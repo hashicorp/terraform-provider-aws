@@ -13,7 +13,7 @@ const opCreateApp = "CreateApp"
 // CreateAppRequest generates a "aws/request.Request" representing the
 // client's request for the CreateApp operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -107,7 +107,7 @@ const opCreateCampaign = "CreateCampaign"
 // CreateCampaignRequest generates a "aws/request.Request" representing the
 // client's request for the CreateCampaign operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -201,7 +201,7 @@ const opCreateExportJob = "CreateExportJob"
 // CreateExportJobRequest generates a "aws/request.Request" representing the
 // client's request for the CreateExportJob operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -295,7 +295,7 @@ const opCreateImportJob = "CreateImportJob"
 // CreateImportJobRequest generates a "aws/request.Request" representing the
 // client's request for the CreateImportJob operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -389,7 +389,7 @@ const opCreateSegment = "CreateSegment"
 // CreateSegmentRequest generates a "aws/request.Request" representing the
 // client's request for the CreateSegment operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -483,7 +483,7 @@ const opDeleteAdmChannel = "DeleteAdmChannel"
 // DeleteAdmChannelRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteAdmChannel operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -577,7 +577,7 @@ const opDeleteApnsChannel = "DeleteApnsChannel"
 // DeleteApnsChannelRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteApnsChannel operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -671,7 +671,7 @@ const opDeleteApnsSandboxChannel = "DeleteApnsSandboxChannel"
 // DeleteApnsSandboxChannelRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteApnsSandboxChannel operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -765,7 +765,7 @@ const opDeleteApnsVoipChannel = "DeleteApnsVoipChannel"
 // DeleteApnsVoipChannelRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteApnsVoipChannel operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -859,7 +859,7 @@ const opDeleteApnsVoipSandboxChannel = "DeleteApnsVoipSandboxChannel"
 // DeleteApnsVoipSandboxChannelRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteApnsVoipSandboxChannel operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -953,7 +953,7 @@ const opDeleteApp = "DeleteApp"
 // DeleteAppRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteApp operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1047,7 +1047,7 @@ const opDeleteBaiduChannel = "DeleteBaiduChannel"
 // DeleteBaiduChannelRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteBaiduChannel operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1141,7 +1141,7 @@ const opDeleteCampaign = "DeleteCampaign"
 // DeleteCampaignRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteCampaign operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1235,7 +1235,7 @@ const opDeleteEmailChannel = "DeleteEmailChannel"
 // DeleteEmailChannelRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteEmailChannel operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1329,7 +1329,7 @@ const opDeleteEndpoint = "DeleteEndpoint"
 // DeleteEndpointRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteEndpoint operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1423,7 +1423,7 @@ const opDeleteEventStream = "DeleteEventStream"
 // DeleteEventStreamRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteEventStream operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1517,7 +1517,7 @@ const opDeleteGcmChannel = "DeleteGcmChannel"
 // DeleteGcmChannelRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteGcmChannel operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1611,7 +1611,7 @@ const opDeleteSegment = "DeleteSegment"
 // DeleteSegmentRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteSegment operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1705,7 +1705,7 @@ const opDeleteSmsChannel = "DeleteSmsChannel"
 // DeleteSmsChannelRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteSmsChannel operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1799,7 +1799,7 @@ const opDeleteUserEndpoints = "DeleteUserEndpoints"
 // DeleteUserEndpointsRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteUserEndpoints operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1893,7 +1893,7 @@ const opGetAdmChannel = "GetAdmChannel"
 // GetAdmChannelRequest generates a "aws/request.Request" representing the
 // client's request for the GetAdmChannel operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1987,7 +1987,7 @@ const opGetApnsChannel = "GetApnsChannel"
 // GetApnsChannelRequest generates a "aws/request.Request" representing the
 // client's request for the GetApnsChannel operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2081,7 +2081,7 @@ const opGetApnsSandboxChannel = "GetApnsSandboxChannel"
 // GetApnsSandboxChannelRequest generates a "aws/request.Request" representing the
 // client's request for the GetApnsSandboxChannel operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2175,7 +2175,7 @@ const opGetApnsVoipChannel = "GetApnsVoipChannel"
 // GetApnsVoipChannelRequest generates a "aws/request.Request" representing the
 // client's request for the GetApnsVoipChannel operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2269,7 +2269,7 @@ const opGetApnsVoipSandboxChannel = "GetApnsVoipSandboxChannel"
 // GetApnsVoipSandboxChannelRequest generates a "aws/request.Request" representing the
 // client's request for the GetApnsVoipSandboxChannel operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2363,7 +2363,7 @@ const opGetApp = "GetApp"
 // GetAppRequest generates a "aws/request.Request" representing the
 // client's request for the GetApp operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2457,7 +2457,7 @@ const opGetApplicationSettings = "GetApplicationSettings"
 // GetApplicationSettingsRequest generates a "aws/request.Request" representing the
 // client's request for the GetApplicationSettings operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2551,7 +2551,7 @@ const opGetApps = "GetApps"
 // GetAppsRequest generates a "aws/request.Request" representing the
 // client's request for the GetApps operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2645,7 +2645,7 @@ const opGetBaiduChannel = "GetBaiduChannel"
 // GetBaiduChannelRequest generates a "aws/request.Request" representing the
 // client's request for the GetBaiduChannel operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2739,7 +2739,7 @@ const opGetCampaign = "GetCampaign"
 // GetCampaignRequest generates a "aws/request.Request" representing the
 // client's request for the GetCampaign operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2833,7 +2833,7 @@ const opGetCampaignActivities = "GetCampaignActivities"
 // GetCampaignActivitiesRequest generates a "aws/request.Request" representing the
 // client's request for the GetCampaignActivities operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2927,7 +2927,7 @@ const opGetCampaignVersion = "GetCampaignVersion"
 // GetCampaignVersionRequest generates a "aws/request.Request" representing the
 // client's request for the GetCampaignVersion operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3021,7 +3021,7 @@ const opGetCampaignVersions = "GetCampaignVersions"
 // GetCampaignVersionsRequest generates a "aws/request.Request" representing the
 // client's request for the GetCampaignVersions operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3115,7 +3115,7 @@ const opGetCampaigns = "GetCampaigns"
 // GetCampaignsRequest generates a "aws/request.Request" representing the
 // client's request for the GetCampaigns operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3209,7 +3209,7 @@ const opGetChannels = "GetChannels"
 // GetChannelsRequest generates a "aws/request.Request" representing the
 // client's request for the GetChannels operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3303,7 +3303,7 @@ const opGetEmailChannel = "GetEmailChannel"
 // GetEmailChannelRequest generates a "aws/request.Request" representing the
 // client's request for the GetEmailChannel operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3397,7 +3397,7 @@ const opGetEndpoint = "GetEndpoint"
 // GetEndpointRequest generates a "aws/request.Request" representing the
 // client's request for the GetEndpoint operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3491,7 +3491,7 @@ const opGetEventStream = "GetEventStream"
 // GetEventStreamRequest generates a "aws/request.Request" representing the
 // client's request for the GetEventStream operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3585,7 +3585,7 @@ const opGetExportJob = "GetExportJob"
 // GetExportJobRequest generates a "aws/request.Request" representing the
 // client's request for the GetExportJob operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3679,7 +3679,7 @@ const opGetExportJobs = "GetExportJobs"
 // GetExportJobsRequest generates a "aws/request.Request" representing the
 // client's request for the GetExportJobs operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3773,7 +3773,7 @@ const opGetGcmChannel = "GetGcmChannel"
 // GetGcmChannelRequest generates a "aws/request.Request" representing the
 // client's request for the GetGcmChannel operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3867,7 +3867,7 @@ const opGetImportJob = "GetImportJob"
 // GetImportJobRequest generates a "aws/request.Request" representing the
 // client's request for the GetImportJob operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3961,7 +3961,7 @@ const opGetImportJobs = "GetImportJobs"
 // GetImportJobsRequest generates a "aws/request.Request" representing the
 // client's request for the GetImportJobs operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4055,7 +4055,7 @@ const opGetSegment = "GetSegment"
 // GetSegmentRequest generates a "aws/request.Request" representing the
 // client's request for the GetSegment operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4149,7 +4149,7 @@ const opGetSegmentExportJobs = "GetSegmentExportJobs"
 // GetSegmentExportJobsRequest generates a "aws/request.Request" representing the
 // client's request for the GetSegmentExportJobs operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4243,7 +4243,7 @@ const opGetSegmentImportJobs = "GetSegmentImportJobs"
 // GetSegmentImportJobsRequest generates a "aws/request.Request" representing the
 // client's request for the GetSegmentImportJobs operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4337,7 +4337,7 @@ const opGetSegmentVersion = "GetSegmentVersion"
 // GetSegmentVersionRequest generates a "aws/request.Request" representing the
 // client's request for the GetSegmentVersion operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4431,7 +4431,7 @@ const opGetSegmentVersions = "GetSegmentVersions"
 // GetSegmentVersionsRequest generates a "aws/request.Request" representing the
 // client's request for the GetSegmentVersions operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4525,7 +4525,7 @@ const opGetSegments = "GetSegments"
 // GetSegmentsRequest generates a "aws/request.Request" representing the
 // client's request for the GetSegments operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4619,7 +4619,7 @@ const opGetSmsChannel = "GetSmsChannel"
 // GetSmsChannelRequest generates a "aws/request.Request" representing the
 // client's request for the GetSmsChannel operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4713,7 +4713,7 @@ const opGetUserEndpoints = "GetUserEndpoints"
 // GetUserEndpointsRequest generates a "aws/request.Request" representing the
 // client's request for the GetUserEndpoints operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4807,7 +4807,7 @@ const opPhoneNumberValidate = "PhoneNumberValidate"
 // PhoneNumberValidateRequest generates a "aws/request.Request" representing the
 // client's request for the PhoneNumberValidate operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4901,7 +4901,7 @@ const opPutEventStream = "PutEventStream"
 // PutEventStreamRequest generates a "aws/request.Request" representing the
 // client's request for the PutEventStream operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4995,7 +4995,7 @@ const opPutEvents = "PutEvents"
 // PutEventsRequest generates a "aws/request.Request" representing the
 // client's request for the PutEvents operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5090,7 +5090,7 @@ const opRemoveAttributes = "RemoveAttributes"
 // RemoveAttributesRequest generates a "aws/request.Request" representing the
 // client's request for the RemoveAttributes operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5184,7 +5184,7 @@ const opSendMessages = "SendMessages"
 // SendMessagesRequest generates a "aws/request.Request" representing the
 // client's request for the SendMessages operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5278,7 +5278,7 @@ const opSendUsersMessages = "SendUsersMessages"
 // SendUsersMessagesRequest generates a "aws/request.Request" representing the
 // client's request for the SendUsersMessages operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5372,7 +5372,7 @@ const opUpdateAdmChannel = "UpdateAdmChannel"
 // UpdateAdmChannelRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateAdmChannel operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5466,7 +5466,7 @@ const opUpdateApnsChannel = "UpdateApnsChannel"
 // UpdateApnsChannelRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateApnsChannel operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5560,7 +5560,7 @@ const opUpdateApnsSandboxChannel = "UpdateApnsSandboxChannel"
 // UpdateApnsSandboxChannelRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateApnsSandboxChannel operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5654,7 +5654,7 @@ const opUpdateApnsVoipChannel = "UpdateApnsVoipChannel"
 // UpdateApnsVoipChannelRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateApnsVoipChannel operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5748,7 +5748,7 @@ const opUpdateApnsVoipSandboxChannel = "UpdateApnsVoipSandboxChannel"
 // UpdateApnsVoipSandboxChannelRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateApnsVoipSandboxChannel operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5842,7 +5842,7 @@ const opUpdateApplicationSettings = "UpdateApplicationSettings"
 // UpdateApplicationSettingsRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateApplicationSettings operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5936,7 +5936,7 @@ const opUpdateBaiduChannel = "UpdateBaiduChannel"
 // UpdateBaiduChannelRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateBaiduChannel operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -6030,7 +6030,7 @@ const opUpdateCampaign = "UpdateCampaign"
 // UpdateCampaignRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateCampaign operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -6124,7 +6124,7 @@ const opUpdateEmailChannel = "UpdateEmailChannel"
 // UpdateEmailChannelRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateEmailChannel operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -6218,7 +6218,7 @@ const opUpdateEndpoint = "UpdateEndpoint"
 // UpdateEndpointRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateEndpoint operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -6312,7 +6312,7 @@ const opUpdateEndpointsBatch = "UpdateEndpointsBatch"
 // UpdateEndpointsBatchRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateEndpointsBatch operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -6406,7 +6406,7 @@ const opUpdateGcmChannel = "UpdateGcmChannel"
 // UpdateGcmChannelRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateGcmChannel operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -6500,7 +6500,7 @@ const opUpdateSegment = "UpdateSegment"
 // UpdateSegmentRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateSegment operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -6594,7 +6594,7 @@ const opUpdateSmsChannel = "UpdateSmsChannel"
 // UpdateSmsChannelRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateSmsChannel operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -8916,11 +8916,12 @@ func (s *CampaignHook) SetWebUrl(v string) *CampaignHook {
 }
 
 // Campaign Limits are used to limit the number of messages that can be sent
-// to a user.
+// to a single endpoint.
 type CampaignLimits struct {
 	_ struct{} `type:"structure"`
 
-	// The maximum number of messages that the campaign can send daily.
+	// The maximum number of messages that each campaign can send to a single endpoint
+	// in a 24-hour period.
 	Daily *int64 `type:"integer"`
 
 	// The length of time (in seconds) that the campaign can run before it ends
@@ -8932,7 +8933,8 @@ type CampaignLimits struct {
 	// value is 50, and the maximum is 20000.
 	MessagesPerSecond *int64 `type:"integer"`
 
-	// The maximum total number of messages that the campaign can send.
+	// The maximum number of messages that an individual campaign can send to a
+	// single endpoint over the course of the campaign.
 	Total *int64 `type:"integer"`
 }
 
@@ -9832,8 +9834,9 @@ type DefaultPushNotificationMessage struct {
 	// data.pinpoint.jsonBody' object
 	Data map[string]*string `type:"map"`
 
-	// Indicates if the message should display on the users device. Silent pushes
-	// can be used for Remote Configuration and Phone Home use cases.
+	// Indicates if the message should display on the recipient's device. You can
+	// use silent pushes for remote configuration or to deliver messages to in-app
+	// notification centers.
 	SilentPush *bool `type:"boolean"`
 
 	// Default message substitutions. Can be overridden by individual address substitutions.
@@ -10883,6 +10886,9 @@ type DirectMessageConfiguration struct {
 	// The default push notification message for all push channels.
 	DefaultPushNotificationMessage *DefaultPushNotificationMessage `type:"structure"`
 
+	// The message to Email channels. Overrides the default message.
+	EmailMessage *EmailMessage `type:"structure"`
+
 	// The message to GCM channels. Overrides the default push notification message.
 	GCMMessage *GCMMessage `type:"structure"`
 
@@ -10930,6 +10936,12 @@ func (s *DirectMessageConfiguration) SetDefaultPushNotificationMessage(v *Defaul
 	return s
 }
 
+// SetEmailMessage sets the EmailMessage field's value.
+func (s *DirectMessageConfiguration) SetEmailMessage(v *EmailMessage) *DirectMessageConfiguration {
+	s.EmailMessage = v
+	return s
+}
+
 // SetGCMMessage sets the GCMMessage field's value.
 func (s *DirectMessageConfiguration) SetGCMMessage(v *GCMMessage) *DirectMessageConfiguration {
 	s.GCMMessage = v
@@ -10945,6 +10957,10 @@ func (s *DirectMessageConfiguration) SetSMSMessage(v *SMSMessage) *DirectMessage
 // Email Channel Request
 type EmailChannelRequest struct {
 	_ struct{} `type:"structure"`
+
+	// The configuration set that you want to use when you send email using the
+	// Pinpoint Email API.
+	ConfigurationSet *string `type:"string"`
 
 	// If the channel is enabled for sending messages.
 	Enabled *bool `type:"boolean"`
@@ -10968,6 +10984,12 @@ func (s EmailChannelRequest) String() string {
 // GoString returns the string representation
 func (s EmailChannelRequest) GoString() string {
 	return s.String()
+}
+
+// SetConfigurationSet sets the ConfigurationSet field's value.
+func (s *EmailChannelRequest) SetConfigurationSet(v string) *EmailChannelRequest {
+	s.ConfigurationSet = &v
+	return s
 }
 
 // SetEnabled sets the Enabled field's value.
@@ -11000,6 +11022,10 @@ type EmailChannelResponse struct {
 
 	// The unique ID of the application to which the email channel belongs.
 	ApplicationId *string `type:"string"`
+
+	// The configuration set that you want to use when you send email using the
+	// Pinpoint Email API.
+	ConfigurationSet *string `type:"string"`
 
 	// The date that the settings were last updated in ISO 8601 format.
 	CreationDate *string `type:"string"`
@@ -11055,6 +11081,12 @@ func (s EmailChannelResponse) GoString() string {
 // SetApplicationId sets the ApplicationId field's value.
 func (s *EmailChannelResponse) SetApplicationId(v string) *EmailChannelResponse {
 	s.ApplicationId = &v
+	return s
+}
+
+// SetConfigurationSet sets the ConfigurationSet field's value.
+func (s *EmailChannelResponse) SetConfigurationSet(v string) *EmailChannelResponse {
+	s.ConfigurationSet = &v
 	return s
 }
 
@@ -11133,6 +11165,87 @@ func (s *EmailChannelResponse) SetRoleArn(v string) *EmailChannelResponse {
 // SetVersion sets the Version field's value.
 func (s *EmailChannelResponse) SetVersion(v int64) *EmailChannelResponse {
 	s.Version = &v
+	return s
+}
+
+// Email Message.
+type EmailMessage struct {
+	_ struct{} `type:"structure"`
+
+	// The body of the email message.
+	Body *string `type:"string"`
+
+	// The email address that bounces and complaints will be forwarded to when feedback
+	// forwarding is enabled.
+	FeedbackForwardingAddress *string `type:"string"`
+
+	// The email address used to send the email from. Defaults to use FromAddress
+	// specified in the Email Channel.
+	FromAddress *string `type:"string"`
+
+	// An email represented as a raw MIME message.
+	RawEmail *RawEmail `type:"structure"`
+
+	// The reply-to email address(es) for the email. If the recipient replies to
+	// the email, each reply-to address will receive the reply.
+	ReplyToAddresses []*string `type:"list"`
+
+	// An email composed of a subject, a text part and a html part.
+	SimpleEmail *SimpleEmail `type:"structure"`
+
+	// Default message substitutions. Can be overridden by individual address substitutions.
+	Substitutions map[string][]*string `type:"map"`
+}
+
+// String returns the string representation
+func (s EmailMessage) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s EmailMessage) GoString() string {
+	return s.String()
+}
+
+// SetBody sets the Body field's value.
+func (s *EmailMessage) SetBody(v string) *EmailMessage {
+	s.Body = &v
+	return s
+}
+
+// SetFeedbackForwardingAddress sets the FeedbackForwardingAddress field's value.
+func (s *EmailMessage) SetFeedbackForwardingAddress(v string) *EmailMessage {
+	s.FeedbackForwardingAddress = &v
+	return s
+}
+
+// SetFromAddress sets the FromAddress field's value.
+func (s *EmailMessage) SetFromAddress(v string) *EmailMessage {
+	s.FromAddress = &v
+	return s
+}
+
+// SetRawEmail sets the RawEmail field's value.
+func (s *EmailMessage) SetRawEmail(v *RawEmail) *EmailMessage {
+	s.RawEmail = v
+	return s
+}
+
+// SetReplyToAddresses sets the ReplyToAddresses field's value.
+func (s *EmailMessage) SetReplyToAddresses(v []*string) *EmailMessage {
+	s.ReplyToAddresses = v
+	return s
+}
+
+// SetSimpleEmail sets the SimpleEmail field's value.
+func (s *EmailMessage) SetSimpleEmail(v *SimpleEmail) *EmailMessage {
+	s.SimpleEmail = v
+	return s
+}
+
+// SetSubstitutions sets the Substitutions field's value.
+func (s *EmailMessage) SetSubstitutions(v map[string][]*string) *EmailMessage {
+	s.Substitutions = v
 	return s
 }
 
@@ -11385,8 +11498,8 @@ func (s *EndpointDemographic) SetTimezone(v string) *EndpointDemographic {
 	return s
 }
 
-// The responses that are returned after you create or update an endpoint and
-// record an event.
+// A complex object that holds the status code and message as a result of processing
+// an endpoint.
 type EndpointItemResponse struct {
 	_ struct{} `type:"structure"`
 
@@ -11394,8 +11507,8 @@ type EndpointItemResponse struct {
 	// a response.
 	Message *string `type:"string"`
 
-	// The status code to respond with for a particular endpoint id after endpoint
-	// registration
+	// The status code associated with the merging of an endpoint when issuing a
+	// response.
 	StatusCode *int64 `type:"integer"`
 }
 
@@ -11429,7 +11542,7 @@ type EndpointLocation struct {
 	City *string `type:"string"`
 
 	// The two-letter code for the country or region of the endpoint. Specified
-	// as an ISO 3166-1 Alpha-2 code, such as "US" for the United States.
+	// as an ISO 3166-1 alpha-2 code, such as "US" for the United States.
 	Country *string `type:"string"`
 
 	// The latitude of the endpoint location, rounded to one decimal place.
@@ -11574,7 +11687,7 @@ func (s *EndpointMessageResult) SetUpdatedToken(v string) *EndpointMessageResult
 	return s
 }
 
-// Endpoint update request
+// An endpoint update request.
 type EndpointRequest struct {
 	_ struct{} `type:"structure"`
 
@@ -12010,10 +12123,10 @@ type Event struct {
 	// The name of the custom event that you're recording.
 	EventType *string `type:"string"`
 
-	// Event metrics
+	// Custom metrics related to the event.
 	Metrics map[string]*float64 `type:"map"`
 
-	// The session
+	// Information about the session in which the event occurred.
 	Session *Session `type:"structure"`
 
 	// The date and time when the event occurred, in ISO 8601 format.
@@ -12066,14 +12179,16 @@ func (s *Event) SetTimestamp(v string) *Event {
 	return s
 }
 
-// The responses that are returned after you record an event.
+// A complex object that holds the status code and message as a result of processing
+// an event.
 type EventItemResponse struct {
 	_ struct{} `type:"structure"`
 
 	// A custom message that is associated with the processing of an event.
 	Message *string `type:"string"`
 
-	// The status code to respond with for a particular event id
+	// The status returned in the response as a result of processing the event.Possible
+	// values: 400 (for invalid events) and 202 (for events that were accepted).
 	StatusCode *int64 `type:"integer"`
 }
 
@@ -12174,14 +12289,14 @@ func (s *EventStream) SetRoleArn(v string) *EventStream {
 	return s
 }
 
-// Events batch definition
+// A batch of PublicEndpoints and Events to process.
 type EventsBatch struct {
 	_ struct{} `type:"structure"`
 
-	// Endpoint information
+	// The PublicEndpoint attached to the EndpointId from the request.
 	Endpoint *PublicEndpoint `type:"structure"`
 
-	// Events
+	// An object that contains a set of events associated with the endpoint.
 	Events map[string]*Event `type:"map"`
 }
 
@@ -12207,13 +12322,12 @@ func (s *EventsBatch) SetEvents(v map[string]*Event) *EventsBatch {
 	return s
 }
 
-// Put Events request
+// A set of events to process.
 type EventsRequest struct {
 	_ struct{} `type:"structure"`
 
-	// Batch of events with endpoint id as the key and an object of EventsBatch
-	// as value. The EventsBatch object has the PublicEndpoint and a map of event
-	// Id's to events
+	// A batch of events to process. Each BatchItem consists of an endpoint ID as
+	// the key, and an EventsBatch object as the value.
 	BatchItem map[string]*EventsBatch `type:"map"`
 }
 
@@ -12233,12 +12347,15 @@ func (s *EventsRequest) SetBatchItem(v map[string]*EventsBatch) *EventsRequest {
 	return s
 }
 
-// The results from processing a put events request
+// Custom messages associated with events.
 type EventsResponse struct {
 	_ struct{} `type:"structure"`
 
-	// A map containing a multi part response for each endpoint, with the endpoint
-	// id as the key and item response as the value
+	// A map that contains a multipart response for each endpoint. Each item in
+	// this object uses the endpoint ID as the key, and the item response as the
+	// value.If no item response exists, the value can also be one of the following:
+	// 202 (if the request was processed successfully) or 400 (if the payload was
+	// invalid, or required fields were missing).
 	Results map[string]*ItemResponse `type:"map"`
 }
 
@@ -15527,15 +15644,16 @@ func (s *ImportJobsResponse) SetNextToken(v string) *ImportJobsResponse {
 	return s
 }
 
-// The endpoint and events combined response definition
+// The response that's provided after registering the endpoint.
 type ItemResponse struct {
 	_ struct{} `type:"structure"`
 
-	// Endpoint item response after endpoint registration
+	// The response received after the endpoint was accepted.
 	EndpointItemResponse *EndpointItemResponse `type:"structure"`
 
-	// Events item response is a multipart response object per event Id, with eventId
-	// as the key and EventItemResponse object as the value
+	// A multipart response object that contains a key and value for each event
+	// ID in the request. In each object, the event ID is the key, and an EventItemResponse
+	// object is the value.
 	EventsItemResponse map[string]*EventItemResponse `type:"map"`
 }
 
@@ -16012,7 +16130,8 @@ func (s *MessageResult) SetUpdatedToken(v string) *MessageResult {
 type MetricDimension struct {
 	_ struct{} `type:"structure"`
 
-	// GREATER_THAN | LESS_THAN | GREATER_THAN_OR_EQUAL | LESS_THAN_OR_EQUAL | EQUAL
+	// The operator that you're using to compare metric values. Possible values:
+	// GREATER_THAN, LESS_THAN, GREATER_THAN_OR_EQUAL, LESS_THAN_OR_EQUAL, or EQUAL
 	ComparisonOperator *string `type:"string"`
 
 	// Value to be compared.
@@ -16041,7 +16160,7 @@ func (s *MetricDimension) SetValue(v float64) *MetricDimension {
 	return s
 }
 
-// Phone Number Information request.
+// Phone Number Validate request.
 type NumberValidateRequest struct {
 	_ struct{} `type:"structure"`
 
@@ -16077,7 +16196,7 @@ func (s *NumberValidateRequest) SetPhoneNumber(v string) *NumberValidateRequest 
 	return s
 }
 
-// Phone Number Information response.
+// Phone Number Validate response.
 type NumberValidateResponse struct {
 	_ struct{} `type:"structure"`
 
@@ -16108,8 +16227,8 @@ type NumberValidateResponse struct {
 	// The county where the phone number was originally registered.
 	County *string `type:"string"`
 
-	// The two-character ISO code for the country or region that you included in
-	// the request body.
+	// The two-character code (in ISO 3166-1 alpha-2 format) for the country or
+	// region in the request body.
 	OriginalCountryCodeIso2 *string `type:"string"`
 
 	// The phone number that you included in the request body.
@@ -16227,7 +16346,7 @@ func (s *NumberValidateResponse) SetZipCode(v string) *NumberValidateResponse {
 type PhoneNumberValidateInput struct {
 	_ struct{} `type:"structure" payload:"NumberValidateRequest"`
 
-	// Phone Number Information request.
+	// Phone Number Validate request.
 	//
 	// NumberValidateRequest is a required field
 	NumberValidateRequest *NumberValidateRequest `type:"structure" required:"true"`
@@ -16265,7 +16384,7 @@ func (s *PhoneNumberValidateInput) SetNumberValidateRequest(v *NumberValidateReq
 type PhoneNumberValidateOutput struct {
 	_ struct{} `type:"structure" payload:"NumberValidateResponse"`
 
-	// Phone Number Information response.
+	// Phone Number Validate response.
 	//
 	// NumberValidateResponse is a required field
 	NumberValidateResponse *NumberValidateResponse `type:"structure" required:"true"`
@@ -16292,7 +16411,7 @@ type PublicEndpoint struct {
 	_ struct{} `type:"structure"`
 
 	// The unique identifier for the recipient. For example, an address could be
-	// a device token or an endpoint ID.
+	// a device token, email address, or mobile phone number.
 	Address *string `type:"string"`
 
 	// Custom attributes that your app reports to Amazon Pinpoint. You can use these
@@ -16305,7 +16424,7 @@ type PublicEndpoint struct {
 	// The endpoint demographic attributes.
 	Demographic *EndpointDemographic `type:"structure"`
 
-	// The date and time when the endpoint was last updated.
+	// The date and time when the endpoint was last updated, in ISO 8601 format.
 	EffectiveDate *string `type:"string"`
 
 	// The status of the endpoint. If the update fails, the value is INACTIVE. If
@@ -16487,7 +16606,7 @@ type PutEventsInput struct {
 	// ApplicationId is a required field
 	ApplicationId *string `location:"uri" locationName:"application-id" type:"string" required:"true"`
 
-	// Put Events request
+	// A set of events to process.
 	//
 	// EventsRequest is a required field
 	EventsRequest *EventsRequest `type:"structure" required:"true"`
@@ -16534,7 +16653,7 @@ func (s *PutEventsInput) SetEventsRequest(v *EventsRequest) *PutEventsInput {
 type PutEventsOutput struct {
 	_ struct{} `type:"structure" payload:"EventsResponse"`
 
-	// The results from processing a put events request
+	// Custom messages associated with events.
 	//
 	// EventsResponse is a required field
 	EventsResponse *EventsResponse `type:"structure" required:"true"`
@@ -16560,10 +16679,16 @@ func (s *PutEventsOutput) SetEventsResponse(v *EventsResponse) *PutEventsOutput 
 type QuietTime struct {
 	_ struct{} `type:"structure"`
 
-	// The default end time for quiet time in ISO 8601 format.
+	// The time at which quiet time should end. The value that you specify has to
+	// be in HH:mm format, where HH is the hour in 24-hour format (with a leading
+	// zero, if applicable), and mm is the minutes. For example, use 02:30 to represent
+	// 2:30 AM, or 14:30 to represent 2:30 PM.
 	End *string `type:"string"`
 
-	// The default start time for quiet time in ISO 8601 format.
+	// The time at which quiet time should begin. The value that you specify has
+	// to be in HH:mm format, where HH is the hour in 24-hour format (with a leading
+	// zero, if applicable), and mm is the minutes. For example, use 02:30 to represent
+	// 2:30 AM, or 14:30 to represent 2:30 PM.
 	Start *string `type:"string"`
 }
 
@@ -16586,6 +16711,30 @@ func (s *QuietTime) SetEnd(v string) *QuietTime {
 // SetStart sets the Start field's value.
 func (s *QuietTime) SetStart(v string) *QuietTime {
 	s.Start = &v
+	return s
+}
+
+// An email represented as a raw MIME message.
+type RawEmail struct {
+	_ struct{} `type:"structure"`
+
+	// Data is automatically base64 encoded/decoded by the SDK.
+	Data []byte `type:"blob"`
+}
+
+// String returns the string representation
+func (s RawEmail) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RawEmail) GoString() string {
+	return s.String()
+}
+
+// SetData sets the Data field's value.
+func (s *RawEmail) SetData(v []byte) *RawEmail {
+	s.Data = v
 	return s
 }
 
@@ -17214,7 +17363,9 @@ type SegmentGroup struct {
 	// the starting "universe" of endpoints. When you add dimensions to the segment,
 	// it filters the source segment based on the dimensions that you specify. You
 	// can specify more than one dimensional segment. You can only specify one imported
-	// segment.
+	// segment.NOTE: If you specify an imported segment for this attribute, the
+	// segment size estimate that appears in the Amazon Pinpoint console shows the
+	// size of the imported segment, without any filters applied to it.
 	SourceSegments []*SegmentReference `type:"list"`
 
 	// Specify how to handle multiple source segments. For example, if you specify
@@ -17377,7 +17528,7 @@ func (s *SegmentImportResource) SetSize(v int64) *SegmentImportResource {
 type SegmentLocation struct {
 	_ struct{} `type:"structure"`
 
-	// The country filter according to ISO 3166-1 Alpha-2 codes.
+	// The country or region, in ISO 3166-1 alpha-2 format.
 	Country *SetDimension `type:"structure"`
 
 	// The GPS Point dimension.
@@ -17841,7 +17992,7 @@ func (s *SendUsersMessagesOutput) SetSendUsersMessageResponse(v *SendUsersMessag
 type Session struct {
 	_ struct{} `type:"structure"`
 
-	// Session duration in millis
+	// The duration of the session, in milliseconds.
 	Duration *int64 `type:"integer"`
 
 	// A unique identifier for the session.
@@ -17922,6 +18073,85 @@ func (s *SetDimension) SetDimensionType(v string) *SetDimension {
 // SetValues sets the Values field's value.
 func (s *SetDimension) SetValues(v []*string) *SetDimension {
 	s.Values = v
+	return s
+}
+
+// An email composed of a subject, a text part and a html part.
+type SimpleEmail struct {
+	_ struct{} `type:"structure"`
+
+	// The content of the message, in HTML format. Use this for email clients that
+	// can process HTML. You can include clickable links, formatted text, and much
+	// more in an HTML message.
+	HtmlPart *SimpleEmailPart `type:"structure"`
+
+	// The subject of the message: A short summary of the content, which will appear
+	// in the recipient's inbox.
+	Subject *SimpleEmailPart `type:"structure"`
+
+	// The content of the message, in text format. Use this for text-based email
+	// clients, or clients on high-latency networks (such as mobile devices).
+	TextPart *SimpleEmailPart `type:"structure"`
+}
+
+// String returns the string representation
+func (s SimpleEmail) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SimpleEmail) GoString() string {
+	return s.String()
+}
+
+// SetHtmlPart sets the HtmlPart field's value.
+func (s *SimpleEmail) SetHtmlPart(v *SimpleEmailPart) *SimpleEmail {
+	s.HtmlPart = v
+	return s
+}
+
+// SetSubject sets the Subject field's value.
+func (s *SimpleEmail) SetSubject(v *SimpleEmailPart) *SimpleEmail {
+	s.Subject = v
+	return s
+}
+
+// SetTextPart sets the TextPart field's value.
+func (s *SimpleEmail) SetTextPart(v *SimpleEmailPart) *SimpleEmail {
+	s.TextPart = v
+	return s
+}
+
+// Textual email data, plus an optional character set specification.
+type SimpleEmailPart struct {
+	_ struct{} `type:"structure"`
+
+	// The character set of the content.
+	Charset *string `type:"string"`
+
+	// The textual data of the content.
+	Data *string `type:"string"`
+}
+
+// String returns the string representation
+func (s SimpleEmailPart) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SimpleEmailPart) GoString() string {
+	return s.String()
+}
+
+// SetCharset sets the Charset field's value.
+func (s *SimpleEmailPart) SetCharset(v string) *SimpleEmailPart {
+	s.Charset = &v
+	return s
+}
+
+// SetData sets the Data field's value.
+func (s *SimpleEmailPart) SetData(v string) *SimpleEmailPart {
+	s.Data = &v
 	return s
 }
 
@@ -18723,7 +18953,7 @@ type UpdateEndpointInput struct {
 	// EndpointId is a required field
 	EndpointId *string `location:"uri" locationName:"endpoint-id" type:"string" required:"true"`
 
-	// Endpoint update request
+	// An endpoint update request.
 	//
 	// EndpointRequest is a required field
 	EndpointRequest *EndpointRequest `type:"structure" required:"true"`
@@ -19123,9 +19353,9 @@ type WriteApplicationSettingsRequest struct {
 	// The CloudWatchMetrics settings for the app.
 	CloudWatchMetricsEnabled *bool `type:"boolean"`
 
-	// The default campaign limits for the app. These limits apply to each campaign
-	// for the app, unless the campaign overrides the default with limits of its
-	// own.
+	// The limits that apply to each campaign in the project by default. Campaigns
+	// can also have their own limits, which override the settings at the project
+	// level.
 	Limits *CampaignLimits `type:"structure"`
 
 	// The default quiet time for the app. Each campaign for this app sends no messages

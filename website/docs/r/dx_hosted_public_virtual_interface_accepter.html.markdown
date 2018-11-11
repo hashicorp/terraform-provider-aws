@@ -40,9 +40,10 @@ resource "aws_dx_hosted_public_virtual_interface" "creator" {
 
   customer_address = "175.45.176.1/30"
   amazon_address   = "175.45.176.2/30"
+
   route_filter_prefixes = [
-      "210.52.109.0/24",
-      "175.45.176.0/22"
+    "210.52.109.0/24",
+    "175.45.176.0/22",
   ]
 }
 

@@ -122,8 +122,11 @@ func expandEcsVolumes(configured []interface{}) ([]*ecs.Volume, error) {
 				l.DockerVolumeConfiguration.Scope = aws.String(v)
 			}
 
-			if v, ok := config["autoprovision"]; ok {
-				l.DockerVolumeConfiguration.Autoprovision = aws.Bool(v.(bool))
+			if v, ok := config["autoprovision"]; ok && v != "" {
+				scope := l.DockerVolumeConfiguration.Scope
+				if scope == nil || *scope != ecs.ScopeTask || v.(bool) {
+					l.DockerVolumeConfiguration.Autoprovision = aws.Bool(v.(bool))
+				}
 			}
 
 			if v, ok := config["driver"].(string); ok && v != "" {
@@ -1892,7 +1895,8 @@ func sortInterfaceSlice(in []interface{}) []interface{} {
 }
 
 // This function sorts List A to look like a list found in the tf file.
-func sortListBasedonTFFile(in []string, d *schema.ResourceData, listName string) ([]string, error) {
+func sortListBasedonTFFile(in []string, d *schema.ResourceData) ([]string, error) {
+	listName := "layer_ids"
 	if attributeCount, ok := d.Get(listName + ".#").(int); ok {
 		for i := 0; i < attributeCount; i++ {
 			currAttributeId := d.Get(listName + "." + strconv.Itoa(i))
@@ -1958,22 +1962,6 @@ func getStringPtr(m interface{}, key string) *string {
 
 	default:
 		panic("unknown type in getStringPtr")
-	}
-
-	return nil
-}
-
-// getStringPtrList returns a []*string version of the map value. If the key
-// isn't present, getNilStringList returns nil.
-func getStringPtrList(m map[string]interface{}, key string) []*string {
-	if v, ok := m[key]; ok {
-		var stringList []*string
-		for _, i := range v.([]interface{}) {
-			s := i.(string)
-			stringList = append(stringList, &s)
-		}
-
-		return stringList
 	}
 
 	return nil
@@ -2314,14 +2302,6 @@ func normalizeCloudFormationTemplate(templateString interface{}) (string, error)
 	}
 
 	return checkYamlString(templateString)
-}
-
-func flattenInspectorTags(cfTags []*cloudformation.Tag) map[string]string {
-	tags := make(map[string]string, len(cfTags))
-	for _, t := range cfTags {
-		tags[*t.Key] = *t.Value
-	}
-	return tags
 }
 
 func flattenApiGatewayUsageApiStages(s []*apigateway.ApiStage) []map[string]interface{} {
@@ -3965,10 +3945,41 @@ func flattenMqBrokerInstances(instances []*mq.BrokerInstance) []interface{} {
 		if len(instance.Endpoints) > 0 {
 			m["endpoints"] = aws.StringValueSlice(instance.Endpoints)
 		}
+		if instance.IpAddress != nil {
+			m["ip_address"] = *instance.IpAddress
+		}
 		l[i] = m
 	}
 
 	return l
+}
+
+func flattenMqLogs(logs *mq.LogsSummary) []interface{} {
+	if logs == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"general": aws.BoolValue(logs.General),
+		"audit":   aws.BoolValue(logs.Audit),
+	}
+
+	return []interface{}{m}
+}
+
+func expandMqLogs(l []interface{}) *mq.Logs {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	logs := &mq.Logs{
+		Audit:   aws.Bool(m["audit"].(bool)),
+		General: aws.Bool(m["general"].(bool)),
+	}
+
+	return logs
 }
 
 func flattenResourceLifecycleConfig(rlc *elasticbeanstalk.ApplicationResourceLifecycleConfig) []map[string]interface{} {

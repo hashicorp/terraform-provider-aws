@@ -14,9 +14,31 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestAccAWSGlacierVault_importBasic(t *testing.T) {
+	resourceName := "aws_glacier_vault.full"
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckGlacierVaultDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlacierVault_full(rInt),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSGlacierVault_basic(t *testing.T) {
 	rInt := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlacierVaultDestroy,
@@ -33,7 +55,7 @@ func TestAccAWSGlacierVault_basic(t *testing.T) {
 
 func TestAccAWSGlacierVault_full(t *testing.T) {
 	rInt := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlacierVaultDestroy,
@@ -50,7 +72,7 @@ func TestAccAWSGlacierVault_full(t *testing.T) {
 
 func TestAccAWSGlacierVault_RemoveNotifications(t *testing.T) {
 	rInt := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlacierVaultDestroy,

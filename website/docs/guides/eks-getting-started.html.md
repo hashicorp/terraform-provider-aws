@@ -41,7 +41,7 @@ associated with these services, even if you choose a different architecture.
         - [EKS Master Cluster IAM Role](#eks-master-cluster-iam-role)
         - [EKS Master Cluster Security Group](#eks-master-cluster-security-group)
         - [EKS Master Cluster](#eks-master-cluster)
-        - [Obtaining kubectl Configuration From Terraform](#obtaining-kubectl-configuration-from-terraform)
+    - [Configuring kubectl for EKS](#configuring-kubectl-for-eks)
     - [Kubernetes Worker Nodes](#kubernetes-worker-nodes)
         - [Worker Node IAM Role and Instance Profile](#worker-node-iam-role-and-instance-profile)
         - [Worker Node Security Group](#worker-node-security-group)
@@ -60,7 +60,7 @@ that will cost you money against your AWS bill.
 The sample architecture introduced here includes the following resources:
 
 * EKS Cluster: AWS managed Kubernetes cluster of master servers
-* AutoScaling Group containing 2 m4.large instances based on the latest EKS Amazon Linux 2 AMI: Operator managed Kuberneted worker nodes for running Kubernetes service deployments
+* AutoScaling Group containing 2 m4.large instances based on the latest EKS Amazon Linux 2 AMI: Operator managed Kubernetes worker nodes for running Kubernetes service deployments
 * Associated VPC, Internet Gateway, Security Groups, and Subnets: Operator managed networking resources for the EKS Cluster and worker node instances
 * Associated IAM Roles and Policies: Operator managed access resources for EKS and worker node instances
 
@@ -285,14 +285,21 @@ resource "aws_eks_cluster" "demo" {
 }
 ```
 
-#### Obtaining kubectl Configuration From Terraform
+### Configuring kubectl for EKS
+
+-> This section only provides some example methods for configuring `kubectl` to communicate with EKS servers. Managing Kubernetes clients and configurations is outside the scope of this guide.
 
 If you are planning on using `kubectl` to manage the Kubernetes cluster, now
-might be a great time to configure your client. The below Terraform output
-generates a sample `kubectl` configuration to connect to your cluster.
-
-You can verify cluster access via `kubectl version` displaying server version
+might be a great time to configure your client. After configuration, you can
+verify cluster access via `kubectl version` displaying server version
 information in addition to local client version information.
+
+The AWS CLI [`eks update-kubeconfig`](https://docs.aws.amazon.com/cli/latest/reference/eks/update-kubeconfig.html)
+command provides a simple method to create or update configuration files.
+
+If you would rather update your configuration manually, the below Terraform output
+generates a sample `kubectl` configuration to connect to your cluster. This can
+be placed into a Kubernetes configuration file, e.g. `~/.kube/config`
 
 ```hcl
 locals {
@@ -470,7 +477,7 @@ data "aws_ami" "eks-worker" {
   }
 
   most_recent = true
-  owners      = ["602401143452"] # Amazon Account ID
+  owners      = ["602401143452"] # Amazon EKS AMI Account ID
 }
 ```
 
@@ -545,21 +552,18 @@ configuration to enable the worker nodes to join the cluster.
 
 #### Required Kubernetes Configuration to Join Worker Nodes
 
+-> While managing Kubernetes cluster and client configurations are beyond the scope of this guide, we provide an example of how to apply the required Kubernetes [`ConfigMap`](http://kubernetes.io/docs/user-guide/configmap/) via `kubectl` below for completeness. See also the [Configuring kubectl for EKS](#configuring-kubectl-for-eks) section.
+
 The EKS service does not provide a cluster-level API parameter or resource to
 automatically configure the underlying Kubernetes cluster to allow worker nodes
 to join the cluster via AWS IAM role authentication.
-
-While managing the underlying Kubernetes cluster configuration is beyond the
-scope of this guide, we provide an example of how to apply the required
-Kubernetes [`ConfigMap`](http://kubernetes.io/docs/user-guide/configmap/)
-via `kubectl` below for completeness.
 
 To output an example IAM Role authentication `ConfigMap` from your
 Terraform configuration:
 
 ```hcl
 locals {
-  config-map-aws-auth = <<CONFIGMAPAWSAUTH
+  config_map_aws_auth = <<CONFIGMAPAWSAUTH
 
 
 apiVersion: v1
@@ -577,13 +581,13 @@ data:
 CONFIGMAPAWSAUTH
 }
 
-output "config-map-aws-auth" {
-  value = "${local.config-map-aws-auth}"
+output "config_map_aws_auth" {
+  value = "${local.config_map_aws_auth}"
 }
 ```
 
-* Run `terraform output config-map-aws-auth` and save the configuration into a file, e.g. `config-map-aws-auth.yaml`
-* Run `kubectl apply -f config-map-aws-auth.yaml`
+* Run `terraform output config_map_aws_auth` and save the configuration into a file, e.g. `config_map_aws_auth.yaml`
+* Run `kubectl apply -f config_map_aws_auth.yaml`
 * You can verify the worker nodes are joining the cluster via: `kubectl get nodes --watch`
 
 At this point, you should be able to utilize Kubernetes as expected!

@@ -17,7 +17,7 @@ func TestAccAWSEcsTaskDefinition_basic(t *testing.T) {
 	rString := acctest.RandString(8)
 	tdName := fmt.Sprintf("tf_acc_td_basic_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
@@ -45,7 +45,7 @@ func TestAccAWSEcsTaskDefinition_withScratchVolume(t *testing.T) {
 	rString := acctest.RandString(8)
 	tdName := fmt.Sprintf("tf_acc_td_with_scratch_volume_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
@@ -66,7 +66,7 @@ func TestAccAWSEcsTaskDefinition_withDockerVolume(t *testing.T) {
 	rString := acctest.RandString(8)
 	tdName := fmt.Sprintf("tf_acc_td_with_docker_volume_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
@@ -109,7 +109,7 @@ func TestAccAWSEcsTaskDefinition_withDockerVolumeMinimalConfig(t *testing.T) {
 	rString := acctest.RandString(8)
 	tdName := fmt.Sprintf("tf_acc_td_with_docker_volume_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
@@ -118,6 +118,36 @@ func TestAccAWSEcsTaskDefinition_withDockerVolumeMinimalConfig(t *testing.T) {
 				Config: testAccAWSEcsTaskDefinitionWithDockerVolumesMinimalConfig(tdName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsTaskDefinitionExists("aws_ecs_task_definition.sleep", &def),
+					resource.TestCheckResourceAttr(
+						"aws_ecs_task_definition.sleep", "volume.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_ecs_task_definition.sleep", "volume.584193650.docker_volume_configuration.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_ecs_task_definition.sleep", "volume.584193650.docker_volume_configuration.0.scope", "task"),
+					resource.TestCheckResourceAttr(
+						"aws_ecs_task_definition.sleep", "volume.584193650.docker_volume_configuration.0.driver", "local"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSEcsTaskDefinition_withTaskScopedDockerVolume(t *testing.T) {
+	var def ecs.TaskDefinition
+
+	rString := acctest.RandString(8)
+	tdName := fmt.Sprintf("tf_acc_td_with_docker_volume_%s", rString)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsTaskDefinitionWithTaskScopedDockerVolume(tdName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsTaskDefinitionExists("aws_ecs_task_definition.sleep", &def),
+					testAccCheckAWSTaskDefinitionDockerVolumeConfigurationAutoprovisionNil(&def),
 					resource.TestCheckResourceAttr(
 						"aws_ecs_task_definition.sleep", "volume.#", "1"),
 					resource.TestCheckResourceAttr(
@@ -142,7 +172,7 @@ func TestAccAWSEcsTaskDefinition_withEcsService(t *testing.T) {
 	svcName := fmt.Sprintf("tf_acc_td_with_ecs_service_%s", rString)
 	tdName := fmt.Sprintf("tf_acc_td_with_ecs_service_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
@@ -173,7 +203,7 @@ func TestAccAWSEcsTaskDefinition_withTaskRoleArn(t *testing.T) {
 	policyName := fmt.Sprintf("tf-acc-policy-ecs-td-with-task-role-arn-%s", rString)
 	tdName := fmt.Sprintf("tf_acc_td_with_task_role_arn_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
@@ -196,7 +226,7 @@ func TestAccAWSEcsTaskDefinition_withNetworkMode(t *testing.T) {
 	policyName := fmt.Sprintf("tf_acc_ecs_td_with_network_mode_%s", rString)
 	tdName := fmt.Sprintf("tf_acc_td_with_network_mode_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
@@ -219,7 +249,7 @@ func TestAccAWSEcsTaskDefinition_constraint(t *testing.T) {
 	rString := acctest.RandString(8)
 	tdName := fmt.Sprintf("tf_acc_td_constraint_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
@@ -243,7 +273,7 @@ func TestAccAWSEcsTaskDefinition_changeVolumesForcesNewResource(t *testing.T) {
 	rString := acctest.RandString(8)
 	tdName := fmt.Sprintf("tf_acc_td_change_vol_forces_new_resource_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
@@ -272,7 +302,7 @@ func TestAccAWSEcsTaskDefinition_arrays(t *testing.T) {
 	rString := acctest.RandString(8)
 	tdName := fmt.Sprintf("tf_acc_td_arrays_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
@@ -293,7 +323,7 @@ func TestAccAWSEcsTaskDefinition_Fargate(t *testing.T) {
 	rString := acctest.RandString(8)
 	tdName := fmt.Sprintf("tf_acc_td_fargate_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
@@ -324,7 +354,7 @@ func TestAccAWSEcsTaskDefinition_ExecutionRole(t *testing.T) {
 	policyName := fmt.Sprintf("tf-acc-policy-ecs-td-execution-role-%s", rString)
 	tdName := fmt.Sprintf("tf_acc_td_execution_role_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
@@ -353,7 +383,7 @@ func TestAccAWSEcsTaskDefinition_Inactive(t *testing.T) {
 		})
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
@@ -457,6 +487,22 @@ func testAccCheckAWSEcsTaskDefinitionExists(name string, def *ecs.TaskDefinition
 
 		*def = *out.TaskDefinition
 
+		return nil
+	}
+}
+
+func testAccCheckAWSTaskDefinitionDockerVolumeConfigurationAutoprovisionNil(def *ecs.TaskDefinition) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if len(def.Volumes) != 1 {
+			return fmt.Errorf("Expected (1) volumes, got (%d)", len(def.Volumes))
+		}
+		config := def.Volumes[0].DockerVolumeConfiguration
+		if config == nil {
+			return fmt.Errorf("Expected docker_volume_configuration, got nil")
+		}
+		if config.Autoprovision != nil {
+			return fmt.Errorf("Expected autoprovision to be nil, got %t", *config.Autoprovision)
+		}
 		return nil
 	}
 }
@@ -901,7 +947,34 @@ TASK_DEFINITION
   volume {
     name = "database_scratch"
     docker_volume_configuration {
-        autoprovision = true
+      autoprovision = true
+    }
+  }
+}
+`, tdName)
+}
+
+func testAccAWSEcsTaskDefinitionWithTaskScopedDockerVolume(tdName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_task_definition" "sleep" {
+  family = "%s"
+  container_definitions = <<TASK_DEFINITION
+[
+  {
+    "name": "sleep",
+    "image": "busybox",
+    "cpu": 10,
+    "command": ["sleep","360"],
+    "memory": 10,
+    "essential": true
+  }
+]
+TASK_DEFINITION
+
+  volume {
+    name = "database_scratch"
+    docker_volume_configuration {
+      scope = "task"
     }
   }
 }

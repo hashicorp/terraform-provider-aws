@@ -53,6 +53,18 @@ func testSweepRouteTables(region string) error {
 	}
 
 	for _, routeTable := range resp.RouteTables {
+		for _, routeTableAssociation := range routeTable.Associations {
+			input := &ec2.DisassociateRouteTableInput{
+				AssociationId: routeTableAssociation.RouteTableAssociationId,
+			}
+
+			log.Printf("[DEBUG] Deleting Route Table Association: %s", input)
+			_, err := conn.DisassociateRouteTable(input)
+			if err != nil {
+				return fmt.Errorf("error deleting Route Table Association (%s): %s", aws.StringValue(routeTableAssociation.RouteTableAssociationId), err)
+			}
+		}
+
 		input := &ec2.DeleteRouteTableInput{
 			RouteTableId: routeTable.RouteTableId,
 		}
@@ -113,7 +125,7 @@ func TestAccAWSRouteTable_basic(t *testing.T) {
 		return nil
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_route_table.foo",
 		Providers:     testAccProviders,
@@ -163,7 +175,7 @@ func TestAccAWSRouteTable_instance(t *testing.T) {
 		return nil
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_route_table.foo",
 		Providers:     testAccProviders,
@@ -193,7 +205,7 @@ func TestAccAWSRouteTable_ipv6(t *testing.T) {
 		return nil
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_route_table.foo",
 		Providers:     testAccProviders,
@@ -213,7 +225,7 @@ func TestAccAWSRouteTable_ipv6(t *testing.T) {
 func TestAccAWSRouteTable_tags(t *testing.T) {
 	var route_table ec2.RouteTable
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_route_table.foo",
 		Providers:     testAccProviders,
@@ -241,7 +253,7 @@ func TestAccAWSRouteTable_tags(t *testing.T) {
 
 // For GH-13545, Fixes panic on an empty route config block
 func TestAccAWSRouteTable_panicEmptyRoute(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_route_table.foo",
 		Providers:     testAccProviders,
@@ -340,7 +352,7 @@ func TestAccAWSRouteTable_vpcPeering(t *testing.T) {
 
 		return nil
 	}
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRouteTableDestroy,
@@ -378,7 +390,7 @@ func TestAccAWSRouteTable_vgwRoutePropagation(t *testing.T) {
 		return nil
 
 	}
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		CheckDestroy: resource.ComposeTestCheckFunc(

@@ -5,17 +5,16 @@ import (
 	"log"
 	"net/url"
 	"strconv"
-	"time"
-
-	"github.com/hashicorp/terraform/helper/schema"
-
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/structure"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 var sqsQueueAttributeMap = map[string]string{
@@ -90,13 +89,13 @@ func resourceAwsSqsQueue() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
-				ValidateFunc:     validateJsonString,
+				ValidateFunc:     validation.ValidateJsonString,
 				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
 			},
 			"redrive_policy": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateJsonString,
+				ValidateFunc: validation.ValidateJsonString,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
@@ -152,11 +151,11 @@ func resourceAwsSqsQueueCreate(d *schema.ResourceData, meta interface{}) error {
 	cbd := d.Get("content_based_deduplication").(bool)
 
 	if fq {
-		if errors := validateSQSFifoQueueName(name, "name"); len(errors) > 0 {
+		if errors := validateSQSFifoQueueName(name); len(errors) > 0 {
 			return fmt.Errorf("Error validating the FIFO queue name: %v", errors)
 		}
 	} else {
-		if errors := validateSQSNonFifoQueueName(name, "name"); len(errors) > 0 {
+		if errors := validateSQSNonFifoQueueName(name); len(errors) > 0 {
 			return fmt.Errorf("Error validating SQS queue name: %v", errors)
 		}
 	}

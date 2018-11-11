@@ -15,51 +15,51 @@ This data source is only available in a us-east-1 or ap-south-1 provider.
 
 ```hcl
 data "aws_pricing_product" "example" {
-    service_code = "AmazonEC2"
-    
-    filters = [
-        {
-            field = "instanceType"
-            value = "c5.xlarge"
-        },
-        {
-            field = "operatingSystem"
-            value = "Linux"
-        },
-        {
-            field = "location"
-            value = "US East (N. Virginia)"
-        },
-        {
-            field = "preInstalledSw"
-            value = "NA"
-        },
-        {
-            field = "licenseModel"
-            value = "No License required"
-        },
-        {
-            field = "tenancy"
-            value = "Shared"
-        },
-    ]
+  service_code = "AmazonEC2"
+
+  filters = [
+    {
+      field = "instanceType"
+      value = "c5.xlarge"
+    },
+    {
+      field = "operatingSystem"
+      value = "Linux"
+    },
+    {
+      field = "location"
+      value = "US East (N. Virginia)"
+    },
+    {
+      field = "preInstalledSw"
+      value = "NA"
+    },
+    {
+      field = "licenseModel"
+      value = "No License required"
+    },
+    {
+      field = "tenancy"
+      value = "Shared"
+    },
+  ]
 }
 ```
 
 ```hcl
 data "aws_pricing_product" "example" {
-    service_code = "AmazonRedshift"
-    
-    filters = [
-        {
-            field = "instanceType"
-            value = "ds1.xlarge"
-        },
-        {
-            field = "location"
-            value = "US East (N. Virginia)"
-        },
-    ]
+  service_code = "AmazonRedshift"
+
+  filters = [
+    {
+      field = "instanceType"
+      value = "ds1.xlarge"
+    },
+    {
+      field = "location"
+      value = "US East (N. Virginia)"
+    },
+  ]
 }
 ```
 

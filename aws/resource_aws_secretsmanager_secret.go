@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/structure"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsSecretsManagerSecret() *schema.Resource {
@@ -36,14 +37,25 @@ func resourceAwsSecretsManagerSecret() *schema.Resource {
 				Optional: true,
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name_prefix"},
+				ValidateFunc:  validateSecretManagerSecretName,
+			},
+			"name_prefix": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name"},
+				ValidateFunc:  validateSecretManagerSecretNamePrefix,
 			},
 			"policy": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				ValidateFunc:     validateJsonString,
+				ValidateFunc:     validation.ValidateJsonString,
 				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
 			},
 			"recovery_window_in_days": {
@@ -91,9 +103,18 @@ func resourceAwsSecretsManagerSecret() *schema.Resource {
 func resourceAwsSecretsManagerSecretCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).secretsmanagerconn
 
+	var secretName string
+	if v, ok := d.GetOk("name"); ok {
+		secretName = v.(string)
+	} else if v, ok := d.GetOk("name_prefix"); ok {
+		secretName = resource.PrefixedUniqueId(v.(string))
+	} else {
+		secretName = resource.UniqueId()
+	}
+
 	input := &secretsmanager.CreateSecretInput{
 		Description: aws.String(d.Get("description").(string)),
-		Name:        aws.String(d.Get("name").(string)),
+		Name:        aws.String(secretName),
 	}
 
 	if v, ok := d.GetOk("kms_key_id"); ok && v.(string) != "" {

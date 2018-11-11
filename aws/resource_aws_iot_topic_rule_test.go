@@ -10,10 +10,31 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestAccAWSIoTTopicRule_importbasic(t *testing.T) {
+	resourceName := "aws_iot_topic_rule.rule"
+	rName := acctest.RandString(5)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSIoTTopicRule_basic(rName),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSIoTTopicRule_basic(t *testing.T) {
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
@@ -36,7 +57,7 @@ func TestAccAWSIoTTopicRule_basic(t *testing.T) {
 func TestAccAWSIoTTopicRule_cloudwatchalarm(t *testing.T) {
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
@@ -54,7 +75,7 @@ func TestAccAWSIoTTopicRule_cloudwatchalarm(t *testing.T) {
 func TestAccAWSIoTTopicRule_cloudwatchmetric(t *testing.T) {
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
@@ -72,7 +93,7 @@ func TestAccAWSIoTTopicRule_cloudwatchmetric(t *testing.T) {
 func TestAccAWSIoTTopicRule_elasticsearch(t *testing.T) {
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
@@ -90,7 +111,7 @@ func TestAccAWSIoTTopicRule_elasticsearch(t *testing.T) {
 func TestAccAWSIoTTopicRule_firehose(t *testing.T) {
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
@@ -108,7 +129,7 @@ func TestAccAWSIoTTopicRule_firehose(t *testing.T) {
 func TestAccAWSIoTTopicRule_firehose_separator(t *testing.T) {
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
@@ -132,7 +153,7 @@ func TestAccAWSIoTTopicRule_firehose_separator(t *testing.T) {
 func TestAccAWSIoTTopicRule_kinesis(t *testing.T) {
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
@@ -150,7 +171,7 @@ func TestAccAWSIoTTopicRule_kinesis(t *testing.T) {
 func TestAccAWSIoTTopicRule_lambda(t *testing.T) {
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
@@ -168,7 +189,7 @@ func TestAccAWSIoTTopicRule_lambda(t *testing.T) {
 func TestAccAWSIoTTopicRule_republish(t *testing.T) {
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
@@ -186,7 +207,7 @@ func TestAccAWSIoTTopicRule_republish(t *testing.T) {
 func TestAccAWSIoTTopicRule_s3(t *testing.T) {
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
@@ -204,7 +225,7 @@ func TestAccAWSIoTTopicRule_s3(t *testing.T) {
 func TestAccAWSIoTTopicRule_sns(t *testing.T) {
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
@@ -222,7 +243,7 @@ func TestAccAWSIoTTopicRule_sns(t *testing.T) {
 func TestAccAWSIoTTopicRule_sqs(t *testing.T) {
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,

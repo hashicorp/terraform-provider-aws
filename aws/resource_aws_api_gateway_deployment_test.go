@@ -14,7 +14,7 @@ import (
 func TestAccAWSAPIGatewayDeployment_basic(t *testing.T) {
 	var conf apigateway.Deployment
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayDeploymentDestroy,
@@ -31,6 +31,49 @@ func TestAccAWSAPIGatewayDeployment_basic(t *testing.T) {
 						"aws_api_gateway_deployment.test", "variables.a", "2"),
 					resource.TestCheckResourceAttrSet(
 						"aws_api_gateway_deployment.test", "created_date"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSAPIGatewayDeployment_createBeforeDestoryUpdate(t *testing.T) {
+	var conf apigateway.Deployment
+	var stage apigateway.Stage
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayDeploymentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayDeploymentCreateBeforeDestroyConfig("description1", "https://www.google.com"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayDeploymentExists("aws_api_gateway_deployment.test", &conf),
+					resource.TestCheckResourceAttr(
+						"aws_api_gateway_deployment.test", "stage_name", "test"),
+					resource.TestCheckResourceAttr(
+						"aws_api_gateway_deployment.test", "description", "description1"),
+					resource.TestCheckResourceAttr(
+						"aws_api_gateway_deployment.test", "variables.a", "2"),
+					resource.TestCheckResourceAttrSet(
+						"aws_api_gateway_deployment.test", "created_date"),
+					testAccCheckAWSAPIGatewayDeploymentStageExists("aws_api_gateway_deployment.test", &stage),
+				),
+			},
+			{
+				Config: testAccAWSAPIGatewayDeploymentCreateBeforeDestroyConfig("description2", "https://www.google.de"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayDeploymentExists("aws_api_gateway_deployment.test", &conf),
+					resource.TestCheckResourceAttr(
+						"aws_api_gateway_deployment.test", "stage_name", "test"),
+					resource.TestCheckResourceAttr(
+						"aws_api_gateway_deployment.test", "description", "description2"),
+					resource.TestCheckResourceAttr(
+						"aws_api_gateway_deployment.test", "variables.a", "2"),
+					resource.TestCheckResourceAttrSet(
+						"aws_api_gateway_deployment.test", "created_date"),
+					testAccCheckAWSAPIGatewayDeploymentStageExists("aws_api_gateway_deployment.test", &stage),
 				),
 			},
 		},
@@ -64,6 +107,30 @@ func testAccCheckAWSAPIGatewayDeploymentExists(n string, res *apigateway.Deploym
 		}
 
 		*res = *describe
+
+		return nil
+	}
+}
+
+func testAccCheckAWSAPIGatewayDeploymentStageExists(resourceName string, res *apigateway.Stage) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).apigateway
+
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("Deployment not found: %s", resourceName)
+		}
+
+		req := &apigateway.GetStageInput{
+			StageName: aws.String(rs.Primary.Attributes["stage_name"]),
+			RestApiId: aws.String(rs.Primary.Attributes["rest_api_id"]),
+		}
+		stage, err := conn.GetStage(req)
+		if err != nil {
+			return err
+		}
+
+		*res = *stage
 
 		return nil
 	}
@@ -103,7 +170,8 @@ func testAccCheckAWSAPIGatewayDeploymentDestroy(s *terraform.State) error {
 	return nil
 }
 
-const testAccAWSAPIGatewayDeploymentConfig = `
+func buildAPIGatewayDeploymentConfig(description, url, extras string) string {
+	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = "test"
 }
@@ -134,7 +202,7 @@ resource "aws_api_gateway_integration" "test" {
   http_method = "${aws_api_gateway_method.test.http_method}"
 
   type = "HTTP"
-  uri = "https://www.google.de"
+  uri = "%s"
   integration_http_method = "GET"
 }
 
@@ -150,10 +218,24 @@ resource "aws_api_gateway_deployment" "test" {
 
   rest_api_id = "${aws_api_gateway_rest_api.test.id}"
   stage_name = "test"
-  description = "This is a test"
+	description = "%s"
+	stage_description = "%s"
+
+	%s
 
   variables = {
     "a" = "2"
   }
 }
-`
+`, url, description, description, extras)
+}
+
+var testAccAWSAPIGatewayDeploymentConfig = buildAPIGatewayDeploymentConfig("This is a test", "https://www.google.de", "")
+
+func testAccAWSAPIGatewayDeploymentCreateBeforeDestroyConfig(description string, url string) string {
+	return buildAPIGatewayDeploymentConfig(description, url, `
+		lifecycle {
+			create_before_destroy = true
+		}
+	`)
+}

@@ -63,10 +63,32 @@ func testSweepDAXClusters(region string) error {
 	return nil
 }
 
+func TestAccAWSDAXCluster_importBasic(t *testing.T) {
+	resourceName := "aws_dax_cluster.test"
+	rString := acctest.RandString(10)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDAXClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDAXClusterConfig(rString),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSDAXCluster_basic(t *testing.T) {
 	var dc dax.Cluster
 	rString := acctest.RandString(10)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDAXClusterDestroy,
@@ -114,7 +136,7 @@ func TestAccAWSDAXCluster_basic(t *testing.T) {
 func TestAccAWSDAXCluster_resize(t *testing.T) {
 	var dc dax.Cluster
 	rString := acctest.RandString(10)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDAXClusterDestroy,
@@ -150,7 +172,7 @@ func TestAccAWSDAXCluster_resize(t *testing.T) {
 func TestAccAWSDAXCluster_encryption_disabled(t *testing.T) {
 	var dc dax.Cluster
 	rString := acctest.RandString(10)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDAXClusterDestroy,
@@ -176,7 +198,7 @@ func TestAccAWSDAXCluster_encryption_disabled(t *testing.T) {
 func TestAccAWSDAXCluster_encryption_enabled(t *testing.T) {
 	var dc dax.Cluster
 	rString := acctest.RandString(10)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDAXClusterDestroy,

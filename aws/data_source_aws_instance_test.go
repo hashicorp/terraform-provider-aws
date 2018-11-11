@@ -11,7 +11,7 @@ import (
 )
 
 func TestAccAWSInstanceDataSource_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -30,7 +30,7 @@ func TestAccAWSInstanceDataSource_basic(t *testing.T) {
 
 func TestAccAWSInstanceDataSource_tags(t *testing.T) {
 	rInt := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -47,7 +47,7 @@ func TestAccAWSInstanceDataSource_tags(t *testing.T) {
 }
 
 func TestAccAWSInstanceDataSource_AzUserData(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -66,7 +66,7 @@ func TestAccAWSInstanceDataSource_AzUserData(t *testing.T) {
 }
 
 func TestAccAWSInstanceDataSource_gp2IopsDevice(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -86,7 +86,7 @@ func TestAccAWSInstanceDataSource_gp2IopsDevice(t *testing.T) {
 }
 
 func TestAccAWSInstanceDataSource_blockDevices(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -107,7 +107,7 @@ func TestAccAWSInstanceDataSource_blockDevices(t *testing.T) {
 }
 
 func TestAccAWSInstanceDataSource_rootInstanceStore(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -126,7 +126,7 @@ func TestAccAWSInstanceDataSource_rootInstanceStore(t *testing.T) {
 }
 
 func TestAccAWSInstanceDataSource_privateIP(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -144,7 +144,7 @@ func TestAccAWSInstanceDataSource_privateIP(t *testing.T) {
 
 func TestAccAWSInstanceDataSource_keyPair(t *testing.T) {
 	rName := fmt.Sprintf("tf-test-key-%d", acctest.RandInt())
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -162,7 +162,7 @@ func TestAccAWSInstanceDataSource_keyPair(t *testing.T) {
 }
 
 func TestAccAWSInstanceDataSource_VPC(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -183,7 +183,7 @@ func TestAccAWSInstanceDataSource_VPC(t *testing.T) {
 func TestAccAWSInstanceDataSource_PlacementGroup(t *testing.T) {
 	rStr := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -199,7 +199,7 @@ func TestAccAWSInstanceDataSource_PlacementGroup(t *testing.T) {
 
 func TestAccAWSInstanceDataSource_SecurityGroups(t *testing.T) {
 	rInt := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -218,7 +218,7 @@ func TestAccAWSInstanceDataSource_SecurityGroups(t *testing.T) {
 }
 
 func TestAccAWSInstanceDataSource_VPCSecurityGroups(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -238,7 +238,7 @@ func TestAccAWSInstanceDataSource_VPCSecurityGroups(t *testing.T) {
 func TestAccAWSInstanceDataSource_getPasswordData_trueToFalse(t *testing.T) {
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -263,7 +263,7 @@ func TestAccAWSInstanceDataSource_getPasswordData_trueToFalse(t *testing.T) {
 func TestAccAWSInstanceDataSource_getPasswordData_falseToTrue(t *testing.T) {
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -286,7 +286,7 @@ func TestAccAWSInstanceDataSource_getPasswordData_falseToTrue(t *testing.T) {
 }
 
 func TestAccAWSInstanceDataSource_creditSpecification(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{

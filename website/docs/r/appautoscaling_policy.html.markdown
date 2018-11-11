@@ -54,11 +54,11 @@ resource "aws_appautoscaling_target" "ecs_target" {
 }
 
 resource "aws_appautoscaling_policy" "ecs_policy" {
-  name                    = "scale-down"
-  policy_type             = "StepScaling"
-  resource_id             = "service/clusterName/serviceName"
-  scalable_dimension      = "ecs:service:DesiredCount"
-  service_namespace       = "ecs"
+  name               = "scale-down"
+  policy_type        = "StepScaling"
+  resource_id        = "service/clusterName/serviceName"
+  scalable_dimension = "ecs:service:DesiredCount"
+  service_namespace  = "ecs"
 
   step_scaling_policy_configuration {
     adjustment_type         = "ChangeInCapacity"
@@ -79,10 +79,10 @@ resource "aws_appautoscaling_policy" "ecs_policy" {
 
 ```hcl
 resource "aws_ecs_service" "ecs_service" {
-  name = "serviceName"
-  cluster = "clusterName"
+  name            = "serviceName"
+  cluster         = "clusterName"
   task_definition = "taskDefinitionFamily:1"
-  desired_count = 2
+  desired_count   = 2
 
   lifecycle {
     ignore_changes = ["desired_count"]
@@ -112,8 +112,9 @@ resource "aws_appautoscaling_policy" "replicas" {
     predefined_metric_specification {
       predefined_metric_type = "RDSReaderAverageCPUUtilization"
     }
-    target_value = 75
-    scale_in_cooldown = 300
+
+    target_value       = 75
+    scale_in_cooldown  = 300
     scale_out_cooldown = 300
   }
 }
@@ -142,16 +143,17 @@ The following arguments are supported:
 * `step_adjustment` - (Optional) A set of adjustments that manage scaling. These have the following structure:
 
   ```hcl
-  step_adjustment {
-    metric_interval_lower_bound = 1.0
-    metric_interval_upper_bound = 2.0
-    scaling_adjustment = -1
-  }
-  step_adjustment {
-    metric_interval_lower_bound = 2.0
-    metric_interval_upper_bound = 3.0
-    scaling_adjustment = 1
-  }
+step_adjustment {
+  metric_interval_lower_bound = 1.0
+  metric_interval_upper_bound = 2.0
+  scaling_adjustment          = -1
+}
+
+step_adjustment {
+  metric_interval_lower_bound = 2.0
+  metric_interval_upper_bound = 3.0
+  scaling_adjustment          = 1
+}
   ```
 
   * `metric_interval_lower_bound` - (Optional) The lower bound for the difference between the alarm threshold and the CloudWatch metric. Without a value, AWS will treat this bound as negative infinity.

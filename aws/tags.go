@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"fmt"
 	"log"
 	"regexp"
 	"strings"
@@ -11,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/elbv2"
+	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 )
@@ -188,15 +190,18 @@ func diffTags(oldTags, newTags []*ec2.Tag) ([]*ec2.Tag, []*ec2.Tag) {
 	// First, we're creating everything we have
 	create := make(map[string]interface{})
 	for _, t := range newTags {
-		create[*t.Key] = *t.Value
+		create[aws.StringValue(t.Key)] = aws.StringValue(t.Value)
 	}
 
 	// Build the list of what to remove
 	var remove []*ec2.Tag
 	for _, t := range oldTags {
-		old, ok := create[*t.Key]
-		if !ok || old != *t.Value {
+		old, ok := create[aws.StringValue(t.Key)]
+		if !ok || old != aws.StringValue(t.Value) {
 			remove = append(remove, t)
+		} else if ok {
+			// already present so remove from new
+			delete(create, aws.StringValue(t.Key))
 		}
 	}
 
@@ -400,4 +405,24 @@ func diffTagsDynamoDb(oldTags, newTags []*dynamodb.Tag) ([]*dynamodb.Tag, []*str
 		}
 	}
 	return tagsFromMapDynamoDb(create), remove
+}
+
+// tagsMapToHash returns a stable hash value for a raw tags map.
+// The returned value map be negative (i.e. not suitable for a 'Set' function).
+func tagsMapToHash(tags map[string]interface{}) int {
+	total := 0
+	for k, v := range tags {
+		total = total ^ hashcode.String(fmt.Sprintf("%s-%s", k, v))
+	}
+	return total
+}
+
+// tagsMapToRaw converts a tags map to its "raw" type.
+func tagsMapToRaw(m map[string]string) map[string]interface{} {
+	raw := make(map[string]interface{})
+	for k, v := range m {
+		raw[k] = v
+	}
+
+	return raw
 }

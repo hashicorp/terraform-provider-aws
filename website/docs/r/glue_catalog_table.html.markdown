@@ -14,7 +14,7 @@ Provides a Glue Catalog Table Resource. You can refer to the [Glue Developer Gui
 
 ```hcl
 resource "aws_glue_catalog_table" "aws_glue_catalog_table" {
-  name = "MyCatalogTable"
+  name          = "MyCatalogTable"
   database_name = "MyCatalogDatabase"
 }
 ```
@@ -60,8 +60,8 @@ The following arguments are supported:
 ##### ser_de_info
 
 * `name` - (Optional) Name of the SerDe.
-* `parameters` - (Optional) Usually the class that implements the SerDe. An example is: org.apache.hadoop.hive.serde2.columnar.ColumnarSerDe.
-* `serialization_library` - (Optional) A list of initialization parameters for the SerDe, in key-value form.
+* `parameters` - (Optional) A map of initialization parameters for the SerDe, in key-value form.
+* `serialization_library` - (Optional) Usually the class that implements the SerDe. An example is: org.apache.hadoop.hive.serde2.columnar.ColumnarSerDe.
 
 ##### sort_column
 

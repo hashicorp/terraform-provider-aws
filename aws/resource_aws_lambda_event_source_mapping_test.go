@@ -29,7 +29,7 @@ func TestAccAWSLambdaEventSourceMapping_kinesis_basic(t *testing.T) {
 	uFuncName := fmt.Sprintf("tf_acc_lambda_esm_basic_updated_%s", rString)
 	uFuncArnRe := regexp.MustCompile(":" + uFuncName + "$")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
@@ -72,7 +72,7 @@ func TestAccAWSLambdaEventSourceMapping_kinesis_removeBatchSize(t *testing.T) {
 	funcName := fmt.Sprintf("tf_acc_lambda_esm_basic_%s", rString)
 	uFuncName := fmt.Sprintf("tf_acc_lambda_esm_basic_updated_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
@@ -111,7 +111,7 @@ func TestAccAWSLambdaEventSourceMapping_sqs_basic(t *testing.T) {
 	uFuncName := fmt.Sprintf("tf_acc_lambda_sqs_basic_updated_%s", rString)
 	uFuncArnRe := regexp.MustCompile(":" + uFuncName + "$")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
@@ -152,7 +152,7 @@ func TestAccAWSLambdaEventSourceMapping_sqs_withFunctionName(t *testing.T) {
 	funcName := fmt.Sprintf("tf_acc_lambda_sqs_basic_%s", rString)
 	funcArnRe := regexp.MustCompile(":" + funcName + "$")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
@@ -182,7 +182,7 @@ func TestAccAWSLambdaEventSourceMapping_kinesis_import(t *testing.T) {
 	funcName := fmt.Sprintf("tf_acc_lambda_esm_import_%s", rString)
 	uFuncName := fmt.Sprintf("tf_acc_lambda_esm_import_updated_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
@@ -212,7 +212,7 @@ func TestAccAWSLambdaEventSourceMapping_kinesis_disappears(t *testing.T) {
 	funcName := fmt.Sprintf("tf_acc_lambda_esm_import_%s", rString)
 	uFuncName := fmt.Sprintf("tf_acc_lambda_esm_import_updated_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
@@ -240,7 +240,7 @@ func TestAccAWSLambdaEventSourceMapping_sqsDisappears(t *testing.T) {
 	funcName := fmt.Sprintf("tf_acc_lambda_sqs_import_%s", rString)
 	uFuncName := fmt.Sprintf("tf_acc_lambda_sqs_import_updated_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
@@ -268,7 +268,7 @@ func TestAccAWSLambdaEventSourceMapping_changesInEnabledAreDetected(t *testing.T
 	funcName := fmt.Sprintf("tf_acc_lambda_sqs_import_%s", rString)
 	uFuncName := fmt.Sprintf("tf_acc_lambda_sqs_import_updated_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{

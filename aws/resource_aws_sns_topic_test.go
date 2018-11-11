@@ -14,10 +14,32 @@ import (
 	"github.com/jen20/awspolicyequivalence"
 )
 
+func TestAccAWSSNSTopic_importBasic(t *testing.T) {
+	resourceName := "aws_sns_topic.test_topic"
+	rName := acctest.RandString(10)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSNSTopicDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSNSTopicConfig_withName(rName),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSSNSTopic_basic(t *testing.T) {
 	attributes := make(map[string]string)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_sns_topic.test_topic",
 		Providers:     testAccProviders,
@@ -38,7 +60,7 @@ func TestAccAWSSNSTopic_name(t *testing.T) {
 
 	rName := acctest.RandString(10)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_sns_topic.test_topic",
 		Providers:     testAccProviders,
@@ -59,7 +81,7 @@ func TestAccAWSSNSTopic_namePrefix(t *testing.T) {
 
 	startsWithPrefix := regexp.MustCompile("^terraform-test-topic-")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_sns_topic.test_topic",
 		Providers:     testAccProviders,
@@ -81,7 +103,7 @@ func TestAccAWSSNSTopic_policy(t *testing.T) {
 
 	rName := acctest.RandString(10)
 	expectedPolicy := `{"Statement":[{"Sid":"Stmt1445931846145","Effect":"Allow","Principal":{"AWS":"*"},"Action":"sns:Publish","Resource":"arn:aws:sns:us-west-2::example"}],"Version":"2012-10-17","Id":"Policy1445931846145"}`
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_sns_topic.test_topic",
 		Providers:     testAccProviders,
@@ -102,7 +124,7 @@ func TestAccAWSSNSTopic_withIAMRole(t *testing.T) {
 	attributes := make(map[string]string)
 
 	rName := acctest.RandString(10)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_sns_topic.test_topic",
 		Providers:     testAccProviders,
@@ -120,7 +142,7 @@ func TestAccAWSSNSTopic_withIAMRole(t *testing.T) {
 
 func TestAccAWSSNSTopic_withFakeIAMRole(t *testing.T) {
 	rName := acctest.RandString(10)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_sns_topic.test_topic",
 		Providers:     testAccProviders,
@@ -139,7 +161,7 @@ func TestAccAWSSNSTopic_withDeliveryPolicy(t *testing.T) {
 
 	rName := acctest.RandString(10)
 	expectedPolicy := `{"http":{"defaultHealthyRetryPolicy": {"minDelayTarget": 20,"maxDelayTarget": 20,"numMaxDelayRetries": 0,"numRetries": 3,"numNoDelayRetries": 0,"numMinDelayRetries": 0,"backoffFunction": "linear"},"disableSubscriptionOverrides": false}}`
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_sns_topic.test_topic",
 		Providers:     testAccProviders,
@@ -176,7 +198,7 @@ func TestAccAWSSNSTopic_deliveryStatus(t *testing.T) {
 		"SQSSuccessFeedbackSampleRate":         regexp.MustCompile(`^70$`),
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_sns_topic.test_topic",
 		Providers:     testAccProviders,

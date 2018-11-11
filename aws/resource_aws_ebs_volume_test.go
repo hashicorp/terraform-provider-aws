@@ -13,9 +13,29 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestAccAWSEBSVolume_importBasic(t *testing.T) {
+	resourceName := "aws_ebs_volume.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsEbsVolumeConfig,
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSEBSVolume_basic(t *testing.T) {
 	var v ec2.Volume
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_ebs_volume.test",
 		Providers:     testAccProviders,
@@ -33,7 +53,7 @@ func TestAccAWSEBSVolume_basic(t *testing.T) {
 
 func TestAccAWSEBSVolume_updateAttachedEbsVolume(t *testing.T) {
 	var v ec2.Volume
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_ebs_volume.test",
 		Providers:     testAccProviders,
@@ -58,7 +78,7 @@ func TestAccAWSEBSVolume_updateAttachedEbsVolume(t *testing.T) {
 
 func TestAccAWSEBSVolume_updateSize(t *testing.T) {
 	var v ec2.Volume
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_ebs_volume.test",
 		Providers:     testAccProviders,
@@ -83,7 +103,7 @@ func TestAccAWSEBSVolume_updateSize(t *testing.T) {
 
 func TestAccAWSEBSVolume_updateType(t *testing.T) {
 	var v ec2.Volume
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_ebs_volume.test",
 		Providers:     testAccProviders,
@@ -108,7 +128,7 @@ func TestAccAWSEBSVolume_updateType(t *testing.T) {
 
 func TestAccAWSEBSVolume_updateIops(t *testing.T) {
 	var v ec2.Volume
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_ebs_volume.test",
 		Providers:     testAccProviders,
@@ -137,7 +157,7 @@ func TestAccAWSEBSVolume_kmsKey(t *testing.T) {
 	config := fmt.Sprintf(testAccAwsEbsVolumeConfigWithKmsKey, ri)
 	keyRegex := regexp.MustCompile("^arn:aws[\\w-]*:([a-zA-Z0-9\\-])+:([a-z-]+-\\d{1})?:(\\d{12})?:(.*)$")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_ebs_volume.test",
 		Providers:     testAccProviders,
@@ -156,7 +176,7 @@ func TestAccAWSEBSVolume_kmsKey(t *testing.T) {
 
 func TestAccAWSEBSVolume_NoIops(t *testing.T) {
 	var v ec2.Volume
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -172,7 +192,7 @@ func TestAccAWSEBSVolume_NoIops(t *testing.T) {
 
 func TestAccAWSEBSVolume_withTags(t *testing.T) {
 	var v ec2.Volume
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_ebs_volume.tags_test",
 		Providers:     testAccProviders,

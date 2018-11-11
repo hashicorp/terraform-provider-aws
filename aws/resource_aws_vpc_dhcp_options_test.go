@@ -11,10 +11,30 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestAccAWSDHCPOptions_importBasic(t *testing.T) {
+	resourceName := "aws_vpc_dhcp_options.foo"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDHCPOptionsConfig,
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSDHCPOptions_basic(t *testing.T) {
 	var d ec2.DhcpOptions
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDHCPOptionsDestroy,
@@ -39,7 +59,7 @@ func TestAccAWSDHCPOptions_basic(t *testing.T) {
 func TestAccAWSDHCPOptions_deleteOptions(t *testing.T) {
 	var d ec2.DhcpOptions
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDHCPOptionsDestroy,

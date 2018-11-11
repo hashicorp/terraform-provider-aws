@@ -10,6 +10,7 @@ description: |-
 
 Attaches a Managed IAM Policy to an IAM user
 
+~> **NOTE:** The usage of this resource conflicts with the `aws_iam_policy_attachment` resource and will permanently show a difference if both are defined.
 
 ## Example Usage
 
@@ -21,7 +22,7 @@ resource "aws_iam_user" "user" {
 resource "aws_iam_policy" "policy" {
     name        = "test-policy"
     description = "A test policy"
-    policy      = # omitted
+    policy      =  # omitted
 }
 
 resource "aws_iam_user_policy_attachment" "test-attach" {
@@ -34,5 +35,5 @@ resource "aws_iam_user_policy_attachment" "test-attach" {
 
 The following arguments are supported:
 
-* `user`		(Required) - The user the policy should be applied to
-* `policy_arn`	(Required) - The ARN of the policy you want to apply
+* `user`        (Required) - The user the policy should be applied to
+* `policy_arn`  (Required) - The ARN of the policy you want to apply

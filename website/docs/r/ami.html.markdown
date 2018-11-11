@@ -24,15 +24,15 @@ it's better to use `aws_ami_launch_permission` instead.
 # an EBS volume populated from a snapshot. It is assumed that such a snapshot
 # already exists with the id "snap-xxxxxxxx".
 resource "aws_ami" "example" {
-    name = "terraform-example"
-    virtualization_type = "hvm"
-    root_device_name = "/dev/xvda"
+  name                = "terraform-example"
+  virtualization_type = "hvm"
+  root_device_name    = "/dev/xvda"
 
-    ebs_block_device {
-        device_name = "/dev/xvda"
-        snapshot_id = "snap-xxxxxxxx"
-        volume_size = 8
-    }
+  ebs_block_device {
+    device_name = "/dev/xvda"
+    snapshot_id = "snap-xxxxxxxx"
+    volume_size = 8
+  }
 }
 ```
 
@@ -109,3 +109,11 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the created AMI.
 * `root_snapshot_id` - The Snapshot ID for the root volume (for EBS-backed AMIs)
+
+## Import
+
+`aws_ami` can be imported using the ID of the AMI, e.g.
+
+```
+$ terraform import aws_ami.example ami-12345678
+```

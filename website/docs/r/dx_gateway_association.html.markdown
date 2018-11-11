@@ -14,7 +14,7 @@ Associates a Direct Connect Gateway with a VGW.
 
 ```hcl
 resource "aws_dx_gateway" "example" {
-  name = "example"
+  name            = "example"
   amazon_side_asn = "64512"
 }
 
@@ -27,7 +27,7 @@ resource "aws_vpn_gateway" "example" {
 }
 
 resource "aws_dx_gateway_association" "example" {
-  dx_gateway_id = "${aws_dx_gateway.example.id}"
+  dx_gateway_id  = "${aws_dx_gateway.example.id}"
   vpn_gateway_id = "${aws_vpn_gateway.example.id}"
 }
 ```

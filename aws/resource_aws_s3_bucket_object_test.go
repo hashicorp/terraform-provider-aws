@@ -31,7 +31,7 @@ func TestAccAWSS3BucketObject_source(t *testing.T) {
 	}
 	var obj s3.GetObjectOutput
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
@@ -48,7 +48,7 @@ func TestAccAWSS3BucketObject_content(t *testing.T) {
 	rInt := acctest.RandInt()
 	var obj s3.GetObjectOutput
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
@@ -81,7 +81,7 @@ func TestAccAWSS3BucketObject_contentBase64(t *testing.T) {
 	rInt := acctest.RandInt()
 	var obj s3.GetObjectOutput
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
@@ -126,7 +126,7 @@ func TestAccAWSS3BucketObject_withContentCharacteristics(t *testing.T) {
 
 	var obj s3.GetObjectOutput
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
@@ -159,7 +159,7 @@ func TestAccAWSS3BucketObject_updates(t *testing.T) {
 	}
 	var obj s3.GetObjectOutput
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
@@ -203,7 +203,7 @@ func TestAccAWSS3BucketObject_updatesWithVersioning(t *testing.T) {
 
 	var originalObj, modifiedObj s3.GetObjectOutput
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
@@ -227,10 +227,27 @@ func TestAccAWSS3BucketObject_updatesWithVersioning(t *testing.T) {
 					testAccCheckAWSS3BucketObjectExists("aws_s3_bucket_object.object", &modifiedObj),
 					resource.TestCheckResourceAttr("aws_s3_bucket_object.object", "etag", "00b8c73b1b50e7cc932362c7225b8e29"),
 					testAccCheckAWSS3BucketObjectVersionIdDiffers(&originalObj, &modifiedObj),
+					testAccCheckResourceAttrMatchesVersionId("data.template_file.object_version", "rendered", &modifiedObj),
 				),
 			},
 		},
 	})
+}
+
+func testAccCheckResourceAttrMatchesVersionId(resourceName string, attribute string, object *s3.GetObjectOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("Not Found: %s", resourceName)
+		}
+
+		attrValue := aws.String(rs.Primary.Attributes[attribute])
+		if *attrValue != *object.VersionId {
+			return fmt.Errorf("Expected Version IDs to be the same, but they were different (%s vs %s)", *attrValue, *object.VersionId)
+		}
+
+		return nil
+	}
 }
 
 func testAccCheckAWSS3BucketObjectVersionIdDiffers(first, second *s3.GetObjectOutput) resource.TestCheckFunc {
@@ -303,7 +320,7 @@ func TestAccAWSS3BucketObject_kms(t *testing.T) {
 	rInt := acctest.RandInt()
 	var obj s3.GetObjectOutput
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
@@ -333,7 +350,7 @@ func TestAccAWSS3BucketObject_sse(t *testing.T) {
 	rInt := acctest.RandInt()
 	var obj s3.GetObjectOutput
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
@@ -358,7 +375,7 @@ func TestAccAWSS3BucketObject_acl(t *testing.T) {
 	rInt := acctest.RandInt()
 	var obj s3.GetObjectOutput
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
@@ -428,7 +445,7 @@ func TestAccAWSS3BucketObject_storageClass(t *testing.T) {
 	rInt := acctest.RandInt()
 	var obj s3.GetObjectOutput
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
@@ -530,7 +547,7 @@ func TestAccAWSS3BucketObject_tags(t *testing.T) {
 	rInt := acctest.RandInt()
 	var obj s3.GetObjectOutput
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
@@ -633,6 +650,14 @@ resource "aws_s3_bucket_object" "object" {
 	key = "updateable-key"
 	source = "%s"
 	etag = "${md5(file("%s"))}"
+}
+
+data "template_file" "object_version" {
+  template = "$${object_version}"
+
+  vars {
+    object_version = "${aws_s3_bucket_object.object.version_id}"
+  }
 }
 `, randInt, source, source)
 }

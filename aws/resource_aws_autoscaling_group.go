@@ -410,7 +410,7 @@ func resourceAwsAutoscalingGroupCreate(d *schema.ResourceData, meta interface{})
 	if v, ok := d.GetOk("tag"); ok {
 		var err error
 		createOpts.Tags, err = autoscalingTagsFromMap(
-			setToMapByKey(v.(*schema.Set), "key"), resourceID)
+			setToMapByKey(v.(*schema.Set)), resourceID)
 		if err != nil {
 			return err
 		}
@@ -566,7 +566,7 @@ func resourceAwsAutoscalingGroupRead(d *schema.ResourceData, meta interface{}) e
 	var v interface{}
 
 	if v, tagOk = d.GetOk("tag"); tagOk {
-		tags := setToMapByKey(v.(*schema.Set), "key")
+		tags := setToMapByKey(v.(*schema.Set))
 		for _, t := range g.Tags {
 			if _, ok := tags[*t.Key]; ok {
 				tagList = append(tagList, t)

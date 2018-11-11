@@ -72,7 +72,7 @@ will be applied automatically to the DB instance during the maintenance window.
 Defaults to true.
 * `availability_zone` - (Optional) The AZ for the RDS instance.
 * `backup_retention_period` - (Optional) The days to retain backups for. Must be
-`1` or greater to be a source for a [Read Replica][1].
+between `0` and `35`. When creating a Read Replica the value must be greater than `0`. [See Read Replica][1].
 * `backup_window` - (Optional) The daily time range (in UTC) during which
 automated backups are created if they are enabled. Example: "09:46-10:16". Must
 not overlap with `maintenance_window`.
@@ -91,6 +91,7 @@ with read replicas, it needs to be specified only if the source database
 specifies an instance in another AWS Region. See [DBSubnetGroupName in API
 action CreateDBInstanceReadReplica](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstanceReadReplica.html)
 for additional read replica contraints.
+* `deletion_protection` - (Optional) If the DB instance should have deletion protection enabled. The database can't be deleted when this value is set to `true`. The default is `false`.
 * `domain` - (Optional) The ID of the Directory Service Active Directory domain to create the instance in.
 * `domain_iam_role_name` - (Optional, but required if domain is provided) The name of the IAM role to be used when making API calls to the Directory Service.
 * `enabled_cloudwatch_logs_exports` - (Optional) List of log types to enable for exporting to CloudWatch logs. If omitted, no logs will be exported. Valid values (depending on `engine`): `alert`, `audit`, `error`, `general`, `listener`, `slowquery`, `trace`.
@@ -195,11 +196,11 @@ Full details on the core parameters and impacts are in the API Docs: [RestoreDBI
 ```hcl
 resource "aws_db_instance" "db" {
   s3_import {
-    source_engine = "mysql"
+    source_engine         = "mysql"
     source_engine_version = "5.6"
-    bucket_name = "mybucket"
-    bucket_prefix = "backups"
-    ingestion_role = "arn:aws:iam::1234567890:role/role-xtrabackup-rds-restore"
+    bucket_name           = "mybucket"
+    bucket_prefix         = "backups"
+    ingestion_role        = "arn:aws:iam::1234567890:role/role-xtrabackup-rds-restore"
   }
 }
 ```

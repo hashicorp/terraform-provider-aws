@@ -160,6 +160,14 @@ adopted by the Default Network ACL. In order to avoid a reoccurring plan, they
 will need to be reassigned, destroyed, or added to the `subnet_ids` attribute of
 the `aws_default_network_acl` entry.
 
+As an alternative to the above, you can also specify the following lifecycle configuration in your `aws_default_network_acl` resource:
+
+```hcl
+lifecycle {
+    ignore_changes = ["subnet_ids"]
+}
+ ```
+
 ### Removing `aws_default_network_acl` from your configuration
 
 Each AWS VPC comes with a Default Network ACL that cannot be deleted. The `aws_default_network_acl`

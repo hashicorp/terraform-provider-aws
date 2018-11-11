@@ -12,7 +12,7 @@ import (
 
 func TestAccAWSEgressOnlyInternetGateway_basic(t *testing.T) {
 	var igw ec2.EgressOnlyInternetGateway
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEgressOnlyInternetGatewayDestroy,

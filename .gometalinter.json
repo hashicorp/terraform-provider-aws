@@ -1,6 +1,7 @@
 {
     "Deadline": "5m",
     "Enable": [
+        "deadcode",
         "errcheck",
         "gofmt",
         "ineffassign",
@@ -8,6 +9,8 @@
         "misspell",
         "structcheck",
         "unconvert",
+        "unparam",
+        "unused",
         "varcheck",
         "vet"
     ],

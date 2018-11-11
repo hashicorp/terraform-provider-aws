@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"os"
 	"reflect"
 	"regexp"
 	"strings"
@@ -114,7 +115,12 @@ func TestFetchRootDevice(t *testing.T) {
 		},
 	}
 
-	conn := ec2.New(session.New(nil))
+	sess, err := session.NewSession(nil)
+	if err != nil {
+		t.Errorf("Error new session: %s", err)
+	}
+
+	conn := ec2.New(sess)
 
 	for _, tc := range cases {
 		t.Run(fmt.Sprintf(tc.label), func(t *testing.T) {
@@ -132,6 +138,101 @@ func TestFetchRootDevice(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestAccAWSInstance_importBasic(t *testing.T) {
+	resourceName := "aws_instance.foo"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfigVPC,
+			},
+
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"associate_public_ip_address", "user_data"},
+			},
+		},
+	})
+}
+
+func TestAccAWSInstance_importInDefaultVpcBySgName(t *testing.T) {
+	resourceName := "aws_instance.foo"
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfigInDefaultVpcBySgName(rInt),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSInstance_importInDefaultVpcBySgId(t *testing.T) {
+	resourceName := "aws_instance.foo"
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfigInDefaultVpcBySgId(rInt),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSInstance_importInEc2Classic(t *testing.T) {
+	resourceName := "aws_instance.foo"
+	rInt := acctest.RandInt()
+
+	// EC2 Classic enabled
+	oldvar := os.Getenv("AWS_DEFAULT_REGION")
+	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
+	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfigInEc2Classic(rInt),
+			},
+
+			{
+				Config:                  testAccInstanceConfigInEc2Classic(rInt),
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"network_interface", "source_dest_check"},
+			},
+		},
+	})
 }
 
 func TestAccAWSInstance_basic(t *testing.T) {
@@ -157,7 +258,7 @@ func TestAccAWSInstance_basic(t *testing.T) {
 		}
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_instance.foo",
 		Providers:     testAccProviders,
@@ -233,7 +334,7 @@ func TestAccAWSInstance_userDataBase64(t *testing.T) {
 
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_instance.foo",
 		Providers:     testAccProviders,
@@ -275,7 +376,7 @@ func TestAccAWSInstance_GP2IopsDevice(t *testing.T) {
 		}
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
 		IDRefreshName:   "aws_instance.foo",
 		IDRefreshIgnore: []string{"ephemeral_block_device", "user_data"},
@@ -305,7 +406,7 @@ func TestAccAWSInstance_GP2IopsDevice(t *testing.T) {
 
 func TestAccAWSInstance_GP2WithIopsValue(t *testing.T) {
 	var v ec2.Instance
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
 		IDRefreshName:   "aws_instance.foo",
 		IDRefreshIgnore: []string{"ephemeral_block_device", "user_data"},
@@ -361,7 +462,7 @@ func TestAccAWSInstance_blockDevices(t *testing.T) {
 		}
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
 		IDRefreshName:   "aws_instance.foo",
 		IDRefreshIgnore: []string{"ephemeral_block_device"},
@@ -423,7 +524,7 @@ func TestAccAWSInstance_blockDevices(t *testing.T) {
 func TestAccAWSInstance_rootInstanceStore(t *testing.T) {
 	var v ec2.Instance
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_instance.foo",
 		Providers:     testAccProviders,
@@ -490,7 +591,7 @@ func TestAccAWSInstance_noAMIEphemeralDevices(t *testing.T) {
 		}
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
 		IDRefreshName:   "aws_instance.foo",
 		IDRefreshIgnore: []string{"ephemeral_block_device"},
@@ -568,7 +669,7 @@ func TestAccAWSInstance_sourceDestCheck(t *testing.T) {
 		}
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_instance.foo",
 		Providers:     testAccProviders,
@@ -622,7 +723,7 @@ func TestAccAWSInstance_disableApiTermination(t *testing.T) {
 		}
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_instance.foo",
 		Providers:     testAccProviders,
@@ -650,7 +751,7 @@ func TestAccAWSInstance_disableApiTermination(t *testing.T) {
 func TestAccAWSInstance_vpc(t *testing.T) {
 	var v ec2.Instance
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
 		IDRefreshName:   "aws_instance.foo",
 		IDRefreshIgnore: []string{"associate_public_ip_address"},
@@ -676,7 +777,7 @@ func TestAccAWSInstance_placementGroup(t *testing.T) {
 	var v ec2.Instance
 	rStr := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
 		IDRefreshName:   "aws_instance.foo",
 		IDRefreshIgnore: []string{"associate_public_ip_address"},
@@ -701,7 +802,7 @@ func TestAccAWSInstance_placementGroup(t *testing.T) {
 func TestAccAWSInstance_ipv6_supportAddressCount(t *testing.T) {
 	var v ec2.Instance
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckInstanceDestroy,
@@ -723,7 +824,7 @@ func TestAccAWSInstance_ipv6_supportAddressCount(t *testing.T) {
 
 func TestAccAWSInstance_ipv6AddressCountAndSingleAddressCausesError(t *testing.T) {
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckInstanceDestroy,
@@ -739,7 +840,7 @@ func TestAccAWSInstance_ipv6AddressCountAndSingleAddressCausesError(t *testing.T
 func TestAccAWSInstance_ipv6_supportAddressCountWithIpv4(t *testing.T) {
 	var v ec2.Instance
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckInstanceDestroy,
@@ -766,7 +867,7 @@ func TestAccAWSInstance_multipleRegions(t *testing.T) {
 	// check for the instances in each region
 	var providers []*schema.Provider
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviderFactories(&providers),
 		CheckDestroy:      testAccCheckWithProviders(testAccCheckInstanceDestroyWithProvider, &providers),
@@ -789,7 +890,7 @@ func TestAccAWSInstance_NetworkInstanceSecurityGroups(t *testing.T) {
 
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
 		IDRefreshName:   "aws_instance.foo_instance",
 		IDRefreshIgnore: []string{"associate_public_ip_address"},
@@ -812,7 +913,7 @@ func TestAccAWSInstance_NetworkInstanceRemovingAllSecurityGroups(t *testing.T) {
 
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_instance.foo_instance",
 		Providers:     testAccProviders,
@@ -850,7 +951,7 @@ func TestAccAWSInstance_NetworkInstanceVPCSecurityGroupIDs(t *testing.T) {
 
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_instance.foo_instance",
 		Providers:     testAccProviders,
@@ -874,7 +975,7 @@ func TestAccAWSInstance_NetworkInstanceVPCSecurityGroupIDs(t *testing.T) {
 func TestAccAWSInstance_tags(t *testing.T) {
 	var v ec2.Instance
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckInstanceDestroy,
@@ -903,7 +1004,7 @@ func TestAccAWSInstance_tags(t *testing.T) {
 func TestAccAWSInstance_volumeTags(t *testing.T) {
 	var v ec2.Instance
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckInstanceDestroy,
@@ -953,7 +1054,7 @@ func TestAccAWSInstance_volumeTags(t *testing.T) {
 func TestAccAWSInstance_volumeTagsComputed(t *testing.T) {
 	var v ec2.Instance
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckInstanceDestroy,
@@ -983,7 +1084,7 @@ func TestAccAWSInstance_instanceProfileChange(t *testing.T) {
 		}
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_instance.foo",
 		Providers:     testAccProviders,
@@ -1020,7 +1121,7 @@ func TestAccAWSInstance_withIamInstanceProfile(t *testing.T) {
 		}
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_instance.foo",
 		Providers:     testAccProviders,
@@ -1050,7 +1151,7 @@ func TestAccAWSInstance_privateIP(t *testing.T) {
 		}
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_instance.foo",
 		Providers:     testAccProviders,
@@ -1080,7 +1181,7 @@ func TestAccAWSInstance_associatePublicIPAndPrivateIP(t *testing.T) {
 		}
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
 		IDRefreshName:   "aws_instance.foo",
 		IDRefreshIgnore: []string{"associate_public_ip_address"},
@@ -1118,7 +1219,7 @@ func TestAccAWSInstance_keyPairCheck(t *testing.T) {
 
 	keyPairName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
 		IDRefreshName:   "aws_instance.foo",
 		IDRefreshIgnore: []string{"source_dest_check"},
@@ -1139,7 +1240,7 @@ func TestAccAWSInstance_keyPairCheck(t *testing.T) {
 func TestAccAWSInstance_rootBlockDeviceMismatch(t *testing.T) {
 	var v ec2.Instance
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckInstanceDestroy,
@@ -1168,7 +1269,7 @@ func TestAccAWSInstance_rootBlockDeviceMismatch(t *testing.T) {
 func TestAccAWSInstance_forceNewAndTagsDrift(t *testing.T) {
 	var v ec2.Instance
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_instance.foo",
 		Providers:     testAccProviders,
@@ -1196,7 +1297,7 @@ func TestAccAWSInstance_changeInstanceType(t *testing.T) {
 	var before ec2.Instance
 	var after ec2.Instance
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckInstanceDestroy,
@@ -1223,7 +1324,7 @@ func TestAccAWSInstance_primaryNetworkInterface(t *testing.T) {
 	var instance ec2.Instance
 	var ini ec2.NetworkInterface
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckInstanceDestroy,
@@ -1244,7 +1345,7 @@ func TestAccAWSInstance_primaryNetworkInterfaceSourceDestCheck(t *testing.T) {
 	var instance ec2.Instance
 	var ini ec2.NetworkInterface
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckInstanceDestroy,
@@ -1267,7 +1368,7 @@ func TestAccAWSInstance_addSecondaryInterface(t *testing.T) {
 	var iniPrimary ec2.NetworkInterface
 	var iniSecondary ec2.NetworkInterface
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckInstanceDestroy,
@@ -1297,7 +1398,7 @@ func TestAccAWSInstance_addSecurityGroupNetworkInterface(t *testing.T) {
 	var before ec2.Instance
 	var after ec2.Instance
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckInstanceDestroy,
@@ -1326,7 +1427,7 @@ func TestAccAWSInstance_associatePublic_defaultPrivate(t *testing.T) {
 	resName := "aws_instance.foo"
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckInstanceDestroy,
@@ -1349,7 +1450,7 @@ func TestAccAWSInstance_associatePublic_defaultPublic(t *testing.T) {
 	resName := "aws_instance.foo"
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckInstanceDestroy,
@@ -1372,7 +1473,7 @@ func TestAccAWSInstance_associatePublic_explicitPublic(t *testing.T) {
 	resName := "aws_instance.foo"
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckInstanceDestroy,
@@ -1395,7 +1496,7 @@ func TestAccAWSInstance_associatePublic_explicitPrivate(t *testing.T) {
 	resName := "aws_instance.foo"
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckInstanceDestroy,
@@ -1418,7 +1519,7 @@ func TestAccAWSInstance_associatePublic_overridePublic(t *testing.T) {
 	resName := "aws_instance.foo"
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckInstanceDestroy,
@@ -1441,7 +1542,7 @@ func TestAccAWSInstance_associatePublic_overridePrivate(t *testing.T) {
 	resName := "aws_instance.foo"
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckInstanceDestroy,
@@ -1463,7 +1564,7 @@ func TestAccAWSInstance_getPasswordData_falseToTrue(t *testing.T) {
 	resName := "aws_instance.foo"
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckInstanceDestroy,
@@ -1494,7 +1595,7 @@ func TestAccAWSInstance_getPasswordData_trueToFalse(t *testing.T) {
 	resName := "aws_instance.foo"
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckInstanceDestroy,
@@ -1523,14 +1624,15 @@ func TestAccAWSInstance_getPasswordData_trueToFalse(t *testing.T) {
 func TestAccAWSInstance_creditSpecification_unspecifiedDefaultsToStandard(t *testing.T) {
 	var instance ec2.Instance
 	resName := "aws_instance.foo"
+	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_creditSpecification_unspecified(acctest.RandInt()),
+				Config: testAccInstanceConfig_creditSpecification_unspecified(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resName, &instance),
 					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
@@ -1542,18 +1644,27 @@ func TestAccAWSInstance_creditSpecification_unspecifiedDefaultsToStandard(t *tes
 }
 
 func TestAccAWSInstance_creditSpecification_standardCpuCredits(t *testing.T) {
-	var instance ec2.Instance
+	var first, second ec2.Instance
 	resName := "aws_instance.foo"
+	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_creditSpecification_standardCpuCredits(acctest.RandInt()),
+				Config: testAccInstanceConfig_creditSpecification_standardCpuCredits(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resName, &instance),
+					testAccCheckInstanceExists(resName, &first),
+					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resName, "credit_specification.0.cpu_credits", "standard"),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_creditSpecification_unspecified(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resName, &second),
 					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
 					resource.TestCheckResourceAttr(resName, "credit_specification.0.cpu_credits", "standard"),
 				),
@@ -1563,18 +1674,27 @@ func TestAccAWSInstance_creditSpecification_standardCpuCredits(t *testing.T) {
 }
 
 func TestAccAWSInstance_creditSpecification_unlimitedCpuCredits(t *testing.T) {
-	var instance ec2.Instance
+	var first, second ec2.Instance
 	resName := "aws_instance.foo"
+	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_creditSpecification_unlimitedCpuCredits(acctest.RandInt()),
+				Config: testAccInstanceConfig_creditSpecification_unlimitedCpuCredits(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resName, &instance),
+					testAccCheckInstanceExists(resName, &first),
+					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resName, "credit_specification.0.cpu_credits", "unlimited"),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_creditSpecification_unspecified(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resName, &second),
 					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
 					resource.TestCheckResourceAttr(resName, "credit_specification.0.cpu_credits", "unlimited"),
 				),
@@ -1584,57 +1704,35 @@ func TestAccAWSInstance_creditSpecification_unlimitedCpuCredits(t *testing.T) {
 }
 
 func TestAccAWSInstance_creditSpecification_updateCpuCredits(t *testing.T) {
-	var before ec2.Instance
-	var after ec2.Instance
+	var first, second, third ec2.Instance
 	resName := "aws_instance.foo"
+	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_creditSpecification_standardCpuCredits(acctest.RandInt()),
+				Config: testAccInstanceConfig_creditSpecification_standardCpuCredits(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resName, &before),
+					testAccCheckInstanceExists(resName, &first),
 					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
 					resource.TestCheckResourceAttr(resName, "credit_specification.0.cpu_credits", "standard"),
 				),
 			},
 			{
-				Config: testAccInstanceConfig_creditSpecification_unlimitedCpuCredits(acctest.RandInt()),
+				Config: testAccInstanceConfig_creditSpecification_unlimitedCpuCredits(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resName, &after),
-					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
-					resource.TestCheckResourceAttr(resName, "credit_specification.0.cpu_credits", "unlimited"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSInstance_creditSpecification_removalReturnsStandard(t *testing.T) {
-	var before ec2.Instance
-	var after ec2.Instance
-	resName := "aws_instance.foo"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckInstanceDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccInstanceConfig_creditSpecification_unlimitedCpuCredits(acctest.RandInt()),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resName, &before),
+					testAccCheckInstanceExists(resName, &second),
 					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
 					resource.TestCheckResourceAttr(resName, "credit_specification.0.cpu_credits", "unlimited"),
 				),
 			},
 			{
-				Config: testAccInstanceConfig_creditSpecification_unspecified(acctest.RandInt()),
+				Config: testAccInstanceConfig_creditSpecification_standardCpuCredits(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resName, &after),
+					testAccCheckInstanceExists(resName, &third),
 					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
 					resource.TestCheckResourceAttr(resName, "credit_specification.0.cpu_credits", "standard"),
 				),
@@ -1646,17 +1744,200 @@ func TestAccAWSInstance_creditSpecification_removalReturnsStandard(t *testing.T)
 func TestAccAWSInstance_creditSpecification_isNotAppliedToNonBurstable(t *testing.T) {
 	var instance ec2.Instance
 	resName := "aws_instance.foo"
+	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_creditSpecification_isNotAppliedToNonBurstable(acctest.RandInt()),
+				Config: testAccInstanceConfig_creditSpecification_isNotAppliedToNonBurstable(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resName, &instance),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSInstance_creditSpecificationT3_unspecifiedDefaultsToUnlimited(t *testing.T) {
+	var instance ec2.Instance
+	resName := "aws_instance.foo"
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_creditSpecification_unspecified_t3(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resName, &instance),
+					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resName, "credit_specification.0.cpu_credits", "unlimited"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSInstance_creditSpecificationT3_standardCpuCredits(t *testing.T) {
+	var first, second ec2.Instance
+	resName := "aws_instance.foo"
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_creditSpecification_standardCpuCredits_t3(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resName, &first),
+					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resName, "credit_specification.0.cpu_credits", "standard"),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_creditSpecification_unspecified_t3(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resName, &second),
+					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resName, "credit_specification.0.cpu_credits", "standard"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSInstance_creditSpecificationT3_unlimitedCpuCredits(t *testing.T) {
+	var first, second ec2.Instance
+	resName := "aws_instance.foo"
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_creditSpecification_unlimitedCpuCredits_t3(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resName, &first),
+					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resName, "credit_specification.0.cpu_credits", "unlimited"),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_creditSpecification_unspecified_t3(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resName, &second),
+					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resName, "credit_specification.0.cpu_credits", "unlimited"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSInstance_creditSpecificationT3_updateCpuCredits(t *testing.T) {
+	var first, second, third ec2.Instance
+	resName := "aws_instance.foo"
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_creditSpecification_standardCpuCredits_t3(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resName, &first),
+					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resName, "credit_specification.0.cpu_credits", "standard"),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_creditSpecification_unlimitedCpuCredits_t3(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resName, &second),
+					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resName, "credit_specification.0.cpu_credits", "unlimited"),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_creditSpecification_standardCpuCredits_t3(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resName, &third),
+					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resName, "credit_specification.0.cpu_credits", "standard"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSInstance_creditSpecification_standardCpuCredits_t2Tot3Taint(t *testing.T) {
+	var before, after ec2.Instance
+	resName := "aws_instance.foo"
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_creditSpecification_standardCpuCredits(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resName, &before),
+					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resName, "credit_specification.0.cpu_credits", "standard"),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_creditSpecification_standardCpuCredits_t3(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resName, &after),
+					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resName, "credit_specification.0.cpu_credits", "standard"),
+				),
+				Taint: []string{resName},
+			},
+		},
+	})
+}
+
+func TestAccAWSInstance_creditSpecification_unlimitedCpuCredits_t2Tot3Taint(t *testing.T) {
+	var before, after ec2.Instance
+	resName := "aws_instance.foo"
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_creditSpecification_unlimitedCpuCredits(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resName, &before),
+					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resName, "credit_specification.0.cpu_credits", "unlimited"),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_creditSpecification_unlimitedCpuCredits_t3(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resName, &after),
+					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resName, "credit_specification.0.cpu_credits", "unlimited"),
+				),
+				Taint: []string{resName},
 			},
 		},
 	})
@@ -1667,7 +1948,7 @@ func TestAccAWSInstance_UserData_EmptyStringToUnspecified(t *testing.T) {
 	rInt := acctest.RandInt()
 	resourceName := "aws_instance.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckInstanceDestroy,
@@ -1693,7 +1974,7 @@ func TestAccAWSInstance_UserData_UnspecifiedToEmptyString(t *testing.T) {
 	rInt := acctest.RandInt()
 	resourceName := "aws_instance.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckInstanceDestroy,
@@ -1857,6 +2138,113 @@ func driftTags(instance *ec2.Instance) resource.TestCheckFunc {
 		})
 		return err
 	}
+}
+
+func testAccInstanceConfigInDefaultVpcBySgName(rInt int) string {
+	return fmt.Sprintf(`
+data "aws_ami" "ubuntu" {
+  most_recent = true
+
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd/ubuntu-trusty-14.04-amd64-server-*"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+
+  owners = ["099720109477"] # Canonical
+}
+
+data "aws_vpc" "default" {
+	default = true
+}
+
+resource "aws_security_group" "sg" {
+  name = "tf_acc_test_%d"
+  description = "Test security group"
+	vpc_id = "${data.aws_vpc.default.id}"
+}
+
+resource "aws_instance" "foo" {
+  ami             = "${data.aws_ami.ubuntu.id}"
+  instance_type   = "t2.micro"
+  security_groups = ["${aws_security_group.sg.name}"]
+}
+`, rInt)
+}
+
+func testAccInstanceConfigInDefaultVpcBySgId(rInt int) string {
+	return fmt.Sprintf(`
+data "aws_ami" "ubuntu" {
+  most_recent = true
+
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd/ubuntu-trusty-14.04-amd64-server-*"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+
+  owners = ["099720109477"] # Canonical
+}
+
+data "aws_vpc" "default" {
+	default = true
+}
+
+resource "aws_security_group" "sg" {
+  name = "tf_acc_test_%d"
+  description = "Test security group"
+	vpc_id = "${data.aws_vpc.default.id}"
+}
+
+resource "aws_instance" "foo" {
+  ami             = "${data.aws_ami.ubuntu.id}"
+  instance_type   = "t2.micro"
+  vpc_security_group_ids = ["${aws_security_group.sg.id}"]
+}
+`, rInt)
+}
+
+func testAccInstanceConfigInEc2Classic(rInt int) string {
+	return fmt.Sprintf(`
+provider "aws" {
+  region = "us-east-1"
+}
+
+data "aws_ami" "ubuntu" {
+  most_recent = true
+
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/ubuntu-trusty-14.04-amd64-server-*"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["paravirtual"]
+  }
+
+  owners = ["099720109477"] # Canonical
+}
+
+resource "aws_security_group" "sg" {
+  name = "tf_acc_test_%d"
+  description = "Test security group"
+}
+
+resource "aws_instance" "foo" {
+  ami             = "${data.aws_ami.ubuntu.id}"
+  instance_type   = "m3.medium"
+  security_groups = ["${aws_security_group.sg.name}"]
+}
+`, rInt)
 }
 
 func testAccInstanceConfig_pre(rInt int) string {
@@ -3343,6 +3731,29 @@ resource "aws_instance" "foo" {
 `, rInt)
 }
 
+func testAccInstanceConfig_creditSpecification_unspecified_t3(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "my_vpc" {
+  cidr_block = "172.16.0.0/16"
+  tags {
+    Name = "tf-acctest-%d"
+  }
+}
+
+resource "aws_subnet" "my_subnet" {
+  vpc_id = "${aws_vpc.my_vpc.id}"
+  cidr_block = "172.16.20.0/24"
+  availability_zone = "us-west-2a"
+}
+
+resource "aws_instance" "foo" {
+  ami = "ami-51537029" # us-west-2
+  instance_type = "t3.micro"
+  subnet_id = "${aws_subnet.my_subnet.id}"
+}
+`, rInt)
+}
+
 func testAccInstanceConfig_creditSpecification_standardCpuCredits(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "my_vpc" {
@@ -3369,6 +3780,32 @@ resource "aws_instance" "foo" {
 `, rInt)
 }
 
+func testAccInstanceConfig_creditSpecification_standardCpuCredits_t3(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "my_vpc" {
+  cidr_block = "172.16.0.0/16"
+  tags {
+    Name = "tf-acctest-%d"
+  }
+}
+
+resource "aws_subnet" "my_subnet" {
+  vpc_id = "${aws_vpc.my_vpc.id}"
+  cidr_block = "172.16.20.0/24"
+  availability_zone = "us-west-2a"
+}
+
+resource "aws_instance" "foo" {
+  ami = "ami-51537029" # us-west-2
+  instance_type = "t3.micro"
+  subnet_id = "${aws_subnet.my_subnet.id}"
+  credit_specification {
+    cpu_credits = "standard"
+  }
+}
+`, rInt)
+}
+
 func testAccInstanceConfig_creditSpecification_unlimitedCpuCredits(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "my_vpc" {
@@ -3387,6 +3824,32 @@ resource "aws_subnet" "my_subnet" {
 resource "aws_instance" "foo" {
   ami = "ami-22b9a343" # us-west-2
   instance_type = "t2.micro"
+  subnet_id = "${aws_subnet.my_subnet.id}"
+  credit_specification {
+    cpu_credits = "unlimited"
+  }
+}
+`, rInt)
+}
+
+func testAccInstanceConfig_creditSpecification_unlimitedCpuCredits_t3(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "my_vpc" {
+  cidr_block = "172.16.0.0/16"
+  tags {
+    Name = "tf-acctest-%d"
+  }
+}
+
+resource "aws_subnet" "my_subnet" {
+  vpc_id = "${aws_vpc.my_vpc.id}"
+  cidr_block = "172.16.20.0/24"
+  availability_zone = "us-west-2a"
+}
+
+resource "aws_instance" "foo" {
+  ami = "ami-51537029" # us-west-2
+  instance_type = "t3.micro"
   subnet_id = "${aws_subnet.my_subnet.id}"
   credit_specification {
     cpu_credits = "unlimited"

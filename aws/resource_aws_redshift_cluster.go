@@ -787,31 +787,38 @@ func resourceAwsRedshiftClusterUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	deprecatedHasChange := (d.HasChange("enable_logging") || d.HasChange("bucket_name") || d.HasChange("s3_key_prefix"))
-	if d.HasChange("logging") || deprecatedHasChange {
-		var loggingErr error
-
-		logging, ok := d.GetOk("logging.0.enable")
-		_, deprecatedOk := d.GetOk("enable_logging")
-
-		if (ok && logging.(bool)) || deprecatedOk {
+	if d.HasChange("logging") {
+		if loggingEnabled, ok := d.GetOk("logging.0.enable"); ok && loggingEnabled.(bool) {
 			log.Printf("[INFO] Enabling Logging for Redshift Cluster %q", d.Id())
-			loggingErr = enableRedshiftClusterLogging(d, conn)
-			if loggingErr != nil {
-				return loggingErr
+			err := enableRedshiftClusterLogging(d, conn)
+			if err != nil {
+				return err
 			}
 		} else {
 			log.Printf("[INFO] Disabling Logging for Redshift Cluster %q", d.Id())
-			_, loggingErr = conn.DisableLogging(&redshift.DisableLoggingInput{
+			_, err := conn.DisableLogging(&redshift.DisableLoggingInput{
 				ClusterIdentifier: aws.String(d.Id()),
 			})
-			if loggingErr != nil {
-				return loggingErr
+			if err != nil {
+				return err
 			}
 		}
-
-		d.SetPartial("enable_logging")
-		d.SetPartial("logging")
+	} else if d.HasChange("enable_logging") || d.HasChange("bucket_name") || d.HasChange("s3_key_prefix") {
+		if enableLogging, ok := d.GetOk("enable_logging"); ok && enableLogging.(bool) {
+			log.Printf("[INFO] Enabling Logging for Redshift Cluster %q", d.Id())
+			err := enableRedshiftClusterLogging(d, conn)
+			if err != nil {
+				return err
+			}
+		} else {
+			log.Printf("[INFO] Disabling Logging for Redshift Cluster %q", d.Id())
+			_, err := conn.DisableLogging(&redshift.DisableLoggingInput{
+				ClusterIdentifier: aws.String(d.Id()),
+			})
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	d.Partial(false)
@@ -895,7 +902,7 @@ func resourceAwsRedshiftClusterDelete(d *schema.ResourceData, meta interface{}) 
 	}
 
 	log.Printf("[DEBUG] Deleting Redshift Cluster: %s", deleteOpts)
-	_, err := deleteAwsRedshiftCluster(&deleteOpts, conn)
+	err := deleteAwsRedshiftCluster(&deleteOpts, conn)
 	if err != nil {
 		return err
 	}
@@ -905,7 +912,7 @@ func resourceAwsRedshiftClusterDelete(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func deleteAwsRedshiftCluster(opts *redshift.DeleteClusterInput, conn *redshift.Redshift) (interface{}, error) {
+func deleteAwsRedshiftCluster(opts *redshift.DeleteClusterInput, conn *redshift.Redshift) error {
 	id := *opts.ClusterIdentifier
 	log.Printf("[INFO] Deleting Redshift Cluster %q", id)
 	err := resource.Retry(15*time.Minute, func() *resource.RetryError {
@@ -917,8 +924,7 @@ func deleteAwsRedshiftCluster(opts *redshift.DeleteClusterInput, conn *redshift.
 		return resource.NonRetryableError(err)
 	})
 	if err != nil {
-		return nil, fmt.Errorf("Error deleting Redshift Cluster (%s): %s",
-			id, err)
+		return fmt.Errorf("Error deleting Redshift Cluster (%s): %s", id, err)
 	}
 
 	stateConf := &resource.StateChangeConf{
@@ -929,7 +935,9 @@ func deleteAwsRedshiftCluster(opts *redshift.DeleteClusterInput, conn *redshift.
 		MinTimeout: 5 * time.Second,
 	}
 
-	return stateConf.WaitForState()
+	_, err = stateConf.WaitForState()
+
+	return err
 }
 
 func resourceAwsRedshiftClusterStateRefreshFunc(id string, conn *redshift.Redshift) resource.StateRefreshFunc {

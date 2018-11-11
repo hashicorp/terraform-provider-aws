@@ -11,7 +11,7 @@ import (
 func TestAccAWSDataElasticacheCluster_basic(t *testing.T) {
 	rInt := acctest.RandInt()
 	rString := acctest.RandString(10)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{

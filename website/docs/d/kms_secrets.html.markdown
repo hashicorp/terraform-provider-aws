@@ -41,9 +41,7 @@ data "aws_kms_secrets" "example" {
   secret {
     # ... potentially other configuration ...
     name    = "master_username"
-    payload = "AQECAHgaPa0J8WadplGCqqVAr4HNvDaFSQ+NaiwIBhmm6qDSFwAAAGIwYAYJKoZI
-               hvcNAQcGoFMwUQIBADBMBgkqhkiG9w0BBwEwHgYJYIZIAWUDBAEuMBEEDI+LoLdvYv8l41OhAAIBEIAf
-               x49FFJCLeYrkfMfAw6XlnxP23MmDBdqP8dPp28OoAQ=="
+    payload =  "AQECAHgaPa0J8WadplGCqqVAr4HNvDaFSQNaiwIBhmm6qDSFwAAAGIwYAYJKoZIhvcNAQcGoFMwUQIBADBMBgkqhkiG9w0BBwEwHgYJYIZIAWUDBAEuMBEEDILoLdvYv8l41OhAAIBEIAfx49FFJCLeYrkfMfAw6XlnxP23MmDBdqP8dPp28OoAQ=="
   }
 }
 

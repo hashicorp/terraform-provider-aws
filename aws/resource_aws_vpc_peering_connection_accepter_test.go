@@ -12,7 +12,7 @@ import (
 func TestAccAWSVPCPeeringConnectionAccepter_sameRegion(t *testing.T) {
 	var connection ec2.VpcPeeringConnection
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccAwsVPCPeeringConnectionAccepterDestroy,
@@ -37,7 +37,7 @@ func TestAccAWSVPCPeeringConnectionAccepter_differentRegion(t *testing.T) {
 
 	var providers []*schema.Provider
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviderFactories(&providers),
 		CheckDestroy:      testAccAwsVPCPeeringConnectionAccepterDestroy,
