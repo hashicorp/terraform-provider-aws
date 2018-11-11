@@ -31,6 +31,8 @@ func TestAccAwsServerlessRepositoryApplication_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_serverlessrepository_application.postgres-rotator", "parameters.endpoint", "secretsmanager.us-east-2.amazonaws.com"),
 					resource.TestCheckResourceAttr("aws_serverlessrepository_application.postgres-rotator", "outputs.%", "1"),
 					resource.TestCheckResourceAttrSet("aws_serverlessrepository_application.postgres-rotator", "outputs.RotationLambdaARN"),
+					resource.TestCheckResourceAttr("aws_serverlessrepository_application.postgres-rotator", "capabilities.#", "1"),
+					//resource.TestCheckResourceAttr("aws_serverlessrepository_application.postgres-rotator", "capabilities.0", "CAPABILITY_NAMED_IAM"),
 				),
 			},
 		},
@@ -58,7 +60,7 @@ func TestAccAwsServerlessRepositoryApplication_versioned(t *testing.T) {
 	})
 }
 
-func TestAccAWSServerlessRepositoryApplication_updateVersion(t *testing.T) {
+func TestAccAwsServerlessRepositoryApplication_updateVersion(t *testing.T) {
 	var stack cloudformation.Stack
 	stackName := fmt.Sprintf("tf-acc-test-update-%s", acctest.RandString(10))
 	const initialVersion = "1.0.15"

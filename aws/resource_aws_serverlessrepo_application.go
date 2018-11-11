@@ -18,7 +18,7 @@ func resourceAwsServerlessRepositoryApplication() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsServerlessRepositoryApplicationCreate,
 		Read:   resourceAwsServerlessRepositoryApplicationRead,
-		//		Update: resourceAwsServerlessRepositoryApplicationUpdate,
+		//Update: resourceAwsServerlessRepositoryApplicationUpdate,
 		Delete: resourceAwsServerlessRepositoryApplicationDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -57,6 +57,12 @@ func resourceAwsServerlessRepositoryApplication() *schema.Resource {
 			"outputs": {
 				Type:     schema.TypeMap,
 				Computed: true,
+			},
+			"capabilities": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
 			},
 		},
 	}
@@ -283,6 +289,13 @@ func resourceAwsServerlessRepositoryApplicationRead(d *schema.ResourceData, meta
 	err = d.Set("outputs", flattenCloudFormationOutputs(stack.Outputs))
 	if err != nil {
 		return err
+	}
+
+	if len(stack.Capabilities) > 0 {
+		err = d.Set("capabilities", schema.NewSet(schema.HashString, flattenStringList(stack.Capabilities)))
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
