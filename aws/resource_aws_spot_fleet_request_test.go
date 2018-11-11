@@ -292,13 +292,11 @@ func TestAccAWSSpotFleetRequest_launchTemplateToLaunchSpec(t *testing.T) {
 						"aws_spot_fleet_request.foo", "spot_price", "0.005"),
 					resource.TestCheckResourceAttr(
 						"aws_spot_fleet_request.foo", "launch_specification.#", "1"),
-					// resource.TestCheckResourceAttr(
-					//  "aws_spot_fleet_request.foo", "launch_template_configs.#", "0"),
 					testAccCheckAWSSpotFleetRequestConfigRecreated(t, &before, &after),
-				),
-			},
-		},
-	})
+                ),
+            },
+        },
+    })
 }
 
 func TestAccAWSSpotFleetRequest_launchSpecToLaunchTemplate(t *testing.T) {
@@ -306,46 +304,44 @@ func TestAccAWSSpotFleetRequest_launchSpecToLaunchTemplate(t *testing.T) {
 	rName := acctest.RandString(10)
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSSpotFleetRequestConfig(rName, rInt),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSSpotFleetRequestExists(
-						"aws_spot_fleet_request.foo", &before),
-					resource.TestCheckResourceAttr(
-						"aws_spot_fleet_request.foo", "spot_request_state", "active"),
-					resource.TestCheckResourceAttr(
-						"aws_spot_fleet_request.foo", "spot_price", "0.005"),
-					resource.TestCheckResourceAttr(
-						"aws_spot_fleet_request.foo", "launch_specification.#", "1"),
-					// resource.TestCheckResourceAttr(
-					//  "aws_spot_fleet_request.foo", "launch_template_configs.#", "0"),
-				),
-			},
-			{
-				Config: testAccAWSSpotFleetRequestLaunchTemplateConfig(rName, rInt),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSSpotFleetRequestExists(
-						"aws_spot_fleet_request.foo", &after),
-					resource.TestCheckResourceAttr(
-						"aws_spot_fleet_request.foo", "spot_request_state", "active"),
-					resource.TestCheckResourceAttr(
-						"aws_spot_fleet_request.foo", "launch_specification.#", "0"),
-					resource.TestCheckResourceAttr(
-						"aws_spot_fleet_request.foo", "launch_template_configs.#", "1"),
-					resource.TestCheckResourceAttr(
-						"aws_spot_fleet_request.foo", "launch_template_configs.4018047529.launch_template_specification.#", "1"),
-					resource.TestCheckResourceAttr(
-						"aws_spot_fleet_request.foo", "launch_template_configs.4018047529.overrides.#", "0"),
-					testAccCheckAWSSpotFleetRequestConfigRecreated(t, &before, &after),
-				),
-			},
-		},
-	})
+    resource.Test(t, resource.TestCase{
+        PreCheck:     func() { testAccPreCheck(t) },
+        Providers:    testAccProviders,
+        CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
+        Steps: []resource.TestStep{
+            {
+                Config: testAccAWSSpotFleetRequestConfig(rName, rInt),
+                Check: resource.ComposeAggregateTestCheckFunc(
+                    testAccCheckAWSSpotFleetRequestExists(
+                        "aws_spot_fleet_request.foo", &before),
+                    resource.TestCheckResourceAttr(
+                        "aws_spot_fleet_request.foo", "spot_request_state", "active"),
+                    resource.TestCheckResourceAttr(
+                        "aws_spot_fleet_request.foo", "spot_price", "0.005"),
+                    resource.TestCheckResourceAttr(
+                        "aws_spot_fleet_request.foo", "launch_specification.#", "1"),
+                ),
+            },
+            {
+                Config: testAccAWSSpotFleetRequestLaunchTemplateConfig(rName, rInt),
+                Check: resource.ComposeAggregateTestCheckFunc(
+                    testAccCheckAWSSpotFleetRequestExists(
+                        "aws_spot_fleet_request.foo", &after),
+                    resource.TestCheckResourceAttr(
+                        "aws_spot_fleet_request.foo", "spot_request_state", "active"),
+                    resource.TestCheckResourceAttr(
+                        "aws_spot_fleet_request.foo", "launch_specification.#", "0"),
+                    resource.TestCheckResourceAttr(
+                        "aws_spot_fleet_request.foo", "launch_template_configs.#", "1"),
+                    resource.TestCheckResourceAttr(
+                        "aws_spot_fleet_request.foo", "launch_template_configs.4018047529.launch_template_specification.#", "1"),
+                    resource.TestCheckResourceAttr(
+                        "aws_spot_fleet_request.foo", "launch_template_configs.4018047529.overrides.#", "0"),
+                    testAccCheckAWSSpotFleetRequestConfigRecreated(t, &before, &after),
+                ),
+            },
+        },
+    })
 }
 
 func TestAccAWSSpotFleetRequest_instanceInterruptionBehavior(t *testing.T) {
