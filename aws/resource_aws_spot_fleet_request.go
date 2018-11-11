@@ -1461,9 +1461,9 @@ func deleteSpotFleetRequest(spotFleetRequestID string, terminateInstances bool, 
 			if len(iresp.Reservations) == 0 {
 				log.Printf("[DEBUG] Active instance count is %d for Spot Fleet Request (%s), but instances have terminated, removing", len(resp.ActiveInstances), spotFleetRequestID)
 				return nil
-			} else {
-				log.Printf("[DEBUG] Active instance count is %d for Spot Fleet Request (%s), and at least 1 instance is still running", len(resp.ActiveInstances), spotFleetRequestID)
 			}
+
+			log.Printf("[DEBUG] Active instance count is %d for Spot Fleet Request (%s), and at least 1 instance is still running", len(resp.ActiveInstances), spotFleetRequestID)
 		}
 
 		log.Printf("[DEBUG] Active instance count in Spot Fleet Request (%s): %d", spotFleetRequestID, len(resp.ActiveInstances))
