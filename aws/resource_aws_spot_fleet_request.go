@@ -914,10 +914,6 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 					default:
 						return resource.NonRetryableError(err)
 					}
-
-					// Assuming this doesn't work; we can get the same error code for reasons other than a lack of IAM consistency:
-					//return resource.RetryableError(
-					//	fmt.Errorf("[WARN] Error creating Spot fleet request, retrying: %s", err))
 				}
 			}
 			return resource.NonRetryableError(err)
