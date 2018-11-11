@@ -904,6 +904,8 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 				if awsErr.Code() == "InvalidSpotFleetRequestConfig" {
 					switch {
 					case strings.Contains(awsErr.Message(), "LaunchTemplateSpecification"):
+						// AWS is letting us know that the Launch Template has been specified in some invalid way.
+						// No point in retrying as the template needs to be corrected.
 						return resource.NonRetryableError(err)
 					case strings.Contains(awsErr.Message(), "IamFleetRole"):
 						// IAM is eventually consistent :/
