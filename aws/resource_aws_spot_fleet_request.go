@@ -978,6 +978,12 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 		if isAWSErr(err, "InvalidSpotFleetRequestConfig", "") {
 			return resource.RetryableError(fmt.Errorf("Error creating Spot fleet request, retrying: %s", err))
 		}
+		if isAWSErr(err, "InvalidSpotFleetRequestConfig", "LaunchTemplateSpecification") {
+			return resource.NonRetryableError(err)
+		}
+		if isAWSErr(err, "InvalidSpotFleetRequestConfig", "IamFleetRole") {
+			return resource.RetryableError(fmt.Errorf("Error creating Spot fleet request, retrying: %s", err))
+		}
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
