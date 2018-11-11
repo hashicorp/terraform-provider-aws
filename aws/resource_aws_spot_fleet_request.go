@@ -450,6 +450,9 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 				Set:      schema.HashString,
 			},
 		},
+		// A launch template can be created with an id or a name, but once created will have both even though we specify only one.
+		// If either changes, this makes sure the other (which was specified) will register as changed in order to correctly determine diffs.
+		// This was taken from the original implementation of launch templates in resource_aws_autoscaling_group.go
 		CustomizeDiff: customdiff.Sequence(
 			customdiff.ComputedIf("launch_template_configs.0.launch_template_specification.0.id", func(diff *schema.ResourceDiff, meta interface{}) bool {
 				return diff.HasChange("launch_template_configs.0.launch_template_specification.0.name")
