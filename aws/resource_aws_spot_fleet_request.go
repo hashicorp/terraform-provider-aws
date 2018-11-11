@@ -325,34 +325,29 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 										ForceNew: true,
-										//ValidateFunc:  validateLaunchTemplateId,
 									},
 									"instance_type": {
 										Type:     schema.TypeString,
 										Optional: true,
 										ForceNew: true,
-										//ValidateFunc:  validateLaunchTemplateName,
 									},
 									"spot_price": {
 										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,
 										ForceNew: true,
-										//ValidateFunc: validation.StringLenBetween(1, 255),
 									},
 									"subnet_id": {
 										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,
 										ForceNew: true,
-										//ValidateFunc: validation.StringLenBetween(1, 255),
 									},
 									"weighted_capacity": {
 										Type:     schema.TypeFloat,
 										Optional: true,
 										Computed: true,
 										ForceNew: true,
-										//ValidateFunc: validation.StringLenBetween(1, 255),
 									},
 								},
 							},
@@ -361,7 +356,8 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 					},
 				},
 			},
-			// Everything on a spot fleet is ForceNew except target_capacity
+			// Everything on a spot fleet is ForceNew except target_capacity and excess_capacity_termination_policy,
+			// see https://docs.aws.amazon.com/sdk-for-go/api/service/ec2/#ModifySpotFleetRequestInput
 			"target_capacity": {
 				Type:     schema.TypeInt,
 				Required: true,
@@ -371,7 +367,7 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 				Type:          schema.TypeInt,
 				ConflictsWith: []string{"launch_specification"},
 				Optional:      true,
-				ForceNew:      false,
+				ForceNew:      true,
 			},
 			"allocation_strategy": {
 				Type:     schema.TypeString,
