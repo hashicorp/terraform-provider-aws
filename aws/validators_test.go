@@ -129,6 +129,57 @@ func TestValidateTypeStringNullableBoolean(t *testing.T) {
 	}
 }
 
+func TestValidateTypeStringNullableFloat(t *testing.T) {
+	testCases := []struct {
+		val         interface{}
+		expectedErr *regexp.Regexp
+	}{
+		{
+			val: "",
+		},
+		{
+			val: "0",
+		},
+		{
+			val: "1",
+		},
+		{
+			val: "42.0",
+		},
+		{
+			val:         "threeve",
+			expectedErr: regexp.MustCompile(`cannot parse`),
+		},
+	}
+
+	matchErr := func(errs []error, r *regexp.Regexp) bool {
+		// err must match one provided
+		for _, err := range errs {
+			if r.MatchString(err.Error()) {
+				return true
+			}
+		}
+
+		return false
+	}
+
+	for i, tc := range testCases {
+		_, errs := validateTypeStringNullableFloat(tc.val, "test_property")
+
+		if len(errs) == 0 && tc.expectedErr == nil {
+			continue
+		}
+
+		if len(errs) != 0 && tc.expectedErr == nil {
+			t.Fatalf("expected test case %d to produce no errors, got %v", i, errs)
+		}
+
+		if !matchErr(errs, tc.expectedErr) {
+			t.Fatalf("expected test case %d to produce error matching \"%s\", got %v", i, tc.expectedErr, errs)
+		}
+	}
+}
+
 func TestValidateEcrRepositoryName(t *testing.T) {
 	validNames := []string{
 		"nginx-web-app",

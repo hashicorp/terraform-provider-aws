@@ -63,6 +63,10 @@ func validateTypeStringNullableFloat(v interface{}, k string) (ws []string, es [
 		return
 	}
 
+	if value == "" {
+		return
+	}
+
 	if _, err := strconv.ParseFloat(value, 64); err != nil {
 		es = append(es, fmt.Errorf("%s: cannot parse '%s' as float: %s", k, value, err))
 	}
