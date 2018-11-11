@@ -227,8 +227,6 @@ func TestAccAWSSpotFleetRequest_launchTemplateToLaunchSpec(t *testing.T) {
                         "aws_spot_fleet_request.foo", "spot_price", "0.005"),
                     resource.TestCheckResourceAttr(
                         "aws_spot_fleet_request.foo", "launch_specification.#", "1"),
-                    // resource.TestCheckResourceAttr(
-                    //  "aws_spot_fleet_request.foo", "launch_template_configs.#", "0"),
                     testAccCheckAWSSpotFleetRequestConfigRecreated(t, &before, &after),
                 ),
             },
@@ -257,8 +255,6 @@ func TestAccAWSSpotFleetRequest_launchSpecToLaunchTemplate(t *testing.T) {
                         "aws_spot_fleet_request.foo", "spot_price", "0.005"),
                     resource.TestCheckResourceAttr(
                         "aws_spot_fleet_request.foo", "launch_specification.#", "1"),
-                    // resource.TestCheckResourceAttr(
-                    //  "aws_spot_fleet_request.foo", "launch_template_configs.#", "0"),
                 ),
             },
             {
