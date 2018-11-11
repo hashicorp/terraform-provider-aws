@@ -14,9 +14,9 @@ import (
 )
 
 // This is used for testing aws_codebuild_webhook as well as aws_codebuild_project.
-// The Terraform AWS user must have done the manual GitHub OAuth dance for this
-// functionality to work. Additionally, the GitHub user that the Terraform AWS
-// user logs in as must have access to the GitHub repository.
+// The Terraform AWS user must have done the manual Bitbucket OAuth dance for this
+// functionality to work. Additionally, the Bitbucket user that the Terraform AWS
+// user logs in as must have access to the Bitbucket repository.
 func testAccAWSCodeBuildBitbucketSourceLocationFromEnv() string {
 	sourceLocation := os.Getenv("AWS_CODEBUILD_BITBUCKET_SOURCE_LOCATION")
 	if sourceLocation == "" {
