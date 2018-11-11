@@ -780,7 +780,7 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 	_, launchTemplateConfigsOk := d.GetOk("launch_template_configs")
 
 	if !launchSpecificationOk && !launchTemplateConfigsOk {
-		return fmt.Errorf("One of `launch_specification` or `launch_template` must be set for an a fleet request")
+		return fmt.Errorf("One of `launch_specification` or `launch_template` must be set for a fleet request")
 	}
 
 	// http://docs.aws.amazon.com/sdk-for-go/api/service/ec2.html#type-SpotFleetRequestConfigData
@@ -804,16 +804,12 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 		spotFleetConfig.LaunchSpecifications = launch_specs
 	}
 
-	// Need to suppport multiples
 	if launchTemplateConfigsOk {
-		// launch_template_cfg, err := buildLaunchTemplateConfig(d, meta)
-		// if err != nil {
-		// 	return err
-		// }
-		spotFleetConfig.LaunchTemplateConfigs, err = buildLaunchTemplateConfigs(d, meta)
+		launch_templates, err := buildLaunchTemplateConfigs(d, meta)
 		if err != nil {
 			return err
 		}
+		spotFleetConfig.LaunchTemplateConfigs = launch_templates
 	}
 
 	if v, ok := d.GetOk("on_demand_target_capacity"); ok {
