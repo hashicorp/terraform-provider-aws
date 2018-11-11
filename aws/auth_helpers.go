@@ -253,6 +253,9 @@ func GetCredentials(c *Config) (*awsCredentials.Credentials, error) {
 		HTTPClient:       cleanhttp.DefaultClient(),
 		S3ForcePathStyle: aws.Bool(c.S3ForcePathStyle),
 	}
+	if c.StsEndpoint != "" {
+		awsConfig.Endpoint = aws.String(c.StsEndpoint)
+	}
 
 	stsclient := sts.New(session.New(awsConfig))
 	assumeRoleProvider := &stscreds.AssumeRoleProvider{
