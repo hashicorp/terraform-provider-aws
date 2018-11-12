@@ -175,7 +175,7 @@ func updateByteMatchSetResource(id string, oldT, newT []interface{}, conn *waf.W
 }
 
 func flattenWafByteMatchTuples(bmt []*waf.ByteMatchTuple) []interface{} {
-	out := make([]interface{}, len(bmt), len(bmt))
+	out := make([]interface{}, len(bmt))
 	for i, t := range bmt {
 		m := make(map[string]interface{})
 

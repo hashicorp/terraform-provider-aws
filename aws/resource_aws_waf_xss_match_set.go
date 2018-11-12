@@ -168,7 +168,7 @@ func updateXssMatchSetResource(id string, oldT, newT []interface{}, conn *waf.WA
 }
 
 func flattenWafXssMatchTuples(ts []*waf.XssMatchTuple) []interface{} {
-	out := make([]interface{}, len(ts), len(ts))
+	out := make([]interface{}, len(ts))
 	for i, t := range ts {
 		m := make(map[string]interface{})
 		m["field_to_match"] = flattenFieldToMatch(t.FieldToMatch)
