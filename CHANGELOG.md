@@ -1,5 +1,9 @@
 ## 1.44.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_glacier_vault_lock` [GH-6432]
+
 ENHANCEMENTS:
 
 * resource/aws_codebuild_project: Support `source` `report_build_status` for Bitbucket [GH-6426]
