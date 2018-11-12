@@ -1,5 +1,9 @@
 ## 1.44.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_codebuild_project: Support `source` `report_build_status` for Bitbucket [GH-6426]
+
 BUG FIXES:
 
 * resource/aws_security_group_rule: Support all non-zero `from_port` and `to_port` configurations with `protocol` ALL/-1 [GH-6423]
