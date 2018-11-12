@@ -56,15 +56,24 @@ func resourceAwsSecurityGroupRule() *schema.Resource {
 				Type:     schema.TypeInt,
 				Required: true,
 				ForceNew: true,
+				// Support existing configurations that have non-zero from_port and to_port defined with all protocols
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					protocol := protocolForValue(d.Get("protocol").(string))
+					if protocol == "-1" && old == "0" {
+						return true
+					}
+					return false
+				},
 			},
 
 			"to_port": {
 				Type:     schema.TypeInt,
 				Required: true,
 				ForceNew: true,
+				// Support existing configurations that have non-zero from_port and to_port defined with all protocols
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					protocol := protocolForValue(d.Get("protocol").(string))
-					if protocol == "-1" && old == "0" && new == "65535" {
+					if protocol == "-1" && old == "0" {
 						return true
 					}
 					return false
