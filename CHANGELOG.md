@@ -1,4 +1,9 @@
 ## 1.44.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_security_group_rule: Support all non-zero `from_port` and `to_port` configurations with `protocol` ALL/-1 [GH-6423]
+
 ## 1.43.2 (November 10, 2018)
 
 BUG FIXES:
