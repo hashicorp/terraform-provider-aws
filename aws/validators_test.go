@@ -630,12 +630,12 @@ func TestValidateIntegerInSlice(t *testing.T) {
 		{
 			val:         42,
 			f:           validateIntegerInSlice([]int{0, 43}),
-			expectedErr: regexp.MustCompile("expected [\\w]+ to be one of \\[0 43\\], got 42"),
+			expectedErr: regexp.MustCompile(`expected [\w]+ to be one of \[0 43\], got 42`),
 		},
 		{
 			val:         "42",
 			f:           validateIntegerInSlice([]int{0, 42}),
-			expectedErr: regexp.MustCompile("expected type of [\\w]+ to be int"),
+			expectedErr: regexp.MustCompile(`expected type of [\w]+ to be int`),
 		},
 	}
 	matchErr := func(errs []error, r *regexp.Regexp) bool {
