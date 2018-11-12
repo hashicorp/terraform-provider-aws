@@ -11,6 +11,27 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestAccAWSElasticTranscoderPreset_import(t *testing.T) {
+	resourceName := "aws_elastictranscoder_preset.bar"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckElasticTranscoderPresetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: awsElasticTranscoderPresetConfig,
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSElasticTranscoderPreset_basic(t *testing.T) {
 	preset := &elastictranscoder.Preset{}
 	name := "aws_elastictranscoder_preset.bar"

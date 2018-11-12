@@ -158,3 +158,11 @@ The `video_codec_options` map supports the following:
 * `ColorSpaceConversion` - The color space conversion Elastic Transcoder applies to the output video. Valid values are `None`, `Bt709toBt601`, `Bt601toBt709`, and `Auto`. (Optional, H.264/MPEG2 Only)
 * `ChromaSubsampling` - The sampling pattern for the chroma (color) channels of the output video. Valid values are `yuv420p` and `yuv422p`.
 * `LoopCount` - The number of times you want the output gif to loop (Gif only)
+
+## Import
+
+Elastic Transcoder presets can be imported using the `id`, e.g.
+
+```
+$ terraform import aws_elastic_transcoder_preset.basic_preset 1407981661351-cttk8b
+```

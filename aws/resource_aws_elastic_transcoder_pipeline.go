@@ -18,6 +18,9 @@ func resourceAwsElasticTranscoderPipeline() *schema.Resource {
 		Read:   resourceAwsElasticTranscoderPipelineRead,
 		Update: resourceAwsElasticTranscoderPipelineUpdate,
 		Delete: resourceAwsElasticTranscoderPipelineDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
