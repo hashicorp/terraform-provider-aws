@@ -16,9 +16,9 @@ for more information.
 
 ```hcl
 resource "aws_emr_cluster" "emr-test-cluster" {
-  name          = "emr-test-arn"
-  release_label = "emr-4.6.0"
-  applications  = ["Spark"]
+  name            = "emr-test-arn"
+  release_label   = "emr-4.6.0"
+  applications    = ["Spark"]
   additional_info = <<EOF
 {
   "instanceAwsClientConfiguration": {
@@ -28,7 +28,7 @@ resource "aws_emr_cluster" "emr-test-cluster" {
 }
 EOF
 
-  termination_protection = false
+  termination_protection            = false
   keep_job_flow_alive_when_no_steps = true
 
   ec2_attributes {
@@ -37,18 +37,18 @@ EOF
     emr_managed_slave_security_group  = "${aws_security_group.sg.id}"
     instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
   }
-  
+
   instance_group {
-      instance_role = "CORE"
-      instance_type = "c4.large"
-      instance_count = "1"
-      ebs_config {
-        size = "40"
-        type = "gp2"
-        volumes_per_instance = 1
-      }
-      bid_price = "0.30"
-      autoscaling_policy = <<EOF
+    instance_role  = "CORE"
+    instance_type  = "c4.large"
+    instance_count = "1"
+    ebs_config {
+      size                 = "40"
+      type                 = "gp2"
+      volumes_per_instance = 1
+    }
+    bid_price          = "0.30"
+    autoscaling_policy = <<EOF
 {
 "Constraints": {
   "MinCapacity": 1,
@@ -81,16 +81,16 @@ EOF
 ]
 }
 EOF
-}
-  ebs_root_volume_size     = 100
+  }
+  ebs_root_volume_size = 100
 
   master_instance_type = "m3.xlarge"
   core_instance_type   = "m3.xlarge"
   core_instance_count  = 1
 
   tags {
-    role     = "rolename"
-    env      = "env"
+    role = "rolename"
+    env  = "env"
   }
 
   bootstrap_action {
@@ -127,8 +127,7 @@ EOF
     }
   ]
 EOF  
-
-  service_role = "${aws_iam_role.iam_emr_service_role.arn}"
+  service_role        = "${aws_iam_role.iam_emr_service_role.arn}"
 }
 ```
 

@@ -142,19 +142,27 @@ The following arguments are supported:
 * `min_adjustment_magnitude` - (Optional) The minimum number to adjust your scalable dimension as a result of a scaling activity. If the adjustment type is PercentChangeInCapacity, the scaling policy changes the scalable dimension of the scalable target by this amount.
 * `step_adjustment` - (Optional) A set of adjustments that manage scaling. These have the following structure:
 
-  ```hcl
-step_adjustment {
-  metric_interval_lower_bound = 1.0
-  metric_interval_upper_bound = 2.0
-  scaling_adjustment          = -1
-}
+ ```hcl
+resource "aws_appautoscaling_policy" "ecs_policy" {
+  # ...
 
-step_adjustment {
-  metric_interval_lower_bound = 2.0
-  metric_interval_upper_bound = 3.0
-  scaling_adjustment          = 1
+  step_scaling_policy_configuration {
+    # insert config here
+
+    step_adjustment {
+      metric_interval_lower_bound = 1.0
+      metric_interval_upper_bound = 2.0
+      scaling_adjustment          = -1
+    }
+
+    step_adjustment {
+      metric_interval_lower_bound = 2.0
+      metric_interval_upper_bound = 3.0
+      scaling_adjustment          = 1
+    }
+  }
 }
-  ```
+```
 
   * `metric_interval_lower_bound` - (Optional) The lower bound for the difference between the alarm threshold and the CloudWatch metric. Without a value, AWS will treat this bound as negative infinity.
   * `metric_interval_upper_bound` - (Optional) The upper bound for the difference between the alarm threshold and the CloudWatch metric. Without a value, AWS will treat this bound as infinity. The upper bound must be greater than the lower bound.
