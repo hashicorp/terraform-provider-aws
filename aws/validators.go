@@ -1783,7 +1783,7 @@ func validateIotThingTypeDescription(v interface{}, k string) (ws []string, erro
 		errors = append(errors, fmt.Errorf(
 			"%q cannot be longer than 2028 characters", k))
 	}
-	if !regexp.MustCompile(`[\p{Graph}\x20]*`).MatchString(value) {
+	if !regexp.MustCompile(`[\\p{Graph}\\x20]*`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			`%q must match pattern [\p{Graph}\x20]*`, k))
 	}
