@@ -1348,7 +1348,7 @@ func flattenConfigRecordingGroup(g *configservice.RecordingGroup) []map[string]i
 }
 
 func flattenConfigSnapshotDeliveryProperties(p *configservice.ConfigSnapshotDeliveryProperties) []map[string]interface{} {
-	m := make(map[string]interface{}, 0)
+	m := make(map[string]interface{})
 
 	if p.DeliveryFrequency != nil {
 		m["delivery_frequency"] = *p.DeliveryFrequency
@@ -1375,7 +1375,7 @@ func stringMapToPointers(m map[string]interface{}) map[string]*string {
 
 func flattenDSVpcSettings(
 	s *directoryservice.DirectoryVpcSettingsDescription) []map[string]interface{} {
-	settings := make(map[string]interface{}, 0)
+	settings := make(map[string]interface{})
 
 	if s == nil {
 		return nil
@@ -1406,7 +1406,7 @@ func flattenLambdaEnvironment(lambdaEnv *lambda.EnvironmentResponse) []interface
 }
 
 func flattenLambdaVpcConfigResponse(s *lambda.VpcConfigResponse) []map[string]interface{} {
-	settings := make(map[string]interface{}, 0)
+	settings := make(map[string]interface{})
 
 	if s == nil {
 		return nil
@@ -1448,7 +1448,7 @@ func flattenDSConnectSettings(
 		return nil
 	}
 
-	settings := make(map[string]interface{}, 0)
+	settings := make(map[string]interface{})
 
 	settings["customer_dns_ips"] = schema.NewSet(schema.HashString, flattenStringList(customerDnsIps))
 	settings["connect_ips"] = schema.NewSet(schema.HashString, flattenStringList(s.ConnectIps))
@@ -1796,7 +1796,7 @@ func expandCloudWachLogMetricTransformations(m map[string]interface{}) ([]*cloud
 
 func flattenCloudWachLogMetricTransformations(ts []*cloudwatchlogs.MetricTransformation) []interface{} {
 	mts := make([]interface{}, 0)
-	m := make(map[string]interface{}, 0)
+	m := make(map[string]interface{})
 
 	m["name"] = *ts[0].MetricName
 	m["namespace"] = *ts[0].MetricNamespace
@@ -2286,11 +2286,8 @@ func checkYamlString(yamlString interface{}) (string, error) {
 	s := yamlString.(string)
 
 	err := yaml.Unmarshal([]byte(s), &y)
-	if err != nil {
-		return s, err
-	}
 
-	return s, nil
+	return s, err
 }
 
 func normalizeCloudFormationTemplate(templateString interface{}) (string, error) {
@@ -2322,7 +2319,7 @@ func flattenApiGatewayUsageApiStages(s []*apigateway.ApiStage) []map[string]inte
 }
 
 func flattenApiGatewayUsagePlanThrottling(s *apigateway.ThrottleSettings) []map[string]interface{} {
-	settings := make(map[string]interface{}, 0)
+	settings := make(map[string]interface{})
 
 	if s == nil {
 		return nil
@@ -2340,7 +2337,7 @@ func flattenApiGatewayUsagePlanThrottling(s *apigateway.ThrottleSettings) []map[
 }
 
 func flattenApiGatewayUsagePlanQuota(s *apigateway.QuotaSettings) []map[string]interface{} {
-	settings := make(map[string]interface{}, 0)
+	settings := make(map[string]interface{})
 
 	if s == nil {
 		return nil
@@ -2438,7 +2435,7 @@ func flattenCognitoIdentityProviders(ips []*cognitoidentity.Provider) []map[stri
 }
 
 func flattenCognitoUserPoolEmailConfiguration(s *cognitoidentityprovider.EmailConfigurationType) []map[string]interface{} {
-	m := make(map[string]interface{}, 0)
+	m := make(map[string]interface{})
 
 	if s == nil {
 		return nil
@@ -2948,7 +2945,7 @@ func flattenCognitoUserPoolPasswordPolicy(s *cognitoidentityprovider.PasswordPol
 }
 
 func expandCognitoResourceServerScope(inputs []interface{}) []*cognitoidentityprovider.ResourceServerScopeType {
-	configs := make([]*cognitoidentityprovider.ResourceServerScopeType, len(inputs), len(inputs))
+	configs := make([]*cognitoidentityprovider.ResourceServerScopeType, len(inputs))
 	for i, input := range inputs {
 		param := input.(map[string]interface{})
 		config := &cognitoidentityprovider.ResourceServerScopeType{}
@@ -2984,7 +2981,7 @@ func flattenCognitoResourceServerScope(inputs []*cognitoidentityprovider.Resourc
 }
 
 func expandCognitoUserPoolSchema(inputs []interface{}) []*cognitoidentityprovider.SchemaAttributeType {
-	configs := make([]*cognitoidentityprovider.SchemaAttributeType, len(inputs), len(inputs))
+	configs := make([]*cognitoidentityprovider.SchemaAttributeType, len(inputs))
 
 	for i, input := range inputs {
 		param := input.(map[string]interface{})
@@ -3298,13 +3295,13 @@ func flattenCognitoUserPoolSchema(configuredAttributes, inputs []*cognitoidentit
 		// https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-attributes.html#cognito-user-pools-standard-attributes
 		// Ignore setting them in state if they are unconfigured to prevent a huge and unexpected diff
 		configured := false
-		if configuredAttributes != nil {
-			for _, configuredAttribute := range configuredAttributes {
-				if reflect.DeepEqual(input, configuredAttribute) {
-					configured = true
-				}
+
+		for _, configuredAttribute := range configuredAttributes {
+			if reflect.DeepEqual(input, configuredAttribute) {
+				configured = true
 			}
 		}
+
 		if !configured {
 			if cognitoUserPoolSchemaAttributeMatchesStandardAttribute(input) {
 				continue
@@ -3574,7 +3571,7 @@ func expandWafWebAclUpdate(updateAction string, aclRule map[string]interface{}) 
 }
 
 func expandWafAction(l []interface{}) *waf.WafAction {
-	if l == nil || len(l) == 0 || l[0] == nil {
+	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
@@ -3586,7 +3583,7 @@ func expandWafAction(l []interface{}) *waf.WafAction {
 }
 
 func expandWafOverrideAction(l []interface{}) *waf.WafOverrideAction {
-	if l == nil || len(l) == 0 || l[0] == nil {
+	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
@@ -3609,7 +3606,7 @@ func flattenWafAction(n *waf.WafAction) []map[string]interface{} {
 }
 
 func flattenWafWebAclRules(ts []*waf.ActivatedRule) []map[string]interface{} {
-	out := make([]map[string]interface{}, len(ts), len(ts))
+	out := make([]map[string]interface{}, len(ts))
 	for i, r := range ts {
 		m := make(map[string]interface{})
 
@@ -3671,7 +3668,7 @@ func flattenCognitoIdentityPoolRoles(config map[string]*string) map[string]strin
 }
 
 func expandCognitoIdentityPoolRoleMappingsAttachment(rms []interface{}) map[string]*cognitoidentity.RoleMapping {
-	values := make(map[string]*cognitoidentity.RoleMapping, 0)
+	values := make(map[string]*cognitoidentity.RoleMapping)
 
 	if len(rms) == 0 {
 		return values
@@ -3769,7 +3766,7 @@ func flattenRedshiftLogging(ls *redshift.LoggingStatus) []interface{} {
 		return []interface{}{}
 	}
 
-	cfg := make(map[string]interface{}, 0)
+	cfg := make(map[string]interface{})
 	cfg["enabled"] = *ls.LoggingEnabled
 	if ls.BucketName != nil {
 		cfg["bucket_name"] = *ls.BucketName
@@ -3785,7 +3782,7 @@ func flattenRedshiftSnapshotCopy(scs *redshift.ClusterSnapshotCopyStatus) []inte
 		return []interface{}{}
 	}
 
-	cfg := make(map[string]interface{}, 0)
+	cfg := make(map[string]interface{})
 	if scs.DestinationRegion != nil {
 		cfg["destination_region"] = *scs.DestinationRegion
 	}
@@ -3819,7 +3816,7 @@ func canonicalXML(s string) (string, error) {
 }
 
 func expandMqUsers(cfg []interface{}) []*mq.User {
-	users := make([]*mq.User, len(cfg), len(cfg))
+	users := make([]*mq.User, len(cfg))
 	for i, m := range cfg {
 		u := m.(map[string]interface{})
 		user := mq.User{
@@ -3839,7 +3836,7 @@ func expandMqUsers(cfg []interface{}) []*mq.User {
 
 // We use cfgdUsers to get & set the password
 func flattenMqUsers(users []*mq.User, cfgUsers []interface{}) *schema.Set {
-	existingPairs := make(map[string]string, 0)
+	existingPairs := make(map[string]string)
 	for _, u := range cfgUsers {
 		user := u.(map[string]interface{})
 		username := user["username"].(string)
@@ -3886,7 +3883,7 @@ func flattenMqWeeklyStartTime(wst *mq.WeeklyStartTime) []interface{} {
 	if wst == nil {
 		return []interface{}{}
 	}
-	m := make(map[string]interface{}, 0)
+	m := make(map[string]interface{})
 	if wst.DayOfWeek != nil {
 		m["day_of_week"] = *wst.DayOfWeek
 	}
@@ -3919,7 +3916,7 @@ func flattenMqConfigurationId(cid *mq.ConfigurationId) []interface{} {
 	if cid == nil {
 		return []interface{}{}
 	}
-	m := make(map[string]interface{}, 0)
+	m := make(map[string]interface{})
 	if cid.Id != nil {
 		m["id"] = *cid.Id
 	}
@@ -3933,9 +3930,9 @@ func flattenMqBrokerInstances(instances []*mq.BrokerInstance) []interface{} {
 	if len(instances) == 0 {
 		return []interface{}{}
 	}
-	l := make([]interface{}, len(instances), len(instances))
+	l := make([]interface{}, len(instances))
 	for i, instance := range instances {
-		m := make(map[string]interface{}, 0)
+		m := make(map[string]interface{})
 		if instance.ConsoleURL != nil {
 			m["console_url"] = *instance.ConsoleURL
 		}
@@ -4268,7 +4265,7 @@ func flattenAwsDynamoDbTableResource(d *schema.ResourceData, table *dynamodb.Tab
 }
 
 func expandDynamoDbAttributes(cfg []interface{}) []*dynamodb.AttributeDefinition {
-	attributes := make([]*dynamodb.AttributeDefinition, len(cfg), len(cfg))
+	attributes := make([]*dynamodb.AttributeDefinition, len(cfg))
 	for i, attribute := range cfg {
 		attr := attribute.(map[string]interface{})
 		attributes[i] = &dynamodb.AttributeDefinition{
@@ -4283,7 +4280,7 @@ func expandDynamoDbAttributes(cfg []interface{}) []*dynamodb.AttributeDefinition
 // this in the config, we shouldn't magically be setting it like this.
 // Removal will however require config change, hence BC. :/
 func expandDynamoDbLocalSecondaryIndexes(cfg []interface{}, keySchemaM map[string]interface{}) []*dynamodb.LocalSecondaryIndex {
-	indexes := make([]*dynamodb.LocalSecondaryIndex, len(cfg), len(cfg))
+	indexes := make([]*dynamodb.LocalSecondaryIndex, len(cfg))
 	for i, lsi := range cfg {
 		m := lsi.(map[string]interface{})
 		idxName := m["name"].(string)
@@ -4532,7 +4529,7 @@ func expandVpcPeeringConnectionOptions(m map[string]interface{}) *ec2.PeeringCon
 }
 
 func expandDxRouteFilterPrefixes(cfg []interface{}) []*directconnect.RouteFilterPrefix {
-	prefixes := make([]*directconnect.RouteFilterPrefix, len(cfg), len(cfg))
+	prefixes := make([]*directconnect.RouteFilterPrefix, len(cfg))
 	for i, p := range cfg {
 		prefix := &directconnect.RouteFilterPrefix{
 			Cidr: aws.String(p.(string)),
