@@ -3,6 +3,7 @@
 ENHANCEMENTS:
 
 * resource/aws_codebuild_project: Support `source` `report_build_status` for Bitbucket [GH-6426]
+* resource/aws_ebs_volume: Switch to tagging on creation [GH-6396]
 
 BUG FIXES:
 
