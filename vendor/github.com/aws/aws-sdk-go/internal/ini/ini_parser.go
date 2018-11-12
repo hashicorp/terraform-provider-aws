@@ -57,7 +57,7 @@ var parseTable = map[ASTKind]map[TokenType]int{
 		TokenOp:      StatementPrimeState,
 		TokenLit:     ValueState,
 		TokenSep:     OpenScopeState,
-		TokenWS:      SkipTokenState,
+		TokenWS:      ValueState,
 		TokenNL:      SkipState,
 		TokenComment: CommentState,
 		TokenNone:    MarkCompleteState,
@@ -198,6 +198,7 @@ loop:
 				)
 			}
 
+			k = trimSpaces(k)
 			expr := newEqualExpr(k, tok)
 			stack.Push(expr)
 		case ValueState:
@@ -220,6 +221,9 @@ loop:
 				// assiging a value to some key
 				k.AppendChild(newExpression(tok))
 				stack.Push(newExprStatement(k))
+			case ASTKindExpr:
+				k.Root.raw = append(k.Root.raw, tok.Raw()...)
+				stack.Push(k)
 			case ASTKindExprStatement:
 				root := k.GetRoot()
 				children := root.GetChildren()
@@ -254,26 +258,7 @@ loop:
 				return nil, NewParseError("expected ']'")
 			}
 
-			// trim left hand side of spaces
-			for i := 0; i < len(k.Root.raw); i++ {
-				if !isWhitespace(k.Root.raw[i]) {
-					break
-				}
-
-				k.Root.raw = k.Root.raw[1:]
-				i--
-			}
-
-			// trim right hand side of spaces
-			for i := len(k.Root.raw) - 1; i > 0; i-- {
-				if !isWhitespace(k.Root.raw[i]) {
-					break
-				}
-
-				k.Root.raw = k.Root.raw[:len(k.Root.raw)-1]
-				i--
-			}
-
+			k = trimSpaces(k)
 			stack.Push(newCompletedSectionStatement(k))
 		case SectionState:
 			var stmt AST
@@ -334,4 +319,30 @@ loop:
 
 	// returns a sublist which exludes the start symbol
 	return stack.List(), nil
+}
+
+// trimSpaces will trim spaces on the left and right hand side of
+// the literal.
+func trimSpaces(k AST) AST {
+	// trim left hand side of spaces
+	for i := 0; i < len(k.Root.raw); i++ {
+		if !isWhitespace(k.Root.raw[i]) {
+			break
+		}
+
+		k.Root.raw = k.Root.raw[1:]
+		i--
+	}
+
+	// trim right hand side of spaces
+	for i := len(k.Root.raw) - 1; i > 0; i-- {
+		if !isWhitespace(k.Root.raw[i]) {
+			break
+		}
+
+		k.Root.raw = k.Root.raw[:len(k.Root.raw)-1]
+		i--
+	}
+
+	return k
 }
