@@ -204,7 +204,7 @@ func resourceAwsSnsPlatformApplicationRead(d *schema.ResourceData, meta interfac
 
 	if err != nil {
 		if isAWSErr(err, sns.ErrCodeNotFoundException, "") {
-			log.Printf("[WARN] SNS Topic (%s) not found, error code (404)", d.Id())
+			log.Printf("[WARN] SNS Platform Application (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
