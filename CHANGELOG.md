@@ -6,6 +6,9 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_eip: Add `filter` argument [GH-3525]
+* data-source/aws_eip: Add `tags` argument [GH-3505]
+* data-source/aws_eip: Support EC2-Classic Elastic IPs [GH-3522]
 * resource/aws_codebuild_project: Support `source` `report_build_status` for Bitbucket [GH-6426]
 * resource/aws_dlm_lifecycle_policy: Add `copy_tags` argument [GH-6445]
 * resource/aws_ebs_snapshot: Allow retries for `SnapshotCreationPerVolumeRateExceeded` errors on creation [GH-6414]
