@@ -14,6 +14,7 @@ func dataSourceAwsEip() *schema.Resource {
 		Read: dataSourceAwsEipRead,
 
 		Schema: map[string]*schema.Schema{
+			"filter": dataSourceFiltersSchema(),
 			"id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -32,15 +33,27 @@ func dataSourceAwsEip() *schema.Resource {
 func dataSourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
+	filters, filtersOk := d.GetOk("filter")
+	id, idOk := d.GetOk("id")
+	publicIP, publicIPOk := d.GetOk("public_ip")
+
+	if (idOk || publicIPOk) && filtersOk {
+		return fmt.Errorf("filter cannot be used when id or public_ip is set")
+	}
+
 	req := &ec2.DescribeAddressesInput{}
 	req.Filters = []*ec2.Filter{}
 
-	if id, ok := d.GetOk("id"); ok {
+	if idOk {
 		req.AllocationIds = []*string{aws.String(id.(string))}
 	}
 
-	if public_ip := d.Get("public_ip"); public_ip != "" {
-		req.PublicIps = []*string{aws.String(public_ip.(string))}
+	if publicIPOk {
+		req.PublicIps = []*string{aws.String(publicIP.(string))}
+	}
+
+	if filtersOk {
+		req.Filters = buildAwsDataSourceFilters(filters.(*schema.Set))
 	}
 
 	if tags, ok := d.GetOk("tags"); ok {
@@ -63,7 +76,13 @@ func dataSourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 
 	eip := resp.Addresses[0]
 
-	d.SetId(*eip.AllocationId)
+	if *eip.Domain == "vpc" {
+		d.SetId(*eip.AllocationId)
+	} else {
+		log.Printf("[DEBUG] Reading EIP, has no AllocationId, this means we have a Classic EIP, the id will also be the public ip : %s", req)
+		d.SetId(*eip.PublicIp)
+	}
+
 	d.Set("public_ip", eip.PublicIp)
 	d.Set("tags", tagsToMap(eip.Tags))
 

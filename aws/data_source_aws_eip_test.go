@@ -9,32 +9,62 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccDataSourceAwsEip_basic(t *testing.T) {
-	resource.ParallelTest(t, resource.TestCase{
+func TestAccDataSourceAwsEip_classic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			{
-				Config: testAccDataSourceAwsEipConfig,
+			resource.TestStep{
+				Config: testAccDataSourceAwsEipClassicConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccDataSourceAwsEipCheck("data.aws_eip.by_id"),
-					testAccDataSourceAwsEipCheck("data.aws_eip.by_public_ip"),
+					testAccDataSourceAwsEipCheck("data.aws_eip.test_classic", "aws_eip.test_classic"),
 				),
 			},
 		},
 	})
 }
 
-func testAccDataSourceAwsEipCheck(name string) resource.TestCheckFunc {
+func TestAccDataSourceAwsEip_vpc(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccDataSourceAwsEipVPCConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccDataSourceAwsEipCheck("data.aws_eip.test_vpc_by_id", "aws_eip.test_vpc"),
+					testAccDataSourceAwsEipCheck("data.aws_eip.test_vpc_by_public_ip", "aws_eip.test_vpc"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDataSourceAwsEip_filter(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccDataSourceAwsEipFilterConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccDataSourceAwsEipCheck("data.aws_eip.by_filter", "aws_eip.test"),
+				),
+			},
+		},
+	})
+}
+
+func testAccDataSourceAwsEipCheck(data_path string, resource_path string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[data_path]
 		if !ok {
-			return fmt.Errorf("root module has no resource called %s", name)
+			return fmt.Errorf("root module has no resource called %s", data_path)
 		}
 
-		eipRs, ok := s.RootModule().Resources["aws_eip.test"]
+		eipRs, ok := s.RootModule().Resources[resource_path]
 		if !ok {
-			return fmt.Errorf("can't find aws_eip.test in state")
+			return fmt.Errorf("can't find %s in state", resource_path)
 		}
 
 		attr := rs.Primary.Attributes
@@ -68,28 +98,62 @@ func TestAccDataSourceAwsEip_tags(t *testing.T) {
 			resource.TestStep{
 				Config: testAccDataSourceAwsEip_tags_config(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccDataSourceAwsEipCheck("data.aws_eip.by_tag"),
+					testAccDataSourceAwsEipCheck("data.aws_eip.by_tag", "aws_eip.test"),
 				),
 			},
 		},
 	})
 }
 
-const testAccDataSourceAwsEipConfig = `
+const testAccDataSourceAwsEipClassicConfig = `
 provider "aws" {
   region = "us-west-2"
 }
 
-resource "aws_eip" "wrong1" {}
-resource "aws_eip" "test" {}
-resource "aws_eip" "wrong2" {}
+resource "aws_eip" "test_classic" {}
 
-data "aws_eip" "by_id" {
-  id = "${aws_eip.test.id}"
+data "aws_eip" "test_classic" {
+  public_ip = "${aws_eip.test_classic.public_ip}"
 }
 
-data "aws_eip" "by_public_ip" {
-  public_ip = "${aws_eip.test.public_ip}"
+`
+
+const testAccDataSourceAwsEipVPCConfig = `
+provider "aws" {
+  region = "us-west-2"
+}
+
+resource "aws_eip" "test_vpc" {
+	vpc = true
+}
+
+data "aws_eip" "test_vpc_by_id" {
+  id = "${aws_eip.test_vpc.id}"
+}
+
+data "aws_eip" "test_vpc_by_public_ip" {
+  public_ip = "${aws_eip.test_vpc.public_ip}"
+}
+`
+
+const testAccDataSourceAwsEipFilterConfig = `
+provider "aws" {
+  region = "us-west-2"
+}
+
+resource "aws_eip" "test" {
+	vpc = true
+
+	tags {
+    	Name = "testeip"
+  	}
+}
+
+data "aws_eip" "by_filter" {
+  filter {
+    name   = "tag:Name"
+    values = ["${aws_eip.test.tags.Name}"]
+  }
 }
 `
 
