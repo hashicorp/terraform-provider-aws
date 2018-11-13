@@ -7,6 +7,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * resource/aws_codebuild_project: Support `source` `report_build_status` for Bitbucket [GH-6426]
+* resource/aws_dlm_lifecycle_policy: Add `copy_tags` argument [GH-6445]
 * resource/aws_ebs_snapshot: Allow retries for `SnapshotCreationPerVolumeRateExceeded` errors on creation [GH-6414]
 * resource/aws_ebs_volume: Switch to tagging on creation [GH-6396]
 * resource/aws_elastic_transcoder_pipeline: Support resource import [GH-6388]
