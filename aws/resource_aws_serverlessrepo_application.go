@@ -84,43 +84,15 @@ func resourceAwsServerlessRepositoryApplicationCreate(d *schema.ResourceData, me
 		changeSetRequest.ParameterOverrides = expandServerlessRepositoryApplicationParameters(v.(map[string]interface{}))
 	}
 
-	log.Printf("[DEBUG] Creating Serverless Repo Application Change Set: %s", changeSetRequest)
+	log.Printf("[DEBUG] Creating Serverless Repo Application change set: %s", changeSetRequest)
 	changeSetResponse, err := serverlessConn.CreateCloudFormationChangeSet(&changeSetRequest)
 	if err != nil {
-		return fmt.Errorf("Creating Serverless Repo Application Change Set failed: %s", err.Error())
+		return fmt.Errorf("Creating Serverless Repo Application change set failed: %s", err.Error())
 	}
 
 	d.SetId(*changeSetResponse.StackId)
 
-	var lastChangeSetStatus string
-	changeSetWait := resource.StateChangeConf{
-		Pending: []string{
-			"CREATE_PENDING",
-			"CREATE_IN_PROGRESS",
-		},
-		Target: []string{
-			"CREATE_COMPLETE",
-			"DELETE_COMPLETE",
-			"FAILED",
-		},
-		Timeout:    d.Timeout(schema.TimeoutCreate),
-		MinTimeout: 1 * time.Second,
-		Refresh: func() (interface{}, string, error) {
-			resp, err := cfConn.DescribeChangeSet(&cloudformation.DescribeChangeSetInput{
-				ChangeSetName: changeSetResponse.ChangeSetId,
-			})
-			if err != nil {
-				log.Printf("[ERROR] Failed to describe Change Set: %s", err)
-				return nil, "", err
-			}
-			status := *resp.Status
-			lastChangeSetStatus = status
-			log.Printf("[DEBUG] Current CloudFormation stack status: %q", status)
-
-			return resp, status, err
-		},
-	}
-	_, err = changeSetWait.WaitForState()
+	lastChangeSetStatus, err := waitForCreateChangeSet(d, cfConn, changeSetResponse.ChangeSetId)
 	if err != nil {
 		return err
 	}
@@ -383,6 +355,39 @@ func resourceAwsServerlessRepositoryApplicationDelete(d *schema.ResourceData, me
 	log.Printf("[DEBUG] CloudFormation stack %q has been deleted", d.Id())
 
 	return nil
+}
+
+func waitForCreateChangeSet(d *schema.ResourceData, conn *cloudformation.CloudFormation, changeSetName *string) (string, error) {
+	var lastChangeSetStatus string
+	changeSetWait := resource.StateChangeConf{
+		Pending: []string{
+			"CREATE_PENDING",
+			"CREATE_IN_PROGRESS",
+		},
+		Target: []string{
+			"CREATE_COMPLETE",
+			"DELETE_COMPLETE",
+			"FAILED",
+		},
+		Timeout:    d.Timeout(schema.TimeoutCreate),
+		MinTimeout: 1 * time.Second,
+		Refresh: func() (interface{}, string, error) {
+			resp, err := conn.DescribeChangeSet(&cloudformation.DescribeChangeSetInput{
+				ChangeSetName: changeSetName,
+			})
+			if err != nil {
+				log.Printf("[ERROR] Failed to describe change set: %s", err)
+				return nil, "", err
+			}
+			status := *resp.Status
+			lastChangeSetStatus = status
+			log.Printf("[DEBUG] Current CloudFormation stack status: %q", status)
+
+			return resp, status, err
+		},
+	}
+	_, err := changeSetWait.WaitForState()
+	return lastChangeSetStatus, err
 }
 
 // Move to `structure.go`?
