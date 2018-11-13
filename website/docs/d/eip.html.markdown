@@ -42,6 +42,8 @@ Elastic IP whose data will be exported as attributes.
 
 * `public_ip` - (Optional) The public IP of the specific EIP to retrieve.
 
+* `tags` - (Optional) A mapping of tags, each pair of which must exactly match a pair on the desired Elastic IP
+
 ## Attributes Reference
 
 All of the argument attributes are also exported as result attributes. This
