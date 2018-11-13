@@ -50,6 +50,12 @@ func resourceAwsDlmLifecyclePolicy() *schema.Resource {
 							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"copy_tags": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Computed: true,
+										ForceNew: true,
+									},
 									"create_rule": {
 										Type:     schema.TypeList,
 										Required: true,
@@ -257,6 +263,9 @@ func expandDlmSchedules(cfg []interface{}) []*dlm.Schedule {
 	for i, c := range cfg {
 		schedule := &dlm.Schedule{}
 		m := c.(map[string]interface{})
+		if v, ok := m["copy_tags"]; ok {
+			schedule.CopyTags = aws.Bool(v.(bool))
+		}
 		if v, ok := m["create_rule"]; ok {
 			schedule.CreateRule = expandDlmCreateRule(v.([]interface{}))
 		}
@@ -279,6 +288,7 @@ func flattenDlmSchedules(schedules []*dlm.Schedule) []map[string]interface{} {
 	result := make([]map[string]interface{}, len(schedules))
 	for i, s := range schedules {
 		m := make(map[string]interface{})
+		m["copy_tags"] = aws.BoolValue(s.CopyTags)
 		m["create_rule"] = flattenDlmCreateRule(s.CreateRule)
 		m["name"] = aws.StringValue(s.Name)
 		m["retain_rule"] = flattenDlmRetainRule(s.RetainRule)
