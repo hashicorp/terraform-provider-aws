@@ -3392,6 +3392,11 @@ func (s *RotateIngestEndpointCredentialsOutput) SetId(v string) *RotateIngestEnd
 type SpekeKeyProvider struct {
 	_ struct{} `type:"structure"`
 
+	// An Amazon Resource Name (ARN) of a Certificate Manager certificatethat MediaPackage
+	// will use for enforcing secure end-to-end datatransfer with the key provider
+	// service.
+	CertificateArn *string `locationName:"certificateArn" type:"string"`
+
 	// The resource ID to include in key requests.
 	//
 	// ResourceId is a required field
@@ -3444,6 +3449,12 @@ func (s *SpekeKeyProvider) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetCertificateArn sets the CertificateArn field's value.
+func (s *SpekeKeyProvider) SetCertificateArn(v string) *SpekeKeyProvider {
+	s.CertificateArn = &v
+	return s
 }
 
 // SetResourceId sets the ResourceId field's value.

@@ -3104,6 +3104,12 @@ var awsusgovPartition = partition{
 				},
 			},
 		},
+		"clouddirectory": service{
+
+			Endpoints: endpoints{
+				"us-gov-west-1": endpoint{},
+			},
+		},
 		"cloudformation": service{
 
 			Endpoints: endpoints{
