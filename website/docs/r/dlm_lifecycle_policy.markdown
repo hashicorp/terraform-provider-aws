@@ -57,6 +57,8 @@ resource "aws_dlm_lifecycle_policy" "example" {
       tags_to_add {
         SnapshotCreator = "DLM"
       }
+
+      copy_tags = false
     }
 
     target_tags {
@@ -85,6 +87,7 @@ The following arguments are supported:
 
 #### Schedule arguments
 
+* `copy_tags` - (Optional) Copy all user-defined tags on a source volume to snapshots of the volume created by this policy.
 * `create_rule` - (Required) See the [`create_rule`](#create-rule-arguments) block. Max of 1 per schedule.
 * `name` - (Required) A name for the schedule.
 * `retain_rule` - (Required) See the [`create_rule`](#create-rule-arguments) block. Max of 1 per schedule.
