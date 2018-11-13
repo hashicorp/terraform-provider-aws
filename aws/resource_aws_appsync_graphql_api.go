@@ -2,8 +2,10 @@ package aws
 
 import (
 	"fmt"
+	"github.com/hashicorp/terraform/helper/resource"
 	"log"
 	"regexp"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appsync"
@@ -130,6 +132,10 @@ func resourceAwsAppsyncGraphqlApi() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"schema": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -161,7 +167,43 @@ func resourceAwsAppsyncGraphqlApiCreate(d *schema.ResourceData, meta interface{}
 
 	d.SetId(*resp.GraphqlApi.ApiId)
 
+	if v, ok := d.GetOk("schema"); ok {
+		if err := startSchemaCreationAndWaitForItToBeActive(d.Id(), v.(string), d.Timeout(schema.TimeoutCreate), conn); err != nil {
+			return err
+		}
+	}
+
 	return resourceAwsAppsyncGraphqlApiRead(d, meta)
+}
+
+func startSchemaCreationAndWaitForItToBeActive(apiID string, schema string, timeout time.Duration, conn *appsync.AppSync) error {
+	input := &appsync.StartSchemaCreationInput{
+		ApiId:      aws.String(apiID),
+		Definition: []byte(schema),
+	}
+
+	if _, err := conn.StartSchemaCreation(input); err != nil {
+		return err
+	}
+
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{appsync.SchemaStatusProcessing},
+		Target:  []string{"SUCCESS"}, // should be appsync.SchemaStatusActive . I think this is a problem in documentation: https://docs.aws.amazon.com/appsync/latest/APIReference/API_GetSchemaCreationStatus.html
+		Timeout: timeout,
+		Refresh: func() (interface{}, string, error) {
+			result, err := conn.GetSchemaCreationStatus(&appsync.GetSchemaCreationStatusInput{
+				ApiId: aws.String(apiID),
+			})
+			if err != nil {
+				return 42, "", err
+			}
+
+			return result, *result.Status, nil
+		},
+	}
+	_, err := stateConf.WaitForState()
+
+	return err
 }
 
 func resourceAwsAppsyncGraphqlApiRead(d *schema.ResourceData, meta interface{}) error {
@@ -230,6 +272,13 @@ func resourceAwsAppsyncGraphqlApiUpdate(d *schema.ResourceData, meta interface{}
 		return err
 	}
 
+	if d.HasChange("schema") {
+		if v, ok := d.GetOk("schema"); ok {
+			if err := startSchemaCreationAndWaitForItToBeActive(d.Id(), v.(string), d.Timeout(schema.TimeoutUpdate), conn); err != nil {
+				return err
+			}
+		}
+	}
 	return resourceAwsAppsyncGraphqlApiRead(d, meta)
 }
 

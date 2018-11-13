@@ -521,6 +521,39 @@ func TestAccAWSAppsyncGraphqlApi_UserPoolConfig_DefaultAction(t *testing.T) {
 	})
 }
 
+func TestAccAWSAppsyncGraphqlApi_Schema(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_appsync_graphql_api.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppsyncGraphqlApiConfig_Schema(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsAppsyncGraphqlApiExists(resourceName),
+					testAccCheckAwsAppsyncTypeExists(resourceName, "Post"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"schema"},
+			},
+			{
+				Config: testAccAppsyncGraphqlApiConfig_SchemaUpdate(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsAppsyncGraphqlApiExists(resourceName),
+					testAccCheckAwsAppsyncTypeExists(resourceName, "PostV2"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAwsAppsyncGraphqlApiDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).appsyncconn
 	for _, rs := range s.RootModule().Resources {
@@ -557,6 +590,30 @@ func testAccCheckAwsAppsyncGraphqlApiExists(name string) resource.TestCheckFunc 
 		}
 
 		_, err := conn.GetGraphqlApi(input)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckAwsAppsyncTypeExists(name, typeName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return fmt.Errorf("Not found: %s", name)
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).appsyncconn
+
+		input := &appsync.GetTypeInput{
+			ApiId:    aws.String(rs.Primary.ID),
+			TypeName: aws.String(typeName),
+			Format:   aws.String(appsync.OutputTypeSdl),
+		}
+
+		_, err := conn.GetType(input)
 		if err != nil {
 			return err
 		}
@@ -704,4 +761,24 @@ resource "aws_appsync_graphql_api" "test" {
   }
 }
 `, rName, rName, defaultAction)
+}
+
+func testAccAppsyncGraphqlApiConfig_Schema(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_appsync_graphql_api" "test" {
+  authentication_type = "API_KEY"
+  name                = %q
+  schema              = "type Mutation {\n\tputPost(id: ID!, title: String!): Post\n}\n\ntype Post {\n\tid: ID!\n\ttitle: String!\n}\n\ntype Query {\n\tsinglePost(id: ID!): Post\n}\n\nschema {\n\tquery: Query\n\tmutation: Mutation\n\n}\n"
+}
+`, rName)
+}
+
+func testAccAppsyncGraphqlApiConfig_SchemaUpdate(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_appsync_graphql_api" "test" {
+  authentication_type = "API_KEY"
+  name                = %q
+  schema              = "type Mutation {\n\tputPostV2(id: ID!, title: String!): PostV2\n}\n\ntype PostV2 {\n\tid: ID!\n\ttitle: String!\n}\n\ntype Query {\n\tsinglePostV2(id: ID!): PostV2\n}\n\nschema {\n\tquery: Query\n\tmutation: Mutation\n\n}\n"
+}
+`, rName)
 }
