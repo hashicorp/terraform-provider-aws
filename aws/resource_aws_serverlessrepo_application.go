@@ -92,17 +92,9 @@ func resourceAwsServerlessRepositoryApplicationCreate(d *schema.ResourceData, me
 
 	d.SetId(*changeSetResponse.StackId)
 
-	lastChangeSetStatus, err := waitForCreateChangeSet(d, cfConn, changeSetResponse.ChangeSetId)
+	err = waitForCreateChangeSet(d, cfConn, changeSetResponse.ChangeSetId)
 	if err != nil {
 		return err
-	}
-
-	if lastChangeSetStatus == "FAILED" {
-		reasons, err := getCloudFormationFailures(d.Id(), cfConn)
-		if err != nil {
-			return fmt.Errorf("Failed getting failure reasons: %q", err.Error())
-		}
-		return fmt.Errorf("%s: %q", lastChangeSetStatus, reasons)
 	}
 
 	executeRequest := cloudformation.ExecuteChangeSetInput{
@@ -357,7 +349,7 @@ func resourceAwsServerlessRepositoryApplicationDelete(d *schema.ResourceData, me
 	return nil
 }
 
-func waitForCreateChangeSet(d *schema.ResourceData, conn *cloudformation.CloudFormation, changeSetName *string) (string, error) {
+func waitForCreateChangeSet(d *schema.ResourceData, conn *cloudformation.CloudFormation, changeSetName *string) error {
 	var lastChangeSetStatus string
 	changeSetWait := resource.StateChangeConf{
 		Pending: []string{
@@ -387,7 +379,15 @@ func waitForCreateChangeSet(d *schema.ResourceData, conn *cloudformation.CloudFo
 		},
 	}
 	_, err := changeSetWait.WaitForState()
-	return lastChangeSetStatus, err
+
+	if lastChangeSetStatus == "FAILED" {
+		reasons, err := getCloudFormationFailures(d.Id(), conn)
+		if err != nil {
+			return fmt.Errorf("Failed getting failure reasons: %q", err.Error())
+		}
+		return fmt.Errorf("%s: %q", lastChangeSetStatus, reasons)
+	}
+	return err
 }
 
 // Move to `structure.go`?
