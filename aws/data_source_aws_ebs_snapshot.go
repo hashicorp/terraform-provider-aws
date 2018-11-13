@@ -129,7 +129,7 @@ func dataSourceAwsEbsSnapshotRead(d *schema.ResourceData, meta interface{}) erro
 				"specific search criteria, or set `most_recent` attribute to true.")
 		}
 		sort.Slice(resp.Snapshots, func(i, j int) bool {
-			return aws.TimeValue(resp.Snapshots[i].StartTime).Unix() < aws.TimeValue(resp.Snapshots[j].StartTime).Unix()
+			return aws.TimeValue(resp.Snapshots[i].StartTime).Unix() > aws.TimeValue(resp.Snapshots[j].StartTime).Unix()
 		})
 	}
 
