@@ -2001,6 +2001,128 @@ func testAccCheckAWSDBInstanceExists(n string, v *rds.DBInstance) resource.TestC
 	}
 }
 
+func TestAccAWSRDSDBInstance_withPerformanceInsights(t *testing.T) {
+	var v rds.DBInstance
+	rInt := acctest.RandInt()
+	resourceName := "aws_db_instance.bar"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBInstancePerformanceInsightsEnabled(rInt, 7),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &v),
+					testAccCheckAWSDBInstanceAttributes(&v),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", "aws_kms_key.foo", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_retention_period", "7"),
+				),
+			},
+			{
+				Config: testAccAWSDBInstancePerformanceInsightsDisabled(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &v),
+					testAccCheckAWSDBInstanceAttributes(&v),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "false"),
+					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", "aws_kms_key.foo", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_retention_period", "0"),
+				),
+			},
+			{
+				Config: testAccAWSDBInstancePerformanceInsightsEnabled(rInt, 7),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &v),
+					testAccCheckAWSDBInstanceAttributes(&v),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", "aws_kms_key.foo", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_retention_period", "7"),
+				),
+			},
+			{
+				Config: testAccAWSDBInstancePerformanceInsightsEnabled(rInt, 731),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &v),
+					testAccCheckAWSDBInstanceAttributes(&v),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", "aws_kms_key.foo", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_retention_period", "731"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"password",
+					"skip_final_snapshot",
+					"final_snapshot_identifier",
+				},
+			},
+		},
+	})
+}
+
+func TestAccAWSDBInstance_ReplicateSourceDb_PerformanceInsightsEnabled(t *testing.T) {
+	var dbInstance, sourceDbInstance rds.DBInstance
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	kmsKeyResourceName := "aws_kms_key.test"
+	sourceResourceName := "aws_db_instance.source"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBInstanceConfig_ReplicateSourceDb_PerformanceInsightsEnabled(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(sourceResourceName, &sourceDbInstance),
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					testAccCheckAWSDBInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", kmsKeyResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_retention_period", "7"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDBInstance_SnapshotIdentifier_PerformanceInsightsEnabled(t *testing.T) {
+	var dbInstance, sourceDbInstance rds.DBInstance
+	var dbSnapshot rds.DBSnapshot
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	kmsKeyResourceName := "aws_kms_key.test"
+	sourceDbResourceName := "aws_db_instance.source"
+	snapshotResourceName := "aws_db_snapshot.test"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBInstanceConfig_SnapshotIdentifier_PerformanceInsightsEnabled(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(sourceDbResourceName, &sourceDbInstance),
+					testAccCheckDbSnapshotExists(snapshotResourceName, &dbSnapshot),
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", kmsKeyResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_retention_period", "7"),
+				),
+			},
+		},
+	})
+}
+
 // Database names cannot collide, and deletion takes so long, that making the
 // name a bit random helps so able we can kill a test that's just waiting for a
 // delete and not be blocked on kicking off another one.
@@ -4571,4 +4693,180 @@ resource "aws_db_instance" "test" {
   }
 }
 `, rName, rName, rName, rName)
+}
+
+func testAccAWSDBInstancePerformanceInsightsDisabled(n int) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "foo" {
+    description = "Terraform acc test %d"
+    policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Id": "kms-tf-1",
+  "Statement": [
+    {
+      "Sid": "Enable IAM User Permissions",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": "kms:*",
+      "Resource": "*"
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_db_instance" "bar" {
+  engine                                = "mysql"
+  identifier                            = "tf-db-test-%d"
+  instance_class                        = "db.m3.medium"
+  allocated_storage                     = 5
+  backup_retention_period               = 0
+  name                                  = "mydb"
+  username                              = "foo"
+  password                              = "mustbeeightcharaters"
+  skip_final_snapshot                   = true
+}
+`, n, n)
+}
+
+func testAccAWSDBInstancePerformanceInsightsEnabled(n int, piRetentionPeriod int) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "foo" {
+    description = "Terraform acc test %d"
+    policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Id": "kms-tf-1",
+  "Statement": [
+    {
+      "Sid": "Enable IAM User Permissions",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": "kms:*",
+      "Resource": "*"
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_db_instance" "bar" {
+  allocated_storage                     = 5
+  backup_retention_period               = 0
+  engine                                = "mysql"
+  engine_version                        = "5.6.41"
+  identifier                            = "tf-db-test-%d"
+  instance_class                        = "db.m3.medium"
+  name                                  = "mydb"
+  password                              = "mustbeeightcharaters"
+  performance_insights_enabled          = true
+  performance_insights_kms_key_id       = "${aws_kms_key.foo.arn}"
+  performance_insights_retention_period = %d
+  skip_final_snapshot                   = true
+  username                              = "foo"
+}
+`, n, n, piRetentionPeriod)
+}
+
+func testAccAWSDBInstanceConfig_ReplicateSourceDb_PerformanceInsightsEnabled(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description = "Terraform acc test"
+  policy      = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Id": "kms-tf-1",
+  "Statement": [
+    {
+      "Sid": "Enable IAM User Permissions",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": "kms:*",
+      "Resource": "*"
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_db_instance" "source" {
+  allocated_storage       = 5
+  backup_retention_period = 1
+  engine                  = "mysql"
+  engine_version          = "5.6.41"
+  identifier              = "%s-source"
+  instance_class          = "db.m3.medium"
+  password                = "mustbeeightcharaters"
+  username                = "tfacctest"
+  skip_final_snapshot     = true
+}
+
+resource "aws_db_instance" "test" {
+  identifier                            = %q
+  instance_class                        = "${aws_db_instance.source.instance_class}"
+  performance_insights_enabled          = true
+  performance_insights_kms_key_id       = "${aws_kms_key.test.arn}"
+  performance_insights_retention_period = 7
+  replicate_source_db                   = "${aws_db_instance.source.id}"
+  skip_final_snapshot                   = true
+}
+`, rName, rName)
+}
+
+func testAccAWSDBInstanceConfig_SnapshotIdentifier_PerformanceInsightsEnabled(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description = "Terraform acc test"
+  policy      = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Id": "kms-tf-1",
+  "Statement": [
+    {
+      "Sid": "Enable IAM User Permissions",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": "kms:*",
+      "Resource": "*"
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_db_instance" "source" {
+  allocated_storage   = 5
+  engine              = "mysql"
+  engine_version      = "5.6.41"
+  identifier          = "%s-source"
+  instance_class      = "db.m3.medium"
+  password            = "avoid-plaintext-passwords"
+  username            = "tfacctest"
+  skip_final_snapshot = true
+}
+
+resource "aws_db_snapshot" "test" {
+  db_instance_identifier = "${aws_db_instance.source.id}"
+  db_snapshot_identifier = %q
+}
+
+resource "aws_db_instance" "test" {
+  identifier                            = %q
+  instance_class                        = "${aws_db_instance.source.instance_class}"
+  performance_insights_enabled          = true
+  performance_insights_kms_key_id       = "${aws_kms_key.test.arn}"
+  performance_insights_retention_period = 7
+  snapshot_identifier                   = "${aws_db_snapshot.test.id}"
+  skip_final_snapshot                   = true
+}
+`, rName, rName, rName)
 }

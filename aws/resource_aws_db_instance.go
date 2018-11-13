@@ -424,6 +424,25 @@ func resourceAwsDbInstance() *schema.Resource {
 				Optional: true,
 			},
 
+			"performance_insights_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+
+			"performance_insights_kms_key_id": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validateArn,
+			},
+
+			"performance_insights_retention_period": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+
 			"tags": tagsSchema(),
 		},
 	}
@@ -573,6 +592,18 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			requiresModifyDbInstance = true
 		}
 
+		if attr, ok := d.GetOk("performance_insights_enabled"); ok {
+			opts.EnablePerformanceInsights = aws.Bool(attr.(bool))
+		}
+
+		if attr, ok := d.GetOk("performance_insights_kms_key_id"); ok {
+			opts.PerformanceInsightsKMSKeyId = aws.String(attr.(string))
+		}
+
+		if attr, ok := d.GetOk("performance_insights_retention_period"); ok {
+			opts.PerformanceInsightsRetentionPeriod = aws.Int64(int64(attr.(int)))
+		}
+
 		log.Printf("[DEBUG] DB Instance Replica create configuration: %#v", opts)
 		_, err := conn.CreateDBInstanceReadReplica(&opts)
 		if err != nil {
@@ -699,6 +730,18 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 
 		if attr, ok := d.GetOk("iam_database_authentication_enabled"); ok {
 			opts.EnableIAMDatabaseAuthentication = aws.Bool(attr.(bool))
+		}
+
+		if attr, ok := d.GetOk("performance_insights_enabled"); ok {
+			opts.EnablePerformanceInsights = aws.Bool(attr.(bool))
+		}
+
+		if attr, ok := d.GetOk("performance_insights_kms_key_id"); ok {
+			opts.PerformanceInsightsKMSKeyId = aws.String(attr.(string))
+		}
+
+		if attr, ok := d.GetOk("performance_insights_retention_period"); ok {
+			opts.PerformanceInsightsRetentionPeriod = aws.Int64(int64(attr.(int)))
 		}
 
 		log.Printf("[DEBUG] DB Instance S3 Restore configuration: %#v", opts)
@@ -897,6 +940,19 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			requiresModifyDbInstance = true
 		}
 
+		if attr, ok := d.GetOk("performance_insights_enabled"); ok {
+			modifyDbInstanceInput.EnablePerformanceInsights = aws.Bool(attr.(bool))
+			requiresModifyDbInstance = true
+
+			if attr, ok := d.GetOk("performance_insights_kms_key_id"); ok {
+				modifyDbInstanceInput.PerformanceInsightsKMSKeyId = aws.String(attr.(string))
+			}
+
+			if attr, ok := d.GetOk("performance_insights_retention_period"); ok {
+				modifyDbInstanceInput.PerformanceInsightsRetentionPeriod = aws.Int64(int64(attr.(int)))
+			}
+		}
+
 		log.Printf("[DEBUG] DB Instance restore from snapshot configuration: %s", opts)
 		_, err := conn.RestoreDBInstanceFromDBSnapshot(&opts)
 
@@ -1045,6 +1101,18 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			opts.DomainIAMRoleName = aws.String(attr.(string))
 		}
 
+		if attr, ok := d.GetOk("performance_insights_enabled"); ok {
+			opts.EnablePerformanceInsights = aws.Bool(attr.(bool))
+		}
+
+		if attr, ok := d.GetOk("performance_insights_kms_key_id"); ok {
+			opts.PerformanceInsightsKMSKeyId = aws.String(attr.(string))
+		}
+
+		if attr, ok := d.GetOk("performance_insights_retention_period"); ok {
+			opts.PerformanceInsightsRetentionPeriod = aws.Int64(int64(attr.(int)))
+		}
+
 		log.Printf("[DEBUG] DB Instance create configuration: %#v", opts)
 		var err error
 		err = resource.Retry(5*time.Minute, func() *resource.RetryError {
@@ -1154,6 +1222,9 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("kms_key_id", v.KmsKeyId)
 	d.Set("port", v.DbInstancePort)
 	d.Set("iam_database_authentication_enabled", v.IAMDatabaseAuthenticationEnabled)
+	d.Set("performance_insights_enabled", v.PerformanceInsightsEnabled)
+	d.Set("performance_insights_kms_key_id", v.PerformanceInsightsKMSKeyId)
+	d.Set("performance_insights_retention_period", v.PerformanceInsightsRetentionPeriod)
 	if v.DBSubnetGroup != nil {
 		d.Set("db_subnet_group_name", v.DBSubnetGroup.DBSubnetGroupName)
 	}
@@ -1472,6 +1543,18 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 		d.SetPartial("domain_iam_role_name")
 		req.Domain = aws.String(d.Get("domain").(string))
 		req.DomainIAMRoleName = aws.String(d.Get("domain_iam_role_name").(string))
+		requestUpdate = true
+	}
+
+	if d.HasChange("performance_insights_enabled") || d.HasChange("performance_insights_kms_key_id") || d.HasChange("performance_insights_retention_period") {
+		d.SetPartial("performance_insights_enabled")
+		req.EnablePerformanceInsights = aws.Bool(d.Get("performance_insights_enabled").(bool))
+
+		d.SetPartial("performance_insights_kms_key_id")
+		req.PerformanceInsightsKMSKeyId = aws.String(d.Get("performance_insights_kms_key_id").(string))
+
+		d.SetPartial("performance_insights_retention_period")
+		req.PerformanceInsightsRetentionPeriod = aws.Int64(int64(d.Get("performance_insights_retention_period").(int)))
 		requestUpdate = true
 	}
 
