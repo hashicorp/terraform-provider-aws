@@ -95,7 +95,7 @@ resource "aws_appsync_graphql_api" "example" {
 }
 ```
 
-### Definig a schema
+### Defining a schema
 
 ```hcl
 resource "aws_appsync_graphql_api" "test" {
