@@ -334,6 +334,7 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 						"delete_on_termination": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							Default:  true,
 						},
 						"description": {
 							Type:     schema.TypeString,

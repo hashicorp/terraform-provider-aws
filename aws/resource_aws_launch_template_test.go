@@ -447,6 +447,7 @@ func TestAccAWSLaunchTemplate_networkInterface(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resName, "network_interfaces.0.network_interface_id"),
 					resource.TestCheckResourceAttr(resName, "network_interfaces.0.associate_public_ip_address", "false"),
 					resource.TestCheckResourceAttr(resName, "network_interfaces.0.ipv4_address_count", "2"),
+					resource.TestCheckResourceAttr(resName, "network_interfaces.0.delete_on_termination", "true"),
 				),
 			},
 		},
