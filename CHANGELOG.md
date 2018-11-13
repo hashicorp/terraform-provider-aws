@@ -10,6 +10,7 @@ ENHANCEMENTS:
 * resource/aws_ebs_volume: Switch to tagging on creation [GH-6396]
 * resource/aws_elastic_transcoder_pipeline: Support resource import [GH-6388]
 * resource/aws_elastic_transcoder_preset: Support resource import [GH-6388]
+* resource/aws_lambda_event_source_mapping: Add `starting_position_timestamp` argument [GH-6437]
 * resource/aws_ses_receipt_rule: Support resource import [GH-6237]
 
 BUG FIXES:
