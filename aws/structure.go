@@ -1780,21 +1780,22 @@ func expandApiGatewayStageKeyOperations(d *schema.ResourceData) []*apigateway.Pa
 	return operations
 }
 
-func expandCloudWachLogMetricTransformations(m map[string]interface{}) ([]*cloudwatchlogs.MetricTransformation, error) {
+func expandCloudWatchLogMetricTransformations(m map[string]interface{}) []*cloudwatchlogs.MetricTransformation {
 	transformation := cloudwatchlogs.MetricTransformation{
 		MetricName:      aws.String(m["name"].(string)),
 		MetricNamespace: aws.String(m["namespace"].(string)),
 		MetricValue:     aws.String(m["value"].(string)),
 	}
 
-	if m["default_value"] != "" {
-		transformation.DefaultValue = aws.Float64(m["default_value"].(float64))
+	if m["default_value"].(string) != "" {
+		value, _ := strconv.ParseFloat(m["default_value"].(string), 64)
+		transformation.DefaultValue = aws.Float64(value)
 	}
 
-	return []*cloudwatchlogs.MetricTransformation{&transformation}, nil
+	return []*cloudwatchlogs.MetricTransformation{&transformation}
 }
 
-func flattenCloudWachLogMetricTransformations(ts []*cloudwatchlogs.MetricTransformation) []interface{} {
+func flattenCloudWatchLogMetricTransformations(ts []*cloudwatchlogs.MetricTransformation) []interface{} {
 	mts := make([]interface{}, 0)
 	m := make(map[string]interface{})
 
@@ -1802,7 +1803,9 @@ func flattenCloudWachLogMetricTransformations(ts []*cloudwatchlogs.MetricTransfo
 	m["namespace"] = *ts[0].MetricNamespace
 	m["value"] = *ts[0].MetricValue
 
-	if ts[0].DefaultValue != nil {
+	if ts[0].DefaultValue == nil {
+		m["default_value"] = ""
+	} else {
 		m["default_value"] = *ts[0].DefaultValue
 	}
 
