@@ -14,7 +14,7 @@ func dataSourceAwsEip() *schema.Resource {
 		Read: dataSourceAwsEipRead,
 
 		Schema: map[string]*schema.Schema{
-			"filter": dataSourceFiltersSchema(),
+			"filter": ec2CustomFiltersSchema(),
 			"id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -33,39 +33,35 @@ func dataSourceAwsEip() *schema.Resource {
 func dataSourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	filters, filtersOk := d.GetOk("filter")
-	id, idOk := d.GetOk("id")
-	publicIP, publicIPOk := d.GetOk("public_ip")
+	req := &ec2.DescribeAddressesInput{}
 
-	if (idOk || publicIPOk) && filtersOk {
-		return fmt.Errorf("filter cannot be used when id or public_ip is set")
+	if v, ok := d.GetOk("id"); ok {
+		req.AllocationIds = []*string{aws.String(v.(string))}
 	}
 
-	req := &ec2.DescribeAddressesInput{}
+	if v, ok := d.GetOk("public_ip"); ok {
+		req.PublicIps = []*string{aws.String(v.(string))}
+	}
+
 	req.Filters = []*ec2.Filter{}
 
-	if idOk {
-		req.AllocationIds = []*string{aws.String(id.(string))}
-	}
+	req.Filters = append(req.Filters, buildEC2CustomFilterList(
+		d.Get("filter").(*schema.Set),
+	)...)
 
-	if publicIPOk {
-		req.PublicIps = []*string{aws.String(publicIP.(string))}
-	}
+	req.Filters = append(req.Filters, buildEC2TagFilterList(
+		tagsFromMap(d.Get("tags").(map[string]interface{})),
+	)...)
 
-	if filtersOk {
-		req.Filters = buildAwsDataSourceFilters(filters.(*schema.Set))
-	}
-
-	if tags, ok := d.GetOk("tags"); ok {
-		req.Filters = append(req.Filters, buildEC2TagFilterList(
-			tagsFromMap(tags.(map[string]interface{})),
-		)...)
+	if len(req.Filters) == 0 {
+		// Don't send an empty filters list; the EC2 API won't accept it.
+		req.Filters = nil
 	}
 
 	log.Printf("[DEBUG] Reading EIP: %s", req)
 	resp, err := conn.DescribeAddresses(req)
 	if err != nil {
-		return err
+		return fmt.Errorf("error describing EC2 Address: %s", err)
 	}
 	if resp == nil || len(resp.Addresses) == 0 {
 		return fmt.Errorf("no matching Elastic IP found")
@@ -76,11 +72,11 @@ func dataSourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 
 	eip := resp.Addresses[0]
 
-	if *eip.Domain == "vpc" {
-		d.SetId(*eip.AllocationId)
+	if aws.StringValue(eip.Domain) == ec2.DomainTypeVpc {
+		d.SetId(aws.StringValue(eip.AllocationId))
 	} else {
 		log.Printf("[DEBUG] Reading EIP, has no AllocationId, this means we have a Classic EIP, the id will also be the public ip : %s", req)
-		d.SetId(*eip.PublicIp)
+		d.SetId(aws.StringValue(eip.PublicIp))
 	}
 
 	d.Set("public_ip", eip.PublicIp)
