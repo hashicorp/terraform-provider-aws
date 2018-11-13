@@ -60,7 +60,7 @@ All of the arguments above are exported as attributes.
 
 ## Import
 
-DynamoDB table items can be imported using the `table_name`, `hash_key`, `hash_key_type`, `hash_key_value` and optionally `range_key`, `range_key_type`, `range_key_value` if required, separated by underscores (`/`).
+DynamoDB table items can be imported using the `table_name`, `hash_key`, `hash_key_type`, `hash_key_value` and optionally `range_key`, `range_key_type`, `range_key_value` if required, separated by slashes (`/`).
 
 ### Examples
 
@@ -87,7 +87,7 @@ ITEM
 $ terraform import aws_dynamodb_table_item test_table/exampleHashKey/S/something
 ```
 
-The same example as above with a range key of `number` type:
+The same example as above with a range key of type number:
 
 ```console
 $ terraform import aws_dynamodb_table_item test_table/exampleHashKey/S/something/exampleRangeKey/N/1111
