@@ -105,82 +105,10 @@ func resourceAwsServerlessRepositoryApplicationCreate(d *schema.ResourceData, me
 	if err != nil {
 		return fmt.Errorf("Executing Change Set failed: %s", err.Error())
 	}
-	var lastStatus string
 
-	wait := resource.StateChangeConf{
-		Pending: []string{
-			"CREATE_IN_PROGRESS",
-			"DELETE_IN_PROGRESS",
-			"ROLLBACK_IN_PROGRESS",
-		},
-		Target: []string{
-			"CREATE_COMPLETE",
-			"CREATE_FAILED",
-			"DELETE_COMPLETE",
-			"DELETE_FAILED",
-			"ROLLBACK_COMPLETE",
-			"ROLLBACK_FAILED",
-		},
-		Timeout:    d.Timeout(schema.TimeoutCreate),
-		MinTimeout: 1 * time.Second,
-		Refresh: func() (interface{}, string, error) {
-			resp, err := cfConn.DescribeStacks(&cloudformation.DescribeStacksInput{
-				StackName: aws.String(d.Id()),
-			})
-			if err != nil {
-				log.Printf("[ERROR] Failed to describe stacks: %s", err)
-				return nil, "", err
-			}
-			if len(resp.Stacks) == 0 {
-				// This shouldn't happen unless CloudFormation is inconsistent
-				// See https://github.com/hashicorp/terraform/issues/5487
-				log.Printf("[WARN] CloudFormation stack %q not found.\nresponse: %q",
-					d.Id(), resp)
-				return resp, "", fmt.Errorf(
-					"CloudFormation stack %q vanished unexpectedly during creation.\n"+
-						"Unless you knowingly manually deleted the stack "+
-						"please report this as bug at https://github.com/hashicorp/terraform/issues\n"+
-						"along with the config & Terraform version & the details below:\n"+
-						"Full API response: %s\n",
-					d.Id(), resp)
-			}
-
-			status := *resp.Stacks[0].StackStatus
-			lastStatus = status
-			log.Printf("[DEBUG] Current CloudFormation stack status: %q", status)
-
-			return resp, status, err
-		},
-	}
-
-	_, err = wait.WaitForState()
+	err = waitForExecuteChangeSet(d, cfConn)
 	if err != nil {
 		return err
-	}
-
-	if lastStatus == "ROLLBACK_COMPLETE" || lastStatus == "ROLLBACK_FAILED" {
-		reasons, err := getCloudFormationRollbackReasons(d.Id(), nil, cfConn)
-		if err != nil {
-			return fmt.Errorf("Failed getting rollback reasons: %q", err.Error())
-		}
-
-		return fmt.Errorf("%s: %q", lastStatus, reasons)
-	}
-	if lastStatus == "DELETE_COMPLETE" || lastStatus == "DELETE_FAILED" {
-		reasons, err := getCloudFormationDeletionReasons(d.Id(), cfConn)
-		if err != nil {
-			return fmt.Errorf("Failed getting deletion reasons: %q", err.Error())
-		}
-
-		d.SetId("")
-		return fmt.Errorf("%s: %q", lastStatus, reasons)
-	}
-	if lastStatus == "CREATE_FAILED" {
-		reasons, err := getCloudFormationFailures(d.Id(), cfConn)
-		if err != nil {
-			return fmt.Errorf("Failed getting failure reasons: %q", err.Error())
-		}
-		return fmt.Errorf("%s: %q", lastStatus, reasons)
 	}
 
 	log.Printf("[INFO] CloudFormation Stack %q created", d.Id())
@@ -387,6 +315,82 @@ func waitForCreateChangeSet(d *schema.ResourceData, conn *cloudformation.CloudFo
 		}
 		return fmt.Errorf("%s: %q", lastChangeSetStatus, reasons)
 	}
+	return err
+}
+
+func waitForExecuteChangeSet(d *schema.ResourceData, conn *cloudformation.CloudFormation) error {
+	var lastStatus string
+	wait := resource.StateChangeConf{
+		Pending: []string{
+			"CREATE_IN_PROGRESS",
+			"DELETE_IN_PROGRESS",
+			"ROLLBACK_IN_PROGRESS",
+		},
+		Target: []string{
+			"CREATE_COMPLETE",
+			"CREATE_FAILED",
+			"DELETE_COMPLETE",
+			"DELETE_FAILED",
+			"ROLLBACK_COMPLETE",
+			"ROLLBACK_FAILED",
+		},
+		Timeout:    d.Timeout(schema.TimeoutCreate),
+		MinTimeout: 1 * time.Second,
+		Refresh: func() (interface{}, string, error) {
+			resp, err := conn.DescribeStacks(&cloudformation.DescribeStacksInput{
+				StackName: aws.String(d.Id()),
+			})
+			if err != nil {
+				log.Printf("[ERROR] Failed to describe stacks: %s", err)
+				return nil, "", err
+			}
+			if len(resp.Stacks) == 0 {
+				// This shouldn't happen unless CloudFormation is inconsistent
+				// See https://github.com/hashicorp/terraform/issues/5487
+				log.Printf("[WARN] CloudFormation stack %q not found.\nresponse: %q",
+					d.Id(), resp)
+				return resp, "", fmt.Errorf(
+					"CloudFormation stack %q vanished unexpectedly during creation.\n"+
+						"Unless you knowingly manually deleted the stack "+
+						"please report this as bug at https://github.com/hashicorp/terraform/issues\n"+
+						"along with the config & Terraform version & the details below:\n"+
+						"Full API response: %s\n",
+					d.Id(), resp)
+			}
+
+			status := *resp.Stacks[0].StackStatus
+			lastStatus = status
+			log.Printf("[DEBUG] Current CloudFormation stack status: %q", status)
+
+			return resp, status, err
+		},
+	}
+	_, err := wait.WaitForState()
+	if lastStatus == "ROLLBACK_COMPLETE" || lastStatus == "ROLLBACK_FAILED" {
+		reasons, err := getCloudFormationRollbackReasons(d.Id(), nil, conn)
+		if err != nil {
+			return fmt.Errorf("Failed getting rollback reasons: %q", err.Error())
+		}
+
+		return fmt.Errorf("%s: %q", lastStatus, reasons)
+	}
+	if lastStatus == "DELETE_COMPLETE" || lastStatus == "DELETE_FAILED" {
+		reasons, err := getCloudFormationDeletionReasons(d.Id(), conn)
+		if err != nil {
+			return fmt.Errorf("Failed getting deletion reasons: %q", err.Error())
+		}
+
+		d.SetId("")
+		return fmt.Errorf("%s: %q", lastStatus, reasons)
+	}
+	if lastStatus == "CREATE_FAILED" {
+		reasons, err := getCloudFormationFailures(d.Id(), conn)
+		if err != nil {
+			return fmt.Errorf("Failed getting failure reasons: %q", err.Error())
+		}
+		return fmt.Errorf("%s: %q", lastStatus, reasons)
+	}
+
 	return err
 }
 
