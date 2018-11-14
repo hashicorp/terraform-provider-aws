@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New Resource:** `aws_gamelift_game_session_queue` [GH-6335]
 * **New Resource:** `aws_glacier_vault_lock` [GH-6432]
 
 ENHANCEMENTS:
