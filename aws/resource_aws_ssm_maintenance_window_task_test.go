@@ -26,7 +26,7 @@ func TestAccAWSSSMMaintenanceWindowTask_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMMaintenanceWindowTaskExists("aws_ssm_maintenance_window_task.target", &task),
 					resource.TestCheckResourceAttr("aws_ssm_maintenance_window_task.target", "name", "TestMaintenanceWindowTask"),
-					resource.TestCheckResourceAttr("aws_ssm_maintenance_window_task.target", "description", "This ressource is for test purpose only"),
+					resource.TestCheckResourceAttr("aws_ssm_maintenance_window_task.target", "description", "This resource is for test purpose only"),
 				),
 			},
 		},
