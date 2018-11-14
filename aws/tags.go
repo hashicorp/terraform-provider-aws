@@ -110,6 +110,8 @@ func setVolumeTags(conn *ec2.EC2, d *schema.ResourceData) error {
 					if err != nil {
 						return err
 					}
+				} else {
+					return err
 				}
 			}
 		}
@@ -140,6 +142,8 @@ func setVolumeTags(conn *ec2.EC2, d *schema.ResourceData) error {
 					if err != nil {
 						return err
 					}
+				} else {
+					return err
 				}
 			}
 		}
@@ -185,6 +189,8 @@ func setTags(conn *ec2.EC2, d *schema.ResourceData) error {
 					if err != nil {
 						return err
 					}
+				} else {
+					return err
 				}
 			}
 		}
@@ -215,6 +221,8 @@ func setTags(conn *ec2.EC2, d *schema.ResourceData) error {
 					if err != nil {
 						return err
 					}
+				} else {
+					return err
 				}
 			}
 		}
