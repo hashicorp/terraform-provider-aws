@@ -100,7 +100,7 @@ resource "aws_appsync_graphql_api" "example" {
 ```hcl
 resource "aws_appsync_graphql_api" "test" {
   authentication_type = "API_KEY"
-  name                = %q
+  name                = "tf-example"
   schema              = <<EOF
 type Mutation {
 	putPost(id: ID!, title: String!): Post
