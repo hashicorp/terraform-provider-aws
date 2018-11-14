@@ -15,13 +15,13 @@ example to supply credentials for a dependency microservice.
 
 ```hcl
 data "aws_api_gateway_api_key" "my_api_key" {
-  id = "my-rest-api-key"
+  id = "ru3mpjgse6"
 }
 ```
 
 ## Argument Reference
 
- * `id` - (Required) The ID of the API Key to look up. If no API Key is found with this name, an error will be returned.
+ * `id` - (Required) The ID of the API Key to look up.
 
 ## Attributes Reference
 
