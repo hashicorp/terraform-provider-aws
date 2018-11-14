@@ -22,6 +22,8 @@ resource "aws_ssm_maintenance_window" "window" {
 
 resource "aws_ssm_maintenance_window_task" "task" {
   window_id        = "${aws_ssm_maintenance_window.window.id}"
+  name             = "maintenance-window-task"
+  description      = "This is a maintenance window task"
   task_type        = "RUN_COMMAND"
   task_arn         = "AWS-RunShellScript"
   priority         = 1
@@ -57,6 +59,8 @@ The following arguments are supported:
 * `task_type` - (Required) The type of task being registered. The only allowed value is `RUN_COMMAND`.
 * `task_arn` - (Required) The ARN of the task to execute.
 * `service_role_arn` - (Required) The role that should be assumed when executing the task.
+* `name` - (Optional) The name of the maintenance window task.
+* `description` - (Optional) The description of the maintenance window task.
 * `targets` - (Required) The targets (either instances or window target ids). Instances are specified using Key=InstanceIds,Values=instanceid1,instanceid2. Window target ids are specified using Key=WindowTargetIds,Values=window target id1, window target id2.
 * `priority` - (Optional) The priority of the task in the Maintenance Window, the lower the number the higher the priority. Tasks in a Maintenance Window are scheduled in priority order with tasks that have the same priority scheduled in parallel.
 * `logging_info` - (Optional) A structure containing information about an Amazon S3 bucket to write instance-level logs to. Documented below.
