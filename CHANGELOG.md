@@ -17,6 +17,7 @@ ENHANCEMENTS:
 * resource/aws_elastic_transcoder_preset: Support resource import [GH-6388]
 * resource/aws_lambda_event_source_mapping: Add `starting_position_timestamp` argument [GH-6437]
 * resource/aws_ses_receipt_rule: Support resource import [GH-6237]
+* resource/aws_ssm_maintenance_window_task: Add `description` and `name` arguments [GH-5762]
 
 BUG FIXES:
 
