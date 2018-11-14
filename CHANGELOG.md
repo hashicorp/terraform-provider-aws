@@ -21,6 +21,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * data-source/aws_ebs_snapshot: Fix `most_recent` ordering [GH-6414]
+* resource/aws_cloudwatch_log_metric_filter: Properly leave `default_value` empty when unset [GH-5933]
 * resource/aws_security_group_rule: Support all non-zero `from_port` and `to_port` configurations with `protocol` ALL/-1 [GH-6423]
 * resource/aws_sns_platform_application: Properly trigger resource recreation when deleted outside Terraform [GH-6436]
 
