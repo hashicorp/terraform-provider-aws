@@ -41,7 +41,7 @@ resource "aws_lambda_function" "test_lambda" {
   role             = "${aws_iam_role.iam_for_lambda.arn}"
   handler          = "exports.test"
   source_code_hash = "${base64sha256(file("lambda_function_payload.zip"))}"
-  runtime          = "nodejs4.3"
+  runtime          = "nodejs8.10"
 
   environment {
     variables = {
@@ -133,6 +133,12 @@ For **environment** the following attributes are supported:
 [7]: http://docs.aws.amazon.com/lambda/latest/dg/vpc.html
 [8]: https://docs.aws.amazon.com/lambda/latest/dg/deployment-package-v2.html
 [9]: https://docs.aws.amazon.com/lambda/latest/dg/concurrent-executions.html
+
+## Timeouts
+
+`aws_lambda_function` provides the following [Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+
+* `create` - (Default `10m`) How long to wait for slow uploads or EC2 throttling errors.
 
 ## Import
 

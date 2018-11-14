@@ -54,7 +54,7 @@ func resourceAwsIamUser() *schema.Resource {
 			"permissions_boundary": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(20, 2048),
+				ValidateFunc: validation.StringLenBetween(0, 2048),
 			},
 			"force_destroy": {
 				Type:        schema.TypeBool,
@@ -205,84 +205,26 @@ func resourceAwsIamUserDelete(d *schema.ResourceData, meta interface{}) error {
 
 	// All access keys, MFA devices and login profile for the user must be removed
 	if d.Get("force_destroy").(bool) {
-		var accessKeys []string
-		listAccessKeys := &iam.ListAccessKeysInput{
-			UserName: aws.String(d.Id()),
-		}
-		pageOfAccessKeys := func(page *iam.ListAccessKeysOutput, lastPage bool) (shouldContinue bool) {
-			for _, k := range page.AccessKeyMetadata {
-				accessKeys = append(accessKeys, *k.AccessKeyId)
-			}
-			return !lastPage
-		}
-		err = iamconn.ListAccessKeysPages(listAccessKeys, pageOfAccessKeys)
+
+		err = deleteAwsIamUserAccessKeys(iamconn, d.Id())
 		if err != nil {
-			return fmt.Errorf("Error removing access keys of user %s: %s", d.Id(), err)
-		}
-		for _, k := range accessKeys {
-			_, err := iamconn.DeleteAccessKey(&iam.DeleteAccessKeyInput{
-				UserName:    aws.String(d.Id()),
-				AccessKeyId: aws.String(k),
-			})
-			if err != nil {
-				return fmt.Errorf("Error deleting access key %s: %s", k, err)
-			}
+			return err
 		}
 
-		var MFADevices []string
-		listMFADevices := &iam.ListMFADevicesInput{
-			UserName: aws.String(d.Id()),
-		}
-		pageOfMFADevices := func(page *iam.ListMFADevicesOutput, lastPage bool) (shouldContinue bool) {
-			for _, m := range page.MFADevices {
-				MFADevices = append(MFADevices, *m.SerialNumber)
-			}
-			return !lastPage
-		}
-		err = iamconn.ListMFADevicesPages(listMFADevices, pageOfMFADevices)
+		err = deleteAwsIamUserSSHKeys(iamconn, d.Id())
 		if err != nil {
-			return fmt.Errorf("Error removing MFA devices of user %s: %s", d.Id(), err)
-		}
-		for _, m := range MFADevices {
-			_, err := iamconn.DeactivateMFADevice(&iam.DeactivateMFADeviceInput{
-				UserName:     aws.String(d.Id()),
-				SerialNumber: aws.String(m),
-			})
-			if err != nil {
-				return fmt.Errorf("Error deactivating MFA device %s: %s", m, err)
-			}
+			return err
 		}
 
-		err = resource.Retry(1*time.Minute, func() *resource.RetryError {
-			_, err = iamconn.DeleteLoginProfile(&iam.DeleteLoginProfileInput{
-				UserName: aws.String(d.Id()),
-			})
-			if err != nil {
-				if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
-					return nil
-				}
-				// EntityTemporarilyUnmodifiable: Login Profile for User XXX cannot be modified while login profile is being created.
-				if isAWSErr(err, iam.ErrCodeEntityTemporarilyUnmodifiableException, "") {
-					return resource.RetryableError(err)
-				}
-				return resource.NonRetryableError(err)
-			}
-			return nil
-		})
-
+		err = deleteAwsIamUserMFADevices(iamconn, d.Id())
 		if err != nil {
-			return fmt.Errorf("Error deleting Account Login Profile: %s", err)
+			return err
 		}
-	}
 
-	deleteUserPermissionsBoundaryInput := &iam.DeleteUserPermissionsBoundaryInput{
-		UserName: aws.String(d.Id()),
-	}
-
-	log.Println("[DEBUG] Delete IAM User Permissions Boundary request:", deleteUserPermissionsBoundaryInput)
-	_, err = iamconn.DeleteUserPermissionsBoundary(deleteUserPermissionsBoundaryInput)
-	if err != nil && !isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
-		return fmt.Errorf("Error deleting IAM User %s Permissions Boundary: %s", d.Id(), err)
+		err = deleteAwsIamUserLoginProfile(iamconn, d.Id())
+		if err != nil {
+			return err
+		}
 	}
 
 	deleteUserInput := &iam.DeleteUserInput{
@@ -309,4 +251,119 @@ func validateAwsIamUserName(v interface{}, k string) (ws []string, errors []erro
 			k, value))
 	}
 	return
+}
+
+func deleteAwsIamUserSSHKeys(svc *iam.IAM, username string) error {
+	var publicKeys []string
+	var err error
+
+	listSSHPublicKeys := &iam.ListSSHPublicKeysInput{
+		UserName: aws.String(username),
+	}
+	pageOfListSSHPublicKeys := func(page *iam.ListSSHPublicKeysOutput, lastPage bool) (shouldContinue bool) {
+		for _, k := range page.SSHPublicKeys {
+			publicKeys = append(publicKeys, *k.SSHPublicKeyId)
+		}
+		return !lastPage
+	}
+	err = svc.ListSSHPublicKeysPages(listSSHPublicKeys, pageOfListSSHPublicKeys)
+	if err != nil {
+		return fmt.Errorf("Error removing public SSH keys of user %s: %s", username, err)
+	}
+	for _, k := range publicKeys {
+		_, err := svc.DeleteSSHPublicKey(&iam.DeleteSSHPublicKeyInput{
+			UserName:       aws.String(username),
+			SSHPublicKeyId: aws.String(k),
+		})
+		if err != nil {
+			return fmt.Errorf("Error deleting public SSH key %s: %s", k, err)
+		}
+	}
+
+	return nil
+}
+
+func deleteAwsIamUserMFADevices(svc *iam.IAM, username string) error {
+	var MFADevices []string
+	var err error
+
+	listMFADevices := &iam.ListMFADevicesInput{
+		UserName: aws.String(username),
+	}
+	pageOfMFADevices := func(page *iam.ListMFADevicesOutput, lastPage bool) (shouldContinue bool) {
+		for _, m := range page.MFADevices {
+			MFADevices = append(MFADevices, *m.SerialNumber)
+		}
+		return !lastPage
+	}
+	err = svc.ListMFADevicesPages(listMFADevices, pageOfMFADevices)
+	if err != nil {
+		return fmt.Errorf("Error removing MFA devices of user %s: %s", username, err)
+	}
+	for _, m := range MFADevices {
+		_, err := svc.DeactivateMFADevice(&iam.DeactivateMFADeviceInput{
+			UserName:     aws.String(username),
+			SerialNumber: aws.String(m),
+		})
+		if err != nil {
+			return fmt.Errorf("Error deactivating MFA device %s: %s", m, err)
+		}
+	}
+
+	return nil
+}
+
+func deleteAwsIamUserLoginProfile(svc *iam.IAM, username string) error {
+	var err error
+	err = resource.Retry(1*time.Minute, func() *resource.RetryError {
+		_, err = svc.DeleteLoginProfile(&iam.DeleteLoginProfileInput{
+			UserName: aws.String(username),
+		})
+		if err != nil {
+			if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+				return nil
+			}
+			// EntityTemporarilyUnmodifiable: Login Profile for User XXX cannot be modified while login profile is being created.
+			if isAWSErr(err, iam.ErrCodeEntityTemporarilyUnmodifiableException, "") {
+				return resource.RetryableError(err)
+			}
+			return resource.NonRetryableError(err)
+		}
+		return nil
+	})
+
+	if err != nil {
+		return fmt.Errorf("Error deleting Account Login Profile: %s", err)
+	}
+
+	return nil
+}
+
+func deleteAwsIamUserAccessKeys(svc *iam.IAM, username string) error {
+	var accessKeys []string
+	var err error
+	listAccessKeys := &iam.ListAccessKeysInput{
+		UserName: aws.String(username),
+	}
+	pageOfAccessKeys := func(page *iam.ListAccessKeysOutput, lastPage bool) (shouldContinue bool) {
+		for _, k := range page.AccessKeyMetadata {
+			accessKeys = append(accessKeys, *k.AccessKeyId)
+		}
+		return !lastPage
+	}
+	err = svc.ListAccessKeysPages(listAccessKeys, pageOfAccessKeys)
+	if err != nil {
+		return fmt.Errorf("Error removing access keys of user %s: %s", username, err)
+	}
+	for _, k := range accessKeys {
+		_, err := svc.DeleteAccessKey(&iam.DeleteAccessKeyInput{
+			UserName:    aws.String(username),
+			AccessKeyId: aws.String(k),
+		})
+		if err != nil {
+			return fmt.Errorf("Error deleting access key %s: %s", k, err)
+		}
+	}
+
+	return nil
 }

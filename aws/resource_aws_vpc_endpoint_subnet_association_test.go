@@ -14,12 +14,12 @@ import (
 func TestAccAWSVpcEndpointSubnetAssociation_basic(t *testing.T) {
 	var vpce ec2.VpcEndpoint
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcEndpointSubnetAssociationDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccVpcEndpointSubnetAssociationConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcEndpointSubnetAssociationExists(
@@ -33,12 +33,12 @@ func TestAccAWSVpcEndpointSubnetAssociation_basic(t *testing.T) {
 func TestAccAWSVpcEndpointSubnetAssociation_multiple(t *testing.T) {
 	var vpce ec2.VpcEndpoint
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcEndpointSubnetAssociationDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccVpcEndpointSubnetAssociationConfig_multiple,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcEndpointSubnetAssociationExists(

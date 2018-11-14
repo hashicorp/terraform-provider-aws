@@ -42,7 +42,7 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
 
   ttl {
     attribute_name = "TimeToExist"
-    enabled = false
+    enabled        = false
   }
 
   global_secondary_index {

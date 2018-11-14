@@ -79,12 +79,12 @@ func testSweepElasticacheCacheSecurityGroups(region string) error {
 }
 
 func TestAccAWSElasticacheSecurityGroup_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheSecurityGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSElasticacheSecurityGroupConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticacheSecurityGroupExists("aws_elasticache_security_group.bar"),
@@ -102,16 +102,16 @@ func TestAccAWSElasticacheSecurityGroup_Import(t *testing.T) {
 	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
 	defer os.Setenv("AWS_DEFAULT_REGION", oldRegion)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheSecurityGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSElasticacheSecurityGroupConfig,
 			},
 
-			resource.TestStep{
+			{
 				ResourceName:      "aws_elasticache_security_group.bar",
 				ImportState:       true,
 				ImportStateVerify: true,

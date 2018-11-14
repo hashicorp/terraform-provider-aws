@@ -13,12 +13,12 @@ import (
 )
 
 func TestAccAWSWafRegionalWebAclAssociation_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckWafRegionalWebAclAssociationDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccCheckWafRegionalWebAclAssociationConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWafRegionalWebAclAssociationExists("aws_wafregional_web_acl_association.foo"),
@@ -29,12 +29,12 @@ func TestAccAWSWafRegionalWebAclAssociation_basic(t *testing.T) {
 }
 
 func TestAccAWSWafRegionalWebAclAssociation_multipleAssociations(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckWafRegionalWebAclAssociationDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccCheckWafRegionalWebAclAssociationConfig_multipleAssociations,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWafRegionalWebAclAssociationExists("aws_wafregional_web_acl_association.foo"),

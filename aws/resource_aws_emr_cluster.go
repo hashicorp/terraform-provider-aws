@@ -51,7 +51,7 @@ func resourceAwsEMRCluster() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ForceNew:         true,
-				ValidateFunc:     validateJsonString,
+				ValidateFunc:     validation.ValidateJsonString,
 				DiffSuppressFunc: suppressEquivalentJsonDiffs,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
@@ -241,7 +241,7 @@ func resourceAwsEMRCluster() *schema.Resource {
 							Type:             schema.TypeString,
 							Optional:         true,
 							DiffSuppressFunc: suppressEquivalentJsonDiffs,
-							ValidateFunc:     validateJsonString,
+							ValidateFunc:     validation.ValidateJsonString,
 							StateFunc: func(v interface{}) string {
 								jsonString, _ := structure.NormalizeJsonString(v)
 								return jsonString
@@ -361,7 +361,7 @@ func resourceAwsEMRCluster() *schema.Resource {
 				Optional:         true,
 				ForceNew:         true,
 				ConflictsWith:    []string{"configurations"},
-				ValidateFunc:     validateJsonString,
+				ValidateFunc:     validation.ValidateJsonString,
 				DiffSuppressFunc: suppressEquivalentJsonDiffs,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
@@ -388,7 +388,7 @@ func resourceAwsEMRCluster() *schema.Resource {
 				ForceNew: true,
 				Optional: true,
 			},
-			"autoscaling_role": &schema.Schema{
+			"autoscaling_role": {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Optional: true,
@@ -489,7 +489,13 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 	}
 	if v, ok := d.GetOk("instance_group"); ok {
 		instanceGroupConfigs := v.(*schema.Set).List()
-		instanceConfig.InstanceGroups = expandInstanceGroupConfigs(instanceGroupConfigs)
+		instanceGroups, err := expandInstanceGroupConfigs(instanceGroupConfigs)
+
+		if err != nil {
+			return fmt.Errorf("error parsing EMR instance groups configuration: %s", err)
+		}
+
+		instanceConfig.InstanceGroups = instanceGroups
 	}
 
 	emrApps := expandApplications(applications)
@@ -616,7 +622,7 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 
 	_, err = stateConf.WaitForState()
 	if err != nil {
-		return fmt.Errorf("[WARN] Error waiting for EMR Cluster state to be \"WAITING\" or \"RUNNING\": %s", err)
+		return fmt.Errorf("Error waiting for EMR Cluster state to be \"WAITING\" or \"RUNNING\": %s", err)
 	}
 
 	return resourceAwsEMRClusterRead(d, meta)
@@ -656,7 +662,7 @@ func resourceAwsEMRClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	instanceGroups, err := fetchAllEMRInstanceGroups(emrconn, d.Id())
 	if err == nil {
-		coreGroup := findGroup(instanceGroups, "CORE")
+		coreGroup := emrCoreInstanceGroup(instanceGroups)
 		if coreGroup != nil {
 			d.Set("core_instance_type", coreGroup.InstanceType)
 			d.Set("core_instance_count", coreGroup.RequestedInstanceCount)
@@ -772,9 +778,9 @@ func resourceAwsEMRClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		coreInstanceCount := d.Get("core_instance_count").(int)
-		coreGroup := findGroup(groups, "CORE")
+		coreGroup := emrCoreInstanceGroup(groups)
 		if coreGroup == nil {
-			return fmt.Errorf("[ERR] Error finding core group")
+			return fmt.Errorf("Error finding core group")
 		}
 
 		params := &emr.ModifyInstanceGroupsInput{
@@ -812,7 +818,7 @@ func resourceAwsEMRClusterUpdate(d *schema.ResourceData, meta interface{}) error
 
 		_, err = stateConf.WaitForState()
 		if err != nil {
-			return fmt.Errorf("[WARN] Error waiting for EMR Cluster state to be \"WAITING\" or \"RUNNING\" after modification: %s", err)
+			return fmt.Errorf("Error waiting for EMR Cluster state to be \"WAITING\" or \"RUNNING\" after modification: %s", err)
 		}
 	}
 
@@ -898,7 +904,7 @@ func resourceAwsEMRClusterDelete(d *schema.ResourceData, meta interface{}) error
 			log.Printf("[DEBUG] All (%d) EMR Cluster (%s) Instances terminated", instanceCount, d.Id())
 			return nil
 		}
-		return resource.RetryableError(fmt.Errorf("[DEBUG] EMR Cluster (%s) has (%d) Instances remaining, retrying", d.Id(), len(resp.Instances)))
+		return resource.RetryableError(fmt.Errorf("EMR Cluster (%s) has (%d) Instances remaining, retrying", d.Id(), len(resp.Instances)))
 	})
 
 	if err != nil {
@@ -1100,25 +1106,10 @@ func flattenBootstrapArguments(actions []*emr.Command) []map[string]interface{} 
 	return result
 }
 
-func loadGroups(d *schema.ResourceData, meta interface{}) ([]*emr.InstanceGroup, error) {
-	emrconn := meta.(*AWSClient).emrconn
-	reqGrps := &emr.ListInstanceGroupsInput{
-		ClusterId: aws.String(d.Id()),
-	}
-
-	respGrps, errGrps := emrconn.ListInstanceGroups(reqGrps)
-	if errGrps != nil {
-		return nil, fmt.Errorf("Error reading EMR cluster: %s", errGrps)
-	}
-	return respGrps.InstanceGroups, nil
-}
-
-func findGroup(grps []*emr.InstanceGroup, typ string) *emr.InstanceGroup {
+func emrCoreInstanceGroup(grps []*emr.InstanceGroup) *emr.InstanceGroup {
 	for _, grp := range grps {
-		if grp.InstanceGroupType != nil {
-			if *grp.InstanceGroupType == typ {
-				return grp
-			}
+		if aws.StringValue(grp.InstanceGroupType) == emr.InstanceGroupTypeCore {
+			return grp
 		}
 	}
 	return nil
@@ -1300,7 +1291,7 @@ func expandEmrStepConfigs(l []interface{}) []*emr.StepConfig {
 	return stepConfigs
 }
 
-func expandInstanceGroupConfigs(instanceGroupConfigs []interface{}) []*emr.InstanceGroupConfig {
+func expandInstanceGroupConfigs(instanceGroupConfigs []interface{}) ([]*emr.InstanceGroupConfig, error) {
 	instanceGroupConfig := []*emr.InstanceGroupConfig{}
 
 	for _, raw := range instanceGroupConfigs {
@@ -1318,12 +1309,23 @@ func expandInstanceGroupConfigs(instanceGroupConfigs []interface{}) []*emr.Insta
 
 		applyBidPrice(config, configAttributes)
 		applyEbsConfig(configAttributes, config)
-		applyAutoScalingPolicy(configAttributes, config)
+
+		if v, ok := configAttributes["autoscaling_policy"]; ok && v.(string) != "" {
+			var autoScalingPolicy *emr.AutoScalingPolicy
+
+			err := json.Unmarshal([]byte(v.(string)), &autoScalingPolicy)
+
+			if err != nil {
+				return []*emr.InstanceGroupConfig{}, fmt.Errorf("error parsing EMR Auto Scaling Policy JSON: %s", err)
+			}
+
+			config.AutoScalingPolicy = autoScalingPolicy
+		}
 
 		instanceGroupConfig = append(instanceGroupConfig, config)
 	}
 
-	return instanceGroupConfig
+	return instanceGroupConfig, nil
 }
 
 func applyBidPrice(config *emr.InstanceGroupConfig, configAttributes map[string]interface{}) {
@@ -1360,24 +1362,6 @@ func applyEbsConfig(configAttributes map[string]interface{}, config *emr.Instanc
 
 		config.EbsConfiguration = ebsConfig
 	}
-}
-
-func applyAutoScalingPolicy(configAttributes map[string]interface{}, config *emr.InstanceGroupConfig) {
-	if rawAutoScalingPolicy, ok := configAttributes["autoscaling_policy"]; ok {
-		autoScalingConfig, _ := expandAutoScalingPolicy(rawAutoScalingPolicy.(string))
-		config.AutoScalingPolicy = autoScalingConfig
-	}
-}
-
-func expandAutoScalingPolicy(rawDefinitions string) (*emr.AutoScalingPolicy, error) {
-	var policy *emr.AutoScalingPolicy
-
-	err := json.Unmarshal([]byte(rawDefinitions), &policy)
-	if err != nil {
-		return nil, fmt.Errorf("Error decoding JSON: %s", err)
-	}
-
-	return policy, nil
 }
 
 func expandConfigurationJson(input string) ([]*emr.Configuration, error) {

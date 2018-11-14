@@ -21,7 +21,7 @@ func TestAccAWSEIP_importEc2Classic(t *testing.T) {
 
 	resourceName := "aws_eip.bar"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEIPDestroy,
@@ -41,7 +41,7 @@ func TestAccAWSEIP_importEc2Classic(t *testing.T) {
 func TestAccAWSEIP_importVpc(t *testing.T) {
 	resourceName := "aws_eip.bar"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEIPDestroy,
@@ -61,13 +61,13 @@ func TestAccAWSEIP_importVpc(t *testing.T) {
 func TestAccAWSEIP_basic(t *testing.T) {
 	var conf ec2.Address
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_eip.bar",
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSEIPDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSEIPConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEIPExists("aws_eip.bar", &conf),
@@ -81,13 +81,13 @@ func TestAccAWSEIP_basic(t *testing.T) {
 func TestAccAWSEIP_instance(t *testing.T) {
 	var conf ec2.Address
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_eip.bar",
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSEIPDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSEIPInstanceConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEIPExists("aws_eip.bar", &conf),
@@ -95,7 +95,7 @@ func TestAccAWSEIP_instance(t *testing.T) {
 				),
 			},
 
-			resource.TestStep{
+			{
 				Config: testAccAWSEIPInstanceConfig2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEIPExists("aws_eip.bar", &conf),
@@ -109,13 +109,13 @@ func TestAccAWSEIP_instance(t *testing.T) {
 func TestAccAWSEIP_network_interface(t *testing.T) {
 	var conf ec2.Address
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_eip.bar",
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSEIPDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSEIPNetworkInterfaceConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEIPExists("aws_eip.bar", &conf),
@@ -130,13 +130,13 @@ func TestAccAWSEIP_network_interface(t *testing.T) {
 func TestAccAWSEIP_twoEIPsOneNetworkInterface(t *testing.T) {
 	var one, two ec2.Address
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_eip.one",
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSEIPDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSEIPMultiNetworkInterfaceConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEIPExists("aws_eip.one", &one),
@@ -156,13 +156,13 @@ func TestAccAWSEIP_twoEIPsOneNetworkInterface(t *testing.T) {
 func TestAccAWSEIP_associated_user_private_ip(t *testing.T) {
 	var one ec2.Address
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_eip.bar",
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSEIPDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSEIPInstanceConfig_associated,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEIPExists("aws_eip.bar", &one),
@@ -171,7 +171,7 @@ func TestAccAWSEIP_associated_user_private_ip(t *testing.T) {
 				),
 			},
 
-			resource.TestStep{
+			{
 				Config: testAccAWSEIPInstanceConfig_associated_switch,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEIPExists("aws_eip.bar", &one),
@@ -190,12 +190,12 @@ func TestAccAWSEIP_classic_disassociate(t *testing.T) {
 	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
 	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEIPDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSEIP_classic_disassociate("instance-store"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(
@@ -206,7 +206,7 @@ func TestAccAWSEIP_classic_disassociate(t *testing.T) {
 						"instance"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAWSEIP_classic_disassociate("ebs"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(
@@ -224,12 +224,12 @@ func TestAccAWSEIP_classic_disassociate(t *testing.T) {
 func TestAccAWSEIP_disappears(t *testing.T) {
 	var conf ec2.Address
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEIPDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSEIPConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEIPExists("aws_eip.bar", &conf),
@@ -244,13 +244,13 @@ func TestAccAWSEIP_disappears(t *testing.T) {
 func TestAccAWSEIPAssociate_not_associated(t *testing.T) {
 	var conf ec2.Address
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_eip.bar",
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSEIPDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSEIPAssociate_not_associated,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEIPExists("aws_eip.bar", &conf),
@@ -258,7 +258,7 @@ func TestAccAWSEIPAssociate_not_associated(t *testing.T) {
 				),
 			},
 
-			resource.TestStep{
+			{
 				Config: testAccAWSEIPAssociate_associated,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEIPExists("aws_eip.bar", &conf),
@@ -276,13 +276,13 @@ func TestAccAWSEIP_tags(t *testing.T) {
 	rName1 := fmt.Sprintf("%s-%d", t.Name(), acctest.RandInt())
 	rName2 := fmt.Sprintf("%s-%d", t.Name(), acctest.RandInt())
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_eip.bar",
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSEIPDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSEIPConfig_tags(rName1, t.Name()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEIPExists(resourceName, &conf),
@@ -292,7 +292,7 @@ func TestAccAWSEIP_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.TestName", t.Name()),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAWSEIPConfig_tags(rName2, t.Name()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEIPExists(resourceName, &conf),

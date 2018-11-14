@@ -17,7 +17,7 @@ func TestAccAWSNeptuneClusterSnapshot_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_neptune_cluster_snapshot.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNeptuneClusterSnapshotDestroy,

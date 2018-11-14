@@ -688,7 +688,9 @@ func readDynamoDbTableTags(arn string, conn *dynamodb.DynamoDB) (map[string]stri
 	output, err := conn.ListTagsOfResource(&dynamodb.ListTagsOfResourceInput{
 		ResourceArn: aws.String(arn),
 	})
-	if err != nil {
+
+	// Do not fail if interfacing with dynamodb-local
+	if err != nil && !isAWSErr(err, "UnknownOperationException", "Tagging is not currently supported in DynamoDB Local.") {
 		return nil, fmt.Errorf("Error reading tags from dynamodb resource: %s", err)
 	}
 
@@ -697,18 +699,6 @@ func readDynamoDbTableTags(arn string, conn *dynamodb.DynamoDB) (map[string]stri
 	// TODO Read NextToken if available
 
 	return result, nil
-}
-
-func readDynamoDbPITR(table string, conn *dynamodb.DynamoDB) (bool, error) {
-	output, err := conn.DescribeContinuousBackups(&dynamodb.DescribeContinuousBackupsInput{
-		TableName: aws.String(table),
-	})
-	if err != nil {
-		return false, fmt.Errorf("Error reading backup status from dynamodb resource: %s", err)
-	}
-
-	pitr := output.ContinuousBackupsDescription.PointInTimeRecoveryDescription
-	return *pitr.PointInTimeRecoveryStatus == dynamodb.PointInTimeRecoveryStatusEnabled, nil
 }
 
 // Waiters

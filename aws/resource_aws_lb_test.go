@@ -34,6 +34,7 @@ func testSweepLBs(region string) error {
 		"tf-test-",
 		"tf-acc-test-",
 		"test-",
+		"testacc",
 	}
 
 	err = conn.DescribeLoadBalancersPages(&elbv2.DescribeLoadBalancersInput{}, func(page *elbv2.DescribeLoadBalancersOutput, isLast bool) bool {
@@ -110,7 +111,7 @@ func TestAccAWSLB_basic(t *testing.T) {
 	var conf elbv2.LoadBalancer
 	lbName := fmt.Sprintf("testaccawslb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_lb.lb_test",
 		Providers:     testAccProviders,
@@ -144,7 +145,7 @@ func TestAccAWSLB_networkLoadbalancerBasic(t *testing.T) {
 	var conf elbv2.LoadBalancer
 	lbName := fmt.Sprintf("testaccawslb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_lb.lb_test",
 		Providers:     testAccProviders,
@@ -174,7 +175,7 @@ func TestAccAWSLB_networkLoadbalancerEIP(t *testing.T) {
 	var conf elbv2.LoadBalancer
 	lbName := fmt.Sprintf("testaccawslb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBDestroy,
@@ -202,7 +203,7 @@ func TestAccAWSLBBackwardsCompatibility(t *testing.T) {
 	var conf elbv2.LoadBalancer
 	lbName := fmt.Sprintf("testaccawslb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_alb.lb_test",
 		Providers:     testAccProviders,
@@ -235,7 +236,7 @@ func TestAccAWSLBBackwardsCompatibility(t *testing.T) {
 func TestAccAWSLB_generatedName(t *testing.T) {
 	var conf elbv2.LoadBalancer
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_lb.lb_test",
 		Providers:     testAccProviders,
@@ -255,7 +256,7 @@ func TestAccAWSLB_generatedName(t *testing.T) {
 func TestAccAWSLB_generatesNameForZeroValue(t *testing.T) {
 	var conf elbv2.LoadBalancer
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_lb.lb_test",
 		Providers:     testAccProviders,
@@ -275,7 +276,7 @@ func TestAccAWSLB_generatesNameForZeroValue(t *testing.T) {
 func TestAccAWSLB_namePrefix(t *testing.T) {
 	var conf elbv2.LoadBalancer
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_lb.lb_test",
 		Providers:     testAccProviders,
@@ -298,7 +299,7 @@ func TestAccAWSLB_tags(t *testing.T) {
 	var conf elbv2.LoadBalancer
 	lbName := fmt.Sprintf("testaccawslb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_lb.lb_test",
 		Providers:     testAccProviders,
@@ -329,7 +330,7 @@ func TestAccAWSLB_networkLoadbalancer_updateCrossZone(t *testing.T) {
 	var pre, mid, post elbv2.LoadBalancer
 	lbName := fmt.Sprintf("testaccawslb-nlbcz-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_lb.lb_test",
 		Providers:     testAccProviders,
@@ -369,7 +370,7 @@ func TestAccAWSLB_applicationLoadBalancer_updateHttp2(t *testing.T) {
 	var pre, mid, post elbv2.LoadBalancer
 	lbName := fmt.Sprintf("testaccawsalb-http2-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_lb.lb_test",
 		Providers:     testAccProviders,
@@ -409,7 +410,7 @@ func TestAccAWSLB_applicationLoadBalancer_updateDeletionProtection(t *testing.T)
 	var pre, mid, post elbv2.LoadBalancer
 	lbName := fmt.Sprintf("testaccawsalb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_lb.lb_test",
 		Providers:     testAccProviders,
@@ -449,7 +450,7 @@ func TestAccAWSLB_updatedSecurityGroups(t *testing.T) {
 	var pre, post elbv2.LoadBalancer
 	lbName := fmt.Sprintf("testaccawslb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_lb.lb_test",
 		Providers:     testAccProviders,
@@ -478,7 +479,7 @@ func TestAccAWSLB_updatedSubnets(t *testing.T) {
 	var pre, post elbv2.LoadBalancer
 	lbName := fmt.Sprintf("testaccawslb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_lb.lb_test",
 		Providers:     testAccProviders,
@@ -507,7 +508,7 @@ func TestAccAWSLB_updatedIpAddressType(t *testing.T) {
 	var pre, post elbv2.LoadBalancer
 	lbName := fmt.Sprintf("testaccawslb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_lb.lb_test",
 		Providers:     testAccProviders,
@@ -538,7 +539,7 @@ func TestAccAWSLB_noSecurityGroup(t *testing.T) {
 	var conf elbv2.LoadBalancer
 	lbName := fmt.Sprintf("testaccawslb-nosg-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_lb.lb_test",
 		Providers:     testAccProviders,
@@ -571,7 +572,7 @@ func TestAccAWSLB_accesslogs(t *testing.T) {
 	lbName := fmt.Sprintf("testaccawslbaccesslog-%s", acctest.RandStringFromCharSet(4, acctest.CharSetAlpha))
 	bucketPrefix := "testAccAWSALBConfig_accessLogs"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_lb.lb_test",
 		Providers:     testAccProviders,
@@ -684,7 +685,7 @@ func TestAccAWSLB_networkLoadbalancer_subnet_change(t *testing.T) {
 	var conf elbv2.LoadBalancer
 	lbName := fmt.Sprintf("testaccawslb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_lb.lb_test",
 		Providers:     testAccProviders,

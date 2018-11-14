@@ -20,7 +20,7 @@ func TestAccAWSKinesisStream_basic(t *testing.T) {
 
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisStreamDestroy,
@@ -41,7 +41,7 @@ func TestAccAWSKinesisStream_createMultipleConcurrentStreams(t *testing.T) {
 
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisStreamDestroy,
@@ -78,7 +78,7 @@ func TestAccAWSKinesisStream_createMultipleConcurrentStreams(t *testing.T) {
 func TestAccAWSKinesisStream_encryptionWithoutKmsKeyThrowsError(t *testing.T) {
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisStreamDestroy,
@@ -95,7 +95,7 @@ func TestAccAWSKinesisStream_encryption(t *testing.T) {
 	var stream kinesis.StreamDescription
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisStreamDestroy,
@@ -133,7 +133,7 @@ func TestAccAWSKinesisStream_importBasic(t *testing.T) {
 	resourceName := "aws_kinesis_stream.test_stream"
 	streamName := fmt.Sprintf("terraform-kinesis-test-%d", rInt)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisStreamDestroy,
@@ -167,7 +167,7 @@ func TestAccAWSKinesisStream_shardCount(t *testing.T) {
 
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisStreamDestroy,
@@ -201,7 +201,7 @@ func TestAccAWSKinesisStream_retentionPeriod(t *testing.T) {
 
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisStreamDestroy,
@@ -244,7 +244,7 @@ func TestAccAWSKinesisStream_shardLevelMetrics(t *testing.T) {
 
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisStreamDestroy,
@@ -288,7 +288,7 @@ func TestAccAWSKinesisStream_Tags(t *testing.T) {
 
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisStreamDestroy,

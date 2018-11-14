@@ -14,7 +14,7 @@ import (
 func TestAccAwsVpcIpv4CidrBlockAssociation_basic(t *testing.T) {
 	var associationSecondary, associationTertiary ec2.VpcCidrBlockAssociation
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsVpcIpv4CidrBlockAssociationDestroy,

@@ -18,7 +18,7 @@ const opAddTags = "AddTags"
 // AddTagsRequest generates a "aws/request.Request" representing the
 // client's request for the AddTags operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -58,13 +58,20 @@ func (c *SageMaker) AddTagsRequest(input *AddTagsInput) (req *request.Request, o
 // AddTags API operation for Amazon SageMaker Service.
 //
 // Adds or overwrites one or more tags for the specified Amazon SageMaker resource.
-// You can add tags to notebook instances, training jobs, models, endpoint configurations,
-// and endpoints.
+// You can add tags to notebook instances, training jobs, hyperparameter tuning
+// jobs, models, endpoint configurations, and endpoints.
 //
 // Each tag consists of a key and an optional value. Tag keys must be unique
-// per resource. For more information about tags, see Using Cost Allocation
-// Tags (http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/cost-alloc-tags.html#allocation-what)
-// in the AWS Billing and Cost Management User Guide.
+// per resource. For more information about tags, see For more information,
+// see AWS Tagging Strategies (https://aws.amazon.com/answers/account-management/aws-tagging-strategies/).
+//
+// Tags that you add to a hyperparameter tuning job by calling this API are
+// also added to any training jobs that the hyperparameter tuning job launches
+// after you call this API, but not to training jobs that the hyperparameter
+// tuning job launched before you called this API. To make sure that the tags
+// associated with a hyperparameter tuning job are also added to all training
+// jobs that the hyperparameter tuning job launches, add the tags when you first
+// create the tuning job by specifying them in the Tags parameter of CreateHyperParameterTuningJob
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -99,7 +106,7 @@ const opCreateEndpoint = "CreateEndpoint"
 // CreateEndpointRequest generates a "aws/request.Request" representing the
 // client's request for the CreateEndpoint operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -206,7 +213,7 @@ const opCreateEndpointConfig = "CreateEndpointConfig"
 // CreateEndpointConfigRequest generates a "aws/request.Request" representing the
 // client's request for the CreateEndpointConfig operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -304,7 +311,7 @@ const opCreateHyperParameterTuningJob = "CreateHyperParameterTuningJob"
 // CreateHyperParameterTuningJobRequest generates a "aws/request.Request" representing the
 // client's request for the CreateHyperParameterTuningJob operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -387,7 +394,7 @@ const opCreateModel = "CreateModel"
 // CreateModelRequest generates a "aws/request.Request" representing the
 // client's request for the CreateModel operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -427,27 +434,32 @@ func (c *SageMaker) CreateModelRequest(input *CreateModelInput) (req *request.Re
 // CreateModel API operation for Amazon SageMaker Service.
 //
 // Creates a model in Amazon SageMaker. In the request, you name the model and
-// describe one or more containers. For each container, you specify the docker
-// image containing inference code, artifacts (from prior training), and custom
-// environment map that the inference code uses when you deploy the model into
-// production.
+// describe a primary container. For the primary container, you specify the
+// docker image containing inference code, artifacts (from prior training),
+// and custom environment map that the inference code uses when you deploy the
+// model for predictions.
 //
-// Use this API to create a model only if you want to use Amazon SageMaker hosting
-// services. To host your model, you create an endpoint configuration with the
-// CreateEndpointConfig API, and then create an endpoint with the CreateEndpoint
-// API.
+// Use this API to create a model if you want to use Amazon SageMaker hosting
+// services or run a batch transform job.
 //
-// Amazon SageMaker then deploys all of the containers that you defined for
-// the model in the hosting environment.
+// To host your model, you create an endpoint configuration with the CreateEndpointConfig
+// API, and then create an endpoint with the CreateEndpoint API. Amazon SageMaker
+// then deploys all of the containers that you defined for the model in the
+// hosting environment.
+//
+// To run a batch transform using your model, you start a job with the CreateTransformJob
+// API. Amazon SageMaker uses your model and your dataset to get inferences
+// which are then saved to a specified S3 location.
 //
 // In the CreateModel request, you must define a container with the PrimaryContainer
 // parameter.
 //
 // In the request, you also provide an IAM role that Amazon SageMaker can assume
 // to access model artifacts and docker image for deployment on ML compute hosting
-// instances. In addition, you also use the IAM role to manage permissions the
-// inference code needs. For example, if the inference code access any other
-// AWS resources, you grant necessary permissions via this role.
+// instances or for batch transform jobs. In addition, you also use the IAM
+// role to manage permissions the inference code needs. For example, if the
+// inference code access any other AWS resources, you grant necessary permissions
+// via this role.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -488,7 +500,7 @@ const opCreateNotebookInstance = "CreateNotebookInstance"
 // CreateNotebookInstanceRequest generates a "aws/request.Request" representing the
 // client's request for the CreateNotebookInstance operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -604,7 +616,7 @@ const opCreateNotebookInstanceLifecycleConfig = "CreateNotebookInstanceLifecycle
 // CreateNotebookInstanceLifecycleConfigRequest generates a "aws/request.Request" representing the
 // client's request for the CreateNotebookInstanceLifecycleConfig operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -659,7 +671,8 @@ func (c *SageMaker) CreateNotebookInstanceLifecycleConfigRequest(input *CreateNo
 // a script runs for longer than 5 minutes, it fails and the notebook instance
 // is not created or started.
 //
-// For information about notebook instance lifestyle configurations, see notebook-lifecycle-config.
+// For information about notebook instance lifestyle configurations, see Step
+// 2.1: (Optional) Customize a Notebook Instance (http://docs.aws.amazon.com/sagemaker/latest/dg/notebook-lifecycle-config.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -700,7 +713,7 @@ const opCreatePresignedNotebookInstanceUrl = "CreatePresignedNotebookInstanceUrl
 // CreatePresignedNotebookInstanceUrlRequest generates a "aws/request.Request" representing the
 // client's request for the CreatePresignedNotebookInstanceUrl operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -745,6 +758,15 @@ func (c *SageMaker) CreatePresignedNotebookInstanceUrlRequest(input *CreatePresi
 // home page from the notebook instance. The console uses this API to get the
 // URL and show the page.
 //
+// You can restrict access to this API and to the URL that it returns to a list
+// of IP addresses that you specify. To restrict access, attach an IAM policy
+// that denies access to this API unless the call comes from an IP address in
+// the specified list to every AWS Identity and Access Management user, group,
+// or role used to access the notebook instance. Use the NotIpAddress condition
+// operator and the aws:SourceIP condition context key to specify the list of
+// IP addresses that you want to have access to the notebook instance. For more
+// information, see Limit Access to a Notebook Instance by IP Address (http://docs.aws.amazon.com/https:/docs.aws.amazon.com/sagemaker/latest/dg/howitworks-access-ws.html#nbi-ip-filter).
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -778,7 +800,7 @@ const opCreateTrainingJob = "CreateTrainingJob"
 // CreateTrainingJobRequest generates a "aws/request.Request" representing the
 // client's request for the CreateTrainingJob operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -896,7 +918,7 @@ const opCreateTransformJob = "CreateTransformJob"
 // CreateTransformJobRequest generates a "aws/request.Request" representing the
 // client's request for the CreateTransformJob operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -947,7 +969,8 @@ func (c *SageMaker) CreateTransformJobRequest(input *CreateTransformJobInput) (r
 //    within an AWS Region in an AWS account.
 //
 //    * ModelName - Identifies the model to use. ModelName must be the name
-//    of an existing Amazon SageMaker model within an AWS Region in an AWS account.
+//    of an existing Amazon SageMaker model in the same AWS Region and AWS account.
+//    For information on creating a model, see CreateModel.
 //
 //    * TransformInput - Describes the dataset to be transformed and the Amazon
 //    S3 location where it is stored.
@@ -1003,7 +1026,7 @@ const opDeleteEndpoint = "DeleteEndpoint"
 // DeleteEndpointRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteEndpoint operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1084,7 +1107,7 @@ const opDeleteEndpointConfig = "DeleteEndpointConfig"
 // DeleteEndpointConfigRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteEndpointConfig operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1162,7 +1185,7 @@ const opDeleteModel = "DeleteModel"
 // DeleteModelRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteModel operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1241,7 +1264,7 @@ const opDeleteNotebookInstance = "DeleteNotebookInstance"
 // DeleteNotebookInstanceRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteNotebookInstance operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1322,7 +1345,7 @@ const opDeleteNotebookInstanceLifecycleConfig = "DeleteNotebookInstanceLifecycle
 // DeleteNotebookInstanceLifecycleConfigRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteNotebookInstanceLifecycleConfig operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1398,7 +1421,7 @@ const opDeleteTags = "DeleteTags"
 // DeleteTagsRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteTags operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1441,6 +1464,10 @@ func (c *SageMaker) DeleteTagsRequest(input *DeleteTagsInput) (req *request.Requ
 //
 // To list a resource's tags, use the ListTags API.
 //
+// When you call this API to delete tags from a hyperparameter tuning job, the
+// deleted tags are not removed from training jobs that the hyperparameter tuning
+// job launched before you called this API.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -1474,7 +1501,7 @@ const opDescribeEndpoint = "DescribeEndpoint"
 // DescribeEndpointRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeEndpoint operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1548,7 +1575,7 @@ const opDescribeEndpointConfig = "DescribeEndpointConfig"
 // DescribeEndpointConfigRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeEndpointConfig operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1623,7 +1650,7 @@ const opDescribeHyperParameterTuningJob = "DescribeHyperParameterTuningJob"
 // DescribeHyperParameterTuningJobRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeHyperParameterTuningJob operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1702,7 +1729,7 @@ const opDescribeModel = "DescribeModel"
 // DescribeModelRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeModel operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1776,7 +1803,7 @@ const opDescribeNotebookInstance = "DescribeNotebookInstance"
 // DescribeNotebookInstanceRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeNotebookInstance operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1850,7 +1877,7 @@ const opDescribeNotebookInstanceLifecycleConfig = "DescribeNotebookInstanceLifec
 // DescribeNotebookInstanceLifecycleConfigRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeNotebookInstanceLifecycleConfig operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1891,7 +1918,8 @@ func (c *SageMaker) DescribeNotebookInstanceLifecycleConfigRequest(input *Descri
 //
 // Returns a description of a notebook instance lifecycle configuration.
 //
-// For information about notebook instance lifestyle configurations, see notebook-lifecycle-config.
+// For information about notebook instance lifestyle configurations, see Step
+// 2.1: (Optional) Customize a Notebook Instance (http://docs.aws.amazon.com/sagemaker/latest/dg/notebook-lifecycle-config.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1926,7 +1954,7 @@ const opDescribeTrainingJob = "DescribeTrainingJob"
 // DescribeTrainingJobRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeTrainingJob operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2005,7 +2033,7 @@ const opDescribeTransformJob = "DescribeTransformJob"
 // DescribeTransformJobRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeTransformJob operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2084,7 +2112,7 @@ const opListEndpointConfigs = "ListEndpointConfigs"
 // ListEndpointConfigsRequest generates a "aws/request.Request" representing the
 // client's request for the ListEndpointConfigs operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2214,7 +2242,7 @@ const opListEndpoints = "ListEndpoints"
 // ListEndpointsRequest generates a "aws/request.Request" representing the
 // client's request for the ListEndpoints operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2344,7 +2372,7 @@ const opListHyperParameterTuningJobs = "ListHyperParameterTuningJobs"
 // ListHyperParameterTuningJobsRequest generates a "aws/request.Request" representing the
 // client's request for the ListHyperParameterTuningJobs operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2475,7 +2503,7 @@ const opListModels = "ListModels"
 // ListModelsRequest generates a "aws/request.Request" representing the
 // client's request for the ListModels operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2606,7 +2634,7 @@ const opListNotebookInstanceLifecycleConfigs = "ListNotebookInstanceLifecycleCon
 // ListNotebookInstanceLifecycleConfigsRequest generates a "aws/request.Request" representing the
 // client's request for the ListNotebookInstanceLifecycleConfigs operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2737,7 +2765,7 @@ const opListNotebookInstances = "ListNotebookInstances"
 // ListNotebookInstancesRequest generates a "aws/request.Request" representing the
 // client's request for the ListNotebookInstances operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2868,7 +2896,7 @@ const opListTags = "ListTags"
 // ListTagsRequest generates a "aws/request.Request" representing the
 // client's request for the ListTags operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2998,7 +3026,7 @@ const opListTrainingJobs = "ListTrainingJobs"
 // ListTrainingJobsRequest generates a "aws/request.Request" representing the
 // client's request for the ListTrainingJobs operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3128,7 +3156,7 @@ const opListTrainingJobsForHyperParameterTuningJob = "ListTrainingJobsForHyperPa
 // ListTrainingJobsForHyperParameterTuningJobRequest generates a "aws/request.Request" representing the
 // client's request for the ListTrainingJobsForHyperParameterTuningJob operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3264,7 +3292,7 @@ const opListTransformJobs = "ListTransformJobs"
 // ListTransformJobsRequest generates a "aws/request.Request" representing the
 // client's request for the ListTransformJobs operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3394,7 +3422,7 @@ const opStartNotebookInstance = "StartNotebookInstance"
 // StartNotebookInstanceRequest generates a "aws/request.Request" representing the
 // client's request for the StartNotebookInstance operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3480,7 +3508,7 @@ const opStopHyperParameterTuningJob = "StopHyperParameterTuningJob"
 // StopHyperParameterTuningJobRequest generates a "aws/request.Request" representing the
 // client's request for the StopHyperParameterTuningJob operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3567,7 +3595,7 @@ const opStopNotebookInstance = "StopNotebookInstance"
 // StopNotebookInstanceRequest generates a "aws/request.Request" representing the
 // client's request for the StopNotebookInstance operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3650,7 +3678,7 @@ const opStopTrainingJob = "StopTrainingJob"
 // StopTrainingJobRequest generates a "aws/request.Request" representing the
 // client's request for the StopTrainingJob operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3743,7 +3771,7 @@ const opStopTransformJob = "StopTransformJob"
 // StopTransformJobRequest generates a "aws/request.Request" representing the
 // client's request for the StopTransformJob operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3829,7 +3857,7 @@ const opUpdateEndpoint = "UpdateEndpoint"
 // UpdateEndpointRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateEndpoint operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3919,7 +3947,7 @@ const opUpdateEndpointWeightsAndCapacities = "UpdateEndpointWeightsAndCapacities
 // UpdateEndpointWeightsAndCapacitiesRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateEndpointWeightsAndCapacities operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4004,7 +4032,7 @@ const opUpdateNotebookInstance = "UpdateNotebookInstance"
 // UpdateNotebookInstanceRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateNotebookInstance operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4087,7 +4115,7 @@ const opUpdateNotebookInstanceLifecycleConfig = "UpdateNotebookInstanceLifecycle
 // UpdateNotebookInstanceLifecycleConfigRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateNotebookInstanceLifecycleConfig operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4255,13 +4283,14 @@ func (s *AddTagsOutput) SetTags(v []*Tag) *AddTagsOutput {
 //
 // For more information about algorithms provided by Amazon SageMaker, see Algorithms
 // (http://docs.aws.amazon.com/sagemaker/latest/dg/algos.html). For information
-// about using your own algorithms, see your-algorithms.
+// about using your own algorithms, see Using Your Own Algorithms with Amazon
+// SageMaker (http://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms.html).
 type AlgorithmSpecification struct {
 	_ struct{} `type:"structure"`
 
 	// The registry path of the Docker image that contains the training algorithm.
 	// For information about docker registry paths for built-in algorithms, see
-	// sagemaker-algo-docker-registry-paths.
+	// Algorithms Provided by Amazon SageMaker: Common Parameters (http://docs.aws.amazon.com/sagemaker/latest/dg/sagemaker-algo-docker-registry-paths.html).
 	//
 	// TrainingImage is a required field
 	TrainingImage *string `type:"string" required:"true"`
@@ -4406,11 +4435,13 @@ type Channel struct {
 	// DataSource is a required field
 	DataSource *DataSource `type:"structure" required:"true"`
 
+	InputMode *string `type:"string" enum:"TrainingInputMode"`
+
 	// Specify RecordIO as the value when input data is in raw format but the training
 	// algorithm requires the RecordIO format, in which case, Amazon SageMaker wraps
 	// each individual S3 object in a RecordIO record. If the input data is already
 	// in RecordIO format, you don't need to set this attribute. For more information,
-	// see Create a Dataset Using RecordIO (https://mxnet.incubator.apache.org/how_to/recordio.html?highlight=im2rec)
+	// see Create a Dataset Using RecordIO (https://mxnet.incubator.apache.org/architecture/note_data_loading.html#data-format)
 	RecordWrapperType *string `type:"string" enum:"RecordWrapper"`
 }
 
@@ -4469,6 +4500,12 @@ func (s *Channel) SetContentType(v string) *Channel {
 // SetDataSource sets the DataSource field's value.
 func (s *Channel) SetDataSource(v *DataSource) *Channel {
 	s.DataSource = v
+	return s
+}
+
+// SetInputMode sets the InputMode field's value.
+func (s *Channel) SetInputMode(v string) *Channel {
+	s.InputMode = &v
 	return s
 }
 
@@ -4875,8 +4912,10 @@ type CreateHyperParameterTuningJobInput struct {
 
 	// An array of key-value pairs. You can use tags to categorize your AWS resources
 	// in different ways, for example, by purpose, owner, or environment. For more
-	// information, see Using Cost Allocation Tags (http://docs.aws.amazon.com//awsaccountbilling/latest/aboutv2/cost-alloc-tags.html#allocation-what)
-	// in the AWS Billing and Cost Management User Guide.
+	// information, see AWS Tagging Strategies (https://aws.amazon.com/answers/account-management/aws-tagging-strategies/).
+	//
+	// Tags that you specify for the tuning job are also added to all training jobs
+	// that the tuning job launches.
 	Tags []*Tag `type:"list"`
 
 	// The HyperParameterTrainingJobDefinition object that describes the training
@@ -4994,8 +5033,9 @@ type CreateModelInput struct {
 
 	// The Amazon Resource Name (ARN) of the IAM role that Amazon SageMaker can
 	// assume to access model artifacts and docker image for deployment on ML compute
-	// instances. Deploying on ML compute instances is part of model hosting. For
-	// more information, see Amazon SageMaker Roles (http://docs.aws.amazon.com/sagemaker/latest/dg/sagemaker-roles.html).
+	// instances or for batch transform jobs. Deploying on ML compute instances
+	// is part of model hosting. For more information, see Amazon SageMaker Roles
+	// (http://docs.aws.amazon.com/sagemaker/latest/dg/sagemaker-roles.html).
 	//
 	// To be able to pass this role to Amazon SageMaker, the caller of this API
 	// must have the iam:PassRole permission.
@@ -5010,7 +5050,7 @@ type CreateModelInput struct {
 
 	// The location of the primary docker image containing inference code, associated
 	// artifacts, and custom environment map that the inference code uses when the
-	// model is deployed into production.
+	// model is deployed for predictions.
 	//
 	// PrimaryContainer is a required field
 	PrimaryContainer *ContainerDefinition `type:"structure" required:"true"`
@@ -5022,7 +5062,10 @@ type CreateModelInput struct {
 
 	// A VpcConfig object that specifies the VPC that you want your model to connect
 	// to. Control access to and from your model container by configuring the VPC.
-	// For more information, see host-vpc.
+	// VpcConfig is used in hosting services and in batch transform. For more information,
+	// see Protect Endpoints by Using an Amazon Virtual Private Cloud (http://docs.aws.amazon.com/sagemaker/latest/dg/host-vpc.html)
+	// and Protect Data in Batch Transform Jobs by Using an Amazon Virtual Private
+	// Cloud (http://docs.aws.amazon.com/sagemaker/latest/dg/batch-vpc.html).
 	VpcConfig *VpcConfig `type:"structure"`
 }
 
@@ -5142,9 +5185,10 @@ type CreateNotebookInstanceInput struct {
 	// training and endpoint services unless your configure a NAT Gateway in your
 	// VPC.
 	//
-	// For more information, see appendix-notebook-and-internet-access. You can
-	// set the value of this parameter to Disabled only if you set a value for the
-	// SubnetId parameter.
+	// For more information, see Notebook Instances Are Internet-Enabled by Default
+	// (http://docs.aws.amazon.com/sagemaker/latest/dg/appendix-additional-considerations.html#appendix-notebook-and-internet-access).
+	// You can set the value of this parameter to Disabled only if you set a value
+	// for the SubnetId parameter.
 	DirectInternetAccess *string `type:"string" enum:"DirectInternetAccess"`
 
 	// The type of ML compute instance to launch for the notebook instance.
@@ -5157,7 +5201,8 @@ type CreateNotebookInstanceInput struct {
 	KmsKeyId *string `type:"string"`
 
 	// The name of a lifecycle configuration to associate with the notebook instance.
-	// For information about lifestyle configurations, see notebook-lifecycle-config.
+	// For information about lifestyle configurations, see Step 2.1: (Optional)
+	// Customize a Notebook Instance (http://docs.aws.amazon.com/sagemaker/latest/dg/notebook-lifecycle-config.html).
 	LifecycleConfigName *string `type:"string"`
 
 	// The name of the new notebook instance.
@@ -5189,6 +5234,9 @@ type CreateNotebookInstanceInput struct {
 	// A list of tags to associate with the notebook instance. You can add tags
 	// later by using the CreateTags API.
 	Tags []*Tag `type:"list"`
+
+	// The size, in GB, of the ML storage volume to attach to the notebook instance.
+	VolumeSizeInGB *int64 `min:"5" type:"integer"`
 }
 
 // String returns the string representation
@@ -5215,6 +5263,9 @@ func (s *CreateNotebookInstanceInput) Validate() error {
 	}
 	if s.RoleArn != nil && len(*s.RoleArn) < 20 {
 		invalidParams.Add(request.NewErrParamMinLen("RoleArn", 20))
+	}
+	if s.VolumeSizeInGB != nil && *s.VolumeSizeInGB < 5 {
+		invalidParams.Add(request.NewErrParamMinValue("VolumeSizeInGB", 5))
 	}
 	if s.Tags != nil {
 		for i, v := range s.Tags {
@@ -5287,6 +5338,12 @@ func (s *CreateNotebookInstanceInput) SetTags(v []*Tag) *CreateNotebookInstanceI
 	return s
 }
 
+// SetVolumeSizeInGB sets the VolumeSizeInGB field's value.
+func (s *CreateNotebookInstanceInput) SetVolumeSizeInGB(v int64) *CreateNotebookInstanceInput {
+	s.VolumeSizeInGB = &v
+	return s
+}
+
 type CreateNotebookInstanceLifecycleConfigInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5296,10 +5353,12 @@ type CreateNotebookInstanceLifecycleConfigInput struct {
 	NotebookInstanceLifecycleConfigName *string `type:"string" required:"true"`
 
 	// A shell script that runs only once, when you create a notebook instance.
+	// The shell script must be a base64-encoded string.
 	OnCreate []*NotebookInstanceLifecycleHook `type:"list"`
 
 	// A shell script that runs every time you start a notebook instance, including
-	// when you create the notebook instance.
+	// when you create the notebook instance. The shell script must be a base64-encoded
+	// string.
 	OnStart []*NotebookInstanceLifecycleHook `type:"list"`
 }
 
@@ -5489,7 +5548,8 @@ type CreateTrainingJobInput struct {
 	// The registry path of the Docker image that contains the training algorithm
 	// and algorithm-specific metadata, including the input mode. For more information
 	// about algorithms provided by Amazon SageMaker, see Algorithms (http://docs.aws.amazon.com/sagemaker/latest/dg/algos.html).
-	// For information about providing your own algorithms, see your-algorithms.
+	// For information about providing your own algorithms, see Using Your Own Algorithms
+	// with Amazon SageMaker (http://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms.html).
 	//
 	// AlgorithmSpecification is a required field
 	AlgorithmSpecification *AlgorithmSpecification `type:"structure" required:"true"`
@@ -5516,9 +5576,7 @@ type CreateTrainingJobInput struct {
 	// Depending on the input mode that the algorithm supports, Amazon SageMaker
 	// either copies input data files from an S3 bucket to a local directory in
 	// the Docker container, or makes it available as input streams.
-	//
-	// InputDataConfig is a required field
-	InputDataConfig []*Channel `min:"1" type:"list" required:"true"`
+	InputDataConfig []*Channel `min:"1" type:"list"`
 
 	// Specifies the path to the S3 bucket where you want to store model artifacts.
 	// Amazon SageMaker creates subfolders for the artifacts.
@@ -5580,7 +5638,8 @@ type CreateTrainingJobInput struct {
 
 	// A VpcConfig object that specifies the VPC that you want your training job
 	// to connect to. Control access to and from your training container by configuring
-	// the VPC. For more information, see train-vpc
+	// the VPC. For more information, see Protect Training Jobs by Using an Amazon
+	// Virtual Private Cloud (http://docs.aws.amazon.com/sagemaker/latest/dg/train-vpc.html).
 	VpcConfig *VpcConfig `type:"structure"`
 }
 
@@ -5599,9 +5658,6 @@ func (s *CreateTrainingJobInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CreateTrainingJobInput"}
 	if s.AlgorithmSpecification == nil {
 		invalidParams.Add(request.NewErrParamRequired("AlgorithmSpecification"))
-	}
-	if s.InputDataConfig == nil {
-		invalidParams.Add(request.NewErrParamRequired("InputDataConfig"))
 	}
 	if s.InputDataConfig != nil && len(s.InputDataConfig) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("InputDataConfig", 1))
@@ -5771,6 +5827,11 @@ type CreateTransformJobInput struct {
 	// means only one record is used per mini-batch. MultiRecord means a mini-batch
 	// is set to contain as many records that can fit within the MaxPayloadInMB
 	// limit.
+	//
+	// Batch transform will automatically split your input data into whatever payload
+	// size is specified if you set SplitType to Line and BatchStrategy to MultiRecord.
+	// There's no need to split the dataset into smaller files or to use larger
+	// payload sizes unless the records in your dataset are very large.
 	BatchStrategy *string `type:"string" enum:"BatchStrategy"`
 
 	// The environment variables to set in the Docker container. We support up to
@@ -6353,7 +6414,7 @@ func (s DeleteTagsOutput) GoString() string {
 // Gets the Amazon EC2 Container Registry path of the docker image of the model
 // that is hosted in this ProductionVariant.
 //
-// If you used the registry/repository[:tag] form to to specify the image path
+// If you used the registry/repository[:tag] form to specify the image path
 // of the primary container when you created the model hosted in this ProductionVariant,
 // the path resolves to a path of the form registry/repository[@digest]. A digest
 // is a hash value that identifies a specific version of an image. For information
@@ -6569,6 +6630,33 @@ type DescribeEndpointOutput struct {
 	EndpointName *string `type:"string" required:"true"`
 
 	// The status of the endpoint.
+	//
+	//    * OutOfService: Endpoint is not available to take incoming requests.
+	//
+	//    * Creating: CreateEndpoint is executing.
+	//
+	//    * Updating: UpdateEndpoint or UpdateEndpointWeightsAndCapacities is executing.
+	//
+	//    * SystemUpdating: Endpoint is undergoing maintenance and cannot be updated
+	//    or deleted or re-scaled until it has completed. This maintenance operation
+	//    does not change any customer-specified values such as VPC config, KMS
+	//    encryption, model, instance type, or instance count.
+	//
+	//    * RollingBack: Endpoint fails to scale up or down or change its variant
+	//    weight and is in the process of rolling back to its previous configuration.
+	//    Once the rollback completes, endpoint returns to an InService status.
+	//    This transitional status only applies to an endpoint that has autoscaling
+	//    enabled and is undergoing variant weight or capacity changes as part of
+	//    an UpdateEndpointWeightsAndCapacities call or when the UpdateEndpointWeightsAndCapacities
+	//    operation is called explicitly.
+	//
+	//    * InService: Endpoint is available to process incoming requests.
+	//
+	//    * Deleting: DeleteEndpoint is executing.
+	//
+	//    * Failed: Endpoint could not be created, updated, or re-scaled. Use DescribeEndpointOutput$FailureReason
+	//    for information about the failure. DeleteEndpoint is the only operation
+	//    that can be performed on a failed endpoint.
 	//
 	// EndpointStatus is a required field
 	EndpointStatus *string `type:"string" required:"true" enum:"EndpointStatus"`
@@ -6899,7 +6987,8 @@ type DescribeModelOutput struct {
 	PrimaryContainer *ContainerDefinition `type:"structure" required:"true"`
 
 	// A VpcConfig object that specifies the VPC that this model has access to.
-	// For more information, see host-vpc
+	// For more information, see Protect Endpoints by Using an Amazon Virtual Private
+	// Cloud (http://docs.aws.amazon.com/sagemaker/latest/dg/host-vpc.html)
 	VpcConfig *VpcConfig `type:"structure"`
 }
 
@@ -7106,7 +7195,8 @@ type DescribeNotebookInstanceOutput struct {
 	// have internet access, and cannot connect to Amazon SageMaker training and
 	// endpoint services.
 	//
-	// For more information, see appendix-notebook-and-internet-access.
+	// For more information, see Notebook Instances Are Internet-Enabled by Default
+	// (http://docs.aws.amazon.com/sagemaker/latest/dg/appendix-additional-considerations.html#appendix-notebook-and-internet-access).
 	DirectInternetAccess *string `type:"string" enum:"DirectInternetAccess"`
 
 	// If status is failed, the reason it failed.
@@ -7132,7 +7222,8 @@ type DescribeNotebookInstanceOutput struct {
 
 	// Returns the name of a notebook instance lifecycle configuration.
 	//
-	// For information about notebook instance lifestyle configurations, see notebook-lifecycle-config.
+	// For information about notebook instance lifestyle configurations, see Step
+	// 2.1: (Optional) Customize a Notebook Instance (http://docs.aws.amazon.com/sagemaker/latest/dg/notebook-lifecycle-config.html)
 	NotebookInstanceLifecycleConfigName *string `type:"string"`
 
 	// Name of the Amazon SageMaker notebook instance.
@@ -7153,6 +7244,9 @@ type DescribeNotebookInstanceOutput struct {
 	// The URL that you use to connect to the Jupyter notebook that is running in
 	// your notebook instance.
 	Url *string `type:"string"`
+
+	// The size, in GB, of the ML storage volume attached to the notebook instance.
+	VolumeSizeInGB *int64 `min:"5" type:"integer"`
 }
 
 // String returns the string representation
@@ -7255,6 +7349,12 @@ func (s *DescribeNotebookInstanceOutput) SetUrl(v string) *DescribeNotebookInsta
 	return s
 }
 
+// SetVolumeSizeInGB sets the VolumeSizeInGB field's value.
+func (s *DescribeNotebookInstanceOutput) SetVolumeSizeInGB(v int64) *DescribeNotebookInstanceOutput {
+	s.VolumeSizeInGB = &v
+	return s
+}
+
 type DescribeTrainingJobInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7316,9 +7416,7 @@ type DescribeTrainingJobOutput struct {
 	HyperParameters map[string]*string `type:"map"`
 
 	// An array of Channel objects that describes each data input channel.
-	//
-	// InputDataConfig is a required field
-	InputDataConfig []*Channel `min:"1" type:"list" required:"true"`
+	InputDataConfig []*Channel `min:"1" type:"list"`
 
 	// A timestamp that indicates when the status of the training job was last modified.
 	LastModifiedTime *time.Time `type:"timestamp"`
@@ -7343,43 +7441,51 @@ type DescribeTrainingJobOutput struct {
 	// job.
 	RoleArn *string `min:"20" type:"string"`
 
-	// Provides granular information about the system state. For more information,
-	// see TrainingJobStatus.
+	// Provides detailed information about the state of the training job. For detailed
+	// information on the secondary status of the training job, see StatusMessage
+	// under SecondaryStatusTransition.
 	//
-	//    * Starting - starting the training job.
+	// Amazon SageMaker provides primary statuses and secondary statuses that apply
+	// to each of them:
 	//
-	//    * LaunchingMLInstances - launching ML instances for the training job.
+	// InProgressStarting - Starting the training job.
 	//
-	//    * PreparingTrainingStack - preparing the ML instances for the training
-	//    job.
+	// Downloading - An optional stage for algorithms that support File training
+	// input mode. It indicates that data is being downloaded to the ML storage
+	// volumes.
 	//
-	//    * Downloading - downloading the input data.
+	// Training - Training is in progress.
 	//
-	//    * DownloadingTrainingImage - downloading the training algorithm image.
+	// Uploading - Training is complete and the model artifacts are being uploaded
+	// to the S3 location.
 	//
-	//    * Training - model training is in progress.
+	// CompletedCompleted - The training job has completed.
 	//
-	//    * Uploading - uploading the trained model.
+	// FailedFailed - The training job has failed. The reason for the failure is
+	// returned in the FailureReason field of DescribeTrainingJobResponse.
 	//
-	//    * Stopping - stopping the training job.
+	// StoppedMaxRuntimeExceeded - The job stopped because it exceeded the maximum
+	// allowed runtime.
 	//
-	//    * Stopped - the training job has stopped.
+	// Stopped - The training job has stopped.
 	//
-	//    * MaxRuntimeExceeded - the training exceed the specified the max run time,
-	//    which means the training job is stopping.
+	// StoppingStopping - Stopping the training job.
 	//
-	//    * Completed - the training job has completed.
+	// Valid values for SecondaryStatus are subject to change.
 	//
-	//    * Failed - the training job has failed. The failure reason is provided
-	//    in the StatusMessage.
+	// We no longer support the following secondary statuses:
 	//
-	// The valid values for SecondaryStatus are subject to change. They primary
-	// provide information on the progress of the training job.
+	//    * LaunchingMLInstances
+	//
+	//    * PreparingTrainingStack
+	//
+	//    * DownloadingTrainingImage
 	//
 	// SecondaryStatus is a required field
 	SecondaryStatus *string `type:"string" required:"true" enum:"SecondaryStatus"`
 
-	// A log of time-ordered secondary statuses that a training job has transitioned.
+	// A history of all of the secondary statuses that the training job has transitioned
+	// through.
 	SecondaryStatusTransitions []*SecondaryStatusTransition `type:"list"`
 
 	// The condition under which to stop the training job.
@@ -7406,22 +7512,21 @@ type DescribeTrainingJobOutput struct {
 
 	// The status of the training job.
 	//
-	// For the InProgress status, Amazon SageMaker can return these secondary statuses:
+	// Amazon SageMaker provides the following training job statuses:
 	//
-	//    * Starting - Preparing for training.
+	//    * InProgress - The training is in progress.
 	//
-	//    * Downloading - Optional stage for algorithms that support File training
-	//    input mode. It indicates data is being downloaded to ML storage volumes.
+	//    * Completed - The training job has completed.
 	//
-	//    * Training - Training is in progress.
+	//    * Failed - The training job has failed. To see the reason for the failure,
+	//    see the FailureReason field in the response to a DescribeTrainingJobResponse
+	//    call.
 	//
-	//    * Uploading - Training is complete and model upload is in progress.
+	//    * Stopping - The training job is stopping.
 	//
-	// For the Stopped training status, Amazon SageMaker can return these secondary
-	// statuses:
+	//    * Stopped - The training job has stopped.
 	//
-	//    * MaxRuntimeExceeded - Job stopped as a result of maximum allowed runtime
-	//    exceeded.
+	// For more detailed information, see SecondaryStatus.
 	//
 	// TrainingJobStatus is a required field
 	TrainingJobStatus *string `type:"string" required:"true" enum:"TrainingJobStatus"`
@@ -7438,7 +7543,8 @@ type DescribeTrainingJobOutput struct {
 	TuningJobArn *string `type:"string"`
 
 	// A VpcConfig object that specifies the VPC that this training job has access
-	// to. For more information, see train-vpc.
+	// to. For more information, see Protect Training Jobs by Using an Amazon Virtual
+	// Private Cloud (http://docs.aws.amazon.com/sagemaker/latest/dg/train-vpc.html).
 	VpcConfig *VpcConfig `type:"structure"`
 }
 
@@ -7913,6 +8019,36 @@ type EndpointSummary struct {
 
 	// The status of the endpoint.
 	//
+	//    * OutOfService: Endpoint is not available to take incoming requests.
+	//
+	//    * Creating: CreateEndpoint is executing.
+	//
+	//    * Updating: UpdateEndpoint or UpdateEndpointWeightsAndCapacities is executing.
+	//
+	//    * SystemUpdating: Endpoint is undergoing maintenance and cannot be updated
+	//    or deleted or re-scaled until it has completed. This mainenance operation
+	//    does not change any customer-specified values such as VPC config, KMS
+	//    encryption, model, instance type, or instance count.
+	//
+	//    * RollingBack: Endpoint fails to scale up or down or change its variant
+	//    weight and is in the process of rolling back to its previous configuration.
+	//    Once the rollback completes, endpoint returns to an InService status.
+	//    This transitional status only applies to an endpoint that has autoscaling
+	//    enabled and is undergoing variant weight or capacity changes as part of
+	//    an UpdateEndpointWeightsAndCapacities call or when the UpdateEndpointWeightsAndCapacities
+	//    operation is called explicitly.
+	//
+	//    * InService: Endpoint is available to process incoming requests.
+	//
+	//    * Deleting: DeleteEndpoint is executing.
+	//
+	//    * Failed: Endpoint could not be created, updated, or re-scaled. Use DescribeEndpointOutput$FailureReason
+	//    for information about the failure. DeleteEndpoint is the only operation
+	//    that can be performed on a failed endpoint.
+	//
+	// To get a list of endpoints with a specified status, use the ListEndpointsInput$StatusEquals
+	// filter.
+	//
 	// EndpointStatus is a required field
 	EndpointStatus *string `type:"string" required:"true" enum:"EndpointStatus"`
 
@@ -8022,7 +8158,7 @@ type HyperParameterAlgorithmSpecification struct {
 
 	// The registry path of the Docker image that contains the training algorithm.
 	// For information about Docker registry paths for built-in algorithms, see
-	// sagemaker-algo-docker-registry-paths.
+	// Algorithms Provided by Amazon SageMaker: Common Parameters (http://docs.aws.amazon.com/sagemaker/latest/dg/sagemaker-algo-docker-registry-paths.html).
 	//
 	// TrainingImage is a required field
 	TrainingImage *string `type:"string" required:"true"`
@@ -8159,7 +8295,7 @@ type HyperParameterTrainingJobDefinition struct {
 	// The VpcConfig object that specifies the VPC that you want the training jobs
 	// that this hyperparameter tuning job launches to connect to. Control access
 	// to and from your training container by configuring the VPC. For more information,
-	// see train-vpc.
+	// see Protect Training Jobs by Using an Amazon Virtual Private Cloud (http://docs.aws.amazon.com/sagemaker/latest/dg/train-vpc.html).
 	VpcConfig *VpcConfig `type:"structure"`
 }
 
@@ -10211,7 +10347,7 @@ func (s *ListTransformJobsOutput) SetTransformJobSummaries(v []*TransformJobSumm
 }
 
 // Specifies a metric that the training algorithm writes to stderr or stdout.
-// Amazon SageMakerHyperparamter tuning captures all defined metrics. You specify
+// Amazon SageMakerhyperparameter tuning captures all defined metrics. You specify
 // one metric that a hyperparameter tuning job uses as its objective metric
 // to choose the best training job.
 type MetricDefinition struct {
@@ -10224,7 +10360,7 @@ type MetricDefinition struct {
 
 	// A regular expression that searches the output of a training job and gets
 	// the value of the metric. For more information about using regular expressions
-	// to define metrics, see automatic-model-tuning-define-metrics.
+	// to define metrics, see Defining Objective Metrics (http://docs.aws.amazon.com/sagemaker/latest/dg/automatic-model-tuning-define-metrics.html).
 	//
 	// Regex is a required field
 	Regex *string `min:"1" type:"string" required:"true"`
@@ -10419,7 +10555,8 @@ func (s *NotebookInstanceLifecycleConfigSummary) SetNotebookInstanceLifecycleCon
 // a script runs for longer than 5 minutes, it fails and the notebook instance
 // is not created or started.
 //
-// For information about notebook instance lifestyle configurations, see notebook-lifecycle-config.
+// For information about notebook instance lifestyle configurations, see Step
+// 2.1: (Optional) Customize a Notebook Instance (http://docs.aws.amazon.com/sagemaker/latest/dg/notebook-lifecycle-config.html).
 type NotebookInstanceLifecycleHook struct {
 	_ struct{} `type:"structure"`
 
@@ -10478,7 +10615,8 @@ type NotebookInstanceSummary struct {
 	// The name of a notebook instance lifecycle configuration associated with this
 	// notebook instance.
 	//
-	// For information about notebook instance lifestyle configurations, see notebook-lifecycle-config.
+	// For information about notebook instance lifestyle configurations, see Step
+	// 2.1: (Optional) Customize a Notebook Instance (http://docs.aws.amazon.com/sagemaker/latest/dg/notebook-lifecycle-config.html).
 	NotebookInstanceLifecycleConfigName *string `type:"string"`
 
 	// The name of the notebook instance that you want a summary for.
@@ -10608,14 +10746,31 @@ type OutputDataConfig struct {
 
 	// The AWS Key Management Service (AWS KMS) key that Amazon SageMaker uses to
 	// encrypt the model artifacts at rest using Amazon S3 server-side encryption.
+	// The KmsKeyId can be any of the following formats:
+	//
+	//    * // KMS Key ID
+	//
+	// "1234abcd-12ab-34cd-56ef-1234567890ab"
+	//
+	//    * // Amazon Resource Name (ARN) of a KMS Key
+	//
+	// "arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab"
+	//
+	//    * // KMS Key Alias
+	//
+	// "alias/ExampleAlias"
+	//
+	//    * // Amazon Resource Name (ARN) of a KMS Key Alias
+	//
+	// "arn:aws:kms:us-west-2:111122223333:alias/ExampleAlias"
 	//
 	// If you don't provide the KMS key ID, Amazon SageMaker uses the default KMS
 	// key for Amazon S3 for your role's account. For more information, see KMS-Managed
 	// Encryption Keys (https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingKMSEncryption.html)
-	// in Amazon Simple Storage Service developer guide.
+	// in Amazon Simple Storage Service Developer Guide.
 	//
-	// The KMS key policy must grant permission to the IAM role you specify in your
-	// CreateTrainingJob request. Using Key Policies in AWS KMS (http://docs.aws.amazon.com/kms/latest/developerguide/key-policies.html)
+	// The KMS key policy must grant permission to the IAM role that you specify
+	// in your CreateTrainingJob request. Using Key Policies in AWS KMS (http://docs.aws.amazon.com/kms/latest/developerguide/key-policies.html)
 	// in the AWS Key Management Service Developer Guide.
 	KmsKeyId *string `type:"string"`
 
@@ -10939,9 +11094,18 @@ type ResourceConfig struct {
 	// InstanceType is a required field
 	InstanceType *string `type:"string" required:"true" enum:"TrainingInstanceType"`
 
-	// The Amazon Resource Name (ARN) of a AWS Key Management Service key that Amazon
-	// SageMaker uses to encrypt data on the storage volume attached to the ML compute
-	// instance(s) that run the training job.
+	// The AWS Key Management Service (AWS KMS) key that Amazon SageMaker uses to
+	// encrypt data on the storage volume attached to the ML compute instance(s)
+	// that run the training job. The VolumeKmsKeyId can be any of the following
+	// formats:
+	//
+	//    * // KMS Key ID
+	//
+	// "1234abcd-12ab-34cd-56ef-1234567890ab"
+	//
+	//    * // Amazon Resource Name (ARN) of a KMS Key
+	//
+	// "arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab"
 	VolumeKmsKeyId *string `type:"string"`
 
 	// The size of the ML storage volume that you want to provision.
@@ -11199,31 +11363,97 @@ func (s *S3DataSource) SetS3Uri(v string) *S3DataSource {
 	return s
 }
 
-// Specifies a secondary status the job has transitioned into. It includes a
-// start timestamp and later an end timestamp. The end timestamp is added either
-// after the job transitions to a different secondary status or after the job
-// has ended.
+// An array element of DescribeTrainingJobResponse$SecondaryStatusTransitions.
+// It provides additional details about a status that the training job has transitioned
+// through. A training job can be in one of several states, for example, starting,
+// downloading, training, or uploading. Within each state, there are a number
+// of intermediate states. For example, within the starting state, Amazon SageMaker
+// could be starting the training job or launching the ML instances. These transitional
+// states are referred to as the job's secondary status.
 type SecondaryStatusTransition struct {
 	_ struct{} `type:"structure"`
 
-	// A timestamp that shows when the secondary status has ended and the job has
-	// transitioned into another secondary status.
+	// A timestamp that shows when the training job transitioned out of this secondary
+	// status state into another secondary status state or when the training job
+	// has ended.
 	EndTime *time.Time `type:"timestamp"`
 
-	// A timestamp that shows when the training job has entered this secondary status.
+	// A timestamp that shows when the training job transitioned to the current
+	// secondary status state.
 	//
 	// StartTime is a required field
 	StartTime *time.Time `type:"timestamp" required:"true"`
 
-	// Provides granular information about the system state. For more information,
-	// see SecondaryStatus under the DescribeTrainingJob response elements.
+	// Contains a secondary status information from a training job.
+	//
+	// Status might be one of the following secondary statuses:
+	//
+	// InProgressStarting - Starting the training job.
+	//
+	// Downloading - An optional stage for algorithms that support File training
+	// input mode. It indicates that data is being downloaded to the ML storage
+	// volumes.
+	//
+	// Training - Training is in progress.
+	//
+	// Uploading - Training is complete and the model artifacts are being uploaded
+	// to the S3 location.
+	//
+	// CompletedCompleted - The training job has completed.
+	//
+	// FailedFailed - The training job has failed. The reason for the failure is
+	// returned in the FailureReason field of DescribeTrainingJobResponse.
+	//
+	// StoppedMaxRuntimeExceeded - The job stopped because it exceeded the maximum
+	// allowed runtime.
+	//
+	// Stopped - The training job has stopped.
+	//
+	// StoppingStopping - Stopping the training job.
+	//
+	// We no longer support the following secondary statuses:
+	//
+	//    * LaunchingMLInstances
+	//
+	//    * PreparingTrainingStack
+	//
+	//    * DownloadingTrainingImage
 	//
 	// Status is a required field
 	Status *string `type:"string" required:"true" enum:"SecondaryStatus"`
 
-	// Shows a brief description and other information about the secondary status.
-	// For example, the LaunchingMLInstances secondary status could show a status
-	// message of "Insufficent capacity error while launching instances".
+	// A detailed description of the progress within a secondary status.
+	//
+	// Amazon SageMaker provides secondary statuses and status messages that apply
+	// to each of them:
+	//
+	// StartingStarting the training job.
+	//
+	// Launching requested ML instances.
+	//
+	// Insufficient capacity error from EC2 while launching instances, retrying!
+	//
+	// Launched instance was unhealthy, replacing it!
+	//
+	// Preparing the instances for training.
+	//
+	// TrainingDownloading the training image.
+	//
+	// Training image download completed. Training in progress.
+	//
+	// Status messages are subject to change. Therefore, we recommend not including
+	// them in code that programmatically initiates actions. For examples, don't
+	// use status messages in if statements.
+	//
+	// To have an overview of your training job's progress, view TrainingJobStatus
+	// and SecondaryStatus in DescribeTrainingJobResponse, and StatusMessage together.
+	// For example, at the start of a training job, you might see the following:
+	//
+	//    * TrainingJobStatus - InProgress
+	//
+	//    * SecondaryStatus - Training
+	//
+	//    * StatusMessage - Downloading the training image
 	StatusMessage *string `type:"string"`
 }
 
@@ -11833,7 +12063,7 @@ type TransformInput struct {
 	_ struct{} `type:"structure"`
 
 	// Compressing data helps save on storage space. If your transform data is compressed,
-	// specify the compression type.and Amazon SageMaker will automatically decompress
+	// specify the compression type. Amazon SageMaker automatically decompresses
 	// the data for the transform job accordingly. The default value is None.
 	CompressionType *string `type:"string" enum:"CompressionType"`
 
@@ -11913,8 +12143,8 @@ func (s *TransformInput) SetSplitType(v string) *TransformInput {
 	return s
 }
 
-// Provides a summary information for a transform job. Multiple TransformJobSummary
-// objects are returned as a list after calling ListTransformJobs.
+// Provides a summary of a transform job. Multiple TransformJobSummary objects
+// are returned as a list after calling ListTransformJobs.
 type TransformJobSummary struct {
 	_ struct{} `type:"structure"`
 
@@ -12014,14 +12244,28 @@ type TransformOutput struct {
 	// Defines how to assemble the results of the transform job as a single S3 object.
 	// You should select a format that is most convenient to you. To concatenate
 	// the results in binary format, specify None. To add a newline character at
-	// the end of every transformed record, specify Line. To assemble the output
-	// in RecordIO format, specify RecordIO. The default value is None.
-	//
-	// For information about the RecordIO format, see Data Format (http://mxnet.io/architecture/note_data_loading.html#data-format).
+	// the end of every transformed record, specify Line.
 	AssembleWith *string `type:"string" enum:"AssemblyType"`
 
-	// The AWS Key Management Service (AWS KMS) key for Amazon S3 server-side encryption
-	// that Amazon SageMaker uses to encrypt the transformed data.
+	// The AWS Key Management Service (AWS KMS) key that Amazon SageMaker uses to
+	// encrypt the model artifacts at rest using Amazon S3 server-side encryption.
+	// The KmsKeyId can be any of the following formats:
+	//
+	//    * // KMS Key ID
+	//
+	// "1234abcd-12ab-34cd-56ef-1234567890ab"
+	//
+	//    * // Amazon Resource Name (ARN) of a KMS Key
+	//
+	// "arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab"
+	//
+	//    * // KMS Key Alias
+	//
+	// "alias/ExampleAlias"
+	//
+	//    * // Amazon Resource Name (ARN) of a KMS Key Alias
+	//
+	// "arn:aws:kms:us-west-2:111122223333:alias/ExampleAlias"
 	//
 	// If you don't provide a KMS key ID, Amazon SageMaker uses the default KMS
 	// key for Amazon S3 for your role's account. For more information, see KMS-Managed
@@ -12112,6 +12356,20 @@ type TransformResources struct {
 	//
 	// InstanceType is a required field
 	InstanceType *string `type:"string" required:"true" enum:"TransformInstanceType"`
+
+	// The AWS Key Management Service (AWS KMS) key that Amazon SageMaker uses to
+	// encrypt data on the storage volume attached to the ML compute instance(s)
+	// that run the batch transform job. The VolumeKmsKeyId can be any of the following
+	// formats:
+	//
+	//    * // KMS Key ID
+	//
+	// "1234abcd-12ab-34cd-56ef-1234567890ab"
+	//
+	//    * // Amazon Resource Name (ARN) of a KMS Key
+	//
+	// "arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab"
+	VolumeKmsKeyId *string `type:"string"`
 }
 
 // String returns the string representation
@@ -12152,6 +12410,12 @@ func (s *TransformResources) SetInstanceCount(v int64) *TransformResources {
 // SetInstanceType sets the InstanceType field's value.
 func (s *TransformResources) SetInstanceType(v string) *TransformResources {
 	s.InstanceType = &v
+	return s
+}
+
+// SetVolumeKmsKeyId sets the VolumeKmsKeyId field's value.
+func (s *TransformResources) SetVolumeKmsKeyId(v string) *TransformResources {
+	s.VolumeKmsKeyId = &v
 	return s
 }
 
@@ -12417,8 +12681,17 @@ func (s *UpdateEndpointWeightsAndCapacitiesOutput) SetEndpointArn(v string) *Upd
 type UpdateNotebookInstanceInput struct {
 	_ struct{} `type:"structure"`
 
+	// Set to true to remove the notebook instance lifecycle configuration currently
+	// associated with the notebook instance.
+	DisassociateLifecycleConfig *bool `type:"boolean"`
+
 	// The Amazon ML compute instance type.
 	InstanceType *string `type:"string" enum:"InstanceType"`
+
+	// The name of a lifecycle configuration to associate with the notebook instance.
+	// For information about lifestyle configurations, see Step 2.1: (Optional)
+	// Customize a Notebook Instance (http://docs.aws.amazon.com/sagemaker/latest/dg/notebook-lifecycle-config.html).
+	LifecycleConfigName *string `type:"string"`
 
 	// The name of the notebook instance to update.
 	//
@@ -12432,6 +12705,9 @@ type UpdateNotebookInstanceInput struct {
 	// To be able to pass this role to Amazon SageMaker, the caller of this API
 	// must have the iam:PassRole permission.
 	RoleArn *string `min:"20" type:"string"`
+
+	// The size, in GB, of the ML storage volume to attach to the notebook instance.
+	VolumeSizeInGB *int64 `min:"5" type:"integer"`
 }
 
 // String returns the string representation
@@ -12453,6 +12729,9 @@ func (s *UpdateNotebookInstanceInput) Validate() error {
 	if s.RoleArn != nil && len(*s.RoleArn) < 20 {
 		invalidParams.Add(request.NewErrParamMinLen("RoleArn", 20))
 	}
+	if s.VolumeSizeInGB != nil && *s.VolumeSizeInGB < 5 {
+		invalidParams.Add(request.NewErrParamMinValue("VolumeSizeInGB", 5))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -12460,9 +12739,21 @@ func (s *UpdateNotebookInstanceInput) Validate() error {
 	return nil
 }
 
+// SetDisassociateLifecycleConfig sets the DisassociateLifecycleConfig field's value.
+func (s *UpdateNotebookInstanceInput) SetDisassociateLifecycleConfig(v bool) *UpdateNotebookInstanceInput {
+	s.DisassociateLifecycleConfig = &v
+	return s
+}
+
 // SetInstanceType sets the InstanceType field's value.
 func (s *UpdateNotebookInstanceInput) SetInstanceType(v string) *UpdateNotebookInstanceInput {
 	s.InstanceType = &v
+	return s
+}
+
+// SetLifecycleConfigName sets the LifecycleConfigName field's value.
+func (s *UpdateNotebookInstanceInput) SetLifecycleConfigName(v string) *UpdateNotebookInstanceInput {
+	s.LifecycleConfigName = &v
 	return s
 }
 
@@ -12475,6 +12766,12 @@ func (s *UpdateNotebookInstanceInput) SetNotebookInstanceName(v string) *UpdateN
 // SetRoleArn sets the RoleArn field's value.
 func (s *UpdateNotebookInstanceInput) SetRoleArn(v string) *UpdateNotebookInstanceInput {
 	s.RoleArn = &v
+	return s
+}
+
+// SetVolumeSizeInGB sets the VolumeSizeInGB field's value.
+func (s *UpdateNotebookInstanceInput) SetVolumeSizeInGB(v int64) *UpdateNotebookInstanceInput {
+	s.VolumeSizeInGB = &v
 	return s
 }
 
@@ -12585,7 +12882,9 @@ func (s UpdateNotebookInstanceOutput) GoString() string {
 
 // Specifies a VPC that your training jobs and hosted models have access to.
 // Control access to and from your training and model containers by configuring
-// the VPC. For more information, see host-vpc and train-vpc.
+// the VPC. For more information, see Protect Endpoints by Using an Amazon Virtual
+// Private Cloud (http://docs.aws.amazon.com/sagemaker/latest/dg/host-vpc.html)
+// and Protect Training Jobs by Using an Amazon Virtual Private Cloud (http://docs.aws.amazon.com/sagemaker/latest/dg/train-vpc.html).
 type VpcConfig struct {
 	_ struct{} `type:"structure"`
 
@@ -12706,6 +13005,9 @@ const (
 
 	// EndpointStatusUpdating is a EndpointStatus enum value
 	EndpointStatusUpdating = "Updating"
+
+	// EndpointStatusSystemUpdating is a EndpointStatus enum value
+	EndpointStatusSystemUpdating = "SystemUpdating"
 
 	// EndpointStatusRollingBack is a EndpointStatus enum value
 	EndpointStatusRollingBack = "RollingBack"

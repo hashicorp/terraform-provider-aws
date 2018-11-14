@@ -24,21 +24,24 @@ resource "aws_kinesis_firehose_delivery_stream" "extended_s3_stream" {
   extended_s3_configuration {
     role_arn   = "${aws_iam_role.firehose_role.arn}"
     bucket_arn = "${aws_s3_bucket.bucket.arn}"
+
     processing_configuration = [
       {
         enabled = "true"
+
         processors = [
           {
             type = "Lambda"
+
             parameters = [
               {
-                parameter_name = "LambdaArn"
+                parameter_name  = "LambdaArn"
                 parameter_value = "${aws_lambda_function.lambda_processor.arn}:$LATEST"
-              }
+              },
             ]
-          }
+          },
         ]
-      }
+      },
     ]
   }
 }
@@ -70,6 +73,7 @@ EOF
 
 resource "aws_iam_role" "lambda_iam" {
   name = "lambda_iam"
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -88,11 +92,11 @@ EOF
 }
 
 resource "aws_lambda_function" "lambda_processor" {
-  filename = "lambda.zip"
+  filename      = "lambda.zip"
   function_name = "firehose_lambda_processor"
-  role = "${aws_iam_role.lambda_iam.arn}"
-  handler = "exports.handler"
-  runtime = "nodejs4.3"
+  role          = "${aws_iam_role.lambda_iam.arn}"
+  handler       = "exports.handler"
+  runtime       = "nodejs8.10"
 }
 ```
 
@@ -168,6 +172,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
     copy_options       = "delimiter '|'" # the default delimiter
     data_table_columns = "test-col"
     s3_backup_mode     = "Enabled"
+
     s3_backup_configuration {
       role_arn           = "${aws_iam_role.firehose_role.arn}"
       bucket_arn         = "${aws_s3_bucket.bucket.arn}"
@@ -207,18 +212,20 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
     processing_configuration = [
       {
         enabled = "true"
+
         processors = [
           {
             type = "Lambda"
+
             parameters = [
               {
-                parameter_name = "LambdaArn"
+                parameter_name  = "LambdaArn"
                 parameter_value = "${aws_lambda_function.lambda_processor.arn}:$LATEST"
-              }
+              },
             ]
-          }
+          },
         ]
-      }
+      },
     ]
   }
 }
@@ -361,6 +368,7 @@ resource "aws_kinesis_firehose_delivery_stream" "example" {
   extended_s3_configuration {
     # Must be at least 64
     buffer_size = 128
+
     # ... other configuration ...
     data_format_conversion_configuration {
       input_format_configuration {

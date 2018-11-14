@@ -16,7 +16,7 @@ const opCreateCluster = "CreateCluster"
 // CreateClusterRequest generates a "aws/request.Request" representing the
 // client's request for the CreateCluster operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -114,7 +114,7 @@ const opCreateService = "CreateService"
 // CreateServiceRequest generates a "aws/request.Request" representing the
 // client's request for the CreateService operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -281,7 +281,7 @@ const opDeleteAttributes = "DeleteAttributes"
 // DeleteAttributesRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteAttributes operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -370,7 +370,7 @@ const opDeleteCluster = "DeleteCluster"
 // DeleteClusterRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteCluster operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -477,7 +477,7 @@ const opDeleteService = "DeleteService"
 // DeleteServiceRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteService operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -589,7 +589,7 @@ const opDeregisterContainerInstance = "DeregisterContainerInstance"
 // DeregisterContainerInstanceRequest generates a "aws/request.Request" representing the
 // client's request for the DeregisterContainerInstance operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -695,7 +695,7 @@ const opDeregisterTaskDefinition = "DeregisterTaskDefinition"
 // DeregisterTaskDefinitionRequest generates a "aws/request.Request" representing the
 // client's request for the DeregisterTaskDefinition operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -797,7 +797,7 @@ const opDescribeClusters = "DescribeClusters"
 // DescribeClustersRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeClusters operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -885,7 +885,7 @@ const opDescribeContainerInstances = "DescribeContainerInstances"
 // DescribeContainerInstancesRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeContainerInstances operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -978,7 +978,7 @@ const opDescribeServices = "DescribeServices"
 // DescribeServicesRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeServices operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1070,7 +1070,7 @@ const opDescribeTaskDefinition = "DescribeTaskDefinition"
 // DescribeTaskDefinitionRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeTaskDefinition operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1163,7 +1163,7 @@ const opDescribeTasks = "DescribeTasks"
 // DescribeTasksRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeTasks operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1255,7 +1255,7 @@ const opDiscoverPollEndpoint = "DiscoverPollEndpoint"
 // DiscoverPollEndpointRequest generates a "aws/request.Request" representing the
 // client's request for the DiscoverPollEndpoint operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1342,7 +1342,7 @@ const opListAttributes = "ListAttributes"
 // ListAttributesRequest generates a "aws/request.Request" representing the
 // client's request for the ListAttributes operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1432,7 +1432,7 @@ const opListClusters = "ListClusters"
 // ListClustersRequest generates a "aws/request.Request" representing the
 // client's request for the ListClusters operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1576,7 +1576,7 @@ const opListContainerInstances = "ListContainerInstances"
 // ListContainerInstancesRequest generates a "aws/request.Request" representing the
 // client's request for the ListContainerInstances operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1728,7 +1728,7 @@ const opListServices = "ListServices"
 // ListServicesRequest generates a "aws/request.Request" representing the
 // client's request for the ListServices operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1876,7 +1876,7 @@ const opListTaskDefinitionFamilies = "ListTaskDefinitionFamilies"
 // ListTaskDefinitionFamiliesRequest generates a "aws/request.Request" representing the
 // client's request for the ListTaskDefinitionFamilies operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2026,7 +2026,7 @@ const opListTaskDefinitions = "ListTaskDefinitions"
 // ListTaskDefinitionsRequest generates a "aws/request.Request" representing the
 // client's request for the ListTaskDefinitions operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2172,7 +2172,7 @@ const opListTasks = "ListTasks"
 // ListTasksRequest generates a "aws/request.Request" representing the
 // client's request for the ListTasks operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2329,7 +2329,7 @@ const opPutAttributes = "PutAttributes"
 // PutAttributesRequest generates a "aws/request.Request" representing the
 // client's request for the PutAttributes operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2427,7 +2427,7 @@ const opRegisterContainerInstance = "RegisterContainerInstance"
 // RegisterContainerInstanceRequest generates a "aws/request.Request" representing the
 // client's request for the RegisterContainerInstance operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2519,7 +2519,7 @@ const opRegisterTaskDefinition = "RegisterTaskDefinition"
 // RegisterTaskDefinitionRequest generates a "aws/request.Request" representing the
 // client's request for the RegisterTaskDefinition operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2627,7 +2627,7 @@ const opRunTask = "RunTask"
 // RunTaskRequest generates a "aws/request.Request" representing the
 // client's request for the RunTask operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2765,7 +2765,7 @@ const opStartTask = "StartTask"
 // StartTaskRequest generates a "aws/request.Request" representing the
 // client's request for the StartTask operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2862,7 +2862,7 @@ const opStopTask = "StopTask"
 // StopTaskRequest generates a "aws/request.Request" representing the
 // client's request for the StopTask operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2965,7 +2965,7 @@ const opSubmitContainerStateChange = "SubmitContainerStateChange"
 // SubmitContainerStateChangeRequest generates a "aws/request.Request" representing the
 // client's request for the SubmitContainerStateChange operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3055,7 +3055,7 @@ const opSubmitTaskStateChange = "SubmitTaskStateChange"
 // SubmitTaskStateChangeRequest generates a "aws/request.Request" representing the
 // client's request for the SubmitTaskStateChange operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3145,7 +3145,7 @@ const opUpdateContainerAgent = "UpdateContainerAgent"
 // UpdateContainerAgentRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateContainerAgent operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3265,7 +3265,7 @@ const opUpdateContainerInstancesState = "UpdateContainerInstancesState"
 // UpdateContainerInstancesStateRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateContainerInstancesState operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3400,7 +3400,7 @@ const opUpdateService = "UpdateService"
 // UpdateServiceRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateService operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3777,7 +3777,7 @@ type AwsVpcConfiguration struct {
 	// All specified security groups must be from the same VPC.
 	SecurityGroups []*string `locationName:"securityGroups" type:"list"`
 
-	// The subnets associated with the task or service. There is a limit of 10 subnets
+	// The subnets associated with the task or service. There is a limit of 16 subnets
 	// able to be specified per AwsVpcConfiguration.
 	//
 	// All specified subnets must be from the same VPC.
@@ -4045,7 +4045,7 @@ type ContainerDefinition struct {
 	_ struct{} `type:"structure"`
 
 	// The command that is passed to the container. This parameter maps to Cmd in
-	// the Create a container (https://docs.docker.com/engine/api/v1.35/#create-a-container)
+	// the Create a container (https://docs.docker.com/engine/api/v1.35/#operation/ContainerCreate)
 	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
 	// and the COMMAND parameter to docker run (https://docs.docker.com/engine/reference/run/).
 	// For more information, see https://docs.docker.com/engine/reference/builder/#cmd
@@ -4053,7 +4053,7 @@ type ContainerDefinition struct {
 	Command []*string `locationName:"command" type:"list"`
 
 	// The number of cpu units reserved for the container. This parameter maps to
-	// CpuShares in the Create a container (https://docs.docker.com/engine/api/v1.35/#create-a-container)
+	// CpuShares in the Create a container (https://docs.docker.com/engine/api/v1.35/#operation/ContainerCreate)
 	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
 	// and the --cpu-shares option to docker run (https://docs.docker.com/engine/reference/run/).
 	//
@@ -4109,14 +4109,14 @@ type ContainerDefinition struct {
 	Cpu *int64 `locationName:"cpu" type:"integer"`
 
 	// When this parameter is true, networking is disabled within the container.
-	// This parameter maps to NetworkDisabled in the Create a container (https://docs.docker.com/engine/api/v1.35/#create-a-container)
+	// This parameter maps to NetworkDisabled in the Create a container (https://docs.docker.com/engine/api/v1.35/#operation/ContainerCreate)
 	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/).
 	//
 	// This parameter is not supported for Windows containers.
 	DisableNetworking *bool `locationName:"disableNetworking" type:"boolean"`
 
 	// A list of DNS search domains that are presented to the container. This parameter
-	// maps to DnsSearch in the Create a container (https://docs.docker.com/engine/api/v1.35/#create-a-container)
+	// maps to DnsSearch in the Create a container (https://docs.docker.com/engine/api/v1.35/#operation/ContainerCreate)
 	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
 	// and the --dns-search option to docker run (https://docs.docker.com/engine/reference/run/).
 	//
@@ -4124,7 +4124,7 @@ type ContainerDefinition struct {
 	DnsSearchDomains []*string `locationName:"dnsSearchDomains" type:"list"`
 
 	// A list of DNS servers that are presented to the container. This parameter
-	// maps to Dns in the Create a container (https://docs.docker.com/engine/api/v1.35/#create-a-container)
+	// maps to Dns in the Create a container (https://docs.docker.com/engine/api/v1.35/#operation/ContainerCreate)
 	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
 	// and the --dns option to docker run (https://docs.docker.com/engine/reference/run/).
 	//
@@ -4132,7 +4132,7 @@ type ContainerDefinition struct {
 	DnsServers []*string `locationName:"dnsServers" type:"list"`
 
 	// A key/value map of labels to add to the container. This parameter maps to
-	// Labels in the Create a container (https://docs.docker.com/engine/api/v1.35/#create-a-container)
+	// Labels in the Create a container (https://docs.docker.com/engine/api/v1.35/#operation/ContainerCreate)
 	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
 	// and the --label option to docker run (https://docs.docker.com/engine/reference/run/).
 	// This parameter requires version 1.18 of the Docker Remote API or greater
@@ -4145,7 +4145,7 @@ type ContainerDefinition struct {
 	// security systems. This field is not valid for containers in tasks using the
 	// Fargate launch type.
 	//
-	// This parameter maps to SecurityOpt in the Create a container (https://docs.docker.com/engine/api/v1.35/#create-a-container)
+	// This parameter maps to SecurityOpt in the Create a container (https://docs.docker.com/engine/api/v1.35/#operation/ContainerCreate)
 	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
 	// and the --security-opt option to docker run (https://docs.docker.com/engine/reference/run/).
 	//
@@ -4164,7 +4164,7 @@ type ContainerDefinition struct {
 	// agent or enter your commands and arguments as command array items instead.
 	//
 	// The entry point that is passed to the container. This parameter maps to Entrypoint
-	// in the Create a container (https://docs.docker.com/engine/api/v1.35/#create-a-container)
+	// in the Create a container (https://docs.docker.com/engine/api/v1.35/#operation/ContainerCreate)
 	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
 	// and the --entrypoint option to docker run (https://docs.docker.com/engine/reference/run/).
 	// For more information, see https://docs.docker.com/engine/reference/builder/#entrypoint
@@ -4172,7 +4172,7 @@ type ContainerDefinition struct {
 	EntryPoint []*string `locationName:"entryPoint" type:"list"`
 
 	// The environment variables to pass to a container. This parameter maps to
-	// Env in the Create a container (https://docs.docker.com/engine/api/v1.35/#create-a-container)
+	// Env in the Create a container (https://docs.docker.com/engine/api/v1.35/#operation/ContainerCreate)
 	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
 	// and the --env option to docker run (https://docs.docker.com/engine/reference/run/).
 	//
@@ -4197,7 +4197,7 @@ type ContainerDefinition struct {
 	// A list of hostnames and IP address mappings to append to the /etc/hosts file
 	// on the container. If using the Fargate launch type, this may be used to list
 	// non-Fargate hosts to which the container can talk. This parameter maps to
-	// ExtraHosts in the Create a container (https://docs.docker.com/engine/api/v1.35/#create-a-container)
+	// ExtraHosts in the Create a container (https://docs.docker.com/engine/api/v1.35/#operation/ContainerCreate)
 	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
 	// and the --add-host option to docker run (https://docs.docker.com/engine/reference/run/).
 	//
@@ -4205,13 +4205,13 @@ type ContainerDefinition struct {
 	ExtraHosts []*HostEntry `locationName:"extraHosts" type:"list"`
 
 	// The health check command and associated configuration parameters for the
-	// container. This parameter maps to HealthCheck in the Create a container (https://docs.docker.com/engine/api/v1.35/#create-a-container)
+	// container. This parameter maps to HealthCheck in the Create a container (https://docs.docker.com/engine/api/v1.35/#operation/ContainerCreate)
 	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
 	// and the HEALTHCHECK parameter of docker run (https://docs.docker.com/engine/reference/run/).
 	HealthCheck *HealthCheck `locationName:"healthCheck" type:"structure"`
 
 	// The hostname to use for your container. This parameter maps to Hostname in
-	// the Create a container (https://docs.docker.com/engine/api/v1.35/#create-a-container)
+	// the Create a container (https://docs.docker.com/engine/api/v1.35/#operation/ContainerCreate)
 	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
 	// and the --hostname option to docker run (https://docs.docker.com/engine/reference/run/).
 	//
@@ -4224,9 +4224,9 @@ type ContainerDefinition struct {
 	// repository-url/image@digest. Up to 255 letters (uppercase and lowercase),
 	// numbers, hyphens, underscores, colons, periods, forward slashes, and number
 	// signs are allowed. This parameter maps to Image in the Create a container
-	// (https://docs.docker.com/engine/api/v1.35/#create-a-container) section of
-	// the Docker Remote API (https://docs.docker.com/engine/api/v1.35/) and the
-	// IMAGE parameter of docker run (https://docs.docker.com/engine/reference/run/).
+	// (https://docs.docker.com/engine/api/v1.35/#operation/ContainerCreate) section
+	// of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/) and
+	// the IMAGE parameter of docker run (https://docs.docker.com/engine/reference/run/).
 	//
 	//    * When a new task starts, the Amazon ECS container agent pulls the latest
 	//    version of the specified image and tag for the container to use. However,
@@ -4249,6 +4249,13 @@ type ContainerDefinition struct {
 	//    name (for example, quay.io/assemblyline/ubuntu).
 	Image *string `locationName:"image" type:"string"`
 
+	// When this parameter is true, this allows you to deploy containerized applications
+	// that require stdin or a tty to be allocated. This parameter maps to OpenStdin
+	// in the Create a container (https://docs.docker.com/engine/api/v1.35/#operation/ContainerCreate)
+	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
+	// and the --interactive option to docker run (https://docs.docker.com/engine/reference/run/).
+	Interactive *bool `locationName:"interactive" type:"boolean"`
+
 	// The link parameter allows containers to communicate with each other without
 	// the need for port mappings. Only supported if the network mode of a task
 	// definition is set to bridge. The name:internalName construct is analogous
@@ -4256,7 +4263,7 @@ type ContainerDefinition struct {
 	// numbers, hyphens, and underscores are allowed. For more information about
 	// linking Docker containers, go to https://docs.docker.com/engine/userguide/networking/default_network/dockerlinks/
 	// (https://docs.docker.com/engine/userguide/networking/default_network/dockerlinks/).
-	// This parameter maps to Links in the Create a container (https://docs.docker.com/engine/api/v1.35/#create-a-container)
+	// This parameter maps to Links in the Create a container (https://docs.docker.com/engine/api/v1.35/#operation/ContainerCreate)
 	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
 	// and the --link option to docker run (https://docs.docker.com/engine/reference/commandline/run/).
 	//
@@ -4278,7 +4285,7 @@ type ContainerDefinition struct {
 	//
 	// If using the Fargate launch type, the only supported value is awslogs.
 	//
-	// This parameter maps to LogConfig in the Create a container (https://docs.docker.com/engine/api/v1.35/#create-a-container)
+	// This parameter maps to LogConfig in the Create a container (https://docs.docker.com/engine/api/v1.35/#operation/ContainerCreate)
 	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
 	// and the --log-driver option to docker run (https://docs.docker.com/engine/reference/run/).
 	// By default, containers use the same logging driver that the Docker daemon
@@ -4309,7 +4316,7 @@ type ContainerDefinition struct {
 
 	// The hard limit (in MiB) of memory to present to the container. If your container
 	// attempts to exceed the memory specified here, the container is killed. This
-	// parameter maps to Memory in the Create a container (https://docs.docker.com/engine/api/v1.35/#create-a-container)
+	// parameter maps to Memory in the Create a container (https://docs.docker.com/engine/api/v1.35/#operation/ContainerCreate)
 	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
 	// and the --memory option to docker run (https://docs.docker.com/engine/reference/run/).
 	//
@@ -4334,7 +4341,7 @@ type ContainerDefinition struct {
 	// it needs to, up to either the hard limit specified with the memory parameter
 	// (if applicable), or all of the available memory on the container instance,
 	// whichever comes first. This parameter maps to MemoryReservation in the Create
-	// a container (https://docs.docker.com/engine/api/v1.35/#create-a-container)
+	// a container (https://docs.docker.com/engine/api/v1.35/#operation/ContainerCreate)
 	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
 	// and the --memory-reservation option to docker run (https://docs.docker.com/engine/reference/run/).
 	//
@@ -4357,7 +4364,7 @@ type ContainerDefinition struct {
 
 	// The mount points for data volumes in your container.
 	//
-	// This parameter maps to Volumes in the Create a container (https://docs.docker.com/engine/api/v1.35/#create-a-container)
+	// This parameter maps to Volumes in the Create a container (https://docs.docker.com/engine/api/v1.35/#operation/ContainerCreate)
 	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
 	// and the --volume option to docker run (https://docs.docker.com/engine/reference/run/).
 	//
@@ -4370,7 +4377,7 @@ type ContainerDefinition struct {
 	// in a task definition, the name of one container can be entered in the links
 	// of another container to connect the containers. Up to 255 letters (uppercase
 	// and lowercase), numbers, hyphens, and underscores are allowed. This parameter
-	// maps to name in the Create a container (https://docs.docker.com/engine/api/v1.35/#create-a-container)
+	// maps to name in the Create a container (https://docs.docker.com/engine/api/v1.35/#operation/ContainerCreate)
 	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
 	// and the --name option to docker run (https://docs.docker.com/engine/reference/run/).
 	Name *string `locationName:"name" type:"string"`
@@ -4386,7 +4393,7 @@ type ContainerDefinition struct {
 	// There is no loopback for port mappings on Windows, so you cannot access a
 	// container's mapped port from the host itself.
 	//
-	// This parameter maps to PortBindings in the Create a container (https://docs.docker.com/engine/api/v1.35/#create-a-container)
+	// This parameter maps to PortBindings in the Create a container (https://docs.docker.com/engine/api/v1.35/#operation/ContainerCreate)
 	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
 	// and the --publish option to docker run (https://docs.docker.com/engine/reference/run/).
 	// If the network mode of a task definition is set to none, then you can't specify
@@ -4402,7 +4409,7 @@ type ContainerDefinition struct {
 
 	// When this parameter is true, the container is given elevated privileges on
 	// the host container instance (similar to the root user). This parameter maps
-	// to Privileged in the Create a container (https://docs.docker.com/engine/api/v1.35/#create-a-container)
+	// to Privileged in the Create a container (https://docs.docker.com/engine/api/v1.35/#operation/ContainerCreate)
 	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
 	// and the --privileged option to docker run (https://docs.docker.com/engine/reference/run/).
 	//
@@ -4410,11 +4417,17 @@ type ContainerDefinition struct {
 	// Fargate launch type.
 	Privileged *bool `locationName:"privileged" type:"boolean"`
 
+	// When this parameter is true, a TTY is allocated. This parameter maps to Tty
+	// in the Create a container (https://docs.docker.com/engine/api/v1.35/#operation/ContainerCreate)
+	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
+	// and the --tty option to docker run (https://docs.docker.com/engine/reference/run/).
+	PseudoTerminal *bool `locationName:"pseudoTerminal" type:"boolean"`
+
 	// When this parameter is true, the container is given read-only access to its
 	// root file system. This parameter maps to ReadonlyRootfs in the Create a container
-	// (https://docs.docker.com/engine/api/v1.35/#create-a-container) section of
-	// the Docker Remote API (https://docs.docker.com/engine/api/v1.35/) and the
-	// --read-only option to docker run.
+	// (https://docs.docker.com/engine/api/v1.35/#operation/ContainerCreate) section
+	// of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/) and
+	// the --read-only option to docker run (https://docs.docker.com/engine/reference/run/).
 	//
 	// This parameter is not supported for Windows containers.
 	ReadonlyRootFilesystem *bool `locationName:"readonlyRootFilesystem" type:"boolean"`
@@ -4422,8 +4435,19 @@ type ContainerDefinition struct {
 	// The private repository authentication credentials to use.
 	RepositoryCredentials *RepositoryCredentials `locationName:"repositoryCredentials" type:"structure"`
 
+	// A list of namespaced kernel parameters to set in the container. This parameter
+	// maps to Sysctls in the Create a container (https://docs.docker.com/engine/api/v1.35/#operation/ContainerCreate)
+	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
+	// and the --sysctl option to docker run (https://docs.docker.com/engine/reference/run/).
+	//
+	// It is not recommended that you specify network-related systemControls parameters
+	// for multiple containers in a single task that also uses either the awsvpc
+	// or host network modes. When you do, the container that is started last will
+	// determine which systemControls parameters take effect.
+	SystemControls []*SystemControl `locationName:"systemControls" type:"list"`
+
 	// A list of ulimits to set in the container. This parameter maps to Ulimits
-	// in the Create a container (https://docs.docker.com/engine/api/v1.35/#create-a-container)
+	// in the Create a container (https://docs.docker.com/engine/api/v1.35/#operation/ContainerCreate)
 	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
 	// and the --ulimit option to docker run (https://docs.docker.com/engine/reference/run/).
 	// Valid naming values are displayed in the Ulimit data type. This parameter
@@ -4436,7 +4460,7 @@ type ContainerDefinition struct {
 	Ulimits []*Ulimit `locationName:"ulimits" type:"list"`
 
 	// The user name to use inside the container. This parameter maps to User in
-	// the Create a container (https://docs.docker.com/engine/api/v1.35/#create-a-container)
+	// the Create a container (https://docs.docker.com/engine/api/v1.35/#operation/ContainerCreate)
 	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
 	// and the --user option to docker run (https://docs.docker.com/engine/reference/run/).
 	//
@@ -4444,13 +4468,13 @@ type ContainerDefinition struct {
 	User *string `locationName:"user" type:"string"`
 
 	// Data volumes to mount from another container. This parameter maps to VolumesFrom
-	// in the Create a container (https://docs.docker.com/engine/api/v1.35/#create-a-container)
+	// in the Create a container (https://docs.docker.com/engine/api/v1.35/#operation/ContainerCreate)
 	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
 	// and the --volumes-from option to docker run (https://docs.docker.com/engine/reference/run/).
 	VolumesFrom []*VolumeFrom `locationName:"volumesFrom" type:"list"`
 
 	// The working directory in which to run commands inside the container. This
-	// parameter maps to WorkingDir in the Create a container (https://docs.docker.com/engine/api/v1.35/#create-a-container)
+	// parameter maps to WorkingDir in the Create a container (https://docs.docker.com/engine/api/v1.35/#operation/ContainerCreate)
 	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
 	// and the --workdir option to docker run (https://docs.docker.com/engine/reference/run/).
 	WorkingDirectory *string `locationName:"workingDirectory" type:"string"`
@@ -4600,6 +4624,12 @@ func (s *ContainerDefinition) SetImage(v string) *ContainerDefinition {
 	return s
 }
 
+// SetInteractive sets the Interactive field's value.
+func (s *ContainerDefinition) SetInteractive(v bool) *ContainerDefinition {
+	s.Interactive = &v
+	return s
+}
+
 // SetLinks sets the Links field's value.
 func (s *ContainerDefinition) SetLinks(v []*string) *ContainerDefinition {
 	s.Links = v
@@ -4654,6 +4684,12 @@ func (s *ContainerDefinition) SetPrivileged(v bool) *ContainerDefinition {
 	return s
 }
 
+// SetPseudoTerminal sets the PseudoTerminal field's value.
+func (s *ContainerDefinition) SetPseudoTerminal(v bool) *ContainerDefinition {
+	s.PseudoTerminal = &v
+	return s
+}
+
 // SetReadonlyRootFilesystem sets the ReadonlyRootFilesystem field's value.
 func (s *ContainerDefinition) SetReadonlyRootFilesystem(v bool) *ContainerDefinition {
 	s.ReadonlyRootFilesystem = &v
@@ -4663,6 +4699,12 @@ func (s *ContainerDefinition) SetReadonlyRootFilesystem(v bool) *ContainerDefini
 // SetRepositoryCredentials sets the RepositoryCredentials field's value.
 func (s *ContainerDefinition) SetRepositoryCredentials(v *RepositoryCredentials) *ContainerDefinition {
 	s.RepositoryCredentials = v
+	return s
+}
+
+// SetSystemControls sets the SystemControls field's value.
+func (s *ContainerDefinition) SetSystemControls(v []*SystemControl) *ContainerDefinition {
+	s.SystemControls = v
 	return s
 }
 
@@ -6411,8 +6453,9 @@ func (s *DiscoverPollEndpointOutput) SetTelemetryEndpoint(v string) *DiscoverPol
 	return s
 }
 
-// The configuration for the Docker volume. This parameter is specified when
-// using Docker volumes.
+// This parameter is specified when using Docker volumes. Docker volumes are
+// only supported when using the EC2 launch type. Windows containers only support
+// the use of the local driver. To use bind mounts, specify a host instead.
 type DockerVolumeConfiguration struct {
 	_ struct{} `type:"structure"`
 
@@ -6529,6 +6572,19 @@ func (s *Failure) SetReason(v string) *Failure {
 // that are specified in a container definition override any Docker health checks
 // that exist in the container image (such as those specified in a parent image
 // or from the image's Dockerfile).
+//
+// The following are notes about container health check support:
+//
+//    * Container health checks require version 1.17.0 or greater of the Amazon
+//    ECS container agent. For more information, see Updating the Amazon ECS
+//    Container Agent (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-agent-update.html).
+//
+//    * Container health checks are supported for Fargate tasks if using platform
+//    version version 1.1.0 or greater. For more information, see AWS Fargate
+//    Platform Versions (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/platform_versions.html).
+//
+//    * Container health checks are not supported for tasks that are part of
+//    a service that is configured to use a Classic Load Balancer.
 type HealthCheck struct {
 	_ struct{} `type:"structure"`
 
@@ -6540,7 +6596,7 @@ type HealthCheck struct {
 	// [ "CMD-SHELL", "curl -f http://localhost/ || exit 1" ]
 	//
 	// An exit code of 0 indicates success, and non-zero exit code indicates failure.
-	// For more information, see HealthCheck in the Create a container (https://docs.docker.com/engine/api/v1.35/#create-a-container)
+	// For more information, see HealthCheck in the Create a container (https://docs.docker.com/engine/api/v1.35/#operation/ContainerCreate)
 	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/).
 	//
 	// Command is a required field
@@ -6724,7 +6780,7 @@ type KernelCapabilities struct {
 
 	// The Linux capabilities for the container that have been added to the default
 	// configuration provided by Docker. This parameter maps to CapAdd in the Create
-	// a container (https://docs.docker.com/engine/api/v1.35/#create-a-container)
+	// a container (https://docs.docker.com/engine/api/v1.35/#operation/ContainerCreate)
 	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
 	// and the --cap-add option to docker run (https://docs.docker.com/engine/reference/run/).
 	//
@@ -6743,7 +6799,7 @@ type KernelCapabilities struct {
 
 	// The Linux capabilities for the container that have been removed from the
 	// default configuration provided by Docker. This parameter maps to CapDrop
-	// in the Create a container (https://docs.docker.com/engine/api/v1.35/#create-a-container)
+	// in the Create a container (https://docs.docker.com/engine/api/v1.35/#operation/ContainerCreate)
 	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
 	// and the --cap-drop option to docker run (https://docs.docker.com/engine/reference/run/).
 	//
@@ -6827,7 +6883,7 @@ type LinuxParameters struct {
 	Capabilities *KernelCapabilities `locationName:"capabilities" type:"structure"`
 
 	// Any host devices to expose to the container. This parameter maps to Devices
-	// in the Create a container (https://docs.docker.com/engine/api/v1.35/#create-a-container)
+	// in the Create a container (https://docs.docker.com/engine/api/v1.35/#operation/ContainerCreate)
 	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
 	// and the --device option to docker run (https://docs.docker.com/engine/reference/run/).
 	//
@@ -9338,7 +9394,7 @@ type ServiceRegistry struct {
 	ContainerPort *int64 `locationName:"containerPort" type:"integer"`
 
 	// The port value used if your service discovery service specified an SRV record.
-	// This field is required if both the awsvpc network mode and SRV records are
+	// This field may be used if both the awsvpc network mode and SRV records are
 	// used.
 	Port *int64 `locationName:"port" type:"integer"`
 
@@ -9862,6 +9918,47 @@ func (s SubmitTaskStateChangeOutput) GoString() string {
 // SetAcknowledgment sets the Acknowledgment field's value.
 func (s *SubmitTaskStateChangeOutput) SetAcknowledgment(v string) *SubmitTaskStateChangeOutput {
 	s.Acknowledgment = &v
+	return s
+}
+
+// A list of namespaced kernel parameters to set in the container. This parameter
+// maps to Sysctls in the Create a container (https://docs.docker.com/engine/api/v1.35/#operation/ContainerCreate)
+// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
+// and the --sysctl option to docker run (https://docs.docker.com/engine/reference/run/).
+//
+// It is not recommended that you specify network-related systemControls parameters
+// for multiple containers in a single task that also uses either the awsvpc
+// or host network modes. When you do, the container that is started last will
+// determine which systemControls parameters take effect.
+type SystemControl struct {
+	_ struct{} `type:"structure"`
+
+	// The namespaced kernel parameter to set a value for.
+	Namespace *string `locationName:"namespace" type:"string"`
+
+	// The value for the namespaced kernel parameter specifed in namespace.
+	Value *string `locationName:"value" type:"string"`
+}
+
+// String returns the string representation
+func (s SystemControl) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SystemControl) GoString() string {
+	return s.String()
+}
+
+// SetNamespace sets the Namespace field's value.
+func (s *SystemControl) SetNamespace(v string) *SystemControl {
+	s.Namespace = &v
+	return s
+}
+
+// SetValue sets the Value field's value.
+func (s *SystemControl) SetValue(v string) *SystemControl {
+	s.Value = &v
 	return s
 }
 
@@ -11054,8 +11151,9 @@ func (s *VersionInfo) SetDockerVersion(v string) *VersionInfo {
 type Volume struct {
 	_ struct{} `type:"structure"`
 
-	// The configuration for the Docker volume. This parameter is specified when
-	// using Docker volumes.
+	// This parameter is specified when using Docker volumes. Docker volumes are
+	// only supported when using the EC2 launch type. Windows containers only support
+	// the use of the local driver. To use bind mounts, specify a host instead.
 	DockerVolumeConfiguration *DockerVolumeConfiguration `locationName:"dockerVolumeConfiguration" type:"structure"`
 
 	// This parameter is specified when using bind mount host volumes. Bind mount

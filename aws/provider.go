@@ -164,6 +164,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_acmpca_certificate_authority":     dataSourceAwsAcmpcaCertificateAuthority(),
 			"aws_ami":                              dataSourceAwsAmi(),
 			"aws_ami_ids":                          dataSourceAwsAmiIds(),
+			"aws_api_gateway_resource":             dataSourceAwsApiGatewayResource(),
 			"aws_api_gateway_rest_api":             dataSourceAwsApiGatewayRestApi(),
 			"aws_arn":                              dataSourceAwsArn(),
 			"aws_autoscaling_groups":               dataSourceAwsAutoscalingGroups(),
@@ -176,11 +177,13 @@ func Provider() terraform.ResourceProvider {
 			"aws_canonical_user_id":                dataSourceAwsCanonicalUserId(),
 			"aws_cloudformation_export":            dataSourceAwsCloudFormationExport(),
 			"aws_cloudformation_stack":             dataSourceAwsCloudFormationStack(),
+			"aws_cloudhsm_v2_cluster":              dataSourceCloudHsm2Cluster(),
 			"aws_cloudtrail_service_account":       dataSourceAwsCloudTrailServiceAccount(),
 			"aws_cloudwatch_log_group":             dataSourceAwsCloudwatchLogGroup(),
 			"aws_cognito_user_pools":               dataSourceAwsCognitoUserPools(),
 			"aws_codecommit_repository":            dataSourceAwsCodeCommitRepository(),
 			"aws_db_cluster_snapshot":              dataSourceAwsDbClusterSnapshot(),
+			"aws_db_event_categories":              dataSourceAwsDbEventCategories(),
 			"aws_db_instance":                      dataSourceAwsDbInstance(),
 			"aws_db_snapshot":                      dataSourceAwsDbSnapshot(),
 			"aws_dx_gateway":                       dataSourceAwsDxGateway(),
@@ -228,6 +231,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_lambda_function":                  dataSourceAwsLambdaFunction(),
 			"aws_lambda_invocation":                dataSourceAwsLambdaInvocation(),
 			"aws_launch_configuration":             dataSourceAwsLaunchConfiguration(),
+			"aws_launch_template":                  dataSourceAwsLaunchTemplate(),
 			"aws_mq_broker":                        dataSourceAwsMqBroker(),
 			"aws_nat_gateway":                      dataSourceAwsNatGateway(),
 			"aws_network_acls":                     dataSourceAwsNetworkAcls(),
@@ -263,6 +267,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_vpc_endpoint_service":             dataSourceAwsVpcEndpointService(),
 			"aws_vpc_peering_connection":           dataSourceAwsVpcPeeringConnection(),
 			"aws_vpn_gateway":                      dataSourceAwsVpnGateway(),
+			"aws_workspaces_bundle":                dataSourceAwsWorkspaceBundle(),
 
 			// Adding the Aliases for the ALB -> LB Rename
 			"aws_lb":               dataSourceAwsLb(),
@@ -324,6 +329,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_cloudformation_stack":                         resourceAwsCloudFormationStack(),
 			"aws_cloudfront_distribution":                      resourceAwsCloudFrontDistribution(),
 			"aws_cloudfront_origin_access_identity":            resourceAwsCloudFrontOriginAccessIdentity(),
+			"aws_cloudfront_public_key":                        resourceAwsCloudFrontPublicKey(),
 			"aws_cloudtrail":                                   resourceAwsCloudTrail(),
 			"aws_cloudwatch_event_permission":                  resourceAwsCloudWatchEventPermission(),
 			"aws_cloudwatch_event_rule":                        resourceAwsCloudWatchEventRule(),
@@ -348,6 +354,8 @@ func Provider() terraform.ResourceProvider {
 			"aws_cognito_user_pool":                            resourceAwsCognitoUserPool(),
 			"aws_cognito_user_pool_client":                     resourceAwsCognitoUserPoolClient(),
 			"aws_cognito_user_pool_domain":                     resourceAwsCognitoUserPoolDomain(),
+			"aws_cloudhsm_v2_cluster":                          resourceAwsCloudHsm2Cluster(),
+			"aws_cloudhsm_v2_hsm":                              resourceAwsCloudHsm2Hsm(),
 			"aws_cognito_resource_server":                      resourceAwsCognitoResourceServer(),
 			"aws_cloudwatch_metric_alarm":                      resourceAwsCloudWatchMetricAlarm(),
 			"aws_cloudwatch_dashboard":                         resourceAwsCloudWatchDashboard(),
@@ -359,6 +367,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_codebuild_project":                            resourceAwsCodeBuildProject(),
 			"aws_codebuild_webhook":                            resourceAwsCodeBuildWebhook(),
 			"aws_codepipeline":                                 resourceAwsCodePipeline(),
+			"aws_codepipeline_webhook":                         resourceAwsCodePipelineWebhook(),
 			"aws_customer_gateway":                             resourceAwsCustomerGateway(),
 			"aws_dax_cluster":                                  resourceAwsDaxCluster(),
 			"aws_dax_parameter_group":                          resourceAwsDaxParameterGroup(),
@@ -374,12 +383,13 @@ func Provider() terraform.ResourceProvider {
 			"aws_devicefarm_project":                           resourceAwsDevicefarmProject(),
 			"aws_directory_service_directory":                  resourceAwsDirectoryServiceDirectory(),
 			"aws_directory_service_conditional_forwarder":      resourceAwsDirectoryServiceConditionalForwarder(),
+			"aws_dlm_lifecycle_policy":                         resourceAwsDlmLifecyclePolicy(),
 			"aws_dms_certificate":                              resourceAwsDmsCertificate(),
 			"aws_dms_endpoint":                                 resourceAwsDmsEndpoint(),
 			"aws_dms_replication_instance":                     resourceAwsDmsReplicationInstance(),
 			"aws_dms_replication_subnet_group":                 resourceAwsDmsReplicationSubnetGroup(),
 			"aws_dms_replication_task":                         resourceAwsDmsReplicationTask(),
-			"aws_dx_lag":                                       resourceAwsDxLag(),
+			"aws_dx_bgp_peer":                                  resourceAwsDxBgpPeer(),
 			"aws_dx_connection":                                resourceAwsDxConnection(),
 			"aws_dx_connection_association":                    resourceAwsDxConnectionAssociation(),
 			"aws_dx_gateway":                                   resourceAwsDxGateway(),
@@ -388,12 +398,16 @@ func Provider() terraform.ResourceProvider {
 			"aws_dx_hosted_private_virtual_interface_accepter": resourceAwsDxHostedPrivateVirtualInterfaceAccepter(),
 			"aws_dx_hosted_public_virtual_interface":           resourceAwsDxHostedPublicVirtualInterface(),
 			"aws_dx_hosted_public_virtual_interface_accepter":  resourceAwsDxHostedPublicVirtualInterfaceAccepter(),
+			"aws_dx_lag":                                       resourceAwsDxLag(),
 			"aws_dx_private_virtual_interface":                 resourceAwsDxPrivateVirtualInterface(),
 			"aws_dx_public_virtual_interface":                  resourceAwsDxPublicVirtualInterface(),
 			"aws_dynamodb_table":                               resourceAwsDynamoDbTable(),
 			"aws_dynamodb_table_item":                          resourceAwsDynamoDbTableItem(),
 			"aws_dynamodb_global_table":                        resourceAwsDynamoDbGlobalTable(),
+			"aws_ec2_capacity_reservation":                     resourceAwsEc2CapacityReservation(),
+			"aws_ec2_fleet":                                    resourceAwsEc2Fleet(),
 			"aws_ebs_snapshot":                                 resourceAwsEbsSnapshot(),
+			"aws_ebs_snapshot_copy":                            resourceAwsEbsSnapshotCopy(),
 			"aws_ebs_volume":                                   resourceAwsEbsVolume(),
 			"aws_ecr_lifecycle_policy":                         resourceAwsEcrLifecyclePolicy(),
 			"aws_ecr_repository":                               resourceAwsEcrRepository(),
@@ -429,13 +443,16 @@ func Provider() terraform.ResourceProvider {
 			"aws_gamelift_alias":                               resourceAwsGameliftAlias(),
 			"aws_gamelift_build":                               resourceAwsGameliftBuild(),
 			"aws_gamelift_fleet":                               resourceAwsGameliftFleet(),
+			"aws_gamelift_game_session_queue":                  resourceAwsGameliftGameSessionQueue(),
 			"aws_glacier_vault":                                resourceAwsGlacierVault(),
+			"aws_glacier_vault_lock":                           resourceAwsGlacierVaultLock(),
 			"aws_glue_catalog_database":                        resourceAwsGlueCatalogDatabase(),
 			"aws_glue_catalog_table":                           resourceAwsGlueCatalogTable(),
 			"aws_glue_classifier":                              resourceAwsGlueClassifier(),
 			"aws_glue_connection":                              resourceAwsGlueConnection(),
 			"aws_glue_crawler":                                 resourceAwsGlueCrawler(),
 			"aws_glue_job":                                     resourceAwsGlueJob(),
+			"aws_glue_security_configuration":                  resourceAwsGlueSecurityConfiguration(),
 			"aws_glue_trigger":                                 resourceAwsGlueTrigger(),
 			"aws_guardduty_detector":                           resourceAwsGuardDutyDetector(),
 			"aws_guardduty_ipset":                              resourceAwsGuardDutyIpset(),
@@ -471,12 +488,15 @@ func Provider() terraform.ResourceProvider {
 			"aws_internet_gateway":                             resourceAwsInternetGateway(),
 			"aws_iot_certificate":                              resourceAwsIotCertificate(),
 			"aws_iot_policy":                                   resourceAwsIotPolicy(),
+			"aws_iot_policy_attachment":                        resourceAwsIotPolicyAttachment(),
 			"aws_iot_thing":                                    resourceAwsIotThing(),
+			"aws_iot_thing_principal_attachment":               resourceAwsIotThingPrincipalAttachment(),
 			"aws_iot_thing_type":                               resourceAwsIotThingType(),
 			"aws_iot_topic_rule":                               resourceAwsIotTopicRule(),
 			"aws_key_pair":                                     resourceAwsKeyPair(),
 			"aws_kinesis_firehose_delivery_stream":             resourceAwsKinesisFirehoseDeliveryStream(),
 			"aws_kinesis_stream":                               resourceAwsKinesisStream(),
+			"aws_kinesis_analytics_application":                resourceAwsKinesisAnalyticsApplication(),
 			"aws_kms_alias":                                    resourceAwsKmsAlias(),
 			"aws_kms_grant":                                    resourceAwsKmsGrant(),
 			"aws_kms_key":                                      resourceAwsKmsKey(),
@@ -545,6 +565,8 @@ func Provider() terraform.ResourceProvider {
 			"aws_redshift_security_group":                      resourceAwsRedshiftSecurityGroup(),
 			"aws_redshift_parameter_group":                     resourceAwsRedshiftParameterGroup(),
 			"aws_redshift_subnet_group":                        resourceAwsRedshiftSubnetGroup(),
+			"aws_redshift_snapshot_copy_grant":                 resourceAwsRedshiftSnapshotCopyGrant(),
+			"aws_redshift_event_subscription":                  resourceAwsRedshiftEventSubscription(),
 			"aws_route53_delegation_set":                       resourceAwsRoute53DelegationSet(),
 			"aws_route53_query_log":                            resourceAwsRoute53QueryLog(),
 			"aws_route53_record":                               resourceAwsRoute53Record(),
@@ -666,11 +688,22 @@ func Provider() terraform.ResourceProvider {
 			"aws_batch_compute_environment":                    resourceAwsBatchComputeEnvironment(),
 			"aws_batch_job_definition":                         resourceAwsBatchJobDefinition(),
 			"aws_batch_job_queue":                              resourceAwsBatchJobQueue(),
+			"aws_pinpoint_app":                                 resourceAwsPinpointApp(),
+			"aws_pinpoint_adm_channel":                         resourceAwsPinpointADMChannel(),
+			"aws_pinpoint_apns_channel":                        resourceAwsPinpointAPNSChannel(),
+			"aws_pinpoint_apns_sandbox_channel":                resourceAwsPinpointAPNSSandboxChannel(),
+			"aws_pinpoint_apns_voip_channel":                   resourceAwsPinpointAPNSVoipChannel(),
+			"aws_pinpoint_apns_voip_sandbox_channel":           resourceAwsPinpointAPNSVoipSandboxChannel(),
+			"aws_pinpoint_baidu_channel":                       resourceAwsPinpointBaiduChannel(),
+			"aws_pinpoint_email_channel":                       resourceAwsPinpointEmailChannel(),
+			"aws_pinpoint_event_stream":                        resourceAwsPinpointEventStream(),
+			"aws_pinpoint_gcm_channel":                         resourceAwsPinpointGCMChannel(),
+			"aws_pinpoint_sms_channel":                         resourceAwsPinpointSMSChannel(),
 
 			// ALBs are actually LBs because they can be type `network` or `application`
 			// To avoid regressions, we will add a new resource for each and they both point
 			// back to the old ALB version. IF the Terraform supported aliases for resources
-			// this would be a whole lot simplier
+			// this would be a whole lot simpler
 			"aws_alb":                         resourceAwsLb(),
 			"aws_lb":                          resourceAwsLb(),
 			"aws_alb_listener":                resourceAwsLbListener(),
@@ -731,6 +764,8 @@ func init() {
 
 		"kinesis_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n" +
 			"It's typically used to connect to kinesalite.",
+
+		"kinesis_analytics_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
 
 		"kms_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
 
@@ -857,6 +892,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		config.EsEndpoint = endpoints["es"].(string)
 		config.IamEndpoint = endpoints["iam"].(string)
 		config.KinesisEndpoint = endpoints["kinesis"].(string)
+		config.KinesisAnalyticsEndpoint = endpoints["kinesis_analytics"].(string)
 		config.KmsEndpoint = endpoints["kms"].(string)
 		config.LambdaEndpoint = endpoints["lambda"].(string)
 		config.R53Endpoint = endpoints["r53"].(string)
@@ -1030,6 +1066,12 @@ func endpointsSchema() *schema.Schema {
 					Optional:    true,
 					Default:     "",
 					Description: descriptions["kinesis_endpoint"],
+				},
+				"kinesis_analytics": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: descriptions["kinesis_analytics_endpoint"],
 				},
 				"kms": {
 					Type:        schema.TypeString,

@@ -73,12 +73,14 @@ which take the following arguments:
   [the underlying AWS API](http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeSubnets.html).
   For example, if matching against tag `Name`, use:
   
-  ```hcl
+```hcl
+data "aws_subnet" "selected" {
   filter {
-    name = "tag:Name"
-    values = ...
+    name   = "tag:Name"
+    values = "" # insert value here
   }
-  ```
+}
+```
 
 * `values` - (Required) Set of values that are accepted for the given field.
   A subnet will be selected if any one of the given values matches.

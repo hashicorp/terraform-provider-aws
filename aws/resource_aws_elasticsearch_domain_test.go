@@ -76,7 +76,7 @@ func TestAccAWSElasticSearchDomain_basic(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 	ri := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
@@ -98,7 +98,7 @@ func TestAccAWSElasticSearchDomain_withDedicatedMaster(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 	ri := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
@@ -130,7 +130,7 @@ func TestAccAWSElasticSearchDomain_duplicate(t *testing.T) {
 	ri := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-%d", ri)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		CheckDestroy: func(s *terraform.State) error {
@@ -178,7 +178,7 @@ func TestAccAWSElasticSearchDomain_importBasic(t *testing.T) {
 	ri := acctest.RandInt()
 	resourceId := fmt.Sprintf("tf-test-%d", ri)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
@@ -200,7 +200,7 @@ func TestAccAWSElasticSearchDomain_v23(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 	ri := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
@@ -221,7 +221,7 @@ func TestAccAWSElasticSearchDomain_complex(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 	ri := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
@@ -240,7 +240,7 @@ func TestAccAWSElasticSearchDomain_vpc(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 	ri := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
@@ -259,7 +259,7 @@ func TestAccAWSElasticSearchDomain_vpc_update(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 	ri := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
@@ -286,7 +286,7 @@ func TestAccAWSElasticSearchDomain_internetToVpcEndpoint(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 	ri := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
@@ -309,7 +309,7 @@ func TestAccAWSElasticSearchDomain_internetToVpcEndpoint(t *testing.T) {
 
 func TestAccAWSElasticSearchDomain_LogPublishingOptions(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
@@ -328,7 +328,7 @@ func TestAccAWSElasticSearchDomain_CognitoOptionsCreateAndRemove(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 	ri := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
@@ -355,7 +355,7 @@ func TestAccAWSElasticSearchDomain_CognitoOptionsUpdate(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 	ri := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
@@ -391,7 +391,7 @@ func testAccCheckESNumberOfSecurityGroups(numberOfSecurityGroups int, status *el
 func TestAccAWSElasticSearchDomain_policy(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
@@ -409,7 +409,7 @@ func TestAccAWSElasticSearchDomain_policy(t *testing.T) {
 func TestAccAWSElasticSearchDomain_encrypt_at_rest_default_key(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
@@ -428,7 +428,7 @@ func TestAccAWSElasticSearchDomain_encrypt_at_rest_default_key(t *testing.T) {
 func TestAccAWSElasticSearchDomain_encrypt_at_rest_specify_key(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
@@ -444,12 +444,31 @@ func TestAccAWSElasticSearchDomain_encrypt_at_rest_specify_key(t *testing.T) {
 	})
 }
 
+func TestAccAWSElasticSearchDomain_NodeToNodeEncryption(t *testing.T) {
+	var domain elasticsearch.ElasticsearchDomainStatus
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckESDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccESDomainConfigwithNodeToNodeEncryption(acctest.RandInt()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &domain),
+					testAccCheckESNodetoNodeEncrypted(true, &domain),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSElasticSearchDomain_tags(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 	var td elasticsearch.ListTagsOutput
 	ri := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSELBDestroy,
@@ -478,7 +497,7 @@ func TestAccAWSElasticSearchDomain_update(t *testing.T) {
 	var input elasticsearch.ElasticsearchDomainStatus
 	ri := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
@@ -506,7 +525,7 @@ func TestAccAWSElasticSearchDomain_update_volume_type(t *testing.T) {
 	var input elasticsearch.ElasticsearchDomainStatus
 	ri := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
@@ -581,6 +600,16 @@ func testAccCheckESEncrypted(encrypted bool, status *elasticsearch.Elasticsearch
 		conf := status.EncryptionAtRestOptions
 		if *conf.Enabled != encrypted {
 			return fmt.Errorf("Encrypt at rest not set properly. Given: %t, Expected: %t", *conf.Enabled, encrypted)
+		}
+		return nil
+	}
+}
+
+func testAccCheckESNodetoNodeEncrypted(encrypted bool, status *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		options := status.NodeToNodeEncryptionOptions
+		if aws.BoolValue(options.Enabled) != encrypted {
+			return fmt.Errorf("Node-to-Node Encryption not set properly. Given: %t, Expected: %t", aws.BoolValue(options.Enabled), encrypted)
 		}
 		return nil
 	}
@@ -885,6 +914,30 @@ resource "aws_elasticsearch_domain" "example" {
   }
 }
 `, randESId, randESId)
+}
+
+func testAccESDomainConfigwithNodeToNodeEncryption(randInt int) string {
+	return fmt.Sprintf(`
+
+resource "aws_elasticsearch_domain" "example" {
+  domain_name = "tf-test-%d"
+
+  elasticsearch_version = "6.0"
+
+  cluster_config {
+    instance_type = "m4.large.elasticsearch"
+  }
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+
+  node_to_node_encryption {
+  	enabled = true
+  }
+}
+`, randInt)
 }
 
 func testAccESDomainConfig_complex(randInt int) string {

@@ -19,12 +19,12 @@ func TestAccAWSNeptuneSubnetGroup_basic(t *testing.T) {
 
 	rName := fmt.Sprintf("tf-test-%d", acctest.RandInt())
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNeptuneSubnetGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccNeptuneSubnetGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNeptuneSubnetGroupExists(
@@ -47,12 +47,12 @@ func TestAccAWSNeptuneSubnetGroup_basic(t *testing.T) {
 func TestAccAWSNeptuneSubnetGroup_namePrefix(t *testing.T) {
 	var v neptune.DBSubnetGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNeptuneSubnetGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccNeptuneSubnetGroupConfig_namePrefix,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNeptuneSubnetGroupExists(
@@ -74,12 +74,12 @@ func TestAccAWSNeptuneSubnetGroup_namePrefix(t *testing.T) {
 func TestAccAWSNeptuneSubnetGroup_generatedName(t *testing.T) {
 	var v neptune.DBSubnetGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNeptuneSubnetGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccNeptuneSubnetGroupConfig_generatedName,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNeptuneSubnetGroupExists(
@@ -99,12 +99,12 @@ func TestAccAWSNeptuneSubnetGroup_updateDescription(t *testing.T) {
 	var v neptune.DBSubnetGroup
 
 	rName := fmt.Sprintf("tf-test-%d", acctest.RandInt())
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNeptuneSubnetGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccNeptuneSubnetGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNeptuneSubnetGroupExists(
@@ -114,7 +114,7 @@ func TestAccAWSNeptuneSubnetGroup_updateDescription(t *testing.T) {
 				),
 			},
 
-			resource.TestStep{
+			{
 				Config: testAccNeptuneSubnetGroupConfig_updatedDescription(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNeptuneSubnetGroupExists(

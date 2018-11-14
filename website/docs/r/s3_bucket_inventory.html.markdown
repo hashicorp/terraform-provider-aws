@@ -35,9 +35,10 @@ resource "aws_s3_bucket_inventory" "test" {
 
   destination {
     bucket {
-      format = "ORC"
+      format     = "ORC"
       bucket_arn = "${aws_s3_bucket.inventory.arn}"
     }
+  }
 }
 ```
 
@@ -68,9 +69,9 @@ resource "aws_s3_bucket_inventory" "test-prefix" {
 
   destination {
     bucket {
-      format = "ORC"
+      format     = "ORC"
       bucket_arn = "${aws_s3_bucket.inventory.arn}"
-      prefix = "inventory"
+      prefix     = "inventory"
     }
   }
 }
@@ -111,8 +112,6 @@ The `bucket` configuration supports the following:
 
 The `encryption` configuration supports the following:
 
-~> **NOTE:** `sse_s3` is currently unsupported.
-
 * `sse_kms` - (Optional) Specifies to use server-side encryption with AWS KMS-managed keys to encrypt the inventory file (documented below).
 * `sse_s3` - (Optional) Specifies to use server-side encryption with Amazon S3-managed keys (SSE-S3) to encrypt the inventory file.
 
@@ -124,6 +123,6 @@ The `sse_kms` configuration supports the following:
 
 S3 bucket inventory configurations can be imported using `bucket:inventory`, e.g.
 
-```
+```sh
 $ terraform import aws_s3_bucket_inventory.my-bucket-entire-bucket my-bucket:EntireBucket
 ```

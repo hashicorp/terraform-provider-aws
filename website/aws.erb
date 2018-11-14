@@ -10,17 +10,6 @@
                     <a href="/docs/providers/aws/index.html">AWS Provider</a>
                 </li>
 
-                <li<%= sidebar_current("docs-aws-community-events") %>>
-                <a href="#">Upcoming Community Events</a>
-                    <ul class="nav nav-visible">
-
-                        <li<%= sidebar_current("docs-aws-community-events-gardening-summer-2018") %>>
-                            <a href="/docs/providers/aws/events/gardening-summer-2018.html">Community Gardening - Summer 2018</a>
-                        </li>
-
-                    </ul>
-                </li>
-
                 <li<%= sidebar_current("docs-aws-guide") %>>
                 <a href="#">Guides</a>
                     <ul class="nav nav-visible">
@@ -31,6 +20,10 @@
 
                         <li<%= sidebar_current("docs-aws-guide-eks-getting-started") %>>
                             <a href="/docs/providers/aws/guides/eks-getting-started.html">AWS EKS Getting Started</a>
+                        </li>
+
+                        <li<%= sidebar_current("docs-aws-guide-iam-policy-documents") %>>
+                            <a href="/docs/providers/aws/guides/iam-policy-documents.html">AWS IAM Policy Documents</a>
                         </li>
 
                         <li<%= sidebar_current("docs-aws-guide-serverless") %>>
@@ -64,6 +57,9 @@
                         </li>
                         <li<%= sidebar_current("docs-aws-datasource-ami-ids") %>>
                             <a href="/docs/providers/aws/d/ami_ids.html">aws_ami_ids</a>
+                        </li>
+                        <li<%= sidebar_current("docs-aws_api_gateway_resource") %>>
+                            <a href="/docs/providers/aws/d/api_gateway_resource.html">aws_api_gateway_resource</a>
                         </li>
                         <li<%= sidebar_current("docs-aws_api_gateway_rest_api") %>>
                             <a href="/docs/providers/aws/d/api_gateway_rest_api.html">aws_api_gateway_rest_api</a>
@@ -101,6 +97,9 @@
                         <li<%= sidebar_current("docs-aws-datasource-cloudformation-stack") %>>
                             <a href="/docs/providers/aws/d/cloudformation_stack.html">aws_cloudformation_stack</a>
                         </li>
+                        <li<%= sidebar_current("docs-aws-datasource-cloudhsm-v2-cluster") %>>
+                            <a href="/docs/providers/aws/d/cloudhsm_v2_cluster.html">aws_cloudhsm_v2_cluster</a>
+                        </li>
                         <li<%= sidebar_current("docs-aws-datasource-cloudtrail-service-account") %>>
                             <a href="/docs/providers/aws/d/cloudtrail_service_account.html">aws_cloudtrail_service_account</a>
                         </li>
@@ -115,6 +114,9 @@
                         </li>
                         <li<%= sidebar_current("docs-aws-datasource-db-cluster-snapshot") %>>
                           <a href="/docs/providers/aws/d/db_cluster_snapshot.html">aws_db_cluster_snapshot</a>
+                        </li>
+                        <li<%= sidebar_current("docs-aws-datasource-db-event-categories") %>>
+                          <a href="/docs/providers/aws/d/db_event_categories.html">aws_db_event_categories</a>
                         </li>
                         <li<%= sidebar_current("docs-aws-datasource-db-instance") %>>
                             <a href="/docs/providers/aws/d/db_instance.html">aws_db_instance</a>
@@ -269,6 +271,12 @@
                         <li<%= sidebar_current("docs-aws-datasource-launch-configuration") %>>
                             <a href="/docs/providers/aws/d/launch_configuration.html">aws_launch_configuration</a>
                         </li>
+
+
+                        <li<%= sidebar_current("docs-aws-datasource-launch-template") %>>
+                            <a href="/docs/providers/aws/d/launch_template.html">aws_launch_template</a>
+                        </li>
+
                         <li<%= sidebar_current("docs-aws-datasource-lb-x") %>>
                             <a href="/docs/providers/aws/d/lb.html">aws_lb</a>
                         </li>
@@ -370,6 +378,9 @@
                         </li>
                         <li<%= sidebar_current("docs-aws-datasource-vpn-gateway") %>>
                             <a href="/docs/providers/aws/d/vpn_gateway.html">aws_vpn_gateway</a>
+                        </li>
+                        <li<%= sidebar_current("docs-aws-datasource-workspaces-bundle") %>>
+                            <a href="/docs/providers/aws/d/workspaces_bundle.html">aws_workspaces_bundle</a>
                         </li>
                     </ul>
                 </li>
@@ -563,6 +574,21 @@
                         <li<%= sidebar_current("docs-aws-resource-cloudfront-origin-access-identity") %>>
                             <a href="/docs/providers/aws/r/cloudfront_origin_access_identity.html">aws_cloudfront_origin_access_identity</a>
                         </li>
+                        <li<%= sidebar_current("docs-aws-resource-cloudfront-public-key") %>>
+                            <a href="/docs/providers/aws/r/cloudfront_public_key.html">aws_cloudfront_public_key</a>
+                        </li>
+                    </ul>
+                </li>
+
+                <li<%= sidebar_current("docs-aws-resource-cloudhsm") %>>
+                    <a href="#">CloudHSM v2 Resources</a>
+                    <ul class="nav nav-visible">
+                        <li<%= sidebar_current("docs-aws-resource-cloudhsm-v2-cluster") %>>
+                            <a href="/docs/providers/aws/r/cloudhsm_v2_cluster.html">aws_cloudhsm_v2_cluster</a>
+                        </li>
+                        <li<%= sidebar_current("docs-aws-resource-cloudhsm-v2-hsm") %>>
+                            <a href="/docs/providers/aws/r/cloudhsm_v2_hsm.html">aws_cloudhsm_v2_hsm</a>
+                        </li>
                     </ul>
                 </li>
 
@@ -687,6 +713,11 @@
                             <a href="/docs/providers/aws/r/codepipeline.html">aws_codepipeline</a>
                         </li>
 
+
+                        <li<%= sidebar_current("docs-aws-resource-codepipeline-webhook") %>>
+                            <a href="/docs/providers/aws/r/codepipeline_webhook.html">aws_codepipeline_webhook</a>
+                        </li>
+
                     </ul>
                 </li>
 
@@ -750,6 +781,15 @@
                     </ul>
                 </li>
 
+                <li<%= sidebar_current("docs-aws-resource-dlm") %>>
+                    <a href="#">Data Lifecycle Manager Resources</a>
+                    <ul class="nav nav-visible">
+                        <li<%= sidebar_current("docs-aws-resource-dlm-lifecycle-policy") %>>
+                            <a href="/docs/providers/aws/r/dlm_lifecycle_policy.html">aws_dlm_lifecycle_policy</a>
+                        </li>
+                    </ul>
+                </li>
+
                 <li<%= sidebar_current("docs-aws-resource-dms") %>>
                     <a href="#">Database Migration Service</a>
                     <ul class="nav nav-visible">
@@ -804,6 +844,9 @@
                 <li<%= sidebar_current("docs-aws-resource-dx") %>>
                     <a href="#">Direct Connect Resources</a>
                     <ul class="nav nav-visible">
+                        <li<%= sidebar_current("docs-aws-resource-dx-bgp-peer") %>>
+                            <a href="/docs/providers/aws/r/dx_bgp_peer.html">aws_dx_bgp_peer</a>
+                        </li>
                         <li<%= sidebar_current("docs-aws-resource-dx-connection") %>>
                             <a href="/docs/providers/aws/r/dx_connection.html">aws_dx_connection</a>
                         </li>
@@ -960,8 +1003,20 @@
                           <a href="/docs/providers/aws/r/ebs_snapshot.html">aws_ebs_snapshot</a>
                         </li>
 
+                        <li<%= sidebar_current("docs-aws-resource-ebs-snapshot-copy") %>>
+                          <a href="/docs/providers/aws/r/ebs_snapshot_copy.html">aws_ebs_snapshot_copy</a>
+                        </li>
+
                         <li<%= sidebar_current("docs-aws-resource-ebs-volume") %>>
                             <a href="/docs/providers/aws/r/ebs_volume.html">aws_ebs_volume</a>
+                        </li>
+
+                        <li<%= sidebar_current("docs-aws-resource-ec2-capacity-reservation") %>>
+                            <a href="/docs/providers/aws/r/ec2_capacity_reservation.html">aws_ec2_capacity_reservation</a>
+                        </li>
+
+                        <li<%= sidebar_current("docs-aws-resource-ec2-fleet") %>>
+                            <a href="/docs/providers/aws/r/ec2_fleet.html">aws_ec2_fleet</a>
                         </li>
 
                         <li<%= sidebar_current("docs-aws-resource-eip") %>>
@@ -1237,14 +1292,20 @@
                         <li<%= sidebar_current("docs-aws-resource-gamelift-fleet") %>>
                             <a href="/docs/providers/aws/r/gamelift_fleet.html">aws_gamelift_fleet</a>
                         </li>
+                        <li<%= sidebar_current("docs-aws-resource-gamelift-game-session-queue") %>>
+                            <a href="/docs/providers/aws/r/gamelift_game_session_queue.html">aws_gamelift_game_session_queue</a>
+                        </li>
                     </ul>
                  </li>
 
                 <li<%= sidebar_current("docs-aws-resource-glacier") %>>
                     <a href="#">Glacier Resources</a>
                     <ul class="nav nav-visible">
-                        <li<%= sidebar_current("docs-aws-resource-glacier-vault") %>>
+                        <li<%= sidebar_current("docs-aws-resource-glacier-vault-x") %>>
                             <a href="/docs/providers/aws/r/glacier_vault.html">aws_glacier_vault</a>
+                        </li>
+                        <li<%= sidebar_current("docs-aws-resource-glacier-vault-lock") %>>
+                            <a href="/docs/providers/aws/r/glacier_vault_lock.html">aws_glacier_vault_lock</a>
                         </li>
                     </ul>
                  </li>
@@ -1269,6 +1330,9 @@
                         </li>
                         <li<%= sidebar_current("docs-aws-resource-glue-job") %>>
                             <a href="/docs/providers/aws/r/glue_job.html">aws_glue_job</a>
+                        </li>
+                        <li<%= sidebar_current("docs-aws-resource-glue-security-configuration") %>>
+                            <a href="/docs/providers/aws/r/glue_security_configuration.html">aws_glue_security_configuration</a>
                         </li>
                         <li<%= sidebar_current("docs-aws-resource-glue-trigger") %>>
                             <a href="/docs/providers/aws/r/glue_trigger.html">aws_glue_trigger</a>
@@ -1407,12 +1471,22 @@
                     <li<%= sidebar_current("docs-aws-resource-iot-policy") %>>
                       <a href="/docs/providers/aws/r/iot_policy.html">aws_iot_policy</a>
                     </li>
+
+                    <li<%= sidebar_current("docs-aws-resource-iot-policy-attachment") %>>
+                      <a href="/docs/providers/aws/r/iot_policy_attachment.html">aws_iot_policy_attachment</a>
+                    </li>
+
                     <li<%= sidebar_current("docs-aws-resource-iot-topic-rule") %>>
                         <a href="/docs/providers/aws/r/iot_topic_rule.html">aws_iot_topic_rule</a>
                     </li>
                     <li<%= sidebar_current("docs-aws-resource-iot-thing") %>>
                         <a href="/docs/providers/aws/r/iot_thing.html">aws_iot_thing</a>
                     </li>
+
+                    <li<%= sidebar_current("docs-aws-resource-iot-thing-principal-attachment") %>>
+                        <a href="/docs/providers/aws/r/iot_thing_principal_attachment.html">aws_iot_thing_principal_attachment</a>
+                    </li>
+
                     <li<%= sidebar_current("docs-aws-resource-iot-thing-type") %>>
                         <a href="/docs/providers/aws/r/iot_thing_type.html">aws_iot_thing_type</a>
                     </li>
@@ -1442,6 +1516,10 @@
                 <li<%= sidebar_current("docs-aws-resource-kinesis") %>>
                     <a href="#">Kinesis Resources</a>
                     <ul class="nav nav-visible">
+
+                        <li<%= sidebar_current("docs-aws-resource-kinesis-analytics-application") %>>
+                            <a href="/docs/providers/aws/r/kinesis_analytics_application.html">aws_kinesis_analytics_application</a>
+                        </li>
 
                         <li<%= sidebar_current("docs-aws-resource-kinesis-stream") %>>
                             <a href="/docs/providers/aws/r/kinesis_stream.html">aws_kinesis_stream</a>
@@ -1657,6 +1735,46 @@
                     </ul>
                 </li>
 
+                <li<%= sidebar_current("docs-aws-resource-pinpoint") %>>
+                    <a href="#">Pinpoint Resources</a>
+                    <ul class="nav nav-visible">
+
+                        <li<%= sidebar_current("docs-aws-resource-pinpoint-app") %>>
+                            <a href="/docs/providers/aws/r/pinpoint_app.html">aws_pinpoint_app</a>
+                        </li>
+                        <li<%= sidebar_current("docs-aws-resource-pinpoint-adm-channel") %>>
+                            <a href="/docs/providers/aws/r/pinpoint_adm_channel.html">aws_pinpoint_adm_channel</a>
+                        </li>
+                        <li<%= sidebar_current("docs-aws-resource-pinpoint-apns-channel") %>>
+                            <a href="/docs/providers/aws/r/pinpoint_apns_channel.html">aws_pinpoint_apns_channel</a>
+                        </li>
+                        <li<%= sidebar_current("docs-aws-resource-pinpoint-apns-sandbox-channel") %>>
+                            <a href="/docs/providers/aws/r/pinpoint_apns_sandbox_channel.html">aws_pinpoint_apns_sandbox_channel</a>
+                        </li>
+                        <li<%= sidebar_current("docs-aws-resource-pinpoint-apns-voip-channel") %>>
+                            <a href="/docs/providers/aws/r/pinpoint_apns_voip_channel.html">aws_pinpoint_apns_voip_channel</a>
+                        </li>
+                        <li<%= sidebar_current("docs-aws-resource-pinpoint-apns-voip-sandbox-channel") %>>
+                            <a href="/docs/providers/aws/r/pinpoint_apns_voip_sandbox_channel.html">aws_pinpoint_apns_voip_sandbox_channel</a>
+                        </li>
+                        <li<%= sidebar_current("docs-aws-resource-pinpoint-baidu-channel") %>>
+                            <a href="/docs/providers/aws/r/pinpoint_baidu_channel.html">aws_pinpoint_baidu_channel</a>
+                        </li>
+                        <li<%= sidebar_current("docs-aws-resource-pinpoint-email-channel") %>>
+                            <a href="/docs/providers/aws/r/pinpoint_email_channel.html">aws_pinpoint_email_channel</a>
+                        </li>
+                        <li<%= sidebar_current("docs-aws-resource-pinpoint-event-stream") %>>
+                            <a href="/docs/providers/aws/r/pinpoint_event_stream.html">aws_pinpoint_event_stream</a>
+                        </li>
+                        <li<%= sidebar_current("docs-aws-resource-pinpoint-gcm-channel") %>>
+                            <a href="/docs/providers/aws/r/pinpoint_gcm_channel.html">aws_pinpoint_gcm_channel</a>
+                        </li>
+                        <li<%= sidebar_current("docs-aws-resource-pinpoint-sms-channel") %>>
+                            <a href="/docs/providers/aws/r/pinpoint_sms_channel.html">aws_pinpoint_sms_channel</a>
+                        </li>
+                    </ul>
+                </li>
+
                 <li<%= sidebar_current("docs-aws-resource-(db|rds)") %>>
                     <a href="#">RDS Resources</a>
                     <ul class="nav nav-visible">
@@ -1751,12 +1869,20 @@
                     <a href="/docs/providers/aws/r/redshift_cluster.html">aws_redshift_cluster</a>
                   </li>
 
+                  <li<%= sidebar_current("docs-aws-resource-redshift-event-subscription") %>>
+                    <a href="/docs/providers/aws/r/redshift_event_subscription.html">aws_redshift_event_subscription</a>
+                  </li>
+
                   <li<%= sidebar_current("docs-aws-resource-redshift-parameter-group") %>>
                     <a href="/docs/providers/aws/r/redshift_parameter_group.html">aws_redshift_parameter_group</a>
                   </li>
 
                   <li<%= sidebar_current("docs-aws-resource-redshift-security-group") %>>
                     <a href="/docs/providers/aws/r/redshift_security_group.html">aws_redshift_security_group</a>
+                  </li>
+
+                  <li<%= sidebar_current("docs-aws-resource-redshift-snapshot-copy-grant") %>>
+                    <a href="/docs/providers/aws/r/redshift_snapshot_copy_grant.html">aws_redshift_snapshot_copy_grant</a>
                   </li>
 
                   <li<%= sidebar_current("docs-aws-resource-redshift-subnet-group") %>>

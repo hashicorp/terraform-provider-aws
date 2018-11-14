@@ -40,7 +40,7 @@ with specific subnet.
 ```hcl
 data "aws_network_interfaces" "example" {
   filter {
-    name = "subnet-id"
+    name   = "subnet-id"
     values = ["${aws_subnet.test.id}"]
   }
 }

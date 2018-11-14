@@ -379,12 +379,3 @@ func resourceAwsRoute53HealthCheckDelete(d *schema.ResourceData, meta interface{
 
 	return nil
 }
-
-func createChildHealthCheckList(s *schema.Set) (nl []*string) {
-	l := s.List()
-	for _, n := range l {
-		nl = append(nl, aws.String(n.(string)))
-	}
-
-	return nl
-}

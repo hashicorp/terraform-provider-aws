@@ -18,7 +18,7 @@ func TestAccAWSNeptuneEventSubscription_basic(t *testing.T) {
 	rInt := acctest.RandInt()
 	rName := fmt.Sprintf("tf-acc-test-neptune-event-subs-%d", rInt)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneEventSubscriptionDestroy,
@@ -59,7 +59,7 @@ func TestAccAWSNeptuneEventSubscription_withPrefix(t *testing.T) {
 	rInt := acctest.RandInt()
 	startsWithPrefix := regexp.MustCompile("^tf-acc-test-neptune-event-subs-")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneEventSubscriptionDestroy,
@@ -86,7 +86,7 @@ func TestAccAWSNeptuneEventSubscription_withSourceIds(t *testing.T) {
 	var v neptune.EventSubscription
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneEventSubscriptionDestroy,
@@ -124,7 +124,7 @@ func TestAccAWSNeptuneEventSubscription_withCategories(t *testing.T) {
 	var v neptune.EventSubscription
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneEventSubscriptionDestroy,

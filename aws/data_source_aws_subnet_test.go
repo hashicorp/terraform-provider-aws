@@ -2,18 +2,18 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	"regexp"
 )
 
 func TestAccDataSourceAwsSubnet_basic(t *testing.T) {
 	rInt := acctest.RandIntRange(0, 256)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcDestroy,
@@ -34,7 +34,7 @@ func TestAccDataSourceAwsSubnet_basic(t *testing.T) {
 
 func TestAccDataSourceAwsSubnet_ipv6ByIpv6Filter(t *testing.T) {
 	rInt := acctest.RandIntRange(0, 256)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -56,7 +56,7 @@ func TestAccDataSourceAwsSubnet_ipv6ByIpv6Filter(t *testing.T) {
 
 func TestAccDataSourceAwsSubnet_ipv6ByIpv6CidrBlock(t *testing.T) {
 	rInt := acctest.RandIntRange(0, 256)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{

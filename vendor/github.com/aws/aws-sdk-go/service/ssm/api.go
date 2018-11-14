@@ -16,7 +16,7 @@ const opAddTagsToResource = "AddTagsToResource"
 // AddTagsToResourceRequest generates a "aws/request.Request" representing the
 // client's request for the AddTagsToResource operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -130,7 +130,7 @@ const opCancelCommand = "CancelCommand"
 // CancelCommandRequest generates a "aws/request.Request" representing the
 // client's request for the CancelCommand operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -225,12 +225,100 @@ func (c *SSM) CancelCommandWithContext(ctx aws.Context, input *CancelCommandInpu
 	return out, req.Send()
 }
 
+const opCancelMaintenanceWindowExecution = "CancelMaintenanceWindowExecution"
+
+// CancelMaintenanceWindowExecutionRequest generates a "aws/request.Request" representing the
+// client's request for the CancelMaintenanceWindowExecution operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CancelMaintenanceWindowExecution for more information on using the CancelMaintenanceWindowExecution
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CancelMaintenanceWindowExecutionRequest method.
+//    req, resp := client.CancelMaintenanceWindowExecutionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CancelMaintenanceWindowExecution
+func (c *SSM) CancelMaintenanceWindowExecutionRequest(input *CancelMaintenanceWindowExecutionInput) (req *request.Request, output *CancelMaintenanceWindowExecutionOutput) {
+	op := &request.Operation{
+		Name:       opCancelMaintenanceWindowExecution,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &CancelMaintenanceWindowExecutionInput{}
+	}
+
+	output = &CancelMaintenanceWindowExecutionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CancelMaintenanceWindowExecution API operation for Amazon Simple Systems Manager (SSM).
+//
+// Stops a Maintenance Window execution that is already in progress and cancels
+// any tasks in the window that have not already starting running. (Tasks already
+// in progress will continue to completion.)
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Simple Systems Manager (SSM)'s
+// API operation CancelMaintenanceWindowExecution for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInternalServerError "InternalServerError"
+//   An error occurred on the server side.
+//
+//   * ErrCodeDoesNotExistException "DoesNotExistException"
+//   Error returned when the ID specified for a resource, such as a Maintenance
+//   Window or Patch baseline, doesn't exist.
+//
+//   For information about resource limits in Systems Manager, see AWS Systems
+//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CancelMaintenanceWindowExecution
+func (c *SSM) CancelMaintenanceWindowExecution(input *CancelMaintenanceWindowExecutionInput) (*CancelMaintenanceWindowExecutionOutput, error) {
+	req, out := c.CancelMaintenanceWindowExecutionRequest(input)
+	return out, req.Send()
+}
+
+// CancelMaintenanceWindowExecutionWithContext is the same as CancelMaintenanceWindowExecution with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CancelMaintenanceWindowExecution for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) CancelMaintenanceWindowExecutionWithContext(ctx aws.Context, input *CancelMaintenanceWindowExecutionInput, opts ...request.Option) (*CancelMaintenanceWindowExecutionOutput, error) {
+	req, out := c.CancelMaintenanceWindowExecutionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opCreateActivation = "CreateActivation"
 
 // CreateActivationRequest generates a "aws/request.Request" representing the
 // client's request for the CreateActivation operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -313,7 +401,7 @@ const opCreateAssociation = "CreateAssociation"
 // CreateAssociationRequest generates a "aws/request.Request" representing the
 // client's request for the CreateAssociation operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -446,7 +534,7 @@ const opCreateAssociationBatch = "CreateAssociationBatch"
 // CreateAssociationBatchRequest generates a "aws/request.Request" representing the
 // client's request for the CreateAssociationBatch operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -579,7 +667,7 @@ const opCreateDocument = "CreateDocument"
 // CreateDocumentRequest generates a "aws/request.Request" representing the
 // client's request for the CreateDocument operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -676,7 +764,7 @@ const opCreateMaintenanceWindow = "CreateMaintenanceWindow"
 // CreateMaintenanceWindowRequest generates a "aws/request.Request" representing the
 // client's request for the CreateMaintenanceWindow operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -766,7 +854,7 @@ const opCreatePatchBaseline = "CreatePatchBaseline"
 // CreatePatchBaselineRequest generates a "aws/request.Request" representing the
 // client's request for the CreatePatchBaseline operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -859,7 +947,7 @@ const opCreateResourceDataSync = "CreateResourceDataSync"
 // CreateResourceDataSyncRequest generates a "aws/request.Request" representing the
 // client's request for the CreateResourceDataSync operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -957,7 +1045,7 @@ const opDeleteActivation = "DeleteActivation"
 // DeleteActivationRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteActivation operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1051,7 +1139,7 @@ const opDeleteAssociation = "DeleteAssociation"
 // DeleteAssociationRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteAssociation operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1160,7 +1248,7 @@ const opDeleteDocument = "DeleteDocument"
 // DeleteDocumentRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteDocument operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1254,7 +1342,7 @@ const opDeleteInventory = "DeleteInventory"
 // DeleteInventoryRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteInventory operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1349,7 +1437,7 @@ const opDeleteMaintenanceWindow = "DeleteMaintenanceWindow"
 // DeleteMaintenanceWindowRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteMaintenanceWindow operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1428,7 +1516,7 @@ const opDeleteParameter = "DeleteParameter"
 // DeleteParameterRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteParameter operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1510,7 +1598,7 @@ const opDeleteParameters = "DeleteParameters"
 // DeleteParametersRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteParameters operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1590,7 +1678,7 @@ const opDeletePatchBaseline = "DeletePatchBaseline"
 // DeletePatchBaselineRequest generates a "aws/request.Request" representing the
 // client's request for the DeletePatchBaseline operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1673,7 +1761,7 @@ const opDeleteResourceDataSync = "DeleteResourceDataSync"
 // DeleteResourceDataSyncRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteResourceDataSync operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1758,7 +1846,7 @@ const opDeregisterManagedInstance = "DeregisterManagedInstance"
 // DeregisterManagedInstanceRequest generates a "aws/request.Request" representing the
 // client's request for the DeregisterManagedInstance operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1854,7 +1942,7 @@ const opDeregisterPatchBaselineForPatchGroup = "DeregisterPatchBaselineForPatchG
 // DeregisterPatchBaselineForPatchGroupRequest generates a "aws/request.Request" representing the
 // client's request for the DeregisterPatchBaselineForPatchGroup operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1937,7 +2025,7 @@ const opDeregisterTargetFromMaintenanceWindow = "DeregisterTargetFromMaintenance
 // DeregisterTargetFromMaintenanceWindowRequest generates a "aws/request.Request" representing the
 // client's request for the DeregisterTargetFromMaintenanceWindow operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2027,7 +2115,7 @@ const opDeregisterTaskFromMaintenanceWindow = "DeregisterTaskFromMaintenanceWind
 // DeregisterTaskFromMaintenanceWindowRequest generates a "aws/request.Request" representing the
 // client's request for the DeregisterTaskFromMaintenanceWindow operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2113,7 +2201,7 @@ const opDescribeActivations = "DescribeActivations"
 // DescribeActivationsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeActivations operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2257,7 +2345,7 @@ const opDescribeAssociation = "DescribeAssociation"
 // DescribeAssociationRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeAssociation operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2366,7 +2454,7 @@ const opDescribeAssociationExecutionTargets = "DescribeAssociationExecutionTarge
 // DescribeAssociationExecutionTargetsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeAssociationExecutionTargets operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2455,7 +2543,7 @@ const opDescribeAssociationExecutions = "DescribeAssociationExecutions"
 // DescribeAssociationExecutionsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeAssociationExecutions operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2540,7 +2628,7 @@ const opDescribeAutomationExecutions = "DescribeAutomationExecutions"
 // DescribeAutomationExecutionsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeAutomationExecutions operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2628,7 +2716,7 @@ const opDescribeAutomationStepExecutions = "DescribeAutomationStepExecutions"
 // DescribeAutomationStepExecutionsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeAutomationStepExecutions operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2721,7 +2809,7 @@ const opDescribeAvailablePatches = "DescribeAvailablePatches"
 // DescribeAvailablePatchesRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeAvailablePatches operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2800,7 +2888,7 @@ const opDescribeDocument = "DescribeDocument"
 // DescribeDocumentRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeDocument operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2885,7 +2973,7 @@ const opDescribeDocumentPermission = "DescribeDocumentPermission"
 // DescribeDocumentPermissionRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeDocumentPermission operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2973,7 +3061,7 @@ const opDescribeEffectiveInstanceAssociations = "DescribeEffectiveInstanceAssoci
 // DescribeEffectiveInstanceAssociationsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeEffectiveInstanceAssociations operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3070,7 +3158,7 @@ const opDescribeEffectivePatchesForPatchBaseline = "DescribeEffectivePatchesForP
 // DescribeEffectivePatchesForPatchBaselineRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeEffectivePatchesForPatchBaseline operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3167,7 +3255,7 @@ const opDescribeInstanceAssociationsStatus = "DescribeInstanceAssociationsStatus
 // DescribeInstanceAssociationsStatusRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeInstanceAssociationsStatus operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3264,7 +3352,7 @@ const opDescribeInstanceInformation = "DescribeInstanceInformation"
 // DescribeInstanceInformationRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeInstanceInformation operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3432,7 +3520,7 @@ const opDescribeInstancePatchStates = "DescribeInstancePatchStates"
 // DescribeInstancePatchStatesRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeInstancePatchStates operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3514,7 +3602,7 @@ const opDescribeInstancePatchStatesForPatchGroup = "DescribeInstancePatchStatesF
 // DescribeInstancePatchStatesForPatchGroupRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeInstancePatchStatesForPatchGroup operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3601,7 +3689,7 @@ const opDescribeInstancePatches = "DescribeInstancePatches"
 // DescribeInstancePatchesRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeInstancePatches operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3703,7 +3791,7 @@ const opDescribeInventoryDeletions = "DescribeInventoryDeletions"
 // DescribeInventoryDeletionsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeInventoryDeletions operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3789,7 +3877,7 @@ const opDescribeMaintenanceWindowExecutionTaskInvocations = "DescribeMaintenance
 // DescribeMaintenanceWindowExecutionTaskInvocationsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeMaintenanceWindowExecutionTaskInvocations operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3876,7 +3964,7 @@ const opDescribeMaintenanceWindowExecutionTasks = "DescribeMaintenanceWindowExec
 // DescribeMaintenanceWindowExecutionTasksRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeMaintenanceWindowExecutionTasks operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3962,7 +4050,7 @@ const opDescribeMaintenanceWindowExecutions = "DescribeMaintenanceWindowExecutio
 // DescribeMaintenanceWindowExecutionsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeMaintenanceWindowExecutions operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4038,12 +4126,98 @@ func (c *SSM) DescribeMaintenanceWindowExecutionsWithContext(ctx aws.Context, in
 	return out, req.Send()
 }
 
+const opDescribeMaintenanceWindowSchedule = "DescribeMaintenanceWindowSchedule"
+
+// DescribeMaintenanceWindowScheduleRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeMaintenanceWindowSchedule operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeMaintenanceWindowSchedule for more information on using the DescribeMaintenanceWindowSchedule
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeMaintenanceWindowScheduleRequest method.
+//    req, resp := client.DescribeMaintenanceWindowScheduleRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeMaintenanceWindowSchedule
+func (c *SSM) DescribeMaintenanceWindowScheduleRequest(input *DescribeMaintenanceWindowScheduleInput) (req *request.Request, output *DescribeMaintenanceWindowScheduleOutput) {
+	op := &request.Operation{
+		Name:       opDescribeMaintenanceWindowSchedule,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeMaintenanceWindowScheduleInput{}
+	}
+
+	output = &DescribeMaintenanceWindowScheduleOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeMaintenanceWindowSchedule API operation for Amazon Simple Systems Manager (SSM).
+//
+// Retrieves information about upcoming executions of a Maintenance Window.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Simple Systems Manager (SSM)'s
+// API operation DescribeMaintenanceWindowSchedule for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInternalServerError "InternalServerError"
+//   An error occurred on the server side.
+//
+//   * ErrCodeDoesNotExistException "DoesNotExistException"
+//   Error returned when the ID specified for a resource, such as a Maintenance
+//   Window or Patch baseline, doesn't exist.
+//
+//   For information about resource limits in Systems Manager, see AWS Systems
+//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeMaintenanceWindowSchedule
+func (c *SSM) DescribeMaintenanceWindowSchedule(input *DescribeMaintenanceWindowScheduleInput) (*DescribeMaintenanceWindowScheduleOutput, error) {
+	req, out := c.DescribeMaintenanceWindowScheduleRequest(input)
+	return out, req.Send()
+}
+
+// DescribeMaintenanceWindowScheduleWithContext is the same as DescribeMaintenanceWindowSchedule with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeMaintenanceWindowSchedule for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) DescribeMaintenanceWindowScheduleWithContext(ctx aws.Context, input *DescribeMaintenanceWindowScheduleInput, opts ...request.Option) (*DescribeMaintenanceWindowScheduleOutput, error) {
+	req, out := c.DescribeMaintenanceWindowScheduleRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDescribeMaintenanceWindowTargets = "DescribeMaintenanceWindowTargets"
 
 // DescribeMaintenanceWindowTargetsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeMaintenanceWindowTargets operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4129,7 +4303,7 @@ const opDescribeMaintenanceWindowTasks = "DescribeMaintenanceWindowTasks"
 // DescribeMaintenanceWindowTasksRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeMaintenanceWindowTasks operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4215,7 +4389,7 @@ const opDescribeMaintenanceWindows = "DescribeMaintenanceWindows"
 // DescribeMaintenanceWindowsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeMaintenanceWindows operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4289,12 +4463,92 @@ func (c *SSM) DescribeMaintenanceWindowsWithContext(ctx aws.Context, input *Desc
 	return out, req.Send()
 }
 
+const opDescribeMaintenanceWindowsForTarget = "DescribeMaintenanceWindowsForTarget"
+
+// DescribeMaintenanceWindowsForTargetRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeMaintenanceWindowsForTarget operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeMaintenanceWindowsForTarget for more information on using the DescribeMaintenanceWindowsForTarget
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeMaintenanceWindowsForTargetRequest method.
+//    req, resp := client.DescribeMaintenanceWindowsForTargetRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeMaintenanceWindowsForTarget
+func (c *SSM) DescribeMaintenanceWindowsForTargetRequest(input *DescribeMaintenanceWindowsForTargetInput) (req *request.Request, output *DescribeMaintenanceWindowsForTargetOutput) {
+	op := &request.Operation{
+		Name:       opDescribeMaintenanceWindowsForTarget,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeMaintenanceWindowsForTargetInput{}
+	}
+
+	output = &DescribeMaintenanceWindowsForTargetOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeMaintenanceWindowsForTarget API operation for Amazon Simple Systems Manager (SSM).
+//
+// Retrieves information about the Maintenance Windows targets or tasks that
+// an instance is associated with.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Simple Systems Manager (SSM)'s
+// API operation DescribeMaintenanceWindowsForTarget for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInternalServerError "InternalServerError"
+//   An error occurred on the server side.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeMaintenanceWindowsForTarget
+func (c *SSM) DescribeMaintenanceWindowsForTarget(input *DescribeMaintenanceWindowsForTargetInput) (*DescribeMaintenanceWindowsForTargetOutput, error) {
+	req, out := c.DescribeMaintenanceWindowsForTargetRequest(input)
+	return out, req.Send()
+}
+
+// DescribeMaintenanceWindowsForTargetWithContext is the same as DescribeMaintenanceWindowsForTarget with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeMaintenanceWindowsForTarget for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) DescribeMaintenanceWindowsForTargetWithContext(ctx aws.Context, input *DescribeMaintenanceWindowsForTargetInput, opts ...request.Option) (*DescribeMaintenanceWindowsForTargetOutput, error) {
+	req, out := c.DescribeMaintenanceWindowsForTargetRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDescribeParameters = "DescribeParameters"
 
 // DescribeParametersRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeParameters operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4450,7 +4704,7 @@ const opDescribePatchBaselines = "DescribePatchBaselines"
 // DescribePatchBaselinesRequest generates a "aws/request.Request" representing the
 // client's request for the DescribePatchBaselines operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4529,7 +4783,7 @@ const opDescribePatchGroupState = "DescribePatchGroupState"
 // DescribePatchGroupStateRequest generates a "aws/request.Request" representing the
 // client's request for the DescribePatchGroupState operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4611,7 +4865,7 @@ const opDescribePatchGroups = "DescribePatchGroups"
 // DescribePatchGroupsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribePatchGroups operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4685,12 +4939,98 @@ func (c *SSM) DescribePatchGroupsWithContext(ctx aws.Context, input *DescribePat
 	return out, req.Send()
 }
 
+const opDescribeSessions = "DescribeSessions"
+
+// DescribeSessionsRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeSessions operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeSessions for more information on using the DescribeSessions
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeSessionsRequest method.
+//    req, resp := client.DescribeSessionsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeSessions
+func (c *SSM) DescribeSessionsRequest(input *DescribeSessionsInput) (req *request.Request, output *DescribeSessionsOutput) {
+	op := &request.Operation{
+		Name:       opDescribeSessions,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeSessionsInput{}
+	}
+
+	output = &DescribeSessionsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeSessions API operation for Amazon Simple Systems Manager (SSM).
+//
+// Retrieves a list of all active sessions (both connected and disconnected)
+// or terminated sessions from the past 30 days.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Simple Systems Manager (SSM)'s
+// API operation DescribeSessions for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInternalServerError "InternalServerError"
+//   An error occurred on the server side.
+//
+//   * ErrCodeInvalidFilterKey "InvalidFilterKey"
+//   The specified key is not valid.
+//
+//   * ErrCodeInvalidNextToken "InvalidNextToken"
+//   The specified token is not valid.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeSessions
+func (c *SSM) DescribeSessions(input *DescribeSessionsInput) (*DescribeSessionsOutput, error) {
+	req, out := c.DescribeSessionsRequest(input)
+	return out, req.Send()
+}
+
+// DescribeSessionsWithContext is the same as DescribeSessions with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeSessions for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) DescribeSessionsWithContext(ctx aws.Context, input *DescribeSessionsInput, opts ...request.Option) (*DescribeSessionsOutput, error) {
+	req, out := c.DescribeSessionsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opGetAutomationExecution = "GetAutomationExecution"
 
 // GetAutomationExecutionRequest generates a "aws/request.Request" representing the
 // client's request for the GetAutomationExecution operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4773,7 +5113,7 @@ const opGetCommandInvocation = "GetCommandInvocation"
 // GetCommandInvocationRequest generates a "aws/request.Request" representing the
 // client's request for the GetCommandInvocation operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4872,12 +5212,92 @@ func (c *SSM) GetCommandInvocationWithContext(ctx aws.Context, input *GetCommand
 	return out, req.Send()
 }
 
+const opGetConnectionStatus = "GetConnectionStatus"
+
+// GetConnectionStatusRequest generates a "aws/request.Request" representing the
+// client's request for the GetConnectionStatus operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetConnectionStatus for more information on using the GetConnectionStatus
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetConnectionStatusRequest method.
+//    req, resp := client.GetConnectionStatusRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetConnectionStatus
+func (c *SSM) GetConnectionStatusRequest(input *GetConnectionStatusInput) (req *request.Request, output *GetConnectionStatusOutput) {
+	op := &request.Operation{
+		Name:       opGetConnectionStatus,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetConnectionStatusInput{}
+	}
+
+	output = &GetConnectionStatusOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetConnectionStatus API operation for Amazon Simple Systems Manager (SSM).
+//
+// Retrieves the Session Manager connection status for an instance to determine
+// whether it is connected and ready to receive Session Manager connections.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Simple Systems Manager (SSM)'s
+// API operation GetConnectionStatus for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInternalServerError "InternalServerError"
+//   An error occurred on the server side.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetConnectionStatus
+func (c *SSM) GetConnectionStatus(input *GetConnectionStatusInput) (*GetConnectionStatusOutput, error) {
+	req, out := c.GetConnectionStatusRequest(input)
+	return out, req.Send()
+}
+
+// GetConnectionStatusWithContext is the same as GetConnectionStatus with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetConnectionStatus for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) GetConnectionStatusWithContext(ctx aws.Context, input *GetConnectionStatusInput, opts ...request.Option) (*GetConnectionStatusOutput, error) {
+	req, out := c.GetConnectionStatusRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opGetDefaultPatchBaseline = "GetDefaultPatchBaseline"
 
 // GetDefaultPatchBaselineRequest generates a "aws/request.Request" representing the
 // client's request for the GetDefaultPatchBaseline operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4961,7 +5381,7 @@ const opGetDeployablePatchSnapshotForInstance = "GetDeployablePatchSnapshotForIn
 // GetDeployablePatchSnapshotForInstanceRequest generates a "aws/request.Request" representing the
 // client's request for the GetDeployablePatchSnapshotForInstance operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5046,7 +5466,7 @@ const opGetDocument = "GetDocument"
 // GetDocumentRequest generates a "aws/request.Request" representing the
 // client's request for the GetDocument operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5131,7 +5551,7 @@ const opGetInventory = "GetInventory"
 // GetInventoryRequest generates a "aws/request.Request" representing the
 // client's request for the GetInventory operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5230,7 +5650,7 @@ const opGetInventorySchema = "GetInventorySchema"
 // GetInventorySchemaRequest generates a "aws/request.Request" representing the
 // client's request for the GetInventorySchema operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5316,7 +5736,7 @@ const opGetMaintenanceWindow = "GetMaintenanceWindow"
 // GetMaintenanceWindowRequest generates a "aws/request.Request" representing the
 // client's request for the GetMaintenanceWindow operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5402,7 +5822,7 @@ const opGetMaintenanceWindowExecution = "GetMaintenanceWindowExecution"
 // GetMaintenanceWindowExecutionRequest generates a "aws/request.Request" representing the
 // client's request for the GetMaintenanceWindowExecution operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5489,7 +5909,7 @@ const opGetMaintenanceWindowExecutionTask = "GetMaintenanceWindowExecutionTask"
 // GetMaintenanceWindowExecutionTaskRequest generates a "aws/request.Request" representing the
 // client's request for the GetMaintenanceWindowExecutionTask operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5576,7 +5996,7 @@ const opGetMaintenanceWindowExecutionTaskInvocation = "GetMaintenanceWindowExecu
 // GetMaintenanceWindowExecutionTaskInvocationRequest generates a "aws/request.Request" representing the
 // client's request for the GetMaintenanceWindowExecutionTaskInvocation operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5663,7 +6083,7 @@ const opGetMaintenanceWindowTask = "GetMaintenanceWindowTask"
 // GetMaintenanceWindowTaskRequest generates a "aws/request.Request" representing the
 // client's request for the GetMaintenanceWindowTask operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5749,7 +6169,7 @@ const opGetParameter = "GetParameter"
 // GetParameterRequest generates a "aws/request.Request" representing the
 // client's request for the GetParameter operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5839,7 +6259,7 @@ const opGetParameterHistory = "GetParameterHistory"
 // GetParameterHistoryRequest generates a "aws/request.Request" representing the
 // client's request for the GetParameterHistory operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5983,7 +6403,7 @@ const opGetParameters = "GetParameters"
 // GetParametersRequest generates a "aws/request.Request" representing the
 // client's request for the GetParameters operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -6066,7 +6486,7 @@ const opGetParametersByPath = "GetParametersByPath"
 // GetParametersByPathRequest generates a "aws/request.Request" representing the
 // client's request for the GetParametersByPath operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -6229,7 +6649,7 @@ const opGetPatchBaseline = "GetPatchBaseline"
 // GetPatchBaselineRequest generates a "aws/request.Request" representing the
 // client's request for the GetPatchBaseline operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -6319,7 +6739,7 @@ const opGetPatchBaselineForPatchGroup = "GetPatchBaselineForPatchGroup"
 // GetPatchBaselineForPatchGroupRequest generates a "aws/request.Request" representing the
 // client's request for the GetPatchBaselineForPatchGroup operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -6399,7 +6819,7 @@ const opLabelParameterVersion = "LabelParameterVersion"
 // LabelParameterVersionRequest generates a "aws/request.Request" representing the
 // client's request for the LabelParameterVersion operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -6520,7 +6940,7 @@ const opListAssociationVersions = "ListAssociationVersions"
 // ListAssociationVersionsRequest generates a "aws/request.Request" representing the
 // client's request for the ListAssociationVersions operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -6605,7 +7025,7 @@ const opListAssociations = "ListAssociations"
 // ListAssociationsRequest generates a "aws/request.Request" representing the
 // client's request for the ListAssociations operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -6743,7 +7163,7 @@ const opListCommandInvocations = "ListCommandInvocations"
 // ListCommandInvocationsRequest generates a "aws/request.Request" representing the
 // client's request for the ListCommandInvocations operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -6905,7 +7325,7 @@ const opListCommands = "ListCommands"
 // ListCommandsRequest generates a "aws/request.Request" representing the
 // client's request for the ListCommands operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -7063,7 +7483,7 @@ const opListComplianceItems = "ListComplianceItems"
 // ListComplianceItemsRequest generates a "aws/request.Request" representing the
 // client's request for the ListComplianceItems operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -7160,7 +7580,7 @@ const opListComplianceSummaries = "ListComplianceSummaries"
 // ListComplianceSummariesRequest generates a "aws/request.Request" representing the
 // client's request for the ListComplianceSummaries operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -7248,7 +7668,7 @@ const opListDocumentVersions = "ListDocumentVersions"
 // ListDocumentVersionsRequest generates a "aws/request.Request" representing the
 // client's request for the ListDocumentVersions operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -7333,7 +7753,7 @@ const opListDocuments = "ListDocuments"
 // ListDocumentsRequest generates a "aws/request.Request" representing the
 // client's request for the ListDocuments operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -7474,7 +7894,7 @@ const opListInventoryEntries = "ListInventoryEntries"
 // ListInventoryEntriesRequest generates a "aws/request.Request" representing the
 // client's request for the ListInventoryEntries operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -7578,7 +7998,7 @@ const opListResourceComplianceSummaries = "ListResourceComplianceSummaries"
 // ListResourceComplianceSummariesRequest generates a "aws/request.Request" representing the
 // client's request for the ListResourceComplianceSummaries operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -7666,7 +8086,7 @@ const opListResourceDataSync = "ListResourceDataSync"
 // ListResourceDataSyncRequest generates a "aws/request.Request" representing the
 // client's request for the ListResourceDataSync operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -7757,7 +8177,7 @@ const opListTagsForResource = "ListTagsForResource"
 // ListTagsForResourceRequest generates a "aws/request.Request" representing the
 // client's request for the ListTagsForResource operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -7844,7 +8264,7 @@ const opModifyDocumentPermission = "ModifyDocumentPermission"
 // ModifyDocumentPermissionRequest generates a "aws/request.Request" representing the
 // client's request for the ModifyDocumentPermission operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -7941,7 +8361,7 @@ const opPutComplianceItems = "PutComplianceItems"
 // PutComplianceItemsRequest generates a "aws/request.Request" representing the
 // client's request for the PutComplianceItems operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -8082,7 +8502,7 @@ const opPutInventory = "PutInventory"
 // PutInventoryRequest generates a "aws/request.Request" representing the
 // client's request for the PutInventory operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -8214,7 +8634,7 @@ const opPutParameter = "PutParameter"
 // PutParameterRequest generates a "aws/request.Request" representing the
 // client's request for the PutParameter operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -8329,7 +8749,7 @@ const opRegisterDefaultPatchBaseline = "RegisterDefaultPatchBaseline"
 // RegisterDefaultPatchBaselineRequest generates a "aws/request.Request" representing the
 // client's request for the RegisterDefaultPatchBaseline operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -8419,7 +8839,7 @@ const opRegisterPatchBaselineForPatchGroup = "RegisterPatchBaselineForPatchGroup
 // RegisterPatchBaselineForPatchGroupRequest generates a "aws/request.Request" representing the
 // client's request for the RegisterPatchBaselineForPatchGroup operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -8520,7 +8940,7 @@ const opRegisterTargetWithMaintenanceWindow = "RegisterTargetWithMaintenanceWind
 // RegisterTargetWithMaintenanceWindowRequest generates a "aws/request.Request" representing the
 // client's request for the RegisterTargetWithMaintenanceWindow operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -8617,7 +9037,7 @@ const opRegisterTaskWithMaintenanceWindow = "RegisterTaskWithMaintenanceWindow"
 // RegisterTaskWithMaintenanceWindowRequest generates a "aws/request.Request" representing the
 // client's request for the RegisterTaskWithMaintenanceWindow operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -8718,7 +9138,7 @@ const opRemoveTagsFromResource = "RemoveTagsFromResource"
 // RemoveTagsFromResourceRequest generates a "aws/request.Request" representing the
 // client's request for the RemoveTagsFromResource operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -8804,12 +9224,102 @@ func (c *SSM) RemoveTagsFromResourceWithContext(ctx aws.Context, input *RemoveTa
 	return out, req.Send()
 }
 
+const opResumeSession = "ResumeSession"
+
+// ResumeSessionRequest generates a "aws/request.Request" representing the
+// client's request for the ResumeSession operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ResumeSession for more information on using the ResumeSession
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ResumeSessionRequest method.
+//    req, resp := client.ResumeSessionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ResumeSession
+func (c *SSM) ResumeSessionRequest(input *ResumeSessionInput) (req *request.Request, output *ResumeSessionOutput) {
+	op := &request.Operation{
+		Name:       opResumeSession,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ResumeSessionInput{}
+	}
+
+	output = &ResumeSessionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ResumeSession API operation for Amazon Simple Systems Manager (SSM).
+//
+// Reconnects a session to an instance after it has been disconnected. Connections
+// can be resumed for disconnected sessions, but not terminated sessions.
+//
+// This command is primarily for use by client machines to automatically reconnect
+// during intermittent network issues. It is not intended for any other use.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Simple Systems Manager (SSM)'s
+// API operation ResumeSession for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeDoesNotExistException "DoesNotExistException"
+//   Error returned when the ID specified for a resource, such as a Maintenance
+//   Window or Patch baseline, doesn't exist.
+//
+//   For information about resource limits in Systems Manager, see AWS Systems
+//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//
+//   * ErrCodeInternalServerError "InternalServerError"
+//   An error occurred on the server side.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ResumeSession
+func (c *SSM) ResumeSession(input *ResumeSessionInput) (*ResumeSessionOutput, error) {
+	req, out := c.ResumeSessionRequest(input)
+	return out, req.Send()
+}
+
+// ResumeSessionWithContext is the same as ResumeSession with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ResumeSession for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) ResumeSessionWithContext(ctx aws.Context, input *ResumeSessionInput, opts ...request.Option) (*ResumeSessionOutput, error) {
+	req, out := c.ResumeSessionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opSendAutomationSignal = "SendAutomationSignal"
 
 // SendAutomationSignalRequest generates a "aws/request.Request" representing the
 // client's request for the SendAutomationSignal operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -8900,7 +9410,7 @@ const opSendCommand = "SendCommand"
 // SendCommandRequest generates a "aws/request.Request" representing the
 // client's request for the SendCommand operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -9029,7 +9539,7 @@ const opStartAssociationsOnce = "StartAssociationsOnce"
 // StartAssociationsOnceRequest generates a "aws/request.Request" representing the
 // client's request for the StartAssociationsOnce operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -9112,7 +9622,7 @@ const opStartAutomationExecution = "StartAutomationExecution"
 // StartAutomationExecutionRequest generates a "aws/request.Request" representing the
 // client's request for the StartAutomationExecution operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -9209,12 +9719,108 @@ func (c *SSM) StartAutomationExecutionWithContext(ctx aws.Context, input *StartA
 	return out, req.Send()
 }
 
+const opStartSession = "StartSession"
+
+// StartSessionRequest generates a "aws/request.Request" representing the
+// client's request for the StartSession operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See StartSession for more information on using the StartSession
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the StartSessionRequest method.
+//    req, resp := client.StartSessionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/StartSession
+func (c *SSM) StartSessionRequest(input *StartSessionInput) (req *request.Request, output *StartSessionOutput) {
+	op := &request.Operation{
+		Name:       opStartSession,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &StartSessionInput{}
+	}
+
+	output = &StartSessionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// StartSession API operation for Amazon Simple Systems Manager (SSM).
+//
+// Initiates a connection to a target (for example, an instance) for a Session
+// Manager session. Returns a URL and token that can be used to open a WebSocket
+// connection for sending input and receiving outputs.
+//
+// AWS CLI usage: start-session is an interactive command that requires the
+// Session Manager plugin to be installed on the client machine making the call.
+// For information, see  Install the Session Manager Plugin for the AWS CLI
+// (http://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html)
+// in the AWS Systems Manager User Guide.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Simple Systems Manager (SSM)'s
+// API operation StartSession for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidDocument "InvalidDocument"
+//   The specified document does not exist.
+//
+//   * ErrCodeTargetNotConnected "TargetNotConnected"
+//   The specified target instance for the session is not fully configured for
+//   use with Session Manager. For more information, see Getting Started with
+//   Session Manager (http://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-getting-started.html)
+//   in the AWS Systems Manager User Guide.
+//
+//   * ErrCodeInternalServerError "InternalServerError"
+//   An error occurred on the server side.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/StartSession
+func (c *SSM) StartSession(input *StartSessionInput) (*StartSessionOutput, error) {
+	req, out := c.StartSessionRequest(input)
+	return out, req.Send()
+}
+
+// StartSessionWithContext is the same as StartSession with the addition of
+// the ability to pass a context and additional request options.
+//
+// See StartSession for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) StartSessionWithContext(ctx aws.Context, input *StartSessionInput, opts ...request.Option) (*StartSessionOutput, error) {
+	req, out := c.StartSessionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opStopAutomationExecution = "StopAutomationExecution"
 
 // StopAutomationExecutionRequest generates a "aws/request.Request" representing the
 // client's request for the StopAutomationExecution operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -9295,12 +9901,100 @@ func (c *SSM) StopAutomationExecutionWithContext(ctx aws.Context, input *StopAut
 	return out, req.Send()
 }
 
+const opTerminateSession = "TerminateSession"
+
+// TerminateSessionRequest generates a "aws/request.Request" representing the
+// client's request for the TerminateSession operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See TerminateSession for more information on using the TerminateSession
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the TerminateSessionRequest method.
+//    req, resp := client.TerminateSessionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/TerminateSession
+func (c *SSM) TerminateSessionRequest(input *TerminateSessionInput) (req *request.Request, output *TerminateSessionOutput) {
+	op := &request.Operation{
+		Name:       opTerminateSession,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &TerminateSessionInput{}
+	}
+
+	output = &TerminateSessionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// TerminateSession API operation for Amazon Simple Systems Manager (SSM).
+//
+// Permanently ends a session and closes the data connection between the Session
+// Manager client and SSM Agent on the instance. A terminated session cannot
+// be resumed.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Simple Systems Manager (SSM)'s
+// API operation TerminateSession for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeDoesNotExistException "DoesNotExistException"
+//   Error returned when the ID specified for a resource, such as a Maintenance
+//   Window or Patch baseline, doesn't exist.
+//
+//   For information about resource limits in Systems Manager, see AWS Systems
+//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//
+//   * ErrCodeInternalServerError "InternalServerError"
+//   An error occurred on the server side.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/TerminateSession
+func (c *SSM) TerminateSession(input *TerminateSessionInput) (*TerminateSessionOutput, error) {
+	req, out := c.TerminateSessionRequest(input)
+	return out, req.Send()
+}
+
+// TerminateSessionWithContext is the same as TerminateSession with the addition of
+// the ability to pass a context and additional request options.
+//
+// See TerminateSession for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) TerminateSessionWithContext(ctx aws.Context, input *TerminateSessionInput, opts ...request.Option) (*TerminateSessionOutput, error) {
+	req, out := c.TerminateSessionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opUpdateAssociation = "UpdateAssociation"
 
 // UpdateAssociationRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateAssociation operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -9420,7 +10114,7 @@ const opUpdateAssociationStatus = "UpdateAssociationStatus"
 // UpdateAssociationStatusRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateAssociationStatus operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -9528,7 +10222,7 @@ const opUpdateDocument = "UpdateDocument"
 // UpdateDocumentRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateDocument operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -9630,7 +10324,7 @@ const opUpdateDocumentDefaultVersion = "UpdateDocumentDefaultVersion"
 // UpdateDocumentDefaultVersionRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateDocumentDefaultVersion operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -9718,7 +10412,7 @@ const opUpdateMaintenanceWindow = "UpdateMaintenanceWindow"
 // UpdateMaintenanceWindowRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateMaintenanceWindow operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -9804,7 +10498,7 @@ const opUpdateMaintenanceWindowTarget = "UpdateMaintenanceWindowTarget"
 // UpdateMaintenanceWindowTargetRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateMaintenanceWindowTarget operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -9906,7 +10600,7 @@ const opUpdateMaintenanceWindowTask = "UpdateMaintenanceWindowTask"
 // UpdateMaintenanceWindowTaskRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateMaintenanceWindowTask operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -10011,7 +10705,7 @@ const opUpdateManagedInstanceRole = "UpdateManagedInstanceRole"
 // UpdateManagedInstanceRoleRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateManagedInstanceRole operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -10106,7 +10800,7 @@ const opUpdatePatchBaseline = "UpdatePatchBaseline"
 // UpdatePatchBaselineRequest generates a "aws/request.Request" representing the
 // client's request for the UpdatePatchBaseline operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -10522,6 +11216,9 @@ type AssociationDescription struct {
 	// The association version.
 	AssociationVersion *string `type:"string"`
 
+	// The severity level that is assigned to the association.
+	ComplianceSeverity *string `type:"string" enum:"AssociationComplianceSeverity"`
+
 	// The date when the association was made.
 	Date *time.Time `type:"timestamp"`
 
@@ -10539,6 +11236,32 @@ type AssociationDescription struct {
 
 	// The date when the association was last updated.
 	LastUpdateAssociationDate *time.Time `type:"timestamp"`
+
+	// The maximum number of targets allowed to run the association at the same
+	// time. You can specify a number, for example 10, or a percentage of the target
+	// set, for example 10%. The default value is 100%, which means all targets
+	// run the association at the same time.
+	//
+	// If a new instance starts and attempts to execute an association while Systems
+	// Manager is executing MaxConcurrency associations, the association is allowed
+	// to run. During the next association interval, the new instance will process
+	// its association within the limit specified for MaxConcurrency.
+	MaxConcurrency *string `min:"1" type:"string"`
+
+	// The number of errors that are allowed before the system stops sending requests
+	// to run the association on additional targets. You can specify either an absolute
+	// number of errors, for example 10, or a percentage of the target set, for
+	// example 10%. If you specify 3, for example, the system stops sending requests
+	// when the fourth error is received. If you specify 0, then the system stops
+	// sending requests after the first error is returned. If you run an association
+	// on 50 instances and set MaxError to 10%, then the system stops sending the
+	// request when the sixth error is received.
+	//
+	// Executions that are already running an association when MaxErrors is reached
+	// are allowed to complete, but some of these executions may fail as well. If
+	// you need to ensure that there won't be more than max-errors failed executions,
+	// set MaxConcurrency to 1 so that executions proceed one at a time.
+	MaxErrors *string `min:"1" type:"string"`
 
 	// The name of the Systems Manager document.
 	Name *string `type:"string"`
@@ -10590,6 +11313,12 @@ func (s *AssociationDescription) SetAssociationVersion(v string) *AssociationDes
 	return s
 }
 
+// SetComplianceSeverity sets the ComplianceSeverity field's value.
+func (s *AssociationDescription) SetComplianceSeverity(v string) *AssociationDescription {
+	s.ComplianceSeverity = &v
+	return s
+}
+
 // SetDate sets the Date field's value.
 func (s *AssociationDescription) SetDate(v time.Time) *AssociationDescription {
 	s.Date = &v
@@ -10623,6 +11352,18 @@ func (s *AssociationDescription) SetLastSuccessfulExecutionDate(v time.Time) *As
 // SetLastUpdateAssociationDate sets the LastUpdateAssociationDate field's value.
 func (s *AssociationDescription) SetLastUpdateAssociationDate(v time.Time) *AssociationDescription {
 	s.LastUpdateAssociationDate = &v
+	return s
+}
+
+// SetMaxConcurrency sets the MaxConcurrency field's value.
+func (s *AssociationDescription) SetMaxConcurrency(v string) *AssociationDescription {
+	s.MaxConcurrency = &v
+	return s
+}
+
+// SetMaxErrors sets the MaxErrors field's value.
+func (s *AssociationDescription) SetMaxErrors(v string) *AssociationDescription {
+	s.MaxErrors = &v
 	return s
 }
 
@@ -11174,12 +11915,41 @@ type AssociationVersionInfo struct {
 	// The association version.
 	AssociationVersion *string `type:"string"`
 
+	// The severity level that is assigned to the association.
+	ComplianceSeverity *string `type:"string" enum:"AssociationComplianceSeverity"`
+
 	// The date the association version was created.
 	CreatedDate *time.Time `type:"timestamp"`
 
 	// The version of a Systems Manager document used when the association version
 	// was created.
 	DocumentVersion *string `type:"string"`
+
+	// The maximum number of targets allowed to run the association at the same
+	// time. You can specify a number, for example 10, or a percentage of the target
+	// set, for example 10%. The default value is 100%, which means all targets
+	// run the association at the same time.
+	//
+	// If a new instance starts and attempts to execute an association while Systems
+	// Manager is executing MaxConcurrency associations, the association is allowed
+	// to run. During the next association interval, the new instance will process
+	// its association within the limit specified for MaxConcurrency.
+	MaxConcurrency *string `min:"1" type:"string"`
+
+	// The number of errors that are allowed before the system stops sending requests
+	// to run the association on additional targets. You can specify either an absolute
+	// number of errors, for example 10, or a percentage of the target set, for
+	// example 10%. If you specify 3, for example, the system stops sending requests
+	// when the fourth error is received. If you specify 0, then the system stops
+	// sending requests after the first error is returned. If you run an association
+	// on 50 instances and set MaxError to 10%, then the system stops sending the
+	// request when the sixth error is received.
+	//
+	// Executions that are already running an association when MaxErrors is reached
+	// are allowed to complete, but some of these executions may fail as well. If
+	// you need to ensure that there won't be more than max-errors failed executions,
+	// set MaxConcurrency to 1 so that executions proceed one at a time.
+	MaxErrors *string `min:"1" type:"string"`
 
 	// The name specified when the association was created.
 	Name *string `type:"string"`
@@ -11228,6 +11998,12 @@ func (s *AssociationVersionInfo) SetAssociationVersion(v string) *AssociationVer
 	return s
 }
 
+// SetComplianceSeverity sets the ComplianceSeverity field's value.
+func (s *AssociationVersionInfo) SetComplianceSeverity(v string) *AssociationVersionInfo {
+	s.ComplianceSeverity = &v
+	return s
+}
+
 // SetCreatedDate sets the CreatedDate field's value.
 func (s *AssociationVersionInfo) SetCreatedDate(v time.Time) *AssociationVersionInfo {
 	s.CreatedDate = &v
@@ -11237,6 +12013,18 @@ func (s *AssociationVersionInfo) SetCreatedDate(v time.Time) *AssociationVersion
 // SetDocumentVersion sets the DocumentVersion field's value.
 func (s *AssociationVersionInfo) SetDocumentVersion(v string) *AssociationVersionInfo {
 	s.DocumentVersion = &v
+	return s
+}
+
+// SetMaxConcurrency sets the MaxConcurrency field's value.
+func (s *AssociationVersionInfo) SetMaxConcurrency(v string) *AssociationVersionInfo {
+	s.MaxConcurrency = &v
+	return s
+}
+
+// SetMaxErrors sets the MaxErrors field's value.
+func (s *AssociationVersionInfo) SetMaxErrors(v string) *AssociationVersionInfo {
+	s.MaxErrors = &v
 	return s
 }
 
@@ -11832,6 +12620,70 @@ func (s CancelCommandOutput) GoString() string {
 	return s.String()
 }
 
+type CancelMaintenanceWindowExecutionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the Maintenance Window execution to stop.
+	//
+	// WindowExecutionId is a required field
+	WindowExecutionId *string `min:"36" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s CancelMaintenanceWindowExecutionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CancelMaintenanceWindowExecutionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CancelMaintenanceWindowExecutionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CancelMaintenanceWindowExecutionInput"}
+	if s.WindowExecutionId == nil {
+		invalidParams.Add(request.NewErrParamRequired("WindowExecutionId"))
+	}
+	if s.WindowExecutionId != nil && len(*s.WindowExecutionId) < 36 {
+		invalidParams.Add(request.NewErrParamMinLen("WindowExecutionId", 36))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetWindowExecutionId sets the WindowExecutionId field's value.
+func (s *CancelMaintenanceWindowExecutionInput) SetWindowExecutionId(v string) *CancelMaintenanceWindowExecutionInput {
+	s.WindowExecutionId = &v
+	return s
+}
+
+type CancelMaintenanceWindowExecutionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the Maintenance Window execution that has been stopped.
+	WindowExecutionId *string `min:"36" type:"string"`
+}
+
+// String returns the string representation
+func (s CancelMaintenanceWindowExecutionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CancelMaintenanceWindowExecutionOutput) GoString() string {
+	return s.String()
+}
+
+// SetWindowExecutionId sets the WindowExecutionId field's value.
+func (s *CancelMaintenanceWindowExecutionOutput) SetWindowExecutionId(v string) *CancelMaintenanceWindowExecutionOutput {
+	s.WindowExecutionId = &v
+	return s
+}
+
 // Configuration options for sending command output to CloudWatch Logs.
 type CloudWatchOutputConfig struct {
 	_ struct{} `type:"structure"`
@@ -12168,7 +13020,44 @@ type CommandFilter struct {
 	// Key is a required field
 	Key *string `locationName:"key" type:"string" required:"true" enum:"CommandFilterKey"`
 
-	// The filter value.
+	// The filter value. Valid values for each filter key are as follows:
+	//
+	//    * InvokedAfter: A timestamp to limit your results. For example, specify
+	//    2018-07-07T00:00:00Z to see results occurring July 7, 2018, and later.
+	//
+	//    * InvokedBefore: A timestamp to limit your results. For example, specify
+	//    2018-07-07T00:00:00Z to see results before July 7, 2018.
+	//
+	//    * Status: Specify a valid command status to see a list of all command
+	//    executions with that status. Status values you can specify include:
+	//
+	// Pending
+	//
+	// InProgress
+	//
+	// Success
+	//
+	// Cancelled
+	//
+	// Failed
+	//
+	// TimedOut
+	//
+	// Cancelling
+	//
+	//    * DocumentName: The name of the SSM document for which you want to see
+	//    command results.
+	//
+	// For example, specify AWS-RunPatchBaseline to see command executions that
+	//    used this SSM document to perform security patching operations on instances.
+	//
+	//
+	//    * ExecutionStage: An enum whose value can be either Executing or Complete.
+	//
+	// Specify Executing to see a list of command executions that are currently
+	//    still running.
+	//
+	// Specify Complete to see a list of command exeuctions that have already completed.
 	//
 	// Value is a required field
 	Value *string `locationName:"value" min:"1" type:"string" required:"true"`
@@ -13227,11 +14116,40 @@ type CreateAssociationBatchRequestEntry struct {
 	// Specify a descriptive name for the association.
 	AssociationName *string `type:"string"`
 
+	// The severity level to assign to the association.
+	ComplianceSeverity *string `type:"string" enum:"AssociationComplianceSeverity"`
+
 	// The document version.
 	DocumentVersion *string `type:"string"`
 
 	// The ID of the instance.
 	InstanceId *string `type:"string"`
+
+	// The maximum number of targets allowed to run the association at the same
+	// time. You can specify a number, for example 10, or a percentage of the target
+	// set, for example 10%. The default value is 100%, which means all targets
+	// run the association at the same time.
+	//
+	// If a new instance starts and attempts to execute an association while Systems
+	// Manager is executing MaxConcurrency associations, the association is allowed
+	// to run. During the next association interval, the new instance will process
+	// its association within the limit specified for MaxConcurrency.
+	MaxConcurrency *string `min:"1" type:"string"`
+
+	// The number of errors that are allowed before the system stops sending requests
+	// to run the association on additional targets. You can specify either an absolute
+	// number of errors, for example 10, or a percentage of the target set, for
+	// example 10%. If you specify 3, for example, the system stops sending requests
+	// when the fourth error is received. If you specify 0, then the system stops
+	// sending requests after the first error is returned. If you run an association
+	// on 50 instances and set MaxError to 10%, then the system stops sending the
+	// request when the sixth error is received.
+	//
+	// Executions that are already running an association when MaxErrors is reached
+	// are allowed to complete, but some of these executions may fail as well. If
+	// you need to ensure that there won't be more than max-errors failed executions,
+	// set MaxConcurrency to 1 so that executions proceed one at a time.
+	MaxErrors *string `min:"1" type:"string"`
 
 	// The name of the configuration document.
 	//
@@ -13264,6 +14182,12 @@ func (s CreateAssociationBatchRequestEntry) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *CreateAssociationBatchRequestEntry) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CreateAssociationBatchRequestEntry"}
+	if s.MaxConcurrency != nil && len(*s.MaxConcurrency) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("MaxConcurrency", 1))
+	}
+	if s.MaxErrors != nil && len(*s.MaxErrors) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("MaxErrors", 1))
+	}
 	if s.Name == nil {
 		invalidParams.Add(request.NewErrParamRequired("Name"))
 	}
@@ -13298,6 +14222,12 @@ func (s *CreateAssociationBatchRequestEntry) SetAssociationName(v string) *Creat
 	return s
 }
 
+// SetComplianceSeverity sets the ComplianceSeverity field's value.
+func (s *CreateAssociationBatchRequestEntry) SetComplianceSeverity(v string) *CreateAssociationBatchRequestEntry {
+	s.ComplianceSeverity = &v
+	return s
+}
+
 // SetDocumentVersion sets the DocumentVersion field's value.
 func (s *CreateAssociationBatchRequestEntry) SetDocumentVersion(v string) *CreateAssociationBatchRequestEntry {
 	s.DocumentVersion = &v
@@ -13307,6 +14237,18 @@ func (s *CreateAssociationBatchRequestEntry) SetDocumentVersion(v string) *Creat
 // SetInstanceId sets the InstanceId field's value.
 func (s *CreateAssociationBatchRequestEntry) SetInstanceId(v string) *CreateAssociationBatchRequestEntry {
 	s.InstanceId = &v
+	return s
+}
+
+// SetMaxConcurrency sets the MaxConcurrency field's value.
+func (s *CreateAssociationBatchRequestEntry) SetMaxConcurrency(v string) *CreateAssociationBatchRequestEntry {
+	s.MaxConcurrency = &v
+	return s
+}
+
+// SetMaxErrors sets the MaxErrors field's value.
+func (s *CreateAssociationBatchRequestEntry) SetMaxErrors(v string) *CreateAssociationBatchRequestEntry {
+	s.MaxErrors = &v
 	return s
 }
 
@@ -13346,12 +14288,41 @@ type CreateAssociationInput struct {
 	// Specify a descriptive name for the association.
 	AssociationName *string `type:"string"`
 
+	// The severity level to assign to the association.
+	ComplianceSeverity *string `type:"string" enum:"AssociationComplianceSeverity"`
+
 	// The document version you want to associate with the target(s). Can be a specific
 	// version or the default version.
 	DocumentVersion *string `type:"string"`
 
 	// The instance ID.
 	InstanceId *string `type:"string"`
+
+	// The maximum number of targets allowed to run the association at the same
+	// time. You can specify a number, for example 10, or a percentage of the target
+	// set, for example 10%. The default value is 100%, which means all targets
+	// run the association at the same time.
+	//
+	// If a new instance starts and attempts to execute an association while Systems
+	// Manager is executing MaxConcurrency associations, the association is allowed
+	// to run. During the next association interval, the new instance will process
+	// its association within the limit specified for MaxConcurrency.
+	MaxConcurrency *string `min:"1" type:"string"`
+
+	// The number of errors that are allowed before the system stops sending requests
+	// to run the association on additional targets. You can specify either an absolute
+	// number of errors, for example 10, or a percentage of the target set, for
+	// example 10%. If you specify 3, for example, the system stops sending requests
+	// when the fourth error is received. If you specify 0, then the system stops
+	// sending requests after the first error is returned. If you run an association
+	// on 50 instances and set MaxError to 10%, then the system stops sending the
+	// request when the sixth error is received.
+	//
+	// Executions that are already running an association when MaxErrors is reached
+	// are allowed to complete, but some of these executions may fail as well. If
+	// you need to ensure that there won't be more than max-errors failed executions,
+	// set MaxConcurrency to 1 so that executions proceed one at a time.
+	MaxErrors *string `min:"1" type:"string"`
 
 	// The name of the Systems Manager document.
 	//
@@ -13384,6 +14355,12 @@ func (s CreateAssociationInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *CreateAssociationInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CreateAssociationInput"}
+	if s.MaxConcurrency != nil && len(*s.MaxConcurrency) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("MaxConcurrency", 1))
+	}
+	if s.MaxErrors != nil && len(*s.MaxErrors) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("MaxErrors", 1))
+	}
 	if s.Name == nil {
 		invalidParams.Add(request.NewErrParamRequired("Name"))
 	}
@@ -13418,6 +14395,12 @@ func (s *CreateAssociationInput) SetAssociationName(v string) *CreateAssociation
 	return s
 }
 
+// SetComplianceSeverity sets the ComplianceSeverity field's value.
+func (s *CreateAssociationInput) SetComplianceSeverity(v string) *CreateAssociationInput {
+	s.ComplianceSeverity = &v
+	return s
+}
+
 // SetDocumentVersion sets the DocumentVersion field's value.
 func (s *CreateAssociationInput) SetDocumentVersion(v string) *CreateAssociationInput {
 	s.DocumentVersion = &v
@@ -13427,6 +14410,18 @@ func (s *CreateAssociationInput) SetDocumentVersion(v string) *CreateAssociation
 // SetInstanceId sets the InstanceId field's value.
 func (s *CreateAssociationInput) SetInstanceId(v string) *CreateAssociationInput {
 	s.InstanceId = &v
+	return s
+}
+
+// SetMaxConcurrency sets the MaxConcurrency field's value.
+func (s *CreateAssociationInput) SetMaxConcurrency(v string) *CreateAssociationInput {
+	s.MaxConcurrency = &v
+	return s
+}
+
+// SetMaxErrors sets the MaxErrors field's value.
+func (s *CreateAssociationInput) SetMaxErrors(v string) *CreateAssociationInput {
+	s.MaxErrors = &v
 	return s
 }
 
@@ -13637,6 +14632,11 @@ type CreateMaintenanceWindowInput struct {
 	// Duration is a required field
 	Duration *int64 `min:"1" type:"integer" required:"true"`
 
+	// The date and time, in ISO-8601 Extended format, for when you want the Maintenance
+	// Window to become inactive. EndDate allows you to set a date and time in the
+	// future when the Maintenance Window will no longer run.
+	EndDate *string `type:"string"`
+
 	// The name of the Maintenance Window.
 	//
 	// Name is a required field
@@ -13646,6 +14646,17 @@ type CreateMaintenanceWindowInput struct {
 	//
 	// Schedule is a required field
 	Schedule *string `min:"1" type:"string" required:"true"`
+
+	// The time zone that the scheduled Maintenance Window executions are based
+	// on, in Internet Assigned Numbers Authority (IANA) format. For example: "America/Los_Angeles",
+	// "etc/UTC", or "Asia/Seoul". For more information, see the Time Zone Database
+	// (https://www.iana.org/time-zones) on the IANA website.
+	ScheduleTimezone *string `type:"string"`
+
+	// The date and time, in ISO-8601 Extended format, for when you want the Maintenance
+	// Window to become active. StartDate allows you to delay activation of the
+	// Maintenance Window until the specified future date.
+	StartDate *string `type:"string"`
 }
 
 // String returns the string representation
@@ -13728,6 +14739,12 @@ func (s *CreateMaintenanceWindowInput) SetDuration(v int64) *CreateMaintenanceWi
 	return s
 }
 
+// SetEndDate sets the EndDate field's value.
+func (s *CreateMaintenanceWindowInput) SetEndDate(v string) *CreateMaintenanceWindowInput {
+	s.EndDate = &v
+	return s
+}
+
 // SetName sets the Name field's value.
 func (s *CreateMaintenanceWindowInput) SetName(v string) *CreateMaintenanceWindowInput {
 	s.Name = &v
@@ -13737,6 +14754,18 @@ func (s *CreateMaintenanceWindowInput) SetName(v string) *CreateMaintenanceWindo
 // SetSchedule sets the Schedule field's value.
 func (s *CreateMaintenanceWindowInput) SetSchedule(v string) *CreateMaintenanceWindowInput {
 	s.Schedule = &v
+	return s
+}
+
+// SetScheduleTimezone sets the ScheduleTimezone field's value.
+func (s *CreateMaintenanceWindowInput) SetScheduleTimezone(v string) *CreateMaintenanceWindowInput {
+	s.ScheduleTimezone = &v
+	return s
+}
+
+// SetStartDate sets the StartDate field's value.
+func (s *CreateMaintenanceWindowInput) SetStartDate(v string) *CreateMaintenanceWindowInput {
+	s.StartDate = &v
 	return s
 }
 
@@ -13812,6 +14841,21 @@ type CreatePatchBaselineInput struct {
 	// Lists (http://docs.aws.amazon.com/systems-manager/latest/userguide/patch-manager-approved-rejected-package-name-formats.html)
 	// in the AWS Systems Manager User Guide.
 	RejectedPatches []*string `type:"list"`
+
+	// The action for Patch Manager to take on patches included in the RejectedPackages
+	// list.
+	//
+	//    * ALLOW_AS_DEPENDENCY: A package in the Rejected patches list is installed
+	//    only if it is a dependency of another package. It is considered compliant
+	//    with the patch baseline, and its status is reported as InstalledOther.
+	//    This is the default action if no option is specified.
+	//
+	//    * BLOCK: Packages in the RejectedPatches list, and packages that include
+	//    them as dependencies, are not installed under any circumstances. If a
+	//    package was installed before it was added to the Rejected patches list,
+	//    it is considered non-compliant with the patch baseline, and its status
+	//    is reported as InstalledRejected.
+	RejectedPatchesAction *string `type:"string" enum:"PatchAction"`
 
 	// Information about the patches to use to update the instances, including target
 	// operating systems and source repositories. Applies to Linux instances only.
@@ -13927,6 +14971,12 @@ func (s *CreatePatchBaselineInput) SetOperatingSystem(v string) *CreatePatchBase
 // SetRejectedPatches sets the RejectedPatches field's value.
 func (s *CreatePatchBaselineInput) SetRejectedPatches(v []*string) *CreatePatchBaselineInput {
 	s.RejectedPatches = v
+	return s
+}
+
+// SetRejectedPatchesAction sets the RejectedPatchesAction field's value.
+func (s *CreatePatchBaselineInput) SetRejectedPatchesAction(v string) *CreatePatchBaselineInput {
+	s.RejectedPatchesAction = &v
 	return s
 }
 
@@ -16198,9 +17248,17 @@ type DescribeInstanceInformationInput struct {
 	_ struct{} `type:"structure"`
 
 	// One or more filters. Use a filter to return a more specific list of instances.
+	// You can filter on Amazon EC2 tag. Specify tags by using a key-value mapping.
 	Filters []*InstanceInformationStringFilter `type:"list"`
 
-	// One or more filters. Use a filter to return a more specific list of instances.
+	// This is a legacy method. We recommend that you don't use this method. Instead,
+	// use the InstanceInformationFilter action. The InstanceInformationFilter action
+	// enables you to return instance information by using tags that are specified
+	// as a key-value mapping.
+	//
+	// If you do use this method, then you can't use the InstanceInformationFilter
+	// action. Using this method and the InstanceInformationFilter action causes
+	// an exception error.
 	InstanceInformationFilterList []*InstanceInformationFilter `type:"list"`
 
 	// The maximum number of items to return for this call. The call also returns
@@ -16628,8 +17686,7 @@ type DescribeInstancePatchesOutput struct {
 	//
 	// Severity (string)
 	//
-	// State (string: "INSTALLED", "INSTALLED OTHER", "MISSING", "NOT APPLICABLE",
-	// "FAILED")
+	// State (string, such as "INSTALLED" or "FAILED")
 	//
 	// InstalledTime (DateTime)
 	//
@@ -17130,6 +18187,150 @@ func (s *DescribeMaintenanceWindowExecutionsOutput) SetWindowExecutions(v []*Mai
 	return s
 }
 
+type DescribeMaintenanceWindowScheduleInput struct {
+	_ struct{} `type:"structure"`
+
+	// Filters used to limit the range of results. For example, you can limit Maintenance
+	// Window executions to only those scheduled before or after a certain date
+	// and time.
+	Filters []*PatchOrchestratorFilter `type:"list"`
+
+	// The maximum number of items to return for this call. The call also returns
+	// a token that you can specify in a subsequent call to get the next set of
+	// results.
+	MaxResults *int64 `min:"1" type:"integer"`
+
+	// The token for the next set of items to return. (You received this token from
+	// a previous call.)
+	NextToken *string `type:"string"`
+
+	// The type of resource you want to retrieve information about. For example,
+	// "INSTANCE".
+	ResourceType *string `type:"string" enum:"MaintenanceWindowResourceType"`
+
+	// The instance ID or key/value pair to retrieve information about.
+	Targets []*Target `type:"list"`
+
+	// The ID of the Maintenance Window to retrieve information about.
+	WindowId *string `min:"20" type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeMaintenanceWindowScheduleInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeMaintenanceWindowScheduleInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeMaintenanceWindowScheduleInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeMaintenanceWindowScheduleInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+	if s.WindowId != nil && len(*s.WindowId) < 20 {
+		invalidParams.Add(request.NewErrParamMinLen("WindowId", 20))
+	}
+	if s.Filters != nil {
+		for i, v := range s.Filters {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Filters", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+	if s.Targets != nil {
+		for i, v := range s.Targets {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Targets", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetFilters sets the Filters field's value.
+func (s *DescribeMaintenanceWindowScheduleInput) SetFilters(v []*PatchOrchestratorFilter) *DescribeMaintenanceWindowScheduleInput {
+	s.Filters = v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *DescribeMaintenanceWindowScheduleInput) SetMaxResults(v int64) *DescribeMaintenanceWindowScheduleInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeMaintenanceWindowScheduleInput) SetNextToken(v string) *DescribeMaintenanceWindowScheduleInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetResourceType sets the ResourceType field's value.
+func (s *DescribeMaintenanceWindowScheduleInput) SetResourceType(v string) *DescribeMaintenanceWindowScheduleInput {
+	s.ResourceType = &v
+	return s
+}
+
+// SetTargets sets the Targets field's value.
+func (s *DescribeMaintenanceWindowScheduleInput) SetTargets(v []*Target) *DescribeMaintenanceWindowScheduleInput {
+	s.Targets = v
+	return s
+}
+
+// SetWindowId sets the WindowId field's value.
+func (s *DescribeMaintenanceWindowScheduleInput) SetWindowId(v string) *DescribeMaintenanceWindowScheduleInput {
+	s.WindowId = &v
+	return s
+}
+
+type DescribeMaintenanceWindowScheduleOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The token for the next set of items to return. (You use this token in the
+	// next call.)
+	NextToken *string `type:"string"`
+
+	// Information about Maintenance Window executions scheduled for the specified
+	// time range.
+	ScheduledWindowExecutions []*ScheduledWindowExecution `type:"list"`
+}
+
+// String returns the string representation
+func (s DescribeMaintenanceWindowScheduleOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeMaintenanceWindowScheduleOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeMaintenanceWindowScheduleOutput) SetNextToken(v string) *DescribeMaintenanceWindowScheduleOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetScheduledWindowExecutions sets the ScheduledWindowExecutions field's value.
+func (s *DescribeMaintenanceWindowScheduleOutput) SetScheduledWindowExecutions(v []*ScheduledWindowExecution) *DescribeMaintenanceWindowScheduleOutput {
+	s.ScheduledWindowExecutions = v
+	return s
+}
+
 type DescribeMaintenanceWindowTargetsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -17363,6 +18564,127 @@ func (s *DescribeMaintenanceWindowTasksOutput) SetNextToken(v string) *DescribeM
 // SetTasks sets the Tasks field's value.
 func (s *DescribeMaintenanceWindowTasksOutput) SetTasks(v []*MaintenanceWindowTask) *DescribeMaintenanceWindowTasksOutput {
 	s.Tasks = v
+	return s
+}
+
+type DescribeMaintenanceWindowsForTargetInput struct {
+	_ struct{} `type:"structure"`
+
+	// The maximum number of items to return for this call. The call also returns
+	// a token that you can specify in a subsequent call to get the next set of
+	// results.
+	MaxResults *int64 `min:"1" type:"integer"`
+
+	// The token for the next set of items to return. (You received this token from
+	// a previous call.)
+	NextToken *string `type:"string"`
+
+	// The type of resource you want to retrieve information about. For example,
+	// "INSTANCE".
+	//
+	// ResourceType is a required field
+	ResourceType *string `type:"string" required:"true" enum:"MaintenanceWindowResourceType"`
+
+	// The instance ID or key/value pair to retrieve information about.
+	//
+	// Targets is a required field
+	Targets []*Target `type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeMaintenanceWindowsForTargetInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeMaintenanceWindowsForTargetInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeMaintenanceWindowsForTargetInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeMaintenanceWindowsForTargetInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+	if s.ResourceType == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceType"))
+	}
+	if s.Targets == nil {
+		invalidParams.Add(request.NewErrParamRequired("Targets"))
+	}
+	if s.Targets != nil {
+		for i, v := range s.Targets {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Targets", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *DescribeMaintenanceWindowsForTargetInput) SetMaxResults(v int64) *DescribeMaintenanceWindowsForTargetInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeMaintenanceWindowsForTargetInput) SetNextToken(v string) *DescribeMaintenanceWindowsForTargetInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetResourceType sets the ResourceType field's value.
+func (s *DescribeMaintenanceWindowsForTargetInput) SetResourceType(v string) *DescribeMaintenanceWindowsForTargetInput {
+	s.ResourceType = &v
+	return s
+}
+
+// SetTargets sets the Targets field's value.
+func (s *DescribeMaintenanceWindowsForTargetInput) SetTargets(v []*Target) *DescribeMaintenanceWindowsForTargetInput {
+	s.Targets = v
+	return s
+}
+
+type DescribeMaintenanceWindowsForTargetOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The token for the next set of items to return. (You use this token in the
+	// next call.)
+	NextToken *string `type:"string"`
+
+	// Information about the Maintenance Window targets and tasks an instance is
+	// associated with.
+	WindowIdentities []*MaintenanceWindowIdentityForTarget `type:"list"`
+}
+
+// String returns the string representation
+func (s DescribeMaintenanceWindowsForTargetOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeMaintenanceWindowsForTargetOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeMaintenanceWindowsForTargetOutput) SetNextToken(v string) *DescribeMaintenanceWindowsForTargetOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetWindowIdentities sets the WindowIdentities field's value.
+func (s *DescribeMaintenanceWindowsForTargetOutput) SetWindowIdentities(v []*MaintenanceWindowIdentityForTarget) *DescribeMaintenanceWindowsForTargetOutput {
+	s.WindowIdentities = v
 	return s
 }
 
@@ -17746,6 +19068,14 @@ type DescribePatchGroupStateOutput struct {
 	// The number of instances with installed patches.
 	InstancesWithInstalledPatches *int64 `type:"integer"`
 
+	// The number of instances with patches installed that are specified in a RejectedPatches
+	// list. Patches with a status of INSTALLED_REJECTED were typically installed
+	// before they were added to a RejectedPatches list.
+	//
+	// If ALLOW_AS_DEPENDENCY is the specified option for RejectedPatchesAction,
+	// the value of InstancesWithInstalledRejectedPatches will always be 0 (zero).
+	InstancesWithInstalledRejectedPatches *int64 `type:"integer"`
+
 	// The number of instances with missing patches from the patch baseline.
 	InstancesWithMissingPatches *int64 `type:"integer"`
 
@@ -17784,6 +19114,12 @@ func (s *DescribePatchGroupStateOutput) SetInstancesWithInstalledOtherPatches(v 
 // SetInstancesWithInstalledPatches sets the InstancesWithInstalledPatches field's value.
 func (s *DescribePatchGroupStateOutput) SetInstancesWithInstalledPatches(v int64) *DescribePatchGroupStateOutput {
 	s.InstancesWithInstalledPatches = &v
+	return s
+}
+
+// SetInstancesWithInstalledRejectedPatches sets the InstancesWithInstalledRejectedPatches field's value.
+func (s *DescribePatchGroupStateOutput) SetInstancesWithInstalledRejectedPatches(v int64) *DescribePatchGroupStateOutput {
+	s.InstancesWithInstalledRejectedPatches = &v
 	return s
 }
 
@@ -17898,6 +19234,123 @@ func (s *DescribePatchGroupsOutput) SetMappings(v []*PatchGroupPatchBaselineMapp
 // SetNextToken sets the NextToken field's value.
 func (s *DescribePatchGroupsOutput) SetNextToken(v string) *DescribePatchGroupsOutput {
 	s.NextToken = &v
+	return s
+}
+
+type DescribeSessionsInput struct {
+	_ struct{} `type:"structure"`
+
+	// One or more filters to limit the type of sessions returned by the request.
+	Filters []*SessionFilter `min:"1" type:"list"`
+
+	// The maximum number of items to return for this call. The call also returns
+	// a token that you can specify in a subsequent call to get the next set of
+	// results.
+	MaxResults *int64 `min:"1" type:"integer"`
+
+	// The token for the next set of items to return. (You received this token from
+	// a previous call.)
+	NextToken *string `type:"string"`
+
+	// The session status to retrieve a list of sessions for. For example, "Active".
+	//
+	// State is a required field
+	State *string `type:"string" required:"true" enum:"SessionState"`
+}
+
+// String returns the string representation
+func (s DescribeSessionsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeSessionsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeSessionsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeSessionsInput"}
+	if s.Filters != nil && len(s.Filters) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Filters", 1))
+	}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+	if s.State == nil {
+		invalidParams.Add(request.NewErrParamRequired("State"))
+	}
+	if s.Filters != nil {
+		for i, v := range s.Filters {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Filters", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetFilters sets the Filters field's value.
+func (s *DescribeSessionsInput) SetFilters(v []*SessionFilter) *DescribeSessionsInput {
+	s.Filters = v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *DescribeSessionsInput) SetMaxResults(v int64) *DescribeSessionsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeSessionsInput) SetNextToken(v string) *DescribeSessionsInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetState sets the State field's value.
+func (s *DescribeSessionsInput) SetState(v string) *DescribeSessionsInput {
+	s.State = &v
+	return s
+}
+
+type DescribeSessionsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The token for the next set of items to return. (You received this token from
+	// a previous call.)
+	NextToken *string `type:"string"`
+
+	// A list of sessions meeting the request parameters.
+	Sessions []*Session `type:"list"`
+}
+
+// String returns the string representation
+func (s DescribeSessionsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeSessionsOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeSessionsOutput) SetNextToken(v string) *DescribeSessionsOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetSessions sets the Sessions field's value.
+func (s *DescribeSessionsOutput) SetSessions(v []*Session) *DescribeSessionsOutput {
+	s.Sessions = v
 	return s
 }
 
@@ -18954,6 +20407,80 @@ func (s *GetCommandInvocationOutput) SetStatus(v string) *GetCommandInvocationOu
 // SetStatusDetails sets the StatusDetails field's value.
 func (s *GetCommandInvocationOutput) SetStatusDetails(v string) *GetCommandInvocationOutput {
 	s.StatusDetails = &v
+	return s
+}
+
+type GetConnectionStatusInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the instance.
+	//
+	// Target is a required field
+	Target *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetConnectionStatusInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetConnectionStatusInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetConnectionStatusInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetConnectionStatusInput"}
+	if s.Target == nil {
+		invalidParams.Add(request.NewErrParamRequired("Target"))
+	}
+	if s.Target != nil && len(*s.Target) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Target", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetTarget sets the Target field's value.
+func (s *GetConnectionStatusInput) SetTarget(v string) *GetConnectionStatusInput {
+	s.Target = &v
+	return s
+}
+
+type GetConnectionStatusOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The status of the connection to the instance. For example, 'Connected' or
+	// 'Not Connected'.
+	Status *string `type:"string" enum:"ConnectionStatus"`
+
+	// The ID of the instance to check connection status.
+	Target *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s GetConnectionStatusOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetConnectionStatusOutput) GoString() string {
+	return s.String()
+}
+
+// SetStatus sets the Status field's value.
+func (s *GetConnectionStatusOutput) SetStatus(v string) *GetConnectionStatusOutput {
+	s.Status = &v
+	return s
+}
+
+// SetTarget sets the Target field's value.
+func (s *GetConnectionStatusOutput) SetTarget(v string) *GetConnectionStatusOutput {
+	s.Target = &v
 	return s
 }
 
@@ -20072,14 +21599,34 @@ type GetMaintenanceWindowOutput struct {
 	// Whether the Maintenance Windows is enabled.
 	Enabled *bool `type:"boolean"`
 
+	// The date and time, in ISO-8601 Extended format, for when the Maintenance
+	// Window is scheduled to become inactive. The Maintenance Window will not run
+	// after this specified time.
+	EndDate *string `type:"string"`
+
 	// The date the Maintenance Window was last modified.
 	ModifiedDate *time.Time `type:"timestamp"`
 
 	// The name of the Maintenance Window.
 	Name *string `min:"3" type:"string"`
 
+	// The next time the Maintenance Window will actually run, taking into account
+	// any specified times for the Maintenance Window to become active or inactive.
+	NextExecutionTime *string `type:"string"`
+
 	// The schedule of the Maintenance Window in the form of a cron or rate expression.
 	Schedule *string `min:"1" type:"string"`
+
+	// The time zone that the scheduled Maintenance Window executions are based
+	// on, in Internet Assigned Numbers Authority (IANA) format. For example: "America/Los_Angeles",
+	// "etc/UTC", or "Asia/Seoul". For more information, see the Time Zone Database
+	// (https://www.iana.org/time-zones) on the IANA website.
+	ScheduleTimezone *string `type:"string"`
+
+	// The date and time, in ISO-8601 Extended format, for when the Maintenance
+	// Window is scheduled to become active. The Maintenance Window will not run
+	// before this specified time.
+	StartDate *string `type:"string"`
 
 	// The ID of the created Maintenance Window.
 	WindowId *string `min:"20" type:"string"`
@@ -20131,6 +21678,12 @@ func (s *GetMaintenanceWindowOutput) SetEnabled(v bool) *GetMaintenanceWindowOut
 	return s
 }
 
+// SetEndDate sets the EndDate field's value.
+func (s *GetMaintenanceWindowOutput) SetEndDate(v string) *GetMaintenanceWindowOutput {
+	s.EndDate = &v
+	return s
+}
+
 // SetModifiedDate sets the ModifiedDate field's value.
 func (s *GetMaintenanceWindowOutput) SetModifiedDate(v time.Time) *GetMaintenanceWindowOutput {
 	s.ModifiedDate = &v
@@ -20143,9 +21696,27 @@ func (s *GetMaintenanceWindowOutput) SetName(v string) *GetMaintenanceWindowOutp
 	return s
 }
 
+// SetNextExecutionTime sets the NextExecutionTime field's value.
+func (s *GetMaintenanceWindowOutput) SetNextExecutionTime(v string) *GetMaintenanceWindowOutput {
+	s.NextExecutionTime = &v
+	return s
+}
+
 // SetSchedule sets the Schedule field's value.
 func (s *GetMaintenanceWindowOutput) SetSchedule(v string) *GetMaintenanceWindowOutput {
 	s.Schedule = &v
+	return s
+}
+
+// SetScheduleTimezone sets the ScheduleTimezone field's value.
+func (s *GetMaintenanceWindowOutput) SetScheduleTimezone(v string) *GetMaintenanceWindowOutput {
+	s.ScheduleTimezone = &v
+	return s
+}
+
+// SetStartDate sets the StartDate field's value.
+func (s *GetMaintenanceWindowOutput) SetStartDate(v string) *GetMaintenanceWindowOutput {
+	s.StartDate = &v
 	return s
 }
 
@@ -20956,6 +22527,11 @@ type GetPatchBaselineOutput struct {
 	// A list of explicitly rejected patches for the baseline.
 	RejectedPatches []*string `type:"list"`
 
+	// The action specified to take on patches included in the RejectedPatches list.
+	// A patch can be allowed only if it is a dependency of another package, or
+	// blocked entirely along with packages that include it as a dependency.
+	RejectedPatchesAction *string `type:"string" enum:"PatchAction"`
+
 	// Information about the patches to use to update the instances, including target
 	// operating systems and source repositories. Applies to Linux instances only.
 	Sources []*PatchSource `type:"list"`
@@ -21046,6 +22622,12 @@ func (s *GetPatchBaselineOutput) SetPatchGroups(v []*string) *GetPatchBaselineOu
 // SetRejectedPatches sets the RejectedPatches field's value.
 func (s *GetPatchBaselineOutput) SetRejectedPatches(v []*string) *GetPatchBaselineOutput {
 	s.RejectedPatches = v
+	return s
+}
+
+// SetRejectedPatchesAction sets the RejectedPatchesAction field's value.
+func (s *GetPatchBaselineOutput) SetRejectedPatchesAction(v string) *GetPatchBaselineOutput {
+	s.RejectedPatchesAction = &v
 	return s
 }
 
@@ -21517,7 +23099,12 @@ func (s *InstanceInformation) SetResourceType(v string) *InstanceInformation {
 	return s
 }
 
-// Describes a filter for a specific list of instances.
+// Describes a filter for a specific list of instances. You can filter instances
+// information by using tags. You specify tags by using a key-value mapping.
+//
+// Use this action instead of the DescribeInstanceInformationRequest$InstanceInformationFilterList
+// method. The InstanceInformationFilterList method is a legacy method and does
+// not support tags.
 type InstanceInformationFilter struct {
 	_ struct{} `type:"structure"`
 
@@ -21651,12 +23238,30 @@ type InstancePatchState struct {
 	// during the last patching operation, but failed to install.
 	FailedCount *int64 `type:"integer"`
 
+	// An https URL or an Amazon S3 path-style URL to a list of patches to be installed.
+	// This patch installation list, which you maintain in an Amazon S3 bucket in
+	// YAML format and specify in the SSM document AWS-RunPatchBaseline, overrides
+	// the patches specified by the default patch baseline.
+	//
+	// For more information about the InstallOverrideList parameter, see About the
+	// SSM Document AWS-RunPatchBaseline (http://docs.aws.amazon.com/systems-manager/latest/userguide/patch-manager-about-aws-runpatchbaseline.html)
+	// in the AWS Systems Manager User Guide.
+	InstallOverrideList *string `min:"1" type:"string"`
+
 	// The number of patches from the patch baseline that are installed on the instance.
 	InstalledCount *int64 `type:"integer"`
 
 	// The number of patches not specified in the patch baseline that are installed
 	// on the instance.
 	InstalledOtherCount *int64 `type:"integer"`
+
+	// The number of instances with patches installed that are specified in a RejectedPatches
+	// list. Patches with a status of InstalledRejected were typically installed
+	// before they were added to a RejectedPatches list.
+	//
+	// If ALLOW_AS_DEPENDENCY is the specified option for RejectedPatchesAction,
+	// the value of InstalledRejectedCount will always be 0 (zero).
+	InstalledRejectedCount *int64 `type:"integer"`
 
 	// The ID of the managed instance the high-level patch compliance information
 	// was collected for.
@@ -21724,6 +23329,12 @@ func (s *InstancePatchState) SetFailedCount(v int64) *InstancePatchState {
 	return s
 }
 
+// SetInstallOverrideList sets the InstallOverrideList field's value.
+func (s *InstancePatchState) SetInstallOverrideList(v string) *InstancePatchState {
+	s.InstallOverrideList = &v
+	return s
+}
+
 // SetInstalledCount sets the InstalledCount field's value.
 func (s *InstancePatchState) SetInstalledCount(v int64) *InstancePatchState {
 	s.InstalledCount = &v
@@ -21733,6 +23344,12 @@ func (s *InstancePatchState) SetInstalledCount(v int64) *InstancePatchState {
 // SetInstalledOtherCount sets the InstalledOtherCount field's value.
 func (s *InstancePatchState) SetInstalledOtherCount(v int64) *InstancePatchState {
 	s.InstalledOtherCount = &v
+	return s
+}
+
+// SetInstalledRejectedCount sets the InstalledRejectedCount field's value.
+func (s *InstancePatchState) SetInstalledRejectedCount(v int64) *InstancePatchState {
+	s.InstalledRejectedCount = &v
 	return s
 }
 
@@ -24413,7 +26030,7 @@ func (s *MaintenanceWindowExecutionTaskInvocationIdentity) SetWindowTargetId(v s
 	return s
 }
 
-// Filter used in the request.
+// Filter used in the request. Supported filter keys are Name and Enabled.
 type MaintenanceWindowFilter struct {
 	_ struct{} `type:"structure"`
 
@@ -24476,8 +26093,27 @@ type MaintenanceWindowIdentity struct {
 	// Whether the Maintenance Window is enabled.
 	Enabled *bool `type:"boolean"`
 
+	// The date and time, in ISO-8601 Extended format, for when the Maintenance
+	// Window is scheduled to become inactive.
+	EndDate *string `type:"string"`
+
 	// The name of the Maintenance Window.
 	Name *string `min:"3" type:"string"`
+
+	// The next time the Maintenance Window will actually run, taking into account
+	// any specified times for the Maintenance Window to become active or inactive.
+	NextExecutionTime *string `type:"string"`
+
+	// The schedule of the Maintenance Window in the form of a cron or rate expression.
+	Schedule *string `min:"1" type:"string"`
+
+	// The time zone that the scheduled Maintenance Window executions are based
+	// on, in Internet Assigned Numbers Authority (IANA) format.
+	ScheduleTimezone *string `type:"string"`
+
+	// The date and time, in ISO-8601 Extended format, for when the Maintenance
+	// Window is scheduled to become active.
+	StartDate *string `type:"string"`
 
 	// The ID of the Maintenance Window.
 	WindowId *string `min:"20" type:"string"`
@@ -24517,14 +26153,77 @@ func (s *MaintenanceWindowIdentity) SetEnabled(v bool) *MaintenanceWindowIdentit
 	return s
 }
 
+// SetEndDate sets the EndDate field's value.
+func (s *MaintenanceWindowIdentity) SetEndDate(v string) *MaintenanceWindowIdentity {
+	s.EndDate = &v
+	return s
+}
+
 // SetName sets the Name field's value.
 func (s *MaintenanceWindowIdentity) SetName(v string) *MaintenanceWindowIdentity {
 	s.Name = &v
 	return s
 }
 
+// SetNextExecutionTime sets the NextExecutionTime field's value.
+func (s *MaintenanceWindowIdentity) SetNextExecutionTime(v string) *MaintenanceWindowIdentity {
+	s.NextExecutionTime = &v
+	return s
+}
+
+// SetSchedule sets the Schedule field's value.
+func (s *MaintenanceWindowIdentity) SetSchedule(v string) *MaintenanceWindowIdentity {
+	s.Schedule = &v
+	return s
+}
+
+// SetScheduleTimezone sets the ScheduleTimezone field's value.
+func (s *MaintenanceWindowIdentity) SetScheduleTimezone(v string) *MaintenanceWindowIdentity {
+	s.ScheduleTimezone = &v
+	return s
+}
+
+// SetStartDate sets the StartDate field's value.
+func (s *MaintenanceWindowIdentity) SetStartDate(v string) *MaintenanceWindowIdentity {
+	s.StartDate = &v
+	return s
+}
+
 // SetWindowId sets the WindowId field's value.
 func (s *MaintenanceWindowIdentity) SetWindowId(v string) *MaintenanceWindowIdentity {
+	s.WindowId = &v
+	return s
+}
+
+// The Maintenance Window to which the specified target belongs.
+type MaintenanceWindowIdentityForTarget struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the Maintenance Window.
+	Name *string `min:"3" type:"string"`
+
+	// The ID of the Maintenance Window.
+	WindowId *string `min:"20" type:"string"`
+}
+
+// String returns the string representation
+func (s MaintenanceWindowIdentityForTarget) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MaintenanceWindowIdentityForTarget) GoString() string {
+	return s.String()
+}
+
+// SetName sets the Name field's value.
+func (s *MaintenanceWindowIdentityForTarget) SetName(v string) *MaintenanceWindowIdentityForTarget {
+	s.Name = &v
+	return s
+}
+
+// SetWindowId sets the WindowId field's value.
+func (s *MaintenanceWindowIdentityForTarget) SetWindowId(v string) *MaintenanceWindowIdentityForTarget {
 	s.WindowId = &v
 	return s
 }
@@ -25984,8 +27683,10 @@ type PatchComplianceData struct {
 	// Severity is a required field
 	Severity *string `type:"string" required:"true"`
 
-	// The state of the patch on the instance (INSTALLED, INSTALLED_OTHER, MISSING,
-	// NOT_APPLICABLE or FAILED).
+	// The state of the patch on the instance, such as INSTALLED or FAILED.
+	//
+	// For descriptions of each patch state, see About Patch Compliance (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-compliance-about.html#sysman-compliance-monitor-patch)
+	// in the AWS Systems Manager User Guide.
 	//
 	// State is a required field
 	State *string `type:"string" required:"true" enum:"PatchComplianceDataState"`
@@ -27899,7 +29600,7 @@ func (s *RegisterTaskWithMaintenanceWindowInput) SetWindowId(v string) *Register
 type RegisterTaskWithMaintenanceWindowOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The id of the task in the Maintenance Window.
+	// The ID of the task in the Maintenance Window.
 	WindowTaskId *string `min:"36" type:"string"`
 }
 
@@ -28358,6 +30059,98 @@ func (s *ResultAttribute) SetTypeName(v string) *ResultAttribute {
 	return s
 }
 
+type ResumeSessionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the disconnected session to resume.
+	//
+	// SessionId is a required field
+	SessionId *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ResumeSessionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResumeSessionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ResumeSessionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ResumeSessionInput"}
+	if s.SessionId == nil {
+		invalidParams.Add(request.NewErrParamRequired("SessionId"))
+	}
+	if s.SessionId != nil && len(*s.SessionId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("SessionId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetSessionId sets the SessionId field's value.
+func (s *ResumeSessionInput) SetSessionId(v string) *ResumeSessionInput {
+	s.SessionId = &v
+	return s
+}
+
+type ResumeSessionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the session.
+	SessionId *string `min:"1" type:"string"`
+
+	// A URL back to SSM Agent on the instance that the Session Manager client uses
+	// to send commands and receive output from the instance. Format: wss://ssm-messages.region.amazonaws.com/v1/data-channel/session-id?stream=(input|output).
+	//
+	// region represents the Region identifier for an AWS Region supported by AWS
+	// Systems Manager, such as us-east-2 for the US East (Ohio) Region. For a list
+	// of supported region values, see the Region column in the AWS Systems Manager
+	// table of regions and endpoints (http://docs.aws.amazon.com/general/latest/gr/rande.html#ssm_region)
+	// in the AWS General Reference.
+	//
+	// session-id represents the ID of a Session Manager session, such as 1a2b3c4dEXAMPLE.
+	StreamUrl *string `type:"string"`
+
+	// An encrypted token value containing session and caller information. Used
+	// to authenticate the connection to the instance.
+	TokenValue *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ResumeSessionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResumeSessionOutput) GoString() string {
+	return s.String()
+}
+
+// SetSessionId sets the SessionId field's value.
+func (s *ResumeSessionOutput) SetSessionId(v string) *ResumeSessionOutput {
+	s.SessionId = &v
+	return s
+}
+
+// SetStreamUrl sets the StreamUrl field's value.
+func (s *ResumeSessionOutput) SetStreamUrl(v string) *ResumeSessionOutput {
+	s.StreamUrl = &v
+	return s
+}
+
+// SetTokenValue sets the TokenValue field's value.
+func (s *ResumeSessionOutput) SetTokenValue(v string) *ResumeSessionOutput {
+	s.TokenValue = &v
+	return s
+}
+
 // An Amazon S3 bucket where you want to store the results of this request.
 type S3OutputLocation struct {
 	_ struct{} `type:"structure"`
@@ -28441,6 +30234,49 @@ func (s S3OutputUrl) GoString() string {
 // SetOutputUrl sets the OutputUrl field's value.
 func (s *S3OutputUrl) SetOutputUrl(v string) *S3OutputUrl {
 	s.OutputUrl = &v
+	return s
+}
+
+// Information about a scheduled execution for a Maintenance Window.
+type ScheduledWindowExecution struct {
+	_ struct{} `type:"structure"`
+
+	// The time, in ISO-8601 Extended format, that the Maintenance Window is scheduled
+	// to be run.
+	ExecutionTime *string `type:"string"`
+
+	// The name of the Maintenance Window to be run.
+	Name *string `min:"3" type:"string"`
+
+	// The ID of the Maintenance Window to be run.
+	WindowId *string `min:"20" type:"string"`
+}
+
+// String returns the string representation
+func (s ScheduledWindowExecution) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ScheduledWindowExecution) GoString() string {
+	return s.String()
+}
+
+// SetExecutionTime sets the ExecutionTime field's value.
+func (s *ScheduledWindowExecution) SetExecutionTime(v string) *ScheduledWindowExecution {
+	s.ExecutionTime = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *ScheduledWindowExecution) SetName(v string) *ScheduledWindowExecution {
+	s.Name = &v
+	return s
+}
+
+// SetWindowId sets the WindowId field's value.
+func (s *ScheduledWindowExecution) SetWindowId(v string) *ScheduledWindowExecution {
+	s.WindowId = &v
 	return s
 }
 
@@ -28570,7 +30406,7 @@ type SendCommandInput struct {
 	// The instance IDs where the command should execute. You can specify a maximum
 	// of 50 IDs. If you prefer not to list individual instance IDs, you can instead
 	// send commands to a fleet of instances using the Targets parameter, which
-	// accepts EC2 tags. For more information about how to use Targets, see Sending
+	// accepts EC2 tags. For more information about how to use targets, see Sending
 	// Commands to a Fleet (http://docs.aws.amazon.com/systems-manager/latest/userguide/send-commands-multiple.html)
 	// in the AWS Systems Manager User Guide.
 	InstanceIds []*string `type:"list"`
@@ -28613,7 +30449,7 @@ type SendCommandInput struct {
 
 	// (Optional) An array of search criteria that targets instances using a Key,Value
 	// combination that you specify. Targets is required if you don't provide one
-	// or more instance IDs in the call. For more information about how to use Targets,
+	// or more instance IDs in the call. For more information about how to use targets,
 	// see Sending Commands to a Fleet (http://docs.aws.amazon.com/systems-manager/latest/userguide/send-commands-multiple.html)
 	// in the AWS Systems Manager User Guide.
 	Targets []*Target `type:"list"`
@@ -28799,6 +30635,220 @@ func (s SendCommandOutput) GoString() string {
 // SetCommand sets the Command field's value.
 func (s *SendCommandOutput) SetCommand(v *Command) *SendCommandOutput {
 	s.Command = v
+	return s
+}
+
+// Information about a Session Manager connection to an instance.
+type Session struct {
+	_ struct{} `type:"structure"`
+
+	// Reserved for future use.
+	Details *string `min:"1" type:"string"`
+
+	// The name of the Session Manager SSM document used to define the parameters
+	// and plugin settings for the session. For example, SSM-SessionManagerRunShell.
+	DocumentName *string `type:"string"`
+
+	// The date and time, in ISO-8601 Extended format, when the session was terminated.
+	EndDate *time.Time `type:"timestamp"`
+
+	// Reserved for future use.
+	OutputUrl *SessionManagerOutputUrl `type:"structure"`
+
+	// The ID of the AWS user account that started the session.
+	Owner *string `min:"1" type:"string"`
+
+	// The ID of the session.
+	SessionId *string `min:"1" type:"string"`
+
+	// The date and time, in ISO-8601 Extended format, when the session began.
+	StartDate *time.Time `type:"timestamp"`
+
+	// The status of the session. For example, "Connected" or "Terminated".
+	Status *string `type:"string" enum:"SessionStatus"`
+
+	// The instance that the Session Manager session connected to.
+	Target *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s Session) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Session) GoString() string {
+	return s.String()
+}
+
+// SetDetails sets the Details field's value.
+func (s *Session) SetDetails(v string) *Session {
+	s.Details = &v
+	return s
+}
+
+// SetDocumentName sets the DocumentName field's value.
+func (s *Session) SetDocumentName(v string) *Session {
+	s.DocumentName = &v
+	return s
+}
+
+// SetEndDate sets the EndDate field's value.
+func (s *Session) SetEndDate(v time.Time) *Session {
+	s.EndDate = &v
+	return s
+}
+
+// SetOutputUrl sets the OutputUrl field's value.
+func (s *Session) SetOutputUrl(v *SessionManagerOutputUrl) *Session {
+	s.OutputUrl = v
+	return s
+}
+
+// SetOwner sets the Owner field's value.
+func (s *Session) SetOwner(v string) *Session {
+	s.Owner = &v
+	return s
+}
+
+// SetSessionId sets the SessionId field's value.
+func (s *Session) SetSessionId(v string) *Session {
+	s.SessionId = &v
+	return s
+}
+
+// SetStartDate sets the StartDate field's value.
+func (s *Session) SetStartDate(v time.Time) *Session {
+	s.StartDate = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *Session) SetStatus(v string) *Session {
+	s.Status = &v
+	return s
+}
+
+// SetTarget sets the Target field's value.
+func (s *Session) SetTarget(v string) *Session {
+	s.Target = &v
+	return s
+}
+
+// Describes a filter for Session Manager information.
+type SessionFilter struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the filter.
+	//
+	// Key is a required field
+	Key *string `locationName:"key" type:"string" required:"true" enum:"SessionFilterKey"`
+
+	// The filter value. Valid values for each filter key are as follows:
+	//
+	//    * InvokedAfter: Specify a timestamp to limit your results. For example,
+	//    specify 2018-08-29T00:00:00Z to see sessions that started August 29, 2018,
+	//    and later.
+	//
+	//    * InvokedBefore: Specify a timestamp to limit your results. For example,
+	//    specify 2018-08-29T00:00:00Z to see sessions that started before August
+	//    29, 2018.
+	//
+	//    * Target: Specify an instance to which session connections have been made.
+	//
+	//    * Owner: Specify an AWS user account to see a list of sessions started
+	//    by that user.
+	//
+	//    * Status: Specify a valid session status to see a list of all sessions
+	//    with that status. Status values you can specify include:
+	//
+	// Connected
+	//
+	// Connecting
+	//
+	// Disconnected
+	//
+	// Terminated
+	//
+	// Terminating
+	//
+	// Failed
+	//
+	// Value is a required field
+	Value *string `locationName:"value" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s SessionFilter) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SessionFilter) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *SessionFilter) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "SessionFilter"}
+	if s.Key == nil {
+		invalidParams.Add(request.NewErrParamRequired("Key"))
+	}
+	if s.Value == nil {
+		invalidParams.Add(request.NewErrParamRequired("Value"))
+	}
+	if s.Value != nil && len(*s.Value) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Value", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetKey sets the Key field's value.
+func (s *SessionFilter) SetKey(v string) *SessionFilter {
+	s.Key = &v
+	return s
+}
+
+// SetValue sets the Value field's value.
+func (s *SessionFilter) SetValue(v string) *SessionFilter {
+	s.Value = &v
+	return s
+}
+
+// Reserved for future use.
+type SessionManagerOutputUrl struct {
+	_ struct{} `type:"structure"`
+
+	// Reserved for future use.
+	CloudWatchOutputUrl *string `min:"1" type:"string"`
+
+	// Reserved for future use.
+	S3OutputUrl *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s SessionManagerOutputUrl) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SessionManagerOutputUrl) GoString() string {
+	return s.String()
+}
+
+// SetCloudWatchOutputUrl sets the CloudWatchOutputUrl field's value.
+func (s *SessionManagerOutputUrl) SetCloudWatchOutputUrl(v string) *SessionManagerOutputUrl {
+	s.CloudWatchOutputUrl = &v
+	return s
+}
+
+// SetS3OutputUrl sets the S3OutputUrl field's value.
+func (s *SessionManagerOutputUrl) SetS3OutputUrl(v string) *SessionManagerOutputUrl {
+	s.S3OutputUrl = &v
 	return s
 }
 
@@ -28988,7 +31038,7 @@ type StartAutomationExecutionInput struct {
 	TargetMaps []map[string][]*string `type:"list"`
 
 	// The name of the parameter used as the target resource for the rate-controlled
-	// execution. Required if you specify Targets.
+	// execution. Required if you specify targets.
 	TargetParameterName *string `min:"1" type:"string"`
 
 	// A key-value mapping to target resources. Required if you specify TargetParameterName.
@@ -29123,6 +31173,118 @@ func (s StartAutomationExecutionOutput) GoString() string {
 // SetAutomationExecutionId sets the AutomationExecutionId field's value.
 func (s *StartAutomationExecutionOutput) SetAutomationExecutionId(v string) *StartAutomationExecutionOutput {
 	s.AutomationExecutionId = &v
+	return s
+}
+
+type StartSessionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the SSM document to define the parameters and plugin settings
+	// for the session. For example, SSM-SessionManagerRunShell. If no document
+	// name is provided, a shell to the instance is launched by default.
+	DocumentName *string `type:"string"`
+
+	// Reserved for future use.
+	Parameters map[string][]*string `type:"map"`
+
+	// The instance to connect to for the session.
+	//
+	// Target is a required field
+	Target *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s StartSessionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StartSessionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *StartSessionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "StartSessionInput"}
+	if s.Target == nil {
+		invalidParams.Add(request.NewErrParamRequired("Target"))
+	}
+	if s.Target != nil && len(*s.Target) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Target", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDocumentName sets the DocumentName field's value.
+func (s *StartSessionInput) SetDocumentName(v string) *StartSessionInput {
+	s.DocumentName = &v
+	return s
+}
+
+// SetParameters sets the Parameters field's value.
+func (s *StartSessionInput) SetParameters(v map[string][]*string) *StartSessionInput {
+	s.Parameters = v
+	return s
+}
+
+// SetTarget sets the Target field's value.
+func (s *StartSessionInput) SetTarget(v string) *StartSessionInput {
+	s.Target = &v
+	return s
+}
+
+type StartSessionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the session.
+	SessionId *string `min:"1" type:"string"`
+
+	// A URL back to SSM Agent on the instance that the Session Manager client uses
+	// to send commands and receive output from the instance. Format: wss://ssm-messages.region.amazonaws.com/v1/data-channel/session-id?stream=(input|output)
+	//
+	// region represents the Region identifier for an AWS Region supported by AWS
+	// Systems Manager, such as us-east-2 for the US East (Ohio) Region. For a list
+	// of supported region values, see the Region column in the AWS Systems Manager
+	// table of regions and endpoints (http://docs.aws.amazon.com/general/latest/gr/rande.html#ssm_region)
+	// in the AWS General Reference.
+	//
+	// session-id represents the ID of a Session Manager session, such as 1a2b3c4dEXAMPLE.
+	StreamUrl *string `type:"string"`
+
+	// An encrypted token value containing session and caller information. Used
+	// to authenticate the connection to the instance.
+	TokenValue *string `type:"string"`
+}
+
+// String returns the string representation
+func (s StartSessionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StartSessionOutput) GoString() string {
+	return s.String()
+}
+
+// SetSessionId sets the SessionId field's value.
+func (s *StartSessionOutput) SetSessionId(v string) *StartSessionOutput {
+	s.SessionId = &v
+	return s
+}
+
+// SetStreamUrl sets the StreamUrl field's value.
+func (s *StartSessionOutput) SetStreamUrl(v string) *StartSessionOutput {
+	s.StreamUrl = &v
+	return s
+}
+
+// SetTokenValue sets the TokenValue field's value.
+func (s *StartSessionOutput) SetTokenValue(v string) *StartSessionOutput {
+	s.TokenValue = &v
 	return s
 }
 
@@ -29575,6 +31737,70 @@ func (s *Target) SetValues(v []*string) *Target {
 	return s
 }
 
+type TerminateSessionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the session to terminate.
+	//
+	// SessionId is a required field
+	SessionId *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s TerminateSessionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TerminateSessionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *TerminateSessionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "TerminateSessionInput"}
+	if s.SessionId == nil {
+		invalidParams.Add(request.NewErrParamRequired("SessionId"))
+	}
+	if s.SessionId != nil && len(*s.SessionId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("SessionId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetSessionId sets the SessionId field's value.
+func (s *TerminateSessionInput) SetSessionId(v string) *TerminateSessionInput {
+	s.SessionId = &v
+	return s
+}
+
+type TerminateSessionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the session that has been terminated.
+	SessionId *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s TerminateSessionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TerminateSessionOutput) GoString() string {
+	return s.String()
+}
+
+// SetSessionId sets the SessionId field's value.
+func (s *TerminateSessionOutput) SetSessionId(v string) *TerminateSessionOutput {
+	s.SessionId = &v
+	return s
+}
+
 type UpdateAssociationInput struct {
 	_ struct{} `type:"structure"`
 
@@ -29591,8 +31817,37 @@ type UpdateAssociationInput struct {
 	// this request succeeds, either specify $LATEST, or omit this parameter.
 	AssociationVersion *string `type:"string"`
 
+	// The severity level to assign to the association.
+	ComplianceSeverity *string `type:"string" enum:"AssociationComplianceSeverity"`
+
 	// The document version you want update for the association.
 	DocumentVersion *string `type:"string"`
+
+	// The maximum number of targets allowed to run the association at the same
+	// time. You can specify a number, for example 10, or a percentage of the target
+	// set, for example 10%. The default value is 100%, which means all targets
+	// run the association at the same time.
+	//
+	// If a new instance starts and attempts to execute an association while Systems
+	// Manager is executing MaxConcurrency associations, the association is allowed
+	// to run. During the next association interval, the new instance will process
+	// its association within the limit specified for MaxConcurrency.
+	MaxConcurrency *string `min:"1" type:"string"`
+
+	// The number of errors that are allowed before the system stops sending requests
+	// to run the association on additional targets. You can specify either an absolute
+	// number of errors, for example 10, or a percentage of the target set, for
+	// example 10%. If you specify 3, for example, the system stops sending requests
+	// when the fourth error is received. If you specify 0, then the system stops
+	// sending requests after the first error is returned. If you run an association
+	// on 50 instances and set MaxError to 10%, then the system stops sending the
+	// request when the sixth error is received.
+	//
+	// Executions that are already running an association when MaxErrors is reached
+	// are allowed to complete, but some of these executions may fail as well. If
+	// you need to ensure that there won't be more than max-errors failed executions,
+	// set MaxConcurrency to 1 so that executions proceed one at a time.
+	MaxErrors *string `min:"1" type:"string"`
 
 	// The name of the association document.
 	Name *string `type:"string"`
@@ -29626,6 +31881,12 @@ func (s *UpdateAssociationInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "UpdateAssociationInput"}
 	if s.AssociationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("AssociationId"))
+	}
+	if s.MaxConcurrency != nil && len(*s.MaxConcurrency) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("MaxConcurrency", 1))
+	}
+	if s.MaxErrors != nil && len(*s.MaxErrors) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("MaxErrors", 1))
 	}
 	if s.ScheduleExpression != nil && len(*s.ScheduleExpression) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("ScheduleExpression", 1))
@@ -29670,9 +31931,27 @@ func (s *UpdateAssociationInput) SetAssociationVersion(v string) *UpdateAssociat
 	return s
 }
 
+// SetComplianceSeverity sets the ComplianceSeverity field's value.
+func (s *UpdateAssociationInput) SetComplianceSeverity(v string) *UpdateAssociationInput {
+	s.ComplianceSeverity = &v
+	return s
+}
+
 // SetDocumentVersion sets the DocumentVersion field's value.
 func (s *UpdateAssociationInput) SetDocumentVersion(v string) *UpdateAssociationInput {
 	s.DocumentVersion = &v
+	return s
+}
+
+// SetMaxConcurrency sets the MaxConcurrency field's value.
+func (s *UpdateAssociationInput) SetMaxConcurrency(v string) *UpdateAssociationInput {
+	s.MaxConcurrency = &v
+	return s
+}
+
+// SetMaxErrors sets the MaxErrors field's value.
+func (s *UpdateAssociationInput) SetMaxErrors(v string) *UpdateAssociationInput {
+	s.MaxErrors = &v
 	return s
 }
 
@@ -30025,6 +32304,11 @@ type UpdateMaintenanceWindowInput struct {
 	// Whether the Maintenance Window is enabled.
 	Enabled *bool `type:"boolean"`
 
+	// The date and time, in ISO-8601 Extended format, for when you want the Maintenance
+	// Window to become inactive. EndDate allows you to set a date and time in the
+	// future when the Maintenance Window will no longer run.
+	EndDate *string `type:"string"`
+
 	// The name of the Maintenance Window.
 	Name *string `min:"3" type:"string"`
 
@@ -30035,6 +32319,18 @@ type UpdateMaintenanceWindowInput struct {
 
 	// The schedule of the Maintenance Window in the form of a cron or rate expression.
 	Schedule *string `min:"1" type:"string"`
+
+	// The time zone that the scheduled Maintenance Window executions are based
+	// on, in Internet Assigned Numbers Authority (IANA) format. For example: "America/Los_Angeles",
+	// "etc/UTC", or "Asia/Seoul". For more information, see the Time Zone Database
+	// (https://www.iana.org/time-zones) on the IANA website.
+	ScheduleTimezone *string `type:"string"`
+
+	// The time zone that the scheduled Maintenance Window executions are based
+	// on, in Internet Assigned Numbers Authority (IANA) format. For example: "America/Los_Angeles",
+	// "etc/UTC", or "Asia/Seoul". For more information, see the Time Zone Database
+	// (https://www.iana.org/time-zones) on the IANA website.
+	StartDate *string `type:"string"`
 
 	// The ID of the Maintenance Window to update.
 	//
@@ -30110,6 +32406,12 @@ func (s *UpdateMaintenanceWindowInput) SetEnabled(v bool) *UpdateMaintenanceWind
 	return s
 }
 
+// SetEndDate sets the EndDate field's value.
+func (s *UpdateMaintenanceWindowInput) SetEndDate(v string) *UpdateMaintenanceWindowInput {
+	s.EndDate = &v
+	return s
+}
+
 // SetName sets the Name field's value.
 func (s *UpdateMaintenanceWindowInput) SetName(v string) *UpdateMaintenanceWindowInput {
 	s.Name = &v
@@ -30125,6 +32427,18 @@ func (s *UpdateMaintenanceWindowInput) SetReplace(v bool) *UpdateMaintenanceWind
 // SetSchedule sets the Schedule field's value.
 func (s *UpdateMaintenanceWindowInput) SetSchedule(v string) *UpdateMaintenanceWindowInput {
 	s.Schedule = &v
+	return s
+}
+
+// SetScheduleTimezone sets the ScheduleTimezone field's value.
+func (s *UpdateMaintenanceWindowInput) SetScheduleTimezone(v string) *UpdateMaintenanceWindowInput {
+	s.ScheduleTimezone = &v
+	return s
+}
+
+// SetStartDate sets the StartDate field's value.
+func (s *UpdateMaintenanceWindowInput) SetStartDate(v string) *UpdateMaintenanceWindowInput {
+	s.StartDate = &v
 	return s
 }
 
@@ -30154,11 +32468,27 @@ type UpdateMaintenanceWindowOutput struct {
 	// Whether the Maintenance Window is enabled.
 	Enabled *bool `type:"boolean"`
 
+	// The date and time, in ISO-8601 Extended format, for when the Maintenance
+	// Window is scheduled to become inactive. The Maintenance Window will not run
+	// after this specified time.
+	EndDate *string `type:"string"`
+
 	// The name of the Maintenance Window.
 	Name *string `min:"3" type:"string"`
 
 	// The schedule of the Maintenance Window in the form of a cron or rate expression.
 	Schedule *string `min:"1" type:"string"`
+
+	// The time zone that the scheduled Maintenance Window executions are based
+	// on, in Internet Assigned Numbers Authority (IANA) format. For example: "America/Los_Angeles",
+	// "etc/UTC", or "Asia/Seoul". For more information, see the Time Zone Database
+	// (https://www.iana.org/time-zones) on the IANA website.
+	ScheduleTimezone *string `type:"string"`
+
+	// The date and time, in ISO-8601 Extended format, for when the Maintenance
+	// Window is scheduled to become active. The Maintenance Window will not run
+	// before this specified time.
+	StartDate *string `type:"string"`
 
 	// The ID of the created Maintenance Window.
 	WindowId *string `min:"20" type:"string"`
@@ -30204,6 +32534,12 @@ func (s *UpdateMaintenanceWindowOutput) SetEnabled(v bool) *UpdateMaintenanceWin
 	return s
 }
 
+// SetEndDate sets the EndDate field's value.
+func (s *UpdateMaintenanceWindowOutput) SetEndDate(v string) *UpdateMaintenanceWindowOutput {
+	s.EndDate = &v
+	return s
+}
+
 // SetName sets the Name field's value.
 func (s *UpdateMaintenanceWindowOutput) SetName(v string) *UpdateMaintenanceWindowOutput {
 	s.Name = &v
@@ -30213,6 +32549,18 @@ func (s *UpdateMaintenanceWindowOutput) SetName(v string) *UpdateMaintenanceWind
 // SetSchedule sets the Schedule field's value.
 func (s *UpdateMaintenanceWindowOutput) SetSchedule(v string) *UpdateMaintenanceWindowOutput {
 	s.Schedule = &v
+	return s
+}
+
+// SetScheduleTimezone sets the ScheduleTimezone field's value.
+func (s *UpdateMaintenanceWindowOutput) SetScheduleTimezone(v string) *UpdateMaintenanceWindowOutput {
+	s.ScheduleTimezone = &v
+	return s
+}
+
+// SetStartDate sets the StartDate field's value.
+func (s *UpdateMaintenanceWindowOutput) SetStartDate(v string) *UpdateMaintenanceWindowOutput {
+	s.StartDate = &v
 	return s
 }
 
@@ -30904,6 +33252,21 @@ type UpdatePatchBaselineInput struct {
 	// in the AWS Systems Manager User Guide.
 	RejectedPatches []*string `type:"list"`
 
+	// The action for Patch Manager to take on patches included in the RejectedPackages
+	// list.
+	//
+	//    * ALLOW_AS_DEPENDENCY: A package in the Rejected patches list is installed
+	//    only if it is a dependency of another package. It is considered compliant
+	//    with the patch baseline, and its status is reported as InstalledOther.
+	//    This is the default action if no option is specified.
+	//
+	//    * BLOCK: Packages in the RejectedPatches list, and packages that include
+	//    them as dependencies, are not installed under any circumstances. If a
+	//    package was installed before it was added to the Rejected patches list,
+	//    it is considered non-compliant with the patch baseline, and its status
+	//    is reported as InstalledRejected.
+	RejectedPatchesAction *string `type:"string" enum:"PatchAction"`
+
 	// If True, then all fields that are required by the CreatePatchBaseline action
 	// are also required for this API request. Optional fields that are not specified
 	// are set to null.
@@ -31020,6 +33383,12 @@ func (s *UpdatePatchBaselineInput) SetRejectedPatches(v []*string) *UpdatePatchB
 	return s
 }
 
+// SetRejectedPatchesAction sets the RejectedPatchesAction field's value.
+func (s *UpdatePatchBaselineInput) SetRejectedPatchesAction(v string) *UpdatePatchBaselineInput {
+	s.RejectedPatchesAction = &v
+	return s
+}
+
 // SetReplace sets the Replace field's value.
 func (s *UpdatePatchBaselineInput) SetReplace(v bool) *UpdatePatchBaselineInput {
 	s.Replace = &v
@@ -31073,6 +33442,11 @@ type UpdatePatchBaselineOutput struct {
 
 	// A list of explicitly rejected patches for the baseline.
 	RejectedPatches []*string `type:"list"`
+
+	// The action specified to take on patches included in the RejectedPatches list.
+	// A patch can be allowed only if it is a dependency of another package, or
+	// blocked entirely along with packages that include it as a dependency.
+	RejectedPatchesAction *string `type:"string" enum:"PatchAction"`
 
 	// Information about the patches to use to update the instances, including target
 	// operating systems and source repositories. Applies to Linux instances only.
@@ -31161,11 +33535,34 @@ func (s *UpdatePatchBaselineOutput) SetRejectedPatches(v []*string) *UpdatePatch
 	return s
 }
 
+// SetRejectedPatchesAction sets the RejectedPatchesAction field's value.
+func (s *UpdatePatchBaselineOutput) SetRejectedPatchesAction(v string) *UpdatePatchBaselineOutput {
+	s.RejectedPatchesAction = &v
+	return s
+}
+
 // SetSources sets the Sources field's value.
 func (s *UpdatePatchBaselineOutput) SetSources(v []*PatchSource) *UpdatePatchBaselineOutput {
 	s.Sources = v
 	return s
 }
+
+const (
+	// AssociationComplianceSeverityCritical is a AssociationComplianceSeverity enum value
+	AssociationComplianceSeverityCritical = "CRITICAL"
+
+	// AssociationComplianceSeverityHigh is a AssociationComplianceSeverity enum value
+	AssociationComplianceSeverityHigh = "HIGH"
+
+	// AssociationComplianceSeverityMedium is a AssociationComplianceSeverity enum value
+	AssociationComplianceSeverityMedium = "MEDIUM"
+
+	// AssociationComplianceSeverityLow is a AssociationComplianceSeverity enum value
+	AssociationComplianceSeverityLow = "LOW"
+
+	// AssociationComplianceSeverityUnspecified is a AssociationComplianceSeverity enum value
+	AssociationComplianceSeverityUnspecified = "UNSPECIFIED"
+)
 
 const (
 	// AssociationExecutionFilterKeyExecutionId is a AssociationExecutionFilterKey enum value
@@ -31415,6 +33812,14 @@ const (
 )
 
 const (
+	// ConnectionStatusConnected is a ConnectionStatus enum value
+	ConnectionStatusConnected = "Connected"
+
+	// ConnectionStatusNotConnected is a ConnectionStatus enum value
+	ConnectionStatusNotConnected = "NotConnected"
+)
+
+const (
 	// DescribeActivationsFilterKeysActivationIds is a DescribeActivationsFilterKeys enum value
 	DescribeActivationsFilterKeysActivationIds = "ActivationIds"
 
@@ -31491,6 +33896,9 @@ const (
 
 	// DocumentTypeAutomation is a DocumentType enum value
 	DocumentTypeAutomation = "Automation"
+
+	// DocumentTypeSession is a DocumentType enum value
+	DocumentTypeSession = "Session"
 )
 
 const (
@@ -31726,11 +34134,22 @@ const (
 )
 
 const (
+	// PatchActionAllowAsDependency is a PatchAction enum value
+	PatchActionAllowAsDependency = "ALLOW_AS_DEPENDENCY"
+
+	// PatchActionBlock is a PatchAction enum value
+	PatchActionBlock = "BLOCK"
+)
+
+const (
 	// PatchComplianceDataStateInstalled is a PatchComplianceDataState enum value
 	PatchComplianceDataStateInstalled = "INSTALLED"
 
 	// PatchComplianceDataStateInstalledOther is a PatchComplianceDataState enum value
 	PatchComplianceDataStateInstalledOther = "INSTALLED_OTHER"
+
+	// PatchComplianceDataStateInstalledRejected is a PatchComplianceDataState enum value
+	PatchComplianceDataStateInstalledRejected = "INSTALLED_REJECTED"
 
 	// PatchComplianceDataStateMissing is a PatchComplianceDataState enum value
 	PatchComplianceDataStateMissing = "MISSING"
@@ -31857,6 +34276,51 @@ const (
 
 	// ResourceTypeForTaggingPatchBaseline is a ResourceTypeForTagging enum value
 	ResourceTypeForTaggingPatchBaseline = "PatchBaseline"
+)
+
+const (
+	// SessionFilterKeyInvokedAfter is a SessionFilterKey enum value
+	SessionFilterKeyInvokedAfter = "InvokedAfter"
+
+	// SessionFilterKeyInvokedBefore is a SessionFilterKey enum value
+	SessionFilterKeyInvokedBefore = "InvokedBefore"
+
+	// SessionFilterKeyTarget is a SessionFilterKey enum value
+	SessionFilterKeyTarget = "Target"
+
+	// SessionFilterKeyOwner is a SessionFilterKey enum value
+	SessionFilterKeyOwner = "Owner"
+
+	// SessionFilterKeyStatus is a SessionFilterKey enum value
+	SessionFilterKeyStatus = "Status"
+)
+
+const (
+	// SessionStateActive is a SessionState enum value
+	SessionStateActive = "Active"
+
+	// SessionStateHistory is a SessionState enum value
+	SessionStateHistory = "History"
+)
+
+const (
+	// SessionStatusConnected is a SessionStatus enum value
+	SessionStatusConnected = "Connected"
+
+	// SessionStatusConnecting is a SessionStatus enum value
+	SessionStatusConnecting = "Connecting"
+
+	// SessionStatusDisconnected is a SessionStatus enum value
+	SessionStatusDisconnected = "Disconnected"
+
+	// SessionStatusTerminated is a SessionStatus enum value
+	SessionStatusTerminated = "Terminated"
+
+	// SessionStatusTerminating is a SessionStatus enum value
+	SessionStatusTerminating = "Terminating"
+
+	// SessionStatusFailed is a SessionStatus enum value
+	SessionStatusFailed = "Failed"
 )
 
 const (

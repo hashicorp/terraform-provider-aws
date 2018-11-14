@@ -15,7 +15,7 @@ func TestAccDataSourceS3Bucket_basic(t *testing.T) {
 	region := testAccGetRegion()
 	hostedZoneID, _ := HostedZoneIDForRegion(region)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -40,7 +40,7 @@ func TestAccDataSourceS3Bucket_website(t *testing.T) {
 	rInt := acctest.RandInt()
 	region := testAccGetRegion()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
