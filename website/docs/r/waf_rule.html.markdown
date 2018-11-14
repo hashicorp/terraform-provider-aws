@@ -39,7 +39,7 @@ resource "aws_waf_rule" "wafrule" {
 
 The following arguments are supported:
 
-* `metric_name` - (Required) The name or description for the Amazon CloudWatch metric of this rule.
+* `metric_name` - (Required) The name or description for the Amazon CloudWatch metric of this rule. The name can contain only alphanumeric characters (A-Z, a-z, 0-9); the name can't contain whitespace.
 * `name` - (Required) The name or description of the rule.
 * `predicates` - (Optional) One of ByteMatchSet, IPSet, SizeConstraintSet, SqlInjectionMatchSet, or XssMatchSet objects to include in a rule.
 
