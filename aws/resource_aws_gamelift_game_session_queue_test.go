@@ -170,6 +170,11 @@ func TestAccAWSGameliftGameSessionQueue_basic(t *testing.T) {
 						"timeout_in_seconds", fmt.Sprintf("%d", uTimeoutInSeconds)),
 				),
 			},
+			{
+				ResourceName:      "aws_gamelift_game_session_queue.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }

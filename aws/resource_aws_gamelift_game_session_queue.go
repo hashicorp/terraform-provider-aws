@@ -15,6 +15,9 @@ func resourceAwsGameliftGameSessionQueue() *schema.Resource {
 		Read:   resourceAwsGameliftGameSessionQueueRead,
 		Update: resourceAwsGameliftGameSessionQueueUpdate,
 		Delete: resourceAwsGameliftGameSessionQueueDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"destinations": {
