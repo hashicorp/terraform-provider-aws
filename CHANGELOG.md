@@ -17,6 +17,7 @@ ENHANCEMENTS:
 * resource/aws_elastic_transcoder_pipeline: Support resource import [GH-6388]
 * resource/aws_elastic_transcoder_preset: Support resource import [GH-6388]
 * resource/aws_lambda_event_source_mapping: Add `starting_position_timestamp` argument [GH-6437]
+* resource/aws_route53_health_check: Provide plan-time validation for `type` [GH-6460]
 * resource/aws_ses_receipt_rule: Support resource import [GH-6237]
 * resource/aws_ssm_maintenance_window_task: Add `description` and `name` arguments [GH-5762]
 
@@ -24,6 +25,7 @@ BUG FIXES:
 
 * data-source/aws_ebs_snapshot: Fix `most_recent` ordering [GH-6414]
 * resource/aws_cloudwatch_log_metric_filter: Properly leave `default_value` empty when unset [GH-5933]
+* resource/aws_route53_health_check: Properly read `child_healthchecks` into Terraform state [GH-6460]
 * resource/aws_security_group_rule: Support all non-zero `from_port` and `to_port` configurations with `protocol` ALL/-1 [GH-6423]
 * resource/aws_sns_platform_application: Properly trigger resource recreation when deleted outside Terraform [GH-6436]
 * service/ec2: Allow `tags` and `volume_tags` updates to retry based on SDK retries instead of time bounds for EC2 throttling [GH-3586]
