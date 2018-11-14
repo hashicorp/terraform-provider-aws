@@ -74,22 +74,22 @@ func resourceAwsGameliftGameSessionQueueCreate(d *schema.ResourceData, meta inte
 		return fmt.Errorf("error creating Gamelift Game Session Queue: %s", err)
 	}
 
-	d.SetId(*out.GameSessionQueue.GameSessionQueueArn)
+	d.SetId(*out.GameSessionQueue.Name)
 
 	return resourceAwsGameliftGameSessionQueueRead(d, meta)
 }
 
 func resourceAwsGameliftGameSessionQueueRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).gameliftconn
-	log.Printf("[INFO] Describing Gamelift Session Queues: %s", d.Get("name"))
+	log.Printf("[INFO] Describing Gamelift Session Queues: %s", d.Id())
 	limit := int64(1)
 	out, err := conn.DescribeGameSessionQueues(&gamelift.DescribeGameSessionQueuesInput{
-		Names: aws.StringSlice([]string{d.Get("name").(string)}),
+		Names: aws.StringSlice([]string{d.Id()}),
 		Limit: &limit,
 	})
 	if err != nil {
 		if isAWSErr(err, gamelift.ErrCodeNotFoundException, "") {
-			log.Printf("[WARN] Gamelift Session Queues (%s) not found, removing from state", d.Get("name"))
+			log.Printf("[WARN] Gamelift Session Queues (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
@@ -98,13 +98,13 @@ func resourceAwsGameliftGameSessionQueueRead(d *schema.ResourceData, meta interf
 	sessionQueues := out.GameSessionQueues
 
 	if len(sessionQueues) < 1 {
-		log.Printf("[WARN] Gamelift Session Queue (%s) not found, removing from state", d.Get("name"))
+		log.Printf("[WARN] Gamelift Session Queue (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 	if len(sessionQueues) != 1 {
 		return fmt.Errorf("expected exactly 1 Gamelift Session Queues, found %d under %q",
-			len(sessionQueues), d.Get("name"))
+			len(sessionQueues), d.Id())
 	}
 	sessionQueue := sessionQueues[0]
 
@@ -149,12 +149,10 @@ func flattenGameliftPlayerLatencyPolicies(playerLatencyPolicies []*gamelift.Play
 func resourceAwsGameliftGameSessionQueueUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).gameliftconn
 
-	name := d.Get("name").(string)
-
-	log.Printf("[INFO] Updating Gamelift Session Queue: %s", name)
+	log.Printf("[INFO] Updating Gamelift Session Queue: %s", d.Id())
 
 	input := gamelift.UpdateGameSessionQueueInput{
-		Name:                  aws.String(d.Get("name").(string)),
+		Name:                  aws.String(d.Id()),
 		Destinations:          expandGameliftGameSessionQueueDestinations(d.Get("destinations").([]interface{})),
 		PlayerLatencyPolicies: expandGameliftGameSessionPlayerLatencyPolicies(d.Get("player_latency_policy").([]interface{})),
 		TimeoutInSeconds:      aws.Int64(int64(d.Get("timeout_in_seconds").(int))),
@@ -170,10 +168,9 @@ func resourceAwsGameliftGameSessionQueueUpdate(d *schema.ResourceData, meta inte
 
 func resourceAwsGameliftGameSessionQueueDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).gameliftconn
-	name := d.Get("name").(string)
-	log.Printf("[INFO] Deleting Gamelift Session Queue: %s", name)
+	log.Printf("[INFO] Deleting Gamelift Session Queue: %s", d.Id())
 	_, err := conn.DeleteGameSessionQueue(&gamelift.DeleteGameSessionQueueInput{
-		Name: aws.String(name),
+		Name: aws.String(d.Id()),
 	})
 	if isAWSErr(err, gamelift.ErrCodeNotFoundException, "") {
 		return nil
