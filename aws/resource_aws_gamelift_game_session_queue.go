@@ -71,11 +71,10 @@ func resourceAwsGameliftGameSessionQueueCreate(d *schema.ResourceData, meta inte
 	log.Printf("[INFO] Creating Gamelift Session Queue: %s", input)
 	out, err := conn.CreateGameSessionQueue(&input)
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating Gamelift Game Session Queue: %s", err)
 	}
 
 	d.SetId(*out.GameSessionQueue.GameSessionQueueArn)
-	d.Set("name", out.GameSessionQueue.Name)
 
 	return resourceAwsGameliftGameSessionQueueRead(d, meta)
 }
@@ -94,7 +93,7 @@ func resourceAwsGameliftGameSessionQueueRead(d *schema.ResourceData, meta interf
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("error reading Gamelift Game Session Queue (%s): %s", d.Id(), err)
 	}
 	sessionQueues := out.GameSessionQueues
 
@@ -112,7 +111,9 @@ func resourceAwsGameliftGameSessionQueueRead(d *schema.ResourceData, meta interf
 	d.Set("arn", sessionQueue.GameSessionQueueArn)
 	d.Set("name", sessionQueue.Name)
 	d.Set("timeout_in_seconds", sessionQueue.TimeoutInSeconds)
-	d.Set("destinations", sessionQueue.Destinations)
+	if err := d.Set("destinations", flattenGameliftGameSessionQueueDestinations(sessionQueue.Destinations)); err != nil {
+		return fmt.Errorf("error setting destinations: %s", err)
+	}
 	if err := d.Set("player_latency_policy", flattenGameliftPlayerLatencyPolicies(sessionQueue.PlayerLatencyPolicies)); err != nil {
 		return fmt.Errorf("error setting player_latency_policy: %s", err)
 	}
@@ -120,16 +121,29 @@ func resourceAwsGameliftGameSessionQueueRead(d *schema.ResourceData, meta interf
 	return nil
 }
 
+func flattenGameliftGameSessionQueueDestinations(destinations []*gamelift.GameSessionQueueDestination) []interface{} {
+	l := make([]interface{}, 0)
+
+	for _, destination := range destinations {
+		if destination == nil {
+			continue
+		}
+		l = append(l, aws.StringValue(destination.DestinationArn))
+	}
+
+	return l
+}
+
 func flattenGameliftPlayerLatencyPolicies(playerLatencyPolicies []*gamelift.PlayerLatencyPolicy) []interface{} {
-	lst := []interface{}{}
+	l := make([]interface{}, 0)
 	for _, policy := range playerLatencyPolicies {
 		m := map[string]interface{}{
 			"maximum_individual_player_latency_milliseconds": aws.Int64Value(policy.MaximumIndividualPlayerLatencyMilliseconds),
 			"policy_duration_seconds":                        aws.Int64Value(policy.PolicyDurationSeconds),
 		}
-		lst = append(lst, m)
+		l = append(l, m)
 	}
-	return lst
+	return l
 }
 
 func resourceAwsGameliftGameSessionQueueUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -148,7 +162,7 @@ func resourceAwsGameliftGameSessionQueueUpdate(d *schema.ResourceData, meta inte
 
 	_, err := conn.UpdateGameSessionQueue(&input)
 	if err != nil {
-		return err
+		return fmt.Errorf("error updating Gamelift Game Session Queue (%s): %s", d.Id(), err)
 	}
 
 	return resourceAwsGameliftGameSessionQueueRead(d, meta)
