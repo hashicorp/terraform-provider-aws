@@ -93,34 +93,23 @@ func setVolumeTags(conn *ec2.EC2, d *schema.ResourceData) error {
 				if err != nil {
 					ec2err, ok := err.(awserr.Error)
 					if ok && strings.Contains(ec2err.Code(), ".NotFound") {
-						return resource.RetryableError(err)
+						return resource.RetryableError(err) // retry
 					}
 					return resource.NonRetryableError(err)
 				}
 				return nil
 			})
 			if err != nil {
-				if !isResourceTimeoutError(err) && !isAWSErr(err, "InvalidParameterValueException", "Your request has been throttled by EC2") {
-					return err
-				}
-				// Allow additional time for slower uploads or EC2 throttling
-				err := resource.Retry(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
+				// Retry without time bounds for EC2 throttling
+				if isResourceTimeoutError(err) {
 					log.Printf("[DEBUG] Removing volume tags: %#v from %s", remove, d.Id())
 					_, err := conn.DeleteTags(&ec2.DeleteTagsInput{
 						Resources: volumeIds,
 						Tags:      remove,
 					})
 					if err != nil {
-						if isAWSErr(err, "InvalidParameterValueException", "Your request has been throttled by EC2") {
-							log.Printf("[DEBUG] Received %s, retrying DeleteTags", err)
-							return resource.RetryableError(err)
-						}
-						return resource.NonRetryableError(err)
+						return err
 					}
-					return nil
-				})
-				if err != nil {
-					return err
 				}
 			}
 		}
@@ -134,34 +123,23 @@ func setVolumeTags(conn *ec2.EC2, d *schema.ResourceData) error {
 				if err != nil {
 					ec2err, ok := err.(awserr.Error)
 					if ok && strings.Contains(ec2err.Code(), ".NotFound") {
-						return resource.RetryableError(err)
+						return resource.RetryableError(err) // retry
 					}
 					return resource.NonRetryableError(err)
 				}
 				return nil
 			})
 			if err != nil {
-				if !isResourceTimeoutError(err) && !isAWSErr(err, "InvalidParameterValueException", "Your request has been throttled by EC2") {
-					return err
-				}
-				// Allow additional time for slower uploads or EC2 throttling
-				err := resource.Retry(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
+				// Retry without time bounds for EC2 throttling
+				if isResourceTimeoutError(err) {
 					log.Printf("[DEBUG] Creating vol tags: %s for %s", create, d.Id())
 					_, err := conn.CreateTags(&ec2.CreateTagsInput{
 						Resources: volumeIds,
 						Tags:      create,
 					})
 					if err != nil {
-						if isAWSErr(err, "InvalidParameterValueException", "Your request has been throttled by EC2") {
-							log.Printf("[DEBUG] Received %s, retrying CreateTags", err)
-							return resource.RetryableError(err)
-						}
-						return resource.NonRetryableError(err)
+						return err
 					}
-					return nil
-				})
-				if err != nil {
-					return err
 				}
 			}
 		}
@@ -181,7 +159,7 @@ func setTags(conn *ec2.EC2, d *schema.ResourceData) error {
 
 		// Set tags
 		if len(remove) > 0 {
-			err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+			err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 				log.Printf("[DEBUG] Removing tags: %#v from %s", remove, d.Id())
 				_, err := conn.DeleteTags(&ec2.DeleteTagsInput{
 					Resources: []*string{aws.String(d.Id())},
@@ -190,39 +168,28 @@ func setTags(conn *ec2.EC2, d *schema.ResourceData) error {
 				if err != nil {
 					ec2err, ok := err.(awserr.Error)
 					if ok && strings.Contains(ec2err.Code(), ".NotFound") {
-						return resource.RetryableError(err)
+						return resource.RetryableError(err) // retry
 					}
 					return resource.NonRetryableError(err)
 				}
 				return nil
 			})
 			if err != nil {
-				if !isResourceTimeoutError(err) && !isAWSErr(err, "InvalidParameterValueException", "Your request has been throttled by EC2") {
-					return err
-				}
-				// Allow additional time for slower uploads or EC2 throttling
-				err := resource.Retry(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
+				// Retry without time bounds for EC2 throttling
+				if isResourceTimeoutError(err) {
 					log.Printf("[DEBUG] Removing tags: %#v from %s", remove, d.Id())
 					_, err := conn.DeleteTags(&ec2.DeleteTagsInput{
 						Resources: []*string{aws.String(d.Id())},
 						Tags:      remove,
 					})
 					if err != nil {
-						if isAWSErr(err, "InvalidParameterValueException", "Your request has been throttled by EC2") {
-							log.Printf("[DEBUG] Received %s, retrying DeleteTags", err)
-							return resource.RetryableError(err)
-						}
-						return resource.NonRetryableError(err)
+						return err
 					}
-					return nil
-				})
-				if err != nil {
-					return err
 				}
 			}
 		}
 		if len(create) > 0 {
-			err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+			err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 				log.Printf("[DEBUG] Creating tags: %s for %s", create, d.Id())
 				_, err := conn.CreateTags(&ec2.CreateTagsInput{
 					Resources: []*string{aws.String(d.Id())},
@@ -231,34 +198,23 @@ func setTags(conn *ec2.EC2, d *schema.ResourceData) error {
 				if err != nil {
 					ec2err, ok := err.(awserr.Error)
 					if ok && strings.Contains(ec2err.Code(), ".NotFound") {
-						return resource.RetryableError(err)
+						return resource.RetryableError(err) // retry
 					}
 					return resource.NonRetryableError(err)
 				}
 				return nil
 			})
 			if err != nil {
-				if !isResourceTimeoutError(err) && !isAWSErr(err, "InvalidParameterValueException", "Your request has been throttled by EC2") {
-					return err
-				}
-				// Allow additional time for slower uploads or EC2 throttling
-				err := resource.Retry(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
+				// Retry without time bounds for EC2 throttling
+				if isResourceTimeoutError(err) {
 					log.Printf("[DEBUG] Creating tags: %s for %s", create, d.Id())
 					_, err := conn.CreateTags(&ec2.CreateTagsInput{
 						Resources: []*string{aws.String(d.Id())},
 						Tags:      create,
 					})
 					if err != nil {
-						if isAWSErr(err, "InvalidParameterValueException", "Your request has been throttled by EC2") {
-							log.Printf("[DEBUG] Received %s, retrying CreateTags", err)
-							return resource.RetryableError(err)
-						}
-						return resource.NonRetryableError(err)
+						return err
 					}
-					return nil
-				})
-				if err != nil {
-					return err
 				}
 			}
 		}
