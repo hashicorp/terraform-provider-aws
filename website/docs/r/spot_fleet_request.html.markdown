@@ -70,7 +70,7 @@ resource "aws_spot_fleet_request" "foo" {
   }
 
   launch_specification {
-    instance_type     = "m3.large"
+    instance_type     = "m5.large"
     ami               = "ami-d06a90b0"
     key_name          = "my-key"
     availability_zone = "us-west-2a"
