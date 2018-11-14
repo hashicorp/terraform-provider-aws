@@ -3,14 +3,16 @@ package aws
 import (
 	"fmt"
 	"testing"
+	"time"
+
+	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/gamelift"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	"log"
-	"strings"
 )
 
 const testAccGameliftGameSessionQueuePrefix = "tfAccQueue-"
@@ -229,26 +231,35 @@ func testAccCheckAWSGameliftGameSessionQueueDestroy(s *terraform.State) error {
 			continue
 		}
 
-		name := rs.Primary.Attributes["name"]
-		limit := int64(1)
-		out, err := conn.DescribeGameSessionQueues(&gamelift.DescribeGameSessionQueuesInput{
-			Names: aws.StringSlice([]string{name}),
-			Limit: &limit,
-		})
-		if isAWSErr(err, gamelift.ErrCodeNotFoundException, "") {
-			continue
+		input := &gamelift.DescribeGameSessionQueuesInput{
+			Names: aws.StringSlice([]string{rs.Primary.ID}),
+			Limit: aws.Int64(1),
 		}
+
+		// Deletions can take a few seconds
+		err := resource.Retry(30*time.Second, func() *resource.RetryError {
+			out, err := conn.DescribeGameSessionQueues(input)
+
+			if isAWSErr(err, gamelift.ErrCodeNotFoundException, "") {
+				return nil
+			}
+
+			if err != nil {
+				return resource.NonRetryableError(err)
+			}
+
+			attributes := out.GameSessionQueues
+
+			if len(attributes) > 0 {
+				return resource.RetryableError(fmt.Errorf("gamelift Session Queue still exists"))
+			}
+
+			return nil
+		})
+
 		if err != nil {
 			return err
 		}
-
-		attributes := out.GameSessionQueues
-
-		if len(attributes) > 0 {
-			return fmt.Errorf("gamelift Session Queue still exists")
-		}
-
-		return nil
 	}
 
 	return nil
