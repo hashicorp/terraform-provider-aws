@@ -1,34 +1,34 @@
-## 1.44.0 (Unreleased)
+## 1.44.0 (November 14, 2018)
 
 FEATURES:
 
-* **New Resource:** `aws_gamelift_game_session_queue` [GH-6335]
-* **New Resource:** `aws_glacier_vault_lock` [GH-6432]
+* **New Resource:** `aws_gamelift_game_session_queue` ([#6335](https://github.com/terraform-providers/terraform-provider-aws/issues/6335))
+* **New Resource:** `aws_glacier_vault_lock` ([#6432](https://github.com/terraform-providers/terraform-provider-aws/issues/6432))
 
 ENHANCEMENTS:
 
-* data-source/aws_eip: Add `filter` argument [GH-3525]
-* data-source/aws_eip: Add `tags` argument [GH-3505]
-* data-source/aws_eip: Support EC2-Classic Elastic IPs [GH-3522]
-* resource/aws_codebuild_project: Support `source` `report_build_status` for Bitbucket [GH-6426]
-* resource/aws_dlm_lifecycle_policy: Add `copy_tags` argument [GH-6445]
-* resource/aws_ebs_snapshot: Allow retries for `SnapshotCreationPerVolumeRateExceeded` errors on creation [GH-6414]
-* resource/aws_ebs_volume: Switch to tagging on creation [GH-6396]
-* resource/aws_elastic_transcoder_pipeline: Support resource import [GH-6388]
-* resource/aws_elastic_transcoder_preset: Support resource import [GH-6388]
-* resource/aws_lambda_event_source_mapping: Add `starting_position_timestamp` argument [GH-6437]
-* resource/aws_route53_health_check: Provide plan-time validation for `type` [GH-6460]
-* resource/aws_ses_receipt_rule: Support resource import [GH-6237]
-* resource/aws_ssm_maintenance_window_task: Add `description` and `name` arguments [GH-5762]
+* data-source/aws_eip: Add `filter` argument ([#3525](https://github.com/terraform-providers/terraform-provider-aws/issues/3525))
+* data-source/aws_eip: Add `tags` argument ([#3505](https://github.com/terraform-providers/terraform-provider-aws/issues/3505))
+* data-source/aws_eip: Support EC2-Classic Elastic IPs ([#3522](https://github.com/terraform-providers/terraform-provider-aws/issues/3522))
+* resource/aws_codebuild_project: Support `source` `report_build_status` for Bitbucket ([#6426](https://github.com/terraform-providers/terraform-provider-aws/issues/6426))
+* resource/aws_dlm_lifecycle_policy: Add `copy_tags` argument ([#6445](https://github.com/terraform-providers/terraform-provider-aws/issues/6445))
+* resource/aws_ebs_snapshot: Allow retries for `SnapshotCreationPerVolumeRateExceeded` errors on creation ([#6414](https://github.com/terraform-providers/terraform-provider-aws/issues/6414))
+* resource/aws_ebs_volume: Switch to tagging on creation ([#6396](https://github.com/terraform-providers/terraform-provider-aws/issues/6396))
+* resource/aws_elastic_transcoder_pipeline: Support resource import ([#6388](https://github.com/terraform-providers/terraform-provider-aws/issues/6388))
+* resource/aws_elastic_transcoder_preset: Support resource import ([#6388](https://github.com/terraform-providers/terraform-provider-aws/issues/6388))
+* resource/aws_lambda_event_source_mapping: Add `starting_position_timestamp` argument ([#6437](https://github.com/terraform-providers/terraform-provider-aws/issues/6437))
+* resource/aws_route53_health_check: Provide plan-time validation for `type` ([#6460](https://github.com/terraform-providers/terraform-provider-aws/issues/6460))
+* resource/aws_ses_receipt_rule: Support resource import ([#6237](https://github.com/terraform-providers/terraform-provider-aws/issues/6237))
+* resource/aws_ssm_maintenance_window_task: Add `description` and `name` arguments ([#5762](https://github.com/terraform-providers/terraform-provider-aws/issues/5762))
 
 BUG FIXES:
 
-* data-source/aws_ebs_snapshot: Fix `most_recent` ordering [GH-6414]
-* resource/aws_cloudwatch_log_metric_filter: Properly leave `default_value` empty when unset [GH-5933]
-* resource/aws_route53_health_check: Properly read `child_healthchecks` into Terraform state [GH-6460]
-* resource/aws_security_group_rule: Support all non-zero `from_port` and `to_port` configurations with `protocol` ALL/-1 [GH-6423]
-* resource/aws_sns_platform_application: Properly trigger resource recreation when deleted outside Terraform [GH-6436]
-* service/ec2: Allow `tags` and `volume_tags` updates to retry based on SDK retries instead of time bounds for EC2 throttling [GH-3586]
+* data-source/aws_ebs_snapshot: Fix `most_recent` ordering ([#6414](https://github.com/terraform-providers/terraform-provider-aws/issues/6414))
+* resource/aws_cloudwatch_log_metric_filter: Properly leave `default_value` empty when unset ([#5933](https://github.com/terraform-providers/terraform-provider-aws/issues/5933))
+* resource/aws_route53_health_check: Properly read `child_healthchecks` into Terraform state ([#6460](https://github.com/terraform-providers/terraform-provider-aws/issues/6460))
+* resource/aws_security_group_rule: Support all non-zero `from_port` and `to_port` configurations with `protocol` ALL/-1 ([#6423](https://github.com/terraform-providers/terraform-provider-aws/issues/6423))
+* resource/aws_sns_platform_application: Properly trigger resource recreation when deleted outside Terraform ([#6436](https://github.com/terraform-providers/terraform-provider-aws/issues/6436))
+* service/ec2: Allow `tags` and `volume_tags` updates to retry based on SDK retries instead of time bounds for EC2 throttling ([#3586](https://github.com/terraform-providers/terraform-provider-aws/issues/3586))
 
 ## 1.43.2 (November 10, 2018)
 
