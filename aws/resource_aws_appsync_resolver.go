@@ -2,10 +2,11 @@ package aws
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appsync"
 	"github.com/hashicorp/terraform/helper/schema"
-	"strings"
 )
 
 func resourceAwsAppsyncResolver() *schema.Resource {
@@ -67,7 +68,10 @@ func resourceAwsAppsyncResolverCreate(d *schema.ResourceData, meta interface{}) 
 		ResponseMappingTemplate: aws.String(d.Get("response_template").(string)),
 	}
 
-	_, err := conn.CreateResolver(input)
+	_, err := retryOnAwsCode(appsync.ErrCodeConcurrentModificationException, func() (interface{}, error) {
+		return conn.CreateResolver(input)
+	})
+
 	if err != nil {
 		return err
 	}
@@ -120,7 +124,10 @@ func resourceAwsAppsyncResolverUpdate(d *schema.ResourceData, meta interface{}) 
 		ResponseMappingTemplate: aws.String(d.Get("response_template").(string)),
 	}
 
-	_, err := conn.UpdateResolver(input)
+	_, err := retryOnAwsCode(appsync.ErrCodeConcurrentModificationException, func() (interface{}, error) {
+		return conn.UpdateResolver(input)
+	})
+
 	if err != nil {
 		return err
 	}
@@ -143,7 +150,10 @@ func resourceAwsAppsyncResolverDelete(d *schema.ResourceData, meta interface{}) 
 		FieldName: aws.String(fieldName),
 	}
 
-	_, err = conn.DeleteResolver(input)
+	_, err = retryOnAwsCode(appsync.ErrCodeConcurrentModificationException, func() (interface{}, error) {
+		return conn.DeleteResolver(input)
+	})
+
 	if err != nil {
 		return err
 	}
