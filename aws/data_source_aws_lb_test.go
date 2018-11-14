@@ -251,7 +251,6 @@ resource "aws_lb" "alb_test" {
   }
 }
 
-resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
@@ -313,14 +312,6 @@ resource "aws_alb" "alb_test" {
 
   tags = {
     TestName = "TestAccAWSALB_basic"
-  }
-}
-
-variable "subnets" {
-  default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = list(string)
-}
-
 data "aws_availability_zones" "available" {
   state = "available"
 
