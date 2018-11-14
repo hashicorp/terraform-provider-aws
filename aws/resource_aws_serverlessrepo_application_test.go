@@ -91,6 +91,36 @@ func TestAccAwsServerlessRepositoryApplication_updateVersion(t *testing.T) {
 	})
 }
 
+func TestAccAwsServerlessRepoApplication_updateFunctionName(t *testing.T) {
+	var stack cloudformation.Stack
+	stackName := fmt.Sprintf("tf-acc-test-update-name-%s", acctest.RandString(10))
+	const initialName = "FuncName1"
+	const updatedName = "FuncName2"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCloudFormationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSServerlessRepositoryApplicationConfig_functionName(stackName, initialName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckerverlessRepositoryApplicationExists("aws_serverlessrepository_application.postgres-rotator", &stack),
+					resource.TestCheckResourceAttr("aws_serverlessrepository_application.postgres-rotator", "application_id", "arn:aws:serverlessrepo:us-east-1:297356227824:applications/SecretsManagerRDSPostgreSQLRotationSingleUser"),
+					resource.TestCheckResourceAttr("aws_serverlessrepository_application.postgres-rotator", "parameters.functionName", initialName),
+				),
+			},
+			{
+				Config: testAccAWSServerlessRepositoryApplicationConfig_functionName(stackName, updatedName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckerverlessRepositoryApplicationExists("aws_serverlessrepository_application.postgres-rotator", &stack),
+					resource.TestCheckResourceAttr("aws_serverlessrepository_application.postgres-rotator", "parameters.functionName", updatedName),
+				),
+			},
+		},
+	})
+}
+
 func testAccAwsServerlessRepositoryApplicationConfig(stackName string) string {
 	return fmt.Sprintf(`
 resource "aws_serverlessrepository_application" "postgres-rotator" {
@@ -101,6 +131,18 @@ resource "aws_serverlessrepository_application" "postgres-rotator" {
     endpoint     = "secretsmanager.us-east-2.amazonaws.com"
   }
 }`, stackName)
+}
+
+func testAccAWSServerlessRepositoryApplicationConfig_functionName(stackName, functionName string) string {
+	return fmt.Sprintf(`
+resource "aws_serverlessrepository_application" "postgres-rotator" {
+  name           = "%[1]s"
+  application_id = "arn:aws:serverlessrepo:us-east-1:297356227824:applications/SecretsManagerRDSPostgreSQLRotationSingleUser"
+  parameters = {
+    functionName = "%[2]s"
+    endpoint     = "secretsmanager.us-east-2.amazonaws.com"
+  }
+}`, stackName, functionName)
 }
 
 func testAccAWSServerlessRepositoryApplicationConfig_versioned(stackName, version string) string {

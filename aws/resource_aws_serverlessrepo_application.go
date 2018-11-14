@@ -18,7 +18,7 @@ func resourceAwsServerlessRepositoryApplication() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsServerlessRepositoryApplicationCreate,
 		Read:   resourceAwsServerlessRepositoryApplicationRead,
-		//Update: resourceAwsServerlessRepositoryApplicationUpdate,
+		Update: resourceAwsServerlessRepositoryApplicationUpdate,
 		Delete: resourceAwsServerlessRepositoryApplicationDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -263,6 +263,107 @@ func resourceAwsServerlessRepositoryApplicationRead(d *schema.ResourceData, meta
 	}
 
 	return nil
+}
+
+func resourceAwsServerlessRepositoryApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).cfconn
+
+	input := &cloudformation.CreateChangeSetInput{
+		StackName:           aws.String(d.Id()),
+		UsePreviousTemplate: aws.Bool(true),
+		ChangeSetType:       aws.String("UPDATE"),
+	}
+
+	input.ChangeSetName = aws.String(fmt.Sprintf("%s-%s",
+		d.Get("name").(string),
+		time.Now().UTC().Format("20060102150405999999999")))
+
+	// Parameters must be present whether they are changed or not
+	if v, ok := d.GetOk("parameters"); ok {
+		input.Parameters = expandCloudFormationParameters(v.(map[string]interface{}))
+	}
+
+	capabilities := d.Get("capabilities")
+	input.Capabilities = expandStringList(capabilities.(*schema.Set).List())
+
+	log.Printf("[DEBUG] Creating CloudFormation change set: %s", input)
+	changeSetResponse, err := conn.CreateChangeSet(input)
+	if err != nil {
+		return fmt.Errorf("Creating CloudFormation change set failed: %s", err.Error())
+	}
+
+	err = waitForCreateChangeSet(d, conn, changeSetResponse.Id)
+	if err != nil {
+		return err
+	}
+
+	executeRequest := cloudformation.ExecuteChangeSetInput{
+		ChangeSetName: changeSetResponse.Id,
+	}
+	log.Printf("[DEBUG] Executing Change Set: %s", executeRequest)
+	_, err = conn.ExecuteChangeSet(&executeRequest)
+	if err != nil {
+		return fmt.Errorf("Executing Change Set failed: %s", err.Error())
+	}
+
+	lastUpdatedTime, err := getLastCfEventTimestamp(d.Id(), conn)
+	if err != nil {
+		return err
+	}
+
+	var lastStatus string
+	var stackId string
+	wait := resource.StateChangeConf{
+		Pending: []string{
+			"UPDATE_COMPLETE_CLEANUP_IN_PROGRESS",
+			"UPDATE_IN_PROGRESS",
+			"UPDATE_ROLLBACK_IN_PROGRESS",
+			"UPDATE_ROLLBACK_COMPLETE_CLEANUP_IN_PROGRESS",
+		},
+		Target: []string{
+			"CREATE_COMPLETE", // If no stack update was performed
+			"UPDATE_COMPLETE",
+			"UPDATE_ROLLBACK_COMPLETE",
+			"UPDATE_ROLLBACK_FAILED",
+		},
+		Timeout:    d.Timeout(schema.TimeoutUpdate),
+		MinTimeout: 5 * time.Second,
+		Refresh: func() (interface{}, string, error) {
+			resp, err := conn.DescribeStacks(&cloudformation.DescribeStacksInput{
+				StackName: aws.String(d.Id()),
+			})
+			if err != nil {
+				log.Printf("[ERROR] Failed to describe stacks: %s", err)
+				return nil, "", err
+			}
+
+			stackId = aws.StringValue(resp.Stacks[0].StackId)
+
+			status := *resp.Stacks[0].StackStatus
+			lastStatus = status
+			log.Printf("[DEBUG] Current CloudFormation stack status: %q", status)
+
+			return resp, status, err
+		},
+	}
+
+	_, err = wait.WaitForState()
+	if err != nil {
+		return err
+	}
+
+	if lastStatus == "UPDATE_ROLLBACK_COMPLETE" || lastStatus == "UPDATE_ROLLBACK_FAILED" {
+		reasons, err := getCloudFormationRollbackReasons(stackId, lastUpdatedTime, conn)
+		if err != nil {
+			return fmt.Errorf("Failed getting details about rollback: %q", err.Error())
+		}
+
+		return fmt.Errorf("%s: %q", lastStatus, reasons)
+	}
+
+	log.Printf("[DEBUG] CloudFormation stack %q has been updated", stackId)
+
+	return resourceAwsServerlessRepositoryApplicationRead(d, meta)
 }
 
 func resourceAwsServerlessRepositoryApplicationDelete(d *schema.ResourceData, meta interface{}) error {
