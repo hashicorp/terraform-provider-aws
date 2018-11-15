@@ -30,6 +30,8 @@ func TestAccAWSSSMMaintenanceWindowTarget_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_ssm_maintenance_window_target.target", "targets.1.values.#", "2"),
 					resource.TestCheckResourceAttr("aws_ssm_maintenance_window_target.target", "targets.1.values.0", "acceptance_test"),
 					resource.TestCheckResourceAttr("aws_ssm_maintenance_window_target.target", "targets.1.values.1", "acceptance_test2"),
+					resource.TestCheckResourceAttr("aws_ssm_maintenance_window_target.target", "name", "TestMaintenanceWindowTarget"),
+					resource.TestCheckResourceAttr("aws_ssm_maintenance_window_target.target", "description", "This resource is for test purpose only"),
 				),
 			},
 			{
@@ -59,6 +61,8 @@ func TestAccAWSSSMMaintenanceWindowTarget_update(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_ssm_maintenance_window_target.target", "targets.1.values.#", "2"),
 					resource.TestCheckResourceAttr("aws_ssm_maintenance_window_target.target", "targets.1.values.0", "acceptance_test"),
 					resource.TestCheckResourceAttr("aws_ssm_maintenance_window_target.target", "targets.1.values.1", "acceptance_test2"),
+					resource.TestCheckResourceAttr("aws_ssm_maintenance_window_target.target", "name", "TestMaintenanceWindowTarget"),
+					resource.TestCheckResourceAttr("aws_ssm_maintenance_window_target.target", "description", "This resource is for test purpose only"),
 				),
 			},
 			{
@@ -72,6 +76,8 @@ func TestAccAWSSSMMaintenanceWindowTarget_update(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_ssm_maintenance_window_target.target", "targets.1.key", "tag:Updated"),
 					resource.TestCheckResourceAttr("aws_ssm_maintenance_window_target.target", "targets.1.values.#", "1"),
 					resource.TestCheckResourceAttr("aws_ssm_maintenance_window_target.target", "targets.1.values.0", "new-value"),
+					resource.TestCheckResourceAttr("aws_ssm_maintenance_window_target.target", "name", "TestMaintenanceWindowTarget"),
+					resource.TestCheckResourceAttr("aws_ssm_maintenance_window_target.target", "description", "This resource is for test purpose only - updated"),
 				),
 			},
 		},
@@ -160,6 +166,8 @@ resource "aws_ssm_maintenance_window" "foo" {
 }
 
 resource "aws_ssm_maintenance_window_target" "target" {
+	name = "TestMaintenanceWindowTarget"
+	description = "This resource is for test purpose only"
   window_id = "${aws_ssm_maintenance_window.foo.id}"
   resource_type = "INSTANCE"
   targets {
@@ -184,6 +192,8 @@ resource "aws_ssm_maintenance_window" "foo" {
 }
 
 resource "aws_ssm_maintenance_window_target" "target" {
+	name = "TestMaintenanceWindowTarget"
+	description = "This resource is for test purpose only - updated"
   window_id = "${aws_ssm_maintenance_window.foo.id}"
   resource_type = "INSTANCE"
   owner_information = "something"
