@@ -1,4 +1,9 @@
 ## 1.45.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_autoscaling_group: Mixed Instances Policy support [GH-6465]
+
 ## 1.44.0 (November 14, 2018)
 
 FEATURES:
