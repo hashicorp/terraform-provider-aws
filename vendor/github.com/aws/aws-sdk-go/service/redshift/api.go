@@ -322,6 +322,94 @@ func (c *Redshift) AuthorizeSnapshotAccessWithContext(ctx aws.Context, input *Au
 	return out, req.Send()
 }
 
+const opCancelResize = "CancelResize"
+
+// CancelResizeRequest generates a "aws/request.Request" representing the
+// client's request for the CancelResize operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CancelResize for more information on using the CancelResize
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CancelResizeRequest method.
+//    req, resp := client.CancelResizeRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/redshift-2012-12-01/CancelResize
+func (c *Redshift) CancelResizeRequest(input *CancelResizeInput) (req *request.Request, output *CancelResizeOutput) {
+	op := &request.Operation{
+		Name:       opCancelResize,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &CancelResizeInput{}
+	}
+
+	output = &CancelResizeOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CancelResize API operation for Amazon Redshift.
+//
+// Cancels a resize operation.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Redshift's
+// API operation CancelResize for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeClusterNotFoundFault "ClusterNotFound"
+//   The ClusterIdentifier parameter does not refer to an existing cluster.
+//
+//   * ErrCodeResizeNotFoundFault "ResizeNotFound"
+//   A resize operation for the specified cluster is not found.
+//
+//   * ErrCodeInvalidClusterStateFault "InvalidClusterState"
+//   The specified cluster is not in the available state.
+//
+//   * ErrCodeUnsupportedOperationFault "UnsupportedOperation"
+//   The requested operation isn't supported.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/redshift-2012-12-01/CancelResize
+func (c *Redshift) CancelResize(input *CancelResizeInput) (*CancelResizeOutput, error) {
+	req, out := c.CancelResizeRequest(input)
+	return out, req.Send()
+}
+
+// CancelResizeWithContext is the same as CancelResize with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CancelResize for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Redshift) CancelResizeWithContext(ctx aws.Context, input *CancelResizeInput, opts ...request.Option) (*CancelResizeOutput, error) {
+	req, out := c.CancelResizeRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opCopyClusterSnapshot = "CopyClusterSnapshot"
 
 // CopyClusterSnapshotRequest generates a "aws/request.Request" representing the
@@ -2425,6 +2513,80 @@ func (c *Redshift) DeleteTagsWithContext(ctx aws.Context, input *DeleteTagsInput
 	return out, req.Send()
 }
 
+const opDescribeAccountAttributes = "DescribeAccountAttributes"
+
+// DescribeAccountAttributesRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeAccountAttributes operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeAccountAttributes for more information on using the DescribeAccountAttributes
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeAccountAttributesRequest method.
+//    req, resp := client.DescribeAccountAttributesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/redshift-2012-12-01/DescribeAccountAttributes
+func (c *Redshift) DescribeAccountAttributesRequest(input *DescribeAccountAttributesInput) (req *request.Request, output *DescribeAccountAttributesOutput) {
+	op := &request.Operation{
+		Name:       opDescribeAccountAttributes,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeAccountAttributesInput{}
+	}
+
+	output = &DescribeAccountAttributesOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeAccountAttributes API operation for Amazon Redshift.
+//
+// Returns a list of attributes attached to an account
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Redshift's
+// API operation DescribeAccountAttributes for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/redshift-2012-12-01/DescribeAccountAttributes
+func (c *Redshift) DescribeAccountAttributes(input *DescribeAccountAttributesInput) (*DescribeAccountAttributesOutput, error) {
+	req, out := c.DescribeAccountAttributesRequest(input)
+	return out, req.Send()
+}
+
+// DescribeAccountAttributesWithContext is the same as DescribeAccountAttributes with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeAccountAttributes for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Redshift) DescribeAccountAttributesWithContext(ctx aws.Context, input *DescribeAccountAttributesInput, opts ...request.Option) (*DescribeAccountAttributesOutput, error) {
+	req, out := c.DescribeAccountAttributesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDescribeClusterDbRevisions = "DescribeClusterDbRevisions"
 
 // DescribeClusterDbRevisionsRequest generates a "aws/request.Request" representing the
@@ -2481,6 +2643,9 @@ func (c *Redshift) DescribeClusterDbRevisionsRequest(input *DescribeClusterDbRev
 // Returned Error Codes:
 //   * ErrCodeClusterNotFoundFault "ClusterNotFound"
 //   The ClusterIdentifier parameter does not refer to an existing cluster.
+//
+//   * ErrCodeInvalidClusterStateFault "InvalidClusterState"
+//   The specified cluster is not in the available state.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/redshift-2012-12-01/DescribeClusterDbRevisions
 func (c *Redshift) DescribeClusterDbRevisions(input *DescribeClusterDbRevisionsInput) (*DescribeClusterDbRevisionsOutput, error) {
@@ -6198,6 +6363,86 @@ func (c *Redshift) ModifyClusterIamRolesWithContext(ctx aws.Context, input *Modi
 	return out, req.Send()
 }
 
+const opModifyClusterMaintenance = "ModifyClusterMaintenance"
+
+// ModifyClusterMaintenanceRequest generates a "aws/request.Request" representing the
+// client's request for the ModifyClusterMaintenance operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ModifyClusterMaintenance for more information on using the ModifyClusterMaintenance
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ModifyClusterMaintenanceRequest method.
+//    req, resp := client.ModifyClusterMaintenanceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/redshift-2012-12-01/ModifyClusterMaintenance
+func (c *Redshift) ModifyClusterMaintenanceRequest(input *ModifyClusterMaintenanceInput) (req *request.Request, output *ModifyClusterMaintenanceOutput) {
+	op := &request.Operation{
+		Name:       opModifyClusterMaintenance,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ModifyClusterMaintenanceInput{}
+	}
+
+	output = &ModifyClusterMaintenanceOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ModifyClusterMaintenance API operation for Amazon Redshift.
+//
+// Modifies the maintenance settings of a cluster. For example, you can defer
+// a maintenance window. You can also update or cancel a deferment.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Redshift's
+// API operation ModifyClusterMaintenance for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeClusterNotFoundFault "ClusterNotFound"
+//   The ClusterIdentifier parameter does not refer to an existing cluster.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/redshift-2012-12-01/ModifyClusterMaintenance
+func (c *Redshift) ModifyClusterMaintenance(input *ModifyClusterMaintenanceInput) (*ModifyClusterMaintenanceOutput, error) {
+	req, out := c.ModifyClusterMaintenanceRequest(input)
+	return out, req.Send()
+}
+
+// ModifyClusterMaintenanceWithContext is the same as ModifyClusterMaintenance with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ModifyClusterMaintenance for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Redshift) ModifyClusterMaintenanceWithContext(ctx aws.Context, input *ModifyClusterMaintenanceInput, opts ...request.Option) (*ModifyClusterMaintenanceOutput, error) {
+	req, out := c.ModifyClusterMaintenanceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opModifyClusterParameterGroup = "ModifyClusterParameterGroup"
 
 // ModifyClusterParameterGroupRequest generates a "aws/request.Request" representing the
@@ -7612,6 +7857,39 @@ func (s *AcceptReservedNodeExchangeOutput) SetExchangedReservedNode(v *ReservedN
 	return s
 }
 
+// A name value pair that describes an aspect of an account.
+type AccountAttribute struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the attribute.
+	AttributeName *string `type:"string"`
+
+	// A list of attribute values.
+	AttributeValues []*AttributeValueTarget `locationNameList:"AttributeValueTarget" type:"list"`
+}
+
+// String returns the string representation
+func (s AccountAttribute) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AccountAttribute) GoString() string {
+	return s.String()
+}
+
+// SetAttributeName sets the AttributeName field's value.
+func (s *AccountAttribute) SetAttributeName(v string) *AccountAttribute {
+	s.AttributeName = &v
+	return s
+}
+
+// SetAttributeValues sets the AttributeValues field's value.
+func (s *AccountAttribute) SetAttributeValues(v []*AttributeValueTarget) *AccountAttribute {
+	s.AttributeValues = v
+	return s
+}
+
 // Describes an AWS customer account authorized to restore a snapshot.
 type AccountWithRestoreAccess struct {
 	_ struct{} `type:"structure"`
@@ -7643,6 +7921,30 @@ func (s *AccountWithRestoreAccess) SetAccountAlias(v string) *AccountWithRestore
 // SetAccountId sets the AccountId field's value.
 func (s *AccountWithRestoreAccess) SetAccountId(v string) *AccountWithRestoreAccess {
 	s.AccountId = &v
+	return s
+}
+
+// Describes an attribute value.
+type AttributeValueTarget struct {
+	_ struct{} `type:"structure"`
+
+	// The value of the attribute.
+	AttributeValue *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AttributeValueTarget) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AttributeValueTarget) GoString() string {
+	return s.String()
+}
+
+// SetAttributeValue sets the AttributeValue field's value.
+func (s *AttributeValueTarget) SetAttributeValue(v string) *AttributeValueTarget {
+	s.AttributeValue = &v
 	return s
 }
 
@@ -7859,6 +8161,222 @@ func (s *AvailabilityZone) SetSupportedPlatforms(v []*SupportedPlatform) *Availa
 	return s
 }
 
+type CancelResizeInput struct {
+	_ struct{} `type:"structure"`
+
+	// The unique identifier for the cluster whose resize operation you wish to
+	// cancel.
+	//
+	// ClusterIdentifier is a required field
+	ClusterIdentifier *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s CancelResizeInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CancelResizeInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CancelResizeInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CancelResizeInput"}
+	if s.ClusterIdentifier == nil {
+		invalidParams.Add(request.NewErrParamRequired("ClusterIdentifier"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetClusterIdentifier sets the ClusterIdentifier field's value.
+func (s *CancelResizeInput) SetClusterIdentifier(v string) *CancelResizeInput {
+	s.ClusterIdentifier = &v
+	return s
+}
+
+// Describes the result of a cluster resize operation.
+type CancelResizeOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The average rate of the resize operation over the last few minutes, measured
+	// in megabytes per second. After the resize operation completes, this value
+	// shows the average rate of the entire resize operation.
+	AvgResizeRateInMegaBytesPerSecond *float64 `type:"double"`
+
+	// The amount of seconds that have elapsed since the resize operation began.
+	// After the resize operation completes, this value shows the total actual time,
+	// in seconds, for the resize operation.
+	ElapsedTimeInSeconds *int64 `type:"long"`
+
+	// The estimated time remaining, in seconds, until the resize operation is complete.
+	// This value is calculated based on the average resize rate and the estimated
+	// amount of data remaining to be processed. Once the resize operation is complete,
+	// this value will be 0.
+	EstimatedTimeToCompletionInSeconds *int64 `type:"long"`
+
+	// The names of tables that have been completely imported .
+	//
+	// Valid Values: List of table names.
+	ImportTablesCompleted []*string `type:"list"`
+
+	// The names of tables that are being currently imported.
+	//
+	// Valid Values: List of table names.
+	ImportTablesInProgress []*string `type:"list"`
+
+	// The names of tables that have not been yet imported.
+	//
+	// Valid Values: List of table names
+	ImportTablesNotStarted []*string `type:"list"`
+
+	// An optional string to provide additional details about the resize action.
+	Message *string `type:"string"`
+
+	// While the resize operation is in progress, this value shows the current amount
+	// of data, in megabytes, that has been processed so far. When the resize operation
+	// is complete, this value shows the total amount of data, in megabytes, on
+	// the cluster, which may be more or less than TotalResizeDataInMegaBytes (the
+	// estimated total amount of data before resize).
+	ProgressInMegaBytes *int64 `type:"long"`
+
+	// An enum with possible values of ClassicResize and ElasticResize. These values
+	// describe the type of resize operation being performed.
+	ResizeType *string `type:"string"`
+
+	// The status of the resize operation.
+	//
+	// Valid Values: NONE | IN_PROGRESS | FAILED | SUCCEEDED | CANCELLING
+	Status *string `type:"string"`
+
+	// The cluster type after the resize operation is complete.
+	//
+	// Valid Values: multi-node | single-node
+	TargetClusterType *string `type:"string"`
+
+	// The type of encryption for the cluster after the resize is complete.
+	//
+	// Possible values are KMS and None. In the China region possible values are:
+	// Legacy and None.
+	TargetEncryptionType *string `type:"string"`
+
+	// The node type that the cluster will have after the resize operation is complete.
+	TargetNodeType *string `type:"string"`
+
+	// The number of nodes that the cluster will have after the resize operation
+	// is complete.
+	TargetNumberOfNodes *int64 `type:"integer"`
+
+	// The estimated total amount of data, in megabytes, on the cluster before the
+	// resize operation began.
+	TotalResizeDataInMegaBytes *int64 `type:"long"`
+}
+
+// String returns the string representation
+func (s CancelResizeOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CancelResizeOutput) GoString() string {
+	return s.String()
+}
+
+// SetAvgResizeRateInMegaBytesPerSecond sets the AvgResizeRateInMegaBytesPerSecond field's value.
+func (s *CancelResizeOutput) SetAvgResizeRateInMegaBytesPerSecond(v float64) *CancelResizeOutput {
+	s.AvgResizeRateInMegaBytesPerSecond = &v
+	return s
+}
+
+// SetElapsedTimeInSeconds sets the ElapsedTimeInSeconds field's value.
+func (s *CancelResizeOutput) SetElapsedTimeInSeconds(v int64) *CancelResizeOutput {
+	s.ElapsedTimeInSeconds = &v
+	return s
+}
+
+// SetEstimatedTimeToCompletionInSeconds sets the EstimatedTimeToCompletionInSeconds field's value.
+func (s *CancelResizeOutput) SetEstimatedTimeToCompletionInSeconds(v int64) *CancelResizeOutput {
+	s.EstimatedTimeToCompletionInSeconds = &v
+	return s
+}
+
+// SetImportTablesCompleted sets the ImportTablesCompleted field's value.
+func (s *CancelResizeOutput) SetImportTablesCompleted(v []*string) *CancelResizeOutput {
+	s.ImportTablesCompleted = v
+	return s
+}
+
+// SetImportTablesInProgress sets the ImportTablesInProgress field's value.
+func (s *CancelResizeOutput) SetImportTablesInProgress(v []*string) *CancelResizeOutput {
+	s.ImportTablesInProgress = v
+	return s
+}
+
+// SetImportTablesNotStarted sets the ImportTablesNotStarted field's value.
+func (s *CancelResizeOutput) SetImportTablesNotStarted(v []*string) *CancelResizeOutput {
+	s.ImportTablesNotStarted = v
+	return s
+}
+
+// SetMessage sets the Message field's value.
+func (s *CancelResizeOutput) SetMessage(v string) *CancelResizeOutput {
+	s.Message = &v
+	return s
+}
+
+// SetProgressInMegaBytes sets the ProgressInMegaBytes field's value.
+func (s *CancelResizeOutput) SetProgressInMegaBytes(v int64) *CancelResizeOutput {
+	s.ProgressInMegaBytes = &v
+	return s
+}
+
+// SetResizeType sets the ResizeType field's value.
+func (s *CancelResizeOutput) SetResizeType(v string) *CancelResizeOutput {
+	s.ResizeType = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *CancelResizeOutput) SetStatus(v string) *CancelResizeOutput {
+	s.Status = &v
+	return s
+}
+
+// SetTargetClusterType sets the TargetClusterType field's value.
+func (s *CancelResizeOutput) SetTargetClusterType(v string) *CancelResizeOutput {
+	s.TargetClusterType = &v
+	return s
+}
+
+// SetTargetEncryptionType sets the TargetEncryptionType field's value.
+func (s *CancelResizeOutput) SetTargetEncryptionType(v string) *CancelResizeOutput {
+	s.TargetEncryptionType = &v
+	return s
+}
+
+// SetTargetNodeType sets the TargetNodeType field's value.
+func (s *CancelResizeOutput) SetTargetNodeType(v string) *CancelResizeOutput {
+	s.TargetNodeType = &v
+	return s
+}
+
+// SetTargetNumberOfNodes sets the TargetNumberOfNodes field's value.
+func (s *CancelResizeOutput) SetTargetNumberOfNodes(v int64) *CancelResizeOutput {
+	s.TargetNumberOfNodes = &v
+	return s
+}
+
+// SetTotalResizeDataInMegaBytes sets the TotalResizeDataInMegaBytes field's value.
+func (s *CancelResizeOutput) SetTotalResizeDataInMegaBytes(v int64) *CancelResizeOutput {
+	s.TotalResizeDataInMegaBytes = &v
+	return s
+}
+
 // Describes a cluster.
 type Cluster struct {
 	_ struct{} `type:"structure"`
@@ -7909,6 +8427,8 @@ type Cluster struct {
 	//
 	//    * available
 	//
+	//    * cancelling-resize
+	//
 	//    * creating
 	//
 	//    * deleting
@@ -7951,6 +8471,13 @@ type Cluster struct {
 	// This same name is returned for the life of the cluster. If an initial database
 	// was not specified, a database named devdev was created by default.
 	DBName *string `type:"string"`
+
+	// Describes the status of a cluster while it is in the process of resizing
+	// with an incremental resize.
+	DataTransferProgress *DataTransferProgress `type:"structure"`
+
+	// Describes a group of DeferredMaintenanceWindow objects.
+	DeferredMaintenanceWindows []*DeferredMaintenanceWindow `locationNameList:"DeferredMaintenanceWindow" type:"list"`
 
 	// The status of the elastic IP (EIP) address.
 	ElasticIpStatus *ElasticIpStatus `type:"structure"`
@@ -8022,6 +8549,14 @@ type Cluster struct {
 	// A Boolean value that, if true, indicates that the cluster can be accessed
 	// from a public network.
 	PubliclyAccessible *bool `type:"boolean"`
+
+	// Returns the following:
+	//
+	//    * AllowCancelResize: a boolean value indicating if the resize operation
+	//    can be cancelled.
+	//
+	//    * ResizeType: Returns ClassicResize
+	ResizeInfo *ResizeInfo `type:"structure"`
 
 	// A value that describes the status of a cluster restore action. This parameter
 	// returns null if the cluster was not created by restoring a snapshot.
@@ -8139,6 +8674,18 @@ func (s *Cluster) SetDBName(v string) *Cluster {
 	return s
 }
 
+// SetDataTransferProgress sets the DataTransferProgress field's value.
+func (s *Cluster) SetDataTransferProgress(v *DataTransferProgress) *Cluster {
+	s.DataTransferProgress = v
+	return s
+}
+
+// SetDeferredMaintenanceWindows sets the DeferredMaintenanceWindows field's value.
+func (s *Cluster) SetDeferredMaintenanceWindows(v []*DeferredMaintenanceWindow) *Cluster {
+	s.DeferredMaintenanceWindows = v
+	return s
+}
+
 // SetElasticIpStatus sets the ElasticIpStatus field's value.
 func (s *Cluster) SetElasticIpStatus(v *ElasticIpStatus) *Cluster {
 	s.ElasticIpStatus = v
@@ -8238,6 +8785,12 @@ func (s *Cluster) SetPreferredMaintenanceWindow(v string) *Cluster {
 // SetPubliclyAccessible sets the PubliclyAccessible field's value.
 func (s *Cluster) SetPubliclyAccessible(v bool) *Cluster {
 	s.PubliclyAccessible = &v
+	return s
+}
+
+// SetResizeInfo sets the ResizeInfo field's value.
+func (s *Cluster) SetResizeInfo(v *ResizeInfo) *Cluster {
+	s.ResizeInfo = v
 	return s
 }
 
@@ -9890,7 +10443,7 @@ type CreateEventSubscriptionInput struct {
 	// Specifies the Amazon Redshift event categories to be published by the event
 	// notification subscription.
 	//
-	// Values: Configuration, Management, Monitoring, Security
+	// Values: configuration, management, monitoring, security
 	EventCategories []*string `locationNameList:"EventCategory" type:"list"`
 
 	// Specifies the Amazon Redshift event severity to be published by the event
@@ -10432,6 +10985,77 @@ func (s CreateTagsOutput) GoString() string {
 	return s.String()
 }
 
+// Describes the status of a cluster while it is in the process of resizing
+// with an incremental resize.
+type DataTransferProgress struct {
+	_ struct{} `type:"structure"`
+
+	// Describes the data transfer rate in MB's per second.
+	CurrentRateInMegaBytesPerSecond *float64 `type:"double"`
+
+	// Describes the total amount of data that has been transfered in MB's.
+	DataTransferredInMegaBytes *int64 `type:"long"`
+
+	// Describes the number of seconds that have elapsed during the data transfer.
+	ElapsedTimeInSeconds *int64 `type:"long"`
+
+	// Describes the estimated number of seconds remaining to complete the transfer.
+	EstimatedTimeToCompletionInSeconds *int64 `type:"long"`
+
+	// Describes the status of the cluster. While the transfer is in progress the
+	// status is transferringdata.
+	Status *string `type:"string"`
+
+	// Describes the total amount of data to be transfered in megabytes.
+	TotalDataInMegaBytes *int64 `type:"long"`
+}
+
+// String returns the string representation
+func (s DataTransferProgress) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DataTransferProgress) GoString() string {
+	return s.String()
+}
+
+// SetCurrentRateInMegaBytesPerSecond sets the CurrentRateInMegaBytesPerSecond field's value.
+func (s *DataTransferProgress) SetCurrentRateInMegaBytesPerSecond(v float64) *DataTransferProgress {
+	s.CurrentRateInMegaBytesPerSecond = &v
+	return s
+}
+
+// SetDataTransferredInMegaBytes sets the DataTransferredInMegaBytes field's value.
+func (s *DataTransferProgress) SetDataTransferredInMegaBytes(v int64) *DataTransferProgress {
+	s.DataTransferredInMegaBytes = &v
+	return s
+}
+
+// SetElapsedTimeInSeconds sets the ElapsedTimeInSeconds field's value.
+func (s *DataTransferProgress) SetElapsedTimeInSeconds(v int64) *DataTransferProgress {
+	s.ElapsedTimeInSeconds = &v
+	return s
+}
+
+// SetEstimatedTimeToCompletionInSeconds sets the EstimatedTimeToCompletionInSeconds field's value.
+func (s *DataTransferProgress) SetEstimatedTimeToCompletionInSeconds(v int64) *DataTransferProgress {
+	s.EstimatedTimeToCompletionInSeconds = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *DataTransferProgress) SetStatus(v string) *DataTransferProgress {
+	s.Status = &v
+	return s
+}
+
+// SetTotalDataInMegaBytes sets the TotalDataInMegaBytes field's value.
+func (s *DataTransferProgress) SetTotalDataInMegaBytes(v int64) *DataTransferProgress {
+	s.TotalDataInMegaBytes = &v
+	return s
+}
+
 // Describes the default cluster parameters for a parameter group family.
 type DefaultClusterParameters struct {
 	_ struct{} `type:"structure"`
@@ -10476,6 +11100,48 @@ func (s *DefaultClusterParameters) SetParameterGroupFamily(v string) *DefaultClu
 // SetParameters sets the Parameters field's value.
 func (s *DefaultClusterParameters) SetParameters(v []*Parameter) *DefaultClusterParameters {
 	s.Parameters = v
+	return s
+}
+
+// Describes a deferred maintenance window
+type DeferredMaintenanceWindow struct {
+	_ struct{} `type:"structure"`
+
+	// A timestamp for the end of the time period when we defer maintenance.
+	DeferMaintenanceEndTime *time.Time `type:"timestamp"`
+
+	// A unique identifier for the maintenance window.
+	DeferMaintenanceIdentifier *string `type:"string"`
+
+	// A timestamp for the beginning of the time period when we defer maintenance.
+	DeferMaintenanceStartTime *time.Time `type:"timestamp"`
+}
+
+// String returns the string representation
+func (s DeferredMaintenanceWindow) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeferredMaintenanceWindow) GoString() string {
+	return s.String()
+}
+
+// SetDeferMaintenanceEndTime sets the DeferMaintenanceEndTime field's value.
+func (s *DeferredMaintenanceWindow) SetDeferMaintenanceEndTime(v time.Time) *DeferredMaintenanceWindow {
+	s.DeferMaintenanceEndTime = &v
+	return s
+}
+
+// SetDeferMaintenanceIdentifier sets the DeferMaintenanceIdentifier field's value.
+func (s *DeferredMaintenanceWindow) SetDeferMaintenanceIdentifier(v string) *DeferredMaintenanceWindow {
+	s.DeferMaintenanceIdentifier = &v
+	return s
+}
+
+// SetDeferMaintenanceStartTime sets the DeferMaintenanceStartTime field's value.
+func (s *DeferredMaintenanceWindow) SetDeferMaintenanceStartTime(v time.Time) *DeferredMaintenanceWindow {
+	s.DeferMaintenanceStartTime = &v
 	return s
 }
 
@@ -11099,6 +11765,52 @@ func (s DeleteTagsOutput) String() string {
 // GoString returns the string representation
 func (s DeleteTagsOutput) GoString() string {
 	return s.String()
+}
+
+type DescribeAccountAttributesInput struct {
+	_ struct{} `type:"structure"`
+
+	// A list of attribute names.
+	AttributeNames []*string `locationNameList:"AttributeName" type:"list"`
+}
+
+// String returns the string representation
+func (s DescribeAccountAttributesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeAccountAttributesInput) GoString() string {
+	return s.String()
+}
+
+// SetAttributeNames sets the AttributeNames field's value.
+func (s *DescribeAccountAttributesInput) SetAttributeNames(v []*string) *DescribeAccountAttributesInput {
+	s.AttributeNames = v
+	return s
+}
+
+type DescribeAccountAttributesOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A list of attributes assigned to an account.
+	AccountAttributes []*AccountAttribute `locationNameList:"AccountAttribute" type:"list"`
+}
+
+// String returns the string representation
+func (s DescribeAccountAttributesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeAccountAttributesOutput) GoString() string {
+	return s.String()
+}
+
+// SetAccountAttributes sets the AccountAttributes field's value.
+func (s *DescribeAccountAttributesOutput) SetAccountAttributes(v []*AccountAttribute) *DescribeAccountAttributesOutput {
+	s.AccountAttributes = v
+	return s
 }
 
 type DescribeClusterDbRevisionsInput struct {
@@ -13256,7 +13968,7 @@ type DescribeResizeOutput struct {
 
 	// The status of the resize operation.
 	//
-	// Valid Values: NONE | IN_PROGRESS | FAILED | SUCCEEDED
+	// Valid Values: NONE | IN_PROGRESS | FAILED | SUCCEEDED | CANCELLING
 	Status *string `type:"string"`
 
 	// The cluster type after the resize operation is complete.
@@ -15600,6 +16312,115 @@ func (s *ModifyClusterInput) SetVpcSecurityGroupIds(v []*string) *ModifyClusterI
 	return s
 }
 
+type ModifyClusterMaintenanceInput struct {
+	_ struct{} `type:"structure"`
+
+	// A unique identifier for the cluster.
+	//
+	// ClusterIdentifier is a required field
+	ClusterIdentifier *string `type:"string" required:"true"`
+
+	// A boolean indicating whether to enable the deferred maintenance window.
+	DeferMaintenance *bool `type:"boolean"`
+
+	// An integer indicating the duration of the maintenance window in days. If
+	// you specify a duration, you can't specify an end time. The duration must
+	// be 14 days or less.
+	DeferMaintenanceDuration *int64 `type:"integer"`
+
+	// A timestamp indicating end time for the deferred maintenance window. If you
+	// specify an end time, you can't specify a duration.
+	DeferMaintenanceEndTime *time.Time `type:"timestamp"`
+
+	// A unique identifier for the deferred maintenance window.
+	DeferMaintenanceIdentifier *string `type:"string"`
+
+	// A timestamp indicating the start time for the deferred maintenance window.
+	DeferMaintenanceStartTime *time.Time `type:"timestamp"`
+}
+
+// String returns the string representation
+func (s ModifyClusterMaintenanceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ModifyClusterMaintenanceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ModifyClusterMaintenanceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ModifyClusterMaintenanceInput"}
+	if s.ClusterIdentifier == nil {
+		invalidParams.Add(request.NewErrParamRequired("ClusterIdentifier"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetClusterIdentifier sets the ClusterIdentifier field's value.
+func (s *ModifyClusterMaintenanceInput) SetClusterIdentifier(v string) *ModifyClusterMaintenanceInput {
+	s.ClusterIdentifier = &v
+	return s
+}
+
+// SetDeferMaintenance sets the DeferMaintenance field's value.
+func (s *ModifyClusterMaintenanceInput) SetDeferMaintenance(v bool) *ModifyClusterMaintenanceInput {
+	s.DeferMaintenance = &v
+	return s
+}
+
+// SetDeferMaintenanceDuration sets the DeferMaintenanceDuration field's value.
+func (s *ModifyClusterMaintenanceInput) SetDeferMaintenanceDuration(v int64) *ModifyClusterMaintenanceInput {
+	s.DeferMaintenanceDuration = &v
+	return s
+}
+
+// SetDeferMaintenanceEndTime sets the DeferMaintenanceEndTime field's value.
+func (s *ModifyClusterMaintenanceInput) SetDeferMaintenanceEndTime(v time.Time) *ModifyClusterMaintenanceInput {
+	s.DeferMaintenanceEndTime = &v
+	return s
+}
+
+// SetDeferMaintenanceIdentifier sets the DeferMaintenanceIdentifier field's value.
+func (s *ModifyClusterMaintenanceInput) SetDeferMaintenanceIdentifier(v string) *ModifyClusterMaintenanceInput {
+	s.DeferMaintenanceIdentifier = &v
+	return s
+}
+
+// SetDeferMaintenanceStartTime sets the DeferMaintenanceStartTime field's value.
+func (s *ModifyClusterMaintenanceInput) SetDeferMaintenanceStartTime(v time.Time) *ModifyClusterMaintenanceInput {
+	s.DeferMaintenanceStartTime = &v
+	return s
+}
+
+type ModifyClusterMaintenanceOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Describes a cluster.
+	Cluster *Cluster `type:"structure"`
+}
+
+// String returns the string representation
+func (s ModifyClusterMaintenanceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ModifyClusterMaintenanceOutput) GoString() string {
+	return s.String()
+}
+
+// SetCluster sets the Cluster field's value.
+func (s *ModifyClusterMaintenanceOutput) SetCluster(v *Cluster) *ModifyClusterMaintenanceOutput {
+	s.Cluster = v
+	return s
+}
+
 type ModifyClusterOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -15777,7 +16598,7 @@ type ModifyEventSubscriptionInput struct {
 	// Specifies the Amazon Redshift event categories to be published by the event
 	// notification subscription.
 	//
-	// Values: Configuration, Management, Monitoring, Security
+	// Values: configuration, management, monitoring, security
 	EventCategories []*string `locationNameList:"EventCategory" type:"list"`
 
 	// Specifies the Amazon Redshift event severity to be published by the event
@@ -16851,6 +17672,39 @@ func (s ResizeClusterOutput) GoString() string {
 // SetCluster sets the Cluster field's value.
 func (s *ResizeClusterOutput) SetCluster(v *Cluster) *ResizeClusterOutput {
 	s.Cluster = v
+	return s
+}
+
+// Describes a resize operation.
+type ResizeInfo struct {
+	_ struct{} `type:"structure"`
+
+	// A boolean value indicating if the resize operation can be cancelled.
+	AllowCancelResize *bool `type:"boolean"`
+
+	// Returns the value ClassicResize.
+	ResizeType *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ResizeInfo) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResizeInfo) GoString() string {
+	return s.String()
+}
+
+// SetAllowCancelResize sets the AllowCancelResize field's value.
+func (s *ResizeInfo) SetAllowCancelResize(v bool) *ResizeInfo {
+	s.AllowCancelResize = &v
+	return s
+}
+
+// SetResizeType sets the ResizeType field's value.
+func (s *ResizeInfo) SetResizeType(v string) *ResizeInfo {
+	s.ResizeType = &v
 	return s
 }
 
@@ -18143,6 +18997,30 @@ func (s *Subnet) SetSubnetStatus(v string) *Subnet {
 	return s
 }
 
+// Describes the operations that are allowed on a maintenance track.
+type SupportedOperation struct {
+	_ struct{} `type:"structure"`
+
+	// A list of the supported operations.
+	OperationName *string `type:"string"`
+}
+
+// String returns the string representation
+func (s SupportedOperation) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SupportedOperation) GoString() string {
+	return s.String()
+}
+
+// SetOperationName sets the OperationName field's value.
+func (s *SupportedOperation) SetOperationName(v string) *SupportedOperation {
+	s.OperationName = &v
+	return s
+}
+
 // A list of supported platforms for orderable clusters.
 type SupportedPlatform struct {
 	_ struct{} `type:"structure"`
@@ -18420,6 +19298,9 @@ type UpdateTarget struct {
 
 	// The name of the new maintenance track.
 	MaintenanceTrackName *string `type:"string"`
+
+	// A list of operations supported by the maintenance track.
+	SupportedOperations []*SupportedOperation `locationNameList:"SupportedOperation" type:"list"`
 }
 
 // String returns the string representation
@@ -18441,6 +19322,12 @@ func (s *UpdateTarget) SetDatabaseVersion(v string) *UpdateTarget {
 // SetMaintenanceTrackName sets the MaintenanceTrackName field's value.
 func (s *UpdateTarget) SetMaintenanceTrackName(v string) *UpdateTarget {
 	s.MaintenanceTrackName = &v
+	return s
+}
+
+// SetSupportedOperations sets the SupportedOperations field's value.
+func (s *UpdateTarget) SetSupportedOperations(v []*SupportedOperation) *UpdateTarget {
+	s.SupportedOperations = v
 	return s
 }
 

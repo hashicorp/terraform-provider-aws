@@ -350,7 +350,11 @@ func (c *SageMaker) CreateHyperParameterTuningJobRequest(input *CreateHyperParam
 
 // CreateHyperParameterTuningJob API operation for Amazon SageMaker Service.
 //
-// Starts a hyperparameter tuning job.
+// Starts a hyperparameter tuning job. A hyperparameter tuning job finds the
+// best version of a model by running many training jobs on your dataset using
+// the algorithm you choose and values for hyperparameters within ranges that
+// you specify. It then chooses the hyperparameter values that result in a model
+// that performs the best, as measured by an objective metric that you choose.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -765,7 +769,7 @@ func (c *SageMaker) CreatePresignedNotebookInstanceUrlRequest(input *CreatePresi
 // or role used to access the notebook instance. Use the NotIpAddress condition
 // operator and the aws:SourceIP condition context key to specify the list of
 // IP addresses that you want to have access to the notebook instance. For more
-// information, see Limit Access to a Notebook Instance by IP Address (http://docs.aws.amazon.com/https:/docs.aws.amazon.com/sagemaker/latest/dg/howitworks-access-ws.html#nbi-ip-filter).
+// information, see Limit Access to a Notebook Instance by IP Address (http://docs.aws.amazon.com/sagemaker/latest/dg/howitworks-access-ws.html#nbi-ip-filter).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4288,12 +4292,15 @@ func (s *AddTagsOutput) SetTags(v []*Tag) *AddTagsOutput {
 type AlgorithmSpecification struct {
 	_ struct{} `type:"structure"`
 
+	// A list of metric definition objects. Each object specifies the metric name
+	// and regular expressions used to parse algorithm logs. Amazon SageMaker publishes
+	// each metric to Amazon CloudWatch.
+	MetricDefinitions []*MetricDefinition `type:"list"`
+
 	// The registry path of the Docker image that contains the training algorithm.
 	// For information about docker registry paths for built-in algorithms, see
 	// Algorithms Provided by Amazon SageMaker: Common Parameters (http://docs.aws.amazon.com/sagemaker/latest/dg/sagemaker-algo-docker-registry-paths.html).
-	//
-	// TrainingImage is a required field
-	TrainingImage *string `type:"string" required:"true"`
+	TrainingImage *string `type:"string"`
 
 	// The input mode that the algorithm supports. For the input modes that Amazon
 	// SageMaker algorithms support, see Algorithms (http://docs.aws.amazon.com/sagemaker/latest/dg/algos.html).
@@ -4332,17 +4339,30 @@ func (s AlgorithmSpecification) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *AlgorithmSpecification) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "AlgorithmSpecification"}
-	if s.TrainingImage == nil {
-		invalidParams.Add(request.NewErrParamRequired("TrainingImage"))
-	}
 	if s.TrainingInputMode == nil {
 		invalidParams.Add(request.NewErrParamRequired("TrainingInputMode"))
+	}
+	if s.MetricDefinitions != nil {
+		for i, v := range s.MetricDefinitions {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "MetricDefinitions", i), err.(request.ErrInvalidParams))
+			}
+		}
 	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetMetricDefinitions sets the MetricDefinitions field's value.
+func (s *AlgorithmSpecification) SetMetricDefinitions(v []*MetricDefinition) *AlgorithmSpecification {
+	s.MetricDefinitions = v
+	return s
 }
 
 // SetTrainingImage sets the TrainingImage field's value.
@@ -4435,6 +4455,17 @@ type Channel struct {
 	// DataSource is a required field
 	DataSource *DataSource `type:"structure" required:"true"`
 
+	// (Optional) The input mode to use for the data channel in a training job.
+	// If you don't set a value for InputMode, Amazon SageMaker uses the value set
+	// for TrainingInputMode. Use this parameter to override the TrainingInputMode
+	// setting in a AlgorithmSpecification request when you have a channel that
+	// needs a different input mode from the training job's general setting. To
+	// download the data from Amazon Simple Storage Service (Amazon S3) to the provisioned
+	// ML storage volume, and mount the directory to a Docker volume, use File input
+	// mode. To stream data directly from Amazon S3 to the container, choose Pipe
+	// input mode.
+	//
+	// To use a model for incremental training, choose File input model.
 	InputMode *string `type:"string" enum:"TrainingInputMode"`
 
 	// Specify RecordIO as the value when input data is in raw format but the training
@@ -4545,7 +4576,7 @@ type ContainerDefinition struct {
 	// Token Service to download model artifacts from the S3 path you provide. AWS
 	// STS is activated in your IAM user account by default. If you previously deactivated
 	// AWS STS for a region, you need to reactivate AWS STS for that region. For
-	// more information, see Activating and Deactivating AWS STS i an AWS Region
+	// more information, see Activating and Deactivating AWS STS in an AWS Region
 	// (http://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_enable-regions.html)
 	// in the AWS Identity and Access Management User Guide.
 	ModelDataUrl *string `type:"string"`
@@ -4896,16 +4927,18 @@ type CreateHyperParameterTuningJobInput struct {
 	_ struct{} `type:"structure"`
 
 	// The HyperParameterTuningJobConfig object that describes the tuning job, including
-	// the search strategy, metric used to evaluate training jobs, ranges of parameters
-	// to search, and resource limits for the tuning job.
+	// the search strategy, the objective metric used to evaluate training jobs,
+	// ranges of parameters to search, and resource limits for the tuning job. For
+	// more information, see automatic-model-tuning
 	//
 	// HyperParameterTuningJobConfig is a required field
 	HyperParameterTuningJobConfig *HyperParameterTuningJobConfig `type:"structure" required:"true"`
 
 	// The name of the tuning job. This name is the prefix for the names of all
 	// training jobs that this tuning job launches. The name must be unique within
-	// the same AWS account and AWS Region. Names are not case sensitive, and must
-	// be between 1-32 characters.
+	// the same AWS account and AWS Region. The name must have { } to { } characters.
+	// Valid characters are a-z, A-Z, 0-9, and : + = @ _ % - (hyphen). The name
+	// is not case sensitive.
 	//
 	// HyperParameterTuningJobName is a required field
 	HyperParameterTuningJobName *string `min:"1" type:"string" required:"true"`
@@ -4925,6 +4958,24 @@ type CreateHyperParameterTuningJobInput struct {
 	//
 	// TrainingJobDefinition is a required field
 	TrainingJobDefinition *HyperParameterTrainingJobDefinition `type:"structure" required:"true"`
+
+	// Specifies configuration for starting the hyperparameter tuning job using
+	// one or more previous tuning jobs as a starting point. The results of previous
+	// tuning jobs are used to inform which combinations of hyperparameters to search
+	// over in the new tuning job.
+	//
+	// All training jobs launched by the new hyperparameter tuning job are evaluated
+	// by using the objective metric. If you specify IDENTICAL_DATA_AND_ALGORITHM
+	// as the WarmStartType for the warm start configuration, the training job that
+	// performs the best in the new tuning job is compared to the best training
+	// jobs from the parent tuning jobs. From these, the training job that performs
+	// the best as measured by the objective metric is returned as the overall best
+	// training job.
+	//
+	// All training jobs launched by parent hyperparameter tuning jobs and the new
+	// hyperparameter tuning jobs count against the limit of training jobs for the
+	// tuning job.
+	WarmStartConfig *HyperParameterTuningJobWarmStartConfig `type:"structure"`
 }
 
 // String returns the string representation
@@ -4972,6 +5023,11 @@ func (s *CreateHyperParameterTuningJobInput) Validate() error {
 			invalidParams.AddNested("TrainingJobDefinition", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.WarmStartConfig != nil {
+		if err := s.WarmStartConfig.Validate(); err != nil {
+			invalidParams.AddNested("WarmStartConfig", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -5003,10 +5059,17 @@ func (s *CreateHyperParameterTuningJobInput) SetTrainingJobDefinition(v *HyperPa
 	return s
 }
 
+// SetWarmStartConfig sets the WarmStartConfig field's value.
+func (s *CreateHyperParameterTuningJobInput) SetWarmStartConfig(v *HyperParameterTuningJobWarmStartConfig) *CreateHyperParameterTuningJobInput {
+	s.WarmStartConfig = v
+	return s
+}
+
 type CreateHyperParameterTuningJobOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The Amazon Resource Name (ARN) of the tuning job.
+	// The Amazon Resource Name (ARN) of the tuning job. Amazon SageMaker assigns
+	// an ARN to a hyperparameter tuning job when you create it.
 	//
 	// HyperParameterTuningJobArn is a required field
 	HyperParameterTuningJobArn *string `type:"string" required:"true"`
@@ -5198,6 +5261,9 @@ type CreateNotebookInstanceInput struct {
 
 	// If you provide a AWS KMS key ID, Amazon SageMaker uses it to encrypt data
 	// at rest on the ML storage volume that is attached to your notebook instance.
+	// The KMS key you provide must be enabled. For information, see Enabling and
+	// Disabling Keys (http://docs.aws.amazon.com/kms/latest/developerguide/enabling-keys.html)
+	// in the AWS Key Management Service Developer Guide.
 	KmsKeyId *string `type:"string"`
 
 	// The name of a lifecycle configuration to associate with the notebook instance.
@@ -5236,6 +5302,7 @@ type CreateNotebookInstanceInput struct {
 	Tags []*Tag `type:"list"`
 
 	// The size, in GB, of the ML storage volume to attach to the notebook instance.
+	// The default value is 5 GB.
 	VolumeSizeInGB *int64 `min:"5" type:"integer"`
 }
 
@@ -6823,6 +6890,13 @@ type DescribeHyperParameterTuningJobOutput struct {
 	// ObjectiveStatusCounters is a required field
 	ObjectiveStatusCounters *ObjectiveStatusCounters `type:"structure" required:"true"`
 
+	// If the hyperparameter tuning job is an incremental tuning job with a WarmStartType
+	// of IDENTICAL_DATA_AND_ALGORITHM, this is the TrainingJobSummary for the training
+	// job with the best objective metric value of all training jobs launched by
+	// this tuning job and all parent jobs specified for the incremental tuning
+	// job.
+	OverallBestTrainingJob *HyperParameterTrainingJobSummary `type:"structure"`
+
 	// The HyperParameterTrainingJobDefinition object that specifies the definition
 	// of the training jobs that this tuning job launches.
 	//
@@ -6834,6 +6908,12 @@ type DescribeHyperParameterTuningJobOutput struct {
 	//
 	// TrainingJobStatusCounters is a required field
 	TrainingJobStatusCounters *TrainingJobStatusCounters `type:"structure" required:"true"`
+
+	// The configuration for starting the hyperparameter parameter tuning job using
+	// one or more previous tuning jobs as a starting point. The results of previous
+	// tuning jobs are used to inform which combinations of hyperparameters to search
+	// over in the new tuning job.
+	WarmStartConfig *HyperParameterTuningJobWarmStartConfig `type:"structure"`
 }
 
 // String returns the string representation
@@ -6906,6 +6986,12 @@ func (s *DescribeHyperParameterTuningJobOutput) SetObjectiveStatusCounters(v *Ob
 	return s
 }
 
+// SetOverallBestTrainingJob sets the OverallBestTrainingJob field's value.
+func (s *DescribeHyperParameterTuningJobOutput) SetOverallBestTrainingJob(v *HyperParameterTrainingJobSummary) *DescribeHyperParameterTuningJobOutput {
+	s.OverallBestTrainingJob = v
+	return s
+}
+
 // SetTrainingJobDefinition sets the TrainingJobDefinition field's value.
 func (s *DescribeHyperParameterTuningJobOutput) SetTrainingJobDefinition(v *HyperParameterTrainingJobDefinition) *DescribeHyperParameterTuningJobOutput {
 	s.TrainingJobDefinition = v
@@ -6915,6 +7001,12 @@ func (s *DescribeHyperParameterTuningJobOutput) SetTrainingJobDefinition(v *Hype
 // SetTrainingJobStatusCounters sets the TrainingJobStatusCounters field's value.
 func (s *DescribeHyperParameterTuningJobOutput) SetTrainingJobStatusCounters(v *TrainingJobStatusCounters) *DescribeHyperParameterTuningJobOutput {
 	s.TrainingJobStatusCounters = v
+	return s
+}
+
+// SetWarmStartConfig sets the WarmStartConfig field's value.
+func (s *DescribeHyperParameterTuningJobOutput) SetWarmStartConfig(v *HyperParameterTuningJobWarmStartConfig) *DescribeHyperParameterTuningJobOutput {
+	s.WarmStartConfig = v
 	return s
 }
 
@@ -7412,6 +7504,10 @@ type DescribeTrainingJobOutput struct {
 	// If the training job failed, the reason it failed.
 	FailureReason *string `type:"string"`
 
+	// A collection of MetricData objects that specify the names, values, and dates
+	// and times that the training algorithm emitted to Amazon CloudWatch.
+	FinalMetricDataList []*MetricData `type:"list"`
+
 	// Algorithm-specific parameters.
 	HyperParameters map[string]*string `type:"map"`
 
@@ -7573,6 +7669,12 @@ func (s *DescribeTrainingJobOutput) SetCreationTime(v time.Time) *DescribeTraini
 // SetFailureReason sets the FailureReason field's value.
 func (s *DescribeTrainingJobOutput) SetFailureReason(v string) *DescribeTrainingJobOutput {
 	s.FailureReason = &v
+	return s
+}
+
+// SetFinalMetricDataList sets the FinalMetricDataList field's value.
+func (s *DescribeTrainingJobOutput) SetFinalMetricDataList(v []*MetricData) *DescribeTrainingJobOutput {
+	s.FinalMetricDataList = v
 	return s
 }
 
@@ -8159,9 +8261,7 @@ type HyperParameterAlgorithmSpecification struct {
 	// The registry path of the Docker image that contains the training algorithm.
 	// For information about Docker registry paths for built-in algorithms, see
 	// Algorithms Provided by Amazon SageMaker: Common Parameters (http://docs.aws.amazon.com/sagemaker/latest/dg/sagemaker-algo-docker-registry-paths.html).
-	//
-	// TrainingImage is a required field
-	TrainingImage *string `type:"string" required:"true"`
+	TrainingImage *string `type:"string"`
 
 	// The input mode that the algorithm supports: File or Pipe. In File input mode,
 	// Amazon SageMaker downloads the training data from Amazon S3 to the storage
@@ -8193,9 +8293,6 @@ func (s HyperParameterAlgorithmSpecification) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *HyperParameterAlgorithmSpecification) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "HyperParameterAlgorithmSpecification"}
-	if s.TrainingImage == nil {
-		invalidParams.Add(request.NewErrParamRequired("TrainingImage"))
-	}
 	if s.TrainingInputMode == nil {
 		invalidParams.Add(request.NewErrParamRequired("TrainingInputMode"))
 	}
@@ -8246,9 +8343,7 @@ type HyperParameterTrainingJobDefinition struct {
 
 	// An array of Channel objects that specify the input for the training jobs
 	// that the tuning job launches.
-	//
-	// InputDataConfig is a required field
-	InputDataConfig []*Channel `min:"1" type:"list" required:"true"`
+	InputDataConfig []*Channel `min:"1" type:"list"`
 
 	// Specifies the path to the Amazon S3 bucket where you store model artifacts
 	// from the training jobs that the tuning job launches.
@@ -8314,9 +8409,6 @@ func (s *HyperParameterTrainingJobDefinition) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "HyperParameterTrainingJobDefinition"}
 	if s.AlgorithmSpecification == nil {
 		invalidParams.Add(request.NewErrParamRequired("AlgorithmSpecification"))
-	}
-	if s.InputDataConfig == nil {
-		invalidParams.Add(request.NewErrParamRequired("InputDataConfig"))
 	}
 	if s.InputDataConfig != nil && len(s.InputDataConfig) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("InputDataConfig", 1))
@@ -8482,6 +8574,8 @@ type HyperParameterTrainingJobSummary struct {
 	//
 	// TunedHyperParameters is a required field
 	TunedHyperParameters map[string]*string `type:"map" required:"true"`
+
+	TuningJobName *string `min:"1" type:"string"`
 }
 
 // String returns the string representation
@@ -8551,6 +8645,12 @@ func (s *HyperParameterTrainingJobSummary) SetTrainingStartTime(v time.Time) *Hy
 // SetTunedHyperParameters sets the TunedHyperParameters field's value.
 func (s *HyperParameterTrainingJobSummary) SetTunedHyperParameters(v map[string]*string) *HyperParameterTrainingJobSummary {
 	s.TunedHyperParameters = v
+	return s
+}
+
+// SetTuningJobName sets the TuningJobName field's value.
+func (s *HyperParameterTrainingJobSummary) SetTuningJobName(v string) *HyperParameterTrainingJobSummary {
+	s.TuningJobName = &v
 	return s
 }
 
@@ -8834,6 +8934,107 @@ func (s *HyperParameterTuningJobSummary) SetStrategy(v string) *HyperParameterTu
 // SetTrainingJobStatusCounters sets the TrainingJobStatusCounters field's value.
 func (s *HyperParameterTuningJobSummary) SetTrainingJobStatusCounters(v *TrainingJobStatusCounters) *HyperParameterTuningJobSummary {
 	s.TrainingJobStatusCounters = v
+	return s
+}
+
+// Specifies the configuration for a hyperparameter tuning job that uses one
+// or more previous hyperparameter tuning jobs as a starting point. The results
+// of previous tuning jobs are used to inform which combinations of hyperparameters
+// to search over in the new tuning job.
+//
+// All training jobs launched by the new hyperparameter tuning job are evaluated
+// by using the objective metric, and the training job that performs the best
+// is compared to the best training jobs from the parent tuning jobs. From these,
+// the training job that performs the best as measured by the objective metric
+// is returned as the overall best training job.
+//
+// All training jobs launched by parent hyperparameter tuning jobs and the new
+// hyperparameter tuning jobs count against the limit of training jobs for the
+// tuning job.
+type HyperParameterTuningJobWarmStartConfig struct {
+	_ struct{} `type:"structure"`
+
+	// An array of hyperparameter tuning jobs that are used as the starting point
+	// for the new hyperparameter tuning job. For more information about warm starting
+	// a hyperparameter tuning job, see Using a Previous Hyperparameter Tuning Job
+	// as a Starting Point (http://docs.aws.amazon.com/automatic-model-tuning-incremental).
+	//
+	// ParentHyperParameterTuningJobs is a required field
+	ParentHyperParameterTuningJobs []*ParentHyperParameterTuningJob `min:"1" type:"list" required:"true"`
+
+	// Specifies one of the following:
+	//
+	// IDENTICAL_DATA_AND_ALGORITHMThe new hyperparameter tuning job uses the same
+	// input data and training image as the parent tuning jobs. You can change the
+	// hyperparameter ranges to search and the maximum number of training jobs that
+	// the hyperparameter tuning job launches. You cannot use a new version of the
+	// training algorithm, unless the changes in the new version do not affect the
+	// algorithm itself. For example, changes that improve logging or adding support
+	// for a different data format are allowed. The objective metric for the new
+	// tuning job must be the same as for all parent jobs.
+	//
+	// TRANSFER_LEARNINGThe new hyperparameter tuning job can include input data,
+	// hyperparameter ranges, maximum number of concurrent training jobs, and maximum
+	// number of training jobs that are different than those of its parent hyperparameter
+	// tuning jobs. The training image can also be a different versionfrom the version
+	// used in the parent hyperparameter tuning job. You can also change hyperparameters
+	// from tunable to static, and from static to tunable, but the total number
+	// of static plus tunable hyperparameters must remain the same as it is in all
+	// parent jobs. The objective metric for the new tuning job must be the same
+	// as for all parent jobs.
+	//
+	// WarmStartType is a required field
+	WarmStartType *string `type:"string" required:"true" enum:"HyperParameterTuningJobWarmStartType"`
+}
+
+// String returns the string representation
+func (s HyperParameterTuningJobWarmStartConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s HyperParameterTuningJobWarmStartConfig) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *HyperParameterTuningJobWarmStartConfig) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "HyperParameterTuningJobWarmStartConfig"}
+	if s.ParentHyperParameterTuningJobs == nil {
+		invalidParams.Add(request.NewErrParamRequired("ParentHyperParameterTuningJobs"))
+	}
+	if s.ParentHyperParameterTuningJobs != nil && len(s.ParentHyperParameterTuningJobs) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ParentHyperParameterTuningJobs", 1))
+	}
+	if s.WarmStartType == nil {
+		invalidParams.Add(request.NewErrParamRequired("WarmStartType"))
+	}
+	if s.ParentHyperParameterTuningJobs != nil {
+		for i, v := range s.ParentHyperParameterTuningJobs {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "ParentHyperParameterTuningJobs", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetParentHyperParameterTuningJobs sets the ParentHyperParameterTuningJobs field's value.
+func (s *HyperParameterTuningJobWarmStartConfig) SetParentHyperParameterTuningJobs(v []*ParentHyperParameterTuningJob) *HyperParameterTuningJobWarmStartConfig {
+	s.ParentHyperParameterTuningJobs = v
+	return s
+}
+
+// SetWarmStartType sets the WarmStartType field's value.
+func (s *HyperParameterTuningJobWarmStartConfig) SetWarmStartType(v string) *HyperParameterTuningJobWarmStartConfig {
+	s.WarmStartType = &v
 	return s
 }
 
@@ -10346,6 +10547,49 @@ func (s *ListTransformJobsOutput) SetTransformJobSummaries(v []*TransformJobSumm
 	return s
 }
 
+// The name, value, and date and time of a metric that was emitted to Amazon
+// CloudWatch.
+type MetricData struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the metric.
+	MetricName *string `min:"1" type:"string"`
+
+	// The date and time that the algorithm emitted the metric.
+	Timestamp *time.Time `type:"timestamp"`
+
+	// The value of the metric.
+	Value *float64 `type:"float"`
+}
+
+// String returns the string representation
+func (s MetricData) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MetricData) GoString() string {
+	return s.String()
+}
+
+// SetMetricName sets the MetricName field's value.
+func (s *MetricData) SetMetricName(v string) *MetricData {
+	s.MetricName = &v
+	return s
+}
+
+// SetTimestamp sets the Timestamp field's value.
+func (s *MetricData) SetTimestamp(v time.Time) *MetricData {
+	s.Timestamp = &v
+	return s
+}
+
+// SetValue sets the Value field's value.
+func (s *MetricData) SetValue(v float64) *MetricData {
+	s.Value = &v
+	return s
+}
+
 // Specifies a metric that the training algorithm writes to stderr or stdout.
 // Amazon SageMakerhyperparameter tuning captures all defined metrics. You specify
 // one metric that a hyperparameter tuning job uses as its objective metric
@@ -10817,7 +11061,15 @@ func (s *OutputDataConfig) SetS3OutputPath(v string) *OutputDataConfig {
 }
 
 // Specifies ranges of integer, continuous, and categorical hyperparameters
-// that a hyperparameter tuning job searches.
+// that a hyperparameter tuning job searches. The hyperparameter tuning job
+// launches training jobs with hyperparameter values within these ranges to
+// find the combination of values that result in the training job with the best
+// performance as measured by the objective metric of the hyperparameter tuning
+// job.
+//
+// You can specify a maximum of 20 hyperparameters that a hyperparameter tuning
+// job can search over. Every possible value of a categorical parameter range
+// counts against this limit.
 type ParameterRanges struct {
 	_ struct{} `type:"structure"`
 
@@ -10899,6 +11151,45 @@ func (s *ParameterRanges) SetContinuousParameterRanges(v []*ContinuousParameterR
 // SetIntegerParameterRanges sets the IntegerParameterRanges field's value.
 func (s *ParameterRanges) SetIntegerParameterRanges(v []*IntegerParameterRange) *ParameterRanges {
 	s.IntegerParameterRanges = v
+	return s
+}
+
+// A previously completed or stopped hyperparameter tuning job to be used as
+// a starting point for a new hyperparameter tuning job.
+type ParentHyperParameterTuningJob struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the hyperparameter tuning job to be used as a starting point
+	// for a new hyperparameter tuning job.
+	HyperParameterTuningJobName *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ParentHyperParameterTuningJob) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ParentHyperParameterTuningJob) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ParentHyperParameterTuningJob) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ParentHyperParameterTuningJob"}
+	if s.HyperParameterTuningJobName != nil && len(*s.HyperParameterTuningJobName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("HyperParameterTuningJobName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetHyperParameterTuningJobName sets the HyperParameterTuningJobName field's value.
+func (s *ParentHyperParameterTuningJob) SetHyperParameterTuningJobName(v string) *ParentHyperParameterTuningJob {
+	s.HyperParameterTuningJobName = &v
 	return s
 }
 
@@ -11306,7 +11597,7 @@ type S3DataSource struct {
 	//
 	// s3://customer_bucket/some/prefix/relative/path/to/custdata-1
 	//
-	// s3://customer_bucket/some/prefix/relative/path/custdata-1
+	// s3://customer_bucket/some/prefix/relative/path/custdata-2
 	//
 	// ...
 	//
@@ -11873,7 +12164,7 @@ func (s *Tag) SetValue(v string) *Tag {
 type TrainingJobStatusCounters struct {
 	_ struct{} `type:"structure"`
 
-	// The number of completed training jobs launched by a hyperparameter tuning
+	// The number of completed training jobs launched by the hyperparameter tuning
 	// job.
 	Completed *int64 `type:"integer"`
 
@@ -12707,6 +12998,7 @@ type UpdateNotebookInstanceInput struct {
 	RoleArn *string `min:"20" type:"string"`
 
 	// The size, in GB, of the ML storage volume to attach to the notebook instance.
+	// The default value is 5 GB.
 	VolumeSizeInGB *int64 `min:"5" type:"integer"`
 }
 
@@ -13066,6 +13358,14 @@ const (
 )
 
 const (
+	// HyperParameterTuningJobWarmStartTypeIdenticalDataAndAlgorithm is a HyperParameterTuningJobWarmStartType enum value
+	HyperParameterTuningJobWarmStartTypeIdenticalDataAndAlgorithm = "IdenticalDataAndAlgorithm"
+
+	// HyperParameterTuningJobWarmStartTypeTransferLearning is a HyperParameterTuningJobWarmStartType enum value
+	HyperParameterTuningJobWarmStartTypeTransferLearning = "TransferLearning"
+)
+
+const (
 	// InstanceTypeMlT2Medium is a InstanceType enum value
 	InstanceTypeMlT2Medium = "ml.t2.medium"
 
@@ -13077,6 +13377,18 @@ const (
 
 	// InstanceTypeMlT22xlarge is a InstanceType enum value
 	InstanceTypeMlT22xlarge = "ml.t2.2xlarge"
+
+	// InstanceTypeMlT3Medium is a InstanceType enum value
+	InstanceTypeMlT3Medium = "ml.t3.medium"
+
+	// InstanceTypeMlT3Large is a InstanceType enum value
+	InstanceTypeMlT3Large = "ml.t3.large"
+
+	// InstanceTypeMlT3Xlarge is a InstanceType enum value
+	InstanceTypeMlT3Xlarge = "ml.t3.xlarge"
+
+	// InstanceTypeMlT32xlarge is a InstanceType enum value
+	InstanceTypeMlT32xlarge = "ml.t3.2xlarge"
 
 	// InstanceTypeMlM4Xlarge is a InstanceType enum value
 	InstanceTypeMlM4Xlarge = "ml.m4.xlarge"
@@ -13092,6 +13404,63 @@ const (
 
 	// InstanceTypeMlM416xlarge is a InstanceType enum value
 	InstanceTypeMlM416xlarge = "ml.m4.16xlarge"
+
+	// InstanceTypeMlM5Xlarge is a InstanceType enum value
+	InstanceTypeMlM5Xlarge = "ml.m5.xlarge"
+
+	// InstanceTypeMlM52xlarge is a InstanceType enum value
+	InstanceTypeMlM52xlarge = "ml.m5.2xlarge"
+
+	// InstanceTypeMlM54xlarge is a InstanceType enum value
+	InstanceTypeMlM54xlarge = "ml.m5.4xlarge"
+
+	// InstanceTypeMlM512xlarge is a InstanceType enum value
+	InstanceTypeMlM512xlarge = "ml.m5.12xlarge"
+
+	// InstanceTypeMlM524xlarge is a InstanceType enum value
+	InstanceTypeMlM524xlarge = "ml.m5.24xlarge"
+
+	// InstanceTypeMlC4Xlarge is a InstanceType enum value
+	InstanceTypeMlC4Xlarge = "ml.c4.xlarge"
+
+	// InstanceTypeMlC42xlarge is a InstanceType enum value
+	InstanceTypeMlC42xlarge = "ml.c4.2xlarge"
+
+	// InstanceTypeMlC44xlarge is a InstanceType enum value
+	InstanceTypeMlC44xlarge = "ml.c4.4xlarge"
+
+	// InstanceTypeMlC48xlarge is a InstanceType enum value
+	InstanceTypeMlC48xlarge = "ml.c4.8xlarge"
+
+	// InstanceTypeMlC5Xlarge is a InstanceType enum value
+	InstanceTypeMlC5Xlarge = "ml.c5.xlarge"
+
+	// InstanceTypeMlC52xlarge is a InstanceType enum value
+	InstanceTypeMlC52xlarge = "ml.c5.2xlarge"
+
+	// InstanceTypeMlC54xlarge is a InstanceType enum value
+	InstanceTypeMlC54xlarge = "ml.c5.4xlarge"
+
+	// InstanceTypeMlC59xlarge is a InstanceType enum value
+	InstanceTypeMlC59xlarge = "ml.c5.9xlarge"
+
+	// InstanceTypeMlC518xlarge is a InstanceType enum value
+	InstanceTypeMlC518xlarge = "ml.c5.18xlarge"
+
+	// InstanceTypeMlC5dXlarge is a InstanceType enum value
+	InstanceTypeMlC5dXlarge = "ml.c5d.xlarge"
+
+	// InstanceTypeMlC5d2xlarge is a InstanceType enum value
+	InstanceTypeMlC5d2xlarge = "ml.c5d.2xlarge"
+
+	// InstanceTypeMlC5d4xlarge is a InstanceType enum value
+	InstanceTypeMlC5d4xlarge = "ml.c5d.4xlarge"
+
+	// InstanceTypeMlC5d9xlarge is a InstanceType enum value
+	InstanceTypeMlC5d9xlarge = "ml.c5d.9xlarge"
+
+	// InstanceTypeMlC5d18xlarge is a InstanceType enum value
+	InstanceTypeMlC5d18xlarge = "ml.c5d.18xlarge"
 
 	// InstanceTypeMlP2Xlarge is a InstanceType enum value
 	InstanceTypeMlP2Xlarge = "ml.p2.xlarge"
