@@ -1278,6 +1278,18 @@ type Budget struct {
 	CalculatedSpend *CalculatedSpend `type:"structure"`
 
 	// The cost filters, such as service or region, that are applied to a budget.
+	//
+	// AWS Budgets supports the following services as a filter for RI budgets:
+	//
+	//    * Amazon Elastic Compute Cloud - Compute
+	//
+	//    * Amazon Redshift
+	//
+	//    * Amazon Relational Database Service
+	//
+	//    * Amazon ElastiCache
+	//
+	//    * Amazon Elasticsearch Service
 	CostFilters map[string][]*string `type:"map"`
 
 	// The types of costs that are included in this COST budget.
@@ -2528,8 +2540,8 @@ type DescribeBudgetPerformanceHistoryOutput struct {
 	//
 	// For DAILY budgets, the history saves the state of the budget for the last
 	// 60 days. For MONTHLY budgets, the history saves the state of the budget for
-	// the last 12 months. For QUARTERLY budgets, the history saves the state of
-	// the budget for the last four quarters.
+	// the current month plus the last 12 months. For QUARTERLY budgets, the history
+	// saves the state of the budget for the last four quarters.
 	BudgetPerformanceHistory *BudgetPerformanceHistory `type:"structure"`
 
 	// A generic string.
