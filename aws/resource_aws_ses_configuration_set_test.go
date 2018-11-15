@@ -24,6 +24,11 @@ func TestAccAWSSESConfigurationSet_basic(t *testing.T) {
 					testAccCheckAwsSESConfigurationSetExists("aws_ses_configuration_set.test"),
 				),
 			},
+			{
+				ResourceName:      "aws_ses_configuration_set.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }

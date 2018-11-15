@@ -34,6 +34,11 @@ func TestAccAWSWafRule_basic(t *testing.T) {
 						"aws_waf_rule.wafrule", "metric_name", wafRuleName),
 				),
 			},
+			{
+				ResourceName:      "aws_waf_rule.wafrule",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -255,7 +260,7 @@ func testAccCheckAWSWafRuleDisappears(v *waf.Rule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).wafconn
 
-		wr := newWafRetryer(conn, "global")
+		wr := newWafRetryer(conn)
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.UpdateRuleInput{
 				ChangeToken: token,

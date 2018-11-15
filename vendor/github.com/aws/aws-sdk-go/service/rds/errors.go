@@ -49,6 +49,24 @@ const (
 	// BacktrackIdentifier doesn't refer to an existing backtrack.
 	ErrCodeDBClusterBacktrackNotFoundFault = "DBClusterBacktrackNotFoundFault"
 
+	// ErrCodeDBClusterEndpointAlreadyExistsFault for service response error code
+	// "DBClusterEndpointAlreadyExistsFault".
+	//
+	// The specified custom endpoint can't be created because it already exists.
+	ErrCodeDBClusterEndpointAlreadyExistsFault = "DBClusterEndpointAlreadyExistsFault"
+
+	// ErrCodeDBClusterEndpointNotFoundFault for service response error code
+	// "DBClusterEndpointNotFoundFault".
+	//
+	// The specified custom endpoint doesn't exist.
+	ErrCodeDBClusterEndpointNotFoundFault = "DBClusterEndpointNotFoundFault"
+
+	// ErrCodeDBClusterEndpointQuotaExceededFault for service response error code
+	// "DBClusterEndpointQuotaExceededFault".
+	//
+	// The cluster already has the maximum number of custom endpoints.
+	ErrCodeDBClusterEndpointQuotaExceededFault = "DBClusterEndpointQuotaExceededFault"
+
 	// ErrCodeDBClusterNotFoundFault for service response error code
 	// "DBClusterNotFoundFault".
 	//
@@ -269,6 +287,13 @@ const (
 	// values are 2, 4, 8, 16, 32, 64, 128, and 256.
 	ErrCodeInvalidDBClusterCapacityFault = "InvalidDBClusterCapacityFault"
 
+	// ErrCodeInvalidDBClusterEndpointStateFault for service response error code
+	// "InvalidDBClusterEndpointStateFault".
+	//
+	// The requested operation can't be performed on the endpoint while the endpoint
+	// is in this state.
+	ErrCodeInvalidDBClusterEndpointStateFault = "InvalidDBClusterEndpointStateFault"
+
 	// ErrCodeInvalidDBClusterSnapshotStateFault for service response error code
 	// "InvalidDBClusterSnapshotStateFault".
 	//
@@ -278,7 +303,7 @@ const (
 	// ErrCodeInvalidDBClusterStateFault for service response error code
 	// "InvalidDBClusterStateFault".
 	//
-	// The DB cluster isn't in a valid state.
+	// The requested operation can't be performed while the cluster is in this state.
 	ErrCodeInvalidDBClusterStateFault = "InvalidDBClusterStateFault"
 
 	// ErrCodeInvalidDBInstanceStateFault for service response error code

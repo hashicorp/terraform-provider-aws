@@ -14,7 +14,7 @@ Provides a WAF Regional Regex Pattern Set Resource
 
 ```hcl
 resource "aws_wafregional_regex_pattern_set" "example" {
-  name = "example"
+  name                  = "example"
   regex_pattern_strings = ["one", "two"]
 }
 ```

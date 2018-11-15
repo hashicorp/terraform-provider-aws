@@ -786,6 +786,167 @@ func TestAccAWSSecurityGroupRule_EgressDescription_updates(t *testing.T) {
 	})
 }
 
+func TestAccAWSSecurityGroupRule_Description_AllPorts(t *testing.T) {
+	var group ec2.SecurityGroup
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	securityGroupResourceName := "aws_security_group.test"
+	resourceName := "aws_security_group_rule.test"
+
+	rule1 := ec2.IpPermission{
+		IpProtocol: aws.String("-1"),
+		IpRanges: []*ec2.IpRange{
+			{CidrIp: aws.String("0.0.0.0/0"), Description: aws.String("description1")},
+		},
+	}
+
+	rule2 := ec2.IpPermission{
+		IpProtocol: aws.String("-1"),
+		IpRanges: []*ec2.IpRange{
+			{CidrIp: aws.String("0.0.0.0/0"), Description: aws.String("description2")},
+		},
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSecurityGroupRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSecurityGroupRuleConfigDescriptionAllPorts(rName, "description1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSecurityGroupRuleExists(securityGroupResourceName, &group),
+					testAccCheckAWSSecurityGroupRuleAttributes(resourceName, &group, &rule1, "ingress"),
+					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
+					resource.TestCheckResourceAttr(resourceName, "from_port", "0"),
+					resource.TestCheckResourceAttr(resourceName, "protocol", "-1"),
+					resource.TestCheckResourceAttr(resourceName, "to_port", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSSecurityGroupRuleImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSSecurityGroupRuleConfigDescriptionAllPorts(rName, "description2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSecurityGroupRuleExists(securityGroupResourceName, &group),
+					testAccCheckAWSSecurityGroupRuleAttributes(resourceName, &group, &rule2, "ingress"),
+					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
+					resource.TestCheckResourceAttr(resourceName, "from_port", "0"),
+					resource.TestCheckResourceAttr(resourceName, "protocol", "-1"),
+					resource.TestCheckResourceAttr(resourceName, "to_port", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSecurityGroupRule_Description_AllPorts_NonZeroPorts(t *testing.T) {
+	var group ec2.SecurityGroup
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	securityGroupResourceName := "aws_security_group.test"
+	resourceName := "aws_security_group_rule.test"
+
+	rule1 := ec2.IpPermission{
+		IpProtocol: aws.String("-1"),
+		IpRanges: []*ec2.IpRange{
+			{CidrIp: aws.String("0.0.0.0/0"), Description: aws.String("description1")},
+		},
+	}
+
+	rule2 := ec2.IpPermission{
+		IpProtocol: aws.String("-1"),
+		IpRanges: []*ec2.IpRange{
+			{CidrIp: aws.String("0.0.0.0/0"), Description: aws.String("description2")},
+		},
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSecurityGroupRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSecurityGroupRuleConfigDescriptionAllPortsNonZeroPorts(rName, "description1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSecurityGroupRuleExists(securityGroupResourceName, &group),
+					testAccCheckAWSSecurityGroupRuleAttributes(resourceName, &group, &rule1, "ingress"),
+					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
+					resource.TestCheckResourceAttr(resourceName, "from_port", "-1"),
+					resource.TestCheckResourceAttr(resourceName, "protocol", "-1"),
+					resource.TestCheckResourceAttr(resourceName, "to_port", "-1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSSecurityGroupRuleImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSSecurityGroupRuleConfigDescriptionAllPortsNonZeroPorts(rName, "description2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSecurityGroupRuleExists(securityGroupResourceName, &group),
+					testAccCheckAWSSecurityGroupRuleAttributes(resourceName, &group, &rule2, "ingress"),
+					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
+					resource.TestCheckResourceAttr(resourceName, "from_port", "0"),
+					resource.TestCheckResourceAttr(resourceName, "protocol", "-1"),
+					resource.TestCheckResourceAttr(resourceName, "to_port", "0"),
+				),
+			},
+		},
+	})
+}
+
+// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/6416
+func TestAccAWSSecurityGroupRule_MultipleRuleSearching_AllProtocolCrash(t *testing.T) {
+	var group ec2.SecurityGroup
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	securityGroupResourceName := "aws_security_group.test"
+	resourceName1 := "aws_security_group_rule.test1"
+	resourceName2 := "aws_security_group_rule.test2"
+
+	rule1 := ec2.IpPermission{
+		IpProtocol: aws.String("-1"),
+		IpRanges: []*ec2.IpRange{
+			{CidrIp: aws.String("10.0.0.0/8")},
+		},
+	}
+
+	rule2 := ec2.IpPermission{
+		FromPort:   aws.Int64(443),
+		ToPort:     aws.Int64(443),
+		IpProtocol: aws.String("tcp"),
+		IpRanges: []*ec2.IpRange{
+			{CidrIp: aws.String("172.168.0.0/16")},
+		},
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSecurityGroupRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSecurityGroupRuleConfigMultipleRuleSearchingAllProtocolCrash(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSecurityGroupRuleExists(securityGroupResourceName, &group),
+					testAccCheckAWSSecurityGroupRuleAttributes(resourceName1, &group, &rule1, "ingress"),
+					testAccCheckAWSSecurityGroupRuleAttributes(resourceName2, &group, &rule2, "ingress"),
+					resource.TestCheckResourceAttr(resourceName1, "from_port", "0"),
+					resource.TestCheckResourceAttr(resourceName1, "protocol", "-1"),
+					resource.TestCheckResourceAttr(resourceName1, "to_port", "65535"),
+					resource.TestCheckResourceAttr(resourceName2, "from_port", "443"),
+					resource.TestCheckResourceAttr(resourceName2, "protocol", "tcp"),
+					resource.TestCheckResourceAttr(resourceName2, "to_port", "443"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSSecurityGroupRule_MultiDescription(t *testing.T) {
 	var group ec2.SecurityGroup
 	var nat ec2.SecurityGroup
@@ -1057,21 +1218,24 @@ func testAccCheckAWSSecurityGroupRuleAttributes(n string, group *ec2.SecurityGro
 		}
 
 		for _, r := range rules {
-			if r.ToPort != nil && *p.ToPort != *r.ToPort {
+			if p.ToPort != nil && r.ToPort != nil && *p.ToPort != *r.ToPort {
 				continue
 			}
 
-			if r.FromPort != nil && *p.FromPort != *r.FromPort {
+			if p.FromPort != nil && r.FromPort != nil && *p.FromPort != *r.FromPort {
 				continue
 			}
 
-			if r.IpProtocol != nil && *p.IpProtocol != *r.IpProtocol {
+			if p.IpProtocol != nil && r.IpProtocol != nil && *p.IpProtocol != *r.IpProtocol {
 				continue
 			}
 
 			remaining := len(p.IpRanges)
 			for _, ip := range p.IpRanges {
 				for _, rip := range r.IpRanges {
+					if ip.CidrIp == nil || rip.CidrIp == nil {
+						continue
+					}
 					if *ip.CidrIp == *rip.CidrIp {
 						remaining--
 					}
@@ -1085,6 +1249,9 @@ func testAccCheckAWSSecurityGroupRuleAttributes(n string, group *ec2.SecurityGro
 			remaining = len(p.Ipv6Ranges)
 			for _, ip := range p.Ipv6Ranges {
 				for _, rip := range r.Ipv6Ranges {
+					if ip.CidrIpv6 == nil || rip.CidrIpv6 == nil {
+						continue
+					}
 					if *ip.CidrIpv6 == *rip.CidrIpv6 {
 						remaining--
 					}
@@ -1098,6 +1265,9 @@ func testAccCheckAWSSecurityGroupRuleAttributes(n string, group *ec2.SecurityGro
 			remaining = len(p.UserIdGroupPairs)
 			for _, ip := range p.UserIdGroupPairs {
 				for _, rip := range r.UserIdGroupPairs {
+					if ip.GroupId == nil || rip.GroupId == nil {
+						continue
+					}
 					if *ip.GroupId == *rip.GroupId {
 						remaining--
 					}
@@ -1111,6 +1281,9 @@ func testAccCheckAWSSecurityGroupRuleAttributes(n string, group *ec2.SecurityGro
 			remaining = len(p.PrefixListIds)
 			for _, pip := range p.PrefixListIds {
 				for _, rpip := range r.PrefixListIds {
+					if pip.PrefixListId == nil || rpip.PrefixListId == nil {
+						continue
+					}
 					if *pip.PrefixListId == *rpip.PrefixListId {
 						remaining--
 					}
@@ -1724,6 +1897,80 @@ resource "aws_security_group_rule" "egress_1" {
     security_group_id = "${aws_security_group.web.id}"
 }
     `, rInt)
+}
+
+func testAccAWSSecurityGroupRuleConfigDescriptionAllPorts(rName, description string) string {
+	return fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name = %q
+
+  tags {
+    Name = "tf-acc-test-ec2-security-group-rule"
+  }
+}
+
+resource "aws_security_group_rule" "test" {
+  cidr_blocks       = ["0.0.0.0/0"]
+  description       = %q
+  from_port         = 0
+  protocol          = -1
+  security_group_id = "${aws_security_group.test.id}"
+  to_port           = 0
+  type              = "ingress"
+}
+`, rName, description)
+}
+
+func testAccAWSSecurityGroupRuleConfigDescriptionAllPortsNonZeroPorts(rName, description string) string {
+	return fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name = %q
+
+  tags {
+    Name = "tf-acc-test-ec2-security-group-rule"
+  }
+}
+
+resource "aws_security_group_rule" "test" {
+  cidr_blocks       = ["0.0.0.0/0"]
+  description       = %q
+  from_port         = -1
+  protocol          = -1
+  security_group_id = "${aws_security_group.test.id}"
+  to_port           = -1
+  type              = "ingress"
+}
+`, rName, description)
+}
+
+func testAccAWSSecurityGroupRuleConfigMultipleRuleSearchingAllProtocolCrash(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name = %q
+
+  tags {
+    Name = "tf-acc-test-ec2-security-group-rule"
+  }
+}
+
+resource "aws_security_group_rule" "test1" {
+  cidr_blocks       = ["10.0.0.0/8"]
+  from_port         = 0
+  protocol          = -1
+  security_group_id = "${aws_security_group.test.id}"
+  to_port           = 65535
+  type              = "ingress"
+}
+
+resource "aws_security_group_rule" "test2" {
+  cidr_blocks       = ["172.168.0.0/16"]
+  from_port         = 443
+  protocol          = "tcp"
+  security_group_id = "${aws_security_group.test.id}"
+  to_port           = 443
+  type              = "ingress"
+}
+`, rName)
 }
 
 var testAccAWSSecurityGroupRuleRace = func() string {

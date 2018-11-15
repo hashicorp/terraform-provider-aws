@@ -155,21 +155,6 @@ func testAccCheckAWSIAMAccountAliasExists(n string, a *string) resource.TestChec
 	}
 }
 
-func testAccCheckAwsIamAccountAlias(n string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Can't find Account Alias resource: %s", n)
-		}
-
-		if rs.Primary.Attributes["account_alias"] == "" {
-			return fmt.Errorf("Missing Account Alias")
-		}
-
-		return nil
-	}
-}
-
 func testAccAWSIAMAccountAliasConfig_with_datasource(rstring string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_account_alias" "test" {

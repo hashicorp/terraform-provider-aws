@@ -112,20 +112,16 @@ resource "aws_s3_bucket" "bucket" {
     id      = "log"
     enabled = true
 
-    prefix  = "log/"
+    prefix = "log/"
+
     tags {
       "rule"      = "log"
       "autoclean" = "true"
     }
 
     transition {
-      days = 15
-      storage_class = "ONEZONE_IA"
-    }
-
-    transition {
       days          = 30
-      storage_class = "STANDARD_IA"
+      storage_class = "STANDARD_IA" # or "ONEZONE_IA"
     }
 
     transition {
@@ -257,8 +253,8 @@ resource "aws_iam_policy_attachment" "replication" {
 }
 
 resource "aws_s3_bucket" "destination" {
-  bucket   = "tf-test-bucket-destination-12345"
-  region   = "eu-west-1"
+  bucket = "tf-test-bucket-destination-12345"
+  region = "eu-west-1"
 
   versioning {
     enabled = true
@@ -302,6 +298,7 @@ resource "aws_kms_key" "mykey" {
 
 resource "aws_s3_bucket" "mybucket" {
   bucket = "mybucket"
+
   server_side_encryption_configuration {
     rule {
       apply_server_side_encryption_by_default {
@@ -409,10 +406,19 @@ The `replication_configuration` object supports the following:
 The `rules` object supports the following:
 
 * `id` - (Optional) Unique identifier for the rule.
+* `priority` - (Optional) The priority associated with the rule.
 * `destination` - (Required) Specifies the destination for the rule (documented below).
 * `source_selection_criteria` - (Optional) Specifies special object selection criteria (documented below).
-* `prefix` - (Required) Object keyname prefix identifying one or more objects to which the rule applies. Set as an empty string to replicate the whole bucket.
+* `prefix` - (Optional) Object keyname prefix identifying one or more objects to which the rule applies.
 * `status` - (Required) The status of the rule. Either `Enabled` or `Disabled`. The rule is ignored if status is not Enabled.
+* `filter` - (Optional) Filter that identifies subset of objects to which the replication rule applies (documented below).
+
+~> **NOTE on `prefix` and `filter`:** Amazon S3's latest version of the replication configuration is V2, which includes the `filter` attribute for replication rules.
+With the `filter` attribute, you can specify object filters based on the object key prefix, tags, or both to scope the objects that the rule applies to.
+Replication configuration V1 supports filtering based on only the `prefix` attribute. For backwards compatibility, Amazon S3 continues to support the V1 configuration.
+* For a specific rule, `prefix` conflicts with `filter`
+* If any rule has `filter` specified then they all must
+* `priority` is optional (with a default value of `0`) but must be unique between multiple rules
 
 The `destination` object supports the following:
 
@@ -431,6 +437,12 @@ The `source_selection_criteria` object supports the following:
 The `sse_kms_encrypted_objects` object supports the following:
 
 * `enabled` - (Required) Boolean which indicates if this criteria is enabled.
+
+The `filter` object supports the following:
+
+* `prefix` - (Optional) Object keyname prefix that identifies subset of objects to which the rule applies.
+* `tags` - (Optional)  A mapping of tags that identifies subset of objects to which the rule applies.
+The rule applies only to objects having all the tags in its tagset.
 
 The `server_side_encryption_configuration` object supports the following:
 

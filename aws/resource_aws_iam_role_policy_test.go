@@ -96,6 +96,7 @@ func TestAccAWSIAMRolePolicy_namePrefix(t *testing.T) {
 						"aws_iam_role_policy.test",
 						&rolePolicy1,
 					),
+					resource.TestCheckResourceAttrSet("aws_iam_role_policy.test", "name"),
 				),
 			},
 			{
@@ -107,6 +108,7 @@ func TestAccAWSIAMRolePolicy_namePrefix(t *testing.T) {
 						&rolePolicy2,
 					),
 					testAccCheckAWSIAMRolePolicyNameMatches(&rolePolicy1, &rolePolicy2),
+					resource.TestCheckResourceAttrSet("aws_iam_role_policy.test", "name"),
 				),
 			},
 		},
@@ -131,6 +133,7 @@ func TestAccAWSIAMRolePolicy_generatedName(t *testing.T) {
 						"aws_iam_role_policy.test",
 						&rolePolicy1,
 					),
+					resource.TestCheckResourceAttrSet("aws_iam_role_policy.test", "name"),
 				),
 			},
 			{
@@ -142,6 +145,7 @@ func TestAccAWSIAMRolePolicy_generatedName(t *testing.T) {
 						&rolePolicy2,
 					),
 					testAccCheckAWSIAMRolePolicyNameMatches(&rolePolicy1, &rolePolicy2),
+					resource.TestCheckResourceAttrSet("aws_iam_role_policy.test", "name"),
 				),
 			},
 		},

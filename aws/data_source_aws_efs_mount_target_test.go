@@ -17,6 +17,7 @@ func TestAccDataSourceAwsEfsMountTargetByMountTargetId(t *testing.T) {
 			{
 				Config: testAccAwsEfsMountTargetConfigByMountTargetId(rName),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair("data.aws_efs_mount_target.by_mount_target_id", "file_system_arn", "aws_efs_mount_target.alpha", "file_system_arn"),
 					resource.TestCheckResourceAttrSet("data.aws_efs_mount_target.by_mount_target_id", "file_system_id"),
 					resource.TestCheckResourceAttrSet("data.aws_efs_mount_target.by_mount_target_id", "ip_address"),
 					resource.TestCheckResourceAttrSet("data.aws_efs_mount_target.by_mount_target_id", "subnet_id"),

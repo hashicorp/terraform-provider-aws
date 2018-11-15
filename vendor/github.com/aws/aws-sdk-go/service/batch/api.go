@@ -145,13 +145,14 @@ func (c *Batch) CreateComputeEnvironmentRequest(input *CreateComputeEnvironmentI
 // Creates an AWS Batch compute environment. You can create MANAGED or UNMANAGED
 // compute environments.
 //
-// In a managed compute environment, AWS Batch manages the compute resources
-// within the environment, based on the compute resources that you specify.
-// Instances launched into a managed compute environment use a recent, approved
-// version of the Amazon ECS-optimized AMI. You can choose to use Amazon EC2
-// On-Demand Instances in your managed compute environment, or you can use Amazon
-// EC2 Spot Instances that only launch when the Spot bid price is below a specified
-// percentage of the On-Demand price.
+// In a managed compute environment, AWS Batch manages the capacity and instance
+// types of the compute resources within the environment, based on the compute
+// resource specification that you define or launch template (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-launch-templates.html)
+// that you specify when you create the compute environment. You can choose
+// to use Amazon EC2 On-Demand Instances or Spot Instances in your managed compute
+// environment. You can optionally set a maximum price so that Spot Instances
+// only launch when the Spot Instance price is below a specified percentage
+// of the On-Demand price.
 //
 // In an unmanaged compute environment, you can manage your own compute resources.
 // This provides more compute resource configuration options, such as using
@@ -164,6 +165,21 @@ func (c *Batch) CreateComputeEnvironmentRequest(input *CreateComputeEnvironmentI
 // manually launch your container instances into that Amazon ECS cluster. For
 // more information, see Launching an Amazon ECS Container Instance (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/launch_container_instance.html)
 // in the Amazon Elastic Container Service Developer Guide.
+//
+// AWS Batch does not upgrade the AMIs in a compute environment after it is
+// created (for example, when a newer version of the Amazon ECS-optimized AMI
+// is available). You are responsible for the management of the guest operating
+// system (including updates and security patches) and any additional application
+// software or utilities that you install on the compute resources. To use a
+// new AMI for your AWS Batch jobs:
+//
+// Create a new compute environment with the new AMI.
+//
+// Add the compute environment to an existing job queue.
+//
+// Remove the old compute environment from your job queue.
+//
+// Delete the old compute environment.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -941,9 +957,13 @@ func (c *Batch) ListJobsRequest(input *ListJobsInput) (req *request.Request, out
 
 // ListJobs API operation for AWS Batch.
 //
-// Returns a list of task jobs for a specified job queue. You can filter the
-// results by job status with the jobStatus parameter. If you do not specify
-// a status, only RUNNING jobs are returned.
+// Returns a list of AWS Batch jobs. You must specify either a job queue to
+// return a list of jobs in that job queue, or an array job ID to return a list
+// of that job's children. You cannot specify both a job queue and an array
+// job ID.
+//
+// You can filter the results by job status with the jobStatus parameter. If
+// you do not specify a status, only RUNNING jobs are returned.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1726,8 +1746,17 @@ type ComputeEnvironmentDetail struct {
 	ServiceRole *string `locationName:"serviceRole" type:"string"`
 
 	// The state of the compute environment. The valid values are ENABLED or DISABLED.
-	// An ENABLED state indicates that you can register instances with the compute
-	// environment and that the associated instances can accept jobs.
+	//
+	// If the state is ENABLED, then the AWS Batch scheduler can attempt to place
+	// jobs from an associated job queue on the compute resources within the environment.
+	// If the compute environment is managed, then it can scale its instances out
+	// or in automatically, based on job queue demand.
+	//
+	// If the state is DISABLED, then the AWS Batch scheduler does not attempt to
+	// place jobs within the environment. Jobs in a STARTING or RUNNING state continue
+	// to progress normally. Managed compute environments in the DISABLED state
+	// do not scale out; however, they scale in to minvCpus value once instances
+	// become idle.
 	State *string `locationName:"state" type:"string" enum:"CEState"`
 
 	// The current status of the compute environment (for example, CREATING or VALID).
@@ -1865,10 +1894,13 @@ func (s *ComputeEnvironmentOrder) SetOrder(v int64) *ComputeEnvironmentOrder {
 type ComputeResource struct {
 	_ struct{} `type:"structure"`
 
-	// The minimum percentage that a Spot Instance price must be when compared with
+	// The maximum percentage that a Spot Instance price can be when compared with
 	// the On-Demand price for that instance type before instances are launched.
-	// For example, if your bid percentage is 20%, then the Spot price must be below
-	// 20% of the current On-Demand price for that EC2 instance.
+	// For example, if your maximum percentage is 20%, then the Spot price must
+	// be below 20% of the current On-Demand price for that EC2 instance. You always
+	// pay the lowest (market) price and never more than your maximum percentage.
+	// If you leave this field empty, the default value is 100% of the On-Demand
+	// price.
 	BidPercentage *int64 `locationName:"bidPercentage" type:"integer"`
 
 	// The desired number of EC2 vCPUS in the compute environment.
@@ -1899,21 +1931,26 @@ type ComputeResource struct {
 	// InstanceTypes is a required field
 	InstanceTypes []*string `locationName:"instanceTypes" type:"list" required:"true"`
 
+	// The launch template to use for your compute resources. Any other compute
+	// resource parameters that you specify in a CreateComputeEnvironment API operation
+	// override the same parameters in the launch template. You must specify either
+	// the launch template ID or launch template name in the request, but not both.
+	LaunchTemplate *LaunchTemplateSpecification `locationName:"launchTemplate" type:"structure"`
+
 	// The maximum number of EC2 vCPUs that an environment can reach.
 	//
 	// MaxvCpus is a required field
 	MaxvCpus *int64 `locationName:"maxvCpus" type:"integer" required:"true"`
 
-	// The minimum number of EC2 vCPUs that an environment should maintain.
+	// The minimum number of EC2 vCPUs that an environment should maintain (even
+	// if the compute environment is DISABLED).
 	//
 	// MinvCpus is a required field
 	MinvCpus *int64 `locationName:"minvCpus" type:"integer" required:"true"`
 
 	// The EC2 security group that is associated with instances launched in the
 	// compute environment.
-	//
-	// SecurityGroupIds is a required field
-	SecurityGroupIds []*string `locationName:"securityGroupIds" type:"list" required:"true"`
+	SecurityGroupIds []*string `locationName:"securityGroupIds" type:"list"`
 
 	// The Amazon Resource Name (ARN) of the Amazon EC2 Spot Fleet IAM role applied
 	// to a SPOT compute environment.
@@ -1958,9 +1995,6 @@ func (s *ComputeResource) Validate() error {
 	}
 	if s.MinvCpus == nil {
 		invalidParams.Add(request.NewErrParamRequired("MinvCpus"))
-	}
-	if s.SecurityGroupIds == nil {
-		invalidParams.Add(request.NewErrParamRequired("SecurityGroupIds"))
 	}
 	if s.Subnets == nil {
 		invalidParams.Add(request.NewErrParamRequired("Subnets"))
@@ -2008,6 +2042,12 @@ func (s *ComputeResource) SetInstanceRole(v string) *ComputeResource {
 // SetInstanceTypes sets the InstanceTypes field's value.
 func (s *ComputeResource) SetInstanceTypes(v []*string) *ComputeResource {
 	s.InstanceTypes = v
+	return s
+}
+
+// SetLaunchTemplate sets the LaunchTemplate field's value.
+func (s *ComputeResource) SetLaunchTemplate(v *LaunchTemplateSpecification) *ComputeResource {
+	s.LaunchTemplate = v
 	return s
 }
 
@@ -2628,7 +2668,9 @@ type CreateComputeEnvironmentInput struct {
 	// on queues.
 	State *string `locationName:"state" type:"string" enum:"CEState"`
 
-	// The type of the compute environment.
+	// The type of the compute environment. For more information, see Compute Environments
+	// (http://docs.aws.amazon.com/batch/latest/userguide/compute_environments.html)
+	// in the AWS Batch User Guide.
 	//
 	// Type is a required field
 	Type *string `locationName:"type" type:"string" required:"true" enum:"CEType"`
@@ -3604,6 +3646,9 @@ type JobDetail struct {
 
 	// The current status for the job.
 	//
+	// If your jobs do not progress to STARTING, see Jobs Stuck in  (http://docs.aws.amazon.com/batch/latest/userguide/troubleshooting.html#job_stuck_in_runnable)RUNNABLE
+	// Status in the troubleshooting section of the AWS Batch User Guide.
+	//
 	// Status is a required field
 	Status *string `locationName:"status" type:"string" required:"true" enum:"JobStatus"`
 
@@ -3984,15 +4029,62 @@ func (s *KeyValuePair) SetValue(v string) *KeyValuePair {
 	return s
 }
 
+// An object representing a launch template associated with a compute resource.
+// You must specify either the launch template ID or launch template name in
+// the request, but not both.
+type LaunchTemplateSpecification struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the launch template.
+	LaunchTemplateId *string `locationName:"launchTemplateId" type:"string"`
+
+	// The name of the launch template.
+	LaunchTemplateName *string `locationName:"launchTemplateName" type:"string"`
+
+	// The version number of the launch template.
+	//
+	// Default: The default version of the launch template.
+	Version *string `locationName:"version" type:"string"`
+}
+
+// String returns the string representation
+func (s LaunchTemplateSpecification) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LaunchTemplateSpecification) GoString() string {
+	return s.String()
+}
+
+// SetLaunchTemplateId sets the LaunchTemplateId field's value.
+func (s *LaunchTemplateSpecification) SetLaunchTemplateId(v string) *LaunchTemplateSpecification {
+	s.LaunchTemplateId = &v
+	return s
+}
+
+// SetLaunchTemplateName sets the LaunchTemplateName field's value.
+func (s *LaunchTemplateSpecification) SetLaunchTemplateName(v string) *LaunchTemplateSpecification {
+	s.LaunchTemplateName = &v
+	return s
+}
+
+// SetVersion sets the Version field's value.
+func (s *LaunchTemplateSpecification) SetVersion(v string) *LaunchTemplateSpecification {
+	s.Version = &v
+	return s
+}
+
 type ListJobsInput struct {
 	_ struct{} `type:"structure"`
 
 	// The job ID for an array job. Specifying an array job ID with this parameter
-	// lists all child jobs from within the specified array.
+	// lists all child jobs from within the specified array. You must specify either
+	// a job queue or an array job ID.
 	ArrayJobId *string `locationName:"arrayJobId" type:"string"`
 
 	// The name or full Amazon Resource Name (ARN) of the job queue with which to
-	// list jobs.
+	// list jobs. You must specify either a job queue or an array job ID.
 	JobQueue *string `locationName:"jobQueue" type:"string"`
 
 	// The job status with which to filter jobs in the specified queue. If you do

@@ -39,7 +39,7 @@ resource "aws_cognito_resource_server" "resource" {
   name       = "example"
 
   scope = [{
-    scope_name = "sample-scope"
+    scope_name        = "sample-scope"
     scope_description = "a Sample Scope Description"
   }]
 

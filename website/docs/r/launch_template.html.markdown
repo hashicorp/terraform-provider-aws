@@ -18,9 +18,14 @@ resource "aws_launch_template" "foo" {
 
   block_device_mappings {
     device_name = "/dev/sda1"
+
     ebs {
       volume_size = 20
     }
+  }
+
+  capacity_reservation_specification {
+    capacity_reservation_preference = "open"
   }
 
   credit_specification {
@@ -71,11 +76,12 @@ resource "aws_launch_template" "foo" {
 
   tag_specifications {
     resource_type = "instance"
+
     tags {
       Name = "test"
     }
   }
-  
+
   user_data = "${base64encode(...)}"
 }
 ```
@@ -89,7 +95,8 @@ The following arguments are supported:
 * `description` - Description of the launch template.
 * `block_device_mappings` - Specify volumes to attach to the instance besides the volumes specified by the AMI.
   See [Block Devices](#block-devices) below for details.
-* `credit_specification` - Customize the credit specification of the instance. See [Credit 
+* `capacity_reservation_specification` - Targeting for EC2 capacity reservations. See [Capacity Reservation Specification](#capacity-reservation-specification) below for more details.
+* `credit_specification` - Customize the credit specification of the instance. See [Credit
   Specification](#credit-specification) below for more details.
 * `disable_api_termination` - If `true`, enables [EC2 Instance
   Termination Protection](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/terminating-instances.html#Using_ChangingDisableAPITermination)
@@ -107,7 +114,7 @@ The following arguments are supported:
 * `kernel_id` - The kernel ID.
 * `key_name` - The key name to use for the instance.
 * `monitoring` - The monitoring option for the instance. See [Monitoring](#monitoring) below for more details.
-* `network_interfaces` - Customize network interfaces to be attached at instance boot time. See [Network 
+* `network_interfaces` - Customize network interfaces to be attached at instance boot time. See [Network
   Interfaces](#network-interfaces) below for more details.
 * `placement` - The placement of the instance. See [Placement](#placement) below for more details.
 * `ram_disk_id` - The ID of the RAM disk.
@@ -149,6 +156,17 @@ The `ebs` block supports the following:
 * `volume_size` - The size of the volume in gigabytes.
 * `volume_type` - The type of volume. Can be `"standard"`, `"gp2"`, or `"io1"`. (Default: `"standard"`).
 
+### Capacity Reservation Specification
+
+The `capacity_reservation_specification` block supports the following:
+
+* `capacity_reservation_preference` - Indicates the instance's Capacity Reservation preferences. Can be `open` or `none`. (Default `none`).
+* `capacity_reservation_target` - Used to target a specific Capacity Reservation:
+
+The `capacity_reservation_target` block supports the following:
+
+* `capacity_reservation_id` - The ID of the Capacity Reservation to target.
+
 ### Credit Specification
 
 Credit specification can be applied/modified to the EC2 Instance at any time.
@@ -187,7 +205,7 @@ The `instance_market_options` block supports the following:
 The `spot_options` block supports the following:
 
 * `block_duration_minutes` - The required duration in minutes. This value must be a multiple of 60.
-* `instance_interruption_behavior` - The behavior when a Spot Instance is interrupted. Can be `hibernate`, 
+* `instance_interruption_behavior` - The behavior when a Spot Instance is interrupted. Can be `hibernate`,
   `stop`, or `terminate`. (Default: `terminate`).
 * `max_price` - The maximum hourly price you're willing to pay for the Spot Instances.
 * `spot_instance_type` - The Spot Instance request type. Can be `one-time`, or `persistent`.

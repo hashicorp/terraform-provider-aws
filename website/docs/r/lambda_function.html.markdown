@@ -134,6 +134,12 @@ For **environment** the following attributes are supported:
 [8]: https://docs.aws.amazon.com/lambda/latest/dg/deployment-package-v2.html
 [9]: https://docs.aws.amazon.com/lambda/latest/dg/concurrent-executions.html
 
+## Timeouts
+
+`aws_lambda_function` provides the following [Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+
+* `create` - (Default `10m`) How long to wait for slow uploads or EC2 throttling errors.
+
 ## Import
 
 Lambda Functions can be imported using the `function_name`, e.g.

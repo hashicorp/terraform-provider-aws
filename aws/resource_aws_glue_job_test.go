@@ -361,6 +361,40 @@ func TestAccAWSGlueJob_Timeout(t *testing.T) {
 	})
 }
 
+func TestAccAWSGlueJob_SecurityConfiguration(t *testing.T) {
+	var job glue.Job
+
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	resourceName := "aws_glue_job.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSGlueJobDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSGlueJobConfig_SecurityConfiguration(rName, "default_encryption"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueJobExists(resourceName, &job),
+					resource.TestCheckResourceAttr(resourceName, "security_configuration", "default_encryption"),
+				),
+			},
+			{
+				Config: testAccAWSGlueJobConfig_SecurityConfiguration(rName, "custom_encryption2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueJobExists(resourceName, &job),
+					resource.TestCheckResourceAttr(resourceName, "security_configuration", "custom_encryption2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSGlueJobExists(resourceName string, job *glue.Job) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -604,4 +638,22 @@ resource "aws_glue_job" "test" {
   depends_on = ["aws_iam_role_policy_attachment.test"]
 }
 `, testAccAWSGlueJobConfig_Base(rName), rName, timeout)
+}
+
+func testAccAWSGlueJobConfig_SecurityConfiguration(rName string, securityConfiguration string) string {
+	return fmt.Sprintf(`
+%s
+
+resource "aws_glue_job" "test" {
+ name                   = "%s"
+ role_arn               = "${aws_iam_role.test.arn}"
+ security_configuration = "%s"
+
+ command {
+   script_location = "testscriptlocation"
+ }
+
+ depends_on = ["aws_iam_role_policy_attachment.test"]
+}
+`, testAccAWSGlueJobConfig_Base(rName), rName, securityConfiguration)
 }

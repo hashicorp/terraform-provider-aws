@@ -38,7 +38,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "example" {
-  role        = "${aws_iam_role.example.name}"
+  role = "${aws_iam_role.example.name}"
 
   policy = <<POLICY
 {
@@ -84,10 +84,10 @@ POLICY
 }
 
 resource "aws_codebuild_project" "example" {
-  name         = "test-project"
-  description  = "test_codebuild_project"
-  build_timeout      = "5"
-  service_role = "${aws_iam_role.example.arn}"
+  name          = "test-project"
+  description   = "test_codebuild_project"
+  build_timeout = "5"
+  service_role  = "${aws_iam_role.example.arn}"
 
   artifacts {
     type = "NO_ARTIFACTS"
@@ -192,13 +192,13 @@ The following arguments are supported:
 
 `source` supports the following:
 
-* `type` - (Required) The type of repository that contains the source code to be built. Valid values for this parameter are: `CODECOMMIT`, `CODEPIPELINE`, `GITHUB`, `GITHUB_ENTERPRISE`, `BITBUCKET` or `S3`.
+* `type` - (Required) The type of repository that contains the source code to be built. Valid values for this parameter are: `CODECOMMIT`, `CODEPIPELINE`, `GITHUB`, `GITHUB_ENTERPRISE`, `BITBUCKET`, `S3` or `NO_SOURCE`.
 * `auth` - (Optional) Information about the authorization settings for AWS CodeBuild to access the source code to be built. Auth blocks are documented below.
-* `buildspec` - (Optional) The build spec declaration to use for this build project's related builds.
+* `buildspec` - (Optional) The build spec declaration to use for this build project's related builds. This must be set when `type` is `NO_SOURCE`.
 * `git_clone_depth` - (Optional) Truncate git history to this many commits.
 * `insecure_ssl` - (Optional) Ignore SSL warnings when connecting to source control.
 * `location` - (Optional) The location of the source code from git or s3.
-* `report_build_status` - (Optional) Set to `true` to report the status of a build's start and finish to your source provider. This option is only valid when your source provider is GitHub.
+* `report_build_status` - (Optional) Set to `true` to report the status of a build's start and finish to your source provider. This option is only valid when the `type` is `BITBUCKET` or `GITHUB`.
 
 `auth` supports the following:
 

@@ -27,6 +27,9 @@ fmt:
 fmtcheck:
 	@sh -c "'$(CURDIR)/scripts/gofmtcheck.sh'"
 
+websitefmtcheck:
+	@sh -c "'$(CURDIR)/scripts/websitefmtcheck.sh'"
+
 lint:
 	@echo "==> Checking source code against linters..."
 	@gometalinter ./$(PKG_NAME)

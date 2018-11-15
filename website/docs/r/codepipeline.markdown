@@ -42,6 +42,7 @@ EOF
 resource "aws_iam_role_policy" "codepipeline_policy" {
   name = "codepipeline_policy"
   role = "${aws_iam_role.codepipeline_role.id}"
+
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -82,6 +83,7 @@ resource "aws_codepipeline" "foo" {
   artifact_store {
     location = "${aws_s3_bucket.foo.bucket}"
     type     = "S3"
+
     encryption_key {
       id   = "${data.aws_kms_alias.s3kmskey.arn}"
       type = "KMS"
@@ -100,9 +102,9 @@ resource "aws_codepipeline" "foo" {
       output_artifacts = ["test"]
 
       configuration {
-        Owner      = "my-organization"
-        Repo       = "test"
-        Branch     = "master"
+        Owner  = "my-organization"
+        Repo   = "test"
+        Branch = "master"
       }
     }
   }

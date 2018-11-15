@@ -923,61 +923,6 @@ resource "aws_elastic_beanstalk_environment" "tfenvtest" {
 }`, appName, envName)
 }
 
-func testAccBeanstalkEnvConfig_settings_update(appName, envName string) string {
-	return fmt.Sprintf(`
-resource "aws_elastic_beanstalk_application" "tftest" {
-  name = "%s"
-  description = "tf-test-desc"
-}
-
-resource "aws_elastic_beanstalk_environment" "tfenvtest" {
-  name                = "%s"
-  application         = "${aws_elastic_beanstalk_application.tftest.name}"
-  solution_stack_name = "64bit Amazon Linux running Python"
-
-  wait_for_ready_timeout = "15m"
-
-  setting {
-    namespace = "aws:elasticbeanstalk:application:environment"
-    name      = "ENV_STATIC"
-    value     = "true"
-  }
-
-  setting {
-    namespace = "aws:elasticbeanstalk:application:environment"
-    name      = "ENV_UPDATE"
-    value     = "false"
-  }
-
-  setting {
-    namespace = "aws:elasticbeanstalk:application:environment"
-    name      = "ENV_ADD"
-    value     = "true"
-  }
-
-  setting {
-    namespace = "aws:autoscaling:scheduledaction"
-    resource  = "ScheduledAction01"
-    name      = "MinSize"
-    value     = 2
-  }
-
-  setting {
-    namespace = "aws:autoscaling:scheduledaction"
-    resource  = "ScheduledAction01"
-    name      = "MaxSize"
-    value     = 3
-  }
-
-  setting {
-    namespace = "aws:autoscaling:scheduledaction"
-    resource  = "ScheduledAction01"
-    name      = "StartTime"
-    value     = "2016-07-28T04:07:02Z"
-  }
-}`, appName, envName)
-}
-
 func testAccBeanstalkWorkerEnvConfig(instanceProfileName, roleName, policyName, appName, envName string) string {
 	return fmt.Sprintf(`
  resource "aws_iam_instance_profile" "tftest" {

@@ -35,9 +35,10 @@ resource "aws_s3_bucket_inventory" "test" {
 
   destination {
     bucket {
-      format = "ORC"
+      format     = "ORC"
       bucket_arn = "${aws_s3_bucket.inventory.arn}"
     }
+  }
 }
 ```
 
@@ -68,9 +69,9 @@ resource "aws_s3_bucket_inventory" "test-prefix" {
 
   destination {
     bucket {
-      format = "ORC"
+      format     = "ORC"
       bucket_arn = "${aws_s3_bucket.inventory.arn}"
-      prefix = "inventory"
+      prefix     = "inventory"
     }
   }
 }
@@ -122,6 +123,6 @@ The `sse_kms` configuration supports the following:
 
 S3 bucket inventory configurations can be imported using `bucket:inventory`, e.g.
 
-```
+```sh
 $ terraform import aws_s3_bucket_inventory.my-bucket-entire-bucket my-bucket:EntireBucket
 ```

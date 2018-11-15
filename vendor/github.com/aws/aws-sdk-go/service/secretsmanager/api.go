@@ -218,10 +218,11 @@ func (c *SecretsManager) CreateSecretRequest(input *CreateSecretInput) (req *req
 // that secret doesn't specify a AWS KMS encryption key, Secrets Manager uses
 // the account's default AWS managed customer master key (CMK) with the alias
 // aws/secretsmanager. If this key doesn't already exist in your account then
-// Secrets Manager creates it for you automatically. All users in the same AWS
-// account automatically have access to use the default CMK. Note that if an
-// Secrets Manager API call results in AWS having to create the account's AWS-managed
-// CMK, it can result in a one-time significant delay in returning the result.
+// Secrets Manager creates it for you automatically. All users and roles in
+// the same AWS account automatically have access to use the default CMK. Note
+// that if an Secrets Manager API call results in AWS having to create the account's
+// AWS-managed CMK, it can result in a one-time significant delay in returning
+// the result.
 //
 // If the secret is in a different AWS account from the credentials calling
 // an API that requires encryption or decryption of the secret value then you
@@ -247,6 +248,9 @@ func (c *SecretsManager) CreateSecretRequest(input *CreateSecretInput) (req *req
 //    * kms:Decrypt - needed only if you use a customer-managed AWS KMS key
 //    to encrypt the secret. You do not need this permission to use the account's
 //    default AWS managed CMK for Secrets Manager.
+//
+//    * secretsmanager:TagResource - needed only if you include the Tags parameter.
+//
 //
 // Related operations
 //
@@ -1540,10 +1544,11 @@ func (c *SecretsManager) PutSecretValueRequest(input *PutSecretValueInput) (req 
 // that secret doesn't specify a AWS KMS encryption key, Secrets Manager uses
 // the account's default AWS managed customer master key (CMK) with the alias
 // aws/secretsmanager. If this key doesn't already exist in your account then
-// Secrets Manager creates it for you automatically. All users in the same AWS
-// account automatically have access to use the default CMK. Note that if an
-// Secrets Manager API call results in AWS having to create the account's AWS-managed
-// CMK, it can result in a one-time significant delay in returning the result.
+// Secrets Manager creates it for you automatically. All users and roles in
+// the same AWS account automatically have access to use the default CMK. Note
+// that if an Secrets Manager API call results in AWS having to create the account's
+// AWS-managed CMK, it can result in a one-time significant delay in returning
+// the result.
 //
 // If the secret is in a different AWS account from the credentials calling
 // an API that requires encryption or decryption of the secret value then you
@@ -2235,10 +2240,11 @@ func (c *SecretsManager) UpdateSecretRequest(input *UpdateSecretInput) (req *req
 // that secret doesn't specify a AWS KMS encryption key, Secrets Manager uses
 // the account's default AWS managed customer master key (CMK) with the alias
 // aws/secretsmanager. If this key doesn't already exist in your account then
-// Secrets Manager creates it for you automatically. All users in the same AWS
-// account automatically have access to use the default CMK. Note that if an
-// Secrets Manager API call results in AWS having to create the account's AWS-managed
-// CMK, it can result in a one-time significant delay in returning the result.
+// Secrets Manager creates it for you automatically. All users and roles in
+// the same AWS account automatically have access to use the default CMK. Note
+// that if an Secrets Manager API call results in AWS having to create the account's
+// AWS-managed CMK, it can result in a one-time significant delay in returning
+// the result.
 //
 // If the secret is in a different AWS account from the credentials calling
 // an API that requires encryption or decryption of the secret value then you
@@ -5270,15 +5276,14 @@ func (s *UpdateSecretOutput) SetVersionId(v string) *UpdateSecretOutput {
 type UpdateSecretVersionStageInput struct {
 	_ struct{} `type:"structure"`
 
-	// (Optional) The secret version ID that you want to add the staging labels
-	// to. If you want to remove a label from a version, then do not specify this
-	// parameter.
+	// (Optional) The secret version ID that you want to add the staging label to.
+	// If you want to remove a label from a version, then do not specify this parameter.
 	//
-	// If any of the staging labels are already attached to a different version
-	// of the secret, then you must also specify the RemoveFromVersionId parameter.
+	// If the staging label is already attached to a different version of the secret,
+	// then you must also specify the RemoveFromVersionId parameter.
 	MoveToVersionId *string `min:"32" type:"string"`
 
-	// Specifies the secret version ID of the version that the staging labels are
+	// Specifies the secret version ID of the version that the staging label is
 	// to be removed from. If the staging label you are trying to attach to one
 	// version is already attached to a different version, then you must include
 	// this parameter and specify the version that the label is to be removed from.
@@ -5305,7 +5310,7 @@ type UpdateSecretVersionStageInput struct {
 	// SecretId is a required field
 	SecretId *string `min:"1" type:"string" required:"true"`
 
-	// The list of staging labels to add to this version.
+	// The staging label to add to this version.
 	//
 	// VersionStage is a required field
 	VersionStage *string `min:"1" type:"string" required:"true"`
@@ -5376,10 +5381,10 @@ func (s *UpdateSecretVersionStageInput) SetVersionStage(v string) *UpdateSecretV
 type UpdateSecretVersionStageOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN of the secret with the staging labels that were modified.
+	// The ARN of the secret with the staging label that was modified.
 	ARN *string `min:"20" type:"string"`
 
-	// The friendly name of the secret with the staging labels that were modified.
+	// The friendly name of the secret with the staging label that was modified.
 	Name *string `min:"1" type:"string"`
 }
 

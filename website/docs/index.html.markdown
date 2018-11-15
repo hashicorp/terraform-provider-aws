@@ -72,7 +72,7 @@ provider "aws" {}
 
 Usage:
 
-```hcl
+```sh
 $ export AWS_ACCESS_KEY_ID="anaccesskey"
 $ export AWS_SECRET_ACCESS_KEY="asecretkey"
 $ export AWS_DEFAULT_REGION="us-west-2"
@@ -231,6 +231,10 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
   - [`aws_ebs_volume` data source](/docs/providers/aws/d/ebs_volume.html)
   - [`aws_ecs_cluster` resource (import)](/docs/providers/aws/r/ecs_cluster.html)
   - [`aws_ecs_service` resource (import)](/docs/providers/aws/r/ecs_service.html)
+  - [`aws_efs_file_system` data source](/docs/providers/aws/d/efs_file_system.html)
+  - [`aws_efs_file_system` resource](/docs/providers/aws/r/efs_file_system.html)
+  - [`aws_efs_mount_target` data source](/docs/providers/aws/d/efs_mount_target.html)
+  - [`aws_efs_mount_target` resource](/docs/providers/aws/r/efs_mount_target.html)
   - [`aws_elasticache_cluster` data source](/docs/providers/aws/d/elasticache_cluster.html)
   - [`aws_elasticache_cluster` resource](/docs/providers/aws/r/elasticache_cluster.html)
   - [`aws_elb` resource](/docs/providers/aws/r/elb.html)

@@ -13,78 +13,6 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestParseTaskDefinition(t *testing.T) {
-	cases := map[string]map[string]interface{}{
-		"invalid": {
-			"family":   "",
-			"revision": "",
-			"isValid":  false,
-		},
-		"invalidWithColon:": {
-			"family":   "",
-			"revision": "",
-			"isValid":  false,
-		},
-		"1234": {
-			"family":   "",
-			"revision": "",
-			"isValid":  false,
-		},
-		"invalid:aaa": {
-			"family":   "",
-			"revision": "",
-			"isValid":  false,
-		},
-		"invalid=family:1": {
-			"family":   "",
-			"revision": "",
-			"isValid":  false,
-		},
-		"invalid:name:1": {
-			"family":   "",
-			"revision": "",
-			"isValid":  false,
-		},
-		"valid:1": {
-			"family":   "valid",
-			"revision": "1",
-			"isValid":  true,
-		},
-		"abc12-def:54": {
-			"family":   "abc12-def",
-			"revision": "54",
-			"isValid":  true,
-		},
-		"lorem_ip-sum:123": {
-			"family":   "lorem_ip-sum",
-			"revision": "123",
-			"isValid":  true,
-		},
-		"lorem-ipsum:1": {
-			"family":   "lorem-ipsum",
-			"revision": "1",
-			"isValid":  true,
-		},
-	}
-
-	for input, expectedOutput := range cases {
-		family, revision, err := parseTaskDefinition(input)
-		isValid := expectedOutput["isValid"].(bool)
-		if !isValid && err == nil {
-			t.Fatalf("Task definition %s should fail", input)
-		}
-
-		expectedFamily := expectedOutput["family"].(string)
-		if family != expectedFamily {
-			t.Fatalf("Unexpected family (%#v) for task definition %s\n%#v", family, input, err)
-		}
-		expectedRevision := expectedOutput["revision"].(string)
-		if revision != expectedRevision {
-			t.Fatalf("Unexpected revision (%#v) for task definition %s\n%#v", revision, input, err)
-		}
-	}
-}
-
 func TestAccAWSEcsService_withARN(t *testing.T) {
 	var service ecs.Service
 	rString := acctest.RandString(8)
@@ -380,6 +308,29 @@ func TestAccAWSEcsService_withDeploymentValues(t *testing.T) {
 	})
 }
 
+// Regression for https://github.com/terraform-providers/terraform-provider-aws/issues/6315
+func TestAccAWSEcsService_withDeploymentMinimumZeroMaximumOneHundred(t *testing.T) {
+	var service ecs.Service
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_ecs_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsServiceConfigDeploymentPercents(rName, 0, 100),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "deployment_maximum_percent", "100"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_minimum_healthy_percent", "0"),
+				),
+			},
+		},
+	})
+}
+
 // Regression for https://github.com/hashicorp/terraform/issues/3444
 func TestAccAWSEcsService_withLbChanges(t *testing.T) {
 	var service ecs.Service
@@ -492,6 +443,15 @@ func TestAccAWSEcsService_withPlacementStrategy(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_ecs_service.mongo", "ordered_placement_strategy.#", "1"),
 					resource.TestCheckResourceAttr("aws_ecs_service.mongo", "ordered_placement_strategy.0.type", "binpack"),
 					resource.TestCheckResourceAttr("aws_ecs_service.mongo", "ordered_placement_strategy.0.field", "memory"),
+				),
+			},
+			{
+				Config: testAccAWSEcsServiceWithRandomPlacementStrategy(clusterName, tdName, svcName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists("aws_ecs_service.mongo", &service),
+					resource.TestCheckResourceAttr("aws_ecs_service.mongo", "ordered_placement_strategy.#", "1"),
+					resource.TestCheckResourceAttr("aws_ecs_service.mongo", "ordered_placement_strategy.0.type", "random"),
+					resource.TestCheckResourceAttr("aws_ecs_service.mongo", "ordered_placement_strategy.0.field", ""),
 				),
 			},
 			{
@@ -666,6 +626,30 @@ func TestAccAWSEcsService_withDaemonSchedulingStrategy(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSEcsServiceWithDaemonSchedulingStrategy(clusterName, tdName, svcName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists("aws_ecs_service.ghost", &service),
+					resource.TestCheckResourceAttr("aws_ecs_service.ghost", "scheduling_strategy", "DAEMON"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSEcsService_withDaemonSchedulingStrategySetDeploymentMinimum(t *testing.T) {
+	var service ecs.Service
+	rString := acctest.RandString(8)
+
+	clusterName := fmt.Sprintf("tf-acc-cluster-svc-w-ss-daemon-%s", rString)
+	tdName := fmt.Sprintf("tf-acc-td-svc-w-ss-daemon-%s", rString)
+	svcName := fmt.Sprintf("tf-acc-svc-w-ss-daemon-%s", rString)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsServiceWithDaemonSchedulingStrategySetDeploymentMinimum(clusterName, tdName, svcName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists("aws_ecs_service.ghost", &service),
 					resource.TestCheckResourceAttr("aws_ecs_service.ghost", "scheduling_strategy", "DAEMON"),
@@ -992,6 +976,39 @@ resource "aws_ecs_service" "mongo" {
   ordered_placement_strategy {
     type = "binpack"
     field = "memory"
+  }
+}
+`, clusterName, tdName, svcName)
+}
+
+func testAccAWSEcsServiceWithRandomPlacementStrategy(clusterName, tdName, svcName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_cluster" "default" {
+  name = "%s"
+}
+
+resource "aws_ecs_task_definition" "mongo" {
+  family = "%s"
+  container_definitions = <<DEFINITION
+[
+  {
+    "cpu": 128,
+    "essential": true,
+    "image": "mongo:latest",
+    "memory": 128,
+    "name": "mongodb"
+  }
+]
+DEFINITION
+}
+
+resource "aws_ecs_service" "mongo" {
+  name = "%s"
+  cluster = "${aws_ecs_cluster.default.id}"
+  task_definition = "${aws_ecs_task_definition.mongo.arn}"
+  desired_count = 1
+  ordered_placement_strategy {
+    type = "random"
   }
 }
 `, clusterName, tdName, svcName)
@@ -2094,6 +2111,68 @@ resource "aws_ecs_service" "ghost" {
   scheduling_strategy = "DAEMON"
 }
 `, clusterName, tdName, svcName)
+}
+
+func testAccAWSEcsServiceWithDaemonSchedulingStrategySetDeploymentMinimum(clusterName, tdName, svcName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_cluster" "default" {
+  name = "%s"
+}
+resource "aws_ecs_task_definition" "ghost" {
+  family = "%s"
+  container_definitions = <<DEFINITION
+[
+  {
+    "cpu": 128,
+    "essential": true,
+    "image": "ghost:latest",
+    "memory": 128,
+    "name": "ghost"
+  }
+]
+DEFINITION
+}
+resource "aws_ecs_service" "ghost" {
+  name = "%s"
+  cluster = "${aws_ecs_cluster.default.id}"
+  task_definition = "${aws_ecs_task_definition.ghost.family}:${aws_ecs_task_definition.ghost.revision}"
+  scheduling_strategy = "DAEMON"
+  deployment_minimum_healthy_percent = "50"
+}
+`, clusterName, tdName, svcName)
+}
+
+func testAccAWSEcsServiceConfigDeploymentPercents(rName string, deploymentMinimumHealthyPercent, deploymentMaximumPercent int) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_cluster" "test" {
+  name = %q
+}
+
+resource "aws_ecs_task_definition" "test" {
+  family = %q
+
+  container_definitions = <<DEFINITION
+[
+  {
+    "cpu": 128,
+    "essential": true,
+    "image": "mongo:latest",
+    "memory": 128,
+    "name": "mongodb"
+  }
+]
+DEFINITION
+}
+
+resource "aws_ecs_service" "test" {
+  cluster                            = "${aws_ecs_cluster.test.id}"
+  deployment_maximum_percent         = %d
+  deployment_minimum_healthy_percent = %d
+  desired_count                      = 1
+  name                               = %q
+  task_definition                    = "${aws_ecs_task_definition.test.arn}"
+}
+`, rName, rName, deploymentMaximumPercent, deploymentMinimumHealthyPercent, rName)
 }
 
 func testAccAWSEcsServiceWithReplicaSchedulingStrategy(clusterName, tdName, svcName string) string {

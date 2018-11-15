@@ -326,6 +326,46 @@ func TestAccAWSLaunchTemplate_tags(t *testing.T) {
 	})
 }
 
+func TestAccAWSLaunchTemplate_capacityReservation_preference(t *testing.T) {
+	var template ec2.LaunchTemplate
+	resName := "aws_launch_template.foo"
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLaunchTemplateConfig_capacityReservation_preference(rInt, "open"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resName, &template),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLaunchTemplate_capacityReservation_target(t *testing.T) {
+	var template ec2.LaunchTemplate
+	resName := "aws_launch_template.foo"
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLaunchTemplateConfig_capacityReservation_target(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resName, &template),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSLaunchTemplate_creditSpecification_nonBurstable(t *testing.T) {
 	var template ec2.LaunchTemplate
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -767,6 +807,41 @@ resource "aws_launch_template" "foo" {
   tags {
     bar = "baz"
   }
+}
+`, rInt)
+}
+
+func testAccAWSLaunchTemplateConfig_capacityReservation_preference(rInt int, preference string) string {
+	return fmt.Sprintf(`
+resource "aws_launch_template" "foo" {
+  name = "foo_%d"
+
+	capacity_reservation_specification {
+		capacity_reservation_preference = %q
+	}
+}
+`, rInt, preference)
+}
+
+func testAccAWSLaunchTemplateConfig_capacityReservation_target(rInt int) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {}
+
+resource "aws_ec2_capacity_reservation" "test" {
+	availability_zone = "${data.aws_availability_zones.available.names[0]}"
+	instance_count    = 1
+	instance_platform = "Linux/UNIX"
+	instance_type     = "t2.micro"
+}
+
+resource "aws_launch_template" "foo" {
+  name = "foo_%d"
+
+	capacity_reservation_specification {
+		capacity_reservation_target {
+			capacity_reservation_id = "${aws_ec2_capacity_reservation.test.id}"
+		}
+	}
 }
 `, rInt)
 }

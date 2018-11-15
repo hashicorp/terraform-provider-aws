@@ -32,9 +32,7 @@ func testSweepCloudFrontDistributions(region string) error {
 
 	input := &cloudfront.ListDistributionsInput{}
 	err = conn.ListDistributionsPages(input, func(page *cloudfront.ListDistributionsOutput, lastPage bool) bool {
-		for _, distributionSummary := range page.DistributionList.Items {
-			distributionSummaries = append(distributionSummaries, distributionSummary)
-		}
+		distributionSummaries = append(distributionSummaries, page.DistributionList.Items...)
 		return !lastPage
 	})
 	if err != nil {
@@ -433,7 +431,7 @@ func testAccCheckCloudFrontDistributionDestroy(s *terraform.State) error {
 		dist, err := testAccAuxCloudFrontGetDistributionConfig(s, k)
 		if err == nil {
 			if _, ok := os.LookupEnv("TF_TEST_CLOUDFRONT_RETAIN"); ok {
-				if *dist.DistributionConfig.Enabled != false {
+				if *dist.DistributionConfig.Enabled {
 					return fmt.Errorf("CloudFront distribution should be disabled")
 				}
 				return nil

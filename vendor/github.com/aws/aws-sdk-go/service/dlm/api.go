@@ -1091,6 +1091,8 @@ func (s *RetainRule) SetCount(v int64) *RetainRule {
 type Schedule struct {
 	_ struct{} `type:"structure"`
 
+	CopyTags *bool `type:"boolean"`
+
 	// The create rule.
 	CreateRule *CreateRule `type:"structure"`
 
@@ -1143,6 +1145,12 @@ func (s *Schedule) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetCopyTags sets the CopyTags field's value.
+func (s *Schedule) SetCopyTags(v bool) *Schedule {
+	s.CopyTags = &v
+	return s
 }
 
 // SetCreateRule sets the CreateRule field's value.

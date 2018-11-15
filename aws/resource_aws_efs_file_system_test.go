@@ -87,6 +87,7 @@ func TestAccAWSEFSFileSystem_basic(t *testing.T) {
 			{
 				Config: testAccAWSEFSFileSystemConfig,
 				Check: resource.ComposeTestCheckFunc(
+					testAccMatchResourceAttrRegionalARN("aws_efs_file_system.foo", "arn", "elasticfilesystem", regexp.MustCompile(`file-system/fs-.+`)),
 					resource.TestCheckResourceAttr(
 						"aws_efs_file_system.foo",
 						"performance_mode",

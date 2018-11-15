@@ -14,6 +14,7 @@ func dataSourceAwsEip() *schema.Resource {
 		Read: dataSourceAwsEipRead,
 
 		Schema: map[string]*schema.Schema{
+			"filter": ec2CustomFiltersSchema(),
 			"id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -24,6 +25,7 @@ func dataSourceAwsEip() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"tags": tagsSchemaComputed(),
 		},
 	}
 }
@@ -33,18 +35,33 @@ func dataSourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 
 	req := &ec2.DescribeAddressesInput{}
 
-	if id, ok := d.GetOk("id"); ok {
-		req.AllocationIds = []*string{aws.String(id.(string))}
+	if v, ok := d.GetOk("id"); ok {
+		req.AllocationIds = []*string{aws.String(v.(string))}
 	}
 
-	if public_ip := d.Get("public_ip"); public_ip != "" {
-		req.PublicIps = []*string{aws.String(public_ip.(string))}
+	if v, ok := d.GetOk("public_ip"); ok {
+		req.PublicIps = []*string{aws.String(v.(string))}
+	}
+
+	req.Filters = []*ec2.Filter{}
+
+	req.Filters = append(req.Filters, buildEC2CustomFilterList(
+		d.Get("filter").(*schema.Set),
+	)...)
+
+	req.Filters = append(req.Filters, buildEC2TagFilterList(
+		tagsFromMap(d.Get("tags").(map[string]interface{})),
+	)...)
+
+	if len(req.Filters) == 0 {
+		// Don't send an empty filters list; the EC2 API won't accept it.
+		req.Filters = nil
 	}
 
 	log.Printf("[DEBUG] Reading EIP: %s", req)
 	resp, err := conn.DescribeAddresses(req)
 	if err != nil {
-		return err
+		return fmt.Errorf("error describing EC2 Address: %s", err)
 	}
 	if resp == nil || len(resp.Addresses) == 0 {
 		return fmt.Errorf("no matching Elastic IP found")
@@ -55,8 +72,15 @@ func dataSourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 
 	eip := resp.Addresses[0]
 
-	d.SetId(*eip.AllocationId)
+	if aws.StringValue(eip.Domain) == ec2.DomainTypeVpc {
+		d.SetId(aws.StringValue(eip.AllocationId))
+	} else {
+		log.Printf("[DEBUG] Reading EIP, has no AllocationId, this means we have a Classic EIP, the id will also be the public ip : %s", req)
+		d.SetId(aws.StringValue(eip.PublicIp))
+	}
+
 	d.Set("public_ip", eip.PublicIp)
+	d.Set("tags", tagsToMap(eip.Tags))
 
 	return nil
 }
