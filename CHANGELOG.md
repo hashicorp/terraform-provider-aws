@@ -1,8 +1,8 @@
-## 1.45.0 (Unreleased)
+## 1.45.0 (November 15, 2018)
 
 ENHANCEMENTS:
 
-* resource/aws_autoscaling_group: Mixed Instances Policy support [GH-6465]
+* resource/aws_autoscaling_group: Mixed Instances Policy support ([#6465](https://github.com/terraform-providers/terraform-provider-aws/issues/6465))
 
 ## 1.44.0 (November 14, 2018)
 
