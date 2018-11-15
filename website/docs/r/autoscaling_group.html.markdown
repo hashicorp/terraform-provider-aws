@@ -182,8 +182,48 @@ The following arguments are supported:
 * `availability_zones` - (Required only for EC2-Classic) A list of one or more availability zones for the group. This parameter should not be specified when using `vpc_zone_identifier`.
 * `default_cooldown` - (Optional) The amount of time, in seconds, after a scaling activity completes before another scaling activity can start.
 * `launch_configuration` - (Optional) The name of the launch configuration to use.
-* `launch_template` - (Optional) Nested argument with Launch template specification to use to launch instances. Defined below.
-* `mixed_instance_policy` (Optional) Configuration block containing settings to define launch targets for Auto Scaling groups. Defined below.
+* `launch_template` - (Optional) Nested argument with launch template specification to use to launch instances.
+
+  ~> **NOTE:** Either `id` or `name` must be specified.
+
+  * `id` - (Optional) The ID of the launch template. Conflicts with `name`.
+  * `name` - (Optional) The name of the launch template. Conflicts with `id`.
+  * `version` - (Optional) Template version. Can be version number, `$Latest`, or `$Default`. (Default: `$Default`).
+* `mixed_instance_policy` (Optional) Configuration block containing settings to define launch targets for Auto Scaling groups.
+
+  This configuration block supports the following:
+
+  * `instances_distribution` - (Optional) Nested argument containing settings on how to mix on-demand and Spot instances in the Auto Scaling group.
+
+    This configuration block supports the following:
+
+    * `on_demand_allocation_strategy` - (Optional) Strategy to use when launching on-demand instances. Valid values: `prioritized`. Default: `prioritzed`.
+    * `on_demand_base_capacity` - (Optional) Absolute minimum amount of desired capacity that must be fulfilled by on-demand instances. Default: `0`.
+    * `on_demand_percentage_above_base_capacity` - (Optional) Percentage split between on-demand and Spot instances above the base on-demand capacity. Default: `100`.
+    * `spot_allocation_strategy` - (Optional) How to allocate capacity across the Spot pools. Valid values: `lowest-price`. Default: `lowest-price`.
+    * `spot_instance_pools` - (Optional) Number of Spot pools per availability zone to allocate capacity. EC2 Auto Scaling selects the cheapest Spot pools and evenly allocates Spot capacity across the number of Spot pools that you specify. Default: `1`.
+    * `spot_max_price` - (Optional) Maximum price per unit hour that the user is willing to pay for the Spot instances. Default: on-demand price.
+
+  * `launch_template` - (Optional) Nested argument containing launch template settings along with the overrides to specify multiple instance types.
+
+    This configuration block supports the following:
+
+    * `launch_template_specification` - (Optional) Nested argument defines the Launch Template.
+
+      ~> **NOTE:** Either `launch_template_id` or `launch_template_name` must be specified.
+
+      This configuration block supports the following:
+
+      * `launch_template_id` - (Optional) The ID of the launch template. Conflicts with `launch_template_name`.
+      * `launch_template_name` - (Optional) The name of the launch template. Conflicts with `launch_template_id`.
+      * `version` - (Optional) Template version. Can be version number, `$Latest`, or `$Default`. (Default: `$Default`).
+
+    * `overrides` - (Optional) List of nested arguments provides the ability to specify multiple instance types. This will override the same parameter in the launch template. For on-demand instances, Auto Scaling considers the order of preference of instance types to launch based on the order specified in the overrides list.
+
+      This configuration block supports the following:
+
+      * `instance_type` - (Optional) Override the instance type in the Launch Template.
+
 * `initial_lifecycle_hook` - (Optional) One or more
   [Lifecycle Hooks](http://docs.aws.amazon.com/autoscaling/latest/userguide/lifecycle-hooks.html)
   to attach to the autoscaling group **before** instances are launched. The
@@ -231,55 +271,6 @@ Note that if you suspend either the `Launch` or `Terminate` process types, it ca
    autoscaling group will not select instances with this setting for terminination
    during scale in events.
 * `service_linked_role_arn` (Optional) The ARN of the service-linked role that the ASG will use to call other AWS services
-
-### launch_template
-
-~> **NOTE:** Either `id` or `name` must be specified.
-
-The top-level `launch_template` block supports the following:
-
-* `id` - (Optional) The ID of the launch template. Conflicts with `name`.
-* `name` - (Optional) The name of the launch template. Conflicts with `id`.
-* `version` - (Optional) Template version. Can be version number, `$Latest`, or `$Default`. (Default: `$Default`).
-
-### mixed_instance_policy
-
-* `instances_distribution` - (Optional) Nested argument containing settings on how to mix on-demand and Spot instances in the Auto Scaling group. Defined below.
-* `launch_template` - (Optional) Nested argument containing launch template settings along with the overrides to specify multiple instance types. Defined below.
-
-#### mixed_instance_policy instances_distribution
-
-This configuration block supports the following:
-
-* `on_demand_allocation_strategy` - (Optional) Strategy to use when launching on-demand instances. Valid values: `prioritized`. Default: `prioritzed`.
-* `on_demand_base_capacity` - (Optional) Absolute minimum amount of desired capacity that must be fulfilled by on-demand instances. Default: `0`.
-* `on_demand_percentage_above_base_capacity` - (Optional) Percentage split between on-demand and Spot instances above the base on-demand capacity. Default: `100`.
-* `spot_allocation_strategy` - (Optional) How to allocate capacity across the Spot pools. Valid values: `lowest-price`. Default: `lowest-price`.
-* `spot_instance_pools` - (Optional) Number of Spot pools per availability zone to allocate capacity. EC2 Auto Scaling selects the cheapest Spot pools and evenly allocates Spot capacity across the number of Spot pools that you specify. Default: `1`.
-* `spot_max_price` - (Optional) Maximum price per unit hour that the user is willing to pay for the Spot instances. Default: on-demand price.
-
-#### mixed_instance_policy launch_template
-
-This configuration block supports the following:
-
-* `launch_template_specification` - (Optional) Nested argument defines the Launch Template. Defined below.
-* `overrides` - (Optional) List of nested arguments provides the ability to specify multiple instance types. This will override the same parameter in the launch template. For on-demand instances, Auto Scaling considers the order of preference of instance types to launch based on the order specified in the overrides list. Defined below.
-
-##### mixed_instance_policy launch_template launch_template_specification
-
-~> **NOTE:** Either `launch_template_id` or `launch_template_name` must be specified.
-
-This configuration block supports the following:
-
-* `launch_template_id` - (Optional) The ID of the launch template. Conflicts with `launch_template_name`.
-* `launch_template_name` - (Optional) The name of the launch template. Conflicts with `launch_template_id`.
-* `version` - (Optional) Template version. Can be version number, `$Latest`, or `$Default`. (Default: `$Default`).
-
-##### mixed_instance_policy launch_template overrides
-
-This configuration block supports the following:
-
-* `instance_type` - (Optional) Override the instance type in the Launch Template.
 
 ### tag and tags
 
