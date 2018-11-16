@@ -2819,6 +2819,11 @@ func (c *RDS) DeleteDBInstanceRequest(input *DeleteDBInstanceInput) (req *reques
 //   * ErrCodeInvalidDBClusterStateFault "InvalidDBClusterStateFault"
 //   The requested operation can't be performed while the cluster is in this state.
 //
+//   * ErrCodeDBInstanceAutomatedBackupQuotaExceededFault "DBInstanceAutomatedBackupQuotaExceeded"
+//   The quota for retained automated backups was exceeded. This prevents you
+//   from retaining any additional automated backups. The retained automated backups
+//   quota is the same as your DB Instance quota.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/rds-2014-10-31/DeleteDBInstance
 func (c *RDS) DeleteDBInstance(input *DeleteDBInstanceInput) (*DeleteDBInstanceOutput, error) {
 	req, out := c.DeleteDBInstanceRequest(input)
@@ -2836,6 +2841,90 @@ func (c *RDS) DeleteDBInstance(input *DeleteDBInstanceInput) (*DeleteDBInstanceO
 // for more information on using Contexts.
 func (c *RDS) DeleteDBInstanceWithContext(ctx aws.Context, input *DeleteDBInstanceInput, opts ...request.Option) (*DeleteDBInstanceOutput, error) {
 	req, out := c.DeleteDBInstanceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteDBInstanceAutomatedBackup = "DeleteDBInstanceAutomatedBackup"
+
+// DeleteDBInstanceAutomatedBackupRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteDBInstanceAutomatedBackup operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteDBInstanceAutomatedBackup for more information on using the DeleteDBInstanceAutomatedBackup
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteDBInstanceAutomatedBackupRequest method.
+//    req, resp := client.DeleteDBInstanceAutomatedBackupRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/rds-2014-10-31/DeleteDBInstanceAutomatedBackup
+func (c *RDS) DeleteDBInstanceAutomatedBackupRequest(input *DeleteDBInstanceAutomatedBackupInput) (req *request.Request, output *DeleteDBInstanceAutomatedBackupOutput) {
+	op := &request.Operation{
+		Name:       opDeleteDBInstanceAutomatedBackup,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteDBInstanceAutomatedBackupInput{}
+	}
+
+	output = &DeleteDBInstanceAutomatedBackupOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeleteDBInstanceAutomatedBackup API operation for Amazon Relational Database Service.
+//
+// Deletes automated backups based on the source instance's DbiResourceId value
+// or the restorable instance's resource ID.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Relational Database Service's
+// API operation DeleteDBInstanceAutomatedBackup for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidDBInstanceAutomatedBackupStateFault "InvalidDBInstanceAutomatedBackupState"
+//   The automated backup is in an invalid state. For example, this automated
+//   backup is associated with an active instance.
+//
+//   * ErrCodeDBInstanceAutomatedBackupNotFoundFault "DBInstanceAutomatedBackupNotFound"
+//   No automated backup for this DB instance was found.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/rds-2014-10-31/DeleteDBInstanceAutomatedBackup
+func (c *RDS) DeleteDBInstanceAutomatedBackup(input *DeleteDBInstanceAutomatedBackupInput) (*DeleteDBInstanceAutomatedBackupOutput, error) {
+	req, out := c.DeleteDBInstanceAutomatedBackupRequest(input)
+	return out, req.Send()
+}
+
+// DeleteDBInstanceAutomatedBackupWithContext is the same as DeleteDBInstanceAutomatedBackup with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteDBInstanceAutomatedBackup for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *RDS) DeleteDBInstanceAutomatedBackupWithContext(ctx aws.Context, input *DeleteDBInstanceAutomatedBackupInput, opts ...request.Option) (*DeleteDBInstanceAutomatedBackupOutput, error) {
+	req, out := c.DeleteDBInstanceAutomatedBackupRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -2887,7 +2976,7 @@ func (c *RDS) DeleteDBParameterGroupRequest(input *DeleteDBParameterGroupInput) 
 
 // DeleteDBParameterGroup API operation for Amazon Relational Database Service.
 //
-// Deletes a specified DBParameterGroup. The DBParameterGroup to be deleted
+// Deletes a specified DB parameter group. The DB parameter group to be deleted
 // can't be associated with any DB instances.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -3058,10 +3147,10 @@ func (c *RDS) DeleteDBSnapshotRequest(input *DeleteDBSnapshotInput) (req *reques
 
 // DeleteDBSnapshot API operation for Amazon Relational Database Service.
 //
-// Deletes a DBSnapshot. If the snapshot is being copied, the copy operation
+// Deletes a DB snapshot. If the snapshot is being copied, the copy operation
 // is terminated.
 //
-// The DBSnapshot must be in the available state to be deleted.
+// The DB snapshot must be in the available state to be deleted.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4282,6 +4371,147 @@ func (c *RDS) DescribeDBEngineVersionsPagesWithContext(ctx aws.Context, input *D
 	cont := true
 	for p.Next() && cont {
 		cont = fn(p.Page().(*DescribeDBEngineVersionsOutput), !p.HasNextPage())
+	}
+	return p.Err()
+}
+
+const opDescribeDBInstanceAutomatedBackups = "DescribeDBInstanceAutomatedBackups"
+
+// DescribeDBInstanceAutomatedBackupsRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeDBInstanceAutomatedBackups operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeDBInstanceAutomatedBackups for more information on using the DescribeDBInstanceAutomatedBackups
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeDBInstanceAutomatedBackupsRequest method.
+//    req, resp := client.DescribeDBInstanceAutomatedBackupsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/rds-2014-10-31/DescribeDBInstanceAutomatedBackups
+func (c *RDS) DescribeDBInstanceAutomatedBackupsRequest(input *DescribeDBInstanceAutomatedBackupsInput) (req *request.Request, output *DescribeDBInstanceAutomatedBackupsOutput) {
+	op := &request.Operation{
+		Name:       opDescribeDBInstanceAutomatedBackups,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"Marker"},
+			OutputTokens:    []string{"Marker"},
+			LimitToken:      "MaxRecords",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &DescribeDBInstanceAutomatedBackupsInput{}
+	}
+
+	output = &DescribeDBInstanceAutomatedBackupsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeDBInstanceAutomatedBackups API operation for Amazon Relational Database Service.
+//
+// Displays backups for both current and deleted instances. For example, use
+// this operation to find details about automated backups for previously deleted
+// instances. Current instances with retention periods greater than zero (0)
+// are returned for both the DescribeDBInstanceAutomatedBackups and DescribeDBInstances
+// operations.
+//
+// All parameters are optional.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Relational Database Service's
+// API operation DescribeDBInstanceAutomatedBackups for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeDBInstanceAutomatedBackupNotFoundFault "DBInstanceAutomatedBackupNotFound"
+//   No automated backup for this DB instance was found.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/rds-2014-10-31/DescribeDBInstanceAutomatedBackups
+func (c *RDS) DescribeDBInstanceAutomatedBackups(input *DescribeDBInstanceAutomatedBackupsInput) (*DescribeDBInstanceAutomatedBackupsOutput, error) {
+	req, out := c.DescribeDBInstanceAutomatedBackupsRequest(input)
+	return out, req.Send()
+}
+
+// DescribeDBInstanceAutomatedBackupsWithContext is the same as DescribeDBInstanceAutomatedBackups with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeDBInstanceAutomatedBackups for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *RDS) DescribeDBInstanceAutomatedBackupsWithContext(ctx aws.Context, input *DescribeDBInstanceAutomatedBackupsInput, opts ...request.Option) (*DescribeDBInstanceAutomatedBackupsOutput, error) {
+	req, out := c.DescribeDBInstanceAutomatedBackupsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// DescribeDBInstanceAutomatedBackupsPages iterates over the pages of a DescribeDBInstanceAutomatedBackups operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeDBInstanceAutomatedBackups method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeDBInstanceAutomatedBackups operation.
+//    pageNum := 0
+//    err := client.DescribeDBInstanceAutomatedBackupsPages(params,
+//        func(page *DescribeDBInstanceAutomatedBackupsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *RDS) DescribeDBInstanceAutomatedBackupsPages(input *DescribeDBInstanceAutomatedBackupsInput, fn func(*DescribeDBInstanceAutomatedBackupsOutput, bool) bool) error {
+	return c.DescribeDBInstanceAutomatedBackupsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeDBInstanceAutomatedBackupsPagesWithContext same as DescribeDBInstanceAutomatedBackupsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *RDS) DescribeDBInstanceAutomatedBackupsPagesWithContext(ctx aws.Context, input *DescribeDBInstanceAutomatedBackupsInput, fn func(*DescribeDBInstanceAutomatedBackupsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeDBInstanceAutomatedBackupsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeDBInstanceAutomatedBackupsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*DescribeDBInstanceAutomatedBackupsOutput), !p.HasNextPage())
 	}
 	return p.Err()
 }
@@ -10007,10 +10237,13 @@ func (c *RDS) RestoreDBInstanceToPointInTimeRequest(input *RestoreDBInstanceToPo
 //   * ErrCodeDomainNotFoundFault "DomainNotFoundFault"
 //   Domain doesn't refer to an existing Active Directory domain.
 //
+//   * ErrCodeBackupPolicyNotFoundFault "BackupPolicyNotFoundFault"
+//
 //   * ErrCodeDBParameterGroupNotFoundFault "DBParameterGroupNotFound"
 //   DBParameterGroupName doesn't refer to an existing DB parameter group.
 //
-//   * ErrCodeBackupPolicyNotFoundFault "BackupPolicyNotFoundFault"
+//   * ErrCodeDBInstanceAutomatedBackupNotFoundFault "DBInstanceAutomatedBackupNotFound"
+//   No automated backup for this DB instance was found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/rds-2014-10-31/RestoreDBInstanceToPointInTime
 func (c *RDS) RestoreDBInstanceToPointInTime(input *RestoreDBInstanceToPointInTimeInput) (*RestoreDBInstanceToPointInTimeOutput, error) {
@@ -10262,7 +10495,7 @@ func (c *RDS) StartDBInstanceRequest(input *StartDBInstanceInput) (req *request.
 // Starts an Amazon RDS DB instance that was stopped using the AWS console,
 // the stop-db-instance AWS CLI command, or the StopDBInstance action.
 //
-// For more information, see  Starting an Amazon RDS DB Instance That Was Previously
+// For more information, see  Starting an Amazon RDS DB instance That Was Previously
 // Stopped (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_StartInstance.html)
 // in the Amazon RDS User Guide.
 //
@@ -17234,6 +17467,252 @@ func (s *DBInstance) SetVpcSecurityGroups(v []*VpcSecurityGroupMembership) *DBIn
 	return s
 }
 
+// An automated backup of a DB instance. It it consists of system backups, transaction
+// logs, and the database instance properties that existed at the time you deleted
+// the source instance.
+type DBInstanceAutomatedBackup struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies the allocated storage size in gibibytes (GiB).
+	AllocatedStorage *int64 `type:"integer"`
+
+	// The Availability Zone that the automated backup was created in. For information
+	// on AWS Regions and Availability Zones, see Regions and Availability Zones
+	// (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.RegionsAndAvailabilityZones.html).
+	AvailabilityZone *string `type:"string"`
+
+	// The Amazon Resource Name (ARN) for the automated backup.
+	DBInstanceArn *string `type:"string"`
+
+	// The customer id of the instance that is/was associated with the automated
+	// backup.
+	DBInstanceIdentifier *string `type:"string"`
+
+	// The identifier for the source DB instance, which can't be changed and which
+	// is unique to an AWS Region.
+	DbiResourceId *string `type:"string"`
+
+	// Specifies whether the automated backup is encrypted.
+	Encrypted *bool `type:"boolean"`
+
+	// The name of the database engine for this automated backup.
+	Engine *string `type:"string"`
+
+	// The version of the database engine for the automated backup.
+	EngineVersion *string `type:"string"`
+
+	// True if mapping of AWS Identity and Access Management (IAM) accounts to database
+	// accounts is enabled, and otherwise false.
+	IAMDatabaseAuthenticationEnabled *bool `type:"boolean"`
+
+	// Provides the date and time that the DB instance was created.
+	InstanceCreateTime *time.Time `type:"timestamp"`
+
+	// The IOPS (I/O operations per second) value for the automated backup.
+	Iops *int64 `type:"integer"`
+
+	// The AWS KMS key ID for an automated backup. The KMS key ID is the Amazon
+	// Resource Name (ARN), KMS key identifier, or the KMS key alias for the KMS
+	// encryption key.
+	KmsKeyId *string `type:"string"`
+
+	// License model information for the automated backup.
+	LicenseModel *string `type:"string"`
+
+	// The license model of an automated backup.
+	MasterUsername *string `type:"string"`
+
+	// The option group the automated backup is associated with. If omitted, the
+	// default option group for the engine specified is used.
+	OptionGroupName *string `type:"string"`
+
+	// The port number that the automated backup used for connections.
+	//
+	// Default: Inherits from the source DB instance
+	//
+	// Valid Values: 1150-65535
+	Port *int64 `type:"integer"`
+
+	// The AWS Region associated with the automated backup.
+	Region *string `type:"string"`
+
+	// Earliest and latest time an instance can be restored to.
+	RestoreWindow *RestoreWindow `type:"structure"`
+
+	// Provides a list of status information for an automated backup:
+	//
+	//    * active - automated backups for current instances
+	//
+	//    * retained - automated backups for deleted instances
+	//
+	//    * creating - automated backups that are waiting for the first automated
+	//    snapshot to be available.
+	Status *string `type:"string"`
+
+	// Specifies the storage type associated with the automated backup.
+	StorageType *string `type:"string"`
+
+	// The ARN from the key store with which the automated backup is associated
+	// for TDE encryption.
+	TdeCredentialArn *string `type:"string"`
+
+	// The time zone of the automated backup. In most cases, the Timezone element
+	// is empty. Timezone content appears only for Microsoft SQL Server DB instances
+	// that were created with a time zone specified.
+	Timezone *string `type:"string"`
+
+	// Provides the VPC ID associated with the DB instance
+	VpcId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s DBInstanceAutomatedBackup) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DBInstanceAutomatedBackup) GoString() string {
+	return s.String()
+}
+
+// SetAllocatedStorage sets the AllocatedStorage field's value.
+func (s *DBInstanceAutomatedBackup) SetAllocatedStorage(v int64) *DBInstanceAutomatedBackup {
+	s.AllocatedStorage = &v
+	return s
+}
+
+// SetAvailabilityZone sets the AvailabilityZone field's value.
+func (s *DBInstanceAutomatedBackup) SetAvailabilityZone(v string) *DBInstanceAutomatedBackup {
+	s.AvailabilityZone = &v
+	return s
+}
+
+// SetDBInstanceArn sets the DBInstanceArn field's value.
+func (s *DBInstanceAutomatedBackup) SetDBInstanceArn(v string) *DBInstanceAutomatedBackup {
+	s.DBInstanceArn = &v
+	return s
+}
+
+// SetDBInstanceIdentifier sets the DBInstanceIdentifier field's value.
+func (s *DBInstanceAutomatedBackup) SetDBInstanceIdentifier(v string) *DBInstanceAutomatedBackup {
+	s.DBInstanceIdentifier = &v
+	return s
+}
+
+// SetDbiResourceId sets the DbiResourceId field's value.
+func (s *DBInstanceAutomatedBackup) SetDbiResourceId(v string) *DBInstanceAutomatedBackup {
+	s.DbiResourceId = &v
+	return s
+}
+
+// SetEncrypted sets the Encrypted field's value.
+func (s *DBInstanceAutomatedBackup) SetEncrypted(v bool) *DBInstanceAutomatedBackup {
+	s.Encrypted = &v
+	return s
+}
+
+// SetEngine sets the Engine field's value.
+func (s *DBInstanceAutomatedBackup) SetEngine(v string) *DBInstanceAutomatedBackup {
+	s.Engine = &v
+	return s
+}
+
+// SetEngineVersion sets the EngineVersion field's value.
+func (s *DBInstanceAutomatedBackup) SetEngineVersion(v string) *DBInstanceAutomatedBackup {
+	s.EngineVersion = &v
+	return s
+}
+
+// SetIAMDatabaseAuthenticationEnabled sets the IAMDatabaseAuthenticationEnabled field's value.
+func (s *DBInstanceAutomatedBackup) SetIAMDatabaseAuthenticationEnabled(v bool) *DBInstanceAutomatedBackup {
+	s.IAMDatabaseAuthenticationEnabled = &v
+	return s
+}
+
+// SetInstanceCreateTime sets the InstanceCreateTime field's value.
+func (s *DBInstanceAutomatedBackup) SetInstanceCreateTime(v time.Time) *DBInstanceAutomatedBackup {
+	s.InstanceCreateTime = &v
+	return s
+}
+
+// SetIops sets the Iops field's value.
+func (s *DBInstanceAutomatedBackup) SetIops(v int64) *DBInstanceAutomatedBackup {
+	s.Iops = &v
+	return s
+}
+
+// SetKmsKeyId sets the KmsKeyId field's value.
+func (s *DBInstanceAutomatedBackup) SetKmsKeyId(v string) *DBInstanceAutomatedBackup {
+	s.KmsKeyId = &v
+	return s
+}
+
+// SetLicenseModel sets the LicenseModel field's value.
+func (s *DBInstanceAutomatedBackup) SetLicenseModel(v string) *DBInstanceAutomatedBackup {
+	s.LicenseModel = &v
+	return s
+}
+
+// SetMasterUsername sets the MasterUsername field's value.
+func (s *DBInstanceAutomatedBackup) SetMasterUsername(v string) *DBInstanceAutomatedBackup {
+	s.MasterUsername = &v
+	return s
+}
+
+// SetOptionGroupName sets the OptionGroupName field's value.
+func (s *DBInstanceAutomatedBackup) SetOptionGroupName(v string) *DBInstanceAutomatedBackup {
+	s.OptionGroupName = &v
+	return s
+}
+
+// SetPort sets the Port field's value.
+func (s *DBInstanceAutomatedBackup) SetPort(v int64) *DBInstanceAutomatedBackup {
+	s.Port = &v
+	return s
+}
+
+// SetRegion sets the Region field's value.
+func (s *DBInstanceAutomatedBackup) SetRegion(v string) *DBInstanceAutomatedBackup {
+	s.Region = &v
+	return s
+}
+
+// SetRestoreWindow sets the RestoreWindow field's value.
+func (s *DBInstanceAutomatedBackup) SetRestoreWindow(v *RestoreWindow) *DBInstanceAutomatedBackup {
+	s.RestoreWindow = v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *DBInstanceAutomatedBackup) SetStatus(v string) *DBInstanceAutomatedBackup {
+	s.Status = &v
+	return s
+}
+
+// SetStorageType sets the StorageType field's value.
+func (s *DBInstanceAutomatedBackup) SetStorageType(v string) *DBInstanceAutomatedBackup {
+	s.StorageType = &v
+	return s
+}
+
+// SetTdeCredentialArn sets the TdeCredentialArn field's value.
+func (s *DBInstanceAutomatedBackup) SetTdeCredentialArn(v string) *DBInstanceAutomatedBackup {
+	s.TdeCredentialArn = &v
+	return s
+}
+
+// SetTimezone sets the Timezone field's value.
+func (s *DBInstanceAutomatedBackup) SetTimezone(v string) *DBInstanceAutomatedBackup {
+	s.Timezone = &v
+	return s
+}
+
+// SetVpcId sets the VpcId field's value.
+func (s *DBInstanceAutomatedBackup) SetVpcId(v string) *DBInstanceAutomatedBackup {
+	s.VpcId = &v
+	return s
+}
+
 // Provides a list of status information for a DB instance.
 type DBInstanceStatusInfo struct {
 	_ struct{} `type:"structure"`
@@ -17561,6 +18040,10 @@ type DBSnapshot struct {
 	// Specifies the identifier for the DB snapshot.
 	DBSnapshotIdentifier *string `type:"string"`
 
+	// The identifier for the source DB instance, which can't be changed and which
+	// is unique to an AWS Region.
+	DbiResourceId *string `type:"string"`
+
 	// Specifies whether the DB snapshot is encrypted.
 	Encrypted *bool `type:"boolean"`
 
@@ -17674,6 +18157,12 @@ func (s *DBSnapshot) SetDBSnapshotArn(v string) *DBSnapshot {
 // SetDBSnapshotIdentifier sets the DBSnapshotIdentifier field's value.
 func (s *DBSnapshot) SetDBSnapshotIdentifier(v string) *DBSnapshot {
 	s.DBSnapshotIdentifier = &v
+	return s
+}
+
+// SetDbiResourceId sets the DbiResourceId field's value.
+func (s *DBSnapshot) SetDbiResourceId(v string) *DBSnapshot {
+	s.DbiResourceId = &v
 	return s
 }
 
@@ -18361,6 +18850,71 @@ func (s *DeleteDBClusterSnapshotOutput) SetDBClusterSnapshot(v *DBClusterSnapsho
 	return s
 }
 
+// Parameter input for the DeleteDBInstanceAutomatedBackup operation.
+type DeleteDBInstanceAutomatedBackupInput struct {
+	_ struct{} `type:"structure"`
+
+	// The identifier for the source DB instance, which can't be changed and which
+	// is unique to an AWS Region.
+	//
+	// DbiResourceId is a required field
+	DbiResourceId *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteDBInstanceAutomatedBackupInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteDBInstanceAutomatedBackupInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteDBInstanceAutomatedBackupInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteDBInstanceAutomatedBackupInput"}
+	if s.DbiResourceId == nil {
+		invalidParams.Add(request.NewErrParamRequired("DbiResourceId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDbiResourceId sets the DbiResourceId field's value.
+func (s *DeleteDBInstanceAutomatedBackupInput) SetDbiResourceId(v string) *DeleteDBInstanceAutomatedBackupInput {
+	s.DbiResourceId = &v
+	return s
+}
+
+type DeleteDBInstanceAutomatedBackupOutput struct {
+	_ struct{} `type:"structure"`
+
+	// An automated backup of a DB instance. It it consists of system backups, transaction
+	// logs, and the database instance properties that existed at the time you deleted
+	// the source instance.
+	DBInstanceAutomatedBackup *DBInstanceAutomatedBackup `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteDBInstanceAutomatedBackupOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteDBInstanceAutomatedBackupOutput) GoString() string {
+	return s.String()
+}
+
+// SetDBInstanceAutomatedBackup sets the DBInstanceAutomatedBackup field's value.
+func (s *DeleteDBInstanceAutomatedBackupOutput) SetDBInstanceAutomatedBackup(v *DBInstanceAutomatedBackup) *DeleteDBInstanceAutomatedBackupOutput {
+	s.DBInstanceAutomatedBackup = v
+	return s
+}
+
 type DeleteDBInstanceInput struct {
 	_ struct{} `type:"structure"`
 
@@ -18374,7 +18928,12 @@ type DeleteDBInstanceInput struct {
 	// DBInstanceIdentifier is a required field
 	DBInstanceIdentifier *string `type:"string" required:"true"`
 
-	// The DBSnapshotIdentifier of the new DBSnapshot created when SkipFinalSnapshot
+	// A value that indicates whether to remove automated backups immediately after
+	// the DB instance is deleted. This parameter isn't case-sensitive. This parameter
+	// defaults to true.
+	DeleteAutomatedBackups *bool `type:"boolean"`
+
+	// The DBSnapshotIdentifier of the new DB snapshot created when SkipFinalSnapshot
 	// is set to false.
 	//
 	// Specifying this parameter and also setting the SkipFinalShapshot parameter
@@ -18384,20 +18943,21 @@ type DeleteDBInstanceInput struct {
 	//
 	//    * Must be 1 to 255 letters or numbers.
 	//
-	//    * First character must be a letter
+	//    * First character must be a letter.
 	//
-	//    * Can't end with a hyphen or contain two consecutive hyphens
+	//    * Can't end with a hyphen or contain two consecutive hyphens.
 	//
 	//    * Can't be specified when deleting a Read Replica.
 	FinalDBSnapshotIdentifier *string `type:"string"`
 
-	// Determines whether a final DB snapshot is created before the DB instance
-	// is deleted. If true is specified, no DBSnapshot is created. If false is specified,
-	// a DB snapshot is created before the DB instance is deleted.
+	// A value that indicates whether a final DB snapshot is created before the
+	// DB instance is deleted. If true is specified, no DB snapshot is created.
+	// If false is specified, a DB snapshot is created before the DB instance is
+	// deleted.
 	//
-	// Note that when a DB instance is in a failure state and has a status of 'failed',
-	// 'incompatible-restore', or 'incompatible-network', it can only be deleted
-	// when the SkipFinalSnapshot parameter is set to "true".
+	// When a DB instance is in a failure state and has a status of failed, incompatible-restore,
+	// or incompatible-network, you can only delete it when the SkipFinalSnapshot
+	// parameter is set to true.
 	//
 	// Specify true when deleting a Read Replica.
 	//
@@ -18434,6 +18994,12 @@ func (s *DeleteDBInstanceInput) Validate() error {
 // SetDBInstanceIdentifier sets the DBInstanceIdentifier field's value.
 func (s *DeleteDBInstanceInput) SetDBInstanceIdentifier(v string) *DeleteDBInstanceInput {
 	s.DBInstanceIdentifier = &v
+	return s
+}
+
+// SetDeleteAutomatedBackups sets the DeleteAutomatedBackups field's value.
+func (s *DeleteDBInstanceInput) SetDeleteAutomatedBackups(v bool) *DeleteDBInstanceInput {
+	s.DeleteAutomatedBackups = &v
 	return s
 }
 
@@ -18601,7 +19167,7 @@ func (s DeleteDBSecurityGroupOutput) GoString() string {
 type DeleteDBSnapshotInput struct {
 	_ struct{} `type:"structure"`
 
-	// The DBSnapshot identifier.
+	// The DB snapshot identifier.
 	//
 	// Constraints: Must be the name of an existing DB snapshot in the available
 	// state.
@@ -20104,6 +20670,151 @@ func (s *DescribeDBEngineVersionsOutput) SetMarker(v string) *DescribeDBEngineVe
 	return s
 }
 
+// Parameter input for DescribeDBInstanceAutomatedBackups.
+type DescribeDBInstanceAutomatedBackupsInput struct {
+	_ struct{} `type:"structure"`
+
+	// (Optional) The user-supplied instance identifier. If this parameter is specified,
+	// it must match the identifier of an existing DB instance. It returns information
+	// from the specific DB instance' automated backup. This parameter isn't case-sensitive.
+	DBInstanceIdentifier *string `type:"string"`
+
+	// The resource ID of the DB instance that is the source of the automated backup.
+	// This parameter isn't case-sensitive.
+	DbiResourceId *string `type:"string"`
+
+	// A filter that specifies which resources to return based on status.
+	//
+	// Supported filters are the following:
+	//
+	//    * status
+	//
+	// active - automated backups for current instances
+	//
+	// retained - automated backups for deleted instances
+	//
+	// creating - automated backups that are waiting for the first automated snapshot
+	//    to be available
+	//
+	//    * db-instance-id - Accepts DB instance identifiers and Amazon Resource
+	//    Names (ARNs) for DB instances. The results list includes only information
+	//    about the DB instance automated backupss identified by these ARNs.
+	//
+	//    * dbi-resource-id - Accepts DB instance resource identifiers and DB Amazon
+	//    Resource Names (ARNs) for DB instances. The results list includes only
+	//    information about the DB instance resources identified by these ARNs.
+	//
+	// Returns all resources by default. The status for each resource is specified
+	// in the response.
+	Filters []*Filter `locationNameList:"Filter" type:"list"`
+
+	// The pagination token provided in the previous request. If this parameter
+	// is specified the response includes only records beyond the marker, up to
+	// MaxRecords.
+	Marker *string `type:"string"`
+
+	// The maximum number of records to include in the response. If more records
+	// exist than the specified MaxRecords value, a pagination token called a marker
+	// is included in the response so that the remaining results can be retrieved.
+	MaxRecords *int64 `type:"integer"`
+}
+
+// String returns the string representation
+func (s DescribeDBInstanceAutomatedBackupsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeDBInstanceAutomatedBackupsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeDBInstanceAutomatedBackupsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeDBInstanceAutomatedBackupsInput"}
+	if s.Filters != nil {
+		for i, v := range s.Filters {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Filters", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDBInstanceIdentifier sets the DBInstanceIdentifier field's value.
+func (s *DescribeDBInstanceAutomatedBackupsInput) SetDBInstanceIdentifier(v string) *DescribeDBInstanceAutomatedBackupsInput {
+	s.DBInstanceIdentifier = &v
+	return s
+}
+
+// SetDbiResourceId sets the DbiResourceId field's value.
+func (s *DescribeDBInstanceAutomatedBackupsInput) SetDbiResourceId(v string) *DescribeDBInstanceAutomatedBackupsInput {
+	s.DbiResourceId = &v
+	return s
+}
+
+// SetFilters sets the Filters field's value.
+func (s *DescribeDBInstanceAutomatedBackupsInput) SetFilters(v []*Filter) *DescribeDBInstanceAutomatedBackupsInput {
+	s.Filters = v
+	return s
+}
+
+// SetMarker sets the Marker field's value.
+func (s *DescribeDBInstanceAutomatedBackupsInput) SetMarker(v string) *DescribeDBInstanceAutomatedBackupsInput {
+	s.Marker = &v
+	return s
+}
+
+// SetMaxRecords sets the MaxRecords field's value.
+func (s *DescribeDBInstanceAutomatedBackupsInput) SetMaxRecords(v int64) *DescribeDBInstanceAutomatedBackupsInput {
+	s.MaxRecords = &v
+	return s
+}
+
+// Contains the result of a successful invocation of the DescribeDBInstanceAutomatedBackups
+// action.
+type DescribeDBInstanceAutomatedBackupsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A list of DBInstanceAutomatedBackup instances.
+	DBInstanceAutomatedBackups []*DBInstanceAutomatedBackup `locationNameList:"DBInstanceAutomatedBackup" type:"list"`
+
+	// An optional pagination token provided by a previous request. If this parameter
+	// is specified, the response includes only records beyond the marker, up to
+	// the value specified by MaxRecords .
+	Marker *string `type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeDBInstanceAutomatedBackupsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeDBInstanceAutomatedBackupsOutput) GoString() string {
+	return s.String()
+}
+
+// SetDBInstanceAutomatedBackups sets the DBInstanceAutomatedBackups field's value.
+func (s *DescribeDBInstanceAutomatedBackupsOutput) SetDBInstanceAutomatedBackups(v []*DBInstanceAutomatedBackup) *DescribeDBInstanceAutomatedBackupsOutput {
+	s.DBInstanceAutomatedBackups = v
+	return s
+}
+
+// SetMarker sets the Marker field's value.
+func (s *DescribeDBInstanceAutomatedBackupsOutput) SetMarker(v string) *DescribeDBInstanceAutomatedBackupsOutput {
+	s.Marker = &v
+	return s
+}
+
 type DescribeDBInstancesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -20880,6 +21591,9 @@ type DescribeDBSnapshotsInput struct {
 	//    must also be specified.
 	DBSnapshotIdentifier *string `type:"string"`
 
+	// A specific DB resource ID to describe.
+	DbiResourceId *string `type:"string"`
+
 	// This parameter is not currently supported.
 	Filters []*Filter `locationNameList:"Filter" type:"list"`
 
@@ -20977,6 +21691,12 @@ func (s *DescribeDBSnapshotsInput) SetDBInstanceIdentifier(v string) *DescribeDB
 // SetDBSnapshotIdentifier sets the DBSnapshotIdentifier field's value.
 func (s *DescribeDBSnapshotsInput) SetDBSnapshotIdentifier(v string) *DescribeDBSnapshotsInput {
 	s.DBSnapshotIdentifier = &v
+	return s
+}
+
+// SetDbiResourceId sets the DbiResourceId field's value.
+func (s *DescribeDBSnapshotsInput) SetDbiResourceId(v string) *DescribeDBSnapshotsInput {
+	s.DbiResourceId = &v
 	return s
 }
 
@@ -30734,9 +31454,10 @@ type RestoreDBInstanceToPointInTimeInput struct {
 	// Constraints:
 	//
 	//    * Must match the identifier of an existing DB instance.
-	//
-	// SourceDBInstanceIdentifier is a required field
-	SourceDBInstanceIdentifier *string `type:"string" required:"true"`
+	SourceDBInstanceIdentifier *string `type:"string"`
+
+	// The resource ID of the source DB instance from which to restore.
+	SourceDbiResourceId *string `type:"string"`
 
 	// Specifies the storage type to be associated with the DB instance.
 	//
@@ -30797,9 +31518,6 @@ func (s RestoreDBInstanceToPointInTimeInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *RestoreDBInstanceToPointInTimeInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "RestoreDBInstanceToPointInTimeInput"}
-	if s.SourceDBInstanceIdentifier == nil {
-		invalidParams.Add(request.NewErrParamRequired("SourceDBInstanceIdentifier"))
-	}
 	if s.TargetDBInstanceIdentifier == nil {
 		invalidParams.Add(request.NewErrParamRequired("TargetDBInstanceIdentifier"))
 	}
@@ -30942,6 +31660,12 @@ func (s *RestoreDBInstanceToPointInTimeInput) SetSourceDBInstanceIdentifier(v st
 	return s
 }
 
+// SetSourceDbiResourceId sets the SourceDbiResourceId field's value.
+func (s *RestoreDBInstanceToPointInTimeInput) SetSourceDbiResourceId(v string) *RestoreDBInstanceToPointInTimeInput {
+	s.SourceDbiResourceId = &v
+	return s
+}
+
 // SetStorageType sets the StorageType field's value.
 func (s *RestoreDBInstanceToPointInTimeInput) SetStorageType(v string) *RestoreDBInstanceToPointInTimeInput {
 	s.StorageType = &v
@@ -31006,6 +31730,39 @@ func (s RestoreDBInstanceToPointInTimeOutput) GoString() string {
 // SetDBInstance sets the DBInstance field's value.
 func (s *RestoreDBInstanceToPointInTimeOutput) SetDBInstance(v *DBInstance) *RestoreDBInstanceToPointInTimeOutput {
 	s.DBInstance = v
+	return s
+}
+
+// Earliest and latest time an instance can be restored to:
+type RestoreWindow struct {
+	_ struct{} `type:"structure"`
+
+	// The earliest time you can restore an instance to.
+	EarliestTime *time.Time `type:"timestamp"`
+
+	// The latest time you can restore an instance to.
+	LatestTime *time.Time `type:"timestamp"`
+}
+
+// String returns the string representation
+func (s RestoreWindow) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RestoreWindow) GoString() string {
+	return s.String()
+}
+
+// SetEarliestTime sets the EarliestTime field's value.
+func (s *RestoreWindow) SetEarliestTime(v time.Time) *RestoreWindow {
+	s.EarliestTime = &v
+	return s
+}
+
+// SetLatestTime sets the LatestTime field's value.
+func (s *RestoreWindow) SetLatestTime(v time.Time) *RestoreWindow {
+	s.LatestTime = &v
 	return s
 }
 
