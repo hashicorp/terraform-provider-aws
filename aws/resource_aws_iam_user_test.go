@@ -345,6 +345,38 @@ func TestAccAWSUser_permissionsBoundary(t *testing.T) {
 	})
 }
 
+func TestAccAWSUser_tags(t *testing.T) {
+	var user iam.GetUserOutput
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_iam_user.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSUserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSUserConfig_tags(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSUserExists(resourceName, &user),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "test-Name"),
+					resource.TestCheckResourceAttr(resourceName, "tags.tag2", "test-tag2"),
+				),
+			},
+			{
+				Config: testAccAWSUserConfig_tagsUpdate(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSUserExists(resourceName, &user),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.tag2", "test-tagUpdate"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSUserDestroy(s *terraform.State) error {
 	iamconn := testAccProvider.Meta().(*AWSClient).iamconn
 
@@ -563,6 +595,29 @@ func testAccAWSUserConfigForceDestroy(rName string) string {
 resource "aws_iam_user" "test" {
   force_destroy = true
   name = %q
+}
+`, rName)
+}
+
+func testAccAWSUserConfig_tags(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_user" "test" {
+  name = %q
+  tags {
+    Name = "test-Name"
+    tag2 = "test-tag2"
+  }
+}
+`, rName)
+}
+
+func testAccAWSUserConfig_tagsUpdate(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_user" "test" {
+  name = %q
+  tags {
+    tag2 = "test-tagUpdate"
+  }
 }
 `, rName)
 }

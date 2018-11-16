@@ -62,6 +62,7 @@ func resourceAwsIamUser() *schema.Resource {
 				Default:     false,
 				Description: "Delete user even if it has non-Terraform-managed IAM access keys, login profile or MFA devices",
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -78,6 +79,11 @@ func resourceAwsIamUserCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("permissions_boundary"); ok && v.(string) != "" {
 		request.PermissionsBoundary = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("tags"); ok {
+		tags := tagsFromMapIAM(v.(map[string]interface{}))
+		request.Tags = tags
 	}
 
 	log.Println("[DEBUG] Create IAM User request:", request)
@@ -121,6 +127,7 @@ func resourceAwsIamUserRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("permissions_boundary", output.User.PermissionsBoundary.PermissionsBoundaryArn)
 	}
 	d.Set("unique_id", output.User.UserId)
+	d.Set("tags", tagsToMapIAM(output.User.Tags))
 
 	return nil
 }
@@ -171,6 +178,32 @@ func resourceAwsIamUserUpdate(d *schema.ResourceData, meta interface{}) error {
 			if err != nil {
 				return fmt.Errorf("error deleting IAM User permissions boundary: %s", err)
 			}
+		}
+	}
+
+	if d.HasChange("tags") {
+		// Reset all tags to empty set
+		oraw, nraw := d.GetChange("tags")
+		o := oraw.(map[string]interface{})
+		n := nraw.(map[string]interface{})
+		_, r := diffTagsIAM(tagsFromMapIAM(o), tagsFromMapIAM(n))
+
+		_, untagErr := iamconn.UntagUser(&iam.UntagUserInput{
+			UserName: aws.String(d.Id()),
+			TagKeys:  tagKeysIam(r),
+		})
+		if untagErr != nil {
+			return fmt.Errorf("error deleting IAM user tags: %s", untagErr)
+		}
+
+		tags := tagsFromMapIAM(d.Get("tags").(map[string]interface{}))
+		input := &iam.TagUserInput{
+			UserName: aws.String(d.Id()),
+			Tags:     tags,
+		}
+		_, tagErr := iamconn.TagUser(input)
+		if tagErr != nil {
+			return fmt.Errorf("error update IAM user tags: %s", tagErr)
 		}
 	}
 
