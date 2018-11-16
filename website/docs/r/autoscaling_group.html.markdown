@@ -251,7 +251,7 @@ The top-level `launch_template` block supports the following:
 
 This configuration block supports the following:
 
-* `on_demand_allocation_strategy` - (Optional) Strategy to use when launching on-demand instances. Valid values: `prioritized`. Default: `prioritzed`.
+* `on_demand_allocation_strategy` - (Optional) Strategy to use when launching on-demand instances. Valid values: `prioritized`. Default: `prioritized`.
 * `on_demand_base_capacity` - (Optional) Absolute minimum amount of desired capacity that must be fulfilled by on-demand instances. Default: `0`.
 * `on_demand_percentage_above_base_capacity` - (Optional) Percentage split between on-demand and Spot instances above the base on-demand capacity. Default: `100`.
 * `spot_allocation_strategy` - (Optional) How to allocate capacity across the Spot pools. Valid values: `lowest-price`. Default: `lowest-price`.
