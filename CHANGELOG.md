@@ -1,4 +1,11 @@
 ## 1.46.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_ecs_cluster: Add `tags` argument [GH-6486]
+* resource/aws_ecs_service: Add `tags` argument [GH-6486]
+* resource/aws_ecs_task_definition: Add `tags` argument [GH-6486]
+
 ## 1.45.0 (November 15, 2018)
 
 ENHANCEMENTS:

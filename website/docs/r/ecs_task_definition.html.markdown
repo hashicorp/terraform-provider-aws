@@ -87,6 +87,7 @@ official [Developer Guide](https://docs.aws.amazon.com/AmazonECS/latest/develope
 * `cpu` - (Optional) The number of cpu units used by the task. If the `requires_compatibilities` is `FARGATE` this field is required.
 * `memory` - (Optional) The amount (in MiB) of memory used by the task. If the `requires_compatibilities` is `FARGATE` this field is required.
 * `requires_compatibilities` - (Optional) A set of launch types required by the task. The valid values are `EC2` and `FARGATE`.
+* `tags` - (Optional) Key-value mapping of resource tags
 
 #### Volume Block Arguments
 
