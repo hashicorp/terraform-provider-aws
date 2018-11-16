@@ -65,8 +65,9 @@ func resourceAwsEMRCluster() *schema.Resource {
 				Computed: true,
 			},
 			"core_instance_count": {
-				Type:     schema.TypeInt,
-				Optional: true,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.IntAtLeast(1),
 			},
 			"cluster_state": {
 				Type:     schema.TypeString,
@@ -433,16 +434,56 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 		TerminationProtected:        aws.Bool(terminationProtection),
 	}
 
+	/*
+		if v, ok := d.GetOk("master_instance_type"); ok {
+			instanceConfig.MasterInstanceType = aws.String(v.(string))
+			instanceConfig.SlaveInstanceType = aws.String(v.(string))
+			instanceConfig.InstanceCount = aws.Int64(1)
+		}*/
+
 	if v, ok := d.GetOk("master_instance_type"); ok {
-		instanceConfig.MasterInstanceType = aws.String(v.(string))
-		instanceConfig.SlaveInstanceType = aws.String(v.(string))
+		masterInstanceGroupConfig := &emr.InstanceGroupConfig{
+			InstanceRole:  aws.String("MASTER"),
+			InstanceType:  aws.String(v.(string)),
+			InstanceCount: aws.Int64(1),
+		}
+		instanceConfig.InstanceGroups = append(instanceConfig.InstanceGroups, masterInstanceGroupConfig)
 	}
+
+	var coreInstanceType string
 	if v, ok := d.GetOk("core_instance_type"); ok {
-		instanceConfig.SlaveInstanceType = aws.String(v.(string))
+		coreInstanceType = v.(string)
 	}
+	var coreInstanceCount int64
 	if v, ok := d.GetOk("core_instance_count"); ok {
-		instanceConfig.InstanceCount = aws.Int64(int64(v.(int)))
+		coreInstanceCount = int64(v.(int))
 	}
+	if (coreInstanceCount == 0 && coreInstanceType != "") || (coreInstanceCount > 0 && coreInstanceType == "") {
+		return fmt.Errorf("Must specify both `core_instance_count` and `core_instance_type`")
+	} else if coreInstanceCount > 0 && coreInstanceType != "" {
+		coreInstanceGroupConfig := &emr.InstanceGroupConfig{
+			InstanceCount: aws.Int64(int64(d.Get("core_instance_count").(int))),
+			InstanceRole:  aws.String("CORE"),
+			InstanceType:  aws.String(d.Get("core_instance_type").(string)),
+		}
+		instanceConfig.InstanceGroups = append(instanceConfig.InstanceGroups, coreInstanceGroupConfig)
+	}
+
+	/*
+			if v, ok := d.GetOk("core_instance_type"); ok {
+				instanceConfig.SlaveInstanceType = aws.String(v.(string))
+			}
+		if v, ok := d.GetOk("core_instance_count"); ok {
+			instanceConfig.InstanceCount = aws.Int64(int64(v.(int)))
+		}*/
+	/*
+		coreInstanceGroupConfig := &emr.InstanceGroupConfig{
+			InstanceCount: aws.Int64(int64(d.Get("core_instance_count").(int))),
+			InstanceRole:  aws.String("CORE"),
+			InstanceType:  aws.String(d.Get("core_instance_type").(string)),
+		}*/
+
+	// instanceConfig.InstanceGroups = []*emr.InstanceGroupConfig{masterInstanceGroupConfig, coreInstanceGroupConfig}
 
 	var instanceProfile string
 	if a, ok := d.GetOk("ec2_attributes"); ok {
@@ -602,6 +643,8 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	d.SetId(*resp.JobFlowId)
+	// This value can only be obtained through a deprecated function
+	d.Set("keep_job_flow_alive_when_no_steps", params.Instances.KeepJobFlowAliveWhenNoSteps)
 
 	log.Println("[INFO] Waiting for EMR Cluster to be available")
 
@@ -667,7 +710,7 @@ func resourceAwsEMRClusterRead(d *schema.ResourceData, meta interface{}) error {
 			d.Set("core_instance_type", coreGroup.InstanceType)
 			d.Set("core_instance_count", coreGroup.RequestedInstanceCount)
 		}
-		masterGroup := findGroup(instanceGroups, "MASTER")
+		masterGroup := findGroupFromRole(instanceGroups, emr.InstanceRoleTypeMaster)
 		if masterGroup != nil {
 			d.Set("master_instance_type", masterGroup.InstanceType)
 		}
@@ -1085,7 +1128,9 @@ func flattenInstanceGroups(igs []*emr.InstanceGroup) []map[string]interface{} {
 			attrs["autoscaling_policy"] = ""
 		}
 
-		attrs["name"] = *ig.Name
+		if attrs["name"] != nil {
+			attrs["name"] = *ig.Name
+		}
 		result = append(result, attrs)
 	}
 
@@ -1475,4 +1520,13 @@ func resourceAwsEMRClusterStateRefreshFunc(d *schema.ResourceData, meta interfac
 
 		return resp.Cluster, state, nil
 	}
+}
+
+func findGroupFromRole(instanceGroups []*emr.InstanceGroup, role string) *emr.InstanceGroup {
+	for _, group := range instanceGroups {
+		if *group.InstanceGroupType == role {
+			return group
+		}
+	}
+	return nil
 }

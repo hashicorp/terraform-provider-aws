@@ -35,7 +35,7 @@ func TestAccAWSEMRCluster_basic(t *testing.T) {
 				ResourceName:            "aws_emr_cluster.tf-test-cluster",
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps", "core_instance_type", "core_instance_count"},
+				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
 			},
 		},
 	})
@@ -57,6 +57,12 @@ func TestAccAWSEMRCluster_additionalInfo(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_emr_cluster.tf-test-cluster", "step.#", "0"),
 				),
 			},
+			{
+				ResourceName:            "aws_emr_cluster.tf-test-cluster",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps", "additional_info"},
+			},
 		},
 	})
 }
@@ -76,6 +82,12 @@ func TestAccAWSEMRCluster_configurationsJson(t *testing.T) {
 					resource.TestMatchResourceAttr("aws_emr_cluster.tf-test-cluster", "configurations_json",
 						regexp.MustCompile("{\"JAVA_HOME\":\"/usr/lib/jvm/java-1.8.0\".+")),
 				),
+			},
+			{
+				ResourceName:            "aws_emr_cluster.tf-test-cluster",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
 			},
 		},
 	})
@@ -97,6 +109,12 @@ func TestAccAWSEMRCluster_instance_group(t *testing.T) {
 						"aws_emr_cluster.tf-test-cluster", "instance_group.#", "2"),
 				),
 			},
+			{
+				ResourceName:            "aws_emr_cluster.tf-test-cluster",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
+			},
 		},
 	})
 }
@@ -116,6 +134,12 @@ func TestAccAWSEMRCluster_instance_group_EBSVolumeType_st1(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_emr_cluster.tf-test-cluster", "instance_group.#", "2"),
 				),
+			},
+			{
+				ResourceName:            "aws_emr_cluster.tf-test-cluster",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
 			},
 		},
 	})
@@ -140,6 +164,12 @@ func TestAccAWSEMRCluster_Kerberos_ClusterDedicatedKdc(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_emr_cluster.tf-test-cluster", "kerberos_attributes.0.realm", "EC2.INTERNAL"),
 				),
 			},
+			{
+				ResourceName:            "aws_emr_cluster.tf-test-cluster",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps", "kerberos_attributes.0.kdc_admin_password"},
+			},
 		},
 	})
 }
@@ -155,6 +185,12 @@ func TestAccAWSEMRCluster_security_config(t *testing.T) {
 			{
 				Config: testAccAWSEmrClusterConfig_SecurityConfiguration(r),
 				Check:  testAccCheckAWSEmrClusterExists("aws_emr_cluster.tf-test-cluster", &cluster),
+			},
+			{
+				ResourceName:            "aws_emr_cluster.tf-test-cluster",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
 			},
 		},
 	})
@@ -182,6 +218,12 @@ func TestAccAWSEMRCluster_Step_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "step.0.hadoop_jar_step.0.properties.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "step.0.name", "Setup Hadoop Debugging"),
 				),
+			},
+			{
+				ResourceName:            "aws_emr_cluster.tf-test-cluster",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
 			},
 		},
 	})
@@ -213,6 +255,12 @@ func TestAccAWSEMRCluster_Step_Multiple(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "step.1.hadoop_jar_step.0.jar", "command-runner.jar"),
 					resource.TestCheckResourceAttr(resourceName, "step.1.name", "Spark Step"),
 				),
+			},
+			{
+				ResourceName:            "aws_emr_cluster.tf-test-cluster",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
 			},
 		},
 	})
@@ -251,6 +299,12 @@ func TestAccAWSEMRCluster_bootstrap_ordering(t *testing.T) {
 					testAccCheck_bootstrap_order(&cluster, argsInts, argsStrings),
 				),
 			},
+			{
+				ResourceName:            "aws_emr_cluster.tf-test-cluster",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
+			},
 		},
 	})
 }
@@ -288,6 +342,12 @@ func TestAccAWSEMRCluster_terminationProtected(t *testing.T) {
 						"aws_emr_cluster.tf-test-cluster", "termination_protection", "false"),
 				),
 			},
+			{
+				ResourceName:            "aws_emr_cluster.tf-test-cluster",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
+			},
 		},
 	})
 }
@@ -307,6 +367,12 @@ func TestAccAWSEMRCluster_keepJob(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_emr_cluster.tf-test-cluster", "keep_job_flow_alive_when_no_steps", "false"),
 				),
+			},
+			{
+				ResourceName:            "aws_emr_cluster.tf-test-cluster",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
 			},
 		},
 	})
@@ -336,6 +402,12 @@ func TestAccAWSEMRCluster_visibleToAllUsers(t *testing.T) {
 						"aws_emr_cluster.tf-test-cluster", "visible_to_all_users", "false"),
 				),
 			},
+			{
+				ResourceName:            "aws_emr_cluster.tf-test-cluster",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
+			},
 		},
 	})
 }
@@ -356,6 +428,12 @@ func TestAccAWSEMRCluster_s3Logging(t *testing.T) {
 					testAccCheckAWSEmrClusterExists("aws_emr_cluster.tf-test-cluster", &cluster),
 					resource.TestCheckResourceAttr("aws_emr_cluster.tf-test-cluster", "log_uri", bucketName),
 				),
+			},
+			{
+				ResourceName:            "aws_emr_cluster.tf-test-cluster",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
 			},
 		},
 	})
@@ -396,6 +474,12 @@ func TestAccAWSEMRCluster_tags(t *testing.T) {
 						"aws_emr_cluster.tf-test-cluster", "tags.name", "name-env"),
 				),
 			},
+			{
+				ResourceName:            "aws_emr_cluster.tf-test-cluster",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
+			},
 		},
 	})
 }
@@ -422,6 +506,12 @@ func TestAccAWSEMRCluster_root_volume_size(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_emr_cluster.tf-test-cluster", "ebs_root_volume_size", "48"),
 				),
 			},
+			{
+				ResourceName:            "aws_emr_cluster.tf-test-cluster",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
+			},
 		},
 	})
 }
@@ -440,6 +530,12 @@ func TestAccAWSEMRCluster_custom_ami_id(t *testing.T) {
 					testAccCheckAWSEmrClusterExists("aws_emr_cluster.tf-test-cluster", &cluster),
 					resource.TestCheckResourceAttrSet("aws_emr_cluster.tf-test-cluster", "custom_ami_id"),
 				),
+			},
+			{
+				ResourceName:            "aws_emr_cluster.tf-test-cluster",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
 			},
 		},
 	})
