@@ -379,17 +379,17 @@ func (c *CodeBuild) CreateWebhookRequest(input *CreateWebhookInput) (req *reques
 // CreateWebhook API operation for AWS CodeBuild.
 //
 // For an existing AWS CodeBuild build project that has its source code stored
-// in a GitHub or Bitbucket repository, enables AWS CodeBuild to begin automatically
-// rebuilding the source code every time a code change is pushed to the repository.
+// in a GitHub or Bitbucket repository, enables AWS CodeBuild to start rebuilding
+// the source code every time a code change is pushed to the repository.
 //
 // If you enable webhooks for an AWS CodeBuild project, and the project is used
-// as a build step in AWS CodePipeline, then two identical builds will be created
+// as a build step in AWS CodePipeline, then two identical builds are created
 // for each commit. One build is triggered through webhooks, and one through
-// AWS CodePipeline. Because billing is on a per-build basis, you will be billed
+// AWS CodePipeline. Because billing is on a per-build basis, you are billed
 // for both builds. Therefore, if you are using AWS CodePipeline, we recommend
-// that you disable webhooks in CodeBuild. In the AWS CodeBuild console, clear
-// the Webhook box. For more information, see step 5 in Change a Build Project's
-// Settings (http://docs.aws.amazon.com/codebuild/latest/userguide/change-project.html#change-project-console).
+// that you disable webhooks in AWS CodeBuild. In the AWS CodeBuild console,
+// clear the Webhook box. For more information, see step 5 in Change a Build
+// Project's Settings (http://docs.aws.amazon.com/codebuild/latest/userguide/change-project.html#change-project-console).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -558,8 +558,8 @@ func (c *CodeBuild) DeleteWebhookRequest(input *DeleteWebhookInput) (req *reques
 // DeleteWebhook API operation for AWS CodeBuild.
 //
 // For an existing AWS CodeBuild build project that has its source code stored
-// in a GitHub or Bitbucket repository, stops AWS CodeBuild from automatically
-// rebuilding the source code every time a code change is pushed to the repository.
+// in a GitHub or Bitbucket repository, stops AWS CodeBuild from rebuilding
+// the source code every time a code change is pushed to the repository.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1293,7 +1293,7 @@ func (c *CodeBuild) UpdateWebhookRequest(input *UpdateWebhookInput) (req *reques
 //
 // Updates the webhook associated with an AWS CodeBuild build project.
 //
-// If you use Bitbucket for your repository then rotateSecret is ignored.
+// If you use Bitbucket for your repository, rotateSecret is ignored.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1563,7 +1563,7 @@ type Build struct {
 	// Information about the output artifacts for the build.
 	Artifacts *BuildArtifacts `locationName:"artifacts" type:"structure"`
 
-	// Whether the build has finished. True if completed; otherwise, false.
+	// Whether the build is complete. True if complete; otherwise, false.
 	BuildComplete *bool `locationName:"buildComplete" type:"boolean"`
 
 	// The current status of the build. Valid values include:
@@ -1590,8 +1590,8 @@ type Build struct {
 	// The AWS Key Management Service (AWS KMS) customer master key (CMK) to be
 	// used for encrypting the build output artifacts.
 	//
-	// This is expressed either as the CMK's Amazon Resource Name (ARN) or, if specified,
-	// the CMK's alias (using the format alias/alias-name).
+	// This is expressed either as the Amazon Resource Name (ARN) of the CMK or,
+	// if specified, the CMK's alias (using the format alias/alias-name).
 	EncryptionKey *string `locationName:"encryptionKey" min:"1" type:"string"`
 
 	// When the build process ended, expressed in Unix time format.
@@ -1609,7 +1609,7 @@ type Build struct {
 	//    codepipeline/my-demo-pipeline).
 	//
 	//    * If an AWS Identity and Access Management (IAM) user started the build,
-	//    the user's name (for example MyUserName).
+	//    the user's name (for example, MyUserName).
 	//
 	//    * If the Jenkins plugin for AWS CodeBuild started the build, the string
 	//    CodeBuild-Jenkins-Plugin.
@@ -1621,12 +1621,15 @@ type Build struct {
 	// Describes a network interface.
 	NetworkInterface *NetworkInterface `locationName:"networkInterface" type:"structure"`
 
-	// Information about all previous build phases that are completed and information
+	// Information about all previous build phases that are complete and information
 	// about any current build phase that is not yet complete.
 	Phases []*BuildPhase `locationName:"phases" type:"list"`
 
 	// The name of the AWS CodeBuild project.
 	ProjectName *string `locationName:"projectName" min:"1" type:"string"`
+
+	// The number of minutes a build is allowed to be queued before it times out.
+	QueuedTimeoutInMinutes *int64 `locationName:"queuedTimeoutInMinutes" type:"integer"`
 
 	// An identifier for the version of this build's source code.
 	//
@@ -1650,17 +1653,17 @@ type Build struct {
 	//    * For GitHub: the commit ID, pull request ID, branch name, or tag name
 	//    that corresponds to the version of the source code you want to build.
 	//    If a pull request ID is specified, it must use the format pr/pull-request-ID
-	//    (for example pr/25). If a branch name is specified, the branch's HEAD
-	//    commit ID will be used. If not specified, the default branch's HEAD commit
-	//    ID will be used.
+	//    (for example, pr/25). If a branch name is specified, the branch's HEAD
+	//    commit ID is used. If not specified, the default branch's HEAD commit
+	//    ID is used.
 	//
 	//    * For Bitbucket: the commit ID, branch name, or tag name that corresponds
 	//    to the version of the source code you want to build. If a branch name
-	//    is specified, the branch's HEAD commit ID will be used. If not specified,
-	//    the default branch's HEAD commit ID will be used.
+	//    is specified, the branch's HEAD commit ID is used. If not specified, the
+	//    default branch's HEAD commit ID is used.
 	//
 	//    * For Amazon Simple Storage Service (Amazon S3): the version ID of the
-	//    object representing the build input ZIP file to use.
+	//    object that represents the build input ZIP file to use.
 	SecondarySourceVersions []*ProjectSourceVersion `locationName:"secondarySourceVersions" type:"list"`
 
 	// An array of ProjectSource objects.
@@ -1789,6 +1792,12 @@ func (s *Build) SetProjectName(v string) *Build {
 	return s
 }
 
+// SetQueuedTimeoutInMinutes sets the QueuedTimeoutInMinutes field's value.
+func (s *Build) SetQueuedTimeoutInMinutes(v int64) *Build {
+	s.QueuedTimeoutInMinutes = &v
+	return s
+}
+
 // SetResolvedSourceVersion sets the ResolvedSourceVersion field's value.
 func (s *Build) SetResolvedSourceVersion(v string) *Build {
 	s.ResolvedSourceVersion = &v
@@ -1864,22 +1873,22 @@ type BuildArtifacts struct {
 
 	// The MD5 hash of the build artifact.
 	//
-	// You can use this hash along with a checksum tool to confirm both file integrity
+	// You can use this hash along with a checksum tool to confirm file integrity
 	// and authenticity.
 	//
 	// This value is available only if the build project's packaging value is set
 	// to ZIP.
 	Md5sum *string `locationName:"md5sum" type:"string"`
 
-	// If this flag is set, a name specified in the buildspec file overrides the
-	// artifact name. The name specified in a buildspec file is calculated at build
+	// If this flag is set, a name specified in the build spec file overrides the
+	// artifact name. The name specified in a build spec file is calculated at build
 	// time and uses the Shell Command Language. For example, you can append a date
 	// and time to your artifact name so that it is always unique.
 	OverrideArtifactName *bool `locationName:"overrideArtifactName" type:"boolean"`
 
 	// The SHA-256 hash of the build artifact.
 	//
-	// You can use this hash along with a checksum tool to confirm both file integrity
+	// You can use this hash along with a checksum tool to confirm file integrity
 	// and authenticity.
 	//
 	// This value is available only if the build project's packaging value is set
@@ -1989,6 +1998,9 @@ type BuildPhase struct {
 	//
 	//    * IN_PROGRESS: The build phase is still in progress.
 	//
+	//    * QUEUED: The build has been submitted and is queued behind other submitted
+	//    builds.
+	//
 	//    * STOPPED: The build phase stopped.
 	//
 	//    * SUCCEEDED: The build phase succeeded.
@@ -2013,6 +2025,9 @@ type BuildPhase struct {
 	//    * PRE_BUILD: Pre-build activities typically occur in this build phase.
 	//
 	//    * PROVISIONING: The build environment is being set up.
+	//
+	//    * QUEUED: The build has been submitted and is queued behind other submitted
+	//    builds.
 	//
 	//    * SUBMITTED: The build has been submitted.
 	//
@@ -2074,12 +2089,12 @@ func (s *BuildPhase) SetStartTime(v time.Time) *BuildPhase {
 type CloudWatchLogsConfig struct {
 	_ struct{} `type:"structure"`
 
-	// The group name of the Amazon CloudWatch Logs. For more information, see Working
-	// with Log Groups and Log Streams (http://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/Working-with-log-groups-and-streams.html)
+	// The group name of the logs in Amazon CloudWatch Logs. For more information,
+	// see Working with Log Groups and Log Streams (http://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/Working-with-log-groups-and-streams.html).
 	GroupName *string `locationName:"groupName" type:"string"`
 
-	// The current status of the Amazon CloudWatch Logs for a build project. Valid
-	// values are:
+	// The current status of the logs in Amazon CloudWatch Logs for a build project.
+	// Valid values are:
 	//
 	//    * ENABLED: Amazon CloudWatch Logs are enabled for this build project.
 	//
@@ -2089,7 +2104,7 @@ type CloudWatchLogsConfig struct {
 	Status *string `locationName:"status" type:"string" required:"true" enum:"LogsConfigStatusType"`
 
 	// The prefix of the stream name of the Amazon CloudWatch Logs. For more information,
-	// see Working with Log Groups and Log Streams (http://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/Working-with-log-groups-and-streams.html)
+	// see Working with Log Groups and Log Streams (http://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/Working-with-log-groups-and-streams.html).
 	StreamName *string `locationName:"streamName" type:"string"`
 }
 
@@ -2142,7 +2157,7 @@ type CreateProjectInput struct {
 	// Artifacts is a required field
 	Artifacts *ProjectArtifacts `locationName:"artifacts" type:"structure" required:"true"`
 
-	// Set this to true to generate a publicly-accessible URL for your project's
+	// Set this to true to generate a publicly accessible URL for your project's
 	// build badge.
 	BadgeEnabled *bool `locationName:"badgeEnabled" type:"boolean"`
 
@@ -2156,7 +2171,7 @@ type CreateProjectInput struct {
 	// The AWS Key Management Service (AWS KMS) customer master key (CMK) to be
 	// used for encrypting the build output artifacts.
 	//
-	// You can specify either the CMK's Amazon Resource Name (ARN) or, if available,
+	// You can specify either the Amazon Resource Name (ARN) of the CMK or, if available,
 	// the CMK's alias (using the format alias/alias-name).
 	EncryptionKey *string `locationName:"encryptionKey" min:"1" type:"string"`
 
@@ -2165,14 +2180,17 @@ type CreateProjectInput struct {
 	// Environment is a required field
 	Environment *ProjectEnvironment `locationName:"environment" type:"structure" required:"true"`
 
-	// Information about logs for the build project. Logs can be Amazon CloudWatch
-	// Logs, uploaded to a specified S3 bucket, or both.
+	// Information about logs for the build project. These can be logs in Amazon
+	// CloudWatch Logs, logs uploaded to a specified S3 bucket, or both.
 	LogsConfig *LogsConfig `locationName:"logsConfig" type:"structure"`
 
 	// The name of the build project.
 	//
 	// Name is a required field
 	Name *string `locationName:"name" min:"2" type:"string" required:"true"`
+
+	// The number of minutes a build is allowed to be queued before it times out.
+	QueuedTimeoutInMinutes *int64 `locationName:"queuedTimeoutInMinutes" min:"5" type:"integer"`
 
 	// An array of ProjectArtifacts objects.
 	SecondaryArtifacts []*ProjectArtifacts `locationName:"secondaryArtifacts" type:"list"`
@@ -2199,8 +2217,8 @@ type CreateProjectInput struct {
 	Tags []*Tag `locationName:"tags" type:"list"`
 
 	// How long, in minutes, from 5 to 480 (8 hours), for AWS CodeBuild to wait
-	// until timing out any build that has not been marked as completed. The default
-	// is 60 minutes.
+	// before it times out any build that has not been marked as completed. The
+	// default is 60 minutes.
 	TimeoutInMinutes *int64 `locationName:"timeoutInMinutes" min:"5" type:"integer"`
 
 	// VpcConfig enables AWS CodeBuild to access resources in an Amazon VPC.
@@ -2234,6 +2252,9 @@ func (s *CreateProjectInput) Validate() error {
 	}
 	if s.Name != nil && len(*s.Name) < 2 {
 		invalidParams.Add(request.NewErrParamMinLen("Name", 2))
+	}
+	if s.QueuedTimeoutInMinutes != nil && *s.QueuedTimeoutInMinutes < 5 {
+		invalidParams.Add(request.NewErrParamMinValue("QueuedTimeoutInMinutes", 5))
 	}
 	if s.ServiceRole == nil {
 		invalidParams.Add(request.NewErrParamRequired("ServiceRole"))
@@ -2362,6 +2383,12 @@ func (s *CreateProjectInput) SetName(v string) *CreateProjectInput {
 	return s
 }
 
+// SetQueuedTimeoutInMinutes sets the QueuedTimeoutInMinutes field's value.
+func (s *CreateProjectInput) SetQueuedTimeoutInMinutes(v int64) *CreateProjectInput {
+	s.QueuedTimeoutInMinutes = &v
+	return s
+}
+
 // SetSecondaryArtifacts sets the SecondaryArtifacts field's value.
 func (s *CreateProjectInput) SetSecondaryArtifacts(v []*ProjectArtifacts) *CreateProjectInput {
 	s.SecondaryArtifacts = v
@@ -2430,10 +2457,10 @@ func (s *CreateProjectOutput) SetProject(v *Project) *CreateProjectOutput {
 type CreateWebhookInput struct {
 	_ struct{} `type:"structure"`
 
-	// A regular expression used to determine which branches in a repository are
-	// built when a webhook is triggered. If the name of a branch matches the regular
-	// expression, then it is built. If it doesn't match, then it is not. If branchFilter
-	// is empty, then all branches are built.
+	// A regular expression used to determine which repository branches are built
+	// when a webhook is triggered. If the name of a branch matches the regular
+	// expression, then it is built. If branchFilter is empty, then all branches
+	// are built.
 	BranchFilter *string `locationName:"branchFilter" type:"string"`
 
 	// The name of the AWS CodeBuild project.
@@ -2743,9 +2770,9 @@ type EnvironmentVariable struct {
 
 	// The value of the environment variable.
 	//
-	// We strongly discourage using environment variables to store sensitive values,
-	// especially AWS secret key IDs and secret access keys. Environment variables
-	// can be displayed in plain text using tools such as the AWS CodeBuild console
+	// We strongly discourage the use of environment variables to store sensitive
+	// values, especially AWS secret key IDs and secret access keys. Environment
+	// variables can be displayed in plain text using the AWS CodeBuild console
 	// and the AWS Command Line Interface (AWS CLI).
 	//
 	// Value is a required field
@@ -2802,8 +2829,7 @@ func (s *EnvironmentVariable) SetValue(v string) *EnvironmentVariable {
 type InvalidateProjectCacheInput struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the AWS CodeBuild build project that the cache will be reset
-	// for.
+	// The name of the AWS CodeBuild build project that the cache is reset for.
 	//
 	// ProjectName is a required field
 	ProjectName *string `locationName:"projectName" min:"1" type:"string" required:"true"`
@@ -3086,13 +3112,12 @@ type ListProjectsInput struct {
 
 	// The criterion to be used to list build project names. Valid values include:
 	//
-	//    * CREATED_TIME: List the build project names based on when each build
-	//    project was created.
+	//    * CREATED_TIME: List based on when each build project was created.
 	//
-	//    * LAST_MODIFIED_TIME: List the build project names based on when information
-	//    about each build project was last changed.
+	//    * LAST_MODIFIED_TIME: List based on when information about each build
+	//    project was last changed.
 	//
-	//    * NAME: List the build project names based on each build project's name.
+	//    * NAME: List based on each build project's name.
 	//
 	// Use sortOrder to specify in what order to list the build project names based
 	// on the preceding criteria.
@@ -3100,9 +3125,9 @@ type ListProjectsInput struct {
 
 	// The order in which to list build projects. Valid values include:
 	//
-	//    * ASCENDING: List the build project names in ascending order.
+	//    * ASCENDING: List in ascending order.
 	//
-	//    * DESCENDING: List the build project names in descending order.
+	//    * DESCENDING: List in descending order.
 	//
 	// Use sortBy to specify the criterion to be used to list build project names.
 	SortOrder *string `locationName:"sortOrder" type:"string" enum:"SortOrderType"`
@@ -3185,7 +3210,7 @@ func (s *ListProjectsOutput) SetProjects(v []*string) *ListProjectsOutput {
 	return s
 }
 
-// Information about logs for a build project. Logs can be Amazon CloudWatch
+// Information about logs for a build project. These can be logs in Amazon CloudWatch
 // Logs, built in a specified S3 bucket, or both.
 type LogsConfig struct {
 	_ struct{} `type:"structure"`
@@ -3254,7 +3279,7 @@ type LogsLocation struct {
 	// The name of the Amazon CloudWatch Logs group for the build logs.
 	GroupName *string `locationName:"groupName" type:"string"`
 
-	// The URL to an individual build log in an S3 bucket.
+	// The URL to a build log in an S3 bucket.
 	S3DeepLink *string `locationName:"s3DeepLink" type:"string"`
 
 	// Information about S3 logs for a build project.
@@ -3344,12 +3369,12 @@ func (s *NetworkInterface) SetSubnetId(v string) *NetworkInterface {
 }
 
 // Additional information about a build phase that has an error. You can use
-// this information to help troubleshoot a failed build.
+// this information for troubleshooting.
 type PhaseContext struct {
 	_ struct{} `type:"structure"`
 
-	// An explanation of the build phase's context. This explanation might include
-	// a command ID and an exit code.
+	// An explanation of the build phase's context. This might include a command
+	// ID and an exit code.
 	Message *string `locationName:"message" type:"string"`
 
 	// The status code for the context of the build phase.
@@ -3403,8 +3428,8 @@ type Project struct {
 	// The AWS Key Management Service (AWS KMS) customer master key (CMK) to be
 	// used for encrypting the build output artifacts.
 	//
-	// This is expressed either as the CMK's Amazon Resource Name (ARN) or, if specified,
-	// the CMK's alias (using the format alias/alias-name).
+	// This is expressed either as the Amazon Resource Name (ARN) of the CMK or,
+	// if specified, the CMK's alias (using the format alias/alias-name).
 	EncryptionKey *string `locationName:"encryptionKey" min:"1" type:"string"`
 
 	// Information about the build environment for this build project.
@@ -3414,12 +3439,15 @@ type Project struct {
 	// format.
 	LastModified *time.Time `locationName:"lastModified" type:"timestamp"`
 
-	// Information about logs for the build project. A project can create Amazon
-	// CloudWatch Logs, logs in an S3 bucket, or both.
+	// Information about logs for the build project. A project can create logs in
+	// Amazon CloudWatch Logs, an S3 bucket, or both.
 	LogsConfig *LogsConfig `locationName:"logsConfig" type:"structure"`
 
 	// The name of the build project.
 	Name *string `locationName:"name" min:"2" type:"string"`
+
+	// The number of minutes a build is allowed to be queued before it times out.
+	QueuedTimeoutInMinutes *int64 `locationName:"queuedTimeoutInMinutes" min:"5" type:"integer"`
 
 	// An array of ProjectArtifacts objects.
 	SecondaryArtifacts []*ProjectArtifacts `locationName:"secondaryArtifacts" type:"list"`
@@ -3446,7 +3474,7 @@ type Project struct {
 	// The default is 60 minutes.
 	TimeoutInMinutes *int64 `locationName:"timeoutInMinutes" min:"5" type:"integer"`
 
-	// Information about the VPC configuration that AWS CodeBuild will access.
+	// Information about the VPC configuration that AWS CodeBuild accesses.
 	VpcConfig *VpcConfig `locationName:"vpcConfig" type:"structure"`
 
 	// Information about a webhook that connects repository events to a build project
@@ -3530,6 +3558,12 @@ func (s *Project) SetName(v string) *Project {
 	return s
 }
 
+// SetQueuedTimeoutInMinutes sets the QueuedTimeoutInMinutes field's value.
+func (s *Project) SetQueuedTimeoutInMinutes(v int64) *Project {
+	s.QueuedTimeoutInMinutes = &v
+	return s
+}
+
 // SetSecondaryArtifacts sets the SecondaryArtifacts field's value.
 func (s *Project) SetSecondaryArtifacts(v []*ProjectArtifacts) *Project {
 	s.SecondaryArtifacts = v
@@ -3586,61 +3620,61 @@ type ProjectArtifacts struct {
 	ArtifactIdentifier *string `locationName:"artifactIdentifier" type:"string"`
 
 	// Set to true if you do not want your output artifacts encrypted. This option
-	// is only valid if your artifacts type is Amazon S3. If this is set with another
-	// artifacts type, an invalidInputException will be thrown.
+	// is valid only if your artifacts type is Amazon Simple Storage Service (Amazon
+	// S3). If this is set with another artifacts type, an invalidInputException
+	// is thrown.
 	EncryptionDisabled *bool `locationName:"encryptionDisabled" type:"boolean"`
 
-	// Information about the build output artifact location, as follows:
+	// Information about the build output artifact location:
 	//
-	//    * If type is set to CODEPIPELINE, then AWS CodePipeline will ignore this
-	//    value if specified. This is because AWS CodePipeline manages its build
-	//    output locations instead of AWS CodeBuild.
+	//    * If type is set to CODEPIPELINE, AWS CodePipeline ignores this value
+	//    if specified. This is because AWS CodePipeline manages its build output
+	//    locations instead of AWS CodeBuild.
 	//
-	//    * If type is set to NO_ARTIFACTS, then this value will be ignored if specified,
-	//    because no build output will be produced.
+	//    * If type is set to NO_ARTIFACTS, this value is ignored if specified,
+	//    because no build output is produced.
 	//
 	//    * If type is set to S3, this is the name of the output bucket.
 	Location *string `locationName:"location" type:"string"`
 
-	// Along with path and namespaceType, the pattern that AWS CodeBuild will use
-	// to name and store the output artifact, as follows:
+	// Along with path and namespaceType, the pattern that AWS CodeBuild uses to
+	// name and store the output artifact:
 	//
-	//    * If type is set to CODEPIPELINE, then AWS CodePipeline will ignore this
-	//    value if specified. This is because AWS CodePipeline manages its build
-	//    output names instead of AWS CodeBuild.
+	//    * If type is set to CODEPIPELINE, AWS CodePipeline ignores this value
+	//    if specified. This is because AWS CodePipeline manages its build output
+	//    names instead of AWS CodeBuild.
 	//
-	//    * If type is set to NO_ARTIFACTS, then this value will be ignored if specified,
-	//    because no build output will be produced.
+	//    * If type is set to NO_ARTIFACTS, this value is ignored if specified,
+	//    because no build output is produced.
 	//
 	//    * If type is set to S3, this is the name of the output artifact object.
-	//    If you set the name to be a forward slash ("/"), then the artifact is
-	//    stored in the root of the output bucket.
+	//    If you set the name to be a forward slash ("/"), the artifact is stored
+	//    in the root of the output bucket.
 	//
 	// For example:
 	//
 	//    *  If path is set to MyArtifacts, namespaceType is set to BUILD_ID, and
-	//    name is set to MyArtifact.zip, then the output artifact would be stored
-	//    in MyArtifacts/build-ID/MyArtifact.zip.
+	//    name is set to MyArtifact.zip, then the output artifact is stored in MyArtifacts/build-ID/MyArtifact.zip.
+	//
 	//
 	//    *  If path is empty, namespaceType is set to NONE, and name is set to
-	//    "/", then the output artifact would be stored in the root of the output
-	//    bucket.
+	//    "/", the output artifact is stored in the root of the output bucket.
 	//
 	//    *  If path is set to MyArtifacts, namespaceType is set to BUILD_ID, and
-	//    name is set to "/", then the output artifact would be stored in MyArtifacts/build-ID.
+	//    name is set to "/", the output artifact is stored in MyArtifacts/build-ID.
 	Name *string `locationName:"name" type:"string"`
 
-	// Along with path and name, the pattern that AWS CodeBuild will use to determine
-	// the name and location to store the output artifact, as follows:
+	// Along with path and name, the pattern that AWS CodeBuild uses to determine
+	// the name and location to store the output artifact:
 	//
-	//    * If type is set to CODEPIPELINE, then AWS CodePipeline will ignore this
-	//    value if specified. This is because AWS CodePipeline manages its build
-	//    output names instead of AWS CodeBuild.
+	//    * If type is set to CODEPIPELINE, AWS CodePipeline ignores this value
+	//    if specified. This is because AWS CodePipeline manages its build output
+	//    names instead of AWS CodeBuild.
 	//
-	//    * If type is set to NO_ARTIFACTS, then this value will be ignored if specified,
-	//    because no build output will be produced.
+	//    * If type is set to NO_ARTIFACTS, this value is ignored if specified,
+	//    because no build output is produced.
 	//
-	//    * If type is set to S3, then valid values include:
+	//    * If type is set to S3, valid values include:
 	//
 	// BUILD_ID: Include the build ID in the location of the build output artifact.
 	//
@@ -3648,61 +3682,60 @@ type ProjectArtifacts struct {
 	//    not specified.
 	//
 	// For example, if path is set to MyArtifacts, namespaceType is set to BUILD_ID,
-	// and name is set to MyArtifact.zip, then the output artifact would be stored
-	// in MyArtifacts/build-ID/MyArtifact.zip.
+	// and name is set to MyArtifact.zip, the output artifact is stored in MyArtifacts/build-ID/MyArtifact.zip.
 	NamespaceType *string `locationName:"namespaceType" type:"string" enum:"ArtifactNamespace"`
 
-	// If this flag is set, a name specified in the buildspec file overrides the
-	// artifact name. The name specified in a buildspec file is calculated at build
+	// If this flag is set, a name specified in the build spec file overrides the
+	// artifact name. The name specified in a build spec file is calculated at build
 	// time and uses the Shell Command Language. For example, you can append a date
 	// and time to your artifact name so that it is always unique.
 	OverrideArtifactName *bool `locationName:"overrideArtifactName" type:"boolean"`
 
-	// The type of build output artifact to create, as follows:
+	// The type of build output artifact to create:
 	//
-	//    * If type is set to CODEPIPELINE, then AWS CodePipeline will ignore this
-	//    value if specified. This is because AWS CodePipeline manages its build
-	//    output artifacts instead of AWS CodeBuild.
+	//    * If type is set to CODEPIPELINE, AWS CodePipeline ignores this value
+	//    if specified. This is because AWS CodePipeline manages its build output
+	//    artifacts instead of AWS CodeBuild.
 	//
-	//    * If type is set to NO_ARTIFACTS, then this value will be ignored if specified,
-	//    because no build output will be produced.
+	//    * If type is set to NO_ARTIFACTS, this value is ignored if specified,
+	//    because no build output is produced.
 	//
 	//    * If type is set to S3, valid values include:
 	//
-	// NONE: AWS CodeBuild will create in the output bucket a folder containing
-	//    the build output. This is the default if packaging is not specified.
+	// NONE: AWS CodeBuild creates in the output bucket a folder that contains the
+	//    build output. This is the default if packaging is not specified.
 	//
-	// ZIP: AWS CodeBuild will create in the output bucket a ZIP file containing
+	// ZIP: AWS CodeBuild creates in the output bucket a ZIP file that contains
 	//    the build output.
 	Packaging *string `locationName:"packaging" type:"string" enum:"ArtifactPackaging"`
 
-	// Along with namespaceType and name, the pattern that AWS CodeBuild will use
-	// to name and store the output artifact, as follows:
+	// Along with namespaceType and name, the pattern that AWS CodeBuild uses to
+	// name and store the output artifact:
 	//
-	//    * If type is set to CODEPIPELINE, then AWS CodePipeline will ignore this
-	//    value if specified. This is because AWS CodePipeline manages its build
-	//    output names instead of AWS CodeBuild.
+	//    * If type is set to CODEPIPELINE, AWS CodePipeline ignores this value
+	//    if specified. This is because AWS CodePipeline manages its build output
+	//    names instead of AWS CodeBuild.
 	//
-	//    * If type is set to NO_ARTIFACTS, then this value will be ignored if specified,
-	//    because no build output will be produced.
+	//    * If type is set to NO_ARTIFACTS, this value is ignored if specified,
+	//    because no build output is produced.
 	//
 	//    * If type is set to S3, this is the path to the output artifact. If path
-	//    is not specified, then path will not be used.
+	//    is not specified, path is not used.
 	//
 	// For example, if path is set to MyArtifacts, namespaceType is set to NONE,
-	// and name is set to MyArtifact.zip, then the output artifact would be stored
-	// in the output bucket at MyArtifacts/MyArtifact.zip.
+	// and name is set to MyArtifact.zip, the output artifact is stored in the output
+	// bucket at MyArtifacts/MyArtifact.zip.
 	Path *string `locationName:"path" type:"string"`
 
 	// The type of build output artifact. Valid values include:
 	//
-	//    * CODEPIPELINE: The build project will have build output generated through
-	//    AWS CodePipeline.
+	//    * CODEPIPELINE: The build project has build output generated through AWS
+	//    CodePipeline.
 	//
-	//    * NO_ARTIFACTS: The build project will not produce any build output.
+	//    * NO_ARTIFACTS: The build project does not produce any build output.
 	//
-	//    * S3: The build project will store build output in Amazon Simple Storage
-	//    Service (Amazon S3).
+	//    * S3: The build project stores build output in Amazon Simple Storage Service
+	//    (Amazon S3).
 	//
 	// Type is a required field
 	Type *string `locationName:"type" type:"string" required:"true" enum:"ArtifactsType"`
@@ -3789,11 +3822,14 @@ func (s *ProjectArtifacts) SetType(v string) *ProjectArtifacts {
 type ProjectBadge struct {
 	_ struct{} `type:"structure"`
 
-	// Set this to true to generate a publicly-accessible URL for your project's
+	// Set this to true to generate a publicly accessible URL for your project's
 	// build badge.
 	BadgeEnabled *bool `locationName:"badgeEnabled" type:"boolean"`
 
 	// The publicly-accessible URL through which you can access the build badge
+	// for your project.
+	//
+	// The publicly accessible URL through which you can access the build badge
 	// for your project.
 	BadgeRequestUrl *string `locationName:"badgeRequestUrl" type:"string"`
 }
@@ -3824,18 +3860,18 @@ func (s *ProjectBadge) SetBadgeRequestUrl(v string) *ProjectBadge {
 type ProjectCache struct {
 	_ struct{} `type:"structure"`
 
-	// Information about the cache location, as follows:
+	// Information about the cache location:
 	//
-	//    * NO_CACHE: This value will be ignored.
+	//    * NO_CACHE: This value is ignored.
 	//
 	//    * S3: This is the S3 bucket name/prefix.
 	Location *string `locationName:"location" type:"string"`
 
 	// The type of cache used by the build project. Valid values include:
 	//
-	//    * NO_CACHE: The build project will not use any cache.
+	//    * NO_CACHE: The build project does not use any cache.
 	//
-	//    * S3: The build project will read and write from/to S3.
+	//    * S3: The build project reads and writes from and to S3.
 	//
 	// Type is a required field
 	Type *string `locationName:"type" type:"string" required:"true" enum:"CacheType"`
@@ -3883,7 +3919,7 @@ type ProjectEnvironment struct {
 	// The certificate to use with this build project.
 	Certificate *string `locationName:"certificate" type:"string"`
 
-	// Information about the compute resources the build project will use. Available
+	// Information about the compute resources the build project uses. Available
 	// values include:
 	//
 	//    * BUILD_GENERAL1_SMALL: Use up to 3 GB memory and 2 vCPUs for builds.
@@ -3908,11 +3944,11 @@ type ProjectEnvironment struct {
 	// only if the build project is be used to build Docker images, and the specified
 	// build environment image is not provided by AWS CodeBuild with Docker support.
 	// Otherwise, all associated builds that attempt to interact with the Docker
-	// daemon will fail. Note that you must also start the Docker daemon so that
-	// builds can interact with it. One way to do this is to initialize the Docker
-	// daemon during the install phase of your build spec by running the following
-	// build commands. (Do not run the following build commands if the specified
-	// build environment image is provided by AWS CodeBuild with Docker support.)
+	// daemon fail. You must also start the Docker daemon so that builds can interact
+	// with it. One way to do this is to initialize the Docker daemon during the
+	// install phase of your build spec by running the following build commands.
+	// (Do not run these commands if the specified build environment image is provided
+	// by AWS CodeBuild with Docker support.)
 	//
 	// If the operating system's base image is Ubuntu Linux:
 	//
@@ -4042,7 +4078,7 @@ type ProjectSource struct {
 	//
 	//    * For source code settings that are specified in the source action of
 	//    a pipeline in AWS CodePipeline, location should not be specified. If it
-	//    is specified, AWS CodePipeline will ignore it. This is because AWS CodePipeline
+	//    is specified, AWS CodePipeline ignores it. This is because AWS CodePipeline
 	//    uses the settings in a pipeline's source action instead of this value.
 	//
 	//    * For source code in an AWS CodeCommit repository, the HTTPS clone URL
@@ -4059,32 +4095,31 @@ type ProjectSource struct {
 	//
 	//
 	//    * For source code in a GitHub repository, the HTTPS clone URL to the repository
-	//    that contains the source and the build spec. Also, you must connect your
-	//    AWS account to your GitHub account. To do this, use the AWS CodeBuild
-	//    console to begin creating a build project. When you use the console to
-	//    connect (or reconnect) with GitHub, on the GitHub Authorize application
-	//    page that displays, for Organization access, choose Request access next
-	//    to each repository you want to allow AWS CodeBuild to have access to.
-	//    Then choose Authorize application. (After you have connected to your GitHub
-	//    account, you do not need to finish creating the build project, and you
-	//    may then leave the AWS CodeBuild console.) To instruct AWS CodeBuild to
-	//    then use this connection, in the source object, set the auth object's
-	//    type value to OAUTH.
+	//    that contains the source and the build spec. You must connect your AWS
+	//    account to your GitHub account. Use the AWS CodeBuild console to start
+	//    creating a build project. When you use the console to connect (or reconnect)
+	//    with GitHub, on the GitHub Authorize application page, for Organization
+	//    access, choose Request access next to each repository you want to allow
+	//    AWS CodeBuild to have access to, and then choose Authorize application.
+	//    (After you have connected to your GitHub account, you do not need to finish
+	//    creating the build project. You can leave the AWS CodeBuild console.)
+	//    To instruct AWS CodeBuild to use this connection, in the source object,
+	//    set the auth object's type value to OAUTH.
 	//
 	//    * For source code in a Bitbucket repository, the HTTPS clone URL to the
-	//    repository that contains the source and the build spec. Also, you must
-	//    connect your AWS account to your Bitbucket account. To do this, use the
-	//    AWS CodeBuild console to begin creating a build project. When you use
-	//    the console to connect (or reconnect) with Bitbucket, on the Bitbucket
-	//    Confirm access to your account page that displays, choose Grant access.
-	//    (After you have connected to your Bitbucket account, you do not need to
-	//    finish creating the build project, and you may then leave the AWS CodeBuild
-	//    console.) To instruct AWS CodeBuild to then use this connection, in the
-	//    source object, set the auth object's type value to OAUTH.
+	//    repository that contains the source and the build spec. You must connect
+	//    your AWS account to your Bitbucket account. Use the AWS CodeBuild console
+	//    to start creating a build project. When you use the console to connect
+	//    (or reconnect) with Bitbucket, on the Bitbucket Confirm access to your
+	//    account page, choose Grant access. (After you have connected to your Bitbucket
+	//    account, you do not need to finish creating the build project. You can
+	//    leave the AWS CodeBuild console.) To instruct AWS CodeBuild to use this
+	//    connection, in the source object, set the auth object's type value to
+	//    OAUTH.
 	Location *string `locationName:"location" type:"string"`
 
 	// Set to true to report the status of a build's start and finish to your source
-	// provider. This option is only valid when your source provider is GitHub,
+	// provider. This option is valid only when your source provider is GitHub,
 	// GitHub Enterprise, or Bitbucket. If this is set and you use a different source
 	// provider, an invalidInputException is thrown.
 	ReportBuildStatus *bool `locationName:"reportBuildStatus" type:"boolean"`
@@ -4206,17 +4241,17 @@ type ProjectSourceVersion struct {
 	//    * For GitHub: the commit ID, pull request ID, branch name, or tag name
 	//    that corresponds to the version of the source code you want to build.
 	//    If a pull request ID is specified, it must use the format pr/pull-request-ID
-	//    (for example pr/25). If a branch name is specified, the branch's HEAD
-	//    commit ID will be used. If not specified, the default branch's HEAD commit
-	//    ID will be used.
+	//    (for example, pr/25). If a branch name is specified, the branch's HEAD
+	//    commit ID is used. If not specified, the default branch's HEAD commit
+	//    ID is used.
 	//
 	//    * For Bitbucket: the commit ID, branch name, or tag name that corresponds
 	//    to the version of the source code you want to build. If a branch name
-	//    is specified, the branch's HEAD commit ID will be used. If not specified,
-	//    the default branch's HEAD commit ID will be used.
+	//    is specified, the branch's HEAD commit ID is used. If not specified, the
+	//    default branch's HEAD commit ID is used.
 	//
 	//    * For Amazon Simple Storage Service (Amazon S3): the version ID of the
-	//    object representing the build input ZIP file to use.
+	//    object that represents the build input ZIP file to use.
 	//
 	// SourceVersion is a required field
 	SourceVersion *string `locationName:"sourceVersion" type:"string" required:"true"`
@@ -4432,6 +4467,9 @@ type StartBuildInput struct {
 	// ProjectName is a required field
 	ProjectName *string `locationName:"projectName" min:"1" type:"string" required:"true"`
 
+	// The number of minutes a build is allowed to be queued before it times out.
+	QueuedTimeoutInMinutesOverride *int64 `locationName:"queuedTimeoutInMinutesOverride" min:"5" type:"integer"`
+
 	// Set to true to report to your source provider the status of a build's start
 	// and completion. If you use this option with a source provider other than
 	// GitHub, GitHub Enterprise, or Bitbucket, an invalidInputException is thrown.
@@ -4456,16 +4494,16 @@ type StartBuildInput struct {
 	// BitBucket or GitHub.
 	SourceAuthOverride *SourceAuth `locationName:"sourceAuthOverride" type:"structure"`
 
-	// A location that overrides for this build the source location for the one
+	// A location that overrides, for this build, the source location for the one
 	// defined in the build project.
 	SourceLocationOverride *string `locationName:"sourceLocationOverride" type:"string"`
 
-	// A source input type for this build that overrides the source input defined
+	// A source input type, for this build, that overrides the source input defined
 	// in the build project.
 	SourceTypeOverride *string `locationName:"sourceTypeOverride" type:"string" enum:"SourceType"`
 
 	// A version of the build input to be built, for this build only. If not specified,
-	// the latest version will be used. If specified, must be one of:
+	// the latest version is used. If specified, must be one of:
 	//
 	//    * For AWS CodeCommit: the commit ID to use.
 	//
@@ -4473,16 +4511,16 @@ type StartBuildInput struct {
 	//    that corresponds to the version of the source code you want to build.
 	//    If a pull request ID is specified, it must use the format pr/pull-request-ID
 	//    (for example pr/25). If a branch name is specified, the branch's HEAD
-	//    commit ID will be used. If not specified, the default branch's HEAD commit
-	//    ID will be used.
+	//    commit ID is used. If not specified, the default branch's HEAD commit
+	//    ID is used.
 	//
 	//    * For Bitbucket: the commit ID, branch name, or tag name that corresponds
 	//    to the version of the source code you want to build. If a branch name
-	//    is specified, the branch's HEAD commit ID will be used. If not specified,
-	//    the default branch's HEAD commit ID will be used.
+	//    is specified, the branch's HEAD commit ID is used. If not specified, the
+	//    default branch's HEAD commit ID is used.
 	//
 	//    * For Amazon Simple Storage Service (Amazon S3): the version ID of the
-	//    object representing the build input ZIP file to use.
+	//    object that represents the build input ZIP file to use.
 	SourceVersion *string `locationName:"sourceVersion" type:"string"`
 
 	// The number of build timeout minutes, from 5 to 480 (8 hours), that overrides,
@@ -4511,6 +4549,9 @@ func (s *StartBuildInput) Validate() error {
 	}
 	if s.ProjectName != nil && len(*s.ProjectName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("ProjectName", 1))
+	}
+	if s.QueuedTimeoutInMinutesOverride != nil && *s.QueuedTimeoutInMinutesOverride < 5 {
+		invalidParams.Add(request.NewErrParamMinValue("QueuedTimeoutInMinutesOverride", 5))
 	}
 	if s.ServiceRoleOverride != nil && len(*s.ServiceRoleOverride) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("ServiceRoleOverride", 1))
@@ -4666,6 +4707,12 @@ func (s *StartBuildInput) SetPrivilegedModeOverride(v bool) *StartBuildInput {
 // SetProjectName sets the ProjectName field's value.
 func (s *StartBuildInput) SetProjectName(v string) *StartBuildInput {
 	s.ProjectName = &v
+	return s
+}
+
+// SetQueuedTimeoutInMinutesOverride sets the QueuedTimeoutInMinutesOverride field's value.
+func (s *StartBuildInput) SetQueuedTimeoutInMinutesOverride(v int64) *StartBuildInput {
+	s.QueuedTimeoutInMinutesOverride = &v
 	return s
 }
 
@@ -4874,7 +4921,7 @@ type UpdateProjectInput struct {
 	// project.
 	Artifacts *ProjectArtifacts `locationName:"artifacts" type:"structure"`
 
-	// Set this to true to generate a publicly-accessible URL for your project's
+	// Set this to true to generate a publicly accessible URL for your project's
 	// build badge.
 	BadgeEnabled *bool `locationName:"badgeEnabled" type:"boolean"`
 
@@ -4888,15 +4935,15 @@ type UpdateProjectInput struct {
 	// The replacement AWS Key Management Service (AWS KMS) customer master key
 	// (CMK) to be used for encrypting the build output artifacts.
 	//
-	// You can specify either the CMK's Amazon Resource Name (ARN) or, if available,
+	// You can specify either the Amazon Resource Name (ARN)of the CMK or, if available,
 	// the CMK's alias (using the format alias/alias-name).
 	EncryptionKey *string `locationName:"encryptionKey" min:"1" type:"string"`
 
 	// Information to be changed about the build environment for the build project.
 	Environment *ProjectEnvironment `locationName:"environment" type:"structure"`
 
-	// Information about logs for the build project. A project can create Amazon
-	// CloudWatch Logs, logs in an S3 bucket, or both.
+	// Information about logs for the build project. A project can create logs in
+	// Amazon CloudWatch Logs, logs in an S3 bucket, or both.
 	LogsConfig *LogsConfig `locationName:"logsConfig" type:"structure"`
 
 	// The name of the build project.
@@ -4905,6 +4952,9 @@ type UpdateProjectInput struct {
 	//
 	// Name is a required field
 	Name *string `locationName:"name" min:"1" type:"string" required:"true"`
+
+	// The number of minutes a build is allowed to be queued before it times out.
+	QueuedTimeoutInMinutes *int64 `locationName:"queuedTimeoutInMinutes" min:"5" type:"integer"`
 
 	// An array of ProjectSource objects.
 	SecondaryArtifacts []*ProjectArtifacts `locationName:"secondaryArtifacts" type:"list"`
@@ -4956,6 +5006,9 @@ func (s *UpdateProjectInput) Validate() error {
 	}
 	if s.Name != nil && len(*s.Name) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
+	}
+	if s.QueuedTimeoutInMinutes != nil && *s.QueuedTimeoutInMinutes < 5 {
+		invalidParams.Add(request.NewErrParamMinValue("QueuedTimeoutInMinutes", 5))
 	}
 	if s.ServiceRole != nil && len(*s.ServiceRole) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("ServiceRole", 1))
@@ -5078,6 +5131,12 @@ func (s *UpdateProjectInput) SetName(v string) *UpdateProjectInput {
 	return s
 }
 
+// SetQueuedTimeoutInMinutes sets the QueuedTimeoutInMinutes field's value.
+func (s *UpdateProjectInput) SetQueuedTimeoutInMinutes(v int64) *UpdateProjectInput {
+	s.QueuedTimeoutInMinutes = &v
+	return s
+}
+
 // SetSecondaryArtifacts sets the SecondaryArtifacts field's value.
 func (s *UpdateProjectInput) SetSecondaryArtifacts(v []*ProjectArtifacts) *UpdateProjectInput {
 	s.SecondaryArtifacts = v
@@ -5146,10 +5205,10 @@ func (s *UpdateProjectOutput) SetProject(v *Project) *UpdateProjectOutput {
 type UpdateWebhookInput struct {
 	_ struct{} `type:"structure"`
 
-	// A regular expression used to determine which branches in a repository are
-	// built when a webhook is triggered. If the name of a branch matches the regular
-	// expression, then it is built. If it doesn't match, then it is not. If branchFilter
-	// is empty, then all branches are built.
+	// A regular expression used to determine which repository branches are built
+	// when a webhook is triggered. If the name of a branch matches the regular
+	// expression, then it is built. If branchFilter is empty, then all branches
+	// are built.
 	BranchFilter *string `locationName:"branchFilter" type:"string"`
 
 	// The name of the AWS CodeBuild project.
@@ -5158,8 +5217,8 @@ type UpdateWebhookInput struct {
 	ProjectName *string `locationName:"projectName" min:"2" type:"string" required:"true"`
 
 	// A boolean value that specifies whether the associated GitHub repository's
-	// secret token should be updated. If you use Bitbucket for your repository
-	// then rotateSecret is ignored.
+	// secret token should be updated. If you use Bitbucket for your repository,
+	// rotateSecret is ignored.
 	RotateSecret *bool `locationName:"rotateSecret" type:"boolean"`
 }
 
@@ -5231,7 +5290,7 @@ func (s *UpdateWebhookOutput) SetWebhook(v *Webhook) *UpdateWebhookOutput {
 	return s
 }
 
-// Information about the VPC configuration that AWS CodeBuild will access.
+// Information about the VPC configuration that AWS CodeBuild accesses.
 type VpcConfig struct {
 	_ struct{} `type:"structure"`
 
@@ -5291,16 +5350,17 @@ func (s *VpcConfig) SetVpcId(v string) *VpcConfig {
 type Webhook struct {
 	_ struct{} `type:"structure"`
 
-	// A regular expression used to determine which branches in a repository are
-	// built when a webhook is triggered. If the name of a branch matches the regular
-	// expression, then it is built. If it doesn't match, then it is not. If branchFilter
-	// is empty, then all branches are built.
+	// A regular expression used to determine which repository branches are built
+	// when a webhook is triggered. If the name of a branch matches the regular
+	// expression, then it is built. If branchFilter is empty, then all branches
+	// are built.
 	BranchFilter *string `locationName:"branchFilter" type:"string"`
 
-	// A timestamp indicating the last time a repository's secret token was modified.
+	// A timestamp that indicates the last time a repository's secret token was
+	// modified.
 	LastModifiedSecret *time.Time `locationName:"lastModifiedSecret" type:"timestamp"`
 
-	// The CodeBuild endpoint where webhook events are sent.
+	// The AWS CodeBuild endpoint where webhook events are sent.
 	PayloadUrl *string `locationName:"payloadUrl" min:"1" type:"string"`
 
 	// The secret token of the associated repository.
@@ -5382,6 +5442,9 @@ const (
 const (
 	// BuildPhaseTypeSubmitted is a BuildPhaseType enum value
 	BuildPhaseTypeSubmitted = "SUBMITTED"
+
+	// BuildPhaseTypeQueued is a BuildPhaseType enum value
+	BuildPhaseTypeQueued = "QUEUED"
 
 	// BuildPhaseTypeProvisioning is a BuildPhaseType enum value
 	BuildPhaseTypeProvisioning = "PROVISIONING"
@@ -5473,6 +5536,9 @@ const (
 
 	// LanguageTypeBase is a LanguageType enum value
 	LanguageTypeBase = "BASE"
+
+	// LanguageTypePhp is a LanguageType enum value
+	LanguageTypePhp = "PHP"
 )
 
 const (
