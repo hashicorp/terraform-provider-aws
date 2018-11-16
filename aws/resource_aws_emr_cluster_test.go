@@ -334,6 +334,18 @@ func TestAccAWSEMRCluster_terminationProtected(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      "aws_emr_cluster.tf-test-cluster",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"configurations",
+					"core_instance_count",
+					"core_instance_type",
+					"kerberos_attributes.0.kdc_admin_password",
+					"keep_job_flow_alive_when_no_steps",
+				},
+			},
+			{
 				//Need to turn off termination_protection to allow the job to be deleted
 				Config: testAccAWSEmrClusterConfigTerminationPolicy(r, "false"),
 				Check: resource.ComposeTestCheckFunc(
@@ -393,6 +405,18 @@ func TestAccAWSEMRCluster_visibleToAllUsers(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_emr_cluster.tf-test-cluster", "visible_to_all_users", "true"),
 				),
+			},
+			{
+				ResourceName:      "aws_emr_cluster.tf-test-cluster",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"configurations",
+					"core_instance_count",
+					"core_instance_type",
+					"kerberos_attributes.0.kdc_admin_password",
+					"keep_job_flow_alive_when_no_steps",
+				},
 			},
 			{
 				Config: testAccAWSEmrClusterConfigVisibleToAllUsersUpdated(r),
