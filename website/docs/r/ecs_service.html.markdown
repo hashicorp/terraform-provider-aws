@@ -93,6 +93,7 @@ The following arguments are supported:
 `placement_constraints` is `10`. Defined below.
 * `network_configuration` - (Optional) The network configuration for the service. This parameter is required for task definitions that use the `awsvpc` network mode to receive their own Elastic Network Interface, and it is not supported for other network modes.
 * `service_registries` - (Optional) The service discovery registries for the service. The maximum number of `service_registries` blocks is `1`.
+* `tags` - (Optional) Key-value mapping of resource tags
 
 ## load_balancer
 
