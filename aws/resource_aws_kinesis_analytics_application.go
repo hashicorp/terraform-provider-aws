@@ -1282,7 +1282,7 @@ func flattenKinesisAnalyticsInputs(inputs []*kinesisanalytics.InputDescription) 
 			ipcd := id.InputProcessingConfigurationDescription
 
 			if ipcd.InputLambdaProcessorDescription != nil {
-				input["processing_configurations"] = []interface{}{
+				input["processing_configuration"] = []interface{}{
 					map[string]interface{}{
 						"lambda": []interface{}{
 							map[string]interface{}{
