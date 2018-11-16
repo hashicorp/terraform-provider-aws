@@ -171,6 +171,28 @@ func TestAccAWSLaunchTemplate_BlockDeviceMappings_EBS_DeleteOnTermination(t *tes
 	})
 }
 
+func TestAccAWSLaunchTemplate_Ebs_DeleteOnTerminationDefault(t *testing.T) {
+	var template ec2.LaunchTemplate
+	resourceName := "aws_launch_template.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLaunchTemplateConfig_Ebs_DeleteOnTerminationDefault,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "block_device_mappings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "block_device_mappings.0.ebs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "block_device_mappings.0.ebs.0.delete_on_termination", "true"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSLaunchTemplate_EbsOptimized(t *testing.T) {
 	var template ec2.LaunchTemplate
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -727,6 +749,19 @@ resource "aws_autoscaling_group" "test" {
 }
 `, rName, deleteOnTermination, rName)
 }
+
+const testAccAWSLaunchTemplateConfig_Ebs_DeleteOnTerminationDefault = `
+resource "aws_launch_template" "test" {
+  name_prefix = "tf-acc-test"
+  block_device_mappings {
+    device_name = "/dev/sda1"
+
+    ebs {
+      volume_size           = 15
+    }
+  }
+}
+`
 
 func testAccAWSLaunchTemplateConfig_EbsOptimized(rName, ebsOptimized string) string {
 	return fmt.Sprintf(`
