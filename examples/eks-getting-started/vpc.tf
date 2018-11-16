@@ -18,11 +18,12 @@ resource "aws_vpc" "demo" {
 }
 
 resource "aws_subnet" "demo" {
-  count = 2
+  count = 3
 
   availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
   cidr_block        = "10.0.${count.index}.0/24"
   vpc_id            = "${aws_vpc.demo.id}"
+  map_public_ip_on_launch = true
 
   tags = "${
     map(
@@ -50,7 +51,7 @@ resource "aws_route_table" "demo" {
 }
 
 resource "aws_route_table_association" "demo" {
-  count = 2
+  count = 3
 
   subnet_id      = "${aws_subnet.demo.*.id[count.index]}"
   route_table_id = "${aws_route_table.demo.id}"

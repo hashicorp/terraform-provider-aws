@@ -109,27 +109,63 @@ set -o xtrace
 USERDATA
 }
 
-resource "aws_launch_configuration" "demo" {
-  associate_public_ip_address = true
-  iam_instance_profile        = "${aws_iam_instance_profile.demo-node.name}"
-  image_id                    = "${data.aws_ami.eks-worker.id}"
-  instance_type               = "m4.large"
-  name_prefix                 = "terraform-eks-demo"
-  security_groups             = ["${aws_security_group.demo-node.id}"]
-  user_data_base64            = "${base64encode(local.demo-node-userdata)}"
-
-  lifecycle {
-    create_before_destroy = true
+resource "aws_launch_template" "demo" {
+  name_prefix   = "demo"
+  image_id      = "${data.aws_ami.eks-worker.id}"
+  instance_type = "m5.large"
+  iam_instance_profile        {
+    name = "${aws_iam_instance_profile.demo-node.name}"
   }
+  vpc_security_group_ids             = ["${aws_security_group.demo-node.id}"]
+  user_data            = "${base64encode(local.demo-node-userdata)}"
 }
 
 resource "aws_autoscaling_group" "demo" {
-  desired_capacity     = 2
-  launch_configuration = "${aws_launch_configuration.demo.id}"
-  max_size             = 2
+  desired_capacity     = 3
+  max_size             = 10
   min_size             = 1
   name                 = "terraform-eks-demo"
   vpc_zone_identifier  = ["${aws_subnet.demo.*.id}"]
+
+  mixed_instances_policy {
+
+    instances_distribution {
+      on_demand_percentage_above_base_capacity = 0
+    }
+    launch_template {
+      launch_template_specification {
+        launch_template_id = "${aws_launch_template.demo.id}"
+      }
+
+      override {
+        instance_type = "m5.large"
+      }
+
+      override {
+        instance_type = "m5d.large"
+      }
+
+      override {
+        instance_type = "m4.large"
+      }
+
+      override {
+        instance_type = "t3.large"
+      }
+
+      override {
+        instance_type = "t2.large"
+      }
+
+      override {
+        instance_type = "c5.xlarge"
+      }
+
+      override {
+        instance_type = "c5d.xlarge"
+      }
+    }
+  }
 
   tag {
     key                 = "Name"
