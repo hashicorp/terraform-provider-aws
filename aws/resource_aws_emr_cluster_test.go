@@ -268,6 +268,7 @@ func TestAccAWSEMRCluster_Step_Multiple(t *testing.T) {
 
 func TestAccAWSEMRCluster_bootstrap_ordering(t *testing.T) {
 	var cluster emr.Cluster
+	resourceName := "aws_emr_cluster.test"
 	rName := acctest.RandomWithPrefix("tf-emr-bootstrap")
 	argsInts := []string{
 		"1",
@@ -295,12 +296,12 @@ func TestAccAWSEMRCluster_bootstrap_ordering(t *testing.T) {
 			{
 				Config: testAccAWSEmrClusterConfig_bootstrap(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEmrClusterExists("aws_emr_cluster.test", &cluster),
+					testAccCheckAWSEmrClusterExists(resourceName, &cluster),
 					testAccCheck_bootstrap_order(&cluster, argsInts, argsStrings),
 				),
 			},
 			{
-				ResourceName:            "aws_emr_cluster.tf-test-cluster",
+				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},

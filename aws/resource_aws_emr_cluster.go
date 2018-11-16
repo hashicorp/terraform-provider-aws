@@ -46,6 +46,7 @@ func resourceAwsEMRCluster() *schema.Resource {
 				Required: false,
 				Optional: true,
 				ForceNew: true,
+				Computed: true,
 			},
 			"additional_info": {
 				Type:             schema.TypeString,
@@ -68,6 +69,7 @@ func resourceAwsEMRCluster() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntAtLeast(1),
+				Computed:     true,
 			},
 			"cluster_state": {
 				Type:     schema.TypeString,
@@ -215,6 +217,7 @@ func resourceAwsEMRCluster() *schema.Resource {
 									"iops": {
 										Type:     schema.TypeInt,
 										Optional: true,
+										Computed: true,
 									},
 									"size": {
 										Type:     schema.TypeInt,
@@ -434,13 +437,6 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 		TerminationProtected:        aws.Bool(terminationProtection),
 	}
 
-	/*
-		if v, ok := d.GetOk("master_instance_type"); ok {
-			instanceConfig.MasterInstanceType = aws.String(v.(string))
-			instanceConfig.SlaveInstanceType = aws.String(v.(string))
-			instanceConfig.InstanceCount = aws.Int64(1)
-		}*/
-
 	if v, ok := d.GetOk("master_instance_type"); ok {
 		masterInstanceGroupConfig := &emr.InstanceGroupConfig{
 			InstanceRole:  aws.String("MASTER"),
@@ -468,22 +464,6 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 		}
 		instanceConfig.InstanceGroups = append(instanceConfig.InstanceGroups, coreInstanceGroupConfig)
 	}
-
-	/*
-			if v, ok := d.GetOk("core_instance_type"); ok {
-				instanceConfig.SlaveInstanceType = aws.String(v.(string))
-			}
-		if v, ok := d.GetOk("core_instance_count"); ok {
-			instanceConfig.InstanceCount = aws.Int64(int64(v.(int)))
-		}*/
-	/*
-		coreInstanceGroupConfig := &emr.InstanceGroupConfig{
-			InstanceCount: aws.Int64(int64(d.Get("core_instance_count").(int))),
-			InstanceRole:  aws.String("CORE"),
-			InstanceType:  aws.String(d.Get("core_instance_type").(string)),
-		}*/
-
-	// instanceConfig.InstanceGroups = []*emr.InstanceGroupConfig{masterInstanceGroupConfig, coreInstanceGroupConfig}
 
 	var instanceProfile string
 	if a, ok := d.GetOk("ec2_attributes"); ok {
