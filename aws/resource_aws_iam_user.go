@@ -186,7 +186,7 @@ func resourceAwsIamUserUpdate(d *schema.ResourceData, meta interface{}) error {
 		oraw, nraw := d.GetChange("tags")
 		o := oraw.(map[string]interface{})
 		n := nraw.(map[string]interface{})
-		_, r := diffTagsIAM(tagsFromMapIAM(o), tagsFromMapIAM(n))
+		c, r := diffTagsIAM(tagsFromMapIAM(o), tagsFromMapIAM(n))
 
 		_, untagErr := iamconn.UntagUser(&iam.UntagUserInput{
 			UserName: aws.String(d.Id()),
@@ -196,10 +196,9 @@ func resourceAwsIamUserUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error deleting IAM user tags: %s", untagErr)
 		}
 
-		tags := tagsFromMapIAM(d.Get("tags").(map[string]interface{}))
 		input := &iam.TagUserInput{
 			UserName: aws.String(d.Id()),
-			Tags:     tags,
+			Tags:     c,
 		}
 		_, tagErr := iamconn.TagUser(input)
 		if tagErr != nil {
