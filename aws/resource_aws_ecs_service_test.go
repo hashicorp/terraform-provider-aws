@@ -594,7 +594,7 @@ func TestAccAWSEcsService_withLaunchTypeFargateAndPlatformVersion(t *testing.T) 
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists("aws_ecs_service.main", &service),
 					resource.TestCheckResourceAttr("aws_ecs_service.main", "launch_type", "FARGATE"),
-					resource.TestCheckResourceAttr("aws_ecs_service.main", "platform_version", "1.2.0"),
+					resource.TestCheckResourceAttr("aws_ecs_service.main", "platform_version", "LATEST"),
 					resource.TestCheckResourceAttr("aws_ecs_service.main", "network_configuration.0.assign_public_ip", "false"),
 					resource.TestCheckResourceAttr("aws_ecs_service.main", "network_configuration.0.security_groups.#", "2"),
 					resource.TestCheckResourceAttr("aws_ecs_service.main", "network_configuration.0.subnets.#", "2"),
@@ -1322,7 +1322,7 @@ data "aws_availability_zones" "available" {}
 resource "aws_vpc" "main" {
   cidr_block = "10.10.0.0/16"
   tags {
-    Name = "terraform-testacc-ecs-service-with-launch-type-fargate"
+    Name = "terraform-testacc-ecs-service-with-launch-type-fargate-and-platform-version"
   }
 }
 
@@ -1332,7 +1332,7 @@ resource "aws_subnet" "main" {
   availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
   vpc_id = "${aws_vpc.main.id}"
   tags {
-    Name = "tf-acc-ecs-service-with-launch-type-fargate"
+    Name = "tf-acc-ecs-service-with-launch-type-fargate-and-platform-version"
   }
 }
 
@@ -1393,7 +1393,7 @@ resource "aws_ecs_service" "main" {
   task_definition = "${aws_ecs_task_definition.mongo.arn}"
   desired_count = 1
   launch_type = "FARGATE"
-  platform_version = "1.2.0"
+  platform_version = "LATEST"
   network_configuration {
     security_groups = ["${aws_security_group.allow_all_a.id}", "${aws_security_group.allow_all_b.id}"]
     subnets = ["${aws_subnet.main.*.id}"]
