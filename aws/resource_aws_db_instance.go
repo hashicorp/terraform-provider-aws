@@ -275,6 +275,12 @@ func resourceAwsDbInstance() *schema.Resource {
 				Default:  false,
 			},
 
+			"delete_automated_backups": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+
 			"db_subnet_group_name": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -1265,6 +1271,9 @@ func resourceAwsDbInstanceDelete(d *schema.ResourceData, meta interface{}) error
 			return fmt.Errorf("DB Instance FinalSnapshotIdentifier is required when a final snapshot is required")
 		}
 	}
+
+	deleteAutomatedBackups := d.Get("delete_automated_backups").(bool)
+	opts.DeleteAutomatedBackups = aws.Bool(deleteAutomatedBackups)
 
 	log.Printf("[DEBUG] DB Instance destroy configuration: %v", opts)
 	_, err := conn.DeleteDBInstance(&opts)

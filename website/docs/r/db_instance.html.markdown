@@ -162,6 +162,8 @@ created before the DB instance is deleted. If true is specified, no DBSnapshot
 is created. If false is specified, a DB snapshot is created before the DB
 instance is deleted, using the value from `final_snapshot_identifier`. Default
 is `false`.
+* `delete_automated_backups` - (Optional) Determines whether to remove automated 
+backups immediately after the DB instance is deleted. Default is `false`.
 * `snapshot_identifier` - (Optional) Specifies whether or not to create this
 database from a snapshot. This correlates to the snapshot ID you'd find in the
 RDS console, e.g: rds:production-2015-06-26-06-05.
