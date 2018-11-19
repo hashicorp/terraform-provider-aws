@@ -106,7 +106,7 @@ func resourceAwsEipCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("public_ipv4_pool"); ok {
-		allocOpts.PublicIpv4Pool = aws.String(d.Get("public_ipv4_pool").(string))
+		allocOpts.PublicIpv4Pool = aws.String(v.(string))
 	}
 
 	log.Printf("[DEBUG] EIP create configuration: %#v", allocOpts)

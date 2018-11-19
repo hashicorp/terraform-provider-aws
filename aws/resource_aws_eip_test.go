@@ -306,25 +306,46 @@ func TestAccAWSEIP_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSEIP_PublicIpv4Pool(t *testing.T) {
+func TestAccAWSEIP_PublicIpv4Pool_default(t *testing.T) {
 	var conf ec2.Address
 	resourceName := "aws_eip.bar"
-	envPoolName := fmt.Sprintf("%s", os.Getenv("AWS_EC2_EIP_PUBLIC_IPV4_POOL"))
-	poolName := ""
-	if envPoolName == "" {
-		poolName = "amazon"
-	} else {
-		poolName = envPoolName
-	}
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_eip.bar",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSEIPDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEIPConfig_PublicIpv4Pool(poolName),
+				Config: testAccAWSEIPConfig_PublicIpv4Pool_default,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEIPExists(resourceName, &conf),
+					testAccCheckAWSEIPAttributes(&conf),
+					resource.TestCheckResourceAttr(resourceName, "public_ipv4_pool", "amazon"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSEIP_PublicIpv4Pool_custom(t *testing.T) {
+	if os.Getenv("AWS_EC2_EIP_PUBLIC_IPV4_POOL") == "" {
+		t.Skip("Environment variable AWS_EC2_EIP_PUBLIC_IPV4_POOL is not set")
+	}
+
+	var conf ec2.Address
+	resourceName := "aws_eip.bar"
+
+	poolName := fmt.Sprintf("%s", os.Getenv("AWS_EC2_EIP_PUBLIC_IPV4_POOL"))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSEIPDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEIPConfig_PublicIpv4Pool_custom(poolName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEIPExists(resourceName, &conf),
 					testAccCheckAWSEIPAttributes(&conf),
@@ -483,7 +504,13 @@ resource "aws_eip" "bar" {
 `, rName, testName)
 }
 
-func testAccAWSEIPConfig_PublicIpv4Pool(poolName string) string {
+const testAccAWSEIPConfig_PublicIpv4Pool_default = `
+resource "aws_eip" "bar" {
+   vpc = true
+}
+`
+
+func testAccAWSEIPConfig_PublicIpv4Pool_custom(poolName string) string {
 	return fmt.Sprintf(`
 resource "aws_eip" "bar" {
    vpc = true
