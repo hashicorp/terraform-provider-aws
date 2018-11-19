@@ -83,7 +83,7 @@ official [Developer Guide](https://docs.aws.amazon.com/AmazonECS/latest/develope
 * `execution_role_arn` - (Optional) The Amazon Resource Name (ARN) of the task execution role that the Amazon ECS container agent and the Docker daemon can assume.
 * `network_mode` - (Optional) The Docker networking mode to use for the containers in the task. The valid values are `none`, `bridge`, `awsvpc`, and `host`.
 * `ipc_mode` - (Optional) The IPC resource namespace to be used for the containers in the task The valid values are `host`, `task`, and `none`.
-* `pid_mode` - (Optional) TheThe process namespace to use for the containers in the task. The valid values are `host` and `task`.
+* `pid_mode` - (Optional) The process namespace to use for the containers in the task. The valid values are `host` and `task`.
 * `volume` - (Optional) A set of [volume blocks](#volume-block-arguments) that containers in your task may use.
 * `placement_constraints` - (Optional) A set of [placement constraints](#placement-constraints-arguments) rules that are taken into consideration during task placement. Maximum number of `placement_constraints` is `10`.
 * `cpu` - (Optional) The number of cpu units used by the task. If the `requires_compatibilities` is `FARGATE` this field is required.
