@@ -6,6 +6,7 @@ ENHANCEMENTS:
 * resource/aws_ecs_cluster: Add `tags` argument [GH-6486]
 * resource/aws_ecs_service: Add `tags` argument [GH-6486]
 * resource/aws_ecs_task_definition: Add `tags` argument [GH-6486]
+* resource/aws_ecs_task_definition: Add `ipc_mode` and `pid_mode` arguments [GH-6515]
 * resource/aws_eip: Add `public_ipv4_pool` argument [GH-6518]
 * resource/aws_iam_role: Add `tags` argument [GH-6499]
 * resource/aws_iam_user: Add `tags` argument [GH-6497]
