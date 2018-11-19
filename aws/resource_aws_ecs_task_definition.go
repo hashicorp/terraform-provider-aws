@@ -192,12 +192,21 @@ func resourceAwsEcsTaskDefinition() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					ecs.IpcModeHost,
+					ecs.IpcModeNone,
+					ecs.IpcModeTask,
+				}, false),
 			},
 
 			"pid_mode": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					ecs.PidModeHost,
+					ecs.PidModeTask,
+				}, false),
 			},
 
 			"tags": tagsSchema(),
