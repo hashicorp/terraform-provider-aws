@@ -448,7 +448,7 @@ func (c *SSM) CreateAssociationRequest(input *CreateAssociationInput) (req *requ
 // the instance as specified.
 //
 // If you associate a document with an instance that already has an associated
-// document, the system throws the AssociationAlreadyExists exception.
+// document, the system returns the AssociationAlreadyExists exception.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -581,7 +581,7 @@ func (c *SSM) CreateAssociationBatchRequest(input *CreateAssociationBatchInput) 
 // the instance as specified.
 //
 // If you associate a document with an instance that already has an associated
-// document, the system throws the AssociationAlreadyExists exception.
+// document, the system returns the AssociationAlreadyExists exception.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -12113,6 +12113,10 @@ type AutomationExecution struct {
 	// The AutomationExecutionId of the parent automation.
 	ParentAutomationExecutionId *string `min:"36" type:"string"`
 
+	// An aggregate of step execution statuses displayed in the AWS Console for
+	// a multi-Region and multi-account Automation execution.
+	ProgressCounters *ProgressCounters `type:"structure"`
+
 	// A list of resolved targets in the rate control execution.
 	ResolvedTargets *ResolvedTargets `type:"structure"`
 
@@ -12127,6 +12131,10 @@ type AutomationExecution struct {
 
 	// The target of the execution.
 	Target *string `type:"string"`
+
+	// The combination of AWS Regions and/or AWS accounts where you want to execute
+	// the Automation.
+	TargetLocations []*TargetLocation `min:"1" type:"list"`
 
 	// The specified key-value mapping of document parameters to target resources.
 	TargetMaps []map[string][]*string `type:"list"`
@@ -12244,6 +12252,12 @@ func (s *AutomationExecution) SetParentAutomationExecutionId(v string) *Automati
 	return s
 }
 
+// SetProgressCounters sets the ProgressCounters field's value.
+func (s *AutomationExecution) SetProgressCounters(v *ProgressCounters) *AutomationExecution {
+	s.ProgressCounters = v
+	return s
+}
+
 // SetResolvedTargets sets the ResolvedTargets field's value.
 func (s *AutomationExecution) SetResolvedTargets(v *ResolvedTargets) *AutomationExecution {
 	s.ResolvedTargets = v
@@ -12265,6 +12279,12 @@ func (s *AutomationExecution) SetStepExecutionsTruncated(v bool) *AutomationExec
 // SetTarget sets the Target field's value.
 func (s *AutomationExecution) SetTarget(v string) *AutomationExecution {
 	s.Target = &v
+	return s
+}
+
+// SetTargetLocations sets the TargetLocations field's value.
+func (s *AutomationExecution) SetTargetLocations(v []*TargetLocation) *AutomationExecution {
+	s.TargetLocations = v
 	return s
 }
 
@@ -12357,6 +12377,13 @@ type AutomationExecutionMetadata struct {
 	// Timed out, or Cancelled.
 	AutomationExecutionStatus *string `type:"string" enum:"AutomationExecutionStatus"`
 
+	// Use this filter with DescribeAutomationExecution. Specify either Local of
+	// CrossAccount. CrossAccount is an Automation that executes in multiple AWS
+	// Regions and accounts. For more information, see Concurrently Executing Automations
+	// in Multiple AWS Regions and Accounts (http://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-automation-multiple-accounts-and-regions.html)
+	// in the AWS Systems Manager User Guide.
+	AutomationType *string `type:"string" enum:"AutomationType"`
+
 	// The action of the currently executing step.
 	CurrentAction *string `type:"string"`
 
@@ -12435,6 +12462,12 @@ func (s *AutomationExecutionMetadata) SetAutomationExecutionId(v string) *Automa
 // SetAutomationExecutionStatus sets the AutomationExecutionStatus field's value.
 func (s *AutomationExecutionMetadata) SetAutomationExecutionStatus(v string) *AutomationExecutionMetadata {
 	s.AutomationExecutionStatus = &v
+	return s
+}
+
+// SetAutomationType sets the AutomationType field's value.
+func (s *AutomationExecutionMetadata) SetAutomationType(v string) *AutomationExecutionMetadata {
+	s.AutomationType = &v
 	return s
 }
 
@@ -13022,11 +13055,13 @@ type CommandFilter struct {
 
 	// The filter value. Valid values for each filter key are as follows:
 	//
-	//    * InvokedAfter: A timestamp to limit your results. For example, specify
-	//    2018-07-07T00:00:00Z to see results occurring July 7, 2018, and later.
+	//    * InvokedAfter: Specify a timestamp to limit your results. For example,
+	//    specify 2018-07-07T00:00:00Z to see a list of command executions occurring
+	//    July 7, 2018, and later.
 	//
-	//    * InvokedBefore: A timestamp to limit your results. For example, specify
-	//    2018-07-07T00:00:00Z to see results before July 7, 2018.
+	//    * InvokedBefore: Specify a timestamp to limit your results. For example,
+	//    specify 2018-07-07T00:00:00Z to see a list of command executions from
+	//    before July 7, 2018.
 	//
 	//    * Status: Specify a valid command status to see a list of all command
 	//    executions with that status. Status values you can specify include:
@@ -13045,19 +13080,17 @@ type CommandFilter struct {
 	//
 	// Cancelling
 	//
-	//    * DocumentName: The name of the SSM document for which you want to see
-	//    command results.
+	//    * DocumentName: Specify name of the SSM document for which you want to
+	//    see command execution results. For example, specify AWS-RunPatchBaseline
+	//    to see command executions that used this SSM document to perform security
+	//    patching operations on instances.
 	//
-	// For example, specify AWS-RunPatchBaseline to see command executions that
-	//    used this SSM document to perform security patching operations on instances.
+	//    * ExecutionStage: Specify one of the following values:
 	//
+	// Executing: Returns a list of command executions that are currently still
+	//    running.
 	//
-	//    * ExecutionStage: An enum whose value can be either Executing or Complete.
-	//
-	// Specify Executing to see a list of command executions that are currently
-	//    still running.
-	//
-	// Specify Complete to see a list of command exeuctions that have already completed.
+	// Complete: Returns a list of command executions that have already completed.
 	//
 	// Value is a required field
 	Value *string `locationName:"value" min:"1" type:"string" required:"true"`
@@ -14109,7 +14142,7 @@ func (s *CreateAssociationBatchOutput) SetSuccessful(v []*AssociationDescription
 	return s
 }
 
-// Describes the association of a Systems Manager document and an instance.
+// Describes the association of a Systems Manager SSM document and an instance.
 type CreateAssociationBatchRequestEntry struct {
 	_ struct{} `type:"structure"`
 
@@ -26356,7 +26389,7 @@ type MaintenanceWindowRunCommandParameters struct {
 	ServiceRoleArn *string `type:"string"`
 
 	// If this time is reached and the command has not already started executing,
-	// it doesn not execute.
+	// it doesn't run.
 	TimeoutSeconds *int64 `min:"30" type:"integer"`
 }
 
@@ -28597,6 +28630,72 @@ func (s *PatchStatus) SetComplianceLevel(v string) *PatchStatus {
 // SetDeploymentStatus sets the DeploymentStatus field's value.
 func (s *PatchStatus) SetDeploymentStatus(v string) *PatchStatus {
 	s.DeploymentStatus = &v
+	return s
+}
+
+// An aggregate of step execution statuses displayed in the AWS Console for
+// a multi-Region and multi-account Automation execution.
+type ProgressCounters struct {
+	_ struct{} `type:"structure"`
+
+	// The total number of steps that the system cancelled in all specified AWS
+	// Regions and accounts for the current Automation execution.
+	CancelledSteps *int64 `type:"integer"`
+
+	// The total number of steps that failed to execute in all specified AWS Regions
+	// and accounts for the current Automation execution.
+	FailedSteps *int64 `type:"integer"`
+
+	// The total number of steps that successfully completed in all specified AWS
+	// Regions and accounts for the current Automation execution.
+	SuccessSteps *int64 `type:"integer"`
+
+	// The total number of steps that timed out in all specified AWS Regions and
+	// accounts for the current Automation execution.
+	TimedOutSteps *int64 `type:"integer"`
+
+	// The total number of steps executed in all specified AWS Regions and accounts
+	// for the current Automation execution.
+	TotalSteps *int64 `type:"integer"`
+}
+
+// String returns the string representation
+func (s ProgressCounters) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ProgressCounters) GoString() string {
+	return s.String()
+}
+
+// SetCancelledSteps sets the CancelledSteps field's value.
+func (s *ProgressCounters) SetCancelledSteps(v int64) *ProgressCounters {
+	s.CancelledSteps = &v
+	return s
+}
+
+// SetFailedSteps sets the FailedSteps field's value.
+func (s *ProgressCounters) SetFailedSteps(v int64) *ProgressCounters {
+	s.FailedSteps = &v
+	return s
+}
+
+// SetSuccessSteps sets the SuccessSteps field's value.
+func (s *ProgressCounters) SetSuccessSteps(v int64) *ProgressCounters {
+	s.SuccessSteps = &v
+	return s
+}
+
+// SetTimedOutSteps sets the TimedOutSteps field's value.
+func (s *ProgressCounters) SetTimedOutSteps(v int64) *ProgressCounters {
+	s.TimedOutSteps = &v
+	return s
+}
+
+// SetTotalSteps sets the TotalSteps field's value.
+func (s *ProgressCounters) SetTotalSteps(v int64) *ProgressCounters {
+	s.TotalSteps = &v
 	return s
 }
 
@@ -31033,6 +31132,13 @@ type StartAutomationExecutionInput struct {
 	// in the Automation document.
 	Parameters map[string][]*string `min:"1" type:"map"`
 
+	// A location is a combination of AWS Regions and/or AWS accounts where you
+	// want to execute the Automation. Use this action to start an Automation in
+	// multiple Regions and multiple accounts. For more information, see Concurrently
+	// Executing Automations in Multiple AWS Regions and Accounts (http://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-automation-multiple-accounts-and-regions.html)
+	// in the AWS Systems Manager User Guide.
+	TargetLocations []*TargetLocation `min:"1" type:"list"`
+
 	// A key-value mapping of document parameters to target resources. Both Targets
 	// and TargetMaps cannot be specified together.
 	TargetMaps []map[string][]*string `type:"list"`
@@ -31073,8 +31179,21 @@ func (s *StartAutomationExecutionInput) Validate() error {
 	if s.Parameters != nil && len(s.Parameters) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Parameters", 1))
 	}
+	if s.TargetLocations != nil && len(s.TargetLocations) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TargetLocations", 1))
+	}
 	if s.TargetParameterName != nil && len(*s.TargetParameterName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("TargetParameterName", 1))
+	}
+	if s.TargetLocations != nil {
+		for i, v := range s.TargetLocations {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "TargetLocations", i), err.(request.ErrInvalidParams))
+			}
+		}
 	}
 	if s.Targets != nil {
 		for i, v := range s.Targets {
@@ -31132,6 +31251,12 @@ func (s *StartAutomationExecutionInput) SetMode(v string) *StartAutomationExecut
 // SetParameters sets the Parameters field's value.
 func (s *StartAutomationExecutionInput) SetParameters(v map[string][]*string) *StartAutomationExecutionInput {
 	s.Parameters = v
+	return s
+}
+
+// SetTargetLocations sets the TargetLocations field's value.
+func (s *StartAutomationExecutionInput) SetTargetLocations(v []*TargetLocation) *StartAutomationExecutionInput {
+	s.TargetLocations = v
 	return s
 }
 
@@ -31353,6 +31478,13 @@ type StepExecution struct {
 	// Success, Cancelled, Failed, and TimedOut.
 	StepStatus *string `type:"string" enum:"AutomationExecutionStatus"`
 
+	// The combination of AWS Regions and accounts targeted by the current Automation
+	// execution.
+	TargetLocation *TargetLocation `type:"structure"`
+
+	// The targets for the step execution.
+	Targets []*Target `type:"list"`
+
 	// The timeout seconds of the step.
 	TimeoutSeconds *int64 `type:"long"`
 
@@ -31479,6 +31611,18 @@ func (s *StepExecution) SetStepName(v string) *StepExecution {
 // SetStepStatus sets the StepStatus field's value.
 func (s *StepExecution) SetStepStatus(v string) *StepExecution {
 	s.StepStatus = &v
+	return s
+}
+
+// SetTargetLocation sets the TargetLocation field's value.
+func (s *StepExecution) SetTargetLocation(v *TargetLocation) *StepExecution {
+	s.TargetLocation = v
+	return s
+}
+
+// SetTargets sets the Targets field's value.
+func (s *StepExecution) SetTargets(v []*Target) *StepExecution {
+	s.Targets = v
 	return s
 }
 
@@ -31734,6 +31878,94 @@ func (s *Target) SetKey(v string) *Target {
 // SetValues sets the Values field's value.
 func (s *Target) SetValues(v []*string) *Target {
 	s.Values = v
+	return s
+}
+
+// The combination of AWS Regions and accounts targeted by the current Automation
+// execution.
+type TargetLocation struct {
+	_ struct{} `type:"structure"`
+
+	// The AWS accounts targeted by the current Automation execution.
+	Accounts []*string `min:"1" type:"list"`
+
+	// The Automation execution role used by the currently executing Automation.
+	ExecutionRoleName *string `min:"1" type:"string"`
+
+	// The AWS Regions targeted by the current Automation execution.
+	Regions []*string `min:"1" type:"list"`
+
+	// The maxium number of AWS accounts and AWS regions allowed to run the Automation
+	// concurrently
+	TargetLocationMaxConcurrency *string `min:"1" type:"string"`
+
+	// The maxium number of errors allowed before the system stops queueing additional
+	// Automation executions for the currently executing Automation.
+	TargetLocationMaxErrors *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s TargetLocation) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TargetLocation) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *TargetLocation) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "TargetLocation"}
+	if s.Accounts != nil && len(s.Accounts) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Accounts", 1))
+	}
+	if s.ExecutionRoleName != nil && len(*s.ExecutionRoleName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ExecutionRoleName", 1))
+	}
+	if s.Regions != nil && len(s.Regions) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Regions", 1))
+	}
+	if s.TargetLocationMaxConcurrency != nil && len(*s.TargetLocationMaxConcurrency) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TargetLocationMaxConcurrency", 1))
+	}
+	if s.TargetLocationMaxErrors != nil && len(*s.TargetLocationMaxErrors) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TargetLocationMaxErrors", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAccounts sets the Accounts field's value.
+func (s *TargetLocation) SetAccounts(v []*string) *TargetLocation {
+	s.Accounts = v
+	return s
+}
+
+// SetExecutionRoleName sets the ExecutionRoleName field's value.
+func (s *TargetLocation) SetExecutionRoleName(v string) *TargetLocation {
+	s.ExecutionRoleName = &v
+	return s
+}
+
+// SetRegions sets the Regions field's value.
+func (s *TargetLocation) SetRegions(v []*string) *TargetLocation {
+	s.Regions = v
+	return s
+}
+
+// SetTargetLocationMaxConcurrency sets the TargetLocationMaxConcurrency field's value.
+func (s *TargetLocation) SetTargetLocationMaxConcurrency(v string) *TargetLocation {
+	s.TargetLocationMaxConcurrency = &v
+	return s
+}
+
+// SetTargetLocationMaxErrors sets the TargetLocationMaxErrors field's value.
+func (s *TargetLocation) SetTargetLocationMaxErrors(v string) *TargetLocation {
+	s.TargetLocationMaxErrors = &v
 	return s
 }
 
@@ -33652,6 +33884,9 @@ const (
 
 	// AutomationExecutionFilterKeyStartTimeAfter is a AutomationExecutionFilterKey enum value
 	AutomationExecutionFilterKeyStartTimeAfter = "StartTimeAfter"
+
+	// AutomationExecutionFilterKeyAutomationType is a AutomationExecutionFilterKey enum value
+	AutomationExecutionFilterKeyAutomationType = "AutomationType"
 )
 
 const (
@@ -33678,6 +33913,14 @@ const (
 
 	// AutomationExecutionStatusFailed is a AutomationExecutionStatus enum value
 	AutomationExecutionStatusFailed = "Failed"
+)
+
+const (
+	// AutomationTypeCrossAccount is a AutomationType enum value
+	AutomationTypeCrossAccount = "CrossAccount"
+
+	// AutomationTypeLocal is a AutomationType enum value
+	AutomationTypeLocal = "Local"
 )
 
 const (
