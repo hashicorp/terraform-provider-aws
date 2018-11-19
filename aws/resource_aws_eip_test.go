@@ -306,6 +306,35 @@ func TestAccAWSEIP_tags(t *testing.T) {
 	})
 }
 
+func TestAccAWSEIP_PublicIpv4Pool(t *testing.T) {
+	var conf ec2.Address
+	resourceName := "aws_eip.bar"
+	envPoolName := fmt.Sprintf("%s", os.Getenv("AWS_EC2_EIP_PUBLIC_IPV4_POOL"))
+	poolName := ""
+	if envPoolName == "" {
+		poolName = "amazon"
+	} else {
+		poolName = envPoolName
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_eip.bar",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSEIPDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEIPConfig_PublicIpv4Pool(poolName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEIPExists(resourceName, &conf),
+					testAccCheckAWSEIPAttributes(&conf),
+					resource.TestCheckResourceAttr(resourceName, "public_ipv4_pool", poolName),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSEIPDisappears(v *ec2.Address) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
@@ -452,6 +481,15 @@ resource "aws_eip" "bar" {
   }
 }
 `, rName, testName)
+}
+
+func testAccAWSEIPConfig_PublicIpv4Pool(poolName string) string {
+	return fmt.Sprintf(`
+resource "aws_eip" "bar" {
+   vpc = true
+   public_ipv4_pool = "%s"
+}
+`, poolName)
 }
 
 const testAccAWSEIPInstanceEc2Classic = `
@@ -716,7 +754,7 @@ resource "aws_subnet" "bar" {
   availability_zone = "us-west-2a"
   cidr_block = "10.0.0.0/24"
   tags {
-  	Name = "tf-acc-eip-network-interface"
+	Name = "tf-acc-eip-network-interface"
   }
 }
 
@@ -750,7 +788,7 @@ resource "aws_subnet" "bar" {
   availability_zone = "us-west-2a"
   cidr_block        = "10.0.0.0/24"
   tags {
-  	Name = "tf-acc-eip-multi-network-interface"
+	Name = "tf-acc-eip-multi-network-interface"
   }
 }
 
