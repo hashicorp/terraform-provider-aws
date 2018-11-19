@@ -25,6 +25,8 @@ func diffTagsIAM(oldTags, newTags []*iam.Tag) ([]*iam.Tag, []*iam.Tag) {
 		if !ok || old != aws.StringValue(t.Value) {
 			// Delete it!
 			remove = append(remove, t)
+		} else if ok {
+			delete(create, aws.StringValue(t.Key))
 		}
 	}
 
