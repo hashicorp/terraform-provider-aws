@@ -221,7 +221,9 @@ func resourceAwsIamRoleRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("permissions_boundary", role.PermissionsBoundary.PermissionsBoundaryArn)
 	}
 	d.Set("unique_id", role.RoleId)
-	d.Set("tags", tagsToMapIAM(role.Tags))
+	if err := d.Set("tags", tagsToMapIAM(role.Tags)); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
 
 	assumRolePolicy, err := url.QueryUnescape(*role.AssumeRolePolicyDocument)
 	if err != nil {
@@ -310,21 +312,25 @@ func resourceAwsIamRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 		n := nraw.(map[string]interface{})
 		c, r := diffTagsIAM(tagsFromMapIAM(o), tagsFromMapIAM(n))
 
-		_, untagErr := iamconn.UntagRole(&iam.UntagRoleInput{
-			RoleName: aws.String(d.Id()),
-			TagKeys:  tagKeysIam(r),
-		})
-		if untagErr != nil {
-			return fmt.Errorf("error deleting IAM role tags: %s", untagErr)
+		if len(r) > 0 {
+			_, err := iamconn.UntagRole(&iam.UntagRoleInput{
+				RoleName: aws.String(d.Id()),
+				TagKeys:  tagKeysIam(r),
+			})
+			if err != nil {
+				return fmt.Errorf("error deleting IAM role tags: %s", err)
+			}
 		}
 
-		input := &iam.TagRoleInput{
-			RoleName: aws.String(d.Id()),
-			Tags:     c,
-		}
-		_, tagErr := iamconn.TagRole(input)
-		if tagErr != nil {
-			return fmt.Errorf("error update IAM role tags: %s", tagErr)
+		if len(c) > 0 {
+			input := &iam.TagRoleInput{
+				RoleName: aws.String(d.Id()),
+				Tags:     c,
+			}
+			_, err := iamconn.TagRole(input)
+			if err != nil {
+				return fmt.Errorf("error update IAM role tags: %s", err)
+			}
 		}
 	}
 
