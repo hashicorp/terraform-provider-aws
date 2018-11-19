@@ -156,8 +156,8 @@ func resourceAwsRoute53HealthCheckUpdate(d *schema.ResourceData, meta interface{
 
 	if d.HasChange("child_healthchecks") {
 		updateHealthCheck.ChildHealthChecks = expandStringList(d.Get("child_healthchecks").(*schema.Set).List())
-
 	}
+
 	if d.HasChange("child_health_threshold") {
 		updateHealthCheck.HealthThreshold = aws.Int64(int64(d.Get("child_health_threshold").(int)))
 	}
@@ -166,7 +166,7 @@ func resourceAwsRoute53HealthCheckUpdate(d *schema.ResourceData, meta interface{
 		updateHealthCheck.SearchString = aws.String(d.Get("search_string").(string))
 	}
 
-	if d.HasChange("cloudwatch_alarm_name") || d.HasChange("cloudwatch_alarm_region") {
+	if d.HasChange("cloudwatch_alarm_name") || d.HasChange("cloudwatch_alarm_region") || d.HasChange("child_healthchecks") {
 		cloudwatchAlarm := &route53.AlarmIdentifier{
 			Name:   aws.String(d.Get("cloudwatch_alarm_name").(string)),
 			Region: aws.String(d.Get("cloudwatch_alarm_region").(string)),
@@ -183,7 +183,7 @@ func resourceAwsRoute53HealthCheckUpdate(d *schema.ResourceData, meta interface{
 		updateHealthCheck.EnableSNI = aws.Bool(d.Get("enable_sni").(bool))
 	}
 
-	if d.HasChange("regions") {
+	if d.HasChange("regions") || d.HasChange("child_healthchecks") {
 		updateHealthCheck.Regions = expandStringList(d.Get("regions").(*schema.Set).List())
 	}
 
