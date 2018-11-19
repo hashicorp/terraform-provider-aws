@@ -127,7 +127,9 @@ func resourceAwsIamUserRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("permissions_boundary", output.User.PermissionsBoundary.PermissionsBoundaryArn)
 	}
 	d.Set("unique_id", output.User.UserId)
-	d.Set("tags", tagsToMapIAM(output.User.Tags))
+	if err := d.Set("tags", tagsToMapIAM(output.User.Tags)); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
 
 	return nil
 }
@@ -188,21 +190,25 @@ func resourceAwsIamUserUpdate(d *schema.ResourceData, meta interface{}) error {
 		n := nraw.(map[string]interface{})
 		c, r := diffTagsIAM(tagsFromMapIAM(o), tagsFromMapIAM(n))
 
-		_, untagErr := iamconn.UntagUser(&iam.UntagUserInput{
-			UserName: aws.String(d.Id()),
-			TagKeys:  tagKeysIam(r),
-		})
-		if untagErr != nil {
-			return fmt.Errorf("error deleting IAM user tags: %s", untagErr)
+		if len(r) > 0 {
+			_, err := iamconn.UntagUser(&iam.UntagUserInput{
+				UserName: aws.String(d.Id()),
+				TagKeys:  tagKeysIam(r),
+			})
+			if err != nil {
+				return fmt.Errorf("error deleting IAM user tags: %s", err)
+			}
 		}
 
-		input := &iam.TagUserInput{
-			UserName: aws.String(d.Id()),
-			Tags:     c,
-		}
-		_, tagErr := iamconn.TagUser(input)
-		if tagErr != nil {
-			return fmt.Errorf("error update IAM user tags: %s", tagErr)
+		if len(c) > 0 {
+			input := &iam.TagUserInput{
+				UserName: aws.String(d.Id()),
+				Tags:     c,
+			}
+			_, err := iamconn.TagUser(input)
+			if err != nil {
+				return fmt.Errorf("error update IAM user tags: %s", err)
+			}
 		}
 	}
 
