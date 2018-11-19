@@ -2,9 +2,11 @@
 
 ENHANCEMENTS:
 
+* data-source/aws_eip: Add `association_id`, `domain`, `instance_id`, `network_interface_id`, `network_interface_owner_id`, `private_ip`, and `public_ipv4_pool` attributes [GH-6463] / [GH-6518]
 * resource/aws_ecs_cluster: Add `tags` argument [GH-6486]
 * resource/aws_ecs_service: Add `tags` argument [GH-6486]
 * resource/aws_ecs_task_definition: Add `tags` argument [GH-6486]
+* resource/aws_eip: Add `public_ipv4_pool` argument [GH-6518]
 * resource/aws_iam_role: Add `tags` argument [GH-6499]
 * resource/aws_iam_user: Add `tags` argument [GH-6497]
 * resource/aws_sns_topic: Add `kms_master_key_id` argument (support server-side encryption) [GH-6502]
