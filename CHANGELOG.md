@@ -6,6 +6,10 @@ ENHANCEMENTS:
 * resource/aws_ecs_service: Add `tags` argument [GH-6486]
 * resource/aws_ecs_task_definition: Add `tags` argument [GH-6486]
 
+BUG FIXES:
+
+* resource/aws_kinesis_analytics_application: Properly handle `processing_configuration` argument [GH-6495]
+
 ## 1.45.0 (November 15, 2018)
 
 ENHANCEMENTS:
