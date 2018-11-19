@@ -105,7 +105,7 @@ func resourceAwsEipCreate(d *schema.ResourceData, meta interface{}) error {
 		Domain: aws.String(domainOpt),
 	}
 
-	if v := d.Get("public_ipv4_pool"); v != nil && v.(string) != "" {
+	if v, ok := d.GetOk("public_ipv4_pool"); ok {
 		allocOpts.PublicIpv4Pool = aws.String(d.Get("public_ipv4_pool").(string))
 	}
 
