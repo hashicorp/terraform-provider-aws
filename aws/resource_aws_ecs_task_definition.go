@@ -188,6 +188,27 @@ func resourceAwsEcsTaskDefinition() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 
+			"ipc_mode": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					ecs.IpcModeHost,
+					ecs.IpcModeNone,
+					ecs.IpcModeTask,
+				}, false),
+			},
+
+			"pid_mode": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					ecs.PidModeHost,
+					ecs.PidModeTask,
+				}, false),
+			},
+
 			"tags": tagsSchema(),
 		},
 	}
@@ -239,6 +260,14 @@ func resourceAwsEcsTaskDefinitionCreate(d *schema.ResourceData, meta interface{}
 
 	if v, ok := d.GetOk("network_mode"); ok {
 		input.NetworkMode = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("ipc_mode"); ok {
+		input.IpcMode = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("pid_mode"); ok {
+		input.PidMode = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("volume"); ok {
