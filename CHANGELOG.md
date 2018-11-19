@@ -5,6 +5,7 @@ ENHANCEMENTS:
 * resource/aws_ecs_cluster: Add `tags` argument [GH-6486]
 * resource/aws_ecs_service: Add `tags` argument [GH-6486]
 * resource/aws_ecs_task_definition: Add `tags` argument [GH-6486]
+* resource/aws_iam_role: Add `tags` argument [GH-6499]
 * resource/aws_iam_user: Add `tags` argument [GH-6497]
 * resource/aws_sns_topic: Add `kms_master_key_id` argument (support server-side encryption) [GH-6502]
 
