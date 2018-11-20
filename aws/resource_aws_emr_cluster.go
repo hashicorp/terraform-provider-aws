@@ -703,7 +703,6 @@ func resourceAwsEMRClusterRead(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return fmt.Errorf("error flattening instance groups: %+v", err)
 		}
-		// return fmt.Errorf("%+v\n\n\n\n%+v", flattenedInstanceGroups, instanceGroups)
 		if err := d.Set("instance_group", flattenedInstanceGroups); err != nil {
 			return fmt.Errorf("[ERR] Error setting EMR instance groups: %s", err)
 		}
@@ -1384,7 +1383,6 @@ func applyEbsConfig(configAttributes map[string]interface{}, config *emr.Instanc
 		ebsConfig := &emr.EbsConfiguration{}
 
 		ebsBlockDeviceConfigs := make([]*emr.EbsBlockDeviceConfig, 0)
-		// for _, rawEbsConfig := range rawEbsConfigs.(*schema.Set).List() {
 		for _, rawEbsConfig := range rawEbsConfigs.([]interface{}) {
 			rawEbsConfig := rawEbsConfig.(map[string]interface{})
 			ebsBlockDeviceConfig := &emr.EbsBlockDeviceConfig{
