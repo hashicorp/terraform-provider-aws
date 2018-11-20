@@ -27,31 +27,6 @@ output "content" {
 To get the contents of the custom document.
 
 ```hcl
-resource "aws_ssm_document" "test" {
-  name          = "test-document"
-  document_type = "Command"
-
-  content = <<DOC
-  {
-    "schemaVersion": "1.2",
-    "description": "Check ip configuration of a Linux instance.",
-    "parameters": {
-
-    },
-    "runtimeConfig": {
-      "aws:runShellScript": {
-        "properties": [
-          {
-            "id": "0.aws:runShellScript",
-            "runCommand": ["ifconfig"]
-          }
-        ]
-      }
-    }
-  }
-DOC
-}
-
 data "aws_ssm_document" "test" {
   name = "${aws_ssm_document.test.name}"
   document_format = "JSON"
@@ -66,6 +41,8 @@ The following arguments are supported:
 * `name` - (Required) The name of the Systems Manager document.
 * `document_format` - (Optional) Returns the document in the specified format. The document format can be either JSON or YAML. JSON is the default format.
 * `document_version` - (Optional) The document version for which you want information.
+
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 

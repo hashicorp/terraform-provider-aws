@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/resource"
@@ -19,24 +18,22 @@ func TestAccAWSSsmDocumentDataSource_basic(t *testing.T) {
 			{
 				Config: testAccCheckAwsSsmDocumentDataSourceConfig(name, "JSON"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "arn",
-						regexp.MustCompile(fmt.Sprintf("^arn:aws:ssm:[a-z0-9-]+:[0-9]{12}:document/%s$", name))),
-					resource.TestCheckResourceAttr(resourceName, "name", name),
-					resource.TestCheckResourceAttr(resourceName, "document_format", "JSON"),
+					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_ssm_document.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "name", "aws_ssm_document.test", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "document_format", "aws_ssm_document.test", "document_format"),
 					resource.TestCheckResourceAttr(resourceName, "document_version", "1"),
-					resource.TestCheckResourceAttr(resourceName, "document_type", "Command"),
+					resource.TestCheckResourceAttrPair(resourceName, "document_type", "aws_ssm_document.test", "document_type"),
 					resource.TestCheckResourceAttrPair(resourceName, "content", "aws_ssm_document.test", "content"),
 				),
 			},
 			{
 				Config: testAccCheckAwsSsmDocumentDataSourceConfig(name, "YAML"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "arn",
-						regexp.MustCompile(fmt.Sprintf("^arn:aws:ssm:[a-z0-9-]+:[0-9]{12}:document/%s$", name))),
-					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_ssm_document.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "name", "aws_ssm_document.test", "name"),
 					resource.TestCheckResourceAttr(resourceName, "document_format", "YAML"),
 					resource.TestCheckResourceAttr(resourceName, "document_version", "1"),
-					resource.TestCheckResourceAttr(resourceName, "document_type", "Command"),
+					resource.TestCheckResourceAttrPair(resourceName, "document_type", "aws_ssm_document.test", "document_type"),
 					resource.TestCheckResourceAttrSet(resourceName, "content"),
 				),
 			},
