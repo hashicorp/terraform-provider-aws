@@ -889,6 +889,91 @@ func (c *WorkSpaces) DescribeAccountModificationsWithContext(ctx aws.Context, in
 	return out, req.Send()
 }
 
+const opDescribeClientProperties = "DescribeClientProperties"
+
+// DescribeClientPropertiesRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeClientProperties operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeClientProperties for more information on using the DescribeClientProperties
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeClientPropertiesRequest method.
+//    req, resp := client.DescribeClientPropertiesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DescribeClientProperties
+func (c *WorkSpaces) DescribeClientPropertiesRequest(input *DescribeClientPropertiesInput) (req *request.Request, output *DescribeClientPropertiesOutput) {
+	op := &request.Operation{
+		Name:       opDescribeClientProperties,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeClientPropertiesInput{}
+	}
+
+	output = &DescribeClientPropertiesOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeClientProperties API operation for Amazon WorkSpaces.
+//
+// Retrieves a list that describes one or more specified Amazon WorkSpaces clients.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon WorkSpaces's
+// API operation DescribeClientProperties for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidParameterValuesException "InvalidParameterValuesException"
+//   One or more parameter values are not valid.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The resource could not be found.
+//
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   The user is not authorized to access a resource.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DescribeClientProperties
+func (c *WorkSpaces) DescribeClientProperties(input *DescribeClientPropertiesInput) (*DescribeClientPropertiesOutput, error) {
+	req, out := c.DescribeClientPropertiesRequest(input)
+	return out, req.Send()
+}
+
+// DescribeClientPropertiesWithContext is the same as DescribeClientProperties with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeClientProperties for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WorkSpaces) DescribeClientPropertiesWithContext(ctx aws.Context, input *DescribeClientPropertiesInput, opts ...request.Option) (*DescribeClientPropertiesOutput, error) {
+	req, out := c.DescribeClientPropertiesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDescribeIpGroups = "DescribeIpGroups"
 
 // DescribeIpGroupsRequest generates a "aws/request.Request" representing the
@@ -1985,6 +2070,91 @@ func (c *WorkSpaces) ModifyAccountWithContext(ctx aws.Context, input *ModifyAcco
 	return out, req.Send()
 }
 
+const opModifyClientProperties = "ModifyClientProperties"
+
+// ModifyClientPropertiesRequest generates a "aws/request.Request" representing the
+// client's request for the ModifyClientProperties operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ModifyClientProperties for more information on using the ModifyClientProperties
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ModifyClientPropertiesRequest method.
+//    req, resp := client.ModifyClientPropertiesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/ModifyClientProperties
+func (c *WorkSpaces) ModifyClientPropertiesRequest(input *ModifyClientPropertiesInput) (req *request.Request, output *ModifyClientPropertiesOutput) {
+	op := &request.Operation{
+		Name:       opModifyClientProperties,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ModifyClientPropertiesInput{}
+	}
+
+	output = &ModifyClientPropertiesOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ModifyClientProperties API operation for Amazon WorkSpaces.
+//
+// Modifies the properties of the specified Amazon WorkSpaces client.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon WorkSpaces's
+// API operation ModifyClientProperties for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidParameterValuesException "InvalidParameterValuesException"
+//   One or more parameter values are not valid.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The resource could not be found.
+//
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   The user is not authorized to access a resource.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/ModifyClientProperties
+func (c *WorkSpaces) ModifyClientProperties(input *ModifyClientPropertiesInput) (*ModifyClientPropertiesOutput, error) {
+	req, out := c.ModifyClientPropertiesRequest(input)
+	return out, req.Send()
+}
+
+// ModifyClientPropertiesWithContext is the same as ModifyClientProperties with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ModifyClientProperties for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WorkSpaces) ModifyClientPropertiesWithContext(ctx aws.Context, input *ModifyClientPropertiesInput, opts ...request.Option) (*ModifyClientPropertiesOutput, error) {
+	req, out := c.ModifyClientPropertiesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opModifyWorkspaceProperties = "ModifyWorkspaceProperties"
 
 // ModifyWorkspacePropertiesRequest generates a "aws/request.Request" representing the
@@ -2955,6 +3125,65 @@ func (s AuthorizeIpRulesOutput) GoString() string {
 	return s.String()
 }
 
+// Describes an Amazon WorkSpaces client.
+type ClientProperties struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies whether users can cache their credentials on the Amazon WorkSpaces
+	// client. When enabled, users can choose to reconnect to their WorkSpaces without
+	// re-entering their credentials.
+	ReconnectEnabled *string `type:"string" enum:"ReconnectEnum"`
+}
+
+// String returns the string representation
+func (s ClientProperties) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ClientProperties) GoString() string {
+	return s.String()
+}
+
+// SetReconnectEnabled sets the ReconnectEnabled field's value.
+func (s *ClientProperties) SetReconnectEnabled(v string) *ClientProperties {
+	s.ReconnectEnabled = &v
+	return s
+}
+
+// Information about the Amazon WorkSpaces client.
+type ClientPropertiesResult struct {
+	_ struct{} `type:"structure"`
+
+	// Information about the Amazon WorkSpaces client.
+	ClientProperties *ClientProperties `type:"structure"`
+
+	// The resource identifier, in the form of a directory ID.
+	ResourceId *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ClientPropertiesResult) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ClientPropertiesResult) GoString() string {
+	return s.String()
+}
+
+// SetClientProperties sets the ClientProperties field's value.
+func (s *ClientPropertiesResult) SetClientProperties(v *ClientProperties) *ClientPropertiesResult {
+	s.ClientProperties = v
+	return s
+}
+
+// SetResourceId sets the ResourceId field's value.
+func (s *ClientPropertiesResult) SetResourceId(v string) *ClientPropertiesResult {
+	s.ResourceId = &v
+	return s
+}
+
 // Describes the compute type.
 type ComputeType struct {
 	_ struct{} `type:"structure"`
@@ -3577,6 +3806,70 @@ func (s *DescribeAccountOutput) SetDedicatedTenancyManagementCidrRange(v string)
 // SetDedicatedTenancySupport sets the DedicatedTenancySupport field's value.
 func (s *DescribeAccountOutput) SetDedicatedTenancySupport(v string) *DescribeAccountOutput {
 	s.DedicatedTenancySupport = &v
+	return s
+}
+
+type DescribeClientPropertiesInput struct {
+	_ struct{} `type:"structure"`
+
+	// The resource identifiers, in the form of directory IDs.
+	//
+	// ResourceIds is a required field
+	ResourceIds []*string `min:"1" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeClientPropertiesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeClientPropertiesInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeClientPropertiesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeClientPropertiesInput"}
+	if s.ResourceIds == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceIds"))
+	}
+	if s.ResourceIds != nil && len(s.ResourceIds) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceIds", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetResourceIds sets the ResourceIds field's value.
+func (s *DescribeClientPropertiesInput) SetResourceIds(v []*string) *DescribeClientPropertiesInput {
+	s.ResourceIds = v
+	return s
+}
+
+type DescribeClientPropertiesOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Information about the specified Amazon WorkSpaces clients.
+	ClientPropertiesList []*ClientPropertiesResult `type:"list"`
+}
+
+// String returns the string representation
+func (s DescribeClientPropertiesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeClientPropertiesOutput) GoString() string {
+	return s.String()
+}
+
+// SetClientPropertiesList sets the ClientPropertiesList field's value.
+func (s *DescribeClientPropertiesOutput) SetClientPropertiesList(v []*ClientPropertiesResult) *DescribeClientPropertiesOutput {
+	s.ClientPropertiesList = v
 	return s
 }
 
@@ -4752,6 +5045,70 @@ func (s ModifyAccountOutput) String() string {
 
 // GoString returns the string representation
 func (s ModifyAccountOutput) GoString() string {
+	return s.String()
+}
+
+type ModifyClientPropertiesInput struct {
+	_ struct{} `type:"structure"`
+
+	// Information about the Amazon WorkSpaces client.
+	ClientProperties *ClientProperties `type:"structure"`
+
+	// The resource identifiers, in the form of directory IDs.
+	//
+	// ResourceId is a required field
+	ResourceId *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ModifyClientPropertiesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ModifyClientPropertiesInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ModifyClientPropertiesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ModifyClientPropertiesInput"}
+	if s.ResourceId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceId"))
+	}
+	if s.ResourceId != nil && len(*s.ResourceId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetClientProperties sets the ClientProperties field's value.
+func (s *ModifyClientPropertiesInput) SetClientProperties(v *ClientProperties) *ModifyClientPropertiesInput {
+	s.ClientProperties = v
+	return s
+}
+
+// SetResourceId sets the ResourceId field's value.
+func (s *ModifyClientPropertiesInput) SetResourceId(v string) *ModifyClientPropertiesInput {
+	s.ResourceId = &v
+	return s
+}
+
+type ModifyClientPropertiesOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s ModifyClientPropertiesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ModifyClientPropertiesOutput) GoString() string {
 	return s.String()
 }
 
@@ -6434,6 +6791,14 @@ const (
 
 	// OperatingSystemTypeLinux is a OperatingSystemType enum value
 	OperatingSystemTypeLinux = "LINUX"
+)
+
+const (
+	// ReconnectEnumEnabled is a ReconnectEnum enum value
+	ReconnectEnumEnabled = "ENABLED"
+
+	// ReconnectEnumDisabled is a ReconnectEnum enum value
+	ReconnectEnumDisabled = "DISABLED"
 )
 
 const (

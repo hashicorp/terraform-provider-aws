@@ -21472,6 +21472,36 @@ const (
 
 	// OperationTypeCreateDiskFromSnapshot is a OperationType enum value
 	OperationTypeCreateDiskFromSnapshot = "CreateDiskFromSnapshot"
+
+	// OperationTypeCreateRelationalDatabase is a OperationType enum value
+	OperationTypeCreateRelationalDatabase = "CreateRelationalDatabase"
+
+	// OperationTypeUpdateRelationalDatabase is a OperationType enum value
+	OperationTypeUpdateRelationalDatabase = "UpdateRelationalDatabase"
+
+	// OperationTypeDeleteRelationalDatabase is a OperationType enum value
+	OperationTypeDeleteRelationalDatabase = "DeleteRelationalDatabase"
+
+	// OperationTypeCreateRelationalDatabaseFromSnapshot is a OperationType enum value
+	OperationTypeCreateRelationalDatabaseFromSnapshot = "CreateRelationalDatabaseFromSnapshot"
+
+	// OperationTypeCreateRelationalDatabaseSnapshot is a OperationType enum value
+	OperationTypeCreateRelationalDatabaseSnapshot = "CreateRelationalDatabaseSnapshot"
+
+	// OperationTypeDeleteRelationalDatabaseSnapshot is a OperationType enum value
+	OperationTypeDeleteRelationalDatabaseSnapshot = "DeleteRelationalDatabaseSnapshot"
+
+	// OperationTypeUpdateRelationalDatabaseParameters is a OperationType enum value
+	OperationTypeUpdateRelationalDatabaseParameters = "UpdateRelationalDatabaseParameters"
+
+	// OperationTypeStartRelationalDatabase is a OperationType enum value
+	OperationTypeStartRelationalDatabase = "StartRelationalDatabase"
+
+	// OperationTypeRebootRelationalDatabase is a OperationType enum value
+	OperationTypeRebootRelationalDatabase = "RebootRelationalDatabase"
+
+	// OperationTypeStopRelationalDatabase is a OperationType enum value
+	OperationTypeStopRelationalDatabase = "StopRelationalDatabase"
 )
 
 const (
