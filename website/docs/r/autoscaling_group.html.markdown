@@ -219,13 +219,13 @@ Note that if you suspend either the `Launch` or `Terminate` process types, it ca
   for Capacity](#waiting-for-capacity) below.) Setting this to "0" causes
   Terraform to skip all Capacity Waiting behavior.
 * `min_elb_capacity` - (Optional) Setting this causes Terraform to wait for
-  this number of instances to show up healthy in the ELB only on creation.
-  Updates will not wait on ELB instance number changes.
+  this number of instances from this autoscaling group to show up healthy in the
+  ELB only on creation. Updates will not wait on ELB instance number changes.
   (See also [Waiting for Capacity](#waiting-for-capacity) below.)
 * `wait_for_elb_capacity` - (Optional) Setting this will cause Terraform to wait
-  for exactly this number of healthy instances in all attached load balancers
-  on both create and update operations. (Takes precedence over
-  `min_elb_capacity` behavior.)
+  for exactly this number of healthy instances from this autoscaling group in
+  all attached load balancers on both create and update operations. (Takes
+  precedence over `min_elb_capacity` behavior.)
   (See also [Waiting for Capacity](#waiting-for-capacity) below.)
 * `protect_from_scale_in` (Optional) Allows setting instance protection. The
    autoscaling group will not select instances with this setting for terminination
