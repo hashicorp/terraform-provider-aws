@@ -1,5 +1,9 @@
 ## 1.46.0 (Unreleased)
 
+FEATURES:
+
+* **New Data Source:** `aws_api_gateway_api_key` [GH-6449]
+
 ENHANCEMENTS:
 
 * data-source/aws_eip: Add `association_id`, `domain`, `instance_id`, `network_interface_id`, `network_interface_owner_id`, `private_ip`, and `public_ipv4_pool` attributes [GH-6463] / [GH-6518]
