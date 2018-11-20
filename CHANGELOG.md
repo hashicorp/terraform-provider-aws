@@ -1,24 +1,24 @@
-## 1.46.0 (Unreleased)
+## 1.46.0 (November 20, 2018)
 
 FEATURES:
 
-* **New Data Source:** `aws_api_gateway_api_key` [GH-6449]
+* **New Data Source:** `aws_api_gateway_api_key` ([#6449](https://github.com/terraform-providers/terraform-provider-aws/issues/6449))
 
 ENHANCEMENTS:
 
-* data-source/aws_eip: Add `association_id`, `domain`, `instance_id`, `network_interface_id`, `network_interface_owner_id`, `private_ip`, and `public_ipv4_pool` attributes [GH-6463] / [GH-6518]
-* resource/aws_ecs_cluster: Add `tags` argument [GH-6486]
-* resource/aws_ecs_service: Add `tags` argument [GH-6486]
-* resource/aws_ecs_task_definition: Add `tags` argument [GH-6486]
-* resource/aws_ecs_task_definition: Add `ipc_mode` and `pid_mode` arguments [GH-6515]
-* resource/aws_eip: Add `public_ipv4_pool` argument [GH-6518]
-* resource/aws_iam_role: Add `tags` argument [GH-6499]
-* resource/aws_iam_user: Add `tags` argument [GH-6497]
-* resource/aws_sns_topic: Add `kms_master_key_id` argument (support server-side encryption) [GH-6502]
+* data-source/aws_eip: Add `association_id`, `domain`, `instance_id`, `network_interface_id`, `network_interface_owner_id`, `private_ip`, and `public_ipv4_pool` attributes ([#6463](https://github.com/terraform-providers/terraform-provider-aws/issues/6463)] / [[#6518](https://github.com/terraform-providers/terraform-provider-aws/issues/6518))
+* resource/aws_ecs_cluster: Add `tags` argument ([#6486](https://github.com/terraform-providers/terraform-provider-aws/issues/6486))
+* resource/aws_ecs_service: Add `tags` argument ([#6486](https://github.com/terraform-providers/terraform-provider-aws/issues/6486))
+* resource/aws_ecs_task_definition: Add `tags` argument ([#6486](https://github.com/terraform-providers/terraform-provider-aws/issues/6486))
+* resource/aws_ecs_task_definition: Add `ipc_mode` and `pid_mode` arguments ([#6515](https://github.com/terraform-providers/terraform-provider-aws/issues/6515))
+* resource/aws_eip: Add `public_ipv4_pool` argument ([#6518](https://github.com/terraform-providers/terraform-provider-aws/issues/6518))
+* resource/aws_iam_role: Add `tags` argument ([#6499](https://github.com/terraform-providers/terraform-provider-aws/issues/6499))
+* resource/aws_iam_user: Add `tags` argument ([#6497](https://github.com/terraform-providers/terraform-provider-aws/issues/6497))
+* resource/aws_sns_topic: Add `kms_master_key_id` argument (support server-side encryption) ([#6502](https://github.com/terraform-providers/terraform-provider-aws/issues/6502))
 
 BUG FIXES:
 
-* resource/aws_kinesis_analytics_application: Properly handle `processing_configuration` argument [GH-6495]
+* resource/aws_kinesis_analytics_application: Properly handle `processing_configuration` argument ([#6495](https://github.com/terraform-providers/terraform-provider-aws/issues/6495))
 
 ## 1.45.0 (November 15, 2018)
 
