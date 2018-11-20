@@ -452,7 +452,7 @@ func mergeConfigSrcs(cfg, userCfg *aws.Config, envCfg envConfig, sharedCfg share
 		}
 	}
 
-	if aws.BoolValue(envCfg.EnableEndpointDiscovery) {
+	if cfg.EnableEndpointDiscovery == nil {
 		if envCfg.EnableEndpointDiscovery != nil {
 			cfg.WithEndpointDiscovery(*envCfg.EnableEndpointDiscovery)
 		} else if envCfg.EnableSharedConfig && sharedCfg.EnableEndpointDiscovery != nil {

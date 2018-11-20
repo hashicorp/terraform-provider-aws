@@ -270,31 +270,16 @@ func (c *Lambda) CreateEventSourceMappingRequest(input *CreateEventSourceMapping
 
 // CreateEventSourceMapping API operation for AWS Lambda.
 //
-// Identifies a poll-based event source for a Lambda function. It can be either
-// an Amazon Kinesis or DynamoDB stream. AWS Lambda invokes the specified function
-// when records are posted to the event source.
+// Creates a mapping between an event source and an AWS Lambda function. Lambda
+// reads items from the event source and triggers the function.
 //
-// This association between a poll-based source and a Lambda function is called
-// the event source mapping.
+// For details about each event source type, see the following topics.
 //
-// You provide mapping information (for example, which stream or SQS queue to
-// read from and which Lambda function to invoke) in the request body.
+//    * Using AWS Lambda with Amazon Kinesis (http://docs.aws.amazon.com/lambda/latest/dg/with-kinesis.html)
 //
-// Amazon Kinesis or DynamoDB stream event sources can be associated with multiple
-// AWS Lambda functions and a given Lambda function can be associated with multiple
-// AWS event sources. For Amazon SQS, you can configure multiple queues as event
-// sources for a single Lambda function, but an SQS queue can be mapped only
-// to a single Lambda function.
+//    * Using AWS Lambda with Amazon SQS (http://docs.aws.amazon.com/lambda/latest/dg/with-sqs.html)
 //
-// You can configure an SQS queue in an account separate from your Lambda function's
-// account. Also the queue needs to reside in the same AWS region as your function.
-//
-// If you are using versioning, you can specify a specific function version
-// or an alias via the function name parameter. For more information about versioning,
-// see AWS Lambda Function Versioning and Aliases (http://docs.aws.amazon.com/lambda/latest/dg/versioning-aliases.html).
-//
-// This operation requires permission for the lambda:CreateEventSourceMapping
-// action.
+//    * Using AWS Lambda with Amazon DynamoDB (http://docs.aws.amazon.com/lambda/latest/dg/with-ddb.html)
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -581,11 +566,7 @@ func (c *Lambda) DeleteEventSourceMappingRequest(input *DeleteEventSourceMapping
 
 // DeleteEventSourceMapping API operation for AWS Lambda.
 //
-// Removes an event source mapping. This means AWS Lambda will no longer invoke
-// the function for events in the associated source.
-//
-// This operation requires permission for the lambda:DeleteEventSourceMapping
-// action.
+// Deletes an event source mapping.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1053,10 +1034,7 @@ func (c *Lambda) GetEventSourceMappingRequest(input *GetEventSourceMappingInput)
 
 // GetEventSourceMapping API operation for AWS Lambda.
 //
-// Returns configuration information for the specified event source mapping
-// (see CreateEventSourceMapping).
-//
-// This operation requires permission for the lambda:GetEventSourceMapping action.
+// Returns details about an event source mapping.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1824,14 +1802,8 @@ func (c *Lambda) ListEventSourceMappingsRequest(input *ListEventSourceMappingsIn
 
 // ListEventSourceMappings API operation for AWS Lambda.
 //
-// Returns a list of event source mappings you created using the CreateEventSourceMapping
-// (see CreateEventSourceMapping).
-//
-// For each mapping, the API returns configuration information. You can optionally
-// specify filters to retrieve specific event source mappings.
-//
-// This operation requires permission for the lambda:ListEventSourceMappings
-// action.
+// Lists event source mappings. Specify an EventSourceArn to only show event
+// source mappings for a single event source.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2910,18 +2882,8 @@ func (c *Lambda) UpdateEventSourceMappingRequest(input *UpdateEventSourceMapping
 
 // UpdateEventSourceMapping API operation for AWS Lambda.
 //
-// You can update an event source mapping. This is useful if you want to change
-// the parameters of the existing mapping without losing your position in the
-// stream. You can change which function will receive the stream records, but
-// to change the stream itself, you must create a new mapping.
-//
-// If you disable the event source mapping, AWS Lambda stops polling. If you
-// enable again, it will resume polling from the time it had stopped polling,
-// so you don't lose processing of any records. However, if you delete event
-// source mapping and create it again, it will reset.
-//
-// This operation requires permission for the lambda:UpdateEventSourceMapping
-// action.
+// Updates an event source mapping. You can change the function that AWS Lambda
+// invokes, or pause invocation and resume later from the same location.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3694,22 +3656,30 @@ func (s *CreateAliasInput) SetRoutingConfig(v *AliasRoutingConfiguration) *Creat
 type CreateEventSourceMappingInput struct {
 	_ struct{} `type:"structure"`
 
-	// The largest number of records that AWS Lambda will retrieve from your event
-	// source at the time of invoking your function. Your function receives an event
-	// with all the retrieved records. The default for Amazon Kinesis and Amazon
-	// DynamoDB is 100 records. Both the default and maximum for Amazon SQS are
-	// 10 messages.
+	// The maximum number of items to retrieve in a single batch.
+	//
+	//    * Amazon Kinesis - Default 100. Max 10,000.
+	//
+	//    * Amazon DynamoDB Streams - Default 100. Max 1,000.
+	//
+	//    * Amazon Simple Queue Service - Default 10. Max 10.
 	BatchSize *int64 `min:"1" type:"integer"`
 
-	// Set to false to disable the event source upon creation.
+	// Disables the event source mapping to pause polling and invocation.
 	Enabled *bool `type:"boolean"`
 
 	// The Amazon Resource Name (ARN) of the event source.
 	//
+	//    * Amazon Kinesis - The ARN of the data stream or a stream consumer.
+	//
+	//    * Amazon DynamoDB Streams - The ARN of the stream.
+	//
+	//    * Amazon Simple Queue Service - The ARN of the queue.
+	//
 	// EventSourceArn is a required field
 	EventSourceArn *string `type:"string" required:"true"`
 
-	// The name of the lambda function.
+	// The name of the Lambda function.
 	//
 	// Name formats
 	//
@@ -3722,24 +3692,18 @@ type CreateEventSourceMappingInput struct {
 	//    * Partial ARN - 123456789012:function:MyFunction.
 	//
 	// The length constraint applies only to the full ARN. If you specify only the
-	// function name, it is limited to 64 characters in length.
+	// function name, it's limited to 64 characters in length.
 	//
 	// FunctionName is a required field
 	FunctionName *string `min:"1" type:"string" required:"true"`
 
-	// The position in the DynamoDB or Kinesis stream where AWS Lambda should start
-	// reading. For more information, see GetShardIterator (http://docs.aws.amazon.com/kinesis/latest/APIReference/API_GetShardIterator.html#Kinesis-GetShardIterator-request-ShardIteratorType)
-	// in the Amazon Kinesis API Reference Guide or GetShardIterator (http://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_streams_GetShardIterator.html)
-	// in the Amazon DynamoDB API Reference Guide. The AT_TIMESTAMP value is supported
-	// only for Kinesis streams (http://docs.aws.amazon.com/streams/latest/dev/amazon-kinesis-streams.html).
+	// The position in a stream from which to start reading. Required for Amazon
+	// Kinesis and Amazon DynamoDB Streams sources. AT_TIMESTAMP is only supported
+	// for Amazon Kinesis streams.
 	StartingPosition *string `type:"string" enum:"EventSourcePosition"`
 
-	// The timestamp of the data record from which to start reading. Used with shard
-	// iterator type (http://docs.aws.amazon.com/kinesis/latest/APIReference/API_GetShardIterator.html#Kinesis-GetShardIterator-request-ShardIteratorType)
-	// AT_TIMESTAMP. If a record with this exact timestamp does not exist, the iterator
-	// returned is for the next (later) record. If the timestamp is older than the
-	// current trim horizon, the iterator returned is for the oldest untrimmed data
-	// record (TRIM_HORIZON). Valid only for Kinesis streams (http://docs.aws.amazon.com/streams/latest/dev/amazon-kinesis-streams.html).
+	// With StartingPosition set to AT_TIMESTAMP, the Unix time in seconds from
+	// which to start reading.
 	StartingPositionTimestamp *time.Time `type:"timestamp"`
 }
 
@@ -4144,7 +4108,7 @@ func (s DeleteAliasOutput) GoString() string {
 type DeleteEventSourceMappingInput struct {
 	_ struct{} `type:"structure"`
 
-	// The event source mapping ID.
+	// The identifier of the event source mapping.
 	//
 	// UUID is a required field
 	UUID *string `location:"uri" locationName:"UUID" type:"string" required:"true"`
@@ -4414,40 +4378,34 @@ func (s *EnvironmentResponse) SetVariables(v map[string]*string) *EnvironmentRes
 	return s
 }
 
-// Describes mapping between an Amazon Kinesis or DynamoDB stream and a Lambda
-// function.
+// A mapping between an AWS resource and an AWS Lambda function. See CreateEventSourceMapping
+// for details.
 type EventSourceMappingConfiguration struct {
 	_ struct{} `type:"structure"`
 
-	// The largest number of records that AWS Lambda will retrieve from your event
-	// source at the time of invoking your function. Your function receives an event
-	// with all the retrieved records.
+	// The maximum number of items to retrieve in a single batch.
 	BatchSize *int64 `min:"1" type:"integer"`
 
-	// The Amazon Resource Name (ARN) of the Amazon Kinesis or DynamoDB stream that
-	// is the source of events.
+	// The Amazon Resource Name (ARN) of the event source.
 	EventSourceArn *string `type:"string"`
 
-	// The Lambda function to invoke when AWS Lambda detects an event on the poll-based
-	// source.
+	// The ARN of the Lambda function.
 	FunctionArn *string `type:"string"`
 
-	// The UTC time string indicating the last time the event mapping was updated.
+	// The date that the event source mapping was last updated, in Unix time seconds.
 	LastModified *time.Time `type:"timestamp"`
 
-	// The result of the last AWS Lambda invocation of your Lambda function. This
-	// value will be null if an SQS queue is the event source.
+	// The result of the last AWS Lambda invocation of your Lambda function.
 	LastProcessingResult *string `type:"string"`
 
-	// The state of the event source mapping. It can be Creating, Enabled, Disabled,
-	// Enabling, Disabling, Updating, or Deleting.
+	// The state of the event source mapping. It can be one of the following: Creating,
+	// Enabling, Enabled, Disabling, Disabled, Updating, or Deleting.
 	State *string `type:"string"`
 
-	// The reason the event source mapping is in its current state. It is either
-	// user-requested or an AWS Lambda-initiated state transition.
+	// The cause of the last state change, either User initiated or Lambda initiated.
 	StateTransitionReason *string `type:"string"`
 
-	// The AWS Lambda assigned opaque identifier for the mapping.
+	// The identifier of the event source mapping.
 	UUID *string `type:"string"`
 }
 
@@ -4924,7 +4882,7 @@ func (s *GetAliasInput) SetName(v string) *GetAliasInput {
 type GetEventSourceMappingInput struct {
 	_ struct{} `type:"structure"`
 
-	// The AWS Lambda assigned ID of the event source mapping.
+	// The identifier of the event source mapping.
 	//
 	// UUID is a required field
 	UUID *string `location:"uri" locationName:"UUID" type:"string" required:"true"`
@@ -5660,11 +5618,16 @@ func (s *ListAliasesOutput) SetNextMarker(v string) *ListAliasesOutput {
 type ListEventSourceMappingsInput struct {
 	_ struct{} `type:"structure"`
 
-	// The Amazon Resource Name (ARN) of the Amazon Kinesis or DynamoDB stream.
-	// (This parameter is optional.)
+	// The Amazon Resource Name (ARN) of the event source.
+	//
+	//    * Amazon Kinesis - The ARN of the data stream or a stream consumer.
+	//
+	//    * Amazon DynamoDB Streams - The ARN of the stream.
+	//
+	//    * Amazon Simple Queue Service - The ARN of the queue.
 	EventSourceArn *string `location:"querystring" locationName:"EventSourceArn" type:"string"`
 
-	// The name of the lambda function.
+	// The name of the Lambda function.
 	//
 	// Name formats
 	//
@@ -5677,16 +5640,13 @@ type ListEventSourceMappingsInput struct {
 	//    * Partial ARN - 123456789012:function:MyFunction.
 	//
 	// The length constraint applies only to the full ARN. If you specify only the
-	// function name, it is limited to 64 characters in length.
+	// function name, it's limited to 64 characters in length.
 	FunctionName *string `location:"querystring" locationName:"FunctionName" min:"1" type:"string"`
 
-	// Optional string. An opaque pagination token returned from a previous ListEventSourceMappings
-	// operation. If present, specifies to continue the list from where the returning
-	// call left off.
+	// A pagination token returned by a previous call.
 	Marker *string `location:"querystring" locationName:"Marker" type:"string"`
 
-	// Optional integer. Specifies the maximum number of event sources to return
-	// in response. This value must be greater than 0.
+	// The maximum number of event source mappings to return.
 	MaxItems *int64 `location:"querystring" locationName:"MaxItems" min:"1" type:"integer"`
 }
 
@@ -5740,14 +5700,14 @@ func (s *ListEventSourceMappingsInput) SetMaxItems(v int64) *ListEventSourceMapp
 	return s
 }
 
-// Contains a list of event sources (see EventSourceMappingConfiguration)
 type ListEventSourceMappingsOutput struct {
 	_ struct{} `type:"structure"`
 
-	// An array of EventSourceMappingConfiguration objects.
+	// A list of event source mappings.
 	EventSourceMappings []*EventSourceMappingConfiguration `type:"list"`
 
-	// A string, present if there are more event source mappings.
+	// A pagination token that's returned when the response doesn't contain all
+	// event source mappings.
 	NextMarker *string `type:"string"`
 }
 
@@ -6640,16 +6600,19 @@ func (s *UpdateAliasInput) SetRoutingConfig(v *AliasRoutingConfiguration) *Updat
 type UpdateEventSourceMappingInput struct {
 	_ struct{} `type:"structure"`
 
-	// The largest number of records that AWS Lambda will retrieve from your event
-	// source at the time of invoking your function. Your function receives an event
-	// with all the retrieved records.
+	// The maximum number of items to retrieve in a single batch.
+	//
+	//    * Amazon Kinesis - Default 100. Max 10,000.
+	//
+	//    * Amazon DynamoDB Streams - Default 100. Max 1,000.
+	//
+	//    * Amazon Simple Queue Service - Default 10. Max 10.
 	BatchSize *int64 `min:"1" type:"integer"`
 
-	// Specifies whether AWS Lambda should actively poll the stream or not. If disabled,
-	// AWS Lambda will not poll the stream.
+	// Disables the event source mapping to pause polling and invocation.
 	Enabled *bool `type:"boolean"`
 
-	// The name of the lambda function.
+	// The name of the Lambda function.
 	//
 	// Name formats
 	//
@@ -6662,10 +6625,10 @@ type UpdateEventSourceMappingInput struct {
 	//    * Partial ARN - 123456789012:function:MyFunction.
 	//
 	// The length constraint applies only to the full ARN. If you specify only the
-	// function name, it is limited to 64 characters in length.
+	// function name, it's limited to 64 characters in length.
 	FunctionName *string `min:"1" type:"string"`
 
-	// The event source mapping identifier.
+	// The identifier of the event source mapping.
 	//
 	// UUID is a required field
 	UUID *string `location:"uri" locationName:"UUID" type:"string" required:"true"`
@@ -7182,6 +7145,9 @@ const (
 
 	// RuntimePython36 is a Runtime enum value
 	RuntimePython36 = "python3.6"
+
+	// RuntimePython37 is a Runtime enum value
+	RuntimePython37 = "python3.7"
 
 	// RuntimeDotnetcore10 is a Runtime enum value
 	RuntimeDotnetcore10 = "dotnetcore1.0"

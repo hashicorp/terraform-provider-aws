@@ -335,13 +335,12 @@ func trimSpaces(k AST) AST {
 	}
 
 	// trim right hand side of spaces
-	for i := len(k.Root.raw) - 1; i > 0; i-- {
+	for i := len(k.Root.raw) - 1; i >= 0; i-- {
 		if !isWhitespace(k.Root.raw[i]) {
 			break
 		}
 
 		k.Root.raw = k.Root.raw[:len(k.Root.raw)-1]
-		i--
 	}
 
 	return k

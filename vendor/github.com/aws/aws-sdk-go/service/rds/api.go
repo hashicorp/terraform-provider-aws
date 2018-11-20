@@ -14697,6 +14697,11 @@ type CreateDBInstanceReadReplicaInput struct {
 	// A value that specifies that the DB instance class of the DB instance uses
 	// its default processor features.
 	UseDefaultProcessorFeatures *bool `type:"boolean"`
+
+	// A list of EC2 VPC security groups to associate with the Read Replica.
+	//
+	// Default: The default EC2 VPC security group for the DB subnet group's VPC.
+	VpcSecurityGroupIds []*string `locationNameList:"VpcSecurityGroupId" type:"list"`
 }
 
 // String returns the string representation
@@ -14890,6 +14895,12 @@ func (s *CreateDBInstanceReadReplicaInput) SetTags(v []*Tag) *CreateDBInstanceRe
 // SetUseDefaultProcessorFeatures sets the UseDefaultProcessorFeatures field's value.
 func (s *CreateDBInstanceReadReplicaInput) SetUseDefaultProcessorFeatures(v bool) *CreateDBInstanceReadReplicaInput {
 	s.UseDefaultProcessorFeatures = &v
+	return s
+}
+
+// SetVpcSecurityGroupIds sets the VpcSecurityGroupIds field's value.
+func (s *CreateDBInstanceReadReplicaInput) SetVpcSecurityGroupIds(v []*string) *CreateDBInstanceReadReplicaInput {
+	s.VpcSecurityGroupIds = v
 	return s
 }
 
@@ -30424,6 +30435,11 @@ type RestoreDBInstanceFromDBSnapshotInput struct {
 	// A value that specifies that the DB instance class of the DB instance uses
 	// its default processor features.
 	UseDefaultProcessorFeatures *bool `type:"boolean"`
+
+	// A list of EC2 VPC security groups to associate with this DB instance.
+	//
+	// Default: The default EC2 VPC security group for the DB subnet group's VPC.
+	VpcSecurityGroupIds []*string `locationNameList:"VpcSecurityGroupId" type:"list"`
 }
 
 // String returns the string representation
@@ -30611,6 +30627,12 @@ func (s *RestoreDBInstanceFromDBSnapshotInput) SetTdeCredentialPassword(v string
 // SetUseDefaultProcessorFeatures sets the UseDefaultProcessorFeatures field's value.
 func (s *RestoreDBInstanceFromDBSnapshotInput) SetUseDefaultProcessorFeatures(v bool) *RestoreDBInstanceFromDBSnapshotInput {
 	s.UseDefaultProcessorFeatures = &v
+	return s
+}
+
+// SetVpcSecurityGroupIds sets the VpcSecurityGroupIds field's value.
+func (s *RestoreDBInstanceFromDBSnapshotInput) SetVpcSecurityGroupIds(v []*string) *RestoreDBInstanceFromDBSnapshotInput {
+	s.VpcSecurityGroupIds = v
 	return s
 }
 
@@ -31503,6 +31525,11 @@ type RestoreDBInstanceToPointInTimeInput struct {
 	//
 	// Constraints: Can't be specified if RestoreTime parameter is provided.
 	UseLatestRestorableTime *bool `type:"boolean"`
+
+	// A list of EC2 VPC security groups to associate with this DB instance.
+	//
+	// Default: The default EC2 VPC security group for the DB subnet group's VPC.
+	VpcSecurityGroupIds []*string `locationNameList:"VpcSecurityGroupId" type:"list"`
 }
 
 // String returns the string representation
@@ -31705,6 +31732,12 @@ func (s *RestoreDBInstanceToPointInTimeInput) SetUseDefaultProcessorFeatures(v b
 // SetUseLatestRestorableTime sets the UseLatestRestorableTime field's value.
 func (s *RestoreDBInstanceToPointInTimeInput) SetUseLatestRestorableTime(v bool) *RestoreDBInstanceToPointInTimeInput {
 	s.UseLatestRestorableTime = &v
+	return s
+}
+
+// SetVpcSecurityGroupIds sets the VpcSecurityGroupIds field's value.
+func (s *RestoreDBInstanceToPointInTimeInput) SetVpcSecurityGroupIds(v []*string) *RestoreDBInstanceToPointInTimeInput {
+	s.VpcSecurityGroupIds = v
 	return s
 }
 

@@ -20625,12 +20625,16 @@ func (c *EC2) ModifyVpcPeeringConnectionOptionsRequest(input *ModifyVpcPeeringCo
 //    * Enable/disable the ability to resolve public DNS hostnames to private
 //    IP addresses when queried from instances in the peer VPC.
 //
-// If the peered VPCs are in different accounts, each owner must initiate a
-// separate request to modify the peering connection options, depending on whether
-// their VPC was the requester or accepter for the VPC peering connection. If
-// the peered VPCs are in the same account, you can modify the requester and
-// accepter options in the same request. To confirm which VPC is the accepter
-// and requester for a VPC peering connection, use the DescribeVpcPeeringConnections
+// If the peered VPCs are in the same AWS account, you can enable DNS resolution
+// for queries from the local VPC. This ensures that queries from the local
+// VPC resolve to private IP addresses in the peer VPC. This option is not available
+// if the peered VPCs are in different AWS accounts or different regions. For
+// peered VPCs in different AWS accounts, each AWS account owner must initiate
+// a separate request to modify the peering connection options. For inter-region
+// peering connections, you must use the region for the requester VPC to modify
+// the requester VPC peering options and the region for the accepter VPC to
+// modify the accepter VPC peering options. To verify which VPCs are the accepter
+// and the requester for a VPC peering connection, use the DescribeVpcPeeringConnections
 // command.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -26351,6 +26355,9 @@ type AvailabilityZone struct {
 	// The state of the Availability Zone.
 	State *string `locationName:"zoneState" type:"string" enum:"AvailabilityZoneState"`
 
+	// The ID of the Availability Zone.
+	ZoneId *string `locationName:"zoneId" type:"string"`
+
 	// The name of the Availability Zone.
 	ZoneName *string `locationName:"zoneName" type:"string"`
 }
@@ -26380,6 +26387,12 @@ func (s *AvailabilityZone) SetRegionName(v string) *AvailabilityZone {
 // SetState sets the State field's value.
 func (s *AvailabilityZone) SetState(v string) *AvailabilityZone {
 	s.State = &v
+	return s
+}
+
+// SetZoneId sets the ZoneId field's value.
+func (s *AvailabilityZone) SetZoneId(v string) *AvailabilityZone {
+	s.ZoneId = &v
 	return s
 }
 
@@ -29738,14 +29751,14 @@ type CreateFleetInput struct {
 	// expires.
 	TerminateInstancesWithExpiration *bool `type:"boolean"`
 
-	// The type of request. instant indicates whether the EC2 Fleet submits a one-time
-	// request for your desired capacity. request indicates whether the EC2 Fleet
-	// submits ongoing requests until your desired capacity is fulfilled, but does
-	// not attempt to submit requests in alternative capacity pools if capacity
-	// is unavailable or maintain the capacity. maintain indicates whether the EC2
-	// Fleet submits ongoing requests until your desired capacity is fulfilled,
-	// and continues to maintain your desired capacity by replenishing interrupted
-	// Spot Instances. Default: maintain.
+	// The type of the request. By default, the EC2 Fleet places an asynchronous
+	// request for your desired capacity, and maintains it by replenishing interrupted
+	// Spot Instances (maintain). A value of instant places a synchronous one-time
+	// request, and returns errors for any instances that could not be launched.
+	// A value of request places an asynchronous one-time request without maintaining
+	// capacity or submitting requests in alternative capacity pools if capacity
+	// is unavailable. For more information, see EC2 Fleet Request Types (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-fleet-configuration-strategies.html#ec2-fleet-request-type)
+	// in the Amazon Elastic Compute Cloud User Guide.
 	Type *string `type:"string" enum:"FleetType"`
 
 	// The start date and time of the request, in UTC format (for example, YYYY-MM-DDTHH:MM:SSZ).
@@ -36223,7 +36236,6 @@ func (s DeregisterImageOutput) GoString() string {
 	return s.String()
 }
 
-// Contains the parameters for DescribeAccountAttributes.
 type DescribeAccountAttributesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -36259,7 +36271,6 @@ func (s *DescribeAccountAttributesInput) SetDryRun(v bool) *DescribeAccountAttri
 	return s
 }
 
-// Contains the output of DescribeAccountAttributes.
 type DescribeAccountAttributesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -36453,7 +36464,6 @@ func (s *DescribeAggregateIdFormatOutput) SetUseLongIdsAggregated(v bool) *Descr
 	return s
 }
 
-// Contains the parameters for DescribeAvailabilityZones.
 type DescribeAvailabilityZonesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -36473,8 +36483,13 @@ type DescribeAvailabilityZonesInput struct {
 	//    * state - The state of the Availability Zone (available | information
 	//    | impaired | unavailable).
 	//
+	//    * zone-id - The ID of the Availability Zone (for example, use1-az1).
+	//
 	//    * zone-name - The name of the Availability Zone (for example, us-east-1a).
 	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
+
+	// The IDs of one or more Availability Zones.
+	ZoneIds []*string `locationName:"ZoneId" locationNameList:"ZoneId" type:"list"`
 
 	// The names of one or more Availability Zones.
 	ZoneNames []*string `locationName:"ZoneName" locationNameList:"ZoneName" type:"list"`
@@ -36502,13 +36517,18 @@ func (s *DescribeAvailabilityZonesInput) SetFilters(v []*Filter) *DescribeAvaila
 	return s
 }
 
+// SetZoneIds sets the ZoneIds field's value.
+func (s *DescribeAvailabilityZonesInput) SetZoneIds(v []*string) *DescribeAvailabilityZonesInput {
+	s.ZoneIds = v
+	return s
+}
+
 // SetZoneNames sets the ZoneNames field's value.
 func (s *DescribeAvailabilityZonesInput) SetZoneNames(v []*string) *DescribeAvailabilityZonesInput {
 	s.ZoneNames = v
 	return s
 }
 
-// Contains the output of DescribeAvailabiltyZones.
 type DescribeAvailabilityZonesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -38716,7 +38736,6 @@ func (s *DescribeIamInstanceProfileAssociationsOutput) SetNextToken(v string) *D
 	return s
 }
 
-// Contains the parameters for DescribeIdFormat.
 type DescribeIdFormatInput struct {
 	_ struct{} `type:"structure"`
 
@@ -38746,7 +38765,6 @@ func (s *DescribeIdFormatInput) SetResource(v string) *DescribeIdFormatInput {
 	return s
 }
 
-// Contains the output of DescribeIdFormat.
 type DescribeIdFormatOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -38770,7 +38788,6 @@ func (s *DescribeIdFormatOutput) SetStatuses(v []*IdFormat) *DescribeIdFormatOut
 	return s
 }
 
-// Contains the parameters for DescribeIdentityIdFormat.
 type DescribeIdentityIdFormatInput struct {
 	_ struct{} `type:"structure"`
 
@@ -38825,7 +38842,6 @@ func (s *DescribeIdentityIdFormatInput) SetResource(v string) *DescribeIdentityI
 	return s
 }
 
-// Contains the output of DescribeIdentityIdFormat.
 type DescribeIdentityIdFormatOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -41745,7 +41761,6 @@ func (s *DescribePublicIpv4PoolsOutput) SetPublicIpv4Pools(v []*PublicIpv4Pool) 
 	return s
 }
 
-// Contains the parameters for DescribeRegions.
 type DescribeRegionsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -41794,7 +41809,6 @@ func (s *DescribeRegionsInput) SetRegionNames(v []*string) *DescribeRegionsInput
 	return s
 }
 
-// Contains the output of DescribeRegions.
 type DescribeRegionsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -56755,7 +56769,6 @@ func (s *ModifyHostsOutput) SetUnsuccessful(v []*UnsuccessfulItem) *ModifyHostsO
 	return s
 }
 
-// Contains the parameters of ModifyIdFormat.
 type ModifyIdFormatInput struct {
 	_ struct{} `type:"structure"`
 
@@ -56831,7 +56844,6 @@ func (s ModifyIdFormatOutput) GoString() string {
 	return s.String()
 }
 
-// Contains the parameters of ModifyIdentityIdFormat.
 type ModifyIdentityIdFormatInput struct {
 	_ struct{} `type:"structure"`
 
@@ -75121,6 +75133,15 @@ const (
 	// ResourceTypeDhcpOptions is a ResourceType enum value
 	ResourceTypeDhcpOptions = "dhcp-options"
 
+	// ResourceTypeElasticIp is a ResourceType enum value
+	ResourceTypeElasticIp = "elastic-ip"
+
+	// ResourceTypeFleet is a ResourceType enum value
+	ResourceTypeFleet = "fleet"
+
+	// ResourceTypeFpgaImage is a ResourceType enum value
+	ResourceTypeFpgaImage = "fpga-image"
+
 	// ResourceTypeImage is a ResourceType enum value
 	ResourceTypeImage = "image"
 
@@ -75129,6 +75150,12 @@ const (
 
 	// ResourceTypeInternetGateway is a ResourceType enum value
 	ResourceTypeInternetGateway = "internet-gateway"
+
+	// ResourceTypeLaunchTemplate is a ResourceType enum value
+	ResourceTypeLaunchTemplate = "launch-template"
+
+	// ResourceTypeNatgateway is a ResourceType enum value
+	ResourceTypeNatgateway = "natgateway"
 
 	// ResourceTypeNetworkAcl is a ResourceType enum value
 	ResourceTypeNetworkAcl = "network-acl"
@@ -75142,6 +75169,9 @@ const (
 	// ResourceTypeRouteTable is a ResourceType enum value
 	ResourceTypeRouteTable = "route-table"
 
+	// ResourceTypeSecurityGroup is a ResourceType enum value
+	ResourceTypeSecurityGroup = "security-group"
+
 	// ResourceTypeSnapshot is a ResourceType enum value
 	ResourceTypeSnapshot = "snapshot"
 
@@ -75151,14 +75181,14 @@ const (
 	// ResourceTypeSubnet is a ResourceType enum value
 	ResourceTypeSubnet = "subnet"
 
-	// ResourceTypeSecurityGroup is a ResourceType enum value
-	ResourceTypeSecurityGroup = "security-group"
-
 	// ResourceTypeVolume is a ResourceType enum value
 	ResourceTypeVolume = "volume"
 
 	// ResourceTypeVpc is a ResourceType enum value
 	ResourceTypeVpc = "vpc"
+
+	// ResourceTypeVpcPeeringConnection is a ResourceType enum value
+	ResourceTypeVpcPeeringConnection = "vpc-peering-connection"
 
 	// ResourceTypeVpnConnection is a ResourceType enum value
 	ResourceTypeVpnConnection = "vpn-connection"
