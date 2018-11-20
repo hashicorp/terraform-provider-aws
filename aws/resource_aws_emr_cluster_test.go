@@ -374,7 +374,7 @@ func TestAccAWSEMRCluster_keepJob(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEmrDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEmrClusterConfig_keepJop(r, "false"),
+				Config: testAccAWSEmrClusterConfig_keepJob(r, "false"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEmrClusterExists("aws_emr_cluster.tf-test-cluster", &cluster),
 					resource.TestCheckResourceAttr(
@@ -3513,7 +3513,7 @@ resource "aws_iam_role_policy_attachment" "emr-autoscaling-role" {
 `, r, term)
 }
 
-func testAccAWSEmrClusterConfig_keepJop(r int, keepJob string) string {
+func testAccAWSEmrClusterConfig_keepJob(r int, keepJob string) string {
 	return fmt.Sprintf(`
 resource "aws_emr_cluster" "tf-test-cluster" {
   name          = "emr-test-%[1]d"

@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"bytes"
 	"log"
 
 	"encoding/json"
@@ -14,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
 	"github.com/aws/aws-sdk-go/service/emr"
+	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/structure"
@@ -43,7 +45,6 @@ func resourceAwsEMRCluster() *schema.Resource {
 			},
 			"master_instance_type": {
 				Type:     schema.TypeString,
-				Required: false,
 				Optional: true,
 				ForceNew: true,
 				Computed: true,
@@ -201,6 +202,7 @@ func resourceAwsEMRCluster() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"bid_price": {
@@ -209,9 +211,10 @@ func resourceAwsEMRCluster() *schema.Resource {
 							Required: false,
 						},
 						"ebs_config": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Optional: true,
 							ForceNew: true,
+							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"iops": {
@@ -246,6 +249,7 @@ func resourceAwsEMRCluster() *schema.Resource {
 							Optional:         true,
 							DiffSuppressFunc: suppressEquivalentJsonDiffs,
 							ValidateFunc:     validation.ValidateJsonString,
+							Computed:         true,
 							StateFunc: func(v interface{}) string {
 								jsonString, _ := structure.NormalizeJsonString(v)
 								return jsonString
@@ -272,6 +276,7 @@ func resourceAwsEMRCluster() *schema.Resource {
 						},
 					},
 				},
+				Set: resourceAwsEMRClusterHash,
 			},
 			"bootstrap_action": {
 				Type:     schema.TypeSet,
@@ -690,12 +695,17 @@ func resourceAwsEMRClusterRead(d *schema.ResourceData, meta interface{}) error {
 			d.Set("core_instance_type", coreGroup.InstanceType)
 			d.Set("core_instance_count", coreGroup.RequestedInstanceCount)
 		}
-		masterGroup := findGroupFromRole(instanceGroups, emr.InstanceRoleTypeMaster)
+		masterGroup := findMasterGroup(instanceGroups)
 		if masterGroup != nil {
 			d.Set("master_instance_type", masterGroup.InstanceType)
 		}
-		if err := d.Set("instance_group", flattenInstanceGroups(instanceGroups)); err != nil {
-			log.Printf("[ERR] Error setting EMR instance groups: %s", err)
+		flattenedInstanceGroups, err := flattenInstanceGroups(instanceGroups)
+		if err != nil {
+			return fmt.Errorf("error flattening instance groups: %+v", err)
+		}
+		// return fmt.Errorf("%+v\n\n\n\n%+v", flattenedInstanceGroups, instanceGroups)
+		if err := d.Set("instance_group", flattenedInstanceGroups); err != nil {
+			return fmt.Errorf("[ERR] Error setting EMR instance groups: %s", err)
 		}
 	}
 
@@ -718,13 +728,7 @@ func resourceAwsEMRClusterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := d.Set("applications", flattenApplications(cluster.Applications)); err != nil {
-		log.Printf("[ERR] Error setting EMR Applications for cluster (%s): %s", d.Id(), err)
-	}
-
-	// Configurations is a JSON document. It's built with an expand method but a
-	// simple string should be returned as JSON
-	if err := d.Set("configurations", cluster.Configurations); err != nil {
-		log.Printf("[ERR] Error setting EMR configurations for cluster (%s): %s", d.Id(), err)
+		return fmt.Errorf("error setting EMR Applications for cluster (%s): %s", d.Id(), err)
 	}
 
 	if _, ok := d.GetOk("configurations_json"); ok {
@@ -738,7 +742,7 @@ func resourceAwsEMRClusterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := d.Set("ec2_attributes", flattenEc2Attributes(cluster.Ec2InstanceAttributes)); err != nil {
-		log.Printf("[ERR] Error setting EMR Ec2 Attributes: %s", err)
+		return fmt.Errorf("error setting EMR Ec2 Attributes: %s", err)
 	}
 
 	if err := d.Set("kerberos_attributes", flattenEmrKerberosAttributes(d, cluster.KerberosAttributes)); err != nil {
@@ -749,11 +753,11 @@ func resourceAwsEMRClusterRead(d *schema.ResourceData, meta interface{}) error {
 		ClusterId: cluster.Id,
 	})
 	if err != nil {
-		log.Printf("[WARN] Error listing bootstrap actions: %s", err)
+		return fmt.Errorf("error listing bootstrap actions: %s", err)
 	}
 
 	if err := d.Set("bootstrap_action", flattenBootstrapArguments(respBootstraps.BootstrapActions)); err != nil {
-		log.Printf("[WARN] Error setting Bootstrap Actions: %s", err)
+		return fmt.Errorf("error setting Bootstrap Actions: %s", err)
 	}
 
 	var stepSummaries []*emr.StepSummary
@@ -931,7 +935,7 @@ func resourceAwsEMRClusterDelete(d *schema.ResourceData, meta interface{}) error
 	})
 
 	if err != nil {
-		log.Printf("[ERR] Error waiting for EMR Cluster (%s) Instances to drain", d.Id())
+		return fmt.Errorf("error waiting for EMR Cluster (%s) Instances to drain", d.Id())
 	}
 
 	return nil
@@ -1073,7 +1077,7 @@ func flattenEmrStepSummary(stepSummary *emr.StepSummary) map[string]interface{} 
 	return m
 }
 
-func flattenInstanceGroups(igs []*emr.InstanceGroup) []map[string]interface{} {
+func flattenInstanceGroups(igs []*emr.InstanceGroup) ([]map[string]interface{}, error) {
 	result := make([]map[string]interface{}, 0)
 
 	for _, ig := range igs {
@@ -1083,27 +1087,38 @@ func flattenInstanceGroups(igs []*emr.InstanceGroup) []map[string]interface{} {
 		} else {
 			attrs["bid_price"] = ""
 		}
-		ebsConfig := make([]map[string]interface{}, 0)
-		for _, ebs := range ig.EbsBlockDevices {
-			ebsAttrs := make(map[string]interface{})
-			if ebs.VolumeSpecification.Iops != nil {
-				ebsAttrs["iops"] = *ebs.VolumeSpecification.Iops
-			} else {
-				ebsAttrs["iops"] = ""
-			}
-			ebsAttrs["size"] = *ebs.VolumeSpecification.SizeInGB
-			ebsAttrs["type"] = *ebs.VolumeSpecification.VolumeType
-			ebsAttrs["volumes_per_instance"] = 1
 
-			ebsConfig = append(ebsConfig, ebsAttrs)
+		if ig.EbsBlockDevices != nil {
+			ebsConfig := make([]map[string]interface{}, 0)
+			for _, ebs := range ig.EbsBlockDevices {
+				ebsAttrs := make(map[string]interface{})
+				if ebs.VolumeSpecification.Iops != nil {
+					ebsAttrs["iops"] = *ebs.VolumeSpecification.Iops
+				}
+				if ebs.VolumeSpecification.SizeInGB != nil {
+					ebsAttrs["size"] = *ebs.VolumeSpecification.SizeInGB
+				}
+				if ebs.VolumeSpecification.VolumeType != nil {
+					ebsAttrs["type"] = *ebs.VolumeSpecification.VolumeType
+				}
+				ebsAttrs["volumes_per_instance"] = 1
+
+				ebsConfig = append(ebsConfig, ebsAttrs)
+			}
+			attrs["ebs_config"] = ebsConfig
 		}
-		attrs["ebs_config"] = ebsConfig
+
 		attrs["instance_count"] = *ig.RequestedInstanceCount
 		attrs["instance_role"] = *ig.InstanceGroupType
 		attrs["instance_type"] = *ig.InstanceType
 
 		if ig.AutoScalingPolicy != nil {
-			attrs["autoscaling_policy"] = *ig.AutoScalingPolicy
+			autoscalingPolicyBytes, err := json.Marshal(ig.AutoScalingPolicy)
+			autoscalingPolicyString := string(autoscalingPolicyBytes)
+			if err != nil {
+				return nil, err
+			}
+			attrs["autoscaling_policy"] = autoscalingPolicyString
 		} else {
 			attrs["autoscaling_policy"] = ""
 		}
@@ -1114,7 +1129,7 @@ func flattenInstanceGroups(igs []*emr.InstanceGroup) []map[string]interface{} {
 		result = append(result, attrs)
 	}
 
-	return result
+	return result, nil
 }
 
 func flattenBootstrapArguments(actions []*emr.Command) []map[string]interface{} {
@@ -1369,7 +1384,8 @@ func applyEbsConfig(configAttributes map[string]interface{}, config *emr.Instanc
 		ebsConfig := &emr.EbsConfiguration{}
 
 		ebsBlockDeviceConfigs := make([]*emr.EbsBlockDeviceConfig, 0)
-		for _, rawEbsConfig := range rawEbsConfigs.(*schema.Set).List() {
+		// for _, rawEbsConfig := range rawEbsConfigs.(*schema.Set).List() {
+		for _, rawEbsConfig := range rawEbsConfigs.([]interface{}) {
 			rawEbsConfig := rawEbsConfig.(map[string]interface{})
 			ebsBlockDeviceConfig := &emr.EbsBlockDeviceConfig{
 				VolumesPerInstance: aws.Int64(int64(rawEbsConfig["volumes_per_instance"].(int))),
@@ -1502,11 +1518,19 @@ func resourceAwsEMRClusterStateRefreshFunc(d *schema.ResourceData, meta interfac
 	}
 }
 
-func findGroupFromRole(instanceGroups []*emr.InstanceGroup, role string) *emr.InstanceGroup {
+func findMasterGroup(instanceGroups []*emr.InstanceGroup) *emr.InstanceGroup {
 	for _, group := range instanceGroups {
-		if *group.InstanceGroupType == role {
+		if *group.InstanceGroupType == emr.InstanceRoleTypeMaster {
 			return group
 		}
 	}
 	return nil
+}
+
+func resourceAwsEMRClusterHash(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.(map[string]interface{})
+	buf.WriteString(fmt.Sprintf("%s-", m["instance_role"].(string)))
+	buf.WriteString(fmt.Sprintf("%s", m["name"].(string)))
+	return hashcode.String(buf.String())
 }
