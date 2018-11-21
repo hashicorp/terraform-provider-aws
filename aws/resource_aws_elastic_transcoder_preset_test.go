@@ -195,9 +195,11 @@ resource "aws_elastictranscoder_preset" "bar" {
   }
 
   video_codec_options = {
-    Profile            = "main"
-    Level              = "4.1"
-    MaxReferenceFrames = 4
+    Profile                  = "main"
+    Level                    = "4.1"
+    MaxReferenceFrames       = 4
+    InterlacedMode           = "Auto"
+    ColorSpaceConversionMode = "None"
   }
 
   thumbnails {
