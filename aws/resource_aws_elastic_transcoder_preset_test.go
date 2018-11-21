@@ -86,16 +86,31 @@ func TestAccAWSElasticTranscoderPreset_basic(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      name,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: awsElasticTranscoderPresetConfig2,
 				Check: resource.ComposeTestCheckFunc(
 					checkExists(true),
 				),
 			},
 			{
+				ResourceName:      name,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: awsElasticTranscoderPresetConfig3,
 				Check: resource.ComposeTestCheckFunc(
 					checkExists(true),
 				),
+			},
+			{
+				ResourceName:      name,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
