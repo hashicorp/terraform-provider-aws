@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	"github.com/jen20/awspolicyequivalence"
+	awspolicy "github.com/jen20/awspolicyequivalence"
 )
 
 func TestAccAWSS3BucketPolicy_basic(t *testing.T) {
@@ -38,6 +38,11 @@ func TestAccAWSS3BucketPolicy_basic(t *testing.T) {
 					testAccCheckAWSS3BucketExists("aws_s3_bucket.bucket"),
 					testAccCheckAWSS3BucketHasPolicy("aws_s3_bucket.bucket", expectedPolicyText),
 				),
+			},
+			{
+				ResourceName:      "aws_s3_bucket_policy.bucket",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -88,6 +93,12 @@ func TestAccAWSS3BucketPolicy_policyUpdate(t *testing.T) {
 					testAccCheckAWSS3BucketExists("aws_s3_bucket.bucket"),
 					testAccCheckAWSS3BucketHasPolicy("aws_s3_bucket.bucket", expectedPolicyText2),
 				),
+			},
+
+			{
+				ResourceName:      "aws_s3_bucket_policy.bucket",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
