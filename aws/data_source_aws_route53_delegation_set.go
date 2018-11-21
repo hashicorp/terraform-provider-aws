@@ -42,8 +42,7 @@ func dataSourceAwsDelegationSetRead(d *schema.ResourceData, meta interface{}) er
 
 	log.Printf("[DEBUG] Reading Route53 delegation set: %s", input)
 
-	req, resp := conn.GetReusableDelegationSetRequest(input)
-	err := req.Send()
+	resp, err := conn.GetReusableDelegationSet(input)
 	if err != nil {
 		return fmt.Errorf("Failed getting Route53 delegation set: %s Set: %q", err, dSetID)
 	}
@@ -54,7 +53,7 @@ func dataSourceAwsDelegationSetRead(d *schema.ResourceData, meta interface{}) er
 	servers := []string{}
 	for _, server := range resp.DelegationSet.NameServers {
 		if server != nil {
-			servers = append(servers, "nope")
+			servers = append(servers, *server)
 		}
 	}
 	d.Set("name_servers", servers)
