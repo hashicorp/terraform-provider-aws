@@ -927,6 +927,14 @@
 			"versionExact": "v1.15.79"
 		},
 		{
+			"checksumSHA1": "s3wuGhJU+8jRioLXfuF4T+/Y6wI=",
+			"path": "github.com/aws/aws-sdk-go/service/ram",
+			"revision": "f557567ff83b93530a0498d4bdb0eb616af70bb3",
+			"revisionTime": "2018-11-20T00:31:09Z",
+			"version": "v1.15.79",
+			"versionExact": "v1.15.79"
+		},
+		{
 			"checksumSHA1": "jZU2pCtRt4/+aBCkg09ELTwWArQ=",
 			"path": "github.com/aws/aws-sdk-go/service/rds",
 			"revision": "f557567ff83b93530a0498d4bdb0eb616af70bb3",
