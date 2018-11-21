@@ -247,7 +247,7 @@ resource "aws_elastictranscoder_preset" "bar" {
     Profile                  = "main"
     Level                    = "2.2"
     MaxReferenceFrames       = 3
-    InterlaceMode            = "Progressive"
+    InterlacedMode           = "Progressive"
     ColorSpaceConversionMode = "None"
   }
 
