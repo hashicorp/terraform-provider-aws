@@ -327,7 +327,7 @@ func resourceAwsElasticTranscoderPresetCreate(d *schema.ResourceData, meta inter
 		Container:   aws.String(d.Get("container").(string)),
 		Description: getStringPtr(d, "description"),
 		Thumbnails:  expandETThumbnails(d),
-		Video:       exapandETVideoParams(d),
+		Video:       expandETVideoParams(d),
 	}
 
 	if name, ok := d.GetOk("name"); ok {
@@ -418,7 +418,7 @@ func expandETAudioCodecOptions(d *schema.ResourceData) *elastictranscoder.AudioC
 	return codecOpts
 }
 
-func exapandETVideoParams(d *schema.ResourceData) *elastictranscoder.VideoParameters {
+func expandETVideoParams(d *schema.ResourceData) *elastictranscoder.VideoParameters {
 	s := d.Get("video").(*schema.Set)
 	if s == nil || s.Len() == 0 {
 		return nil
