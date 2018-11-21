@@ -91,7 +91,7 @@ func TestAccAwsServerlessRepositoryApplication_updateVersion(t *testing.T) {
 	})
 }
 
-func TestAccAwsServerlessRepoApplication_updateFunctionName(t *testing.T) {
+func TestAccAwsServerlessRepositoryApplication_updateFunctionName(t *testing.T) {
 	var stack cloudformation.Stack
 	stackName := fmt.Sprintf("tf-acc-test-update-name-%s", acctest.RandString(10))
 	const initialName = "FuncName1"

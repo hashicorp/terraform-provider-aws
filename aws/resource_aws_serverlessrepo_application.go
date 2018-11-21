@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 	"time"
 
@@ -64,6 +65,7 @@ func resourceAwsServerlessRepositoryApplication() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -250,6 +252,11 @@ func resourceAwsServerlessRepositoryApplicationRead(d *schema.ResourceData, meta
 		return err
 	}
 
+	err = d.Set("tags", flattenServerlessRepositoryCloudFormationTags(stack.Tags))
+	if err != nil {
+		return err
+	}
+
 	err = d.Set("outputs", flattenCloudFormationOutputs(stack.Outputs))
 	if err != nil {
 		return err
@@ -263,6 +270,28 @@ func resourceAwsServerlessRepositoryApplicationRead(d *schema.ResourceData, meta
 	}
 
 	return nil
+}
+
+func flattenServerlessRepositoryCloudFormationTags(cfTags []*cloudformation.Tag) map[string]string {
+	tags := make(map[string]string, len(cfTags))
+	for _, t := range cfTags {
+		if !tagIgnoredServerlessRepositoryCloudFormation(*t.Key) {
+			tags[*t.Key] = *t.Value
+		}
+	}
+	return tags
+}
+
+func tagIgnoredServerlessRepositoryCloudFormation(k string) bool {
+	filter := []string{"^aws:", "^serverlessrepo:"}
+	for _, v := range filter {
+		log.Printf("[DEBUG] Matching %v with %v\n", v, k)
+		if r, _ := regexp.MatchString(v, k); r == true {
+			log.Printf("[DEBUG] Found AWS specific tag %s, ignoring.\n", k)
+			return true
+		}
+	}
+	return false
 }
 
 func resourceAwsServerlessRepositoryApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
