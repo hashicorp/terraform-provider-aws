@@ -594,14 +594,14 @@ func flattenETVideoParams(video *elastictranscoder.VideoParameters) []map[string
 	return m.MapList()
 }
 
-func flattenETVideoCodecOptions(opts map[string]*string) []map[string]interface{} {
+func flattenETVideoCodecOptions(opts map[string]*string) map[string]interface{} {
 	codecOpts := setMap(make(map[string]interface{}))
 
 	for k, v := range opts {
 		codecOpts.SetString(k, v)
 	}
 
-	return codecOpts.MapList()
+	return codecOpts.Map()
 }
 
 func flattenETWatermarks(watermarks []*elastictranscoder.PresetWatermark) []map[string]interface{} {
