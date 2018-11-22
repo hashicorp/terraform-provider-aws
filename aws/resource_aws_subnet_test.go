@@ -135,6 +135,9 @@ func TestAccAWSSubnet_basic(t *testing.T) {
 					testAccCheckSubnetExists(
 						"aws_subnet.foo", &v),
 					testCheck,
+					// ipv6 should be empty if disabled so we can still use the property in conditionals
+					resource.TestCheckResourceAttr(
+						"aws_subnet.foo", "ipv6_cidr_block", ""),
 					resource.TestMatchResourceAttr(
 						"aws_subnet.foo",
 						"arn",
