@@ -84,6 +84,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/aws/aws-sdk-go/service/route53"
+	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
@@ -202,6 +203,7 @@ type AWSClient struct {
 	stsconn               *sts.STS
 	redshiftconn          *redshift.Redshift
 	r53conn               *route53.Route53
+	r53resolverconn       *route53resolver.Route53Resolver
 	partition             string
 	accountid             string
 	supportedplatforms    []string
@@ -554,6 +556,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.opsworksconn = opsworks.New(sess)
 	client.organizationsconn = organizations.New(sess)
 	client.r53conn = route53.New(r53Sess)
+	client.r53resolverconn = route53resolver.New(sess)
 	client.rdsconn = rds.New(awsRdsSess)
 	client.redshiftconn = redshift.New(sess)
 	client.simpledbconn = simpledb.New(sess)
