@@ -147,11 +147,11 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"core_count": {
 							Type:     schema.TypeInt,
-							Optional: false,
+							Optional: true,
 						},
 						"threads_per_core": {
 							Type:     schema.TypeInt,
-							Optional: false,
+							Optional: true,
 						},
 					},
 				},
@@ -784,12 +784,12 @@ func getCapacityReservationTarget(crt *ec2.CapacityReservationTargetResponse) []
 	return s
 }
 
-func getCpuOptions(cs *ec2.CpuOptions) []interface{} {
+func getCpuOptions(cs *ec2.LaunchTemplateCpuOptions) []interface{} {
 	s := []interface{}{}
 	if cs != nil {
 		s = append(s, map[string]interface{}{
-			"core_count":       aws.StringValue(cs.CoreCount),
-			"threads_per_core": aws.StringValue(cs.ThreadsPerCore),
+			"core_count":       aws.Int64Value(cs.CoreCount),
+			"threads_per_core": aws.Int64Value(cs.ThreadsPerCore),
 		})
 	}
 	return s
@@ -1031,10 +1031,10 @@ func buildLaunchTemplateData(d *schema.ResourceData) (*ec2.RequestLaunchTemplate
 	}
 
 	if v, ok := d.GetOk("cpu_options"); ok {
-		cs := v.([]interface{})
+		co := v.([]interface{})
 
-		if len(cs) > 0 {
-			opts.CpuOptions = readCpuOptionsFromConfig(cs[0].(map[string]interface{}))
+		if len(co) > 0 {
+			opts.CpuOptions = readCpuOptionsFromConfig(co[0].(map[string]interface{}))
 		}
 	}
 
@@ -1307,15 +1307,15 @@ func readCapacityReservationTargetFromConfig(crt map[string]interface{}) *ec2.Ca
 	return capacityReservationTarget
 }
 
-func readCpuOptionsFromConfig(cs map[string]interface{}) *ec2.CreditSpecificationRequest {
-	cpuOptions := &ec2.CpuOptionsRequest{}
+func readCpuOptionsFromConfig(co map[string]interface{}) *ec2.LaunchTemplateCpuOptionsRequest {
+	cpuOptions := &ec2.LaunchTemplateCpuOptionsRequest{}
 
-	if v, ok := cs["core_count"].(string); ok && v != "" {
-		cpuOptions.CoreCount = aws.String(v)
+	if v, ok := co["core_count"].(int); ok && v != 0 {
+		cpuOptions.CoreCount = aws.Int64(int64(v))
 	}
 
-	if v, ok := cs["threads_per_core"].(string); ok && v != "" {
-		cpuOptions.ThreadsPerCore = aws.String(v)
+	if v, ok := co["threads_per_core"].(int); ok && v != 0 {
+		cpuOptions.ThreadsPerCore = aws.Int64(int64(v))
 	}
 
 	return cpuOptions
