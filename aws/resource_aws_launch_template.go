@@ -139,6 +139,24 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 				},
 			},
 
+			"cpu_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"core_count": {
+							Type:     schema.TypeInt,
+							Optional: false,
+						},
+						"threads_per_core": {
+							Type:     schema.TypeInt,
+							Optional: false,
+						},
+					},
+				},
+			},
+
 			"capacity_reservation_specification": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -609,6 +627,10 @@ func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
+	if err := d.Set("cpu_options", getCpuOptions(ltData.CpuOptions)); err != nil {
+		return err
+	}
+
 	if strings.HasPrefix(aws.StringValue(ltData.InstanceType), "t2") || strings.HasPrefix(aws.StringValue(ltData.InstanceType), "t3") {
 		if err := d.Set("credit_specification", getCreditSpecification(ltData.CreditSpecification)); err != nil {
 			return err
@@ -757,6 +779,17 @@ func getCapacityReservationTarget(crt *ec2.CapacityReservationTargetResponse) []
 	if crt != nil {
 		s = append(s, map[string]interface{}{
 			"capacity_reservation_id": aws.StringValue(crt.CapacityReservationId),
+		})
+	}
+	return s
+}
+
+func getCpuOptions(cs *ec2.CpuOptions) []interface{} {
+	s := []interface{}{}
+	if cs != nil {
+		s = append(s, map[string]interface{}{
+			"core_count":       aws.StringValue(cs.CoreCount),
+			"threads_per_core": aws.StringValue(cs.ThreadsPerCore),
 		})
 	}
 	return s
@@ -994,6 +1027,14 @@ func buildLaunchTemplateData(d *schema.ResourceData) (*ec2.RequestLaunchTemplate
 
 		if len(crs) > 0 {
 			opts.CapacityReservationSpecification = readCapacityReservationSpecificationFromConfig(crs[0].(map[string]interface{}))
+		}
+	}
+
+	if v, ok := d.GetOk("cpu_options"); ok {
+		cs := v.([]interface{})
+
+		if len(cs) > 0 {
+			opts.CpuOptions = readCpuOptionsFromConfig(cs[0].(map[string]interface{}))
 		}
 	}
 
@@ -1264,6 +1305,20 @@ func readCapacityReservationTargetFromConfig(crt map[string]interface{}) *ec2.Ca
 	}
 
 	return capacityReservationTarget
+}
+
+func readCpuOptionsFromConfig(cs map[string]interface{}) *ec2.CreditSpecificationRequest {
+	cpuOptions := &ec2.CpuOptionsRequest{}
+
+	if v, ok := cs["core_count"].(string); ok && v != "" {
+		cpuOptions.CoreCount = aws.String(v)
+	}
+
+	if v, ok := cs["threads_per_core"].(string); ok && v != "" {
+		cpuOptions.ThreadsPerCore = aws.String(v)
+	}
+
+	return cpuOptions
 }
 
 func readCreditSpecificationFromConfig(cs map[string]interface{}) *ec2.CreditSpecificationRequest {

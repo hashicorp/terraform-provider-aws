@@ -28,6 +28,11 @@ resource "aws_launch_template" "foo" {
     capacity_reservation_preference = "open"
   }
 
+  cpu_options {
+    core_count = 4
+    threads_per_core = 2
+  }
+
   credit_specification {
     cpu_credits = "standard"
   }
@@ -96,6 +101,7 @@ The following arguments are supported:
 * `block_device_mappings` - Specify volumes to attach to the instance besides the volumes specified by the AMI.
   See [Block Devices](#block-devices) below for details.
 * `capacity_reservation_specification` - Targeting for EC2 capacity reservations. See [Capacity Reservation Specification](#capacity-reservation-specification) below for more details.
+* `cpu_options` - The CPU options for the instance. See [CPU Options](#cpu-options) below for more details.
 * `credit_specification` - Customize the credit specification of the instance. See [Credit
   Specification](#credit-specification) below for more details.
 * `disable_api_termination` - If `true`, enables [EC2 Instance
@@ -166,6 +172,16 @@ The `capacity_reservation_specification` block supports the following:
 The `capacity_reservation_target` block supports the following:
 
 * `capacity_reservation_id` - The ID of the Capacity Reservation to target.
+
+### CPU Options
+
+The `cpu_options` block supports the following:
+
+* `core_count` - The number of CPU cores for the instance.
+* `threads_per_core` - The number of threads per CPU core. To disable Intel Hyper-Threading Technology for the instance, specify a value of 1.
+Otherwise, specify the default value of 2.
+
+Both number of CPU cores and threads per core must be specified. Valid number of CPU cores and threads per core for the instance type can be found in the [CPU Options Documentation](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-optimize-cpu.html?shortFooter=true#cpu-options-supported-instances-values)
 
 ### Credit Specification
 

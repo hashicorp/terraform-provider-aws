@@ -366,6 +366,30 @@ func TestAccAWSLaunchTemplate_capacityReservation_target(t *testing.T) {
 	})
 }
 
+func TestAccAWSLaunchTemplate_cpuOptions(t *testing.T) {
+	var template ec2.LaunchTemplate
+	resName := "aws_launch_template.foo"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLaunchTemplateConfig_cpuOptions(rName, rInt, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resName, &template),
+					resource.TestCheckResourceAttr(resName, "cpu_options.#", "1"),
+					resource.TestCheckResourceAttr(resName, "cpu_options.0.core_count", rInt),
+					resource.TestCheckResourceAttr(resName, "cpu_options.0.threads_per_core", 2),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSLaunchTemplate_creditSpecification_nonBurstable(t *testing.T) {
 	var template ec2.LaunchTemplate
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -844,6 +868,18 @@ resource "aws_launch_template" "foo" {
 	}
 }
 `, rInt)
+}
+
+func testAccAWSLaunchTemplateConfig_cpuOptions(coreCount, threadsPerCore int) string {
+	return fmt.Sprintf(`
+resource "aws_launch_template" "foo" {
+
+  cpu_options {
+		core_count = %d
+		threads_per_core = %d
+  }
+}
+`, coreCount, threadsPerCore)
 }
 
 func testAccAWSLaunchTemplateConfig_creditSpecification(rName, instanceType, cpuCredits string) string {
