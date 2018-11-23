@@ -50,18 +50,10 @@ users:
 KUBECONFIG
 }
 
-provider "k8s" {
-  kubeconfig_content = "${local.kubeconfig}"
+output "config_map_aws_auth" {
+  value = "${local.config_map_aws_auth}"
 }
 
-resource "k8s_manifest" "awsauth" {
-  content = "${local.config_map_aws_auth}"
-}
-
-# output "config_map_aws_auth" {
-#   value = "${local.config_map_aws_auth}"
-# }
-#
 output "kubeconfig" {
   value = "${local.kubeconfig}"
 }
