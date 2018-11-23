@@ -604,6 +604,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_route53_zone_association":                     resourceAwsRoute53ZoneAssociation(),
 			"aws_route53_zone":                                 resourceAwsRoute53Zone(),
 			"aws_route53_health_check":                         resourceAwsRoute53HealthCheck(),
+			"aws_route53_resolver_endpoint":                    resourceAwsRoute53ResolverEndpoint(),
 			"aws_route":                                        resourceAwsRoute(),
 			"aws_route_table":                                  resourceAwsRouteTable(),
 			"aws_default_route_table":                          resourceAwsDefaultRouteTable(),

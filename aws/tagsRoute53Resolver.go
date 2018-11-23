@@ -11,7 +11,6 @@ import (
 
 // getTags is a helper to get the tags for a resource. It expects the
 // tags field to be named "tags"
-// nolint
 func getTagsRoute53Resolver(conn *route53resolver.Route53Resolver, d *schema.ResourceData, arn string) error {
 	tags := make([]*route53resolver.Tag, 0)
 	req := &route53resolver.ListTagsForResourceInput{
@@ -42,7 +41,6 @@ func getTagsRoute53Resolver(conn *route53resolver.Route53Resolver, d *schema.Res
 
 // setTags is a helper to set the tags for a resource. It expects the
 // tags field to be named "tags"
-// nolint
 func setTagsRoute53Resolver(conn *route53resolver.Route53Resolver, d *schema.ResourceData, arn string) error {
 	if d.HasChange("tags") {
 		oraw, nraw := d.GetChange("tags")
