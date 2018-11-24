@@ -550,6 +550,10 @@ func resourceAwsS3BucketCreate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] S3 bucket create: %s, ACL: %s", bucket, acl)
 
+	// Mutex lock so no 2 buckets with same name can be created
+	awsMutexKV.Lock(bucket)
+	defer awsMutexKV.Unlock(bucket)
+
 	req := &s3.CreateBucketInput{
 		Bucket: aws.String(bucket),
 		ACL:    aws.String(acl),
@@ -577,7 +581,20 @@ func resourceAwsS3BucketCreate(d *schema.ResourceData, meta interface{}) error {
 
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		log.Printf("[DEBUG] Trying to create new S3 bucket: %q", bucket)
-		_, err := s3conn.CreateBucket(req)
+
+		// Perform a HEAD to request to check if bucket already exists
+		log.Printf("[DEBUG] HEAD request for bucket: %q", bucket)
+		_, err := s3conn.HeadBucket(&s3.HeadBucketInput{
+			Bucket: aws.String(bucket),
+		})
+
+		// If previous HEAD requests doesn't give an error that means the bucket already exists
+		if err == nil {
+			return resource.NonRetryableError(fmt.Errorf("bucket with name %s already exists",
+				bucket))
+		}
+		_, err = s3conn.CreateBucket(req)
+
 		if awsErr, ok := err.(awserr.Error); ok {
 			if awsErr.Code() == "OperationAborted" {
 				log.Printf("[WARN] Got an error while trying to create S3 bucket %s: %s", bucket, err)
