@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New Data Source:** `aws_route53_delegation_set` [GH-6152]
+* **New Data Source:** `aws_ssm_document` [GH-6479]
 
 ENHANCEMENTS:
 
