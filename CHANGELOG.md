@@ -4,6 +4,10 @@ FEATURES:
 
 * **New Data Source:** `aws_route53_delegation_set` [GH-6152]
 
+ENHANCEMENTS:
+
+* resource/aws_s3_bucket_policy: Support resource import [GH-6543]
+
 BUG FIXES:
 
 * resource/aws_elastic_transcoder_preset: Properly read `video_codec_options` into Terraform state [GH-6545]
