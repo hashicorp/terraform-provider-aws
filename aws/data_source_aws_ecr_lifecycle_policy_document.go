@@ -51,12 +51,10 @@ func dataSourceAwsEcrLifecyclePolicyDocument() *schema.Resource {
 						},
 						"description": {
 							Type:     schema.TypeString,
-							Required: false,
 							Optional: true,
 						},
 						"selection": {
 							Type:     schema.TypeSet,
-							Required: false,
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -94,9 +92,10 @@ func dataSourceAwsEcrLifecyclePolicyDocument() *schema.Resource {
 							},
 						},
 						"action": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Required: false,
 							Optional: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"type": {
