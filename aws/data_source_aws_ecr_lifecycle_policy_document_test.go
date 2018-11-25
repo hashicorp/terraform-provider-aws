@@ -1,11 +1,9 @@
 package aws
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccAWSDataSourceEcrLifecyclePolicyDocument_basic(t *testing.T) {
@@ -18,34 +16,13 @@ func TestAccAWSDataSourceEcrLifecyclePolicyDocument_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSEcrLifecyclePolicyDocumentConfig,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEcrLifecyclePolicyValue("data.aws_ecr_lifecycle_policy_document.test", "json",
-						testAccAWSEcrLifecyclePolicyDocumentExpectedJSON,
-					),
+				Check: resource.TestCheckResourceAttr(
+					"data.aws_ecr_lifecycle_policy_document.test", "json",
+					testAccAWSEcrLifecyclePolicyDocumentExpectedJSON,
 				),
 			},
 		},
 	})
-}
-
-func testAccCheckEcrLifecyclePolicyValue(id, name, value string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[id]
-		if !ok {
-			return fmt.Errorf("Not found: %s", id)
-		}
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
-
-		v := rs.Primary.Attributes[name]
-		if v != value {
-			return fmt.Errorf(
-				"Value for %s is %s, not %s", name, v, value)
-		}
-
-		return nil
-	}
 }
 
 var testAccAWSEcrLifecyclePolicyDocumentConfig = `
