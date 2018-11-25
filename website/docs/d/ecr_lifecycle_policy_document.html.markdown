@@ -3,14 +3,14 @@ layout: "aws"
 page_title: "AWS: aws_ecr_lifecycle_policy_document"
 sidebar_current: "docs-aws-datasource-ecr-lifecycle-policy-document"
 description: |-
-    PGenerates an ECR lifecycle policy document in JSON format.
+    Generates an ECR lifecycle policy document in JSON format.
 ---
 
 # Data Source: aws_ecr_lifecycle_policy_document
 
-This is a data source which can be used to construct a JSON representation of an ECR lifecycle policy document, for use with resources which expect policy documents, such as the aws_ecr_lifecycle_policy resource.
+Generates an ECR lifecycle policy document in JSON format. Can be used with resources such as the [`aws_ecr_lifecycle_policy` resource](/docs/providers/aws/r/ecr_lifecycle_policy.html).
 
--> For more information about building AWS ECR lifecycle policy documents with Terraform, see the [AWS ECR Lifecycle Policy Document Guide](https://docs.aws.amazon.com/AmazonECR/latest/userguide/LifecyclePolicies.html).
+-> For more information about building AWS ECR lifecycle policy documents, see the [AWS ECR Lifecycle Policy Document Guide](https://docs.aws.amazon.com/AmazonECR/latest/userguide/LifecyclePolicies.html).
 
 ## Example Usage
 
