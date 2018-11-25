@@ -7,6 +7,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* resource/aws_ecs_service: Add `enable_ecs_managed_tags` argument [GH-6544]
 * resource/aws_kinesis_firehose_delivery_stream: Add `tags` argument [GH-6548]
 * resource/aws_s3_bucket_policy: Support resource import [GH-6543]
 
