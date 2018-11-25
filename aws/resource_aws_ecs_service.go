@@ -56,6 +56,12 @@ func resourceAwsEcsService() *schema.Resource {
 				},
 			},
 
+			"enable_ecs_managed_tags": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+
 			"health_check_grace_period_seconds": {
 				Type:         schema.TypeInt,
 				Optional:     true,
@@ -329,11 +335,12 @@ func resourceAwsEcsServiceCreate(d *schema.ResourceData, meta interface{}) error
 	schedulingStrategy := d.Get("scheduling_strategy").(string)
 
 	input := ecs.CreateServiceInput{
-		ClientToken:        aws.String(resource.UniqueId()),
-		SchedulingStrategy: aws.String(schedulingStrategy),
-		ServiceName:        aws.String(d.Get("name").(string)),
-		Tags:               tagsFromMapECS(d.Get("tags").(map[string]interface{})),
-		TaskDefinition:     aws.String(d.Get("task_definition").(string)),
+		ClientToken:          aws.String(resource.UniqueId()),
+		SchedulingStrategy:   aws.String(schedulingStrategy),
+		ServiceName:          aws.String(d.Get("name").(string)),
+		Tags:                 tagsFromMapECS(d.Get("tags").(map[string]interface{})),
+		TaskDefinition:       aws.String(d.Get("task_definition").(string)),
+		EnableECSManagedTags: aws.Bool(d.Get("enable_ecs_managed_tags").(bool)),
 	}
 
 	if schedulingStrategy == ecs.SchedulingStrategyDaemon && deploymentMinimumHealthyPercent != 100 {
@@ -538,6 +545,7 @@ func resourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("desired_count", service.DesiredCount)
 	d.Set("health_check_grace_period_seconds", service.HealthCheckGracePeriodSeconds)
 	d.Set("launch_type", service.LaunchType)
+	d.Set("enable_ecs_managed_tags", service.EnableECSManagedTags)
 
 	// Save cluster in the same format
 	if strings.HasPrefix(d.Get("cluster").(string), "arn:"+meta.(*AWSClient).partition+":ecs:") {
