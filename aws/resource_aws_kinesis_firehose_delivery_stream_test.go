@@ -79,6 +79,48 @@ func TestAccAWSKinesisFirehoseDeliveryStream_s3basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSKinesisFirehoseDeliveryStream_s3basicWithTags(t *testing.T) {
+	var stream firehose.DeliveryStreamDescription
+	rInt := acctest.RandInt()
+	rName := fmt.Sprintf("terraform-kinesis-firehose-basictest-%d", rInt)
+	config := fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_s3basic,
+		rInt, rInt, rInt, rInt)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithTags(rName, rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisFirehoseDeliveryStreamExists("aws_kinesis_firehose_delivery_stream.test_stream", &stream),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
+					resource.TestCheckResourceAttr("aws_kinesis_firehose_delivery_stream.test_stream", "tags.%", "2"),
+					resource.TestCheckResourceAttr("aws_kinesis_firehose_delivery_stream.test_stream", "tags.Usage", "original"),
+				),
+			},
+			{
+				Config: testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithTagsChanged(rName, rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisFirehoseDeliveryStreamExists("aws_kinesis_firehose_delivery_stream.test_stream", &stream),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
+					resource.TestCheckResourceAttr("aws_kinesis_firehose_delivery_stream.test_stream", "tags.%", "1"),
+					resource.TestCheckResourceAttr("aws_kinesis_firehose_delivery_stream.test_stream", "tags.Usage", "changed"),
+				),
+			},
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisFirehoseDeliveryStreamExists("aws_kinesis_firehose_delivery_stream.test_stream", &stream),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
+					resource.TestCheckResourceAttr("aws_kinesis_firehose_delivery_stream.test_stream", "tags.%", "0"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSKinesisFirehoseDeliveryStream_s3KinesisStreamSource(t *testing.T) {
 	var stream firehose.DeliveryStreamDescription
 	ri := acctest.RandInt()
@@ -1282,6 +1324,41 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
     bucket_arn = "${aws_s3_bucket.bucket.arn}"
   }
 }`
+
+func testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithTags(rName string, rInt int) string {
+	return fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamBaseConfig, rInt, rInt, rInt) +
+		fmt.Sprintf(`
+	resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
+		depends_on = ["aws_iam_role_policy.firehose"]
+		name = "%s"
+		destination = "s3"
+		s3_configuration {
+			role_arn = "${aws_iam_role.firehose.arn}"
+			bucket_arn = "${aws_s3_bucket.bucket.arn}"
+		}
+		tags {
+			Environment = "production"
+			Usage = "original"
+		}
+	}`, rName)
+}
+
+func testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithTagsChanged(rName string, rInt int) string {
+	return fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamBaseConfig, rInt, rInt, rInt) +
+		fmt.Sprintf(`
+	resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
+		depends_on = ["aws_iam_role_policy.firehose"]
+		name = "%s"
+		destination = "s3"
+		s3_configuration {
+			role_arn = "${aws_iam_role.firehose.arn}"
+			bucket_arn = "${aws_s3_bucket.bucket.arn}"
+		}
+		tags {
+			Usage = "changed"
+		}
+	}`, rName)
+}
 
 var testAccKinesisFirehoseDeliveryStreamConfig_s3KinesisStreamSource = testAccKinesisFirehoseDeliveryStreamBaseConfig + testAccFirehoseKinesisStreamSource + `
 resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
