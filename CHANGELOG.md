@@ -1,4 +1,9 @@
 ## 1.47.0 (Unreleased)
+
+FEATURES:
+
+* **New Data Source:** `aws_route53_delegation_set` [GH-6152]
+
 ## 1.46.0 (November 20, 2018)
 
 FEATURES:
