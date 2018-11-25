@@ -969,10 +969,10 @@
 		{
 			"checksumSHA1": "BXq9iFh96oyJIvbqSYGXLjgiSLw=",
 			"path": "github.com/aws/aws-sdk-go/service/route53resolver",
-			"revision": "f557567ff83b93530a0498d4bdb0eb616af70bb3",
-			"revisionTime": "2018-11-20T00:31:09Z",
-			"version": "v1.15.79",
-			"versionExact": "v1.15.79"
+			"revision": "66af558c91f83a793b4a0101f70742062982f611",
+			"revisionTime": "2018-11-21T19:28:15Z",
+			"version": "v1.15.81",
+			"versionExact": "v1.15.81"
 		},
 		{
 			"checksumSHA1": "9QjcQS7eJ5eff1xX14OrACHkKO0=",
