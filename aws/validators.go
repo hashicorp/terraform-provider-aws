@@ -541,6 +541,23 @@ func validateCIDRNetworkAddress(v interface{}, k string) (ws []string, errors []
 	return
 }
 
+// validateVPCCIDRNetworkAddress ensures that the string value is a valid VPC CIDR block that
+// represents a  valid VPC CIDR - it adds an error otherwise
+func validateVPCCIDRNetworkAddress(v interface{}, k string) (ws []string, errors []error) {
+	_, errors = validateCIDRNetworkAddress(v, k)
+	if len(errors) != 0 {
+		return
+	}
+	value := v.(string)
+
+	netmask, _ := strconv.Atoi(strings.Split(value, "/")[1])
+	if netmask < 16 || netmask > 28 {
+		errors = append(errors, fmt.Errorf(
+			"%q has invlalid block size. The allowed block size is between a /28 netmask and /16 netmask, got /%d", k, netmask))
+	}
+	return
+}
+
 func validateHTTPMethod() schema.SchemaValidateFunc {
 	return validation.StringInSlice([]string{
 		"ANY",

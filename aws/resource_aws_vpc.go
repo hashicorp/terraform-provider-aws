@@ -33,7 +33,7 @@ func resourceAwsVpc() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateCIDRNetworkAddress,
+				ValidateFunc: validateVPCCIDRNetworkAddress,
 			},
 
 			"instance_tenancy": {
