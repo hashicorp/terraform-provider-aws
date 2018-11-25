@@ -51,7 +51,9 @@ The following arguments are supported:
 * `policy` - (Required) The text of the policy. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](/docs/providers/aws/guides/iam-policy-documents.html).
 
 ## Import
- S3 bucket policies can be imported using the bucket name, e.g.
- ```
+
+S3 bucket policies can be imported using the bucket name, e.g.
+
+```
 $ terraform import aws_s3_bucket_policy.example my-bucket-name
 ```
