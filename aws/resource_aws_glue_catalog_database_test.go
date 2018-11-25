@@ -16,7 +16,7 @@ func TestAccAWSGlueCatalogDatabase_importBasic(t *testing.T) {
 	resourceName := "aws_glue_catalog_database.test"
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlueDatabaseDestroy,
@@ -35,7 +35,7 @@ func TestAccAWSGlueCatalogDatabase_importBasic(t *testing.T) {
 
 func TestAccAWSGlueCatalogDatabase_full(t *testing.T) {
 	rInt := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlueDatabaseDestroy,
@@ -138,7 +138,7 @@ func TestAccAWSGlueCatalogDatabase_recreates(t *testing.T) {
 	resourceName := "aws_glue_catalog_database.test"
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlueDatabaseDestroy,

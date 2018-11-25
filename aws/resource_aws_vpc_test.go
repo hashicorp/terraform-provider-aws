@@ -91,7 +91,7 @@ func testSweepVPCs(region string) error {
 func TestAccAWSVpc_importBasic(t *testing.T) {
 	resourceName := "aws_vpc.foo"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcDestroy,
@@ -112,7 +112,7 @@ func TestAccAWSVpc_importBasic(t *testing.T) {
 func TestAccAWSVpc_basic(t *testing.T) {
 	var vpc ec2.Vpc
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcDestroy,
@@ -141,7 +141,7 @@ func TestAccAWSVpc_basic(t *testing.T) {
 func TestAccAWSVpc_enableIpv6(t *testing.T) {
 	var vpc ec2.Vpc
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcDestroy,
@@ -194,7 +194,7 @@ func TestAccAWSVpc_enableIpv6(t *testing.T) {
 func TestAccAWSVpc_dedicatedTenancy(t *testing.T) {
 	var vpc ec2.Vpc
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcDestroy,
@@ -215,7 +215,7 @@ func TestAccAWSVpc_modifyTenancy(t *testing.T) {
 	var vpcDedicated ec2.Vpc
 	var vpcDefault ec2.Vpc
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcDestroy,
@@ -253,7 +253,7 @@ func TestAccAWSVpc_modifyTenancy(t *testing.T) {
 func TestAccAWSVpc_tags(t *testing.T) {
 	var vpc ec2.Vpc
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcDestroy,
@@ -284,7 +284,7 @@ func TestAccAWSVpc_tags(t *testing.T) {
 func TestAccAWSVpc_update(t *testing.T) {
 	var vpc ec2.Vpc
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcDestroy,
@@ -406,7 +406,7 @@ func testAccCheckVpcExists(n string, vpc *ec2.Vpc) resource.TestCheckFunc {
 
 // https://github.com/hashicorp/terraform/issues/1301
 func TestAccAWSVpc_bothDnsOptionsSet(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcDestroy,
@@ -426,7 +426,7 @@ func TestAccAWSVpc_bothDnsOptionsSet(t *testing.T) {
 
 // https://github.com/hashicorp/terraform/issues/10168
 func TestAccAWSVpc_DisabledDnsSupport(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcDestroy,
@@ -443,7 +443,7 @@ func TestAccAWSVpc_DisabledDnsSupport(t *testing.T) {
 }
 
 func TestAccAWSVpc_classiclinkOptionSet(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcDestroy,
@@ -460,7 +460,7 @@ func TestAccAWSVpc_classiclinkOptionSet(t *testing.T) {
 }
 
 func TestAccAWSVpc_classiclinkDnsSupportOptionSet(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcDestroy,

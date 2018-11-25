@@ -13,7 +13,7 @@ func TestAccDataSourceAWSMqBroker_basic(t *testing.T) {
 	prefix := "tf-acctest-d-mq-broker"
 	brokerName := fmt.Sprintf("%s-%s", prefix, rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{

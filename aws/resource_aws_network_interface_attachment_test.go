@@ -13,7 +13,7 @@ func TestAccAWSNetworkInterfaceAttachment_basic(t *testing.T) {
 	var conf ec2.NetworkInterface
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_network_interface.bar",
 		Providers:     testAccProviders,

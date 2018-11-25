@@ -14,7 +14,7 @@ import (
 
 func TestAccAWSAppautoscalingScheduledAction_dynamo(t *testing.T) {
 	ts := time.Now().AddDate(0, 0, 1).Format("2006-01-02T15:04:05")
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppautoscalingScheduledActionDestroy,
@@ -31,7 +31,7 @@ func TestAccAWSAppautoscalingScheduledAction_dynamo(t *testing.T) {
 
 func TestAccAWSAppautoscalingScheduledAction_ECS(t *testing.T) {
 	ts := time.Now().AddDate(0, 0, 1).Format("2006-01-02T15:04:05")
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppautoscalingScheduledActionDestroy,
@@ -48,7 +48,7 @@ func TestAccAWSAppautoscalingScheduledAction_ECS(t *testing.T) {
 
 func TestAccAWSAppautoscalingScheduledAction_EMR(t *testing.T) {
 	ts := time.Now().AddDate(0, 0, 1).Format("2006-01-02T15:04:05")
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppautoscalingScheduledActionDestroy,
@@ -65,7 +65,7 @@ func TestAccAWSAppautoscalingScheduledAction_EMR(t *testing.T) {
 
 func TestAccAWSAppautoscalingScheduledAction_SpotFleet(t *testing.T) {
 	ts := time.Now().AddDate(0, 0, 1).Format("2006-01-02T15:04:05")
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppautoscalingScheduledActionDestroy,

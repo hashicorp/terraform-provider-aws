@@ -15,7 +15,7 @@ func TestAccDataSourceAwsKmsAlias_AwsService(t *testing.T) {
 	name := "alias/aws/s3"
 	resourceName := "data.aws_kms_alias.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -38,7 +38,7 @@ func TestAccDataSourceAwsKmsAlias_CMK(t *testing.T) {
 	aliasResourceName := "aws_kms_alias.test"
 	datasourceAliasResourceName := "data.aws_kms_alias.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{

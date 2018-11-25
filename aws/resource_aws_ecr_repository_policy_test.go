@@ -15,7 +15,7 @@ import (
 func TestAccAWSEcrRepositoryPolicy_basic(t *testing.T) {
 	randString := acctest.RandString(10)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcrRepositoryPolicyDestroy,
@@ -33,7 +33,7 @@ func TestAccAWSEcrRepositoryPolicy_basic(t *testing.T) {
 func TestAccAWSEcrRepositoryPolicy_iam(t *testing.T) {
 	randString := acctest.RandString(10)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcrRepositoryPolicyDestroy,

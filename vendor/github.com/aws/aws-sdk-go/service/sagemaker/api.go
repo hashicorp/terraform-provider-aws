@@ -18,7 +18,7 @@ const opAddTags = "AddTags"
 // AddTagsRequest generates a "aws/request.Request" representing the
 // client's request for the AddTags operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -99,7 +99,7 @@ const opCreateEndpoint = "CreateEndpoint"
 // CreateEndpointRequest generates a "aws/request.Request" representing the
 // client's request for the CreateEndpoint operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -206,7 +206,7 @@ const opCreateEndpointConfig = "CreateEndpointConfig"
 // CreateEndpointConfigRequest generates a "aws/request.Request" representing the
 // client's request for the CreateEndpointConfig operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -304,7 +304,7 @@ const opCreateHyperParameterTuningJob = "CreateHyperParameterTuningJob"
 // CreateHyperParameterTuningJobRequest generates a "aws/request.Request" representing the
 // client's request for the CreateHyperParameterTuningJob operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -387,7 +387,7 @@ const opCreateModel = "CreateModel"
 // CreateModelRequest generates a "aws/request.Request" representing the
 // client's request for the CreateModel operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -493,7 +493,7 @@ const opCreateNotebookInstance = "CreateNotebookInstance"
 // CreateNotebookInstanceRequest generates a "aws/request.Request" representing the
 // client's request for the CreateNotebookInstance operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -609,7 +609,7 @@ const opCreateNotebookInstanceLifecycleConfig = "CreateNotebookInstanceLifecycle
 // CreateNotebookInstanceLifecycleConfigRequest generates a "aws/request.Request" representing the
 // client's request for the CreateNotebookInstanceLifecycleConfig operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -705,7 +705,7 @@ const opCreatePresignedNotebookInstanceUrl = "CreatePresignedNotebookInstanceUrl
 // CreatePresignedNotebookInstanceUrlRequest generates a "aws/request.Request" representing the
 // client's request for the CreatePresignedNotebookInstanceUrl operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -792,7 +792,7 @@ const opCreateTrainingJob = "CreateTrainingJob"
 // CreateTrainingJobRequest generates a "aws/request.Request" representing the
 // client's request for the CreateTrainingJob operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -910,7 +910,7 @@ const opCreateTransformJob = "CreateTransformJob"
 // CreateTransformJobRequest generates a "aws/request.Request" representing the
 // client's request for the CreateTransformJob operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1018,7 +1018,7 @@ const opDeleteEndpoint = "DeleteEndpoint"
 // DeleteEndpointRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteEndpoint operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1099,7 +1099,7 @@ const opDeleteEndpointConfig = "DeleteEndpointConfig"
 // DeleteEndpointConfigRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteEndpointConfig operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1177,7 +1177,7 @@ const opDeleteModel = "DeleteModel"
 // DeleteModelRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteModel operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1256,7 +1256,7 @@ const opDeleteNotebookInstance = "DeleteNotebookInstance"
 // DeleteNotebookInstanceRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteNotebookInstance operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1337,7 +1337,7 @@ const opDeleteNotebookInstanceLifecycleConfig = "DeleteNotebookInstanceLifecycle
 // DeleteNotebookInstanceLifecycleConfigRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteNotebookInstanceLifecycleConfig operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1413,7 +1413,7 @@ const opDeleteTags = "DeleteTags"
 // DeleteTagsRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteTags operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1489,7 +1489,7 @@ const opDescribeEndpoint = "DescribeEndpoint"
 // DescribeEndpointRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeEndpoint operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1563,7 +1563,7 @@ const opDescribeEndpointConfig = "DescribeEndpointConfig"
 // DescribeEndpointConfigRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeEndpointConfig operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1638,7 +1638,7 @@ const opDescribeHyperParameterTuningJob = "DescribeHyperParameterTuningJob"
 // DescribeHyperParameterTuningJobRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeHyperParameterTuningJob operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1717,7 +1717,7 @@ const opDescribeModel = "DescribeModel"
 // DescribeModelRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeModel operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1791,7 +1791,7 @@ const opDescribeNotebookInstance = "DescribeNotebookInstance"
 // DescribeNotebookInstanceRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeNotebookInstance operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1865,7 +1865,7 @@ const opDescribeNotebookInstanceLifecycleConfig = "DescribeNotebookInstanceLifec
 // DescribeNotebookInstanceLifecycleConfigRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeNotebookInstanceLifecycleConfig operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1941,7 +1941,7 @@ const opDescribeTrainingJob = "DescribeTrainingJob"
 // DescribeTrainingJobRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeTrainingJob operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2020,7 +2020,7 @@ const opDescribeTransformJob = "DescribeTransformJob"
 // DescribeTransformJobRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeTransformJob operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2099,7 +2099,7 @@ const opListEndpointConfigs = "ListEndpointConfigs"
 // ListEndpointConfigsRequest generates a "aws/request.Request" representing the
 // client's request for the ListEndpointConfigs operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2229,7 +2229,7 @@ const opListEndpoints = "ListEndpoints"
 // ListEndpointsRequest generates a "aws/request.Request" representing the
 // client's request for the ListEndpoints operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2359,7 +2359,7 @@ const opListHyperParameterTuningJobs = "ListHyperParameterTuningJobs"
 // ListHyperParameterTuningJobsRequest generates a "aws/request.Request" representing the
 // client's request for the ListHyperParameterTuningJobs operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2490,7 +2490,7 @@ const opListModels = "ListModels"
 // ListModelsRequest generates a "aws/request.Request" representing the
 // client's request for the ListModels operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2621,7 +2621,7 @@ const opListNotebookInstanceLifecycleConfigs = "ListNotebookInstanceLifecycleCon
 // ListNotebookInstanceLifecycleConfigsRequest generates a "aws/request.Request" representing the
 // client's request for the ListNotebookInstanceLifecycleConfigs operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2752,7 +2752,7 @@ const opListNotebookInstances = "ListNotebookInstances"
 // ListNotebookInstancesRequest generates a "aws/request.Request" representing the
 // client's request for the ListNotebookInstances operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2883,7 +2883,7 @@ const opListTags = "ListTags"
 // ListTagsRequest generates a "aws/request.Request" representing the
 // client's request for the ListTags operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3013,7 +3013,7 @@ const opListTrainingJobs = "ListTrainingJobs"
 // ListTrainingJobsRequest generates a "aws/request.Request" representing the
 // client's request for the ListTrainingJobs operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3143,7 +3143,7 @@ const opListTrainingJobsForHyperParameterTuningJob = "ListTrainingJobsForHyperPa
 // ListTrainingJobsForHyperParameterTuningJobRequest generates a "aws/request.Request" representing the
 // client's request for the ListTrainingJobsForHyperParameterTuningJob operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3279,7 +3279,7 @@ const opListTransformJobs = "ListTransformJobs"
 // ListTransformJobsRequest generates a "aws/request.Request" representing the
 // client's request for the ListTransformJobs operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3409,7 +3409,7 @@ const opStartNotebookInstance = "StartNotebookInstance"
 // StartNotebookInstanceRequest generates a "aws/request.Request" representing the
 // client's request for the StartNotebookInstance operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3495,7 +3495,7 @@ const opStopHyperParameterTuningJob = "StopHyperParameterTuningJob"
 // StopHyperParameterTuningJobRequest generates a "aws/request.Request" representing the
 // client's request for the StopHyperParameterTuningJob operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3582,7 +3582,7 @@ const opStopNotebookInstance = "StopNotebookInstance"
 // StopNotebookInstanceRequest generates a "aws/request.Request" representing the
 // client's request for the StopNotebookInstance operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3665,7 +3665,7 @@ const opStopTrainingJob = "StopTrainingJob"
 // StopTrainingJobRequest generates a "aws/request.Request" representing the
 // client's request for the StopTrainingJob operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3758,7 +3758,7 @@ const opStopTransformJob = "StopTransformJob"
 // StopTransformJobRequest generates a "aws/request.Request" representing the
 // client's request for the StopTransformJob operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3844,7 +3844,7 @@ const opUpdateEndpoint = "UpdateEndpoint"
 // UpdateEndpointRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateEndpoint operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3934,7 +3934,7 @@ const opUpdateEndpointWeightsAndCapacities = "UpdateEndpointWeightsAndCapacities
 // UpdateEndpointWeightsAndCapacitiesRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateEndpointWeightsAndCapacities operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4019,7 +4019,7 @@ const opUpdateNotebookInstance = "UpdateNotebookInstance"
 // UpdateNotebookInstanceRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateNotebookInstance operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4102,7 +4102,7 @@ const opUpdateNotebookInstanceLifecycleConfig = "UpdateNotebookInstanceLifecycle
 // UpdateNotebookInstanceLifecycleConfigRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateNotebookInstanceLifecycleConfig operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.

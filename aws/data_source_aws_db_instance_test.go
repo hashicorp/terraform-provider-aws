@@ -11,7 +11,7 @@ import (
 
 func TestAccAWSDbInstanceDataSource_basic(t *testing.T) {
 	rInt := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -43,7 +43,7 @@ func TestAccAWSDbInstanceDataSource_ec2Classic(t *testing.T) {
 
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{

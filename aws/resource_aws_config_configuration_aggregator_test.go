@@ -67,7 +67,7 @@ func TestAccAWSConfigConfigurationAggregator_account(t *testing.T) {
 	rString := acctest.RandString(10)
 	expectedName := fmt.Sprintf("tf-%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSConfigConfigurationAggregatorDestroy,
@@ -99,7 +99,7 @@ func TestAccAWSConfigConfigurationAggregator_organization(t *testing.T) {
 	rString := acctest.RandString(10)
 	expectedName := fmt.Sprintf("tf-%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSConfigConfigurationAggregatorDestroy,
@@ -127,7 +127,7 @@ func TestAccAWSConfigConfigurationAggregator_organization(t *testing.T) {
 func TestAccAWSConfigConfigurationAggregator_switch(t *testing.T) {
 	rString := acctest.RandString(10)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSConfigConfigurationAggregatorDestroy,
