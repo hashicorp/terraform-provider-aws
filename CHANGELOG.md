@@ -6,6 +6,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* resource/aws_kinesis_firehose_delivery_stream: Add `tags` argument [GH-6548]
 * resource/aws_s3_bucket_policy: Support resource import [GH-6543]
 
 BUG FIXES:
