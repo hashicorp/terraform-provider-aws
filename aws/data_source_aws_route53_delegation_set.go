@@ -56,7 +56,9 @@ func dataSourceAwsDelegationSetRead(d *schema.ResourceData, meta interface{}) er
 			servers = append(servers, *server)
 		}
 	}
-	d.Set("name_servers", servers)
+	if err := d.Set("name_servers", expandNameServers(resp.DelegationSet.NameServers)); err != nil {
+		return fmt.Errorf("error setting name_servers: %s", err)
+	}
 
 	return nil
 }

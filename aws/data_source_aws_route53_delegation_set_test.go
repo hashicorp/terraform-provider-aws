@@ -8,8 +8,8 @@ import (
 )
 
 func TestAccDataSourceRoute53DelegationSet_basic(t *testing.T) {
-	dataSourceName := "data.aws_route53_delegation_set.test"
-	resourceName := "aws_route53_delegation_set.test"
+	dataSourceName := "data.aws_route53_delegation_set.dset"
+	resourceName := "aws_route53_delegation_set.dset"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -18,10 +18,6 @@ func TestAccDataSourceRoute53DelegationSet_basic(t *testing.T) {
 			{
 				Config: testAccAWSDataSourceAWSRoute53DelegationSetConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(
-						dataSourceName, "caller_reference",
-						resourceName, "caller_reference",
-					),
 					resource.TestCheckResourceAttrPair(
 						dataSourceName, "name_servers.#",
 						resourceName, "name_servers.#",
