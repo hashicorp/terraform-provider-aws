@@ -14,6 +14,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_elastic_transcoder_preset: Properly read `video_codec_options` into Terraform state [GH-6545]
+* resource/aws_subnet: Always set `ipv6_cidr_block_association_id` and `ipv6_cidr_block` attributes in Terraform state [GH-6533]
 
 ## 1.46.0 (November 20, 2018)
 
