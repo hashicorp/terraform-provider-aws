@@ -8398,6 +8398,10 @@ type HlsGroupSettings struct {
 	// Period of insertion of EXT-X-PROGRAM-DATE-TIME entry, in seconds.
 	ProgramDateTimePeriod *int64 `locationName:"programDateTimePeriod" type:"integer"`
 
+	// When set to "enabled", includes the media playlists from both pipelines in
+	// the master manifest (.m3u8) file.
+	RedundantManifest *string `locationName:"redundantManifest" type:"string" enum:"HlsRedundantManifest"`
+
 	// Length of MPEG-2 Transport Stream segments to create (in seconds). Note that
 	// segments will end on the next keyframe after this number of seconds, so actual
 	// segment length may be longer.
@@ -8643,6 +8647,12 @@ func (s *HlsGroupSettings) SetProgramDateTime(v string) *HlsGroupSettings {
 // SetProgramDateTimePeriod sets the ProgramDateTimePeriod field's value.
 func (s *HlsGroupSettings) SetProgramDateTimePeriod(v int64) *HlsGroupSettings {
 	s.ProgramDateTimePeriod = &v
+	return s
+}
+
+// SetRedundantManifest sets the RedundantManifest field's value.
+func (s *HlsGroupSettings) SetRedundantManifest(v string) *HlsGroupSettings {
+	s.RedundantManifest = &v
 	return s
 }
 
@@ -12398,6 +12408,11 @@ type RtmpGroupSettings struct {
 	// 1 video will be passed.
 	CaptionData *string `locationName:"captionData" type:"string" enum:"RtmpCaptionData"`
 
+	// Controls the behavior of this RTMP group if input becomes unavailable.- emitOutput:
+	// Emit a slate until input returns.- pauseOutput: Stop transmitting data until
+	// input returns. This does not close the underlying RTMP connection.
+	InputLossAction *string `locationName:"inputLossAction" type:"string" enum:"InputLossActionForRtmpOut"`
+
 	// If a streaming output fails, number of seconds to wait until a restart is
 	// initiated. A value of 0 means never restart.
 	RestartDelay *int64 `locationName:"restartDelay" type:"integer"`
@@ -12447,6 +12462,12 @@ func (s *RtmpGroupSettings) SetCacheLength(v int64) *RtmpGroupSettings {
 // SetCaptionData sets the CaptionData field's value.
 func (s *RtmpGroupSettings) SetCaptionData(v string) *RtmpGroupSettings {
 	s.CaptionData = &v
+	return s
+}
+
+// SetInputLossAction sets the InputLossAction field's value.
+func (s *RtmpGroupSettings) SetInputLossAction(v string) *RtmpGroupSettings {
+	s.InputLossAction = &v
 	return s
 }
 
@@ -16007,6 +16028,14 @@ const (
 )
 
 const (
+	// HlsRedundantManifestDisabled is a HlsRedundantManifest enum value
+	HlsRedundantManifestDisabled = "DISABLED"
+
+	// HlsRedundantManifestEnabled is a HlsRedundantManifest enum value
+	HlsRedundantManifestEnabled = "ENABLED"
+)
+
+const (
 	// HlsSegmentationModeUseInputSegmentation is a HlsSegmentationMode enum value
 	HlsSegmentationModeUseInputSegmentation = "USE_INPUT_SEGMENTATION"
 
@@ -16102,6 +16131,14 @@ const (
 
 	// InputLossActionForMsSmoothOutPauseOutput is a InputLossActionForMsSmoothOut enum value
 	InputLossActionForMsSmoothOutPauseOutput = "PAUSE_OUTPUT"
+)
+
+const (
+	// InputLossActionForRtmpOutEmitOutput is a InputLossActionForRtmpOut enum value
+	InputLossActionForRtmpOutEmitOutput = "EMIT_OUTPUT"
+
+	// InputLossActionForRtmpOutPauseOutput is a InputLossActionForRtmpOut enum value
+	InputLossActionForRtmpOutPauseOutput = "PAUSE_OUTPUT"
 )
 
 const (

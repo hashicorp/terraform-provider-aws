@@ -166,7 +166,7 @@ func (c *Redshift) AuthorizeClusterSecurityGroupIngressRequest(input *AuthorizeC
 //
 // If you authorize access to an Amazon EC2 security group, specify EC2SecurityGroupName
 // and EC2SecurityGroupOwnerId. The Amazon EC2 security group and Amazon Redshift
-// cluster must be in the same AWS region.
+// cluster must be in the same AWS Region.
 //
 // If you authorize access to a CIDR/IP address range, specify CIDRIP. For an
 // overview of CIDR blocks, see the Wikipedia article on Classless Inter-Domain
@@ -458,7 +458,7 @@ func (c *Redshift) BatchModifyClusterSnapshotsRequest(input *BatchModifyClusterS
 //
 // Returned Error Codes:
 //   * ErrCodeInvalidRetentionPeriodFault "InvalidRetentionPeriodFault"
-//   The retention period specified is either in the past or is not a valide value.
+//   The retention period specified is either in the past or is not a valid value.
 //
 //   The value must be either -1 or an integer between 1 and 3,653.
 //
@@ -658,7 +658,7 @@ func (c *Redshift) CopyClusterSnapshotRequest(input *CopyClusterSnapshotInput) (
 //   snapshots.
 //
 //   * ErrCodeInvalidRetentionPeriodFault "InvalidRetentionPeriodFault"
-//   The retention period specified is either in the past or is not a valide value.
+//   The retention period specified is either in the past or is not a valid value.
 //
 //   The value must be either -1 or an integer between 1 and 3,653.
 //
@@ -818,7 +818,7 @@ func (c *Redshift) CreateClusterRequest(input *CreateClusterInput) (req *request
 //   We could not find the specified snapshot schedule.
 //
 //   * ErrCodeInvalidRetentionPeriodFault "InvalidRetentionPeriodFault"
-//   The retention period specified is either in the past or is not a valide value.
+//   The retention period specified is either in the past or is not a valid value.
 //
 //   The value must be either -1 or an integer between 1 and 3,653.
 //
@@ -1121,7 +1121,7 @@ func (c *Redshift) CreateClusterSnapshotRequest(input *CreateClusterSnapshotInpu
 //   The tag is invalid.
 //
 //   * ErrCodeInvalidRetentionPeriodFault "InvalidRetentionPeriodFault"
-//   The retention period specified is either in the past or is not a valide value.
+//   The retention period specified is either in the past or is not a valid value.
 //
 //   The value must be either -1 or an integer between 1 and 3,653.
 //
@@ -1972,7 +1972,7 @@ func (c *Redshift) DeleteClusterRequest(input *DeleteClusterInput) (req *request
 //   snapshots.
 //
 //   * ErrCodeInvalidRetentionPeriodFault "InvalidRetentionPeriodFault"
-//   The retention period specified is either in the past or is not a valide value.
+//   The retention period specified is either in the past or is not a valid value.
 //
 //   The value must be either -1 or an integer between 1 and 3,653.
 //
@@ -5079,7 +5079,7 @@ func (c *Redshift) DescribeOrderableClusterOptionsRequest(input *DescribeOrderab
 //
 // Returns a list of orderable cluster options. Before you create a new cluster
 // you can use this operation to find what options are available, such as the
-// EC2 Availability Zones (AZ) in the specific AWS region that you can specify,
+// EC2 Availability Zones (AZ) in the specific AWS Region that you can specify,
 // and the node types you can request. The node types differ by available storage,
 // memory, CPU and price. With the cost involved you might want to obtain a
 // list of cluster options in the specific region and specify values when creating
@@ -6327,7 +6327,7 @@ func (c *Redshift) EnableSnapshotCopyRequest(input *EnableSnapshotCopyInput) (re
 //   requests made by Amazon Redshift on your behalf. Wait and retry the request.
 //
 //   * ErrCodeInvalidRetentionPeriodFault "InvalidRetentionPeriodFault"
-//   The retention period specified is either in the past or is not a valide value.
+//   The retention period specified is either in the past or is not a valid value.
 //
 //   The value must be either -1 or an integer between 1 and 3,653.
 //
@@ -6679,7 +6679,7 @@ func (c *Redshift) ModifyClusterRequest(input *ModifyClusterInput) (req *request
 //   The provided cluster track name is not valid.
 //
 //   * ErrCodeInvalidRetentionPeriodFault "InvalidRetentionPeriodFault"
-//   The retention period specified is either in the past or is not a valide value.
+//   The retention period specified is either in the past or is not a valid value.
 //
 //   The value must be either -1 or an integer between 1 and 3,653.
 //
@@ -7106,7 +7106,7 @@ func (c *Redshift) ModifyClusterSnapshotRequest(input *ModifyClusterSnapshotInpu
 //   The snapshot identifier does not refer to an existing cluster snapshot.
 //
 //   * ErrCodeInvalidRetentionPeriodFault "InvalidRetentionPeriodFault"
-//   The retention period specified is either in the past or is not a valide value.
+//   The retention period specified is either in the past or is not a valid value.
 //
 //   The value must be either -1 or an integer between 1 and 3,653.
 //
@@ -7476,13 +7476,13 @@ func (c *Redshift) ModifySnapshotCopyRetentionPeriodRequest(input *ModifySnapsho
 
 // ModifySnapshotCopyRetentionPeriod API operation for Amazon Redshift.
 //
-// Modifies the number of days to retain snapshots in the destination region
-// after they are copied from the source region. By default, this only changes
-// the retention period of copied automated snapshots. The retention periods
-// for both new and existing copied automated snapshots will be updated with
-// the new retention period. You can set the manual option to change only the
-// retention periods of copied manual snapshots. If you set this option only
-// newly copied manual snapshots will have the new retention period
+// Modifies the number of days to retain snapshots in the destination AWS Region
+// after they are copied from the source AWS Region. By default, this operation
+// only changes the retention period of copied automated snapshots. The retention
+// periods for both new and existing copied automated snapshots are updated
+// with the new retention period. You can set the manual option to change only
+// the retention periods of copied manual snapshots. If you set this option,
+// only newly copied manual snapshots have the new retention period.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -7505,7 +7505,7 @@ func (c *Redshift) ModifySnapshotCopyRetentionPeriodRequest(input *ModifySnapsho
 //   The specified cluster is not in the available state.
 //
 //   * ErrCodeInvalidRetentionPeriodFault "InvalidRetentionPeriodFault"
-//   The retention period specified is either in the past or is not a valide value.
+//   The retention period specified is either in the past or is not a valid value.
 //
 //   The value must be either -1 or an integer between 1 and 3,653.
 //
@@ -7575,8 +7575,8 @@ func (c *Redshift) ModifySnapshotScheduleRequest(input *ModifySnapshotScheduleIn
 
 // ModifySnapshotSchedule API operation for Amazon Redshift.
 //
-// Modifies a snapshot schedule. Any schedule associate with a cluster will
-// be modified asynchronously.
+// Modifies a snapshot schedule. Any schedule associated with a cluster is modified
+// asynchronously.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -8951,7 +8951,7 @@ func (s *AvailabilityZone) SetSupportedPlatforms(v []*SupportedPlatform) *Availa
 type BatchDeleteClusterSnapshotsInput struct {
 	_ struct{} `type:"structure"`
 
-	// A list of indentifiers for the snapshots you want to delete.
+	// A list of identifiers for the snapshots that you want to delete.
 	//
 	// Identifiers is a required field
 	Identifiers []*DeleteClusterSnapshotMessage `locationNameList:"DeleteClusterSnapshotMessage" type:"list" required:"true"`
@@ -9345,7 +9345,7 @@ func (s *CancelResizeOutput) SetTotalResizeDataInMegaBytes(v int64) *CancelResiz
 type Cluster struct {
 	_ struct{} `type:"structure"`
 
-	// A Boolean value that, if true, indicates that major version upgrades will
+	// A boolean value that, if true, indicates that major version upgrades will
 	// be applied automatically to the cluster during the maintenance window.
 	AllowVersionUpgrade *bool `type:"boolean"`
 
@@ -9390,6 +9390,10 @@ type Cluster struct {
 	// The current state of the cluster. Possible values are the following:
 	//
 	//    * available
+	//
+	//    * available, prep-for-resize
+	//
+	//    * available, resize-cleanup
 	//
 	//    * cancelling-resize
 	//
@@ -9450,7 +9454,7 @@ type Cluster struct {
 	// method.
 	ElasticResizeNumberOfNodeOptions *string `type:"string"`
 
-	// A Boolean value that, if true, indicates that data in the cluster is encrypted
+	// A boolean value that, if true, indicates that data in the cluster is encrypted
 	// at rest.
 	Encrypted *bool `type:"boolean"`
 
@@ -9487,10 +9491,10 @@ type Cluster struct {
 	MaintenanceTrackName *string `type:"string"`
 
 	// The default number of days to retain a manual snapshot. If the value is -1,
-	// the snapshot is retained indefinitely. This setting does not change the retention
+	// the snapshot is retained indefinitely. This setting doesn't change the retention
 	// period of existing snapshots.
 	//
-	// The value must be either -1 or an integer between 1 and 3,653
+	// The value must be either -1 or an integer between 1 and 3,653.
 	ManualSnapshotRetentionPeriod *int64 `type:"integer"`
 
 	// The master user name for the cluster. This name is used to connect to the
@@ -9517,7 +9521,7 @@ type Cluster struct {
 	// system maintenance can occur.
 	PreferredMaintenanceWindow *string `type:"string"`
 
-	// A Boolean value that, if true, indicates that the cluster can be accessed
+	// A boolean value that, if true, indicates that the cluster can be accessed
 	// from a public network.
 	PubliclyAccessible *bool `type:"boolean"`
 
@@ -10712,10 +10716,10 @@ type CreateClusterInput struct {
 	MaintenanceTrackName *string `type:"string"`
 
 	// The default number of days to retain a manual snapshot. If the value is -1,
-	// the snapshot is retained indefinitely. This setting does not change the retention
+	// the snapshot is retained indefinitely. This setting doesn't change the retention
 	// period of existing snapshots.
 	//
-	// The value must be either -1 or an integer between 1 and 3,653
+	// The value must be either -1 or an integer between 1 and 3,653.
 	ManualSnapshotRetentionPeriod *int64 `type:"integer"`
 
 	// The password associated with the master user account for the cluster that
@@ -11494,8 +11498,8 @@ func (s *CreateClusterSubnetGroupOutput) SetClusterSubnetGroup(v *ClusterSubnetG
 type CreateEventSubscriptionInput struct {
 	_ struct{} `type:"structure"`
 
-	// A Boolean value; set to true to activate the subscription, set to false to
-	// create the subscription but not active it.
+	// A boolean value; set to true to activate the subscription, and set to false
+	// to create the subscription but not activate it.
 	Enabled *bool `type:"boolean"`
 
 	// Specifies the Amazon Redshift event categories to be published by the event
@@ -11979,7 +11983,7 @@ type CreateSnapshotScheduleInput struct {
 	NextInvocations *int64 `type:"integer"`
 
 	// The definition of the snapshot schedule. The definition is made up of schedule
-	// expressions. For example, "cron(30 12 *)" or "rate(12 hours)".
+	// expressions, for example "cron(30 12 *)" or "rate(12 hours)".
 	ScheduleDefinitions []*string `locationNameList:"ScheduleDefinition" type:"list"`
 
 	// The description of the snapshot schedule.
@@ -16235,18 +16239,18 @@ type EnableSnapshotCopyInput struct {
 	// ClusterIdentifier is a required field
 	ClusterIdentifier *string `type:"string" required:"true"`
 
-	// The destination region that you want to copy snapshots to.
+	// The destination AWS Region that you want to copy snapshots to.
 	//
-	// Constraints: Must be the name of a valid region. For more information, see
-	// Regions and Endpoints (http://docs.aws.amazon.com/general/latest/gr/rande.html#redshift_region)
+	// Constraints: Must be the name of a valid AWS Region. For more information,
+	// see Regions and Endpoints (http://docs.aws.amazon.com/general/latest/gr/rande.html#redshift_region)
 	// in the Amazon Web Services General Reference.
 	//
 	// DestinationRegion is a required field
 	DestinationRegion *string `type:"string" required:"true"`
 
-	// The number of days to retain newly copied snapshots in the destination region
-	// after they are copied from the source region. If the value is -1, the manual
-	// snapshot is retained indefinitely.
+	// The number of days to retain newly copied snapshots in the destination AWS
+	// Region after they are copied from the source AWS Region. If the value is
+	// -1, the manual snapshot is retained indefinitely.
 	//
 	// The value must be either -1 or an integer between 1 and 3,653.
 	ManualSnapshotRetentionPeriod *int64 `type:"integer"`
@@ -16556,8 +16560,8 @@ type EventSubscription struct {
 	// subscription.
 	CustomerAwsId *string `type:"string"`
 
-	// A Boolean value indicating whether the subscription is enabled. true indicates
-	// the subscription is enabled.
+	// A boolean value indicating whether the subscription is enabled; true indicates
+	// that the subscription is enabled.
 	Enabled *bool `type:"boolean"`
 
 	// The list of Amazon Redshift event categories specified in the event notification
@@ -17571,7 +17575,7 @@ type ModifyClusterInput struct {
 
 	// The default for number of days that a newly created manual snapshot is retained.
 	// If the value is -1, the manual snapshot is retained indefinitely. This value
-	// will not retroactively change the retention periods of existing manual snapshots
+	// doesn't retroactively change the retention periods of existing manual snapshots.
 	//
 	// The value must be either -1 or an integer between 1 and 3,653.
 	//
@@ -18120,8 +18124,8 @@ type ModifyClusterSnapshotScheduleInput struct {
 	// and the schedule.
 	DisassociateSchedule *bool `type:"boolean"`
 
-	// A unique alphanumeric identifier for the schedule you want to associate with
-	// the cluster.
+	// A unique alphanumeric identifier for the schedule that you want to associate
+	// with the cluster.
 	ScheduleIdentifier *string `type:"string"`
 }
 
@@ -18408,7 +18412,7 @@ type ModifySnapshotCopyRetentionPeriodInput struct {
 
 	// The unique identifier of the cluster for which you want to change the retention
 	// period for either automated or manual snapshots that are copied to a destination
-	// region.
+	// AWS Region.
 	//
 	// Constraints: Must be the valid name of an existing cluster that has cross-region
 	// snapshot copy enabled.
@@ -18420,14 +18424,14 @@ type ModifySnapshotCopyRetentionPeriodInput struct {
 	// manual snapshots instead of automated snapshots.
 	Manual *bool `type:"boolean"`
 
-	// The number of days to retain automated snapshots in the destination region
-	// after they are copied from the source region.
+	// The number of days to retain automated snapshots in the destination AWS Region
+	// after they are copied from the source AWS Region.
 	//
 	// By default, this only changes the retention period of copied automated snapshots.
 	//
 	// If you decrease the retention period for automated snapshots that are copied
-	// to a destination region, Amazon Redshift will delete any existing automated
-	// snapshots that were copied to the destination region and that fall outside
+	// to a destination AWS Region, Amazon Redshift deletes any existing automated
+	// snapshots that were copied to the destination AWS Region and that fall outside
 	// of the new retention period.
 	//
 	// Constraints: Must be at least 1 and no more than 35 for automated snapshots.
@@ -18516,7 +18520,7 @@ type ModifySnapshotScheduleInput struct {
 	_ struct{} `type:"structure"`
 
 	// An updated list of schedule definitions. A schedule definition is made up
-	// of schedule expressions. For example, "cron(30 12 *)" or "rate(12 hours)".
+	// of schedule expressions, for example, "cron(30 12 *)" or "rate(12 hours)".
 	//
 	// ScheduleDefinitions is a required field
 	ScheduleDefinitions []*string `locationNameList:"ScheduleDefinition" type:"list" required:"true"`
@@ -20516,8 +20520,8 @@ type Snapshot struct {
 	// The list of node types that this cluster snapshot is able to restore into.
 	RestorableNodeTypes []*string `locationNameList:"NodeType" type:"list"`
 
-	// The time (UTC) when Amazon Redshift began the snapshot. A snapshot contains
-	// a copy of the cluster data as of this exact time.
+	// The time (in UTC format) when Amazon Redshift began the snapshot. A snapshot
+	// contains a copy of the cluster data as of this exact time.
 	SnapshotCreateTime *time.Time `type:"timestamp"`
 
 	// The snapshot identifier that is provided in the request.
@@ -20527,14 +20531,14 @@ type Snapshot struct {
 	SnapshotRetentionStartTime *time.Time `type:"timestamp"`
 
 	// The snapshot type. Snapshots created using CreateClusterSnapshot and CopyClusterSnapshot
-	// will be of type "manual".
+	// are of type "manual".
 	SnapshotType *string `type:"string"`
 
 	// The source region from which the snapshot was copied.
 	SourceRegion *string `type:"string"`
 
 	// The snapshot status. The value of the status depends on the API operation
-	// used.
+	// used:
 	//
 	//    * CreateClusterSnapshot and CopyClusterSnapshot returns status as "creating".
 	//
@@ -21245,7 +21249,7 @@ func (s *Tag) SetValue(v string) *Tag {
 type TaggedResource struct {
 	_ struct{} `type:"structure"`
 
-	// The Amazon Resource Name (ARN) with which the tag is associated. For example,
+	// The Amazon Resource Name (ARN) with which the tag is associated, for example:
 	// arn:aws:redshift:us-east-1:123456789:cluster:t1.
 	ResourceName *string `type:"string"`
 
