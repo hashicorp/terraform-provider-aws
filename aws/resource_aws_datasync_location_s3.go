@@ -128,7 +128,11 @@ func resourceAwsDataSyncLocationS3Read(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("error reading DataSync Location S3 (%s) tags: %s", d.Id(), err)
 	}
 
-	_, _, subdirectory, err := dataSyncParseLocationURI(aws.StringValue(output.LocationUri))
+	subdirectory, err := dataSyncParseLocationURI(aws.StringValue(output.LocationUri))
+
+	if err != nil {
+		return fmt.Errorf("error parsing Location S3 (%s) URI (%s): %s", d.Id(), aws.StringValue(output.LocationUri), err)
+	}
 
 	d.Set("arn", output.LocationArn)
 

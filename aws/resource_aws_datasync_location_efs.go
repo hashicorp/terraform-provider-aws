@@ -135,7 +135,11 @@ func resourceAwsDataSyncLocationEfsRead(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("error reading DataSync Location EFS (%s) tags: %s", d.Id(), err)
 	}
 
-	_, _, subdirectory, err := dataSyncParseLocationURI(aws.StringValue(output.LocationUri))
+	subdirectory, err := dataSyncParseLocationURI(aws.StringValue(output.LocationUri))
+
+	if err != nil {
+		return fmt.Errorf("error parsing Location EFS (%s) URI (%s): %s", d.Id(), aws.StringValue(output.LocationUri), err)
+	}
 
 	d.Set("arn", output.LocationArn)
 

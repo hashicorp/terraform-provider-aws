@@ -8,14 +8,14 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-func dataSyncParseLocationURI(uri string) (string, string, string, error) {
+func dataSyncParseLocationURI(uri string) (string, error) {
 	parsedURL, err := url.ParseRequestURI(uri)
 
 	if err != nil {
-		return "", "", "", err
+		return "", err
 	}
 
-	return parsedURL.Scheme, parsedURL.Host, parsedURL.Path, nil
+	return parsedURL.Path, nil
 }
 
 func expandDataSyncEc2Config(l []interface{}) *datasync.Ec2Config {
