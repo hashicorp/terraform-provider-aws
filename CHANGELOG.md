@@ -9,6 +9,7 @@ ENHANCEMENTS:
 
 * resource/aws_ecs_service: Add `enable_ecs_managed_tags` argument [GH-6544]
 * resource/aws_kinesis_firehose_delivery_stream: Add `tags` argument [GH-6548]
+* resource/aws_organizations_organization: Add `aws_service_access_principals` argument [GH-6581]
 * resource/aws_s3_bucket_policy: Support resource import [GH-6543]
 * resource/aws_vpc: Support plan-time validation for `cidr_block` block size [GH-6577]
 
