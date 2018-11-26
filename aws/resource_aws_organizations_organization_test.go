@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/organizations"
@@ -9,7 +10,8 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func testAccAwsOrganizationsOrganization_importBasic(t *testing.T) {
+func testAccAwsOrganizationsOrganization_basic(t *testing.T) {
+	var organization organizations.Organization
 	resourceName := "aws_organizations_organization.test"
 
 	resource.Test(t, resource.TestCase{
@@ -19,8 +21,15 @@ func testAccAwsOrganizationsOrganization_importBasic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsOrganizationsOrganizationConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsOrganizationsOrganizationExists(resourceName, &organization),
+					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "organizations", regexp.MustCompile(`organization/o-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "feature_set", organizations.OrganizationFeatureSetAll),
+					testAccMatchResourceAttrGlobalARN(resourceName, "master_account_arn", "organizations", regexp.MustCompile(`account/o-.+/.+`)),
+					resource.TestMatchResourceAttr(resourceName, "master_account_email", regexp.MustCompile(`.+@.+`)),
+					testAccCheckResourceAttrAccountID(resourceName, "master_account_id"),
+				),
 			},
-
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -30,8 +39,9 @@ func testAccAwsOrganizationsOrganization_importBasic(t *testing.T) {
 	})
 }
 
-func testAccAwsOrganizationsOrganization_basic(t *testing.T) {
+func testAccAwsOrganizationsOrganization_FeatureSet(t *testing.T) {
 	var organization organizations.Organization
+	resourceName := "aws_organizations_organization.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
@@ -39,36 +49,16 @@ func testAccAwsOrganizationsOrganization_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAwsOrganizationsOrganizationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsOrganizationsOrganizationConfig,
+				Config: testAccAwsOrganizationsOrganizationConfigFeatureSet(organizations.OrganizationFeatureSetConsolidatedBilling),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsOrganizationsOrganizationExists("aws_organizations_organization.test", &organization),
-					resource.TestCheckResourceAttr("aws_organizations_organization.test", "feature_set", organizations.OrganizationFeatureSetAll),
-					resource.TestCheckResourceAttrSet("aws_organizations_organization.test", "arn"),
-					resource.TestCheckResourceAttrSet("aws_organizations_organization.test", "master_account_arn"),
-					resource.TestCheckResourceAttrSet("aws_organizations_organization.test", "master_account_email"),
-					resource.TestCheckResourceAttrSet("aws_organizations_organization.test", "feature_set"),
+					testAccCheckAwsOrganizationsOrganizationExists(resourceName, &organization),
+					resource.TestCheckResourceAttr(resourceName, "feature_set", organizations.OrganizationFeatureSetConsolidatedBilling),
 				),
 			},
-		},
-	})
-}
-
-func testAccAwsOrganizationsOrganization_consolidatedBilling(t *testing.T) {
-	var organization organizations.Organization
-
-	feature_set := organizations.OrganizationFeatureSetConsolidatedBilling
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsOrganizationsOrganizationDestroy,
-		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsOrganizationsOrganizationConfigConsolidatedBilling(feature_set),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsOrganizationsOrganizationExists("aws_organizations_organization.test", &organization),
-					resource.TestCheckResourceAttr("aws_organizations_organization.test", "feature_set", feature_set),
-				),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -86,10 +76,11 @@ func testAccCheckAwsOrganizationsOrganizationDestroy(s *terraform.State) error {
 
 		resp, err := conn.DescribeOrganization(params)
 
+		if isAWSErr(err, organizations.ErrCodeAWSOrganizationsNotInUseException, "") {
+			return nil
+		}
+
 		if err != nil {
-			if isAWSErr(err, organizations.ErrCodeAWSOrganizationsNotInUseException, "") {
-				return nil
-			}
 			return err
 		}
 
@@ -133,10 +124,10 @@ func testAccCheckAwsOrganizationsOrganizationExists(n string, a *organizations.O
 
 const testAccAwsOrganizationsOrganizationConfig = "resource \"aws_organizations_organization\" \"test\" {}"
 
-func testAccAwsOrganizationsOrganizationConfigConsolidatedBilling(feature_set string) string {
+func testAccAwsOrganizationsOrganizationConfigFeatureSet(featureSet string) string {
 	return fmt.Sprintf(`
 resource "aws_organizations_organization" "test" {
-  feature_set = "%s"
+  feature_set = %q
 }
-`, feature_set)
+`, featureSet)
 }
