@@ -17,14 +17,15 @@ import (
 func TestAccAWSCloudTrail(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Trail": {
-			"basic":         testAccAWSCloudTrail_basic,
-			"cloudwatch":    testAccAWSCloudTrail_cloudwatch,
-			"enableLogging": testAccAWSCloudTrail_enable_logging,
-			"isMultiRegion": testAccAWSCloudTrail_is_multi_region,
-			"logValidation": testAccAWSCloudTrail_logValidation,
-			"kmsKey":        testAccAWSCloudTrail_kmsKey,
-			"tags":          testAccAWSCloudTrail_tags,
-			"eventSelector": testAccAWSCloudTrail_event_selector,
+			"basic":                      testAccAWSCloudTrail_basic,
+			"cloudwatch":                 testAccAWSCloudTrail_cloudwatch,
+			"enableLogging":              testAccAWSCloudTrail_enable_logging,
+			"includeGlobalServiceEvents": testAccAWSCloudTrail_include_global_service_events,
+			"isMultiRegion":              testAccAWSCloudTrail_is_multi_region,
+			"logValidation":              testAccAWSCloudTrail_logValidation,
+			"kmsKey":                     testAccAWSCloudTrail_kmsKey,
+			"tags":                       testAccAWSCloudTrail_tags,
+			"eventSelector":              testAccAWSCloudTrail_event_selector,
 		},
 	}
 
@@ -39,29 +40,6 @@ func TestAccAWSCloudTrail(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestAccAWSCloudTrail_importBasic(t *testing.T) {
-	resourceName := "aws_cloudtrail.foobar"
-	cloudTrailRandInt := acctest.RandInt()
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSCloudTrailDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSCloudTrailConfig(cloudTrailRandInt),
-			},
-
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"enable_log_file_validation", "is_multi_region_trail", "include_global_service_events", "enable_logging"},
-			},
-		},
-	})
 }
 
 func testAccAWSCloudTrail_basic(t *testing.T) {
@@ -81,6 +59,11 @@ func testAccAWSCloudTrail_basic(t *testing.T) {
 					testAccCheckCloudTrailLogValidationEnabled("aws_cloudtrail.foobar", false, &trail),
 					testAccCheckCloudTrailKmsKeyIdEquals("aws_cloudtrail.foobar", "", &trail),
 				),
+			},
+			{
+				ResourceName:      "aws_cloudtrail.foobar",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSCloudTrailConfigModified(cloudTrailRandInt),
@@ -114,6 +97,11 @@ func testAccAWSCloudTrail_cloudwatch(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      "aws_cloudtrail.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccAWSCloudTrailConfigCloudWatchModified(randInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudTrailExists("aws_cloudtrail.test", &trail),
@@ -144,6 +132,11 @@ func testAccAWSCloudTrail_enable_logging(t *testing.T) {
 					testAccCheckCloudTrailLogValidationEnabled("aws_cloudtrail.foobar", false, &trail),
 					testAccCheckCloudTrailKmsKeyIdEquals("aws_cloudtrail.foobar", "", &trail),
 				),
+			},
+			{
+				ResourceName:      "aws_cloudtrail.foobar",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSCloudTrailConfigModified(cloudTrailRandInt),
@@ -195,6 +188,11 @@ func testAccAWSCloudTrail_is_multi_region(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      "aws_cloudtrail.foobar",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccAWSCloudTrailConfig(cloudTrailRandInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudTrailExists("aws_cloudtrail.foobar", &trail),
@@ -225,6 +223,11 @@ func testAccAWSCloudTrail_logValidation(t *testing.T) {
 					testAccCheckCloudTrailLogValidationEnabled("aws_cloudtrail.foobar", true, &trail),
 					testAccCheckCloudTrailKmsKeyIdEquals("aws_cloudtrail.foobar", "", &trail),
 				),
+			},
+			{
+				ResourceName:      "aws_cloudtrail.foobar",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSCloudTrailConfig_logValidationModified(cloudTrailRandInt),
@@ -260,6 +263,11 @@ func testAccAWSCloudTrail_kmsKey(t *testing.T) {
 					resource.TestMatchResourceAttr("aws_cloudtrail.foobar", "kms_key_id", keyRegex),
 				),
 			},
+			{
+				ResourceName:      "aws_cloudtrail.foobar",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -287,6 +295,11 @@ func testAccAWSCloudTrail_tags(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      "aws_cloudtrail.foobar",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccAWSCloudTrailConfig_tagsModified(cloudTrailRandInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudTrailExists("aws_cloudtrail.foobar", &trail),
@@ -312,7 +325,7 @@ func testAccAWSCloudTrail_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudTrail_include_global_service_events(t *testing.T) {
+func testAccAWSCloudTrail_include_global_service_events(t *testing.T) {
 	var trail cloudtrail.Trail
 	cloudTrailRandInt := acctest.RandInt()
 
@@ -327,6 +340,11 @@ func TestAccAWSCloudTrail_include_global_service_events(t *testing.T) {
 					testAccCheckCloudTrailExists("aws_cloudtrail.foobar", &trail),
 					resource.TestCheckResourceAttr("aws_cloudtrail.foobar", "include_global_service_events", "false"),
 				),
+			},
+			{
+				ResourceName:      "aws_cloudtrail.foobar",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -352,6 +370,11 @@ func testAccAWSCloudTrail_event_selector(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_cloudtrail.foobar", "event_selector.0.include_management_events", "false"),
 					resource.TestCheckResourceAttr("aws_cloudtrail.foobar", "event_selector.0.read_write_type", "ReadOnly"),
 				),
+			},
+			{
+				ResourceName:      "aws_cloudtrail.foobar",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSCloudTrailConfig_eventSelectorModified(cloudTrailRandInt),
