@@ -906,7 +906,9 @@ POLICY
 
 func testAccAWSCloudTrailConfigOrganization(cloudTrailRandInt int) string {
 	return fmt.Sprintf(`
-resource "aws_organizations_organization" "test" {}
+resource "aws_organizations_organization" "test" {
+  aws_service_access_principals = ["cloudtrail.amazonaws.com"]
+}
 
 resource "aws_cloudtrail" "foobar" {
   is_organization_trail = true
