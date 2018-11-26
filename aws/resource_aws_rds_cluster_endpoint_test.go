@@ -9,33 +9,6 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 )
 
-func TestAccAWSRDSClusterEndpoint_importBasic(t *testing.T) {
-	ri := acctest.RandInt()
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSClusterDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSClusterEndpointConfig(ri),
-			},
-
-			{
-				ResourceName:      "aws_rds_cluster_endpoint.reader",
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-
-			{
-				ResourceName:      "aws_rds_cluster_endpoint.default",
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
 func TestAccAWSRDSClusterEndpoint_basic(t *testing.T) {
 	rInt := acctest.RandInt()
 	readerResourceName := "aws_rds_cluster_endpoint.reader"
@@ -55,6 +28,18 @@ func TestAccAWSRDSClusterEndpoint_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(defaultResourceName, "endpoint"),
 				),
 			},
+			{
+				ResourceName:      "aws_rds_cluster_endpoint.reader",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+
+			{
+				ResourceName:      "aws_rds_cluster_endpoint.default",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+
 		},
 	})
 }
