@@ -1,4 +1,13 @@
 ## 1.48.0 (Unreleased)
+
+FEATURES
+
+* **New Resource:** `aws_datasync_agent` [GH-6591]
+* **New Resource:** `aws_datasync_location_efs` [GH-6591]
+* **New Resource:** `aws_datasync_location_nfs` [GH-6591]
+* **New Resource:** `aws_datasync_location_s3` [GH-6591]
+* **New Resource:** `aws_datasync_task` [GH-6591]
+
 ## 1.47.0 (November 26, 2018)
 
 FEATURES:
