@@ -22,6 +22,7 @@ func TestAccAWSCloudTrail(t *testing.T) {
 			"enableLogging":              testAccAWSCloudTrail_enable_logging,
 			"includeGlobalServiceEvents": testAccAWSCloudTrail_include_global_service_events,
 			"isMultiRegion":              testAccAWSCloudTrail_is_multi_region,
+			"isOrganization":             testAccAWSCloudTrail_is_organization,
 			"logValidation":              testAccAWSCloudTrail_logValidation,
 			"kmsKey":                     testAccAWSCloudTrail_kmsKey,
 			"tags":                       testAccAWSCloudTrail_tags,
@@ -56,6 +57,7 @@ func testAccAWSCloudTrail_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudTrailExists("aws_cloudtrail.foobar", &trail),
 					resource.TestCheckResourceAttr("aws_cloudtrail.foobar", "include_global_service_events", "true"),
+					resource.TestCheckResourceAttr("aws_cloudtrail.foobar", "is_organization_trail", "false"),
 					testAccCheckCloudTrailLogValidationEnabled("aws_cloudtrail.foobar", false, &trail),
 					testAccCheckCloudTrailKmsKeyIdEquals("aws_cloudtrail.foobar", "", &trail),
 				),
@@ -197,6 +199,42 @@ func testAccAWSCloudTrail_is_multi_region(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudTrailExists("aws_cloudtrail.foobar", &trail),
 					resource.TestCheckResourceAttr("aws_cloudtrail.foobar", "is_multi_region_trail", "false"),
+					testAccCheckCloudTrailLogValidationEnabled("aws_cloudtrail.foobar", false, &trail),
+					testAccCheckCloudTrailKmsKeyIdEquals("aws_cloudtrail.foobar", "", &trail),
+				),
+			},
+		},
+	})
+}
+
+func testAccAWSCloudTrail_is_organization(t *testing.T) {
+	var trail cloudtrail.Trail
+	cloudTrailRandInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCloudTrailDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudTrailConfigOrganization(cloudTrailRandInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudTrailExists("aws_cloudtrail.foobar", &trail),
+					resource.TestCheckResourceAttr("aws_cloudtrail.foobar", "is_organization_trail", "true"),
+					testAccCheckCloudTrailLogValidationEnabled("aws_cloudtrail.foobar", false, &trail),
+					testAccCheckCloudTrailKmsKeyIdEquals("aws_cloudtrail.foobar", "", &trail),
+				),
+			},
+			{
+				ResourceName:      "aws_cloudtrail.foobar",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSCloudTrailConfig(cloudTrailRandInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudTrailExists("aws_cloudtrail.foobar", &trail),
+					resource.TestCheckResourceAttr("aws_cloudtrail.foobar", "is_organization_trail", "false"),
 					testAccCheckCloudTrailLogValidationEnabled("aws_cloudtrail.foobar", false, &trail),
 					testAccCheckCloudTrailKmsKeyIdEquals("aws_cloudtrail.foobar", "", &trail),
 				),
@@ -837,6 +875,50 @@ resource "aws_s3_bucket" "foo" {
 	bucket = "tf-test-trail-%d"
 	force_destroy = true
 	policy = <<POLICY
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Sid": "AWSCloudTrailAclCheck",
+			"Effect": "Allow",
+			"Principal": "*",
+			"Action": "s3:GetBucketAcl",
+			"Resource": "arn:aws:s3:::tf-test-trail-%d"
+		},
+		{
+			"Sid": "AWSCloudTrailWrite",
+			"Effect": "Allow",
+			"Principal": "*",
+			"Action": "s3:PutObject",
+			"Resource": "arn:aws:s3:::tf-test-trail-%d/*",
+			"Condition": {
+				"StringEquals": {
+					"s3:x-amz-acl": "bucket-owner-full-control"
+				}
+			}
+		}
+	]
+}
+POLICY
+}
+`, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt)
+}
+
+func testAccAWSCloudTrailConfigOrganization(cloudTrailRandInt int) string {
+	return fmt.Sprintf(`
+resource "aws_organizations_organization" "test" {}
+
+resource "aws_cloudtrail" "foobar" {
+  is_organization_trail = true
+  name                  = "tf-trail-foobar-%d"
+  s3_bucket_name        = "${aws_s3_bucket.foo.id}"
+}
+
+resource "aws_s3_bucket" "foo" {
+  bucket        = "tf-test-trail-%d"
+  force_destroy = true
+
+  policy = <<POLICY
 {
 	"Version": "2012-10-17",
 	"Statement": [
