@@ -99,6 +99,13 @@ func testAccAwsProviderAccountID(provider *schema.Provider) string {
 	return client.accountid
 }
 
+// testAccCheckResourceAttrAccountID ensures the Terraform state exactly matches the account ID
+func testAccCheckResourceAttrAccountID(resourceName, attributeName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		return resource.TestCheckResourceAttr(resourceName, attributeName, testAccGetAccountID())(s)
+	}
+}
+
 // testAccCheckResourceAttrRegionalARN ensures the Terraform state exactly matches a formatted ARN with region
 func testAccCheckResourceAttrRegionalARN(resourceName, attributeName, arnService, arnResource string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -113,7 +120,7 @@ func testAccCheckResourceAttrRegionalARN(resourceName, attributeName, arnService
 	}
 }
 
-// testAccCheckResourceAttrRegionalARN ensures the Terraform state regexp matches a formatted ARN with region
+// testAccMatchResourceAttrRegionalARN ensures the Terraform state regexp matches a formatted ARN with region
 func testAccMatchResourceAttrRegionalARN(resourceName, attributeName, arnService string, arnResourceRegexp *regexp.Regexp) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		arnRegexp := arn.ARN{
@@ -144,6 +151,26 @@ func testAccCheckResourceAttrGlobalARN(resourceName, attributeName, arnService, 
 			Service:   arnService,
 		}.String()
 		return resource.TestCheckResourceAttr(resourceName, attributeName, attributeValue)(s)
+	}
+}
+
+// testAccMatchResourceAttrGlobalARN ensures the Terraform state regexp matches a formatted ARN without region
+func testAccMatchResourceAttrGlobalARN(resourceName, attributeName, arnService string, arnResourceRegexp *regexp.Regexp) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		arnRegexp := arn.ARN{
+			AccountID: testAccGetAccountID(),
+			Partition: testAccGetPartition(),
+			Resource:  arnResourceRegexp.String(),
+			Service:   arnService,
+		}.String()
+
+		attributeMatch, err := regexp.Compile(arnRegexp)
+
+		if err != nil {
+			return fmt.Errorf("Unable to compile ARN regexp (%s): %s", arnRegexp, err)
+		}
+
+		return resource.TestMatchResourceAttr(resourceName, attributeName, attributeMatch)(s)
 	}
 }
 
