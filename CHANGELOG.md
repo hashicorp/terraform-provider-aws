@@ -1,12 +1,12 @@
-## 1.48.0 (Unreleased)
+## 1.48.0 (November 26, 2018)
 
 FEATURES
 
-* **New Resource:** `aws_datasync_agent` [GH-6591]
-* **New Resource:** `aws_datasync_location_efs` [GH-6591]
-* **New Resource:** `aws_datasync_location_nfs` [GH-6591]
-* **New Resource:** `aws_datasync_location_s3` [GH-6591]
-* **New Resource:** `aws_datasync_task` [GH-6591]
+* **New Resource:** `aws_datasync_agent` ([#6591](https://github.com/terraform-providers/terraform-provider-aws/issues/6591))
+* **New Resource:** `aws_datasync_location_efs` ([#6591](https://github.com/terraform-providers/terraform-provider-aws/issues/6591))
+* **New Resource:** `aws_datasync_location_nfs` ([#6591](https://github.com/terraform-providers/terraform-provider-aws/issues/6591))
+* **New Resource:** `aws_datasync_location_s3` ([#6591](https://github.com/terraform-providers/terraform-provider-aws/issues/6591))
+* **New Resource:** `aws_datasync_task` ([#6591](https://github.com/terraform-providers/terraform-provider-aws/issues/6591))
 
 ## 1.47.0 (November 26, 2018)
 
