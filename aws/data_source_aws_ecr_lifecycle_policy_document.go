@@ -140,7 +140,7 @@ func dataSourceAwsEcrLifecyclePolicyDocumentRead(d *schema.ResourceData, meta in
 			stmt.Selection = dataSourceAwsEcrLifecyclePolicyDocumentMakeSelection(selection)
 		}
 
-		if action := cfgStmt["action"].(*schema.Set).List(); len(action) == 0 {
+		if action := cfgStmt["action"].([]interface{}); len(action) == 0 {
 			stmt.Action = EcrLifecyclePolicyAction{
 				Type: "expire",
 			}
