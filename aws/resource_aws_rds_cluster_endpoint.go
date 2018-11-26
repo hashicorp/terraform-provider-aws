@@ -70,20 +70,10 @@ func resourceAwsRDSClusterEndpoint() *schema.Resource {
 func resourceAwsRDSClusterEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).rdsconn
 
-	var clusterId string
-	if v, ok := d.GetOk("cluster_identifier"); ok {
-		clusterId = v.(string)
-	}
+	clusterId := d.Get("cluster_identifier").(string)
+	endpointId := d.Get("cluster_endpoint_identifier").(string)
+	endpointType := d.Get("custom_endpoint_type").(string)
 
-	var endpointId string
-	if v, ok := d.GetOk("cluster_endpoint_identifier"); ok {
-		endpointId = v.(string)
-	}
-
-	var endpointType string
-	if v, ok := d.GetOk("custom_endpoint_type"); ok {
-		endpointType = v.(string)
-	}
 
 	createClusterEndpointInput := &rds.CreateDBClusterEndpointInput{
 		DBClusterIdentifier:         aws.String(clusterId),
@@ -91,21 +81,11 @@ func resourceAwsRDSClusterEndpointCreate(d *schema.ResourceData, meta interface{
 		EndpointType:                aws.String(endpointType),
 	}
 
-	var staticMembers []*string
 	if v := d.Get("static_members"); v != nil {
-		for _, v := range v.(*schema.Set).List() {
-			str := v.(string)
-			staticMembers = append(staticMembers, aws.String(str))
-		}
-		createClusterEndpointInput.StaticMembers = staticMembers
+		createClusterEndpointInput.StaticMembers = expandStringSet(v.(*schema.Set))
 	}
-	var excludedMembers []*string
 	if v := d.Get("excluded_members"); v != nil {
-		for _, v := range v.(*schema.Set).List() {
-			str := v.(string)
-			excludedMembers = append(excludedMembers, aws.String(str))
-		}
-		createClusterEndpointInput.ExcludedMembers = excludedMembers
+		createClusterEndpointInput.ExcludedMembers = expandStringSet(v.(*schema.Set))
 	}
 
 	_, err := conn.CreateDBClusterEndpoint(createClusterEndpointInput)
