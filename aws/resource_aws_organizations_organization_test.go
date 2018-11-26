@@ -24,6 +24,7 @@ func testAccAwsOrganizationsOrganization_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsOrganizationsOrganizationExists(resourceName, &organization),
 					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "organizations", regexp.MustCompile(`organization/o-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "aws_service_access_principals.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "feature_set", organizations.OrganizationFeatureSetAll),
 					testAccMatchResourceAttrGlobalARN(resourceName, "master_account_arn", "organizations", regexp.MustCompile(`account/o-.+/.+`)),
 					resource.TestMatchResourceAttr(resourceName, "master_account_email", regexp.MustCompile(`.+@.+`)),
@@ -34,6 +35,49 @@ func testAccAwsOrganizationsOrganization_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccAwsOrganizationsOrganization_AwsServiceAccessPrincipals(t *testing.T) {
+	var organization organizations.Organization
+	resourceName := "aws_organizations_organization.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsOrganizationsOrganizationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsOrganizationsOrganizationConfigAwsServiceAccessPrincipals1("config.amazonaws.com"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsOrganizationsOrganizationExists(resourceName, &organization),
+					resource.TestCheckResourceAttr(resourceName, "aws_service_access_principals.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "aws_service_access_principals.553690328", "config.amazonaws.com"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAwsOrganizationsOrganizationConfigAwsServiceAccessPrincipals2("config.amazonaws.com", "ds.amazonaws.com"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsOrganizationsOrganizationExists(resourceName, &organization),
+					resource.TestCheckResourceAttr(resourceName, "aws_service_access_principals.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "aws_service_access_principals.553690328", "config.amazonaws.com"),
+					resource.TestCheckResourceAttr(resourceName, "aws_service_access_principals.3567899500", "ds.amazonaws.com"),
+				),
+			},
+			{
+				Config: testAccAwsOrganizationsOrganizationConfigAwsServiceAccessPrincipals1("fms.amazonaws.com"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsOrganizationsOrganizationExists(resourceName, &organization),
+					resource.TestCheckResourceAttr(resourceName, "aws_service_access_principals.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "aws_service_access_principals.4066123156", "fms.amazonaws.com"),
+				),
 			},
 		},
 	})
@@ -123,6 +167,22 @@ func testAccCheckAwsOrganizationsOrganizationExists(n string, a *organizations.O
 }
 
 const testAccAwsOrganizationsOrganizationConfig = "resource \"aws_organizations_organization\" \"test\" {}"
+
+func testAccAwsOrganizationsOrganizationConfigAwsServiceAccessPrincipals1(principal1 string) string {
+	return fmt.Sprintf(`
+resource "aws_organizations_organization" "test" {
+  aws_service_access_principals = [%q]
+}
+`, principal1)
+}
+
+func testAccAwsOrganizationsOrganizationConfigAwsServiceAccessPrincipals2(principal1, principal2 string) string {
+	return fmt.Sprintf(`
+resource "aws_organizations_organization" "test" {
+  aws_service_access_principals = [%q, %q]
+}
+`, principal1, principal2)
+}
 
 func testAccAwsOrganizationsOrganizationConfigFeatureSet(featureSet string) string {
 	return fmt.Sprintf(`
