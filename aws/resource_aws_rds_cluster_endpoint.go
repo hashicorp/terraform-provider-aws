@@ -3,11 +3,9 @@ package aws
 import (
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 )
@@ -110,13 +108,7 @@ func resourceAwsRDSClusterEndpointCreate(d *schema.ResourceData, meta interface{
 		createClusterEndpointInput.ExcludedMembers = excludedMembers
 	}
 
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-		_, err := conn.CreateDBClusterEndpoint(createClusterEndpointInput)
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-		return nil
-	})
+	_, err := conn.CreateDBClusterEndpoint(createClusterEndpointInput)
 	if err != nil {
 		return fmt.Errorf("Error creating RDS Cluster Endpoint: %s", err)
 	}
@@ -199,13 +191,7 @@ func resourceAwsRDSClusterEndpointUpdate(d *schema.ResourceData, meta interface{
 		input.StaticMembers = make([]*string, 0)
 	}
 
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-		_, err := conn.ModifyDBClusterEndpoint(input)
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-		return nil
-	})
+	_, err := conn.ModifyDBClusterEndpoint(input)
 	if err != nil {
 		return fmt.Errorf("Error modifying RDS Cluster Endpoint: %s", err)
 	}
@@ -218,13 +204,7 @@ func resourceAwsRDSClusterEndpointDelete(d *schema.ResourceData, meta interface{
 	input := &rds.DeleteDBClusterEndpointInput{
 		DBClusterEndpointIdentifier: aws.String(d.Id()),
 	}
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteDBClusterEndpoint(input)
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-		return nil
-	})
+	_, err := conn.DeleteDBClusterEndpoint(input)
 	if err != nil {
 		return fmt.Errorf("Error deleting RDS Cluster Endpoint: %s", err)
 	}
