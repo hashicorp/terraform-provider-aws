@@ -22,9 +22,9 @@ func TestAccAWSRDSClusterEndpoint_basic(t *testing.T) {
 			{
 				Config: testAccAWSClusterEndpointConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(readerResourceName, "arn", regexp.MustCompile(`^arn:[^:]+:rds:[^:]+:\d{12}:cluster-endpoint:.+`)),
+					testAccMatchResourceAttrRegionalARN(readerResourceName, "arn", "rds", regexp.MustCompile(`cluster-endpoint:.+`)),
 					resource.TestCheckResourceAttrSet(readerResourceName, "endpoint"),
-					resource.TestMatchResourceAttr(defaultResourceName, "arn", regexp.MustCompile(`^arn:[^:]+:rds:[^:]+:\d{12}:cluster-endpoint:.+`)),
+					testAccMatchResourceAttrRegionalARN(defaultResourceName, "arn", "rds", regexp.MustCompile(`cluster-endpoint:.+`)),
 					resource.TestCheckResourceAttrSet(defaultResourceName, "endpoint"),
 				),
 			},
