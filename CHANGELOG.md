@@ -1,3 +1,4 @@
+## 1.49.0 (Unreleased)
 ## 1.48.0 (November 26, 2018)
 
 FEATURES
