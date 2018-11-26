@@ -1,22 +1,22 @@
-## 1.47.0 (Unreleased)
+## 1.47.0 (November 26, 2018)
 
 FEATURES:
 
-* **New Data Source:** `aws_route53_delegation_set` [GH-6152]
-* **New Data Source:** `aws_ssm_document` [GH-6479]
+* **New Data Source:** `aws_route53_delegation_set` ([#6152](https://github.com/terraform-providers/terraform-provider-aws/issues/6152))
+* **New Data Source:** `aws_ssm_document` ([#6479](https://github.com/terraform-providers/terraform-provider-aws/issues/6479))
 
 ENHANCEMENTS:
 
-* resource/aws_ecs_service: Add `enable_ecs_managed_tags` argument [GH-6544]
-* resource/aws_kinesis_firehose_delivery_stream: Add `tags` argument [GH-6548]
-* resource/aws_organizations_organization: Add `aws_service_access_principals` argument [GH-6581]
-* resource/aws_s3_bucket_policy: Support resource import [GH-6543]
-* resource/aws_vpc: Support plan-time validation for `cidr_block` block size [GH-6577]
+* resource/aws_ecs_service: Add `enable_ecs_managed_tags` argument ([#6544](https://github.com/terraform-providers/terraform-provider-aws/issues/6544))
+* resource/aws_kinesis_firehose_delivery_stream: Add `tags` argument ([#6548](https://github.com/terraform-providers/terraform-provider-aws/issues/6548))
+* resource/aws_organizations_organization: Add `aws_service_access_principals` argument ([#6581](https://github.com/terraform-providers/terraform-provider-aws/issues/6581))
+* resource/aws_s3_bucket_policy: Support resource import ([#6543](https://github.com/terraform-providers/terraform-provider-aws/issues/6543))
+* resource/aws_vpc: Support plan-time validation for `cidr_block` block size ([#6577](https://github.com/terraform-providers/terraform-provider-aws/issues/6577))
 
 BUG FIXES:
 
-* resource/aws_elastic_transcoder_preset: Properly read `video_codec_options` into Terraform state [GH-6545]
-* resource/aws_subnet: Always set `ipv6_cidr_block_association_id` and `ipv6_cidr_block` attributes in Terraform state [GH-6533]
+* resource/aws_elastic_transcoder_preset: Properly read `video_codec_options` into Terraform state ([#6545](https://github.com/terraform-providers/terraform-provider-aws/issues/6545))
+* resource/aws_subnet: Always set `ipv6_cidr_block_association_id` and `ipv6_cidr_block` attributes in Terraform state ([#6533](https://github.com/terraform-providers/terraform-provider-aws/issues/6533))
 
 ## 1.46.0 (November 20, 2018)
 
