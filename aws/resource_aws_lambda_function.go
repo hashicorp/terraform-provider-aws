@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/lambda"
-	"github.com/mitchellh/go-homedir"
+	homedir "github.com/mitchellh/go-homedir"
 
 	"errors"
 
@@ -116,6 +116,7 @@ func resourceAwsLambdaFunction() *schema.Resource {
 					lambda.RuntimeNodejs810,
 					lambda.RuntimePython27,
 					lambda.RuntimePython36,
+					lambda.RuntimePython37,
 				}, false),
 			},
 			"timeout": {
