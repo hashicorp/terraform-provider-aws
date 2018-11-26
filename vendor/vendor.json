@@ -567,6 +567,14 @@
 			"versionExact": "v1.15.82"
 		},
 		{
+			"checksumSHA1": "I6c5FAGn2f6sxKaUJ5Pcr3aWdGQ=",
+			"path": "github.com/aws/aws-sdk-go/service/datasync",
+			"revision": "936c5266940725e6a728ea4b7241ede3f1616096",
+			"revisionTime": "2018-11-26T09:11:36Z",
+			"version": "v1.15.82",
+			"versionExact": "v1.15.82"
+		},
+		{
 			"checksumSHA1": "E2PzR2gdjvKrUoxFlf5Recjd604=",
 			"path": "github.com/aws/aws-sdk-go/service/dax",
 			"revision": "936c5266940725e6a728ea4b7241ede3f1616096",
