@@ -5,8 +5,11 @@ services:
 language: go
 
 env:
+env:
   global:
-    GOFLAGS=-mod=vendor
+    - GOFLAGS=-mod=vendor
+    - LINUX_BINARY_PATH=${GOPATH}/bin/terraform-provider-aws
+    - DARWIN_BINARY_PATH=${GOPATH}/bin/darwin_amd64/terraform-provider-aws
 go_import_path: github.com/terraform-providers/terraform-provider-aws
 
 matrix:
@@ -39,3 +42,26 @@ install:
 # See: https://github.com/golang/go/issues/12933
 - bash scripts/gogetcookie.sh
 - make tools
+
+before_deploy:
+  - GIT_TAG=$(git describe --tags)
+  - GOOS=linux GOARCH=amd64 make build
+  - mv ${LINUX_BINARY_PATH} ${LINUX_BINARY_PATH}_${GIT_TAG}
+  - zip -j ${LINUX_BINARY_PATH}_${GIT_TAG}_linux_amd64.zip ${LINUX_BINARY_PATH}_${GIT_TAG}
+  - GOOS=darwin GOARCH=amd64 make build
+  - mv ${DARWIN_BINARY_PATH} ${DARWIN_BINARY_PATH}_${GIT_TAG}
+  - zip -j ${DARWIN_BINARY_PATH}_${GIT_TAG}_darwin_amd64.zip ${DARWIN_BINARY_PATH}_${GIT_TAG}
+
+# Deploy only when a tag is created and pushed to the master branch.
+deploy:
+  provider: releases
+  api_key: ${GITHUB_API_KEY}
+  file:
+    - ${LINUX_BINARY_PATH}_${GIT_TAG}_linux_amd64.zip
+    - ${DARWIN_BINARY_PATH}_${GIT_TAG}_darwin_amd64.zip
+  skip_cleanup: true
+  file_glob: true
+  on:
+    branch: master
+    tags: true
+  condition: ${GIT_TAG} =~ ^v[0-9]+\.[0-9]+\.[0-9]$
