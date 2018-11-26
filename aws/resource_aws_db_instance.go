@@ -1612,6 +1612,7 @@ func diffCloudwatchLogsExportConfiguration(old, new []interface{}) ([]interface{
 var resourceAwsDbInstanceCreatePendingStates = []string{
 	"backing-up",
 	"configuring-enhanced-monitoring",
+	"configuring-iam-database-auth",
 	"configuring-log-exports",
 	"creating",
 	"maintenance",
@@ -1642,6 +1643,7 @@ var resourceAwsDbInstanceDeletePendingStates = []string{
 var resourceAwsDbInstanceUpdatePendingStates = []string{
 	"backing-up",
 	"configuring-enhanced-monitoring",
+	"configuring-iam-database-auth",
 	"configuring-log-exports",
 	"creating",
 	"maintenance",
