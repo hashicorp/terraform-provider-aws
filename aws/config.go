@@ -40,6 +40,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/aws/aws-sdk-go/service/databasemigrationservice"
+	"github.com/aws/aws-sdk-go/service/datasync"
 	"github.com/aws/aws-sdk-go/service/dax"
 	"github.com/aws/aws-sdk-go/service/devicefarm"
 	"github.com/aws/aws-sdk-go/service/directconnect"
@@ -172,6 +173,7 @@ type AWSClient struct {
 	cognitoconn           *cognitoidentity.CognitoIdentity
 	cognitoidpconn        *cognitoidentityprovider.CognitoIdentityProvider
 	configconn            *configservice.ConfigService
+	datasyncconn          *datasync.DataSync
 	daxconn               *dax.DAX
 	devicefarmconn        *devicefarm.DeviceFarm
 	dlmconn               *dlm.DLM
@@ -519,6 +521,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.cognitoconn = cognitoidentity.New(sess)
 	client.cognitoidpconn = cognitoidentityprovider.New(sess)
 	client.codepipelineconn = codepipeline.New(sess)
+	client.datasyncconn = datasync.New(sess)
 	client.daxconn = dax.New(awsDynamoSess)
 	client.dlmconn = dlm.New(sess)
 	client.dmsconn = databasemigrationservice.New(sess)
