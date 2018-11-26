@@ -510,38 +510,6 @@ func TestValidateCIDRNetworkAddress(t *testing.T) {
 	}
 }
 
-func TestValidateVPCCIDRNetworkAddress(t *testing.T) {
-	cases := []struct {
-		CIDR              string
-		ExpectedErrSubstr string
-	}{
-		{"notacidr", `must contain a valid CIDR`},
-		{"10.0.1.0/16", `must contain a valid network CIDR`},
-		{"10.0.0.0/15", `has invlalid block size. The allowed block size is between a /28 netmask and /16 netmask`},
-		{"10.0.0.0/29", `has invlalid block size. The allowed block size is between a /28 netmask and /16 netmask`},
-		{"10.0.1.0/24", ``},
-	}
-
-	for i, tc := range cases {
-		_, errs := validateVPCCIDRNetworkAddress(tc.CIDR, "foo")
-		if tc.ExpectedErrSubstr == "" {
-			if len(errs) != 0 {
-				t.Fatalf("%d/%d: Expected no error, got errs: %#v",
-					i+1, len(cases), errs)
-			}
-		} else {
-			if len(errs) != 1 {
-				t.Fatalf("%d/%d: Expected 1 err containing %q, got %d errs",
-					i+1, len(cases), tc.ExpectedErrSubstr, len(errs))
-			}
-			if !strings.Contains(errs[0].Error(), tc.ExpectedErrSubstr) {
-				t.Fatalf("%d/%d: Expected err: %q, to include %q",
-					i+1, len(cases), errs[0], tc.ExpectedErrSubstr)
-			}
-		}
-	}
-}
-
 func TestValidateLogMetricFilterName(t *testing.T) {
 	validNames := []string{
 		"YadaHereAndThere",
