@@ -932,7 +932,7 @@ func TestAccAWSS3Bucket_Replication(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSS3BucketConfigReplicationWithConfiguration(rInt),
+				Config: testAccAWSS3BucketConfigReplicationWithConfiguration(rInt, "STANDARD"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketExistsWithProvider("aws_s3_bucket.bucket", testAccAwsRegionProviderFunc(region, &providers)),
 					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "replication_configuration.#", "1"),
@@ -947,7 +947,32 @@ func TestAccAWSS3Bucket_Replication(t *testing.T) {
 								ID: aws.String("foobar"),
 								Destination: &s3.Destination{
 									Bucket:       aws.String(fmt.Sprintf("arn:%s:s3:::tf-test-bucket-destination-%d", partition, rInt)),
-									StorageClass: aws.String(s3.ObjectStorageClassStandard),
+									StorageClass: aws.String(s3.StorageClassStandard),
+								},
+								Prefix: aws.String("foo"),
+								Status: aws.String(s3.ReplicationRuleStatusEnabled),
+							},
+						},
+					),
+				),
+			},
+			{
+				Config: testAccAWSS3BucketConfigReplicationWithConfiguration(rInt, "GLACIER"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketExistsWithProvider("aws_s3_bucket.bucket", testAccAwsRegionProviderFunc(region, &providers)),
+					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "replication_configuration.#", "1"),
+					resource.TestMatchResourceAttr("aws_s3_bucket.bucket", "replication_configuration.0.role", regexp.MustCompile(fmt.Sprintf("^arn:aws[\\w-]*:iam::[\\d+]+:role/tf-iam-role-replication-%d", rInt))),
+					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "replication_configuration.0.rules.#", "1"),
+					testAccCheckAWSS3BucketExistsWithProvider("aws_s3_bucket.destination", testAccAwsRegionProviderFunc("eu-west-1", &providers)),
+					testAccCheckAWSS3BucketReplicationRules(
+						"aws_s3_bucket.bucket",
+						testAccAwsRegionProviderFunc(region, &providers),
+						[]*s3.ReplicationRule{
+							{
+								ID: aws.String("foobar"),
+								Destination: &s3.Destination{
+									Bucket:       aws.String(fmt.Sprintf("arn:%s:s3:::tf-test-bucket-destination-%d", partition, rInt)),
+									StorageClass: aws.String(s3.StorageClassGlacier),
 								},
 								Prefix: aws.String("foo"),
 								Status: aws.String(s3.ReplicationRuleStatusEnabled),
@@ -2449,7 +2474,7 @@ resource "aws_s3_bucket" "destination" {
 `, randInt, randInt, randInt)
 }
 
-func testAccAWSS3BucketConfigReplicationWithConfiguration(randInt int) string {
+func testAccAWSS3BucketConfigReplicationWithConfiguration(randInt int, storageClass string) string {
 	return fmt.Sprintf(testAccAWSS3BucketConfigReplicationBasic+`
 resource "aws_s3_bucket" "bucket" {
     provider = "aws.uswest2"
@@ -2469,7 +2494,7 @@ resource "aws_s3_bucket" "bucket" {
 
             destination {
                 bucket        = "${aws_s3_bucket.destination.arn}"
-                storage_class = "STANDARD"
+                storage_class = "%s"
             }
         }
     }
@@ -2484,7 +2509,7 @@ resource "aws_s3_bucket" "destination" {
         enabled = true
     }
 }
-`, randInt, randInt, randInt)
+`, randInt, randInt, storageClass, randInt)
 }
 
 func testAccAWSS3BucketConfigReplicationWithSseKmsEncryptedObjects(randInt int) string {
