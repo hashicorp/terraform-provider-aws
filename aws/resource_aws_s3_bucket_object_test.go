@@ -482,6 +482,19 @@ func TestAccAWSS3BucketObject_storageClass(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccAWSS3BucketObjectConfig_storageClass(rInt, "GLACIER"),
+				Check: resource.ComposeTestCheckFunc(
+					// Can't GetObject on an object in Glacier without restoring it.
+					resource.TestCheckResourceAttr(
+						"aws_s3_bucket_object.object",
+						"storage_class",
+						"GLACIER"),
+					testAccCheckAWSS3BucketObjectStorageClass(
+						"aws_s3_bucket_object.object",
+						"GLACIER"),
+				),
+			},
+			{
 				Config: testAccAWSS3BucketObjectConfig_storageClass(rInt, "INTELLIGENT_TIERING"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketObjectExists(
