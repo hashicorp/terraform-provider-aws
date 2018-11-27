@@ -15285,6 +15285,9 @@ type Action struct {
 	// Sends message data to an AWS IoT Analytics channel.
 	IotAnalytics *IotAnalyticsAction `locationName:"iotAnalytics" type:"structure"`
 
+	// Sends an input to an AWS IoT Events detector.
+	IotEvents *IotEventsAction `locationName:"iotEvents" type:"structure"`
+
 	// Write data to an Amazon Kinesis stream.
 	Kinesis *KinesisAction `locationName:"kinesis" type:"structure"`
 
@@ -15351,6 +15354,11 @@ func (s *Action) Validate() error {
 	if s.Firehose != nil {
 		if err := s.Firehose.Validate(); err != nil {
 			invalidParams.AddNested("Firehose", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.IotEvents != nil {
+		if err := s.IotEvents.Validate(); err != nil {
+			invalidParams.AddNested("IotEvents", err.(request.ErrInvalidParams))
 		}
 	}
 	if s.Kinesis != nil {
@@ -15439,6 +15447,12 @@ func (s *Action) SetFirehose(v *FirehoseAction) *Action {
 // SetIotAnalytics sets the IotAnalytics field's value.
 func (s *Action) SetIotAnalytics(v *IotAnalyticsAction) *Action {
 	s.IotAnalytics = v
+	return s
+}
+
+// SetIotEvents sets the IotEvents field's value.
+func (s *Action) SetIotEvents(v *IotEventsAction) *Action {
+	s.IotEvents = v
 	return s
 }
 
@@ -25303,6 +25317,73 @@ func (s *IotAnalyticsAction) SetChannelName(v string) *IotAnalyticsAction {
 
 // SetRoleArn sets the RoleArn field's value.
 func (s *IotAnalyticsAction) SetRoleArn(v string) *IotAnalyticsAction {
+	s.RoleArn = &v
+	return s
+}
+
+// Sends an input to an AWS IoT Events detector.
+type IotEventsAction struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the AWS IoT Events input.
+	//
+	// InputName is a required field
+	InputName *string `locationName:"inputName" min:"1" type:"string" required:"true"`
+
+	// [Optional] Use this to ensure that only one input (message) with a given
+	// messageId will be processed by an AWS IoT Events detector.
+	MessageId *string `locationName:"messageId" type:"string"`
+
+	// The ARN of the role that grants AWS IoT permission to send an input to an
+	// AWS IoT Events detector. ("Action":"iotevents:BatchPutMessage").
+	//
+	// RoleArn is a required field
+	RoleArn *string `locationName:"roleArn" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s IotEventsAction) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s IotEventsAction) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *IotEventsAction) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "IotEventsAction"}
+	if s.InputName == nil {
+		invalidParams.Add(request.NewErrParamRequired("InputName"))
+	}
+	if s.InputName != nil && len(*s.InputName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("InputName", 1))
+	}
+	if s.RoleArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("RoleArn"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetInputName sets the InputName field's value.
+func (s *IotEventsAction) SetInputName(v string) *IotEventsAction {
+	s.InputName = &v
+	return s
+}
+
+// SetMessageId sets the MessageId field's value.
+func (s *IotEventsAction) SetMessageId(v string) *IotEventsAction {
+	s.MessageId = &v
+	return s
+}
+
+// SetRoleArn sets the RoleArn field's value.
+func (s *IotEventsAction) SetRoleArn(v string) *IotEventsAction {
 	s.RoleArn = &v
 	return s
 }
