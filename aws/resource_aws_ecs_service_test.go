@@ -824,6 +824,7 @@ func TestAccAWSEcsService_ManagedTags(t *testing.T) {
 					testAccCheckAWSEcsServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "enable_ecs_managed_tags", "true"),
+					resource.TestCheckResourceAttr(resourceName, "propagate_tags", "SERVICE"),
 				),
 			},
 		},
@@ -2511,6 +2512,7 @@ resource "aws_ecs_service" "test" {
   name                               = %q
   task_definition                    = "${aws_ecs_task_definition.test.arn}"
   enable_ecs_managed_tags            = true
+  propagate_tags                     = "SERVICE"
 
   tags {
     tag-key = "tag-value"
