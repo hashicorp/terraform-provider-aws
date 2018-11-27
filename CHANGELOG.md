@@ -1,25 +1,25 @@
-## 1.49.0 (Unreleased)
+## 1.49.0 (November 27, 2018)
 
 FEATURES
 
-* **New Data Source:** `aws_ec2_transit_gateway` [GH-6605]
-* **New Data Source:** `aws_ec2_transit_gateway_route_table` [GH-6605]
-* **New Data Source:** `aws_ec2_transit_gateway_vpc_attachment` [GH-6605]
-* **New Resource:** `aws_ec2_transit_gateway` [GH-6605]
-* **New Resource:** `aws_ec2_transit_gateway_route` [GH-6605]
-* **New Resource:** `aws_ec2_transit_gateway_route_table` [GH-6605]
-* **New Resource:** `aws_ec2_transit_gateway_route_table_association` [GH-6605]
-* **New Resource:** `aws_ec2_transit_gateway_route_table_propagation` [GH-6605]
-* **New Resource:** `aws_ec2_transit_gateway_vpc_attachment` [GH-6605]
+* **New Data Source:** `aws_ec2_transit_gateway` ([#6605](https://github.com/terraform-providers/terraform-provider-aws/issues/6605))
+* **New Data Source:** `aws_ec2_transit_gateway_route_table` ([#6605](https://github.com/terraform-providers/terraform-provider-aws/issues/6605))
+* **New Data Source:** `aws_ec2_transit_gateway_vpc_attachment` ([#6605](https://github.com/terraform-providers/terraform-provider-aws/issues/6605))
+* **New Resource:** `aws_ec2_transit_gateway` ([#6605](https://github.com/terraform-providers/terraform-provider-aws/issues/6605))
+* **New Resource:** `aws_ec2_transit_gateway_route` ([#6605](https://github.com/terraform-providers/terraform-provider-aws/issues/6605))
+* **New Resource:** `aws_ec2_transit_gateway_route_table` ([#6605](https://github.com/terraform-providers/terraform-provider-aws/issues/6605))
+* **New Resource:** `aws_ec2_transit_gateway_route_table_association` ([#6605](https://github.com/terraform-providers/terraform-provider-aws/issues/6605))
+* **New Resource:** `aws_ec2_transit_gateway_route_table_propagation` ([#6605](https://github.com/terraform-providers/terraform-provider-aws/issues/6605))
+* **New Resource:** `aws_ec2_transit_gateway_vpc_attachment` ([#6605](https://github.com/terraform-providers/terraform-provider-aws/issues/6605))
 
 ENHANCEMENTS
 
-* data-source/aws_route: Add `transit_gateway_id` attribute [GH-6605]
-* data-source/aws_route_table: Add `route` attribute block `transit_gateway_id` attribute [GH-6605]
-* resource/aws_default_route_table: Add `route` configuration block `transit_gateway_id` argument [GH-6605]
-* resource/aws_route: Add `transit_gateway_id` argument [GH-6605]
-* resource/aws_route_table: Add `route` configuration block `transit_gateway_id` argument [GH-6605]
-* resource/aws_vpn_connection: Add `transit_gateway_id` argument, mark `vpn_gateway_id` as optional [GH-6605]
+* data-source/aws_route: Add `transit_gateway_id` attribute ([#6605](https://github.com/terraform-providers/terraform-provider-aws/issues/6605))
+* data-source/aws_route_table: Add `route` attribute block `transit_gateway_id` attribute ([#6605](https://github.com/terraform-providers/terraform-provider-aws/issues/6605))
+* resource/aws_default_route_table: Add `route` configuration block `transit_gateway_id` argument ([#6605](https://github.com/terraform-providers/terraform-provider-aws/issues/6605))
+* resource/aws_route: Add `transit_gateway_id` argument ([#6605](https://github.com/terraform-providers/terraform-provider-aws/issues/6605))
+* resource/aws_route_table: Add `route` configuration block `transit_gateway_id` argument ([#6605](https://github.com/terraform-providers/terraform-provider-aws/issues/6605))
+* resource/aws_vpn_connection: Add `transit_gateway_id` argument, mark `vpn_gateway_id` as optional ([#6605](https://github.com/terraform-providers/terraform-provider-aws/issues/6605))
 
 ## 1.48.0 (November 26, 2018)
 
