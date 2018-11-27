@@ -151,11 +151,11 @@
                         <li<%= sidebar_current("docs-aws-datasource-ecs-container-definition") %>>
                             <a href="/docs/providers/aws/d/ecs_container_definition.html">aws_ecs_container_definition</a>
                         </li>
-                        <li<%= sidebar_current("docs-aws-datasource-ecs-task-definition") %>>
-                            <a href="/docs/providers/aws/d/ecs_task_definition.html">aws_ecs_task_definition</a>
-                        </li>
                         <li<%= sidebar_current("docs-aws-datasource-ecs-service") %>>
                             <a href="/docs/providers/aws/d/ecs_service.html">aws_ecs_service</a>
+                        </li>
+                        <li<%= sidebar_current("docs-aws-datasource-ecs-task-definition") %>>
+                            <a href="/docs/providers/aws/d/ecs_task_definition.html">aws_ecs_task_definition</a>
                         </li>
                         <li<%= sidebar_current("docs-aws-datasource-efs-file-system") %>>
                             <a href="/docs/providers/aws/d/efs_file_system.html">aws_efs_file_system</a>
@@ -241,11 +241,11 @@
                         <li<%= sidebar_current("docs-aws-datasource-kms-alias") %>>
                             <a href="/docs/providers/aws/d/kms_alias.html">aws_kms_alias</a>
                         </li>
-                        <li<%= sidebar_current("docs-aws-datasource-kms-key") %>>
-                          <a href="/docs/providers/aws/d/kms_key.html">aws_kms_key</a>
-                        </li>
                         <li<%= sidebar_current("docs-aws-datasource-kms-ciphertext") %>>
                             <a href="/docs/providers/aws/d/kms_ciphertext.html">aws_kms_ciphertext</a>
+                        </li>
+                        <li<%= sidebar_current("docs-aws-datasource-kms-key") %>>
+                          <a href="/docs/providers/aws/d/kms_key.html">aws_kms_key</a>
                         </li>
                         <li<%= sidebar_current("docs-aws-datasource-kms-secret-x") %>>
                             <a href="/docs/providers/aws/d/kms_secret.html">aws_kms_secret</a>
@@ -253,23 +253,11 @@
                         <li<%= sidebar_current("docs-aws-datasource-kms-secrets") %>>
                             <a href="/docs/providers/aws/d/kms_secrets.html">aws_kms_secrets</a>
                         </li>
-                        <li<%= sidebar_current("docs-aws-datasource-lambda-invocation") %>>
-                            <a href="/docs/providers/aws/d/lambda_invocation.html">aws_lambda_invocation</a>
-                        </li>
-                        <li<%= sidebar_current("docs-aws-datasource-nat-gateway") %>>
-                           <a href="/docs/providers/aws/d/nat_gateway.html">aws_nat_gateway</a>
-                        </li>
-                        <li<%= sidebar_current("docs-aws-datasource-network-acls") %>>
-                           <a href="/docs/providers/aws/d/network_acls.html">aws_network_acls</a>
-                        </li>
-                        <li<%= sidebar_current("docs-aws-datasource-network-interface-x") %>>
-                            <a href="/docs/providers/aws/d/network_interface.html">aws_network_interface</a>
-                        </li>
-                         <li<%= sidebar_current("docs-aws-datasource-network-interfaces") %>>
-                            <a href="/docs/providers/aws/d/network_interfaces.html">aws_network_interfaces</a>
-                        </li>
                         <li<%= sidebar_current("docs-aws-datasource-lambda-function") %>>
                             <a href="/docs/providers/aws/d/lambda_function.html">aws_lambda_function</a>
+                        </li>
+                        <li<%= sidebar_current("docs-aws-datasource-lambda-invocation") %>>
+                            <a href="/docs/providers/aws/d/lambda_invocation.html">aws_lambda_invocation</a>
                         </li>
                         <li<%= sidebar_current("docs-aws-datasource-launch-configuration") %>>
                             <a href="/docs/providers/aws/d/launch_configuration.html">aws_launch_configuration</a>
@@ -292,6 +280,18 @@
                         <li<%= sidebar_current("docs-aws-datasource-mq-broker") %>>
                             <a href="/docs/providers/aws/d/mq_broker.html">aws_mq_broker</a>
                         </li>
+                        <li<%= sidebar_current("docs-aws-datasource-nat-gateway") %>>
+                           <a href="/docs/providers/aws/d/nat_gateway.html">aws_nat_gateway</a>
+                        </li>
+                        <li<%= sidebar_current("docs-aws-datasource-network-acls") %>>
+                           <a href="/docs/providers/aws/d/network_acls.html">aws_network_acls</a>
+                        </li>
+                        <li<%= sidebar_current("docs-aws-datasource-network-interface-x") %>>
+                            <a href="/docs/providers/aws/d/network_interface.html">aws_network_interface</a>
+                        </li>
+                         <li<%= sidebar_current("docs-aws-datasource-network-interfaces") %>>
+                            <a href="/docs/providers/aws/d/network_interfaces.html">aws_network_interfaces</a>
+                        </li>
                         <li<%= sidebar_current("docs-aws-datasource-partition") %>>
                             <a href="/docs/providers/aws/d/partition.html">aws_partition</a>
                         </li>
@@ -313,6 +313,9 @@
                         <li<%= sidebar_current("docs-aws-datasource-region") %>>
                             <a href="/docs/providers/aws/d/region.html">aws_region</a>
                         </li>
+                        <li<%= sidebar_current("docs-aws-datasource-route") %>>
+                          <a href="/docs/providers/aws/d/route.html">aws_route</a>
+                        </li>
                         <li<%= sidebar_current("docs-aws-datasource-route53-delegation-set") %>>
                           <a href="/docs/providers/aws/d/route53_delegation_set.html">aws_route53_delegation_set</a>
                         </li>
@@ -325,9 +328,7 @@
                         <li<%= sidebar_current("docs-aws-datasource-route-tables") %>>
                           <a href="/docs/providers/aws/d/route_tables.html">aws_route_tables</a>
                         </li>
-                        <li<%= sidebar_current("docs-aws-datasource-route") %>>
-                          <a href="/docs/providers/aws/d/route.html">aws_route</a>
-                        </li>
+
                         <li<%= sidebar_current("docs-aws-datasource-s3-bucket") %>>
                             <a href="/docs/providers/aws/d/s3_bucket.html">aws_s3_bucket</a>
                         </li>
@@ -346,12 +347,13 @@
                         <li<%= sidebar_current("docs-aws-datasource-security-groups") %>>
                          <a href="/docs/providers/aws/d/security_groups.html">aws_security_groups</a>
                         </li>
-                        <li<%= sidebar_current("docs-aws-datasource-sqs-queue") %>>
-                         <a href="/docs/providers/aws/d/sqs_queue.html">aws_sqs_queue</a>
-                        </li>
                         <li<%= sidebar_current("docs-aws-datasource-sns-topic") %>>
                          <a href="/docs/providers/aws/d/sns_topic.html">aws_sns_topic</a>
                         </li>
+                        <li<%= sidebar_current("docs-aws-datasource-sqs-queue") %>>
+                         <a href="/docs/providers/aws/d/sqs_queue.html">aws_sqs_queue</a>
+                        </li>
+
                         <li<%= sidebar_current("docs-aws-datasource-ssm-document") %>>
                          <a href="/docs/providers/aws/d/ssm_document.html">aws_ssm_document</a>
                         </li>
@@ -367,9 +369,6 @@
                         <li<%= sidebar_current("docs-aws-datasource-subnet-ids") %>>
                             <a href="/docs/providers/aws/d/subnet_ids.html">aws_subnet_ids</a>
                         </li>
-                        <li<%= sidebar_current("docs-aws-datasource-vpcs") %>>
-                            <a href="/docs/providers/aws/d/vpcs.html">aws_vpcs</a>
-                        </li>
                         <li<%= sidebar_current("docs-aws-datasource-vpc-x") %>>
                             <a href="/docs/providers/aws/d/vpc.html">aws_vpc</a>
                         </li>
@@ -384,6 +383,9 @@
                         </li>
                         <li<%= sidebar_current("docs-aws-datasource-vpc-peering-connection") %>>
                             <a href="/docs/providers/aws/d/vpc_peering_connection.html">aws_vpc_peering_connection</a>
+                        </li>
+                        <li<%= sidebar_current("docs-aws-datasource-vpcs") %>>
+                            <a href="/docs/providers/aws/d/vpcs.html">aws_vpcs</a>
                         </li>
                         <li<%= sidebar_current("docs-aws-datasource-vpn-gateway") %>>
                             <a href="/docs/providers/aws/d/vpn_gateway.html">aws_vpn_gateway</a>
