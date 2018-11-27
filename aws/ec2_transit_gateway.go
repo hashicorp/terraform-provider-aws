@@ -80,6 +80,8 @@ func ec2DescribeTransitGateway(conn *ec2.EC2, transitGatewayID string) (*ec2.Tra
 
 func ec2DescribeTransitGatewayRoute(conn *ec2.EC2, transitGatewayRouteTableID, destination string) (*ec2.TransitGatewayRoute, error) {
 	input := &ec2.SearchTransitGatewayRoutesInput{
+		// As of the time of writing, the EC2 API reference documentation (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_SearchTransitGatewayRoutes.html)
+		// incorrectly states which filter Names are allowed. The below are example errors:
 		// InvalidParameterValue: Value (transit-gateway-route-destination-cidr-block) for parameter Filters is invalid.
 		// InvalidParameterValue: Value (transit-gateway-route-type) for parameter Filters is invalid.
 		// InvalidParameterValue: Value (destination-cidr-block) for parameter Filters is invalid.
