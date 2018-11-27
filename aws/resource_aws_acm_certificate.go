@@ -41,6 +41,11 @@ func resourceAwsAcmCertificate() *schema.Resource {
 				StateFunc: normalizeCert,
 				Sensitive: true,
 			},
+			"certificate_authority_arn": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 			"domain_name": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -73,7 +78,7 @@ func resourceAwsAcmCertificate() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"private_key", "certificate_body", "certificate_chain"},
+				ConflictsWith: []string{"private_key", "certificate_body", "certificate_chain", "certificate_authority_arn"},
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -115,6 +120,10 @@ func resourceAwsAcmCertificate() *schema.Resource {
 
 func resourceAwsAcmCertificateCreate(d *schema.ResourceData, meta interface{}) error {
 	if _, ok := d.GetOk("domain_name"); ok {
+		if _, ok := d.GetOk("certificate_authority_arn"); ok {
+			return resourceAwsAcmCertificateCreateRequested(d, meta)
+		}
+
 		if _, ok := d.GetOk("validation_method"); !ok {
 			return errors.New("validation_method must be set when creating a certificate")
 		}
@@ -154,8 +163,14 @@ func resourceAwsAcmCertificateCreateImported(d *schema.ResourceData, meta interf
 func resourceAwsAcmCertificateCreateRequested(d *schema.ResourceData, meta interface{}) error {
 	acmconn := meta.(*AWSClient).acmconn
 	params := &acm.RequestCertificateInput{
-		DomainName:       aws.String(strings.TrimSuffix(d.Get("domain_name").(string), ".")),
-		ValidationMethod: aws.String(d.Get("validation_method").(string)),
+		DomainName: aws.String(strings.TrimSuffix(d.Get("domain_name").(string), ".")),
+	}
+
+	caARN, ok := d.GetOk("certificate_authority_arn")
+	if ok {
+		params.CertificateAuthorityArn = aws.String(caARN.(string))
+	} else {
+		params.ValidationMethod = aws.String(d.Get("validation_method").(string))
 	}
 
 	if sans, ok := d.GetOk("subject_alternative_names"); ok {
@@ -209,6 +224,7 @@ func resourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) err
 
 		d.Set("domain_name", resp.Certificate.DomainName)
 		d.Set("arn", resp.Certificate.CertificateArn)
+		d.Set("certificate_authority_arn", resp.Certificate.CertificateAuthorityArn)
 
 		if err := d.Set("subject_alternative_names", cleanUpSubjectAlternativeNames(resp.Certificate)); err != nil {
 			return resource.NonRetryableError(err)
