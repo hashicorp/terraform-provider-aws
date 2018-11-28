@@ -164,37 +164,51 @@ func (c *ECS) CreateServiceRequest(input *CreateServiceInput) (req *request.Requ
 // For more information, see Service Load Balancing (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/service-load-balancing.html)
 // in the Amazon Elastic Container Service Developer Guide.
 //
-// You can optionally specify a deployment configuration for your service. During
-// a deployment, the service scheduler uses the minimumHealthyPercent and maximumPercent
-// parameters to determine the deployment strategy. The deployment is triggered
-// by changing the task definition or the desired count of a service with an
-// UpdateService operation.
+// You can optionally specify a deployment configuration for your service. The
+// deployment is triggered by changing properties, such as the task definition
+// or the desired count of a service, with an UpdateService operation.
 //
-// The minimumHealthyPercent represents a lower limit on the number of your
-// service's tasks that must remain in the RUNNING state during a deployment,
-// as a percentage of the desiredCount (rounded up to the nearest integer).
-// This parameter enables you to deploy without using additional cluster capacity.
-// For example, if your service has a desiredCount of four tasks and a minimumHealthyPercent
-// of 50%, the scheduler can stop two existing tasks to free up cluster capacity
-// before starting two new tasks. Tasks for services that do not use a load
-// balancer are considered healthy if they are in the RUNNING state. Tasks for
-// services that do use a load balancer are considered healthy if they are in
-// the RUNNING state and the container instance they are hosted on is reported
-// as healthy by the load balancer. The default value for a replica service
-// for minimumHealthyPercent is 50% in the console and 100% for the AWS CLI,
-// the AWS SDKs, and the APIs. The default value for a daemon service for minimumHealthyPercent
-// is 0% for the AWS CLI, the AWS SDKs, and the APIs and 50% for the console.
+// If a service is using the ECS deployment controller, the minimum healthy
+// percent represents a lower limit on the number of tasks in a service that
+// must remain in the RUNNING state during a deployment, as a percentage of
+// the desired number of tasks (rounded up to the nearest integer), and while
+// any container instances are in the DRAINING state if the service contains
+// tasks using the EC2 launch type. This parameter enables you to deploy without
+// using additional cluster capacity. For example, if your service has a desired
+// number of four tasks and a minimum healthy percent of 50%, the scheduler
+// may stop two existing tasks to free up cluster capacity before starting two
+// new tasks. Tasks for services that do not use a load balancer are considered
+// healthy if they are in the RUNNING state; tasks for services that do use
+// a load balancer are considered healthy if they are in the RUNNING state and
+// they are reported as healthy by the load balancer. The default value for
+// minimum healthy percent is 100%.
 //
-// The maximumPercent parameter represents an upper limit on the number of your
-// service's tasks that are allowed in the RUNNING or PENDING state during a
-// deployment, as a percentage of the desiredCount (rounded down to the nearest
-// integer). This parameter enables you to define the deployment batch size.
-// For example, if your replica service has a desiredCount of four tasks and
-// a maximumPercent value of 200%, the scheduler can start four new tasks before
-// stopping the four older tasks (provided that the cluster resources required
-// to do this are available). The default value for a replica service for maximumPercent
-// is 200%. If you are using a daemon service type, the maximumPercent should
-// remain at 100%, which is the default value.
+// If a service is using the ECS deployment controller, the maximum percent
+// parameter represents an upper limit on the number of tasks in a service that
+// are allowed in the RUNNING or PENDING state during a deployment, as a percentage
+// of the desired number of tasks (rounded down to the nearest integer), and
+// while any container instances are in the DRAINING state if the service contains
+// tasks using the EC2 launch type. This parameter enables you to define the
+// deployment batch size. For example, if your service has a desired number
+// of four tasks and a maximum percent value of 200%, the scheduler may start
+// four new tasks before stopping the four older tasks (provided that the cluster
+// resources required to do this are available). The default value for maximum
+// percent is 200%.
+//
+// If a service is using the CODE_DEPLOY deployment controller and tasks that
+// use the EC2 launch type, the minimum healthy percent and maximum percent
+// values are only used to define the lower and upper limit on the number of
+// the tasks in the service that remain in the RUNNING state while the container
+// instances are in the DRAINING state. If the tasks in the service use the
+// Fargate launch type, the minimum healthy percent and maximum percent values
+// are not used, although they are currently visible when describing your service.
+//
+// Tasks for services that do not use a load balancer are considered healthy
+// if they are in the RUNNING state. Tasks for services that do use a load balancer
+// are considered healthy if they are in the RUNNING state and the container
+// instance they are hosted on is reported as healthy by the load balancer.
+// The default value for a replica service for minimumHealthyPercent is 100%.
+// The default value for a daemon service for minimumHealthyPercent is 0%.
 //
 // When the service scheduler launches new tasks, it determines task placement
 // in your cluster using the following logic:
@@ -529,14 +543,14 @@ func (c *ECS) DeleteClusterRequest(input *DeleteClusterInput) (req *request.Requ
 //   with ListClusters. Amazon ECS clusters are Region-specific.
 //
 //   * ErrCodeClusterContainsContainerInstancesException "ClusterContainsContainerInstancesException"
-//   You cannot delete a cluster that has registered container instances. You
-//   must first deregister the container instances before you can delete the cluster.
-//   For more information, see DeregisterContainerInstance.
+//   You cannot delete a cluster that has registered container instances. First,
+//   deregister the container instances before you can delete the cluster. For
+//   more information, see DeregisterContainerInstance.
 //
 //   * ErrCodeClusterContainsServicesException "ClusterContainsServicesException"
-//   You cannot delete a cluster that contains services. You must first update
-//   the service to reduce its desired task count to 0 and then delete the service.
-//   For more information, see UpdateService and DeleteService.
+//   You cannot delete a cluster that contains services. First, update the service
+//   to reduce its desired task count to 0 and then delete the service. For more
+//   information, see UpdateService and DeleteService.
 //
 //   * ErrCodeClusterContainsTasksException "ClusterContainsTasksException"
 //   You cannot delete a cluster that has active tasks.
@@ -834,8 +848,8 @@ func (c *ECS) DeregisterTaskDefinitionRequest(input *DeregisterTaskDefinitionInp
 //
 // You cannot use an INACTIVE task definition to run new tasks or create new
 // services, and you cannot update an existing service to reference an INACTIVE
-// task definition (although there may be up to a 10-minute window following
-// deregistration where these restrictions have not yet taken effect).
+// task definition. However, there may be up to a 10-minute window following
+// deregistration where these restrictions have not yet taken effect.
 //
 // At this time, INACTIVE task definitions remain discoverable in your account
 // indefinitely. However, this behavior is subject to change in the future,
@@ -3098,7 +3112,7 @@ func (c *ECS) RunTaskRequest(input *RunTaskInput) (req *request.Request, output 
 //   You do not have authorization to perform the requested action.
 //
 //   * ErrCodeBlockedException "BlockedException"
-//   Your AWS account has been blocked. For more information, Contact AWS Support
+//   Your AWS account has been blocked. For more information, contact AWS Support
 //   (http://aws.amazon.com/contact-us/).
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecs-2014-11-13/RunTask
@@ -3267,10 +3281,11 @@ func (c *ECS) StopTaskRequest(input *StopTaskInput) (req *request.Request, outpu
 // Stops a running task. Any tags associated with the task will be deleted.
 //
 // When StopTask is called on a task, the equivalent of docker stop is issued
-// to the containers running in the task. This results in a SIGTERM and a default
-// 30-second timeout, after which SIGKILL is sent and the containers are forcibly
-// stopped. If the container handles the SIGTERM gracefully and exits within
-// 30 seconds from receiving it, no SIGKILL is sent.
+// to the containers running in the task. This results in a SIGTERM value and
+// a default 30-second timeout, after which the SIGKILL value is sent and the
+// containers are forcibly stopped. If the container handles the SIGTERM value
+// gracefully and exits within 30 seconds from receiving it, no SIGKILL value
+// is sent.
 //
 // The default 30-second timeout can be configured on the Amazon ECS container
 // agent with the ECS_CONTAINER_STOP_TIMEOUT variable. For more information,
@@ -3890,10 +3905,10 @@ func (c *ECS) UpdateContainerInstancesStateRequest(input *UpdateContainerInstanc
 //
 //    * The maximumPercent parameter represents an upper limit on the number
 //    of running tasks during task replacement, which enables you to define
-//    the replacement batch size. For example, if desiredCount of four tasks,
+//    the replacement batch size. For example, if desiredCount is four tasks,
 //    a maximum of 200% starts four new tasks before stopping the four tasks
-//    to be drained (provided that the cluster resources required to do this
-//    are available). If the maximum is 100%, then replacement tasks can't start
+//    to be drained, provided that the cluster resources required to do this
+//    are available. If the maximum is 100%, then replacement tasks can't start
 //    until the draining tasks have stopped.
 //
 // Any PENDING or RUNNING tasks that do not belong to a service are not affected.
@@ -3995,8 +4010,18 @@ func (c *ECS) UpdateServiceRequest(input *UpdateServiceInput) (req *request.Requ
 
 // UpdateService API operation for Amazon EC2 Container Service.
 //
-// Modifies the desired count, deployment configuration, network configuration,
-// or task definition used in a service.
+// Modifies the parameters of a service.
+//
+// For services using the rolling update (ECS) deployment controller, the desired
+// count, deployment configuration, network configuration, or task definition
+// used can be updated.
+//
+// For services using the blue/green (CODE_DEPLOY) deployment controller, only
+// the desired count, deployment configuration, and health check grace period
+// can be updated using this API. If the network configuration, platform version,
+// or task definition need to be updated, a new AWS CodeDeploy deployment should
+// be created. For more information, see CreateDeployment (https://docs.aws.amazon.com/codedeploy/latest/APIReference/API_CreateDeployment.html)
+// in the AWS CodeDeploy API Reference.
 //
 // You can add to or subtract from the number of instantiations of a task definition
 // in a service by specifying the cluster that the service is running in and
@@ -4328,7 +4353,7 @@ type AwsVpcConfiguration struct {
 
 	// The security groups associated with the task or service. If you do not specify
 	// a security group, the default security group for the VPC is used. There is
-	// a limit of 5 security groups able to be specified per AwsVpcConfiguration.
+	// a limit of five security groups able to be specified per AwsVpcConfiguration.
 	//
 	// All specified security groups must be from the same VPC.
 	SecurityGroups []*string `locationName:"securityGroups" type:"list"`
@@ -4667,7 +4692,7 @@ type ContainerDefinition struct {
 	//    * Agent versions less than or equal to 1.1.0: Null and zero CPU values
 	//    are passed to Docker as 0, which Docker then converts to 1,024 CPU shares.
 	//    CPU values of 1 are passed to Docker as 1, which the Linux kernel converts
-	//    to 2 CPU shares.
+	//    to two CPU shares.
 	//
 	//    * Agent versions greater than or equal to 1.2.0: Null, zero, and CPU values
 	//    of 1 are passed to Docker as 2.
@@ -5746,6 +5771,9 @@ type CreateServiceInput struct {
 	// deployment and the ordering of stopping and starting tasks.
 	DeploymentConfiguration *DeploymentConfiguration `locationName:"deploymentConfiguration" type:"structure"`
 
+	// The deployment controller to use for the service.
+	DeploymentController *DeploymentController `locationName:"deploymentController" type:"structure"`
+
 	// The number of instantiations of the specified task definition to place and
 	// keep running on your cluster.
 	DesiredCount *int64 `locationName:"desiredCount" type:"integer"`
@@ -5761,19 +5789,37 @@ type CreateServiceInput struct {
 	// has first started. This is only valid if your service is configured to use
 	// a load balancer. If your service's tasks take a while to start and respond
 	// to Elastic Load Balancing health checks, you can specify a health check grace
-	// period of up to 7,200 seconds during which the ECS service scheduler ignores
-	// health check status. This grace period can prevent the ECS service scheduler
-	// from marking tasks as unhealthy and stopping them before they have time to
-	// come up.
+	// period of up to 7,200 seconds. During that time, the ECS service scheduler
+	// ignores health check status. This grace period can prevent the ECS service
+	// scheduler from marking tasks as unhealthy and stopping them before they have
+	// time to come up.
 	HealthCheckGracePeriodSeconds *int64 `locationName:"healthCheckGracePeriodSeconds" type:"integer"`
 
-	// The launch type on which to run your service.
+	// The launch type on which to run your service. For more information, see Amazon
+	// ECS Launch Types (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/launch_types.html)
+	// in the Amazon Elastic Container Service Developer Guide.
 	LaunchType *string `locationName:"launchType" type:"string" enum:"LaunchType"`
 
 	// A load balancer object representing the load balancer to use with your service.
-	// Currently, you are limited to one load balancer or target group per service.
-	// After you create a service, the load balancer name or target group ARN, container
-	// name, and container port specified in the service definition are immutable.
+	//
+	// If the service is using the ECS deployment controller, you are limited to
+	// one load balancer or target group.
+	//
+	// If the service is using the CODE_DEPLOY deployment controller, the service
+	// is required to use either an Application Load Balancer or Network Load Balancer.
+	// When creating an AWS CodeDeploy deployment group, you specify two target
+	// groups (referred to as a targetGroupPair). During a deployment, AWS CodeDeploy
+	// determines which task set in your service has the status PRIMARY and associates
+	// one target group with it, and then associates the other target group with
+	// the replacement task set. The load balancer can also have up to two listeners:
+	// a required listener for production traffic and an optional listener that
+	// allows you perform validation tests with Lambda functions before routing
+	// production traffic to it.
+	//
+	// After you create a service using the ECS deployment controller, the load
+	// balancer name or target group ARN, container name, and container port specified
+	// in the service definition are immutable. If you are using the CODE_DEPLOY
+	// deployment controller, these values can be changed when updating the service.
 	//
 	// For Classic Load Balancers, this object must contain the load balancer name,
 	// the container name (as it appears in a container definition), and the container
@@ -5812,8 +5858,11 @@ type CreateServiceInput struct {
 	// specify a maximum of five strategy rules per service.
 	PlacementStrategy []*PlacementStrategy `locationName:"placementStrategy" type:"list"`
 
-	// The platform version on which to run your service. If one is not specified,
-	// the latest version is used by default.
+	// The platform version on which your tasks in the service are running. A platform
+	// version is only specified for tasks using the Fargate launch type. If one
+	// is not specified, the LATEST platform version is used by default. For more
+	// information, see AWS Fargate Platform Versions (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/platform_versions.html)
+	// in the Amazon Elastic Container Service Developer Guide.
 	PlatformVersion *string `locationName:"platformVersion" type:"string"`
 
 	// Specifies whether to propagate the tags from the task definition or the service
@@ -5845,14 +5894,15 @@ type CreateServiceInput struct {
 	Role *string `locationName:"role" type:"string"`
 
 	// The scheduling strategy to use for the service. For more information, see
-	// Services (http://docs.aws.amazon.com/AmazonECS/latest/developerguideecs_services.html).
+	// Services (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs_services.html).
 	//
 	// There are two service scheduler strategies available:
 	//
 	//    * REPLICA-The replica scheduling strategy places and maintains the desired
 	//    number of tasks across your cluster. By default, the service scheduler
 	//    spreads tasks across Availability Zones. You can use task placement strategies
-	//    and constraints to customize task placement decisions.
+	//    and constraints to customize task placement decisions. This scheduler
+	//    strategy is required if using the CODE_DEPLOY deployment controller.
 	//
 	//    * DAEMON-The daemon scheduling strategy deploys exactly one task on each
 	//    active container instance that meets all of the task placement constraints
@@ -5860,7 +5910,8 @@ type CreateServiceInput struct {
 	//    is no need to specify a desired number of tasks, a task placement strategy,
 	//    or use Service Auto Scaling policies.
 	//
-	// Fargate tasks do not support the DAEMON scheduling strategy.
+	// Tasks using the Fargate launch type or the CODE_DEPLOY deploymenet controller
+	//    do not support the DAEMON scheduling strategy.
 	SchedulingStrategy *string `locationName:"schedulingStrategy" type:"string" enum:"SchedulingStrategy"`
 
 	// The name of your service. Up to 255 letters (uppercase and lowercase), numbers,
@@ -5913,6 +5964,11 @@ func (s *CreateServiceInput) Validate() error {
 	if s.TaskDefinition == nil {
 		invalidParams.Add(request.NewErrParamRequired("TaskDefinition"))
 	}
+	if s.DeploymentController != nil {
+		if err := s.DeploymentController.Validate(); err != nil {
+			invalidParams.AddNested("DeploymentController", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.NetworkConfiguration != nil {
 		if err := s.NetworkConfiguration.Validate(); err != nil {
 			invalidParams.AddNested("NetworkConfiguration", err.(request.ErrInvalidParams))
@@ -5950,6 +6006,12 @@ func (s *CreateServiceInput) SetCluster(v string) *CreateServiceInput {
 // SetDeploymentConfiguration sets the DeploymentConfiguration field's value.
 func (s *CreateServiceInput) SetDeploymentConfiguration(v *DeploymentConfiguration) *CreateServiceInput {
 	s.DeploymentConfiguration = v
+	return s
+}
+
+// SetDeploymentController sets the DeploymentController field's value.
+func (s *CreateServiceInput) SetDeploymentController(v *DeploymentController) *CreateServiceInput {
+	s.DeploymentController = v
 	return s
 }
 
@@ -6053,6 +6115,13 @@ type CreateServiceOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The full description of your service following the create call.
+	//
+	// If a service is using the ECS deployment controller, the deploymentController
+	// and taskSets parameters will not be returned.
+	//
+	// If the service is using the CODE_DEPLOY deployment controller, the deploymentController,
+	// taskSets and deployments parameters will be returned, however the deployments
+	// parameter will be an empty list.
 	Service *Service `locationName:"service" type:"structure"`
 }
 
@@ -6379,11 +6448,12 @@ func (s *DeleteServiceOutput) SetService(v *Service) *DeleteServiceOutput {
 	return s
 }
 
-// The details of an Amazon ECS service deployment.
+// The details of an Amazon ECS service deployment. This is used when a service
+// uses the CODE_DEPLOY deployment controller type.
 type Deployment struct {
 	_ struct{} `type:"structure"`
 
-	// The Unix timestamp for when the service was created.
+	// The Unix timestamp for when the service deployment was created.
 	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp"`
 
 	// The most recent desired count of tasks that was specified for the service
@@ -6393,7 +6463,9 @@ type Deployment struct {
 	// The ID of the deployment.
 	Id *string `locationName:"id" type:"string"`
 
-	// The launch type on which your service is running.
+	// The launch type the tasks in the service are using. For more information,
+	// see Amazon ECS Launch Types (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/launch_types.html)
+	// in the Amazon Elastic Container Service Developer Guide.
 	LaunchType *string `locationName:"launchType" type:"string" enum:"LaunchType"`
 
 	// The VPC subnet and security group configuration for tasks that receive their
@@ -6403,22 +6475,31 @@ type Deployment struct {
 	// The number of tasks in the deployment that are in the PENDING status.
 	PendingCount *int64 `locationName:"pendingCount" type:"integer"`
 
-	// The platform version on which your service is running.
+	// The platform version on which your tasks in the service are running. A platform
+	// version is only specified for tasks using the Fargate launch type. If one
+	// is not specified, the LATEST platform version is used by default. For more
+	// information, see AWS Fargate Platform Versions (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/platform_versions.html)
+	// in the Amazon Elastic Container Service Developer Guide.
 	PlatformVersion *string `locationName:"platformVersion" type:"string"`
 
 	// The number of tasks in the deployment that are in the RUNNING status.
 	RunningCount *int64 `locationName:"runningCount" type:"integer"`
 
-	// The status of the deployment. Valid values are PRIMARY for the most recent
-	// deployment, ACTIVE for previous deployments that still have tasks running,
-	// but are being replaced with the PRIMARY deployment, and INACTIVE for deployments
-	// that have been completely replaced.
+	// The status of the deployment. The following describes each state:
+	//
+	// PRIMARYThe most recent deployment of a service.
+	//
+	// ACTIVEA service deployment that still has running tasks, but are in the process
+	// of being replaced with a new PRIMARY deployment.
+	//
+	// INACTIVEA deployment that has been completely replaced.
 	Status *string `locationName:"status" type:"string"`
 
-	// The most recent task definition that was specified for the service to use.
+	// The most recent task definition that was specified for the tasks in the service
+	// to use.
 	TaskDefinition *string `locationName:"taskDefinition" type:"string"`
 
-	// The Unix timestamp for when the service was last updated.
+	// The Unix timestamp for when the service deployment was last updated.
 	UpdatedAt *time.Time `locationName:"updatedAt" type:"timestamp"`
 }
 
@@ -6503,17 +6584,49 @@ func (s *Deployment) SetUpdatedAt(v time.Time) *Deployment {
 type DeploymentConfiguration struct {
 	_ struct{} `type:"structure"`
 
-	// The upper limit (as a percentage of the service's desiredCount) of the number
-	// of tasks that are allowed in the RUNNING or PENDING state in a service during
-	// a deployment. The maximum number of tasks during a deployment is the desiredCount
-	// multiplied by maximumPercent/100, rounded down to the nearest integer value.
+	// If a service is using the rolling update (ECS) deployment type, the maximum
+	// percent parameter represents an upper limit on the number of tasks in a service
+	// that are allowed in the RUNNING or PENDING state during a deployment, as
+	// a percentage of the desired number of tasks (rounded down to the nearest
+	// integer), and while any container instances are in the DRAINING state if
+	// the service contains tasks using the EC2 launch type. This parameter enables
+	// you to define the deployment batch size. For example, if your service has
+	// a desired number of four tasks and a maximum percent value of 200%, the scheduler
+	// may start four new tasks before stopping the four older tasks (provided that
+	// the cluster resources required to do this are available). The default value
+	// for maximum percent is 200%.
+	//
+	// If a service is using the blue/green (CODE_DEPLOY) deployment type and tasks
+	// that use the EC2 launch type, the maximum percent value is set to the default
+	// value and is used to define the upper limit on the number of the tasks in
+	// the service that remain in the RUNNING state while the container instances
+	// are in the DRAINING state. If the tasks in the service use the Fargate launch
+	// type, the maximum percent value is not used, although it is returned when
+	// describing your service.
 	MaximumPercent *int64 `locationName:"maximumPercent" type:"integer"`
 
-	// The lower limit (as a percentage of the service's desiredCount) of the number
-	// of running tasks that must remain in the RUNNING state in a service during
-	// a deployment. The minimum number of healthy tasks during a deployment is
-	// the desiredCount multiplied by minimumHealthyPercent/100, rounded up to the
-	// nearest integer value.
+	// If a service is using the rolling update (ECS) deployment type, the minimum
+	// healthy percent represents a lower limit on the number of tasks in a service
+	// that must remain in the RUNNING state during a deployment, as a percentage
+	// of the desired number of tasks (rounded up to the nearest integer), and while
+	// any container instances are in the DRAINING state if the service contains
+	// tasks using the EC2 launch type. This parameter enables you to deploy without
+	// using additional cluster capacity. For example, if your service has a desired
+	// number of four tasks and a minimum healthy percent of 50%, the scheduler
+	// may stop two existing tasks to free up cluster capacity before starting two
+	// new tasks. Tasks for services that do not use a load balancer are considered
+	// healthy if they are in the RUNNING state; tasks for services that do use
+	// a load balancer are considered healthy if they are in the RUNNING state and
+	// they are reported as healthy by the load balancer. The default value for
+	// minimum healthy percent is 100%.
+	//
+	// If a service is using the blue/green (CODE_DEPLOY) deployment type and tasks
+	// that use the EC2 launch type, the minimum healthy percent value is set to
+	// the default value and is used to define the lower limit on the number of
+	// the tasks in the service that remain in the RUNNING state while the container
+	// instances are in the DRAINING state. If the tasks in the service use the
+	// Fargate launch type, the minimum healthy percent value is not used, although
+	// it is returned when describing your service.
 	MinimumHealthyPercent *int64 `locationName:"minimumHealthyPercent" type:"integer"`
 }
 
@@ -6536,6 +6649,61 @@ func (s *DeploymentConfiguration) SetMaximumPercent(v int64) *DeploymentConfigur
 // SetMinimumHealthyPercent sets the MinimumHealthyPercent field's value.
 func (s *DeploymentConfiguration) SetMinimumHealthyPercent(v int64) *DeploymentConfiguration {
 	s.MinimumHealthyPercent = &v
+	return s
+}
+
+// The deployment controller to use for the service. For more information, see
+// Amazon ECS Deployment Types (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/deployment-types.html)
+// in the Amazon Elastic Container Service Developer Guide.
+type DeploymentController struct {
+	_ struct{} `type:"structure"`
+
+	// The deployment controller type to use.
+	//
+	// There are two deployment controller types available:
+	//
+	// ECSThe rolling update (ECS) deployment type involves replacing the current
+	// running version of the container with the latest version. The number of containers
+	// Amazon ECS adds or removes from the service during a rolling update is controlled
+	// by adjusting the minimum and maximum number of healthy tasks allowed during
+	// a service deployment, as specified in the DeploymentConfiguration.
+	//
+	// CODE_DEPLOYThe blue/green (CODE_DEPLOY) deployment type uses the blue/green
+	// deployment model powered by AWS CodeDeploy, which allows you to verify a
+	// new deployment of a service before sending production traffic to it. For
+	// more information, see Amazon ECS Deployment Types (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/deployment-types.html)
+	// in the Amazon Elastic Container Service Developer Guide.
+	//
+	// Type is a required field
+	Type *string `locationName:"type" type:"string" required:"true" enum:"DeploymentControllerType"`
+}
+
+// String returns the string representation
+func (s DeploymentController) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeploymentController) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeploymentController) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeploymentController"}
+	if s.Type == nil {
+		invalidParams.Add(request.NewErrParamRequired("Type"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetType sets the Type field's value.
+func (s *DeploymentController) SetType(v string) *DeploymentController {
+	s.Type = &v
 	return s
 }
 
@@ -8808,6 +8976,18 @@ func (s *ListTasksOutput) SetTaskArns(v []*string) *ListTasksOutput {
 
 // Details on a load balancer that is used with a service.
 //
+// If the service is using the ECS deployment controller, you are limited to
+// one load balancer or target group.
+//
+// If the service is using the CODE_DEPLOY deployment controller, the service
+// is required to use either an Application Load Balancer or Network Load Balancer.
+// When you are creating an AWS CodeDeploy deployment group, you specify two
+// target groups (referred to as a targetGroupPair). Each target group binds
+// to a separate task set in the deployment. The load balancer can also have
+// up to two listeners, a required listener for production traffic and an optional
+// listener that allows you to test new revisions of the service before routing
+// production traffic to it.
+//
 // Services with tasks that use the awsvpc network mode (for example, those
 // with the Fargate launch type) only support Application Load Balancers and
 // Network Load Balancers. Classic Load Balancers are not supported. Also, when
@@ -8831,7 +9011,10 @@ type LoadBalancer struct {
 	LoadBalancerName *string `locationName:"loadBalancerName" type:"string"`
 
 	// The full Amazon Resource Name (ARN) of the Elastic Load Balancing target
-	// group associated with a service.
+	// group or groups associated with a service. For services using the ECS deployment
+	// controller, you are limited to one target group. For services using the CODE_DEPLOY
+	// deployment controller, you are required to define two target groups for the
+	// load balancer.
 	//
 	// If your service's task definition uses the awsvpc network mode (which is
 	// required for the Fargate launch type), you must choose ip as the target type,
@@ -9266,9 +9449,9 @@ type PortMapping struct {
 	// was previously specified in a running task is also reserved while the task
 	// is running (after a task stops, the host port is released). The current reserved
 	// ports are displayed in the remainingResources of DescribeContainerInstances
-	// output, and a container instance may have up to 100 reserved ports at a time,
-	// including the default reserved ports (automatically assigned ports do not
-	// count toward the 100 reserved ports limit).
+	// output. A container instance may have up to 100 reserved ports at a time,
+	// including the default reserved ports. Aautomatically assigned ports do not
+	// count toward the 100 reserved ports limit.
 	HostPort *int64 `locationName:"hostPort" type:"integer"`
 
 	// The protocol used for the port mapping. Valid values are tcp and udp. The
@@ -9699,7 +9882,7 @@ type RegisterTaskDefinitionInput struct {
 	//
 	// If you are setting namespaced kernel parameters using systemControls for
 	// the containers in the task, the following will apply to your IPC resource
-	// namespace. For more information, see System Controls (http://docs.aws.amazon.com/AmazonECS/latest/developerguidetask_definition_parameters.html)
+	// namespace. For more information, see System Controls (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html)
 	// in the Amazon Elastic Container Service Developer Guide.
 	//
 	//    * For tasks that use the host IPC mode, IPC namespace related systemControls
@@ -10118,7 +10301,9 @@ type RunTaskInput struct {
 	// is the family name of the task definition (for example, family:my-family-name).
 	Group *string `locationName:"group" type:"string"`
 
-	// The launch type on which to run your task.
+	// The launch type on which to run your task. For more information, see Amazon
+	// ECS Launch Types (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/launch_types.html)
+	// in the Amazon Elastic Container Service Developer Guide.
 	LaunchType *string `locationName:"launchType" type:"string" enum:"LaunchType"`
 
 	// The network configuration for the task. This parameter is required for task
@@ -10149,8 +10334,11 @@ type RunTaskInput struct {
 	// of five strategy rules per task.
 	PlacementStrategy []*PlacementStrategy `locationName:"placementStrategy" type:"list"`
 
-	// The platform version on which to run your task. If one is not specified,
-	// the latest version is used by default.
+	// The platform version the task should run. A platform version is only specified
+	// for tasks using the Fargate launch type. If one is not specified, the LATEST
+	// platform version is used by default. For more information, see AWS Fargate
+	// Platform Versions (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/platform_versions.html)
+	// in the Amazon Elastic Container Service Developer Guide.
 	PlatformVersion *string `locationName:"platformVersion" type:"string"`
 
 	// Specifies whether to propagate the tags from the task definition or the service
@@ -10336,6 +10524,42 @@ func (s *RunTaskOutput) SetTasks(v []*Task) *RunTaskOutput {
 	return s
 }
 
+// A floating-point percentage of the desired number of tasks to place and keep
+// running in the service. This is used when a service uses the CODE_DEPLOY
+// deployment controller type.
+type Scale struct {
+	_ struct{} `type:"structure"`
+
+	// The unit of measure for the scale value.
+	Unit *string `locationName:"unit" type:"string" enum:"ScaleUnit"`
+
+	// The value, specified as a percent total of a service's desiredCount, to scale
+	// the task set.
+	Value *float64 `locationName:"value" type:"double"`
+}
+
+// String returns the string representation
+func (s Scale) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Scale) GoString() string {
+	return s.String()
+}
+
+// SetUnit sets the Unit field's value.
+func (s *Scale) SetUnit(v string) *Scale {
+	s.Unit = &v
+	return s
+}
+
+// SetValue sets the Value field's value.
+func (s *Scale) SetValue(v float64) *Scale {
+	s.Value = &v
+	return s
+}
+
 // An object representing the secret to expose to your container.
 type Secret struct {
 	_ struct{} `type:"structure"`
@@ -10407,6 +10631,9 @@ type Service struct {
 	// deployment and the ordering of stopping and starting tasks.
 	DeploymentConfiguration *DeploymentConfiguration `locationName:"deploymentConfiguration" type:"structure"`
 
+	// The deployment controller type the service is using.
+	DeploymentController *DeploymentController `locationName:"deploymentController" type:"structure"`
+
 	// The current state of deployments for the service.
 	Deployments []*Deployment `locationName:"deployments" type:"list"`
 
@@ -10429,7 +10656,9 @@ type Service struct {
 	// started.
 	HealthCheckGracePeriodSeconds *int64 `locationName:"healthCheckGracePeriodSeconds" type:"integer"`
 
-	// The launch type on which your service is running.
+	// The launch type on which your service is running. For more information, see
+	// Amazon ECS Launch Types (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/launch_types.html)
+	// in the Amazon Elastic Container Service Developer Guide.
 	LaunchType *string `locationName:"launchType" type:"string" enum:"LaunchType"`
 
 	// A list of Elastic Load Balancing load balancer objects, containing the load
@@ -10440,8 +10669,8 @@ type Service struct {
 	// with the Fargate launch type) only support Application Load Balancers and
 	// Network Load Balancers. Classic Load Balancers are not supported. Also, when
 	// you create any target groups for these services, you must choose ip as the
-	// target type, not instance, because tasks that use the awsvpc network mode
-	// are associated with an elastic network interface, not an Amazon EC2 instance.
+	// target type, not instance. Tasks that use the awsvpc network mode are associated
+	// with an elastic network interface, not an Amazon EC2 instance.
 	LoadBalancers []*LoadBalancer `locationName:"loadBalancers" type:"list"`
 
 	// The VPC subnet and security group configuration for tasks that receive their
@@ -10457,8 +10686,10 @@ type Service struct {
 	// The placement strategy that determines how tasks for the service are placed.
 	PlacementStrategy []*PlacementStrategy `locationName:"placementStrategy" type:"list"`
 
-	// The platform version on which your task is running. For more information,
-	// see AWS Fargate Platform Versions (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/platform_versions.html)
+	// The platform version on which your tasks in the service are running. A platform
+	// version is only specified for tasks using the Fargate launch type. If one
+	// is not specified, the LATEST platform version is used by default. For more
+	// information, see AWS Fargate Platform Versions (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/platform_versions.html)
 	// in the Amazon Elastic Container Service Developer Guide.
 	PlatformVersion *string `locationName:"platformVersion" type:"string"`
 
@@ -10475,7 +10706,7 @@ type Service struct {
 	RunningCount *int64 `locationName:"runningCount" type:"integer"`
 
 	// The scheduling strategy to use for the service. For more information, see
-	// Services (http://docs.aws.amazon.com/AmazonECS/latest/developerguideecs_services.html).
+	// Services (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs_services.html).
 	//
 	// There are two service scheduler strategies available:
 	//
@@ -10517,6 +10748,11 @@ type Service struct {
 	// when the service is created with CreateService, and it can be modified with
 	// UpdateService.
 	TaskDefinition *string `locationName:"taskDefinition" type:"string"`
+
+	// Information about a set of Amazon ECS tasks in an AWS CodeDeploy deployment.
+	// An Amazon ECS task set includes details such as the desired number of tasks,
+	// how many tasks are running, and whether the task set serves production traffic.
+	TaskSets []*TaskSet `locationName:"taskSets" type:"list"`
 }
 
 // String returns the string representation
@@ -10550,6 +10786,12 @@ func (s *Service) SetCreatedBy(v string) *Service {
 // SetDeploymentConfiguration sets the DeploymentConfiguration field's value.
 func (s *Service) SetDeploymentConfiguration(v *DeploymentConfiguration) *Service {
 	s.DeploymentConfiguration = v
+	return s
+}
+
+// SetDeploymentController sets the DeploymentController field's value.
+func (s *Service) SetDeploymentController(v *DeploymentController) *Service {
+	s.DeploymentController = v
 	return s
 }
 
@@ -10682,6 +10924,12 @@ func (s *Service) SetTags(v []*Tag) *Service {
 // SetTaskDefinition sets the TaskDefinition field's value.
 func (s *Service) SetTaskDefinition(v string) *Service {
 	s.TaskDefinition = &v
+	return s
+}
+
+// SetTaskSets sets the TaskSets field's value.
+func (s *Service) SetTaskSets(v []*TaskSet) *Service {
+	s.TaskSets = v
 	return s
 }
 
@@ -11386,7 +11634,7 @@ func (s *SubmitTaskStateChangeOutput) SetAcknowledgment(v string) *SubmitTaskSta
 type SystemControl struct {
 	_ struct{} `type:"structure"`
 
-	// The namespaced kernel parameter to set a value for.
+	// The namespaced kernel parameter for which to set a value.
 	Namespace *string `locationName:"namespace" type:"string"`
 
 	// The value for the namespaced kernel parameter specified in namespace.
@@ -11629,7 +11877,9 @@ type Task struct {
 	// (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_life_cycle.html).
 	LastStatus *string `locationName:"lastStatus" type:"string"`
 
-	// The launch type on which your task is running.
+	// The launch type on which your task is running. For more information, see
+	// Amazon ECS Launch Types (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/launch_types.html)
+	// in the Amazon Elastic Container Service Developer Guide.
 	LaunchType *string `locationName:"launchType" type:"string" enum:"LaunchType"`
 
 	// The amount of memory (in MiB) used by the task as expressed in a task definition.
@@ -11663,8 +11913,10 @@ type Task struct {
 	// One or more container overrides.
 	Overrides *TaskOverride `locationName:"overrides" type:"structure"`
 
-	// The platform version on which your task is running. For more information,
-	// see AWS Fargate Platform Versions (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/platform_versions.html)
+	// The platform version on which your task is running. A platform version is
+	// only specified for tasks using the Fargate launch type. If one is not specified,
+	// the LATEST platform version is used by default. For more information, see
+	// AWS Fargate Platform Versions (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/platform_versions.html)
 	// in the Amazon Elastic Container Service Developer Guide.
 	PlatformVersion *string `locationName:"platformVersion" type:"string"`
 
@@ -11691,7 +11943,7 @@ type Task struct {
 	// the RUNNING state to the STOPPED state).
 	StoppedAt *time.Time `locationName:"stoppedAt" type:"timestamp"`
 
-	// The reason the task was stopped.
+	// The reason that the task was stopped.
 	StoppedReason *string `locationName:"stoppedReason" type:"string"`
 
 	// The Unix timestamp for when the task stops (transitions from the RUNNING
@@ -11713,9 +11965,9 @@ type Task struct {
 	// The version counter for the task. Every time a task experiences a change
 	// that triggers a CloudWatch event, the version counter is incremented. If
 	// you are replicating your Amazon ECS task state with CloudWatch Events, you
-	// can compare the version of a task reported by the Amazon ECS APIs with the
-	// version reported in CloudWatch Events for the task (inside the detail object)
-	// to verify that the version in your event stream is current.
+	// can compare the version of a task reported by the Amazon ECS API actionss
+	// with the version reported in CloudWatch Events for the task (inside the detail
+	// object) to verify that the version in your event stream is current.
 	Version *int64 `locationName:"version" type:"long"`
 }
 
@@ -11965,7 +12217,7 @@ type TaskDefinition struct {
 	//
 	// If you are setting namespaced kernel parameters using systemControls for
 	// the containers in the task, the following will apply to your IPC resource
-	// namespace. For more information, see System Controls (http://docs.aws.amazon.com/AmazonECS/latest/developerguidetask_definition_parameters.html)
+	// namespace. For more information, see System Controls (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html)
 	// in the Amazon Elastic Container Service Developer Guide.
 	//
 	//    * For tasks that use the host IPC mode, IPC namespace related systemControls
@@ -12054,21 +12306,22 @@ type TaskDefinition struct {
 	PidMode *string `locationName:"pidMode" type:"string" enum:"PidMode"`
 
 	// An array of placement constraint objects to use for tasks. This field is
-	// not valid if using the Fargate launch type for your task.
+	// not valid if you are using the Fargate launch type for your task.
 	PlacementConstraints []*TaskDefinitionPlacementConstraint `locationName:"placementConstraints" type:"list"`
 
 	// The container instance attributes required by your task. This field is not
-	// valid if using the Fargate launch type for your task.
+	// valid if you are using the Fargate launch type for your task.
 	RequiresAttributes []*Attribute `locationName:"requiresAttributes" type:"list"`
 
-	// The launch type the task is using.
+	// The launch type that the task is using.
 	RequiresCompatibilities []*string `locationName:"requiresCompatibilities" type:"list"`
 
 	// The revision of the task in a particular family. The revision is a version
 	// number of a task definition in a family. When you register a task definition
-	// for the first time, the revision is 1. Each time you register a new revision
-	// of a task definition in the same family, the revision value always increases
-	// by one (even if you have deregistered previous revisions in this family).
+	// for the first time, the revision is 1. Each time that you register a new
+	// revision of a task definition in the same family, the revision value always
+	// increases by one, even if you have deregistered previous revisions in this
+	// family.
 	Revision *int64 `locationName:"revision" type:"integer"`
 
 	// The status of the task definition.
@@ -12295,6 +12548,218 @@ func (s *TaskOverride) SetExecutionRoleArn(v string) *TaskOverride {
 // SetTaskRoleArn sets the TaskRoleArn field's value.
 func (s *TaskOverride) SetTaskRoleArn(v string) *TaskOverride {
 	s.TaskRoleArn = &v
+	return s
+}
+
+// Information about a set of Amazon ECS tasks in an AWS CodeDeploy deployment.
+// An Amazon ECS task set includes details such as the desired number of tasks,
+// how many tasks are running, and whether the task set serves production traffic.
+type TaskSet struct {
+	_ struct{} `type:"structure"`
+
+	// The computed desired count for the task set. This is calculated by multiplying
+	// the service's desiredCount by the task set's scale percentage.
+	ComputedDesiredCount *int64 `locationName:"computedDesiredCount" type:"integer"`
+
+	// The Unix timestamp for when the task set was created.
+	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp"`
+
+	// The deployment ID of the AWS CodeDeploy deployment.
+	ExternalId *string `locationName:"externalId" type:"string"`
+
+	// The ID of the task set.
+	Id *string `locationName:"id" type:"string"`
+
+	// The launch type the tasks in the task set are using. For more information,
+	// see Amazon ECS Launch Types (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/launch_types.html)
+	// in the Amazon Elastic Container Service Developer Guide.
+	LaunchType *string `locationName:"launchType" type:"string" enum:"LaunchType"`
+
+	// Details on a load balancer that is used with a task set.
+	LoadBalancers []*LoadBalancer `locationName:"loadBalancers" type:"list"`
+
+	// The network configuration for the task set.
+	NetworkConfiguration *NetworkConfiguration `locationName:"networkConfiguration" type:"structure"`
+
+	// The number of tasks in the task set that are in the PENDING status during
+	// a deployment. A task in the PENDING state is preparing to enter the RUNNING
+	// state. A task set enters the PENDING status when it launches for the first
+	// time, or when it is restarted after being in the STOPPED state.
+	PendingCount *int64 `locationName:"pendingCount" type:"integer"`
+
+	// The platform version on which the tasks in the task set are running. A platform
+	// version is only specified for tasks using the Fargate launch type. If one
+	// is not specified, the LATEST platform version is used by default. For more
+	// information, see AWS Fargate Platform Versions (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/platform_versions.html)
+	// in the Amazon Elastic Container Service Developer Guide.
+	PlatformVersion *string `locationName:"platformVersion" type:"string"`
+
+	// The number of tasks in the task set that are in the RUNNING status during
+	// a deployment. A task in the RUNNING state is running and ready for use.
+	RunningCount *int64 `locationName:"runningCount" type:"integer"`
+
+	// A floating-point percentage of the desired number of tasks to place and keep
+	// running in the service.
+	Scale *Scale `locationName:"scale" type:"structure"`
+
+	// The stability status, which indicates whether the task set has reached a
+	// steady state. If the following conditions are met, the task set will be in
+	// STEADY_STATE:
+	//
+	//    * The task runningCount is equal to the computedDesiredCount.
+	//
+	//    * The pendingCount is 0.
+	//
+	//    * There are no tasks running on container instances in the DRAINING status.
+	//
+	//    * All tasks are reporting a healthy status from the load balancers, service
+	//    discovery, and container health checks.
+	//
+	// If any of those conditions are not met, the stability status returns STABILIZING.
+	StabilityStatus *string `locationName:"stabilityStatus" type:"string" enum:"StabilityStatus"`
+
+	// The Unix timestamp for when the task set stability status was retrieved.
+	StabilityStatusAt *time.Time `locationName:"stabilityStatusAt" type:"timestamp"`
+
+	// The tag specified when a task set is started. If the task is started by an
+	// AWS CodeDeploy deployment, then the startedBy parameter is CODE_DEPLOY.
+	StartedBy *string `locationName:"startedBy" type:"string"`
+
+	// The status of the task set. The following describes each state:
+	//
+	// PRIMARYThe task set is serving production traffic.
+	//
+	// ACTIVEThe task set is not serving production traffic.
+	//
+	// DRAININGThe tasks in the task set are being stopped and their corresponding
+	// targets are being deregistered from their target group.
+	Status *string `locationName:"status" type:"string"`
+
+	// The task definition the task set is using.
+	TaskDefinition *string `locationName:"taskDefinition" type:"string"`
+
+	// The Amazon Resource Name (ARN) of the task set.
+	TaskSetArn *string `locationName:"taskSetArn" type:"string"`
+
+	// The Unix timestamp for when the task set was last updated.
+	UpdatedAt *time.Time `locationName:"updatedAt" type:"timestamp"`
+}
+
+// String returns the string representation
+func (s TaskSet) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TaskSet) GoString() string {
+	return s.String()
+}
+
+// SetComputedDesiredCount sets the ComputedDesiredCount field's value.
+func (s *TaskSet) SetComputedDesiredCount(v int64) *TaskSet {
+	s.ComputedDesiredCount = &v
+	return s
+}
+
+// SetCreatedAt sets the CreatedAt field's value.
+func (s *TaskSet) SetCreatedAt(v time.Time) *TaskSet {
+	s.CreatedAt = &v
+	return s
+}
+
+// SetExternalId sets the ExternalId field's value.
+func (s *TaskSet) SetExternalId(v string) *TaskSet {
+	s.ExternalId = &v
+	return s
+}
+
+// SetId sets the Id field's value.
+func (s *TaskSet) SetId(v string) *TaskSet {
+	s.Id = &v
+	return s
+}
+
+// SetLaunchType sets the LaunchType field's value.
+func (s *TaskSet) SetLaunchType(v string) *TaskSet {
+	s.LaunchType = &v
+	return s
+}
+
+// SetLoadBalancers sets the LoadBalancers field's value.
+func (s *TaskSet) SetLoadBalancers(v []*LoadBalancer) *TaskSet {
+	s.LoadBalancers = v
+	return s
+}
+
+// SetNetworkConfiguration sets the NetworkConfiguration field's value.
+func (s *TaskSet) SetNetworkConfiguration(v *NetworkConfiguration) *TaskSet {
+	s.NetworkConfiguration = v
+	return s
+}
+
+// SetPendingCount sets the PendingCount field's value.
+func (s *TaskSet) SetPendingCount(v int64) *TaskSet {
+	s.PendingCount = &v
+	return s
+}
+
+// SetPlatformVersion sets the PlatformVersion field's value.
+func (s *TaskSet) SetPlatformVersion(v string) *TaskSet {
+	s.PlatformVersion = &v
+	return s
+}
+
+// SetRunningCount sets the RunningCount field's value.
+func (s *TaskSet) SetRunningCount(v int64) *TaskSet {
+	s.RunningCount = &v
+	return s
+}
+
+// SetScale sets the Scale field's value.
+func (s *TaskSet) SetScale(v *Scale) *TaskSet {
+	s.Scale = v
+	return s
+}
+
+// SetStabilityStatus sets the StabilityStatus field's value.
+func (s *TaskSet) SetStabilityStatus(v string) *TaskSet {
+	s.StabilityStatus = &v
+	return s
+}
+
+// SetStabilityStatusAt sets the StabilityStatusAt field's value.
+func (s *TaskSet) SetStabilityStatusAt(v time.Time) *TaskSet {
+	s.StabilityStatusAt = &v
+	return s
+}
+
+// SetStartedBy sets the StartedBy field's value.
+func (s *TaskSet) SetStartedBy(v string) *TaskSet {
+	s.StartedBy = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *TaskSet) SetStatus(v string) *TaskSet {
+	s.Status = &v
+	return s
+}
+
+// SetTaskDefinition sets the TaskDefinition field's value.
+func (s *TaskSet) SetTaskDefinition(v string) *TaskSet {
+	s.TaskDefinition = &v
+	return s
+}
+
+// SetTaskSetArn sets the TaskSetArn field's value.
+func (s *TaskSet) SetTaskSetArn(v string) *TaskSet {
+	s.TaskSetArn = &v
+	return s
+}
+
+// SetUpdatedAt sets the UpdatedAt field's value.
+func (s *TaskSet) SetUpdatedAt(v time.Time) *TaskSet {
+	s.UpdatedAt = &v
 	return s
 }
 
@@ -12698,10 +13163,10 @@ type UpdateServiceInput struct {
 	// has first started. This is only valid if your service is configured to use
 	// a load balancer. If your service's tasks take a while to start and respond
 	// to Elastic Load Balancing health checks, you can specify a health check grace
-	// period of up to 1,800 seconds during which the ECS service scheduler ignores
-	// the Elastic Load Balancing health check status. This grace period can prevent
-	// the ECS service scheduler from marking tasks as unhealthy and stopping them
-	// before they have time to come up.
+	// period of up to 1,800 seconds. During that time, the ECS service scheduler
+	// ignores the Elastic Load Balancing health check status. This grace period
+	// can prevent the ECS service scheduler from marking tasks as unhealthy and
+	// stopping them before they have time to come up.
 	HealthCheckGracePeriodSeconds *int64 `locationName:"healthCheckGracePeriodSeconds" type:"integer"`
 
 	// The network configuration for the service. This parameter is required for
@@ -12716,7 +13181,11 @@ type UpdateServiceInput struct {
 	// network configuration, this does not trigger a new service deployment.
 	NetworkConfiguration *NetworkConfiguration `locationName:"networkConfiguration" type:"structure"`
 
-	// The platform version that your service should run.
+	// The platform version on which your tasks in the service are running. A platform
+	// version is only specified for tasks using the Fargate launch type. If one
+	// is not specified, the LATEST platform version is used by default. For more
+	// information, see AWS Fargate Platform Versions (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/platform_versions.html)
+	// in the Amazon Elastic Container Service Developer Guide.
 	PlatformVersion *string `locationName:"platformVersion" type:"string"`
 
 	// The name of the service to update.
@@ -12884,7 +13353,7 @@ func (s *VersionInfo) SetDockerVersion(v string) *VersionInfo {
 // A data volume used in a task definition. For tasks that use a Docker volume,
 // specify a DockerVolumeConfiguration. For tasks that use a bind mount host
 // volume, specify a host and optional sourcePath. For more information, see
-// Using Data Volumes in Tasks (http://docs.aws.amazon.com/AmazonECS/latest/developerguideusing_data_volumes.html).
+// Using Data Volumes in Tasks (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/using_data_volumes.html).
 type Volume struct {
 	_ struct{} `type:"structure"`
 
@@ -12899,7 +13368,7 @@ type Volume struct {
 	// launch types. The contents of the host parameter determine whether your bind
 	// mount host volume persists on the host container instance and where it is
 	// stored. If the host parameter is empty, then the Docker daemon assigns a
-	// host path for your data volume, but the data is not guaranteed to persist
+	// host path for your data volume. However, the data is not guaranteed to persist
 	// after the containers associated with it stop running.
 	//
 	// Windows containers can mount whole directories on the same drive as $env:ProgramData.
@@ -12951,8 +13420,8 @@ type VolumeFrom struct {
 	// value is false.
 	ReadOnly *bool `locationName:"readOnly" type:"boolean"`
 
-	// The name of another container within the same task definition to mount volumes
-	// from.
+	// The name of another container within the same task definition from which
+	// to mount volumes.
 	SourceContainer *string `locationName:"sourceContainer" type:"string"`
 }
 
@@ -13041,6 +13510,14 @@ const (
 
 	// ContainerInstanceStatusDraining is a ContainerInstanceStatus enum value
 	ContainerInstanceStatusDraining = "DRAINING"
+)
+
+const (
+	// DeploymentControllerTypeEcs is a DeploymentControllerType enum value
+	DeploymentControllerTypeEcs = "ECS"
+
+	// DeploymentControllerTypeCodeDeploy is a DeploymentControllerType enum value
+	DeploymentControllerTypeCodeDeploy = "CODE_DEPLOY"
 )
 
 const (
@@ -13168,6 +13645,11 @@ const (
 )
 
 const (
+	// ScaleUnitPercent is a ScaleUnit enum value
+	ScaleUnitPercent = "PERCENT"
+)
+
+const (
 	// SchedulingStrategyReplica is a SchedulingStrategy enum value
 	SchedulingStrategyReplica = "REPLICA"
 
@@ -13205,6 +13687,14 @@ const (
 
 	// SortOrderDesc is a SortOrder enum value
 	SortOrderDesc = "DESC"
+)
+
+const (
+	// StabilityStatusSteadyState is a StabilityStatus enum value
+	StabilityStatusSteadyState = "STEADY_STATE"
+
+	// StabilityStatusStabilizing is a StabilityStatus enum value
+	StabilityStatusStabilizing = "STABILIZING"
 )
 
 const (
