@@ -34264,6 +34264,9 @@ type CreateSubnetInput struct {
 	// VPC, we may not necessarily select a different zone for each subnet.
 	AvailabilityZone *string `type:"string"`
 
+	// The AZ ID of the subnet.
+	AvailabilityZoneId *string `type:"string"`
+
 	// The IPv4 network range for the subnet, in CIDR notation. For example, 10.0.0.0/24.
 	//
 	// CidrBlock is a required field
@@ -34314,6 +34317,12 @@ func (s *CreateSubnetInput) Validate() error {
 // SetAvailabilityZone sets the AvailabilityZone field's value.
 func (s *CreateSubnetInput) SetAvailabilityZone(v string) *CreateSubnetInput {
 	s.AvailabilityZone = &v
+	return s
+}
+
+// SetAvailabilityZoneId sets the AvailabilityZoneId field's value.
+func (s *CreateSubnetInput) SetAvailabilityZoneId(v string) *CreateSubnetInput {
+	s.AvailabilityZoneId = &v
 	return s
 }
 
@@ -39937,11 +39946,13 @@ type DescribeDhcpOptionsInput struct {
 
 	// One or more filters.
 	//
-	//    * dhcp-options-id - The ID of a set of DHCP options.
+	//    * dhcp-options-id - The ID of a DHCP options set.
 	//
 	//    * key - The key for one of the options (for example, domain-name).
 	//
 	//    * value - The value for one of the options.
+	//
+	//    * owner-id - The ID of the AWS account that owns the DHCP options set.
 	//
 	//    * tag:<key> - The key/value combination of a tag assigned to the resource.
 	//    Use the tag key in the filter name and the tag value as the filter value.
@@ -43026,6 +43037,8 @@ type DescribeInternetGatewaysInput struct {
 	//
 	//    * internet-gateway-id - The ID of the Internet gateway.
 	//
+	//    * owner-id - The ID of the AWS account that owns the internet gateway.
+	//
 	//    * tag:<key> - The key/value combination of a tag assigned to the resource.
 	//    Use the tag key in the filter name and the tag value as the filter value.
 	//    For example, to find all resources that have a tag with the key Owner
@@ -43707,6 +43720,8 @@ type DescribeNetworkAclsInput struct {
 	//    the set of ACL entries.
 	//
 	//    * network-acl-id - The ID of the network ACL.
+	//
+	//    * owner-id - The ID of the AWS account that owns the network ACL.
 	//
 	//    * tag:<key> - The key/value combination of a tag assigned to the resource.
 	//    Use the tag key in the filter name and the tag value as the filter value.
@@ -45226,6 +45241,8 @@ type DescribeRouteTablesInput struct {
 	//    * association.main - Indicates whether the route table is the main route
 	//    table for the VPC (true | false). Route tables that do not have an association
 	//    ID are not returned in the response.
+	//
+	//    * owner-id - The ID of the AWS account that owns the route table.
 	//
 	//    * route-table-id - The ID of the route table.
 	//
@@ -47056,18 +47073,21 @@ type DescribeSubnetsInput struct {
 
 	// One or more filters.
 	//
-	//    * availabilityZone - The Availability Zone for the subnet. You can also
-	//    use availability-zone as the filter name.
+	//    * availability-zone - The Availability Zone for the subnet. You can also
+	//    use availabilityZone as the filter name.
+	//
+	//    * availability-zone-id - The ID of the Availability Zone for the subnet.
+	//    You can also use availabilityZoneId as the filter name.
 	//
 	//    * available-ip-address-count - The number of IPv4 addresses in the subnet
 	//    that are available.
 	//
-	//    * cidrBlock - The IPv4 CIDR block of the subnet. The CIDR block you specify
+	//    * cidr-block - The IPv4 CIDR block of the subnet. The CIDR block you specify
 	//    must exactly match the subnet's CIDR block for information to be returned
-	//    for the subnet. You can also use cidr or cidr-block as the filter names.
+	//    for the subnet. You can also use cidr or cidrBlock as the filter names.
 	//
-	//    * defaultForAz - Indicates whether this is the default subnet for the
-	//    Availability Zone. You can also use default-for-az as the filter name.
+	//    * default-for-az - Indicates whether this is the default subnet for the
+	//    Availability Zone. You can also use defaultForAz as the filter name.
 	//
 	//    * ipv6-cidr-block-association.ipv6-cidr-block - An IPv6 CIDR block associated
 	//    with the subnet.
@@ -47078,7 +47098,11 @@ type DescribeSubnetsInput struct {
 	//    * ipv6-cidr-block-association.state - The state of an IPv6 CIDR block
 	//    associated with the subnet.
 	//
+	//    * owner-id - The ID of the AWS account that owns the subnet.
+	//
 	//    * state - The state of the subnet (pending | available).
+	//
+	//    * subnet-arn - The Amazon Resource Name (ARN) of the subnet.
 	//
 	//    * subnet-id - The ID of the subnet.
 	//
@@ -49335,6 +49359,8 @@ type DescribeVpcsInput struct {
 	//
 	//    * isDefault - Indicates whether the VPC is the default VPC.
 	//
+	//    * owner-id - The ID of the AWS account that owns the VPC.
+	//
 	//    * state - The state of the VPC (pending | available).
 	//
 	//    * tag:<key> - The key/value combination of a tag assigned to the resource.
@@ -50060,6 +50086,9 @@ type DhcpOptions struct {
 	// The ID of the set of DHCP options.
 	DhcpOptionsId *string `locationName:"dhcpOptionsId" type:"string"`
 
+	// The ID of the AWS account that owns the DHCP options set.
+	OwnerId *string `locationName:"ownerId" type:"string"`
+
 	// Any tags assigned to the DHCP options set.
 	Tags []*Tag `locationName:"tagSet" locationNameList:"item" type:"list"`
 }
@@ -50083,6 +50112,12 @@ func (s *DhcpOptions) SetDhcpConfigurations(v []*DhcpConfiguration) *DhcpOptions
 // SetDhcpOptionsId sets the DhcpOptionsId field's value.
 func (s *DhcpOptions) SetDhcpOptionsId(v string) *DhcpOptions {
 	s.DhcpOptionsId = &v
+	return s
+}
+
+// SetOwnerId sets the OwnerId field's value.
+func (s *DhcpOptions) SetOwnerId(v string) *DhcpOptions {
+	s.OwnerId = &v
 	return s
 }
 
@@ -58119,6 +58154,9 @@ type InternetGateway struct {
 	// The ID of the internet gateway.
 	InternetGatewayId *string `locationName:"internetGatewayId" type:"string"`
 
+	// The ID of the AWS account that owns the internet gateway.
+	OwnerId *string `locationName:"ownerId" type:"string"`
+
 	// Any tags assigned to the internet gateway.
 	Tags []*Tag `locationName:"tagSet" locationNameList:"item" type:"list"`
 }
@@ -58142,6 +58180,12 @@ func (s *InternetGateway) SetAttachments(v []*InternetGatewayAttachment) *Intern
 // SetInternetGatewayId sets the InternetGatewayId field's value.
 func (s *InternetGateway) SetInternetGatewayId(v string) *InternetGateway {
 	s.InternetGatewayId = &v
+	return s
+}
+
+// SetOwnerId sets the OwnerId field's value.
+func (s *InternetGateway) SetOwnerId(v string) *InternetGateway {
+	s.OwnerId = &v
 	return s
 }
 
@@ -63684,6 +63728,9 @@ type NetworkAcl struct {
 	// The ID of the network ACL.
 	NetworkAclId *string `locationName:"networkAclId" type:"string"`
 
+	// The ID of the AWS account that owns the network ACL.
+	OwnerId *string `locationName:"ownerId" type:"string"`
+
 	// Any tags assigned to the network ACL.
 	Tags []*Tag `locationName:"tagSet" locationNameList:"item" type:"list"`
 
@@ -63722,6 +63769,12 @@ func (s *NetworkAcl) SetIsDefault(v bool) *NetworkAcl {
 // SetNetworkAclId sets the NetworkAclId field's value.
 func (s *NetworkAcl) SetNetworkAclId(v string) *NetworkAcl {
 	s.NetworkAclId = &v
+	return s
+}
+
+// SetOwnerId sets the OwnerId field's value.
+func (s *NetworkAcl) SetOwnerId(v string) *NetworkAcl {
+	s.OwnerId = &v
 	return s
 }
 
@@ -70211,6 +70264,9 @@ type RouteTable struct {
 	// The associations between the route table and one or more subnets.
 	Associations []*RouteTableAssociation `locationName:"associationSet" locationNameList:"item" type:"list"`
 
+	// The ID of the AWS account that owns the route table.
+	OwnerId *string `locationName:"ownerId" type:"string"`
+
 	// Any virtual private gateway (VGW) propagating routes.
 	PropagatingVgws []*PropagatingVgw `locationName:"propagatingVgwSet" locationNameList:"item" type:"list"`
 
@@ -70240,6 +70296,12 @@ func (s RouteTable) GoString() string {
 // SetAssociations sets the Associations field's value.
 func (s *RouteTable) SetAssociations(v []*RouteTableAssociation) *RouteTable {
 	s.Associations = v
+	return s
+}
+
+// SetOwnerId sets the OwnerId field's value.
+func (s *RouteTable) SetOwnerId(v string) *RouteTable {
+	s.OwnerId = &v
 	return s
 }
 
@@ -74702,6 +74764,9 @@ type Subnet struct {
 	// The Availability Zone of the subnet.
 	AvailabilityZone *string `locationName:"availabilityZone" type:"string"`
 
+	// The AZ ID of the subnet.
+	AvailabilityZoneId *string `locationName:"availabilityZoneId" type:"string"`
+
 	// The number of unused private IPv4 addresses in the subnet. The IPv4 addresses
 	// for any stopped instances are considered unavailable.
 	AvailableIpAddressCount *int64 `locationName:"availableIpAddressCount" type:"integer"`
@@ -74719,8 +74784,14 @@ type Subnet struct {
 	// address.
 	MapPublicIpOnLaunch *bool `locationName:"mapPublicIpOnLaunch" type:"boolean"`
 
+	// The ID of the AWS account that owns the subnet.
+	OwnerId *string `locationName:"ownerId" type:"string"`
+
 	// The current state of the subnet.
 	State *string `locationName:"state" type:"string" enum:"SubnetState"`
+
+	// The Amazon Resource Name (ARN) of the subnet.
+	SubnetArn *string `locationName:"subnetArn" type:"string"`
 
 	// The ID of the subnet.
 	SubnetId *string `locationName:"subnetId" type:"string"`
@@ -74754,6 +74825,12 @@ func (s *Subnet) SetAvailabilityZone(v string) *Subnet {
 	return s
 }
 
+// SetAvailabilityZoneId sets the AvailabilityZoneId field's value.
+func (s *Subnet) SetAvailabilityZoneId(v string) *Subnet {
+	s.AvailabilityZoneId = &v
+	return s
+}
+
 // SetAvailableIpAddressCount sets the AvailableIpAddressCount field's value.
 func (s *Subnet) SetAvailableIpAddressCount(v int64) *Subnet {
 	s.AvailableIpAddressCount = &v
@@ -74784,9 +74861,21 @@ func (s *Subnet) SetMapPublicIpOnLaunch(v bool) *Subnet {
 	return s
 }
 
+// SetOwnerId sets the OwnerId field's value.
+func (s *Subnet) SetOwnerId(v string) *Subnet {
+	s.OwnerId = &v
+	return s
+}
+
 // SetState sets the State field's value.
 func (s *Subnet) SetState(v string) *Subnet {
 	s.State = &v
+	return s
+}
+
+// SetSubnetArn sets the SubnetArn field's value.
+func (s *Subnet) SetSubnetArn(v string) *Subnet {
+	s.SubnetArn = &v
 	return s
 }
 
@@ -77836,6 +77925,9 @@ type Vpc struct {
 	// Indicates whether the VPC is the default VPC.
 	IsDefault *bool `locationName:"isDefault" type:"boolean"`
 
+	// The ID of the AWS account that owns the VPC.
+	OwnerId *string `locationName:"ownerId" type:"string"`
+
 	// The current state of the VPC.
 	State *string `locationName:"state" type:"string" enum:"VpcState"`
 
@@ -77889,6 +77981,12 @@ func (s *Vpc) SetIpv6CidrBlockAssociationSet(v []*VpcIpv6CidrBlockAssociation) *
 // SetIsDefault sets the IsDefault field's value.
 func (s *Vpc) SetIsDefault(v bool) *Vpc {
 	s.IsDefault = &v
+	return s
+}
+
+// SetOwnerId sets the OwnerId field's value.
+func (s *Vpc) SetOwnerId(v string) *Vpc {
+	s.OwnerId = &v
 	return s
 }
 
