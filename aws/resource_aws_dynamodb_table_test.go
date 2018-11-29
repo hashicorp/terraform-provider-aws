@@ -497,7 +497,7 @@ func TestAccAWSDynamoDbTable_BillingMode(t *testing.T) {
 			{
 				Config: testAccAWSDynamoDbBilling_PayPerRequest(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDynamoDbTableHasBilling_PayPerRequest("aws_dynamodb_table.basic-dynamodb-table"),					
+					testAccCheckDynamoDbTableHasBilling_PayPerRequest("aws_dynamodb_table.basic-dynamodb-table"),
 				),
 			},
 		},
