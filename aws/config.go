@@ -99,6 +99,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/aws/aws-sdk-go/service/sts"
 	"github.com/aws/aws-sdk-go/service/swf"
+	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
 	"github.com/aws/aws-sdk-go/service/workspaces"
@@ -254,6 +255,7 @@ type AWSClient struct {
 	pinpointconn          *pinpoint.Pinpoint
 	workspacesconn        *workspaces.WorkSpaces
 	appmeshconn           *appmesh.AppMesh
+	transferconn          *transfer.Transfer
 }
 
 func (c *AWSClient) S3() *s3.S3 {
@@ -586,6 +588,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.pinpointconn = pinpoint.New(sess)
 	client.workspacesconn = workspaces.New(sess)
 	client.appmeshconn = appmesh.New(sess)
+	client.transferconn = transfer.New(sess)
 
 	// Workaround for https://github.com/aws/aws-sdk-go/issues/1376
 	client.kinesisconn.Handlers.Retry.PushBack(func(r *request.Request) {
