@@ -199,7 +199,7 @@ func TestAccAWSNetworkAcl_OnlyIngressRules_basic(t *testing.T) {
 						"aws_network_acl.foos", "ingress.4245812720.action", "deny"),
 					resource.TestCheckResourceAttr(
 						"aws_network_acl.foos", "ingress.4245812720.cidr_block", "10.2.0.0/18"),
-					resource.TestCheckResourceAttrSet("aws_network_acl.bar", "owner_id"),
+					resource.TestCheckResourceAttrSet("aws_network_acl.foos", "owner_id"),
 				),
 			},
 		},
