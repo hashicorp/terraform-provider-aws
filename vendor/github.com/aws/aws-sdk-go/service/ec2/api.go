@@ -25322,6 +25322,12 @@ func (c *EC2) StopInstancesRequest(input *StopInstancesInput) (req *request.Requ
 //
 // Stops an Amazon EBS-backed instance.
 //
+// You can use the Stop action to hibernate an instance if the instance is enabled
+// for hibernation (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Hibernate.html#enabling-hibernation)
+// and it meets the hibernation prerequisites (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Hibernate.html#hibernating-prerequisites).
+// For more information, see Hibernate Your Instance (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Hibernate.html)
+// in the Amazon Elastic Compute Cloud User Guide.
+//
 // We don't charge usage for a stopped instance, or data transfer fees; however,
 // your root partition Amazon EBS volume remains and continues to persist your
 // data, and you are charged for Amazon EBS volume usage. Every time you start
@@ -25332,20 +25338,25 @@ func (c *EC2) StopInstancesRequest(input *StopInstancesInput) (req *request.Requ
 // your Linux instance, Amazon EC2 charges a one-minute minimum for instance
 // usage, and thereafter charges per second for instance usage.
 //
-// You can't start or stop Spot Instances, and you can't stop instance store-backed
-// instances.
+// You can't start, stop, or hibernate Spot Instances, and you can't stop or
+// hibernate instance store-backed instances. For information about using hibernation
+// for Spot Instances, see Hibernating Interrupted Spot Instances (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-interruptions.html#hibernate-spot-instances)
+// in the Amazon Elastic Compute Cloud User Guide.
 //
-// When you stop an instance, we shut it down. You can restart your instance
-// at any time. Before stopping an instance, make sure it is in a state from
-// which it can be restarted. Stopping an instance does not preserve data stored
-// in RAM.
+// When you stop or hibernate an instance, we shut it down. You can restart
+// your instance at any time. Before stopping or hibernating an instance, make
+// sure it is in a state from which it can be restarted. Stopping an instance
+// does not preserve data stored in RAM, but hibernating an instance does preserve
+// data stored in RAM. If an instance cannot hibernate successfully, a normal
+// shutdown occurs.
 //
-// Stopping an instance is different to rebooting or terminating it. For example,
-// when you stop an instance, the root device and any other devices attached
-// to the instance persist. When you terminate an instance, the root device
-// and any other devices attached during the instance launch are automatically
-// deleted. For more information about the differences between rebooting, stopping,
-// and terminating instances, see Instance Lifecycle (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-lifecycle.html)
+// Stopping and hibernating an instance is different to rebooting or terminating
+// it. For example, when you stop or hibernate an instance, the root device
+// and any other devices attached to the instance persist. When you terminate
+// an instance, the root device and any other devices attached during the instance
+// launch are automatically deleted. For more information about the differences
+// between rebooting, stopping, hibernating, and terminating instances, see
+// Instance Lifecycle (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-lifecycle.html)
 // in the Amazon Elastic Compute Cloud User Guide.
 //
 // When you stop an instance, we attempt to shut it down forcibly after a short
@@ -30278,7 +30289,6 @@ func (s *ClientData) SetUploadStart(v time.Time) *ClientData {
 	return s
 }
 
-// Contains the parameters for ConfirmProductInstance.
 type ConfirmProductInstanceInput struct {
 	_ struct{} `type:"structure"`
 
@@ -30343,7 +30353,6 @@ func (s *ConfirmProductInstanceInput) SetProductCode(v string) *ConfirmProductIn
 	return s
 }
 
-// Contains the output of ConfirmProductInstance.
 type ConfirmProductInstanceOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -33570,7 +33579,6 @@ func (s *CreateNetworkInterfacePermissionOutput) SetInterfacePermission(v *Netwo
 	return s
 }
 
-// Contains the parameters for CreatePlacementGroup.
 type CreatePlacementGroupInput struct {
 	_ struct{} `type:"structure"`
 
@@ -37462,7 +37470,6 @@ func (s *DeleteNetworkInterfacePermissionOutput) SetReturn(v bool) *DeleteNetwor
 	return s
 }
 
-// Contains the parameters for DeletePlacementGroup.
 type DeletePlacementGroupInput struct {
 	_ struct{} `type:"structure"`
 
@@ -42209,7 +42216,6 @@ func (s *DescribeImportSnapshotTasksOutput) SetNextToken(v string) *DescribeImpo
 	return s
 }
 
-// Contains the parameters for DescribeInstanceAttribute.
 type DescribeInstanceAttributeInput struct {
 	_ struct{} `type:"structure"`
 
@@ -42535,7 +42541,6 @@ func (s *DescribeInstanceCreditSpecificationsOutput) SetNextToken(v string) *Des
 	return s
 }
 
-// Contains the parameters for DescribeInstanceStatus.
 type DescribeInstanceStatusInput struct {
 	_ struct{} `type:"structure"`
 
@@ -42651,7 +42656,6 @@ func (s *DescribeInstanceStatusInput) SetNextToken(v string) *DescribeInstanceSt
 	return s
 }
 
-// Contains the output of DescribeInstanceStatus.
 type DescribeInstanceStatusOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -42685,7 +42689,6 @@ func (s *DescribeInstanceStatusOutput) SetNextToken(v string) *DescribeInstanceS
 	return s
 }
 
-// Contains the parameters for DescribeInstances.
 type DescribeInstancesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -42728,6 +42731,10 @@ type DescribeInstancesInput struct {
 	//
 	//    * group-name - The name of the security group for the instance. EC2-Classic
 	//    only.
+	//
+	//    * hibernation-options.configured - A Boolean that indicates whether the
+	//    instance is enabled for hibernation. A value of true means that the instance
+	//    is enabled for hibernation.
 	//
 	//    * host-id - The ID of the Dedicated Host on which the instance is running,
 	//    if applicable.
@@ -42985,7 +42992,6 @@ func (s *DescribeInstancesInput) SetNextToken(v string) *DescribeInstancesInput 
 	return s
 }
 
-// Contains the output of DescribeInstances.
 type DescribeInstancesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -44217,7 +44223,6 @@ func (s *DescribeNetworkInterfacesOutput) SetNextToken(v string) *DescribeNetwor
 	return s
 }
 
-// Contains the parameters for DescribePlacementGroups.
 type DescribePlacementGroupsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -44271,7 +44276,6 @@ func (s *DescribePlacementGroupsInput) SetGroupNames(v []*string) *DescribePlace
 	return s
 }
 
-// Contains the output of DescribePlacementGroups.
 type DescribePlacementGroupsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -51525,6 +51529,98 @@ func (s *ElasticGpus) SetInstanceId(v string) *ElasticGpus {
 	return s
 }
 
+// Describes an elastic inference accelerator.
+type ElasticInferenceAccelerator struct {
+	_ struct{} `type:"structure"`
+
+	// The type of elastic inference accelerator. The possible values are eia1.small,
+	// eia1.medium, and eia1.large.
+	//
+	// Type is a required field
+	Type *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ElasticInferenceAccelerator) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ElasticInferenceAccelerator) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ElasticInferenceAccelerator) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ElasticInferenceAccelerator"}
+	if s.Type == nil {
+		invalidParams.Add(request.NewErrParamRequired("Type"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetType sets the Type field's value.
+func (s *ElasticInferenceAccelerator) SetType(v string) *ElasticInferenceAccelerator {
+	s.Type = &v
+	return s
+}
+
+// Describes the association between an instance and an elastic inference accelerator.
+type ElasticInferenceAcceleratorAssociation struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the elastic inference accelerator.
+	ElasticInferenceAcceleratorArn *string `locationName:"elasticInferenceAcceleratorArn" type:"string"`
+
+	// The ID of the association.
+	ElasticInferenceAcceleratorAssociationId *string `locationName:"elasticInferenceAcceleratorAssociationId" type:"string"`
+
+	// The state of the elastic inference accelerator.
+	ElasticInferenceAcceleratorAssociationState *string `locationName:"elasticInferenceAcceleratorAssociationState" type:"string"`
+
+	// The time at which the elastic inference accelerator is associated with an
+	// instance.
+	ElasticInferenceAcceleratorAssociationTime *time.Time `locationName:"elasticInferenceAcceleratorAssociationTime" type:"timestamp"`
+}
+
+// String returns the string representation
+func (s ElasticInferenceAcceleratorAssociation) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ElasticInferenceAcceleratorAssociation) GoString() string {
+	return s.String()
+}
+
+// SetElasticInferenceAcceleratorArn sets the ElasticInferenceAcceleratorArn field's value.
+func (s *ElasticInferenceAcceleratorAssociation) SetElasticInferenceAcceleratorArn(v string) *ElasticInferenceAcceleratorAssociation {
+	s.ElasticInferenceAcceleratorArn = &v
+	return s
+}
+
+// SetElasticInferenceAcceleratorAssociationId sets the ElasticInferenceAcceleratorAssociationId field's value.
+func (s *ElasticInferenceAcceleratorAssociation) SetElasticInferenceAcceleratorAssociationId(v string) *ElasticInferenceAcceleratorAssociation {
+	s.ElasticInferenceAcceleratorAssociationId = &v
+	return s
+}
+
+// SetElasticInferenceAcceleratorAssociationState sets the ElasticInferenceAcceleratorAssociationState field's value.
+func (s *ElasticInferenceAcceleratorAssociation) SetElasticInferenceAcceleratorAssociationState(v string) *ElasticInferenceAcceleratorAssociation {
+	s.ElasticInferenceAcceleratorAssociationState = &v
+	return s
+}
+
+// SetElasticInferenceAcceleratorAssociationTime sets the ElasticInferenceAcceleratorAssociationTime field's value.
+func (s *ElasticInferenceAcceleratorAssociation) SetElasticInferenceAcceleratorAssociationTime(v time.Time) *ElasticInferenceAcceleratorAssociation {
+	s.ElasticInferenceAcceleratorAssociationTime = &v
+	return s
+}
+
 type EnableTransitGatewayRouteTablePropagationInput struct {
 	_ struct{} `type:"structure"`
 
@@ -53259,7 +53355,6 @@ func (s *FpgaImageState) SetMessage(v string) *FpgaImageState {
 	return s
 }
 
-// Contains the parameters for GetConsoleOutput.
 type GetConsoleOutputInput struct {
 	_ struct{} `type:"structure"`
 
@@ -53321,7 +53416,6 @@ func (s *GetConsoleOutputInput) SetLatest(v bool) *GetConsoleOutputInput {
 	return s
 }
 
-// Contains the output of GetConsoleOutput.
 type GetConsoleOutputOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -53364,7 +53458,6 @@ func (s *GetConsoleOutputOutput) SetTimestamp(v time.Time) *GetConsoleOutputOutp
 	return s
 }
 
-// Contains the parameters for the request.
 type GetConsoleScreenshotInput struct {
 	_ struct{} `type:"structure"`
 
@@ -53425,7 +53518,6 @@ func (s *GetConsoleScreenshotInput) SetWakeUp(v bool) *GetConsoleScreenshotInput
 	return s
 }
 
-// Contains the output of the request.
 type GetConsoleScreenshotOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -53635,7 +53727,6 @@ func (s *GetLaunchTemplateDataOutput) SetLaunchTemplateData(v *ResponseLaunchTem
 	return s
 }
 
-// Contains the parameters for GetPasswordData.
 type GetPasswordDataInput struct {
 	_ struct{} `type:"structure"`
 
@@ -53686,7 +53777,6 @@ func (s *GetPasswordDataInput) SetInstanceId(v string) *GetPasswordDataInput {
 	return s
 }
 
-// Contains the output of GetPasswordData.
 type GetPasswordDataOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -54285,6 +54375,65 @@ func (s *GroupIdentifier) SetGroupId(v string) *GroupIdentifier {
 // SetGroupName sets the GroupName field's value.
 func (s *GroupIdentifier) SetGroupName(v string) *GroupIdentifier {
 	s.GroupName = &v
+	return s
+}
+
+// Indicates whether your instance is configured for hibernation. This parameter
+// is valid only if the instance meets the hibernation prerequisites (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Hibernate.html#hibernating-prerequisites).
+// Hibernation is currently supported only for Amazon Linux. For more information,
+// see Hibernate Your Instance (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Hibernate.html)
+// in the Amazon Elastic Compute Cloud User Guide.
+type HibernationOptions struct {
+	_ struct{} `type:"structure"`
+
+	// If this parameter is set to true, your instance is enabled for hibernation;
+	// otherwise, it is not enabled for hibernation.
+	Configured *bool `locationName:"configured" type:"boolean"`
+}
+
+// String returns the string representation
+func (s HibernationOptions) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s HibernationOptions) GoString() string {
+	return s.String()
+}
+
+// SetConfigured sets the Configured field's value.
+func (s *HibernationOptions) SetConfigured(v bool) *HibernationOptions {
+	s.Configured = &v
+	return s
+}
+
+// Indicates whether your instance is configured for hibernation. This parameter
+// is valid only if the instance meets the hibernation prerequisites (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Hibernate.html#hibernating-prerequisites).
+// Hibernation is currently supported only for Amazon Linux. For more information,
+// see Hibernate Your Instance (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Hibernate.html)
+// in the Amazon Elastic Compute Cloud User Guide.
+type HibernationOptionsRequest struct {
+	_ struct{} `type:"structure"`
+
+	// If you set this parameter to true, your instance is enabled for hibernation.
+	//
+	// Default: false
+	Configured *bool `type:"boolean"`
+}
+
+// String returns the string representation
+func (s HibernationOptionsRequest) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s HibernationOptionsRequest) GoString() string {
+	return s.String()
+}
+
+// SetConfigured sets the Configured field's value.
+func (s *HibernationOptionsRequest) SetConfigured(v bool) *HibernationOptionsRequest {
+	s.Configured = &v
 	return s
 }
 
@@ -56643,8 +56792,14 @@ type Instance struct {
 	// The Elastic GPU associated with the instance.
 	ElasticGpuAssociations []*ElasticGpuAssociation `locationName:"elasticGpuAssociationSet" locationNameList:"item" type:"list"`
 
+	// The elastic inference accelerator associated with the instance.
+	ElasticInferenceAcceleratorAssociations []*ElasticInferenceAcceleratorAssociation `locationName:"elasticInferenceAcceleratorAssociationSet" locationNameList:"item" type:"list"`
+
 	// Specifies whether enhanced networking with ENA is enabled.
 	EnaSupport *bool `locationName:"enaSupport" type:"boolean"`
+
+	// Indicates whether the instance is enabled for hibernation.
+	HibernationOptions *HibernationOptions `locationName:"hibernationOptions" type:"structure"`
 
 	// The hypervisor type of the instance.
 	Hypervisor *string `locationName:"hypervisor" type:"string" enum:"HypervisorType"`
@@ -56673,6 +56828,9 @@ type Instance struct {
 
 	// The time the instance was launched.
 	LaunchTime *time.Time `locationName:"launchTime" type:"timestamp"`
+
+	// The license configurations.
+	Licenses []*LicenseConfiguration `locationName:"licenseSet" locationNameList:"item" type:"list"`
 
 	// The monitoring for the instance.
 	Monitoring *Monitoring `locationName:"monitoring" type:"structure"`
@@ -56824,9 +56982,21 @@ func (s *Instance) SetElasticGpuAssociations(v []*ElasticGpuAssociation) *Instan
 	return s
 }
 
+// SetElasticInferenceAcceleratorAssociations sets the ElasticInferenceAcceleratorAssociations field's value.
+func (s *Instance) SetElasticInferenceAcceleratorAssociations(v []*ElasticInferenceAcceleratorAssociation) *Instance {
+	s.ElasticInferenceAcceleratorAssociations = v
+	return s
+}
+
 // SetEnaSupport sets the EnaSupport field's value.
 func (s *Instance) SetEnaSupport(v bool) *Instance {
 	s.EnaSupport = &v
+	return s
+}
+
+// SetHibernationOptions sets the HibernationOptions field's value.
+func (s *Instance) SetHibernationOptions(v *HibernationOptions) *Instance {
+	s.HibernationOptions = v
 	return s
 }
 
@@ -56881,6 +57051,12 @@ func (s *Instance) SetKeyName(v string) *Instance {
 // SetLaunchTime sets the LaunchTime field's value.
 func (s *Instance) SetLaunchTime(v time.Time) *Instance {
 	s.LaunchTime = &v
+	return s
+}
+
+// SetLicenses sets the Licenses field's value.
+func (s *Instance) SetLicenses(v []*LicenseConfiguration) *Instance {
+	s.Licenses = v
 	return s
 }
 
@@ -59277,6 +59453,124 @@ func (s *LaunchTemplateEbsBlockDeviceRequest) SetVolumeType(v string) *LaunchTem
 	return s
 }
 
+// Describes an elastic inference accelerator.
+type LaunchTemplateElasticInferenceAccelerator struct {
+	_ struct{} `type:"structure"`
+
+	// The type of elastic inference accelerator. The possible values are eia1.medium,
+	// eia1.large, and eia1.xlarge.
+	//
+	// Type is a required field
+	Type *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s LaunchTemplateElasticInferenceAccelerator) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LaunchTemplateElasticInferenceAccelerator) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *LaunchTemplateElasticInferenceAccelerator) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "LaunchTemplateElasticInferenceAccelerator"}
+	if s.Type == nil {
+		invalidParams.Add(request.NewErrParamRequired("Type"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetType sets the Type field's value.
+func (s *LaunchTemplateElasticInferenceAccelerator) SetType(v string) *LaunchTemplateElasticInferenceAccelerator {
+	s.Type = &v
+	return s
+}
+
+// Describes an elastic inference accelerator.
+type LaunchTemplateElasticInferenceAcceleratorResponse struct {
+	_ struct{} `type:"structure"`
+
+	// The type of elastic inference accelerator. The possible values are eia1.medium,
+	// eia1.large, and eia1.xlarge.
+	Type *string `locationName:"type" type:"string"`
+}
+
+// String returns the string representation
+func (s LaunchTemplateElasticInferenceAcceleratorResponse) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LaunchTemplateElasticInferenceAcceleratorResponse) GoString() string {
+	return s.String()
+}
+
+// SetType sets the Type field's value.
+func (s *LaunchTemplateElasticInferenceAcceleratorResponse) SetType(v string) *LaunchTemplateElasticInferenceAcceleratorResponse {
+	s.Type = &v
+	return s
+}
+
+// Indicates whether an instance is configured for hibernation.
+type LaunchTemplateHibernationOptions struct {
+	_ struct{} `type:"structure"`
+
+	// If this parameter is set to true, the instance is enabled for hibernation;
+	// otherwise, it is not enabled for hibernation.
+	Configured *bool `locationName:"configured" type:"boolean"`
+}
+
+// String returns the string representation
+func (s LaunchTemplateHibernationOptions) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LaunchTemplateHibernationOptions) GoString() string {
+	return s.String()
+}
+
+// SetConfigured sets the Configured field's value.
+func (s *LaunchTemplateHibernationOptions) SetConfigured(v bool) *LaunchTemplateHibernationOptions {
+	s.Configured = &v
+	return s
+}
+
+// Indicates whether the instance is configured for hibernation. This parameter
+// is valid only if the instance meets the hibernation prerequisites (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Hibernate.html#hibernating-prerequisites).
+// Hibernation is currently supported only for Amazon Linux.
+type LaunchTemplateHibernationOptionsRequest struct {
+	_ struct{} `type:"structure"`
+
+	// If you set this parameter to true, the instance is enabled for hibernation.
+	//
+	// Default: false
+	Configured *bool `type:"boolean"`
+}
+
+// String returns the string representation
+func (s LaunchTemplateHibernationOptionsRequest) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LaunchTemplateHibernationOptionsRequest) GoString() string {
+	return s.String()
+}
+
+// SetConfigured sets the Configured field's value.
+func (s *LaunchTemplateHibernationOptionsRequest) SetConfigured(v bool) *LaunchTemplateHibernationOptionsRequest {
+	s.Configured = &v
+	return s
+}
+
 // Describes an IAM instance profile.
 type LaunchTemplateIamInstanceProfileSpecification struct {
 	_ struct{} `type:"structure"`
@@ -59659,6 +59953,54 @@ func (s *LaunchTemplateInstanceNetworkInterfaceSpecificationRequest) SetSubnetId
 	return s
 }
 
+// Describes a license configuration.
+type LaunchTemplateLicenseConfiguration struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the license configuration.
+	LicenseConfigurationArn *string `locationName:"licenseConfigurationArn" type:"string"`
+}
+
+// String returns the string representation
+func (s LaunchTemplateLicenseConfiguration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LaunchTemplateLicenseConfiguration) GoString() string {
+	return s.String()
+}
+
+// SetLicenseConfigurationArn sets the LicenseConfigurationArn field's value.
+func (s *LaunchTemplateLicenseConfiguration) SetLicenseConfigurationArn(v string) *LaunchTemplateLicenseConfiguration {
+	s.LicenseConfigurationArn = &v
+	return s
+}
+
+// Describes a license configuration.
+type LaunchTemplateLicenseConfigurationRequest struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the license configuration.
+	LicenseConfigurationArn *string `type:"string"`
+}
+
+// String returns the string representation
+func (s LaunchTemplateLicenseConfigurationRequest) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LaunchTemplateLicenseConfigurationRequest) GoString() string {
+	return s.String()
+}
+
+// SetLicenseConfigurationArn sets the LicenseConfigurationArn field's value.
+func (s *LaunchTemplateLicenseConfigurationRequest) SetLicenseConfigurationArn(v string) *LaunchTemplateLicenseConfigurationRequest {
+	s.LicenseConfigurationArn = &v
+	return s
+}
+
 // Describes overrides for a launch template.
 type LaunchTemplateOverrides struct {
 	_ struct{} `type:"structure"`
@@ -59803,7 +60145,7 @@ func (s *LaunchTemplatePlacement) SetTenancy(v string) *LaunchTemplatePlacement 
 	return s
 }
 
-// The placement for the instance.
+// Describes the placement of an instance.
 type LaunchTemplatePlacementRequest struct {
 	_ struct{} `type:"structure"`
 
@@ -60251,6 +60593,54 @@ func (s LaunchTemplatesMonitoringRequest) GoString() string {
 // SetEnabled sets the Enabled field's value.
 func (s *LaunchTemplatesMonitoringRequest) SetEnabled(v bool) *LaunchTemplatesMonitoringRequest {
 	s.Enabled = &v
+	return s
+}
+
+// Describes a license configuration.
+type LicenseConfiguration struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the license configuration.
+	LicenseConfigurationArn *string `locationName:"licenseConfigurationArn" type:"string"`
+}
+
+// String returns the string representation
+func (s LicenseConfiguration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LicenseConfiguration) GoString() string {
+	return s.String()
+}
+
+// SetLicenseConfigurationArn sets the LicenseConfigurationArn field's value.
+func (s *LicenseConfiguration) SetLicenseConfigurationArn(v string) *LicenseConfiguration {
+	s.LicenseConfigurationArn = &v
+	return s
+}
+
+// Describes a license configuration.
+type LicenseConfigurationRequest struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the license configuration.
+	LicenseConfigurationArn *string `type:"string"`
+}
+
+// String returns the string representation
+func (s LicenseConfigurationRequest) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LicenseConfigurationRequest) GoString() string {
+	return s.String()
+}
+
+// SetLicenseConfigurationArn sets the LicenseConfigurationArn field's value.
+func (s *LicenseConfigurationRequest) SetLicenseConfigurationArn(v string) *LicenseConfigurationRequest {
+	s.LicenseConfigurationArn = &v
 	return s
 }
 
@@ -61170,7 +61560,6 @@ func (s ModifyImageAttributeOutput) GoString() string {
 	return s.String()
 }
 
-// Contains the parameters for ModifyInstanceAttribute.
 type ModifyInstanceAttributeInput struct {
 	_ struct{} `type:"structure"`
 
@@ -63290,7 +63679,6 @@ func (s *ModifyVpcTenancyOutput) SetReturnValue(v bool) *ModifyVpcTenancyOutput 
 	return s
 }
 
-// Contains the parameters for MonitorInstances.
 type MonitorInstancesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -63341,7 +63729,6 @@ func (s *MonitorInstancesInput) SetInstanceIds(v []*string) *MonitorInstancesInp
 	return s
 }
 
-// Contains the output of MonitorInstances.
 type MonitorInstancesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -66023,7 +66410,6 @@ func (s *PurchaseScheduledInstancesOutput) SetScheduledInstanceSet(v []*Schedule
 	return s
 }
 
-// Contains the parameters for RebootInstances.
 type RebootInstancesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -67381,7 +67767,6 @@ func (s *ReplaceTransitGatewayRouteOutput) SetRoute(v *TransitGatewayRoute) *Rep
 	return s
 }
 
-// Contains the parameters for ReportInstanceStatus.
 type ReportInstanceStatusInput struct {
 	_ struct{} `type:"structure"`
 
@@ -67535,7 +67920,7 @@ type RequestLaunchTemplateData struct {
 	// cannot be changed using this action.
 	BlockDeviceMappings []*LaunchTemplateBlockDeviceMappingRequest `locationName:"BlockDeviceMapping" locationNameList:"BlockDeviceMapping" type:"list"`
 
-	// Information about the Capacity Reservation targeting option.
+	// The Capacity Reservation targeting option.
 	CapacityReservationSpecification *LaunchTemplateCapacityReservationSpecificationRequest `type:"structure"`
 
 	// The CPU options for the instance. For more information, see Optimizing CPU
@@ -67560,6 +67945,16 @@ type RequestLaunchTemplateData struct {
 
 	// An elastic GPU to associate with the instance.
 	ElasticGpuSpecifications []*ElasticGpuSpecification `locationName:"ElasticGpuSpecification" locationNameList:"ElasticGpuSpecification" type:"list"`
+
+	// The elastic inference accelerator for the instance.
+	ElasticInferenceAccelerators []*LaunchTemplateElasticInferenceAccelerator `locationName:"ElasticInferenceAccelerator" locationNameList:"item" type:"list"`
+
+	// Indicates whether an instance is enabled for hibernation. This parameter
+	// is valid only if the instance meets the hibernation prerequisites (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Hibernate.html#hibernating-prerequisites).
+	// Hibernation is currently supported only for Amazon Linux. For more information,
+	// see Hibernate Your Instance (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Hibernate.html)
+	// in the Amazon Elastic Compute Cloud User Guide.
+	HibernationOptions *LaunchTemplateHibernationOptionsRequest `type:"structure"`
 
 	// The IAM instance profile.
 	IamInstanceProfile *LaunchTemplateIamInstanceProfileSpecificationRequest `type:"structure"`
@@ -67593,6 +67988,9 @@ type RequestLaunchTemplateData struct {
 	// If you do not specify a key pair, you can't connect to the instance unless
 	// you choose an AMI that is configured to allow users another way to log in.
 	KeyName *string `type:"string"`
+
+	// The license configurations.
+	LicenseSpecifications []*LaunchTemplateLicenseConfigurationRequest `locationName:"LicenseSpecification" locationNameList:"item" type:"list"`
 
 	// The monitoring for the instance.
 	Monitoring *LaunchTemplatesMonitoringRequest `type:"structure"`
@@ -67661,6 +68059,16 @@ func (s *RequestLaunchTemplateData) Validate() error {
 			}
 		}
 	}
+	if s.ElasticInferenceAccelerators != nil {
+		for i, v := range s.ElasticInferenceAccelerators {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "ElasticInferenceAccelerators", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -67710,6 +68118,18 @@ func (s *RequestLaunchTemplateData) SetElasticGpuSpecifications(v []*ElasticGpuS
 	return s
 }
 
+// SetElasticInferenceAccelerators sets the ElasticInferenceAccelerators field's value.
+func (s *RequestLaunchTemplateData) SetElasticInferenceAccelerators(v []*LaunchTemplateElasticInferenceAccelerator) *RequestLaunchTemplateData {
+	s.ElasticInferenceAccelerators = v
+	return s
+}
+
+// SetHibernationOptions sets the HibernationOptions field's value.
+func (s *RequestLaunchTemplateData) SetHibernationOptions(v *LaunchTemplateHibernationOptionsRequest) *RequestLaunchTemplateData {
+	s.HibernationOptions = v
+	return s
+}
+
 // SetIamInstanceProfile sets the IamInstanceProfile field's value.
 func (s *RequestLaunchTemplateData) SetIamInstanceProfile(v *LaunchTemplateIamInstanceProfileSpecificationRequest) *RequestLaunchTemplateData {
 	s.IamInstanceProfile = v
@@ -67749,6 +68169,12 @@ func (s *RequestLaunchTemplateData) SetKernelId(v string) *RequestLaunchTemplate
 // SetKeyName sets the KeyName field's value.
 func (s *RequestLaunchTemplateData) SetKeyName(v string) *RequestLaunchTemplateData {
 	s.KeyName = &v
+	return s
+}
+
+// SetLicenseSpecifications sets the LicenseSpecifications field's value.
+func (s *RequestLaunchTemplateData) SetLicenseSpecifications(v []*LaunchTemplateLicenseConfigurationRequest) *RequestLaunchTemplateData {
+	s.LicenseSpecifications = v
 	return s
 }
 
@@ -69277,7 +69703,6 @@ func (s ResetImageAttributeOutput) GoString() string {
 	return s.String()
 }
 
-// Contains the parameters for ResetInstanceAttribute.
 type ResetInstanceAttributeInput struct {
 	_ struct{} `type:"structure"`
 
@@ -69575,6 +70000,14 @@ type ResponseLaunchTemplateData struct {
 	// The elastic GPU specification.
 	ElasticGpuSpecifications []*ElasticGpuSpecificationResponse `locationName:"elasticGpuSpecificationSet" locationNameList:"item" type:"list"`
 
+	// The elastic inference accelerator for the instance.
+	ElasticInferenceAccelerators []*LaunchTemplateElasticInferenceAcceleratorResponse `locationName:"elasticInferenceAcceleratorSet" locationNameList:"item" type:"list"`
+
+	// Indicates whether an instance is configured for hibernation. For more information,
+	// see Hibernate Your Instance (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Hibernate.html)
+	// in the Amazon Elastic Compute Cloud User Guide.
+	HibernationOptions *LaunchTemplateHibernationOptions `locationName:"hibernationOptions" type:"structure"`
+
 	// The IAM instance profile.
 	IamInstanceProfile *LaunchTemplateIamInstanceProfileSpecification `locationName:"iamInstanceProfile" type:"structure"`
 
@@ -69596,6 +70029,9 @@ type ResponseLaunchTemplateData struct {
 
 	// The name of the key pair.
 	KeyName *string `locationName:"keyName" type:"string"`
+
+	// The license configurations.
+	LicenseSpecifications []*LaunchTemplateLicenseConfiguration `locationName:"licenseSet" locationNameList:"item" type:"list"`
 
 	// The monitoring for the instance.
 	Monitoring *LaunchTemplatesMonitoring `locationName:"monitoring" type:"structure"`
@@ -69674,6 +70110,18 @@ func (s *ResponseLaunchTemplateData) SetElasticGpuSpecifications(v []*ElasticGpu
 	return s
 }
 
+// SetElasticInferenceAccelerators sets the ElasticInferenceAccelerators field's value.
+func (s *ResponseLaunchTemplateData) SetElasticInferenceAccelerators(v []*LaunchTemplateElasticInferenceAcceleratorResponse) *ResponseLaunchTemplateData {
+	s.ElasticInferenceAccelerators = v
+	return s
+}
+
+// SetHibernationOptions sets the HibernationOptions field's value.
+func (s *ResponseLaunchTemplateData) SetHibernationOptions(v *LaunchTemplateHibernationOptions) *ResponseLaunchTemplateData {
+	s.HibernationOptions = v
+	return s
+}
+
 // SetIamInstanceProfile sets the IamInstanceProfile field's value.
 func (s *ResponseLaunchTemplateData) SetIamInstanceProfile(v *LaunchTemplateIamInstanceProfileSpecification) *ResponseLaunchTemplateData {
 	s.IamInstanceProfile = v
@@ -69713,6 +70161,12 @@ func (s *ResponseLaunchTemplateData) SetKernelId(v string) *ResponseLaunchTempla
 // SetKeyName sets the KeyName field's value.
 func (s *ResponseLaunchTemplateData) SetKeyName(v string) *ResponseLaunchTemplateData {
 	s.KeyName = &v
+	return s
+}
+
+// SetLicenseSpecifications sets the LicenseSpecifications field's value.
+func (s *ResponseLaunchTemplateData) SetLicenseSpecifications(v []*LaunchTemplateLicenseConfiguration) *ResponseLaunchTemplateData {
+	s.LicenseSpecifications = v
 	return s
 }
 
@@ -70386,7 +70840,6 @@ func (s *RouteTableAssociation) SetSubnetId(v string) *RouteTableAssociation {
 	return s
 }
 
-// Contains the parameters for RunInstances.
 type RunInstancesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -70448,6 +70901,14 @@ type RunInstancesInput struct {
 	// An elastic GPU to associate with the instance.
 	ElasticGpuSpecification []*ElasticGpuSpecification `locationNameList:"item" type:"list"`
 
+	// An elastic inference accelerator.
+	ElasticInferenceAccelerators []*ElasticInferenceAccelerator `locationName:"ElasticInferenceAccelerator" locationNameList:"item" type:"list"`
+
+	// Indicates whether an instance is enabled for hibernation. For more information,
+	// see Hibernate Your Instance (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Hibernate.html)
+	// in the Amazon Elastic Compute Cloud User Guide.
+	HibernationOptions *HibernationOptionsRequest `type:"structure"`
+
 	// The IAM instance profile.
 	IamInstanceProfile *IamInstanceProfileSpecification `locationName:"iamInstanceProfile" type:"structure"`
 
@@ -70506,6 +70967,9 @@ type RunInstancesInput struct {
 	// specify in RunInstances override the same parameters in the launch template.
 	// You can specify either the name or ID of a launch template, but not both.
 	LaunchTemplate *LaunchTemplateSpecification `type:"structure"`
+
+	// The license configurations.
+	LicenseSpecifications []*LicenseConfigurationRequest `locationName:"LicenseSpecification" locationNameList:"item" type:"list"`
 
 	// The maximum number of instances to launch. If you specify more instances
 	// than Amazon EC2 can launch in the target Availability Zone, Amazon EC2 launches
@@ -70619,6 +71083,16 @@ func (s *RunInstancesInput) Validate() error {
 			}
 		}
 	}
+	if s.ElasticInferenceAccelerators != nil {
+		for i, v := range s.ElasticInferenceAccelerators {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "ElasticInferenceAccelerators", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 	if s.Monitoring != nil {
 		if err := s.Monitoring.Validate(); err != nil {
 			invalidParams.AddNested("Monitoring", err.(request.ErrInvalidParams))
@@ -70691,6 +71165,18 @@ func (s *RunInstancesInput) SetElasticGpuSpecification(v []*ElasticGpuSpecificat
 	return s
 }
 
+// SetElasticInferenceAccelerators sets the ElasticInferenceAccelerators field's value.
+func (s *RunInstancesInput) SetElasticInferenceAccelerators(v []*ElasticInferenceAccelerator) *RunInstancesInput {
+	s.ElasticInferenceAccelerators = v
+	return s
+}
+
+// SetHibernationOptions sets the HibernationOptions field's value.
+func (s *RunInstancesInput) SetHibernationOptions(v *HibernationOptionsRequest) *RunInstancesInput {
+	s.HibernationOptions = v
+	return s
+}
+
 // SetIamInstanceProfile sets the IamInstanceProfile field's value.
 func (s *RunInstancesInput) SetIamInstanceProfile(v *IamInstanceProfileSpecification) *RunInstancesInput {
 	s.IamInstanceProfile = v
@@ -70748,6 +71234,12 @@ func (s *RunInstancesInput) SetKeyName(v string) *RunInstancesInput {
 // SetLaunchTemplate sets the LaunchTemplate field's value.
 func (s *RunInstancesInput) SetLaunchTemplate(v *LaunchTemplateSpecification) *RunInstancesInput {
 	s.LaunchTemplate = v
+	return s
+}
+
+// SetLicenseSpecifications sets the LicenseSpecifications field's value.
+func (s *RunInstancesInput) SetLicenseSpecifications(v []*LicenseConfigurationRequest) *RunInstancesInput {
+	s.LicenseSpecifications = v
 	return s
 }
 
@@ -74454,7 +74946,6 @@ func (s *StaleSecurityGroup) SetVpcId(v string) *StaleSecurityGroup {
 	return s
 }
 
-// Contains the parameters for StartInstances.
 type StartInstancesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -74514,7 +75005,6 @@ func (s *StartInstancesInput) SetInstanceIds(v []*string) *StartInstancesInput {
 	return s
 }
 
-// Contains the output of StartInstances.
 type StartInstancesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -74576,6 +75066,8 @@ type StateReason struct {
 	//
 	//    * Client.InvalidSnapshot.NotFound: The specified snapshot was not found.
 	//
+	//    * Client.UserInitiatedHibernate: Hibernation was initiated on the instance.
+	//
 	//    * Client.UserInitiatedShutdown: The instance was shut down using the Amazon
 	//    EC2 API.
 	//
@@ -74607,7 +75099,6 @@ func (s *StateReason) SetMessage(v string) *StateReason {
 	return s
 }
 
-// Contains the parameters for StopInstances.
 type StopInstancesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -74624,6 +75115,14 @@ type StopInstancesInput struct {
 	//
 	// Default: false
 	Force *bool `locationName:"force" type:"boolean"`
+
+	// Hibernates the instance if the instance was enabled for hibernation at launch.
+	// If the instance cannot hibernate successfully, a normal shutdown occurs.
+	// For more information, see Hibernate Your Instance (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Hibernate.html)
+	// in the Amazon Elastic Compute Cloud User Guide.
+	//
+	// Default: false
+	Hibernate *bool `type:"boolean"`
 
 	// One or more instance IDs.
 	//
@@ -74666,13 +75165,18 @@ func (s *StopInstancesInput) SetForce(v bool) *StopInstancesInput {
 	return s
 }
 
+// SetHibernate sets the Hibernate field's value.
+func (s *StopInstancesInput) SetHibernate(v bool) *StopInstancesInput {
+	s.Hibernate = &v
+	return s
+}
+
 // SetInstanceIds sets the InstanceIds field's value.
 func (s *StopInstancesInput) SetInstanceIds(v []*string) *StopInstancesInput {
 	s.InstanceIds = v
 	return s
 }
 
-// Contains the output of StopInstances.
 type StopInstancesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -75458,7 +75962,6 @@ func (s *TargetReservationValue) SetTargetConfiguration(v *TargetConfiguration) 
 	return s
 }
 
-// Contains the parameters for TerminateInstances.
 type TerminateInstancesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -75512,7 +76015,6 @@ func (s *TerminateInstancesInput) SetInstanceIds(v []*string) *TerminateInstance
 	return s
 }
 
-// Contains the output of TerminateInstances.
 type TerminateInstancesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -76636,7 +77138,6 @@ func (s UnassignPrivateIpAddressesOutput) GoString() string {
 	return s.String()
 }
 
-// Contains the parameters for UnmonitorInstances.
 type UnmonitorInstancesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -76687,7 +77188,6 @@ func (s *UnmonitorInstancesInput) SetInstanceIds(v []*string) *UnmonitorInstance
 	return s
 }
 
-// Contains the output of UnmonitorInstances.
 type UnmonitorInstancesOutput struct {
 	_ struct{} `type:"structure"`
 
