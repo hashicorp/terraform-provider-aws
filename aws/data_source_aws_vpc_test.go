@@ -104,6 +104,14 @@ func testAccDataSourceAwsVpcCheck(name, cidr, tag string) resource.TestCheckFunc
 			)
 		}
 
+		if attr["owner_id"] != vpcRs.Primary.Attributes["owner_id"] {
+			return fmt.Errorf(
+				"owner_id is %s; want %s",
+				attr["owner_id"],
+				vpcRs.Primary.Attributes["owner_id"],
+			)
+		}
+
 		if attr["cidr_block"] != cidr {
 			return fmt.Errorf("bad cidr_block %s, expected: %s", attr["cidr_block"], cidr)
 		}
