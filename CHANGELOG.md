@@ -1,4 +1,11 @@
 ## 1.50.0 (Unreleased)
+
+ENHANCEMENTS
+
+* resource/aws_codedeploy_app: Support `ECS` `compute_platform` [GH-6647]
+* resource/aws_codedeploy_deployment_group: Add `ecs_service` argument and `load_balancer_info` configuration block `target_group_pair_info` argument (Support ECS Blue/Green Deployment) [GH-6647]
+* resource/aws_ecs_service: Add `deployment_controller` argument [GH-6647]
+
 ## 1.49.0 (November 27, 2018)
 
 FEATURES
