@@ -95,6 +95,11 @@ func resourceAwsRouteTable() *schema.Resource {
 				},
 				Set: resourceAwsRouteTableHash,
 			},
+
+			"owner_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -214,6 +219,8 @@ func resourceAwsRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Tags
 	d.Set("tags", tagsToMap(rt.Tags))
+
+	d.Set("owner_id", rt.OwnerId)
 
 	return nil
 }
