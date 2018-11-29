@@ -93,6 +93,33 @@ func resourceAwsEcsService() *schema.Resource {
 				Computed: true,
 			},
 
+			"deployment_controller": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				// Ignore missing configuration block
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == "1" && new == "0" {
+						return true
+					}
+					return false
+				},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"type": {
+							Type:     schema.TypeString,
+							ForceNew: true,
+							Optional: true,
+							Default:  ecs.DeploymentControllerTypeEcs,
+							ValidateFunc: validation.StringInSlice([]string{
+								ecs.DeploymentControllerTypeCodeDeploy,
+								ecs.DeploymentControllerTypeEcs,
+							}, false),
+						},
+					},
+				},
+			},
+
 			"deployment_maximum_percent": {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -336,6 +363,7 @@ func resourceAwsEcsServiceCreate(d *schema.ResourceData, meta interface{}) error
 
 	input := ecs.CreateServiceInput{
 		ClientToken:          aws.String(resource.UniqueId()),
+		DeploymentController: expandEcsDeploymentController(d.Get("deployment_controller").([]interface{})),
 		SchedulingStrategy:   aws.String(schedulingStrategy),
 		ServiceName:          aws.String(d.Get("name").(string)),
 		Tags:                 tagsFromMapECS(d.Get("tags").(map[string]interface{})),
@@ -570,6 +598,10 @@ func resourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("deployment_minimum_healthy_percent", service.DeploymentConfiguration.MinimumHealthyPercent)
 	}
 
+	if err := d.Set("deployment_controller", flattenEcsDeploymentController(service.DeploymentController)); err != nil {
+		return fmt.Errorf("Error setting deployment_controller for (%s): %s", d.Id(), err)
+	}
+
 	if service.LoadBalancers != nil {
 		d.Set("load_balancer", flattenEcsLoadBalancers(service.LoadBalancers))
 	}
@@ -600,6 +632,34 @@ func resourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return nil
+}
+
+func expandEcsDeploymentController(l []interface{}) *ecs.DeploymentController {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	deploymentController := &ecs.DeploymentController{
+		Type: aws.String(m["type"].(string)),
+	}
+
+	return deploymentController
+}
+
+func flattenEcsDeploymentController(deploymentController *ecs.DeploymentController) []interface{} {
+	m := map[string]interface{}{
+		"type": ecs.DeploymentControllerTypeEcs,
+	}
+
+	if deploymentController == nil {
+		return []interface{}{m}
+	}
+
+	m["type"] = aws.StringValue(deploymentController.Type)
+
+	return []interface{}{m}
 }
 
 func flattenEcsNetworkConfiguration(nc *ecs.NetworkConfiguration) []interface{} {

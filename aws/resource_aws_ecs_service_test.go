@@ -281,6 +281,36 @@ func TestAccAWSEcsService_withIamRole(t *testing.T) {
 	})
 }
 
+func TestAccAWSEcsService_withDeploymentController_Type_CodeDeploy(t *testing.T) {
+	var service ecs.Service
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_ecs_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsServiceConfigDeploymentControllerTypeCodeDeploy(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "deployment_controller.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_controller.0.type", "CODE_DEPLOY"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateId:     fmt.Sprintf("%s/%s", rName, rName),
+				ImportState:       true,
+				ImportStateVerify: true,
+				// Resource currently defaults to importing task_definition as family:revision
+				ImportStateVerifyIgnore: []string{"task_definition"},
+			},
+		},
+	})
+}
+
 func TestAccAWSEcsService_withDeploymentValues(t *testing.T) {
 	var service ecs.Service
 	rString := acctest.RandString(8)
@@ -1123,6 +1153,8 @@ resource "aws_ecs_service" "mongo" {
 
 func testAccAWSEcsServiceWithPlacementConstraint(clusterName, tdName, svcName string) string {
 	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {}
+
 resource "aws_ecs_cluster" "default" {
   name = "%s"
 }
@@ -1149,7 +1181,7 @@ resource "aws_ecs_service" "mongo" {
   desired_count = 1
   placement_constraints {
     type = "memberOf"
-    expression = "attribute:ecs.availability-zone in [us-west-2a, us-west-2b]"
+    expression = "attribute:ecs.availability-zone in [${data.aws_availability_zones.available.names[0]}]"
   }
 }
 	`, clusterName, tdName, svcName)
@@ -1188,9 +1220,6 @@ resource "aws_ecs_service" "mongo" {
 
 func testAccAWSEcsServiceWithLaunchTypeFargate(sg1Name, sg2Name, clusterName, tdName, svcName, assignPublicIP string) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
 data "aws_availability_zones" "available" {}
 
 resource "aws_vpc" "main" {
@@ -1414,6 +1443,28 @@ resource "aws_ecs_service" "with_alb" {
 
 func testAccAWSEcsService_withIamRole(clusterName, tdName, roleName, policyName, svcName string) string {
 	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "tf-acc-test-ecs-service-iam-role"
+  }
+}
+
+resource "aws_subnet" "test" {
+  count = 2
+
+  availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
+  cidr_block        = "${cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)}"
+  vpc_id            = "${aws_vpc.test.id}"
+
+  tags = {
+    Name = "tf-acc-test-ecs-service-iam-role"
+  }
+}
+
 resource "aws_ecs_cluster" "main" {
   name = "%s"
 }
@@ -1480,7 +1531,8 @@ EOF
 }
 
 resource "aws_elb" "main" {
-  availability_zones = ["us-west-2a"]
+  internal = true
+  subnets  = ["${aws_subnet.test.*.id}"]
 
   listener {
     instance_port = 8080
@@ -1542,6 +1594,28 @@ func tpl_testAccAWSEcsService_withLbChanges(clusterName, tdName, image,
 	containerName string, containerPort, hostPort int, roleName, policyName string,
 	instancePort int, svcName string) string {
 	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "tf-acc-test-ecs-service-iam-role"
+  }
+}
+
+resource "aws_subnet" "test" {
+  count = 2
+
+  availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
+  cidr_block        = "${cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)}"
+  vpc_id            = "${aws_vpc.test.id}"
+
+  tags = {
+    Name = "tf-acc-test-ecs-service-iam-role"
+  }
+}
+
 resource "aws_ecs_cluster" "main" {
   name = "%[1]s"
 }
@@ -1608,7 +1682,8 @@ EOF
 }
 
 resource "aws_elb" "main" {
-  availability_zones = ["us-west-2a"]
+  internal = true
+  subnets  = ["${aws_subnet.test.*.id}"]
 
   listener {
     instance_port = %[6]d
@@ -2209,6 +2284,99 @@ resource "aws_ecs_service" "ghost" {
   deployment_minimum_healthy_percent = "50"
 }
 `, clusterName, tdName, svcName)
+}
+
+func testAccAWSEcsServiceConfigDeploymentControllerTypeCodeDeploy(rName string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "tf-acc-test-ecs-service-deployment-controller-type"
+  }
+}
+
+resource "aws_subnet" "test" {
+  count = 2
+
+  availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
+  cidr_block        = "${cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)}"
+  vpc_id            = "${aws_vpc.test.id}"
+
+  tags = {
+    Name = "tf-acc-test-ecs-service-deployment-controller-type"
+  }
+}
+
+resource "aws_lb" "test" {
+  internal = true
+  name     = %q
+  subnets  = ["${aws_subnet.test.*.id}"]
+}
+
+resource "aws_lb_listener" "test" {
+  load_balancer_arn = "${aws_lb.test.id}"
+  port              = "80"
+  protocol          = "HTTP"
+
+  default_action {
+    target_group_arn = "${aws_lb_target_group.test.id}"
+    type             = "forward"
+  }
+}
+
+resource "aws_lb_target_group" "test" {
+  name     = "${aws_lb.test.name}"
+  port     = 80
+  protocol = "HTTP"
+  vpc_id   = "${aws_vpc.test.id}"
+}
+
+resource "aws_ecs_cluster" "test" {
+  name = %q
+}
+
+resource "aws_ecs_task_definition" "test" {
+  family = %q
+
+  container_definitions = <<DEFINITION
+[
+  {
+    "cpu": 128,
+    "essential": true,
+    "image": "mongo:latest",
+    "memory": 128,
+    "name": "test",
+    "portMappings": [
+      {
+        "containerPort": 80,
+        "hostPort": 8080
+      }
+    ]
+  }
+]
+DEFINITION
+}
+
+resource "aws_ecs_service" "test" {
+  cluster         = "${aws_ecs_cluster.test.id}"
+  desired_count   = 0
+  name            = %q
+  task_definition = "${aws_ecs_task_definition.test.arn}"
+
+  deployment_controller {
+    type = "CODE_DEPLOY"
+  }
+
+  load_balancer {
+    container_name   = "test"
+    container_port   = "80"
+    target_group_arn = "${aws_lb_target_group.test.id}"
+  }
+}
+`, rName, rName, rName, rName)
 }
 
 func testAccAWSEcsServiceConfigDeploymentPercents(rName string, deploymentMinimumHealthyPercent, deploymentMaximumPercent int) string {
