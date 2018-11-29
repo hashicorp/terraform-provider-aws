@@ -85,7 +85,8 @@ func resourceAwsDynamoDbTable() *schema.Resource {
 			},
 			"billing_mode": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
+				Default:  dynamodb.BillingModeProvisioned,
 				ValidateFunc: validation.StringInSlice([]string{
 					dynamodb.BillingModePayPerRequest,
 					dynamodb.BillingModeProvisioned,
