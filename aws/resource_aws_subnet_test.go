@@ -142,6 +142,7 @@ func TestAccAWSSubnet_basic(t *testing.T) {
 						"aws_subnet.foo",
 						"arn",
 						regexp.MustCompile(`^arn:[^:]+:ec2:[^:]+:\d{12}:subnet/subnet-.+`)),
+					resource.TestCheckResourceAttrSet("aws_subnet.foo", "owner_id"),
 				),
 			},
 		},

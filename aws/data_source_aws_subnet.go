@@ -5,7 +5,6 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform/helper/schema"
 )
@@ -77,6 +76,11 @@ func dataSourceAwsSubnet() *schema.Resource {
 			},
 
 			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -161,14 +165,8 @@ func dataSourceAwsSubnetRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
-		Service:   "ec2",
-		AccountID: meta.(*AWSClient).accountid,
-		Resource:  fmt.Sprintf("subnet/%s", d.Id()),
-	}
-	d.Set("arn", arn.String())
+	d.Set("arn", subnet.SubnetArn)
+	d.Set("owner_id", subnet.OwnerId)
 
 	return nil
 }

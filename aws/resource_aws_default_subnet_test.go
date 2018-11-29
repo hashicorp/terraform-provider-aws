@@ -28,6 +28,7 @@ func TestAccAWSDefaultSubnet_basic(t *testing.T) {
 						"aws_default_subnet.foo", "tags.%", "1"),
 					resource.TestCheckResourceAttr(
 						"aws_default_subnet.foo", "tags.Name", "terraform-testacc-default-subnet"),
+					resource.TestCheckResourceAttrSet("aws_default_subnet.foo", "owner_id"),
 				),
 			},
 		},

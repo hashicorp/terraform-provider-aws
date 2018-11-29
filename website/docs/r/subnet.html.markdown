@@ -70,6 +70,7 @@ In addition to all arguments above, the following attributes are exported:
 * `vpc_id` - The VPC ID.
 * `ipv6_cidr_block_association_id` - The association ID for the IPv6 CIDR block.
 * `ipv6_cidr_block` - The IPv6 CIDR block.
+* `owner_id` - The ID of the AWS account that owns the subnet.
 
 ## Import
 

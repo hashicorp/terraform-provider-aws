@@ -100,6 +100,14 @@ func testAccDataSourceAwsSubnetCheck(name string, rInt int) resource.TestCheckFu
 			)
 		}
 
+		if attr["owner_id"] != subnetRs.Primary.Attributes["owner_id"] {
+			return fmt.Errorf(
+				"owner_id is %s; want %s",
+				attr["owner_id"],
+				subnetRs.Primary.Attributes["owner_id"],
+			)
+		}
+
 		if attr["vpc_id"] != vpcRs.Primary.Attributes["id"] {
 			return fmt.Errorf(
 				"vpc_id is %s; want %s",
