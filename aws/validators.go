@@ -400,6 +400,56 @@ func validateSagemakerName(v interface{}, k string) (ws []string, errors []error
 	return
 }
 
+func validateSagemakerEnvironment(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !regexp.MustCompile(`^[0-9A-Za-z_]+$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only alphanumeric characters and underscore allowed in %q: %q",
+			k, value))
+	}
+	if len(value) > 1024 {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot be longer than 1024 characters: %q", k, value))
+	}
+	if regexp.MustCompile(`^[0-9]`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot begin with a digit: %q", k, value))
+	}
+	return
+}
+
+func validateSagemakerImage(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !regexp.MustCompile(`[\S]+`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"no whitespace allowed in %q: %q",
+			k, value))
+	}
+	if len(value) > 255 {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot be longer than 255 characters: %q", k, value))
+	}
+	return
+}
+
+func validateSagemakerModelDataUrl(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !regexp.MustCompile(`^(https|s3)://([^/]+)/?(.*)$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q must be a valid path: %q",
+			k, value))
+	}
+	if len(value) > 1024 {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot be longer than 1024 characters: %q", k, value))
+	}
+	if regexp.MustCompile(`^(https|s3)://`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q must be a path that starts with either s3 or https: %q", k, value))
+	}
+	return
+}
+
 func validateEcrRepositoryName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if len(value) < 2 {

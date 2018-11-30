@@ -24,39 +24,12 @@ resource "aws_sagemaker_model" "m" {
 }
 ```
 
-Usage with supplemental container and tags:
-
-```hcl
-resource "aws_sagemaker_model" "m" {
-    name = "my-model"
-
-    primary_container {
-        image = "111111111111.ecr.us-west-2.amazonaws.com/my-docker-image:latest"
-        model_data_url  = "s3://111111111111-foo/model.tar.gz"
-    }
-
-    supplemental_container {
-        image = "111111111111.ecr.us-west-2.amazonaws.com/my-other-docker-image:latest"
-        environment = [
-            KeyName1 = "value"
-            KeyName2 = "value"
-        ]
-    }
-
-    tags {
-        Name = "foo"
-    }
-}
-```
-
 ## Argument Reference
 
 The following arguments are supported:
 
 * `name` - (Optional) The name of the model (must be unique). If omitted, Terraform will assign a random, unique name.
 * `primary_container` - (Required) Fields are documented below.
-* `supplemental_container` - (Optional) Can be specified multiple times for each
-   additional docker container to use. Each supplemental block supports the same fields as the primary container.
 * `execution_role_arn` - (Optional) A role to with permissions that allows SageMaker to call other services on your behalf.
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 

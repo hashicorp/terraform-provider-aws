@@ -2,13 +2,14 @@ package aws
 
 import (
 	"fmt"
+	"log"
+	"time"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
-	"log"
-	"time"
 )
 
 func resourceAwsSagemakerModel() *schema.Resource {
@@ -37,31 +38,36 @@ func resourceAwsSagemakerModel() *schema.Resource {
 
 			"primary_container": {
 				Type:     schema.TypeList,
+				MaxItems: 1,
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"container_hostname": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validateSagemakerName,
 						},
 
 						"image": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: validateSagemakerImage,
 						},
 
 						"model_data_url": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validateSagemakerModelDataUrl,
 						},
 
 						"environment": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							ForceNew: true,
+							Type:         schema.TypeMap,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validateSagemakerEnvironment,
 						},
 					},
 				},
@@ -71,11 +77,6 @@ func resourceAwsSagemakerModel() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-			},
-
-			"creation_time": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 
 			"tags": tagsSchema(),
@@ -98,12 +99,8 @@ func resourceAwsSagemakerModelCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	pContainer := d.Get("primary_container").([]interface{})
-	if len(pContainer) > 1 {
-		return fmt.Errorf("Only a single primary_container block is expected")
-	} else if len(pContainer) == 1 {
-		m := pContainer[0].(map[string]interface{})
-		createOpts.PrimaryContainer = expandPrimaryContainers(m)
-	}
+	m := pContainer[0].(map[string]interface{})
+	createOpts.PrimaryContainer = expandPrimaryContainers(m)
 
 	if v, ok := d.GetOk("execution_role_arn"); ok {
 		createOpts.ExecutionRoleArn = aws.String(v.(string))
@@ -114,21 +111,15 @@ func resourceAwsSagemakerModelCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	log.Printf("[DEBUG] Sagemaker model create config: %#v", *createOpts)
-	modelResponse, err := retryOnAwsCode("ValidationException", func() (interface{}, error) {
+	_, err := retryOnAwsCode("ValidationException", func() (interface{}, error) {
 		return conn.CreateModel(createOpts)
 	})
-	model := modelResponse.(*sagemaker.CreateModelOutput)
 
 	if err != nil {
-		return fmt.Errorf("Error creating Sagemaker model: %s", err)
+		return fmt.Errorf("error creating Sagemaker model: %s", err)
 	}
 
-	d.SetId(name)
-	if err := d.Set("arn", model.ModelArn); err != nil {
-		return err
-	}
-
-	return resourceAwsSagemakerModelUpdate(d, meta)
+	return resourceAwsSagemakerModelRead(d, meta)
 }
 
 func resourceAwsSagemakerModelRead(d *schema.ResourceData, meta interface{}) error {
@@ -141,14 +132,15 @@ func resourceAwsSagemakerModelRead(d *schema.ResourceData, meta interface{}) err
 	model, err := conn.DescribeModel(request)
 	if err != nil {
 		if sagemakerErr, ok := err.(awserr.Error); ok && sagemakerErr.Code() == "ResourceNotFound" {
+			log.Printf("[INFO] unable to find the sagemaker resource and therfore it is removed from the state: %s", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("Error reading Sagemaker model %s: %s", d.Id(), err)
+		return fmt.Errorf("error reading Sagemaker model %s: %s", d.Id(), err)
 	}
 
 	if err := d.Set("arn", model.ModelArn); err != nil {
-		return err
+		return fmt.Errorf("unable to set arn for sagemaker model %q: %+v", d.Id(), err)
 	}
 	if err := d.Set("name", model.ModelName); err != nil {
 		return err
@@ -159,15 +151,13 @@ func resourceAwsSagemakerModelRead(d *schema.ResourceData, meta interface{}) err
 	if err := d.Set("primary_container", flattenPrimaryContainer(model.PrimaryContainer)); err != nil {
 		return err
 	}
-	if err := d.Set("creation_time", model.CreationTime.Format(time.RFC3339)); err != nil {
-		return err
-	}
 
 	tagsOutput, err := conn.ListTags(&sagemaker.ListTagsInput{
 		ResourceArn: model.ModelArn,
 	})
-	d.Set("tags", tagsToMapSagemaker(tagsOutput.Tags))
-
+	if err := d.Set("tags", tagsToMapSagemaker(tagsOutput.Tags)); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -210,7 +200,7 @@ func resourceAwsSagemakerModelDelete(d *schema.ResourceData, meta interface{}) e
 			return resource.RetryableError(err)
 		}
 
-		return resource.NonRetryableError(fmt.Errorf("Error deleting Sagemaker model: %s", err))
+		return resource.NonRetryableError(fmt.Errorf("error deleting Sagemaker model: %s", err))
 	})
 }
 
