@@ -23,13 +23,13 @@ data "aws_s3_bucket" "selected" {
 }
 
 data "aws_route53_zone" "test_zone" {
-  name         = "test.com."
+  name = "test.com."
 }
 
 resource "aws_route53_record" "example" {
-  zone_id   = "${data.aws_route53_zone.test_zone.id}"
-  name      = "bucket"
-  type      = "A"
+  zone_id = "${data.aws_route53_zone.test_zone.id}"
+  name    = "bucket"
+  type    = "A"
 
   alias {
     name    = "${data.aws_s3_bucket.selected.website_domain}"

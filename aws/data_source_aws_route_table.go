@@ -66,6 +66,11 @@ func dataSourceAwsRouteTable() *schema.Resource {
 							Computed: true,
 						},
 
+						"transit_gateway_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
 						"vpc_peering_connection_id": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -201,6 +206,9 @@ func dataSourceRoutesRead(ec2Routes []*ec2.Route) []map[string]interface{} {
 		}
 		if r.InstanceId != nil {
 			m["instance_id"] = *r.InstanceId
+		}
+		if r.TransitGatewayId != nil {
+			m["transit_gateway_id"] = *r.TransitGatewayId
 		}
 		if r.VpcPeeringConnectionId != nil {
 			m["vpc_peering_connection_id"] = *r.VpcPeeringConnectionId

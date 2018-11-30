@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/lambda"
-	"github.com/mitchellh/go-homedir"
+	homedir "github.com/mitchellh/go-homedir"
 
 	"errors"
 
@@ -27,6 +27,9 @@ func resourceAwsLambdaFunction() *schema.Resource {
 		Read:   resourceAwsLambdaFunctionRead,
 		Update: resourceAwsLambdaFunctionUpdate,
 		Delete: resourceAwsLambdaFunctionDelete,
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(10 * time.Minute),
+		},
 
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
@@ -113,6 +116,8 @@ func resourceAwsLambdaFunction() *schema.Resource {
 					lambda.RuntimeNodejs810,
 					lambda.RuntimePython27,
 					lambda.RuntimePython36,
+					lambda.RuntimePython37,
+					lambda.RuntimeRuby25,
 				}, false),
 			},
 			"timeout": {
@@ -392,11 +397,11 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 		return nil
 	})
 	if err != nil {
-		if !isAWSErr(err, "InvalidParameterValueException", "Your request has been throttled by EC2") {
+		if !isResourceTimeoutError(err) && !isAWSErr(err, "InvalidParameterValueException", "Your request has been throttled by EC2") {
 			return fmt.Errorf("Error creating Lambda function: %s", err)
 		}
-		// Allow 9 more minutes for EC2 throttling
-		err := resource.Retry(9*time.Minute, func() *resource.RetryError {
+		// Allow additional time for slower uploads or EC2 throttling
+		err := resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 			_, err := conn.CreateFunction(params)
 			if err != nil {
 				log.Printf("[DEBUG] Error creating Lambda Function: %s", err)

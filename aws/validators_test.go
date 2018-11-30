@@ -130,6 +130,57 @@ func TestValidateTypeStringNullableBoolean(t *testing.T) {
 	}
 }
 
+func TestValidateTypeStringNullableFloat(t *testing.T) {
+	testCases := []struct {
+		val         interface{}
+		expectedErr *regexp.Regexp
+	}{
+		{
+			val: "",
+		},
+		{
+			val: "0",
+		},
+		{
+			val: "1",
+		},
+		{
+			val: "42.0",
+		},
+		{
+			val:         "threeve",
+			expectedErr: regexp.MustCompile(`cannot parse`),
+		},
+	}
+
+	matchErr := func(errs []error, r *regexp.Regexp) bool {
+		// err must match one provided
+		for _, err := range errs {
+			if r.MatchString(err.Error()) {
+				return true
+			}
+		}
+
+		return false
+	}
+
+	for i, tc := range testCases {
+		_, errs := validateTypeStringNullableFloat(tc.val, "test_property")
+
+		if len(errs) == 0 && tc.expectedErr == nil {
+			continue
+		}
+
+		if len(errs) != 0 && tc.expectedErr == nil {
+			t.Fatalf("expected test case %d to produce no errors, got %v", i, errs)
+		}
+
+		if !matchErr(errs, tc.expectedErr) {
+			t.Fatalf("expected test case %d to produce error matching \"%s\", got %v", i, tc.expectedErr, errs)
+		}
+	}
+}
+
 func TestValidateCloudWatchDashboardName(t *testing.T) {
 	validNames := []string{
 		"HelloWorl_d",
@@ -369,6 +420,7 @@ func TestValidateArn(t *testing.T) {
 
 func TestValidateEC2AutomateARN(t *testing.T) {
 	validNames := []string{
+		"arn:aws:automate:us-east-1:ec2:reboot",
 		"arn:aws:automate:us-east-1:ec2:recover",
 		"arn:aws:automate:us-east-1:ec2:stop",
 		"arn:aws:automate:us-east-1:ec2:terminate",
@@ -629,12 +681,12 @@ func TestValidateIntegerInSlice(t *testing.T) {
 		{
 			val:         42,
 			f:           validateIntegerInSlice([]int{0, 43}),
-			expectedErr: regexp.MustCompile("expected [\\w]+ to be one of \\[0 43\\], got 42"),
+			expectedErr: regexp.MustCompile(`expected [\w]+ to be one of \[0 43\], got 42`),
 		},
 		{
 			val:         "42",
 			f:           validateIntegerInSlice([]int{0, 42}),
-			expectedErr: regexp.MustCompile("expected type of [\\w]+ to be int"),
+			expectedErr: regexp.MustCompile(`expected type of [\w]+ to be int`),
 		},
 	}
 	matchErr := func(errs []error, r *regexp.Regexp) bool {

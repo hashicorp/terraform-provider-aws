@@ -18,13 +18,13 @@ Use this data source to generate a Glue script from a Directed Acyclic Graph (DA
 data "aws_glue_script" "example" {
   language = "PYTHON"
 
-  dag_edge = [
-    # ...
-  ]
+  dag_edge = []
 
-  dag_node = [
-    # ...
-  ]
+  # ...
+
+  dag_node = []
+
+  # ...
 }
 
 output "python_script" {
@@ -38,13 +38,13 @@ output "python_script" {
 data "aws_glue_script" "example" {
   language = "SCALA"
 
-  dag_edge = [
-    # ...
-  ]
+  dag_edge = []
 
-  dag_node = [
-    # ...
-  ]
+  # ...
+
+  dag_node = []
+
+  # ...
 }
 
 output "scala_code" {

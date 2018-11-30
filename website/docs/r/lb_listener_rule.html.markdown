@@ -62,9 +62,10 @@ resource "aws_lb_listener_rule" "redirect_http_to_https" {
 
   action {
     type = "redirect"
+
     redirect {
-      port = "443"
-      protocol = "HTTPS"
+      port        = "443"
+      protocol    = "HTTPS"
       status_code = "HTTP_301"
     }
   }
@@ -82,10 +83,11 @@ resource "aws_lb_listener_rule" "health_check" {
 
   action {
     type = "fixed-response"
+
     fixed_response {
       content_type = "text/plain"
       message_body = "HEALTHY"
-      status_code = "200"
+      status_code  = "200"
     }
   }
 
@@ -113,7 +115,8 @@ resource "aws_lb_listener_rule" "admin" {
   listener_arn = "${aws_lb_listener.front_end.arn}"
 
   action {
-    type  = "authenticate-cognito"
+    type = "authenticate-cognito"
+
     authenticate_cognito {
       user_pool_arn       = "${aws_cognito_user_pool.pool.arn}"
       user_pool_client_id = "${aws_cognito_user_pool_client.client.id}"
@@ -133,7 +136,8 @@ resource "aws_lb_listener" "admin" {
   listener_arn = "${aws_lb_listener.front_end.arn}"
 
   action {
-    type  = "authenticate-oidc"
+    type = "authenticate-oidc"
+
     authenticate_oidc {
       authorization_endpoint = "https://example.com/authorization_endpoint"
       client_id              = "client_id"

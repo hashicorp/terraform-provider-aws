@@ -14,7 +14,7 @@ Provides information about an Elastic File System Mount Target (EFS).
 
 ```hcl
 variable "mount_target_id" {
-  type = "string"
+  type    = "string"
   default = ""
 }
 

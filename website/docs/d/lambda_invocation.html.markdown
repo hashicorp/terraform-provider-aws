@@ -24,7 +24,6 @@ data "aws_lambda_invocation" "example" {
   "key2": "value2"
 }
 JSON
-
 }
 
 output "result_entry" {

@@ -51,8 +51,9 @@ resource "aws_subnet" "cloudhsm2_subnets" {
 }
 
 resource "aws_cloudhsm_v2_cluster" "cloudhsm_v2_cluster" {
-  hsm_type = "hsm1.medium"
+  hsm_type   = "hsm1.medium"
   subnet_ids = ["${aws_subnet.cloudhsm2_subnets.*.id}"]
+
   tags {
     Name = "example-aws_cloudhsm_v2_cluster"
   }

@@ -4567,7 +4567,7 @@ func (c *DeviceFarm) ListSamplesRequest(input *ListSamplesInput) (req *request.R
 
 // ListSamples API operation for AWS Device Farm.
 //
-// Gets information about samples, given an AWS Device Farm project ARN
+// Gets information about samples, given an AWS Device Farm job ARN.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -7578,6 +7578,22 @@ type CreateUploadInput struct {
 	//    * XCTEST_TEST_PACKAGE: An XCode test package upload.
 	//
 	//    * XCTEST_UI_TEST_PACKAGE: An XCode UI test package upload.
+	//
+	//    * APPIUM_JAVA_JUNIT_TEST_SPEC: An Appium Java JUnit test spec upload.
+	//
+	//    * APPIUM_JAVA_TESTNG_TEST_SPEC: An Appium Java TestNG test spec upload.
+	//
+	//    * APPIUM_PYTHON_TEST_SPEC: An Appium Python test spec upload.
+	//
+	//    * APPIUM_WEB_JAVA_JUNIT_TEST_SPEC: An Appium Java JUnit test spec upload.
+	//
+	//    * APPIUM_WEB_JAVA_TESTNG_TEST_SPEC: An Appium Java TestNG test spec upload.
+	//
+	//    * APPIUM_WEB_PYTHON_TEST_SPEC: An Appium Python test spec upload.
+	//
+	//    * INSTRUMENTATION_TEST_SPEC: An instrumentation test spec upload.
+	//
+	//    * XCTEST_UI_TEST_SPEC: An XCode UI test spec upload.
 	//
 	// Note If you call CreateUpload with WEB_APP specified, AWS Device Farm throws
 	// an ArgumentException error.
@@ -11477,8 +11493,7 @@ func (s *ListRunsOutput) SetRuns(v []*Run) *ListRunsOutput {
 type ListSamplesInput struct {
 	_ struct{} `type:"structure"`
 
-	// The Amazon Resource Name (ARN) of the project for which you want to list
-	// samples.
+	// The Amazon Resource Name (ARN) of the job used to list samples.
 	//
 	// Arn is a required field
 	Arn *string `locationName:"arn" min:"32" type:"string" required:"true"`
@@ -14013,15 +14028,22 @@ func (s *ScheduleRunOutput) SetRun(v *Run) *ScheduleRunOutput {
 	return s
 }
 
-// Represents additional test settings.
+// Represents test settings. This data structure is passed in as the "test"
+// parameter to ScheduleRun. For an example of the JSON request syntax, see
+// ScheduleRun.
 type ScheduleRunTest struct {
 	_ struct{} `type:"structure"`
 
 	// The test's filter.
 	Filter *string `locationName:"filter" type:"string"`
 
-	// The test's parameters, such as the following test framework parameters and
-	// fixture settings:
+	// The test's parameters, such as test framework parameters and fixture settings.
+	// Parameters are represented by name-value pairs of strings.
+	//
+	// For all tests:
+	//
+	//    * app_performance_monitoring: Performance monitoring is enabled by default.
+	//    Set this parameter to "false" to disable it.
 	//
 	// For Calabash tests:
 	//
@@ -14032,14 +14054,14 @@ type ScheduleRunTest struct {
 	//
 	// For Appium tests (all types):
 	//
-	//    * appium_version: The Appium version. Currently supported values are "1.4.16",
-	//    "1.6.3", "latest", and "default".
+	//    * appium_version: The Appium version. Currently supported values are "1.7.2",
+	//    "1.7.1", "1.6.5", "latest", and "default".
 	//
-	// “latest” will run the latest Appium version supported by Device Farm (1.6.3).
+	// “latest” will run the latest Appium version supported by Device Farm (1.7.2).
 	//
 	// For “default”, Device Farm will choose a compatible version of Appium for
-	//    the device. The current behavior is to run 1.4.16 on Android devices and
-	//    iOS 9 and earlier, 1.6.3 for iOS 10 and later.
+	//    the device. The current behavior is to run 1.7.2 on Android devices and
+	//    iOS 9 and earlier, 1.7.2 for iOS 10 and later.
 	//
 	// This behavior is subject to change.
 	//
@@ -15657,6 +15679,22 @@ type Upload struct {
 	//    * XCTEST_TEST_PACKAGE: An XCode test package upload.
 	//
 	//    * XCTEST_UI_TEST_PACKAGE: An XCode UI test package upload.
+	//
+	//    * APPIUM_JAVA_JUNIT_TEST_SPEC: An Appium Java JUnit test spec upload.
+	//
+	//    * APPIUM_JAVA_TESTNG_TEST_SPEC: An Appium Java TestNG test spec upload.
+	//
+	//    * APPIUM_PYTHON_TEST_SPEC: An Appium Python test spec upload.
+	//
+	//    * APPIUM_WEB_JAVA_JUNIT_TEST_SPEC: An Appium Java JUnit test spec upload.
+	//
+	//    * APPIUM_WEB_JAVA_TESTNG_TEST_SPEC: An Appium Java TestNG test spec upload.
+	//
+	//    * APPIUM_WEB_PYTHON_TEST_SPEC: An Appium Python test spec upload.
+	//
+	//    * INSTRUMENTATION_TEST_SPEC: An instrumentation test spec upload.
+	//
+	//    * XCTEST_UI_TEST_SPEC: An XCode UI test spec upload.
 	Type *string `locationName:"type" type:"string" enum:"UploadType"`
 
 	// The pre-signed Amazon S3 URL that was used to store a file through a corresponding

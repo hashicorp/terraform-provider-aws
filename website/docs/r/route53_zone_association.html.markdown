@@ -30,7 +30,7 @@ resource "aws_vpc" "secondary" {
 }
 
 resource "aws_route53_zone" "example" {
-  name   = "example.com"
+  name = "example.com"
 
   # NOTE: The aws_route53_zone vpc argument accepts multiple configuration
   #       blocks. The below usage of the single vpc configuration, the

@@ -448,7 +448,7 @@ func (c *SSM) CreateAssociationRequest(input *CreateAssociationInput) (req *requ
 // the instance as specified.
 //
 // If you associate a document with an instance that already has an associated
-// document, the system throws the AssociationAlreadyExists exception.
+// document, the system returns the AssociationAlreadyExists exception.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -581,7 +581,7 @@ func (c *SSM) CreateAssociationBatchRequest(input *CreateAssociationBatchInput) 
 // the instance as specified.
 //
 // If you associate a document with an instance that already has an associated
-// document, the system throws the AssociationAlreadyExists exception.
+// document, the system returns the AssociationAlreadyExists exception.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -10285,6 +10285,10 @@ func (c *SSM) UpdateDocumentRequest(input *UpdateDocumentInput) (req *request.Re
 //   The content of the association document matches another document. Change
 //   the content of the document and try again.
 //
+//   * ErrCodeDuplicateDocumentVersionName "DuplicateDocumentVersionName"
+//   The version name has already been used in this document. Specify a different
+//   version name, and then try again.
+//
 //   * ErrCodeInvalidDocumentContent "InvalidDocumentContent"
 //   The content for the document is not valid.
 //
@@ -10296,6 +10300,10 @@ func (c *SSM) UpdateDocumentRequest(input *UpdateDocumentInput) (req *request.Re
 //
 //   * ErrCodeInvalidDocument "InvalidDocument"
 //   The specified document does not exist.
+//
+//   * ErrCodeInvalidDocumentOperation "InvalidDocumentOperation"
+//   You attempted to delete a document while it is still shared. You must stop
+//   sharing the document before you can delete it.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateDocument
 func (c *SSM) UpdateDocument(input *UpdateDocumentInput) (*UpdateDocumentOutput, error) {
@@ -12058,6 +12066,137 @@ func (s *AssociationVersionInfo) SetTargets(v []*Target) *AssociationVersionInfo
 	return s
 }
 
+// A structure that includes attributes that describe a document attachment.
+type AttachmentContent struct {
+	_ struct{} `type:"structure"`
+
+	// The cryptographic hash value of the document content.
+	Hash *string `type:"string"`
+
+	// The hash algorithm used to calculate the hash value.
+	HashType *string `type:"string" enum:"AttachmentHashType"`
+
+	// The name of an attachment.
+	Name *string `type:"string"`
+
+	// The size of an attachment in bytes.
+	Size *int64 `type:"long"`
+
+	// The URL location of the attachment content.
+	Url *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AttachmentContent) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AttachmentContent) GoString() string {
+	return s.String()
+}
+
+// SetHash sets the Hash field's value.
+func (s *AttachmentContent) SetHash(v string) *AttachmentContent {
+	s.Hash = &v
+	return s
+}
+
+// SetHashType sets the HashType field's value.
+func (s *AttachmentContent) SetHashType(v string) *AttachmentContent {
+	s.HashType = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *AttachmentContent) SetName(v string) *AttachmentContent {
+	s.Name = &v
+	return s
+}
+
+// SetSize sets the Size field's value.
+func (s *AttachmentContent) SetSize(v int64) *AttachmentContent {
+	s.Size = &v
+	return s
+}
+
+// SetUrl sets the Url field's value.
+func (s *AttachmentContent) SetUrl(v string) *AttachmentContent {
+	s.Url = &v
+	return s
+}
+
+// An attribute of an attachment, such as the attachment name or size.
+type AttachmentInformation struct {
+	_ struct{} `type:"structure"`
+
+	Name *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AttachmentInformation) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AttachmentInformation) GoString() string {
+	return s.String()
+}
+
+// SetName sets the Name field's value.
+func (s *AttachmentInformation) SetName(v string) *AttachmentInformation {
+	s.Name = &v
+	return s
+}
+
+// A key and value pair that identifies the location of an attachment to a document.
+type AttachmentsSource struct {
+	_ struct{} `type:"structure"`
+
+	// The key of a key and value pair that identifies the location of an attachment
+	// to a document.
+	Key *string `type:"string" enum:"AttachmentsSourceKey"`
+
+	// The URL of the location of a document attachment, such as the URL of an Amazon
+	// S3 bucket.
+	Values []*string `min:"1" type:"list"`
+}
+
+// String returns the string representation
+func (s AttachmentsSource) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AttachmentsSource) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AttachmentsSource) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AttachmentsSource"}
+	if s.Values != nil && len(s.Values) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Values", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetKey sets the Key field's value.
+func (s *AttachmentsSource) SetKey(v string) *AttachmentsSource {
+	s.Key = &v
+	return s
+}
+
+// SetValues sets the Values field's value.
+func (s *AttachmentsSource) SetValues(v []*string) *AttachmentsSource {
+	s.Values = v
+	return s
+}
+
 // Detailed information about the current state of an individual Automation
 // execution.
 type AutomationExecution struct {
@@ -12113,6 +12252,10 @@ type AutomationExecution struct {
 	// The AutomationExecutionId of the parent automation.
 	ParentAutomationExecutionId *string `min:"36" type:"string"`
 
+	// An aggregate of step execution statuses displayed in the AWS Console for
+	// a multi-Region and multi-account Automation execution.
+	ProgressCounters *ProgressCounters `type:"structure"`
+
 	// A list of resolved targets in the rate control execution.
 	ResolvedTargets *ResolvedTargets `type:"structure"`
 
@@ -12127,6 +12270,10 @@ type AutomationExecution struct {
 
 	// The target of the execution.
 	Target *string `type:"string"`
+
+	// The combination of AWS Regions and/or AWS accounts where you want to execute
+	// the Automation.
+	TargetLocations []*TargetLocation `min:"1" type:"list"`
 
 	// The specified key-value mapping of document parameters to target resources.
 	TargetMaps []map[string][]*string `type:"list"`
@@ -12244,6 +12391,12 @@ func (s *AutomationExecution) SetParentAutomationExecutionId(v string) *Automati
 	return s
 }
 
+// SetProgressCounters sets the ProgressCounters field's value.
+func (s *AutomationExecution) SetProgressCounters(v *ProgressCounters) *AutomationExecution {
+	s.ProgressCounters = v
+	return s
+}
+
 // SetResolvedTargets sets the ResolvedTargets field's value.
 func (s *AutomationExecution) SetResolvedTargets(v *ResolvedTargets) *AutomationExecution {
 	s.ResolvedTargets = v
@@ -12265,6 +12418,12 @@ func (s *AutomationExecution) SetStepExecutionsTruncated(v bool) *AutomationExec
 // SetTarget sets the Target field's value.
 func (s *AutomationExecution) SetTarget(v string) *AutomationExecution {
 	s.Target = &v
+	return s
+}
+
+// SetTargetLocations sets the TargetLocations field's value.
+func (s *AutomationExecution) SetTargetLocations(v []*TargetLocation) *AutomationExecution {
+	s.TargetLocations = v
 	return s
 }
 
@@ -12357,6 +12516,13 @@ type AutomationExecutionMetadata struct {
 	// Timed out, or Cancelled.
 	AutomationExecutionStatus *string `type:"string" enum:"AutomationExecutionStatus"`
 
+	// Use this filter with DescribeAutomationExecution. Specify either Local of
+	// CrossAccount. CrossAccount is an Automation that executes in multiple AWS
+	// Regions and accounts. For more information, see Concurrently Executing Automations
+	// in Multiple AWS Regions and Accounts (http://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-automation-multiple-accounts-and-regions.html)
+	// in the AWS Systems Manager User Guide.
+	AutomationType *string `type:"string" enum:"AutomationType"`
+
 	// The action of the currently executing step.
 	CurrentAction *string `type:"string"`
 
@@ -12435,6 +12601,12 @@ func (s *AutomationExecutionMetadata) SetAutomationExecutionId(v string) *Automa
 // SetAutomationExecutionStatus sets the AutomationExecutionStatus field's value.
 func (s *AutomationExecutionMetadata) SetAutomationExecutionStatus(v string) *AutomationExecutionMetadata {
 	s.AutomationExecutionStatus = &v
+	return s
+}
+
+// SetAutomationType sets the AutomationType field's value.
+func (s *AutomationExecutionMetadata) SetAutomationType(v string) *AutomationExecutionMetadata {
+	s.AutomationType = &v
 	return s
 }
 
@@ -13022,11 +13194,13 @@ type CommandFilter struct {
 
 	// The filter value. Valid values for each filter key are as follows:
 	//
-	//    * InvokedAfter: A timestamp to limit your results. For example, specify
-	//    2018-07-07T00:00:00Z to see results occurring July 7, 2018, and later.
+	//    * InvokedAfter: Specify a timestamp to limit your results. For example,
+	//    specify 2018-07-07T00:00:00Z to see a list of command executions occurring
+	//    July 7, 2018, and later.
 	//
-	//    * InvokedBefore: A timestamp to limit your results. For example, specify
-	//    2018-07-07T00:00:00Z to see results before July 7, 2018.
+	//    * InvokedBefore: Specify a timestamp to limit your results. For example,
+	//    specify 2018-07-07T00:00:00Z to see a list of command executions from
+	//    before July 7, 2018.
 	//
 	//    * Status: Specify a valid command status to see a list of all command
 	//    executions with that status. Status values you can specify include:
@@ -13045,19 +13219,17 @@ type CommandFilter struct {
 	//
 	// Cancelling
 	//
-	//    * DocumentName: The name of the SSM document for which you want to see
-	//    command results.
+	//    * DocumentName: Specify name of the SSM document for which you want to
+	//    see command execution results. For example, specify AWS-RunPatchBaseline
+	//    to see command executions that used this SSM document to perform security
+	//    patching operations on instances.
 	//
-	// For example, specify AWS-RunPatchBaseline to see command executions that
-	//    used this SSM document to perform security patching operations on instances.
+	//    * ExecutionStage: Specify one of the following values:
 	//
+	// Executing: Returns a list of command executions that are currently still
+	//    running.
 	//
-	//    * ExecutionStage: An enum whose value can be either Executing or Complete.
-	//
-	// Specify Executing to see a list of command executions that are currently
-	//    still running.
-	//
-	// Specify Complete to see a list of command exeuctions that have already completed.
+	// Complete: Returns a list of command executions that have already completed.
 	//
 	// Value is a required field
 	Value *string `locationName:"value" min:"1" type:"string" required:"true"`
@@ -14109,7 +14281,7 @@ func (s *CreateAssociationBatchOutput) SetSuccessful(v []*AssociationDescription
 	return s
 }
 
-// Describes the association of a Systems Manager document and an instance.
+// Describes the association of a Systems Manager SSM document and an instance.
 type CreateAssociationBatchRequestEntry struct {
 	_ struct{} `type:"structure"`
 
@@ -14481,6 +14653,10 @@ func (s *CreateAssociationOutput) SetAssociationDescription(v *AssociationDescri
 type CreateDocumentInput struct {
 	_ struct{} `type:"structure"`
 
+	// A list of key and value pairs that describe attachments to a version of a
+	// document.
+	Attachments []*AttachmentsSource `type:"list"`
+
 	// A valid JSON or YAML string.
 	//
 	// Content is a required field
@@ -14490,8 +14666,8 @@ type CreateDocumentInput struct {
 	// JSON or YAML. JSON is the default format.
 	DocumentFormat *string `type:"string" enum:"DocumentFormat"`
 
-	// The type of document to create. Valid document types include: Policy, Automation,
-	// and Command.
+	// The type of document to create. Valid document types include: Command, Policy,
+	// Automation, Session, and Package.
 	DocumentType *string `type:"string" enum:"DocumentType"`
 
 	// A name for the Systems Manager document.
@@ -14516,6 +14692,11 @@ type CreateDocumentInput struct {
 	// Types Reference (http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html)
 	// in the AWS CloudFormation User Guide.
 	TargetType *string `type:"string"`
+
+	// An optional field specifying the version of the artifact you are creating
+	// with the document. For example, "Release 12, Update 6". This value is unique
+	// across all versions of a document, and cannot be changed.
+	VersionName *string `type:"string"`
 }
 
 // String returns the string representation
@@ -14540,11 +14721,27 @@ func (s *CreateDocumentInput) Validate() error {
 	if s.Name == nil {
 		invalidParams.Add(request.NewErrParamRequired("Name"))
 	}
+	if s.Attachments != nil {
+		for i, v := range s.Attachments {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Attachments", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetAttachments sets the Attachments field's value.
+func (s *CreateDocumentInput) SetAttachments(v []*AttachmentsSource) *CreateDocumentInput {
+	s.Attachments = v
+	return s
 }
 
 // SetContent sets the Content field's value.
@@ -14574,6 +14771,12 @@ func (s *CreateDocumentInput) SetName(v string) *CreateDocumentInput {
 // SetTargetType sets the TargetType field's value.
 func (s *CreateDocumentInput) SetTargetType(v string) *CreateDocumentInput {
 	s.TargetType = &v
+	return s
+}
+
+// SetVersionName sets the VersionName field's value.
+func (s *CreateDocumentInput) SetVersionName(v string) *CreateDocumentInput {
+	s.VersionName = &v
 	return s
 }
 
@@ -16822,6 +17025,11 @@ type DescribeDocumentInput struct {
 	//
 	// Name is a required field
 	Name *string `type:"string" required:"true"`
+
+	// An optional field specifying the version of the artifact associated with
+	// the document. For example, "Release 12, Update 6". This value is unique across
+	// all versions of a document, and cannot be changed.
+	VersionName *string `type:"string"`
 }
 
 // String returns the string representation
@@ -16856,6 +17064,12 @@ func (s *DescribeDocumentInput) SetDocumentVersion(v string) *DescribeDocumentIn
 // SetName sets the Name field's value.
 func (s *DescribeDocumentInput) SetName(v string) *DescribeDocumentInput {
 	s.Name = &v
+	return s
+}
+
+// SetVersionName sets the VersionName field's value.
+func (s *DescribeDocumentInput) SetVersionName(v string) *DescribeDocumentInput {
+	s.VersionName = &v
 	return s
 }
 
@@ -19361,6 +19575,9 @@ type DocumentDefaultVersionDescription struct {
 	// The default version of the document.
 	DefaultVersion *string `type:"string"`
 
+	// The default version of the artifact associated with the document.
+	DefaultVersionName *string `type:"string"`
+
 	// The name of the document.
 	Name *string `type:"string"`
 }
@@ -19381,6 +19598,12 @@ func (s *DocumentDefaultVersionDescription) SetDefaultVersion(v string) *Documen
 	return s
 }
 
+// SetDefaultVersionName sets the DefaultVersionName field's value.
+func (s *DocumentDefaultVersionDescription) SetDefaultVersionName(v string) *DocumentDefaultVersionDescription {
+	s.DefaultVersionName = &v
+	return s
+}
+
 // SetName sets the Name field's value.
 func (s *DocumentDefaultVersionDescription) SetName(v string) *DocumentDefaultVersionDescription {
 	s.Name = &v
@@ -19390,6 +19613,10 @@ func (s *DocumentDefaultVersionDescription) SetName(v string) *DocumentDefaultVe
 // Describes a Systems Manager document.
 type DocumentDescription struct {
 	_ struct{} `type:"structure"`
+
+	// Details about the document attachments, including names, locations, sizes,
+	// etc.
+	AttachmentsInformation []*AttachmentInformation `type:"list"`
 
 	// The date when the document was created.
 	CreatedDate *time.Time `type:"timestamp"`
@@ -19414,7 +19641,7 @@ type DocumentDescription struct {
 	// Sha1 hashes have been deprecated.
 	Hash *string `type:"string"`
 
-	// Sha256 or Sha1.
+	// The hash type of the document. Valid values include Sha256 or Sha1.
 	//
 	// Sha1 hashes have been deprecated.
 	HashType *string `type:"string" enum:"DocumentHashType"`
@@ -19443,6 +19670,12 @@ type DocumentDescription struct {
 	// The status of the Systems Manager document.
 	Status *string `type:"string" enum:"DocumentStatus"`
 
+	// A message returned by AWS Systems Manager that explains the Status value.
+	// For example, a Failed status might be explained by the StatusInformation
+	// message, "The specified S3 bucket does not exist. Verify that the URL of
+	// the S3 bucket is correct."
+	StatusInformation *string `type:"string"`
+
 	// The tags, or metadata, that have been applied to the document.
 	Tags []*Tag `type:"list"`
 
@@ -19451,6 +19684,9 @@ type DocumentDescription struct {
 	// see AWS Resource Types Reference (http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html)
 	// in the AWS CloudFormation User Guide.
 	TargetType *string `type:"string"`
+
+	// The version of the artifact associated with the document.
+	VersionName *string `type:"string"`
 }
 
 // String returns the string representation
@@ -19461,6 +19697,12 @@ func (s DocumentDescription) String() string {
 // GoString returns the string representation
 func (s DocumentDescription) GoString() string {
 	return s.String()
+}
+
+// SetAttachmentsInformation sets the AttachmentsInformation field's value.
+func (s *DocumentDescription) SetAttachmentsInformation(v []*AttachmentInformation) *DocumentDescription {
+	s.AttachmentsInformation = v
+	return s
 }
 
 // SetCreatedDate sets the CreatedDate field's value.
@@ -19559,6 +19801,12 @@ func (s *DocumentDescription) SetStatus(v string) *DocumentDescription {
 	return s
 }
 
+// SetStatusInformation sets the StatusInformation field's value.
+func (s *DocumentDescription) SetStatusInformation(v string) *DocumentDescription {
+	s.StatusInformation = &v
+	return s
+}
+
 // SetTags sets the Tags field's value.
 func (s *DocumentDescription) SetTags(v []*Tag) *DocumentDescription {
 	s.Tags = v
@@ -19568,6 +19816,12 @@ func (s *DocumentDescription) SetTags(v []*Tag) *DocumentDescription {
 // SetTargetType sets the TargetType field's value.
 func (s *DocumentDescription) SetTargetType(v string) *DocumentDescription {
 	s.TargetType = &v
+	return s
+}
+
+// SetVersionName sets the VersionName field's value.
+func (s *DocumentDescription) SetVersionName(v string) *DocumentDescription {
+	s.VersionName = &v
 	return s
 }
 
@@ -19660,6 +19914,11 @@ type DocumentIdentifier struct {
 	// see AWS Resource Types Reference (http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html)
 	// in the AWS CloudFormation User Guide.
 	TargetType *string `type:"string"`
+
+	// An optional field specifying the version of the artifact associated with
+	// the document. For example, "Release 12, Update 6". This value is unique across
+	// all versions of a document, and cannot be changed.
+	VersionName *string `type:"string"`
 }
 
 // String returns the string representation
@@ -19723,6 +19982,12 @@ func (s *DocumentIdentifier) SetTags(v []*Tag) *DocumentIdentifier {
 // SetTargetType sets the TargetType field's value.
 func (s *DocumentIdentifier) SetTargetType(v string) *DocumentIdentifier {
 	s.TargetType = &v
+	return s
+}
+
+// SetVersionName sets the VersionName field's value.
+func (s *DocumentIdentifier) SetVersionName(v string) *DocumentIdentifier {
+	s.VersionName = &v
 	return s
 }
 
@@ -19868,6 +20133,21 @@ type DocumentVersionInfo struct {
 
 	// The document name.
 	Name *string `type:"string"`
+
+	// The status of the Systems Manager document, such as Creating, Active, Failed,
+	// and Deleting.
+	Status *string `type:"string" enum:"DocumentStatus"`
+
+	// A message returned by AWS Systems Manager that explains the Status value.
+	// For example, a Failed status might be explained by the StatusInformation
+	// message, "The specified S3 bucket does not exist. Verify that the URL of
+	// the S3 bucket is correct."
+	StatusInformation *string `type:"string"`
+
+	// The version of the artifact associated with the document. For example, "Release
+	// 12, Update 6". This value is unique across all versions of a document, and
+	// cannot be changed.
+	VersionName *string `type:"string"`
 }
 
 // String returns the string representation
@@ -19907,6 +20187,24 @@ func (s *DocumentVersionInfo) SetIsDefaultVersion(v bool) *DocumentVersionInfo {
 // SetName sets the Name field's value.
 func (s *DocumentVersionInfo) SetName(v string) *DocumentVersionInfo {
 	s.Name = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *DocumentVersionInfo) SetStatus(v string) *DocumentVersionInfo {
+	s.Status = &v
+	return s
+}
+
+// SetStatusInformation sets the StatusInformation field's value.
+func (s *DocumentVersionInfo) SetStatusInformation(v string) *DocumentVersionInfo {
+	s.StatusInformation = &v
+	return s
+}
+
+// SetVersionName sets the VersionName field's value.
+func (s *DocumentVersionInfo) SetVersionName(v string) *DocumentVersionInfo {
+	s.VersionName = &v
 	return s
 }
 
@@ -20660,6 +20958,11 @@ type GetDocumentInput struct {
 	//
 	// Name is a required field
 	Name *string `type:"string" required:"true"`
+
+	// An optional field specifying the version of the artifact associated with
+	// the document. For example, "Release 12, Update 6". This value is unique across
+	// all versions of a document, and cannot be changed.
+	VersionName *string `type:"string"`
 }
 
 // String returns the string representation
@@ -20703,8 +21006,18 @@ func (s *GetDocumentInput) SetName(v string) *GetDocumentInput {
 	return s
 }
 
+// SetVersionName sets the VersionName field's value.
+func (s *GetDocumentInput) SetVersionName(v string) *GetDocumentInput {
+	s.VersionName = &v
+	return s
+}
+
 type GetDocumentOutput struct {
 	_ struct{} `type:"structure"`
+
+	// A description of the document attachments, including names, locations, sizes,
+	// etc.
+	AttachmentsContent []*AttachmentContent `type:"list"`
 
 	// The contents of the Systems Manager document.
 	Content *string `min:"1" type:"string"`
@@ -20720,6 +21033,21 @@ type GetDocumentOutput struct {
 
 	// The name of the Systems Manager document.
 	Name *string `type:"string"`
+
+	// The status of the Systems Manager document, such as Creating, Active, Updating,
+	// Failed, and Deleting.
+	Status *string `type:"string" enum:"DocumentStatus"`
+
+	// A message returned by AWS Systems Manager that explains the Status value.
+	// For example, a Failed status might be explained by the StatusInformation
+	// message, "The specified S3 bucket does not exist. Verify that the URL of
+	// the S3 bucket is correct."
+	StatusInformation *string `type:"string"`
+
+	// The version of the artifact associated with the document. For example, "Release
+	// 12, Update 6". This value is unique across all versions of a document, and
+	// cannot be changed.
+	VersionName *string `type:"string"`
 }
 
 // String returns the string representation
@@ -20730,6 +21058,12 @@ func (s GetDocumentOutput) String() string {
 // GoString returns the string representation
 func (s GetDocumentOutput) GoString() string {
 	return s.String()
+}
+
+// SetAttachmentsContent sets the AttachmentsContent field's value.
+func (s *GetDocumentOutput) SetAttachmentsContent(v []*AttachmentContent) *GetDocumentOutput {
+	s.AttachmentsContent = v
+	return s
 }
 
 // SetContent sets the Content field's value.
@@ -20759,6 +21093,24 @@ func (s *GetDocumentOutput) SetDocumentVersion(v string) *GetDocumentOutput {
 // SetName sets the Name field's value.
 func (s *GetDocumentOutput) SetName(v string) *GetDocumentOutput {
 	s.Name = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *GetDocumentOutput) SetStatus(v string) *GetDocumentOutput {
+	s.Status = &v
+	return s
+}
+
+// SetStatusInformation sets the StatusInformation field's value.
+func (s *GetDocumentOutput) SetStatusInformation(v string) *GetDocumentOutput {
+	s.StatusInformation = &v
+	return s
+}
+
+// SetVersionName sets the VersionName field's value.
+func (s *GetDocumentOutput) SetVersionName(v string) *GetDocumentOutput {
+	s.VersionName = &v
 	return s
 }
 
@@ -26356,7 +26708,7 @@ type MaintenanceWindowRunCommandParameters struct {
 	ServiceRoleArn *string `type:"string"`
 
 	// If this time is reached and the command has not already started executing,
-	// it doesn not execute.
+	// it doesn't run.
 	TimeoutSeconds *int64 `min:"30" type:"integer"`
 }
 
@@ -28597,6 +28949,72 @@ func (s *PatchStatus) SetComplianceLevel(v string) *PatchStatus {
 // SetDeploymentStatus sets the DeploymentStatus field's value.
 func (s *PatchStatus) SetDeploymentStatus(v string) *PatchStatus {
 	s.DeploymentStatus = &v
+	return s
+}
+
+// An aggregate of step execution statuses displayed in the AWS Console for
+// a multi-Region and multi-account Automation execution.
+type ProgressCounters struct {
+	_ struct{} `type:"structure"`
+
+	// The total number of steps that the system cancelled in all specified AWS
+	// Regions and accounts for the current Automation execution.
+	CancelledSteps *int64 `type:"integer"`
+
+	// The total number of steps that failed to execute in all specified AWS Regions
+	// and accounts for the current Automation execution.
+	FailedSteps *int64 `type:"integer"`
+
+	// The total number of steps that successfully completed in all specified AWS
+	// Regions and accounts for the current Automation execution.
+	SuccessSteps *int64 `type:"integer"`
+
+	// The total number of steps that timed out in all specified AWS Regions and
+	// accounts for the current Automation execution.
+	TimedOutSteps *int64 `type:"integer"`
+
+	// The total number of steps executed in all specified AWS Regions and accounts
+	// for the current Automation execution.
+	TotalSteps *int64 `type:"integer"`
+}
+
+// String returns the string representation
+func (s ProgressCounters) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ProgressCounters) GoString() string {
+	return s.String()
+}
+
+// SetCancelledSteps sets the CancelledSteps field's value.
+func (s *ProgressCounters) SetCancelledSteps(v int64) *ProgressCounters {
+	s.CancelledSteps = &v
+	return s
+}
+
+// SetFailedSteps sets the FailedSteps field's value.
+func (s *ProgressCounters) SetFailedSteps(v int64) *ProgressCounters {
+	s.FailedSteps = &v
+	return s
+}
+
+// SetSuccessSteps sets the SuccessSteps field's value.
+func (s *ProgressCounters) SetSuccessSteps(v int64) *ProgressCounters {
+	s.SuccessSteps = &v
+	return s
+}
+
+// SetTimedOutSteps sets the TimedOutSteps field's value.
+func (s *ProgressCounters) SetTimedOutSteps(v int64) *ProgressCounters {
+	s.TimedOutSteps = &v
+	return s
+}
+
+// SetTotalSteps sets the TotalSteps field's value.
+func (s *ProgressCounters) SetTotalSteps(v int64) *ProgressCounters {
+	s.TotalSteps = &v
 	return s
 }
 
@@ -31033,6 +31451,13 @@ type StartAutomationExecutionInput struct {
 	// in the Automation document.
 	Parameters map[string][]*string `min:"1" type:"map"`
 
+	// A location is a combination of AWS Regions and/or AWS accounts where you
+	// want to execute the Automation. Use this action to start an Automation in
+	// multiple Regions and multiple accounts. For more information, see Concurrently
+	// Executing Automations in Multiple AWS Regions and Accounts (http://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-automation-multiple-accounts-and-regions.html)
+	// in the AWS Systems Manager User Guide.
+	TargetLocations []*TargetLocation `min:"1" type:"list"`
+
 	// A key-value mapping of document parameters to target resources. Both Targets
 	// and TargetMaps cannot be specified together.
 	TargetMaps []map[string][]*string `type:"list"`
@@ -31073,8 +31498,21 @@ func (s *StartAutomationExecutionInput) Validate() error {
 	if s.Parameters != nil && len(s.Parameters) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Parameters", 1))
 	}
+	if s.TargetLocations != nil && len(s.TargetLocations) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TargetLocations", 1))
+	}
 	if s.TargetParameterName != nil && len(*s.TargetParameterName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("TargetParameterName", 1))
+	}
+	if s.TargetLocations != nil {
+		for i, v := range s.TargetLocations {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "TargetLocations", i), err.(request.ErrInvalidParams))
+			}
+		}
 	}
 	if s.Targets != nil {
 		for i, v := range s.Targets {
@@ -31132,6 +31570,12 @@ func (s *StartAutomationExecutionInput) SetMode(v string) *StartAutomationExecut
 // SetParameters sets the Parameters field's value.
 func (s *StartAutomationExecutionInput) SetParameters(v map[string][]*string) *StartAutomationExecutionInput {
 	s.Parameters = v
+	return s
+}
+
+// SetTargetLocations sets the TargetLocations field's value.
+func (s *StartAutomationExecutionInput) SetTargetLocations(v []*TargetLocation) *StartAutomationExecutionInput {
+	s.TargetLocations = v
 	return s
 }
 
@@ -31353,6 +31797,13 @@ type StepExecution struct {
 	// Success, Cancelled, Failed, and TimedOut.
 	StepStatus *string `type:"string" enum:"AutomationExecutionStatus"`
 
+	// The combination of AWS Regions and accounts targeted by the current Automation
+	// execution.
+	TargetLocation *TargetLocation `type:"structure"`
+
+	// The targets for the step execution.
+	Targets []*Target `type:"list"`
+
 	// The timeout seconds of the step.
 	TimeoutSeconds *int64 `type:"long"`
 
@@ -31479,6 +31930,18 @@ func (s *StepExecution) SetStepName(v string) *StepExecution {
 // SetStepStatus sets the StepStatus field's value.
 func (s *StepExecution) SetStepStatus(v string) *StepExecution {
 	s.StepStatus = &v
+	return s
+}
+
+// SetTargetLocation sets the TargetLocation field's value.
+func (s *StepExecution) SetTargetLocation(v *TargetLocation) *StepExecution {
+	s.TargetLocation = v
+	return s
+}
+
+// SetTargets sets the Targets field's value.
+func (s *StepExecution) SetTargets(v []*Target) *StepExecution {
+	s.Targets = v
 	return s
 }
 
@@ -31734,6 +32197,94 @@ func (s *Target) SetKey(v string) *Target {
 // SetValues sets the Values field's value.
 func (s *Target) SetValues(v []*string) *Target {
 	s.Values = v
+	return s
+}
+
+// The combination of AWS Regions and accounts targeted by the current Automation
+// execution.
+type TargetLocation struct {
+	_ struct{} `type:"structure"`
+
+	// The AWS accounts targeted by the current Automation execution.
+	Accounts []*string `min:"1" type:"list"`
+
+	// The Automation execution role used by the currently executing Automation.
+	ExecutionRoleName *string `min:"1" type:"string"`
+
+	// The AWS Regions targeted by the current Automation execution.
+	Regions []*string `min:"1" type:"list"`
+
+	// The maxium number of AWS accounts and AWS regions allowed to run the Automation
+	// concurrently
+	TargetLocationMaxConcurrency *string `min:"1" type:"string"`
+
+	// The maxium number of errors allowed before the system stops queueing additional
+	// Automation executions for the currently executing Automation.
+	TargetLocationMaxErrors *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s TargetLocation) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TargetLocation) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *TargetLocation) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "TargetLocation"}
+	if s.Accounts != nil && len(s.Accounts) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Accounts", 1))
+	}
+	if s.ExecutionRoleName != nil && len(*s.ExecutionRoleName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ExecutionRoleName", 1))
+	}
+	if s.Regions != nil && len(s.Regions) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Regions", 1))
+	}
+	if s.TargetLocationMaxConcurrency != nil && len(*s.TargetLocationMaxConcurrency) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TargetLocationMaxConcurrency", 1))
+	}
+	if s.TargetLocationMaxErrors != nil && len(*s.TargetLocationMaxErrors) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TargetLocationMaxErrors", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAccounts sets the Accounts field's value.
+func (s *TargetLocation) SetAccounts(v []*string) *TargetLocation {
+	s.Accounts = v
+	return s
+}
+
+// SetExecutionRoleName sets the ExecutionRoleName field's value.
+func (s *TargetLocation) SetExecutionRoleName(v string) *TargetLocation {
+	s.ExecutionRoleName = &v
+	return s
+}
+
+// SetRegions sets the Regions field's value.
+func (s *TargetLocation) SetRegions(v []*string) *TargetLocation {
+	s.Regions = v
+	return s
+}
+
+// SetTargetLocationMaxConcurrency sets the TargetLocationMaxConcurrency field's value.
+func (s *TargetLocation) SetTargetLocationMaxConcurrency(v string) *TargetLocation {
+	s.TargetLocationMaxConcurrency = &v
+	return s
+}
+
+// SetTargetLocationMaxErrors sets the TargetLocationMaxErrors field's value.
+func (s *TargetLocation) SetTargetLocationMaxErrors(v string) *TargetLocation {
+	s.TargetLocationMaxErrors = &v
 	return s
 }
 
@@ -32181,7 +32732,11 @@ func (s *UpdateDocumentDefaultVersionOutput) SetDescription(v *DocumentDefaultVe
 type UpdateDocumentInput struct {
 	_ struct{} `type:"structure"`
 
-	// The content in a document that you want to update.
+	// A list of key and value pairs that describe attachments to a version of a
+	// document.
+	Attachments []*AttachmentsSource `type:"list"`
+
+	// A valid JSON or YAML string.
 	//
 	// Content is a required field
 	Content *string `min:"1" type:"string" required:"true"`
@@ -32200,6 +32755,11 @@ type UpdateDocumentInput struct {
 
 	// Specify a new target type for the document.
 	TargetType *string `type:"string"`
+
+	// An optional field specifying the version of the artifact you are updating
+	// with the document. For example, "Release 12, Update 6". This value is unique
+	// across all versions of a document, and cannot be changed.
+	VersionName *string `type:"string"`
 }
 
 // String returns the string representation
@@ -32224,11 +32784,27 @@ func (s *UpdateDocumentInput) Validate() error {
 	if s.Name == nil {
 		invalidParams.Add(request.NewErrParamRequired("Name"))
 	}
+	if s.Attachments != nil {
+		for i, v := range s.Attachments {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Attachments", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetAttachments sets the Attachments field's value.
+func (s *UpdateDocumentInput) SetAttachments(v []*AttachmentsSource) *UpdateDocumentInput {
+	s.Attachments = v
+	return s
 }
 
 // SetContent sets the Content field's value.
@@ -32258,6 +32834,12 @@ func (s *UpdateDocumentInput) SetName(v string) *UpdateDocumentInput {
 // SetTargetType sets the TargetType field's value.
 func (s *UpdateDocumentInput) SetTargetType(v string) *UpdateDocumentInput {
 	s.TargetType = &v
+	return s
+}
+
+// SetVersionName sets the VersionName field's value.
+func (s *UpdateDocumentInput) SetVersionName(v string) *UpdateDocumentInput {
+	s.VersionName = &v
 	return s
 }
 
@@ -33632,6 +34214,16 @@ const (
 )
 
 const (
+	// AttachmentHashTypeSha256 is a AttachmentHashType enum value
+	AttachmentHashTypeSha256 = "Sha256"
+)
+
+const (
+	// AttachmentsSourceKeySourceUrl is a AttachmentsSourceKey enum value
+	AttachmentsSourceKeySourceUrl = "SourceUrl"
+)
+
+const (
 	// AutomationExecutionFilterKeyDocumentNamePrefix is a AutomationExecutionFilterKey enum value
 	AutomationExecutionFilterKeyDocumentNamePrefix = "DocumentNamePrefix"
 
@@ -33652,6 +34244,9 @@ const (
 
 	// AutomationExecutionFilterKeyStartTimeAfter is a AutomationExecutionFilterKey enum value
 	AutomationExecutionFilterKeyStartTimeAfter = "StartTimeAfter"
+
+	// AutomationExecutionFilterKeyAutomationType is a AutomationExecutionFilterKey enum value
+	AutomationExecutionFilterKeyAutomationType = "AutomationType"
 )
 
 const (
@@ -33678,6 +34273,14 @@ const (
 
 	// AutomationExecutionStatusFailed is a AutomationExecutionStatus enum value
 	AutomationExecutionStatusFailed = "Failed"
+)
+
+const (
+	// AutomationTypeCrossAccount is a AutomationType enum value
+	AutomationTypeCrossAccount = "CrossAccount"
+
+	// AutomationTypeLocal is a AutomationType enum value
+	AutomationTypeLocal = "Local"
 )
 
 const (
@@ -33873,6 +34476,7 @@ const (
 	DocumentPermissionTypeShare = "Share"
 )
 
+// The status of a document.
 const (
 	// DocumentStatusCreating is a DocumentStatus enum value
 	DocumentStatusCreating = "Creating"
@@ -33885,6 +34489,9 @@ const (
 
 	// DocumentStatusDeleting is a DocumentStatus enum value
 	DocumentStatusDeleting = "Deleting"
+
+	// DocumentStatusFailed is a DocumentStatus enum value
+	DocumentStatusFailed = "Failed"
 )
 
 const (
@@ -33899,6 +34506,9 @@ const (
 
 	// DocumentTypeSession is a DocumentType enum value
 	DocumentTypeSession = "Session"
+
+	// DocumentTypePackage is a DocumentType enum value
+	DocumentTypePackage = "Package"
 )
 
 const (

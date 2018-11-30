@@ -68,6 +68,7 @@ func TestAccAWSDlmLifecyclePolicy_Full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.create_rule.0.times.0", "21:42"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.retain_rule.0.count", "10"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.tags_to_add.tf-acc-test-added", "full"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.copy_tags", "false"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.target_tags.tf-acc-test", "full"),
 				),
 			},
@@ -85,6 +86,7 @@ func TestAccAWSDlmLifecyclePolicy_Full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.create_rule.0.times.0", "09:42"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.retain_rule.0.count", "100"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.tags_to_add.tf-acc-test-added", "full-updated"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.copy_tags", "true"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.target_tags.tf-acc-test", "full-updated"),
 				),
 			},
@@ -240,6 +242,8 @@ resource "aws_dlm_lifecycle_policy" "full" {
       tags_to_add {
         tf-acc-test-added = "full"
       }
+
+      copy_tags = false
     }
 
     target_tags {
@@ -296,6 +300,8 @@ resource "aws_dlm_lifecycle_policy" "full" {
       tags_to_add {
         tf-acc-test-added = "full-updated"
       }
+
+      copy_tags = true
     }
 
     target_tags {

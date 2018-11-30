@@ -18,8 +18,8 @@ resource "aws_neptune_parameter_group" "example" {
   name   = "example"
 
   parameter {
-    name         = "neptune_query_timeout"
-    value        = "25"
+    name  = "neptune_query_timeout"
+    value = "25"
   }
 }
 ```

@@ -77,6 +77,11 @@ func resourceAwsRouteTable() *schema.Resource {
 							Optional: true,
 						},
 
+						"transit_gateway_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+
 						"vpc_peering_connection_id": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -192,6 +197,9 @@ func resourceAwsRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 		}
 		if r.InstanceId != nil {
 			m["instance_id"] = *r.InstanceId
+		}
+		if r.TransitGatewayId != nil {
+			m["transit_gateway_id"] = *r.TransitGatewayId
 		}
 		if r.VpcPeeringConnectionId != nil {
 			m["vpc_peering_connection_id"] = *r.VpcPeeringConnectionId
@@ -322,6 +330,10 @@ func resourceAwsRouteTableUpdate(d *schema.ResourceData, meta interface{}) error
 				RouteTableId: aws.String(d.Id()),
 			}
 
+			if s := m["transit_gateway_id"].(string); s != "" {
+				opts.TransitGatewayId = aws.String(s)
+			}
+
 			if s := m["vpc_peering_connection_id"].(string); s != "" {
 				opts.VpcPeeringConnectionId = aws.String(s)
 			}
@@ -357,12 +369,16 @@ func resourceAwsRouteTableUpdate(d *schema.ResourceData, meta interface{}) error
 			log.Printf("[INFO] Creating route for %s: %#v", d.Id(), opts)
 			err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 				_, err := conn.CreateRoute(&opts)
+
+				if isAWSErr(err, "InvalidRouteTableID.NotFound", "") {
+					return resource.RetryableError(err)
+				}
+
+				if isAWSErr(err, "InvalidTransitGatewayID.NotFound", "") {
+					return resource.RetryableError(err)
+				}
+
 				if err != nil {
-					if awsErr, ok := err.(awserr.Error); ok {
-						if awsErr.Code() == "InvalidRouteTableID.NotFound" {
-							return resource.RetryableError(awsErr)
-						}
-					}
 					return resource.NonRetryableError(err)
 				}
 				return nil
@@ -484,6 +500,10 @@ func resourceAwsRouteTableHash(v interface{}) int {
 	instanceSet := false
 	if v, ok := m["instance_id"]; ok {
 		instanceSet = v.(string) != ""
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+
+	if v, ok := m["transit_gateway_id"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
 

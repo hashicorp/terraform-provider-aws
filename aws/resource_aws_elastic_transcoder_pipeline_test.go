@@ -26,7 +26,7 @@ func TestAccAWSElasticTranscoderPipeline_basic(t *testing.T) {
 		CheckDestroy:  testAccCheckElasticTranscoderPipelineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: awsElasticTranscoderPipelineConfigBasic,
+				Config: fmt.Sprintf(awsElasticTranscoderPipelineConfigBasic, "basic"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticTranscoderPipelineExists("aws_elastictranscoder_pipeline.bar", pipeline),
 				),
@@ -229,16 +229,37 @@ func testAccCheckElasticTranscoderPipelineDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccAWSElasticTranscoderPipeline_import(t *testing.T) {
+	resourceName := "aws_elastictranscoder_pipeline.bar"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckElasticTranscoderPipelineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(awsElasticTranscoderPipelineConfigBasic, "import"),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 const awsElasticTranscoderPipelineConfigBasic = `
 resource "aws_elastictranscoder_pipeline" "bar" {
   input_bucket  = "${aws_s3_bucket.test_bucket.bucket}"
   output_bucket = "${aws_s3_bucket.test_bucket.bucket}"
-  name          = "aws_elastictranscoder_pipeline_tf_test_"
+  name          = "aws_ets_pipeline_tf_test_%[1]s"
   role          = "${aws_iam_role.test_role.arn}"
 }
 
 resource "aws_iam_role" "test_role" {
-  name = "aws_elastictranscoder_pipeline_tf_test_role_"
+  name = "aws_elastictranscoder_pipeline_tf_test_role_%[1]s"
 
   assume_role_policy = <<EOF
 {
@@ -258,7 +279,7 @@ EOF
 }
 
 resource "aws_s3_bucket" "test_bucket" {
-  bucket = "aws-elasticencoder-pipeline-tf-test-bucket"
+  bucket = "aws-elasticencoder-pipeline-tf-test-bucket-%[1]s"
   acl    = "private"
 }
 `

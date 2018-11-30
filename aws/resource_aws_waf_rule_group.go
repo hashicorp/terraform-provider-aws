@@ -140,11 +140,8 @@ func resourceAwsWafRuleGroupDelete(d *schema.ResourceData, meta interface{}) err
 
 	oldRules := d.Get("activated_rule").(*schema.Set).List()
 	err := deleteWafRuleGroup(d.Id(), oldRules, conn)
-	if err != nil {
-		return err
-	}
 
-	return nil
+	return err
 }
 
 func deleteWafRuleGroup(id string, oldRules []interface{}, conn *waf.WAF) error {

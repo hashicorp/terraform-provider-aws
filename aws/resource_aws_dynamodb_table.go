@@ -83,13 +83,22 @@ func resourceAwsDynamoDbTable() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+			"billing_mode": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  dynamodb.BillingModeProvisioned,
+				ValidateFunc: validation.StringInSlice([]string{
+					dynamodb.BillingModePayPerRequest,
+					dynamodb.BillingModeProvisioned,
+				}, false),
+			},
 			"write_capacity": {
 				Type:     schema.TypeInt,
-				Required: true,
+				Optional: true,
 			},
 			"read_capacity": {
 				Type:     schema.TypeInt,
-				Required: true,
+				Optional: true,
 			},
 			"attribute": {
 				Type:     schema.TypeSet,
@@ -279,12 +288,22 @@ func resourceAwsDynamoDbTableCreate(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[DEBUG] Creating DynamoDB table with key schema: %#v", keySchemaMap)
 
 	req := &dynamodb.CreateTableInput{
-		TableName: aws.String(d.Get("name").(string)),
-		ProvisionedThroughput: expandDynamoDbProvisionedThroughput(map[string]interface{}{
-			"read_capacity":  d.Get("read_capacity"),
-			"write_capacity": d.Get("write_capacity"),
-		}),
-		KeySchema: expandDynamoDbKeySchema(keySchemaMap),
+		TableName:   aws.String(d.Get("name").(string)),
+		BillingMode: aws.String(d.Get("billing_mode").(string)),
+		KeySchema:   expandDynamoDbKeySchema(keySchemaMap),
+	}
+
+	if d.Get("billing_mode").(string) == dynamodb.BillingModeProvisioned {
+		v_read, ok_read := d.GetOk("read_capacity")
+		v_write, ok_write := d.GetOk("write_capacity")
+		if !ok_read || !ok_write {
+			return fmt.Errorf("Read and Write capacity should be set when billing mode is PROVISIONED")
+		}
+
+		req.ProvisionedThroughput = expandDynamoDbProvisionedThroughput(map[string]interface{}{
+			"read_capacity":  v_read,
+			"write_capacity": v_write,
+		})
 	}
 
 	if v, ok := d.GetOk("attribute"); ok {
@@ -360,10 +379,35 @@ func resourceAwsDynamoDbTableCreate(d *schema.ResourceData, meta interface{}) er
 
 func resourceAwsDynamoDbTableUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).dynamodbconn
+	if d.HasChange("billing_mode") && !d.IsNewResource() {
+		req := &dynamodb.UpdateTableInput{
+			TableName:   aws.String(d.Id()),
+			BillingMode: aws.String(d.Get("billing_mode").(string)),
+		}
+		if d.Get("billing_mode").(string) == dynamodb.BillingModeProvisioned {
 
+			v_read, ok_read := d.GetOk("read_capacity")
+			v_write, ok_write := d.GetOk("write_capacity")
+			if !ok_read || !ok_write {
+				return fmt.Errorf("Read and Write capacity should be set when billing mode is PROVISIONED")
+			}
+
+			req.ProvisionedThroughput = expandDynamoDbProvisionedThroughput(map[string]interface{}{
+				"read_capacity":  v_read,
+				"write_capacity": v_write,
+			})
+		}
+		_, err := conn.UpdateTable(req)
+		if err != nil {
+			return fmt.Errorf("Error updating DynamoDB Table (%s) billing mode: %s", d.Id(), err)
+		}
+		if err := waitForDynamoDbTableToBeActive(d.Id(), d.Timeout(schema.TimeoutUpdate), conn); err != nil {
+			return fmt.Errorf("Error waiting for DynamoDB Table update: %s", err)
+		}
+	}
 	// Cannot create or delete index while updating table IOPS
 	// so we update IOPS separately
-	if (d.HasChange("read_capacity") || d.HasChange("write_capacity")) && !d.IsNewResource() {
+	if !d.HasChange("billing_mode") && d.Get("billing_mode").(string) == dynamodb.BillingModeProvisioned && (d.HasChange("read_capacity") || d.HasChange("write_capacity")) && !d.IsNewResource() {
 		_, err := conn.UpdateTable(&dynamodb.UpdateTableInput{
 			TableName: aws.String(d.Id()),
 			ProvisionedThroughput: expandDynamoDbProvisionedThroughput(map[string]interface{}{

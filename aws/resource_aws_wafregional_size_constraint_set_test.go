@@ -220,10 +220,8 @@ func testAccCheckAWSWafRegionalSizeConstraintSetDisappears(constraints *waf.Size
 			}
 			return conn.DeleteSizeConstraintSet(opts)
 		})
-		if err != nil {
-			return err
-		}
-		return nil
+
+		return err
 	}
 }
 

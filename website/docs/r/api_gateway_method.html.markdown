@@ -41,7 +41,7 @@ data "aws_cognito_user_pools" "this" {
 }
 
 resource "aws_api_gateway_rest_api" "this" {
-  name        = "with-authorizer"
+  name = "with-authorizer"
 }
 
 resource "aws_api_gateway_resource" "this" {
@@ -89,8 +89,8 @@ The following arguments are supported:
   For example:
 ```hcl
 request_parameters = {
-  "method.request.header.X-Some-Header" = true,
-  "method.request.querystring.some-query-param"  = true,
+  "method.request.header.X-Some-Header"         = true
+  "method.request.querystring.some-query-param" = true
 }
 ```
 would define that the header `X-Some-Header` and the query string `some-query-param` must be provided on the request, or

@@ -155,14 +155,16 @@ func resourceAwsSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("cidr_block", subnet.CidrBlock)
 	d.Set("map_public_ip_on_launch", subnet.MapPublicIpOnLaunch)
 	d.Set("assign_ipv6_address_on_creation", subnet.AssignIpv6AddressOnCreation)
+
+	// Make sure those values are set, if an IPv6 block exists it'll be set in the loop
+	d.Set("ipv6_cidr_block_association_id", "")
+	d.Set("ipv6_cidr_block", "")
+
 	for _, a := range subnet.Ipv6CidrBlockAssociationSet {
 		if *a.Ipv6CidrBlockState.State == "associated" { //we can only ever have 1 IPv6 block associated at once
 			d.Set("ipv6_cidr_block_association_id", a.AssociationId)
 			d.Set("ipv6_cidr_block", a.Ipv6CidrBlock)
 			break
-		} else {
-			d.Set("ipv6_cidr_block_association_id", "") // we blank these out to remove old entries
-			d.Set("ipv6_cidr_block", "")
 		}
 	}
 
