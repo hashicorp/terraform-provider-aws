@@ -791,6 +791,12 @@
 			"versionExact": "v1.15.87"
 		},
 		{
+			"checksumSHA1": "R7JzSKDyTa/eedqWRurE7THVAoc=",
+			"path": "github.com/aws/aws-sdk-go/service/kafka",
+			"revision": "88388f1dcec6c6c6548dab2149b22d36ef2f5e08",
+			"revisionTime": "2018-11-30T00:06:08Z"
+		},
+		{
 			"checksumSHA1": "BqFgvuCkO8U2SOLpzBEWAwkSwL0=",
 			"path": "github.com/aws/aws-sdk-go/service/kinesis",
 			"revision": "180cc10e5ff368b86dee226b034af7d1672baec6",
