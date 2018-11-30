@@ -5,10 +5,10 @@ import (
 	"net/url"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iam"
 
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsIamAssumeRolePolicy() *schema.Resource {
@@ -24,11 +24,11 @@ func resourceAwsIamAssumeRolePolicy() *schema.Resource {
 				Required: true,
 			},
 
-			"assume_role_policy": {
+			"policy": {
 				Type:             schema.TypeString,
 				Required:         true,
 				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
-				ValidateFunc:     validateJsonString,
+				ValidateFunc:     validation.ValidateJsonString,
 			},
 		},
 	}
@@ -43,10 +43,6 @@ func resourceAwsIamAssumeRolePolicyCreate(d *schema.ResourceData, meta interface
 	}
 	_, err := iamconn.UpdateAssumeRolePolicy(assumeRolePolicyInput)
 	if err != nil {
-		if iamerr, ok := err.(awserr.Error); ok && iamerr.Code() == "NoSuchEntity" {
-			d.SetId("")
-			return nil
-		}
 		return fmt.Errorf("Error Updating IAM Role (%s) Assume Role Policy: %s", d.Id(), err)
 	}
 
@@ -64,10 +60,6 @@ func resourceAwsIamAssumeRolePolicyRead(d *schema.ResourceData, meta interface{}
 
 	getResp, err := iamconn.GetRole(request)
 	if err != nil {
-		if iamerr, ok := err.(awserr.Error); ok && iamerr.Code() == "NoSuchEntity" { // XXX test me
-			d.SetId("")
-			return nil
-		}
 		return fmt.Errorf("Error reading IAM Role %s: %s", d.Id(), err)
 	}
 
@@ -97,10 +89,6 @@ func resourceAwsIamAssumeRolePolicyUpdate(d *schema.ResourceData, meta interface
 		}
 		_, err := iamconn.UpdateAssumeRolePolicy(assumeRolePolicyInput)
 		if err != nil {
-			if iamerr, ok := err.(awserr.Error); ok && iamerr.Code() == "NoSuchEntity" {
-				d.SetId("")
-				return nil
-			}
 			return fmt.Errorf("Error Updating IAM Role (%s) Assume Role Policy: %s", d.Id(), err)
 		}
 	}
