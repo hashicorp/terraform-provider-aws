@@ -855,12 +855,6 @@
 			"versionExact": "v1.15.88"
 		},
 		{
-			"path": "github.com/aws/aws-sdk-go/service/license-manager",
-			"revision": "v1.15.88",
-			"version": "v1.15.88",
-			"versionExact": "v1.15.88"
-		},
-		{
 			"checksumSHA1": "p+dZ6RjD1lYHe8I0vuWxZHAuoL4=",
 			"path": "github.com/aws/aws-sdk-go/service/licensemanager",
 			"revision": "ceab7b7ac6f535d1397f124620720b5145f1ad59",
