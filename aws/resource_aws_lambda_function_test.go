@@ -1248,7 +1248,7 @@ func TestAccAWSLambdaFunction_runtimeValidation_ruby25(t *testing.T) {
 				Config: testAccAWSLambdaConfigPython37Runtime(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLambdaFunctionExists("aws_lambda_function.lambda_function_test", funcName, &conf),
-					resource.TestCheckResourceAttr("aws_lambda_function.lambda_function_test", "runtime", lambda.RuntimePython37),
+					resource.TestCheckResourceAttr("aws_lambda_function.lambda_function_test", "runtime", lambda.Runtimeruby25),
 				),
 			},
 		},
