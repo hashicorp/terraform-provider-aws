@@ -13,6 +13,114 @@ import (
 	"github.com/aws/aws-sdk-go/private/protocol/restjson"
 )
 
+const opAddLayerVersionPermission = "AddLayerVersionPermission"
+
+// AddLayerVersionPermissionRequest generates a "aws/request.Request" representing the
+// client's request for the AddLayerVersionPermission operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See AddLayerVersionPermission for more information on using the AddLayerVersionPermission
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the AddLayerVersionPermissionRequest method.
+//    req, resp := client.AddLayerVersionPermissionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/AddLayerVersionPermission
+func (c *Lambda) AddLayerVersionPermissionRequest(input *AddLayerVersionPermissionInput) (req *request.Request, output *AddLayerVersionPermissionOutput) {
+	op := &request.Operation{
+		Name:       opAddLayerVersionPermission,
+		HTTPMethod: "POST",
+		HTTPPath:   "/2018-10-31/layers/{LayerName}/versions/{VersionNumber}/policy",
+	}
+
+	if input == nil {
+		input = &AddLayerVersionPermissionInput{}
+	}
+
+	output = &AddLayerVersionPermissionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// AddLayerVersionPermission API operation for AWS Lambda.
+//
+// Adds permissions to the resource-based policy of a version of a function
+// layer. Use this action to grant layer usage permission to other accounts.
+// You can grant permission to a single account, all AWS accounts, or all accounts
+// in an organization.
+//
+// To revoke permission, call RemoveLayerVersionPermission with the statement
+// ID that you specified when you added it.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Lambda's
+// API operation AddLayerVersionPermission for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeServiceException "ServiceException"
+//   The AWS Lambda service encountered an internal error.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The resource (for example, a Lambda function or access policy statement)
+//   specified in the request does not exist.
+//
+//   * ErrCodeResourceConflictException "ResourceConflictException"
+//   The resource already exists.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Request throughput limit exceeded
+//
+//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   One of the parameters in the request is invalid. For example, if you provided
+//   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
+//   API, that AWS Lambda is unable to assume you will get this exception.
+//
+//   * ErrCodePolicyLengthExceededException "PolicyLengthExceededException"
+//   Lambda function access policy is limited to 20 KB.
+//
+//   * ErrCodePreconditionFailedException "PreconditionFailedException"
+//   The RevisionId provided does not match the latest RevisionId for the Lambda
+//   function or alias. Call the GetFunction or the GetAlias API to retrieve the
+//   latest RevisionId for your resource.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/AddLayerVersionPermission
+func (c *Lambda) AddLayerVersionPermission(input *AddLayerVersionPermissionInput) (*AddLayerVersionPermissionOutput, error) {
+	req, out := c.AddLayerVersionPermissionRequest(input)
+	return out, req.Send()
+}
+
+// AddLayerVersionPermissionWithContext is the same as AddLayerVersionPermission with the addition of
+// the ability to pass a context and additional request options.
+//
+// See AddLayerVersionPermission for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Lambda) AddLayerVersionPermissionWithContext(ctx aws.Context, input *AddLayerVersionPermissionInput, opts ...request.Option) (*AddLayerVersionPermissionOutput, error) {
+	req, out := c.AddLayerVersionPermissionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opAddPermission = "AddPermission"
 
 // AddPermissionRequest generates a "aws/request.Request" representing the
@@ -812,6 +920,92 @@ func (c *Lambda) DeleteFunctionConcurrencyWithContext(ctx aws.Context, input *De
 	return out, req.Send()
 }
 
+const opDeleteLayerVersion = "DeleteLayerVersion"
+
+// DeleteLayerVersionRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteLayerVersion operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteLayerVersion for more information on using the DeleteLayerVersion
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteLayerVersionRequest method.
+//    req, resp := client.DeleteLayerVersionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/DeleteLayerVersion
+func (c *Lambda) DeleteLayerVersionRequest(input *DeleteLayerVersionInput) (req *request.Request, output *DeleteLayerVersionOutput) {
+	op := &request.Operation{
+		Name:       opDeleteLayerVersion,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/2018-10-31/layers/{LayerName}/versions/{VersionNumber}",
+	}
+
+	if input == nil {
+		input = &DeleteLayerVersionInput{}
+	}
+
+	output = &DeleteLayerVersionOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Remove(restjson.UnmarshalHandler)
+	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DeleteLayerVersion API operation for AWS Lambda.
+//
+// Deletes a version of a function layer. Deleted versions can no longer be
+// viewed or added to functions. However, a copy of the version remains in Lambda
+// until no functions refer to it.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Lambda's
+// API operation DeleteLayerVersion for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeServiceException "ServiceException"
+//   The AWS Lambda service encountered an internal error.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Request throughput limit exceeded
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/DeleteLayerVersion
+func (c *Lambda) DeleteLayerVersion(input *DeleteLayerVersionInput) (*DeleteLayerVersionOutput, error) {
+	req, out := c.DeleteLayerVersionRequest(input)
+	return out, req.Send()
+}
+
+// DeleteLayerVersionWithContext is the same as DeleteLayerVersion with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteLayerVersion for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Lambda) DeleteLayerVersionWithContext(ctx aws.Context, input *DeleteLayerVersionInput, opts ...request.Option) (*DeleteLayerVersionOutput, error) {
+	req, out := c.DeleteLayerVersionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opGetAccountSettings = "GetAccountSettings"
 
 // GetAccountSettingsRequest generates a "aws/request.Request" representing the
@@ -1280,6 +1474,190 @@ func (c *Lambda) GetFunctionConfiguration(input *GetFunctionConfigurationInput) 
 // for more information on using Contexts.
 func (c *Lambda) GetFunctionConfigurationWithContext(ctx aws.Context, input *GetFunctionConfigurationInput, opts ...request.Option) (*FunctionConfiguration, error) {
 	req, out := c.GetFunctionConfigurationRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetLayerVersion = "GetLayerVersion"
+
+// GetLayerVersionRequest generates a "aws/request.Request" representing the
+// client's request for the GetLayerVersion operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetLayerVersion for more information on using the GetLayerVersion
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetLayerVersionRequest method.
+//    req, resp := client.GetLayerVersionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/GetLayerVersion
+func (c *Lambda) GetLayerVersionRequest(input *GetLayerVersionInput) (req *request.Request, output *GetLayerVersionOutput) {
+	op := &request.Operation{
+		Name:       opGetLayerVersion,
+		HTTPMethod: "GET",
+		HTTPPath:   "/2018-10-31/layers/{LayerName}/versions/{VersionNumber}",
+	}
+
+	if input == nil {
+		input = &GetLayerVersionInput{}
+	}
+
+	output = &GetLayerVersionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetLayerVersion API operation for AWS Lambda.
+//
+// Returns information about a version of a function layer, with a link to download
+// the layer archive that's valid for 10 minutes.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Lambda's
+// API operation GetLayerVersion for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeServiceException "ServiceException"
+//   The AWS Lambda service encountered an internal error.
+//
+//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   One of the parameters in the request is invalid. For example, if you provided
+//   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
+//   API, that AWS Lambda is unable to assume you will get this exception.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Request throughput limit exceeded
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The resource (for example, a Lambda function or access policy statement)
+//   specified in the request does not exist.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/GetLayerVersion
+func (c *Lambda) GetLayerVersion(input *GetLayerVersionInput) (*GetLayerVersionOutput, error) {
+	req, out := c.GetLayerVersionRequest(input)
+	return out, req.Send()
+}
+
+// GetLayerVersionWithContext is the same as GetLayerVersion with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetLayerVersion for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Lambda) GetLayerVersionWithContext(ctx aws.Context, input *GetLayerVersionInput, opts ...request.Option) (*GetLayerVersionOutput, error) {
+	req, out := c.GetLayerVersionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetLayerVersionPolicy = "GetLayerVersionPolicy"
+
+// GetLayerVersionPolicyRequest generates a "aws/request.Request" representing the
+// client's request for the GetLayerVersionPolicy operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetLayerVersionPolicy for more information on using the GetLayerVersionPolicy
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetLayerVersionPolicyRequest method.
+//    req, resp := client.GetLayerVersionPolicyRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/GetLayerVersionPolicy
+func (c *Lambda) GetLayerVersionPolicyRequest(input *GetLayerVersionPolicyInput) (req *request.Request, output *GetLayerVersionPolicyOutput) {
+	op := &request.Operation{
+		Name:       opGetLayerVersionPolicy,
+		HTTPMethod: "GET",
+		HTTPPath:   "/2018-10-31/layers/{LayerName}/versions/{VersionNumber}/policy",
+	}
+
+	if input == nil {
+		input = &GetLayerVersionPolicyInput{}
+	}
+
+	output = &GetLayerVersionPolicyOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetLayerVersionPolicy API operation for AWS Lambda.
+//
+// Returns the permission policy for a layer version. For more information,
+// see AddLayerVersionPermission.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Lambda's
+// API operation GetLayerVersionPolicy for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeServiceException "ServiceException"
+//   The AWS Lambda service encountered an internal error.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The resource (for example, a Lambda function or access policy statement)
+//   specified in the request does not exist.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Request throughput limit exceeded
+//
+//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   One of the parameters in the request is invalid. For example, if you provided
+//   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
+//   API, that AWS Lambda is unable to assume you will get this exception.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/GetLayerVersionPolicy
+func (c *Lambda) GetLayerVersionPolicy(input *GetLayerVersionPolicyInput) (*GetLayerVersionPolicyOutput, error) {
+	req, out := c.GetLayerVersionPolicyRequest(input)
+	return out, req.Send()
+}
+
+// GetLayerVersionPolicyWithContext is the same as GetLayerVersionPolicy with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetLayerVersionPolicy for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Lambda) GetLayerVersionPolicyWithContext(ctx aws.Context, input *GetLayerVersionPolicyInput, opts ...request.Option) (*GetLayerVersionPolicyOutput, error) {
+	req, out := c.GetLayerVersionPolicyRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -2051,6 +2429,188 @@ func (c *Lambda) ListFunctionsPagesWithContext(ctx aws.Context, input *ListFunct
 	return p.Err()
 }
 
+const opListLayerVersions = "ListLayerVersions"
+
+// ListLayerVersionsRequest generates a "aws/request.Request" representing the
+// client's request for the ListLayerVersions operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListLayerVersions for more information on using the ListLayerVersions
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListLayerVersionsRequest method.
+//    req, resp := client.ListLayerVersionsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/ListLayerVersions
+func (c *Lambda) ListLayerVersionsRequest(input *ListLayerVersionsInput) (req *request.Request, output *ListLayerVersionsOutput) {
+	op := &request.Operation{
+		Name:       opListLayerVersions,
+		HTTPMethod: "GET",
+		HTTPPath:   "/2018-10-31/layers/{LayerName}/versions",
+	}
+
+	if input == nil {
+		input = &ListLayerVersionsInput{}
+	}
+
+	output = &ListLayerVersionsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListLayerVersions API operation for AWS Lambda.
+//
+// Lists the versions of a function layer. Versions that have been deleted aren't
+// listed. Specify a runtime identifier (http://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html)
+// to list only versions that indicate that they're compatible with that runtime.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Lambda's
+// API operation ListLayerVersions for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeServiceException "ServiceException"
+//   The AWS Lambda service encountered an internal error.
+//
+//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   One of the parameters in the request is invalid. For example, if you provided
+//   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
+//   API, that AWS Lambda is unable to assume you will get this exception.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The resource (for example, a Lambda function or access policy statement)
+//   specified in the request does not exist.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Request throughput limit exceeded
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/ListLayerVersions
+func (c *Lambda) ListLayerVersions(input *ListLayerVersionsInput) (*ListLayerVersionsOutput, error) {
+	req, out := c.ListLayerVersionsRequest(input)
+	return out, req.Send()
+}
+
+// ListLayerVersionsWithContext is the same as ListLayerVersions with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListLayerVersions for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Lambda) ListLayerVersionsWithContext(ctx aws.Context, input *ListLayerVersionsInput, opts ...request.Option) (*ListLayerVersionsOutput, error) {
+	req, out := c.ListLayerVersionsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opListLayers = "ListLayers"
+
+// ListLayersRequest generates a "aws/request.Request" representing the
+// client's request for the ListLayers operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListLayers for more information on using the ListLayers
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListLayersRequest method.
+//    req, resp := client.ListLayersRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/ListLayers
+func (c *Lambda) ListLayersRequest(input *ListLayersInput) (req *request.Request, output *ListLayersOutput) {
+	op := &request.Operation{
+		Name:       opListLayers,
+		HTTPMethod: "GET",
+		HTTPPath:   "/2018-10-31/layers",
+	}
+
+	if input == nil {
+		input = &ListLayersInput{}
+	}
+
+	output = &ListLayersOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListLayers API operation for AWS Lambda.
+//
+// Lists function layers and shows information about the latest version of each.
+// Specify a runtime identifier (http://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html)
+// to list only layers that indicate that they're compatible with that runtime.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Lambda's
+// API operation ListLayers for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeServiceException "ServiceException"
+//   The AWS Lambda service encountered an internal error.
+//
+//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   One of the parameters in the request is invalid. For example, if you provided
+//   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
+//   API, that AWS Lambda is unable to assume you will get this exception.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Request throughput limit exceeded
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/ListLayers
+func (c *Lambda) ListLayers(input *ListLayersInput) (*ListLayersOutput, error) {
+	req, out := c.ListLayersRequest(input)
+	return out, req.Send()
+}
+
+// ListLayersWithContext is the same as ListLayers with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListLayers for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Lambda) ListLayersWithContext(ctx aws.Context, input *ListLayersInput, opts ...request.Option) (*ListLayersOutput, error) {
+	req, out := c.ListLayersRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opListTags = "ListTags"
 
 // ListTagsRequest generates a "aws/request.Request" representing the
@@ -2232,6 +2792,103 @@ func (c *Lambda) ListVersionsByFunction(input *ListVersionsByFunctionInput) (*Li
 // for more information on using Contexts.
 func (c *Lambda) ListVersionsByFunctionWithContext(ctx aws.Context, input *ListVersionsByFunctionInput, opts ...request.Option) (*ListVersionsByFunctionOutput, error) {
 	req, out := c.ListVersionsByFunctionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opPublishLayerVersion = "PublishLayerVersion"
+
+// PublishLayerVersionRequest generates a "aws/request.Request" representing the
+// client's request for the PublishLayerVersion operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See PublishLayerVersion for more information on using the PublishLayerVersion
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the PublishLayerVersionRequest method.
+//    req, resp := client.PublishLayerVersionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/PublishLayerVersion
+func (c *Lambda) PublishLayerVersionRequest(input *PublishLayerVersionInput) (req *request.Request, output *PublishLayerVersionOutput) {
+	op := &request.Operation{
+		Name:       opPublishLayerVersion,
+		HTTPMethod: "POST",
+		HTTPPath:   "/2018-10-31/layers/{LayerName}/versions",
+	}
+
+	if input == nil {
+		input = &PublishLayerVersionInput{}
+	}
+
+	output = &PublishLayerVersionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// PublishLayerVersion API operation for AWS Lambda.
+//
+// Creates a function layer from a ZIP archive. Each time you call PublishLayerVersion
+// with the same version name, a new version is created.
+//
+// Add layers to your function with CreateFunction or UpdateFunctionConfiguration.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Lambda's
+// API operation PublishLayerVersion for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeServiceException "ServiceException"
+//   The AWS Lambda service encountered an internal error.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The resource (for example, a Lambda function or access policy statement)
+//   specified in the request does not exist.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Request throughput limit exceeded
+//
+//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   One of the parameters in the request is invalid. For example, if you provided
+//   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
+//   API, that AWS Lambda is unable to assume you will get this exception.
+//
+//   * ErrCodeCodeStorageExceededException "CodeStorageExceededException"
+//   You have exceeded your maximum total code size per account. Limits (http://docs.aws.amazon.com/lambda/latest/dg/limits.html)
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/PublishLayerVersion
+func (c *Lambda) PublishLayerVersion(input *PublishLayerVersionInput) (*PublishLayerVersionOutput, error) {
+	req, out := c.PublishLayerVersionRequest(input)
+	return out, req.Send()
+}
+
+// PublishLayerVersionWithContext is the same as PublishLayerVersion with the addition of
+// the ability to pass a context and additional request options.
+//
+// See PublishLayerVersion for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Lambda) PublishLayerVersionWithContext(ctx aws.Context, input *PublishLayerVersionInput, opts ...request.Option) (*PublishLayerVersionOutput, error) {
+	req, out := c.PublishLayerVersionRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -2431,6 +3088,105 @@ func (c *Lambda) PutFunctionConcurrency(input *PutFunctionConcurrencyInput) (*Pu
 // for more information on using Contexts.
 func (c *Lambda) PutFunctionConcurrencyWithContext(ctx aws.Context, input *PutFunctionConcurrencyInput, opts ...request.Option) (*PutFunctionConcurrencyOutput, error) {
 	req, out := c.PutFunctionConcurrencyRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opRemoveLayerVersionPermission = "RemoveLayerVersionPermission"
+
+// RemoveLayerVersionPermissionRequest generates a "aws/request.Request" representing the
+// client's request for the RemoveLayerVersionPermission operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See RemoveLayerVersionPermission for more information on using the RemoveLayerVersionPermission
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the RemoveLayerVersionPermissionRequest method.
+//    req, resp := client.RemoveLayerVersionPermissionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/RemoveLayerVersionPermission
+func (c *Lambda) RemoveLayerVersionPermissionRequest(input *RemoveLayerVersionPermissionInput) (req *request.Request, output *RemoveLayerVersionPermissionOutput) {
+	op := &request.Operation{
+		Name:       opRemoveLayerVersionPermission,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/2018-10-31/layers/{LayerName}/versions/{VersionNumber}/policy/{StatementId}",
+	}
+
+	if input == nil {
+		input = &RemoveLayerVersionPermissionInput{}
+	}
+
+	output = &RemoveLayerVersionPermissionOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Remove(restjson.UnmarshalHandler)
+	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// RemoveLayerVersionPermission API operation for AWS Lambda.
+//
+// Removes a statement from the permissions policy for a layer version. For
+// more information, see AddLayerVersionPermission.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Lambda's
+// API operation RemoveLayerVersionPermission for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeServiceException "ServiceException"
+//   The AWS Lambda service encountered an internal error.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The resource (for example, a Lambda function or access policy statement)
+//   specified in the request does not exist.
+//
+//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   One of the parameters in the request is invalid. For example, if you provided
+//   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
+//   API, that AWS Lambda is unable to assume you will get this exception.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Request throughput limit exceeded
+//
+//   * ErrCodePreconditionFailedException "PreconditionFailedException"
+//   The RevisionId provided does not match the latest RevisionId for the Lambda
+//   function or alias. Call the GetFunction or the GetAlias API to retrieve the
+//   latest RevisionId for your resource.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/RemoveLayerVersionPermission
+func (c *Lambda) RemoveLayerVersionPermission(input *RemoveLayerVersionPermissionInput) (*RemoveLayerVersionPermissionOutput, error) {
+	req, out := c.RemoveLayerVersionPermissionRequest(input)
+	return out, req.Send()
+}
+
+// RemoveLayerVersionPermissionWithContext is the same as RemoveLayerVersionPermission with the addition of
+// the ability to pass a context and additional request options.
+//
+// See RemoveLayerVersionPermission for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Lambda) RemoveLayerVersionPermissionWithContext(ctx aws.Context, input *RemoveLayerVersionPermissionInput, opts ...request.Option) (*RemoveLayerVersionPermissionOutput, error) {
+	req, out := c.RemoveLayerVersionPermissionRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -3256,6 +4012,159 @@ func (s *AccountUsage) SetTotalCodeSize(v int64) *AccountUsage {
 	return s
 }
 
+type AddLayerVersionPermissionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The API action that grants access to the layer. For example, lambda:GetLayerVersion.
+	//
+	// Action is a required field
+	Action *string `type:"string" required:"true"`
+
+	// The name of the layer.
+	//
+	// LayerName is a required field
+	LayerName *string `location:"uri" locationName:"LayerName" min:"1" type:"string" required:"true"`
+
+	// With the principal set to *, grant permission to all accounts in the specified
+	// organization.
+	OrganizationId *string `type:"string"`
+
+	// An account ID, or * to grant permission to all AWS accounts.
+	//
+	// Principal is a required field
+	Principal *string `type:"string" required:"true"`
+
+	// Only update the policy if the revision ID matches the ID specified. Use this
+	// option to avoid modifying a policy that has changed since you last read it.
+	RevisionId *string `location:"querystring" locationName:"RevisionId" type:"string"`
+
+	// An identifier that distinguishes the policy from others on the same layer
+	// version.
+	//
+	// StatementId is a required field
+	StatementId *string `min:"1" type:"string" required:"true"`
+
+	// The version number.
+	//
+	// VersionNumber is a required field
+	VersionNumber *int64 `location:"uri" locationName:"VersionNumber" type:"long" required:"true"`
+}
+
+// String returns the string representation
+func (s AddLayerVersionPermissionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AddLayerVersionPermissionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AddLayerVersionPermissionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AddLayerVersionPermissionInput"}
+	if s.Action == nil {
+		invalidParams.Add(request.NewErrParamRequired("Action"))
+	}
+	if s.LayerName == nil {
+		invalidParams.Add(request.NewErrParamRequired("LayerName"))
+	}
+	if s.LayerName != nil && len(*s.LayerName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("LayerName", 1))
+	}
+	if s.Principal == nil {
+		invalidParams.Add(request.NewErrParamRequired("Principal"))
+	}
+	if s.StatementId == nil {
+		invalidParams.Add(request.NewErrParamRequired("StatementId"))
+	}
+	if s.StatementId != nil && len(*s.StatementId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("StatementId", 1))
+	}
+	if s.VersionNumber == nil {
+		invalidParams.Add(request.NewErrParamRequired("VersionNumber"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAction sets the Action field's value.
+func (s *AddLayerVersionPermissionInput) SetAction(v string) *AddLayerVersionPermissionInput {
+	s.Action = &v
+	return s
+}
+
+// SetLayerName sets the LayerName field's value.
+func (s *AddLayerVersionPermissionInput) SetLayerName(v string) *AddLayerVersionPermissionInput {
+	s.LayerName = &v
+	return s
+}
+
+// SetOrganizationId sets the OrganizationId field's value.
+func (s *AddLayerVersionPermissionInput) SetOrganizationId(v string) *AddLayerVersionPermissionInput {
+	s.OrganizationId = &v
+	return s
+}
+
+// SetPrincipal sets the Principal field's value.
+func (s *AddLayerVersionPermissionInput) SetPrincipal(v string) *AddLayerVersionPermissionInput {
+	s.Principal = &v
+	return s
+}
+
+// SetRevisionId sets the RevisionId field's value.
+func (s *AddLayerVersionPermissionInput) SetRevisionId(v string) *AddLayerVersionPermissionInput {
+	s.RevisionId = &v
+	return s
+}
+
+// SetStatementId sets the StatementId field's value.
+func (s *AddLayerVersionPermissionInput) SetStatementId(v string) *AddLayerVersionPermissionInput {
+	s.StatementId = &v
+	return s
+}
+
+// SetVersionNumber sets the VersionNumber field's value.
+func (s *AddLayerVersionPermissionInput) SetVersionNumber(v int64) *AddLayerVersionPermissionInput {
+	s.VersionNumber = &v
+	return s
+}
+
+type AddLayerVersionPermissionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A unique identifier for the current revision of the policy.
+	RevisionId *string `type:"string"`
+
+	// The permission statement.
+	Statement *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AddLayerVersionPermissionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AddLayerVersionPermissionOutput) GoString() string {
+	return s.String()
+}
+
+// SetRevisionId sets the RevisionId field's value.
+func (s *AddLayerVersionPermissionOutput) SetRevisionId(v string) *AddLayerVersionPermissionOutput {
+	s.RevisionId = &v
+	return s
+}
+
+// SetStatement sets the Statement field's value.
+func (s *AddLayerVersionPermissionOutput) SetStatement(v string) *AddLayerVersionPermissionOutput {
+	s.Statement = &v
+	return s
+}
+
 type AddPermissionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -3271,7 +4180,7 @@ type AddPermissionInput struct {
 	// This is currently only used for Alexa Smart Home functions.
 	EventSourceToken *string `type:"string"`
 
-	// The name of the lambda function.
+	// The name of the Lambda function.
 	//
 	// Name formats
 	//
@@ -3794,7 +4703,7 @@ type CreateFunctionInput struct {
 	// Environment variables that are accessible from function code during execution.
 	Environment *Environment `type:"structure"`
 
-	// The name of the lambda function.
+	// The name of the Lambda function.
 	//
 	// Name formats
 	//
@@ -3819,6 +4728,10 @@ type CreateFunctionInput struct {
 	// The ARN of the KMS key used to encrypt your function's environment variables.
 	// If not provided, AWS Lambda will use a default service key.
 	KMSKeyArn *string `type:"string"`
+
+	// A list of function layers (http://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html)
+	// to add to the function's execution environment.
+	Layers []*string `type:"list"`
 
 	// The amount of memory that your function has access to. Increasing the function's
 	// memory also increases it's CPU allocation. The default value is 128 MB. The
@@ -3946,6 +4859,12 @@ func (s *CreateFunctionInput) SetHandler(v string) *CreateFunctionInput {
 // SetKMSKeyArn sets the KMSKeyArn field's value.
 func (s *CreateFunctionInput) SetKMSKeyArn(v string) *CreateFunctionInput {
 	s.KMSKeyArn = &v
+	return s
+}
+
+// SetLayers sets the Layers field's value.
+func (s *CreateFunctionInput) SetLayers(v []*string) *CreateFunctionInput {
+	s.Layers = v
 	return s
 }
 
@@ -4146,7 +5065,7 @@ func (s *DeleteEventSourceMappingInput) SetUUID(v string) *DeleteEventSourceMapp
 type DeleteFunctionConcurrencyInput struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the lambda function.
+	// The name of the Lambda function.
 	//
 	// Name formats
 	//
@@ -4212,7 +5131,7 @@ func (s DeleteFunctionConcurrencyOutput) GoString() string {
 type DeleteFunctionInput struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the lambda function.
+	// The name of the Lambda function.
 	//
 	// Name formats
 	//
@@ -4285,6 +5204,75 @@ func (s DeleteFunctionOutput) String() string {
 
 // GoString returns the string representation
 func (s DeleteFunctionOutput) GoString() string {
+	return s.String()
+}
+
+type DeleteLayerVersionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the layer.
+	//
+	// LayerName is a required field
+	LayerName *string `location:"uri" locationName:"LayerName" min:"1" type:"string" required:"true"`
+
+	// The version number.
+	//
+	// VersionNumber is a required field
+	VersionNumber *int64 `location:"uri" locationName:"VersionNumber" type:"long" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteLayerVersionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteLayerVersionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteLayerVersionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteLayerVersionInput"}
+	if s.LayerName == nil {
+		invalidParams.Add(request.NewErrParamRequired("LayerName"))
+	}
+	if s.LayerName != nil && len(*s.LayerName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("LayerName", 1))
+	}
+	if s.VersionNumber == nil {
+		invalidParams.Add(request.NewErrParamRequired("VersionNumber"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetLayerName sets the LayerName field's value.
+func (s *DeleteLayerVersionInput) SetLayerName(v string) *DeleteLayerVersionInput {
+	s.LayerName = &v
+	return s
+}
+
+// SetVersionNumber sets the VersionNumber field's value.
+func (s *DeleteLayerVersionInput) SetVersionNumber(v int64) *DeleteLayerVersionInput {
+	s.VersionNumber = &v
+	return s
+}
+
+type DeleteLayerVersionOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteLayerVersionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteLayerVersionOutput) GoString() string {
 	return s.String()
 }
 
@@ -4608,8 +5596,11 @@ type FunctionConfiguration struct {
 	KMSKeyArn *string `type:"string"`
 
 	// The date and time that the function was last updated, in ISO-8601 format
-	// (https://www.w3.org/TR/NOTE-datetime) (YYYY-MM-DDThh:mm:ssTZD).
+	// (https://www.w3.org/TR/NOTE-datetime) (YYYY-MM-DDThh:mm:ss.sTZD).
 	LastModified *string `type:"string"`
+
+	// A list of function layers (http://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html).
+	Layers []*Layer `type:"list"`
 
 	// The ARN of the master function.
 	MasterArn *string `type:"string"`
@@ -4707,6 +5698,12 @@ func (s *FunctionConfiguration) SetKMSKeyArn(v string) *FunctionConfiguration {
 // SetLastModified sets the LastModified field's value.
 func (s *FunctionConfiguration) SetLastModified(v string) *FunctionConfiguration {
 	s.LastModified = &v
+	return s
+}
+
+// SetLayers sets the Layers field's value.
+func (s *FunctionConfiguration) SetLayers(v []*Layer) *FunctionConfiguration {
+	s.Layers = v
 	return s
 }
 
@@ -4920,7 +5917,7 @@ func (s *GetEventSourceMappingInput) SetUUID(v string) *GetEventSourceMappingInp
 type GetFunctionConfigurationInput struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the lambda function.
+	// The name of the Lambda function.
 	//
 	// Name formats
 	//
@@ -4985,7 +5982,7 @@ func (s *GetFunctionConfigurationInput) SetQualifier(v string) *GetFunctionConfi
 type GetFunctionInput struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the lambda function.
+	// The name of the Lambda function.
 	//
 	// Name formats
 	//
@@ -5101,6 +6098,235 @@ func (s *GetFunctionOutput) SetTags(v map[string]*string) *GetFunctionOutput {
 	return s
 }
 
+type GetLayerVersionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the layer.
+	//
+	// LayerName is a required field
+	LayerName *string `location:"uri" locationName:"LayerName" min:"1" type:"string" required:"true"`
+
+	// The version number.
+	//
+	// VersionNumber is a required field
+	VersionNumber *int64 `location:"uri" locationName:"VersionNumber" type:"long" required:"true"`
+}
+
+// String returns the string representation
+func (s GetLayerVersionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetLayerVersionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetLayerVersionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetLayerVersionInput"}
+	if s.LayerName == nil {
+		invalidParams.Add(request.NewErrParamRequired("LayerName"))
+	}
+	if s.LayerName != nil && len(*s.LayerName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("LayerName", 1))
+	}
+	if s.VersionNumber == nil {
+		invalidParams.Add(request.NewErrParamRequired("VersionNumber"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetLayerName sets the LayerName field's value.
+func (s *GetLayerVersionInput) SetLayerName(v string) *GetLayerVersionInput {
+	s.LayerName = &v
+	return s
+}
+
+// SetVersionNumber sets the VersionNumber field's value.
+func (s *GetLayerVersionInput) SetVersionNumber(v int64) *GetLayerVersionInput {
+	s.VersionNumber = &v
+	return s
+}
+
+type GetLayerVersionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The layer's compatible runtimes.
+	CompatibleRuntimes []*string `type:"list"`
+
+	// Details about the layer version.
+	Content *LayerVersionContentOutput `type:"structure"`
+
+	// The date that the layer version was created, in ISO-8601 format (https://www.w3.org/TR/NOTE-datetime)
+	// (YYYY-MM-DDThh:mm:ss.sTZD).
+	CreatedDate *string `type:"string"`
+
+	// The description of the version.
+	Description *string `type:"string"`
+
+	// The Amazon Resource Name (ARN) of the function layer.
+	LayerArn *string `min:"1" type:"string"`
+
+	// The ARN of the layer version.
+	LayerVersionArn *string `min:"1" type:"string"`
+
+	// The layer's software license.
+	LicenseInfo *string `type:"string"`
+
+	// The version number.
+	Version *int64 `type:"long"`
+}
+
+// String returns the string representation
+func (s GetLayerVersionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetLayerVersionOutput) GoString() string {
+	return s.String()
+}
+
+// SetCompatibleRuntimes sets the CompatibleRuntimes field's value.
+func (s *GetLayerVersionOutput) SetCompatibleRuntimes(v []*string) *GetLayerVersionOutput {
+	s.CompatibleRuntimes = v
+	return s
+}
+
+// SetContent sets the Content field's value.
+func (s *GetLayerVersionOutput) SetContent(v *LayerVersionContentOutput) *GetLayerVersionOutput {
+	s.Content = v
+	return s
+}
+
+// SetCreatedDate sets the CreatedDate field's value.
+func (s *GetLayerVersionOutput) SetCreatedDate(v string) *GetLayerVersionOutput {
+	s.CreatedDate = &v
+	return s
+}
+
+// SetDescription sets the Description field's value.
+func (s *GetLayerVersionOutput) SetDescription(v string) *GetLayerVersionOutput {
+	s.Description = &v
+	return s
+}
+
+// SetLayerArn sets the LayerArn field's value.
+func (s *GetLayerVersionOutput) SetLayerArn(v string) *GetLayerVersionOutput {
+	s.LayerArn = &v
+	return s
+}
+
+// SetLayerVersionArn sets the LayerVersionArn field's value.
+func (s *GetLayerVersionOutput) SetLayerVersionArn(v string) *GetLayerVersionOutput {
+	s.LayerVersionArn = &v
+	return s
+}
+
+// SetLicenseInfo sets the LicenseInfo field's value.
+func (s *GetLayerVersionOutput) SetLicenseInfo(v string) *GetLayerVersionOutput {
+	s.LicenseInfo = &v
+	return s
+}
+
+// SetVersion sets the Version field's value.
+func (s *GetLayerVersionOutput) SetVersion(v int64) *GetLayerVersionOutput {
+	s.Version = &v
+	return s
+}
+
+type GetLayerVersionPolicyInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the layer.
+	//
+	// LayerName is a required field
+	LayerName *string `location:"uri" locationName:"LayerName" min:"1" type:"string" required:"true"`
+
+	// The version number.
+	//
+	// VersionNumber is a required field
+	VersionNumber *int64 `location:"uri" locationName:"VersionNumber" type:"long" required:"true"`
+}
+
+// String returns the string representation
+func (s GetLayerVersionPolicyInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetLayerVersionPolicyInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetLayerVersionPolicyInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetLayerVersionPolicyInput"}
+	if s.LayerName == nil {
+		invalidParams.Add(request.NewErrParamRequired("LayerName"))
+	}
+	if s.LayerName != nil && len(*s.LayerName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("LayerName", 1))
+	}
+	if s.VersionNumber == nil {
+		invalidParams.Add(request.NewErrParamRequired("VersionNumber"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetLayerName sets the LayerName field's value.
+func (s *GetLayerVersionPolicyInput) SetLayerName(v string) *GetLayerVersionPolicyInput {
+	s.LayerName = &v
+	return s
+}
+
+// SetVersionNumber sets the VersionNumber field's value.
+func (s *GetLayerVersionPolicyInput) SetVersionNumber(v int64) *GetLayerVersionPolicyInput {
+	s.VersionNumber = &v
+	return s
+}
+
+type GetLayerVersionPolicyOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The policy document.
+	Policy *string `type:"string"`
+
+	// A unique identifier for the current revision of the policy.
+	RevisionId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s GetLayerVersionPolicyOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetLayerVersionPolicyOutput) GoString() string {
+	return s.String()
+}
+
+// SetPolicy sets the Policy field's value.
+func (s *GetLayerVersionPolicyOutput) SetPolicy(v string) *GetLayerVersionPolicyOutput {
+	s.Policy = &v
+	return s
+}
+
+// SetRevisionId sets the RevisionId field's value.
+func (s *GetLayerVersionPolicyOutput) SetRevisionId(v string) *GetLayerVersionPolicyOutput {
+	s.RevisionId = &v
+	return s
+}
+
 type GetPolicyInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5206,7 +6432,7 @@ func (s *GetPolicyOutput) SetRevisionId(v string) *GetPolicyOutput {
 type InvokeAsyncInput struct {
 	_ struct{} `deprecated:"true" type:"structure" payload:"InvokeArgs"`
 
-	// The name of the lambda function.
+	// The name of the Lambda function.
 	//
 	// Name formats
 	//
@@ -5311,7 +6537,7 @@ type InvokeInput struct {
 	// invocation type.
 	ClientContext *string `location:"header" locationName:"X-Amz-Client-Context" type:"string"`
 
-	// The name of the lambda function.
+	// The name of the Lambda function.
 	//
 	// Name formats
 	//
@@ -5491,6 +6717,266 @@ func (s *InvokeOutput) SetPayload(v []byte) *InvokeOutput {
 // SetStatusCode sets the StatusCode field's value.
 func (s *InvokeOutput) SetStatusCode(v int64) *InvokeOutput {
 	s.StatusCode = &v
+	return s
+}
+
+// A function layer.
+type Layer struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the function layer.
+	Arn *string `min:"1" type:"string"`
+
+	// The size of the layer archive in bytes.
+	CodeSize *int64 `type:"long"`
+}
+
+// String returns the string representation
+func (s Layer) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Layer) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *Layer) SetArn(v string) *Layer {
+	s.Arn = &v
+	return s
+}
+
+// SetCodeSize sets the CodeSize field's value.
+func (s *Layer) SetCodeSize(v int64) *Layer {
+	s.CodeSize = &v
+	return s
+}
+
+// A ZIP archive that contains the contents of the function layer. You can specify
+// either an Amazon S3 location, or upload a layer archive directly.
+type LayerVersionContentInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon S3 bucket of the layer archive.
+	S3Bucket *string `min:"3" type:"string"`
+
+	// The Amazon S3 key of the layer archive.
+	S3Key *string `min:"1" type:"string"`
+
+	// For versioned objects, the version of the layer archive object to use.
+	S3ObjectVersion *string `min:"1" type:"string"`
+
+	// The base64-encoded contents of the layer archive. AWS SDK and AWS CLI clients
+	// handle the encoding for you.
+	//
+	// ZipFile is automatically base64 encoded/decoded by the SDK.
+	ZipFile []byte `type:"blob"`
+}
+
+// String returns the string representation
+func (s LayerVersionContentInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LayerVersionContentInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *LayerVersionContentInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "LayerVersionContentInput"}
+	if s.S3Bucket != nil && len(*s.S3Bucket) < 3 {
+		invalidParams.Add(request.NewErrParamMinLen("S3Bucket", 3))
+	}
+	if s.S3Key != nil && len(*s.S3Key) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("S3Key", 1))
+	}
+	if s.S3ObjectVersion != nil && len(*s.S3ObjectVersion) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("S3ObjectVersion", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetS3Bucket sets the S3Bucket field's value.
+func (s *LayerVersionContentInput) SetS3Bucket(v string) *LayerVersionContentInput {
+	s.S3Bucket = &v
+	return s
+}
+
+// SetS3Key sets the S3Key field's value.
+func (s *LayerVersionContentInput) SetS3Key(v string) *LayerVersionContentInput {
+	s.S3Key = &v
+	return s
+}
+
+// SetS3ObjectVersion sets the S3ObjectVersion field's value.
+func (s *LayerVersionContentInput) SetS3ObjectVersion(v string) *LayerVersionContentInput {
+	s.S3ObjectVersion = &v
+	return s
+}
+
+// SetZipFile sets the ZipFile field's value.
+func (s *LayerVersionContentInput) SetZipFile(v []byte) *LayerVersionContentInput {
+	s.ZipFile = v
+	return s
+}
+
+// Details about a layer version.
+type LayerVersionContentOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The SHA-256 hash of the layer archive.
+	CodeSha256 *string `type:"string"`
+
+	// The size of the layer archive in bytes.
+	CodeSize *int64 `type:"long"`
+
+	// A link to the layer archive in Amazon S3 that is valid for 10 minutes.
+	Location *string `type:"string"`
+}
+
+// String returns the string representation
+func (s LayerVersionContentOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LayerVersionContentOutput) GoString() string {
+	return s.String()
+}
+
+// SetCodeSha256 sets the CodeSha256 field's value.
+func (s *LayerVersionContentOutput) SetCodeSha256(v string) *LayerVersionContentOutput {
+	s.CodeSha256 = &v
+	return s
+}
+
+// SetCodeSize sets the CodeSize field's value.
+func (s *LayerVersionContentOutput) SetCodeSize(v int64) *LayerVersionContentOutput {
+	s.CodeSize = &v
+	return s
+}
+
+// SetLocation sets the Location field's value.
+func (s *LayerVersionContentOutput) SetLocation(v string) *LayerVersionContentOutput {
+	s.Location = &v
+	return s
+}
+
+// Details about a layer version.
+type LayerVersionsListItem struct {
+	_ struct{} `type:"structure"`
+
+	// The layer's compatible runtimes.
+	CompatibleRuntimes []*string `type:"list"`
+
+	// The date that the version was created, in ISO 8601 format. For example, 2018-11-27T15:10:45.123+0000.
+	CreatedDate *string `type:"string"`
+
+	// The description of the version.
+	Description *string `type:"string"`
+
+	// The ARN of the layer version.
+	LayerVersionArn *string `min:"1" type:"string"`
+
+	// The layer's open-source license.
+	LicenseInfo *string `type:"string"`
+
+	// The version number.
+	Version *int64 `type:"long"`
+}
+
+// String returns the string representation
+func (s LayerVersionsListItem) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LayerVersionsListItem) GoString() string {
+	return s.String()
+}
+
+// SetCompatibleRuntimes sets the CompatibleRuntimes field's value.
+func (s *LayerVersionsListItem) SetCompatibleRuntimes(v []*string) *LayerVersionsListItem {
+	s.CompatibleRuntimes = v
+	return s
+}
+
+// SetCreatedDate sets the CreatedDate field's value.
+func (s *LayerVersionsListItem) SetCreatedDate(v string) *LayerVersionsListItem {
+	s.CreatedDate = &v
+	return s
+}
+
+// SetDescription sets the Description field's value.
+func (s *LayerVersionsListItem) SetDescription(v string) *LayerVersionsListItem {
+	s.Description = &v
+	return s
+}
+
+// SetLayerVersionArn sets the LayerVersionArn field's value.
+func (s *LayerVersionsListItem) SetLayerVersionArn(v string) *LayerVersionsListItem {
+	s.LayerVersionArn = &v
+	return s
+}
+
+// SetLicenseInfo sets the LicenseInfo field's value.
+func (s *LayerVersionsListItem) SetLicenseInfo(v string) *LayerVersionsListItem {
+	s.LicenseInfo = &v
+	return s
+}
+
+// SetVersion sets the Version field's value.
+func (s *LayerVersionsListItem) SetVersion(v int64) *LayerVersionsListItem {
+	s.Version = &v
+	return s
+}
+
+// Details about a function layer.
+type LayersListItem struct {
+	_ struct{} `type:"structure"`
+
+	// The newest version of the layer.
+	LatestMatchingVersion *LayerVersionsListItem `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the function layer.
+	LayerArn *string `min:"1" type:"string"`
+
+	// The name of the layer.
+	LayerName *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s LayersListItem) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LayersListItem) GoString() string {
+	return s.String()
+}
+
+// SetLatestMatchingVersion sets the LatestMatchingVersion field's value.
+func (s *LayersListItem) SetLatestMatchingVersion(v *LayerVersionsListItem) *LayersListItem {
+	s.LatestMatchingVersion = v
+	return s
+}
+
+// SetLayerArn sets the LayerArn field's value.
+func (s *LayersListItem) SetLayerArn(v string) *LayersListItem {
+	s.LayerArn = &v
+	return s
+}
+
+// SetLayerName sets the LayerName field's value.
+func (s *LayersListItem) SetLayerName(v string) *LayersListItem {
+	s.LayerName = &v
 	return s
 }
 
@@ -5835,6 +7321,195 @@ func (s *ListFunctionsOutput) SetNextMarker(v string) *ListFunctionsOutput {
 	return s
 }
 
+type ListLayerVersionsInput struct {
+	_ struct{} `type:"structure"`
+
+	// A runtime identifier. For example, go1.x.
+	CompatibleRuntime *string `location:"querystring" locationName:"CompatibleRuntime" type:"string" enum:"Runtime"`
+
+	// The name of the layer.
+	//
+	// LayerName is a required field
+	LayerName *string `location:"uri" locationName:"LayerName" min:"1" type:"string" required:"true"`
+
+	// A pagination token returned by a previous call.
+	Marker *string `location:"querystring" locationName:"Marker" type:"string"`
+
+	// The maximum number of versions to return.
+	MaxItems *int64 `location:"querystring" locationName:"MaxItems" min:"1" type:"integer"`
+}
+
+// String returns the string representation
+func (s ListLayerVersionsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListLayerVersionsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListLayerVersionsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListLayerVersionsInput"}
+	if s.LayerName == nil {
+		invalidParams.Add(request.NewErrParamRequired("LayerName"))
+	}
+	if s.LayerName != nil && len(*s.LayerName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("LayerName", 1))
+	}
+	if s.MaxItems != nil && *s.MaxItems < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxItems", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCompatibleRuntime sets the CompatibleRuntime field's value.
+func (s *ListLayerVersionsInput) SetCompatibleRuntime(v string) *ListLayerVersionsInput {
+	s.CompatibleRuntime = &v
+	return s
+}
+
+// SetLayerName sets the LayerName field's value.
+func (s *ListLayerVersionsInput) SetLayerName(v string) *ListLayerVersionsInput {
+	s.LayerName = &v
+	return s
+}
+
+// SetMarker sets the Marker field's value.
+func (s *ListLayerVersionsInput) SetMarker(v string) *ListLayerVersionsInput {
+	s.Marker = &v
+	return s
+}
+
+// SetMaxItems sets the MaxItems field's value.
+func (s *ListLayerVersionsInput) SetMaxItems(v int64) *ListLayerVersionsInput {
+	s.MaxItems = &v
+	return s
+}
+
+type ListLayerVersionsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A list of versions.
+	LayerVersions []*LayerVersionsListItem `type:"list"`
+
+	// A pagination token returned when the response doesn't contain all versions.
+	NextMarker *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ListLayerVersionsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListLayerVersionsOutput) GoString() string {
+	return s.String()
+}
+
+// SetLayerVersions sets the LayerVersions field's value.
+func (s *ListLayerVersionsOutput) SetLayerVersions(v []*LayerVersionsListItem) *ListLayerVersionsOutput {
+	s.LayerVersions = v
+	return s
+}
+
+// SetNextMarker sets the NextMarker field's value.
+func (s *ListLayerVersionsOutput) SetNextMarker(v string) *ListLayerVersionsOutput {
+	s.NextMarker = &v
+	return s
+}
+
+type ListLayersInput struct {
+	_ struct{} `type:"structure"`
+
+	// A runtime identifier. For example, go1.x.
+	CompatibleRuntime *string `location:"querystring" locationName:"CompatibleRuntime" type:"string" enum:"Runtime"`
+
+	// A pagination token returned by a previous call.
+	Marker *string `location:"querystring" locationName:"Marker" type:"string"`
+
+	// The maximum number of layers to return.
+	MaxItems *int64 `location:"querystring" locationName:"MaxItems" min:"1" type:"integer"`
+}
+
+// String returns the string representation
+func (s ListLayersInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListLayersInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListLayersInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListLayersInput"}
+	if s.MaxItems != nil && *s.MaxItems < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxItems", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCompatibleRuntime sets the CompatibleRuntime field's value.
+func (s *ListLayersInput) SetCompatibleRuntime(v string) *ListLayersInput {
+	s.CompatibleRuntime = &v
+	return s
+}
+
+// SetMarker sets the Marker field's value.
+func (s *ListLayersInput) SetMarker(v string) *ListLayersInput {
+	s.Marker = &v
+	return s
+}
+
+// SetMaxItems sets the MaxItems field's value.
+func (s *ListLayersInput) SetMaxItems(v int64) *ListLayersInput {
+	s.MaxItems = &v
+	return s
+}
+
+type ListLayersOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A list of function layers.
+	Layers []*LayersListItem `type:"list"`
+
+	// A pagination token returned when the response doesn't contain all layers.
+	NextMarker *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ListLayersOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListLayersOutput) GoString() string {
+	return s.String()
+}
+
+// SetLayers sets the Layers field's value.
+func (s *ListLayersOutput) SetLayers(v []*LayersListItem) *ListLayersOutput {
+	s.Layers = v
+	return s
+}
+
+// SetNextMarker sets the NextMarker field's value.
+func (s *ListLayersOutput) SetNextMarker(v string) *ListLayersOutput {
+	s.NextMarker = &v
+	return s
+}
+
 type ListTagsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -6007,6 +7682,188 @@ func (s *ListVersionsByFunctionOutput) SetVersions(v []*FunctionConfiguration) *
 	return s
 }
 
+type PublishLayerVersionInput struct {
+	_ struct{} `type:"structure"`
+
+	// A list of compatible function runtimes (http://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html).
+	// Used for filtering with ListLayers and ListLayerVersions.
+	CompatibleRuntimes []*string `type:"list"`
+
+	// The function layer archive.
+	//
+	// Content is a required field
+	Content *LayerVersionContentInput `type:"structure" required:"true"`
+
+	// The description of the version.
+	Description *string `type:"string"`
+
+	// The name of the layer.
+	//
+	// LayerName is a required field
+	LayerName *string `location:"uri" locationName:"LayerName" min:"1" type:"string" required:"true"`
+
+	// The layer's software license. It can be any of the following:
+	//
+	//    * An SPDX license identifier (https://spdx.org/licenses/). For example,
+	//    MIT.
+	//
+	//    * The URL of a license hosted on the internet. For example, https://opensource.org/licenses/MIT.
+	//
+	//    * The full text of the license.
+	LicenseInfo *string `type:"string"`
+}
+
+// String returns the string representation
+func (s PublishLayerVersionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PublishLayerVersionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *PublishLayerVersionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "PublishLayerVersionInput"}
+	if s.Content == nil {
+		invalidParams.Add(request.NewErrParamRequired("Content"))
+	}
+	if s.LayerName == nil {
+		invalidParams.Add(request.NewErrParamRequired("LayerName"))
+	}
+	if s.LayerName != nil && len(*s.LayerName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("LayerName", 1))
+	}
+	if s.Content != nil {
+		if err := s.Content.Validate(); err != nil {
+			invalidParams.AddNested("Content", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCompatibleRuntimes sets the CompatibleRuntimes field's value.
+func (s *PublishLayerVersionInput) SetCompatibleRuntimes(v []*string) *PublishLayerVersionInput {
+	s.CompatibleRuntimes = v
+	return s
+}
+
+// SetContent sets the Content field's value.
+func (s *PublishLayerVersionInput) SetContent(v *LayerVersionContentInput) *PublishLayerVersionInput {
+	s.Content = v
+	return s
+}
+
+// SetDescription sets the Description field's value.
+func (s *PublishLayerVersionInput) SetDescription(v string) *PublishLayerVersionInput {
+	s.Description = &v
+	return s
+}
+
+// SetLayerName sets the LayerName field's value.
+func (s *PublishLayerVersionInput) SetLayerName(v string) *PublishLayerVersionInput {
+	s.LayerName = &v
+	return s
+}
+
+// SetLicenseInfo sets the LicenseInfo field's value.
+func (s *PublishLayerVersionInput) SetLicenseInfo(v string) *PublishLayerVersionInput {
+	s.LicenseInfo = &v
+	return s
+}
+
+type PublishLayerVersionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The layer's compatible runtimes.
+	CompatibleRuntimes []*string `type:"list"`
+
+	// Details about the layer version.
+	Content *LayerVersionContentOutput `type:"structure"`
+
+	// The date that the layer version was created, in ISO-8601 format (https://www.w3.org/TR/NOTE-datetime)
+	// (YYYY-MM-DDThh:mm:ss.sTZD).
+	CreatedDate *string `type:"string"`
+
+	// The description of the version.
+	Description *string `type:"string"`
+
+	// The Amazon Resource Name (ARN) of the function layer.
+	LayerArn *string `min:"1" type:"string"`
+
+	// The ARN of the layer version.
+	LayerVersionArn *string `min:"1" type:"string"`
+
+	// The layer's software license.
+	LicenseInfo *string `type:"string"`
+
+	// The version number.
+	Version *int64 `type:"long"`
+}
+
+// String returns the string representation
+func (s PublishLayerVersionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PublishLayerVersionOutput) GoString() string {
+	return s.String()
+}
+
+// SetCompatibleRuntimes sets the CompatibleRuntimes field's value.
+func (s *PublishLayerVersionOutput) SetCompatibleRuntimes(v []*string) *PublishLayerVersionOutput {
+	s.CompatibleRuntimes = v
+	return s
+}
+
+// SetContent sets the Content field's value.
+func (s *PublishLayerVersionOutput) SetContent(v *LayerVersionContentOutput) *PublishLayerVersionOutput {
+	s.Content = v
+	return s
+}
+
+// SetCreatedDate sets the CreatedDate field's value.
+func (s *PublishLayerVersionOutput) SetCreatedDate(v string) *PublishLayerVersionOutput {
+	s.CreatedDate = &v
+	return s
+}
+
+// SetDescription sets the Description field's value.
+func (s *PublishLayerVersionOutput) SetDescription(v string) *PublishLayerVersionOutput {
+	s.Description = &v
+	return s
+}
+
+// SetLayerArn sets the LayerArn field's value.
+func (s *PublishLayerVersionOutput) SetLayerArn(v string) *PublishLayerVersionOutput {
+	s.LayerArn = &v
+	return s
+}
+
+// SetLayerVersionArn sets the LayerVersionArn field's value.
+func (s *PublishLayerVersionOutput) SetLayerVersionArn(v string) *PublishLayerVersionOutput {
+	s.LayerVersionArn = &v
+	return s
+}
+
+// SetLicenseInfo sets the LicenseInfo field's value.
+func (s *PublishLayerVersionOutput) SetLicenseInfo(v string) *PublishLayerVersionOutput {
+	s.LicenseInfo = &v
+	return s
+}
+
+// SetVersion sets the Version field's value.
+func (s *PublishLayerVersionOutput) SetVersion(v int64) *PublishLayerVersionOutput {
+	s.Version = &v
+	return s
+}
+
 type PublishVersionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -6098,7 +7955,7 @@ func (s *PublishVersionInput) SetRevisionId(v string) *PublishVersionInput {
 type PutFunctionConcurrencyInput struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the lambda function.
+	// The name of the Lambda function.
 	//
 	// Name formats
 	//
@@ -6185,10 +8042,106 @@ func (s *PutFunctionConcurrencyOutput) SetReservedConcurrentExecutions(v int64) 
 	return s
 }
 
+type RemoveLayerVersionPermissionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the layer.
+	//
+	// LayerName is a required field
+	LayerName *string `location:"uri" locationName:"LayerName" min:"1" type:"string" required:"true"`
+
+	// Only update the policy if the revision ID matches the ID specified. Use this
+	// option to avoid modifying a policy that has changed since you last read it.
+	RevisionId *string `location:"querystring" locationName:"RevisionId" type:"string"`
+
+	// The identifier that was specified when the statement was added.
+	//
+	// StatementId is a required field
+	StatementId *string `location:"uri" locationName:"StatementId" min:"1" type:"string" required:"true"`
+
+	// The version number.
+	//
+	// VersionNumber is a required field
+	VersionNumber *int64 `location:"uri" locationName:"VersionNumber" type:"long" required:"true"`
+}
+
+// String returns the string representation
+func (s RemoveLayerVersionPermissionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RemoveLayerVersionPermissionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *RemoveLayerVersionPermissionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "RemoveLayerVersionPermissionInput"}
+	if s.LayerName == nil {
+		invalidParams.Add(request.NewErrParamRequired("LayerName"))
+	}
+	if s.LayerName != nil && len(*s.LayerName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("LayerName", 1))
+	}
+	if s.StatementId == nil {
+		invalidParams.Add(request.NewErrParamRequired("StatementId"))
+	}
+	if s.StatementId != nil && len(*s.StatementId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("StatementId", 1))
+	}
+	if s.VersionNumber == nil {
+		invalidParams.Add(request.NewErrParamRequired("VersionNumber"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetLayerName sets the LayerName field's value.
+func (s *RemoveLayerVersionPermissionInput) SetLayerName(v string) *RemoveLayerVersionPermissionInput {
+	s.LayerName = &v
+	return s
+}
+
+// SetRevisionId sets the RevisionId field's value.
+func (s *RemoveLayerVersionPermissionInput) SetRevisionId(v string) *RemoveLayerVersionPermissionInput {
+	s.RevisionId = &v
+	return s
+}
+
+// SetStatementId sets the StatementId field's value.
+func (s *RemoveLayerVersionPermissionInput) SetStatementId(v string) *RemoveLayerVersionPermissionInput {
+	s.StatementId = &v
+	return s
+}
+
+// SetVersionNumber sets the VersionNumber field's value.
+func (s *RemoveLayerVersionPermissionInput) SetVersionNumber(v int64) *RemoveLayerVersionPermissionInput {
+	s.VersionNumber = &v
+	return s
+}
+
+type RemoveLayerVersionPermissionOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s RemoveLayerVersionPermissionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RemoveLayerVersionPermissionOutput) GoString() string {
+	return s.String()
+}
+
 type RemovePermissionInput struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the lambda function.
+	// The name of the Lambda function.
 	//
 	// Name formats
 	//
@@ -6698,7 +8651,7 @@ type UpdateFunctionCodeInput struct {
 	// returned in the response.
 	DryRun *bool `type:"boolean"`
 
-	// The name of the lambda function.
+	// The name of the Lambda function.
 	//
 	// Name formats
 	//
@@ -6844,7 +8797,7 @@ type UpdateFunctionConfigurationInput struct {
 	// The parent object that contains your environment's configuration settings.
 	Environment *Environment `type:"structure"`
 
-	// The name of the lambda function.
+	// The name of the Lambda function.
 	//
 	// Name formats
 	//
@@ -6868,6 +8821,10 @@ type UpdateFunctionConfigurationInput struct {
 	// environment variables. If you elect to use the AWS Lambda default service
 	// key, pass in an empty string ("") for this parameter.
 	KMSKeyArn *string `type:"string"`
+
+	// A list of function layers (http://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html)
+	// to add to the function's execution environment.
+	Layers []*string `type:"list"`
 
 	// The amount of memory, in MB, your Lambda function is given. AWS Lambda uses
 	// this memory size to infer the amount of CPU allocated to your function. Your
@@ -6969,6 +8926,12 @@ func (s *UpdateFunctionConfigurationInput) SetHandler(v string) *UpdateFunctionC
 // SetKMSKeyArn sets the KMSKeyArn field's value.
 func (s *UpdateFunctionConfigurationInput) SetKMSKeyArn(v string) *UpdateFunctionConfigurationInput {
 	s.KMSKeyArn = &v
+	return s
+}
+
+// SetLayers sets the Layers field's value.
+func (s *UpdateFunctionConfigurationInput) SetLayers(v []*string) *UpdateFunctionConfigurationInput {
+	s.Layers = v
 	return s
 }
 
@@ -7163,6 +9126,12 @@ const (
 
 	// RuntimeGo1X is a Runtime enum value
 	RuntimeGo1X = "go1.x"
+
+	// RuntimeRuby25 is a Runtime enum value
+	RuntimeRuby25 = "ruby2.5"
+
+	// RuntimeProvided is a Runtime enum value
+	RuntimeProvided = "provided"
 )
 
 const (
