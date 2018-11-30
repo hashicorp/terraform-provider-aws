@@ -7,11 +7,22 @@ import (
 
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccDataSourceAwsSubnet_basic(t *testing.T) {
 	rInt := acctest.RandIntRange(0, 256)
+	cidr := fmt.Sprintf("172.%d.123.0/24", rInt)
+	az := "us-west-2a"
+	tag := "tf-acc-subnet-data-source"
+	arnregex := regexp.MustCompile(`^arn:[^:]+:ec2:[^:]+:\d{12}:subnet/subnet-.+`)
+
+	snResourceName := "aws_subnet.test"
+	vpcResourceName := "aws_vpc.test"
+	ds1ResourceName := "data.aws_subnet.by_id"
+	ds2ResourceName := "data.aws_subnet.by_cidr"
+	ds3ResourceName := "data.aws_subnet.by_tag"
+	ds4ResourceName := "data.aws_subnet.by_vpc"
+	ds5ResourceName := "data.aws_subnet.by_filter"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -21,11 +32,80 @@ func TestAccDataSourceAwsSubnet_basic(t *testing.T) {
 			{
 				Config: testAccDataSourceAwsSubnetConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccDataSourceAwsSubnetCheck("data.aws_subnet.by_id", rInt),
-					testAccDataSourceAwsSubnetCheck("data.aws_subnet.by_cidr", rInt),
-					testAccDataSourceAwsSubnetCheck("data.aws_subnet.by_tag", rInt),
-					testAccDataSourceAwsSubnetCheck("data.aws_subnet.by_vpc", rInt),
-					testAccDataSourceAwsSubnetCheck("data.aws_subnet.by_filter", rInt),
+					resource.TestCheckResourceAttrPair(
+						ds1ResourceName, "id", snResourceName, "id"),
+					resource.TestCheckResourceAttrPair(
+						ds1ResourceName, "owner_id", snResourceName, "owner_id"),
+					resource.TestCheckResourceAttrPair(
+						ds1ResourceName, "vpc_id", vpcResourceName, "id"),
+					resource.TestCheckResourceAttr(
+						ds1ResourceName, "cidr_block", cidr),
+					resource.TestCheckResourceAttr(
+						ds1ResourceName, "availability_zone", az),
+					resource.TestCheckResourceAttr(
+						ds1ResourceName, "tags.Name", tag),
+					resource.TestMatchResourceAttr(
+						ds1ResourceName, "arn", arnregex),
+
+					resource.TestCheckResourceAttrPair(
+						ds2ResourceName, "id", snResourceName, "id"),
+					resource.TestCheckResourceAttrPair(
+						ds2ResourceName, "owner_id", snResourceName, "owner_id"),
+					resource.TestCheckResourceAttrPair(
+						ds2ResourceName, "vpc_id", vpcResourceName, "id"),
+					resource.TestCheckResourceAttr(
+						ds2ResourceName, "cidr_block", cidr),
+					resource.TestCheckResourceAttr(
+						ds2ResourceName, "availability_zone", az),
+					resource.TestCheckResourceAttr(
+						ds2ResourceName, "tags.Name", tag),
+					resource.TestMatchResourceAttr(
+						ds2ResourceName, "arn", arnregex),
+
+					resource.TestCheckResourceAttrPair(
+						ds3ResourceName, "id", snResourceName, "id"),
+					resource.TestCheckResourceAttrPair(
+						ds3ResourceName, "owner_id", snResourceName, "owner_id"),
+					resource.TestCheckResourceAttrPair(
+						ds3ResourceName, "vpc_id", vpcResourceName, "id"),
+					resource.TestCheckResourceAttr(
+						ds3ResourceName, "cidr_block", cidr),
+					resource.TestCheckResourceAttr(
+						ds3ResourceName, "availability_zone", az),
+					resource.TestCheckResourceAttr(
+						ds3ResourceName, "tags.Name", tag),
+					resource.TestMatchResourceAttr(
+						ds3ResourceName, "arn", arnregex),
+
+					resource.TestCheckResourceAttrPair(
+						ds4ResourceName, "id", snResourceName, "id"),
+					resource.TestCheckResourceAttrPair(
+						ds4ResourceName, "owner_id", snResourceName, "owner_id"),
+					resource.TestCheckResourceAttrPair(
+						ds4ResourceName, "vpc_id", vpcResourceName, "id"),
+					resource.TestCheckResourceAttr(
+						ds4ResourceName, "cidr_block", cidr),
+					resource.TestCheckResourceAttr(
+						ds4ResourceName, "availability_zone", az),
+					resource.TestCheckResourceAttr(
+						ds4ResourceName, "tags.Name", tag),
+					resource.TestMatchResourceAttr(
+						ds4ResourceName, "arn", arnregex),
+
+					resource.TestCheckResourceAttrPair(
+						ds5ResourceName, "id", snResourceName, "id"),
+					resource.TestCheckResourceAttrPair(
+						ds5ResourceName, "owner_id", snResourceName, "owner_id"),
+					resource.TestCheckResourceAttrPair(
+						ds5ResourceName, "vpc_id", vpcResourceName, "id"),
+					resource.TestCheckResourceAttr(
+						ds5ResourceName, "cidr_block", cidr),
+					resource.TestCheckResourceAttr(
+						ds5ResourceName, "availability_zone", az),
+					resource.TestCheckResourceAttr(
+						ds5ResourceName, "tags.Name", tag),
+					resource.TestMatchResourceAttr(
+						ds5ResourceName, "arn", arnregex),
 				),
 			},
 		},
@@ -72,69 +152,6 @@ func TestAccDataSourceAwsSubnet_ipv6ByIpv6CidrBlock(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccDataSourceAwsSubnetCheck(name string, rInt int) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("root module has no resource called %s", name)
-		}
-
-		vpcRs, ok := s.RootModule().Resources["aws_vpc.test"]
-		if !ok {
-			return fmt.Errorf("can't find aws_vpc.test in state")
-		}
-		subnetRs, ok := s.RootModule().Resources["aws_subnet.test"]
-		if !ok {
-			return fmt.Errorf("can't find aws_subnet.test in state")
-		}
-
-		attr := rs.Primary.Attributes
-
-		if attr["id"] != subnetRs.Primary.Attributes["id"] {
-			return fmt.Errorf(
-				"id is %s; want %s",
-				attr["id"],
-				subnetRs.Primary.Attributes["id"],
-			)
-		}
-
-		if attr["owner_id"] != subnetRs.Primary.Attributes["owner_id"] {
-			return fmt.Errorf(
-				"owner_id is %s; want %s",
-				attr["owner_id"],
-				subnetRs.Primary.Attributes["owner_id"],
-			)
-		}
-
-		if attr["vpc_id"] != vpcRs.Primary.Attributes["id"] {
-			return fmt.Errorf(
-				"vpc_id is %s; want %s",
-				attr["vpc_id"],
-				vpcRs.Primary.Attributes["id"],
-			)
-		}
-
-		if attr["cidr_block"] != fmt.Sprintf("172.%d.123.0/24", rInt) {
-			return fmt.Errorf("bad cidr_block %s", attr["cidr_block"])
-		}
-		if attr["availability_zone"] != "us-west-2a" {
-			return fmt.Errorf("bad availability_zone %s", attr["availability_zone"])
-		}
-		if attr["tags.Name"] != "tf-acc-subnet-data-source" {
-			return fmt.Errorf("bad Name tag %s", attr["tags.Name"])
-		}
-
-		arnformat := `^arn:[^:]+:ec2:[^:]+:\d{12}:subnet/subnet-.+`
-		arnregex := regexp.MustCompile(arnformat)
-
-		if !arnregex.MatchString(attr["arn"]) {
-			return fmt.Errorf("arn doesn't match format %s", attr["arn"])
-		}
-
-		return nil
-	}
 }
 
 func testAccDataSourceAwsSubnetConfig(rInt int) string {

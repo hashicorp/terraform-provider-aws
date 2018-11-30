@@ -76,7 +76,7 @@ func resourceAwsInternetGatewayCreate(d *schema.ResourceData, meta interface{}) 
 	// Attach the new gateway to the correct vpc
 	err = resourceAwsInternetGatewayAttach(d, meta)
 	if err != nil {
-		return err
+		return fmt.Errorf("error attaching EC2 Internet Gateway (%s): %s", d.Id(), err)
 	}
 
 	return resourceAwsInternetGatewayRead(d, meta)

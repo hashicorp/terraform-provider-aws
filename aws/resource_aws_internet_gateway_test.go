@@ -145,7 +145,7 @@ func TestAccAWSInternetGateway_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInternetGatewayExists(
 						"aws_internet_gateway.foo", &v),
-					resource.TestCheckResourceAttrSet("aws_internet_gateway.foo", "owner_id"),
+					testAccCheckResourceAttrAccountID("aws_internet_gateway.foo", "owner_id"),
 				),
 			},
 
@@ -155,7 +155,7 @@ func TestAccAWSInternetGateway_basic(t *testing.T) {
 					testAccCheckInternetGatewayExists(
 						"aws_internet_gateway.foo", &v2),
 					testNotEqual,
-					resource.TestCheckResourceAttrSet("aws_internet_gateway.foo", "owner_id"),
+					testAccCheckResourceAttrAccountID("aws_internet_gateway.foo", "owner_id"),
 				),
 			},
 		},
@@ -209,7 +209,7 @@ func TestAccAWSInternetGateway_tags(t *testing.T) {
 					testAccCheckInternetGatewayExists("aws_internet_gateway.foo", &v),
 					testAccCheckTags(&v.Tags, "Name", "terraform-testacc-internet-gateway-tags"),
 					testAccCheckTags(&v.Tags, "foo", "bar"),
-					resource.TestCheckResourceAttrSet("aws_internet_gateway.foo", "owner_id"),
+					testAccCheckResourceAttrAccountID("aws_internet_gateway.foo", "owner_id"),
 				),
 			},
 
@@ -220,7 +220,7 @@ func TestAccAWSInternetGateway_tags(t *testing.T) {
 					testAccCheckTags(&v.Tags, "Name", "terraform-testacc-internet-gateway-tags"),
 					testAccCheckTags(&v.Tags, "foo", ""),
 					testAccCheckTags(&v.Tags, "bar", "baz"),
-					resource.TestCheckResourceAttrSet("aws_internet_gateway.foo", "owner_id"),
+					testAccCheckResourceAttrAccountID("aws_internet_gateway.foo", "owner_id"),
 				),
 			},
 		},
