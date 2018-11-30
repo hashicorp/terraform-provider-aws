@@ -117,6 +117,7 @@ func resourceAwsLambdaFunction() *schema.Resource {
 					lambda.RuntimePython27,
 					lambda.RuntimePython36,
 					lambda.RuntimePython37,
+					lambda.RuntimeRuby25,
 				}, false),
 			},
 			"timeout": {
