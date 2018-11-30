@@ -54,12 +54,12 @@ func (c *SFN) CreateActivityRequest(input *CreateActivityInput) (req *request.Re
 
 // CreateActivity API operation for AWS Step Functions.
 //
-// Creates an activity. An activity is a task which you write in any programming
-// language and host on any machine which has access to AWS Step Functions.
-// Activities must poll Step Functions using the GetActivityTask API action
-// and respond using SendTask* API actions. This function lets Step Functions
-// know the existence of your activity and returns an identifier for use in
-// a state machine and when polling from the activity.
+// Creates an activity. An activity is a task that you write in any programming
+// language and host on any machine that has access to AWS Step Functions. Activities
+// must poll Step Functions using the GetActivityTask API action and respond
+// using SendTask* API actions. This function lets Step Functions know the existence
+// of your activity and returns an identifier for use in a state machine and
+// when polling from the activity.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -406,6 +406,9 @@ func (c *SFN) DescribeActivityRequest(input *DescribeActivityInput) (req *reques
 //
 // Describes an activity.
 //
+// This operation is eventually consistent. The results are best effort and
+// may not reflect very recent updates and changes.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -487,6 +490,9 @@ func (c *SFN) DescribeExecutionRequest(input *DescribeExecutionInput) (req *requ
 // DescribeExecution API operation for AWS Step Functions.
 //
 // Describes an execution.
+//
+// This operation is eventually consistent. The results are best effort and
+// may not reflect very recent updates and changes.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -570,6 +576,9 @@ func (c *SFN) DescribeStateMachineRequest(input *DescribeStateMachineInput) (req
 //
 // Describes a state machine.
 //
+// This operation is eventually consistent. The results are best effort and
+// may not reflect very recent updates and changes.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -651,6 +660,9 @@ func (c *SFN) DescribeStateMachineForExecutionRequest(input *DescribeStateMachin
 // DescribeStateMachineForExecution API operation for AWS Step Functions.
 //
 // Describes the state machine associated with a specific execution.
+//
+// This operation is eventually consistent. The results are best effort and
+// may not reflect very recent updates and changes.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -742,6 +754,10 @@ func (c *SFN) GetActivityTaskRequest(input *GetActivityTaskInput) (req *request.
 //
 // Workers should set their client side socket timeout to at least 65 seconds
 // (5 seconds higher than the maximum time the service may hold the poll request).
+//
+// Polling with GetActivityTask can cause latency in some implementations. See
+// Avoid Latency When Polling for Activity Tasks (http://docs.aws.amazon.com/step-functions/latest/dg/bp-activity-pollers.html)
+// in the Step Functions Developer Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -837,9 +853,11 @@ func (c *SFN) GetExecutionHistoryRequest(input *GetExecutionHistoryInput) (req *
 // the results are returned in ascending order of the timeStamp of the events.
 // Use the reverseOrder parameter to get the latest events first.
 //
-// If a nextToken is returned by a previous call, there are more results available.
-// To retrieve the next page of results, make the call again using the returned
-// token in nextToken. Keep all other arguments unchanged.
+// If nextToken is returned, there are more results available. The value of
+// nextToken is a unique pagination token for each page. Make the call again
+// using the returned token to retrieve the next page. Keep all other arguments
+// unchanged. Each pagination token expires after 60 seconds. Using an expired
+// pagination token will return an HTTP 400 InvalidToken error.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -982,9 +1000,14 @@ func (c *SFN) ListActivitiesRequest(input *ListActivitiesInput) (req *request.Re
 //
 // Lists the existing activities.
 //
-// If a nextToken is returned by a previous call, there are more results available.
-// To retrieve the next page of results, make the call again using the returned
-// token in nextToken. Keep all other arguments unchanged.
+// If nextToken is returned, there are more results available. The value of
+// nextToken is a unique pagination token for each page. Make the call again
+// using the returned token to retrieve the next page. Keep all other arguments
+// unchanged. Each pagination token expires after 60 seconds. Using an expired
+// pagination token will return an HTTP 400 InvalidToken error.
+//
+// This operation is eventually consistent. The results are best effort and
+// may not reflect very recent updates and changes.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1120,10 +1143,16 @@ func (c *SFN) ListExecutionsRequest(input *ListExecutionsInput) (req *request.Re
 // ListExecutions API operation for AWS Step Functions.
 //
 // Lists the executions of a state machine that meet the filtering criteria.
+// Results are sorted by time, with the most recent execution first.
 //
-// If a nextToken is returned by a previous call, there are more results available.
-// To retrieve the next page of results, make the call again using the returned
-// token in nextToken. Keep all other arguments unchanged.
+// If nextToken is returned, there are more results available. The value of
+// nextToken is a unique pagination token for each page. Make the call again
+// using the returned token to retrieve the next page. Keep all other arguments
+// unchanged. Each pagination token expires after 60 seconds. Using an expired
+// pagination token will return an HTTP 400 InvalidToken error.
+//
+// This operation is eventually consistent. The results are best effort and
+// may not reflect very recent updates and changes.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1266,9 +1295,14 @@ func (c *SFN) ListStateMachinesRequest(input *ListStateMachinesInput) (req *requ
 //
 // Lists the existing state machines.
 //
-// If a nextToken is returned by a previous call, there are more results available.
-// To retrieve the next page of results, make the call again using the returned
-// token in nextToken. Keep all other arguments unchanged.
+// If nextToken is returned, there are more results available. The value of
+// nextToken is a unique pagination token for each page. Make the call again
+// using the returned token to retrieve the next page. Keep all other arguments
+// unchanged. Each pagination token expires after 60 seconds. Using an expired
+// pagination token will return an HTTP 400 InvalidToken error.
+//
+// This operation is eventually consistent. The results are best effort and
+// may not reflect very recent updates and changes.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1664,6 +1698,12 @@ func (c *SFN) StartExecutionRequest(input *StartExecutionInput) (req *request.Re
 //
 // Starts a state machine execution.
 //
+// StartExecution is idempotent. If StartExecution is called with the same name
+// and input as a running execution, the call will succeed and return the same
+// response as the original request. If the execution is closed or if the input
+// is different, it will return a 400 ExecutionAlreadyExists error. Names can
+// be reused after 90 days.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -1846,12 +1886,12 @@ func (c *SFN) UpdateStateMachineRequest(input *UpdateStateMachineInput) (req *re
 //
 // Updates an existing state machine by modifying its definition and/or roleArn.
 // Running executions will continue to use the previous definition and roleArn.
+// You must include at least one of definition or roleArn or you will receive
+// a MissingRequiredParameter error.
 //
 // All StartExecution calls within a few seconds will use the updated definition
 // and roleArn. Executions started immediately after calling UpdateStateMachine
-// may use the previous state machine definition and roleArn. You must include
-// at least one of definition or roleArn or you will receive a MissingRequiredParameter
-// error.
+// may use the previous state machine definition and roleArn.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1899,7 +1939,7 @@ func (c *SFN) UpdateStateMachineWithContext(ctx aws.Context, input *UpdateStateM
 	return out, req.Send()
 }
 
-// Contains details about an activity which failed during an execution.
+// Contains details about an activity that failed during an execution.
 type ActivityFailedEventDetails struct {
 	_ struct{} `type:"structure"`
 
@@ -1992,7 +2032,7 @@ func (s *ActivityListItem) SetName(v string) *ActivityListItem {
 	return s
 }
 
-// Contains details about an activity schedule failure which occurred during
+// Contains details about an activity schedule failure that occurred during
 // an execution.
 type ActivityScheduleFailedEventDetails struct {
 	_ struct{} `type:"structure"`
@@ -2104,7 +2144,7 @@ func (s *ActivityStartedEventDetails) SetWorkerName(v string) *ActivityStartedEv
 	return s
 }
 
-// Contains details about an activity which successfully terminated during an
+// Contains details about an activity that successfully terminated during an
 // execution.
 type ActivitySucceededEventDetails struct {
 	_ struct{} `type:"structure"`
@@ -2129,7 +2169,7 @@ func (s *ActivitySucceededEventDetails) SetOutput(v string) *ActivitySucceededEv
 	return s
 }
 
-// Contains details about an activity timeout which occurred during an execution.
+// Contains details about an activity timeout that occurred during an execution.
 type ActivityTimedOutEventDetails struct {
 	_ struct{} `type:"structure"`
 
@@ -2257,15 +2297,13 @@ func (s *CreateActivityOutput) SetCreationDate(v time.Time) *CreateActivityOutpu
 type CreateStateMachineInput struct {
 	_ struct{} `type:"structure"`
 
-	// The Amazon States Language definition of the state machine.
+	// The Amazon States Language definition of the state machine. See Amazon States
+	// Language (http://docs.aws.amazon.com/step-functions/latest/dg/concepts-amazon-states-language.html).
 	//
 	// Definition is a required field
 	Definition *string `locationName:"definition" min:"1" type:"string" required:"true"`
 
-	// The name of the state machine. This name must be unique for your AWS account
-	// and region for 90 days. For more information, see  Limits Related to State
-	// Machine Executions (http://docs.aws.amazon.com/step-functions/latest/dg/limits.html#service-limits-state-machine-executions)
-	// in the AWS Step Functions Developer Guide.
+	// The name of the state machine.
 	//
 	// A name must not contain:
 	//
@@ -2787,7 +2825,8 @@ func (s *DescribeStateMachineForExecutionInput) SetExecutionArn(v string) *Descr
 type DescribeStateMachineForExecutionOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The Amazon States Language definition of the state machine.
+	// The Amazon States Language definition of the state machine. See Amazon States
+	// Language (http://docs.aws.amazon.com/step-functions/latest/dg/concepts-amazon-states-language.html).
 	//
 	// Definition is a required field
 	Definition *string `locationName:"definition" min:"1" type:"string" required:"true"`
@@ -2904,7 +2943,8 @@ type DescribeStateMachineOutput struct {
 	// CreationDate is a required field
 	CreationDate *time.Time `locationName:"creationDate" type:"timestamp" required:"true"`
 
-	// The Amazon States Language definition of the state machine.
+	// The Amazon States Language definition of the state machine. See Amazon States
+	// Language (http://docs.aws.amazon.com/step-functions/latest/dg/concepts-amazon-states-language.html).
 	//
 	// Definition is a required field
 	Definition *string `locationName:"definition" min:"1" type:"string" required:"true"`
@@ -3203,7 +3243,7 @@ func (s *ExecutionSucceededEventDetails) SetOutput(v string) *ExecutionSucceeded
 	return s
 }
 
-// Contains details about the execution timeout which occurred during the execution.
+// Contains details about the execution timeout that occurred during the execution.
 type ExecutionTimedOutEventDetails struct {
 	_ struct{} `type:"structure"`
 
@@ -3336,18 +3376,17 @@ type GetExecutionHistoryInput struct {
 
 	// The maximum number of results that are returned per call. You can use nextToken
 	// to obtain further pages of results. The default is 100 and the maximum allowed
-	// page size is 100. A value of 0 uses the default.
+	// page size is 1000. A value of 0 uses the default.
 	//
 	// This is only an upper limit. The actual number of results returned per call
 	// might be fewer than the specified maximum.
 	MaxResults *int64 `locationName:"maxResults" type:"integer"`
 
-	// If a nextToken is returned by a previous call, there are more results available.
-	// To retrieve the next page of results, make the call again using the returned
-	// token in nextToken. Keep all other arguments unchanged.
-	//
-	// The configured maxResults determines how many results can be returned in
-	// a single call.
+	// If nextToken is returned, there are more results available. The value of
+	// nextToken is a unique pagination token for each page. Make the call again
+	// using the returned token to retrieve the next page. Keep all other arguments
+	// unchanged. Each pagination token expires after 60 seconds. Using an expired
+	// pagination token will return an HTTP 400 InvalidToken error.
 	NextToken *string `locationName:"nextToken" min:"1" type:"string"`
 
 	// Lists events in descending order of their timeStamp.
@@ -3415,12 +3454,11 @@ type GetExecutionHistoryOutput struct {
 	// Events is a required field
 	Events []*HistoryEvent `locationName:"events" type:"list" required:"true"`
 
-	// If a nextToken is returned by a previous call, there are more results available.
-	// To retrieve the next page of results, make the call again using the returned
-	// token in nextToken. Keep all other arguments unchanged.
-	//
-	// The configured maxResults determines how many results can be returned in
-	// a single call.
+	// If nextToken is returned, there are more results available. The value of
+	// nextToken is a unique pagination token for each page. Make the call again
+	// using the returned token to retrieve the next page. Keep all other arguments
+	// unchanged. Each pagination token expires after 60 seconds. Using an expired
+	// pagination token will return an HTTP 400 InvalidToken error.
 	NextToken *string `locationName:"nextToken" min:"1" type:"string"`
 }
 
@@ -3450,11 +3488,10 @@ func (s *GetExecutionHistoryOutput) SetNextToken(v string) *GetExecutionHistoryO
 type HistoryEvent struct {
 	_ struct{} `type:"structure"`
 
-	// Contains details about an activity which failed during an execution.
+	// Contains details about an activity that failed during an execution.
 	ActivityFailedEventDetails *ActivityFailedEventDetails `locationName:"activityFailedEventDetails" type:"structure"`
 
-	// Contains details about an activity schedule event which failed during an
-	// execution.
+	// Contains details about an activity schedule event that failed during an execution.
 	ActivityScheduleFailedEventDetails *ActivityScheduleFailedEventDetails `locationName:"activityScheduleFailedEventDetails" type:"structure"`
 
 	// Contains details about an activity scheduled during an execution.
@@ -3463,11 +3500,11 @@ type HistoryEvent struct {
 	// Contains details about the start of an activity during an execution.
 	ActivityStartedEventDetails *ActivityStartedEventDetails `locationName:"activityStartedEventDetails" type:"structure"`
 
-	// Contains details about an activity which successfully terminated during an
+	// Contains details about an activity that successfully terminated during an
 	// execution.
 	ActivitySucceededEventDetails *ActivitySucceededEventDetails `locationName:"activitySucceededEventDetails" type:"structure"`
 
-	// Contains details about an activity timeout which occurred during an execution.
+	// Contains details about an activity timeout that occurred during an execution.
 	ActivityTimedOutEventDetails *ActivityTimedOutEventDetails `locationName:"activityTimedOutEventDetails" type:"structure"`
 
 	// Contains details about an abort of an execution.
@@ -3482,7 +3519,7 @@ type HistoryEvent struct {
 	// Contains details about the successful termination of the execution.
 	ExecutionSucceededEventDetails *ExecutionSucceededEventDetails `locationName:"executionSucceededEventDetails" type:"structure"`
 
-	// Contains details about the execution timeout which occurred during the execution.
+	// Contains details about the execution timeout that occurred during the execution.
 	ExecutionTimedOutEventDetails *ExecutionTimedOutEventDetails `locationName:"executionTimedOutEventDetails" type:"structure"`
 
 	// The id of the event. Events are numbered sequentially, starting at one.
@@ -3490,25 +3527,24 @@ type HistoryEvent struct {
 	// Id is a required field
 	Id *int64 `locationName:"id" type:"long" required:"true"`
 
-	// Contains details about a lambda function which failed during an execution.
+	// Contains details about a lambda function that failed during an execution.
 	LambdaFunctionFailedEventDetails *LambdaFunctionFailedEventDetails `locationName:"lambdaFunctionFailedEventDetails" type:"structure"`
 
-	// Contains details about a failed lambda function schedule event which occurred
+	// Contains details about a failed lambda function schedule event that occurred
 	// during an execution.
 	LambdaFunctionScheduleFailedEventDetails *LambdaFunctionScheduleFailedEventDetails `locationName:"lambdaFunctionScheduleFailedEventDetails" type:"structure"`
 
 	// Contains details about a lambda function scheduled during an execution.
 	LambdaFunctionScheduledEventDetails *LambdaFunctionScheduledEventDetails `locationName:"lambdaFunctionScheduledEventDetails" type:"structure"`
 
-	// Contains details about a lambda function which failed to start during an
-	// execution.
+	// Contains details about a lambda function that failed to start during an execution.
 	LambdaFunctionStartFailedEventDetails *LambdaFunctionStartFailedEventDetails `locationName:"lambdaFunctionStartFailedEventDetails" type:"structure"`
 
-	// Contains details about a lambda function which terminated successfully during
+	// Contains details about a lambda function that terminated successfully during
 	// an execution.
 	LambdaFunctionSucceededEventDetails *LambdaFunctionSucceededEventDetails `locationName:"lambdaFunctionSucceededEventDetails" type:"structure"`
 
-	// Contains details about a lambda function timeout which occurred during an
+	// Contains details about a lambda function timeout that occurred during an
 	// execution.
 	LambdaFunctionTimedOutEventDetails *LambdaFunctionTimedOutEventDetails `locationName:"lambdaFunctionTimedOutEventDetails" type:"structure"`
 
@@ -3521,7 +3557,30 @@ type HistoryEvent struct {
 	// Contains details about an exit from a state during an execution.
 	StateExitedEventDetails *StateExitedEventDetails `locationName:"stateExitedEventDetails" type:"structure"`
 
-	// The date the event occurred.
+	// Contains details about a task failure event.
+	TaskFailedEventDetails *TaskFailedEventDetails `locationName:"taskFailedEventDetails" type:"structure"`
+
+	// Contains details about a task scheduled during an execution.
+	TaskScheduledEventDetails *TaskScheduledEventDetails `locationName:"taskScheduledEventDetails" type:"structure"`
+
+	// Contains details about a task that failed to start during an execution.
+	TaskStartFailedEventDetails *TaskStartFailedEventDetails `locationName:"taskStartFailedEventDetails" type:"structure"`
+
+	// Contains details about the start of a task during an execution.
+	TaskStartedEventDetails *TaskStartedEventDetails `locationName:"taskStartedEventDetails" type:"structure"`
+
+	TaskSubmitFailedEventDetails *TaskSubmitFailedEventDetails `locationName:"taskSubmitFailedEventDetails" type:"structure"`
+
+	TaskSubmittedEventDetails *TaskSubmittedEventDetails `locationName:"taskSubmittedEventDetails" type:"structure"`
+
+	// Contains details about the start of connected service by a task state.
+	TaskSucceededEventDetails *TaskSucceededEventDetails `locationName:"taskSucceededEventDetails" type:"structure"`
+
+	// Contains details about a connected service timeout that occured during an
+	// execution.
+	TaskTimedOutEventDetails *TaskTimedOutEventDetails `locationName:"taskTimedOutEventDetails" type:"structure"`
+
+	// The date and time the event occurred.
 	//
 	// Timestamp is a required field
 	Timestamp *time.Time `locationName:"timestamp" type:"timestamp" required:"true"`
@@ -3668,6 +3727,54 @@ func (s *HistoryEvent) SetStateExitedEventDetails(v *StateExitedEventDetails) *H
 	return s
 }
 
+// SetTaskFailedEventDetails sets the TaskFailedEventDetails field's value.
+func (s *HistoryEvent) SetTaskFailedEventDetails(v *TaskFailedEventDetails) *HistoryEvent {
+	s.TaskFailedEventDetails = v
+	return s
+}
+
+// SetTaskScheduledEventDetails sets the TaskScheduledEventDetails field's value.
+func (s *HistoryEvent) SetTaskScheduledEventDetails(v *TaskScheduledEventDetails) *HistoryEvent {
+	s.TaskScheduledEventDetails = v
+	return s
+}
+
+// SetTaskStartFailedEventDetails sets the TaskStartFailedEventDetails field's value.
+func (s *HistoryEvent) SetTaskStartFailedEventDetails(v *TaskStartFailedEventDetails) *HistoryEvent {
+	s.TaskStartFailedEventDetails = v
+	return s
+}
+
+// SetTaskStartedEventDetails sets the TaskStartedEventDetails field's value.
+func (s *HistoryEvent) SetTaskStartedEventDetails(v *TaskStartedEventDetails) *HistoryEvent {
+	s.TaskStartedEventDetails = v
+	return s
+}
+
+// SetTaskSubmitFailedEventDetails sets the TaskSubmitFailedEventDetails field's value.
+func (s *HistoryEvent) SetTaskSubmitFailedEventDetails(v *TaskSubmitFailedEventDetails) *HistoryEvent {
+	s.TaskSubmitFailedEventDetails = v
+	return s
+}
+
+// SetTaskSubmittedEventDetails sets the TaskSubmittedEventDetails field's value.
+func (s *HistoryEvent) SetTaskSubmittedEventDetails(v *TaskSubmittedEventDetails) *HistoryEvent {
+	s.TaskSubmittedEventDetails = v
+	return s
+}
+
+// SetTaskSucceededEventDetails sets the TaskSucceededEventDetails field's value.
+func (s *HistoryEvent) SetTaskSucceededEventDetails(v *TaskSucceededEventDetails) *HistoryEvent {
+	s.TaskSucceededEventDetails = v
+	return s
+}
+
+// SetTaskTimedOutEventDetails sets the TaskTimedOutEventDetails field's value.
+func (s *HistoryEvent) SetTaskTimedOutEventDetails(v *TaskTimedOutEventDetails) *HistoryEvent {
+	s.TaskTimedOutEventDetails = v
+	return s
+}
+
 // SetTimestamp sets the Timestamp field's value.
 func (s *HistoryEvent) SetTimestamp(v time.Time) *HistoryEvent {
 	s.Timestamp = &v
@@ -3680,7 +3787,7 @@ func (s *HistoryEvent) SetType(v string) *HistoryEvent {
 	return s
 }
 
-// Contains details about a lambda function which failed during an execution.
+// Contains details about a lambda function that failed during an execution.
 type LambdaFunctionFailedEventDetails struct {
 	_ struct{} `type:"structure"`
 
@@ -3713,7 +3820,7 @@ func (s *LambdaFunctionFailedEventDetails) SetError(v string) *LambdaFunctionFai
 	return s
 }
 
-// Contains details about a failed lambda function schedule event which occurred
+// Contains details about a failed lambda function schedule event that occurred
 // during an execution.
 type LambdaFunctionScheduleFailedEventDetails struct {
 	_ struct{} `type:"structure"`
@@ -3791,8 +3898,7 @@ func (s *LambdaFunctionScheduledEventDetails) SetTimeoutInSeconds(v int64) *Lamb
 	return s
 }
 
-// Contains details about a lambda function which failed to start during an
-// execution.
+// Contains details about a lambda function that failed to start during an execution.
 type LambdaFunctionStartFailedEventDetails struct {
 	_ struct{} `type:"structure"`
 
@@ -3825,7 +3931,7 @@ func (s *LambdaFunctionStartFailedEventDetails) SetError(v string) *LambdaFuncti
 	return s
 }
 
-// Contains details about a lambda function which successfully terminated during
+// Contains details about a lambda function that successfully terminated during
 // an execution.
 type LambdaFunctionSucceededEventDetails struct {
 	_ struct{} `type:"structure"`
@@ -3850,7 +3956,7 @@ func (s *LambdaFunctionSucceededEventDetails) SetOutput(v string) *LambdaFunctio
 	return s
 }
 
-// Contains details about a lambda function timeout which occurred during an
+// Contains details about a lambda function timeout that occurred during an
 // execution.
 type LambdaFunctionTimedOutEventDetails struct {
 	_ struct{} `type:"structure"`
@@ -3889,18 +3995,17 @@ type ListActivitiesInput struct {
 
 	// The maximum number of results that are returned per call. You can use nextToken
 	// to obtain further pages of results. The default is 100 and the maximum allowed
-	// page size is 100. A value of 0 uses the default.
+	// page size is 1000. A value of 0 uses the default.
 	//
 	// This is only an upper limit. The actual number of results returned per call
 	// might be fewer than the specified maximum.
 	MaxResults *int64 `locationName:"maxResults" type:"integer"`
 
-	// If a nextToken is returned by a previous call, there are more results available.
-	// To retrieve the next page of results, make the call again using the returned
-	// token in nextToken. Keep all other arguments unchanged.
-	//
-	// The configured maxResults determines how many results can be returned in
-	// a single call.
+	// If nextToken is returned, there are more results available. The value of
+	// nextToken is a unique pagination token for each page. Make the call again
+	// using the returned token to retrieve the next page. Keep all other arguments
+	// unchanged. Each pagination token expires after 60 seconds. Using an expired
+	// pagination token will return an HTTP 400 InvalidToken error.
 	NextToken *string `locationName:"nextToken" min:"1" type:"string"`
 }
 
@@ -3947,12 +4052,11 @@ type ListActivitiesOutput struct {
 	// Activities is a required field
 	Activities []*ActivityListItem `locationName:"activities" type:"list" required:"true"`
 
-	// If a nextToken is returned by a previous call, there are more results available.
-	// To retrieve the next page of results, make the call again using the returned
-	// token in nextToken. Keep all other arguments unchanged.
-	//
-	// The configured maxResults determines how many results can be returned in
-	// a single call.
+	// If nextToken is returned, there are more results available. The value of
+	// nextToken is a unique pagination token for each page. Make the call again
+	// using the returned token to retrieve the next page. Keep all other arguments
+	// unchanged. Each pagination token expires after 60 seconds. Using an expired
+	// pagination token will return an HTTP 400 InvalidToken error.
 	NextToken *string `locationName:"nextToken" min:"1" type:"string"`
 }
 
@@ -3983,18 +4087,17 @@ type ListExecutionsInput struct {
 
 	// The maximum number of results that are returned per call. You can use nextToken
 	// to obtain further pages of results. The default is 100 and the maximum allowed
-	// page size is 100. A value of 0 uses the default.
+	// page size is 1000. A value of 0 uses the default.
 	//
 	// This is only an upper limit. The actual number of results returned per call
 	// might be fewer than the specified maximum.
 	MaxResults *int64 `locationName:"maxResults" type:"integer"`
 
-	// If a nextToken is returned by a previous call, there are more results available.
-	// To retrieve the next page of results, make the call again using the returned
-	// token in nextToken. Keep all other arguments unchanged.
-	//
-	// The configured maxResults determines how many results can be returned in
-	// a single call.
+	// If nextToken is returned, there are more results available. The value of
+	// nextToken is a unique pagination token for each page. Make the call again
+	// using the returned token to retrieve the next page. Keep all other arguments
+	// unchanged. Each pagination token expires after 60 seconds. Using an expired
+	// pagination token will return an HTTP 400 InvalidToken error.
 	NextToken *string `locationName:"nextToken" min:"1" type:"string"`
 
 	// The Amazon Resource Name (ARN) of the state machine whose executions is listed.
@@ -4068,12 +4171,11 @@ type ListExecutionsOutput struct {
 	// Executions is a required field
 	Executions []*ExecutionListItem `locationName:"executions" type:"list" required:"true"`
 
-	// If a nextToken is returned by a previous call, there are more results available.
-	// To retrieve the next page of results, make the call again using the returned
-	// token in nextToken. Keep all other arguments unchanged.
-	//
-	// The configured maxResults determines how many results can be returned in
-	// a single call.
+	// If nextToken is returned, there are more results available. The value of
+	// nextToken is a unique pagination token for each page. Make the call again
+	// using the returned token to retrieve the next page. Keep all other arguments
+	// unchanged. Each pagination token expires after 60 seconds. Using an expired
+	// pagination token will return an HTTP 400 InvalidToken error.
 	NextToken *string `locationName:"nextToken" min:"1" type:"string"`
 }
 
@@ -4104,18 +4206,17 @@ type ListStateMachinesInput struct {
 
 	// The maximum number of results that are returned per call. You can use nextToken
 	// to obtain further pages of results. The default is 100 and the maximum allowed
-	// page size is 100. A value of 0 uses the default.
+	// page size is 1000. A value of 0 uses the default.
 	//
 	// This is only an upper limit. The actual number of results returned per call
 	// might be fewer than the specified maximum.
 	MaxResults *int64 `locationName:"maxResults" type:"integer"`
 
-	// If a nextToken is returned by a previous call, there are more results available.
-	// To retrieve the next page of results, make the call again using the returned
-	// token in nextToken. Keep all other arguments unchanged.
-	//
-	// The configured maxResults determines how many results can be returned in
-	// a single call.
+	// If nextToken is returned, there are more results available. The value of
+	// nextToken is a unique pagination token for each page. Make the call again
+	// using the returned token to retrieve the next page. Keep all other arguments
+	// unchanged. Each pagination token expires after 60 seconds. Using an expired
+	// pagination token will return an HTTP 400 InvalidToken error.
 	NextToken *string `locationName:"nextToken" min:"1" type:"string"`
 }
 
@@ -4157,12 +4258,11 @@ func (s *ListStateMachinesInput) SetNextToken(v string) *ListStateMachinesInput 
 type ListStateMachinesOutput struct {
 	_ struct{} `type:"structure"`
 
-	// If a nextToken is returned by a previous call, there are more results available.
-	// To retrieve the next page of results, make the call again using the returned
-	// token in nextToken. Keep all other arguments unchanged.
-	//
-	// The configured maxResults determines how many results can be returned in
-	// a single call.
+	// If nextToken is returned, there are more results available. The value of
+	// nextToken is a unique pagination token for each page. Make the call again
+	// using the returned token to retrieve the next page. Keep all other arguments
+	// unchanged. Each pagination token expires after 60 seconds. Using an expired
+	// pagination token will return an HTTP 400 InvalidToken error.
 	NextToken *string `locationName:"nextToken" min:"1" type:"string"`
 
 	// StateMachines is a required field
@@ -4197,7 +4297,7 @@ type SendTaskFailureInput struct {
 	// A more detailed explanation of the cause of the failure.
 	Cause *string `locationName:"cause" type:"string"`
 
-	// An arbitrary error code that identifies the cause of the failure.
+	// The error code of the failure.
 	Error *string `locationName:"error" type:"string"`
 
 	// The token that represents this task. Task tokens are generated by the service
@@ -4406,20 +4506,6 @@ type StartExecutionInput struct {
 	// and region for 90 days. For more information, see  Limits Related to State
 	// Machine Executions (http://docs.aws.amazon.com/step-functions/latest/dg/limits.html#service-limits-state-machine-executions)
 	// in the AWS Step Functions Developer Guide.
-	//
-	// An execution can't use the name of another execution for 90 days.
-	//
-	// When you make multiple StartExecution calls with the same name, the new execution
-	// doesn't run and the following rules apply:
-	//
-	// When the original execution is open and the execution input from the new
-	// call is different, the ExecutionAlreadyExists message is returned.
-	//
-	// When the original execution is open and the execution input from the new
-	// call is identical, the Success message is returned.
-	//
-	// When the original execution is closed, the ExecutionAlreadyExists message
-	// is returned regardless of input.
 	//
 	// A name must not contain:
 	//
@@ -4668,10 +4754,10 @@ func (s *StateMachineListItem) SetStateMachineArn(v string) *StateMachineListIte
 type StopExecutionInput struct {
 	_ struct{} `type:"structure"`
 
-	// A more detailed explanation of the cause of the termination.
+	// A more detailed explanation of the cause of the failure.
 	Cause *string `locationName:"cause" type:"string"`
 
-	// An arbitrary error code that identifies the cause of the termination.
+	// The error code of the failure.
 	Error *string `locationName:"error" type:"string"`
 
 	// The Amazon Resource Name (ARN) of the execution to stop.
@@ -4749,10 +4835,426 @@ func (s *StopExecutionOutput) SetStopDate(v time.Time) *StopExecutionOutput {
 	return s
 }
 
+// Contains details about a task failure event.
+type TaskFailedEventDetails struct {
+	_ struct{} `type:"structure"`
+
+	// A more detailed explanation of the cause of the failure.
+	Cause *string `locationName:"cause" type:"string"`
+
+	// The error code of the failure.
+	Error *string `locationName:"error" type:"string"`
+
+	// The service name of the connected service in a task state.
+	//
+	// Resource is a required field
+	Resource *string `locationName:"resource" min:"1" type:"string" required:"true"`
+
+	// The action of the connected service called by a task state.
+	//
+	// ResourceType is a required field
+	ResourceType *string `locationName:"resourceType" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s TaskFailedEventDetails) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TaskFailedEventDetails) GoString() string {
+	return s.String()
+}
+
+// SetCause sets the Cause field's value.
+func (s *TaskFailedEventDetails) SetCause(v string) *TaskFailedEventDetails {
+	s.Cause = &v
+	return s
+}
+
+// SetError sets the Error field's value.
+func (s *TaskFailedEventDetails) SetError(v string) *TaskFailedEventDetails {
+	s.Error = &v
+	return s
+}
+
+// SetResource sets the Resource field's value.
+func (s *TaskFailedEventDetails) SetResource(v string) *TaskFailedEventDetails {
+	s.Resource = &v
+	return s
+}
+
+// SetResourceType sets the ResourceType field's value.
+func (s *TaskFailedEventDetails) SetResourceType(v string) *TaskFailedEventDetails {
+	s.ResourceType = &v
+	return s
+}
+
+// Contains details about a task scheduled during an execution.
+type TaskScheduledEventDetails struct {
+	_ struct{} `type:"structure"`
+
+	// The JSON data passed to the connected service referenced in a task state.
+	//
+	// Parameters is a required field
+	Parameters *string `locationName:"parameters" type:"string" required:"true"`
+
+	// Region is a required field
+	Region *string `locationName:"region" min:"1" type:"string" required:"true"`
+
+	// The service name of the connected service in a task state.
+	//
+	// Resource is a required field
+	Resource *string `locationName:"resource" min:"1" type:"string" required:"true"`
+
+	// The action of the connected service called by a task state.
+	//
+	// ResourceType is a required field
+	ResourceType *string `locationName:"resourceType" min:"1" type:"string" required:"true"`
+
+	// The maximum allowed duration of the task.
+	TimeoutInSeconds *int64 `locationName:"timeoutInSeconds" type:"long"`
+}
+
+// String returns the string representation
+func (s TaskScheduledEventDetails) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TaskScheduledEventDetails) GoString() string {
+	return s.String()
+}
+
+// SetParameters sets the Parameters field's value.
+func (s *TaskScheduledEventDetails) SetParameters(v string) *TaskScheduledEventDetails {
+	s.Parameters = &v
+	return s
+}
+
+// SetRegion sets the Region field's value.
+func (s *TaskScheduledEventDetails) SetRegion(v string) *TaskScheduledEventDetails {
+	s.Region = &v
+	return s
+}
+
+// SetResource sets the Resource field's value.
+func (s *TaskScheduledEventDetails) SetResource(v string) *TaskScheduledEventDetails {
+	s.Resource = &v
+	return s
+}
+
+// SetResourceType sets the ResourceType field's value.
+func (s *TaskScheduledEventDetails) SetResourceType(v string) *TaskScheduledEventDetails {
+	s.ResourceType = &v
+	return s
+}
+
+// SetTimeoutInSeconds sets the TimeoutInSeconds field's value.
+func (s *TaskScheduledEventDetails) SetTimeoutInSeconds(v int64) *TaskScheduledEventDetails {
+	s.TimeoutInSeconds = &v
+	return s
+}
+
+// Contains details about a task that failed to start during an execution.
+type TaskStartFailedEventDetails struct {
+	_ struct{} `type:"structure"`
+
+	// A more detailed explanation of the cause of the failure.
+	Cause *string `locationName:"cause" type:"string"`
+
+	// The error code of the failure.
+	Error *string `locationName:"error" type:"string"`
+
+	// The service name of the connected service in a task state.
+	//
+	// Resource is a required field
+	Resource *string `locationName:"resource" min:"1" type:"string" required:"true"`
+
+	// The action of the connected service called by a task state.
+	//
+	// ResourceType is a required field
+	ResourceType *string `locationName:"resourceType" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s TaskStartFailedEventDetails) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TaskStartFailedEventDetails) GoString() string {
+	return s.String()
+}
+
+// SetCause sets the Cause field's value.
+func (s *TaskStartFailedEventDetails) SetCause(v string) *TaskStartFailedEventDetails {
+	s.Cause = &v
+	return s
+}
+
+// SetError sets the Error field's value.
+func (s *TaskStartFailedEventDetails) SetError(v string) *TaskStartFailedEventDetails {
+	s.Error = &v
+	return s
+}
+
+// SetResource sets the Resource field's value.
+func (s *TaskStartFailedEventDetails) SetResource(v string) *TaskStartFailedEventDetails {
+	s.Resource = &v
+	return s
+}
+
+// SetResourceType sets the ResourceType field's value.
+func (s *TaskStartFailedEventDetails) SetResourceType(v string) *TaskStartFailedEventDetails {
+	s.ResourceType = &v
+	return s
+}
+
+// Contains details about the start of a task during an execution.
+type TaskStartedEventDetails struct {
+	_ struct{} `type:"structure"`
+
+	// The service name of the connected service in a task state.
+	//
+	// Resource is a required field
+	Resource *string `locationName:"resource" min:"1" type:"string" required:"true"`
+
+	// The action of the connected service called by a task state.
+	//
+	// ResourceType is a required field
+	ResourceType *string `locationName:"resourceType" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s TaskStartedEventDetails) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TaskStartedEventDetails) GoString() string {
+	return s.String()
+}
+
+// SetResource sets the Resource field's value.
+func (s *TaskStartedEventDetails) SetResource(v string) *TaskStartedEventDetails {
+	s.Resource = &v
+	return s
+}
+
+// SetResourceType sets the ResourceType field's value.
+func (s *TaskStartedEventDetails) SetResourceType(v string) *TaskStartedEventDetails {
+	s.ResourceType = &v
+	return s
+}
+
+type TaskSubmitFailedEventDetails struct {
+	_ struct{} `type:"structure"`
+
+	// A more detailed explanation of the cause of the failure.
+	Cause *string `locationName:"cause" type:"string"`
+
+	// The error code of the failure.
+	Error *string `locationName:"error" type:"string"`
+
+	// The service name of the connected service in a task state.
+	//
+	// Resource is a required field
+	Resource *string `locationName:"resource" min:"1" type:"string" required:"true"`
+
+	// The action of the connected service called by a task state.
+	//
+	// ResourceType is a required field
+	ResourceType *string `locationName:"resourceType" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s TaskSubmitFailedEventDetails) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TaskSubmitFailedEventDetails) GoString() string {
+	return s.String()
+}
+
+// SetCause sets the Cause field's value.
+func (s *TaskSubmitFailedEventDetails) SetCause(v string) *TaskSubmitFailedEventDetails {
+	s.Cause = &v
+	return s
+}
+
+// SetError sets the Error field's value.
+func (s *TaskSubmitFailedEventDetails) SetError(v string) *TaskSubmitFailedEventDetails {
+	s.Error = &v
+	return s
+}
+
+// SetResource sets the Resource field's value.
+func (s *TaskSubmitFailedEventDetails) SetResource(v string) *TaskSubmitFailedEventDetails {
+	s.Resource = &v
+	return s
+}
+
+// SetResourceType sets the ResourceType field's value.
+func (s *TaskSubmitFailedEventDetails) SetResourceType(v string) *TaskSubmitFailedEventDetails {
+	s.ResourceType = &v
+	return s
+}
+
+type TaskSubmittedEventDetails struct {
+	_ struct{} `type:"structure"`
+
+	// The response from a connected service when a task has started.
+	Output *string `locationName:"output" type:"string"`
+
+	// The service name of the connected service in a task state.
+	//
+	// Resource is a required field
+	Resource *string `locationName:"resource" min:"1" type:"string" required:"true"`
+
+	// The action of the connected service called by a task state.
+	//
+	// ResourceType is a required field
+	ResourceType *string `locationName:"resourceType" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s TaskSubmittedEventDetails) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TaskSubmittedEventDetails) GoString() string {
+	return s.String()
+}
+
+// SetOutput sets the Output field's value.
+func (s *TaskSubmittedEventDetails) SetOutput(v string) *TaskSubmittedEventDetails {
+	s.Output = &v
+	return s
+}
+
+// SetResource sets the Resource field's value.
+func (s *TaskSubmittedEventDetails) SetResource(v string) *TaskSubmittedEventDetails {
+	s.Resource = &v
+	return s
+}
+
+// SetResourceType sets the ResourceType field's value.
+func (s *TaskSubmittedEventDetails) SetResourceType(v string) *TaskSubmittedEventDetails {
+	s.ResourceType = &v
+	return s
+}
+
+// Contains details about the start of connected service by a task state.
+type TaskSucceededEventDetails struct {
+	_ struct{} `type:"structure"`
+
+	// The full JSON response from a connected service when a task has succeeded.
+	// This response becomes the output of the related task.
+	Output *string `locationName:"output" type:"string"`
+
+	// The service name of the connected service in a task state.
+	//
+	// Resource is a required field
+	Resource *string `locationName:"resource" min:"1" type:"string" required:"true"`
+
+	// The action of the connected service called by a task state.
+	//
+	// ResourceType is a required field
+	ResourceType *string `locationName:"resourceType" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s TaskSucceededEventDetails) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TaskSucceededEventDetails) GoString() string {
+	return s.String()
+}
+
+// SetOutput sets the Output field's value.
+func (s *TaskSucceededEventDetails) SetOutput(v string) *TaskSucceededEventDetails {
+	s.Output = &v
+	return s
+}
+
+// SetResource sets the Resource field's value.
+func (s *TaskSucceededEventDetails) SetResource(v string) *TaskSucceededEventDetails {
+	s.Resource = &v
+	return s
+}
+
+// SetResourceType sets the ResourceType field's value.
+func (s *TaskSucceededEventDetails) SetResourceType(v string) *TaskSucceededEventDetails {
+	s.ResourceType = &v
+	return s
+}
+
+// Contains details about a connected service timeout that occured during an
+// execution.
+type TaskTimedOutEventDetails struct {
+	_ struct{} `type:"structure"`
+
+	// A more detailed explanation of the cause of the failure.
+	Cause *string `locationName:"cause" type:"string"`
+
+	// The error code of the failure.
+	Error *string `locationName:"error" type:"string"`
+
+	// The service name of the connected service in a task state.
+	//
+	// Resource is a required field
+	Resource *string `locationName:"resource" min:"1" type:"string" required:"true"`
+
+	// The action of the connected service called by a task state.
+	//
+	// ResourceType is a required field
+	ResourceType *string `locationName:"resourceType" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s TaskTimedOutEventDetails) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TaskTimedOutEventDetails) GoString() string {
+	return s.String()
+}
+
+// SetCause sets the Cause field's value.
+func (s *TaskTimedOutEventDetails) SetCause(v string) *TaskTimedOutEventDetails {
+	s.Cause = &v
+	return s
+}
+
+// SetError sets the Error field's value.
+func (s *TaskTimedOutEventDetails) SetError(v string) *TaskTimedOutEventDetails {
+	s.Error = &v
+	return s
+}
+
+// SetResource sets the Resource field's value.
+func (s *TaskTimedOutEventDetails) SetResource(v string) *TaskTimedOutEventDetails {
+	s.Resource = &v
+	return s
+}
+
+// SetResourceType sets the ResourceType field's value.
+func (s *TaskTimedOutEventDetails) SetResourceType(v string) *TaskTimedOutEventDetails {
+	s.ResourceType = &v
+	return s
+}
+
 type UpdateStateMachineInput struct {
 	_ struct{} `type:"structure"`
 
-	// The Amazon States Language definition of the state machine.
+	// The Amazon States Language definition of the state machine. See Amazon States
+	// Language (http://docs.aws.amazon.com/step-functions/latest/dg/concepts-amazon-states-language.html).
 	Definition *string `locationName:"definition" min:"1" type:"string"`
 
 	// The Amazon Resource Name (ARN) of the IAM role of the state machine.
@@ -4880,6 +5382,30 @@ const (
 
 	// HistoryEventTypeChoiceStateExited is a HistoryEventType enum value
 	HistoryEventTypeChoiceStateExited = "ChoiceStateExited"
+
+	// HistoryEventTypeTaskFailed is a HistoryEventType enum value
+	HistoryEventTypeTaskFailed = "TaskFailed"
+
+	// HistoryEventTypeTaskScheduled is a HistoryEventType enum value
+	HistoryEventTypeTaskScheduled = "TaskScheduled"
+
+	// HistoryEventTypeTaskStartFailed is a HistoryEventType enum value
+	HistoryEventTypeTaskStartFailed = "TaskStartFailed"
+
+	// HistoryEventTypeTaskStarted is a HistoryEventType enum value
+	HistoryEventTypeTaskStarted = "TaskStarted"
+
+	// HistoryEventTypeTaskSubmitFailed is a HistoryEventType enum value
+	HistoryEventTypeTaskSubmitFailed = "TaskSubmitFailed"
+
+	// HistoryEventTypeTaskSubmitted is a HistoryEventType enum value
+	HistoryEventTypeTaskSubmitted = "TaskSubmitted"
+
+	// HistoryEventTypeTaskSucceeded is a HistoryEventType enum value
+	HistoryEventTypeTaskSucceeded = "TaskSucceeded"
+
+	// HistoryEventTypeTaskTimedOut is a HistoryEventType enum value
+	HistoryEventTypeTaskTimedOut = "TaskTimedOut"
 
 	// HistoryEventTypeExecutionFailed is a HistoryEventType enum value
 	HistoryEventTypeExecutionFailed = "ExecutionFailed"
