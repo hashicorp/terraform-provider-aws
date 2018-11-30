@@ -20,6 +20,7 @@ in the [AWS SDK example documentation](https://docs.aws.amazon.com/amazondynamod
 ```hcl
 resource "aws_dynamodb_table" "basic-dynamodb-table" {
   name           = "GameScores"
+  billing_mode   = "PROVISIONED"
   read_capacity  = 20
   write_capacity = 20
   hash_key       = "UserId"
@@ -83,10 +84,11 @@ The following arguments are supported:
 
 * `name` - (Required) The name of the table, this needs to be unique
   within a region.
+* `billing_mode` - (Optional) Controls how you are charged for read and write throughput and how you manage capacity. The valid values are `PROVISIONED` and `PAY_PER_REQUEST`. Defaults to `PROVISIONED`.
 * `hash_key` - (Required, Forces new resource) The attribute to use as the hash (partition) key. Must also be defined as an `attribute`, see below.
 * `range_key` - (Optional, Forces new resource) The attribute to use as the range (sort) key. Must also be defined as an `attribute`, see below.
-* `write_capacity` - (Required) The number of write units for this table
-* `read_capacity` - (Required) The number of read units for this table
+* `write_capacity` - (Optional) The number of write units for this table. If the `billing_mode` is `PROVISIONED`, this field is required.
+* `read_capacity` - (Optional) The number of read units for this table. If the `billing_mode` is `PROVISIONED`, this field is required.
 * `attribute` - (Required) List of nested attribute definitions. Only required for `hash_key` and `range_key` attributes. Each attribute has two properties:
   * `name` - (Required) The name of the attribute
   * `type` - (Required) Attribute type, which must be a scalar type: `S`, `N`, or `B` for (S)tring, (N)umber or (B)inary data
