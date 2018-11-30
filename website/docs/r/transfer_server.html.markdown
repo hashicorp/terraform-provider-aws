@@ -1,0 +1,94 @@
+---
+layout: "aws"
+page_title: "AWS: aws_transfer_server"
+sidebar_current: "docs-aws-resource-transfer-server"
+description: |-
+  Provides a AWS Transfer Server resource.
+---
+
+# aws_transfer_server
+
+Provides a AWS Transfer Server resource.
+
+
+```hcl
+resource "aws_iam_role" "foo" {
+	name = "tf-test-transfer-server-iam-role"
+  
+	assume_role_policy = <<EOF
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+		"Effect": "Allow",
+		"Principal": {
+			"Service": "transfer.amazonaws.com"
+		},
+		"Action": "sts:AssumeRole"
+		}
+	]
+}
+EOF
+}
+
+resource "aws_iam_policy" "foo" {
+	name 		= "tf-test-transfer-server-iam-policy"
+	path        = "/"
+	description = "IAM policy for for Transfer Server testing"
+  
+	policy = <<EOF
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Effect": "Allow",
+			"Action": "logs:*"
+			"Resource": "*"
+		}
+	]
+}
+EOF
+}
+
+resource "aws_iam_policy_attachment" "foo" {
+	name       = "%s"
+	roles      = ["${aws_iam_role.foo.name}"]
+	policy_arn = "${aws_iam_policy.foo.arn}"
+}
+  
+
+resource "aws_transfer_server" "foo" {
+  identity_provider_type = "SERVICE_MANAGED"
+  logging_role = "${aws_iam_role.foo.arn}"
+
+  tags {
+	NAME   = "tf-acc-test-transfer-server"
+	ENV    = "test"
+  }
+}
+```
+
+## Argument Reference
+
+The following arguments are supported:
+
+* `invocation_role` - (Optional) The Role parameter provides the type of InvocationRole used to authenticate the user account.
+* `url` - (Optional) - The IdentityProviderDetail parameter contains the location of the service endpoint used to authenticate users.
+* `identity_provider_type` - (Optional) The mode of authentication enabled for this service. The default value is SERVICE_MANAGED, which allows you to store and access SFTP user credentials within the service. An IdentityProviderType value of API_GATEWAY indicates that user authentication requires a call to an API Gateway endpoint URL provided by you to integrate an identity provider of your choice.
+* `logging_role` - (Optional) A value that allows the service to write your SFTP users’ activity to your Amazon CloudWatch logs for monitoring and auditing purposes.
+* `tags` - (Optional) A mapping of tags to assign to the resource.
+
+## Attributes Reference
+In addition to all arguments above, the following attributes are exported:
+
+* `arn` - Amazon Resource Name (ARN) of Transfer Server
+* `id`  - The Server ID of the Transfer Server
+* `endpoint` - The endpoint of the Transfer Server
+
+## Import
+
+Transfer Servers can be imported using the `server id`, e.g.
+
+```
+$ terraform import aws_transfer_server.bar HOGEHOGE
+```
