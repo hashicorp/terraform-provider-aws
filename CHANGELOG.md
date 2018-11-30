@@ -1,4 +1,9 @@
 ## 1.51.0 (Unreleased)
+
+ENHANCEMENTS
+
+* resource/aws_lambda_function: Support `python3.7` in `runtime` validation [GH-6583]
+
 ## 1.50.0 (November 29, 2018)
 
 ENHANCEMENTS
