@@ -10409,6 +10409,8 @@ type DeleteObjectInput struct {
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
+	// Indicates whether S3 Object Lock should bypass Governance-mode restrictions
+	// to process this operation.
 	BypassGovernanceRetention *bool `location:"header" locationName:"x-amz-bypass-governance-retention" type:"boolean"`
 
 	// Key is a required field
@@ -13132,6 +13134,8 @@ type GetObjectOutput struct {
 	// you can create metadata whose values are not legal HTTP headers.
 	MissingMeta *int64 `location:"header" locationName:"x-amz-missing-meta" type:"integer"`
 
+	// Indicates whether this object has an active legal hold. This field is only
+	// returned if you have permission to view an object's legal hold status.
 	ObjectLockLegalHoldStatus *string `location:"header" locationName:"x-amz-object-lock-legal-hold" type:"string" enum:"ObjectLockLegalHoldStatus"`
 
 	// The Object Lock mode currently in place for this object.
@@ -17805,7 +17809,7 @@ func (s *ObjectIdentifier) SetVersionId(v string) *ObjectIdentifier {
 type ObjectLockConfiguration struct {
 	_ struct{} `type:"structure"`
 
-	// Indicates whether this object has an Object Lock configuration enabled.
+	// Indicates whether this bucket has an Object Lock configuration enabled.
 	ObjectLockEnabled *string `type:"string" enum:"ObjectLockEnabled"`
 
 	// The Object Lock rule in place for the specified object.
@@ -17865,6 +17869,7 @@ type ObjectLockRetention struct {
 	// Indicates the Retention mode for the specified object.
 	Mode *string `type:"string" enum:"ObjectLockRetentionMode"`
 
+	// The date on which this Object Lock Retention will expire.
 	RetainUntilDate *time.Time `type:"timestamp" timestampFormat:"iso8601"`
 }
 
@@ -20615,6 +20620,7 @@ type PutObjectRetentionInput struct {
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
+	// Indicates whether this operation should bypass Governance-mode restrictions.j
 	BypassGovernanceRetention *bool `location:"header" locationName:"x-amz-bypass-governance-retention" type:"boolean"`
 
 	// The key name for the object that you want to apply this Object Retention
