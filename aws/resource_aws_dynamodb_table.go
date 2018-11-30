@@ -94,11 +94,11 @@ func resourceAwsDynamoDbTable() *schema.Resource {
 			},
 			"write_capacity": {
 				Type:     schema.TypeInt,
-				Required: false,
+				Optional: true,
 			},
 			"read_capacity": {
 				Type:     schema.TypeInt,
-				Required: false,
+				Optional: true,
 			},
 			"attribute": {
 				Type:     schema.TypeSet,
@@ -294,9 +294,15 @@ func resourceAwsDynamoDbTableCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if d.Get("billing_mode").(string) == dynamodb.BillingModeProvisioned {
+		v_read, ok_read := d.GetOk("read_capacity")
+		v_write, ok_write := d.GetOk("write_capacity")
+		if !ok_read || !ok_write {
+			return fmt.Errorf("Read and Write capacity should be set when billing mode is PROVISIONED")
+		}
+
 		req.ProvisionedThroughput = expandDynamoDbProvisionedThroughput(map[string]interface{}{
-			"read_capacity":  d.Get("read_capacity"),
-			"write_capacity": d.Get("write_capacity"),
+			"read_capacity":  v_read,
+			"write_capacity": v_write,
 		})
 	}
 
@@ -379,14 +385,21 @@ func resourceAwsDynamoDbTableUpdate(d *schema.ResourceData, meta interface{}) er
 			BillingMode: aws.String(d.Get("billing_mode").(string)),
 		}
 		if d.Get("billing_mode").(string) == dynamodb.BillingModeProvisioned {
+
+			v_read, ok_read := d.GetOk("read_capacity")
+			v_write, ok_write := d.GetOk("write_capacity")
+			if !ok_read || !ok_write {
+				return fmt.Errorf("Read and Write capacity should be set when billing mode is PROVISIONED")
+			}
+
 			req.ProvisionedThroughput = expandDynamoDbProvisionedThroughput(map[string]interface{}{
-				"read_capacity":  d.Get("read_capacity"),
-				"write_capacity": d.Get("write_capacity"),
+				"read_capacity":  v_read,
+				"write_capacity": v_write,
 			})
 		}
 		_, err := conn.UpdateTable(req)
 		if err != nil {
-			return err
+			return fmt.Errorf("Error updating DynamoDB Table (%s) billing mode: %s", d.Id(), err)
 		}
 		if err := waitForDynamoDbTableToBeActive(d.Id(), d.Timeout(schema.TimeoutUpdate), conn); err != nil {
 			return fmt.Errorf("Error waiting for DynamoDB Table update: %s", err)
