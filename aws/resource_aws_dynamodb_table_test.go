@@ -1016,8 +1016,8 @@ func testAccCheckInitialAWSDynamoDbTableConf(n string) resource.TestCheckFunc {
 
 		log.Printf("[DEBUG] Checking on table %s", rs.Primary.ID)
 
-		if *table.BillingModeSummary.BillingMode != dynamodb.BillingModeProvisioned {
-			return fmt.Errorf("Billing Mode was %s, not %s!", *table.BillingModeSummary.BillingMode, dynamodb.BillingModeProvisioned)
+		if table.BillingModeSummary != nil && aws.StringValue(table.BillingModeSummary.BillingMode) != dynamodb.BillingModeProvisioned {
+			return fmt.Errorf("Billing Mode was %s, not %s!", aws.StringValue(table.BillingModeSummary.BillingMode), dynamodb.BillingModeProvisioned)
 		}
 
 		if *table.ProvisionedThroughput.WriteCapacityUnits != 2 {
@@ -1119,8 +1119,11 @@ func testAccCheckDynamoDbTableHasBilling_PayPerRequest(n string) resource.TestCh
 		}
 		table := resp.Table
 
-		if *table.BillingModeSummary.BillingMode != dynamodb.BillingModePayPerRequest {
-			return fmt.Errorf("Billing Mode was %s, not %s!", *table.BillingModeSummary.BillingMode, dynamodb.BillingModePayPerRequest)
+		if table.BillingModeSummary == nil {
+			return fmt.Errorf("Billing Mode summary was empty, expected summary to exist and contain billing mode %s", dynamodb.BillingModePayPerRequest)
+		} else if aws.StringValue(table.BillingModeSummary.BillingMode) != dynamodb.BillingModePayPerRequest {
+			return fmt.Errorf("Billing Mode was %s, not %s!", aws.StringValue(table.BillingModeSummary.BillingMode), dynamodb.BillingModePayPerRequest)
+
 		}
 
 		return nil
