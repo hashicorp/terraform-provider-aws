@@ -2088,6 +2088,18 @@ resource "aws_lambda_function" "lambda_function_test" {
 `, funcName)
 }
 
+func testAccAWSLambdaConfigProvidedRuntime(funcName, policyName, roleName, sgName string) string {
+	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
+resource "aws_lambda_function" "lambda_function_test" {
+    filename = "test-fixtures/lambdatest.zip"
+    function_name = "%s"
+    role = "${aws_iam_role.iam_for_lambda.arn}"
+    handler = "exports.example"
+    runtime = "provided"
+}
+`, funcName)
+}
+
 func testAccAWSLambdaConfigPython36Runtime(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "lambda_function_test" {
