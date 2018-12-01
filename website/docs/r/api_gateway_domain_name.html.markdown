@@ -31,6 +31,33 @@ the `regional_domain_name` attribute.
 
 ## Example Usage
 
+-> For information about regions that support AWS Certificate Manager (ACM), see the [Regions and Endpoints Documentation](https://docs.aws.amazon.com/general/latest/gr/rande.html#acm_region).
+
+### Edge Optimized (With ACM Support)
+
+```hcl
+resource "aws_api_gateway_domain_name" "example" {
+  certificate_arn = "${aws_acm_certificate_validation.example.certificate_arn}"
+  domain_name     = "api.example.com"
+}
+
+# Example DNS record using Route53.
+# Route53 is not specifically required; any DNS host can be used.
+resource "aws_route53_record" "example" {
+  name    = "${aws_api_gateway_domain_name.example.domain_name}"
+  type    = "A"
+  zone_id = "${aws_route53_zone.example.id}"
+
+  alias {
+    evaluate_target_health = true
+    name                   = "${aws_api_gateway_domain_name.example.cloudfront_domain_name}"
+    zone_id                = "${aws_api_gateway_domain_name.example.cloudfront_zone_id}"
+  }
+}
+```
+
+### Edge Optimized (Without ACM Support)
+
 ```hcl
 resource "aws_api_gateway_domain_name" "example" {
   domain_name = "api.example.com"
@@ -53,6 +80,63 @@ resource "aws_route53_record" "example" {
     name                   = "${aws_api_gateway_domain_name.example.cloudfront_domain_name}"
     zone_id                = "${aws_api_gateway_domain_name.example.cloudfront_zone_id}"
     evaluate_target_health = true
+  }
+}
+```
+
+### Regional (With ACM Support)
+
+```hcl
+resource "aws_api_gateway_domain_name" "example" {
+  domain_name              = "api.example.com"
+  regional_certificate_arn = "${aws_acm_certificate_validation.example.certificate_arn}"
+
+  endpoint_configuration {
+    type = "REGIONAL"
+  }
+}
+
+# Example DNS record using Route53.
+# Route53 is not specifically required; any DNS host can be used.
+resource "aws_route53_record" "example" {
+  name    = "${aws_api_gateway_domain_name.example.domain_name}"
+  type    = "A"
+  zone_id = "${aws_route53_zone.example.id}"
+
+  alias {
+    evaluate_target_health = true
+    name                   = "${aws_api_gateway_domain_name.example.regional_domain_name}"
+    zone_id                = "${aws_api_gateway_domain_name.example.regional_zone_id}"
+  }
+}
+```
+
+### Regional (Without ACM Support)
+
+```hcl
+resource "aws_api_gateway_domain_name" "example" {
+  certificate_body          = "${file("${path.module}/example.com/example.crt")}"
+  certificate_chain         = "${file("${path.module}/example.com/ca.crt")}"
+  certificate_private_key   = "${file("${path.module}/example.com/example.key")}"
+  domain_name               = "api.example.com"
+  regional_certificate_name = "example-api"
+
+  endpoint_configuration {
+    type = "REGIONAL"
+  }
+}
+
+# Example DNS record using Route53.
+# Route53 is not specifically required; any DNS host can be used.
+resource "aws_route53_record" "example" {
+  name    = "${aws_api_gateway_domain_name.example.domain_name}"
+  type    = "A"
+  zone_id = "${aws_route53_zone.example.id}"
+
+  alias {
+    evaluate_target_health = true
+    name                   = "${aws_api_gateway_domain_name.example.regional_domain_name}"
+    zone_id                = "${aws_api_gateway_domain_name.example.regional_zone_id}"
   }
 }
 ```
