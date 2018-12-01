@@ -4,6 +4,7 @@ ENHANCEMENTS
 
 * resource/aws_cloudtrail: Add `is_organization_trail` argument [GH-6580]
 * resource/aws_dynamodb_table: Add `billing_mode` argument (support on-demand capacity) [GH-6648]
+* resource/aws_lambda_function: Support `provided` in `runtime` validation [GH-6676]
 * resource/aws_lambda_function: Support `python3.7` in `runtime` validation [GH-6583]
 * resource/aws_lambda_function: Support `ruby2.5` in `runtime` validation [GH-6657]
 
