@@ -2,6 +2,7 @@ package aws
 
 import (
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -114,6 +115,8 @@ func dataSourceAwsIamPolicyDocumentRead(d *schema.ResourceData, meta interface{}
 	if cfgStmts, hasCfgStmts := d.GetOk("statement"); hasCfgStmts {
 		var cfgStmtIntf = cfgStmts.([]interface{})
 		stmts := make([]*IAMPolicyStatement, len(cfgStmtIntf))
+		sidMap := make(map[string]struct{})
+
 		for i, stmtI := range cfgStmtIntf {
 			cfgStmt := stmtI.(map[string]interface{})
 			stmt := &IAMPolicyStatement{
@@ -121,7 +124,13 @@ func dataSourceAwsIamPolicyDocumentRead(d *schema.ResourceData, meta interface{}
 			}
 
 			if sid, ok := cfgStmt["sid"]; ok {
+				if _, ok := sidMap[sid.(string)]; ok {
+					return fmt.Errorf("Sid should be blank or unique. Change Sid : %s", sid.(string))
+				}
 				stmt.Sid = sid.(string)
+				if len(stmt.Sid) > 0 {
+					sidMap[stmt.Sid] = struct{}{}
+				}
 			}
 
 			if actions := cfgStmt["actions"].(*schema.Set).List(); len(actions) > 0 {
