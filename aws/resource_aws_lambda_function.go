@@ -114,6 +114,7 @@ func resourceAwsLambdaFunction() *schema.Resource {
 					lambda.RuntimeNodejs43Edge,
 					lambda.RuntimeNodejs610,
 					lambda.RuntimeNodejs810,
+					lambda.RuntimeProvided,
 					lambda.RuntimePython27,
 					lambda.RuntimePython36,
 					lambda.RuntimePython37,
