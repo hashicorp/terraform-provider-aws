@@ -136,7 +136,7 @@ resource "aws_codedeploy_deployment_group" "example" {
 }
 ```
 
-### Blue Green Deployments with Servers
+### Blue Green Deployments with Servers and Classic ELB
 
 ```hcl
 resource "aws_codedeploy_app" "example" {
@@ -155,7 +155,7 @@ resource "aws_codedeploy_deployment_group" "example" {
 
   load_balancer_info {
     elb_info {
-      name = "example-elb"
+      name = "${aws_elb.example.name}"
     }
   }
 
@@ -192,7 +192,7 @@ The following arguments are supported:
 * `ec2_tag_filter` - (Optional) Tag filters associated with the deployment group. See the AWS docs for details.
 * `ec2_tag_set` - (Optional) Configuration block(s) of Tag filters associated with the deployment group, which are also referred to as tag groups (documented below). See the AWS docs for details.
 * `ecs_service` - (Optional) Configuration block(s) of the ECS services for a deployment group (documented below).
-* `load_balancer_info` - (Optional) Configuration block of the load balancer to use in a blue/green deployment (documented below).
+* `load_balancer_info` - (Optional) Single configuration block of the load balancer to use in a blue/green deployment (documented below).
 * `on_premises_instance_tag_filter` - (Optional) On premise tag filters associated with the group. See the AWS docs for details.
 * `trigger_configuration` - (Optional) Configuration block(s) of the triggers for the deployment group (documented below).
 
@@ -274,13 +274,9 @@ You can form a tag group by putting a set of tag filters into `ec2_tag_set`. If 
 
 You can configure the **Load Balancer** to use in a deployment. `load_balancer_info` supports the following:
 
-* `elb_info` - (Optional) The load balancer to use in a deployment.
-* `target_group_info` - (Optional) The target group to use in a deployment.
-* `target_group_pair_info` - (Optional) The target group pair to use in a deployment.
-
-_Only one `load_balancer_info` is supported per deployment group._
-
-_Only one of `elb_info`, `target_group_info`, `target_group_pair_info` can be used in a deployment._
+* `elb_info` - (Optional) The Classic Elastic Load Balancer to use in a deployment. Conflicts with `target_group_info` and `target_group_pair_info`.
+* `target_group_info` - (Optional) The (Application/Network Load Balancer) target group to use in a deployment. Conflicts with `elb_info` and `target_group_pair_info`.
+* `target_group_pair_info` - (Optional) The (Application/Network Load Balancer) target group pair to use in a deployment. Conflicts with `elb_info` and `target_group_info`.
 
 #### load_balancer_info elb_info Argument Reference
 
