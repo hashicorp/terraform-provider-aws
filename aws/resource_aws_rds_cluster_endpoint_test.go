@@ -2,7 +2,13 @@ package aws
 
 import (
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/terraform"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/acctest"
@@ -11,17 +17,23 @@ import (
 
 func TestAccAWSRDSClusterEndpoint_basic(t *testing.T) {
 	rInt := acctest.RandInt()
+	var customReaderEndpoint rds.DBClusterEndpoint
+	var customEndpoint rds.DBClusterEndpoint
 	readerResourceName := "aws_rds_cluster_endpoint.reader"
 	defaultResourceName := "aws_rds_cluster_endpoint.default"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSClusterDestroy,
+		CheckDestroy: testAccCheckAWSClusterEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSClusterEndpointConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRDSClusterEndpointExists(readerResourceName, &customReaderEndpoint),
+					testAccCheckAWSRDSClusterEndpointAttributes(&customReaderEndpoint),
+					testAccCheckAWSRDSClusterEndpointExists(defaultResourceName, &customEndpoint),
+					testAccCheckAWSRDSClusterEndpointAttributes(&customEndpoint),
 					testAccMatchResourceAttrRegionalARN(readerResourceName, "arn", "rds", regexp.MustCompile(`cluster-endpoint:.+`)),
 					resource.TestCheckResourceAttrSet(readerResourceName, "endpoint"),
 					testAccMatchResourceAttrRegionalARN(defaultResourceName, "arn", "rds", regexp.MustCompile(`cluster-endpoint:.+`)),
@@ -39,9 +51,113 @@ func TestAccAWSRDSClusterEndpoint_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
-
 		},
 	})
+}
+
+func testAccCheckAWSRDSClusterEndpointAttributes(v *rds.DBClusterEndpoint) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+
+		if aws.StringValue(v.Endpoint) == "" {
+			return fmt.Errorf("empty endpoint domain")
+		}
+
+		if aws.StringValue(v.CustomEndpointType) != "READER" &&
+			aws.StringValue(v.CustomEndpointType) != "ANY" {
+			return fmt.Errorf("Incorrect endpoint type: expected: READER or ANY, got: %s", aws.StringValue(v.CustomEndpointType))
+		}
+
+		if len(v.StaticMembers) == 0 && len(v.ExcludedMembers) == 0 {
+			return fmt.Errorf("Empty members")
+		}
+
+		for _, m := range aws.StringValueSlice(v.StaticMembers) {
+			if !strings.HasPrefix(m, "tf-aurora-cluster-instance") {
+				return fmt.Errorf("Incorrect StaticMember Cluster Instance Identifier prefix:\nexpected: %s\ngot: %s", "tf-aurora-cluster-instance", m)
+			}
+		}
+
+		for _, m := range aws.StringValueSlice(v.ExcludedMembers) {
+			if !strings.HasPrefix(m, "tf-aurora-cluster-instance") {
+				return fmt.Errorf("Incorrect ExcludeMember Cluster Instance Identifier prefix:\nexpected: %s\ngot: %s", "tf-aurora-cluster-instance", m)
+			}
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckAWSClusterEndpointDestroy(s *terraform.State) error {
+	return testAccCheckAWSClusterEndpointDestroyWithProvider(s, testAccProvider)
+}
+
+func testAccCheckAWSClusterEndpointDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
+	conn := provider.Meta().(*AWSClient).rdsconn
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_rds_cluster_endpoint" {
+			continue
+		}
+
+		// Try to find the Group
+		var err error
+		resp, err := conn.DescribeDBClusterEndpoints(
+			&rds.DescribeDBClusterEndpointsInput{
+				DBClusterEndpointIdentifier: aws.String(rs.Primary.ID),
+			})
+
+		if err == nil {
+			if len(resp.DBClusterEndpoints) != 0 &&
+				*resp.DBClusterEndpoints[0].DBClusterEndpointIdentifier == rs.Primary.ID {
+				return fmt.Errorf("DB Cluster Endpoint %s still exists", rs.Primary.ID)
+			}
+		}
+
+		// Return nil if the cluster is already destroyed
+		if awsErr, ok := err.(awserr.Error); ok {
+			if awsErr.Code() == "DBClusterNotFoundFault" {
+				return nil
+			}
+		}
+
+		return err
+	}
+
+	return nil
+}
+func testAccCheckAWSRDSClusterEndpointExists(resourceName string, endpoint *rds.DBClusterEndpoint) resource.TestCheckFunc {
+	return testAccCheckAWSRDSClusterEndpointExistsWithProvider(resourceName, endpoint, testAccProvider)
+}
+
+func testAccCheckAWSRDSClusterEndpointExistsWithProvider(resourceName string, endpoint *rds.DBClusterEndpoint, provider *schema.Provider) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("DBClusterEndpoint ID is not set")
+		}
+
+		conn := provider.Meta().(*AWSClient).rdsconn
+
+		response, err := conn.DescribeDBClusterEndpoints(&rds.DescribeDBClusterEndpointsInput{
+			DBClusterEndpointIdentifier: aws.String(rs.Primary.ID),
+		})
+
+		if err != nil {
+			return err
+		}
+
+		if len(response.DBClusterEndpoints) != 1 ||
+			*response.DBClusterEndpoints[0].DBClusterEndpointIdentifier != rs.Primary.ID {
+			return fmt.Errorf("DBClusterEndpoint not found")
+		}
+
+		*endpoint = *response.DBClusterEndpoints[0]
+		return nil
+	}
 }
 
 func testAccAWSClusterEndpointConfig(n int) string {
