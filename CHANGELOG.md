@@ -9,6 +9,10 @@ ENHANCEMENTS
 * resource/aws_lambda_function: Support `python3.7` in `runtime` validation [GH-6583]
 * resource/aws_lambda_function: Support `ruby2.5` in `runtime` validation [GH-6657]
 
+BUG FIXES:
+
+* resource/aws_iot_topic_rule: Omit sending empty string `cloudwatch_metric` configuration block `metric_timestamp` argument to AWS [GH-6618]
+
 ## 1.50.0 (November 29, 2018)
 
 ENHANCEMENTS
