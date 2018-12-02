@@ -50,10 +50,19 @@ func resourceAwsSubnet() *schema.Resource {
 			},
 
 			"availability_zone": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"availability_zone_id"},
+			},
+
+			"availability_zone_id": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"availability_zone"},
 			},
 
 			"map_public_ip_on_launch": {
@@ -92,9 +101,10 @@ func resourceAwsSubnetCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
 	createOpts := &ec2.CreateSubnetInput{
-		AvailabilityZone: aws.String(d.Get("availability_zone").(string)),
-		CidrBlock:        aws.String(d.Get("cidr_block").(string)),
-		VpcId:            aws.String(d.Get("vpc_id").(string)),
+		AvailabilityZone:   aws.String(d.Get("availability_zone").(string)),
+		AvailabilityZoneId: aws.String(d.Get("availability_zone_id").(string)),
+		CidrBlock:          aws.String(d.Get("cidr_block").(string)),
+		VpcId:              aws.String(d.Get("vpc_id").(string)),
 	}
 
 	if v, ok := d.GetOk("ipv6_cidr_block"); ok {
@@ -156,6 +166,7 @@ func resourceAwsSubnetRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("vpc_id", subnet.VpcId)
 	d.Set("availability_zone", subnet.AvailabilityZone)
+	d.Set("availability_zone_id", subnet.AvailabilityZoneId)
 	d.Set("cidr_block", subnet.CidrBlock)
 	d.Set("map_public_ip_on_launch", subnet.MapPublicIpOnLaunch)
 	d.Set("assign_ipv6_address_on_creation", subnet.AssignIpv6AddressOnCreation)

@@ -54,6 +54,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the subnet
 * `availability_zone`- The AZ for the subnet.
+* `availability_zone_id`- The AZ ID of the subnet.
 * `cidr_block` - The CIDR block for the subnet.
 * `vpc_id` - The VPC ID.
 * `ipv6_association_id` - The association ID for the IPv6 CIDR block.

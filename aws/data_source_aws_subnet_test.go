@@ -12,7 +12,6 @@ import (
 func TestAccDataSourceAwsSubnet_basic(t *testing.T) {
 	rInt := acctest.RandIntRange(0, 256)
 	cidr := fmt.Sprintf("172.%d.123.0/24", rInt)
-	az := "us-west-2a"
 	tag := "tf-acc-subnet-data-source"
 	arnregex := regexp.MustCompile(`^arn:[^:]+:ec2:[^:]+:\d{12}:subnet/subnet-.+`)
 
@@ -23,6 +22,7 @@ func TestAccDataSourceAwsSubnet_basic(t *testing.T) {
 	ds3ResourceName := "data.aws_subnet.by_tag"
 	ds4ResourceName := "data.aws_subnet.by_vpc"
 	ds5ResourceName := "data.aws_subnet.by_filter"
+	ds6ResourceName := "data.aws_subnet.by_az_id"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -37,11 +37,13 @@ func TestAccDataSourceAwsSubnet_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(
 						ds1ResourceName, "owner_id", snResourceName, "owner_id"),
 					resource.TestCheckResourceAttrPair(
+						ds1ResourceName, "availability_zone", snResourceName, "availability_zone"),
+					resource.TestCheckResourceAttrPair(
+						ds1ResourceName, "availability_zone_id", snResourceName, "availability_zone_id"),
+					resource.TestCheckResourceAttrPair(
 						ds1ResourceName, "vpc_id", vpcResourceName, "id"),
 					resource.TestCheckResourceAttr(
 						ds1ResourceName, "cidr_block", cidr),
-					resource.TestCheckResourceAttr(
-						ds1ResourceName, "availability_zone", az),
 					resource.TestCheckResourceAttr(
 						ds1ResourceName, "tags.Name", tag),
 					resource.TestMatchResourceAttr(
@@ -52,11 +54,13 @@ func TestAccDataSourceAwsSubnet_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(
 						ds2ResourceName, "owner_id", snResourceName, "owner_id"),
 					resource.TestCheckResourceAttrPair(
+						ds2ResourceName, "availability_zone", snResourceName, "availability_zone"),
+					resource.TestCheckResourceAttrPair(
+						ds2ResourceName, "availability_zone_id", snResourceName, "availability_zone_id"),
+					resource.TestCheckResourceAttrPair(
 						ds2ResourceName, "vpc_id", vpcResourceName, "id"),
 					resource.TestCheckResourceAttr(
 						ds2ResourceName, "cidr_block", cidr),
-					resource.TestCheckResourceAttr(
-						ds2ResourceName, "availability_zone", az),
 					resource.TestCheckResourceAttr(
 						ds2ResourceName, "tags.Name", tag),
 					resource.TestMatchResourceAttr(
@@ -67,11 +71,13 @@ func TestAccDataSourceAwsSubnet_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(
 						ds3ResourceName, "owner_id", snResourceName, "owner_id"),
 					resource.TestCheckResourceAttrPair(
+						ds3ResourceName, "availability_zone", snResourceName, "availability_zone"),
+					resource.TestCheckResourceAttrPair(
+						ds3ResourceName, "availability_zone_id", snResourceName, "availability_zone_id"),
+					resource.TestCheckResourceAttrPair(
 						ds3ResourceName, "vpc_id", vpcResourceName, "id"),
 					resource.TestCheckResourceAttr(
 						ds3ResourceName, "cidr_block", cidr),
-					resource.TestCheckResourceAttr(
-						ds3ResourceName, "availability_zone", az),
 					resource.TestCheckResourceAttr(
 						ds3ResourceName, "tags.Name", tag),
 					resource.TestMatchResourceAttr(
@@ -82,11 +88,13 @@ func TestAccDataSourceAwsSubnet_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(
 						ds4ResourceName, "owner_id", snResourceName, "owner_id"),
 					resource.TestCheckResourceAttrPair(
+						ds4ResourceName, "availability_zone", snResourceName, "availability_zone"),
+					resource.TestCheckResourceAttrPair(
+						ds4ResourceName, "availability_zone_id", snResourceName, "availability_zone_id"),
+					resource.TestCheckResourceAttrPair(
 						ds4ResourceName, "vpc_id", vpcResourceName, "id"),
 					resource.TestCheckResourceAttr(
 						ds4ResourceName, "cidr_block", cidr),
-					resource.TestCheckResourceAttr(
-						ds4ResourceName, "availability_zone", az),
 					resource.TestCheckResourceAttr(
 						ds4ResourceName, "tags.Name", tag),
 					resource.TestMatchResourceAttr(
@@ -97,15 +105,34 @@ func TestAccDataSourceAwsSubnet_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(
 						ds5ResourceName, "owner_id", snResourceName, "owner_id"),
 					resource.TestCheckResourceAttrPair(
+						ds5ResourceName, "availability_zone", snResourceName, "availability_zone"),
+					resource.TestCheckResourceAttrPair(
+						ds5ResourceName, "availability_zone_id", snResourceName, "availability_zone_id"),
+					resource.TestCheckResourceAttrPair(
 						ds5ResourceName, "vpc_id", vpcResourceName, "id"),
 					resource.TestCheckResourceAttr(
 						ds5ResourceName, "cidr_block", cidr),
 					resource.TestCheckResourceAttr(
-						ds5ResourceName, "availability_zone", az),
-					resource.TestCheckResourceAttr(
 						ds5ResourceName, "tags.Name", tag),
 					resource.TestMatchResourceAttr(
 						ds5ResourceName, "arn", arnregex),
+
+					resource.TestCheckResourceAttrPair(
+						ds6ResourceName, "id", snResourceName, "id"),
+					resource.TestCheckResourceAttrPair(
+						ds6ResourceName, "owner_id", snResourceName, "owner_id"),
+					resource.TestCheckResourceAttrPair(
+						ds6ResourceName, "availability_zone", snResourceName, "availability_zone"),
+					resource.TestCheckResourceAttrPair(
+						ds6ResourceName, "availability_zone_id", snResourceName, "availability_zone_id"),
+					resource.TestCheckResourceAttrPair(
+						ds6ResourceName, "vpc_id", vpcResourceName, "id"),
+					resource.TestCheckResourceAttr(
+						ds6ResourceName, "cidr_block", cidr),
+					resource.TestCheckResourceAttr(
+						ds6ResourceName, "tags.Name", tag),
+					resource.TestMatchResourceAttr(
+						ds6ResourceName, "arn", arnregex),
 				),
 			},
 		},
@@ -156,6 +183,8 @@ func TestAccDataSourceAwsSubnet_ipv6ByIpv6CidrBlock(t *testing.T) {
 
 func testAccDataSourceAwsSubnetConfig(rInt int) string {
 	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {}
+
 resource "aws_vpc" "test" {
   cidr_block = "172.%d.0.0/16"
 
@@ -167,23 +196,25 @@ resource "aws_vpc" "test" {
 resource "aws_subnet" "test" {
   vpc_id            = "${aws_vpc.test.id}"
   cidr_block        = "172.%d.123.0/24"
-  availability_zone = "us-west-2a"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
 
   tags {
     Name = "tf-acc-subnet-data-source"
   }
 }
 
-
 data "aws_subnet" "by_id" {
   id = "${aws_subnet.test.id}"
 }
 
 data "aws_subnet" "by_cidr" {
+  vpc_id     = "${aws_subnet.test.vpc_id}"
   cidr_block = "${aws_subnet.test.cidr_block}"
 }
 
 data "aws_subnet" "by_tag" {
+  vpc_id = "${aws_subnet.test.vpc_id}"
+
   tags {
     Name = "${aws_subnet.test.tags["Name"]}"
   }
@@ -199,11 +230,18 @@ data "aws_subnet" "by_filter" {
     values = ["${aws_subnet.test.vpc_id}"]
   }
 }
+
+data "aws_subnet" "by_az_id" {
+  vpc_id               = "${aws_subnet.test.vpc_id}"
+  availability_zone_id = "${aws_subnet.test.availability_zone_id}"
+}
 `, rInt, rInt)
 }
 
 func testAccDataSourceAwsSubnetConfigIpv6(rInt int) string {
 	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {}
+
 resource "aws_vpc" "test" {
   cidr_block = "172.%d.0.0/16"
   assign_generated_ipv6_cidr_block = true
@@ -216,7 +254,7 @@ resource "aws_vpc" "test" {
 resource "aws_subnet" "test" {
   vpc_id            = "${aws_vpc.test.id}"
   cidr_block        = "172.%d.123.0/24"
-  availability_zone = "us-west-2a"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
   ipv6_cidr_block = "${cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)}"
 
   tags {
@@ -228,6 +266,8 @@ resource "aws_subnet" "test" {
 
 func testAccDataSourceAwsSubnetConfigIpv6WithDataSourceFilter(rInt int) string {
 	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {}
+
 resource "aws_vpc" "test" {
   cidr_block = "172.%d.0.0/16"
   assign_generated_ipv6_cidr_block = true
@@ -240,7 +280,7 @@ resource "aws_vpc" "test" {
 resource "aws_subnet" "test" {
   vpc_id            = "${aws_vpc.test.id}"
   cidr_block        = "172.%d.123.0/24"
-  availability_zone = "us-west-2a"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
   ipv6_cidr_block = "${cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)}"
 
   tags {
@@ -259,6 +299,8 @@ data "aws_subnet" "by_ipv6_cidr" {
 
 func testAccDataSourceAwsSubnetConfigIpv6WithDataSourceIpv6CidrBlock(rInt int) string {
 	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {}
+
 resource "aws_vpc" "test" {
   cidr_block = "172.%d.0.0/16"
   assign_generated_ipv6_cidr_block = true
@@ -271,7 +313,7 @@ resource "aws_vpc" "test" {
 resource "aws_subnet" "test" {
   vpc_id            = "${aws_vpc.test.id}"
   cidr_block        = "172.%d.123.0/24"
-  availability_zone = "us-west-2a"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
   ipv6_cidr_block = "${cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)}"
 
   tags {

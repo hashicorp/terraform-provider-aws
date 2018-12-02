@@ -48,6 +48,8 @@ subnet whose data will be exported as attributes.
 * `availability_zone` - (Optional) The availability zone where the
   subnet must reside.
 
+* `availability_zone_id` - (Optional) The ID of the Availability Zone for the subnet.
+
 * `cidr_block` - (Optional) The cidr block of the desired subnet.
 
 * `ipv6_cidr_block` - (Optional) The Ipv6 cidr block of the desired subnet
