@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-func dataSourceAwsS3BucketPresignedUrl() *schema.Resource {
+func dataSourceAwsS3PresignedUrl() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsS3BucketPresignedUrlRead,
+		Read: dataSourceAwsS3PresignedUrlRead,
 
 		Schema: map[string]*schema.Schema{
 			"bucket": {
@@ -40,7 +40,7 @@ func dataSourceAwsS3BucketPresignedUrl() *schema.Resource {
 	}
 }
 
-func dataSourceAwsS3BucketPresignedUrlRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAwsS3PresignedUrlRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).s3conn
 
 	bucket := d.Get("bucket").(string)
@@ -48,7 +48,7 @@ func dataSourceAwsS3BucketPresignedUrlRead(d *schema.ResourceData, meta interfac
 	expirationTime := time.Duration(d.Get("expiration_time").(int))
 	put := d.Get("put").(bool)
 
-	presignedURL, err := dataSourceAwsS3BucketPresignedUrlCreatePresignedUrl(conn, bucket, key, expirationTime, put)
+	presignedURL, err := dataSourceAwsS3PresignedUrlCreatePresignedUrl(conn, bucket, key, expirationTime, put)
 
 	if err != nil {
 		return fmt.Errorf("Error failed to sign request: %q", err)
@@ -60,7 +60,7 @@ func dataSourceAwsS3BucketPresignedUrlRead(d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func dataSourceAwsS3BucketPresignedUrlCreatePresignedUrl(conn *s3.S3, bucket string, key string, expirationTime time.Duration, put bool) (string, error) {
+func dataSourceAwsS3PresignedUrlCreatePresignedUrl(conn *s3.S3, bucket string, key string, expirationTime time.Duration, put bool) (string, error) {
 	if put {
 		log.Print("[DEBUG] Creating S3 PUT request")
 		req, _ := conn.PutObjectRequest(&s3.PutObjectInput{
