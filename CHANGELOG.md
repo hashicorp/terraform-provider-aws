@@ -16,6 +16,7 @@ ENHANCEMENTS
 BUG FIXES:
 
 * resource/aws_iot_topic_rule: Omit sending empty string `cloudwatch_metric` configuration block `metric_timestamp` argument to AWS [GH-6618]
+* resource/aws_db_instance: Allow `configuring-iam-database-auth` as pending state [GH-6597]
 
 ## 1.50.0 (November 29, 2018)
 
