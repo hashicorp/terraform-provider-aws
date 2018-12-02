@@ -74,7 +74,6 @@ func resourceAwsRDSClusterEndpointCreate(d *schema.ResourceData, meta interface{
 	endpointId := d.Get("cluster_endpoint_identifier").(string)
 	endpointType := d.Get("custom_endpoint_type").(string)
 
-
 	createClusterEndpointInput := &rds.CreateDBClusterEndpointInput{
 		DBClusterIdentifier:         aws.String(clusterId),
 		DBClusterEndpointIdentifier: aws.String(endpointId),
