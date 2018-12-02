@@ -23,16 +23,9 @@ func resourceAwsDynamoDbTableGsi() *schema.Resource {
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
+			Update: schema.DefaultTimeout(5 * time.Minute), // provisioned throughput changes only
 			Delete: schema.DefaultTimeout(10 * time.Minute),
-			Update: schema.DefaultTimeout(10 * time.Minute),
 		},
-
-		// ???
-		// CustomizeDiff: customdiff.Sequence(
-		// 	func(diff *schema.ResourceDiff, v interface{}) error {
-		// 		return validateDynamoDbTableAttributes(diff)
-		// 	},
-		// ),
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -52,7 +45,7 @@ func resourceAwsDynamoDbTableGsi() *schema.Resource {
 			},
 			"range_key": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				ForceNew: true,
 			},
 			"attribute": {
@@ -93,10 +86,12 @@ func resourceAwsDynamoDbTableGsi() *schema.Resource {
 			"projection_type": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			"non_key_attributes": {
 				Type:     schema.TypeList,
 				Optional: true,
+				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 		},
@@ -107,6 +102,7 @@ func resourceAwsDynamoDbTableGsiCreate(d *schema.ResourceData, meta interface{})
 	conn := meta.(*AWSClient).dynamodbconn
 
 	tableName := d.Get("table_name").(string)
+	indexName := d.Get("name").(string)
 	keySchemaMap := map[string]interface{}{
 		"hash_key": d.Get("hash_key").(string),
 	}
@@ -119,7 +115,7 @@ func resourceAwsDynamoDbTableGsiCreate(d *schema.ResourceData, meta interface{})
 		TableName: aws.String(tableName),
 	}
 
-	// TODO: replace with keySchema
+	// TODO: add types to key attributes instead
 	if v, ok := d.GetOk("attribute"); ok {
 		aSet := v.(*schema.Set)
 		req.AttributeDefinitions = expandDynamoDbAttributes(aSet.List())
@@ -135,7 +131,7 @@ func resourceAwsDynamoDbTableGsiCreate(d *schema.ResourceData, meta interface{})
 
 	createOp := &dynamodb.GlobalSecondaryIndexUpdate{
 		Create: &dynamodb.CreateGlobalSecondaryIndexAction{
-			IndexName: aws.String(d.Id()),
+			IndexName: aws.String(indexName),
 			KeySchema: expandDynamoDbKeySchema(keySchemaMap),
 			ProvisionedThroughput: expandDynamoDbProvisionedThroughput(map[string]interface{}{
 				"read_capacity":  d.Get("read_capacity"),
@@ -147,18 +143,18 @@ func resourceAwsDynamoDbTableGsiCreate(d *schema.ResourceData, meta interface{})
 	req.GlobalSecondaryIndexUpdates = []*dynamodb.GlobalSecondaryIndexUpdate{createOp}
 
 	var output *dynamodb.UpdateTableOutput
-	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		var err error
 		output, err = conn.UpdateTable(req)
 		if err != nil {
 			if isAWSErr(err, "ThrottlingException", "") {
 				return resource.RetryableError(err)
 			}
-			// TODO: double check error codes for GSI creation
-			if isAWSErr(err, dynamodb.ErrCodeLimitExceededException, "can be created, updated, or deleted simultaneously") {
+			if isAWSErr(err, dynamodb.ErrCodeResourceInUseException, "") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, dynamodb.ErrCodeLimitExceededException, "indexed tables that can be created simultaneously") {
+			// Subscriber limit exceeded: Only 1 online index can be created or deleted simultaneously per table
+			if isAWSErr(err, dynamodb.ErrCodeLimitExceededException, "simultaneously") {
 				return resource.RetryableError(err)
 			}
 
@@ -170,15 +166,11 @@ func resourceAwsDynamoDbTableGsiCreate(d *schema.ResourceData, meta interface{})
 		return err
 	}
 
-	// TODO: what ouputs do we get from GSI creation?
-	// d.SetId(*output.TableDescription.TableName)
+	gsiDescription := findDynamoDbGsi(&output.TableDescription.GlobalSecondaryIndexes, indexName)
+	d.SetId(*gsiDescription.IndexName)
 
-	if err := waitForDynamoDbGSIToBeActive(d.Get("table_name").(string), d.Id(), conn); err != nil {
-		return err
-	}
-
-	// ???
-	return resourceAwsDynamoDbTableGsiUpdate(d, meta)
+	err = waitForDynamoDbGSIToBeActive(d.Get("table_name").(string), d.Id(), conn)
+	return err
 }
 
 func resourceAwsDynamoDbTableGsiUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -204,23 +196,20 @@ func resourceAwsDynamoDbTableGsiUpdate(d *schema.ResourceData, meta interface{})
 		req.AttributeDefinitions = expandDynamoDbAttributes(aSet.List())
 	}
 
-	log.Printf("[DEBUG] Updating DynamoDB table GSI: %s", req)
-	var output *dynamodb.UpdateTableOutput
-	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
 		var err error
-		output, err = conn.UpdateTable(req)
+		_, err = conn.UpdateTable(req)
 		if err != nil {
 			if isAWSErr(err, "ThrottlingException", "") {
 				return resource.RetryableError(err)
 			}
-			// TODO: double check error codes for GSI creation
-			if isAWSErr(err, dynamodb.ErrCodeLimitExceededException, "can be created, updated, or deleted simultaneously") {
+			if isAWSErr(err, dynamodb.ErrCodeResourceInUseException, "") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, dynamodb.ErrCodeLimitExceededException, "indexed tables that can be created simultaneously") {
+			// Subscriber limit exceeded: Only 1 online index can be created or deleted simultaneously per table
+			if isAWSErr(err, dynamodb.ErrCodeLimitExceededException, "simultaneously") {
 				return resource.RetryableError(err)
 			}
-
 			return resource.NonRetryableError(err)
 		}
 		return nil
@@ -229,11 +218,8 @@ func resourceAwsDynamoDbTableGsiUpdate(d *schema.ResourceData, meta interface{})
 		return err
 	}
 
-	if err := waitForDynamoDbGSIToBeActive(d.Get("table_name").(string), d.Id(), conn); err != nil {
-		return err
-	}
-
-	return resourceAwsDynamoDbTableGsiRead(d, meta)
+	err = waitForDynamoDbGSIToBeActive(d.Get("table_name").(string), d.Id(), conn)
+	return err
 }
 
 func resourceAwsDynamoDbTableGsiRead(d *schema.ResourceData, meta interface{}) error {
@@ -243,101 +229,98 @@ func resourceAwsDynamoDbTableGsiRead(d *schema.ResourceData, meta interface{}) e
 	result, err := conn.DescribeTable(&dynamodb.DescribeTableInput{
 		TableName: aws.String(tableName),
 	})
-
 	if err != nil {
 		return err
 	}
 
 	err = flattenAwsDynamoDbTableGsiResource(d, result.Table)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func resourceAwsDynamoDbTableGsiDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).dynamodbconn
 
-	log.Printf("[DEBUG] DynamoDB delete index: %s", d.Id())
-
 	req := &dynamodb.UpdateTableInput{
 		TableName: aws.String(d.Get("table_name").(string)),
 		GlobalSecondaryIndexUpdates: []*dynamodb.GlobalSecondaryIndexUpdate{
 			{
-				Update: &dynamodb.UpdateGlobalSecondaryIndexAction{
+				Delete: &dynamodb.DeleteGlobalSecondaryIndexAction{
 					IndexName: aws.String(d.Id()),
 				},
 			},
 		},
 	}
 
-	if v, ok := d.GetOk("attribute"); ok {
-		aSet := v.(*schema.Set)
-		req.AttributeDefinitions = expandDynamoDbAttributes(aSet.List())
-	}
-
-	return resource.Retry(5*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		_, err := conn.UpdateTable(req)
 		if err != nil {
-			// Subscriber limit exceeded: Only 10 tables can be created, updated, or deleted simultaneously
+			// Subscriber limit exceeded: Only 1 online index can be created or deleted simultaneously per table
 			if isAWSErr(err, dynamodb.ErrCodeLimitExceededException, "simultaneously") {
 				return resource.RetryableError(err)
 			}
 			if isAWSErr(err, dynamodb.ErrCodeResourceInUseException, "") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, dynamodb.ErrCodeResourceNotFoundException, "Requested resource not found: ") {
-				return resource.NonRetryableError(err)
-			}
 			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
+	if err != nil {
+		return err
+	}
 
-	err := waitForDynamoDbGSIToBeActive(d.Get("table_name").(string), d.Id(), conn)
-
+	err = waitForDynamoDbGSIToBeDeleted(d.Get("table_name").(string), d.Id(), conn)
 	return err
 }
 
 // Helpers
 
 func flattenAwsDynamoDbTableGsiResource(d *schema.ResourceData, table *dynamodb.TableDescription) error {
-	attributes := []interface{}{}
-	for _, attrdef := range table.AttributeDefinitions {
-		attribute := map[string]string{
-			"name": *attrdef.AttributeName,
-			"type": *attrdef.AttributeType,
-		}
-		attributes = append(attributes, attribute)
-	}
-
-	d.Set("attribute", attributes)
 	d.Set("table_name", table.TableName)
 
-	for _, gsiObject := range table.GlobalSecondaryIndexes {
-		if *gsiObject.IndexName == d.Id() {
-			d.Set("write_capacity", gsiObject.ProvisionedThroughput.WriteCapacityUnits)
-			d.Set("read_capacity", gsiObject.ProvisionedThroughput.ReadCapacityUnits)
-			d.Set("projection_type", gsiObject.Projection.ProjectionType)
+	gsi := findDynamoDbGsi(&table.GlobalSecondaryIndexes, d.Id())
+	d.Set("write_capacity", gsi.ProvisionedThroughput.WriteCapacityUnits)
+	d.Set("read_capacity", gsi.ProvisionedThroughput.ReadCapacityUnits)
+	d.Set("projection_type", gsi.Projection.ProjectionType)
 
-			for _, attribute := range gsiObject.KeySchema {
-				if *attribute.KeyType == dynamodb.KeyTypeHash {
-					d.Set("hash_key", attribute.AttributeName)
-				}
+	gsiAttributeNames := make(map[string]struct{}, len(gsi.KeySchema))
+	for _, attribute := range gsi.KeySchema {
+		if *attribute.KeyType == dynamodb.KeyTypeHash {
+			d.Set("hash_key", attribute.AttributeName)
+			gsiAttributeNames[*attribute.AttributeName] = struct{}{}
+		}
 
-				if *attribute.KeyType == dynamodb.KeyTypeRange {
-					d.Set("range_key", attribute.AttributeName)
-				}
+		if *attribute.KeyType == dynamodb.KeyTypeRange {
+			d.Set("range_key", attribute.AttributeName)
+			gsiAttributeNames[*attribute.AttributeName] = struct{}{}
+		}
+	}
+
+	attributes := []interface{}{}
+	for _, attrdef := range table.AttributeDefinitions {
+		if _, ok := gsiAttributeNames[*attrdef.AttributeName]; ok {
+			attribute := map[string]string{
+				"name": *attrdef.AttributeName,
+				"type": *attrdef.AttributeType,
 			}
+			attributes = append(attributes, attribute)
+		}
+	}
+	d.Set("attribute", attributes)
 
-			nonKeyAttrs := make([]string, 0, len(gsiObject.Projection.NonKeyAttributes))
-			for _, nonKeyAttr := range gsiObject.Projection.NonKeyAttributes {
-				nonKeyAttrs = append(nonKeyAttrs, *nonKeyAttr)
-			}
-			d.Set("non_key_attributes", nonKeyAttrs)
+	nonKeyAttrs := make([]string, 0, len(gsi.Projection.NonKeyAttributes))
+	for _, nonKeyAttr := range gsi.Projection.NonKeyAttributes {
+		nonKeyAttrs = append(nonKeyAttrs, *nonKeyAttr)
+	}
+	d.Set("non_key_attributes", nonKeyAttrs)
 
-			break
+	return nil
+}
+
+func findDynamoDbGsi(gsiList *[]*dynamodb.GlobalSecondaryIndexDescription, target string) *dynamodb.GlobalSecondaryIndexDescription {
+	for _, gsiObject := range *gsiList {
+		if *gsiObject.IndexName == target {
+			return gsiObject
 		}
 	}
 
