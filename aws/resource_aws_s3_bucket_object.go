@@ -106,10 +106,11 @@ func resourceAwsS3BucketObject() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				ValidateFunc: validation.StringInSlice([]string{
-					s3.StorageClassStandard,
-					s3.StorageClassReducedRedundancy,
-					s3.StorageClassOnezoneIa,
-					s3.StorageClassStandardIa,
+					s3.ObjectStorageClassStandard,
+					s3.ObjectStorageClassReducedRedundancy,
+					s3.ObjectStorageClassStandardIa,
+					s3.ObjectStorageClassOnezoneIa,
+					s3.ObjectStorageClassIntelligentTiering,
 				}, false),
 			},
 
