@@ -32,6 +32,11 @@ func dataSourceAwsAvailabilityZones() *schema.Resource {
 					ec2.AvailabilityZoneStateUnavailable,
 				}, false),
 			},
+			"zone_ids": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 		},
 	}
 }
@@ -59,16 +64,38 @@ func dataSourceAwsAvailabilityZonesRead(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("Error fetching Availability Zones: %s", err)
 	}
 
-	raw := make([]string, len(resp.AvailabilityZones))
-	for i, v := range resp.AvailabilityZones {
-		raw[i] = *v.ZoneName
+	azs := resp.AvailabilityZones
+	sort.Sort(availabilityZones(azs))
+
+	names := []string{}
+	zoneIds := []string{}
+	for _, v := range azs {
+		names = append(names, aws.StringValue(v.ZoneName))
+		zoneIds = append(zoneIds, aws.StringValue(v.ZoneId))
 	}
 
-	sort.Strings(raw)
-
-	if err := d.Set("names", raw); err != nil {
-		return fmt.Errorf("Error setting Availability Zones: %s", err)
+	if err := d.Set("names", names); err != nil {
+		return fmt.Errorf("Error setting Availability Zone names: %s", err)
+	}
+	if err := d.Set("zone_ids", zoneIds); err != nil {
+		return fmt.Errorf("Error setting Availability Zone IDs: %s", err)
 	}
 
 	return nil
+}
+
+// Ensure that indexes of returned AZ names and zone IDs correspond.
+type availabilityZones []*ec2.AvailabilityZone
+
+func (azs availabilityZones) Len() int {
+	return len(azs)
+}
+
+func (azs availabilityZones) Swap(i, j int) {
+	azs[i], azs[j] = azs[j], azs[i]
+}
+
+func (azs availabilityZones) Less(i, j int) bool {
+	// Sort by AZ name.
+	return aws.StringValue(azs[i].ZoneName) < aws.StringValue(azs[j].ZoneName)
 }
