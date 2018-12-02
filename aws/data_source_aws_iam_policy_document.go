@@ -125,7 +125,7 @@ func dataSourceAwsIamPolicyDocumentRead(d *schema.ResourceData, meta interface{}
 
 			if sid, ok := cfgStmt["sid"]; ok {
 				if _, ok := sidMap[sid.(string)]; ok {
-					return fmt.Errorf("Sid should be blank or unique. Change Sid : %s", sid.(string))
+					return fmt.Errorf("Found duplicate sid (%s). Either remove the sid or ensure the sid is unique across all statements.", sid.(string))
 				}
 				stmt.Sid = sid.(string)
 				if len(stmt.Sid) > 0 {
