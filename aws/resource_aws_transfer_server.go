@@ -117,8 +117,9 @@ func resourceAwsTransferServerRead(d *schema.ResourceData, meta interface{}) err
 	resp, err := conn.DescribeServer(descOpts)
 	if err != nil {
 		if isAWSErr(err, transfer.ErrCodeResourceNotFoundException, "") {
-			log.Printf("[WARN] Transfer Server (%s) not found, error code (404)", d.Id())
+			log.Printf("[WARN] Transfer Server (%s) not found, removing from state", d.Id())
 			d.SetId("")
+			return nil
 		}
 		return err
 	}
@@ -172,11 +173,11 @@ func resourceAwsTransferServerUpdate(d *schema.ResourceData, meta interface{}) e
 		_, err := conn.UpdateServer(updateOpts)
 		if err != nil {
 			if isAWSErr(err, transfer.ErrCodeResourceNotFoundException, "") {
-				log.Printf("[WARN] Transfer Server (%s) not found, error code (404)", d.Id())
+				log.Printf("[WARN] Transfer Server (%s) not found, removing from state", d.Id())
 				d.SetId("")
 				return nil
 			}
-			return err
+			return fmt.Errorf("error updating Transfer Server (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -199,8 +200,9 @@ func resourceAwsTransferServerDelete(d *schema.ResourceData, meta interface{}) e
 	_, err := conn.DeleteServer(delOpts)
 	if err != nil {
 		if isAWSErr(err, transfer.ErrCodeResourceNotFoundException, "") {
-			log.Printf("[WARN] Transfer Server (%s) not found, error code (404)", d.Id())
+			log.Printf("[WARN] Transfer Server (%s) not found, removing from state", d.Id())
 			d.SetId("")
+			return nil
 		}
 		return err
 	}
