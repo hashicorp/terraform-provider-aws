@@ -51,9 +51,19 @@ resource "aws_lambda_function" "test_lambda" {
 }
 ```
 
-## Add permission to write logs to CloudWatch
+## CloudWatch Logging and Permissions
 
-```HCL
+For more information about CloudWatch Logs for Lambda, see the [Lambda User Guide](https://docs.aws.amazon.com/lambda/latest/dg/monitoring-functions-logs.html).
+
+```hcl
+# This is to optionally manage the CloudWatch Log Group for the Lambda Function.
+# If skipping this resource configuration, also add "logs:CreateLogGroup" to the IAM policy below.
+resource "aws_cloudwatch_log_group" "example" {
+  name              = "/aws/lambda/${aws_lambda_function.test_lambda.function_name}"
+  retention_in_days = 14
+}
+
+# See also the following AWS managed policy: AWSLambdaBasicExecutionRole
 resource "aws_iam_policy" "lambda_logging" {
   name = "lambda_logging"
   path = "/"
@@ -65,7 +75,6 @@ resource "aws_iam_policy" "lambda_logging" {
   "Statement": [
     {
       "Action": [
-        "logs:CreateLogGroup",
         "logs:CreateLogStream",
         "logs:PutLogEvents"
       ],
