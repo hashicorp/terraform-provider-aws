@@ -255,6 +255,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_route53_zone":                       dataSourceAwsRoute53Zone(),
 			"aws_s3_bucket":                          dataSourceAwsS3Bucket(),
 			"aws_s3_bucket_object":                   dataSourceAwsS3BucketObject(),
+			"aws_s3_presigned_url":                   dataSourceAwsS3BucketPresignedUrl(),
 			"aws_secretsmanager_secret":              dataSourceAwsSecretsManagerSecret(),
 			"aws_secretsmanager_secret_version":      dataSourceAwsSecretsManagerSecretVersion(),
 			"aws_sns_topic":                          dataSourceAwsSnsTopic(),
