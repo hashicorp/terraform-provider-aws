@@ -75,22 +75,22 @@ func resourceAwsTransferServerCreate(d *schema.ResourceData, meta interface{}) e
 
 	var identityProviderDetails *transfer.IdentityProviderDetails
 	if attr, ok := d.GetOk("invocation_role"); ok {
-		identityProviderDetails.SetInvocationRole(attr.(string))
+		identityProviderDetails.InvocationRole = aws.String(attr.(string))
 	}
 
 	if attr, ok := d.GetOk("url"); ok {
-		identityProviderDetails.SetUrl(attr.(string))
+		identityProviderDetails.Url = aws.String(attr.(string))
 	}
 	if identityProviderDetails != nil {
-		createOpts.SetIdentityProviderDetails(identityProviderDetails)
+		createOpts.IdentityProviderDetails = identityProviderDetails
 	}
 
 	if attr, ok := d.GetOk("identity_provider_type"); ok {
-		createOpts.SetIdentityProviderType(attr.(string))
+		createOpts.IdentityProviderType = aws.String(attr.(string))
 	}
 
 	if attr, ok := d.GetOk("logging_role"); ok {
-		createOpts.SetIdentityProviderType(attr.(string))
+		createOpts.LoggingRole = aws.String(attr.(string))
 	}
 
 	log.Printf("[DEBUG] Create Transfer Server Option: %#v", createOpts)
@@ -153,20 +153,20 @@ func resourceAwsTransferServerUpdate(d *schema.ResourceData, meta interface{}) e
 
 	if d.HasChange("logging_role") {
 		updateFlag = true
-		updateOpts.SetLoggingRole(d.Get("logging_role").(string))
+		updateOpts.LoggingRole = aws.String(d.Get("logging_role").(string))
 	}
 
 	if d.HasChange("invocation_role") || d.HasChange("url") {
 		var identityProviderDetails *transfer.IdentityProviderDetails
 		updateFlag = true
 		if attr, ok := d.GetOk("invocation_role"); ok {
-			identityProviderDetails.SetInvocationRole(attr.(string))
+			identityProviderDetails.InvocationRole = aws.String(attr.(string))
 		}
 
 		if attr, ok := d.GetOk("url"); ok {
-			identityProviderDetails.SetUrl(attr.(string))
+			identityProviderDetails.Url = aws.String(attr.(string))
 		}
-		updateOpts.SetIdentityProviderDetails(identityProviderDetails)
+		updateOpts.IdentityProviderDetails = identityProviderDetails
 	}
 
 	if updateFlag {
