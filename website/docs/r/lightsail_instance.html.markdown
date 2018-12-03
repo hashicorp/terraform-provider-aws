@@ -45,11 +45,17 @@ Lightsail console (cannot use `aws_key_pair` at this time)
 ## Blueprints
 
 Lightsail currently supports the following Blueprint IDs:
+
+### OS Only
+
 - `amazon_linux_2017_03_1_1`
 - `ubuntu_16_04_1`
 - `debian_8_7`
 - `freebsd_11`
 - `opensuse_42_2`
+
+### Apps and OS
+
 - `wordpress_4_8_0`
 - `lamp_5_6_30_5`
 - `nodejs_7_10_0`
