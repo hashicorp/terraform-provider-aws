@@ -156,6 +156,10 @@ func ec2DescribeTransitGatewayRouteTable(conn *ec2.EC2, transitGatewayRouteTable
 }
 
 func ec2DescribeTransitGatewayRouteTableAssociation(conn *ec2.EC2, transitGatewayRouteTableID, transitGatewayAttachmentID string) (*ec2.TransitGatewayRouteTableAssociation, error) {
+	if transitGatewayRouteTableID == "" {
+		return nil, nil
+	}
+
 	input := &ec2.GetTransitGatewayRouteTableAssociationsInput{
 		Filters: []*ec2.Filter{
 			{
@@ -180,6 +184,10 @@ func ec2DescribeTransitGatewayRouteTableAssociation(conn *ec2.EC2, transitGatewa
 }
 
 func ec2DescribeTransitGatewayRouteTablePropagation(conn *ec2.EC2, transitGatewayRouteTableID, transitGatewayAttachmentID string) (*ec2.TransitGatewayRouteTablePropagation, error) {
+	if transitGatewayRouteTableID == "" {
+		return nil, nil
+	}
+
 	input := &ec2.GetTransitGatewayRouteTablePropagationsInput{
 		Filters: []*ec2.Filter{
 			{

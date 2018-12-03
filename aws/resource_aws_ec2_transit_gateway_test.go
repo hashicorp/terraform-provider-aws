@@ -134,6 +134,32 @@ func TestAccAWSEc2TransitGateway_AutoAcceptSharedAttachments(t *testing.T) {
 	})
 }
 
+func TestAccAWSEc2TransitGateway_DefaultRouteTableAssociationAndPropagationDisabled(t *testing.T) {
+	var transitGateway1 ec2.TransitGateway
+	resourceName := "aws_ec2_transit_gateway.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEc2TransitGatewayDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEc2TransitGatewayConfigDefaultRouteTableAssociationAndPropagationDisabled(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEc2TransitGatewayExists(resourceName, &transitGateway1),
+					resource.TestCheckResourceAttr(resourceName, "default_route_table_association", ec2.DefaultRouteTableAssociationValueDisable),
+					resource.TestCheckResourceAttr(resourceName, "default_route_table_propagation", ec2.DefaultRouteTablePropagationValueDisable),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSEc2TransitGateway_DefaultRouteTableAssociation(t *testing.T) {
 	var transitGateway1, transitGateway2 ec2.TransitGateway
 	resourceName := "aws_ec2_transit_gateway.test"
@@ -545,6 +571,15 @@ resource "aws_ec2_transit_gateway" "test" {
   auto_accept_shared_attachments = %q
 }
 `, autoAcceptSharedAttachments)
+}
+
+func testAccAWSEc2TransitGatewayConfigDefaultRouteTableAssociationAndPropagationDisabled() string {
+	return fmt.Sprintf(`
+resource "aws_ec2_transit_gateway" "test" {
+  default_route_table_association = "disable"
+  default_route_table_propagation = "disable"
+}
+`)
 }
 
 func testAccAWSEc2TransitGatewayConfigDefaultRouteTableAssociation(defaultRouteTableAssociation string) string {
