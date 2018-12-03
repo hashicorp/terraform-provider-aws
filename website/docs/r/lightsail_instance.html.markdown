@@ -91,15 +91,37 @@ Lightsail currently supports the following Blueprint IDs:
 
 ## Bundles
 
-Lightsail currently supports the following Bundle IDs:
+Lightsail currently supports the following Bundle IDs (e.g. an instance in `ap-northeast-1` would use `small_2_0`):
 
-- `nano_1_0`
-- `micro_1_0`
-- `small_1_0`
-- `medium_1_0`
-- `large_1_0`
-- `xlarge_1_0`
-- `2xlarge_1_0`
+### Prefix
+
+A Bundle ID starts with one of the below size prefixes:
+
+- `nano_`
+- `micro_`
+- `small_`
+- `medium_`
+- `large_`
+- `xlarge_`
+- `2xlarge_`
+
+### Suffix
+
+A Bundle ID ends with one of the following suffixes depending on Availability Zone:
+
+- ap-northeast-1: `2_0`
+- ap-northeast-2: `2_0`
+- ap-south-1: `2_1`
+- ap-southeast-1: `2_0`
+- ap-southeast-2: `2_2`
+- ca-central-1: `2_0`
+- eu-central-1: `2_0`
+- eu-west-1: `2_0`
+- eu-west-2: `2_0`
+- eu-west-3: `2_0`
+- us-east-1: `2_0`
+- us-east-2: `2_0`
+- us-west-2: `2_0`
 
 ## Attributes Reference
 
