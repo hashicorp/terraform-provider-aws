@@ -504,6 +504,27 @@ func testAccCheckAWSALBTargetGroupDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccAWSALBTargetGroup_lambda(t *testing.T) {
+	var conf elbv2.TargetGroup
+	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_alb_target_group.test",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSALBTargetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSALBTargetGroupConfig_lambda(targetGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSALBTargetGroupExists("aws_alb_target_group.test", &conf),
+					resource.TestCheckResourceAttr("aws_alb_target_group.test", "target_type", "lambda"),
+				),
+			},
+		},
+	})
+}
+
 func testAccAWSALBTargetGroupConfig_basic(targetGroupName string) string {
 	return fmt.Sprintf(`resource "aws_alb_target_group" "test" {
   name = "%s"
@@ -855,3 +876,10 @@ resource "aws_vpc" "test" {
 	}
 }
 `
+
+func testAccAWSALBTargetGroupConfig_lambda(targetGroupName string) string {
+	return fmt.Sprintf(`resource "aws_alb_target_group" "test" {
+	name = "%s"
+	target_type = "lambda"
+}`, targetGroupName)
+}

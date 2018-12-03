@@ -57,14 +57,14 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 
 			"port": {
 				Type:         schema.TypeInt,
-				Required:     true,
+				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.IntBetween(1, 65535),
 			},
 
 			"protocol": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				ForceNew: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					elbv2.ProtocolEnumHttp,
@@ -75,7 +75,7 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 
 			"vpc_id": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				ForceNew: true,
 			},
 
@@ -102,8 +102,13 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 			"target_type": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "instance",
+				Default:  elbv2.TargetTypeEnumInstance,
 				ForceNew: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					elbv2.TargetTypeEnumInstance,
+					elbv2.TargetTypeEnumIp,
+					elbv2.TargetTypeEnumLambda,
+				}, false),
 			},
 
 			"stickiness": {
@@ -224,11 +229,25 @@ func resourceAwsLbTargetGroupCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	params := &elbv2.CreateTargetGroupInput{
-		Name:       aws.String(groupName),
-		Port:       aws.Int64(int64(d.Get("port").(int))),
-		Protocol:   aws.String(d.Get("protocol").(string)),
-		VpcId:      aws.String(d.Get("vpc_id").(string)),
+		Name: aws.String(groupName),
+		// Port:       aws.Int64(int64(d.Get("port").(int))),
+		// Protocol:   aws.String(d.Get("protocol").(string)),
+		// VpcId:      aws.String(d.Get("vpc_id").(string)),
 		TargetType: aws.String(d.Get("target_type").(string)),
+	}
+
+	if d.Get("target_type").(string) != elbv2.TargetTypeEnumLambda {
+		if _, ok := d.GetOk("port"); !ok {
+			return fmt.Errorf("port should be set when target type is %s", d.Get("target_type").(string))
+		}
+
+		if _, ok := d.GetOk("protocol"); !ok {
+			return fmt.Errorf("protocol should be set when target type is %s", d.Get("target_type").(string))
+		}
+
+		if _, ok := d.GetOk("vpc_id"); !ok {
+			return fmt.Errorf("vpc_id should be set when target type is %s", d.Get("target_type").(string))
+		}
 	}
 
 	if healthChecks := d.Get("health_check").([]interface{}); len(healthChecks) == 1 {
@@ -267,9 +286,7 @@ func resourceAwsLbTargetGroupCreate(d *schema.ResourceData, meta interface{}) er
 	if len(resp.TargetGroups) == 0 {
 		return errors.New("Error creating LB Target Group: no groups returned in response")
 	}
-
 	d.SetId(aws.StringValue(resp.TargetGroups[0].TargetGroupArn))
-
 	return resourceAwsLbTargetGroupUpdate(d, meta)
 }
 
@@ -343,68 +360,70 @@ func resourceAwsLbTargetGroupUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	var attrs []*elbv2.TargetGroupAttribute
+	if d.Get("target_type").(string) != elbv2.TargetTypeEnumLambda {
+		var attrs []*elbv2.TargetGroupAttribute
 
-	if d.HasChange("deregistration_delay") {
-		attrs = append(attrs, &elbv2.TargetGroupAttribute{
-			Key:   aws.String("deregistration_delay.timeout_seconds"),
-			Value: aws.String(fmt.Sprintf("%d", d.Get("deregistration_delay").(int))),
-		})
-	}
-
-	if d.HasChange("slow_start") {
-		attrs = append(attrs, &elbv2.TargetGroupAttribute{
-			Key:   aws.String("slow_start.duration_seconds"),
-			Value: aws.String(fmt.Sprintf("%d", d.Get("slow_start").(int))),
-		})
-	}
-
-	if d.HasChange("proxy_protocol_v2") {
-		attrs = append(attrs, &elbv2.TargetGroupAttribute{
-			Key:   aws.String("proxy_protocol_v2.enabled"),
-			Value: aws.String(strconv.FormatBool(d.Get("proxy_protocol_v2").(bool))),
-		})
-	}
-
-	// In CustomizeDiff we allow LB stickiness to be declared for TCP target
-	// groups, so long as it's not enabled. This allows for better support for
-	// modules, but also means we need to completely skip sending the data to the
-	// API if it's defined on a TCP target group.
-	if d.HasChange("stickiness") && d.Get("protocol") != "TCP" {
-		stickinessBlocks := d.Get("stickiness").([]interface{})
-		if len(stickinessBlocks) == 1 {
-			stickiness := stickinessBlocks[0].(map[string]interface{})
-
-			attrs = append(attrs,
-				&elbv2.TargetGroupAttribute{
-					Key:   aws.String("stickiness.enabled"),
-					Value: aws.String(strconv.FormatBool(stickiness["enabled"].(bool))),
-				},
-				&elbv2.TargetGroupAttribute{
-					Key:   aws.String("stickiness.type"),
-					Value: aws.String(stickiness["type"].(string)),
-				},
-				&elbv2.TargetGroupAttribute{
-					Key:   aws.String("stickiness.lb_cookie.duration_seconds"),
-					Value: aws.String(fmt.Sprintf("%d", stickiness["cookie_duration"].(int))),
-				})
-		} else if len(stickinessBlocks) == 0 {
+		if d.HasChange("deregistration_delay") {
 			attrs = append(attrs, &elbv2.TargetGroupAttribute{
-				Key:   aws.String("stickiness.enabled"),
-				Value: aws.String("false"),
+				Key:   aws.String("deregistration_delay.timeout_seconds"),
+				Value: aws.String(fmt.Sprintf("%d", d.Get("deregistration_delay").(int))),
 			})
 		}
-	}
 
-	if len(attrs) > 0 {
-		params := &elbv2.ModifyTargetGroupAttributesInput{
-			TargetGroupArn: aws.String(d.Id()),
-			Attributes:     attrs,
+		if d.HasChange("slow_start") {
+			attrs = append(attrs, &elbv2.TargetGroupAttribute{
+				Key:   aws.String("slow_start.duration_seconds"),
+				Value: aws.String(fmt.Sprintf("%d", d.Get("slow_start").(int))),
+			})
 		}
 
-		_, err := elbconn.ModifyTargetGroupAttributes(params)
-		if err != nil {
-			return fmt.Errorf("Error modifying Target Group Attributes: %s", err)
+		if d.HasChange("proxy_protocol_v2") {
+			attrs = append(attrs, &elbv2.TargetGroupAttribute{
+				Key:   aws.String("proxy_protocol_v2.enabled"),
+				Value: aws.String(strconv.FormatBool(d.Get("proxy_protocol_v2").(bool))),
+			})
+		}
+
+		// In CustomizeDiff we allow LB stickiness to be declared for TCP target
+		// groups, so long as it's not enabled. This allows for better support for
+		// modules, but also means we need to completely skip sending the data to the
+		// API if it's defined on a TCP target group.
+		if d.HasChange("stickiness") && d.Get("protocol") != "TCP" {
+			stickinessBlocks := d.Get("stickiness").([]interface{})
+			if len(stickinessBlocks) == 1 {
+				stickiness := stickinessBlocks[0].(map[string]interface{})
+
+				attrs = append(attrs,
+					&elbv2.TargetGroupAttribute{
+						Key:   aws.String("stickiness.enabled"),
+						Value: aws.String(strconv.FormatBool(stickiness["enabled"].(bool))),
+					},
+					&elbv2.TargetGroupAttribute{
+						Key:   aws.String("stickiness.type"),
+						Value: aws.String(stickiness["type"].(string)),
+					},
+					&elbv2.TargetGroupAttribute{
+						Key:   aws.String("stickiness.lb_cookie.duration_seconds"),
+						Value: aws.String(fmt.Sprintf("%d", stickiness["cookie_duration"].(int))),
+					})
+			} else if len(stickinessBlocks) == 0 {
+				attrs = append(attrs, &elbv2.TargetGroupAttribute{
+					Key:   aws.String("stickiness.enabled"),
+					Value: aws.String("false"),
+				})
+			}
+		}
+
+		if len(attrs) > 0 {
+			params := &elbv2.ModifyTargetGroupAttributesInput{
+				TargetGroupArn: aws.String(d.Id()),
+				Attributes:     attrs,
+			}
+
+			_, err := elbconn.ModifyTargetGroupAttributes(params)
+			if err != nil {
+				return fmt.Errorf("Error modifying Target Group Attributes: %s", err)
+			}
 		}
 	}
 
