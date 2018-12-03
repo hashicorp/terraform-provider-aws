@@ -48,24 +48,30 @@ Lightsail currently supports the following Blueprint IDs:
 
 ### OS Only
 
-- `amazon_linux_2017_03_1_1`
-- `ubuntu_16_04_1`
+- `amazon_linux_2018_03_0_2`
+- `centos_7_1805_01`
 - `debian_8_7`
-- `freebsd_11`
+- `debian_9_5`
+- `freebsd_11_1`
 - `opensuse_42_2`
+- `ubuntu_16_04_2`
+- `ubuntu_18_04`
 
 ### Apps and OS
 
-- `wordpress_4_8_0`
-- `lamp_5_6_30_5`
-- `nodejs_7_10_0`
-- `joomla_3_7_3`
-- `magento_2_1_7`
-- `mean_3_4_5`
-- `drupal_8_3_3`
-- `gitlab_9_2_6`
-- `redmine_3_3_3_1`
-- `nginx_1_12_0_2`
+- `drupal_8_5_6`
+- `gitlab_11_1_4_1`
+- `joomla_3_8_11`
+- `lamp_5_6_37_2`
+- `lamp_7_1_20_1`
+- `magento_2_2_5`
+- `mean_4_0_1`
+- `nginx_1_14_0_1`
+- `nodejs_10_8_0`
+- `plesk_ubuntu_17_8_11_1`
+- `redmine_3_4_6`
+- `wordpress_4_9_8`
+- `wordpress_multisite_4_9_8`
 
 ## Bundles
 
