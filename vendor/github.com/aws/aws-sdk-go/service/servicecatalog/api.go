@@ -8120,6 +8120,8 @@ type ConstraintDetail struct {
 	//
 	//    * NOTIFICATION
 	//
+	//    * STACKSET
+	//
 	//    * TEMPLATE
 	Type *string `min:"1" type:"string"`
 }
@@ -8170,6 +8172,8 @@ type ConstraintSummary struct {
 	//    * LAUNCH
 	//
 	//    * NOTIFICATION
+	//
+	//    * STACKSET
 	//
 	//    * TEMPLATE
 	Type *string `min:"1" type:"string"`
