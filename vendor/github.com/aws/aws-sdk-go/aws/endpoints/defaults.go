@@ -170,6 +170,7 @@ const (
 	SupportServiceID                      = "support"                      // Support.
 	SwfServiceID                          = "swf"                          // Swf.
 	TaggingServiceID                      = "tagging"                      // Tagging.
+	TransferServiceID                     = "transfer"                     // Transfer.
 	TranslateServiceID                    = "translate"                    // Translate.
 	WafServiceID                          = "waf"                          // Waf.
 	WafRegionalServiceID                  = "waf-regional"                 // WafRegional.
@@ -1868,6 +1869,7 @@ var awsPartition = partition{
 			Endpoints: endpoints{
 				"eu-west-1": endpoint{},
 				"us-east-1": endpoint{},
+				"us-west-2": endpoint{},
 			},
 		},
 		"polly": service{
@@ -2702,6 +2704,24 @@ var awsPartition = partition{
 				"us-west-2":      endpoint{},
 			},
 		},
+		"transfer": service{
+
+			Endpoints: endpoints{
+				"ap-northeast-1": endpoint{},
+				"ap-northeast-2": endpoint{},
+				"ap-southeast-1": endpoint{},
+				"ap-southeast-2": endpoint{},
+				"ca-central-1":   endpoint{},
+				"eu-central-1":   endpoint{},
+				"eu-west-1":      endpoint{},
+				"eu-west-2":      endpoint{},
+				"eu-west-3":      endpoint{},
+				"us-east-1":      endpoint{},
+				"us-east-2":      endpoint{},
+				"us-west-1":      endpoint{},
+				"us-west-2":      endpoint{},
+			},
+		},
 		"translate": service{
 			Defaults: endpoint{
 				Protocols: []string{"https"},
@@ -3088,6 +3108,12 @@ var awscnPartition = partition{
 				"cn-northwest-1": endpoint{},
 			},
 		},
+		"polly": service{
+
+			Endpoints: endpoints{
+				"cn-northwest-1": endpoint{},
+			},
+		},
 		"rds": service{
 
 			Endpoints: endpoints{
@@ -3320,6 +3346,12 @@ var awsusgovPartition = partition{
 
 			Endpoints: endpoints{
 				"us-gov-east-1": endpoint{},
+				"us-gov-east-1-fips": endpoint{
+					Hostname: "codedeploy-fips.us-gov-east-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-gov-east-1",
+					},
+				},
 				"us-gov-west-1": endpoint{},
 				"us-gov-west-1-fips": endpoint{
 					Hostname: "codedeploy-fips.us-gov-west-1.amazonaws.com",
