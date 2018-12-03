@@ -319,6 +319,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_appautoscaling_target":                        resourceAwsAppautoscalingTarget(),
 			"aws_appautoscaling_policy":                        resourceAwsAppautoscalingPolicy(),
 			"aws_appautoscaling_scheduled_action":              resourceAwsAppautoscalingScheduledAction(),
+			"aws_appmesh_mesh":                                 resourceAwsAppmeshMesh(),
 			"aws_appsync_api_key":                              resourceAwsAppsyncApiKey(),
 			"aws_appsync_datasource":                           resourceAwsAppsyncDatasource(),
 			"aws_appsync_graphql_api":                          resourceAwsAppsyncGraphqlApi(),
