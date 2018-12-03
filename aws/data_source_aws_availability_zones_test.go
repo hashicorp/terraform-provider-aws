@@ -32,7 +32,9 @@ func TestAvailabilityZonesSort(t *testing.T) {
 			ZoneId:   aws.String("id_BBB"),
 		},
 	}
-	sort.Sort(availabilityZones(azs))
+	sort.Slice(azs, func(i, j int) bool {
+		return aws.StringValue(azs[i].ZoneName) < aws.StringValue(azs[j].ZoneName)
+	})
 
 	cases := []struct {
 		Index    int
