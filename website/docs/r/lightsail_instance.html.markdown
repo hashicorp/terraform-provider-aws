@@ -82,6 +82,8 @@ Lightsail currently supports the following Bundle IDs:
 - `small_1_0`
 - `medium_1_0`
 - `large_1_0`
+- `xlarge_1_0`
+- `2xlarge_1_0`
 
 ## Attributes Reference
 
