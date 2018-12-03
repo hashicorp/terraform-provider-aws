@@ -33,7 +33,7 @@ The following arguments are supported:
 
 * `name` - (Required) The name of the Lightsail Instance
 * `availability_zone` - (Required) The Availability Zone in which to create your
-instance. At this time, must be in `us-east-1`, `us-east-2`, `us-west-2`, `eu-west-1`, `eu-west-2`, `eu-central-1`, `ap-southeast-1`, `ap-southeast-2`, `ap-northeast-1`, `ap-south-1` regions
+instance (see list below)
 * `blueprint_id` - (Required) The ID for a virtual private server image
 (see list below)
 * `bundle_id` - (Required) The bundle of specification information (see list below)
@@ -41,6 +41,22 @@ instance. At this time, must be in `us-east-1`, `us-east-2`, `us-west-2`, `eu-we
 Lightsail console (cannot use `aws_key_pair` at this time)
 * `user_data` - (Optional) launch script to configure server with additional user data
 
+## Availability Zones
+Lightsail currently supports the following Availability Zones (e.g. `us-east-1a`):
+
+- `ap-northeast-1{a,c,d}`
+- `ap-northeast-2{a,c}`
+- `ap-south-1{a,b}`
+- `ap-southeast-1{a,b,c}`
+- `ap-southeast-2{a,b,c}`
+- `ca-central-1{a,b}`
+- `eu-central-1{a,b,c}`
+- `eu-west-1{a,b,c}`
+- `eu-west-2{a,b,c}`
+- `eu-west-3{a,b,c}`
+- `us-east-1{a,b,c,d,e,f}`
+- `us-east-2{a,b,c}`
+- `us-west-2{a,b,c}`
 
 ## Blueprints
 
