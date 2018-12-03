@@ -2,6 +2,8 @@
 
 ENHANCEMENTS
 
+* data-source/aws_availability_zone: Add `zone_id` attribute [GH-6686]
+* data-source/aws_availability_zones: Add `zone_ids` attribute [GH-6686]
 * data-source/aws_iam_policy_document: Provide error if duplicate `sid` are configured across statements [GH-6675]
 * resource/aws_cloudtrail: Add `is_organization_trail` argument [GH-6580]
 * resource/aws_codedeploy_config: Add `compute_platform` and `traffic_routing_config` arguments (support Lambda) [GH-6644]
