@@ -20,10 +20,10 @@ func resourceAwsDefaultSubnet() *schema.Resource {
 		Type:     schema.TypeString,
 		Required: true,
 	}
-	// availability_zone_id is a required value for Default Subnets
+	// availability_zone_id is a computed value for Default Subnets
 	dsubnet.Schema["availability_zone_id"] = &schema.Schema{
 		Type:     schema.TypeString,
-		Required: true,
+		Computed: true,
 	}
 	// vpc_id is a computed value for Default Subnets
 	dsubnet.Schema["vpc_id"] = &schema.Schema{

@@ -32,7 +32,7 @@ resource "aws_default_subnet" "default_az1" {
 ## Argument Reference
 
 The arguments of an `aws_default_subnet` differ from `aws_subnet` resources.
-Namely, the `availability_zone` argument is required and the `vpc_id`, `cidr_block`, `ipv6_cidr_block`,
+Namely, the `availability_zone` argument is required and the `availability_zone_id`, `vpc_id`, `cidr_block`, `ipv6_cidr_block`,
 and `assign_ipv6_address_on_creation` arguments are computed.
 The following arguments are still supported:
 
