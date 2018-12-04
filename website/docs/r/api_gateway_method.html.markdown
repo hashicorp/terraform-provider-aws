@@ -93,7 +93,7 @@ request_parameters = {
   "method.request.querystring.some-query-param" = true
 }
 ```
-would define that the header `X-Some-Header` and the query string `some-query-param` must be provided on the request, or
+would define that the header `X-Some-Header` and the query string `some-query-param` must be provided on the request
 * `request_parameters_in_json` - **Deprecated**, use `request_parameters` instead.
 
 ## Import
