@@ -5,6 +5,7 @@ ENHANCEMENTS
 * data-source/aws_availability_zone: Add `zone_id` attribute [GH-6686]
 * data-source/aws_availability_zones: Add `zone_ids` attribute [GH-6686]
 * data-source/aws_iam_policy_document: Provide error if duplicate `sid` are configured across statements [GH-6675]
+* data-source/aws_iam_policy_document: Add `version` argument [GH-6699]
 * data-source/aws_internet_gateway: Add `owner_id` attribute [GH-6642]
 * data-source/aws_route_table: Add `owner_id` attribute [GH-6642]
 * data-source/aws_subnet: Add `availability_zone_id` argument and `owner_id` attribute [GH-6642]
