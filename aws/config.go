@@ -19,6 +19,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
+	"github.com/aws/aws-sdk-go/service/appmesh"
 	"github.com/aws/aws-sdk-go/service/appsync"
 	"github.com/aws/aws-sdk-go/service/athena"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
@@ -252,6 +253,7 @@ type AWSClient struct {
 	pricingconn           *pricing.Pricing
 	pinpointconn          *pinpoint.Pinpoint
 	workspacesconn        *workspaces.WorkSpaces
+	appmeshconn           *appmesh.AppMesh
 }
 
 func (c *AWSClient) S3() *s3.S3 {
@@ -583,6 +585,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.pricingconn = pricing.New(sess)
 	client.pinpointconn = pinpoint.New(sess)
 	client.workspacesconn = workspaces.New(sess)
+	client.appmeshconn = appmesh.New(sess)
 
 	// Workaround for https://github.com/aws/aws-sdk-go/issues/1376
 	client.kinesisconn.Handlers.Retry.PushBack(func(r *request.Request) {
