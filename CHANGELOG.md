@@ -27,6 +27,7 @@ ENHANCEMENTS
 * resource/aws_iam_group_policy_attachment: Support resource import [GH-6625]
 * resource/aws_iam_user_policy_attachment: Support resource import [GH-6487]
 * resource/aws_internet_gateway: Add `owner_id` attribute [GH-6642]
+* resource/aws_lambda_alias: Add `invoke_arn` attribute [GH-6329]
 * resource/aws_lambda_function: Support `provided` in `runtime` validation [GH-6676]
 * resource/aws_lambda_function: Support `python3.7` in `runtime` validation [GH-6583]
 * resource/aws_lambda_function: Support `ruby2.5` in `runtime` validation [GH-6657]
