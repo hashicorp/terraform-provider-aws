@@ -569,13 +569,7 @@ func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) err
 		d.Set("qualified_arn", lastQualifiedArn)
 	}
 
-	invokeArn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Service:   "apigateway",
-		Region:    meta.(*AWSClient).region,
-		AccountID: "lambda",
-		Resource:  fmt.Sprintf("path/2015-03-31/functions/%s/invocations", *function.FunctionArn),
-	}.String()
+	invokeArn := lambdaFunctionInvokeArn(*function.FunctionArn, meta)
 	d.Set("invoke_arn", invokeArn)
 
 	return nil
@@ -886,4 +880,14 @@ func readEnvironmentVariables(ev map[string]interface{}) map[string]string {
 	}
 
 	return variables
+}
+
+func lambdaFunctionInvokeArn(functionArn string, meta interface{}) string {
+	return arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "apigateway",
+		Region:    meta.(*AWSClient).region,
+		AccountID: "lambda",
+		Resource:  fmt.Sprintf("path/2015-03-31/functions/%s/invocations", functionArn),
+	}.String()
 }

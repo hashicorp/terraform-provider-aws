@@ -157,6 +157,7 @@ func TestAccAWSLambdaFunction_importS3(t *testing.T) {
 
 func TestAccAWSLambdaFunction_basic(t *testing.T) {
 	var conf lambda.GetFunctionOutput
+	resourceName := "aws_lambda_function.lambda_function_test"
 
 	rString := acctest.RandString(8)
 	funcName := fmt.Sprintf("tf_acc_lambda_func_basic_%s", rString)
@@ -172,10 +173,11 @@ func TestAccAWSLambdaFunction_basic(t *testing.T) {
 			{
 				Config: testAccAWSLambdaConfigBasic(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists("aws_lambda_function.lambda_function_test", funcName, &conf),
+					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
 					testAccCheckAwsLambdaFunctionName(&conf, funcName),
 					testAccCheckAwsLambdaFunctionArnHasSuffix(&conf, ":"+funcName),
-					resource.TestCheckResourceAttr("aws_lambda_function.lambda_function_test", "reserved_concurrent_executions", "0"),
+					resource.TestMatchResourceAttr(resourceName, "invoke_arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:apigateway:[^:]+:lambda:path/2015-03-31/functions/arn:[^:]+:lambda:[^:]+:[^:]+:function:%s/invocations$", funcName))),
+					resource.TestCheckResourceAttr(resourceName, "reserved_concurrent_executions", "0"),
 				),
 			},
 		},
