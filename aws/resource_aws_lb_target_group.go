@@ -229,10 +229,7 @@ func resourceAwsLbTargetGroupCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	params := &elbv2.CreateTargetGroupInput{
-		Name: aws.String(groupName),
-		// Port:       aws.Int64(int64(d.Get("port").(int))),
-		// Protocol:   aws.String(d.Get("protocol").(string)),
-		// VpcId:      aws.String(d.Get("vpc_id").(string)),
+		Name:       aws.String(groupName),
 		TargetType: aws.String(d.Get("target_type").(string)),
 	}
 

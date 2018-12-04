@@ -866,7 +866,17 @@ const testAccAWSALBTargetGroupConfig_generatedName = `
 resource "aws_alb_target_group" "test" {
   port = 80
   protocol = "HTTP"
-  vpc_id = "${aws_vpc.test.id}"
+	vpc_id = "${aws_vpc.test.id}"
+	
+	health_check {
+    path = "/health"
+    interval = 60
+    timeout = 3
+    healthy_threshold = 3
+    unhealthy_threshold = 3
+    matcher = "200-299"
+  }
+
 }
 
 resource "aws_vpc" "test" {
