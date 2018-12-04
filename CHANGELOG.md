@@ -1,5 +1,9 @@
 ## 1.51.0 (Unreleased)
 
+FEATURES
+
+* **New Resource:** `aws_appmesh_mesh` [GH-6708]
+
 ENHANCEMENTS
 
 * data-source/aws_availability_zone: Add `zone_id` attribute [GH-6686]
