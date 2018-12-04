@@ -27,6 +27,7 @@ ENHANCEMENTS
 * resource/aws_lambda_function: Support `python3.7` in `runtime` validation [GH-6583]
 * resource/aws_lambda_function: Support `ruby2.5` in `runtime` validation [GH-6657]
 * resource/aws_network_acl: Add `owner_id` attribute [GH-6642]
+* resource/aws_rds_cluster_instance: Add `copy_tags_to_snapshot` argument [GH-6582]
 * resource/aws_route_table: Add `owner_id` attribute [GH-6642]
 * resource/aws_s3_bucket: Support `INTELLIGENT_TIERING` in storage class validations [GH-6589]
 * resource/aws_s3_bucket: Support replication rule destination storage class `GLACIER` [GH-6613]
