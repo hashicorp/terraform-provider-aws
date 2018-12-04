@@ -52,6 +52,7 @@ func TestAccAWSRDSClusterInstance_basic(t *testing.T) {
 					testAccCheckAWSDBClusterInstanceAttributes(&v),
 					resource.TestMatchResourceAttr("aws_rds_cluster_instance.cluster_instances", "arn", regexp.MustCompile(`^arn:[^:]+:rds:[^:]+:[^:]+:db:.+`)),
 					resource.TestCheckResourceAttr("aws_rds_cluster_instance.cluster_instances", "auto_minor_version_upgrade", "true"),
+					resource.TestCheckResourceAttr("aws_rds_cluster_instance.cluster_instances", "copy_tags_to_snapshot", "false"),
 					resource.TestCheckResourceAttrSet("aws_rds_cluster_instance.cluster_instances", "preferred_maintenance_window"),
 					resource.TestCheckResourceAttrSet("aws_rds_cluster_instance.cluster_instances", "preferred_backup_window"),
 					resource.TestCheckResourceAttrSet("aws_rds_cluster_instance.cluster_instances", "dbi_resource_id"),
@@ -208,6 +209,35 @@ func TestAccAWSRDSClusterInstance_PubliclyAccessible(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSRDSClusterInstance_CopyTagsToSnapshot(t *testing.T) {
+	var dbInstance rds.DBInstance
+	rNameSuffix := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSClusterInstanceConfig_CopyTagsToSnapshot(rNameSuffix, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterInstanceExists("aws_rds_cluster_instance.cluster_instances", &dbInstance),
+					resource.TestCheckResourceAttr(
+						"aws_rds_cluster_instance.cluster_instances", "copy_tags_to_snapshot", "true"),
+				),
+			},
+			{
+				Config: testAccAWSClusterInstanceConfig_CopyTagsToSnapshot(rNameSuffix, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterInstanceExists("aws_rds_cluster_instance.cluster_instances", &dbInstance),
+					resource.TestCheckResourceAttr(
+						"aws_rds_cluster_instance.cluster_instances", "copy_tags_to_snapshot", "false"),
 				),
 			},
 		},
@@ -773,4 +803,25 @@ resource "aws_rds_cluster_instance" "test" {
   publicly_accessible     = %t
 }
 `, rName, rName, publiclyAccessible)
+}
+
+func testAccAWSClusterInstanceConfig_CopyTagsToSnapshot(n int, f bool) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "default" {
+  cluster_identifier = "tf-aurora-cluster-test-%d"
+  availability_zones = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  database_name      = "mydb"
+  master_username    = "foo"
+  master_password    = "mustbeeightcharaters"
+  skip_final_snapshot = true
+}
+
+resource "aws_rds_cluster_instance" "cluster_instances" {
+  identifier              = "tf-cluster-instance-%d"
+  cluster_identifier      = "${aws_rds_cluster.default.id}"
+  instance_class          = "db.t2.small"
+  promotion_tier          = "3"
+  copy_tags_to_snapshot 	= %t
+}
+`, n, n, f)
 }
