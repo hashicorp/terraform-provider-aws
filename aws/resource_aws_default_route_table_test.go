@@ -25,6 +25,7 @@ func TestAccAWSDefaultRouteTable_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(
 						"aws_default_route_table.foo", &v),
+					testAccCheckResourceAttrAccountID("aws_default_route_table.foo", "owner_id"),
 				),
 			},
 		},

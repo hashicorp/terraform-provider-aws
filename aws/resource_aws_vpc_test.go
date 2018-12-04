@@ -112,6 +112,7 @@ func TestAccAWSVpc_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ipv6_association_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block", ""),
 					resource.TestMatchResourceAttr(resourceName, "main_route_table_id", regexp.MustCompile(`^rtb-.+`)),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 				),
 			},
 			{

@@ -36,6 +36,7 @@ func TestAccDataSourceAwsVpcDhcpOptions_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "ntp_servers.0", resourceName, "ntp_servers.0"),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.Name", resourceName, "tags.Name"),
+					resource.TestCheckResourceAttrPair(datasourceName, "owner_id", resourceName, "owner_id"),
 				),
 			},
 		},
@@ -66,6 +67,7 @@ func TestAccDataSourceAwsVpcDhcpOptions_Filter(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "ntp_servers.0", resourceName, "ntp_servers.0"),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.Name", resourceName, "tags.Name"),
+					resource.TestCheckResourceAttrPair(datasourceName, "owner_id", resourceName, "owner_id"),
 				),
 			},
 			{

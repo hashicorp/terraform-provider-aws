@@ -167,6 +167,7 @@ func TestAccAWSNetworkAcl_EgressAndIngressRules(t *testing.T) {
 						"aws_network_acl.bar", "egress.3111164687.cidr_block", "10.3.0.0/18"),
 					resource.TestCheckResourceAttr(
 						"aws_network_acl.bar", "egress.3111164687.action", "allow"),
+					testAccCheckResourceAttrAccountID("aws_network_acl.bar", "owner_id"),
 				),
 			},
 		},
@@ -198,6 +199,7 @@ func TestAccAWSNetworkAcl_OnlyIngressRules_basic(t *testing.T) {
 						"aws_network_acl.foos", "ingress.4245812720.action", "deny"),
 					resource.TestCheckResourceAttr(
 						"aws_network_acl.foos", "ingress.4245812720.cidr_block", "10.2.0.0/18"),
+					testAccCheckResourceAttrAccountID("aws_network_acl.foos", "owner_id"),
 				),
 			},
 		},
@@ -234,6 +236,7 @@ func TestAccAWSNetworkAcl_OnlyIngressRules_update(t *testing.T) {
 						"aws_network_acl.foos", "ingress.4245812720.from_port", "443"),
 					resource.TestCheckResourceAttr(
 						"aws_network_acl.foos", "ingress.4245812720.rule_no", "2"),
+					testAccCheckResourceAttrAccountID("aws_network_acl.foos", "owner_id"),
 				),
 			},
 			{
@@ -253,6 +256,7 @@ func TestAccAWSNetworkAcl_OnlyIngressRules_update(t *testing.T) {
 						"aws_network_acl.foos", "ingress.401088754.action", "deny"),
 					resource.TestCheckResourceAttr(
 						"aws_network_acl.foos", "ingress.401088754.cidr_block", "10.2.0.0/18"),
+					testAccCheckResourceAttrAccountID("aws_network_acl.foos", "owner_id"),
 				),
 			},
 		},

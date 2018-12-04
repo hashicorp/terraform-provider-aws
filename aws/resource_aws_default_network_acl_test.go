@@ -38,6 +38,7 @@ func TestAccAWSDefaultNetworkAcl_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccGetAWSDefaultNetworkAcl("aws_default_network_acl.default", &networkAcl),
 					testAccCheckAWSDefaultACLAttributes(&networkAcl, []*ec2.NetworkAclEntry{}, 0, 2),
+					testAccCheckResourceAttrAccountID("aws_default_network_acl.default", "owner_id"),
 				),
 			},
 		},

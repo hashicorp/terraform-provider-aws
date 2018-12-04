@@ -32,7 +32,7 @@ func TestAccAWSEc2TransitGateway_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_route_table_propagation", ec2.DefaultRouteTablePropagationValueEnable),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "dns_support", ec2.DnsSupportValueEnable),
-					resource.TestCheckResourceAttrSet(resourceName, "owner_id"),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "propagation_default_route_table_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "vpn_ecmp_support", ec2.VpnEcmpSupportValueEnable),

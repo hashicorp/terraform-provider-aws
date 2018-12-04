@@ -137,6 +137,7 @@ func TestAccAWSRouteTable_basic(t *testing.T) {
 					testAccCheckRouteTableExists(
 						"aws_route_table.foo", &v),
 					testCheck,
+					testAccCheckResourceAttrAccountID("aws_route_table.foo", "owner_id"),
 				),
 			},
 
@@ -146,6 +147,7 @@ func TestAccAWSRouteTable_basic(t *testing.T) {
 					testAccCheckRouteTableExists(
 						"aws_route_table.foo", &v),
 					testCheckChange,
+					testAccCheckResourceAttrAccountID("aws_route_table.foo", "owner_id"),
 				),
 			},
 		},
