@@ -13,8 +13,8 @@ Provides an AWS App Mesh service mesh resource.
 ## Example Usage
 
 ```hcl
-resource "aws_appmesh_mesh" "default" {
-  name = "default"
+resource "aws_appmesh_mesh" "simple" {
+  name = "simpleapp"
 }
 ```
 
@@ -38,5 +38,5 @@ In addition to all arguments above, the following attributes are exported:
 App Mesh service meshes can be imported using the `name`, e.g.
 
 ```
-$ terraform import aws_appmesh_mesh.default default
+$ terraform import aws_appmesh_mesh.simple simpleapp
 ```

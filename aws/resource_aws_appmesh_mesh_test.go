@@ -12,28 +12,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAwsAppmeshMesh_importBasic(t *testing.T) {
-	resourceName := "aws_appmesh_mesh.foo"
-	rName := fmt.Sprintf("tf-test-%d", acctest.RandInt())
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAppmeshMeshDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAppmeshMeshConfig(rName),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccAwsAppmeshMesh_basic(t *testing.T) {
+func testAccAwsAppmeshMesh_basic(t *testing.T) {
 	var mesh appmesh.MeshData
 	resourceName := "aws_appmesh_mesh.foo"
 	rName := fmt.Sprintf("tf-test-%d", acctest.RandInt())
@@ -57,6 +36,11 @@ func TestAccAwsAppmeshMesh_basic(t *testing.T) {
 					resource.TestMatchResourceAttr(
 						resourceName, "arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:appmesh:[^:]+:\\d{12}:mesh/%s", rName))),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
