@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -42,7 +43,17 @@ func resourceAwsIamRolePolicyAttachmentCreate(d *schema.ResourceData, meta inter
 	role := d.Get("role").(string)
 	arn := d.Get("policy_arn").(string)
 
-	err := attachPolicyToRole(conn, role, arn)
+	err := resource.Retry(30*time.Second, func() *resource.RetryError {
+		var err error
+		err = attachPolicyToRole(conn, role, arn)
+		if err != nil {
+			if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+				return resource.RetryableError(err)
+			}
+			return resource.NonRetryableError(err)
+		}
+		return nil
+	})
 	if err != nil {
 		return fmt.Errorf("Error attaching policy %s to IAM Role %s: %v", arn, role, err)
 	}
