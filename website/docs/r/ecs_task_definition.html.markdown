@@ -142,3 +142,11 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - Full ARN of the Task Definition (including both `family` and `revision`).
 * `family` - The family of the Task Definition.
 * `revision` - The revision of the task in a particular family.
+
+## Import
+
+ECS Task Definitions can be imported via their Amazon Resource Name (ARN):
+
+```
+$ terraform import aws_ecs_task_definition.example arn:aws:ecs:us-east-1:012345678910:task-definition/mytaskfamily:123
+```
