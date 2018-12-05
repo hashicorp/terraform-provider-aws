@@ -73,6 +73,27 @@ func resourceAwsSagemakerModel() *schema.Resource {
 				},
 			},
 
+			"vpc_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"subnets": {
+							Type:     schema.TypeSet,
+							Required: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"security_group_ids": {
+							Type:     schema.TypeSet,
+							Required: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+					},
+				},
+			},
+
 			"execution_role_arn": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -110,6 +131,11 @@ func resourceAwsSagemakerModelCreate(d *schema.ResourceData, meta interface{}) e
 		createOpts.Tags = tagsFromMapSagemaker(v.(map[string]interface{}))
 	}
 
+	if v, ok := d.GetOk("vpc_config"); ok {
+		vpcConfig := expandSageMakerVpcConfigRequest(v.([]interface{}))
+		createOpts.SetVpcConfig(vpcConfig)
+	}
+
 	log.Printf("[DEBUG] Sagemaker model create config: %#v", *createOpts)
 	_, err := retryOnAwsCode("ValidationException", func() (interface{}, error) {
 		return conn.CreateModel(createOpts)
@@ -120,6 +146,19 @@ func resourceAwsSagemakerModelCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	return resourceAwsSagemakerModelRead(d, meta)
+}
+
+func expandSageMakerVpcConfigRequest(l []interface{}) *sagemaker.VpcConfig {
+	if len(l) == 0 {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	return &sagemaker.VpcConfig{
+		SecurityGroupIds: expandStringSet(m["security_group_ids"].(*schema.Set)),
+		Subnets:          expandStringSet(m["subnets"].(*schema.Set)),
+	}
 }
 
 func resourceAwsSagemakerModelRead(d *schema.ResourceData, meta interface{}) error {
@@ -151,6 +190,9 @@ func resourceAwsSagemakerModelRead(d *schema.ResourceData, meta interface{}) err
 	if err := d.Set("primary_container", flattenPrimaryContainer(model.PrimaryContainer)); err != nil {
 		return err
 	}
+	if err := d.Set("vpc_config", flattenSageMakerVpcConfigResponse(model.VpcConfig)); err != nil {
+		return fmt.Errorf("error setting vpc_config: %s", err)
+	}
 
 	tagsOutput, err := conn.ListTags(&sagemaker.ListTagsInput{
 		ResourceArn: model.ModelArn,
@@ -159,6 +201,19 @@ func resourceAwsSagemakerModelRead(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 	return nil
+}
+
+func flattenSageMakerVpcConfigResponse(vpcConfig *sagemaker.VpcConfig) []map[string]interface{} {
+	if vpcConfig == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"security_group_ids": schema.NewSet(schema.HashString, flattenStringList(vpcConfig.SecurityGroupIds)),
+		"subnets":            schema.NewSet(schema.HashString, flattenStringList(vpcConfig.Subnets)),
+	}
+
+	return []map[string]interface{}{m}
 }
 
 func resourceAwsSagemakerModelUpdate(d *schema.ResourceData, meta interface{}) error {
