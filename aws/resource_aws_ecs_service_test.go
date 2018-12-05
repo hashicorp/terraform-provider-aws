@@ -557,7 +557,7 @@ func TestAccAWSEcsService_withLaunchTypeFargate(t *testing.T) {
 	tdName := fmt.Sprintf("tf-acc-td-svc-w-ltf-%s", rString)
 	svcName := fmt.Sprintf("tf-acc-svc-w-ltf-%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
@@ -572,13 +572,6 @@ func TestAccAWSEcsService_withLaunchTypeFargate(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_ecs_service.main", "network_configuration.0.subnets.#", "2"),
 				),
 			},
-		},
-	})
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
-		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSEcsServiceWithLaunchTypeFargate(sg1Name, sg2Name, clusterName, tdName, svcName, "true"),
 				Check: resource.ComposeTestCheckFunc(
@@ -586,13 +579,6 @@ func TestAccAWSEcsService_withLaunchTypeFargate(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_ecs_service.main", "network_configuration.0.assign_public_ip", "true"),
 				),
 			},
-		},
-	})
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
-		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSEcsServiceWithLaunchTypeFargate(sg1Name, sg2Name, clusterName, tdName, svcName, "false"),
 				Check: resource.ComposeTestCheckFunc(
