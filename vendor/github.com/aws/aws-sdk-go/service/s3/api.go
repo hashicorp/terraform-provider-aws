@@ -24162,6 +24162,9 @@ const (
 
 	// InventoryFormatOrc is a InventoryFormat enum value
 	InventoryFormatOrc = "ORC"
+
+	// InventoryFormatParquet is a InventoryFormat enum value
+	InventoryFormatParquet = "Parquet"
 )
 
 const (
