@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -19,6 +21,25 @@ func resourceAwsEcsTaskDefinition() *schema.Resource {
 		Read:   resourceAwsEcsTaskDefinitionRead,
 		Update: resourceAwsEcsTaskDefinitionUpdate,
 		Delete: resourceAwsEcsTaskDefinitionDelete,
+		Importer: &schema.ResourceImporter{
+			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				d.Set("arn", d.Id())
+
+				idErr := fmt.Errorf("Expected ID in format of arn:PARTITION:ecs:REGION:ACCOUNTID:task-definition/FAMILY:REVISION and provided: %s", d.Id())
+				resARN, err := arn.Parse(d.Id())
+				if err != nil {
+					return nil, idErr
+				}
+				familyRevision := strings.TrimPrefix(resARN.Resource, "task-definition/")
+				familyRevisionParts := strings.Split(familyRevision, ":")
+				if len(familyRevisionParts) != 2 {
+					return nil, idErr
+				}
+				d.SetId(familyRevisionParts[0])
+
+				return []*schema.ResourceData{d}, nil
+			},
+		},
 
 		SchemaVersion: 1,
 		MigrateState:  resourceAwsEcsTaskDefinitionMigrateState,
