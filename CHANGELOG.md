@@ -26,6 +26,7 @@ ENHANCEMENTS
 * resource/aws_default_vpc_dhcp_options: Add `owner_id` attribute [GH-6642]
 * resource/aws_dynamodb_table: Add `billing_mode` argument (support on-demand capacity) [GH-6648]
 * resource/aws_ecs_service: Add `propagate_tags` argument [GH-6603]
+* resource/aws_ecs_task_definition: Support resource import [GH-6723]
 * resource/aws_iam_group_policy_attachment: Support resource import [GH-6625]
 * resource/aws_iam_user_policy_attachment: Support resource import [GH-6487]
 * resource/aws_internet_gateway: Add `owner_id` attribute [GH-6642]
