@@ -46,9 +46,10 @@ ENHANCEMENTS
 
 BUG FIXES:
 
-* resource/aws_iot_topic_rule: Omit sending empty string `cloudwatch_metric` configuration block `metric_timestamp` argument to AWS [GH-6618]
 * resource/aws_db_instance: Allow `configuring-iam-database-auth` as pending state [GH-6597]
 * resource/aws_ec2_transit_gateway_vpc_attachment: Prevent error when Transit Gateway does not have default route table [GH-6665]
+* resource/aws_iam_user_ssh_key: Properly trigger resource recreation with `encoding` and `public_key` updates [GH-6718]
+* resource/aws_iot_topic_rule: Omit sending empty string `cloudwatch_metric` configuration block `metric_timestamp` argument to AWS [GH-6618]
 
 ## 1.50.0 (November 29, 2018)
 
