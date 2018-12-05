@@ -39,6 +39,7 @@ ENHANCEMENTS
 * resource/aws_route_table: Add `owner_id` attribute [GH-6642]
 * resource/aws_s3_bucket: Support `INTELLIGENT_TIERING` in storage class validations [GH-6589]
 * resource/aws_s3_bucket: Support replication rule destination storage class `GLACIER` [GH-6613]
+* resource/aws_s3_bucket_inventory: Support destination bucket `Parquet` in `format` validation [GH-6729]
 * resource/aws_s3_bucket_object: Support `GLACIER` in `storage_class` validation [GH-6610]
 * resource/aws_s3_bucket_object: Support `INTELLIGENT_TIERING` in `storage_class` validation [GH-6589]
 * resource/aws_ses_event_destination: Support multiple `cloudwatch_destination` configuration blocks [GH-6690]
