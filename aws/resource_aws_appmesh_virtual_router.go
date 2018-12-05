@@ -83,13 +83,13 @@ func resourceAwsAppmeshVirtualRouterCreate(d *schema.ResourceData, meta interfac
 
 	d.SetId(aws.StringValue(resp.VirtualRouter.Metadata.Uid))
 
-	return resourceAwsAppmeshVirtualRouterUpdate(d, meta)
+	return resourceAwsAppmeshVirtualRouterRead(d, meta)
 }
 
 func resourceAwsAppmeshVirtualRouterUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).appmeshconn
 
-	if !d.IsNewResource() && d.HasChange("spec") {
+	if d.HasChange("spec") {
 		_, v := d.GetChange("spec")
 		req := &appmesh.UpdateVirtualRouterInput{
 			MeshName:          aws.String(d.Get("mesh_name").(string)),
@@ -115,7 +115,7 @@ func resourceAwsAppmeshVirtualRouterRead(d *schema.ResourceData, meta interface{
 		VirtualRouterName: aws.String(d.Get("name").(string)),
 	})
 	if err != nil {
-		if isAWSErr(err, "NotFoundException", "") {
+		if isAWSErr(err, appmesh.ErrCodeNotFoundException, "") {
 			log.Printf("[WARN] App Mesh virtual router (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -149,7 +149,7 @@ func resourceAwsAppmeshVirtualRouterDelete(d *schema.ResourceData, meta interfac
 		VirtualRouterName: aws.String(d.Get("name").(string)),
 	})
 	if err != nil {
-		if isAWSErr(err, "NotFoundException", "") {
+		if isAWSErr(err, appmesh.ErrCodeNotFoundException, "") {
 			return nil
 		}
 		return fmt.Errorf("error deleting App Mesh virtual router: %s", err)
