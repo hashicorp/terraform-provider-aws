@@ -304,12 +304,18 @@ func resourceAwsEcsService() *schema.Resource {
 			"propagate_tags": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ForceNew: true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					if old == "NONE" && new == "" {
 						return true
 					}
 					return false
 				},
+				ValidateFunc: validation.StringInSlice([]string{
+					ecs.PropagateTagsService,
+					ecs.PropagateTagsTaskDefinition,
+					"",
+				}, false),
 			},
 
 			"service_registries": {
