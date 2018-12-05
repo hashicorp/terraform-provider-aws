@@ -14518,7 +14518,7 @@ type AccessKey struct {
 	// The secret key used to sign requests.
 	//
 	// SecretAccessKey is a required field
-	SecretAccessKey *string `type:"string" required:"true"`
+	SecretAccessKey *string `type:"string" required:"true" sensitive:"true"`
 
 	// The status of the access key. Active means that the key is valid for API
 	// calls, while Inactive means it is not.
@@ -15285,12 +15285,12 @@ type ChangePasswordInput struct {
 	// because they have special meaning within that tool.
 	//
 	// NewPassword is a required field
-	NewPassword *string `min:"1" type:"string" required:"true"`
+	NewPassword *string `min:"1" type:"string" required:"true" sensitive:"true"`
 
 	// The IAM user's current password.
 	//
 	// OldPassword is a required field
-	OldPassword *string `min:"1" type:"string" required:"true"`
+	OldPassword *string `min:"1" type:"string" required:"true" sensitive:"true"`
 }
 
 // String returns the string representation
@@ -15749,7 +15749,7 @@ type CreateLoginProfileInput struct {
 	// because they have special meaning within that tool.
 	//
 	// Password is a required field
-	Password *string `min:"1" type:"string" required:"true"`
+	Password *string `min:"1" type:"string" required:"true" sensitive:"true"`
 
 	// Specifies whether the user is required to set a new password on next sign-in.
 	PasswordResetRequired *bool `type:"boolean"`
@@ -27122,7 +27122,7 @@ type ServiceSpecificCredential struct {
 	// The generated password for the service-specific credential.
 	//
 	// ServicePassword is a required field
-	ServicePassword *string `type:"string" required:"true"`
+	ServicePassword *string `type:"string" required:"true" sensitive:"true"`
 
 	// The unique identifier for the service-specific credential.
 	//
@@ -28951,7 +28951,7 @@ type UpdateLoginProfileInput struct {
 	// However, the format can be further restricted by the account administrator
 	// by setting a password policy on the AWS account. For more information, see
 	// UpdateAccountPasswordPolicy.
-	Password *string `min:"1" type:"string"`
+	Password *string `min:"1" type:"string" sensitive:"true"`
 
 	// Allows this new password to be used only once by requiring the specified
 	// IAM user to set a new password on next sign-in.
@@ -30003,7 +30003,7 @@ type UploadServerCertificateInput struct {
 	//    return (\u000D)
 	//
 	// PrivateKey is a required field
-	PrivateKey *string `min:"1" type:"string" required:"true"`
+	PrivateKey *string `min:"1" type:"string" required:"true" sensitive:"true"`
 
 	// The name for the server certificate. Do not include the path in this value.
 	// The name of the certificate cannot contain any spaces.
@@ -30478,7 +30478,7 @@ type VirtualMFADevice struct {
 	// The Base32StringSeed is Base64-encoded.
 	//
 	// Base32StringSeed is automatically base64 encoded/decoded by the SDK.
-	Base32StringSeed []byte `type:"blob"`
+	Base32StringSeed []byte `type:"blob" sensitive:"true"`
 
 	// The date and time on which the virtual MFA device was enabled.
 	EnableDate *time.Time `type:"timestamp"`
@@ -30489,7 +30489,7 @@ type VirtualMFADevice struct {
 	// is the seed in Base32 format. The Base32String value is Base64-encoded.
 	//
 	// QRCodePNG is automatically base64 encoded/decoded by the SDK.
-	QRCodePNG []byte `type:"blob"`
+	QRCodePNG []byte `type:"blob" sensitive:"true"`
 
 	// The serial number associated with VirtualMFADevice.
 	//

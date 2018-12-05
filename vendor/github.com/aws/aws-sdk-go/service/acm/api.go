@@ -1979,7 +1979,7 @@ type ExportCertificateInput struct {
 	// Passphrase is automatically base64 encoded/decoded by the SDK.
 	//
 	// Passphrase is a required field
-	Passphrase []byte `min:"4" type:"blob" required:"true"`
+	Passphrase []byte `min:"4" type:"blob" required:"true" sensitive:"true"`
 }
 
 // String returns the string representation
@@ -2037,7 +2037,7 @@ type ExportCertificateOutput struct {
 	CertificateChain *string `min:"1" type:"string"`
 
 	// The PEM-encoded private key associated with the public key in the certificate.
-	PrivateKey *string `min:"1" type:"string"`
+	PrivateKey *string `min:"1" type:"string" sensitive:"true"`
 }
 
 // String returns the string representation
@@ -2271,7 +2271,7 @@ type ImportCertificateInput struct {
 	// PrivateKey is automatically base64 encoded/decoded by the SDK.
 	//
 	// PrivateKey is a required field
-	PrivateKey []byte `min:"1" type:"blob" required:"true"`
+	PrivateKey []byte `min:"1" type:"blob" required:"true" sensitive:"true"`
 }
 
 // String returns the string representation
