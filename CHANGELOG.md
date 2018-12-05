@@ -3,6 +3,7 @@
 FEATURES
 
 * **New Resource:** `aws_appmesh_mesh` [GH-6708]
+* **New Resource:** `aws_appmesh_virtual_router` [GH-6720]
 
 ENHANCEMENTS
 
