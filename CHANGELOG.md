@@ -1,59 +1,59 @@
-## 1.51.0 (Unreleased)
+## 1.51.0 (December 05, 2018)
 
 FEATURES
 
-* **New Resource:** `aws_appmesh_mesh` [GH-6708]
-* **New Resource:** `aws_appmesh_virtual_router` [GH-6720]
+* **New Resource:** `aws_appmesh_mesh` ([#6708](https://github.com/terraform-providers/terraform-provider-aws/issues/6708))
+* **New Resource:** `aws_appmesh_virtual_router` ([#6720](https://github.com/terraform-providers/terraform-provider-aws/issues/6720))
 
 ENHANCEMENTS
 
-* data-source/aws_availability_zone: Add `zone_id` attribute [GH-6686]
-* data-source/aws_availability_zones: Add `zone_ids` attribute [GH-6686]
-* data-source/aws_iam_policy_document: Provide error if duplicate `sid` are configured across statements [GH-6675]
-* data-source/aws_iam_policy_document: Add `version` argument [GH-6699]
-* data-source/aws_internet_gateway: Add `owner_id` attribute [GH-6642]
-* data-source/aws_route_table: Add `owner_id` attribute [GH-6642]
-* data-source/aws_subnet: Add `availability_zone_id` argument and `owner_id` attribute [GH-6642]
-* data-source/aws_subnet: Use API provided `arn` attribute [GH-6642]
-* data-source/aws_vpc: Add `owner_id` attribute [GH-6642]
-* data-source/aws_vpc_dhcp_options: Add `owner_id` attribute [GH-6642]
-* resource/aws_cloudtrail: Add `is_organization_trail` argument [GH-6580]
-* resource/aws_codedeploy_config: Add `compute_platform` and `traffic_routing_config` arguments (support Lambda) [GH-6644]
-* resource/aws_default_network_acl: Add `owner_id` attribute [GH-6642]
-* resource/aws_default_route_table: Add `owner_id` attribute [GH-6642]
-* resource/aws_default_subnet: Add `owner_id` attribute [GH-6642]
-* resource/aws_default_vpc: Add `owner_id` attribute [GH-6642]
-* resource/aws_default_vpc_dhcp_options: Add `owner_id` attribute [GH-6642]
-* resource/aws_dynamodb_table: Add `billing_mode` argument (support on-demand capacity) [GH-6648]
-* resource/aws_ecs_service: Add `propagate_tags` argument [GH-6603]
-* resource/aws_ecs_task_definition: Support resource import [GH-6723]
-* resource/aws_iam_group_policy_attachment: Support resource import [GH-6625]
-* resource/aws_iam_user_policy_attachment: Support resource import [GH-6487]
-* resource/aws_internet_gateway: Add `owner_id` attribute [GH-6642]
-* resource/aws_lambda_alias: Add `invoke_arn` attribute [GH-6329]
-* resource/aws_lambda_function: Support `provided` in `runtime` validation [GH-6676]
-* resource/aws_lambda_function: Support `python3.7` in `runtime` validation [GH-6583]
-* resource/aws_lambda_function: Support `ruby2.5` in `runtime` validation [GH-6657]
-* resource/aws_network_acl: Add `owner_id` attribute [GH-6642]
-* resource/aws_rds_cluster_instance: Add `copy_tags_to_snapshot` argument [GH-6582]
-* resource/aws_route_table: Add `owner_id` attribute [GH-6642]
-* resource/aws_s3_bucket: Support `INTELLIGENT_TIERING` in storage class validations [GH-6589]
-* resource/aws_s3_bucket: Support replication rule destination storage class `GLACIER` [GH-6613]
-* resource/aws_s3_bucket_inventory: Support destination bucket `Parquet` in `format` validation [GH-6729]
-* resource/aws_s3_bucket_object: Support `GLACIER` in `storage_class` validation [GH-6610]
-* resource/aws_s3_bucket_object: Support `INTELLIGENT_TIERING` in `storage_class` validation [GH-6589]
-* resource/aws_ses_event_destination: Support multiple `cloudwatch_destination` configuration blocks [GH-6690]
-* resource/aws_subnet: Add `availability_zone_id` argument and `owner_id` attribute [GH-6642]
-* resource/aws_subnet: Use API provided `arn` attribute [GH-6642]
-* resource/aws_vpc: Add `owner_id` attribute [GH-6642]
-* resource/aws_vpc_dhcp_options: Add `owner_id` attribute [GH-6642]
+* data-source/aws_availability_zone: Add `zone_id` attribute ([#6686](https://github.com/terraform-providers/terraform-provider-aws/issues/6686))
+* data-source/aws_availability_zones: Add `zone_ids` attribute ([#6686](https://github.com/terraform-providers/terraform-provider-aws/issues/6686))
+* data-source/aws_iam_policy_document: Provide error if duplicate `sid` are configured across statements ([#6675](https://github.com/terraform-providers/terraform-provider-aws/issues/6675))
+* data-source/aws_iam_policy_document: Add `version` argument ([#6699](https://github.com/terraform-providers/terraform-provider-aws/issues/6699))
+* data-source/aws_internet_gateway: Add `owner_id` attribute ([#6642](https://github.com/terraform-providers/terraform-provider-aws/issues/6642))
+* data-source/aws_route_table: Add `owner_id` attribute ([#6642](https://github.com/terraform-providers/terraform-provider-aws/issues/6642))
+* data-source/aws_subnet: Add `availability_zone_id` argument and `owner_id` attribute ([#6642](https://github.com/terraform-providers/terraform-provider-aws/issues/6642))
+* data-source/aws_subnet: Use API provided `arn` attribute ([#6642](https://github.com/terraform-providers/terraform-provider-aws/issues/6642))
+* data-source/aws_vpc: Add `owner_id` attribute ([#6642](https://github.com/terraform-providers/terraform-provider-aws/issues/6642))
+* data-source/aws_vpc_dhcp_options: Add `owner_id` attribute ([#6642](https://github.com/terraform-providers/terraform-provider-aws/issues/6642))
+* resource/aws_cloudtrail: Add `is_organization_trail` argument ([#6580](https://github.com/terraform-providers/terraform-provider-aws/issues/6580))
+* resource/aws_codedeploy_config: Add `compute_platform` and `traffic_routing_config` arguments (support Lambda) ([#6644](https://github.com/terraform-providers/terraform-provider-aws/issues/6644))
+* resource/aws_default_network_acl: Add `owner_id` attribute ([#6642](https://github.com/terraform-providers/terraform-provider-aws/issues/6642))
+* resource/aws_default_route_table: Add `owner_id` attribute ([#6642](https://github.com/terraform-providers/terraform-provider-aws/issues/6642))
+* resource/aws_default_subnet: Add `owner_id` attribute ([#6642](https://github.com/terraform-providers/terraform-provider-aws/issues/6642))
+* resource/aws_default_vpc: Add `owner_id` attribute ([#6642](https://github.com/terraform-providers/terraform-provider-aws/issues/6642))
+* resource/aws_default_vpc_dhcp_options: Add `owner_id` attribute ([#6642](https://github.com/terraform-providers/terraform-provider-aws/issues/6642))
+* resource/aws_dynamodb_table: Add `billing_mode` argument (support on-demand capacity) ([#6648](https://github.com/terraform-providers/terraform-provider-aws/issues/6648))
+* resource/aws_ecs_service: Add `propagate_tags` argument ([#6603](https://github.com/terraform-providers/terraform-provider-aws/issues/6603))
+* resource/aws_ecs_task_definition: Support resource import ([#6723](https://github.com/terraform-providers/terraform-provider-aws/issues/6723))
+* resource/aws_iam_group_policy_attachment: Support resource import ([#6625](https://github.com/terraform-providers/terraform-provider-aws/issues/6625))
+* resource/aws_iam_user_policy_attachment: Support resource import ([#6487](https://github.com/terraform-providers/terraform-provider-aws/issues/6487))
+* resource/aws_internet_gateway: Add `owner_id` attribute ([#6642](https://github.com/terraform-providers/terraform-provider-aws/issues/6642))
+* resource/aws_lambda_alias: Add `invoke_arn` attribute ([#6329](https://github.com/terraform-providers/terraform-provider-aws/issues/6329))
+* resource/aws_lambda_function: Support `provided` in `runtime` validation ([#6676](https://github.com/terraform-providers/terraform-provider-aws/issues/6676))
+* resource/aws_lambda_function: Support `python3.7` in `runtime` validation ([#6583](https://github.com/terraform-providers/terraform-provider-aws/issues/6583))
+* resource/aws_lambda_function: Support `ruby2.5` in `runtime` validation ([#6657](https://github.com/terraform-providers/terraform-provider-aws/issues/6657))
+* resource/aws_network_acl: Add `owner_id` attribute ([#6642](https://github.com/terraform-providers/terraform-provider-aws/issues/6642))
+* resource/aws_rds_cluster_instance: Add `copy_tags_to_snapshot` argument ([#6582](https://github.com/terraform-providers/terraform-provider-aws/issues/6582))
+* resource/aws_route_table: Add `owner_id` attribute ([#6642](https://github.com/terraform-providers/terraform-provider-aws/issues/6642))
+* resource/aws_s3_bucket: Support `INTELLIGENT_TIERING` in storage class validations ([#6589](https://github.com/terraform-providers/terraform-provider-aws/issues/6589))
+* resource/aws_s3_bucket: Support replication rule destination storage class `GLACIER` ([#6613](https://github.com/terraform-providers/terraform-provider-aws/issues/6613))
+* resource/aws_s3_bucket_inventory: Support destination bucket `Parquet` in `format` validation ([#6729](https://github.com/terraform-providers/terraform-provider-aws/issues/6729))
+* resource/aws_s3_bucket_object: Support `GLACIER` in `storage_class` validation ([#6610](https://github.com/terraform-providers/terraform-provider-aws/issues/6610))
+* resource/aws_s3_bucket_object: Support `INTELLIGENT_TIERING` in `storage_class` validation ([#6589](https://github.com/terraform-providers/terraform-provider-aws/issues/6589))
+* resource/aws_ses_event_destination: Support multiple `cloudwatch_destination` configuration blocks ([#6690](https://github.com/terraform-providers/terraform-provider-aws/issues/6690))
+* resource/aws_subnet: Add `availability_zone_id` argument and `owner_id` attribute ([#6642](https://github.com/terraform-providers/terraform-provider-aws/issues/6642))
+* resource/aws_subnet: Use API provided `arn` attribute ([#6642](https://github.com/terraform-providers/terraform-provider-aws/issues/6642))
+* resource/aws_vpc: Add `owner_id` attribute ([#6642](https://github.com/terraform-providers/terraform-provider-aws/issues/6642))
+* resource/aws_vpc_dhcp_options: Add `owner_id` attribute ([#6642](https://github.com/terraform-providers/terraform-provider-aws/issues/6642))
 
 BUG FIXES:
 
-* resource/aws_db_instance: Allow `configuring-iam-database-auth` as pending state [GH-6597]
-* resource/aws_ec2_transit_gateway_vpc_attachment: Prevent error when Transit Gateway does not have default route table [GH-6665]
-* resource/aws_iam_user_ssh_key: Properly trigger resource recreation with `encoding` and `public_key` updates [GH-6718]
-* resource/aws_iot_topic_rule: Omit sending empty string `cloudwatch_metric` configuration block `metric_timestamp` argument to AWS [GH-6618]
+* resource/aws_db_instance: Allow `configuring-iam-database-auth` as pending state ([#6597](https://github.com/terraform-providers/terraform-provider-aws/issues/6597))
+* resource/aws_ec2_transit_gateway_vpc_attachment: Prevent error when Transit Gateway does not have default route table ([#6665](https://github.com/terraform-providers/terraform-provider-aws/issues/6665))
+* resource/aws_iam_user_ssh_key: Properly trigger resource recreation with `encoding` and `public_key` updates ([#6718](https://github.com/terraform-providers/terraform-provider-aws/issues/6718))
+* resource/aws_iot_topic_rule: Omit sending empty string `cloudwatch_metric` configuration block `metric_timestamp` argument to AWS ([#6618](https://github.com/terraform-providers/terraform-provider-aws/issues/6618))
 
 ## 1.50.0 (November 29, 2018)
 
