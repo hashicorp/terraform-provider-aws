@@ -830,6 +830,42 @@ func TestAccAWSEcsService_ManagedTags(t *testing.T) {
 	})
 }
 
+func TestAccAWSEcsService_PropagateTags(t *testing.T) {
+	var first, second, third ecs.Service
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_ecs_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsServiceConfigPropagateTags(rName, "SERVICE"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists(resourceName, &first),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "propagate_tags", ecs.PropagateTagsService),
+				),
+			},
+			{
+				Config: testAccAWSEcsServiceConfigPropagateTags(rName, "TASK_DEFINITION"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists(resourceName, &second),
+					resource.TestCheckResourceAttr(resourceName, "propagate_tags", ecs.PropagateTagsTaskDefinition),
+				),
+			},
+			{
+				Config: testAccAWSEcsServiceConfigManagedTags(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists(resourceName, &third),
+					resource.TestCheckResourceAttr(resourceName, "propagate_tags", "NONE"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSEcsServiceDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).ecsconn
 
@@ -2517,6 +2553,47 @@ resource "aws_ecs_service" "test" {
   }
 }
 `, rName, rName, rName)
+}
+
+func testAccAWSEcsServiceConfigPropagateTags(rName, propagate string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_cluster" "test" {
+  name = %q
+}
+
+resource "aws_ecs_task_definition" "test" {
+  family = %q
+
+  container_definitions = <<DEFINITION
+[
+  {
+    "cpu": 128,
+    "essential": true,
+    "image": "mongo:latest",
+    "memory": 128,
+    "name": "mongodb"
+  }
+]
+DEFINITION
+
+  tags {
+    tag-key = "task-def"
+  }
+}
+
+resource "aws_ecs_service" "test" {
+  cluster                            = "${aws_ecs_cluster.test.id}"
+  desired_count                      = 0
+  name                               = %q
+  task_definition                    = "${aws_ecs_task_definition.test.arn}"
+  enable_ecs_managed_tags            = true
+  propagate_tags                     = "%s"
+
+  tags {
+    tag-key = "service"
+  }
+}
+`, rName, rName, rName, propagate)
 }
 
 func testAccAWSEcsServiceWithReplicaSchedulingStrategy(clusterName, tdName, svcName string) string {
