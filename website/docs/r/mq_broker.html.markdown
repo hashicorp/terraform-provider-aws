@@ -81,7 +81,7 @@ The following arguments are supported:
 * `time_of_day` - (Required) The time, in 24-hour format. e.g. `02:00`
 * `time_zone` - (Required) The time zone, UTC by default, in either the Country/City format, or the UTC offset format. e.g. `CET`
 
-~> **NOTE:** although terraform allows updating, AWS currently does not support updating the maintenance window beyond resource creation.
+~> **NOTE:** AWS currently does not support updating the maintenance window beyond resource creation.
 
 ### `logs`
 
