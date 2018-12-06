@@ -187,11 +187,11 @@ func resourceAwsDynamoDbTable() *schema.Resource {
 						},
 						"write_capacity": {
 							Type:     schema.TypeInt,
-							Required: true,
+							Optional: true,
 						},
 						"read_capacity": {
 							Type:     schema.TypeInt,
-							Required: true,
+							Optional: true,
 						},
 						"hash_key": {
 							Type:     schema.TypeString,
@@ -293,7 +293,8 @@ func resourceAwsDynamoDbTableCreate(d *schema.ResourceData, meta interface{}) er
 		KeySchema:   expandDynamoDbKeySchema(keySchemaMap),
 	}
 
-	if d.Get("billing_mode").(string) == dynamodb.BillingModeProvisioned {
+	billingMode := d.Get("billing_mode").(string)
+	if billingMode == dynamodb.BillingModeProvisioned {
 		v_read, ok_read := d.GetOk("read_capacity")
 		v_write, ok_write := d.GetOk("write_capacity")
 		if !ok_read || !ok_write {
@@ -319,9 +320,17 @@ func resourceAwsDynamoDbTableCreate(d *schema.ResourceData, meta interface{}) er
 	if v, ok := d.GetOk("global_secondary_index"); ok {
 		globalSecondaryIndexes := []*dynamodb.GlobalSecondaryIndex{}
 		gsiSet := v.(*schema.Set)
+
 		for _, gsiObject := range gsiSet.List() {
 			gsi := gsiObject.(map[string]interface{})
-			gsiObject := expandDynamoDbGlobalSecondaryIndex(gsi)
+
+			_, writeCapacitySet := gsi["write_capacity"]
+			_, readCapacitySet := gsi["read_capacity"]
+			if billingMode == dynamodb.BillingModeProvisioned && (!writeCapacitySet || !readCapacitySet) {
+				return fmt.Errorf("Read and Write capacity should be set for GSIs when billing mode is %s", dynamodb.BillingModeProvisioned)
+			}
+
+			gsiObject := expandDynamoDbGlobalSecondaryIndex(gsi, billingMode)
 			globalSecondaryIndexes = append(globalSecondaryIndexes, gsiObject)
 		}
 		req.GlobalSecondaryIndexes = globalSecondaryIndexes

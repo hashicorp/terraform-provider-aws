@@ -4308,13 +4308,18 @@ func expandDynamoDbLocalSecondaryIndexes(cfg []interface{}, keySchemaM map[strin
 	return indexes
 }
 
-func expandDynamoDbGlobalSecondaryIndex(data map[string]interface{}) *dynamodb.GlobalSecondaryIndex {
-	return &dynamodb.GlobalSecondaryIndex{
-		IndexName:             aws.String(data["name"].(string)),
-		KeySchema:             expandDynamoDbKeySchema(data),
-		Projection:            expandDynamoDbProjection(data),
-		ProvisionedThroughput: expandDynamoDbProvisionedThroughput(data),
+func expandDynamoDbGlobalSecondaryIndex(data map[string]interface{}, billingMode string) *dynamodb.GlobalSecondaryIndex {
+	gsi := &dynamodb.GlobalSecondaryIndex{
+		IndexName:  aws.String(data["name"].(string)),
+		KeySchema:  expandDynamoDbKeySchema(data),
+		Projection: expandDynamoDbProjection(data),
 	}
+
+	if billingMode == dynamodb.BillingModeProvisioned {
+		gsi.ProvisionedThroughput = expandDynamoDbProvisionedThroughput(data)
+	}
+
+	return gsi
 }
 
 func expandDynamoDbProvisionedThroughput(data map[string]interface{}) *dynamodb.ProvisionedThroughput {
