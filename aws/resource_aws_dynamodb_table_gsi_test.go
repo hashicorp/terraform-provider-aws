@@ -102,7 +102,7 @@ func TestAccAWSDynamoDbTableGsi_updateOtherAttributes(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSDynamoDbConfigGsiUpdatedOtherAttributes(tableName),
+				Config: testAccAWSDynamoDbGsiConfigUpdatedOtherAttributes(tableName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialAWSDynamoDbTableExists("aws_dynamodb_table.table", &conf),
 
