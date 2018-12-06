@@ -1996,6 +1996,9 @@ func (s *DeleteChannelInput) Validate() error {
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
 	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -2046,6 +2049,9 @@ func (s *DeleteOriginEndpointInput) Validate() error {
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
 	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -2095,6 +2101,9 @@ func (s *DescribeChannelInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DescribeChannelInput"}
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
+	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -2178,6 +2187,9 @@ func (s *DescribeOriginEndpointInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DescribeOriginEndpointInput"}
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
+	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -3231,6 +3243,9 @@ func (s *RotateChannelCredentialsInput) Validate() error {
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
 	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -3318,8 +3333,14 @@ func (s *RotateIngestEndpointCredentialsInput) Validate() error {
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
 	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
+	}
 	if s.IngestEndpointId == nil {
 		invalidParams.Add(request.NewErrParamRequired("IngestEndpointId"))
+	}
+	if s.IngestEndpointId != nil && len(*s.IngestEndpointId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("IngestEndpointId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -3548,6 +3569,9 @@ func (s *UpdateChannelInput) Validate() error {
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
 	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -3658,6 +3682,9 @@ func (s *UpdateOriginEndpointInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "UpdateOriginEndpointInput"}
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
+	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
 	}
 	if s.CmafPackage != nil {
 		if err := s.CmafPackage.Validate(); err != nil {

@@ -1055,6 +1055,9 @@ func (s *DeleteClusterInput) Validate() error {
 	if s.ClusterArn == nil {
 		invalidParams.Add(request.NewErrParamRequired("ClusterArn"))
 	}
+	if s.ClusterArn != nil && len(*s.ClusterArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ClusterArn", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -1129,6 +1132,9 @@ func (s *DescribeClusterInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DescribeClusterInput"}
 	if s.ClusterArn == nil {
 		invalidParams.Add(request.NewErrParamRequired("ClusterArn"))
+	}
+	if s.ClusterArn != nil && len(*s.ClusterArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ClusterArn", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -1307,6 +1313,9 @@ func (s *GetBootstrapBrokersInput) Validate() error {
 	if s.ClusterArn == nil {
 		invalidParams.Add(request.NewErrParamRequired("ClusterArn"))
 	}
+	if s.ClusterArn != nil && len(*s.ClusterArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ClusterArn", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -1457,6 +1466,9 @@ func (s *ListNodesInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "ListNodesInput"}
 	if s.ClusterArn == nil {
 		invalidParams.Add(request.NewErrParamRequired("ClusterArn"))
+	}
+	if s.ClusterArn != nil && len(*s.ClusterArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ClusterArn", 1))
 	}
 	if s.MaxResults != nil && *s.MaxResults < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))

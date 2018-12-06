@@ -4813,6 +4813,9 @@ func (s *DeleteInsightInput) Validate() error {
 	if s.InsightArn == nil {
 		invalidParams.Add(request.NewErrParamRequired("InsightArn"))
 	}
+	if s.InsightArn != nil && len(*s.InsightArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("InsightArn", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -4971,6 +4974,9 @@ func (s *DisableImportFindingsForProductInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DisableImportFindingsForProductInput"}
 	if s.ProductSubscriptionArn == nil {
 		invalidParams.Add(request.NewErrParamRequired("ProductSubscriptionArn"))
+	}
+	if s.ProductSubscriptionArn != nil && len(*s.ProductSubscriptionArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ProductSubscriptionArn", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -5400,6 +5406,9 @@ func (s *GetInsightResultsInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "GetInsightResultsInput"}
 	if s.InsightArn == nil {
 		invalidParams.Add(request.NewErrParamRequired("InsightArn"))
+	}
+	if s.InsightArn != nil && len(*s.InsightArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("InsightArn", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -7500,6 +7509,9 @@ func (s *UpdateInsightInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "UpdateInsightInput"}
 	if s.InsightArn == nil {
 		invalidParams.Add(request.NewErrParamRequired("InsightArn"))
+	}
+	if s.InsightArn != nil && len(*s.InsightArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("InsightArn", 1))
 	}
 
 	if invalidParams.Len() > 0 {

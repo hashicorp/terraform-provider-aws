@@ -1944,10 +1944,10 @@ type ActivityFailedEventDetails struct {
 	_ struct{} `type:"structure"`
 
 	// A more detailed explanation of the cause of the failure.
-	Cause *string `locationName:"cause" type:"string"`
+	Cause *string `locationName:"cause" type:"string" sensitive:"true"`
 
 	// The error code of the failure.
-	Error *string `locationName:"error" type:"string"`
+	Error *string `locationName:"error" type:"string" sensitive:"true"`
 }
 
 // String returns the string representation
@@ -2038,10 +2038,10 @@ type ActivityScheduleFailedEventDetails struct {
 	_ struct{} `type:"structure"`
 
 	// A more detailed explanation of the cause of the failure.
-	Cause *string `locationName:"cause" type:"string"`
+	Cause *string `locationName:"cause" type:"string" sensitive:"true"`
 
 	// The error code of the failure.
-	Error *string `locationName:"error" type:"string"`
+	Error *string `locationName:"error" type:"string" sensitive:"true"`
 }
 
 // String returns the string representation
@@ -2074,7 +2074,7 @@ type ActivityScheduledEventDetails struct {
 	HeartbeatInSeconds *int64 `locationName:"heartbeatInSeconds" type:"long"`
 
 	// The JSON data input to the activity task.
-	Input *string `locationName:"input" type:"string"`
+	Input *string `locationName:"input" type:"string" sensitive:"true"`
 
 	// The Amazon Resource Name (ARN) of the scheduled activity.
 	//
@@ -2150,7 +2150,7 @@ type ActivitySucceededEventDetails struct {
 	_ struct{} `type:"structure"`
 
 	// The JSON data output by the activity task.
-	Output *string `locationName:"output" type:"string"`
+	Output *string `locationName:"output" type:"string" sensitive:"true"`
 }
 
 // String returns the string representation
@@ -2174,10 +2174,10 @@ type ActivityTimedOutEventDetails struct {
 	_ struct{} `type:"structure"`
 
 	// A more detailed explanation of the cause of the timeout.
-	Cause *string `locationName:"cause" type:"string"`
+	Cause *string `locationName:"cause" type:"string" sensitive:"true"`
 
 	// The error code of the failure.
-	Error *string `locationName:"error" type:"string"`
+	Error *string `locationName:"error" type:"string" sensitive:"true"`
 }
 
 // String returns the string representation
@@ -2301,7 +2301,7 @@ type CreateStateMachineInput struct {
 	// Language (http://docs.aws.amazon.com/step-functions/latest/dg/concepts-amazon-states-language.html).
 	//
 	// Definition is a required field
-	Definition *string `locationName:"definition" min:"1" type:"string" required:"true"`
+	Definition *string `locationName:"definition" min:"1" type:"string" required:"true" sensitive:"true"`
 
 	// The name of the state machine.
 	//
@@ -2680,7 +2680,7 @@ type DescribeExecutionOutput struct {
 	// The string that contains the JSON input data of the execution.
 	//
 	// Input is a required field
-	Input *string `locationName:"input" type:"string" required:"true"`
+	Input *string `locationName:"input" type:"string" required:"true" sensitive:"true"`
 
 	// The name of the execution.
 	//
@@ -2701,7 +2701,7 @@ type DescribeExecutionOutput struct {
 	//
 	// This field is set only if the execution succeeds. If the execution fails,
 	// this field is null.
-	Output *string `locationName:"output" type:"string"`
+	Output *string `locationName:"output" type:"string" sensitive:"true"`
 
 	// The date the execution is started.
 	//
@@ -2829,7 +2829,7 @@ type DescribeStateMachineForExecutionOutput struct {
 	// Language (http://docs.aws.amazon.com/step-functions/latest/dg/concepts-amazon-states-language.html).
 	//
 	// Definition is a required field
-	Definition *string `locationName:"definition" min:"1" type:"string" required:"true"`
+	Definition *string `locationName:"definition" min:"1" type:"string" required:"true" sensitive:"true"`
 
 	// The name of the state machine associated with the execution.
 	//
@@ -2947,7 +2947,7 @@ type DescribeStateMachineOutput struct {
 	// Language (http://docs.aws.amazon.com/step-functions/latest/dg/concepts-amazon-states-language.html).
 	//
 	// Definition is a required field
-	Definition *string `locationName:"definition" min:"1" type:"string" required:"true"`
+	Definition *string `locationName:"definition" min:"1" type:"string" required:"true" sensitive:"true"`
 
 	// The name of the state machine.
 	//
@@ -3033,10 +3033,10 @@ type ExecutionAbortedEventDetails struct {
 	_ struct{} `type:"structure"`
 
 	// A more detailed explanation of the cause of the failure.
-	Cause *string `locationName:"cause" type:"string"`
+	Cause *string `locationName:"cause" type:"string" sensitive:"true"`
 
 	// The error code of the failure.
-	Error *string `locationName:"error" type:"string"`
+	Error *string `locationName:"error" type:"string" sensitive:"true"`
 }
 
 // String returns the string representation
@@ -3066,10 +3066,10 @@ type ExecutionFailedEventDetails struct {
 	_ struct{} `type:"structure"`
 
 	// A more detailed explanation of the cause of the failure.
-	Cause *string `locationName:"cause" type:"string"`
+	Cause *string `locationName:"cause" type:"string" sensitive:"true"`
 
 	// The error code of the failure.
-	Error *string `locationName:"error" type:"string"`
+	Error *string `locationName:"error" type:"string" sensitive:"true"`
 }
 
 // String returns the string representation
@@ -3190,7 +3190,7 @@ type ExecutionStartedEventDetails struct {
 	_ struct{} `type:"structure"`
 
 	// The JSON data input to the execution.
-	Input *string `locationName:"input" type:"string"`
+	Input *string `locationName:"input" type:"string" sensitive:"true"`
 
 	// The Amazon Resource Name (ARN) of the IAM role used for executing AWS Lambda
 	// tasks.
@@ -3224,7 +3224,7 @@ type ExecutionSucceededEventDetails struct {
 	_ struct{} `type:"structure"`
 
 	// The JSON data output by the execution.
-	Output *string `locationName:"output" type:"string"`
+	Output *string `locationName:"output" type:"string" sensitive:"true"`
 }
 
 // String returns the string representation
@@ -3248,10 +3248,10 @@ type ExecutionTimedOutEventDetails struct {
 	_ struct{} `type:"structure"`
 
 	// A more detailed explanation of the cause of the timeout.
-	Cause *string `locationName:"cause" type:"string"`
+	Cause *string `locationName:"cause" type:"string" sensitive:"true"`
 
 	// The error code of the failure.
-	Error *string `locationName:"error" type:"string"`
+	Error *string `locationName:"error" type:"string" sensitive:"true"`
 }
 
 // String returns the string representation
@@ -3336,7 +3336,7 @@ type GetActivityTaskOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The string that contains the JSON input data for the task.
-	Input *string `locationName:"input" type:"string"`
+	Input *string `locationName:"input" type:"string" sensitive:"true"`
 
 	// A token that identifies the scheduled task. This token must be copied and
 	// included in subsequent calls to SendTaskHeartbeat, SendTaskSuccess or SendTaskFailure
@@ -3792,10 +3792,10 @@ type LambdaFunctionFailedEventDetails struct {
 	_ struct{} `type:"structure"`
 
 	// A more detailed explanation of the cause of the failure.
-	Cause *string `locationName:"cause" type:"string"`
+	Cause *string `locationName:"cause" type:"string" sensitive:"true"`
 
 	// The error code of the failure.
-	Error *string `locationName:"error" type:"string"`
+	Error *string `locationName:"error" type:"string" sensitive:"true"`
 }
 
 // String returns the string representation
@@ -3826,10 +3826,10 @@ type LambdaFunctionScheduleFailedEventDetails struct {
 	_ struct{} `type:"structure"`
 
 	// A more detailed explanation of the cause of the failure.
-	Cause *string `locationName:"cause" type:"string"`
+	Cause *string `locationName:"cause" type:"string" sensitive:"true"`
 
 	// The error code of the failure.
-	Error *string `locationName:"error" type:"string"`
+	Error *string `locationName:"error" type:"string" sensitive:"true"`
 }
 
 // String returns the string representation
@@ -3859,7 +3859,7 @@ type LambdaFunctionScheduledEventDetails struct {
 	_ struct{} `type:"structure"`
 
 	// The JSON data input to the lambda function.
-	Input *string `locationName:"input" type:"string"`
+	Input *string `locationName:"input" type:"string" sensitive:"true"`
 
 	// The Amazon Resource Name (ARN) of the scheduled lambda function.
 	//
@@ -3903,10 +3903,10 @@ type LambdaFunctionStartFailedEventDetails struct {
 	_ struct{} `type:"structure"`
 
 	// A more detailed explanation of the cause of the failure.
-	Cause *string `locationName:"cause" type:"string"`
+	Cause *string `locationName:"cause" type:"string" sensitive:"true"`
 
 	// The error code of the failure.
-	Error *string `locationName:"error" type:"string"`
+	Error *string `locationName:"error" type:"string" sensitive:"true"`
 }
 
 // String returns the string representation
@@ -3937,7 +3937,7 @@ type LambdaFunctionSucceededEventDetails struct {
 	_ struct{} `type:"structure"`
 
 	// The JSON data output by the lambda function.
-	Output *string `locationName:"output" type:"string"`
+	Output *string `locationName:"output" type:"string" sensitive:"true"`
 }
 
 // String returns the string representation
@@ -3962,10 +3962,10 @@ type LambdaFunctionTimedOutEventDetails struct {
 	_ struct{} `type:"structure"`
 
 	// A more detailed explanation of the cause of the timeout.
-	Cause *string `locationName:"cause" type:"string"`
+	Cause *string `locationName:"cause" type:"string" sensitive:"true"`
 
 	// The error code of the failure.
-	Error *string `locationName:"error" type:"string"`
+	Error *string `locationName:"error" type:"string" sensitive:"true"`
 }
 
 // String returns the string representation
@@ -4295,10 +4295,10 @@ type SendTaskFailureInput struct {
 	_ struct{} `type:"structure"`
 
 	// A more detailed explanation of the cause of the failure.
-	Cause *string `locationName:"cause" type:"string"`
+	Cause *string `locationName:"cause" type:"string" sensitive:"true"`
 
 	// The error code of the failure.
-	Error *string `locationName:"error" type:"string"`
+	Error *string `locationName:"error" type:"string" sensitive:"true"`
 
 	// The token that represents this task. Task tokens are generated by the service
 	// when the tasks are assigned to a worker (see GetActivityTask::taskToken).
@@ -4427,7 +4427,7 @@ type SendTaskSuccessInput struct {
 	// The JSON output of the task.
 	//
 	// Output is a required field
-	Output *string `locationName:"output" type:"string" required:"true"`
+	Output *string `locationName:"output" type:"string" required:"true" sensitive:"true"`
 
 	// The token that represents this task. Task tokens are generated by the service
 	// when the tasks are assigned to a worker (see GetActivityTaskOutput$taskToken).
@@ -4500,7 +4500,7 @@ type StartExecutionInput struct {
 	//
 	// If you don't include any JSON input data, you still must include the two
 	// braces, for example: "input": "{}"
-	Input *string `locationName:"input" type:"string"`
+	Input *string `locationName:"input" type:"string" sensitive:"true"`
 
 	// The name of the execution. This name must be unique for your AWS account
 	// and region for 90 days. For more information, see  Limits Related to State
@@ -4614,7 +4614,7 @@ type StateEnteredEventDetails struct {
 	_ struct{} `type:"structure"`
 
 	// The string that contains the JSON input data for the state.
-	Input *string `locationName:"input" type:"string"`
+	Input *string `locationName:"input" type:"string" sensitive:"true"`
 
 	// The name of the state.
 	//
@@ -4666,7 +4666,7 @@ type StateExitedEventDetails struct {
 	Name *string `locationName:"name" min:"1" type:"string" required:"true"`
 
 	// The JSON output data of the state.
-	Output *string `locationName:"output" type:"string"`
+	Output *string `locationName:"output" type:"string" sensitive:"true"`
 }
 
 // String returns the string representation
@@ -4755,10 +4755,10 @@ type StopExecutionInput struct {
 	_ struct{} `type:"structure"`
 
 	// A more detailed explanation of the cause of the failure.
-	Cause *string `locationName:"cause" type:"string"`
+	Cause *string `locationName:"cause" type:"string" sensitive:"true"`
 
 	// The error code of the failure.
-	Error *string `locationName:"error" type:"string"`
+	Error *string `locationName:"error" type:"string" sensitive:"true"`
 
 	// The Amazon Resource Name (ARN) of the execution to stop.
 	//
@@ -4840,10 +4840,10 @@ type TaskFailedEventDetails struct {
 	_ struct{} `type:"structure"`
 
 	// A more detailed explanation of the cause of the failure.
-	Cause *string `locationName:"cause" type:"string"`
+	Cause *string `locationName:"cause" type:"string" sensitive:"true"`
 
 	// The error code of the failure.
-	Error *string `locationName:"error" type:"string"`
+	Error *string `locationName:"error" type:"string" sensitive:"true"`
 
 	// The service name of the connected service in a task state.
 	//
@@ -4897,7 +4897,7 @@ type TaskScheduledEventDetails struct {
 	// The JSON data passed to the connected service referenced in a task state.
 	//
 	// Parameters is a required field
-	Parameters *string `locationName:"parameters" type:"string" required:"true"`
+	Parameters *string `locationName:"parameters" type:"string" required:"true" sensitive:"true"`
 
 	// Region is a required field
 	Region *string `locationName:"region" min:"1" type:"string" required:"true"`
@@ -4961,10 +4961,10 @@ type TaskStartFailedEventDetails struct {
 	_ struct{} `type:"structure"`
 
 	// A more detailed explanation of the cause of the failure.
-	Cause *string `locationName:"cause" type:"string"`
+	Cause *string `locationName:"cause" type:"string" sensitive:"true"`
 
 	// The error code of the failure.
-	Error *string `locationName:"error" type:"string"`
+	Error *string `locationName:"error" type:"string" sensitive:"true"`
 
 	// The service name of the connected service in a task state.
 	//
@@ -5052,10 +5052,10 @@ type TaskSubmitFailedEventDetails struct {
 	_ struct{} `type:"structure"`
 
 	// A more detailed explanation of the cause of the failure.
-	Cause *string `locationName:"cause" type:"string"`
+	Cause *string `locationName:"cause" type:"string" sensitive:"true"`
 
 	// The error code of the failure.
-	Error *string `locationName:"error" type:"string"`
+	Error *string `locationName:"error" type:"string" sensitive:"true"`
 
 	// The service name of the connected service in a task state.
 	//
@@ -5106,7 +5106,7 @@ type TaskSubmittedEventDetails struct {
 	_ struct{} `type:"structure"`
 
 	// The response from a connected service when a task has started.
-	Output *string `locationName:"output" type:"string"`
+	Output *string `locationName:"output" type:"string" sensitive:"true"`
 
 	// The service name of the connected service in a task state.
 	//
@@ -5153,7 +5153,7 @@ type TaskSucceededEventDetails struct {
 
 	// The full JSON response from a connected service when a task has succeeded.
 	// This response becomes the output of the related task.
-	Output *string `locationName:"output" type:"string"`
+	Output *string `locationName:"output" type:"string" sensitive:"true"`
 
 	// The service name of the connected service in a task state.
 	//
@@ -5200,10 +5200,10 @@ type TaskTimedOutEventDetails struct {
 	_ struct{} `type:"structure"`
 
 	// A more detailed explanation of the cause of the failure.
-	Cause *string `locationName:"cause" type:"string"`
+	Cause *string `locationName:"cause" type:"string" sensitive:"true"`
 
 	// The error code of the failure.
-	Error *string `locationName:"error" type:"string"`
+	Error *string `locationName:"error" type:"string" sensitive:"true"`
 
 	// The service name of the connected service in a task state.
 	//
@@ -5255,7 +5255,7 @@ type UpdateStateMachineInput struct {
 
 	// The Amazon States Language definition of the state machine. See Amazon States
 	// Language (http://docs.aws.amazon.com/step-functions/latest/dg/concepts-amazon-states-language.html).
-	Definition *string `locationName:"definition" min:"1" type:"string"`
+	Definition *string `locationName:"definition" min:"1" type:"string" sensitive:"true"`
 
 	// The Amazon Resource Name (ARN) of the IAM role of the state machine.
 	RoleArn *string `locationName:"roleArn" min:"1" type:"string"`

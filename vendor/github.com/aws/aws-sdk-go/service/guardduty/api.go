@@ -3906,6 +3906,9 @@ func (s *AcceptInvitationInput) Validate() error {
 	if s.DetectorId == nil {
 		invalidParams.Add(request.NewErrParamRequired("DetectorId"))
 	}
+	if s.DetectorId != nil && len(*s.DetectorId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DetectorId", 1))
+	}
 	if s.InvitationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("InvitationId"))
 	}
@@ -4144,6 +4147,9 @@ func (s *ArchiveFindingsInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "ArchiveFindingsInput"}
 	if s.DetectorId == nil {
 		invalidParams.Add(request.NewErrParamRequired("DetectorId"))
+	}
+	if s.DetectorId != nil && len(*s.DetectorId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DetectorId", 1))
 	}
 	if s.FindingIds == nil {
 		invalidParams.Add(request.NewErrParamRequired("FindingIds"))
@@ -4503,6 +4509,9 @@ func (s *CreateFilterInput) Validate() error {
 	if s.DetectorId == nil {
 		invalidParams.Add(request.NewErrParamRequired("DetectorId"))
 	}
+	if s.DetectorId != nil && len(*s.DetectorId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DetectorId", 1))
+	}
 	if s.FindingCriteria == nil {
 		invalidParams.Add(request.NewErrParamRequired("FindingCriteria"))
 	}
@@ -4635,6 +4644,9 @@ func (s *CreateIPSetInput) Validate() error {
 	if s.DetectorId == nil {
 		invalidParams.Add(request.NewErrParamRequired("DetectorId"))
 	}
+	if s.DetectorId != nil && len(*s.DetectorId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DetectorId", 1))
+	}
 	if s.Format == nil {
 		invalidParams.Add(request.NewErrParamRequired("Format"))
 	}
@@ -4744,6 +4756,9 @@ func (s *CreateMembersInput) Validate() error {
 	if s.DetectorId == nil {
 		invalidParams.Add(request.NewErrParamRequired("DetectorId"))
 	}
+	if s.DetectorId != nil && len(*s.DetectorId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DetectorId", 1))
+	}
 	if s.AccountDetails != nil {
 		for i, v := range s.AccountDetails {
 			if v == nil {
@@ -4824,6 +4839,9 @@ func (s *CreateSampleFindingsInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CreateSampleFindingsInput"}
 	if s.DetectorId == nil {
 		invalidParams.Add(request.NewErrParamRequired("DetectorId"))
+	}
+	if s.DetectorId != nil && len(*s.DetectorId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DetectorId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -4909,6 +4927,9 @@ func (s *CreateThreatIntelSetInput) Validate() error {
 	}
 	if s.DetectorId == nil {
 		invalidParams.Add(request.NewErrParamRequired("DetectorId"))
+	}
+	if s.DetectorId != nil && len(*s.DetectorId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DetectorId", 1))
 	}
 	if s.Format == nil {
 		invalidParams.Add(request.NewErrParamRequired("Format"))
@@ -5074,6 +5095,9 @@ func (s *DeleteDetectorInput) Validate() error {
 	if s.DetectorId == nil {
 		invalidParams.Add(request.NewErrParamRequired("DetectorId"))
 	}
+	if s.DetectorId != nil && len(*s.DetectorId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DetectorId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -5127,8 +5151,14 @@ func (s *DeleteFilterInput) Validate() error {
 	if s.DetectorId == nil {
 		invalidParams.Add(request.NewErrParamRequired("DetectorId"))
 	}
+	if s.DetectorId != nil && len(*s.DetectorId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DetectorId", 1))
+	}
 	if s.FilterName == nil {
 		invalidParams.Add(request.NewErrParamRequired("FilterName"))
+	}
+	if s.FilterName != nil && len(*s.FilterName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("FilterName", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -5189,8 +5219,14 @@ func (s *DeleteIPSetInput) Validate() error {
 	if s.DetectorId == nil {
 		invalidParams.Add(request.NewErrParamRequired("DetectorId"))
 	}
+	if s.DetectorId != nil && len(*s.DetectorId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DetectorId", 1))
+	}
 	if s.IpSetId == nil {
 		invalidParams.Add(request.NewErrParamRequired("IpSetId"))
+	}
+	if s.IpSetId != nil && len(*s.IpSetId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("IpSetId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -5322,6 +5358,9 @@ func (s *DeleteMembersInput) Validate() error {
 	if s.DetectorId == nil {
 		invalidParams.Add(request.NewErrParamRequired("DetectorId"))
 	}
+	if s.DetectorId != nil && len(*s.DetectorId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DetectorId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -5392,8 +5431,14 @@ func (s *DeleteThreatIntelSetInput) Validate() error {
 	if s.DetectorId == nil {
 		invalidParams.Add(request.NewErrParamRequired("DetectorId"))
 	}
+	if s.DetectorId != nil && len(*s.DetectorId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DetectorId", 1))
+	}
 	if s.ThreatIntelSetId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ThreatIntelSetId"))
+	}
+	if s.ThreatIntelSetId != nil && len(*s.ThreatIntelSetId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ThreatIntelSetId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -5450,6 +5495,9 @@ func (s *DisassociateFromMasterAccountInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DisassociateFromMasterAccountInput"}
 	if s.DetectorId == nil {
 		invalidParams.Add(request.NewErrParamRequired("DetectorId"))
+	}
+	if s.DetectorId != nil && len(*s.DetectorId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DetectorId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -5510,6 +5558,9 @@ func (s *DisassociateMembersInput) Validate() error {
 	}
 	if s.DetectorId == nil {
 		invalidParams.Add(request.NewErrParamRequired("DetectorId"))
+	}
+	if s.DetectorId != nil && len(*s.DetectorId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DetectorId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -5872,6 +5923,9 @@ func (s *GetDetectorInput) Validate() error {
 	if s.DetectorId == nil {
 		invalidParams.Add(request.NewErrParamRequired("DetectorId"))
 	}
+	if s.DetectorId != nil && len(*s.DetectorId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DetectorId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -5971,8 +6025,14 @@ func (s *GetFilterInput) Validate() error {
 	if s.DetectorId == nil {
 		invalidParams.Add(request.NewErrParamRequired("DetectorId"))
 	}
+	if s.DetectorId != nil && len(*s.DetectorId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DetectorId", 1))
+	}
 	if s.FilterName == nil {
 		invalidParams.Add(request.NewErrParamRequired("FilterName"))
+	}
+	if s.FilterName != nil && len(*s.FilterName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("FilterName", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -6087,6 +6147,9 @@ func (s *GetFindingsInput) Validate() error {
 	if s.DetectorId == nil {
 		invalidParams.Add(request.NewErrParamRequired("DetectorId"))
 	}
+	if s.DetectorId != nil && len(*s.DetectorId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DetectorId", 1))
+	}
 	if s.FindingIds == nil {
 		invalidParams.Add(request.NewErrParamRequired("FindingIds"))
 	}
@@ -6171,6 +6234,9 @@ func (s *GetFindingsStatisticsInput) Validate() error {
 	if s.DetectorId == nil {
 		invalidParams.Add(request.NewErrParamRequired("DetectorId"))
 	}
+	if s.DetectorId != nil && len(*s.DetectorId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DetectorId", 1))
+	}
 	if s.FindingStatisticTypes == nil {
 		invalidParams.Add(request.NewErrParamRequired("FindingStatisticTypes"))
 	}
@@ -6249,8 +6315,14 @@ func (s *GetIPSetInput) Validate() error {
 	if s.DetectorId == nil {
 		invalidParams.Add(request.NewErrParamRequired("DetectorId"))
 	}
+	if s.DetectorId != nil && len(*s.DetectorId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DetectorId", 1))
+	}
 	if s.IpSetId == nil {
 		invalidParams.Add(request.NewErrParamRequired("IpSetId"))
+	}
+	if s.IpSetId != nil && len(*s.IpSetId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("IpSetId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -6385,6 +6457,9 @@ func (s *GetMasterAccountInput) Validate() error {
 	if s.DetectorId == nil {
 		invalidParams.Add(request.NewErrParamRequired("DetectorId"))
 	}
+	if s.DetectorId != nil && len(*s.DetectorId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DetectorId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -6453,6 +6528,9 @@ func (s *GetMembersInput) Validate() error {
 	}
 	if s.DetectorId == nil {
 		invalidParams.Add(request.NewErrParamRequired("DetectorId"))
+	}
+	if s.DetectorId != nil && len(*s.DetectorId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DetectorId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -6533,8 +6611,14 @@ func (s *GetThreatIntelSetInput) Validate() error {
 	if s.DetectorId == nil {
 		invalidParams.Add(request.NewErrParamRequired("DetectorId"))
 	}
+	if s.DetectorId != nil && len(*s.DetectorId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DetectorId", 1))
+	}
 	if s.ThreatIntelSetId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ThreatIntelSetId"))
+	}
+	if s.ThreatIntelSetId != nil && len(*s.ThreatIntelSetId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ThreatIntelSetId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -6856,6 +6940,9 @@ func (s *InviteMembersInput) Validate() error {
 	if s.DetectorId == nil {
 		invalidParams.Add(request.NewErrParamRequired("DetectorId"))
 	}
+	if s.DetectorId != nil && len(*s.DetectorId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DetectorId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -7022,6 +7109,9 @@ func (s *ListFiltersInput) Validate() error {
 	if s.DetectorId == nil {
 		invalidParams.Add(request.NewErrParamRequired("DetectorId"))
 	}
+	if s.DetectorId != nil && len(*s.DetectorId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DetectorId", 1))
+	}
 	if s.MaxResults != nil && *s.MaxResults < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
 	}
@@ -7125,6 +7215,9 @@ func (s *ListFindingsInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "ListFindingsInput"}
 	if s.DetectorId == nil {
 		invalidParams.Add(request.NewErrParamRequired("DetectorId"))
+	}
+	if s.DetectorId != nil && len(*s.DetectorId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DetectorId", 1))
 	}
 	if s.MaxResults != nil && *s.MaxResults < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
@@ -7230,6 +7323,9 @@ func (s *ListIPSetsInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "ListIPSetsInput"}
 	if s.DetectorId == nil {
 		invalidParams.Add(request.NewErrParamRequired("DetectorId"))
+	}
+	if s.DetectorId != nil && len(*s.DetectorId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DetectorId", 1))
 	}
 	if s.MaxResults != nil && *s.MaxResults < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
@@ -7407,6 +7503,9 @@ func (s *ListMembersInput) Validate() error {
 	if s.DetectorId == nil {
 		invalidParams.Add(request.NewErrParamRequired("DetectorId"))
 	}
+	if s.DetectorId != nil && len(*s.DetectorId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DetectorId", 1))
+	}
 	if s.MaxResults != nil && *s.MaxResults < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
 	}
@@ -7505,6 +7604,9 @@ func (s *ListThreatIntelSetsInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "ListThreatIntelSetsInput"}
 	if s.DetectorId == nil {
 		invalidParams.Add(request.NewErrParamRequired("DetectorId"))
+	}
+	if s.DetectorId != nil && len(*s.DetectorId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DetectorId", 1))
 	}
 	if s.MaxResults != nil && *s.MaxResults < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
@@ -8435,6 +8537,9 @@ func (s *StartMonitoringMembersInput) Validate() error {
 	if s.DetectorId == nil {
 		invalidParams.Add(request.NewErrParamRequired("DetectorId"))
 	}
+	if s.DetectorId != nil && len(*s.DetectorId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DetectorId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -8511,6 +8616,9 @@ func (s *StopMonitoringMembersInput) Validate() error {
 	}
 	if s.DetectorId == nil {
 		invalidParams.Add(request.NewErrParamRequired("DetectorId"))
+	}
+	if s.DetectorId != nil && len(*s.DetectorId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DetectorId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -8618,6 +8726,9 @@ func (s *UnarchiveFindingsInput) Validate() error {
 	if s.DetectorId == nil {
 		invalidParams.Add(request.NewErrParamRequired("DetectorId"))
 	}
+	if s.DetectorId != nil && len(*s.DetectorId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DetectorId", 1))
+	}
 	if s.FindingIds == nil {
 		invalidParams.Add(request.NewErrParamRequired("FindingIds"))
 	}
@@ -8723,6 +8834,9 @@ func (s *UpdateDetectorInput) Validate() error {
 	if s.DetectorId == nil {
 		invalidParams.Add(request.NewErrParamRequired("DetectorId"))
 	}
+	if s.DetectorId != nil && len(*s.DetectorId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DetectorId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -8803,8 +8917,14 @@ func (s *UpdateFilterInput) Validate() error {
 	if s.DetectorId == nil {
 		invalidParams.Add(request.NewErrParamRequired("DetectorId"))
 	}
+	if s.DetectorId != nil && len(*s.DetectorId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DetectorId", 1))
+	}
 	if s.FilterName == nil {
 		invalidParams.Add(request.NewErrParamRequired("FilterName"))
+	}
+	if s.FilterName != nil && len(*s.FilterName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("FilterName", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -8910,6 +9030,9 @@ func (s *UpdateFindingsFeedbackInput) Validate() error {
 	if s.DetectorId == nil {
 		invalidParams.Add(request.NewErrParamRequired("DetectorId"))
 	}
+	if s.DetectorId != nil && len(*s.DetectorId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DetectorId", 1))
+	}
 	if s.Feedback == nil {
 		invalidParams.Add(request.NewErrParamRequired("Feedback"))
 	}
@@ -8997,8 +9120,14 @@ func (s *UpdateIPSetInput) Validate() error {
 	if s.DetectorId == nil {
 		invalidParams.Add(request.NewErrParamRequired("DetectorId"))
 	}
+	if s.DetectorId != nil && len(*s.DetectorId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DetectorId", 1))
+	}
 	if s.IpSetId == nil {
 		invalidParams.Add(request.NewErrParamRequired("IpSetId"))
+	}
+	if s.IpSetId != nil && len(*s.IpSetId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("IpSetId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -9089,8 +9218,14 @@ func (s *UpdateThreatIntelSetInput) Validate() error {
 	if s.DetectorId == nil {
 		invalidParams.Add(request.NewErrParamRequired("DetectorId"))
 	}
+	if s.DetectorId != nil && len(*s.DetectorId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DetectorId", 1))
+	}
 	if s.ThreatIntelSetId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ThreatIntelSetId"))
+	}
+	if s.ThreatIntelSetId != nil && len(*s.ThreatIntelSetId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ThreatIntelSetId", 1))
 	}
 
 	if invalidParams.Len() > 0 {

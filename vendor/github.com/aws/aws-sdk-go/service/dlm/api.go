@@ -650,6 +650,9 @@ func (s *DeleteLifecyclePolicyInput) Validate() error {
 	if s.PolicyId == nil {
 		invalidParams.Add(request.NewErrParamRequired("PolicyId"))
 	}
+	if s.PolicyId != nil && len(*s.PolicyId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("PolicyId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -806,6 +809,9 @@ func (s *GetLifecyclePolicyInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "GetLifecyclePolicyInput"}
 	if s.PolicyId == nil {
 		invalidParams.Add(request.NewErrParamRequired("PolicyId"))
+	}
+	if s.PolicyId != nil && len(*s.PolicyId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("PolicyId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -1269,6 +1275,9 @@ func (s *UpdateLifecyclePolicyInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "UpdateLifecyclePolicyInput"}
 	if s.PolicyId == nil {
 		invalidParams.Add(request.NewErrParamRequired("PolicyId"))
+	}
+	if s.PolicyId != nil && len(*s.PolicyId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("PolicyId", 1))
 	}
 	if s.PolicyDetails != nil {
 		if err := s.PolicyDetails.Validate(); err != nil {

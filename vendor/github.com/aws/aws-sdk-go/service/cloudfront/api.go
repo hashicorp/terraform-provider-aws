@@ -6215,6 +6215,9 @@ func (s *CreateInvalidationInput) Validate() error {
 	if s.DistributionId == nil {
 		invalidParams.Add(request.NewErrParamRequired("DistributionId"))
 	}
+	if s.DistributionId != nil && len(*s.DistributionId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DistributionId", 1))
+	}
 	if s.InvalidationBatch == nil {
 		invalidParams.Add(request.NewErrParamRequired("InvalidationBatch"))
 	}
@@ -7193,6 +7196,9 @@ func (s *DeleteCloudFrontOriginAccessIdentityInput) Validate() error {
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
 	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -7290,6 +7296,9 @@ func (s *DeleteDistributionInput) Validate() error {
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
 	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -7351,6 +7360,9 @@ func (s *DeleteFieldLevelEncryptionConfigInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DeleteFieldLevelEncryptionConfigInput"}
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
+	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -7414,6 +7426,9 @@ func (s *DeleteFieldLevelEncryptionProfileInput) Validate() error {
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
 	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -7475,6 +7490,9 @@ func (s *DeletePublicKeyInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DeletePublicKeyInput"}
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
+	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -7538,6 +7556,9 @@ func (s *DeleteStreamingDistributionInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DeleteStreamingDistributionInput"}
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
+	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -9529,6 +9550,9 @@ func (s *GetCloudFrontOriginAccessIdentityConfigInput) Validate() error {
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
 	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -9600,6 +9624,9 @@ func (s *GetCloudFrontOriginAccessIdentityInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "GetCloudFrontOriginAccessIdentityInput"}
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
+	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -9674,6 +9701,9 @@ func (s *GetDistributionConfigInput) Validate() error {
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
 	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -9746,6 +9776,9 @@ func (s *GetDistributionInput) Validate() error {
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
 	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -9816,6 +9849,9 @@ func (s *GetFieldLevelEncryptionConfigInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "GetFieldLevelEncryptionConfigInput"}
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
+	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -9888,6 +9924,9 @@ func (s *GetFieldLevelEncryptionInput) Validate() error {
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
 	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -9959,6 +9998,9 @@ func (s *GetFieldLevelEncryptionProfileConfigInput) Validate() error {
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
 	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -10029,6 +10071,9 @@ func (s *GetFieldLevelEncryptionProfileInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "GetFieldLevelEncryptionProfileInput"}
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
+	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -10106,8 +10151,14 @@ func (s *GetInvalidationInput) Validate() error {
 	if s.DistributionId == nil {
 		invalidParams.Add(request.NewErrParamRequired("DistributionId"))
 	}
+	if s.DistributionId != nil && len(*s.DistributionId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DistributionId", 1))
+	}
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
+	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -10178,6 +10229,9 @@ func (s *GetPublicKeyConfigInput) Validate() error {
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
 	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -10247,6 +10301,9 @@ func (s *GetPublicKeyInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "GetPublicKeyInput"}
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
+	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -10319,6 +10376,9 @@ func (s *GetStreamingDistributionConfigInput) Validate() error {
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
 	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -10390,6 +10450,9 @@ func (s *GetStreamingDistributionInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "GetStreamingDistributionInput"}
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
+	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -11092,6 +11155,9 @@ func (s *ListDistributionsByWebACLIdInput) Validate() error {
 	if s.WebACLId == nil {
 		invalidParams.Add(request.NewErrParamRequired("WebACLId"))
 	}
+	if s.WebACLId != nil && len(*s.WebACLId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("WebACLId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -11363,6 +11429,9 @@ func (s *ListInvalidationsInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "ListInvalidationsInput"}
 	if s.DistributionId == nil {
 		invalidParams.Add(request.NewErrParamRequired("DistributionId"))
+	}
+	if s.DistributionId != nil && len(*s.DistributionId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DistributionId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -14410,6 +14479,9 @@ func (s *UpdateCloudFrontOriginAccessIdentityInput) Validate() error {
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
 	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
+	}
 	if s.CloudFrontOriginAccessIdentityConfig != nil {
 		if err := s.CloudFrontOriginAccessIdentityConfig.Validate(); err != nil {
 			invalidParams.AddNested("CloudFrontOriginAccessIdentityConfig", err.(request.ErrInvalidParams))
@@ -14511,6 +14583,9 @@ func (s *UpdateDistributionInput) Validate() error {
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
 	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
+	}
 	if s.DistributionConfig != nil {
 		if err := s.DistributionConfig.Validate(); err != nil {
 			invalidParams.AddNested("DistributionConfig", err.(request.ErrInvalidParams))
@@ -14610,6 +14685,9 @@ func (s *UpdateFieldLevelEncryptionConfigInput) Validate() error {
 	}
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
+	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
 	}
 	if s.FieldLevelEncryptionConfig != nil {
 		if err := s.FieldLevelEncryptionConfig.Validate(); err != nil {
@@ -14711,6 +14789,9 @@ func (s *UpdateFieldLevelEncryptionProfileInput) Validate() error {
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
 	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
+	}
 	if s.FieldLevelEncryptionProfileConfig != nil {
 		if err := s.FieldLevelEncryptionProfileConfig.Validate(); err != nil {
 			invalidParams.AddNested("FieldLevelEncryptionProfileConfig", err.(request.ErrInvalidParams))
@@ -14806,6 +14887,9 @@ func (s *UpdatePublicKeyInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "UpdatePublicKeyInput"}
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
+	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
 	}
 	if s.PublicKeyConfig == nil {
 		invalidParams.Add(request.NewErrParamRequired("PublicKeyConfig"))
@@ -14906,6 +14990,9 @@ func (s *UpdateStreamingDistributionInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "UpdateStreamingDistributionInput"}
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
+	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
 	}
 	if s.StreamingDistributionConfig == nil {
 		invalidParams.Add(request.NewErrParamRequired("StreamingDistributionConfig"))
