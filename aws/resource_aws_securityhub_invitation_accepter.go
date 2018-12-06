@@ -19,18 +19,15 @@ func resourceAwsSecurityHubInvitationAccepter() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"invitation_id": {
+			"master_id": {
 				Type:     schema.TypeString,
-				Computed: true,
-				Optional: true,
+				Required: true,
 				ForceNew: true,
 			},
 
-			"master_id": {
+			"invitation_id": {
 				Type:     schema.TypeString,
 				Computed: true,
-				Optional: true,
-				ForceNew: true,
 			},
 		},
 	}
@@ -38,10 +35,12 @@ func resourceAwsSecurityHubInvitationAccepter() *schema.Resource {
 
 func resourceAwsSecurityHubInvitationAccepterCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).securityhubconn
-	log.Printf("[DEBUG] Creating Security Hub member %s", d.Get("rest_api_id").(string))
+	log.Print("[DEBUG] Accepting Security Hub invitation")
 
-	_, err := conn.AcceptInvitation(&securityhub.AcceptInvitationInput{
-		InvitationId: aws.String(d.Get("invitation_id").(string)),
+	invitationId, err := resourceAwsSecurityHubInvitationAccepterGetInvitationId(conn, d.Get("master_id").(string))
+
+	_, err = conn.AcceptInvitation(&securityhub.AcceptInvitationInput{
+		InvitationId: aws.String(invitationId),
 		MasterId:     aws.String(d.Get("master_id").(string)),
 	})
 
@@ -54,9 +53,28 @@ func resourceAwsSecurityHubInvitationAccepterCreate(d *schema.ResourceData, meta
 	return resourceAwsSecurityHubInvitationAccepterRead(d, meta)
 }
 
+func resourceAwsSecurityHubInvitationAccepterGetInvitationId(conn *securityhub.SecurityHub, masterId string) (string, error) {
+	log.Printf("[DEBUG] Getting InvitationId for MasterId %s", masterId)
+
+	resp, err := conn.ListInvitations(&securityhub.ListInvitationsInput{})
+
+	if err != nil {
+		return "", fmt.Errorf("Error listing Security Hub invitations: %s", err)
+	}
+
+	for _, invitation := range resp.Invitations {
+		log.Printf("[DEBUG] Invitation: %s", invitation)
+		if *invitation.AccountId == masterId {
+			return *invitation.InvitationId, nil
+		}
+	}
+
+	return "", fmt.Errorf("Cannot find InvitationId for MasterId %s", masterId)
+}
+
 func resourceAwsSecurityHubInvitationAccepterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).securityhubconn
-	log.Print("[DEBUG] Disassociating from Security Hub master account")
+	log.Print("[DEBUG] Reading Security Hub master account")
 
 	resp, err := conn.GetMasterAccount(&securityhub.GetMasterAccountInput{})
 

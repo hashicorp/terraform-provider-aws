@@ -8,6 +8,8 @@ description: |-
 
 # aws_securityhub_invitation
 
+-> **Note:** The Security Hub API does not provide a way to revoke an invitation explicitly. Destroying this resource will remove the member account instead - this may cause a dirty plan on the next apply.
+
 Provides a Security Hub invitation resource.
 
 ## Example Usage
@@ -34,6 +36,7 @@ The following arguments are supported:
 The following attributes are exported in addition to the arguments listed above:
 
 * `id` - The ID of the invitee AWS account (matches `account_id`).
+* `master_id` - The ID of the inviter AWS account.
 
 ## Import
 

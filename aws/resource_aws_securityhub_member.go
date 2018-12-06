@@ -36,7 +36,7 @@ func resourceAwsSecurityHubMember() *schema.Resource {
 
 func resourceAwsSecurityHubMemberCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).securityhubconn
-	log.Printf("[DEBUG] Creating Security Hub member %s", d.Get("rest_api_id").(string))
+	log.Printf("[DEBUG] Creating Security Hub member %s", d.Get("account_id").(string))
 
 	resp, err := conn.CreateMembers(&securityhub.CreateMembersInput{
 		AccountDetails: []*securityhub.AccountDetails{

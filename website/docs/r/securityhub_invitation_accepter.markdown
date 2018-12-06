@@ -25,7 +25,7 @@ resource "aws_securityhub_invitation" "example" {
 }
 
 resource "aws_securityhub_invitation_accepter" "example" {
-  invitation_id = "${aws_securityhub_invitation.example.id}"
+  master_id = "${aws_securityhub_invitation.example.id}"
 }
 ```
 
@@ -33,14 +33,13 @@ resource "aws_securityhub_invitation_accepter" "example" {
 
 The following arguments are supported:
 
-* `invitation_id` - (Optiona) The ID of the invitation that is sent to the AWS account by the Security Hub master account.
 * `master_id` - (Optiona) The account ID of the master Security Hub account whose invitation you're accepting.
 
 ## Attributes Reference
 
 The following attributes are exported in addition to the arguments listed above:
 
-* `id` - The ID of the invitee AWS account (matches `account_id`).
+* `id` - Returns `securityhub-invitation-accepter`.
 
 ## Import
 

@@ -9,6 +9,12 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
+const (
+	SecurityHubMemberStatusAssociated = "Associated"
+	SecurityHubMemberStatusInvited    = "Invited"
+	SecurityHubMemberStatusRemoved    = "Removed"
+)
+
 func resourceAwsSecurityHubInvitation() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsSecurityHubInvitationCreate,
@@ -24,16 +30,21 @@ func resourceAwsSecurityHubInvitation() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+
+			"master_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
 
 func resourceAwsSecurityHubInvitationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).securityhubconn
-	log.Printf("[DEBUG] Creating Security Hub invitation %s", d.Get("rest_api_id").(string))
+	log.Printf("[DEBUG] Creating Security Hub invitation %s", d.Get("account_id").(string))
 
 	resp, err := conn.InviteMembers(&securityhub.InviteMembersInput{
-		AccountIds: []*string{aws.String(d.Id())},
+		AccountIds: []*string{aws.String(d.Get("account_id").(string))},
 	})
 
 	if err != nil {
@@ -50,14 +61,48 @@ func resourceAwsSecurityHubInvitationCreate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsSecurityHubInvitationRead(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).securityhubconn
+
+	log.Printf("[DEBUG] Reading Security Hub member %s", d.Id())
+	resp, err := conn.GetMembers(&securityhub.GetMembersInput{
+		AccountIds: []*string{aws.String(d.Id())},
+	})
+
+	if err != nil {
+		if isAWSErr(err, securityhub.ErrCodeResourceNotFoundException, "") {
+			log.Printf("[WARN] Security Hub member (%s) not found, removing from state", d.Id())
+			d.SetId("")
+			return nil
+		}
+		return err
+	}
+
+	if len(resp.Members) == 0 {
+		log.Printf("[WARN] Security Hub member (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	member := resp.Members[0]
+
+	// if member.Status != "" {
+	// 	log.Printf("[WARN] Security Hub member (%s) not invited/accepted, removing from state", d.Id())
+	// 	d.SetId("")
+	// 	return nil
+	// }
+
+	d.Set("account_id", member.AccountId)
+	d.Set("master_id", member.MasterId)
+
 	return nil
+
 }
 
 func resourceAwsSecurityHubInvitationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).securityhubconn
 	log.Printf("[DEBUG] Deleting Security Hub invitation: %s", d.Id())
 
-	_, err := conn.DeleteInvitations(&securityhub.DeleteInvitationsInput{
+	_, err := conn.DeleteMembers(&securityhub.DeleteMembersInput{
 		AccountIds: []*string{aws.String(d.Id())},
 	})
 
