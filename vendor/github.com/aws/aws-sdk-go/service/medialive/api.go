@@ -3893,6 +3893,9 @@ func (s *BatchUpdateScheduleInput) Validate() error {
 	if s.ChannelId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ChannelId"))
 	}
+	if s.ChannelId != nil && len(*s.ChannelId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ChannelId", 1))
+	}
 	if s.Creates != nil {
 		if err := s.Creates.Validate(); err != nil {
 			invalidParams.AddNested("Creates", err.(request.ErrInvalidParams))
@@ -5279,6 +5282,9 @@ func (s *DeleteChannelInput) Validate() error {
 	if s.ChannelId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ChannelId"))
 	}
+	if s.ChannelId != nil && len(*s.ChannelId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ChannelId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -5426,6 +5432,9 @@ func (s *DeleteInputInput) Validate() error {
 	if s.InputId == nil {
 		invalidParams.Add(request.NewErrParamRequired("InputId"))
 	}
+	if s.InputId != nil && len(*s.InputId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("InputId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -5476,6 +5485,9 @@ func (s *DeleteInputSecurityGroupInput) Validate() error {
 	if s.InputSecurityGroupId == nil {
 		invalidParams.Add(request.NewErrParamRequired("InputSecurityGroupId"))
 	}
+	if s.InputSecurityGroupId != nil && len(*s.InputSecurityGroupId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("InputSecurityGroupId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -5525,6 +5537,9 @@ func (s *DeleteReservationInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DeleteReservationInput"}
 	if s.ReservationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ReservationId"))
+	}
+	if s.ReservationId != nil && len(*s.ReservationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ReservationId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -5716,6 +5731,9 @@ func (s *DescribeChannelInput) Validate() error {
 	if s.ChannelId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ChannelId"))
 	}
+	if s.ChannelId != nil && len(*s.ChannelId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ChannelId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -5863,6 +5881,9 @@ func (s *DescribeInputInput) Validate() error {
 	if s.InputId == nil {
 		invalidParams.Add(request.NewErrParamRequired("InputId"))
 	}
+	if s.InputId != nil && len(*s.InputId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("InputId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -5985,6 +6006,9 @@ func (s *DescribeInputSecurityGroupInput) Validate() error {
 	if s.InputSecurityGroupId == nil {
 		invalidParams.Add(request.NewErrParamRequired("InputSecurityGroupId"))
 	}
+	if s.InputSecurityGroupId != nil && len(*s.InputSecurityGroupId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("InputSecurityGroupId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -6074,6 +6098,9 @@ func (s *DescribeOfferingInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DescribeOfferingInput"}
 	if s.OfferingId == nil {
 		invalidParams.Add(request.NewErrParamRequired("OfferingId"))
+	}
+	if s.OfferingId != nil && len(*s.OfferingId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("OfferingId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -6215,6 +6242,9 @@ func (s *DescribeReservationInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DescribeReservationInput"}
 	if s.ReservationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ReservationId"))
+	}
+	if s.ReservationId != nil && len(*s.ReservationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ReservationId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -6409,6 +6439,9 @@ func (s *DescribeScheduleInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DescribeScheduleInput"}
 	if s.ChannelId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ChannelId"))
+	}
+	if s.ChannelId != nil && len(*s.ChannelId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ChannelId", 1))
 	}
 	if s.MaxResults != nil && *s.MaxResults < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
@@ -11990,6 +12023,9 @@ func (s *PurchaseOfferingInput) Validate() error {
 	if s.OfferingId == nil {
 		invalidParams.Add(request.NewErrParamRequired("OfferingId"))
 	}
+	if s.OfferingId != nil && len(*s.OfferingId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("OfferingId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -13577,6 +13613,9 @@ func (s *StartChannelInput) Validate() error {
 	if s.ChannelId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ChannelId"))
 	}
+	if s.ChannelId != nil && len(*s.ChannelId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ChannelId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -13963,6 +14002,9 @@ func (s *StopChannelInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "StopChannelInput"}
 	if s.ChannelId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ChannelId"))
+	}
+	if s.ChannelId != nil && len(*s.ChannelId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ChannelId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -14414,6 +14456,9 @@ func (s *UpdateChannelInput) Validate() error {
 	if s.ChannelId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ChannelId"))
 	}
+	if s.ChannelId != nil && len(*s.ChannelId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ChannelId", 1))
+	}
 	if s.EncoderSettings != nil {
 		if err := s.EncoderSettings.Validate(); err != nil {
 			invalidParams.AddNested("EncoderSettings", err.(request.ErrInvalidParams))
@@ -14537,6 +14582,9 @@ func (s *UpdateInputInput) Validate() error {
 	if s.InputId == nil {
 		invalidParams.Add(request.NewErrParamRequired("InputId"))
 	}
+	if s.InputId != nil && len(*s.InputId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("InputId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -14620,6 +14668,9 @@ func (s *UpdateInputSecurityGroupInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "UpdateInputSecurityGroupInput"}
 	if s.InputSecurityGroupId == nil {
 		invalidParams.Add(request.NewErrParamRequired("InputSecurityGroupId"))
+	}
+	if s.InputSecurityGroupId != nil && len(*s.InputSecurityGroupId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("InputSecurityGroupId", 1))
 	}
 
 	if invalidParams.Len() > 0 {

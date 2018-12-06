@@ -12094,6 +12094,9 @@ func (s *CreateAuthorizerInput) Validate() error {
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
 	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
+	}
 	if s.Type == nil {
 		invalidParams.Add(request.NewErrParamRequired("Type"))
 	}
@@ -12206,6 +12209,9 @@ func (s *CreateBasePathMappingInput) Validate() error {
 	if s.DomainName == nil {
 		invalidParams.Add(request.NewErrParamRequired("DomainName"))
 	}
+	if s.DomainName != nil && len(*s.DomainName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DomainName", 1))
+	}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
 	}
@@ -12293,6 +12299,9 @@ func (s *CreateDeploymentInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CreateDeploymentInput"}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -12400,6 +12409,9 @@ func (s *CreateDocumentationPartInput) Validate() error {
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
 	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
+	}
 	if s.Location != nil {
 		if err := s.Location.Validate(); err != nil {
 			invalidParams.AddNested("Location", err.(request.ErrInvalidParams))
@@ -12469,6 +12481,9 @@ func (s *CreateDocumentationVersionInput) Validate() error {
 	}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -12676,6 +12691,9 @@ func (s *CreateModelInput) Validate() error {
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
 	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -12750,6 +12768,9 @@ func (s *CreateRequestValidatorInput) Validate() error {
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
 	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -12817,11 +12838,17 @@ func (s *CreateResourceInput) Validate() error {
 	if s.ParentId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ParentId"))
 	}
+	if s.ParentId != nil && len(*s.ParentId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ParentId", 1))
+	}
 	if s.PathPart == nil {
 		invalidParams.Add(request.NewErrParamRequired("PathPart"))
 	}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -13037,6 +13064,9 @@ func (s *CreateStageInput) Validate() error {
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
 	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
+	}
 	if s.StageName == nil {
 		invalidParams.Add(request.NewErrParamRequired("StageName"))
 	}
@@ -13234,6 +13264,9 @@ func (s *CreateUsagePlanKeyInput) Validate() error {
 	if s.UsagePlanId == nil {
 		invalidParams.Add(request.NewErrParamRequired("UsagePlanId"))
 	}
+	if s.UsagePlanId != nil && len(*s.UsagePlanId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("UsagePlanId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -13352,6 +13385,9 @@ func (s *DeleteApiKeyInput) Validate() error {
 	if s.ApiKey == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApiKey"))
 	}
+	if s.ApiKey != nil && len(*s.ApiKey) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApiKey", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -13410,8 +13446,14 @@ func (s *DeleteAuthorizerInput) Validate() error {
 	if s.AuthorizerId == nil {
 		invalidParams.Add(request.NewErrParamRequired("AuthorizerId"))
 	}
+	if s.AuthorizerId != nil && len(*s.AuthorizerId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AuthorizerId", 1))
+	}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -13477,8 +13519,14 @@ func (s *DeleteBasePathMappingInput) Validate() error {
 	if s.BasePath == nil {
 		invalidParams.Add(request.NewErrParamRequired("BasePath"))
 	}
+	if s.BasePath != nil && len(*s.BasePath) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("BasePath", 1))
+	}
 	if s.DomainName == nil {
 		invalidParams.Add(request.NewErrParamRequired("DomainName"))
+	}
+	if s.DomainName != nil && len(*s.DomainName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DomainName", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -13539,6 +13587,9 @@ func (s *DeleteClientCertificateInput) Validate() error {
 	if s.ClientCertificateId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ClientCertificateId"))
 	}
+	if s.ClientCertificateId != nil && len(*s.ClientCertificateId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ClientCertificateId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -13597,8 +13648,14 @@ func (s *DeleteDeploymentInput) Validate() error {
 	if s.DeploymentId == nil {
 		invalidParams.Add(request.NewErrParamRequired("DeploymentId"))
 	}
+	if s.DeploymentId != nil && len(*s.DeploymentId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DeploymentId", 1))
+	}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -13664,8 +13721,14 @@ func (s *DeleteDocumentationPartInput) Validate() error {
 	if s.DocumentationPartId == nil {
 		invalidParams.Add(request.NewErrParamRequired("DocumentationPartId"))
 	}
+	if s.DocumentationPartId != nil && len(*s.DocumentationPartId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DocumentationPartId", 1))
+	}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -13731,8 +13794,14 @@ func (s *DeleteDocumentationVersionInput) Validate() error {
 	if s.DocumentationVersion == nil {
 		invalidParams.Add(request.NewErrParamRequired("DocumentationVersion"))
 	}
+	if s.DocumentationVersion != nil && len(*s.DocumentationVersion) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DocumentationVersion", 1))
+	}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -13792,6 +13861,9 @@ func (s *DeleteDomainNameInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DeleteDomainNameInput"}
 	if s.DomainName == nil {
 		invalidParams.Add(request.NewErrParamRequired("DomainName"))
+	}
+	if s.DomainName != nil && len(*s.DomainName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DomainName", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -13872,8 +13944,14 @@ func (s *DeleteGatewayResponseInput) Validate() error {
 	if s.ResponseType == nil {
 		invalidParams.Add(request.NewErrParamRequired("ResponseType"))
 	}
+	if s.ResponseType != nil && len(*s.ResponseType) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResponseType", 1))
+	}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -13944,11 +14022,20 @@ func (s *DeleteIntegrationInput) Validate() error {
 	if s.HttpMethod == nil {
 		invalidParams.Add(request.NewErrParamRequired("HttpMethod"))
 	}
+	if s.HttpMethod != nil && len(*s.HttpMethod) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("HttpMethod", 1))
+	}
 	if s.ResourceId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ResourceId"))
 	}
+	if s.ResourceId != nil && len(*s.ResourceId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceId", 1))
+	}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -14030,14 +14117,26 @@ func (s *DeleteIntegrationResponseInput) Validate() error {
 	if s.HttpMethod == nil {
 		invalidParams.Add(request.NewErrParamRequired("HttpMethod"))
 	}
+	if s.HttpMethod != nil && len(*s.HttpMethod) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("HttpMethod", 1))
+	}
 	if s.ResourceId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ResourceId"))
+	}
+	if s.ResourceId != nil && len(*s.ResourceId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceId", 1))
 	}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
 	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
+	}
 	if s.StatusCode == nil {
 		invalidParams.Add(request.NewErrParamRequired("StatusCode"))
+	}
+	if s.StatusCode != nil && len(*s.StatusCode) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("StatusCode", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -14120,11 +14219,20 @@ func (s *DeleteMethodInput) Validate() error {
 	if s.HttpMethod == nil {
 		invalidParams.Add(request.NewErrParamRequired("HttpMethod"))
 	}
+	if s.HttpMethod != nil && len(*s.HttpMethod) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("HttpMethod", 1))
+	}
 	if s.ResourceId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ResourceId"))
 	}
+	if s.ResourceId != nil && len(*s.ResourceId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceId", 1))
+	}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -14206,14 +14314,26 @@ func (s *DeleteMethodResponseInput) Validate() error {
 	if s.HttpMethod == nil {
 		invalidParams.Add(request.NewErrParamRequired("HttpMethod"))
 	}
+	if s.HttpMethod != nil && len(*s.HttpMethod) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("HttpMethod", 1))
+	}
 	if s.ResourceId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ResourceId"))
+	}
+	if s.ResourceId != nil && len(*s.ResourceId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceId", 1))
 	}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
 	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
+	}
 	if s.StatusCode == nil {
 		invalidParams.Add(request.NewErrParamRequired("StatusCode"))
+	}
+	if s.StatusCode != nil && len(*s.StatusCode) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("StatusCode", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -14291,8 +14411,14 @@ func (s *DeleteModelInput) Validate() error {
 	if s.ModelName == nil {
 		invalidParams.Add(request.NewErrParamRequired("ModelName"))
 	}
+	if s.ModelName != nil && len(*s.ModelName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ModelName", 1))
+	}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -14358,8 +14484,14 @@ func (s *DeleteRequestValidatorInput) Validate() error {
 	if s.RequestValidatorId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RequestValidatorId"))
 	}
+	if s.RequestValidatorId != nil && len(*s.RequestValidatorId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RequestValidatorId", 1))
+	}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -14425,8 +14557,14 @@ func (s *DeleteResourceInput) Validate() error {
 	if s.ResourceId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ResourceId"))
 	}
+	if s.ResourceId != nil && len(*s.ResourceId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceId", 1))
+	}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -14487,6 +14625,9 @@ func (s *DeleteRestApiInput) Validate() error {
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
 	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -14545,8 +14686,14 @@ func (s *DeleteStageInput) Validate() error {
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
 	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
+	}
 	if s.StageName == nil {
 		invalidParams.Add(request.NewErrParamRequired("StageName"))
+	}
+	if s.StageName != nil && len(*s.StageName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("StageName", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -14607,6 +14754,9 @@ func (s *DeleteUsagePlanInput) Validate() error {
 	if s.UsagePlanId == nil {
 		invalidParams.Add(request.NewErrParamRequired("UsagePlanId"))
 	}
+	if s.UsagePlanId != nil && len(*s.UsagePlanId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("UsagePlanId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -14653,8 +14803,14 @@ func (s *DeleteUsagePlanKeyInput) Validate() error {
 	if s.KeyId == nil {
 		invalidParams.Add(request.NewErrParamRequired("KeyId"))
 	}
+	if s.KeyId != nil && len(*s.KeyId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("KeyId", 1))
+	}
 	if s.UsagePlanId == nil {
 		invalidParams.Add(request.NewErrParamRequired("UsagePlanId"))
+	}
+	if s.UsagePlanId != nil && len(*s.UsagePlanId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("UsagePlanId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -14729,6 +14885,9 @@ func (s *DeleteVpcLinkInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DeleteVpcLinkInput"}
 	if s.VpcLinkId == nil {
 		invalidParams.Add(request.NewErrParamRequired("VpcLinkId"))
+	}
+	if s.VpcLinkId != nil && len(*s.VpcLinkId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("VpcLinkId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -15282,8 +15441,14 @@ func (s *FlushStageAuthorizersCacheInput) Validate() error {
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
 	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
+	}
 	if s.StageName == nil {
 		invalidParams.Add(request.NewErrParamRequired("StageName"))
+	}
+	if s.StageName != nil && len(*s.StageName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("StageName", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -15349,8 +15514,14 @@ func (s *FlushStageCacheInput) Validate() error {
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
 	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
+	}
 	if s.StageName == nil {
 		invalidParams.Add(request.NewErrParamRequired("StageName"))
+	}
+	if s.StageName != nil && len(*s.StageName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("StageName", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -15453,6 +15624,9 @@ func (s *GetApiKeyInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "GetApiKeyInput"}
 	if s.ApiKey == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApiKey"))
+	}
+	if s.ApiKey != nil && len(*s.ApiKey) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApiKey", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -15611,8 +15785,14 @@ func (s *GetAuthorizerInput) Validate() error {
 	if s.AuthorizerId == nil {
 		invalidParams.Add(request.NewErrParamRequired("AuthorizerId"))
 	}
+	if s.AuthorizerId != nil && len(*s.AuthorizerId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AuthorizerId", 1))
+	}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -15665,6 +15845,9 @@ func (s *GetAuthorizersInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "GetAuthorizersInput"}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -15759,8 +15942,14 @@ func (s *GetBasePathMappingInput) Validate() error {
 	if s.BasePath == nil {
 		invalidParams.Add(request.NewErrParamRequired("BasePath"))
 	}
+	if s.BasePath != nil && len(*s.BasePath) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("BasePath", 1))
+	}
 	if s.DomainName == nil {
 		invalidParams.Add(request.NewErrParamRequired("DomainName"))
+	}
+	if s.DomainName != nil && len(*s.DomainName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DomainName", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -15813,6 +16002,9 @@ func (s *GetBasePathMappingsInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "GetBasePathMappingsInput"}
 	if s.DomainName == nil {
 		invalidParams.Add(request.NewErrParamRequired("DomainName"))
+	}
+	if s.DomainName != nil && len(*s.DomainName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DomainName", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -15898,6 +16090,9 @@ func (s *GetClientCertificateInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "GetClientCertificateInput"}
 	if s.ClientCertificateId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ClientCertificateId"))
+	}
+	if s.ClientCertificateId != nil && len(*s.ClientCertificateId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ClientCertificateId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -16020,8 +16215,14 @@ func (s *GetDeploymentInput) Validate() error {
 	if s.DeploymentId == nil {
 		invalidParams.Add(request.NewErrParamRequired("DeploymentId"))
 	}
+	if s.DeploymentId != nil && len(*s.DeploymentId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DeploymentId", 1))
+	}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -16080,6 +16281,9 @@ func (s *GetDeploymentsInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "GetDeploymentsInput"}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -16180,8 +16384,14 @@ func (s *GetDocumentationPartInput) Validate() error {
 	if s.DocumentationPartId == nil {
 		invalidParams.Add(request.NewErrParamRequired("DocumentationPartId"))
 	}
+	if s.DocumentationPartId != nil && len(*s.DocumentationPartId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DocumentationPartId", 1))
+	}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -16249,6 +16459,9 @@ func (s *GetDocumentationPartsInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "GetDocumentationPartsInput"}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -16364,8 +16577,14 @@ func (s *GetDocumentationVersionInput) Validate() error {
 	if s.DocumentationVersion == nil {
 		invalidParams.Add(request.NewErrParamRequired("DocumentationVersion"))
 	}
+	if s.DocumentationVersion != nil && len(*s.DocumentationVersion) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DocumentationVersion", 1))
+	}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -16418,6 +16637,9 @@ func (s *GetDocumentationVersionsInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "GetDocumentationVersionsInput"}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -16507,6 +16729,9 @@ func (s *GetDomainNameInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "GetDomainNameInput"}
 	if s.DomainName == nil {
 		invalidParams.Add(request.NewErrParamRequired("DomainName"))
+	}
+	if s.DomainName != nil && len(*s.DomainName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DomainName", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -16640,11 +16865,20 @@ func (s *GetExportInput) Validate() error {
 	if s.ExportType == nil {
 		invalidParams.Add(request.NewErrParamRequired("ExportType"))
 	}
+	if s.ExportType != nil && len(*s.ExportType) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ExportType", 1))
+	}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
 	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
+	}
 	if s.StageName == nil {
 		invalidParams.Add(request.NewErrParamRequired("StageName"))
+	}
+	if s.StageName != nil && len(*s.StageName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("StageName", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -16777,8 +17011,14 @@ func (s *GetGatewayResponseInput) Validate() error {
 	if s.ResponseType == nil {
 		invalidParams.Add(request.NewErrParamRequired("ResponseType"))
 	}
+	if s.ResponseType != nil && len(*s.ResponseType) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResponseType", 1))
+	}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -16836,6 +17076,9 @@ func (s *GetGatewayResponsesInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "GetGatewayResponsesInput"}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -17089,11 +17332,20 @@ func (s *GetIntegrationInput) Validate() error {
 	if s.HttpMethod == nil {
 		invalidParams.Add(request.NewErrParamRequired("HttpMethod"))
 	}
+	if s.HttpMethod != nil && len(*s.HttpMethod) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("HttpMethod", 1))
+	}
 	if s.ResourceId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ResourceId"))
 	}
+	if s.ResourceId != nil && len(*s.ResourceId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceId", 1))
+	}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -17161,14 +17413,26 @@ func (s *GetIntegrationResponseInput) Validate() error {
 	if s.HttpMethod == nil {
 		invalidParams.Add(request.NewErrParamRequired("HttpMethod"))
 	}
+	if s.HttpMethod != nil && len(*s.HttpMethod) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("HttpMethod", 1))
+	}
 	if s.ResourceId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ResourceId"))
+	}
+	if s.ResourceId != nil && len(*s.ResourceId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceId", 1))
 	}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
 	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
+	}
 	if s.StatusCode == nil {
 		invalidParams.Add(request.NewErrParamRequired("StatusCode"))
+	}
+	if s.StatusCode != nil && len(*s.StatusCode) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("StatusCode", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -17237,11 +17501,20 @@ func (s *GetMethodInput) Validate() error {
 	if s.HttpMethod == nil {
 		invalidParams.Add(request.NewErrParamRequired("HttpMethod"))
 	}
+	if s.HttpMethod != nil && len(*s.HttpMethod) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("HttpMethod", 1))
+	}
 	if s.ResourceId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ResourceId"))
 	}
+	if s.ResourceId != nil && len(*s.ResourceId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceId", 1))
+	}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -17309,14 +17582,26 @@ func (s *GetMethodResponseInput) Validate() error {
 	if s.HttpMethod == nil {
 		invalidParams.Add(request.NewErrParamRequired("HttpMethod"))
 	}
+	if s.HttpMethod != nil && len(*s.HttpMethod) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("HttpMethod", 1))
+	}
 	if s.ResourceId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ResourceId"))
+	}
+	if s.ResourceId != nil && len(*s.ResourceId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceId", 1))
 	}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
 	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
+	}
 	if s.StatusCode == nil {
 		invalidParams.Add(request.NewErrParamRequired("StatusCode"))
+	}
+	if s.StatusCode != nil && len(*s.StatusCode) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("StatusCode", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -17385,8 +17670,14 @@ func (s *GetModelInput) Validate() error {
 	if s.ModelName == nil {
 		invalidParams.Add(request.NewErrParamRequired("ModelName"))
 	}
+	if s.ModelName != nil && len(*s.ModelName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ModelName", 1))
+	}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -17444,8 +17735,14 @@ func (s *GetModelTemplateInput) Validate() error {
 	if s.ModelName == nil {
 		invalidParams.Add(request.NewErrParamRequired("ModelName"))
 	}
+	if s.ModelName != nil && len(*s.ModelName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ModelName", 1))
+	}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -17525,6 +17822,9 @@ func (s *GetModelsInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "GetModelsInput"}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -17616,8 +17916,14 @@ func (s *GetRequestValidatorInput) Validate() error {
 	if s.RequestValidatorId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RequestValidatorId"))
 	}
+	if s.RequestValidatorId != nil && len(*s.RequestValidatorId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RequestValidatorId", 1))
+	}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -17670,6 +17976,9 @@ func (s *GetRequestValidatorsInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "GetRequestValidatorsInput"}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -17773,8 +18082,14 @@ func (s *GetResourceInput) Validate() error {
 	if s.ResourceId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ResourceId"))
 	}
+	if s.ResourceId != nil && len(*s.ResourceId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceId", 1))
+	}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -17841,6 +18156,9 @@ func (s *GetResourcesInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "GetResourcesInput"}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -17932,6 +18250,9 @@ func (s *GetRestApiInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "GetRestApiInput"}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -18059,11 +18380,20 @@ func (s *GetSdkInput) Validate() error {
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
 	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
+	}
 	if s.SdkType == nil {
 		invalidParams.Add(request.NewErrParamRequired("SdkType"))
 	}
+	if s.SdkType != nil && len(*s.SdkType) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("SdkType", 1))
+	}
 	if s.StageName == nil {
 		invalidParams.Add(request.NewErrParamRequired("StageName"))
+	}
+	if s.StageName != nil && len(*s.StageName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("StageName", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -18163,6 +18493,9 @@ func (s *GetSdkTypeInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "GetSdkTypeInput"}
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
+	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -18274,8 +18607,14 @@ func (s *GetStageInput) Validate() error {
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
 	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
+	}
 	if s.StageName == nil {
 		invalidParams.Add(request.NewErrParamRequired("StageName"))
+	}
+	if s.StageName != nil && len(*s.StageName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("StageName", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -18324,6 +18663,9 @@ func (s *GetStagesInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "GetStagesInput"}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -18404,6 +18746,9 @@ func (s *GetTagsInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "GetTagsInput"}
 	if s.ResourceArn == nil {
 		invalidParams.Add(request.NewErrParamRequired("ResourceArn"))
+	}
+	if s.ResourceArn != nil && len(*s.ResourceArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceArn", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -18507,6 +18852,9 @@ func (s *GetUsageInput) Validate() error {
 	if s.UsagePlanId == nil {
 		invalidParams.Add(request.NewErrParamRequired("UsagePlanId"))
 	}
+	if s.UsagePlanId != nil && len(*s.UsagePlanId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("UsagePlanId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -18576,6 +18924,9 @@ func (s *GetUsagePlanInput) Validate() error {
 	if s.UsagePlanId == nil {
 		invalidParams.Add(request.NewErrParamRequired("UsagePlanId"))
 	}
+	if s.UsagePlanId != nil && len(*s.UsagePlanId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("UsagePlanId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -18622,8 +18973,14 @@ func (s *GetUsagePlanKeyInput) Validate() error {
 	if s.KeyId == nil {
 		invalidParams.Add(request.NewErrParamRequired("KeyId"))
 	}
+	if s.KeyId != nil && len(*s.KeyId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("KeyId", 1))
+	}
 	if s.UsagePlanId == nil {
 		invalidParams.Add(request.NewErrParamRequired("UsagePlanId"))
+	}
+	if s.UsagePlanId != nil && len(*s.UsagePlanId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("UsagePlanId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -18681,6 +19038,9 @@ func (s *GetUsagePlanKeysInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "GetUsagePlanKeysInput"}
 	if s.UsagePlanId == nil {
 		invalidParams.Add(request.NewErrParamRequired("UsagePlanId"))
+	}
+	if s.UsagePlanId != nil && len(*s.UsagePlanId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("UsagePlanId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -18851,6 +19211,9 @@ func (s *GetVpcLinkInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "GetVpcLinkInput"}
 	if s.VpcLinkId == nil {
 		invalidParams.Add(request.NewErrParamRequired("VpcLinkId"))
+	}
+	if s.VpcLinkId != nil && len(*s.VpcLinkId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("VpcLinkId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -19077,6 +19440,9 @@ func (s *ImportDocumentationPartsInput) Validate() error {
 	}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -20300,8 +20666,14 @@ func (s *PutGatewayResponseInput) Validate() error {
 	if s.ResponseType == nil {
 		invalidParams.Add(request.NewErrParamRequired("ResponseType"))
 	}
+	if s.ResponseType != nil && len(*s.ResponseType) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResponseType", 1))
+	}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -20477,11 +20849,20 @@ func (s *PutIntegrationInput) Validate() error {
 	if s.HttpMethod == nil {
 		invalidParams.Add(request.NewErrParamRequired("HttpMethod"))
 	}
+	if s.HttpMethod != nil && len(*s.HttpMethod) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("HttpMethod", 1))
+	}
 	if s.ResourceId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ResourceId"))
 	}
+	if s.ResourceId != nil && len(*s.ResourceId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceId", 1))
+	}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
 	}
 	if s.Type == nil {
 		invalidParams.Add(request.NewErrParamRequired("Type"))
@@ -20662,14 +21043,26 @@ func (s *PutIntegrationResponseInput) Validate() error {
 	if s.HttpMethod == nil {
 		invalidParams.Add(request.NewErrParamRequired("HttpMethod"))
 	}
+	if s.HttpMethod != nil && len(*s.HttpMethod) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("HttpMethod", 1))
+	}
 	if s.ResourceId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ResourceId"))
+	}
+	if s.ResourceId != nil && len(*s.ResourceId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceId", 1))
 	}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
 	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
+	}
 	if s.StatusCode == nil {
 		invalidParams.Add(request.NewErrParamRequired("StatusCode"))
+	}
+	if s.StatusCode != nil && len(*s.StatusCode) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("StatusCode", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -20813,11 +21206,20 @@ func (s *PutMethodInput) Validate() error {
 	if s.HttpMethod == nil {
 		invalidParams.Add(request.NewErrParamRequired("HttpMethod"))
 	}
+	if s.HttpMethod != nil && len(*s.HttpMethod) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("HttpMethod", 1))
+	}
 	if s.ResourceId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ResourceId"))
 	}
+	if s.ResourceId != nil && len(*s.ResourceId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceId", 1))
+	}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -20951,14 +21353,26 @@ func (s *PutMethodResponseInput) Validate() error {
 	if s.HttpMethod == nil {
 		invalidParams.Add(request.NewErrParamRequired("HttpMethod"))
 	}
+	if s.HttpMethod != nil && len(*s.HttpMethod) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("HttpMethod", 1))
+	}
 	if s.ResourceId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ResourceId"))
+	}
+	if s.ResourceId != nil && len(*s.ResourceId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceId", 1))
 	}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
 	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
+	}
 	if s.StatusCode == nil {
 		invalidParams.Add(request.NewErrParamRequired("StatusCode"))
+	}
+	if s.StatusCode != nil && len(*s.StatusCode) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("StatusCode", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -21053,6 +21467,9 @@ func (s *PutRestApiInput) Validate() error {
 	}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -21738,6 +22155,9 @@ func (s *TagResourceInput) Validate() error {
 	if s.ResourceArn == nil {
 		invalidParams.Add(request.NewErrParamRequired("ResourceArn"))
 	}
+	if s.ResourceArn != nil && len(*s.ResourceArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceArn", 1))
+	}
 	if s.Tags == nil {
 		invalidParams.Add(request.NewErrParamRequired("Tags"))
 	}
@@ -21829,8 +22249,14 @@ func (s *TestInvokeAuthorizerInput) Validate() error {
 	if s.AuthorizerId == nil {
 		invalidParams.Add(request.NewErrParamRequired("AuthorizerId"))
 	}
+	if s.AuthorizerId != nil && len(*s.AuthorizerId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AuthorizerId", 1))
+	}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -22026,11 +22452,20 @@ func (s *TestInvokeMethodInput) Validate() error {
 	if s.HttpMethod == nil {
 		invalidParams.Add(request.NewErrParamRequired("HttpMethod"))
 	}
+	if s.HttpMethod != nil && len(*s.HttpMethod) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("HttpMethod", 1))
+	}
 	if s.ResourceId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ResourceId"))
 	}
+	if s.ResourceId != nil && len(*s.ResourceId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceId", 1))
+	}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -22231,6 +22666,9 @@ func (s *UntagResourceInput) Validate() error {
 	if s.ResourceArn == nil {
 		invalidParams.Add(request.NewErrParamRequired("ResourceArn"))
 	}
+	if s.ResourceArn != nil && len(*s.ResourceArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceArn", 1))
+	}
 	if s.TagKeys == nil {
 		invalidParams.Add(request.NewErrParamRequired("TagKeys"))
 	}
@@ -22322,6 +22760,9 @@ func (s *UpdateApiKeyInput) Validate() error {
 	if s.ApiKey == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApiKey"))
 	}
+	if s.ApiKey != nil && len(*s.ApiKey) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApiKey", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -22376,8 +22817,14 @@ func (s *UpdateAuthorizerInput) Validate() error {
 	if s.AuthorizerId == nil {
 		invalidParams.Add(request.NewErrParamRequired("AuthorizerId"))
 	}
+	if s.AuthorizerId != nil && len(*s.AuthorizerId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AuthorizerId", 1))
+	}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -22439,8 +22886,14 @@ func (s *UpdateBasePathMappingInput) Validate() error {
 	if s.BasePath == nil {
 		invalidParams.Add(request.NewErrParamRequired("BasePath"))
 	}
+	if s.BasePath != nil && len(*s.BasePath) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("BasePath", 1))
+	}
 	if s.DomainName == nil {
 		invalidParams.Add(request.NewErrParamRequired("DomainName"))
+	}
+	if s.DomainName != nil && len(*s.DomainName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DomainName", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -22497,6 +22950,9 @@ func (s *UpdateClientCertificateInput) Validate() error {
 	if s.ClientCertificateId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ClientCertificateId"))
 	}
+	if s.ClientCertificateId != nil && len(*s.ClientCertificateId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ClientCertificateId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -22552,8 +23008,14 @@ func (s *UpdateDeploymentInput) Validate() error {
 	if s.DeploymentId == nil {
 		invalidParams.Add(request.NewErrParamRequired("DeploymentId"))
 	}
+	if s.DeploymentId != nil && len(*s.DeploymentId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DeploymentId", 1))
+	}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -22615,8 +23077,14 @@ func (s *UpdateDocumentationPartInput) Validate() error {
 	if s.DocumentationPartId == nil {
 		invalidParams.Add(request.NewErrParamRequired("DocumentationPartId"))
 	}
+	if s.DocumentationPartId != nil && len(*s.DocumentationPartId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DocumentationPartId", 1))
+	}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -22678,8 +23146,14 @@ func (s *UpdateDocumentationVersionInput) Validate() error {
 	if s.DocumentationVersion == nil {
 		invalidParams.Add(request.NewErrParamRequired("DocumentationVersion"))
 	}
+	if s.DocumentationVersion != nil && len(*s.DocumentationVersion) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DocumentationVersion", 1))
+	}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -22735,6 +23209,9 @@ func (s *UpdateDomainNameInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "UpdateDomainNameInput"}
 	if s.DomainName == nil {
 		invalidParams.Add(request.NewErrParamRequired("DomainName"))
+	}
+	if s.DomainName != nil && len(*s.DomainName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DomainName", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -22810,8 +23287,14 @@ func (s *UpdateGatewayResponseInput) Validate() error {
 	if s.ResponseType == nil {
 		invalidParams.Add(request.NewErrParamRequired("ResponseType"))
 	}
+	if s.ResponseType != nil && len(*s.ResponseType) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResponseType", 1))
+	}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -23002,11 +23485,20 @@ func (s *UpdateIntegrationInput) Validate() error {
 	if s.HttpMethod == nil {
 		invalidParams.Add(request.NewErrParamRequired("HttpMethod"))
 	}
+	if s.HttpMethod != nil && len(*s.HttpMethod) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("HttpMethod", 1))
+	}
 	if s.ResourceId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ResourceId"))
 	}
+	if s.ResourceId != nil && len(*s.ResourceId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceId", 1))
+	}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -23084,14 +23576,26 @@ func (s *UpdateIntegrationResponseInput) Validate() error {
 	if s.HttpMethod == nil {
 		invalidParams.Add(request.NewErrParamRequired("HttpMethod"))
 	}
+	if s.HttpMethod != nil && len(*s.HttpMethod) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("HttpMethod", 1))
+	}
 	if s.ResourceId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ResourceId"))
+	}
+	if s.ResourceId != nil && len(*s.ResourceId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceId", 1))
 	}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
 	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
+	}
 	if s.StatusCode == nil {
 		invalidParams.Add(request.NewErrParamRequired("StatusCode"))
+	}
+	if s.StatusCode != nil && len(*s.StatusCode) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("StatusCode", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -23170,11 +23674,20 @@ func (s *UpdateMethodInput) Validate() error {
 	if s.HttpMethod == nil {
 		invalidParams.Add(request.NewErrParamRequired("HttpMethod"))
 	}
+	if s.HttpMethod != nil && len(*s.HttpMethod) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("HttpMethod", 1))
+	}
 	if s.ResourceId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ResourceId"))
 	}
+	if s.ResourceId != nil && len(*s.ResourceId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceId", 1))
+	}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -23252,14 +23765,26 @@ func (s *UpdateMethodResponseInput) Validate() error {
 	if s.HttpMethod == nil {
 		invalidParams.Add(request.NewErrParamRequired("HttpMethod"))
 	}
+	if s.HttpMethod != nil && len(*s.HttpMethod) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("HttpMethod", 1))
+	}
 	if s.ResourceId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ResourceId"))
+	}
+	if s.ResourceId != nil && len(*s.ResourceId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceId", 1))
 	}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
 	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
+	}
 	if s.StatusCode == nil {
 		invalidParams.Add(request.NewErrParamRequired("StatusCode"))
+	}
+	if s.StatusCode != nil && len(*s.StatusCode) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("StatusCode", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -23333,8 +23858,14 @@ func (s *UpdateModelInput) Validate() error {
 	if s.ModelName == nil {
 		invalidParams.Add(request.NewErrParamRequired("ModelName"))
 	}
+	if s.ModelName != nil && len(*s.ModelName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ModelName", 1))
+	}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -23396,8 +23927,14 @@ func (s *UpdateRequestValidatorInput) Validate() error {
 	if s.RequestValidatorId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RequestValidatorId"))
 	}
+	if s.RequestValidatorId != nil && len(*s.RequestValidatorId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RequestValidatorId", 1))
+	}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -23520,8 +24057,14 @@ func (s *UpdateResourceInput) Validate() error {
 	if s.ResourceId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ResourceId"))
 	}
+	if s.ResourceId != nil && len(*s.ResourceId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceId", 1))
+	}
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -23578,6 +24121,9 @@ func (s *UpdateRestApiInput) Validate() error {
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
 	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -23632,8 +24178,14 @@ func (s *UpdateStageInput) Validate() error {
 	if s.RestApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
 	}
+	if s.RestApiId != nil && len(*s.RestApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RestApiId", 1))
+	}
 	if s.StageName == nil {
 		invalidParams.Add(request.NewErrParamRequired("StageName"))
+	}
+	if s.StageName != nil && len(*s.StageName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("StageName", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -23697,8 +24249,14 @@ func (s *UpdateUsageInput) Validate() error {
 	if s.KeyId == nil {
 		invalidParams.Add(request.NewErrParamRequired("KeyId"))
 	}
+	if s.KeyId != nil && len(*s.KeyId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("KeyId", 1))
+	}
 	if s.UsagePlanId == nil {
 		invalidParams.Add(request.NewErrParamRequired("UsagePlanId"))
+	}
+	if s.UsagePlanId != nil && len(*s.UsagePlanId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("UsagePlanId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -23755,6 +24313,9 @@ func (s *UpdateUsagePlanInput) Validate() error {
 	if s.UsagePlanId == nil {
 		invalidParams.Add(request.NewErrParamRequired("UsagePlanId"))
 	}
+	if s.UsagePlanId != nil && len(*s.UsagePlanId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("UsagePlanId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -23804,6 +24365,9 @@ func (s *UpdateVpcLinkInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "UpdateVpcLinkInput"}
 	if s.VpcLinkId == nil {
 		invalidParams.Add(request.NewErrParamRequired("VpcLinkId"))
+	}
+	if s.VpcLinkId != nil && len(*s.VpcLinkId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("VpcLinkId", 1))
 	}
 
 	if invalidParams.Len() > 0 {

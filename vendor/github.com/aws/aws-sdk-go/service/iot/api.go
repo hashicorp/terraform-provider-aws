@@ -20931,6 +20931,9 @@ func (s *DeletePolicyVersionInput) Validate() error {
 	if s.PolicyVersionId == nil {
 		invalidParams.Add(request.NewErrParamRequired("PolicyVersionId"))
 	}
+	if s.PolicyVersionId != nil && len(*s.PolicyVersionId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("PolicyVersionId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -23207,6 +23210,9 @@ func (s *DescribeThingRegistrationTaskInput) Validate() error {
 	if s.TaskId == nil {
 		invalidParams.Add(request.NewErrParamRequired("TaskId"))
 	}
+	if s.TaskId != nil && len(*s.TaskId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TaskId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -24943,6 +24949,9 @@ func (s *GetPolicyVersionInput) Validate() error {
 	if s.PolicyVersionId == nil {
 		invalidParams.Add(request.NewErrParamRequired("PolicyVersionId"))
 	}
+	if s.PolicyVersionId != nil && len(*s.PolicyVersionId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("PolicyVersionId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -26094,7 +26103,7 @@ type KeyPair struct {
 	_ struct{} `type:"structure"`
 
 	// The private key.
-	PrivateKey *string `min:"1" type:"string"`
+	PrivateKey *string `min:"1" type:"string" sensitive:"true"`
 
 	// The public key.
 	PublicKey *string `min:"1" type:"string"`
@@ -26362,6 +26371,9 @@ func (s *ListAttachedPoliciesInput) Validate() error {
 	}
 	if s.Target == nil {
 		invalidParams.Add(request.NewErrParamRequired("Target"))
+	}
+	if s.Target != nil && len(*s.Target) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Target", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -29222,6 +29234,9 @@ func (s *ListThingRegistrationTaskReportsInput) Validate() error {
 	}
 	if s.TaskId == nil {
 		invalidParams.Add(request.NewErrParamRequired("TaskId"))
+	}
+	if s.TaskId != nil && len(*s.TaskId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TaskId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -32481,6 +32496,9 @@ func (s *SetDefaultPolicyVersionInput) Validate() error {
 	if s.PolicyVersionId == nil {
 		invalidParams.Add(request.NewErrParamRequired("PolicyVersionId"))
 	}
+	if s.PolicyVersionId != nil && len(*s.PolicyVersionId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("PolicyVersionId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -33193,6 +33211,9 @@ func (s *StopThingRegistrationTaskInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "StopThingRegistrationTaskInput"}
 	if s.TaskId == nil {
 		invalidParams.Add(request.NewErrParamRequired("TaskId"))
+	}
+	if s.TaskId != nil && len(*s.TaskId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TaskId", 1))
 	}
 
 	if invalidParams.Len() > 0 {

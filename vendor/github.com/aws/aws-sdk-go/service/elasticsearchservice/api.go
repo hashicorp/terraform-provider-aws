@@ -3363,8 +3363,14 @@ func (s *DescribeElasticsearchInstanceTypeLimitsInput) Validate() error {
 	if s.ElasticsearchVersion == nil {
 		invalidParams.Add(request.NewErrParamRequired("ElasticsearchVersion"))
 	}
+	if s.ElasticsearchVersion != nil && len(*s.ElasticsearchVersion) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ElasticsearchVersion", 1))
+	}
 	if s.InstanceType == nil {
 		invalidParams.Add(request.NewErrParamRequired("InstanceType"))
+	}
+	if s.InstanceType != nil && len(*s.InstanceType) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("InstanceType", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -4718,6 +4724,9 @@ func (s *ListElasticsearchInstanceTypesInput) Validate() error {
 	}
 	if s.ElasticsearchVersion == nil {
 		invalidParams.Add(request.NewErrParamRequired("ElasticsearchVersion"))
+	}
+	if s.ElasticsearchVersion != nil && len(*s.ElasticsearchVersion) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ElasticsearchVersion", 1))
 	}
 
 	if invalidParams.Len() > 0 {
