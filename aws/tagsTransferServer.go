@@ -60,12 +60,15 @@ func diffTagsTransferServer(oldTags, newTags []*transfer.Tag) ([]*transfer.Tag, 
 	}
 
 	// Build the list of what to remove
-	var remove []*transfer.Tag
+	var remove []*ecs.Tag
 	for _, t := range oldTags {
 		old, ok := create[aws.StringValue(t.Key)]
 		if !ok || old != aws.StringValue(t.Value) {
 			// Delete it!
 			remove = append(remove, t)
+		} else if ok {
+			// already present so remove from new
+			delete(create, aws.StringValue(t.Key))
 		}
 	}
 
