@@ -166,6 +166,54 @@ func TestAccAWSRoute53Record_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSRoute53Record_disappears(t *testing.T) {
+	var record1 route53.ResourceRecordSet
+	var zone1 route53.GetHostedZoneOutput
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRoute53RecordDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoute53RecordConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoute53ZoneExists("aws_route53_zone.main", &zone1),
+					testAccCheckRoute53RecordExists("aws_route53_record.default", &record1),
+					testAccCheckRoute53RecordDisappears(&zone1, &record1),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSRoute53Record_disappears_MultipleRecords(t *testing.T) {
+	var record1, record2, record3, record4, record5 route53.ResourceRecordSet
+	var zone1 route53.GetHostedZoneOutput
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRoute53RecordDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoute53RecordConfigMultiple,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoute53ZoneExists("aws_route53_zone.test", &zone1),
+					testAccCheckRoute53RecordExists("aws_route53_record.test.0", &record1),
+					testAccCheckRoute53RecordExists("aws_route53_record.test.1", &record2),
+					testAccCheckRoute53RecordExists("aws_route53_record.test.2", &record3),
+					testAccCheckRoute53RecordExists("aws_route53_record.test.3", &record4),
+					testAccCheckRoute53RecordExists("aws_route53_record.test.4", &record5),
+					testAccCheckRoute53RecordDisappears(&zone1, &record1),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSRoute53Record_basic_fqdn(t *testing.T) {
 	var record1, record2 route53.ResourceRecordSet
 
@@ -678,6 +726,41 @@ func testAccCheckRoute53RecordDestroy(s *terraform.State) error {
 	return nil
 }
 
+func testAccCheckRoute53RecordDisappears(zone *route53.GetHostedZoneOutput, resourceRecordSet *route53.ResourceRecordSet) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).r53conn
+
+		input := &route53.ChangeResourceRecordSetsInput{
+			HostedZoneId: zone.HostedZone.Id,
+			ChangeBatch: &route53.ChangeBatch{
+				Comment: aws.String("Deleted by Terraform"),
+				Changes: []*route53.Change{
+					{
+						Action:            aws.String(route53.ChangeActionDelete),
+						ResourceRecordSet: resourceRecordSet,
+					},
+				},
+			},
+		}
+
+		respRaw, err := deleteRoute53RecordSet(conn, input)
+		if err != nil {
+			return fmt.Errorf("error deleting resource record set: %s", err)
+		}
+
+		changeInfo := respRaw.(*route53.ChangeResourceRecordSetsOutput).ChangeInfo
+		if changeInfo == nil {
+			return nil
+		}
+
+		if err := waitForRoute53RecordSetToSync(conn, cleanChangeID(*changeInfo.Id)); err != nil {
+			return fmt.Errorf("error waiting for resource record set deletion: %s", err)
+		}
+
+		return nil
+	}
+}
+
 func testAccCheckRoute53RecordExists(n string, resourceRecordSet *route53.ResourceRecordSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).r53conn
@@ -762,6 +845,22 @@ resource "aws_route53_record" "default" {
 	type = "A"
 	ttl = "30"
 	records = ["127.0.0.1", "127.0.0.27"]
+}
+`
+
+const testAccRoute53RecordConfigMultiple = `
+resource "aws_route53_zone" "test" {
+  name = "notexample.com"
+}
+
+resource "aws_route53_record" "test" {
+  count = 5
+
+  name    = "record${count.index}.${aws_route53_zone.test.name}"
+  records = ["127.0.0.${count.index}"]
+  ttl     = "30"
+  type    = "A"
+  zone_id = "${aws_route53_zone.test.zone_id}"
 }
 `
 
