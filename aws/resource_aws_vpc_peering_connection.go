@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -80,8 +81,36 @@ func resourceAwsVPCPeeringCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if v, ok := d.GetOk("peer_region"); ok {
+
 		if _, ok := d.GetOk("auto_accept"); ok {
-			return fmt.Errorf("peer_region cannot be set whilst auto_accept is true when creating a vpc peering connection")
+			log.Printf("[DEBUG] VPC Peering Auto Accept")
+			createOpts.PeerRegion = aws.String(v.(string))
+			// return fmt.Errorf("peer_region cannot be set whilst auto_accept is true when creating a vpc peering connection")
+			resp, err := conn.CreateVpcPeeringConnection(createOpts)
+			if err != nil {
+				return fmt.Errorf("Error creating VPC Peering Connection: %s", err)
+			}
+			rt := resp.VpcPeeringConnection
+			d.SetId(*rt.VpcPeeringConnectionId)
+			err = vpcPeeringConnectionWaitUntilAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+			if err != nil {
+				return fmt.Errorf("Error waiting for VPC Peering Connection to become available: %s", err)
+			}
+			// // Test if we can change AUTH Param and change the region
+			sess, err := session.NewSession(&aws.Config{Region: aws.String(v.(string))})
+			if err != nil {
+				return fmt.Errorf("Error New Session Creation: %s", err)
+			}
+			svc := ec2.New(sess, aws.NewConfig().WithRegion(v.(string)))
+			_, err = resourceVPCPeeringConnectionAccept(svc, d.Id())
+
+			// Ori
+			// _, err = resourceVPCPeeringConnectionAccept(conn, d.Id())
+			if err != nil {
+				return fmt.Errorf("Error Peering Acceptation: %s %s", err, svc)
+			}
+			return nil
+			// return resourceAwsVPCPeeringUpdate(d, meta)
 		}
 		createOpts.PeerRegion = aws.String(v.(string))
 	}
