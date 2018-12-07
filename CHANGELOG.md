@@ -1,5 +1,9 @@
 ## 1.52.0 (Unreleased)
 
+FEATURES
+
+* **New Data Source:** `aws_api_gateway_vpc_link` [GH-6763]
+
 ENHANCEMENTS
 
 * data-source/aws_ip_ranges: Add `url` argument [GH-6756]
