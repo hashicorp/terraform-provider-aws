@@ -354,7 +354,7 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 		d.Set("tenancy", instance.Placement.Tenancy)
 	}
 	if instance.Placement.HostId != nil {
-		d.Set("host_id", instance.Placement.Tenancy)
+		d.Set("host_id", instance.Placement.HostId)
 	}
 	d.Set("ami", instance.ImageId)
 	d.Set("instance_type", instance.InstanceType)
