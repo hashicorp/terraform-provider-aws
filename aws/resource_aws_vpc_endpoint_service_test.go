@@ -78,10 +78,8 @@ func TestAccAWSVpcEndpointService_removed(t *testing.T) {
 		_, err := conn.DeleteVpcEndpointServiceConfigurations(&ec2.DeleteVpcEndpointServiceConfigurationsInput{
 			ServiceIds: []*string{svcCfg.ServiceId},
 		})
-		if err != nil {
-			return err
-		}
-		return nil
+
+		return err
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
