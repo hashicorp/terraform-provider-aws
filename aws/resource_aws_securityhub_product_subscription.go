@@ -30,7 +30,7 @@ func resourceAwsSecurityHubProductSubscription() *schema.Resource {
 
 func resourceAwsSecurityHubProductSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).securityhubconn
-	log.Print("[DEBUG] Enabling Security Hub product subscription for product %s", d.Get("product_arn"))
+	log.Printf("[DEBUG] Enabling Security Hub product subscription for product %s", d.Get("product_arn"))
 
 	resp, err := conn.EnableImportFindingsForProduct(&securityhub.EnableImportFindingsForProductInput{
 		ProductArn: aws.String(d.Get("product_arn").(string)),
@@ -70,7 +70,7 @@ func resourceAwsSecurityHubProductSubscriptionRead(d *schema.ResourceData, meta 
 
 func resourceAwsSecurityHubProductSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).securityhubconn
-	log.Print("[DEBUG] Disabling Security Hub product subscription %s", d.Id())
+	log.Printf("[DEBUG] Disabling Security Hub product subscription %s", d.Id())
 
 	_, err := conn.DisableImportFindingsForProduct(&securityhub.DisableImportFindingsForProductInput{
 		ProductSubscriptionArn: aws.String(d.Id()),

@@ -30,7 +30,7 @@ func resourceAwsSecurityHubStandard() *schema.Resource {
 
 func resourceAwsSecurityHubStandardCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).securityhubconn
-	log.Print("[DEBUG] Enabling Security Hub standard")
+	log.Printf("[DEBUG] Enabling Security Hub standard %s", d.Get("standards_arn"))
 
 	resp, err := conn.BatchEnableStandards(&securityhub.BatchEnableStandardsInput{
 		StandardsSubscriptionRequests: []*securityhub.StandardsSubscriptionRequest{
@@ -74,7 +74,7 @@ func resourceAwsSecurityHubStandardRead(d *schema.ResourceData, meta interface{}
 
 func resourceAwsSecurityHubStandardDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).securityhubconn
-	log.Print("[DEBUG] Disabling Security Hub standard %s", d.Id())
+	log.Printf("[DEBUG] Disabling Security Hub standard %s", d.Id())
 
 	_, err := conn.BatchDisableStandards(&securityhub.BatchDisableStandardsInput{
 		StandardsSubscriptionArns: []*string{aws.String(d.Id())},
