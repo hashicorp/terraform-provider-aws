@@ -86,7 +86,6 @@ func TestAccAWSCloudwatchLogSubscriptionFilter_disappears_LogGroup(t *testing.T)
 	})
 }
 
-
 func testAccCheckCloudwatchLogSubscriptionFilterDisappears(rName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).cloudwatchlogsconn
