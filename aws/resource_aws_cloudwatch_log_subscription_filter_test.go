@@ -174,7 +174,7 @@ resource "aws_lambda_permission" "allow_cloudwatch_logs" {
   statement_id  = "AllowExecutionFromCloudWatchLogs"
   action        = "lambda:*"
   function_name = "${aws_lambda_function.test_lambdafunction.arn}"
-  principal     = "logs.us-west-2.amazonaws.com"
+  principal     = "logs.amazonaws.com"
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
