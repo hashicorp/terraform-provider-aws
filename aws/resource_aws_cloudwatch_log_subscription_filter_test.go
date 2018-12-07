@@ -39,7 +39,7 @@ func TestAccAWSCloudwatchLogSubscriptionFilter_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudwatchLogSubscriptionFilter_subscriptionFilterDisappears(t *testing.T) {
+func TestAccAWSCloudwatchLogSubscriptionFilter_disappears(t *testing.T) {
 	var filter cloudwatchlogs.SubscriptionFilter
 	rstring := acctest.RandString(5)
 
@@ -59,6 +59,33 @@ func TestAccAWSCloudwatchLogSubscriptionFilter_subscriptionFilterDisappears(t *t
 		},
 	})
 }
+
+func TestAccAWSCloudwatchLogSubscriptionFilter_disappears_LogGroup(t *testing.T) {
+	var filter cloudwatchlogs.SubscriptionFilter
+	var logGroup cloudwatchlogs.LogGroup
+
+	rstring := acctest.RandString(5)
+	logGroupResourceName := "aws_cloudwatch_log_group.logs"
+	resourceName := "aws_cloudwatch_log_subscription_filter.test_lambdafunction_logfilter"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckCloudwatchLogSubscriptionFilterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudwatchLogSubscriptionFilterConfig(rstring),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsCloudwatchLogSubscriptionFilterExists(resourceName, &filter, rstring),
+					testAccCheckCloudWatchLogGroupExists(logGroupResourceName, &logGroup),
+					testAccCheckCloudWatchLogGroupDisappears(&logGroup),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 
 func testAccCheckCloudwatchLogSubscriptionFilterDisappears(rName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
