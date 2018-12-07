@@ -6,7 +6,6 @@ import (
 
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccDataSourceAwsApiGatewayVpcLink(t *testing.T) {
@@ -18,37 +17,12 @@ func TestAccDataSourceAwsApiGatewayVpcLink(t *testing.T) {
 			{
 				Config: testAccDataSourceAwsApiGatewayVpcLinkConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccDataSourceAwsApiGatewayVpcLinkCheck("data.aws_api_gateway_vpc_link.vpc_link"),
-					resource.TestCheckResourceAttrSet("data.aws_api_gateway_vpc_link.vpc_link", "id", "aws_api_gateway_vpc_link.vpc_link", "id"),
+					resource.TestCheckResourceAttrPair("data.aws_api_gateway_vpc_link.vpc_link", "name", "aws_api_gateway_vpc_link.vpc_link", "name"),
+					resource.TestCheckResourceAttrPair("data.aws_api_gateway_vpc_link.vpc_link", "id", "aws_api_gateway_vpc_link.vpc_link", "id"),
 				),
 			},
 		},
 	})
-}
-
-func testAccDataSourceAwsApiGatewayVpcLinkCheck(name string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		resources, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("root module has no resource called %s", name)
-		}
-
-		apiGatewayVpcLinkResources, ok := s.RootModule().Resources["aws_api_gateway_vpc_link.vpc_link"]
-		if !ok {
-			return fmt.Errorf("can't find aws_api_gateway_vpc_link.vpc_link in state")
-		}
-
-		attr := resources.Primary.Attributes
-		if attr["name"] != apiGatewayVpcLinkResources.Primary.Attributes["name"] {
-			return fmt.Errorf(
-				"name is %s; want %s",
-				attr["name"],
-				apiGatewayVpcLinkResources.Primary.Attributes["name"],
-			)
-		}
-
-		return nil
-	}
 }
 
 func testAccDataSourceAwsApiGatewayVpcLinkConfig(r string) string {
@@ -100,8 +74,7 @@ func testAccDataSourceAwsApiGatewayVpcLinkConfig(r string) string {
 	  resource "aws_subnet" "apigateway_vpclink_test_subnet1" {
 		vpc_id            = "${aws_vpc.apigateway_vpclink_test.id}"
 		cidr_block        = "10.0.1.0/24"
-		availability_zone = "us-west-2a"
-	  
+
 		tags = {
 		  Name = "tf-acc-lb-apigateway-vpclink"
 		}
