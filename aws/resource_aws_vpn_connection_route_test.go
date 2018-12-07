@@ -137,11 +137,7 @@ func testAccAwsVpnConnectionRoute(
 		_, err := ec2conn.DescribeVpnConnections(&ec2.DescribeVpnConnectionsInput{
 			Filters: routeFilters,
 		})
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
