@@ -107,7 +107,7 @@ func resourceAwsVPCPeeringCreate(d *schema.ResourceData, meta interface{}) error
 			// Ori
 			// _, err = resourceVPCPeeringConnectionAccept(conn, d.Id())
 			if err != nil {
-				return fmt.Errorf("Error Peering Acceptation: %s %s", err, svc)
+				return fmt.Errorf("Error Peering Acceptation: %s", err)
 			}
 			return nil
 			// return resourceAwsVPCPeeringUpdate(d, meta)
