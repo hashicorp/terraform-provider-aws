@@ -500,6 +500,15 @@ func TestAccAWSDynamoDbTable_BillingMode(t *testing.T) {
 					testAccCheckDynamoDbTableHasBilling_PayPerRequest("aws_dynamodb_table.basic-dynamodb-table"),
 				),
 			},
+			{
+				Config: testAccAWSDynamoDbBilling_PayPerRequestWithGSI(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDynamoDbTableHasBilling_PayPerRequest("aws_dynamodb_table.basic-dynamodb-table"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.basic-dynamodb-table", "global_secondary_index.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_dynamodb_table.basic-dynamodb-table", "global_secondary_index.427641302.name", "TestTableGSI"),
+				),
+			},
 		},
 	})
 }
@@ -1260,6 +1269,32 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
   attribute {
     name = "TestTableHashKey"
     type = "S"
+  }
+}
+`, rName)
+}
+
+func testAccAWSDynamoDbBilling_PayPerRequestWithGSI(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "basic-dynamodb-table" {
+  name = "%s"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key = "TestTableHashKey"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  attribute {
+    name = "TestTableGSIKey"
+    type = "S"
+  }
+
+  global_secondary_index {
+	name 			= "TestTableGSI"
+	hash_key        = "TestTableGSIKey"
+    projection_type = "KEYS_ONLY"
   }
 }
 `, rName)
