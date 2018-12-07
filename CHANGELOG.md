@@ -3,6 +3,7 @@
 ENHANCEMENTS
 
 * data-source/aws_ip_ranges: Add `url` argument [GH-6756]
+* resource/aws_iam_user_ssh_key: Support resource import [GH-6727]
 
 BUG FIXES
 
