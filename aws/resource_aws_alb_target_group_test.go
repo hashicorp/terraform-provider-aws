@@ -529,7 +529,7 @@ func testAccAWSALBTargetGroupConfig_basic(targetGroupName string) string {
     matcher = "200-299"
   }
 
-  tags {
+  tags = {
     TestName = "TestAccAWSALBTargetGroup_basic"
   }
 }
@@ -537,7 +537,7 @@ func testAccAWSALBTargetGroupConfig_basic(targetGroupName string) string {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-alb-target-group-basic"
   }
 }`, targetGroupName)
@@ -568,7 +568,7 @@ func testAccAWSALBTargetGroupConfig_updatedPort(targetGroupName string) string {
     matcher = "200-299"
   }
 
-  tags {
+  tags = {
     TestName = "TestAccAWSALBTargetGroup_basic"
   }
 }
@@ -576,7 +576,7 @@ func testAccAWSALBTargetGroupConfig_updatedPort(targetGroupName string) string {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-alb-target-group-basic"
   }
 }`, targetGroupName)
@@ -607,7 +607,7 @@ func testAccAWSALBTargetGroupConfig_updatedProtocol(targetGroupName string) stri
     matcher = "200-299"
   }
 
-  tags {
+  tags = {
     TestName = "TestAccAWSALBTargetGroup_basic"
   }
 }
@@ -615,7 +615,7 @@ func testAccAWSALBTargetGroupConfig_updatedProtocol(targetGroupName string) stri
 resource "aws_vpc" "test2" {
   cidr_block = "10.10.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-alb-target-group-basic-2"
   }
 }
@@ -623,7 +623,7 @@ resource "aws_vpc" "test2" {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-alb-target-group-basic"
   }
 }`, targetGroupName)
@@ -654,7 +654,7 @@ func testAccAWSALBTargetGroupConfig_updatedVpc(targetGroupName string) string {
     matcher = "200-299"
   }
 
-  tags {
+  tags = {
     TestName = "TestAccAWSALBTargetGroup_basic"
   }
 }
@@ -662,7 +662,7 @@ func testAccAWSALBTargetGroupConfig_updatedVpc(targetGroupName string) string {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-alb-target-group-basic"
   }
 }`, targetGroupName)
@@ -693,7 +693,7 @@ func testAccAWSALBTargetGroupConfig_updateTags(targetGroupName string) string {
     matcher = "200-299"
   }
 
-  tags {
+  tags = {
     Environment = "Production"
     Type = "ALB Target Group"
   }
@@ -702,7 +702,7 @@ func testAccAWSALBTargetGroupConfig_updateTags(targetGroupName string) string {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-alb-target-group-basic"
   }
 }`, targetGroupName)
@@ -737,7 +737,7 @@ func testAccAWSALBTargetGroupConfig_updateHealthCheck(targetGroupName string) st
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-alb-target-group-basic"
   }
 }`, targetGroupName)
@@ -779,7 +779,7 @@ func testAccAWSALBTargetGroupConfig_stickiness(targetGroupName string, addSticki
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-alb-target-group-stickiness"
   }
 }`, targetGroupName, stickinessBlock)
@@ -811,7 +811,7 @@ func testAccAWSALBTargetGroupConfig_updateSlowStart(targetGroupName string, slow
     matcher = "200-299"
   }
 
-  tags {
+  tags = {
     TestName = "TestAccAWSALBTargetGroup_SlowStart"
   }
 }
@@ -819,7 +819,7 @@ func testAccAWSALBTargetGroupConfig_updateSlowStart(targetGroupName string, slow
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-alb-target-group-slowstart"
   }
 }`, targetGroupName, slowStartDuration)
@@ -835,7 +835,7 @@ resource "aws_alb_target_group" "test" {
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-alb-target-group-name-prefix"
 	}
 }
@@ -850,7 +850,7 @@ resource "aws_alb_target_group" "test" {
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-alb-target-group-generated-name"
 	}
 }

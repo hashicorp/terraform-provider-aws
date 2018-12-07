@@ -83,7 +83,7 @@ func testAccCheckAWSInspectorTargetExists(name string) resource.TestCheckFunc {
 var testAccAWSInspectorTargetAssessment = `
 
 resource "aws_inspector_resource_group" "foo" {
-	tags {
+	tags = {
 	  Name  = "bar"
   }
 }
@@ -96,7 +96,7 @@ resource "aws_inspector_assessment_target" "foo" {
 var testAccCheckAWSInspectorTargetAssessmentModified = `
 
 resource "aws_inspector_resource_group" "foo" {
-	tags {
+	tags = {
 	  Name  = "bar"
   }
 }
@@ -109,13 +109,13 @@ resource "aws_inspector_assessment_target" "foo" {
 var testAccCheckAWSInspectorTargetAssessmentUpdatedResourceGroup = `
 
 resource "aws_inspector_resource_group" "foo" {
-	tags {
+	tags = {
 	  Name  = "bar"
   }
 }
 
 resource "aws_inspector_resource_group" "bar" {
-	tags {
+	tags = {
 	  Name  = "test"
   }
 }

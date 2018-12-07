@@ -1534,7 +1534,7 @@ EOF
 
 resource "aws_vpc" "vpc_for_lambda" {
     cidr_block = "10.0.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-lambda-function"
 	}
 }
@@ -1543,7 +1543,7 @@ resource "aws_subnet" "subnet_for_lambda" {
     vpc_id = "${aws_vpc.vpc_for_lambda.id}"
     cidr_block = "10.0.1.0/24"
 
-    tags {
+  tags = {
         Name = "tf-acc-lambda-function-1"
     }
 }
@@ -1923,7 +1923,7 @@ resource "aws_subnet" "subnet_for_lambda_2" {
     vpc_id = "${aws_vpc.vpc_for_lambda.id}"
     cidr_block = "10.0.2.0/24"
 
-    tags {
+  tags = {
         Name = "tf-acc-lambda-function-2"
     }
 }
@@ -2065,7 +2065,7 @@ resource "aws_lambda_function" "lambda_function_test" {
     role = "${aws_iam_role.iam_for_lambda.arn}"
     handler = "exports.example"
     runtime = "nodejs4.3"
-    tags {
+  tags = {
 		Key1 = "Value One"
 		Description = "Very interesting"
     }
@@ -2081,7 +2081,7 @@ resource "aws_lambda_function" "lambda_function_test" {
     role = "${aws_iam_role.iam_for_lambda.arn}"
     handler = "exports.example"
     runtime = "nodejs4.3"
-    tags {
+  tags = {
 		Key1 = "Value One Changed"
 		Key2 = "Value Two"
 		Key3 = "Value Three"

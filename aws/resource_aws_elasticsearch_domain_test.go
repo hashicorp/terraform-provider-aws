@@ -813,7 +813,7 @@ resource "aws_elasticsearch_domain" "example" {
     volume_size = 10
   }
 
-  tags {
+  tags = {
     foo = "bar"
     new = "type"
   }
@@ -963,7 +963,7 @@ resource "aws_elasticsearch_domain" "example" {
     automated_snapshot_start_hour = 23
   }
 
-  tags {
+  tags = {
     bar = "complex"
   }
 }
@@ -991,7 +991,7 @@ data "aws_availability_zones" "available" {
 
 resource "aws_vpc" "elasticsearch_in_vpc" {
   cidr_block = "192.168.0.0/22"
-  tags {
+  tags = {
     Name = "terraform-testacc-elasticsearch-domain-in-vpc"
   }
 }
@@ -1000,7 +1000,7 @@ resource "aws_subnet" "first" {
   vpc_id            = "${aws_vpc.elasticsearch_in_vpc.id}"
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
   cidr_block        = "192.168.0.0/24"
-  tags {
+  tags = {
     Name = "tf-acc-elasticsearch-domain-in-vpc-first"
   }
 }
@@ -1009,7 +1009,7 @@ resource "aws_subnet" "second" {
   vpc_id            = "${aws_vpc.elasticsearch_in_vpc.id}"
   availability_zone = "${data.aws_availability_zones.available.names[1]}"
   cidr_block        = "192.168.1.0/24"
-  tags {
+  tags = {
     Name = "tf-acc-elasticsearch-domain-in-vpc-second"
   }
 }
@@ -1060,7 +1060,7 @@ data "aws_availability_zones" "available" {
 
 resource "aws_vpc" "elasticsearch_in_vpc" {
   cidr_block = "192.168.0.0/22"
-  tags {
+  tags = {
     Name = "terraform-testacc-elasticsearch-domain-in-vpc-update"
   }
 }
@@ -1069,7 +1069,7 @@ resource "aws_subnet" "az1_first" {
   vpc_id            = "${aws_vpc.elasticsearch_in_vpc.id}"
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
   cidr_block        = "192.168.0.0/24"
-  tags {
+  tags = {
     Name = "tf-acc-elasticsearch-domain-in-vpc-update-az1-first"
   }
 }
@@ -1078,7 +1078,7 @@ resource "aws_subnet" "az2_first" {
   vpc_id            = "${aws_vpc.elasticsearch_in_vpc.id}"
   availability_zone = "${data.aws_availability_zones.available.names[1]}"
   cidr_block        = "192.168.1.0/24"
-  tags {
+  tags = {
     Name = "tf-acc-elasticsearch-domain-in-vpc-update-az2-first"
   }
 }
@@ -1087,7 +1087,7 @@ resource "aws_subnet" "az1_second" {
   vpc_id            = "${aws_vpc.elasticsearch_in_vpc.id}"
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
   cidr_block        = "192.168.2.0/24"
-  tags {
+  tags = {
     Name = "tf-acc-elasticsearch-domain-in-vpc-update-az1-second"
   }
 }
@@ -1096,7 +1096,7 @@ resource "aws_subnet" "az2_second" {
   vpc_id            = "${aws_vpc.elasticsearch_in_vpc.id}"
   availability_zone = "${data.aws_availability_zones.available.names[1]}"
   cidr_block        = "192.168.3.0/24"
-  tags {
+  tags = {
     Name = "tf-acc-elasticsearch-domain-in-vpc-update-az2-second"
   }
 }
@@ -1138,7 +1138,7 @@ data "aws_availability_zones" "available" {
 
 resource "aws_vpc" "elasticsearch_in_vpc" {
   cidr_block = "192.168.0.0/22"
-  tags {
+  tags = {
     Name = "terraform-testacc-elasticsearch-domain-internet-to-vpc-endpoint"
   }
 }
@@ -1147,7 +1147,7 @@ resource "aws_subnet" "first" {
   vpc_id            = "${aws_vpc.elasticsearch_in_vpc.id}"
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
   cidr_block        = "192.168.0.0/24"
-  tags {
+  tags = {
     Name = "tf-acc-elasticsearch-domain-internet-to-vpc-endpoint-first"
   }
 }
@@ -1156,7 +1156,7 @@ resource "aws_subnet" "second" {
   vpc_id            = "${aws_vpc.elasticsearch_in_vpc.id}"
   availability_zone = "${data.aws_availability_zones.available.names[1]}"
   cidr_block        = "192.168.1.0/24"
-  tags {
+  tags = {
     Name = "tf-acc-elasticsearch-domain-internet-to-vpc-endpoint-second"
   }
 }

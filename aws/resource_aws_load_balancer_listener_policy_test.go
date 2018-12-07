@@ -159,7 +159,7 @@ resource "aws_elb" "test-lb" {
     lb_protocol = "http"
   }
 
-  tags {
+  tags = {
     Name = "tf-acc-test"
   }
 }
@@ -196,7 +196,7 @@ resource "aws_elb" "test-lb" {
     lb_protocol = "http"
   }
 
-  tags {
+  tags = {
     Name = "tf-acc-test"
   }
 }
@@ -233,7 +233,7 @@ resource "aws_elb" "test-lb" {
     lb_protocol = "http"
   }
 
-  tags {
+  tags = {
     Name = "tf-acc-test"
   }
 }`, lbName)

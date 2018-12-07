@@ -45,7 +45,7 @@ resource "aws_route_table" "r" {
     egress_only_gateway_id = "${aws_egress_only_internet_gateway.foo.id}"
   }
 
-  tags {
+  tags = {
     Name = "main"
   }
 }

@@ -80,7 +80,7 @@ resource "aws_instance" "test" {
   count = 3
   ami = "${data.aws_ami.ubuntu.id}"
   instance_type = "t2.micro"
-  tags {
+  tags = {
     Name = "TfAccTest"
   }
 }
@@ -115,7 +115,7 @@ resource "aws_instance" "test" {
   count = 5
   ami = "${data.aws_ami.ubuntu.id}"
   instance_type = "t2.micro"
-  tags {
+  tags = {
     Name = "TfAccTest-HelloWorld"
     TestSeed = "%[1]d"
   }
@@ -152,7 +152,7 @@ resource "aws_instance" "test" {
   count = 2
   ami = "${data.aws_ami.ubuntu.id}"
   instance_type = "t2.micro"
-  tags {
+  tags = {
     Name = "TfAccTest-HelloWorld"
     TestSeed = "%[1]d"
   }

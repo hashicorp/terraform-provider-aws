@@ -96,7 +96,7 @@ resource "aws_vpc_dhcp_options" "test" {
   netbios_node_type    = 2
   ntp_servers          = ["127.0.0.1"]
 
-  tags {
+  tags = {
     Name = "tf-acc-test"
   }
 }
@@ -121,7 +121,7 @@ resource "aws_vpc_dhcp_options" "test" {
   netbios_node_type    = 2
   ntp_servers          = ["127.0.0.1"]
 
-  tags {
+  tags = {
     Name = "tf-acc-test-%d"
   }
 }

@@ -317,7 +317,7 @@ func testAccCheckVpcEndpointPrefixListAvailable(n string) resource.TestCheckFunc
 const testAccVpcEndpointConfig_gatewayWithRouteTableAndPolicy = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.0.0.0/16"
-  tags {
+  tags = {
     Name = "terraform-testacc-vpc-endpoint-gw-w-route-table-and-policy"
   }
 }
@@ -325,7 +325,7 @@ resource "aws_vpc" "foo" {
 resource "aws_subnet" "foo" {
   vpc_id = "${aws_vpc.foo.id}"
   cidr_block = "10.0.1.0/24"
-  tags {
+  tags = {
     Name = "tf-acc-vpc-endpoint-gw-w-route-table-and-policy"
   }
 }
@@ -363,7 +363,7 @@ resource "aws_route_table_association" "main" {
 const testAccVpcEndpointConfig_gatewayWithRouteTableAndPolicyModified = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.0.0.0/16"
-  tags {
+  tags = {
     Name = "terraform-testacc-vpc-endpoint-gw-w-route-table-and-policy"
   }
 }
@@ -371,7 +371,7 @@ resource "aws_vpc" "foo" {
 resource "aws_subnet" "foo" {
   vpc_id = "${aws_vpc.foo.id}"
   cidr_block = "10.0.1.0/24"
-  tags {
+  tags = {
     Name = "tf-acc-vpc-endpoint-gw-w-route-table-and-policy"
   }
 }
@@ -407,7 +407,7 @@ resource "aws_route_table_association" "main" {
 const testAccVpcEndpointConfig_gatewayWithoutRouteTableOrPolicy = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.0.0.0/16"
-  tags {
+  tags = {
     Name = "terraform-testacc-vpc-endpoint-gw-wout-route-table-or-policy"
   }
 }
@@ -423,7 +423,7 @@ resource "aws_vpc_endpoint" "s3" {
 const testAccVpcEndpointConfig_interfaceWithoutSubnet = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.0.0.0/16"
-  tags {
+  tags = {
     Name = "terraform-testacc-vpc-endpoint-iface-wout-subnet"
   }
 }
@@ -448,7 +448,7 @@ resource "aws_vpc" "foo" {
   cidr_block = "10.0.0.0/16"
   enable_dns_support = true
   enable_dns_hostnames = true
-  tags {
+  tags = {
     Name = "terraform-testacc-vpc-endpoint-iface-w-subnet"
   }
 }
@@ -461,7 +461,7 @@ resource "aws_subnet" "sn1" {
   vpc_id = "${aws_vpc.foo.id}"
   cidr_block = "${cidrsubnet(aws_vpc.foo.cidr_block, 2, 0)}"
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
-  tags {
+  tags = {
     Name = "tf-acc-vpc-endpoint-iface-w-subnet-1"
   }
 }
@@ -470,7 +470,7 @@ resource "aws_subnet" "sn2" {
   vpc_id = "${aws_vpc.foo.id}"
   cidr_block = "${cidrsubnet(aws_vpc.foo.cidr_block, 2, 1)}"
   availability_zone = "${data.aws_availability_zones.available.names[1]}"
-  tags {
+  tags = {
     Name = "tf-acc-vpc-endpoint-iface-w-subnet-2"
   }
 }
@@ -479,7 +479,7 @@ resource "aws_subnet" "sn3" {
   vpc_id = "${aws_vpc.foo.id}"
   cidr_block = "${cidrsubnet(aws_vpc.foo.cidr_block, 2, 2)}"
   availability_zone = "${data.aws_availability_zones.available.names[2]}"
-  tags {
+  tags = {
     Name = "tf-acc-vpc-endpoint-iface-w-subnet-3"
   }
 }
@@ -507,7 +507,7 @@ resource "aws_vpc" "foo" {
   cidr_block = "10.0.0.0/16"
   enable_dns_support = true
   enable_dns_hostnames = true
-  tags {
+  tags = {
     Name = "terraform-testacc-vpc-endpoint-iface-w-subnet"
   }
 }
@@ -520,7 +520,7 @@ resource "aws_subnet" "sn1" {
   vpc_id = "${aws_vpc.foo.id}"
   cidr_block = "${cidrsubnet(aws_vpc.foo.cidr_block, 2, 0)}"
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
-  tags {
+  tags = {
     Name = "tf-acc-vpc-endpoint-iface-w-subnet-1"
   }
 }
@@ -529,7 +529,7 @@ resource "aws_subnet" "sn2" {
   vpc_id = "${aws_vpc.foo.id}"
   cidr_block = "${cidrsubnet(aws_vpc.foo.cidr_block, 2, 1)}"
   availability_zone = "${data.aws_availability_zones.available.names[1]}"
-  tags {
+  tags = {
     Name = "tf-acc-vpc-endpoint-iface-w-subnet-2"
   }
 }
@@ -538,7 +538,7 @@ resource "aws_subnet" "sn3" {
   vpc_id = "${aws_vpc.foo.id}"
   cidr_block = "${cidrsubnet(aws_vpc.foo.cidr_block, 2, 2)}"
   availability_zone = "${data.aws_availability_zones.available.names[2]}"
-  tags {
+  tags = {
     Name = "tf-acc-vpc-endpoint-iface-w-subnet-3"
   }
 }
@@ -566,7 +566,7 @@ func testAccVpcEndpointConfig_interfaceNonAWSService(lbName string) string {
 resource "aws_vpc" "foo" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-vpc-endpoint-iface-non-aws-svc"
   }
 }
@@ -584,7 +584,7 @@ resource "aws_lb" "nlb_test_1" {
   idle_timeout               = 60
   enable_deletion_protection = false
 
-  tags {
+  tags = {
     Name = "testAccVpcEndpointServiceBasicConfig_nlb1"
   }
 }
@@ -598,7 +598,7 @@ resource "aws_subnet" "nlb_test_1" {
   cidr_block        = "10.0.1.0/24"
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
 
-  tags {
+  tags = {
     Name = "tf-acc-vpc-endpoint-iface-non-aws-svc-1"
   }
 }
@@ -608,7 +608,7 @@ resource "aws_subnet" "nlb_test_2" {
   cidr_block        = "10.0.2.0/24"
   availability_zone = "${data.aws_availability_zones.available.names[1]}"
 
-  tags {
+  tags = {
     Name = "tf-acc-vpc-endpoint-iface-non-aws-svc-2"
   }
 }

@@ -46,7 +46,7 @@ provider "aws" {
 resource "aws_vpc" "test" {
   cidr_block = "172.16.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-igw-data-source"
   }
 }
@@ -54,7 +54,7 @@ resource "aws_vpc" "test" {
 resource "aws_internet_gateway" "test" {
   vpc_id = "${aws_vpc.test.id}"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-data-source-igw"
   }
 }
@@ -64,7 +64,7 @@ data "aws_internet_gateway" "by_id" {
 }
 
 data "aws_internet_gateway" "by_tags" {
-  tags {
+  tags = {
     Name = "${aws_internet_gateway.test.tags["Name"]}"
   }
 }

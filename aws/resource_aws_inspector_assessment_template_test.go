@@ -80,7 +80,7 @@ func testAccCheckAWSInspectorTemplateExists(name string) resource.TestCheckFunc 
 func testAccAWSInspectorTemplateAssessment(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_inspector_resource_group" "foo" {
-	tags {
+	tags = {
 	  Name  = "tf-acc-test-%d"
   }
 }
@@ -107,7 +107,7 @@ resource "aws_inspector_assessment_template" "foo" {
 func testAccCheckAWSInspectorTemplatetModified(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_inspector_resource_group" "foo" {
-	tags {
+	tags = {
 	  Name  = "tf-acc-test-%d"
   }
 }

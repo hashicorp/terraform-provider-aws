@@ -89,7 +89,7 @@ func testAccCheckAWSDefaultSubnetDestroy(s *terraform.State) error {
 const testAccAWSDefaultSubnetConfigBasic = `
 resource "aws_default_subnet" "foo" {
   availability_zone = "us-west-2a"
-  tags {
+  tags = {
     Name = "terraform-testacc-default-subnet"
   }
 }
@@ -99,7 +99,7 @@ const testAccAWSDefaultSubnetConfigPublicIp = `
 resource "aws_default_subnet" "foo" {
   availability_zone = "us-west-2b"
   map_public_ip_on_launch = true
-  tags {
+  tags = {
     Name = "terraform-testacc-default-subnet"
   }
 }
@@ -109,7 +109,7 @@ const testAccAWSDefaultSubnetConfigNoPublicIp = `
 resource "aws_default_subnet" "foo" {
   availability_zone = "us-west-2b"
   map_public_ip_on_launch = false
-  tags {
+  tags = {
     Name = "terraform-testacc-default-subnet"
   }
 }

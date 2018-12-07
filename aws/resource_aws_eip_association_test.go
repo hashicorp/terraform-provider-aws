@@ -252,7 +252,7 @@ func testAccCheckAWSEIPAssociationDestroy(s *terraform.State) error {
 const testAccAWSEIPAssociationConfig = `
 resource "aws_vpc" "main" {
 	cidr_block = "192.168.0.0/24"
-	tags {
+	tags = {
 		Name = "terraform-testacc-eip-association"
 	}
 }
@@ -260,7 +260,7 @@ resource "aws_subnet" "sub" {
 	vpc_id = "${aws_vpc.main.id}"
 	cidr_block = "192.168.0.0/25"
 	availability_zone = "us-west-2a"
-	tags {
+	tags = {
 		Name = "tf-acc-eip-association"
 	}
 }
@@ -307,7 +307,7 @@ resource "aws_network_interface" "baz" {
 const testAccAWSEIPAssociationConfigDisappears = `
 resource "aws_vpc" "main" {
 	cidr_block = "192.168.0.0/24"
-	tags {
+	tags = {
 		Name = "terraform-testacc-eip-association-disappears"
 	}
 }
@@ -315,7 +315,7 @@ resource "aws_subnet" "sub" {
 	vpc_id = "${aws_vpc.main.id}"
 	cidr_block = "192.168.0.0/25"
 	availability_zone = "us-west-2a"
-	tags {
+	tags = {
 		Name = "tf-acc-eip-association-disappears"
 	}
 }

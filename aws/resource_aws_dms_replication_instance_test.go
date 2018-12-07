@@ -618,7 +618,7 @@ data "aws_availability_zones" "available" {}
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
-  tags {
+  tags = {
     Name = %q
   }
 }
@@ -630,7 +630,7 @@ resource "aws_subnet" "test" {
   cidr_block        = "10.1.${count.index}.0/24"
   vpc_id            = "${aws_vpc.test.id}"
 
-  tags {
+  tags = {
     Name = "${aws_vpc.test.tags["Name"]}"
   }
 }
@@ -657,7 +657,7 @@ resource "aws_dms_replication_instance" "test" {
   replication_instance_class   = "dms.t2.micro"
   replication_instance_id      = %q
 
-  tags {
+  tags = {
     %q = %q
   }
 }
@@ -671,7 +671,7 @@ resource "aws_dms_replication_instance" "test" {
   replication_instance_class   = "dms.t2.micro"
   replication_instance_id      = %q
 
-  tags {
+  tags = {
     %q = %q
     %q = %q
   }
@@ -686,7 +686,7 @@ data "aws_availability_zones" "available" {}
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
-  tags {
+  tags = {
     Name = %q
   }
 }
@@ -703,7 +703,7 @@ resource "aws_subnet" "test" {
   cidr_block        = "10.1.${count.index}.0/24"
   vpc_id            = "${aws_vpc.test.id}"
 
-  tags {
+  tags = {
     Name = "${aws_vpc.test.tags["Name"]}"
   }
 }

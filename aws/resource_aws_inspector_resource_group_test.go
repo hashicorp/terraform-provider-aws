@@ -42,14 +42,14 @@ func testAccCheckAWSInspectorResourceGroupExists(name string) resource.TestCheck
 
 var testAccAWSInspectorResourceGroup = `
 resource "aws_inspector_resource_group" "foo" {
-	tags {
+	tags = {
 	  Name  = "foo"
   }
 }`
 
 var testAccCheckAWSInspectorResourceGroupModified = `
 resource "aws_inspector_resource_group" "foo" {
-	tags {
+	tags = {
 	  Name  = "bar"
   }
 }`

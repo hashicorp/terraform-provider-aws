@@ -1505,7 +1505,7 @@ resource "aws_ecs_task_definition" "test" {
 ]
 DEFINITION
 
-  tags {
+  tags = {
     %q = %q
   }
 }
@@ -1533,7 +1533,7 @@ resource "aws_ecs_task_definition" "test" {
 ]
 DEFINITION
 
-  tags {
+  tags = {
     %q = %q
     %q = %q
   }

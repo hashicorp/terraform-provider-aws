@@ -164,7 +164,7 @@ func testAccVpcEndpointServiceBasicConfig(lb1Name string) string {
 resource "aws_vpc" "nlb_test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-vpc-endpoint-service"
   }
 }
@@ -182,7 +182,7 @@ resource "aws_lb" "nlb_test_1" {
   idle_timeout               = 60
   enable_deletion_protection = false
 
-  tags {
+  tags = {
     Name = "testAccVpcEndpointServiceBasicConfig_nlb1"
   }
 }
@@ -192,7 +192,7 @@ resource "aws_subnet" "nlb_test_1" {
   cidr_block        = "10.0.1.0/24"
   availability_zone = "us-west-2a"
 
-  tags {
+  tags = {
     Name = "tf-acc-vpc-endpoint-service-1"
   }
 }
@@ -202,7 +202,7 @@ resource "aws_subnet" "nlb_test_2" {
   cidr_block        = "10.0.2.0/24"
   availability_zone = "us-west-2b"
 
-  tags {
+  tags = {
     Name = "tf-acc-vpc-endpoint-service-2"
   }
 }
@@ -229,7 +229,7 @@ func testAccVpcEndpointServiceModifiedConfig(lb1Name, lb2Name string) string {
 resource "aws_vpc" "nlb_test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-vpc-endpoint-service"
   }
 }
@@ -247,7 +247,7 @@ resource "aws_lb" "nlb_test_1" {
   idle_timeout               = 60
   enable_deletion_protection = false
 
-  tags {
+  tags = {
     Name = "testAccVpcEndpointServiceBasicConfig_nlb1"
   }
 }
@@ -265,7 +265,7 @@ resource "aws_lb" "nlb_test_2" {
 	idle_timeout               = 60
 	enable_deletion_protection = false
 
-	tags {
+	tags = {
 	  Name = "testAccVpcEndpointServiceBasicConfig_nlb2"
 	}
   }
@@ -275,7 +275,7 @@ resource "aws_subnet" "nlb_test_1" {
   cidr_block        = "10.0.1.0/24"
   availability_zone = "us-west-2a"
 
-  tags {
+  tags = {
     Name = "tf-acc-vpc-endpoint-service-1"
   }
 }
@@ -285,7 +285,7 @@ resource "aws_subnet" "nlb_test_2" {
   cidr_block        = "10.0.2.0/24"
   availability_zone = "us-west-2b"
 
-  tags {
+  tags = {
     Name = "tf-acc-vpc-endpoint-service-2"
   }
 }

@@ -46,7 +46,7 @@ provider "aws" {
 }
 
 resource "aws_default_vpc_dhcp_options" "foo" {
-	tags {
+	tags = {
 		Name = "Default DHCP Option Set"
 	}
 }

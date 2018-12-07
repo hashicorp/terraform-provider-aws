@@ -41,7 +41,7 @@ resource "aws_spot_instance_request" "cheap_worker" {
   spot_price    = "0.03"
   instance_type = "c4.xlarge"
 
-  tags {
+  tags = {
     Name = "CheapWorker"
   }
 }

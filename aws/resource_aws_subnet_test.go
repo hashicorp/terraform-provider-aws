@@ -340,7 +340,7 @@ func testAccCheckSubnetExists(n string, v *ec2.Subnet) resource.TestCheckFunc {
 const testAccSubnetConfig = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-subnet"
 	}
 }
@@ -349,7 +349,7 @@ resource "aws_subnet" "foo" {
 	cidr_block = "10.1.1.0/24"
 	vpc_id = "${aws_vpc.foo.id}"
 	map_public_ip_on_launch = true
-	tags {
+	tags = {
 		Name = "tf-acc-subnet"
 	}
 }
@@ -359,7 +359,7 @@ const testAccSubnetConfigPreIpv6 = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.10.0.0/16"
 	assign_generated_ipv6_cidr_block = true
-	tags {
+	tags = {
 		Name = "terraform-testacc-subnet-ipv6"
 	}
 }
@@ -368,7 +368,7 @@ resource "aws_subnet" "foo" {
 	cidr_block = "10.10.1.0/24"
 	vpc_id = "${aws_vpc.foo.id}"
 	map_public_ip_on_launch = true
-	tags {
+	tags = {
 		Name = "tf-acc-subnet-ipv6"
 	}
 }
@@ -378,7 +378,7 @@ const testAccSubnetConfigIpv6 = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.10.0.0/16"
 	assign_generated_ipv6_cidr_block = true
-	tags {
+	tags = {
 		Name = "terraform-testacc-subnet-ipv6"
 	}
 }
@@ -389,7 +389,7 @@ resource "aws_subnet" "foo" {
 	ipv6_cidr_block = "${cidrsubnet(aws_vpc.foo.ipv6_cidr_block, 8, 1)}"
 	map_public_ip_on_launch = true
 	assign_ipv6_address_on_creation = true
-	tags {
+	tags = {
 		Name = "tf-acc-subnet-ipv6"
 	}
 }
@@ -399,7 +399,7 @@ const testAccSubnetConfigIpv6UpdateAssignIpv6OnCreation = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.10.0.0/16"
 	assign_generated_ipv6_cidr_block = true
-	tags {
+	tags = {
 		Name = "terraform-testacc-subnet-assign-ipv6-on-creation"
 	}
 }
@@ -410,7 +410,7 @@ resource "aws_subnet" "foo" {
 	ipv6_cidr_block = "${cidrsubnet(aws_vpc.foo.ipv6_cidr_block, 8, 1)}"
 	map_public_ip_on_launch = true
 	assign_ipv6_address_on_creation = false
-	tags {
+	tags = {
 		Name = "tf-acc-subnet-assign-ipv6-on-creation"
 	}
 }
@@ -420,7 +420,7 @@ const testAccSubnetConfigIpv6UpdateIpv6Cidr = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.10.0.0/16"
 	assign_generated_ipv6_cidr_block = true
-	tags {
+	tags = {
 		Name = "terraform-testacc-subnet-ipv6-update-cidr"
 	}
 }
@@ -431,7 +431,7 @@ resource "aws_subnet" "foo" {
 	ipv6_cidr_block = "${cidrsubnet(aws_vpc.foo.ipv6_cidr_block, 8, 3)}"
 	map_public_ip_on_launch = true
 	assign_ipv6_address_on_creation = false
-	tags {
+	tags = {
 		Name = "tf-acc-subnet-ipv6-update-cidr"
 	}
 }
@@ -444,7 +444,7 @@ provider "aws" {
 
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
-  tags {
+  tags = {
     Name = "terraform-testacc-subnet"
   }
 }
@@ -453,7 +453,7 @@ resource "aws_subnet" "foo" {
   cidr_block = "10.1.1.0/24"
   vpc_id = "${aws_vpc.foo.id}"
   availability_zone_id = "usw2-az3"
-  tags {
+  tags = {
     Name = "tf-acc-subnet"
   }
 }

@@ -93,7 +93,7 @@ func testAccAWSRedshiftSnapshotCopyGrant_Basic(rName string) string {
 resource "aws_redshift_snapshot_copy_grant" "basic" {
   snapshot_copy_grant_name = "%s"
 
-  tags {
+  tags = {
     Name = "tf-redshift-snapshot-copy-grant-basic"
   }
 }

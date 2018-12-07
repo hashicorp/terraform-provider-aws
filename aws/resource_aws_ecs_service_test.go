@@ -1246,7 +1246,7 @@ data "aws_availability_zones" "available" {}
 
 resource "aws_vpc" "main" {
   cidr_block = "10.10.0.0/16"
-  tags {
+  tags = {
     Name = "terraform-testacc-ecs-service-with-launch-type-fargate"
   }
 }
@@ -1256,7 +1256,7 @@ resource "aws_subnet" "main" {
   cidr_block = "${cidrsubnet(aws_vpc.main.cidr_block, 8, count.index)}"
   availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
   vpc_id = "${aws_vpc.main.id}"
-  tags {
+  tags = {
     Name = "tf-acc-ecs-service-with-launch-type-fargate"
   }
 }
@@ -1334,7 +1334,7 @@ data "aws_availability_zones" "available" {}
 
 resource "aws_vpc" "main" {
   cidr_block = "10.10.0.0/16"
-  tags {
+  tags = {
     Name = "%s"
   }
 }
@@ -1344,7 +1344,7 @@ resource "aws_subnet" "main" {
   cidr_block = "${cidrsubnet(aws_vpc.main.cidr_block, 8, count.index)}"
   availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
   vpc_id = "${aws_vpc.main.id}"
-  tags {
+  tags = {
     Name = "tf-acc-ecs-service-health-check-grace-period"
   }
 }
@@ -1865,7 +1865,7 @@ data "aws_availability_zones" "available" {}
 
 resource "aws_vpc" "main" {
   cidr_block = "10.10.0.0/16"
-  tags {
+  tags = {
     Name = "terraform-testacc-ecs-service-with-alb"
   }
 }
@@ -1875,7 +1875,7 @@ resource "aws_subnet" "main" {
   cidr_block = "${cidrsubnet(aws_vpc.main.cidr_block, 8, count.index)}"
   availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
   vpc_id = "${aws_vpc.main.id}"
-  tags {
+  tags = {
     Name = "tf-acc-ecs-service-with-alb"
   }
 }
@@ -2011,7 +2011,7 @@ data "aws_availability_zones" "available" {}
 
 resource "aws_vpc" "main" {
   cidr_block = "10.10.0.0/16"
-  tags {
+  tags = {
     Name = "terraform-testacc-ecs-service-with-network-config"
   }
 }
@@ -2021,7 +2021,7 @@ resource "aws_subnet" "main" {
   cidr_block = "${cidrsubnet(aws_vpc.main.cidr_block, 8, count.index)}"
   availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
   vpc_id = "${aws_vpc.main.id}"
-  tags {
+  tags = {
     Name = "tf-acc-ecs-service-with-network-config"
   }
 }
@@ -2462,7 +2462,7 @@ resource "aws_ecs_service" "test" {
   name                               = %q
   task_definition                    = "${aws_ecs_task_definition.test.arn}"
 
-  tags {
+  tags = {
     %q = %q
   }
 }
@@ -2497,7 +2497,7 @@ resource "aws_ecs_service" "test" {
   name                               = %q
   task_definition                    = "${aws_ecs_task_definition.test.arn}"
 
-  tags {
+  tags = {
     %q = %q
     %q = %q
   }
@@ -2534,7 +2534,7 @@ resource "aws_ecs_service" "test" {
   task_definition                    = "${aws_ecs_task_definition.test.arn}"
   enable_ecs_managed_tags            = true
 
-  tags {
+  tags = {
     tag-key = "tag-value"
   }
 }
@@ -2562,7 +2562,7 @@ resource "aws_ecs_task_definition" "test" {
 ]
 DEFINITION
 
-  tags {
+  tags = {
     tag-key = "task-def"
   }
 }
@@ -2575,7 +2575,7 @@ resource "aws_ecs_service" "test" {
   enable_ecs_managed_tags            = true
   propagate_tags                     = "%s"
 
-  tags {
+  tags = {
     tag-key = "service"
   }
 }

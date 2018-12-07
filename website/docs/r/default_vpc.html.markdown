@@ -25,7 +25,7 @@ Basic usage with tags:
 
 ```hcl
 resource "aws_default_vpc" "default" {
-  tags {
+  tags = {
     Name = "Default VPC"
   }
 }

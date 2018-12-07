@@ -721,7 +721,7 @@ resource "aws_ssm_document" "foo" {
     }
 DOC
 
-  tags {
+  tags = {
     %s = %q
   }
 }
@@ -754,7 +754,7 @@ resource "aws_ssm_document" "foo" {
     }
 DOC
 
-  tags {
+  tags = {
     %s = %q
     %s = %q
   }

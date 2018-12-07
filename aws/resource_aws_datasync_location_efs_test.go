@@ -289,7 +289,7 @@ func testAccAWSDataSyncLocationEfsConfigBase() string {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "tf-acc-test-datasync-location-efs"
   }
 }
@@ -298,7 +298,7 @@ resource "aws_subnet" "test" {
   cidr_block = "10.0.0.0/24"
   vpc_id     = "${aws_vpc.test.id}"
 
-  tags {
+  tags = {
     Name = "tf-acc-test-datasync-location-efs"
   }
 }
@@ -306,7 +306,7 @@ resource "aws_subnet" "test" {
 resource "aws_security_group" "test" {
   vpc_id = "${aws_vpc.test.id}"
 
-  tags {
+  tags = {
     Name = "tf-acc-test-datasync-location-efs"
   }
 }
@@ -357,7 +357,7 @@ resource "aws_datasync_location_efs" "test" {
     subnet_arn          = "${aws_subnet.test.arn}"
   }
 
-  tags {
+  tags = {
     %q = %q
   }
 }
@@ -374,7 +374,7 @@ resource "aws_datasync_location_efs" "test" {
     subnet_arn          = "${aws_subnet.test.arn}"
   }
 
-  tags {
+  tags = {
     %q = %q
     %q = %q
   }

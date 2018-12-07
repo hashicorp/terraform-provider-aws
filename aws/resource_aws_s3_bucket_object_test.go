@@ -761,7 +761,7 @@ resource "aws_s3_bucket_object" "object" {
 	bucket = "${aws_s3_bucket.object_bucket_2.bucket}"
 	key = "test-key"
 	content = "stuff"
-	tags {
+	tags = {
 		Key1 = "Value One"
 		Description = "Very interesting"
 	}

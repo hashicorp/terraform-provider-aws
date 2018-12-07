@@ -1467,7 +1467,7 @@ resource "aws_codebuild_project" "test" {
     type     = "GITHUB"
   }
 
-  tags {
+  tags = {
     tag1 = "tag1value"
     %s = "%s"
   }
@@ -1487,7 +1487,7 @@ resource "aws_subnet" "test" {
   cidr_block = "10.0.${count.index}.0/24"
   vpc_id     = "${aws_vpc.test.id}"
 
-  tags {
+  tags = {
     Name = "tf-acc-codebuild-project"
   }
 }

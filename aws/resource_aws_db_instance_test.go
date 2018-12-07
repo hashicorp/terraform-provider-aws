@@ -2168,7 +2168,7 @@ resource "aws_iam_policy_attachment" "test-attach" {
 //  Make sure EVERYTHING required is here...
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-db-instance-with-subnet-group"
 	}
 }
@@ -2177,7 +2177,7 @@ resource "aws_subnet" "foo" {
 	cidr_block = "10.1.1.0/24"
 	availability_zone = "us-west-2a"
 	vpc_id = "${aws_vpc.foo.id}"
-	tags {
+	tags = {
 		Name = "tf-acc-db-instance-with-subnet-group-1"
 	}
 }
@@ -2186,7 +2186,7 @@ resource "aws_subnet" "bar" {
 	cidr_block = "10.1.2.0/24"
 	availability_zone = "us-west-2b"
 	vpc_id = "${aws_vpc.foo.id}"
-	tags {
+	tags = {
 		Name = "tf-acc-db-instance-with-subnet-group-2"
 	}
 }
@@ -2194,7 +2194,7 @@ resource "aws_subnet" "bar" {
 resource "aws_db_subnet_group" "foo" {
 	name = "%s-subnet-group"
 	subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
-	tags {
+	tags = {
 		Name = "tf-dbsubnet-group-test"
 	}
 }
@@ -2250,7 +2250,7 @@ resource "aws_db_instance" "snapshot" {
 
 	copy_tags_to_snapshot = true
 	final_snapshot_identifier = "foobarbaz-test-terraform-final-snapshot-%d"
-	tags {
+	tags = {
 		Name = "tf-tags-db"
 	}
 }
@@ -2408,7 +2408,7 @@ func testAccAWSDBInstanceConfigWithSubnetGroup(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-db-instance-with-subnet-group"
 	}
 }
@@ -2417,7 +2417,7 @@ resource "aws_subnet" "foo" {
 	cidr_block = "10.1.1.0/24"
 	availability_zone = "us-west-2a"
 	vpc_id = "${aws_vpc.foo.id}"
-	tags {
+	tags = {
 		Name = "tf-acc-db-instance-with-subnet-group-1"
 	}
 }
@@ -2426,7 +2426,7 @@ resource "aws_subnet" "bar" {
 	cidr_block = "10.1.2.0/24"
 	availability_zone = "us-west-2b"
 	vpc_id = "${aws_vpc.foo.id}"
-	tags {
+	tags = {
 		Name = "tf-acc-db-instance-with-subnet-group-2"
 	}
 }
@@ -2434,7 +2434,7 @@ resource "aws_subnet" "bar" {
 resource "aws_db_subnet_group" "foo" {
 	name = "foo-%s"
 	subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
-	tags {
+	tags = {
 		Name = "tf-dbsubnet-group-test"
 	}
 }
@@ -2462,14 +2462,14 @@ func testAccAWSDBInstanceConfigWithSubnetGroupUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-db-instance-with-subnet-group-updated-foo"
 	}
 }
 
 resource "aws_vpc" "bar" {
 	cidr_block = "10.10.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-db-instance-with-subnet-group-updated-bar"
 	}
 }
@@ -2478,7 +2478,7 @@ resource "aws_subnet" "foo" {
 	cidr_block = "10.1.1.0/24"
 	availability_zone = "us-west-2a"
 	vpc_id = "${aws_vpc.foo.id}"
-	tags {
+	tags = {
 		Name = "tf-acc-db-instance-with-subnet-group-1"
 	}
 }
@@ -2487,7 +2487,7 @@ resource "aws_subnet" "bar" {
 	cidr_block = "10.1.2.0/24"
 	availability_zone = "us-west-2b"
 	vpc_id = "${aws_vpc.foo.id}"
-	tags {
+	tags = {
 		Name = "tf-acc-db-instance-with-subnet-group-2"
 	}
 }
@@ -2496,7 +2496,7 @@ resource "aws_subnet" "test" {
 	cidr_block = "10.10.3.0/24"
 	availability_zone = "us-west-2b"
 	vpc_id = "${aws_vpc.bar.id}"
-	tags {
+	tags = {
 		Name = "tf-acc-db-instance-with-subnet-group-3"
 	}
 }
@@ -2505,7 +2505,7 @@ resource "aws_subnet" "another_test" {
 	cidr_block = "10.10.4.0/24"
 	availability_zone = "us-west-2a"
 	vpc_id = "${aws_vpc.bar.id}"
-	tags {
+	tags = {
 		Name = "tf-acc-db-instance-with-subnet-group-4"
 	}
 }
@@ -2513,7 +2513,7 @@ resource "aws_subnet" "another_test" {
 resource "aws_db_subnet_group" "foo" {
 	name = "foo-%s"
 	subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
-	tags {
+	tags = {
 		Name = "tf-dbsubnet-group-test"
 	}
 }
@@ -2521,7 +2521,7 @@ resource "aws_db_subnet_group" "foo" {
 resource "aws_db_subnet_group" "bar" {
 	name = "bar-%s"
 	subnet_ids = ["${aws_subnet.test.id}", "${aws_subnet.another_test.id}"]
-	tags {
+	tags = {
 		Name = "tf-dbsubnet-group-test-updated"
 	}
 }
@@ -2551,7 +2551,7 @@ func testAccAWSDBMSSQL_timezone(rInt int) string {
 resource "aws_vpc" "foo" {
   cidr_block           = "10.1.0.0/16"
   enable_dns_hostnames = true
-  tags {
+  tags = {
     Name = "terraform-testacc-db-instance-mssql-timezone"
   }
 }
@@ -2567,7 +2567,7 @@ resource "aws_subnet" "main" {
   vpc_id            = "${aws_vpc.foo.id}"
   availability_zone = "us-west-2a"
   cidr_block        = "10.1.1.0/24"
-  tags {
+  tags = {
     Name = "tf-acc-db-instance-mssql-timezone-main"
   }
 }
@@ -2576,7 +2576,7 @@ resource "aws_subnet" "other" {
   vpc_id            = "${aws_vpc.foo.id}"
   availability_zone = "us-west-2b"
   cidr_block        = "10.1.2.0/24"
-  tags {
+  tags = {
     Name = "tf-acc-db-instance-mssql-timezone-other"
   }
 }
@@ -2623,7 +2623,7 @@ func testAccAWSDBMSSQL_timezone_AKST(rInt int) string {
 resource "aws_vpc" "foo" {
   cidr_block           = "10.1.0.0/16"
   enable_dns_hostnames = true
-  tags {
+  tags = {
     Name = "terraform-testacc-db-instance-mssql-timezone-akst"
   }
 }
@@ -2639,7 +2639,7 @@ resource "aws_subnet" "main" {
   vpc_id            = "${aws_vpc.foo.id}"
   availability_zone = "us-west-2a"
   cidr_block        = "10.1.1.0/24"
-  tags {
+  tags = {
     Name = "tf-acc-db-instance-mssql-timezone-akst-main"
   }
 }
@@ -2648,7 +2648,7 @@ resource "aws_subnet" "other" {
   vpc_id            = "${aws_vpc.foo.id}"
   availability_zone = "us-west-2b"
   cidr_block        = "10.1.2.0/24"
-  tags {
+  tags = {
     Name = "tf-acc-db-instance-mssql-timezone-akst-other"
   }
 }
@@ -2696,7 +2696,7 @@ func testAccAWSDBMSSQLDomain(rInt int) string {
 resource "aws_vpc" "foo" {
   cidr_block           = "10.1.0.0/16"
   enable_dns_hostnames = true
-  tags {
+  tags = {
     Name = "terraform-testacc-db-instance-mssql-domain"
   }
 }
@@ -2712,7 +2712,7 @@ resource "aws_subnet" "main" {
   vpc_id            = "${aws_vpc.foo.id}"
   availability_zone = "us-west-2a"
   cidr_block        = "10.1.1.0/24"
-  tags {
+  tags = {
     Name = "tf-acc-db-instance-mssql-domain-main"
   }
 }
@@ -2721,7 +2721,7 @@ resource "aws_subnet" "other" {
   vpc_id            = "${aws_vpc.foo.id}"
   availability_zone = "us-west-2b"
   cidr_block        = "10.1.2.0/24"
-  tags {
+  tags = {
     Name = "tf-acc-db-instance-mssql-domain-other"
   }
 }
@@ -2818,7 +2818,7 @@ func testAccAWSDBMSSQLUpdateDomain(rInt int) string {
 resource "aws_vpc" "foo" {
   cidr_block           = "10.1.0.0/16"
   enable_dns_hostnames = true
-  tags {
+  tags = {
     Name = "terraform-testacc-db-instance-mssql-domain"
   }
 }
@@ -2834,7 +2834,7 @@ resource "aws_subnet" "main" {
   vpc_id            = "${aws_vpc.foo.id}"
   availability_zone = "us-west-2a"
   cidr_block        = "10.1.1.0/24"
-  tags {
+  tags = {
     Name = "tf-acc-db-instance-mssql-domain-main"
   }
 }
@@ -2843,7 +2843,7 @@ resource "aws_subnet" "other" {
   vpc_id            = "${aws_vpc.foo.id}"
   availability_zone = "us-west-2b"
   cidr_block        = "10.1.2.0/24"
-  tags {
+  tags = {
     Name = "tf-acc-db-instance-mssql-domain-other"
   }
 }
@@ -2941,7 +2941,7 @@ func testAccAWSDBMSSQLDomainSnapshotRestore(rInt int) string {
 resource "aws_vpc" "foo" {
   cidr_block           = "10.1.0.0/16"
   enable_dns_hostnames = true
-  tags {
+  tags = {
     Name = "terraform-testacc-db-instance-mssql-domain"
   }
 }
@@ -2957,7 +2957,7 @@ resource "aws_subnet" "main" {
   vpc_id            = "${aws_vpc.foo.id}"
   availability_zone = "us-west-2a"
   cidr_block        = "10.1.1.0/24"
-  tags {
+  tags = {
     Name = "tf-acc-db-instance-mssql-domain-main"
   }
 }
@@ -2966,7 +2966,7 @@ resource "aws_subnet" "other" {
   vpc_id            = "${aws_vpc.foo.id}"
   availability_zone = "us-west-2b"
   cidr_block        = "10.1.2.0/24"
-  tags {
+  tags = {
     Name = "tf-acc-db-instance-mssql-domain-other"
   }
 }
@@ -3083,7 +3083,7 @@ func testAccAWSDBInstanceConfigCloudwatchLogsExportConfiguration(rInt int) strin
 	resource "aws_vpc" "foo" {
 		cidr_block           = "10.1.0.0/16"
 		enable_dns_hostnames = true
-		tags {
+	tags = {
 		  Name = "terraform-testacc-db-instance-enable-cloudwatch"
 		}
 	  }
@@ -3099,7 +3099,7 @@ func testAccAWSDBInstanceConfigCloudwatchLogsExportConfiguration(rInt int) strin
 		vpc_id            = "${aws_vpc.foo.id}"
 		availability_zone = "us-west-2a"
 		cidr_block        = "10.1.1.0/24"
-		tags {
+	tags = {
 		  Name = "tf-acc-db-instance-enable-cloudwatch-main"
 		}
 	  }
@@ -3108,7 +3108,7 @@ func testAccAWSDBInstanceConfigCloudwatchLogsExportConfiguration(rInt int) strin
 		vpc_id            = "${aws_vpc.foo.id}"
 		availability_zone = "us-west-2b"
 		cidr_block        = "10.1.2.0/24"
-		tags {
+	tags = {
 		  Name = "tf-acc-db-instance-enable-cloudwatch-other"
 		}
 	  }
@@ -3140,7 +3140,7 @@ func testAccAWSDBInstanceConfigCloudwatchLogsExportConfigurationAdd(rInt int) st
 		resource "aws_vpc" "foo" {
 			cidr_block           = "10.1.0.0/16"
 			enable_dns_hostnames = true
-			tags {
+	tags = {
 			  Name = "terraform-testacc-db-instance-enable-cloudwatch"
 			}
 		  }
@@ -3156,7 +3156,7 @@ func testAccAWSDBInstanceConfigCloudwatchLogsExportConfigurationAdd(rInt int) st
 			vpc_id            = "${aws_vpc.foo.id}"
 			availability_zone = "us-west-2a"
 			cidr_block        = "10.1.1.0/24"
-			tags {
+	tags = {
 			  Name = "tf-acc-db-instance-enable-cloudwatch-main"
 			}
 		  }
@@ -3165,7 +3165,7 @@ func testAccAWSDBInstanceConfigCloudwatchLogsExportConfigurationAdd(rInt int) st
 			vpc_id            = "${aws_vpc.foo.id}"
 			availability_zone = "us-west-2b"
 			cidr_block        = "10.1.2.0/24"
-			tags {
+	tags = {
 			  Name = "tf-acc-db-instance-enable-cloudwatch-other"
 			}
 		  }
@@ -3200,7 +3200,7 @@ func testAccAWSDBInstanceConfigCloudwatchLogsExportConfigurationModify(rInt int)
 		resource "aws_vpc" "foo" {
 			cidr_block           = "10.1.0.0/16"
 			enable_dns_hostnames = true
-			tags {
+	tags = {
 			  Name = "terraform-testacc-db-instance-enable-cloudwatch"
 			}
 		  }
@@ -3216,7 +3216,7 @@ func testAccAWSDBInstanceConfigCloudwatchLogsExportConfigurationModify(rInt int)
 			vpc_id            = "${aws_vpc.foo.id}"
 			availability_zone = "us-west-2a"
 			cidr_block        = "10.1.1.0/24"
-			tags {
+	tags = {
 			  Name = "tf-acc-db-instance-enable-cloudwatch-main"
 			}
 		  }
@@ -3225,7 +3225,7 @@ func testAccAWSDBInstanceConfigCloudwatchLogsExportConfigurationModify(rInt int)
 			vpc_id            = "${aws_vpc.foo.id}"
 			availability_zone = "us-west-2b"
 			cidr_block        = "10.1.2.0/24"
-			tags {
+	tags = {
 			  Name = "tf-acc-db-instance-enable-cloudwatch-other"
 			}
 		  }
@@ -3260,7 +3260,7 @@ func testAccAWSDBInstanceConfigCloudwatchLogsExportConfigurationDelete(rInt int)
 		resource "aws_vpc" "foo" {
 			cidr_block           = "10.1.0.0/16"
 			enable_dns_hostnames = true
-			tags {
+	tags = {
 			  Name = "terraform-testacc-db-instance-enable-cloudwatch"
 			}
 		  }
@@ -3276,7 +3276,7 @@ func testAccAWSDBInstanceConfigCloudwatchLogsExportConfigurationDelete(rInt int)
 			vpc_id            = "${aws_vpc.foo.id}"
 			availability_zone = "us-west-2a"
 			cidr_block        = "10.1.1.0/24"
-			tags {
+	tags = {
 			  Name = "tf-acc-db-instance-enable-cloudwatch-main"
 			}
 		  }
@@ -3285,7 +3285,7 @@ func testAccAWSDBInstanceConfigCloudwatchLogsExportConfigurationDelete(rInt int)
 			vpc_id            = "${aws_vpc.foo.id}"
 			availability_zone = "us-west-2b"
 			cidr_block        = "10.1.2.0/24"
-			tags {
+	tags = {
 			  Name = "tf-acc-db-instance-enable-cloudwatch-other"
 			}
 		  }
@@ -4235,7 +4235,7 @@ resource "aws_db_instance" "test" {
   snapshot_identifier = "${aws_db_snapshot.test.id}"
   skip_final_snapshot = true
 
-  tags {
+  tags = {
     key1 = "value1"
   }
 }
@@ -4253,7 +4253,7 @@ resource "aws_db_instance" "source" {
   username            = "tfacctest"
   skip_final_snapshot = true
 
-  tags {
+  tags = {
     key1 = "value1"
   }
 }
@@ -4269,7 +4269,7 @@ resource "aws_db_instance" "test" {
   snapshot_identifier = "${aws_db_snapshot.test.id}"
   skip_final_snapshot = true
 
-  tags {}
+  tags = {}
 }
 `, rName, rName, rName)
 }
@@ -4343,7 +4343,7 @@ resource "aws_db_instance" "test" {
   skip_final_snapshot    = true
   vpc_security_group_ids = ["${aws_security_group.test.id}"]
 
-  tags {
+  tags = {
     key1 = "value1"
   }
 }
