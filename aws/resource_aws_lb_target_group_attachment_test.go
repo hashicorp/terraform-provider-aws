@@ -89,6 +89,25 @@ func TestAccAWSALBTargetGroupAttachment_ipAddress(t *testing.T) {
 	})
 }
 
+func TestAccAWSALBTargetGroupAttachment_lambda(t *testing.T) {
+	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_lb_target_group.test",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSLBTargetGroupAttachmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLBTargetGroupAttachmentConfigWithLambda(targetGroupName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBTargetGroupAttachmentExists("aws_lb_target_group_attachment.test"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSLBTargetGroupAttachmentExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -372,4 +391,64 @@ resource "aws_vpc" "test" {
 		Name = "terraform-testacc-lb-target-group-attachment-with-ip-address"
 	}
 }`, targetGroupName)
+}
+
+func testAccAWSLBTargetGroupAttachmentConfigWithLambda(targetGroupName string) string {
+	funcName := fmt.Sprintf("tf_acc_lambda_func_%s", acctest.RandString(8))
+
+	return fmt.Sprintf(`
+
+	resource "aws_lambda_permission" "with_lb" {
+		statement_id = "AllowExecutionFromlb"
+		action = "lambda:InvokeFunction"
+		function_name = "${aws_lambda_function.test.arn}"
+		principal = "elasticloadbalancing.amazonaws.com"
+		source_arn = "${aws_lb_target_group.test.arn}"
+		qualifier     = "${aws_lambda_alias.test.name}"
+	}
+
+	resource "aws_lb_target_group" "test" {
+		name = "%s"
+		target_type = "lambda" 
+	}
+
+	resource "aws_lambda_function" "test" {
+		filename = "test-fixtures/lambda_elb.zip"
+		function_name = "%s"
+		role = "${aws_iam_role.iam_for_lambda.arn}"
+		handler = "lambda_elb.lambda_handler"
+		runtime = "python3.7"
+	}
+
+	resource "aws_lambda_alias" "test" {
+		name             = "test"
+		description      = "a sample description"
+		function_name    = "${aws_lambda_function.test.function_name}"
+		function_version = "$LATEST"
+	}
+	
+	resource "aws_iam_role" "iam_for_lambda" {
+			assume_role_policy = <<EOF
+{
+		"Version": "2012-10-17",
+		"Statement": [
+			{
+				"Action": "sts:AssumeRole",
+				"Principal": {
+					"Service": "lambda.amazonaws.com"
+				},
+				"Effect": "Allow",
+				"Sid": ""
+			}
+		]
+	}
+	EOF
+}
+
+	resource "aws_lb_target_group_attachment" "test" {
+		target_group_arn = "${aws_lb_target_group.test.arn}"
+		target_id = "${aws_lambda_alias.test.arn}"
+		depends_on = ["aws_lambda_permission.with_lb"]
+	}
+`, targetGroupName, funcName)
 }
