@@ -1,5 +1,9 @@
 ## 1.52.0 (Unreleased)
 
+ENHANCEMENTS
+
+* data-source/aws_ip_ranges: Add `url` argument [GH-6756]
+
 BUG FIXES
 
 * resource/aws_cloudwatch_log_subscription_filter: Ignore `ResourceNotFound` error on deletion [GH-6760]
