@@ -41,9 +41,20 @@ func resourceAwsSecurityHubAccountCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsSecurityHubAccountRead(d *schema.ResourceData, meta interface{}) error {
-	// AWS does not currently publically expose API methods to check if an account is
-	// enabled for Security Hub. The console uses a private API method called
-	// isSecurityHubEnabled - this may become public in the future.
+	conn := meta.(*AWSClient).securityhubconn
+
+	log.Printf("[DEBUG] Checking if Security Hub is enabled")
+	_, err := conn.GetEnabledStandards(&securityhub.GetEnabledStandardsInput{})
+
+	if err != nil {
+		// Can only read enabled standards if Security Hub is enabled
+		if isAWSErr(err, "InvalidAccessException", "not subscribed to AWS Security Hub") {
+			d.SetId("")
+			return nil
+		}
+		return fmt.Errorf("Error checking if Security Hub is enabled: %s", err)
+	}
+
 	return nil
 }
 

@@ -39,6 +39,10 @@ func resourceAwsSecurityHubInvitationAccepterCreate(d *schema.ResourceData, meta
 
 	invitationId, err := resourceAwsSecurityHubInvitationAccepterGetInvitationId(conn, d.Get("master_id").(string))
 
+	if err != nil {
+		return err
+	}
+
 	_, err = conn.AcceptInvitation(&securityhub.AcceptInvitationInput{
 		InvitationId: aws.String(invitationId),
 		MasterId:     aws.String(d.Get("master_id").(string)),
@@ -80,13 +84,20 @@ func resourceAwsSecurityHubInvitationAccepterRead(d *schema.ResourceData, meta i
 
 	if err != nil {
 		if isAWSErr(err, securityhub.ErrCodeResourceNotFoundException, "") {
-			log.Print("[WARN] Security Hub master account not found")
+			log.Print("[WARN] Security Hub master account not found, removing from state")
+			d.SetId("")
 			return nil
 		}
 		return err
 	}
 
 	master := resp.Master
+
+	if master == nil {
+		log.Print("[WARN] Security Hub master account not found, removing from state")
+		d.SetId("")
+		return nil
+	}
 
 	d.Set("invitation_id", master.InvitationId)
 	d.Set("master_id", master.AccountId)
@@ -101,8 +112,8 @@ func resourceAwsSecurityHubInvitationAccepterDelete(d *schema.ResourceData, meta
 	_, err := conn.DisassociateFromMasterAccount(&securityhub.DisassociateFromMasterAccountInput{})
 
 	if err != nil {
-		if isAWSErr(err, securityhub.ErrCodeResourceNotFoundException, "") {
-			log.Print("[WARN] Security Hub invitation not found")
+		if isAWSErr(err, "BadRequestException", "The request is rejected because the current account is not associated to a master account") {
+			log.Print("[WARN] Security Hub account is not a member account")
 			return nil
 		}
 		return err

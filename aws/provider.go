@@ -623,6 +623,8 @@ func Provider() terraform.ResourceProvider {
 			"aws_securityhub_member":                           resourceAwsSecurityHubMember(),
 			"aws_securityhub_invitation":                       resourceAwsSecurityHubInvitation(),
 			"aws_securityhub_invitation_accepter":              resourceAwsSecurityHubInvitationAccepter(),
+			"aws_securityhub_product_subscription":             resourceAwsSecurityHubProductSubscription(),
+			"aws_securityhub_standard":                         resourceAwsSecurityHubStandard(),
 			"aws_servicecatalog_portfolio":                     resourceAwsServiceCatalogPortfolio(),
 			"aws_service_discovery_private_dns_namespace":      resourceAwsServiceDiscoveryPrivateDnsNamespace(),
 			"aws_service_discovery_public_dns_namespace":       resourceAwsServiceDiscoveryPublicDnsNamespace(),

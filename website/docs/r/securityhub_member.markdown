@@ -13,6 +13,8 @@ Provides a Security Hub member resource.
 ## Example Usage
 
 ```hcl
+resource "aws_securityhub_account" "example" {}
+
 resource "aws_securityhub_member" "example" {
   account_id = "123456789012"
   email      = "example@example.com"

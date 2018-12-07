@@ -1,0 +1,88 @@
+package aws
+
+import (
+	"fmt"
+	"log"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/securityhub"
+	"github.com/hashicorp/terraform/helper/schema"
+)
+
+func resourceAwsSecurityHubStandard() *schema.Resource {
+	return &schema.Resource{
+		Create: resourceAwsSecurityHubStandardCreate,
+		Read:   resourceAwsSecurityHubStandardRead,
+		Delete: resourceAwsSecurityHubStandardDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
+
+		Schema: map[string]*schema.Schema{
+			"standards_arn": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+		},
+	}
+}
+
+func resourceAwsSecurityHubStandardCreate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).securityhubconn
+	log.Print("[DEBUG] Enabling Security Hub standard")
+
+	resp, err := conn.BatchEnableStandards(&securityhub.BatchEnableStandardsInput{
+		StandardsSubscriptionRequests: []*securityhub.StandardsSubscriptionRequest{
+			{
+				StandardsArn: aws.String(d.Get("standards_arn").(string)),
+			},
+		},
+	})
+
+	if err != nil {
+		return fmt.Errorf("Error enabling Security Hub standard: %s", err)
+	}
+
+	standardsSubscription := resp.StandardsSubscriptions[0]
+
+	d.SetId(*standardsSubscription.StandardsSubscriptionArn)
+
+	return resourceAwsSecurityHubStandardRead(d, meta)
+}
+
+func resourceAwsSecurityHubStandardRead(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).securityhubconn
+
+	log.Printf("[DEBUG] Reading Security Hub standard %s", d.Id())
+	resp, err := conn.GetEnabledStandards(&securityhub.GetEnabledStandardsInput{
+		StandardsSubscriptionArns: []*string{aws.String(d.Id())},
+	})
+
+	if err != nil {
+		return fmt.Errorf("Error reading Security Hub standard %s: %s", d.Id(), err)
+	}
+
+	if len(resp.StandardsSubscriptions) == 0 {
+		log.Printf("[WARN] Security Hub standard (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	return nil
+}
+
+func resourceAwsSecurityHubStandardDelete(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).securityhubconn
+	log.Print("[DEBUG] Disabling Security Hub standard %s", d.Id())
+
+	_, err := conn.BatchDisableStandards(&securityhub.BatchDisableStandardsInput{
+		StandardsSubscriptionArns: []*string{aws.String(d.Id())},
+	})
+
+	if err != nil {
+		return fmt.Errorf("Error disabling Security Hub standard %s: %s", d.Id(), err)
+	}
+
+	return nil
+}

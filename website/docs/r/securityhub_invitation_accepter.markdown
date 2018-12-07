@@ -3,7 +3,7 @@ layout: "aws"
 page_title: "AWS: aws_securityhub_invitation_accepter"
 sidebar_current: "docs-aws-resource-securityhub-invitation-accepter"
 description: |-
-  Provides a Security Hub invitation resource.
+  Accepts a Security Hub invitation.
 ---
 
 # aws_securityhub_invitation_accepter
@@ -21,7 +21,7 @@ resource "aws_securityhub_member" "example" {
 }
 
 resource "aws_securityhub_invitation" "example" {
-  account_id = "123456789012"
+  account_id = "${aws_securityhub_member.example.id}"
 }
 
 resource "aws_securityhub_invitation_accepter" "example" {
