@@ -5137,9 +5137,13 @@ type CreateInputInput struct {
 
 	InputSecurityGroups []*string `locationName:"inputSecurityGroups" type:"list"`
 
+	MediaConnectFlows []*MediaConnectFlowRequest `locationName:"mediaConnectFlows" type:"list"`
+
 	Name *string `locationName:"name" type:"string"`
 
 	RequestId *string `locationName:"requestId" type:"string" idempotencyToken:"true"`
+
+	RoleArn *string `locationName:"roleArn" type:"string"`
 
 	Sources []*InputSourceRequest `locationName:"sources" type:"list"`
 
@@ -5168,6 +5172,12 @@ func (s *CreateInputInput) SetInputSecurityGroups(v []*string) *CreateInputInput
 	return s
 }
 
+// SetMediaConnectFlows sets the MediaConnectFlows field's value.
+func (s *CreateInputInput) SetMediaConnectFlows(v []*MediaConnectFlowRequest) *CreateInputInput {
+	s.MediaConnectFlows = v
+	return s
+}
+
 // SetName sets the Name field's value.
 func (s *CreateInputInput) SetName(v string) *CreateInputInput {
 	s.Name = &v
@@ -5177,6 +5187,12 @@ func (s *CreateInputInput) SetName(v string) *CreateInputInput {
 // SetRequestId sets the RequestId field's value.
 func (s *CreateInputInput) SetRequestId(v string) *CreateInputInput {
 	s.RequestId = &v
+	return s
+}
+
+// SetRoleArn sets the RoleArn field's value.
+func (s *CreateInputInput) SetRoleArn(v string) *CreateInputInput {
+	s.RoleArn = &v
 	return s
 }
 
@@ -5908,7 +5924,11 @@ type DescribeInputOutput struct {
 
 	Id *string `locationName:"id" type:"string"`
 
+	MediaConnectFlows []*MediaConnectFlow `locationName:"mediaConnectFlows" type:"list"`
+
 	Name *string `locationName:"name" type:"string"`
+
+	RoleArn *string `locationName:"roleArn" type:"string"`
 
 	SecurityGroups []*string `locationName:"securityGroups" type:"list"`
 
@@ -5953,9 +5973,21 @@ func (s *DescribeInputOutput) SetId(v string) *DescribeInputOutput {
 	return s
 }
 
+// SetMediaConnectFlows sets the MediaConnectFlows field's value.
+func (s *DescribeInputOutput) SetMediaConnectFlows(v []*MediaConnectFlow) *DescribeInputOutput {
+	s.MediaConnectFlows = v
+	return s
+}
+
 // SetName sets the Name field's value.
 func (s *DescribeInputOutput) SetName(v string) *DescribeInputOutput {
 	s.Name = &v
+	return s
+}
+
+// SetRoleArn sets the RoleArn field's value.
+func (s *DescribeInputOutput) SetRoleArn(v string) *DescribeInputOutput {
+	s.RoleArn = &v
 	return s
 }
 
@@ -7721,8 +7753,9 @@ type H264Settings struct {
 	// be the value configured in the fixedAfd parameter.
 	AfdSignaling *string `locationName:"afdSignaling" type:"string" enum:"AfdSignaling"`
 
-	// Average bitrate in bits/second. Required for VBR, CBR, and ABR. For MS Smooth
-	// outputs, bitrates must be unique when rounded down to the nearest multiple
+	// Average bitrate in bits/second. Required when the rate control mode is VBR
+	// or CBR. Not used for QVBR. In an MS Smooth output group, each output must
+	// have a unique value when its bitrate is rounded down to the nearest multiple
 	// of 1000.
 	Bitrate *int64 `locationName:"bitrate" min:"1000" type:"integer"`
 
@@ -7787,8 +7820,8 @@ type H264Settings struct {
 	// while high can produce better quality for certain content.
 	LookAheadRateControl *string `locationName:"lookAheadRateControl" type:"string" enum:"H264LookAheadRateControl"`
 
-	// Maximum bitrate in bits/second (for VBR and QVBR modes only).Required when
-	// rateControlMode is "qvbr".
+	// For QVBR: See the tooltip for Quality level For VBR: Set the maximum bitrate
+	// in order to accommodate expected spikes in the complexity of the video.
 	MaxBitrate *int64 `locationName:"maxBitrate" min:"1000" type:"integer"`
 
 	// Only meaningful if sceneChangeDetect is set to enabled. Enforces separation
@@ -7820,16 +7853,21 @@ type H264Settings struct {
 	// H.264 Profile.
 	Profile *string `locationName:"profile" type:"string" enum:"H264Profile"`
 
-	// Target quality value. Applicable only to QVBR mode. 1 is the lowest quality
-	// and 10 is thehighest and approaches lossless. Typical levels for content
-	// distribution are between 6 and 8.
+	// Controls the target quality for the video encode. Applies only when the rate
+	// control mode is QVBR. Set values for the QVBR quality level field and Max
+	// bitrate field that suit your most important viewing devices. Recommended
+	// values are:- Primary screen: Quality level: 8 to 10. Max bitrate: 4M- PC
+	// or tablet: Quality level: 7. Max bitrate: 1.5M to 3M- Smartphone: Quality
+	// level: 6. Max bitrate: 1M to 1.5M
 	QvbrQualityLevel *int64 `locationName:"qvbrQualityLevel" min:"1" type:"integer"`
 
-	// Rate control mode. - CBR: Constant Bit Rate- VBR: Variable Bit Rate- QVBR:
-	// Encoder dynamically controls the bitrate to meet the desired quality (specifiedthrough
-	// the qvbrQualityLevel field). The bitrate will not exceed the bitrate specified
-	// inthe maxBitrate field and will not fall below the bitrate required to meet
-	// the desiredquality level.
+	// Rate control mode. QVBR: Quality will match the specified quality level except
+	// when it is constrained by themaximum bitrate. Recommended if you or your
+	// viewers pay for bandwidth.VBR: Quality and bitrate vary, depending on the
+	// video complexity. Recommended instead of QVBRif you want to maintain a specific
+	// average bitrate over the duration of the channel.CBR: Quality varies, depending
+	// on the video complexity. Recommended only if you distributeyour assets to
+	// devices that cannot handle variable bitrates.
 	RateControlMode *string `locationName:"rateControlMode" type:"string" enum:"H264RateControlMode"`
 
 	// Sets the scan type of the output to progressive or top-field-first interlaced.
@@ -9051,8 +9089,15 @@ type Input struct {
 	// The generated ID of the input (unique for user account, immutable).
 	Id *string `locationName:"id" type:"string"`
 
+	// A list of MediaConnect Flows for this input.
+	MediaConnectFlows []*MediaConnectFlow `locationName:"mediaConnectFlows" type:"list"`
+
 	// The user-assigned name (This is a mutable value).
 	Name *string `locationName:"name" type:"string"`
+
+	// The Amazon Resource Name (ARN) of the role this input assumes during and
+	// after creation.
+	RoleArn *string `locationName:"roleArn" type:"string"`
 
 	// A list of IDs for all the security groups attached to the input.
 	SecurityGroups []*string `locationName:"securityGroups" type:"list"`
@@ -9099,9 +9144,21 @@ func (s *Input) SetId(v string) *Input {
 	return s
 }
 
+// SetMediaConnectFlows sets the MediaConnectFlows field's value.
+func (s *Input) SetMediaConnectFlows(v []*MediaConnectFlow) *Input {
+	s.MediaConnectFlows = v
+	return s
+}
+
 // SetName sets the Name field's value.
 func (s *Input) SetName(v string) *Input {
 	s.Name = &v
+	return s
+}
+
+// SetRoleArn sets the RoleArn field's value.
+func (s *Input) SetRoleArn(v string) *Input {
+	s.RoleArn = &v
 	return s
 }
 
@@ -11090,6 +11147,54 @@ func (s *M3u8Settings) SetTransportStreamId(v int64) *M3u8Settings {
 // SetVideoPid sets the VideoPid field's value.
 func (s *M3u8Settings) SetVideoPid(v string) *M3u8Settings {
 	s.VideoPid = &v
+	return s
+}
+
+// The settings for a MediaConnect Flow.
+type MediaConnectFlow struct {
+	_ struct{} `type:"structure"`
+
+	// The unique ARN of the MediaConnect Flow being used as a source.
+	FlowArn *string `locationName:"flowArn" type:"string"`
+}
+
+// String returns the string representation
+func (s MediaConnectFlow) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MediaConnectFlow) GoString() string {
+	return s.String()
+}
+
+// SetFlowArn sets the FlowArn field's value.
+func (s *MediaConnectFlow) SetFlowArn(v string) *MediaConnectFlow {
+	s.FlowArn = &v
+	return s
+}
+
+// The settings for a MediaConnect Flow.
+type MediaConnectFlowRequest struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the MediaConnect Flow that you want to use as a source.
+	FlowArn *string `locationName:"flowArn" type:"string"`
+}
+
+// String returns the string representation
+func (s MediaConnectFlowRequest) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MediaConnectFlowRequest) GoString() string {
+	return s.String()
+}
+
+// SetFlowArn sets the FlowArn field's value.
+func (s *MediaConnectFlowRequest) SetFlowArn(v string) *MediaConnectFlowRequest {
+	s.FlowArn = &v
 	return s
 }
 
@@ -14561,7 +14666,11 @@ type UpdateInputInput struct {
 
 	InputSecurityGroups []*string `locationName:"inputSecurityGroups" type:"list"`
 
+	MediaConnectFlows []*MediaConnectFlowRequest `locationName:"mediaConnectFlows" type:"list"`
+
 	Name *string `locationName:"name" type:"string"`
+
+	RoleArn *string `locationName:"roleArn" type:"string"`
 
 	Sources []*InputSourceRequest `locationName:"sources" type:"list"`
 }
@@ -14610,9 +14719,21 @@ func (s *UpdateInputInput) SetInputSecurityGroups(v []*string) *UpdateInputInput
 	return s
 }
 
+// SetMediaConnectFlows sets the MediaConnectFlows field's value.
+func (s *UpdateInputInput) SetMediaConnectFlows(v []*MediaConnectFlowRequest) *UpdateInputInput {
+	s.MediaConnectFlows = v
+	return s
+}
+
 // SetName sets the Name field's value.
 func (s *UpdateInputInput) SetName(v string) *UpdateInputInput {
 	s.Name = &v
+	return s
+}
+
+// SetRoleArn sets the RoleArn field's value.
+func (s *UpdateInputInput) SetRoleArn(v string) *UpdateInputInput {
+	s.RoleArn = &v
 	return s
 }
 
@@ -16294,6 +16415,9 @@ const (
 
 	// InputTypeMp4File is a InputType enum value
 	InputTypeMp4File = "MP4_FILE"
+
+	// InputTypeMediaconnect is a InputType enum value
+	InputTypeMediaconnect = "MEDIACONNECT"
 )
 
 // The log level the user wants for their channel.

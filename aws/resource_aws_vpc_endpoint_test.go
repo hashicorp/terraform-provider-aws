@@ -201,10 +201,8 @@ func TestAccAWSVpcEndpoint_removed(t *testing.T) {
 		}
 
 		_, err := conn.DeleteVpcEndpoints(input)
-		if err != nil {
-			return err
-		}
-		return nil
+
+		return err
 	}
 
 	resource.ParallelTest(t, resource.TestCase{

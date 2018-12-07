@@ -71,10 +71,8 @@ func TestAccAWSVPCPeeringConnection_plan(t *testing.T) {
 			&ec2.DeleteVpcPeeringConnectionInput{
 				VpcPeeringConnectionId: connection.VpcPeeringConnectionId,
 			})
-		if err != nil {
-			return err
-		}
-		return nil
+
+		return err
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -135,10 +133,8 @@ func TestAccAWSVPCPeeringConnection_options(t *testing.T) {
 					AllowDnsResolutionFromRemoteVpc: aws.Bool(false),
 				},
 			})
-		if err != nil {
-			return err
-		}
-		return nil
+
+		return err
 	}
 
 	resource.ParallelTest(t, resource.TestCase{

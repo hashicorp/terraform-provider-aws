@@ -1,4 +1,9 @@
 ## 1.52.0 (Unreleased)
+
+BUG FIXES
+
+* resource/aws_cloudwatch_log_subscription_filter: Ignore `ResourceNotFound` error on deletion [GH-6760]
+
 ## 1.51.0 (December 05, 2018)
 
 FEATURES

@@ -15030,9 +15030,6 @@ type CreateDBInstanceReadReplicaInput struct {
 	// Resource Name (ARN), KMS key identifier, or the KMS key alias for the KMS
 	// encryption key.
 	//
-	// If you specify this parameter when you create a Read Replica from an unencrypted
-	// DB instance, the Read Replica is encrypted.
-	//
 	// If you create an encrypted Read Replica in the same AWS Region as the source
 	// DB instance, then you do not have to specify a value for this parameter.
 	// The Read Replica is encrypted with the same KMS key as the source DB instance.
@@ -15041,6 +15038,8 @@ type CreateDBInstanceReadReplicaInput struct {
 	// must specify a KMS key for the destination AWS Region. KMS encryption keys
 	// are specific to the AWS Region that they are created in, and you can't use
 	// encryption keys from one AWS Region in another AWS Region.
+	//
+	// You can't create an encrypted Read Replica from an unencrypted DB instance.
 	KmsKeyId *string `type:"string"`
 
 	// The interval, in seconds, between points when Enhanced Monitoring metrics
@@ -16275,6 +16274,12 @@ type DBCluster struct {
 	// Specifies the number of days for which automatic DB snapshots are retained.
 	BackupRetentionPeriod *int64 `type:"integer"`
 
+	// The current capacity of an Aurora Serverless DB cluster. The capacity is
+	// 0 (zero) when the cluster is paused.
+	//
+	// For more information about Aurora Serverless, see Using Amazon Aurora Serverless
+	// (http://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless.html)
+	// in the Amazon Aurora User Guide.
 	Capacity *int64 `type:"integer"`
 
 	// If present, specifies the name of the character set that this cluster is
@@ -17717,6 +17722,8 @@ type DBInstance struct {
 	// Aurora Read Replica of an RDS MySQL DB instance, the Aurora MySQL DB cluster
 	// for the Aurora Read Replica is shown. This output does not contain information
 	// about cross region Aurora Read Replicas.
+	//
+	// Currently, each RDS DB instance can have only one Aurora Read Replica.
 	ReadReplicaDBClusterIdentifiers []*string `locationNameList:"ReadReplicaDBClusterIdentifier" type:"list"`
 
 	// Contains one or more identifiers of the Read Replicas associated with this
