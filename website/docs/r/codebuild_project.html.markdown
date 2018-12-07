@@ -135,7 +135,7 @@ resource "aws_codebuild_project" "example" {
     ]
   }
 
-  tags {
+  tags = {
     "Environment" = "Test"
   }
 }

@@ -1442,7 +1442,7 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
     projection_type = "KEYS_ONLY"
   }
 
-  tags {
+  tags = {
     Name = "terraform-test-table-%d"
     AccTest = "yes"
     Testing = "absolutely"

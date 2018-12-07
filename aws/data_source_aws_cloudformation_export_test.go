@@ -55,7 +55,7 @@ resource "aws_cloudformation_stack" "cfs" {
   }
 }
 STACK
-  tags {
+  tags = {
     TestExport = "waiter"
     Second = "meh"
   }
@@ -88,7 +88,7 @@ Outputs:
     Export:
       Name: MyVpcId
 STACK
-  tags {
+  tags = {
     TestExport = "MyVpcId"
     Second = "meh"
   }

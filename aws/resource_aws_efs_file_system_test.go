@@ -426,7 +426,7 @@ resource "aws_efs_file_system" "foo" {
 func testAccAWSEFSFileSystemConfigPagedTags(rInt int) string {
 	return fmt.Sprintf(`
 	resource "aws_efs_file_system" "foo" {
-		tags {
+	tags = {
 			Name = "foo-efs-%d"
 			Another = "tag"
 			Test = "yes"
@@ -446,7 +446,7 @@ func testAccAWSEFSFileSystemConfigPagedTags(rInt int) string {
 func testAccAWSEFSFileSystemConfigWithTags(rInt int) string {
 	return fmt.Sprintf(`
 	resource "aws_efs_file_system" "foo-with-tags" {
-		tags {
+	tags = {
 			Name = "foo-efs-%d"
 			Another = "tag"
 		}

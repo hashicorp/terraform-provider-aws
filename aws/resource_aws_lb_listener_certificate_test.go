@@ -423,7 +423,7 @@ data "aws_availability_zones" "available" {}
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-  tags {
+  tags = {
   	Name = "terraform-testacc-lb-listener-certificate"
   }
 }
@@ -437,7 +437,7 @@ resource "aws_subnet" "test" {
   vpc_id            = "${aws_vpc.test.id}"
   cidr_block        = "${element(var.subnets, count.index)}"
   availability_zone = "${element(data.aws_availability_zones.available.names, count.index)}"
-  tags {
+  tags = {
     Name = "tf-acc-lb-listener-certificate-${count.index}"
   }
 }`, rName, suffix, suffix, suffix, suffix)

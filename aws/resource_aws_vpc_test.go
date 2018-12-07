@@ -479,7 +479,7 @@ func TestAccAWSVpc_classiclinkDnsSupportOptionSet(t *testing.T) {
 const testAccVpcConfig = `
 resource "aws_vpc" "test" {
 	cidr_block = "10.1.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-vpc"
 	}
 }
@@ -491,7 +491,7 @@ resource "aws_vpc" "test" {
   assign_generated_ipv6_cidr_block = %t
   cidr_block                       = "10.1.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-vpc-ipv6"
   }
 }
@@ -502,7 +502,7 @@ const testAccVpcConfigUpdate = `
 resource "aws_vpc" "test" {
 	cidr_block = "10.1.0.0/16"
 	enable_dns_hostnames = true
-	tags {
+	tags = {
 		Name = "terraform-testacc-vpc"
 	}
 }
@@ -512,7 +512,7 @@ const testAccVpcConfigTags = `
 resource "aws_vpc" "test" {
 	cidr_block = "10.1.0.0/16"
 
-	tags {
+	tags = {
 		foo = "bar"
 		Name = "terraform-testacc-vpc-tags"
 	}
@@ -523,7 +523,7 @@ const testAccVpcConfigTagsUpdate = `
 resource "aws_vpc" "test" {
 	cidr_block = "10.1.0.0/16"
 
-	tags {
+	tags = {
 		bar = "baz"
 		Name = "terraform-testacc-vpc-tags"
 	}
@@ -533,7 +533,7 @@ const testAccVpcDedicatedConfig = `
 resource "aws_vpc" "test" {
 	instance_tenancy = "dedicated"
 	cidr_block = "10.1.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-vpc-dedicated"
 	}
 }
@@ -544,7 +544,7 @@ resource "aws_vpc" "test" {
 	cidr_block = "10.2.0.0/16"
 	enable_dns_hostnames = true
 	enable_dns_support = true
-	tags {
+	tags = {
 		Name = "terraform-testacc-vpc-both-dns-opts"
 	}
 }
@@ -554,7 +554,7 @@ const testAccVpcConfig_DisabledDnsSupport = `
 resource "aws_vpc" "test" {
 	cidr_block = "10.2.0.0/16"
 	enable_dns_support = false
-	tags {
+	tags = {
 		Name = "terraform-testacc-vpc-disabled-dns-support"
 	}
 }
@@ -564,7 +564,7 @@ const testAccVpcConfig_ClassiclinkOption = `
 resource "aws_vpc" "test" {
 	cidr_block = "172.2.0.0/16"
 	enable_classiclink = true
-	tags {
+	tags = {
 		Name = "terraform-testacc-vpc-classic-link"
 	}
 }
@@ -575,7 +575,7 @@ resource "aws_vpc" "test" {
 	cidr_block = "172.2.0.0/16"
 	enable_classiclink = true
 	enable_classiclink_dns_support = true
-	tags {
+	tags = {
 		Name = "terraform-testacc-vpc-classic-link-support"
 	}
 }

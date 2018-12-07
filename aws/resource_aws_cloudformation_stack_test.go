@@ -471,7 +471,7 @@ POLICY
   notification_arns = ["${aws_sns_topic.cf-updates.arn}"]
   on_failure = "DELETE"
   timeout_in_minutes = 10
-  tags {
+  tags = {
     First = "Mickey"
     Second = "Mouse"
   }

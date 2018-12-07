@@ -93,7 +93,7 @@ data "aws_availability_zones" "available" {}
 resource "aws_vpc" "acctest" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "${var.prefix}"
   }
 }
@@ -117,7 +117,7 @@ resource "aws_subnet" "acctest" {
   availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
   vpc_id            = "${aws_vpc.acctest.id}"
 
-  tags {
+  tags = {
     Name = "${var.prefix}"
   }
 }

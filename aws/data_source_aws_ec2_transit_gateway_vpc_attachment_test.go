@@ -62,7 +62,7 @@ func testAccAWSEc2TransitGatewayVpcAttachmentDataSourceConfigFilter() string {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "tf-acc-test-ec2-transit-gateway-vpc-attachment"
   }
 }
@@ -71,7 +71,7 @@ resource "aws_subnet" "test" {
   cidr_block = "10.0.0.0/24"
   vpc_id     = "${aws_vpc.test.id}"
 
-  tags {
+  tags = {
     Name = "tf-acc-test-ec2-transit-gateway-vpc-attachment"
   }
 }
@@ -98,7 +98,7 @@ func testAccAWSEc2TransitGatewayVpcAttachmentDataSourceConfigID() string {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "tf-acc-test-ec2-transit-gateway-vpc-attachment"
   }
 }
@@ -107,7 +107,7 @@ resource "aws_subnet" "test" {
   cidr_block = "10.0.0.0/24"
   vpc_id     = "${aws_vpc.test.id}"
 
-  tags {
+  tags = {
     Name = "tf-acc-test-ec2-transit-gateway-vpc-attachment"
   }
 }

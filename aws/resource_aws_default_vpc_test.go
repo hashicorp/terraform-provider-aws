@@ -53,7 +53,7 @@ provider "aws" {
 }
 
 resource "aws_default_vpc" "foo" {
-	tags {
+	tags = {
 		Name = "Default VPC"
 	}
 }

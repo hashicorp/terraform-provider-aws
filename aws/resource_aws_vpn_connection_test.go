@@ -378,7 +378,7 @@ func TestAWSVpnConnection_xmlconfig(t *testing.T) {
 func testAccAwsVpnConnectionConfig(rBgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_vpn_gateway" "vpn_gateway" {
-  tags {
+  tags = {
     Name = "vpn_gateway"
   }
 }
@@ -387,7 +387,7 @@ resource "aws_customer_gateway" "customer_gateway" {
   bgp_asn = %d
   ip_address = "178.0.0.1"
   type = "ipsec.1"
-  tags {
+  tags = {
     Name = "main-customer-gateway"
   }
 }
@@ -405,7 +405,7 @@ resource "aws_vpn_connection" "foo" {
 func testAccAwsVpnConnectionConfigUpdate(rInt, rBgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_vpn_gateway" "vpn_gateway" {
-  tags {
+  tags = {
     Name = "vpn_gateway"
   }
 }
@@ -414,7 +414,7 @@ resource "aws_customer_gateway" "customer_gateway" {
   bgp_asn = %d
   ip_address = "178.0.0.1"
   type = "ipsec.1"
-  tags {
+  tags = {
     Name = "main-customer-gateway-%d"
   }
 }
@@ -431,7 +431,7 @@ resource "aws_vpn_connection" "foo" {
 func testAccAwsVpnConnectionConfigSingleTunnelOptions(rBgpAsn int, psk string, tunnelCidr string) string {
 	return fmt.Sprintf(`
 resource "aws_vpn_gateway" "vpn_gateway" {
-  tags {
+  tags = {
     Name = "vpn_gateway"
   }
 }
@@ -440,7 +440,7 @@ resource "aws_customer_gateway" "customer_gateway" {
   bgp_asn = %d
   ip_address = "178.0.0.1"
   type = "ipsec.1"
-  tags {
+  tags = {
     Name = "main-customer-gateway"
   }
 }
@@ -466,7 +466,7 @@ resource "aws_customer_gateway" "test" {
   ip_address = "178.0.0.1"
   type       = "ipsec.1"
 
-  tags {
+  tags = {
     Name = "tf-acc-test-ec2-vpn-connection-transit-gateway-id"
   }
 }
@@ -482,7 +482,7 @@ resource "aws_vpn_connection" "test" {
 func testAccAwsVpnConnectionConfigTunnelOptions(rBgpAsn int, psk string, tunnelCidr string, psk2 string, tunnelCidr2 string) string {
 	return fmt.Sprintf(`
 resource "aws_vpn_gateway" "vpn_gateway" {
-  tags {
+  tags = {
     Name = "vpn_gateway"
   }
 }
@@ -491,7 +491,7 @@ resource "aws_customer_gateway" "customer_gateway" {
   bgp_asn = %d
   ip_address = "178.0.0.1"
   type = "ipsec.1"
-  tags {
+  tags = {
     Name = "main-customer-gateway"
   }
 }

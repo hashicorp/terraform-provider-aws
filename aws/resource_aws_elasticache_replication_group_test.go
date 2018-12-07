@@ -1022,7 +1022,7 @@ resource "aws_elasticache_replication_group" "bar" {
 var testAccAWSElasticacheReplicationGroupInVPCConfig = fmt.Sprintf(`
 resource "aws_vpc" "foo" {
     cidr_block = "192.168.0.0/16"
-    tags {
+  tags = {
         Name = "terraform-testacc-elasticache-replication-group-in-vpc"
     }
 }
@@ -1031,7 +1031,7 @@ resource "aws_subnet" "foo" {
     vpc_id = "${aws_vpc.foo.id}"
     cidr_block = "192.168.0.0/20"
     availability_zone = "us-west-2a"
-    tags {
+  tags = {
         Name = "tf-acc-elasticache-replication-group-in-vpc"
     }
 }
@@ -1071,7 +1071,7 @@ resource "aws_elasticache_replication_group" "bar" {
 var testAccAWSElasticacheReplicationGroupMultiAZInVPCConfig = fmt.Sprintf(`
 resource "aws_vpc" "foo" {
     cidr_block = "192.168.0.0/16"
-    tags {
+  tags = {
         Name = "terraform-testacc-elasticache-replication-group-multi-az-in-vpc"
     }
 }
@@ -1080,7 +1080,7 @@ resource "aws_subnet" "foo" {
     vpc_id = "${aws_vpc.foo.id}"
     cidr_block = "192.168.0.0/20"
     availability_zone = "us-west-2a"
-    tags {
+  tags = {
         Name = "tf-acc-elasticache-replication-group-multi-az-in-vpc-foo"
     }
 }
@@ -1089,7 +1089,7 @@ resource "aws_subnet" "bar" {
     vpc_id = "${aws_vpc.foo.id}"
     cidr_block = "192.168.16.0/20"
     availability_zone = "us-west-2b"
-    tags {
+  tags = {
         Name = "tf-acc-elasticache-replication-group-multi-az-in-vpc-bar"
     }
 }
@@ -1133,7 +1133,7 @@ resource "aws_elasticache_replication_group" "bar" {
 var testAccAWSElasticacheReplicationGroupRedisClusterInVPCConfig = fmt.Sprintf(`
 resource "aws_vpc" "foo" {
     cidr_block = "192.168.0.0/16"
-    tags {
+  tags = {
         Name = "terraform-testacc-elasticache-replication-group-redis-cluster-in-vpc"
     }
 }
@@ -1142,7 +1142,7 @@ resource "aws_subnet" "foo" {
     vpc_id = "${aws_vpc.foo.id}"
     cidr_block = "192.168.0.0/20"
     availability_zone = "us-west-2a"
-    tags {
+  tags = {
         Name = "tf-acc-elasticache-replication-group-redis-cluster-in-vpc-foo"
     }
 }
@@ -1151,7 +1151,7 @@ resource "aws_subnet" "bar" {
     vpc_id = "${aws_vpc.foo.id}"
     cidr_block = "192.168.16.0/20"
     availability_zone = "us-west-2b"
-    tags {
+  tags = {
         Name = "tf-acc-elasticache-replication-group-redis-cluster-in-vpc-bar"
     }
 }
@@ -1198,7 +1198,7 @@ func testAccAWSElasticacheReplicationGroupNativeRedisClusterErrorConfig(rInt int
 	return fmt.Sprintf(`
 resource "aws_vpc" "foo" {
     cidr_block = "192.168.0.0/16"
-    tags {
+  tags = {
         Name = "terraform-testacc-elasticache-replication-group-native-redis-cluster-err"
     }
 }
@@ -1207,7 +1207,7 @@ resource "aws_subnet" "foo" {
     vpc_id = "${aws_vpc.foo.id}"
     cidr_block = "192.168.0.0/20"
     availability_zone = "us-west-2a"
-    tags {
+  tags = {
         Name = "tf-acc-elasticache-replication-group-native-redis-cluster-err-foo"
     }
 }
@@ -1216,7 +1216,7 @@ resource "aws_subnet" "bar" {
     vpc_id = "${aws_vpc.foo.id}"
     cidr_block = "192.168.16.0/20"
     availability_zone = "us-west-2b"
-    tags {
+  tags = {
         Name = "tf-acc-elasticache-replication-group-native-redis-cluster-err-bar"
     }
 }
@@ -1262,7 +1262,7 @@ func testAccAWSElasticacheReplicationGroupNativeRedisClusterConfig(rName string,
 	return fmt.Sprintf(`
 resource "aws_vpc" "foo" {
     cidr_block = "192.168.0.0/16"
-    tags {
+  tags = {
         Name = "terraform-testacc-elasticache-replication-group-native-redis-cluster"
     }
 }
@@ -1271,7 +1271,7 @@ resource "aws_subnet" "foo" {
     vpc_id = "${aws_vpc.foo.id}"
     cidr_block = "192.168.0.0/20"
     availability_zone = "us-west-2a"
-    tags {
+  tags = {
         Name = "tf-acc-elasticache-replication-group-native-redis-cluster-foo"
     }
 }
@@ -1280,7 +1280,7 @@ resource "aws_subnet" "bar" {
     vpc_id = "${aws_vpc.foo.id}"
     cidr_block = "192.168.16.0/20"
     availability_zone = "us-west-2b"
-    tags {
+  tags = {
         Name = "tf-acc-elasticache-replication-group-native-redis-cluster-bar"
     }
 }
@@ -1325,7 +1325,7 @@ func testAccAWSElasticacheReplicationGroup_EnableAtRestEncryptionConfig(rInt int
 	return fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block = "192.168.0.0/16"
-  tags {
+  tags = {
     Name = "terraform-testacc-elasticache-replication-group-at-rest-encryption"
   }
 }
@@ -1334,7 +1334,7 @@ resource "aws_subnet" "foo" {
   vpc_id = "${aws_vpc.foo.id}"
   cidr_block = "192.168.0.0/20"
   availability_zone = "us-west-2a"
-  tags {
+  tags = {
     Name = "tf-acc-elasticache-replication-group-at-rest-encryption"
   }
 }
@@ -1379,7 +1379,7 @@ func testAccAWSElasticacheReplicationGroup_EnableAuthTokenTransitEncryptionConfi
 	return fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block = "192.168.0.0/16"
-  tags {
+  tags = {
     Name = "terraform-testacc-elasticache-replication-group-auth-token-transit-encryption"
   }
 }
@@ -1388,7 +1388,7 @@ resource "aws_subnet" "foo" {
   vpc_id = "${aws_vpc.foo.id}"
   cidr_block = "192.168.0.0/20"
   availability_zone = "us-west-2a"
-  tags {
+  tags = {
     Name = "tf-acc-elasticache-replication-group-auth-token-transit-encryption"
   }
 }
@@ -1436,7 +1436,7 @@ data "aws_availability_zones" "available" {}
 
 resource "aws_vpc" "test" {
   cidr_block = "192.168.0.0/16"
-  tags {
+  tags = {
       Name = "terraform-testacc-elasticache-replication-group-number-cache-clusters"
   }
 }
@@ -1448,7 +1448,7 @@ resource "aws_subnet" "test" {
   cidr_block        = "192.168.${count.index}.0/24"
   vpc_id            = "${aws_vpc.test.id}"
 
-  tags {
+  tags = {
     Name = "tf-acc-elasticache-replication-group-number-cache-clusters"
   }
 }

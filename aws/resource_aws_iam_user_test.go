@@ -603,7 +603,7 @@ func testAccAWSUserConfig_tags(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "test" {
   name = %q
-  tags {
+  tags = {
     Name = "test-Name"
     tag2 = "test-tag2"
   }
@@ -615,7 +615,7 @@ func testAccAWSUserConfig_tagsUpdate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "test" {
   name = %q
-  tags {
+  tags = {
     tag2 = "test-tagUpdate"
   }
 }

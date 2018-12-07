@@ -188,7 +188,7 @@ data "aws_availability_zones" "available" {}
 resource "aws_vpc" "test" {
   cidr_block = "172.%d.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-subnet-data-source"
   }
 }
@@ -198,7 +198,7 @@ resource "aws_subnet" "test" {
   cidr_block        = "172.%d.123.0/24"
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
 
-  tags {
+  tags = {
     Name = "tf-acc-subnet-data-source"
   }
 }
@@ -215,7 +215,7 @@ data "aws_subnet" "by_cidr" {
 data "aws_subnet" "by_tag" {
   vpc_id = "${aws_subnet.test.vpc_id}"
 
-  tags {
+  tags = {
     Name = "${aws_subnet.test.tags["Name"]}"
   }
 }
@@ -246,7 +246,7 @@ resource "aws_vpc" "test" {
   cidr_block = "172.%d.0.0/16"
   assign_generated_ipv6_cidr_block = true
 
-  tags {
+  tags = {
     Name = "terraform-testacc-subnet-data-source-ipv6"
   }
 }
@@ -257,7 +257,7 @@ resource "aws_subnet" "test" {
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
   ipv6_cidr_block = "${cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)}"
 
-  tags {
+  tags = {
     Name = "tf-acc-subnet-data-source-ipv6"
   }
 }
@@ -272,7 +272,7 @@ resource "aws_vpc" "test" {
   cidr_block = "172.%d.0.0/16"
   assign_generated_ipv6_cidr_block = true
 
-  tags {
+  tags = {
     Name = "terraform-testacc-subnet-data-source-ipv6-with-ds-filter"
   }
 }
@@ -283,7 +283,7 @@ resource "aws_subnet" "test" {
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
   ipv6_cidr_block = "${cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)}"
 
-  tags {
+  tags = {
     Name = "tf-acc-subnet-data-source-ipv6-with-ds-filter"
   }
 }
@@ -305,7 +305,7 @@ resource "aws_vpc" "test" {
   cidr_block = "172.%d.0.0/16"
   assign_generated_ipv6_cidr_block = true
 
-  tags {
+  tags = {
     Name = "terraform-testacc-subnet-data-source-ipv6-cidr-block"
   }
 }
@@ -316,7 +316,7 @@ resource "aws_subnet" "test" {
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
   ipv6_cidr_block = "${cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)}"
 
-  tags {
+  tags = {
     Name = "tf-acc-subnet-data-source-ipv6-cidr-block"
   }
 }

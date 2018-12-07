@@ -625,7 +625,7 @@ resource "aws_ec2_transit_gateway" "test" {
 func testAccAWSEc2TransitGatewayConfigTags1(tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
-  tags {
+  tags = {
     %q = %q
   }
 }
@@ -635,7 +635,7 @@ resource "aws_ec2_transit_gateway" "test" {
 func testAccAWSEc2TransitGatewayConfigTags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
-  tags {
+  tags = {
     %q = %q
     %q = %q
   }

@@ -50,7 +50,7 @@ resource "aws_default_route_table" "r" {
     # ...
   }
 
-  tags {
+  tags = {
     Name = "default table"
   }
 }

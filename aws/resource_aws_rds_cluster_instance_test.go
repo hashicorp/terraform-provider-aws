@@ -391,7 +391,7 @@ resource "aws_db_parameter_group" "bar" {
     apply_method = "pending-reboot"
   }
 
-  tags {
+  tags = {
     foo = "bar"
   }
 }
@@ -428,7 +428,7 @@ resource "aws_db_parameter_group" "bar" {
     apply_method = "pending-reboot"
   }
 
-  tags {
+  tags = {
     foo = "bar"
   }
 }
@@ -467,7 +467,7 @@ resource "aws_db_parameter_group" "bar" {
     apply_method = "pending-reboot"
   }
 
-  tags {
+  tags = {
     foo = "bar"
   }
 }
@@ -492,7 +492,7 @@ resource "aws_rds_cluster" "test" {
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-rds-cluster-instance-name-prefix"
 	}
 }
@@ -501,7 +501,7 @@ resource "aws_subnet" "a" {
   vpc_id = "${aws_vpc.test.id}"
   cidr_block = "10.0.0.0/24"
   availability_zone = "us-west-2a"
-  tags {
+  tags = {
     Name = "tf-acc-rds-cluster-instance-name-prefix-a"
   }
 }
@@ -510,7 +510,7 @@ resource "aws_subnet" "b" {
   vpc_id = "${aws_vpc.test.id}"
   cidr_block = "10.0.1.0/24"
   availability_zone = "us-west-2b"
-  tags {
+  tags = {
     Name = "tf-acc-rds-cluster-instance-name-prefix-b"
   }
 }
@@ -539,7 +539,7 @@ resource "aws_rds_cluster" "test" {
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-rds-cluster-instance-generated-name"
 	}
 }
@@ -548,7 +548,7 @@ resource "aws_subnet" "a" {
   vpc_id = "${aws_vpc.test.id}"
   cidr_block = "10.0.0.0/24"
   availability_zone = "us-west-2a"
-  tags {
+  tags = {
     Name = "tf-acc-rds-cluster-instance-generated-name-a"
   }
 }
@@ -557,7 +557,7 @@ resource "aws_subnet" "b" {
   vpc_id = "${aws_vpc.test.id}"
   cidr_block = "10.0.1.0/24"
   availability_zone = "us-west-2b"
-  tags {
+  tags = {
     Name = "tf-acc-rds-cluster-instance-generated-name-b"
   }
 }
@@ -621,7 +621,7 @@ resource "aws_db_parameter_group" "bar" {
     apply_method = "pending-reboot"
   }
 
-  tags {
+  tags = {
     foo = "bar"
   }
 }
@@ -718,7 +718,7 @@ resource "aws_db_parameter_group" "bar" {
     apply_method = "pending-reboot"
   }
 
-  tags {
+  tags = {
     foo = "bar"
   }
 }
@@ -779,7 +779,7 @@ resource "aws_db_parameter_group" "bar" {
     value = "10"
   }
 
-  tags {
+  tags = {
     foo = "bar"
   }
 }

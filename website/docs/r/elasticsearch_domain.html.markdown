@@ -27,7 +27,7 @@ resource "aws_elasticsearch_domain" "example" {
     automated_snapshot_start_hour = 23
   }
 
-  tags {
+  tags = {
     Domain = "TestDomain"
   }
 }

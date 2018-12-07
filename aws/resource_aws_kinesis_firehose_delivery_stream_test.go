@@ -1336,7 +1336,7 @@ func testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithTags(rName string, rI
 			role_arn = "${aws_iam_role.firehose.arn}"
 			bucket_arn = "${aws_s3_bucket.bucket.arn}"
 		}
-		tags {
+	tags = {
 			Environment = "production"
 			Usage = "original"
 		}
@@ -1354,7 +1354,7 @@ func testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithTagsChanged(rName str
 			role_arn = "${aws_iam_role.firehose.arn}"
 			bucket_arn = "${aws_s3_bucket.bucket.arn}"
 		}
-		tags {
+	tags = {
 			Usage = "changed"
 		}
 	}`, rName)

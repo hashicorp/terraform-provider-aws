@@ -208,14 +208,14 @@ resource "aws_lb_target_group" "test" {
 resource "aws_subnet" "subnet" {
   cidr_block = "10.0.1.0/24"
   vpc_id = "${aws_vpc.test.id}"
-  tags {
+  tags = {
     Name = "tf-acc-lb-target-group-attachment-without-port"
   }
 }
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-lb-target-group-attachment-without-port"
 	}
 }`, targetGroupName)
@@ -260,14 +260,14 @@ resource "aws_lb_target_group" "test" {
 resource "aws_subnet" "subnet" {
   cidr_block = "10.0.1.0/24"
   vpc_id = "${aws_vpc.test.id}"
-  tags {
+  tags = {
     Name = "tf-acc-lb-target-group-attachment-basic"
   }
 }
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-lb-target-group-attachment-basic"
 	}
 }`, targetGroupName)
@@ -312,14 +312,14 @@ resource "aws_alb_target_group" "test" {
 resource "aws_subnet" "subnet" {
   cidr_block = "10.0.1.0/24"
   vpc_id = "${aws_vpc.test.id}"
-  tags {
+  tags = {
     Name = "tf-acc-lb-target-group-attachment-bc"
   }
 }
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-lb-target-group-attachment-bc"
 	}
 }`, targetGroupName)
@@ -362,13 +362,13 @@ resource "aws_lb_target_group" "test" {
 resource "aws_subnet" "subnet" {
   cidr_block = "10.0.1.0/24"
   vpc_id = "${aws_vpc.test.id}"
-  tags {
+  tags = {
     Name = "tf-acc-lb-target-group-attachment-with-ip-address"
   }
 }
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-lb-target-group-attachment-with-ip-address"
 	}
 }`, targetGroupName)

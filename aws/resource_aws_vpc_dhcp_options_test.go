@@ -173,7 +173,7 @@ resource "aws_vpc_dhcp_options" "foo" {
 	netbios_name_servers = ["127.0.0.1"]
 	netbios_node_type = 2
 
-	tags {
+	tags = {
 		Name = "foo-name"
 	}
 }
