@@ -212,12 +212,6 @@ func resourceAwsElasticacheParameterGroupUpdate(d *schema.ResourceData, meta int
 					// can attempt to workaround the API issue by switching it to
 					// reserved-memory-percentage first then reset that temporary parameter.
 
-					// The reserved-memory-percentage parameter does not exist in redis2.6 and redis2.8
-					family := d.Get("family").(string)
-					if family == "redis2.6" || family == "redis2.8" {
-						break
-					}
-
 					tryReservedMemoryPercentageWorkaround := true
 
 					allConfiguredParameters, err := expandElastiCacheParameters(d.Get("parameter").(*schema.Set).List())
@@ -233,6 +227,13 @@ func resourceAwsElasticacheParameterGroupUpdate(d *schema.ResourceData, meta int
 					}
 
 					if !tryReservedMemoryPercentageWorkaround {
+						break
+					}
+
+					// The reserved-memory-percentage parameter does not exist in redis2.6 and redis2.8
+					family := d.Get("family").(string)
+					if family == "redis2.6" || family == "redis2.8" {
+						log.Printf("[WARN] Cannot reset Elasticache Parameter Group (%s) reserved-memory parameter with %s family", d.Id(), family)
 						break
 					}
 
