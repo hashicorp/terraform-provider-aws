@@ -2092,6 +2092,22 @@ func TestInstanceTenancySchema(t *testing.T) {
 	}
 }
 
+func TestInstanceHostIDSchema(t *testing.T) {
+	actualSchema := resourceAwsInstance().Schema["host_id"]
+	expectedSchema := &schema.Schema{
+		Type:     schema.TypeString,
+		Optional: true,
+		Computed: true,
+		ForceNew: true,
+	}
+	if !reflect.DeepEqual(actualSchema, expectedSchema) {
+		t.Fatalf(
+			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
+			actualSchema,
+			expectedSchema)
+	}
+}
+
 func TestInstanceCpuCoreCountSchema(t *testing.T) {
 	actualSchema := resourceAwsInstance().Schema["cpu_core_count"]
 	expectedSchema := &schema.Schema{
