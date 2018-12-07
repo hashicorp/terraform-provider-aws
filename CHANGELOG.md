@@ -1,8 +1,16 @@
 ## 1.52.0 (Unreleased)
 
+ENHANCEMENTS
+
+* data-source/aws_ip_ranges: Add `url` argument [GH-6756]
+* resource/aws_iam_user_ssh_key: Support resource import [GH-6727]
+
 BUG FIXES
 
 * resource/aws_cloudwatch_log_subscription_filter: Ignore `ResourceNotFound` error on deletion [GH-6760]
+* resource/aws_elasticache_parameter_group: Handle API reset issues with `reserved-memory` parameter updates [GH-6752]
+* resource/aws_route53_record: Prevent scanning entire zone for missing record [GH-6753]
+* resource/aws_ssm_document: Properly batch large `permissions` updates for API limits [GH-6735]
 
 ## 1.51.0 (December 05, 2018)
 
