@@ -19,7 +19,7 @@ func TestAccDataSourceAwsApiGatewayVpcLink(t *testing.T) {
 				Config: testAccDataSourceAwsApiGatewayVpcLinkConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsApiGatewayVpcLinkCheck("data.aws_api_gateway_vpc_link.vpc_link"),
-					resource.TestCheckResourceAttrSet("data.aws_api_gateway_vpc_link.vpc_link", "id"),
+					resource.TestCheckResourceAttrSet("data.aws_api_gateway_vpc_link.vpc_link", "id", "aws_api_gateway_vpc_link.vpc_link", "id"),
 				),
 			},
 		},
