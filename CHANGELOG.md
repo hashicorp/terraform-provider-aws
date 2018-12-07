@@ -3,6 +3,7 @@
 FEATURES
 
 * **New Data Source:** `aws_api_gateway_vpc_link` [GH-6763]
+* **New Resource:** `aws_appmesh_virtual_node` [GH-6764]
 
 ENHANCEMENTS
 
