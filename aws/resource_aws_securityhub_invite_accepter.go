@@ -9,11 +9,11 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-func resourceAwsSecurityHubInvitationAccepter() *schema.Resource {
+func resourceAwsSecurityHubInviteAccepter() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSecurityHubInvitationAccepterCreate,
-		Read:   resourceAwsSecurityHubInvitationAccepterRead,
-		Delete: resourceAwsSecurityHubInvitationAccepterDelete,
+		Create: resourceAwsSecurityHubInviteAccepterCreate,
+		Read:   resourceAwsSecurityHubInviteAccepterRead,
+		Delete: resourceAwsSecurityHubInviteAccepterDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -33,11 +33,11 @@ func resourceAwsSecurityHubInvitationAccepter() *schema.Resource {
 	}
 }
 
-func resourceAwsSecurityHubInvitationAccepterCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsSecurityHubInviteAccepterCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).securityhubconn
 	log.Print("[DEBUG] Accepting Security Hub invitation")
 
-	invitationId, err := resourceAwsSecurityHubInvitationAccepterGetInvitationId(conn, d.Get("master_id").(string))
+	invitationId, err := resourceAwsSecurityHubInviteAccepterGetInvitationId(conn, d.Get("master_id").(string))
 
 	if err != nil {
 		return err
@@ -54,10 +54,10 @@ func resourceAwsSecurityHubInvitationAccepterCreate(d *schema.ResourceData, meta
 
 	d.SetId("securityhub-invitation-accepter")
 
-	return resourceAwsSecurityHubInvitationAccepterRead(d, meta)
+	return resourceAwsSecurityHubInviteAccepterRead(d, meta)
 }
 
-func resourceAwsSecurityHubInvitationAccepterGetInvitationId(conn *securityhub.SecurityHub, masterId string) (string, error) {
+func resourceAwsSecurityHubInviteAccepterGetInvitationId(conn *securityhub.SecurityHub, masterId string) (string, error) {
 	log.Printf("[DEBUG] Getting InvitationId for MasterId %s", masterId)
 
 	resp, err := conn.ListInvitations(&securityhub.ListInvitationsInput{})
@@ -76,7 +76,7 @@ func resourceAwsSecurityHubInvitationAccepterGetInvitationId(conn *securityhub.S
 	return "", fmt.Errorf("Cannot find InvitationId for MasterId %s", masterId)
 }
 
-func resourceAwsSecurityHubInvitationAccepterRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsSecurityHubInviteAccepterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).securityhubconn
 	log.Print("[DEBUG] Reading Security Hub master account")
 
@@ -105,7 +105,7 @@ func resourceAwsSecurityHubInvitationAccepterRead(d *schema.ResourceData, meta i
 	return nil
 }
 
-func resourceAwsSecurityHubInvitationAccepterDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsSecurityHubInviteAccepterDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).securityhubconn
 	log.Print("[DEBUG] Disassociating from Security Hub master account")
 
