@@ -1224,12 +1224,12 @@ func resourceAwsSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) e
 func setLaunchTemplateOverrides(overrides []*ec2.LaunchTemplateOverrides) *schema.Set {
 	overrideSet := &schema.Set{F: hashLaunchTemplateOverrides}
 	for _, override := range overrides {
-		overrideSet.Add(overrideToMap(override))
+		overrideSet.Add(flattenSpotFleetRequestLaunchTemplateOverrides(override))
 	}
 	return overrideSet
 }
 
-func overrideToMap(override *ec2.LaunchTemplateOverrides) map[string]interface{} {
+func flattenSpotFleetRequestLaunchTemplateOverrides(override *ec2.LaunchTemplateOverrides) map[string]interface{} {
 	m := make(map[string]interface{})
 
 	if override.AvailabilityZone != nil {
