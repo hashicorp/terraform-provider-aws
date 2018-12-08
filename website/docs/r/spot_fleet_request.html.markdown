@@ -182,7 +182,7 @@ across different markets and instance types. Conflicts with `launch_template_con
 * `target_capacity` - The number of units to request. You can choose to set the
   target capacity in terms of instances or a performance characteristic that is
   important to your application workload, such as vCPUs, memory, or I/O.
-* `on_demand_target_capacity` - (Optional) Allows specification of a minimum value of the `target_capacity` to be filled by full price on-demand instance to ensure a minimum capacity of the fleet no matter spot instance availability. Not supported by `launch_specification`, must be used with `launch_template_configs`.
+* `on_demand_target_capacity` - (Optional) The number of full-price On-Demand units to request in addition to the spot instance capacity. Use this to guarantee a minimum capacity of the fleet even in the event that the spot requests cannot be filled. Capacity is defined in the same units as configured in target_capacity such as vCPUs, memory, or I/O. Not supported by launch_specification, must be used with launch_template_configs.
 * `allocation_strategy` - Indicates how to allocate the target capacity across
   the Spot pools specified by the Spot fleet request. The default is
   `lowestPrice`.
@@ -218,7 +218,7 @@ The `launch_template_configs` block supports the following:
 
 * `id` - The ID of the launch template. Conflicts with `name`.
 * `name` - The name of the launch template. Conflicts with `id`.
-* `version` - (Optional) Template version. Unlike the autoscaling equivalent, does not support `$Latest` or `$Default`, so use the launch_template resource's attribute, e.g. `"${aws_launch_template.foo.latest_version}"`. Wil use default version if omitted.
+* `version` - (Optional) Template version. Unlike the autoscaling equivalent, does not support `$Latest` or `$Default`, so use the launch_template resource's attribute, e.g. `"${aws_launch_template.foo.latest_version}"`. Will use default version if omitted.
 
     **Note:** The specified launch template can specify only a subset of the 
     inputs of [`aws_launch_template`](launch_template.html).  There are limitations on
