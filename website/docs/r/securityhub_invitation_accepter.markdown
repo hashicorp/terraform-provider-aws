@@ -15,17 +15,24 @@ Accepts a Security Hub invitation.
 ## Example Usage
 
 ```hcl
+resource "aws_securityhub_account" "example" {}
+
 resource "aws_securityhub_member" "example" {
   account_id = "123456789012"
   email      = "example@example.com"
 }
 
 resource "aws_securityhub_invitation" "example" {
-  account_id = "${aws_securityhub_member.example.id}"
+  account_id = "${aws_securityhub_member.example.account_id}"
 }
 
-resource "aws_securityhub_invitation_accepter" "example" {
-  master_id = "${aws_securityhub_invitation.example.id}"
+resource "aws_securityhub_account" "invitee" {
+  provider = "aws.invitee"
+}
+
+resource "aws_securityhub_invitation_accepter" "invitee" {
+  provider  = "aws.invitee"
+  master_id = "${aws_securityhub_invitation.example.master_id}"
 }
 ```
 
