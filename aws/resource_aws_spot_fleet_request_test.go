@@ -213,6 +213,22 @@ func TestAccAWSSpotFleetRequest_launchTemplateWithOnDemandCapacity(t *testing.T)
 	})
 }
 
+func TestAccAWSSpotFleetRequest_launchTemplateConflictLaunchSpecification(t *testing.T) {
+    rName := acctest.RandString(10)
+
+    resource.ParallelTest(t, resource.TestCase{
+        PreCheck:     func() { testAccPreCheck(t) },
+        Providers:    testAccProviders,
+        CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
+        Steps: []resource.TestStep{
+            {
+                Config:      testAccAWSSpotFleetRequestLaunchTemplateConflictLaunchSpecification(rName),
+                ExpectError: regexp.MustCompile(`"launch_template_configs": conflicts with launch_specification`),
+            },
+        },
+    })
+}
+
 func TestAccAWSSpotFleetRequest_launchTemplateWithOverrides(t *testing.T) {
 	var sfr ec2.SpotFleetRequestConfig
 	rName := acctest.RandString(10)
@@ -1393,43 +1409,8 @@ resource "aws_spot_fleet_request" "foo" {
 `, rName, rInt, rInt, rName)
 }
 
-<<<<<<< HEAD
-func testAccAWSSpotFleetRequestLaunchTemplateConfigWithOnDemandCapacity(rName string, rInt int) string {
+func testAccAWSSpotFleetRequestLaunchTemplateConflictLaunchSpecification(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_key_pair" "debugging" {
-    key_name = "tmp-key-%s"
-    public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD3F6tyPEFEzV0LX3X8BsXdMsQz1x2cEikKDEY0aIj41qgxMCP/iteneqXSIFZBp5vizPvaoIR3Um9xK7PGoW8giupGn+EPuxIA4cDM4vzOqOkiMPhz5XK0whEjkVzTo4+S0puvDZuwIsdiW9mxhJc7tgBNL0cYlWSYVkz4G/fslNfRPW5mYAM49f4fhtxPb5ok4Q2Lg9dPKVHO/Bgeu5woMc7RY0p1ej6D4CKFE6lymSDJpW0YHX/wqE9+cfEauh7xZcG0q9t2ta6F6fmX0agvpFyZo8aFbXeUBr7osSCJNgvavWbM/06niWrOvYX2xwWdhXmXSrbX8ZbabVohBK41 phodgson@thoughtworks.com"
-}
-
-resource "aws_iam_policy" "test-policy" {
-  name = "test-policy-%d"
-  path = "/"
-  description = "Spot Fleet Request ACCTest Policy"
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [{
-    "Effect": "Allow",
-    "Action": [
-       "ec2:DescribeImages",
-       "ec2:DescribeSubnets",
-       "ec2:RequestSpotInstances",
-       "ec2:TerminateInstances",
-       "ec2:DescribeInstanceStatus",
-       "iam:PassRole"
-        ],
-    "Resource": ["*"]
-  }]
-}
-EOF
-}
-
-resource "aws_iam_policy_attachment" "test-attach" {
-    name = "test-attachment-%d"
-    roles = ["${aws_iam_role.test-role.name}"]
-    policy_arn = "${aws_iam_policy.test-policy.arn}"
-}
-
 resource "aws_iam_role" "test-role" {
     name = "test-role-%s"
     assume_role_policy = <<EOF
@@ -1453,35 +1434,39 @@ EOF
 }
 
 resource "aws_launch_template" "foo" {
-  name = "test-launch-template"
+  name = "test-launch-template-%s"
   image_id = "ami-516b9131"
   instance_type = "m1.small"
-  key_name = "${aws_key_pair.debugging.key_name}"
 }
 
 resource "aws_spot_fleet_request" "foo" {
     iam_fleet_role = "${aws_iam_role.test-role.arn}"
     spot_price = "0.005"
     target_capacity = 2
-    valid_until = "2019-11-04T20:44:20Z"
-    terminate_instances_with_expiration = true
-    wait_for_fulfillment = true
-    on_demand_target_capacity = 2
 
     launch_template_configs {
       launch_template_specification {
         name = "${aws_launch_template.foo.name}"
         version = "${aws_launch_template.foo.latest_version}"
       }
+      overrides {
+        instance_type = "t1.micro"
+        weighted_capacity = "2"
+      }
+      overrides {
+        instance_type = "m3.medium"
+        spot_price = "0.26"
+      }
     }
 
-    depends_on = ["aws_iam_policy_attachment.test-attach"]
+    launch_specification {
+        instance_type = "m1.small"
+        ami = "ami-516b9131"
+    }
 }
-`, rName, rInt, rInt, rName)
+`, rName, rName)
 }
 
-=======
->>>>>>> removed on-demand spot instance feature due to moving to a different PR
 func testAccAWSSpotFleetRequestLaunchTemplateConfigWithOverrides(rName string, rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_key_pair" "debugging" {
