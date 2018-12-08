@@ -770,7 +770,7 @@ func buildAwsSpotFleetLaunchSpecifications(
 	return specs, nil
 }
 
-func buildLaunchTemplateConfigs(d *schema.ResourceData, meta interface{}) ([]*ec2.LaunchTemplateConfig, error) {
+func buildLaunchTemplateConfigs(d *schema.ResourceData) ([]*ec2.LaunchTemplateConfig, error) {
 	launch_template_cfgs := d.Get("launch_template_configs").(*schema.Set).List()
 	cfgs := make([]*ec2.LaunchTemplateConfig, len(launch_template_cfgs))
 
@@ -877,7 +877,7 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	if launchTemplateConfigsOk {
-		launch_templates, err := buildLaunchTemplateConfigs(d, meta)
+		launch_templates, err := buildLaunchTemplateConfigs(d)
 		if err != nil {
 			return err
 		}
