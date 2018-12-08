@@ -19,7 +19,7 @@ data "aws_region" "current" {}
 
 resource "aws_securityhub_product_subscription" "example" {
   depends_on  = ["aws_securityhub_account.example"]
-  product_arn = "arn:aws:securityhub:${data.aws_region.current.name}:679703615338:product/alertlogic/althreatmanagement"
+  product_arn = "arn:aws:securityhub:${data.aws_region.current.name}:733251395267:product/alertlogic/althreatmanagement"
 }
 ```
 
@@ -68,11 +68,3 @@ Currently available products (remember to replace `${var.region}` as appropriate
 The following attributes are exported in addition to the arguments listed above:
 
 * `id` - The ARN of a resource that represents your subscription to the product that generates the findings that you want to import into Security Hub.
-
-## Import
-
-Security Hub product subscriptions can be imported using the product subscription ID, e.g.
-
-```
-$ terraform import aws_securityhub_product_subscription.example arn:aws:securityhub:eu-west-1:123456789012:product-subscription/alertlogic/althreatmanagement
-```
