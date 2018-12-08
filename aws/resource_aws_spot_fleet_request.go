@@ -363,12 +363,6 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 				Required: true,
 				ForceNew: false,
 			},
-			"on_demand_target_capacity": {
-				Type:          schema.TypeInt,
-				ConflictsWith: []string{"launch_specification"},
-				Optional:      true,
-				ForceNew:      true,
-			},
 			"allocation_strategy": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -810,10 +804,6 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 			return err
 		}
 		spotFleetConfig.LaunchTemplateConfigs = launch_templates
-	}
-
-	if v, ok := d.GetOk("on_demand_target_capacity"); ok {
-		spotFleetConfig.OnDemandTargetCapacity = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("excess_capacity_termination_policy"); ok {
@@ -1434,7 +1424,6 @@ func deleteSpotFleetRequest(spotFleetRequestID string, terminateInstances bool, 
 		return nil
 	}
 
-	// On-Demand capacity instances are never delisted as "active" in spot fleet even once terminated, so we now need logic to check that they are gone.
 	return resource.Retry(timeout, func() *resource.RetryError {
 		resp, err := conn.DescribeSpotFleetInstances(&ec2.DescribeSpotFleetInstancesInput{
 			SpotFleetRequestId: aws.String(spotFleetRequestID),
@@ -1446,24 +1435,6 @@ func deleteSpotFleetRequest(spotFleetRequestID string, terminateInstances bool, 
 		if len(resp.ActiveInstances) == 0 {
 			log.Printf("[DEBUG] Active instance count is 0 for Spot Fleet Request (%s), removing", spotFleetRequestID)
 			return nil
-		} else {
-			instances := []*string{}
-			for _, instMap := range resp.ActiveInstances {
-				instances = append(instances, aws.String(*instMap.InstanceId))
-			}
-			iresp, err := conn.DescribeInstances(&ec2.DescribeInstancesInput{
-				InstanceIds: instances,
-			})
-			if err != nil {
-				return resource.RetryableError(
-					fmt.Errorf("Error while trying to determine fleet status for fleet (%s): %s", spotFleetRequestID, err))
-			}
-			if len(iresp.Reservations) == 0 {
-				log.Printf("[DEBUG] Active instance count is %d for Spot Fleet Request (%s), but instances have terminated, removing", len(resp.ActiveInstances), spotFleetRequestID)
-				return nil
-			}
-
-			log.Printf("[DEBUG] Active instance count is %d for Spot Fleet Request (%s), and at least 1 instance is still running", len(resp.ActiveInstances), spotFleetRequestID)
 		}
 
 		log.Printf("[DEBUG] Active instance count in Spot Fleet Request (%s): %d", spotFleetRequestID, len(resp.ActiveInstances))

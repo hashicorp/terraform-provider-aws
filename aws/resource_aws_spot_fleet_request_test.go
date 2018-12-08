@@ -114,40 +114,6 @@ func TestAccAWSSpotFleetRequest_launchTemplate(t *testing.T) {
     })
 }
 
-//On-Demand capacity requires launch template defined spot fleet, so can't test without it.
-func TestAccAWSSpotFleetRequest_launchTemplateWithOnDemandCapacity(t *testing.T) {
-    var sfr ec2.SpotFleetRequestConfig
-    rName := acctest.RandString(10)
-    rInt := acctest.RandInt()
-
-    resource.ParallelTest(t, resource.TestCase{
-        PreCheck:     func() { testAccPreCheck(t) },
-        Providers:    testAccProviders,
-        CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
-        Steps: []resource.TestStep{
-            {
-                Config: testAccAWSSpotFleetRequestLaunchTemplateConfigWithOnDemandCapacity(rName, rInt),
-                Check: resource.ComposeAggregateTestCheckFunc(
-                    testAccCheckAWSSpotFleetRequestExists(
-                        "aws_spot_fleet_request.foo", &sfr),
-                    resource.TestCheckResourceAttr(
-                        "aws_spot_fleet_request.foo", "spot_request_state", "active"),
-                    resource.TestCheckResourceAttr(
-                        "aws_spot_fleet_request.foo", "launch_specification.#", "0"),
-                    resource.TestCheckResourceAttr(
-                        "aws_spot_fleet_request.foo", "launch_template_configs.#", "1"),
-                    resource.TestCheckResourceAttr(
-                        "aws_spot_fleet_request.foo", "launch_template_configs.4018047529.launch_template_specification.#", "1"),
-                    resource.TestCheckResourceAttr(
-                        "aws_spot_fleet_request.foo", "launch_template_configs.4018047529.overrides.#", "0"),
-                    resource.TestCheckResourceAttr(
-                        "aws_spot_fleet_request.foo", "on_demand_target_capacity", "2"),
-                ),
-            },
-        },
-    })
-}
-
 func TestAccAWSSpotFleetRequest_launchTemplateWithOverrides(t *testing.T) {
     var sfr ec2.SpotFleetRequestConfig
     rName := acctest.RandString(10)
@@ -1296,6 +1262,7 @@ resource "aws_spot_fleet_request" "foo" {
 `, rName, rInt, rInt, rName)
 }
 
+<<<<<<< HEAD
 func testAccAWSSpotFleetRequestLaunchTemplateConfigWithOnDemandCapacity(rName string, rInt int) string {
     return fmt.Sprintf(`
 resource "aws_key_pair" "debugging" {
@@ -1382,6 +1349,8 @@ resource "aws_spot_fleet_request" "foo" {
 `, rName, rInt, rInt, rName)
 }
 
+=======
+>>>>>>> removed on-demand spot instance feature due to moving to a different PR
 func testAccAWSSpotFleetRequestLaunchTemplateConfigWithOverrides(rName string, rInt int) string {
     return fmt.Sprintf(`
 resource "aws_key_pair" "debugging" {
