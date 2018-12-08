@@ -9,11 +9,11 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-func resourceAwsSecurityHubStandard() *schema.Resource {
+func resourceAwsSecurityHubStandardSubscription() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSecurityHubStandardCreate,
-		Read:   resourceAwsSecurityHubStandardRead,
-		Delete: resourceAwsSecurityHubStandardDelete,
+		Create: resourceAwsSecurityHubStandardSubscriptionCreate,
+		Read:   resourceAwsSecurityHubStandardSubscriptionRead,
+		Delete: resourceAwsSecurityHubStandardSubscriptionDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -28,7 +28,7 @@ func resourceAwsSecurityHubStandard() *schema.Resource {
 	}
 }
 
-func resourceAwsSecurityHubStandardCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsSecurityHubStandardSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).securityhubconn
 	log.Printf("[DEBUG] Enabling Security Hub standard %s", d.Get("standards_arn"))
 
@@ -48,10 +48,10 @@ func resourceAwsSecurityHubStandardCreate(d *schema.ResourceData, meta interface
 
 	d.SetId(*standardsSubscription.StandardsSubscriptionArn)
 
-	return resourceAwsSecurityHubStandardRead(d, meta)
+	return resourceAwsSecurityHubStandardSubscriptionRead(d, meta)
 }
 
-func resourceAwsSecurityHubStandardRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsSecurityHubStandardSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).securityhubconn
 
 	log.Printf("[DEBUG] Reading Security Hub standard %s", d.Id())
@@ -76,7 +76,7 @@ func resourceAwsSecurityHubStandardRead(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAwsSecurityHubStandardDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsSecurityHubStandardSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).securityhubconn
 	log.Printf("[DEBUG] Disabling Security Hub standard %s", d.Id())
 

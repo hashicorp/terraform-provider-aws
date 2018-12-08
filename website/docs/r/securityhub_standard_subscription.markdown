@@ -1,12 +1,12 @@
 ---
 layout: "aws"
-page_title: "AWS: aws_securityhub_standard"
-sidebar_current: "docs-aws-resource-securityhub-standard"
+page_title: "AWS: aws_securityhub_standard_subscription"
+sidebar_current: "docs-aws-resource-securityhub-standard-subscription"
 description: |-
   Subscribes to a Security Hub standard.
 ---
 
-# aws_securityhub_standard
+# aws_securityhub_standard_subscription
 
 Subscribes to a Security Hub standard.
 
@@ -15,7 +15,7 @@ Subscribes to a Security Hub standard.
 ```hcl
 resource "aws_securityhub_account" "example" {}
 
-resource "aws_securityhub_standard" "example" {
+resource "aws_securityhub_standard_subscription" "example" {
   depends_on    = ["aws_securityhub_account.example"]
   standards_arn = "arn:aws:securityhub:::ruleset/cis-aws-foundations-benchmark/v/1.2.0"
 }
