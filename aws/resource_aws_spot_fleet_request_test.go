@@ -149,52 +149,52 @@ func TestAccAWSSpotFleetRequest_associatePublicIpAddress(t *testing.T) {
 }
 
 func TestAccAWSSpotFleetRequest_fleetType(t *testing.T) {
-	var sfr ec2.SpotFleetRequestConfig
-	rName := acctest.RandString(10)
-	rInt := acctest.RandInt()
+    var sfr ec2.SpotFleetRequestConfig
+    rName := acctest.RandString(10)
+    rInt := acctest.RandInt()
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSSpotFleetRequestConfigFleetType(rName, rInt),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSSpotFleetRequestExists(
-						"aws_spot_fleet_request.foo", &sfr),
-					resource.TestCheckResourceAttr(
-						"aws_spot_fleet_request.foo", "spot_request_state", "active"),
-					resource.TestCheckResourceAttr(
-						"aws_spot_fleet_request.foo", "fleet_type", "request"),
-				),
-			},
-		},
-	})
+    resource.ParallelTest(t, resource.TestCase{
+        PreCheck:     func() { testAccPreCheck(t) },
+        Providers:    testAccProviders,
+        CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
+        Steps: []resource.TestStep{
+            {
+                Config: testAccAWSSpotFleetRequestConfigFleetType(rName, rInt),
+                Check: resource.ComposeAggregateTestCheckFunc(
+                    testAccCheckAWSSpotFleetRequestExists(
+                        "aws_spot_fleet_request.foo", &sfr),
+                    resource.TestCheckResourceAttr(
+                        "aws_spot_fleet_request.foo", "spot_request_state", "active"),
+                    resource.TestCheckResourceAttr(
+                        "aws_spot_fleet_request.foo", "fleet_type", "request"),
+                ),
+            },
+        },
+    })
 }
 
 func TestAccAWSSpotFleetRequest_iamInstanceProfileArn(t *testing.T) {
-	var sfr ec2.SpotFleetRequestConfig
-	rName := acctest.RandString(10)
-	rInt := acctest.RandInt()
+    var sfr ec2.SpotFleetRequestConfig
+    rName := acctest.RandString(10)
+    rInt := acctest.RandInt()
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSSpotFleetRequestConfigIamInstanceProfileArn(rName, rInt),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSSpotFleetRequestExists(
-						"aws_spot_fleet_request.foo", &sfr),
-					resource.TestCheckResourceAttr(
-						"aws_spot_fleet_request.foo", "spot_request_state", "active"),
-					testAccCheckAWSSpotFleetRequest_IamInstanceProfileArn(&sfr),
-				),
-			},
-		},
-	})
+    resource.ParallelTest(t, resource.TestCase{
+        PreCheck:     func() { testAccPreCheck(t) },
+        Providers:    testAccProviders,
+        CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
+        Steps: []resource.TestStep{
+            {
+                Config: testAccAWSSpotFleetRequestConfigIamInstanceProfileArn(rName, rInt),
+                Check: resource.ComposeAggregateTestCheckFunc(
+                    testAccCheckAWSSpotFleetRequestExists(
+                        "aws_spot_fleet_request.foo", &sfr),
+                    resource.TestCheckResourceAttr(
+                        "aws_spot_fleet_request.foo", "spot_request_state", "active"),
+                    testAccCheckAWSSpotFleetRequest_IamInstanceProfileArn(&sfr),
+                ),
+            },
+        },
+    })
 }
 
 func TestAccAWSSpotFleetRequest_launchTemplate(t *testing.T) {
@@ -280,36 +280,36 @@ func TestAccAWSSpotFleetRequest_launchTemplateConflictLaunchSpecification(t *tes
 
 //On-Demand capacity requires launch template defined spot fleet, so can't test without it.
 func TestAccAWSSpotFleetRequest_launchTemplateWithOnDemandCapacity(t *testing.T) {
-	var sfr ec2.SpotFleetRequestConfig
-	rName := acctest.RandString(10)
-	rInt := acctest.RandInt()
+    var sfr ec2.SpotFleetRequestConfig
+    rName := acctest.RandString(10)
+    rInt := acctest.RandInt()
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSSpotFleetRequestLaunchTemplateConfigWithOnDemandCapacity(rName, rInt),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSSpotFleetRequestExists(
-						"aws_spot_fleet_request.foo", &sfr),
-					resource.TestCheckResourceAttr(
-						"aws_spot_fleet_request.foo", "spot_request_state", "active"),
-					resource.TestCheckResourceAttr(
-						"aws_spot_fleet_request.foo", "launch_specification.#", "0"),
-					resource.TestCheckResourceAttr(
-						"aws_spot_fleet_request.foo", "launch_template_configs.#", "1"),
-					resource.TestCheckResourceAttr(
-						"aws_spot_fleet_request.foo", "launch_template_configs.4018047529.launch_template_specification.#", "1"),
-					resource.TestCheckResourceAttr(
-						"aws_spot_fleet_request.foo", "launch_template_configs.4018047529.overrides.#", "0"),
-					resource.TestCheckResourceAttr(
-						"aws_spot_fleet_request.foo", "on_demand_target_capacity", "2"),
-				),
-			},
-		},
-	})
+    resource.ParallelTest(t, resource.TestCase{
+        PreCheck:     func() { testAccPreCheck(t) },
+        Providers:    testAccProviders,
+        CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
+        Steps: []resource.TestStep{
+            {
+                Config: testAccAWSSpotFleetRequestLaunchTemplateConfigWithOnDemandCapacity(rName, rInt),
+                Check: resource.ComposeAggregateTestCheckFunc(
+                    testAccCheckAWSSpotFleetRequestExists(
+                        "aws_spot_fleet_request.foo", &sfr),
+                    resource.TestCheckResourceAttr(
+                        "aws_spot_fleet_request.foo", "spot_request_state", "active"),
+                    resource.TestCheckResourceAttr(
+                        "aws_spot_fleet_request.foo", "launch_specification.#", "0"),
+                    resource.TestCheckResourceAttr(
+                        "aws_spot_fleet_request.foo", "launch_template_configs.#", "1"),
+                    resource.TestCheckResourceAttr(
+                        "aws_spot_fleet_request.foo", "launch_template_configs.4018047529.launch_template_specification.#", "1"),
+                    resource.TestCheckResourceAttr(
+                        "aws_spot_fleet_request.foo", "launch_template_configs.4018047529.overrides.#", "0"),
+                    resource.TestCheckResourceAttr(
+                        "aws_spot_fleet_request.foo", "on_demand_target_capacity", "2"),
+                ),
+            },
+        },
+    })
 }
 
 func TestAccAWSSpotFleetRequest_launchTemplateWithOverrides(t *testing.T) {
@@ -720,6 +720,29 @@ func TestAccAWSSpotFleetRequest_multipleInstanceTypesInSameAz(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccCheckAWSSpotFleetRequest_IamInstanceProfileArn(
+    sfr *ec2.SpotFleetRequestConfig) resource.TestCheckFunc {
+    return func(s *terraform.State) error {
+        if len(sfr.SpotFleetRequestConfig.LaunchSpecifications) == 0 {
+            return errors.New("Missing launch specification")
+        }
+
+        spec := *sfr.SpotFleetRequestConfig.LaunchSpecifications[0]
+
+        profile := spec.IamInstanceProfile
+        if profile == nil {
+            return fmt.Errorf("Expected IamInstanceProfile to be set, got nil")
+        }
+        //Validate the string whether it is ARN
+        re := regexp.MustCompile("arn:aws:iam::\\d{12}:instance-profile/?[a-zA-Z0-9+=,.@-_].*")
+        if !re.MatchString(*profile.Arn) {
+            return fmt.Errorf("Expected IamInstanceProfile input as ARN, got %s", *profile.Arn)
+        }
+
+        return nil
+    }
 }
 
 func TestAccAWSSpotFleetRequest_multipleInstanceTypesInSameSubnet(t *testing.T) {
@@ -1551,7 +1574,7 @@ resource "aws_spot_fleet_request" "foo" {
 }
 
 func testAccAWSSpotFleetRequestLaunchTemplateConfigWithOnDemandCapacity(rName string, rInt int) string {
-	return fmt.Sprintf(`
+    return fmt.Sprintf(`
 resource "aws_key_pair" "debugging" {
     key_name = "tmp-key-%s"
     public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD3F6tyPEFEzV0LX3X8BsXdMsQz1x2cEikKDEY0aIj41qgxMCP/iteneqXSIFZBp5vizPvaoIR3Um9xK7PGoW8giupGn+EPuxIA4cDM4vzOqOkiMPhz5XK0whEjkVzTo4+S0puvDZuwIsdiW9mxhJc7tgBNL0cYlWSYVkz4G/fslNfRPW5mYAM49f4fhtxPb5ok4Q2Lg9dPKVHO/Bgeu5woMc7RY0p1ej6D4CKFE6lymSDJpW0YHX/wqE9+cfEauh7xZcG0q9t2ta6F6fmX0agvpFyZo8aFbXeUBr7osSCJNgvavWbM/06niWrOvYX2xwWdhXmXSrbX8ZbabVohBK41 phodgson@thoughtworks.com"
