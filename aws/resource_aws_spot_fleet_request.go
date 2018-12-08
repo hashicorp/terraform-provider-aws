@@ -1248,7 +1248,7 @@ func flattenSpotFleetRequestLaunchTemplateOverrides(override *ec2.LaunchTemplate
 	}
 
 	if override.WeightedCapacity != nil {
-		m["weighted_capacity"] = aws.Float64Value(override.WeightedCapacity) //strconv.FormatFloat(*override.WeightedCapacity, 'f', 0, 64)
+		m["weighted_capacity"] = aws.Float64Value(override.WeightedCapacity)
 	}
 
 	return m
