@@ -69,6 +69,10 @@ func resourceAwsSecurityHubStandardRead(d *schema.ResourceData, meta interface{}
 		return nil
 	}
 
+	standardsSubscription := resp.StandardsSubscriptions[0]
+
+	d.Set("standards_arn", standardsSubscription.StandardsArn)
+
 	return nil
 }
 
