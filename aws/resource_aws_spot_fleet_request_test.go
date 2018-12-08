@@ -1393,6 +1393,7 @@ resource "aws_spot_fleet_request" "foo" {
 `, rName, rInt, rInt, rName)
 }
 
+<<<<<<< HEAD
 func testAccAWSSpotFleetRequestLaunchTemplateConfigWithOnDemandCapacity(rName string, rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_key_pair" "debugging" {
@@ -1479,6 +1480,8 @@ resource "aws_spot_fleet_request" "foo" {
 `, rName, rInt, rInt, rName)
 }
 
+=======
+>>>>>>> removed on-demand spot instance feature due to moving to a different PR
 func testAccAWSSpotFleetRequestLaunchTemplateConfigWithOverrides(rName string, rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_key_pair" "debugging" {

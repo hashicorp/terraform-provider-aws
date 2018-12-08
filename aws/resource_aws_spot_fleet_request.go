@@ -400,12 +400,6 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 				Required: true,
 				ForceNew: false,
 			},
-			"on_demand_target_capacity": {
-				Type:          schema.TypeInt,
-				ConflictsWith: []string{"launch_specification"},
-				Optional:      true,
-				ForceNew:      true,
-			},
 			"allocation_strategy": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -888,10 +882,6 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 			return err
 		}
 		spotFleetConfig.LaunchTemplateConfigs = launch_templates
-	}
-
-	if v, ok := d.GetOk("on_demand_target_capacity"); ok {
-		spotFleetConfig.OnDemandTargetCapacity = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("excess_capacity_termination_policy"); ok {

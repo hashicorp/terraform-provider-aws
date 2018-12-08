@@ -180,7 +180,6 @@ across different markets and instance types. Conflicts with `launch_template_con
 * `target_capacity` - The number of units to request. You can choose to set the
   target capacity in terms of instances or a performance characteristic that is
   important to your application workload, such as vCPUs, memory, or I/O.
-* `on_demand_target_capacity` - (Optional) The number of full-price On-Demand units to request in addition to the spot instance capacity. Use this to guarantee a minimum capacity of the fleet even in the event that the spot requests cannot be filled. Capacity is defined in the same units as configured in target_capacity such as vCPUs, memory, or I/O. Not supported by launch_specification, must be used with launch_template_configs.
 * `allocation_strategy` - Indicates how to allocate the target capacity across
   the Spot pools specified by the Spot fleet request. The default is
   `lowestPrice`.
