@@ -121,7 +121,7 @@ func testAccCheckAwsAvailabilityZonesMeta(n string) resource.TestCheckFunc {
 
 		expected := actual
 		sort.Strings(expected)
-		if reflect.DeepEqual(expected, actual) != true {
+		if !reflect.DeepEqual(expected, actual) {
 			return fmt.Errorf("AZs not sorted - expected %v, got %v", expected, actual)
 		}
 		return nil
@@ -144,10 +144,7 @@ func testAccCheckAwsAvailabilityZoneState(n string) resource.TestCheckFunc {
 		}
 
 		_, err := testAccCheckAwsAvailabilityZonesBuildAvailable(rs.Primary.Attributes)
-		if err != nil {
-			return err
-		}
-		return nil
+		return err
 	}
 }
 
