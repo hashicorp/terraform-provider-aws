@@ -133,17 +133,13 @@ func resourceAwsRDSClusterEndpointRead(d *schema.ResourceData, meta interface{})
 	d.Set("endpoint", clusterEp.Endpoint)
 	d.Set("custom_endpoint_type", clusterEp.CustomEndpointType)
 
-	excludeMembers := make([]string, 0)
-	for _, member := range clusterEp.ExcludedMembers {
-		excludeMembers = append(excludeMembers, aws.StringValue(member))
+	if err := d.Set("excluded_members", flattenStringList(clusterEp.ExcludedMembers)); err != nil {
+		return fmt.Errorf("error setting excluded_members: %s", err)
 	}
-	d.Set("excluded_members", excludeMembers)
 
-	staticMembers := make([]string, 0)
-	for _, member := range clusterEp.StaticMembers {
-		staticMembers = append(staticMembers, aws.StringValue(member))
+	if err := d.Set("static_members", flattenStringList(clusterEp.StaticMembers)); err != nil {
+		return fmt.Errorf("error setting static_members: %s", err)
 	}
-	d.Set("static_members", staticMembers)
 
 	return nil
 }
