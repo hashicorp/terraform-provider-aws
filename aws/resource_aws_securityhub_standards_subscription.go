@@ -9,26 +9,27 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-func resourceAwsSecurityHubStandardSubscription() *schema.Resource {
+func resourceAwsSecurityHubStandardsSubscription() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSecurityHubStandardSubscriptionCreate,
-		Read:   resourceAwsSecurityHubStandardSubscriptionRead,
-		Delete: resourceAwsSecurityHubStandardSubscriptionDelete,
+		Create: resourceAwsSecurityHubStandardsSubscriptionCreate,
+		Read:   resourceAwsSecurityHubStandardsSubscriptionRead,
+		Delete: resourceAwsSecurityHubStandardsSubscriptionDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
 		Schema: map[string]*schema.Schema{
 			"standards_arn": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validateArn,
 			},
 		},
 	}
 }
 
-func resourceAwsSecurityHubStandardSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsSecurityHubStandardsSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).securityhubconn
 	log.Printf("[DEBUG] Enabling Security Hub standard %s", d.Get("standards_arn"))
 
@@ -48,10 +49,10 @@ func resourceAwsSecurityHubStandardSubscriptionCreate(d *schema.ResourceData, me
 
 	d.SetId(*standardsSubscription.StandardsSubscriptionArn)
 
-	return resourceAwsSecurityHubStandardSubscriptionRead(d, meta)
+	return resourceAwsSecurityHubStandardsSubscriptionRead(d, meta)
 }
 
-func resourceAwsSecurityHubStandardSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsSecurityHubStandardsSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).securityhubconn
 
 	log.Printf("[DEBUG] Reading Security Hub standard %s", d.Id())
@@ -76,7 +77,7 @@ func resourceAwsSecurityHubStandardSubscriptionRead(d *schema.ResourceData, meta
 	return nil
 }
 
-func resourceAwsSecurityHubStandardSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsSecurityHubStandardsSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).securityhubconn
 	log.Printf("[DEBUG] Disabling Security Hub standard %s", d.Id())
 

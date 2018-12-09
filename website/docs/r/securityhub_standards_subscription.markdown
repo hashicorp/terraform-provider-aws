@@ -1,12 +1,12 @@
 ---
 layout: "aws"
-page_title: "AWS: aws_securityhub_standard_subscription"
-sidebar_current: "docs-aws-resource-securityhub-standard-subscription"
+page_title: "AWS: aws_securityhub_standards_subscription"
+sidebar_current: "docs-aws-resource-securityhub-standards-subscription"
 description: |-
   Subscribes to a Security Hub standard.
 ---
 
-# aws_securityhub_standard_subscription
+# aws_securityhub_standards_subscription
 
 Subscribes to a Security Hub standard.
 
@@ -15,7 +15,7 @@ Subscribes to a Security Hub standard.
 ```hcl
 resource "aws_securityhub_account" "example" {}
 
-resource "aws_securityhub_standard_subscription" "example" {
+resource "aws_securityhub_standards_subscription" "example" {
   depends_on    = ["aws_securityhub_account.example"]
   standards_arn = "arn:aws:securityhub:::ruleset/cis-aws-foundations-benchmark/v/1.2.0"
 }
@@ -41,8 +41,8 @@ The following attributes are exported in addition to the arguments listed above:
 
 ## Import
 
-Security Hub standards subscriptions can be imported using the standards subscription ID, e.g.
+Security Hub standards subscriptions can be imported using the standards subscription ARN, e.g.
 
 ```
-$ terraform import aws_securityhub_standard.example arn:aws:securityhub:eu-west-1:123456789012:subscription/cis-aws-foundations-benchmark/v/1.2.0
+$ terraform import aws_securityhub_standards_subscription.example arn:aws:securityhub:eu-west-1:123456789012:subscription/cis-aws-foundations-benchmark/v/1.2.0
 ```

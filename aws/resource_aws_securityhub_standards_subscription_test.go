@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAWSSecurityHubStandardSubscription_basic(t *testing.T) {
+func TestAccAWSSecurityHubStandardsSubscription_basic(t *testing.T) {
 	var standardsSubscription *securityhub.StandardsSubscription
 
 	resource.Test(t, resource.TestCase{
@@ -18,27 +18,27 @@ func TestAccAWSSecurityHubStandardSubscription_basic(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSecurityHubStandardSubscriptionConfig_basic,
+				Config: testAccAWSSecurityHubStandardsSubscriptionConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSecurityHubStandardSubscriptionExists("aws_securityhub_standard_subscription.example", standardsSubscription),
+					testAccCheckAWSSecurityHubStandardsSubscriptionExists("aws_securityhub_standards_subscription.example", standardsSubscription),
 				),
 			},
 			{
-				ResourceName:      "aws_securityhub_standard_subscription.example",
+				ResourceName:      "aws_securityhub_standards_subscription.example",
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
 				// Check Destroy - but only target the specific resource (otherwise Security Hub
 				// will be disabled and the destroy check will fail)
-				Config: testAccAWSSecurityHubStandardSubscriptionConfig_empty,
-				Check:  testAccCheckAWSSecurityHubStandardSubscriptionDestroy,
+				Config: testAccAWSSecurityHubStandardsSubscriptionConfig_empty,
+				Check:  testAccCheckAWSSecurityHubStandardsSubscriptionDestroy,
 			},
 		},
 	})
 }
 
-func testAccCheckAWSSecurityHubStandardSubscriptionExists(n string, standardsSubscription *securityhub.StandardsSubscription) resource.TestCheckFunc {
+func testAccCheckAWSSecurityHubStandardsSubscriptionExists(n string, standardsSubscription *securityhub.StandardsSubscription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -65,11 +65,11 @@ func testAccCheckAWSSecurityHubStandardSubscriptionExists(n string, standardsSub
 	}
 }
 
-func testAccCheckAWSSecurityHubStandardSubscriptionDestroy(s *terraform.State) error {
+func testAccCheckAWSSecurityHubStandardsSubscriptionDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).securityhubconn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_securityhub_standard_subscription" {
+		if rs.Type != "aws_securityhub_standards_subscription" {
 			continue
 		}
 
@@ -94,14 +94,14 @@ func testAccCheckAWSSecurityHubStandardSubscriptionDestroy(s *terraform.State) e
 	return nil
 }
 
-const testAccAWSSecurityHubStandardSubscriptionConfig_empty = `
+const testAccAWSSecurityHubStandardsSubscriptionConfig_empty = `
 resource "aws_securityhub_account" "example" {}
 `
 
-const testAccAWSSecurityHubStandardSubscriptionConfig_basic = `
+const testAccAWSSecurityHubStandardsSubscriptionConfig_basic = `
 resource "aws_securityhub_account" "example" {}
 
-resource "aws_securityhub_standard_subscription" "example" {
+resource "aws_securityhub_standards_subscription" "example" {
   depends_on    = ["aws_securityhub_account.example"]
   standards_arn = "arn:aws:securityhub:::ruleset/cis-aws-foundations-benchmark/v/1.2.0"
 }
