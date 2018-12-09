@@ -7,23 +7,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/securityhub"
-	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccAWSSecurityHubMember_basic(t *testing.T) {
 	var member securityhub.Member
-
-	orgsEmailDomain, ok := os.LookupEnv("TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN")
-
-	if !ok {
-		t.Skip("'TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN' not set, skipping test.")
-	}
-
-	rInt := acctest.RandInt()
-	name := fmt.Sprintf("tf_acctest_%d", rInt)
-	email := fmt.Sprintf("tf-acctest+%d@%s", rInt, orgsEmailDomain)
+	resourceName := "aws_securityhub_member.example"
+	accountId, email := testAccAWSSecurityHubMemberFromEnv(t)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -31,18 +22,105 @@ func TestAccAWSSecurityHubMember_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSSecurityHubMemberDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSecurityHubMemberConfig(name, email),
+				Config: testAccAWSSecurityHubMemberConfig_basic(accountId, email),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSecurityHubMemberExists("aws_securityhub_member.example", &member),
+					testAccCheckAWSSecurityHubMemberExists(resourceName, &member),
 				),
 			},
 			{
-				ResourceName:      "aws_securityhub_member.example",
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 		},
 	})
+}
+
+func TestAccAWSSecurityHubMember_invite_create(t *testing.T) {
+	var member securityhub.Member
+	resourceName := "aws_securityhub_member.example"
+	accountId, email := testAccAWSSecurityHubMemberFromEnv(t)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSecurityHubMemberDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSecurityHubMemberConfig_invite(accountId, email, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSecurityHubMemberExists(resourceName, &member),
+					resource.TestCheckResourceAttr(resourceName, "member_status", "Invited"),
+					resource.TestCheckResourceAttr(resourceName, "invite", "true"),
+				),
+			},
+			// Disassociate member
+			{
+				Config: testAccAWSSecurityHubMemberConfig_invite(accountId, email, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSecurityHubMemberExists(resourceName, &member),
+					// These may fail: https://github.com/aws/aws-sdk-go/issues/2332#issuecomment-445535357
+					resource.TestCheckResourceAttr(resourceName, "member_status", "Removed"),
+					resource.TestCheckResourceAttr(resourceName, "invite", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSSecurityHubMember_invite_update(t *testing.T) {
+	var member securityhub.Member
+	resourceName := "aws_securityhub_member.example"
+	accountId, email := testAccAWSSecurityHubMemberFromEnv(t)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSecurityHubMemberDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSecurityHubMemberConfig_invite(accountId, email, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSecurityHubMemberExists(resourceName, &member),
+					resource.TestCheckResourceAttr(resourceName, "member_status", "Created"),
+					resource.TestCheckResourceAttr(resourceName, "invite", "false"),
+				),
+			},
+			// Invite member
+			{
+				Config: testAccAWSSecurityHubMemberConfig_invite(accountId, email, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSecurityHubMemberExists(resourceName, &member),
+					resource.TestCheckResourceAttr(resourceName, "member_status", "Invited"),
+					resource.TestCheckResourceAttr(resourceName, "invite", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccAWSSecurityHubMemberFromEnv(t *testing.T) (string, string) {
+	accountId := os.Getenv("AWS_ALTERNATE_ACCOUNT_ID")
+	if accountId == "" {
+		accountId = "111111111111"
+	}
+
+	email := os.Getenv("AWS_ALTERNATE_EMAIL")
+	if email == "" {
+		email = "example@example.com"
+	}
+
+	return accountId, email
 }
 
 func testAccCheckAWSSecurityHubMemberExists(n string, member *securityhub.Member) resource.TestCheckFunc {
@@ -92,7 +170,7 @@ func testAccCheckAWSSecurityHubMemberDestroy(s *terraform.State) error {
 		}
 
 		if len(resp.Members) != 0 {
-			return fmt.Errorf("API Gateway Resource still exists")
+			return fmt.Errorf("Security Hub member still exists")
 		}
 
 		return nil
@@ -101,16 +179,27 @@ func testAccCheckAWSSecurityHubMemberDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSSecurityHubMemberConfig(name, email string) string {
+func testAccAWSSecurityHubMemberConfig_basic(accountId, email string) string {
 	return fmt.Sprintf(`
-resource "aws_organizations_account" "example" {
-  name  = "%s"
-  email = "%s"
-}
+resource "aws_securityhub_account" "example" {}
 
 resource "aws_securityhub_member" "example" {
-  account_id = "${aws_organizations_account.example.id}"
+  depends_on = ["aws_securityhub_account.example"]
+  account_id = "%s"
   email      = "%s"
 }
-`, name, email, email)
+`, accountId, email)
+}
+
+func testAccAWSSecurityHubMemberConfig_invite(accountId, email string, invite bool) string {
+	return fmt.Sprintf(`
+resource "aws_securityhub_account" "example" {}
+
+resource "aws_securityhub_member" "example" {
+  depends_on = ["aws_securityhub_account.example"]
+  account_id = "%s"
+  email      = "%s"
+  invite     = %t
+}
+`, accountId, email, invite)
 }

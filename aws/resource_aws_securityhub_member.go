@@ -9,10 +9,19 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
+const (
+	SecurityHubMemberStatusCreated    = "Created"
+	SecurityHubMemberStatusInvited    = "Invited"
+	SecurityHubMemberStatusAssociated = "Associated"
+	SecurityHubMemberStatusResigned   = "Resigned"
+	SecurityHubMemberStatusRemoved    = "Removed"
+)
+
 func resourceAwsSecurityHubMember() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsSecurityHubMemberCreate,
 		Read:   resourceAwsSecurityHubMemberRead,
+		Update: resourceAwsSecurityHubMemberUpdate,
 		Delete: resourceAwsSecurityHubMemberDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -20,15 +29,27 @@ func resourceAwsSecurityHubMember() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"account_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validateAwsAccountId,
 			},
-
 			"email": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+			},
+			"invite": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"master_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"member_status": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 		},
 	}
@@ -48,14 +69,31 @@ func resourceAwsSecurityHubMemberCreate(d *schema.ResourceData, meta interface{}
 	})
 
 	if err != nil {
-		return fmt.Errorf("Error creating Security Hub member: %s", err)
+		return fmt.Errorf("Error creating Security Hub member %s: %s", d.Get("account_id").(string), err)
 	}
 
 	if len(resp.UnprocessedAccounts) > 0 {
-		return fmt.Errorf("Error creating Security Hub member: UnprocessedAccounts is not empty")
+		return fmt.Errorf("Error creating Security Hub member %s: UnprocessedAccounts is not empty", d.Get("account_id").(string))
 	}
 
 	d.SetId(d.Get("account_id").(string))
+
+	if !d.Get("invite").(bool) {
+		return resourceAwsSecurityHubMemberRead(d, meta)
+	}
+
+	log.Printf("[INFO] Inviting Security Hub member %s", d.Id())
+	iresp, err := conn.InviteMembers(&securityhub.InviteMembersInput{
+		AccountIds: []*string{aws.String(d.Get("account_id").(string))},
+	})
+
+	if err != nil {
+		return fmt.Errorf("Error inviting Security Hub member %s: %s", d.Id(), err)
+	}
+
+	if len(iresp.UnprocessedAccounts) > 0 {
+		return fmt.Errorf("Error inviting Security Hub member %s: UnprocessedAccounts is not empty", d.Id())
+	}
 
 	return resourceAwsSecurityHubMemberRead(d, meta)
 }
@@ -87,8 +125,51 @@ func resourceAwsSecurityHubMemberRead(d *schema.ResourceData, meta interface{}) 
 
 	d.Set("account_id", member.AccountId)
 	d.Set("email", member.Email)
+	d.Set("master_id", member.MasterId)
+
+	status := aws.StringValue(member.MemberStatus)
+	d.Set("member_status", status)
+
+	d.Set("invite", false)
+	if status == SecurityHubMemberStatusInvited || status == SecurityHubMemberStatusAssociated || status == SecurityHubMemberStatusRemoved {
+		d.Set("invite", true)
+	}
 
 	return nil
+}
+
+func resourceAwsSecurityHubMemberUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).securityhubconn
+
+	if d.HasChange("invite") {
+		if d.Get("invite").(bool) {
+			log.Printf("[INFO] Inviting Security Hub member %s", d.Id())
+
+			resp, err := conn.InviteMembers(&securityhub.InviteMembersInput{
+				AccountIds: []*string{aws.String(d.Get("account_id").(string))},
+			})
+
+			if err != nil {
+				return fmt.Errorf("Error inviting Security Hub member %s: %s", d.Id(), err)
+			}
+
+			if len(resp.UnprocessedAccounts) > 0 {
+				return fmt.Errorf("Error inviting Security Hub member %s: UnprocessedAccounts is not empty", d.Id())
+			}
+		} else {
+			log.Printf("[INFO] Disassociating Security Hub member %s", d.Id())
+
+			_, err := conn.DisassociateMembers(&securityhub.DisassociateMembersInput{
+				AccountIds: []*string{aws.String(d.Id())},
+			})
+
+			if err != nil {
+				return fmt.Errorf("Error disassociating Security Hub member %s: %s", d.Id(), err)
+			}
+		}
+	}
+
+	return resourceAwsSecurityHubMemberRead(d, meta)
 }
 
 func resourceAwsSecurityHubMemberDelete(d *schema.ResourceData, meta interface{}) error {
@@ -104,7 +185,7 @@ func resourceAwsSecurityHubMemberDelete(d *schema.ResourceData, meta interface{}
 			log.Printf("[WARN] Security Hub member (%s) not found", d.Id())
 			return nil
 		}
-		return err
+		return fmt.Errorf("Error deleting Security Hub member %s: %s", d.Id(), err)
 	}
 
 	return nil

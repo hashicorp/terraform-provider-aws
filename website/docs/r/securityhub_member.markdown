@@ -18,6 +18,7 @@ resource "aws_securityhub_account" "example" {}
 resource "aws_securityhub_member" "example" {
   account_id = "123456789012"
   email      = "example@example.com"
+  invite     = true
 }
 ```
 
@@ -27,12 +28,15 @@ The following arguments are supported:
 
 * `account_id` - (Required) The ID of the member AWS account.
 * `email` - (Required) The email of the member AWS account.
+* `invite` - (Optional) Boolean whether to invite the account to Security Hub as a member. Defaults to `false`.
 
 ## Attributes Reference
 
 The following attributes are exported in addition to the arguments listed above:
 
 * `id` - The ID of the member AWS account (matches `account_id`).
+* `master_id` - The ID of the master Security Hub AWS account.
+* `member_status` - The status of the relationship between the member account and its master account.
 
 ## Import
 
