@@ -17,7 +17,7 @@ This datasource may be useful when waiting to access or upload content to a S3 b
 ### Writing to a presigned URL in a AWS instances user data
 
 ```hcl
-data "aws_bucket_presigned_url" "presigned_url" {
+data "aws_s3_bucket_presigned_url" "presigned_url" {
   bucket = "ourcorp-deploy-config"
   key = "some/file.txt"
   expiration_time = 300 // 5 minutes
@@ -30,7 +30,7 @@ resource "aws_instance" "instance" {
   user_data = <<-EOF
     #!/bin/bash
     echo test >> file.txt
-    curl -T file.txt ${data.aws_bucket_presigned_url.presigned_url.url} 
+    curl -T file.txt ${data.aws_s3_bucket_presigned_url.presigned_url.url} 
   EOF
 }
 ```
@@ -38,7 +38,7 @@ resource "aws_instance" "instance" {
 ### Downloading a file from a presigned URL in a AWS instances user data
 
 ```hcl
-data "aws_bucket_presigned_url" "presigned_url" {
+data "aws_s3_bucket_presigned_url" "presigned_url" {
   bucket = "ourcorp-deploy-config"
   key = "some/file.txt"
   expiration_time = 300 // 5 minutes
@@ -49,7 +49,7 @@ resource "aws_instance" "instance" {
   ami           = "ami-2757f631"
   user_data = <<-EOF
     #!/bin/bash
-    curl ${data.aws_bucket_presigned_url.presigned_url.url} >> file.txt
+    curl ${data.aws_s3_bucket_presigned_url.presigned_url.url} >> file.txt
   EOF
 }
 ```
