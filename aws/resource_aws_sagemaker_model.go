@@ -39,7 +39,7 @@ func resourceAwsSagemakerModel() *schema.Resource {
 			"primary_container": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
-				Required: true,
+				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"container_hostname": {
@@ -84,11 +84,13 @@ func resourceAwsSagemakerModel() *schema.Resource {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
+							Set:      schema.HashString,
 						},
 						"security_group_ids": {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
+							Set:      schema.HashString,
 						},
 					},
 				},
@@ -98,6 +100,47 @@ func resourceAwsSagemakerModel() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+			},
+
+			"enable_network_isolation": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+
+			"container": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"container_hostname": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validateSagemakerName,
+						},
+
+						"image": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: validateSagemakerImage,
+						},
+
+						"model_data_url": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validateSagemakerModelDataUrl,
+						},
+
+						"environment": {
+							Type:         schema.TypeMap,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validateSagemakerEnvironment,
+						},
+					},
+				},
 			},
 
 			"tags": tagsSchema(),
@@ -119,21 +162,31 @@ func resourceAwsSagemakerModelCreate(d *schema.ResourceData, meta interface{}) e
 		ModelName: aws.String(name),
 	}
 
-	pContainer := d.Get("primary_container").([]interface{})
-	m := pContainer[0].(map[string]interface{})
-	createOpts.PrimaryContainer = expandPrimaryContainers(m)
+	if v, ok := d.GetOk("primary_container"); ok {
+		m := v.([]interface{})[0].(map[string]interface{})
+		createOpts.PrimaryContainer = expandContainer(m)
+	}
+
+	if v, ok := d.GetOk("container"); ok {
+		containers := expandContainers(v.([]interface{}))
+		createOpts.SetContainers(containers)
+	}
 
 	if v, ok := d.GetOk("execution_role_arn"); ok {
-		createOpts.ExecutionRoleArn = aws.String(v.(string))
+		createOpts.SetExecutionRoleArn(v.(string))
 	}
 
 	if v, ok := d.GetOk("tags"); ok {
-		createOpts.Tags = tagsFromMapSagemaker(v.(map[string]interface{}))
+		createOpts.SetTags(tagsFromMapSagemaker(v.(map[string]interface{})))
 	}
 
 	if v, ok := d.GetOk("vpc_config"); ok {
 		vpcConfig := expandSageMakerVpcConfigRequest(v.([]interface{}))
 		createOpts.SetVpcConfig(vpcConfig)
+	}
+
+	if v, ok := d.GetOk("enable_network_isolation"); ok {
+		createOpts.SetEnableNetworkIsolation(v.(bool))
 	}
 
 	log.Printf("[DEBUG] Sagemaker model create config: %#v", *createOpts)
@@ -144,6 +197,7 @@ func resourceAwsSagemakerModelCreate(d *schema.ResourceData, meta interface{}) e
 	if err != nil {
 		return fmt.Errorf("error creating Sagemaker model: %s", err)
 	}
+	d.SetId(name)
 
 	return resourceAwsSagemakerModelRead(d, meta)
 }
@@ -187,7 +241,10 @@ func resourceAwsSagemakerModelRead(d *schema.ResourceData, meta interface{}) err
 	if err := d.Set("execution_role_arn", model.ExecutionRoleArn); err != nil {
 		return err
 	}
-	if err := d.Set("primary_container", flattenPrimaryContainer(model.PrimaryContainer)); err != nil {
+	if err := d.Set("primary_container", flattenContainer(model.PrimaryContainer)); err != nil {
+		return err
+	}
+	if err := d.Set("container", flattenContainers(model.Containers)); err != nil {
 		return err
 	}
 	if err := d.Set("vpc_config", flattenSageMakerVpcConfigResponse(model.VpcConfig)); err != nil {
@@ -259,7 +316,7 @@ func resourceAwsSagemakerModelDelete(d *schema.ResourceData, meta interface{}) e
 	})
 }
 
-func expandPrimaryContainers(m map[string]interface{}) *sagemaker.ContainerDefinition {
+func expandContainer(m map[string]interface{}) *sagemaker.ContainerDefinition {
 	container := sagemaker.ContainerDefinition{
 		Image: aws.String(m["image"].(string)),
 	}
@@ -277,7 +334,21 @@ func expandPrimaryContainers(m map[string]interface{}) *sagemaker.ContainerDefin
 	return &container
 }
 
-func flattenPrimaryContainer(container *sagemaker.ContainerDefinition) []interface{} {
+func expandContainers(a []interface{}) []*sagemaker.ContainerDefinition {
+	containers := make([]*sagemaker.ContainerDefinition, 0, len(a))
+
+	for _, m := range a {
+		containers = append(containers, expandContainer(m.(map[string]interface{})))
+	}
+
+	return containers
+}
+
+func flattenContainer(container *sagemaker.ContainerDefinition) []interface{} {
+	if container == nil {
+		return []interface{}{}
+	}
+
 	cfg := make(map[string]interface{}, 0)
 
 	cfg["image"] = *container.Image
@@ -293,6 +364,14 @@ func flattenPrimaryContainer(container *sagemaker.ContainerDefinition) []interfa
 	}
 
 	return []interface{}{cfg}
+}
+
+func flattenContainers(containers []*sagemaker.ContainerDefinition) []interface{} {
+	fContainers := make([]interface{}, 0, len(containers))
+	for _, container := range containers {
+		fContainers = append(fContainers, flattenContainer(container)[0].(map[string]interface{}))
+	}
+	return fContainers
 }
 
 func flattenEnvironment(env map[string]*string) map[string]string {

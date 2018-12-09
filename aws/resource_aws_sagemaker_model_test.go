@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"reflect"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -56,8 +55,8 @@ func testSweepSagemakerModels(region string) error {
 }
 
 func TestAccAWSSagemakerModel_importBasic(t *testing.T) {
-	resourceName := "aws_sagemaker_model.foo"
 	rName := acctest.RandString(10)
+	image := "174872318107.dkr.ecr.us-west-2.amazonaws.com/kmeans:1"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -65,11 +64,11 @@ func TestAccAWSSagemakerModel_importBasic(t *testing.T) {
 		CheckDestroy: testAccCheckSagemakerModelDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSagemakerModelConfig(rName),
+				Config: testAccSagemakerModelConfig(rName, image),
 			},
 
 			{
-				ResourceName:      resourceName,
+				ResourceName:      "aws_sagemaker_model.foo",
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -78,8 +77,8 @@ func TestAccAWSSagemakerModel_importBasic(t *testing.T) {
 }
 
 func TestAccAWSSagemakerModel_basic(t *testing.T) {
-	var model sagemaker.DescribeModelOutput
 	rName := acctest.RandString(10)
+	image := "174872318107.dkr.ecr.us-west-2.amazonaws.com/kmeans:1"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -87,16 +86,16 @@ func TestAccAWSSagemakerModel_basic(t *testing.T) {
 		CheckDestroy: testAccCheckSagemakerModelDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSagemakerModelConfig(rName),
+				Config: testAccSagemakerModelConfig(rName, image),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSagemakerModelExists("aws_sagemaker_model.foo", &model),
+					testAccCheckSagemakerModelExists("aws_sagemaker_model.foo"),
 
 					resource.TestCheckResourceAttr(
-						"aws_sagemaker_model.foo", "name", "terraform-testacc-sagemaker-model-foo"),
+						"aws_sagemaker_model.foo", "name",
+						fmt.Sprintf("terraform-testacc-sagemaker-model-%s", rName)),
 					resource.TestCheckResourceAttr("aws_sagemaker_model.foo", "primary_container.#", "1"),
 					resource.TestCheckResourceAttr(
-						"aws_sagemaker_model.foo", "primary_container.0.image",
-						"174872318107.dkr.ecr.us-west-2.amazonaws.com/kmeans:1"),
+						"aws_sagemaker_model.foo", "primary_container.0.image", image),
 					resource.TestCheckResourceAttrSet("aws_sagemaker_model.foo", "execution_role_arn"),
 					resource.TestCheckResourceAttrSet("aws_sagemaker_model.foo", "arn"),
 				),
@@ -106,7 +105,6 @@ func TestAccAWSSagemakerModel_basic(t *testing.T) {
 }
 
 func TestAccAWSSagemakerModel_tags(t *testing.T) {
-	var model sagemaker.DescribeModelOutput
 	rName := acctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -117,11 +115,7 @@ func TestAccAWSSagemakerModel_tags(t *testing.T) {
 			{
 				Config: testAccSagemakerModelConfigTags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSagemakerModelExists("aws_sagemaker_model.foo", &model),
-					testAccCheckSagemakerTags(&model, "foo", "bar"),
-
-					resource.TestCheckResourceAttr(
-						"aws_sagemaker_model.foo", "name", "terraform-testacc-sagemaker-model-foo"),
+					testAccCheckSagemakerModelExists("aws_sagemaker_model.foo"),
 					resource.TestCheckResourceAttr("aws_sagemaker_model.foo", "tags.%", "1"),
 					resource.TestCheckResourceAttr("aws_sagemaker_model.foo", "tags.foo", "bar"),
 				),
@@ -129,10 +123,7 @@ func TestAccAWSSagemakerModel_tags(t *testing.T) {
 			{
 				Config: testAccSagemakerModelConfigTagsUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSagemakerModelExists("aws_sagemaker_model.foo", &model),
-					testAccCheckSagemakerTags(&model, "foo", ""),
-					testAccCheckSagemakerTags(&model, "bar", "baz"),
-
+					testAccCheckSagemakerModelExists("aws_sagemaker_model.foo"),
 					resource.TestCheckResourceAttr("aws_sagemaker_model.foo", "tags.%", "1"),
 					resource.TestCheckResourceAttr("aws_sagemaker_model.foo", "tags.bar", "baz"),
 				),
@@ -142,8 +133,8 @@ func TestAccAWSSagemakerModel_tags(t *testing.T) {
 }
 
 func TestAccAWSSagemakerModel_primaryContainerModelDataUrl(t *testing.T) {
-	var model sagemaker.DescribeModelOutput
 	rName := acctest.RandString(10)
+	modelDataUrl := fmt.Sprintf("https://s3-us-west-2.amazonaws.com/terraform-testacc-sagemaker-model-data-bucket-%s/model.tar.gz", rName)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -151,15 +142,11 @@ func TestAccAWSSagemakerModel_primaryContainerModelDataUrl(t *testing.T) {
 		CheckDestroy: testAccCheckSagemakerModelDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSagemakerPrimaryContainerModelDataUrlConfig(rName),
+				Config: testAccSagemakerPrimaryContainerModelDataUrlConfig(rName, modelDataUrl),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSagemakerModelExists("aws_sagemaker_model.foo", &model),
-					testAccCheckSagemakerModelPrimaryContainerModelDataUrl(&model,
-						"https://s3-us-west-2.amazonaws.com/terraform-testacc-sagemaker-model-data-bucket/model.tar.gz"),
-
+					testAccCheckSagemakerModelExists("aws_sagemaker_model.foo"),
 					resource.TestCheckResourceAttr("aws_sagemaker_model.foo",
-						"primary_container.0.model_data_url",
-						"https://s3-us-west-2.amazonaws.com/terraform-testacc-sagemaker-model-data-bucket/model.tar.gz"),
+						"primary_container.0.model_data_url", modelDataUrl),
 				),
 			},
 		},
@@ -167,7 +154,6 @@ func TestAccAWSSagemakerModel_primaryContainerModelDataUrl(t *testing.T) {
 }
 
 func TestAccAWSSagemakerModel_primaryContainerHostname(t *testing.T) {
-	var model sagemaker.DescribeModelOutput
 	rName := acctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -178,11 +164,9 @@ func TestAccAWSSagemakerModel_primaryContainerHostname(t *testing.T) {
 			{
 				Config: testAccSagemakerPrimaryContainerHostnameConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSagemakerModelExists("aws_sagemaker_model.foo", &model),
-					testAccCheckSagemakerModelPrimaryContainerHostname(&model, "primary-hostname-foo"),
-
+					testAccCheckSagemakerModelExists("aws_sagemaker_model.foo"),
 					resource.TestCheckResourceAttr("aws_sagemaker_model.foo",
-						"primary_container.0.container_hostname", "primary-hostname-foo"),
+						"primary_container.0.container_hostname", "foo"),
 				),
 			},
 		},
@@ -190,10 +174,6 @@ func TestAccAWSSagemakerModel_primaryContainerHostname(t *testing.T) {
 }
 
 func TestAccAWSSagemakerModel_primaryContainerEnvironment(t *testing.T) {
-	var model sagemaker.DescribeModelOutput
-	environment := map[string]*string{
-		"foo": aws.String("bar"),
-	}
 	rName := acctest.RandString(10)
 
 	resource.Test(t, resource.TestCase{
@@ -204,13 +184,77 @@ func TestAccAWSSagemakerModel_primaryContainerEnvironment(t *testing.T) {
 			{
 				Config: testAccSagemakerPrimaryContainerEnvironmentConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSagemakerModelExists("aws_sagemaker_model.foo", &model),
-					testAccCheckSagemakerModelPrimaryContainerEnvironment(&model, environment),
-
+					testAccCheckSagemakerModelExists("aws_sagemaker_model.foo"),
 					resource.TestCheckResourceAttr("aws_sagemaker_model.foo",
 						"primary_container.0.environment.%", "1"),
 					resource.TestCheckResourceAttr("aws_sagemaker_model.foo",
 						"primary_container.0.environment.foo", "bar"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSagemakerModel_containers(t *testing.T) {
+	rName := acctest.RandString(10)
+	image := "174872318107.dkr.ecr.us-west-2.amazonaws.com/kmeans:1"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckSagemakerModelDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSagemakerModelContainers(rName, image),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSagemakerModelExists("aws_sagemaker_model.foo"),
+					resource.TestCheckResourceAttr("aws_sagemaker_model.foo", "container.#", "2"),
+					resource.TestCheckResourceAttr(
+						"aws_sagemaker_model.foo", "container.0.image", image),
+					resource.TestCheckResourceAttr(
+						"aws_sagemaker_model.foo", "container.1.image", image),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSagemakerModel_vpcConfig(t *testing.T) {
+	rName := acctest.RandString(10)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckSagemakerModelDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSagemakerModelVpcConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSagemakerModelExists("aws_sagemaker_model.foo"),
+					resource.TestCheckResourceAttr("aws_sagemaker_model.foo", "vpc_config.#", "1"),
+					resource.TestCheckResourceAttr("aws_sagemaker_model.foo", "vpc_config.0.subnets.#", "2"),
+					resource.TestCheckResourceAttr("aws_sagemaker_model.foo", "vpc_config.0.security_group_ids.#", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSagemakerModel_networkIsolation(t *testing.T) {
+	rName := acctest.RandString(10)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckSagemakerModelDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSagemakerModelNetworkIsolation(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSagemakerModelExists("aws_sagemaker_model.foo"),
+
+					resource.TestCheckResourceAttr(
+						"aws_sagemaker_model.foo", "enable_network_isolation", "true"),
 				),
 			},
 		},
@@ -230,7 +274,7 @@ func testAccCheckSagemakerModelDestroy(s *terraform.State) error {
 		})
 		if err == nil {
 			if len(resp.Models) > 0 {
-				return fmt.Errorf("Sagemaker models still exist.")
+				return fmt.Errorf("Sagemaker models still exist")
 			}
 
 			return nil
@@ -248,7 +292,7 @@ func testAccCheckSagemakerModelDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckSagemakerModelExists(n string, model *sagemaker.DescribeModelOutput) resource.TestCheckFunc {
+func testAccCheckSagemakerModelExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -263,88 +307,23 @@ func testAccCheckSagemakerModelExists(n string, model *sagemaker.DescribeModelOu
 		DescribeModelOpts := &sagemaker.DescribeModelInput{
 			ModelName: aws.String(rs.Primary.ID),
 		}
-		resp, err := conn.DescribeModel(DescribeModelOpts)
+		_, err := conn.DescribeModel(DescribeModelOpts)
 		if err != nil {
 			return err
 		}
 
-		*model = *resp
 		return nil
 	}
 }
 
-func testAccCheckSagemakerTags(model *sagemaker.DescribeModelOutput, key string, value string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
-
-		ts, err := conn.ListTags(&sagemaker.ListTagsInput{
-			ResourceArn: model.ModelArn,
-		})
-		if err != nil {
-			return fmt.Errorf("Error listing tags: %s", err)
-		}
-
-		m := tagsToMapSagemaker(ts.Tags)
-		v, ok := m[key]
-		if value != "" && !ok {
-			return fmt.Errorf("Missing tag: %s", key)
-		} else if value == "" && ok {
-			return fmt.Errorf("Extra tag: %s", key)
-		}
-		if value == "" {
-			return nil
-		}
-
-		if v != value {
-			return fmt.Errorf("%s: bad value: %s", key, v)
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckSagemakerModelPrimaryContainerModelDataUrl(model *sagemaker.DescribeModelOutput, expected string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		modelDataUrl := model.PrimaryContainer.ModelDataUrl
-		if *modelDataUrl != expected {
-			return fmt.Errorf("Bad model data url of primary container: %s", *modelDataUrl)
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckSagemakerModelPrimaryContainerHostname(model *sagemaker.DescribeModelOutput, expected string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		hostname := model.PrimaryContainer.ContainerHostname
-		if *hostname != expected {
-			return fmt.Errorf("Bad container hostname of primary container: %s", *hostname)
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckSagemakerModelPrimaryContainerEnvironment(model *sagemaker.DescribeModelOutput, expected map[string]*string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		environment := model.PrimaryContainer.Environment
-
-		if !reflect.DeepEqual(environment, expected) {
-			return fmt.Errorf("Bad environment of primary container.")
-		}
-
-		return nil
-	}
-}
-
-func testAccSagemakerModelConfig(rName string) string {
+func testAccSagemakerModelConfig(rName string, image string) string {
 	return fmt.Sprintf(`
-esource "aws_sagemaker_model" "foo" {
+resource "aws_sagemaker_model" "foo" {
 	name = "terraform-testacc-sagemaker-model-%s"
 	execution_role_arn = "${aws_iam_role.foo.arn}"
 
 	primary_container {
-		image = "174872318107.dkr.ecr.us-west-2.amazonaws.com/kmeans:1"
+		image = "%s"
 	}
 }
 
@@ -363,7 +342,7 @@ data "aws_iam_policy_document" "assume_role" {
     }
   }
 }
-`, rName, rName)
+`, rName, image, rName)
 }
 
 func testAccSagemakerModelConfigTags(rName string) string {
@@ -432,7 +411,7 @@ data "aws_iam_policy_document" "assume_role" {
 `, rName, rName)
 }
 
-func testAccSagemakerPrimaryContainerModelDataUrlConfig(rName string) string {
+func testAccSagemakerPrimaryContainerModelDataUrlConfig(rName string, modelDataUrl string) string {
 	return fmt.Sprintf(`
 resource "aws_sagemaker_model" "foo" {
 	name = "terraform-testacc-sagemaker-model-%s"
@@ -440,7 +419,7 @@ resource "aws_sagemaker_model" "foo" {
 
 	primary_container {
 		image = "174872318107.dkr.ecr.us-west-2.amazonaws.com/kmeans:1"
-		model_data_url = "https://s3-us-west-2.amazonaws.com/${aws_s3_bucket.foo.bucket}/model.tar.gz"
+		model_data_url = "%s"
 	}
 }
 
@@ -511,7 +490,7 @@ resource "aws_s3_bucket_object" "object" {
   key    = "model.tar.gz"
   content = "some-data"
 }
-`, rName, rName, rName)
+`, rName, modelDataUrl, rName, rName, rName)
 }
 
 func testAccSagemakerPrimaryContainerHostnameConfig(rName string) string {
@@ -522,7 +501,7 @@ resource "aws_sagemaker_model" "foo" {
 
 	primary_container {
 		image = "174872318107.dkr.ecr.us-west-2.amazonaws.com/kmeans:1"
-		container_hostname = "primary-hostname-foo"
+		container_hostname = "foo"
 	}
 }
 
@@ -574,4 +553,138 @@ data "aws_iam_policy_document" "assume_role" {
   }
 }
 `, rName, rName)
+}
+
+func testAccSagemakerModelContainers(rName string, image string) string {
+	return fmt.Sprintf(`
+resource "aws_sagemaker_model" "foo" {
+	name = "terraform-testacc-sagemaker-model-%s"
+	execution_role_arn = "${aws_iam_role.foo.arn}"
+
+	container {
+		image = "%s"
+	}
+
+	container {
+		image = "%s"
+	}
+}
+
+resource "aws_iam_role" "foo" {
+  name = "terraform-testacc-sagemaker-model-%s"
+  path = "/"
+  assume_role_policy = "${data.aws_iam_policy_document.assume_role.json}"
+}
+
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    actions = [ "sts:AssumeRole" ]
+    principals {
+      type = "Service"
+      identifiers = [ "sagemaker.amazonaws.com" ]
+    }
+  }
+}
+`, rName, image, image, rName)
+}
+
+func testAccSagemakerModelNetworkIsolation(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_sagemaker_model" "foo" {
+	name = "terraform-testacc-sagemaker-model-%s"
+	execution_role_arn = "${aws_iam_role.foo.arn}"
+	enable_network_isolation = true
+
+    primary_container {
+		image = "174872318107.dkr.ecr.us-west-2.amazonaws.com/kmeans:1"
+	}
+}
+
+resource "aws_iam_role" "foo" {
+  name = "terraform-testacc-sagemaker-model-%s"
+  path = "/"
+  assume_role_policy = "${data.aws_iam_policy_document.assume_role.json}"
+}
+
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    actions = [ "sts:AssumeRole" ]
+    principals {
+      type = "Service"
+      identifiers = [ "sagemaker.amazonaws.com" ]
+    }
+  }
+}
+`, rName, rName)
+}
+
+func testAccSagemakerModelVpcConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_sagemaker_model" "foo" {
+	name = "terraform-testacc-sagemaker-model-%s"
+	execution_role_arn = "${aws_iam_role.foo.arn}"
+	enable_network_isolation = true
+
+    primary_container {
+		image = "174872318107.dkr.ecr.us-west-2.amazonaws.com/kmeans:1"
+	}
+
+    vpc_config {
+      subnets = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
+      security_group_ids = ["${aws_security_group.foo.id}", "${aws_security_group.bar.id}"]
+    }
+
+}
+
+resource "aws_iam_role" "foo" {
+  name = "terraform-testacc-sagemaker-model-%s"
+  path = "/"
+  assume_role_policy = "${data.aws_iam_policy_document.assume_role.json}"
+}
+
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    actions = [ "sts:AssumeRole" ]
+    principals {
+      type = "Service"
+      identifiers = [ "sagemaker.amazonaws.com" ]
+    }
+  }
+}
+
+resource "aws_vpc" "foo" {
+	cidr_block = "10.1.0.0/16"
+	tags {
+		Name = "terraform-testacc-sagemaker-model-%s"
+	}
+}
+
+resource "aws_subnet" "foo" {
+	cidr_block = "10.1.1.0/24"
+	availability_zone = "us-west-2a"
+	vpc_id = "${aws_vpc.foo.id}"
+	tags {
+		Name = "terraform-testacc-sagemaker-model-foo-%s"
+	}
+}
+
+resource "aws_subnet" "bar" {
+	cidr_block = "10.1.2.0/24"
+	availability_zone = "us-west-2b"
+	vpc_id = "${aws_vpc.foo.id}"
+	tags {
+		Name = "terraform-testacc-sagemaker-model-bar-%s"
+	}
+}
+
+resource "aws_security_group" "foo" {
+	name 	= "terraform-testacc-sagemaker-model-foo-%s"
+	vpc_id 	= "${aws_vpc.foo.id}"
+}
+
+resource "aws_security_group" "bar" {
+	name 	= "terraform-testacc-sagemaker-model-bar-%s"
+	vpc_id 	= "${aws_vpc.foo.id}"
+}
+`, rName, rName, rName, rName, rName, rName, rName)
 }

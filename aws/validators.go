@@ -401,19 +401,25 @@ func validateSagemakerName(v interface{}, k string) (ws []string, errors []error
 }
 
 func validateSagemakerEnvironment(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if !regexp.MustCompile(`^[0-9A-Za-z_]+$`).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"only alphanumeric characters and underscore allowed in %q: %q",
-			k, value))
-	}
-	if len(value) > 1024 {
-		errors = append(errors, fmt.Errorf(
-			"%q cannot be longer than 1024 characters: %q", k, value))
-	}
-	if regexp.MustCompile(`^[0-9]`).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"%q cannot begin with a digit: %q", k, value))
+	value := v.(map[string]interface{})
+	for envK, envV := range value {
+		if !regexp.MustCompile(`^[0-9A-Za-z_]+$`).MatchString(envK) {
+			errors = append(errors, fmt.Errorf(
+				"only alphanumeric characters and underscore allowed in %q: %q",
+				k, envK))
+		}
+		if len(envK) > 1024 {
+			errors = append(errors, fmt.Errorf(
+				"%q cannot be longer than 1024 characters: %q", k, envK))
+		}
+		if len(envV.(string)) > 1024 {
+			errors = append(errors, fmt.Errorf(
+				"%q cannot be longer than 1024 characters: %q", k, envV.(string)))
+		}
+		if regexp.MustCompile(`^[0-9]`).MatchString(envK) {
+			errors = append(errors, fmt.Errorf(
+				"%q cannot begin with a digit: %q", k, envK))
+		}
 	}
 	return
 }
@@ -443,32 +449,10 @@ func validateSagemakerModelDataUrl(v interface{}, k string) (ws []string, errors
 		errors = append(errors, fmt.Errorf(
 			"%q cannot be longer than 1024 characters: %q", k, value))
 	}
-	if regexp.MustCompile(`^(https|s3)://`).MatchString(value) {
+	if !regexp.MustCompile(`^(https|s3)://`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"%q must be a path that starts with either s3 or https: %q", k, value))
 	}
-	return
-}
-
-func validateEcrRepositoryName(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if len(value) < 2 {
-		errors = append(errors, fmt.Errorf(
-			"%q must be at least 2 characters long: %q", k, value))
-	}
-	if len(value) > 256 {
-		errors = append(errors, fmt.Errorf(
-			"%q cannot be longer than 256 characters: %q", k, value))
-	}
-
-	// http://docs.aws.amazon.com/AmazonECR/latest/APIReference/API_CreateRepository.html
-	pattern := `^(?:[a-z0-9]+(?:[._-][a-z0-9]+)*/)*[a-z0-9]+(?:[._-][a-z0-9]+)*$`
-	if !regexp.MustCompile(pattern).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"%q doesn't comply with restrictions (%q): %q",
-			k, pattern, value))
-	}
-
 	return
 }
 

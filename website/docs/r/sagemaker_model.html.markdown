@@ -31,6 +31,9 @@ The following arguments are supported:
 * `name` - (Optional) The name of the model (must be unique). If omitted, Terraform will assign a random, unique name.
 * `primary_container` - (Required) Fields are documented below.
 * `execution_role_arn` - (Optional) A role to with permissions that allows SageMaker to call other services on your behalf.
+* `containers` (Optional) -  Specifies additional containers in the inference pipeline.
+* `enable_network_isolation` (Optional) - Isolates the model container. No inbound or outbound network calls can be made to or from the model container.
+* `vpc_config` (Optional) - Specifies the VPC that you want your model to connect to. VpcConfig is used in hosting services and in batch transform.
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 
 The `primary_container` block supports:
@@ -41,14 +44,12 @@ The `primary_container` block supports:
 * `environment` - (Optional) Environment variables for the Docker container.
    A list of key value pairs.
 
-
 ## Attributes Reference
 
 The following attributes are exported:
 
 * `name` - The name of the model.
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this model.
-* `creation_time` - The creation timestamp of the model.
 
 ## Import
 
