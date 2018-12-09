@@ -20,9 +20,10 @@ func resourceAwsSecurityHubProductSubscription() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"product_arn": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validateArn,
 			},
 		},
 	}
