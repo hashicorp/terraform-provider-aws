@@ -73,7 +73,7 @@ func resourceAwsTransferServerCreate(d *schema.ResourceData, meta interface{}) e
 		Tags: tags,
 	}
 
-	var identityProviderDetails *transfer.IdentityProviderDetails
+	identityProviderDetails := &transfer.IdentityProviderDetails{}
 	if attr, ok := d.GetOk("invocation_role"); ok {
 		identityProviderDetails.InvocationRole = aws.String(attr.(string))
 	}
@@ -157,7 +157,7 @@ func resourceAwsTransferServerUpdate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if d.HasChange("invocation_role") || d.HasChange("url") {
-		var identityProviderDetails *transfer.IdentityProviderDetails
+		identityProviderDetails := &transfer.IdentityProviderDetails{}
 		updateFlag = true
 		if attr, ok := d.GetOk("invocation_role"); ok {
 			identityProviderDetails.InvocationRole = aws.String(attr.(string))
