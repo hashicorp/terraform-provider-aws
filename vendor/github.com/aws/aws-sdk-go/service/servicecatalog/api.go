@@ -3745,8 +3745,9 @@ func (c *ServiceCatalog) EnableAWSOrganizationsAccessRequest(input *EnableAWSOrg
 // sync your shares with the current structure. This API can only be called
 // by the master account in the organization.
 //
-// By calling this API Service Catalog will use FAS credentials to call organizations:EnableAWSServiceAccess
-// so that your shares can be in sync with any changes in your AWS Organizations.
+// By calling this API Service Catalog will make a call to organizations:EnableAWSServiceAccess
+// on your behalf so that your shares can be in sync with any changes in your
+// AWS Organizations structure.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -14181,11 +14182,14 @@ func (s *ListTagOptionsOutput) SetTagOptionDetails(v []*TagOptionDetail) *ListTa
 	return s
 }
 
+// Information about the organization node.
 type OrganizationNode struct {
 	_ struct{} `type:"structure"`
 
+	// The organization node type.
 	Type *string `type:"string" enum:"OrganizationNodeType"`
 
+	// The identifier of the organization node.
 	Value *string `type:"string"`
 }
 

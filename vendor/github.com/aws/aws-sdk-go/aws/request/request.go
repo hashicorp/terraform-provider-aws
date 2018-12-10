@@ -122,7 +122,6 @@ func New(cfg aws.Config, clientInfo metadata.ClientInfo, handlers Handlers,
 		Handlers:   handlers.Copy(),
 
 		Retryer:     retryer,
-		AttemptTime: time.Now(),
 		Time:        time.Now(),
 		ExpireTime:  0,
 		Operation:   operation,

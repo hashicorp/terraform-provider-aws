@@ -142,7 +142,7 @@ const (
 
 	// DefaultBufSize limits buffer size from growing to an enormous
 	// amount due to a faulty process.
-	DefaultBufSize = 512
+	DefaultBufSize = 1024
 
 	// DefaultTimeout default limit on time a process can run.
 	DefaultTimeout = time.Duration(1) * time.Minute
