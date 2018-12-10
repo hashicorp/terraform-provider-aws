@@ -101,7 +101,7 @@ func resourceAwsRDSClusterEndpointCreate(d *schema.ResourceData, meta interface{
 
 	d.SetId(endpointId)
 
-	_, err = resourceAwsRDSClusterEndpointWaitForAvailable(d.Timeout(schema.TimeoutDelete), d.Id(), conn)
+	err = resourceAwsRDSClusterEndpointWaitForAvailable(d.Timeout(schema.TimeoutDelete), d.Id(), conn)
 	if err != nil {
 		return err
 	}
@@ -221,7 +221,7 @@ func resourceAwsRDSClusterEndpointWaitForDestroy(timeout time.Duration, id strin
 	return nil
 }
 
-func resourceAwsRDSClusterEndpointWaitForAvailable(timeout time.Duration, id string, conn *rds.RDS) (*rds.DBClusterEndpoint, error) {
+func resourceAwsRDSClusterEndpointWaitForAvailable(timeout time.Duration, id string, conn *rds.RDS) error {
 	log.Printf("Waiting for RDS Cluster Endpoint %s to become available...", id)
 
 	stateConf := &resource.StateChangeConf{
@@ -233,11 +233,11 @@ func resourceAwsRDSClusterEndpointWaitForAvailable(timeout time.Duration, id str
 		MinTimeout: AWSRDSClusterEndpointRetryMinTimeout,
 	}
 
-	info, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForState()
 	if err != nil {
-		return nil, fmt.Errorf("Error waiting for RDS Cluster Endpoint (%s) to be ready: %v", id, err)
+		return fmt.Errorf("Error waiting for RDS Cluster Endpoint (%s) to be ready: %v", id, err)
 	}
-	return info.(*rds.DBClusterEndpoint), nil
+	return nil
 }
 
 func DBClusterEndpointStateRefreshFunc(conn *rds.RDS, id string) resource.StateRefreshFunc {
