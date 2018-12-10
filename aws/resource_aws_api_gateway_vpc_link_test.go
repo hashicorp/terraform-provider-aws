@@ -100,11 +100,7 @@ func testAccCheckAwsAPIGatewayVpcLinkExists(name string) resource.TestCheckFunc 
 		}
 
 		_, err := conn.GetVpcLink(input)
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
