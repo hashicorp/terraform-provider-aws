@@ -81,7 +81,8 @@ func resourceAwsTransferServerCreate(d *schema.ResourceData, meta interface{}) e
 	if attr, ok := d.GetOk("url"); ok {
 		identityProviderDetails.Url = aws.String(attr.(string))
 	}
-	if identityProviderDetails != nil {
+
+	if identityProviderDetails.Url != nil || identityProviderDetails.InvocationRole != nil {
 		createOpts.IdentityProviderDetails = identityProviderDetails
 	}
 
