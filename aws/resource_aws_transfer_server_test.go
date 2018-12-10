@@ -165,11 +165,15 @@ func testAccCheckAWSTransferServerDisappears(conf *transfer.DescribedServer) res
 			resp, err := conn.DescribeServer(params)
 			if err != nil {
 				cgw, ok := err.(awserr.Error)
-				if ok && cgw.Code() == "ValidationError" {
+				if ok && cgw.Code() == transfer.ErrCodeResourceNotFoundException {
 					return nil
 				}
-				return resource.NonRetryableError(
-					fmt.Errorf("Error retrieving Transfer Server: %s", err))
+				if ok && (cgw.Code() == transfer.ErrCodeInvalidRequestException) {
+					return resource.NonRetryableError(
+						fmt.Errorf("Waiting for Transfer Server to be in the correct state: %v", err))
+				}
+				return resource.RetryableError(fmt.Errorf(
+					"Waiting for Transfer Server: %v", conf.ServerId))
 			}
 			if resp.Server == nil {
 				return nil
