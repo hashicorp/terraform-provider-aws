@@ -2,29 +2,33 @@ package aws
 
 import (
 	"fmt"
+	"log"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/transfer"
 
+	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccAWSTransferServer_basic(t *testing.T) {
 	var conf transfer.DescribedServer
+	rName := acctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_transfer_server.foo",
 		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSTransferServerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSTransferServerConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSTransferServerExists("aws_transfer_server.foo", &conf),
-					resource.TestCheckResourceAttrSet(
-						"aws_transfer_server.foo", "arn"),
+					testAccMatchResourceAttrRegionalARN("aws_transfer_server.foo", "arn", "transfer", regexp.MustCompile(`server/.+`)),
 					resource.TestCheckResourceAttrSet(
 						"aws_transfer_server.foo", "endpoint"),
 					resource.TestCheckResourceAttr(
@@ -41,7 +45,7 @@ func TestAccAWSTransferServer_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSTransferServerConfig_basicUpdate,
+				Config: testAccAWSTransferServerConfig_basicUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSTransferServerExists("aws_transfer_server.foo", &conf),
 					resource.TestCheckResourceAttr(
@@ -81,12 +85,38 @@ func testAccCheckAWSTransferServerExists(n string, res *transfer.DescribedServer
 
 		*res = *describe.Server
 
-		if res.ServerId != nil {
+		return nil
+	}
+}
 
 		}
 
 		return nil
 	}
+}
+
+func testAccCheckAWSTransferServerDestroy(s *terraform.State) error {
+	conn := testAccProvider.Meta().(*AWSClient).transferconn
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_transfer_server" {
+			continue
+		}
+
+		_, err := conn.DescribeServer(&transfer.DescribeServerInput{
+			ServerId: aws.String(rs.Primary.ID),
+		})
+
+		if isAWSErr(err, transfer.ErrCodeResourceNotFoundException, "") {
+			continue
+		}
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 const testAccAWSTransferServerConfig_basic = `
@@ -99,10 +129,12 @@ resource "aws_transfer_server" "foo" {
 }
 `
 
-const testAccAWSTransferServerConfig_basicUpdate = `
+func testAccAWSTransferServerConfig_basicUpdate(rName string) string {
+
+	return fmt.Sprintf(`
 
 resource "aws_iam_role" "foo" {
-	name = "tf-test-transfer-server-iam-role"
+	name = "tf-test-transfer-server-iam-role-%s"
   
 	assume_role_policy = <<EOF
 {
@@ -121,24 +153,24 @@ EOF
 }
 
 resource "aws_iam_role_policy" "foo" {
-	name = "tf-test-transfer-server-iam-policy"
+	name = "tf-test-transfer-server-iam-policy-%s"
 	role = "${aws_iam_role.foo.id}"
 	policy = <<POLICY
-  {
+{
 	"Version": "2012-10-17",
 	"Statement": [
-	  {
+		{
 		"Sid": "AllowFullAccesstoCloudWatchLogs",
 		"Effect": "Allow",
 		"Action": [
-		  "logs:*"
+			"logs:*"
 		],
 		"Resource": "*"
-	  }
+		}
 	]
-  }
-  POLICY
-  }
+}
+POLICY
+}
 
 resource "aws_transfer_server" "foo" {
   identity_provider_type = "SERVICE_MANAGED"
@@ -149,4 +181,5 @@ resource "aws_transfer_server" "foo" {
 	ENV    = "test"
   }
 }
-`
+`, rName, rName)
+}
