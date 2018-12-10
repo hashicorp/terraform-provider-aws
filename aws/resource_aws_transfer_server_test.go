@@ -5,9 +5,13 @@ import (
 	"log"
 	"regexp"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/transfer"
+
+	"github.com/davecgh/go-spew/spew"
 
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -92,6 +96,26 @@ func TestAccAWSTransferServer_apigateway(t *testing.T) {
 	})
 }
 
+func TestAccAWSTransferServer_disappears(t *testing.T) {
+	var conf transfer.DescribedServer
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSTransferServerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSTransferServerConfig_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSTransferServerExists("aws_transfer_server.foo", &conf),
+					testAccCheckAWSTransferServerDisappears(&conf),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSTransferServerExists(n string, res *transfer.DescribedServer) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -119,9 +143,41 @@ func testAccCheckAWSTransferServerExists(n string, res *transfer.DescribedServer
 	}
 }
 
+func testAccCheckAWSTransferServerDisappears(conf *transfer.DescribedServer) resource.TestCheckFunc {
+
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).transferconn
+
+		params := &transfer.DeleteServerInput{
+			ServerId: conf.ServerId,
 		}
 
-		return nil
+		log.Printf("TEST %s", spew.Sdump(params))
+		_, err := conn.DeleteServer(params)
+		if err != nil {
+			return err
+		}
+
+		return resource.Retry(10*time.Minute, func() *resource.RetryError {
+			params := &transfer.DescribeServerInput{
+				ServerId: conf.ServerId,
+			}
+			resp, err := conn.DescribeServer(params)
+			if err != nil {
+				cgw, ok := err.(awserr.Error)
+				if ok && cgw.Code() == "ValidationError" {
+					return nil
+				}
+				return resource.NonRetryableError(
+					fmt.Errorf("Error retrieving Transfer Server: %s", err))
+			}
+			if resp.Server == nil {
+				return nil
+			}
+			return resource.RetryableError(fmt.Errorf(
+				"Waiting for Transfer Server: %v", conf.ServerId))
+		})
+
 	}
 }
 
