@@ -88,6 +88,11 @@ resource "aws_codedeploy_deployment_group" "example" {
 ### Blue Green Deployments with ECS
 
 ```hcl
+resource "aws_codedeploy_app" "example" {
+  compute_platform = "ECS"
+  name             = "example"
+}
+
 resource "aws_codedeploy_deployment_group" "example" {
   app_name               = "${aws_codedeploy_app.example.name}"
   deployment_config_name = "CodeDeployDefault.ECSAllAtOnce"
