@@ -775,17 +775,17 @@ func TestAccAWSGlueCrawler_SecurityConfiguration(t *testing.T) {
 		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlueCrawlerConfig_SecurityConfiguration(rName, "security_configuration_name1"),
+				Config: testAccGlueCrawlerConfig_SecurityConfiguration(rName, "security_configuration1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
-					resource.TestCheckResourceAttr(resourceName, "security_configuration", "security_configuration_name1"),
+					resource.TestCheckResourceAttr(resourceName, "security_configuration", "security_configuration1"),
 				),
 			},
 			{
-				Config: testAccGlueCrawlerConfig_TablePrefix(rName, "security_configuration_name2"),
+				Config: testAccGlueCrawlerConfig_SecurityConfiguration(rName, "security_configuration2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
-					resource.TestCheckResourceAttr(resourceName, "security_configuration", "security_configuration_name2"),
+					resource.TestCheckResourceAttr(resourceName, "security_configuration", "security_configuration2"),
 				),
 			},
 			{
@@ -1393,17 +1393,35 @@ resource "aws_glue_catalog_database" "test" {
   name = %q
 }
 
+resource "aws_glue_security_configuration" "test" {
+  name = %q
+
+  encryption_configuration {
+    cloudwatch_encryption {
+      cloudwatch_encryption_mode = "DISABLED"
+    }
+
+    job_bookmarks_encryption {
+      job_bookmarks_encryption_mode = "DISABLED"
+    }
+
+    s3_encryption {
+      s3_encryption_mode = "DISABLED"
+    }
+  }
+}
+
 resource "aws_glue_crawler" "test" {
   depends_on = ["aws_iam_role_policy_attachment.test-AWSGlueServiceRole"]
 
   database_name          = "${aws_glue_catalog_database.test.name}"
   name                   = %q
   role                   = "${aws_iam_role.test.name}"
-  security_configuration = %q
+  security_configuration = "${aws_glue_security_configuration.test.name}"
 
   s3_target {
     path = "s3://bucket-name"
   }
 }
-`, rName, rName, securityConfiguration)
+`, rName, securityConfiguration, rName)
 }
