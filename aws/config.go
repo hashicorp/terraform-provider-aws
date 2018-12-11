@@ -159,6 +159,7 @@ type Config struct {
 	EsEndpoint               string
 	ElbEndpoint              string
 	IamEndpoint              string
+	KafkaEndpoint            string
 	KinesisEndpoint          string
 	KinesisAnalyticsEndpoint string
 	KmsEndpoint              string
