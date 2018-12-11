@@ -72,7 +72,7 @@ func dataSourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", arn)
 	d.Set("bucket_domain_name", bucketDomainName(bucket))
 
-	err := bucketLocation(d, bucket, conn)
+	err = bucketLocation(d, bucket, conn)
 	return err
 }
 
