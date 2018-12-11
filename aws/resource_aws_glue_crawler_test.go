@@ -764,6 +764,39 @@ func TestAccAWSGlueCrawler_TablePrefix(t *testing.T) {
 	})
 }
 
+func TestAccAWSGlueCrawler_SecurityConfiguration(t *testing.T) {
+	var crawler glue.Crawler
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_glue_crawler.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlueCrawlerConfig_SecurityConfiguration(rName, "security_configuration_name1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
+					resource.TestCheckResourceAttr(resourceName, "security_configuration", "security_configuration_name1"),
+				),
+			},
+			{
+				Config: testAccGlueCrawlerConfig_TablePrefix(rName, "security_configuration_name2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
+					resource.TestCheckResourceAttr(resourceName, "security_configuration", "security_configuration_name2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSGlueCrawlerExists(resourceName string, crawler *glue.Crawler) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -1352,4 +1385,25 @@ resource "aws_glue_crawler" "test" {
   }
 }
 `, rName, rName, tablePrefix)
+}
+
+func testAccGlueCrawlerConfig_SecurityConfiguration(rName, securityConfiguration string) string {
+	return testAccGlueCrawlerConfig_Base(rName) + fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name = %q
+}
+
+resource "aws_glue_crawler" "test" {
+  depends_on = ["aws_iam_role_policy_attachment.test-AWSGlueServiceRole"]
+
+  database_name          = "${aws_glue_catalog_database.test.name}"
+  name                   = %q
+  role                   = "${aws_iam_role.test.name}"
+  security_configuration = %q
+
+  s3_target {
+    path = "s3://bucket-name"
+  }
+}
+`, rName, rName, securityConfiguration)
 }
