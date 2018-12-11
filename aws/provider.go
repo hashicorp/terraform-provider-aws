@@ -580,6 +580,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_placement_group":                              resourceAwsPlacementGroup(),
 			"aws_proxy_protocol_policy":                        resourceAwsProxyProtocolPolicy(),
 			"aws_rds_cluster":                                  resourceAwsRDSCluster(),
+			"aws_rds_cluster_endpoint":                         resourceAwsRDSClusterEndpoint(),
 			"aws_rds_cluster_instance":                         resourceAwsRDSClusterInstance(),
 			"aws_rds_cluster_parameter_group":                  resourceAwsRDSClusterParameterGroup(),
 			"aws_redshift_cluster":                             resourceAwsRedshiftCluster(),
