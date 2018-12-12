@@ -43,7 +43,7 @@ func TestAccAWSLBListener_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBListenerBackwardsCompatibility(t *testing.T) {
+func TestAccAWSLBListener_BackwardsCompatibility(t *testing.T) {
 	var conf elbv2.Listener
 	lbName := fmt.Sprintf("testlistener-basic-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
 	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
