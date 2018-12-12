@@ -3,10 +3,12 @@ package aws
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/transfer"
 
+	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 )
@@ -205,5 +207,29 @@ func resourceAwsTransferServerDelete(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("error deleting Transfer Server (%s): %s", d.Id(), err)
 	}
 
+	if err := waitForTransferServerDeletion(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for Transfer Server (%s): %s", d.Id(), err)
+	}
+
 	return nil
+}
+
+func waitForTransferServerDeletion(conn *transfer.Transfer, serverID string) error {
+	params := &transfer.DescribeServerInput{
+		ServerId: aws.String(serverID),
+	}
+
+	return resource.Retry(10*time.Minute, func() *resource.RetryError {
+		_, err := conn.DescribeServer(params)
+
+		if isAWSErr(err, transfer.ErrCodeResourceNotFoundException, "") {
+			return nil
+		}
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return resource.RetryableError(fmt.Errorf("Transfer Server (%s) still exists", serverID))
+	})
 }
