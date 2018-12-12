@@ -28,6 +28,7 @@ func TestAccAWSMskCluster_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMskClusterExists("aws_msk_cluster.test_cluster", &cluster),
 					testAccCheckAWSMskClusterAttributes(&cluster),
+					resource.TestCheckResourceAttr("aws_msk_cluster.test_cluster", "broker_security_groups.#", "1"),
 				),
 			},
 		},
@@ -49,20 +50,19 @@ func TestAccAWSMskCluster_encryptAtRest(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMskClusterExists("aws_msk_cluster.test_cluster", &cluster),
 					testAccCheckAWSMskClusterAttributes(&cluster),
-					resource.TestCheckResourceAttr(
-						"aws_msk_cluster.test_cluster", "encrypt_rest_enabled", "true"),
-					resource.TestCheckResourceAttr(
-						"aws_msk_cluster.test_cluster", "encrypt_rest_key", "test-kms-key"),
 				),
 			},
 		},
 	})
 }
 
-func testMskClusterConfig(rInt int) string {
+func testMskClusterCommonConfig(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test_vpc" {
 	cidr_block = "10.1.0.0/16"
+	tags {
+		Name = "test_vpc-%d"
+	}
 }
 	
 resource "aws_subnet" "test_subnet_a" {
@@ -82,46 +82,44 @@ resource "aws_subnet" "test_subnet_c" {
 	cidr_block = "10.1.3.0/24"
 	availability_zone = "us-east-1c"
 }
+
+`, rInt)
+}
+
+func testMskClusterConfig(rInt int) string {
+	return testMskClusterCommonConfig(rInt) + fmt.Sprintf(`
+
+resource "aws_security_group" "test_sg_a" {
+	name        = "allow_all"
+	description = "Allow all inbound traffic"
+	vpc_id      = "${aws_vpc.test_vpc.id}"
+	
+	ingress {
+		from_port   = 0
+		to_port     = 0
+		protocol    = "-1"
+		cidr_blocks = ["0.0.0.0/0"]
+	}
+}  
 
 resource "aws_msk_cluster" "test_cluster" {
 	name = "terraform-msk-test-%d"
 	broker_count = 3
 	broker_instance_type = "kafka.m5.large"
 	broker_volume_size = 10
+	broker_security_groups =["${aws_security_group.test_sg_a.id}"]
 	client_subnets = ["${aws_subnet.test_subnet_a.id}", "${aws_subnet.test_subnet_b.id}", "${aws_subnet.test_subnet_c.id}"]
 }`, rInt)
 }
 
 func testMskClusterConfigWithEncryption(rInt int) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test_vpc" {
-	cidr_block = "10.1.0.0/16"
-}
-	
-resource "aws_subnet" "test_subnet_a" {
-	vpc_id = "${aws_vpc.test_vpc.id}"
-	cidr_block = "10.1.1.0/24"
-	availability_zone = "us-east-1a"
-}
-
-resource "aws_subnet" "test_subnet_b" {
-	vpc_id = "${aws_vpc.test_vpc.id}"
-	cidr_block = "10.1.2.0/24"
-	availability_zone = "us-east-1b"
-}
-
-resource "aws_subnet" "test_subnet_c" {
-	vpc_id = "${aws_vpc.test_vpc.id}"
-	cidr_block = "10.1.3.0/24"
-	availability_zone = "us-east-1c"
-}
+	return testMskClusterCommonConfig(rInt) + fmt.Sprintf(`
 
 resource "aws_kms_key" "test_key" {
 	description             = "KMS key 1"
 	deletion_window_in_days = 10
-  }
+}
   
-
 resource "aws_msk_cluster" "test_cluster" {
 	name = "terraform-msk-test-%d"
 	broker_count = 3
@@ -129,6 +127,32 @@ resource "aws_msk_cluster" "test_cluster" {
 	broker_volume_size = 10
 	client_subnets = ["${aws_subnet.test_subnet_a.id}", "${aws_subnet.test_subnet_b.id}", "${aws_subnet.test_subnet_c.id}"]
 	encrypt_rest_key = "${aws_kms_key.test_key.key_id}"
+}`, rInt)
+}
+
+func testMskClusterConfigSecurityGroups(rInt int) string {
+	return testMskClusterCommonConfig(rInt) + fmt.Sprintf(`
+resource "aws_security_group" "test_sg_a" {
+	name        = "allow_all"
+	description = "Allow all inbound traffic"
+	vpc_id      = "${aws_vpc.test_vpc.id}"
+	
+	ingress {
+		from_port   = 0
+		to_port     = 0
+		protocol    = "-1"
+		cidr_blocks = ["0.0.0.0/0"]
+	}
+}  
+
+
+resource "aws_msk_cluster" "test_cluster" {
+	name = "terraform-msk-test-%d"
+	broker_count = 3
+	broker_instance_type = "kafka.m5.large"
+	broker_volume_size = 10
+	broker_security_groups = ["${aws_security_group.test_sg_a.id}"]
+	client_subnets = ["${aws_subnet.test_subnet_a.id}", "${aws_subnet.test_subnet_b.id}", "${aws_subnet.test_subnet_c.id}"]
 }`, rInt)
 }
 
@@ -174,11 +198,16 @@ func testAccCheckAWSMskClusterAttributes(cluster *kafka.ClusterInfo) resource.Te
 			if brokerCount != rs.Primary.Attributes["broker_count"] {
 				return fmt.Errorf("Bad Cluster Broker Count\n\t expected: %s\n\tgot: %s\n", rs.Primary.Attributes["broker_count"], brokerCount)
 			}
-			if rs.Primary.Attributes["encrypt_rest_key"] != "" {
-				encryptRestKey := *cluster.EncryptionInfo.EncryptionAtRest.DataVolumeKMSKeyId
-				if encryptRestKey != rs.Primary.Attributes["encrypt_rest_key"] {
-					return fmt.Errorf("Bad Encrypt Rest Key\n\t expected: %s\n\tgot: %s\n", rs.Primary.Attributes["encrypt_rest_key"], encryptRestKey)
-				}
+			volumeSize := strconv.Itoa(int(aws.Int64Value(cluster.BrokerNodeGroupInfo.StorageInfo.EbsStorageInfo.VolumeSize)))
+			if volumeSize != rs.Primary.Attributes["broker_volume_size"] {
+				return fmt.Errorf("Bad Broker Volume Size\n\t expected: %s\n\tgot: %s\n", rs.Primary.Attributes["broker_volume_size"], volumeSize)
+			}
+			encryptRestKey := *cluster.EncryptionInfo.EncryptionAtRest.DataVolumeKMSKeyId
+			if !strings.Contains(encryptRestKey, rs.Primary.Attributes["encrypt_rest_key"]) {
+				return fmt.Errorf("Bad Encrypt Rest Key\n\t expected: %s\n\tgot: %s\n", rs.Primary.Attributes["encrypt_rest_key"], encryptRestKey)
+			}
+			if *cluster.ZookeeperConnectString == "" {
+				return fmt.Errorf("empty zookeeper_connect")
 			}
 		}
 		return nil

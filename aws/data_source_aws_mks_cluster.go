@@ -54,7 +54,7 @@ func dataSourceAwsMksClusterRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("arn", state.arn)
 	d.Set("status", state.status)
 	d.Set("creation_timestamp", state.creationTimestamp)
-	d.Set("encrypt_rest_key", state.encryptRestKey)
+	d.Set("encrypt_rest_arn", state.encryptRestArn)
 
 	return nil
 }

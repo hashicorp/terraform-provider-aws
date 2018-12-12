@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"errors"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -78,6 +79,21 @@ func resourceAwsMskCluster() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"encrypt_rest_arn": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"zookeeper_connect": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"bootstrap_brokers": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -97,6 +113,11 @@ func resourceAwsMskClusterCreate(d *schema.ResourceData, meta interface{}) error
 			ClientSubnets:        expandStringList(clientSubnets.([]interface{})),
 			InstanceType:         aws.String(d.Get("broker_instance_type").(string)),
 			SecurityGroups:       expandStringList(securityGroups.([]interface{})),
+			StorageInfo: &kafka.StorageInfo{
+				EbsStorageInfo: &kafka.EBSStorageInfo{
+					VolumeSize: aws.Int64(int64(d.Get("broker_volume_size").(int))),
+				},
+			},
 		},
 		KafkaVersion: aws.String(d.Get("kafka_version").(string)),
 	}
@@ -157,7 +178,9 @@ func resourceAwsMskClusterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.SetId(state.arn)
 	d.Set("arn", state.arn)
-	d.Set("encrypt_rest_key", state.encryptRestKey)
+	d.Set("encrypt_rest_arn", state.encryptRestArn)
+	d.Set("zookeeper_connect", state.zookeeper_connect)
+	d.Set("bootstrap_brokers", state.bootstrap_brokers)
 
 	return nil
 }
@@ -201,7 +224,9 @@ type mskClusterState struct {
 	arn               string
 	creationTimestamp int64
 	status            string
-	encryptRestKey    string
+	encryptRestArn    string
+	zookeeper_connect string
+	bootstrap_brokers string
 }
 
 func readMskClusterState(conn *kafka.Kafka, arn string) (*mskClusterState, error) {
@@ -216,7 +241,17 @@ func readMskClusterState(conn *kafka.Kafka, arn string) (*mskClusterState, error
 		state.arn = aws.StringValue(cluster.ClusterInfo.ClusterArn)
 		state.creationTimestamp = aws.TimeValue(cluster.ClusterInfo.CreationTime).Unix()
 		state.status = aws.StringValue(cluster.ClusterInfo.State)
-		state.encryptRestKey = aws.StringValue(cluster.ClusterInfo.EncryptionInfo.EncryptionAtRest.DataVolumeKMSKeyId)
+		state.encryptRestArn = aws.StringValue(cluster.ClusterInfo.EncryptionInfo.EncryptionAtRest.DataVolumeKMSKeyId)
+		state.zookeeper_connect = aws.StringValue(cluster.ClusterInfo.ZookeeperConnectString)
+
+		bb, bb_err := conn.GetBootstrapBrokers(
+			&kafka.GetBootstrapBrokersInput{
+				ClusterArn: cluster.ClusterInfo.ClusterArn,
+			})
+
+		if bb_err == nil {
+			state.bootstrap_brokers = aws.StringValue(bb.BootstrapBrokerString)
+		}
 	}
 
 	return state, err
@@ -233,6 +268,10 @@ func clusterStateRefreshFunc(conn *kafka.Kafka, arn string) resource.StateRefres
 				return nil, awsErr.Code(), err
 			}
 			return nil, "failed", err
+		}
+
+		if state.status == "FAILED" {
+			return nil, "failed", errors.New("MSK Cluster in FAILED state")
 		}
 
 		return state, state.status, nil
