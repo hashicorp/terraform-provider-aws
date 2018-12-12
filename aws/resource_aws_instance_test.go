@@ -1064,7 +1064,6 @@ func TestAccAWSInstance_volumeTagsComputed(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists("aws_instance.foo", &v),
 				),
-				ExpectNonEmptyPlan: false,
 			},
 		},
 	})
@@ -2716,15 +2715,13 @@ data "aws_ami" "debian_jessie_latest" {
 }
 
 resource "aws_instance" "foo" {
-  ami                         = "${data.aws_ami.debian_jessie_latest.id}"
-  associate_public_ip_address = true
-  count                       = 1
-  instance_type               = "t2.medium"
+  ami           = "${data.aws_ami.debian_jessie_latest.id}"
+  instance_type = "t2.medium"
 
   root_block_device {
+    delete_on_termination = true
     volume_size           = "10"
     volume_type           = "standard"
-    delete_on_termination = true
   }
 
   tags = {
@@ -2733,10 +2730,9 @@ resource "aws_instance" "foo" {
 }
 
 resource "aws_ebs_volume" "test" {
-  depends_on        = ["aws_instance.foo"]
   availability_zone = "${aws_instance.foo.availability_zone}"
-  type       = "gp2"
   size              = "10"
+  type              = "gp2"
 
   tags = {
     Name = "test-terraform"
@@ -2744,7 +2740,6 @@ resource "aws_ebs_volume" "test" {
 }
 
 resource "aws_volume_attachment" "test" {
-  depends_on  = ["aws_ebs_volume.test"]
   device_name = "/dev/xvdg"
   volume_id   = "${aws_ebs_volume.test.id}"
   instance_id = "${aws_instance.foo.id}"
