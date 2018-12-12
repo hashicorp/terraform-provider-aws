@@ -16,6 +16,10 @@ const (
 	SecurityHubFilterComparisonPrefix   = "PREFIX"
 )
 
+const (
+	SecurityHubFilterDateRangeUnitDays = "DAYS"
+)
+
 func resourceAwsSecurityHubInsight() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsSecurityHubInsightCreate,
@@ -342,14 +346,17 @@ func securityHubDateFilterSchema() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"date_range": {
-					Type:     schema.TypeSet,
-					Required: true,
+					Type:     schema.TypeList,
+					Optional: true,
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"unit": {
 								Type:     schema.TypeString,
 								Optional: true,
+								ValidateFunc: validation.StringInSlice([]string{
+									SecurityHubFilterDateRangeUnitDays,
+								}, false),
 							},
 							"value": {
 								Type:     schema.TypeInt,
@@ -383,7 +390,9 @@ func expandSecurityHubDateFilters(in []interface{}) []*securityhub.DateFilter {
 		}
 		m := mRaw.(map[string]interface{})
 		filter := &securityhub.DateFilter{}
-		// TODO: Add support for DateRange
+		if m["date_range"] != nil {
+			filter.DateRange = expandSecurityHubDateRange(m["date_range"].([]interface{}))
+		}
 		if m["end"] != nil {
 			filter.End = aws.String(m["end"].(string))
 		}
@@ -393,6 +402,23 @@ func expandSecurityHubDateFilters(in []interface{}) []*securityhub.DateFilter {
 		out = append(out, filter)
 	}
 	return out
+}
+
+func expandSecurityHubDateRange(in []interface{}) *securityhub.DateRange {
+	if in == nil || len(in) == 0 {
+		return nil
+	}
+
+	m := in[0].(map[string]interface{})
+	dateRange := &securityhub.DateRange{}
+	if m["unit"] != nil {
+		dateRange.Unit = aws.String(m["unit"].(string))
+	}
+	if m["value"] != nil {
+		dateRange.Value = aws.Int64(int64(m["value"].(int)))
+	}
+
+	return dateRange
 }
 
 func securityHubKeywordFilterSchema() *schema.Schema {
@@ -532,6 +558,9 @@ func expandSecurityHubMapFilters(in []interface{}) []*securityhub.MapFilter {
 
 func resourceAwsSecurityHubInsightCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).securityhubconn
+
+	log.Printf("expandSecurityHubAwsSecurityFindingFilters: %v", d.Get("filter"))
+
 	log.Print("[DEBUG] Enabling Security Hub insight")
 
 	resp, err := conn.CreateInsight(&securityhub.CreateInsightInput{
@@ -567,6 +596,12 @@ func resourceAwsSecurityHubInsightRead(d *schema.ResourceData, meta interface{})
 	}
 
 	insight := resp.Insights[0]
+
+	if insight == nil {
+		log.Printf("[WARN] Security Hub insight (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
 
 	d.Set("name", insight.Name)
 	d.Set("group_by_attribute", insight.GroupByAttribute)
