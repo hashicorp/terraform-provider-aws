@@ -9,6 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/aws/aws-sdk-go/aws/request"
+	"github.com/aws/aws-sdk-go/private/protocol"
+	"github.com/aws/aws-sdk-go/private/protocol/jsonrpc"
 )
 
 const opCreateCluster = "CreateCluster"
@@ -3557,6 +3559,7 @@ func (c *ECS) TagResourceRequest(input *TagResourceInput) (req *request.Request,
 
 	output = &TagResourceOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -3655,6 +3658,7 @@ func (c *ECS) UntagResourceRequest(input *UntagResourceInput) (req *request.Requ
 
 	output = &UntagResourceOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -9507,7 +9511,7 @@ type PutAccountSettingInput struct {
 	PrincipalArn *string `locationName:"principalArn" type:"string"`
 
 	// The account setting value for the specified principal ARN. Accepted values
-	// are ENABLED and DISABLED.
+	// are enabled and disabled.
 	//
 	// Value is a required field
 	Value *string `locationName:"value" type:"string" required:"true"`
@@ -11053,9 +11057,9 @@ type Setting struct {
 	// user. If this field is omitted, the authenticated user is assumed.
 	PrincipalArn *string `locationName:"principalArn" type:"string"`
 
-	// The current account setting for the resource name. If ENABLED, then the resource
+	// The current account setting for the resource name. If enabled, then the resource
 	// will receive the new Amazon Resource Name (ARN) and resource identifier (ID)
-	// format. If DISABLED, then the resource will receive the old Amazon Resource
+	// format. If disabled, then the resource will receive the old Amazon Resource
 	// Name (ARN) and resource identifier (ID) format.
 	Value *string `locationName:"value" type:"string"`
 }
