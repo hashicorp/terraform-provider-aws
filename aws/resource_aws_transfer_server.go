@@ -126,7 +126,6 @@ func resourceAwsTransferServerRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	endpoint := fmt.Sprintf("%s.server.transfer.%s.amazonaws.com", d.Id(), meta.(*AWSClient).region)
-	log.Printf("[DEBUG] managed endpoint : %s", endpoint)
 
 	d.Set("arn", resp.Server.Arn)
 	d.Set("endpoint", endpoint)
