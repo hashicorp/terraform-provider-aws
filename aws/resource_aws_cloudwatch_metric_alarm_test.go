@@ -249,7 +249,7 @@ func TestAccAWSCloudWatchMetricAlarm_expression(t *testing.T) {
 				Config: testAccAWSCloudWatchMetricAlarmConfigWithExpression(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchMetricAlarmExists("aws_cloudwatch_metric_alarm.foobar", &alarm),
-					resource.TestCheckResourceAttr("aws_cloudwatch_metric_alarm.foobar", "metrics.#", "2"),
+					resource.TestCheckResourceAttr("aws_cloudwatch_metric_alarm.foobar", "metric_query.#", "2"),
 				),
 			},
 		},
