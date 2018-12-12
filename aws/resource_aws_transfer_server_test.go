@@ -30,8 +30,8 @@ func TestAccAWSTransferServer_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSTransferServerExists("aws_transfer_server.foo", &conf),
 					testAccMatchResourceAttrRegionalARN("aws_transfer_server.foo", "arn", "transfer", regexp.MustCompile(`server/.+`)),
-					resource.TestCheckResourceAttrSet(
-						"aws_transfer_server.foo", "endpoint"),
+					resource.TestMatchResourceAttr(
+						"aws_transfer_server.foo", "endpoint", regexp.MustCompile(fmt.Sprintf("^s-[a-z0-9]+.server.transfer.%s.amazonaws.com$", testAccGetRegion()))),
 					resource.TestCheckResourceAttr(
 						"aws_transfer_server.foo", "identity_provider_type", "SERVICE_MANAGED"),
 					resource.TestCheckResourceAttr(
@@ -55,8 +55,8 @@ func TestAccAWSTransferServer_basic(t *testing.T) {
 						"aws_transfer_server.foo", "tags.NAME", "tf-acc-test-transfer-server"),
 					resource.TestCheckResourceAttr(
 						"aws_transfer_server.foo", "tags.ENV", "test"),
-					resource.TestCheckResourceAttrSet(
-						"aws_transfer_server.foo", "logging_role"),
+					resource.TestCheckResourceAttrPair(
+						"aws_transfer_server.foo", "logging_role", "aws_iam_role.foo", "arn"),
 				),
 			},
 		},
