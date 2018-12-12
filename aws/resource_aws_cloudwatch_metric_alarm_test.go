@@ -506,6 +506,7 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
 	metric_query {
 		id = "e1"
 		expression = "m1"
+		label = "cat"
 		return_data = "true"
 	}
 	metric_query {
@@ -515,6 +516,7 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
 			namespace   = "AWS/EC2"
 			period      = "120"
 			stat        = "Average"
+			unit        = "Count"
 			dimensions {
 				InstanceId = "i-abc123"
 			}
