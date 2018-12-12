@@ -200,8 +200,6 @@ func resourceAwsTransferServerDelete(d *schema.ResourceData, meta interface{}) e
 	_, err := conn.DeleteServer(delOpts)
 	if err != nil {
 		if isAWSErr(err, transfer.ErrCodeResourceNotFoundException, "") {
-			log.Printf("[WARN] Transfer Server (%s) not found, removing from state", d.Id())
-			d.SetId("")
 			return nil
 		}
 		return err
