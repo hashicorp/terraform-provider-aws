@@ -45,15 +45,73 @@ func resourceAwsCloudWatchMetricAlarm() *schema.Resource {
 			},
 			"metric_name": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
+			},
+			"metric_query": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"expression": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"metric": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"dimensions": {
+										Type:     schema.TypeMap,
+										Optional: true,
+									},
+									"metric_name": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"namespace": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"period": {
+										Type:     schema.TypeInt,
+										Required: true,
+									},
+									"stat": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"unit": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
+						"label": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"return_data": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+					},
+				},
 			},
 			"namespace": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 			"period": {
 				Type:     schema.TypeInt,
-				Required: true,
+				Optional: true,
 			},
 			"statistic": {
 				Type:          schema.TypeString,
@@ -134,10 +192,11 @@ func resourceAwsCloudWatchMetricAlarm() *schema.Resource {
 func resourceAwsCloudWatchMetricAlarmCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudwatchconn
 
+	_, metricNameOk := d.GetOk("metric_name")
 	_, statisticOk := d.GetOk("statistic")
 	_, extendedStatisticOk := d.GetOk("extended_statistic")
 
-	if !statisticOk && !extendedStatisticOk {
+	if metricNameOk && ((!statisticOk && !extendedStatisticOk) || (statisticOk && extendedStatisticOk)) {
 		return fmt.Errorf("One of `statistic` or `extended_statistic` must be set for a cloudwatch metric alarm")
 	}
 
@@ -245,9 +304,6 @@ func getAwsCloudWatchPutMetricAlarmInput(d *schema.ResourceData) cloudwatch.PutM
 		AlarmName:          aws.String(d.Get("alarm_name").(string)),
 		ComparisonOperator: aws.String(d.Get("comparison_operator").(string)),
 		EvaluationPeriods:  aws.Int64(int64(d.Get("evaluation_periods").(int))),
-		MetricName:         aws.String(d.Get("metric_name").(string)),
-		Namespace:          aws.String(d.Get("namespace").(string)),
-		Period:             aws.Int64(int64(d.Get("period").(int))),
 		Threshold:          aws.Float64(d.Get("threshold").(float64)),
 		TreatMissingData:   aws.String(d.Get("treat_missing_data").(string)),
 	}
@@ -262,6 +318,17 @@ func getAwsCloudWatchPutMetricAlarmInput(d *schema.ResourceData) cloudwatch.PutM
 
 	if v, ok := d.GetOk("datapoints_to_alarm"); ok {
 		params.DatapointsToAlarm = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("metric_name"); ok {
+		params.MetricName = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("namespace"); ok {
+		params.Namespace = aws.String(v.(string))
+	}
+	if v, ok := d.GetOk("period"); ok {
+		params.Period = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("unit"); ok {
@@ -298,6 +365,58 @@ func getAwsCloudWatchPutMetricAlarmInput(d *schema.ResourceData) cloudwatch.PutM
 		params.InsufficientDataActions = insufficientDataActions
 	}
 
+	var metrics []*cloudwatch.MetricDataQuery
+	if v := d.Get("metric_query"); v != nil {
+		for _, v := range v.(*schema.Set).List() {
+			metricQueryResource := v.(map[string]interface{})
+			metricQuery := cloudwatch.MetricDataQuery{
+				Id: aws.String(metricQueryResource["id"].(string)),
+			}
+			if v, ok := metricQueryResource["expression"]; ok && v.(string) != "" {
+				metricQuery.Expression = aws.String(v.(string))
+			}
+			if v, ok := metricQueryResource["label"]; ok && v.(string) != "" {
+				metricQuery.Label = aws.String(v.(string))
+			}
+			if v, ok := metricQueryResource["return_data"]; ok {
+				metricQuery.ReturnData = aws.Bool(v.(bool))
+			}
+			if v := metricQueryResource["metric"]; v != nil {
+				for _, v := range v.([]interface{}) {
+					metricResource := v.(map[string]interface{})
+					metric := cloudwatch.Metric{
+						MetricName: aws.String(metricResource["metric_name"].(string)),
+					}
+					metricStat := cloudwatch.MetricStat{
+						Metric: &metric,
+						Stat:   aws.String(metricResource["stat"].(string)),
+					}
+					if v, ok := metricResource["namespace"]; ok && v.(string) != "" {
+						metric.Namespace = aws.String(v.(string))
+					}
+					if v, ok := metricResource["period"]; ok {
+						metricStat.Period = aws.Int64(int64(v.(int)))
+					}
+					if v, ok := metricResource["unit"]; ok && v.(string) != "" {
+						metricStat.Unit = aws.String(v.(string))
+					}
+					a := metricResource["dimensions"].(map[string]interface{})
+					dimensions := make([]*cloudwatch.Dimension, 0, len(a))
+					for k, v := range a {
+						dimensions = append(dimensions, &cloudwatch.Dimension{
+							Name:  aws.String(k),
+							Value: aws.String(v.(string)),
+						})
+					}
+					metric.Dimensions = dimensions
+					metricQuery.MetricStat = &metricStat
+				}
+			}
+			metrics = append(metrics, &metricQuery)
+		}
+		params.Metrics = metrics
+	}
+
 	var okActions []*string
 	if v := d.Get("ok_actions"); v != nil {
 		for _, v := range v.(*schema.Set).List() {
@@ -308,7 +427,7 @@ func getAwsCloudWatchPutMetricAlarmInput(d *schema.ResourceData) cloudwatch.PutM
 	}
 
 	a := d.Get("dimensions").(map[string]interface{})
-	dimensions := make([]*cloudwatch.Dimension, 0, len(a))
+	var dimensions []*cloudwatch.Dimension
 	for k, v := range a {
 		dimensions = append(dimensions, &cloudwatch.Dimension{
 			Name:  aws.String(k),
