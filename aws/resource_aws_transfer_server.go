@@ -202,7 +202,7 @@ func resourceAwsTransferServerDelete(d *schema.ResourceData, meta interface{}) e
 		if isAWSErr(err, transfer.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}
-		return fmt.Errorf("error deleting Transfer Server (%d): %s", d.Id(), err)
+		return fmt.Errorf("error deleting Transfer Server (%s): %s", d.Id(), err)
 	}
 
 	return nil
