@@ -172,8 +172,8 @@ func testAccCheckAWSTransferServerDestroy(s *terraform.State) error {
 			continue
 		}
 
-		if err != nil {
-			return err
+		if err == nil {
+			return fmt.Errorf("Transfer Server (%s) still exists", rs.Primary.ID)
 		}
 	}
 
