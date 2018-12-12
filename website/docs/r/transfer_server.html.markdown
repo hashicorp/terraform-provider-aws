@@ -31,31 +31,26 @@ resource "aws_iam_role" "foo" {
 EOF
 }
 
-resource "aws_iam_policy" "foo" {
-	name 		= "tf-test-transfer-server-iam-policy"
-	path        = "/"
-	description = "IAM policy for for Transfer Server testing"
-  
-	policy = <<EOF
+resource "aws_iam_role_policy" "foo" {
+	name = "tf-test-transfer-server-iam-policy-%s"
+	role = "${aws_iam_role.foo.id}"
+	policy = <<POLICY
 {
 	"Version": "2012-10-17",
 	"Statement": [
 		{
-			"Effect": "Allow",
-			"Action": "logs:*"
-			"Resource": "*"
+		"Sid": "AllowFullAccesstoCloudWatchLogs",
+		"Effect": "Allow",
+		"Action": [
+			"logs:*"
+		],
+		"Resource": "*"
 		}
 	]
 }
-EOF
+POLICY
 }
 
-resource "aws_iam_policy_attachment" "foo" {
-	name       = "%s"
-	roles      = ["${aws_iam_role.foo.name}"]
-	policy_arn = "${aws_iam_policy.foo.arn}"
-}
-  
 
 resource "aws_transfer_server" "foo" {
   identity_provider_type = "SERVICE_MANAGED"
