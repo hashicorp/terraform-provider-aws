@@ -21,7 +21,7 @@ func TestAccAWSMskCluster_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckKinesisStreamDestroy,
+		CheckDestroy: testAccCheckMskClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testMskClusterConfig(rInt),
@@ -34,14 +34,96 @@ func TestAccAWSMskCluster_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSMskCluster_encryptAtRest(t *testing.T) {
+	var cluster kafka.ClusterInfo
+
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckMskClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testMskClusterConfigWithEncryption(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMskClusterExists("aws_msk_cluster.test_cluster", &cluster),
+					testAccCheckAWSMskClusterAttributes(&cluster),
+					resource.TestCheckResourceAttr(
+						"aws_msk_cluster.test_cluster", "encrypt_rest_enabled", "true"),
+					resource.TestCheckResourceAttr(
+						"aws_msk_cluster.test_cluster", "encrypt_rest_key", "test-kms-key"),
+				),
+			},
+		},
+	})
+}
+
 func testMskClusterConfig(rInt int) string {
 	return fmt.Sprintf(`
+resource "aws_vpc" "test_vpc" {
+	cidr_block = "10.1.0.0/16"
+}
+	
+resource "aws_subnet" "test_subnet_a" {
+	vpc_id = "${aws_vpc.test_vpc.id}"
+	cidr_block = "10.1.1.0/24"
+	availability_zone = "us-east-1a"
+}
+
+resource "aws_subnet" "test_subnet_b" {
+	vpc_id = "${aws_vpc.test_vpc.id}"
+	cidr_block = "10.1.2.0/24"
+	availability_zone = "us-east-1b"
+}
+
+resource "aws_subnet" "test_subnet_c" {
+	vpc_id = "${aws_vpc.test_vpc.id}"
+	cidr_block = "10.1.3.0/24"
+	availability_zone = "us-east-1c"
+}
+
 resource "aws_msk_cluster" "test_cluster" {
 	name = "terraform-msk-test-%d"
-	broker_count = 1
-	tags = {
-		Name = "tf-test"
-	}
+	broker_count = 3
+	broker_instance_type = "kafka.m5.large"
+	broker_volume_size = 10
+	client_subnets = ["${aws_subnet.test_subnet_a.id}", "${aws_subnet.test_subnet_b.id}", "${aws_subnet.test_subnet_c.id}"]
+}`, rInt)
+}
+
+func testMskClusterConfigWithEncryption(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test_vpc" {
+	cidr_block = "10.1.0.0/16"
+}
+	
+resource "aws_subnet" "test_subnet_a" {
+	vpc_id = "${aws_vpc.test_vpc.id}"
+	cidr_block = "10.1.1.0/24"
+	availability_zone = "us-east-1a"
+}
+
+resource "aws_subnet" "test_subnet_b" {
+	vpc_id = "${aws_vpc.test_vpc.id}"
+	cidr_block = "10.1.2.0/24"
+	availability_zone = "us-east-1b"
+}
+
+resource "aws_subnet" "test_subnet_c" {
+	vpc_id = "${aws_vpc.test_vpc.id}"
+	cidr_block = "10.1.3.0/24"
+	availability_zone = "us-east-1c"
+}
+
+resource "aws_msk_cluster" "test_cluster" {
+	name = "terraform-msk-test-%d"
+	broker_count = 3
+	broker_instance_type = "kafka.m5.large"
+	broker_volume_size = 10
+	client_subnets = ["${aws_subnet.test_subnet_a.id}", "${aws_subnet.test_subnet_b.id}", "${aws_subnet.test_subnet_c.id}"]
+	encrypt_rest_enabled = true
+	encrypt_rest_key = "test-kms-key"
 }`, rInt)
 }
 
@@ -86,6 +168,14 @@ func testAccCheckAWSMskClusterAttributes(cluster *kafka.ClusterInfo) resource.Te
 			broker_count := strconv.Itoa(int(aws.Int64Value(cluster.NumberOfBrokerNodes)))
 			if broker_count != rs.Primary.Attributes["broker_count"] {
 				return fmt.Errorf("Bad Cluster Broker Count\n\t expected: %s\n\tgot: %s\n", rs.Primary.Attributes["broker_count"], broker_count)
+			}
+			encryptRestEnabled := strconv.FormatBool(cluster.EncryptionInfo.EncryptionAtRest != nil)
+			if encryptRestEnabled != rs.Primary.Attributes["encrypt_rest_enabled"] {
+				return fmt.Errorf("Bad Encrypt Rest\n\t expected: %s\n\tgot: %s\n", rs.Primary.Attributes["encrypt_rest_enabled"], encryptRestEnabled)
+			}
+			encryptRestKey := *cluster.EncryptionInfo.EncryptionAtRest.DataVolumeKMSKeyId
+			if encryptRestKey != rs.Primary.Attributes["encrypt_rest_key"] {
+				return fmt.Errorf("Bad Encrypt Rest Key\n\t expected: %s\n\tgot: %s\n", rs.Primary.Attributes["encrypt_rest_enabled"], encryptRestKey)
 			}
 		}
 		return nil
