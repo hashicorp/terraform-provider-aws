@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"log"
 	"regexp"
 	"testing"
 	"time"
