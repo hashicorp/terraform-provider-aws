@@ -44,12 +44,14 @@ func resourceAwsCloudWatchMetricAlarm() *schema.Resource {
 				ValidateFunc: validation.IntAtLeast(1),
 			},
 			"metric_name": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"metric_query"},
 			},
 			"metric_query": {
-				Type:     schema.TypeSet,
-				Optional: true,
+				Type:          schema.TypeSet,
+				Optional:      true,
+				ConflictsWith: []string{"metric_name"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
@@ -57,13 +59,15 @@ func resourceAwsCloudWatchMetricAlarm() *schema.Resource {
 							Required: true,
 						},
 						"expression": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:          schema.TypeString,
+							ConflictsWith: []string{"metric_query.metric"},
+							Optional:      true,
 						},
 						"metric": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
+							Type:          schema.TypeList,
+							MaxItems:      1,
+							Optional:      true,
+							ConflictsWith: []string{"metric_query.expression"},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"dimensions": {
@@ -106,17 +110,19 @@ func resourceAwsCloudWatchMetricAlarm() *schema.Resource {
 				},
 			},
 			"namespace": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"metric_query"},
 			},
 			"period": {
-				Type:     schema.TypeInt,
-				Optional: true,
+				Type:          schema.TypeInt,
+				Optional:      true,
+				ConflictsWith: []string{"metric_query"},
 			},
 			"statistic": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"extended_statistic"},
+				ConflictsWith: []string{"extended_statistic", "metric_query"},
 			},
 			"threshold": {
 				Type:     schema.TypeFloat,
@@ -149,8 +155,9 @@ func resourceAwsCloudWatchMetricAlarm() *schema.Resource {
 				ValidateFunc: validation.IntAtLeast(1),
 			},
 			"dimensions": {
-				Type:     schema.TypeMap,
-				Optional: true,
+				Type:          schema.TypeMap,
+				Optional:      true,
+				ConflictsWith: []string{"metric_query"},
 			},
 			"insufficient_data_actions": {
 				Type:     schema.TypeSet,
@@ -171,7 +178,7 @@ func resourceAwsCloudWatchMetricAlarm() *schema.Resource {
 			"extended_statistic": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"statistic"},
+				ConflictsWith: []string{"statistic", "metric_query"},
 			},
 			"treat_missing_data": {
 				Type:         schema.TypeString,
