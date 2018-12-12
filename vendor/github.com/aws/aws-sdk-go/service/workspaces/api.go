@@ -9,6 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/aws/aws-sdk-go/aws/request"
+	"github.com/aws/aws-sdk-go/private/protocol"
+	"github.com/aws/aws-sdk-go/private/protocol/jsonrpc"
 )
 
 const opAssociateIpGroups = "AssociateIpGroups"
@@ -50,6 +52,7 @@ func (c *WorkSpaces) AssociateIpGroupsRequest(input *AssociateIpGroupsInput) (re
 
 	output = &AssociateIpGroupsOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -144,6 +147,7 @@ func (c *WorkSpaces) AuthorizeIpRulesRequest(input *AuthorizeIpRulesInput) (req 
 
 	output = &AuthorizeIpRulesOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -341,6 +345,7 @@ func (c *WorkSpaces) CreateTagsRequest(input *CreateTagsInput) (req *request.Req
 
 	output = &CreateTagsOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -510,6 +515,7 @@ func (c *WorkSpaces) DeleteIpGroupRequest(input *DeleteIpGroupInput) (req *reque
 
 	output = &DeleteIpGroupOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -600,6 +606,7 @@ func (c *WorkSpaces) DeleteTagsRequest(input *DeleteTagsInput) (req *request.Req
 
 	output = &DeleteTagsOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -682,6 +689,7 @@ func (c *WorkSpaces) DeleteWorkspaceImageRequest(input *DeleteWorkspaceImageInpu
 
 	output = &DeleteWorkspaceImageOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -1747,6 +1755,7 @@ func (c *WorkSpaces) DisassociateIpGroupsRequest(input *DisassociateIpGroupsInpu
 
 	output = &DisassociateIpGroupsOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -2017,6 +2026,7 @@ func (c *WorkSpaces) ModifyAccountRequest(input *ModifyAccountInput) (req *reque
 
 	output = &ModifyAccountOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -2109,6 +2119,7 @@ func (c *WorkSpaces) ModifyClientPropertiesRequest(input *ModifyClientProperties
 
 	output = &ModifyClientPropertiesOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -2194,6 +2205,7 @@ func (c *WorkSpaces) ModifyWorkspacePropertiesRequest(input *ModifyWorkspaceProp
 
 	output = &ModifyWorkspacePropertiesOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -2293,6 +2305,7 @@ func (c *WorkSpaces) ModifyWorkspaceStateRequest(input *ModifyWorkspaceStateInpu
 
 	output = &ModifyWorkspaceStateOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -2543,6 +2556,7 @@ func (c *WorkSpaces) RevokeIpRulesRequest(input *RevokeIpRulesInput) (req *reque
 
 	output = &RevokeIpRulesOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -2868,6 +2882,7 @@ func (c *WorkSpaces) UpdateRulesOfIpGroupRequest(input *UpdateRulesOfIpGroupInpu
 
 	output = &UpdateRulesOfIpGroupOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
