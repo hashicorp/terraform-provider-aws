@@ -39,7 +39,7 @@ func TestAccDataSourceAWSLBListener_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAWSLBListenerBackwardsCompatibility(t *testing.T) {
+func TestAccDataSourceAWSLBListener_BackwardsCompatibility(t *testing.T) {
 	lbName := fmt.Sprintf("testlistener-basic-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
 	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
