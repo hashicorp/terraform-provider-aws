@@ -130,32 +130,6 @@ resource "aws_msk_cluster" "test_cluster" {
 }`, rInt)
 }
 
-func testMskClusterConfigSecurityGroups(rInt int) string {
-	return testMskClusterCommonConfig(rInt) + fmt.Sprintf(`
-resource "aws_security_group" "test_sg_a" {
-	name        = "allow_all"
-	description = "Allow all inbound traffic"
-	vpc_id      = "${aws_vpc.test_vpc.id}"
-	
-	ingress {
-		from_port   = 0
-		to_port     = 0
-		protocol    = "-1"
-		cidr_blocks = ["0.0.0.0/0"]
-	}
-}  
-
-
-resource "aws_msk_cluster" "test_cluster" {
-	name = "terraform-msk-test-%d"
-	broker_count = 3
-	broker_instance_type = "kafka.m5.large"
-	broker_volume_size = 10
-	broker_security_groups = ["${aws_security_group.test_sg_a.id}"]
-	client_subnets = ["${aws_subnet.test_subnet_a.id}", "${aws_subnet.test_subnet_b.id}", "${aws_subnet.test_subnet_c.id}"]
-}`, rInt)
-}
-
 func testAccCheckMskClusterExists(n string, cluster *kafka.ClusterInfo) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
