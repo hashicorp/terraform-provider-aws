@@ -77,13 +77,13 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - Amazon Resource Name (ARN) of Transfer Server
-* `id`  - The Server ID of the Transfer Server
-* `endpoint` - The endpoint of the Transfer Server
+* `id`  - The Server ID of the Transfer Server (e.g. `s-12345678`)
+* `endpoint` - The endpoint of the Transfer Server (e.g. `s-12345678.server.transfer.REGION.amazonaws.com`)
 
 ## Import
 
 Transfer Servers can be imported using the `server id`, e.g.
 
 ```
-$ terraform import aws_transfer_server.bar HOGEHOGE
+$ terraform import aws_transfer_server.bar s-12345678
 ```
