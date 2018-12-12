@@ -116,14 +116,19 @@ resource "aws_subnet" "test_subnet_c" {
 	availability_zone = "us-east-1c"
 }
 
+resource "aws_kms_key" "test_key" {
+	description             = "KMS key 1"
+	deletion_window_in_days = 10
+  }
+  
+
 resource "aws_msk_cluster" "test_cluster" {
 	name = "terraform-msk-test-%d"
 	broker_count = 3
 	broker_instance_type = "kafka.m5.large"
 	broker_volume_size = 10
 	client_subnets = ["${aws_subnet.test_subnet_a.id}", "${aws_subnet.test_subnet_b.id}", "${aws_subnet.test_subnet_c.id}"]
-	encrypt_rest_enabled = true
-	encrypt_rest_key = "test-kms-key"
+	encrypt_rest_key = "${aws_kms_key.test_key.key_id}"
 }`, rInt)
 }
 
@@ -165,17 +170,15 @@ func testAccCheckAWSMskClusterAttributes(cluster *kafka.ClusterInfo) resource.Te
 			if *cluster.ClusterArn != rs.Primary.Attributes["arn"] {
 				return fmt.Errorf("Bad Cluster ARN\n\t expected: %s\n\tgot: %s\n", rs.Primary.Attributes["arn"], *cluster.ClusterArn)
 			}
-			broker_count := strconv.Itoa(int(aws.Int64Value(cluster.NumberOfBrokerNodes)))
-			if broker_count != rs.Primary.Attributes["broker_count"] {
-				return fmt.Errorf("Bad Cluster Broker Count\n\t expected: %s\n\tgot: %s\n", rs.Primary.Attributes["broker_count"], broker_count)
+			brokerCount := strconv.Itoa(int(aws.Int64Value(cluster.NumberOfBrokerNodes)))
+			if brokerCount != rs.Primary.Attributes["broker_count"] {
+				return fmt.Errorf("Bad Cluster Broker Count\n\t expected: %s\n\tgot: %s\n", rs.Primary.Attributes["broker_count"], brokerCount)
 			}
-			encryptRestEnabled := strconv.FormatBool(cluster.EncryptionInfo.EncryptionAtRest != nil)
-			if encryptRestEnabled != rs.Primary.Attributes["encrypt_rest_enabled"] {
-				return fmt.Errorf("Bad Encrypt Rest\n\t expected: %s\n\tgot: %s\n", rs.Primary.Attributes["encrypt_rest_enabled"], encryptRestEnabled)
-			}
-			encryptRestKey := *cluster.EncryptionInfo.EncryptionAtRest.DataVolumeKMSKeyId
-			if encryptRestKey != rs.Primary.Attributes["encrypt_rest_key"] {
-				return fmt.Errorf("Bad Encrypt Rest Key\n\t expected: %s\n\tgot: %s\n", rs.Primary.Attributes["encrypt_rest_enabled"], encryptRestKey)
+			if rs.Primary.Attributes["encrypt_rest_key"] != "" {
+				encryptRestKey := *cluster.EncryptionInfo.EncryptionAtRest.DataVolumeKMSKeyId
+				if encryptRestKey != rs.Primary.Attributes["encrypt_rest_key"] {
+					return fmt.Errorf("Bad Encrypt Rest Key\n\t expected: %s\n\tgot: %s\n", rs.Primary.Attributes["encrypt_rest_key"], encryptRestKey)
+				}
 			}
 		}
 		return nil

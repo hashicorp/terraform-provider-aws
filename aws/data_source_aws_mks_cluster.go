@@ -17,10 +17,6 @@ func dataSourceAwsMksCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"encrypt_rest_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
 			"encrypt_rest_key": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -58,7 +54,6 @@ func dataSourceAwsMksClusterRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("arn", state.arn)
 	d.Set("status", state.status)
 	d.Set("creation_timestamp", state.creationTimestamp)
-	d.Set("encrypt_rest_enabled", state.encryptRestEnabled)
 	d.Set("encrypt_rest_key", state.encryptRestKey)
 
 	return nil

@@ -49,12 +49,6 @@ func resourceAwsMskCluster() *schema.Resource {
 				Type:     schema.TypeInt,
 				Required: true,
 			},
-			"encrypt_rest_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Required: false,
-				Default:  false,
-			},
 			"encrypt_rest_key": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -90,7 +84,7 @@ func resourceAwsMskCluster() *schema.Resource {
 func resourceAwsMskClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kafkaconn
 	cn := d.Get("name").(string)
-	encyptRestEnabled := d.Get("encrypt_rest_enabled").(bool)
+	encryptRestKey := d.Get("encrypt_rest_key").(string)
 	clientSubnets, _ := d.GetOk("client_subnets")
 	securityGroups, _ := d.GetOk("broker_security_groups")
 
@@ -98,7 +92,6 @@ func resourceAwsMskClusterCreate(d *schema.ResourceData, meta interface{}) error
 		ClusterName:         aws.String(cn),
 		EnhancedMonitoring:  aws.String(d.Get("enhanced_monitoring").(string)),
 		NumberOfBrokerNodes: aws.Int64(int64(d.Get("broker_count").(int))),
-		EncryptionInfo:      &kafka.EncryptionInfo{},
 		BrokerNodeGroupInfo: &kafka.BrokerNodeGroupInfo{
 			BrokerAZDistribution: aws.String(kafka.BrokerAZDistributionDefault),
 			ClientSubnets:        expandStringList(clientSubnets.([]interface{})),
@@ -108,13 +101,8 @@ func resourceAwsMskClusterCreate(d *schema.ResourceData, meta interface{}) error
 		KafkaVersion: aws.String(d.Get("kafka_version").(string)),
 	}
 
-	if encyptRestEnabled {
-		encryptRestKey := d.Get("encrypt_rest_key").(string)
-		if encryptRestKey == "" {
-			return fmt.Errorf(
-				"Field encryption_at_rest_key required when encryption_at_rest_key is true.")
-		}
-
+	if encryptRestKey != "" {
+		createOpts.EncryptionInfo = &kafka.EncryptionInfo{}
 		createOpts.EncryptionInfo.EncryptionAtRest = &kafka.EncryptionAtRest{
 			DataVolumeKMSKeyId: aws.String(encryptRestKey),
 		}
@@ -169,7 +157,6 @@ func resourceAwsMskClusterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.SetId(state.arn)
 	d.Set("arn", state.arn)
-	d.Set("encrypt_rest_enabled", state.encryptRestEnabled)
 	d.Set("encrypt_rest_key", state.encryptRestKey)
 
 	return nil
@@ -211,11 +198,10 @@ func resourceAwsMskClusterDelete(d *schema.ResourceData, meta interface{}) error
 }
 
 type mskClusterState struct {
-	arn                string
-	creationTimestamp  int64
-	status             string
-	encryptRestEnabled bool
-	encryptRestKey     string
+	arn               string
+	creationTimestamp int64
+	status            string
+	encryptRestKey    string
 }
 
 func readMskClusterState(conn *kafka.Kafka, arn string) (*mskClusterState, error) {
@@ -226,12 +212,10 @@ func readMskClusterState(conn *kafka.Kafka, arn string) (*mskClusterState, error
 	state := &mskClusterState{}
 	cluster, err := conn.DescribeCluster(describeOpts)
 
-	state.arn = aws.StringValue(cluster.ClusterInfo.ClusterArn)
-	state.creationTimestamp = aws.TimeValue(cluster.ClusterInfo.CreationTime).Unix()
-	state.status = aws.StringValue(cluster.ClusterInfo.State)
-	state.encryptRestEnabled = (cluster.ClusterInfo.EncryptionInfo.EncryptionAtRest != nil)
-
-	if state.encryptRestEnabled {
+	if cluster.ClusterInfo != nil {
+		state.arn = aws.StringValue(cluster.ClusterInfo.ClusterArn)
+		state.creationTimestamp = aws.TimeValue(cluster.ClusterInfo.CreationTime).Unix()
+		state.status = aws.StringValue(cluster.ClusterInfo.State)
 		state.encryptRestKey = aws.StringValue(cluster.ClusterInfo.EncryptionInfo.EncryptionAtRest.DataVolumeKMSKeyId)
 	}
 
@@ -243,7 +227,7 @@ func clusterStateRefreshFunc(conn *kafka.Kafka, arn string) resource.StateRefres
 		state, err := readMskClusterState(conn, arn)
 		if err != nil {
 			if awsErr, ok := err.(awserr.Error); ok {
-				if awsErr.Code() == "ResourceNotFoundException" {
+				if awsErr.Code() == "NotFoundException" {
 					return 42, "DESTROYED", nil
 				}
 				return nil, awsErr.Code(), err
