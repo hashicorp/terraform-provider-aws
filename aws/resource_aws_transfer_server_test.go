@@ -4,10 +4,8 @@ import (
 	"fmt"
 	"regexp"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/transfer"
 
 	"github.com/hashicorp/terraform/helper/acctest"
@@ -154,30 +152,7 @@ func testAccCheckAWSTransferServerDisappears(conf *transfer.DescribedServer) res
 			return err
 		}
 
-		return resource.Retry(10*time.Minute, func() *resource.RetryError {
-			params := &transfer.DescribeServerInput{
-				ServerId: conf.ServerId,
-			}
-			resp, err := conn.DescribeServer(params)
-			if err != nil {
-				cgw, ok := err.(awserr.Error)
-				if ok && cgw.Code() == transfer.ErrCodeResourceNotFoundException {
-					return nil
-				}
-				if ok && (cgw.Code() == transfer.ErrCodeInvalidRequestException) {
-					return resource.NonRetryableError(
-						fmt.Errorf("Waiting for Transfer Server to be in the correct state: %v", err))
-				}
-				return resource.RetryableError(fmt.Errorf(
-					"Waiting for Transfer Server: %v", conf.ServerId))
-			}
-			if resp.Server == nil {
-				return nil
-			}
-			return resource.RetryableError(fmt.Errorf(
-				"Waiting for Transfer Server: %v", conf.ServerId))
-		})
-
+		return waitForTransferServerDeletion(conn, *conf.ServerId)
 	}
 }
 
