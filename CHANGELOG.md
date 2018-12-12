@@ -13,10 +13,12 @@ ENHANCEMENTS
 
 BUG FIXES
 
+* data-source/aws_lb_listener: Add missing `default_action` attributes from resource [GH-6830]
 * resource/aws_cloudwatch_log_subscription_filter: Ignore `ResourceNotFound` error on deletion [GH-6760]
 * resource/aws_ec2_transit_gateway_route: Trigger resource recreation with deleted/deleting route state [GH-6817]
 * resource/aws_elasticache_parameter_group: Handle API reset issues with `reserved-memory` parameter updates [GH-6752]
 * resource/aws_lambda_permission: Ignore `ResourceNotFoundException` error on deletion [GH-6770]
+* resource/aws_lb_listener: Properly return an error when there are issues setting `default_action` attributes in Terraform state [GH-6830]
 * resource/aws_route53_record: Prevent scanning entire zone for missing record [GH-6753]
 * resource/aws_ssm_document: Properly batch large `permissions` updates for API limits [GH-6735]
 
