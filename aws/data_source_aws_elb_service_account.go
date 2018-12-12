@@ -27,6 +27,7 @@ var elbAccountIdPerRegionMap = map[string]string{
 	"us-gov-west-1":  "048591011584",
 	"us-west-1":      "027434742980",
 	"us-west-2":      "797873946194",
+	"eu-north-1":     "897822967062",
 }
 
 func dataSourceAwsElbServiceAccount() *schema.Resource {

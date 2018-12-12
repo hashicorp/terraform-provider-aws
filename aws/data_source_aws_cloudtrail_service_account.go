@@ -25,6 +25,7 @@ var cloudTrailServiceAccountPerRegionMap = map[string]string{
 	"eu-west-3":      "262312530599",
 	"sa-east-1":      "814480443879",
 	"cn-northwest-1": "681348832753",
+	"eu-north-1":     "829690693026",
 }
 
 func dataSourceAwsCloudTrailServiceAccount() *schema.Resource {
