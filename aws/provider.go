@@ -624,6 +624,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_network_interface_sg_attachment":              resourceAwsNetworkInterfaceSGAttachment(),
 			"aws_default_security_group":                       resourceAwsDefaultSecurityGroup(),
 			"aws_security_group_rule":                          resourceAwsSecurityGroupRule(),
+			"aws_securityhub_account":                          resourceAwsSecurityHubAccount(),
 			"aws_servicecatalog_portfolio":                     resourceAwsServiceCatalogPortfolio(),
 			"aws_service_discovery_private_dns_namespace":      resourceAwsServiceDiscoveryPrivateDnsNamespace(),
 			"aws_service_discovery_public_dns_namespace":       resourceAwsServiceDiscoveryPublicDnsNamespace(),
