@@ -9,11 +9,13 @@ FEATURES
 
 ENHANCEMENTS
 
+* data-source/aws_instance: Add `host_id` attribute [GH-6767]
 * data-source/aws_ip_ranges: Add `url` argument [GH-6756]
 * resource/aws_db_instance: Allow `postgresql` and `upgrade` values for `enabled_cloudwatch_logs_exports` (e.g. Postgres specific log exports) [GH-6829]
 * resource/aws_eks_cluster: Support `version` update [GH-6843]
 * resource/aws_glue_crawler: Add `security_configuration` argument [GH-6797]
 * resource/aws_iam_user_ssh_key: Support resource import [GH-6727]
+* resource/aws_instance: Add `host_id` argument [GH-6767]
 * resource/aws_ssm_maintenance_window: Support resource import [GH-6747]
 
 BUG FIXES
