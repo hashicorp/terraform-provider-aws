@@ -15412,6 +15412,17 @@ type HyperParameterTuningJobConfig struct {
 	//
 	// Strategy is a required field
 	Strategy *string `type:"string" required:"true" enum:"HyperParameterTuningJobStrategyType"`
+
+	// Specifies whether to use early stopping for training jobs launched by the
+	// hyperparameter tuning job. One of the following values:
+	//
+	// OFFTraining jobs launched by the hyperparameter tuning job do not use early
+	// stopping.
+	//
+	// AUTOAmazon SageMaker stops training jobs launched by the hyperparameter tuning
+	// job when they are no longer improving as measured by the objective metric
+	// of the tuning job.
+	TrainingJobEarlyStoppingType *string `type:"string" enum:"TrainingJobEarlyStoppingType"`
 }
 
 // String returns the string representation
@@ -15482,6 +15493,12 @@ func (s *HyperParameterTuningJobConfig) SetResourceLimits(v *ResourceLimits) *Hy
 // SetStrategy sets the Strategy field's value.
 func (s *HyperParameterTuningJobConfig) SetStrategy(v string) *HyperParameterTuningJobConfig {
 	s.Strategy = &v
+	return s
+}
+
+// SetTrainingJobEarlyStoppingType sets the TrainingJobEarlyStoppingType field's value.
+func (s *HyperParameterTuningJobConfig) SetTrainingJobEarlyStoppingType(v string) *HyperParameterTuningJobConfig {
+	s.TrainingJobEarlyStoppingType = &v
 	return s
 }
 
@@ -25784,6 +25801,14 @@ const (
 
 	// TrainingInstanceTypeMlC518xlarge is a TrainingInstanceType enum value
 	TrainingInstanceTypeMlC518xlarge = "ml.c5.18xlarge"
+)
+
+const (
+	// TrainingJobEarlyStoppingTypeOff is a TrainingJobEarlyStoppingType enum value
+	TrainingJobEarlyStoppingTypeOff = "Off"
+
+	// TrainingJobEarlyStoppingTypeAuto is a TrainingJobEarlyStoppingType enum value
+	TrainingJobEarlyStoppingTypeAuto = "Auto"
 )
 
 const (
