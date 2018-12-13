@@ -11,7 +11,7 @@ import (
 var elbAccountIdPerRegionMap = map[string]string{
 	"ap-northeast-1": "582318560864",
 	"ap-northeast-2": "600734575887",
-	"ap-northeast-3": "765225791966",
+	"ap-northeast-3": "383597477331",
 	"ap-south-1":     "718504428378",
 	"ap-southeast-1": "114774131450",
 	"ap-southeast-2": "783225319266",
