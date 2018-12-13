@@ -31,7 +31,7 @@ func resourceAwsSecurityHubAccountCreate(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("Error enabling Security Hub for account: %s", err)
 	}
 
-	d.SetId("securityhub-account")
+	d.SetId(meta.(*AWSClient).accountid)
 
 	return resourceAwsSecurityHubAccountRead(d, meta)
 }
