@@ -4014,7 +4014,7 @@ func flattenResourceLifecycleConfig(rlc *elasticbeanstalk.ApplicationResourceLif
 	return result
 }
 
-func diffDynamoDbGSI(oldGsi, newGsi []interface{}) (ops []*dynamodb.GlobalSecondaryIndexUpdate, e error) {
+func diffDynamoDbGSI(oldGsi, newGsi []interface{}, billingMode string) (ops []*dynamodb.GlobalSecondaryIndexUpdate, e error) {
 	// Transform slices into maps
 	oldGsis := make(map[string]interface{})
 	for _, gsidata := range oldGsi {
@@ -4024,6 +4024,10 @@ func diffDynamoDbGSI(oldGsi, newGsi []interface{}) (ops []*dynamodb.GlobalSecond
 	newGsis := make(map[string]interface{})
 	for _, gsidata := range newGsi {
 		m := gsidata.(map[string]interface{})
+		// validate throughput input early, to avoid unnecessary processing
+		if e = validateDynamoDbProvisionedThroughput(m, billingMode); e != nil {
+			return
+		}
 		newGsis[m["name"].(string)] = m
 	}
 
@@ -4039,7 +4043,7 @@ func diffDynamoDbGSI(oldGsi, newGsi []interface{}) (ops []*dynamodb.GlobalSecond
 				Create: &dynamodb.CreateGlobalSecondaryIndexAction{
 					IndexName:             aws.String(idxName),
 					KeySchema:             expandDynamoDbKeySchema(m),
-					ProvisionedThroughput: expandDynamoDbProvisionedThroughput(m),
+					ProvisionedThroughput: expandDynamoDbProvisionedThroughput(m, billingMode),
 					Projection:            expandDynamoDbProjection(m),
 				},
 			})
@@ -4075,7 +4079,7 @@ func diffDynamoDbGSI(oldGsi, newGsi []interface{}) (ops []*dynamodb.GlobalSecond
 				update := &dynamodb.GlobalSecondaryIndexUpdate{
 					Update: &dynamodb.UpdateGlobalSecondaryIndexAction{
 						IndexName:             aws.String(idxName),
-						ProvisionedThroughput: expandDynamoDbProvisionedThroughput(newMap),
+						ProvisionedThroughput: expandDynamoDbProvisionedThroughput(newMap, billingMode),
 					},
 				}
 				ops = append(ops, update)
@@ -4091,7 +4095,7 @@ func diffDynamoDbGSI(oldGsi, newGsi []interface{}) (ops []*dynamodb.GlobalSecond
 					Create: &dynamodb.CreateGlobalSecondaryIndexAction{
 						IndexName:             aws.String(idxName),
 						KeySchema:             expandDynamoDbKeySchema(newMap),
-						ProvisionedThroughput: expandDynamoDbProvisionedThroughput(newMap),
+						ProvisionedThroughput: expandDynamoDbProvisionedThroughput(newMap, billingMode),
 						Projection:            expandDynamoDbProjection(newMap),
 					},
 				})
@@ -4312,16 +4316,45 @@ func expandDynamoDbLocalSecondaryIndexes(cfg []interface{}, keySchemaM map[strin
 	return indexes
 }
 
-func expandDynamoDbGlobalSecondaryIndex(data map[string]interface{}) *dynamodb.GlobalSecondaryIndex {
+func expandDynamoDbGlobalSecondaryIndex(data map[string]interface{}, billingMode string) *dynamodb.GlobalSecondaryIndex {
 	return &dynamodb.GlobalSecondaryIndex{
 		IndexName:             aws.String(data["name"].(string)),
 		KeySchema:             expandDynamoDbKeySchema(data),
 		Projection:            expandDynamoDbProjection(data),
-		ProvisionedThroughput: expandDynamoDbProvisionedThroughput(data),
+		ProvisionedThroughput: expandDynamoDbProvisionedThroughput(data, billingMode),
 	}
 }
 
-func expandDynamoDbProvisionedThroughput(data map[string]interface{}) *dynamodb.ProvisionedThroughput {
+func validateDynamoDbProvisionedThroughput(data map[string]interface{}, billingMode string) error {
+	// if billing mode is PAY_PER_REQUEST, don't need to validate the throughput settings
+	if billingMode == dynamodb.BillingModePayPerRequest {
+		return nil
+	}
+
+	writeCapacity, writeCapacitySet := data["write_capacity"].(int)
+	readCapacity, readCapacitySet := data["read_capacity"].(int)
+
+	if !writeCapacitySet || !readCapacitySet {
+		return fmt.Errorf("Read and Write capacity should be set when billing mode is %s", dynamodb.BillingModeProvisioned)
+	}
+
+	if writeCapacity < 1 {
+		return fmt.Errorf("Write capacity must be > 0 when billing mode is %s", dynamodb.BillingModeProvisioned)
+	}
+
+	if readCapacity < 1 {
+		return fmt.Errorf("Read capacity must be > 0 when billing mode is %s", dynamodb.BillingModeProvisioned)
+	}
+
+	return nil
+}
+
+func expandDynamoDbProvisionedThroughput(data map[string]interface{}, billingMode string) *dynamodb.ProvisionedThroughput {
+
+	if billingMode == dynamodb.BillingModePayPerRequest {
+		return nil
+	}
+
 	return &dynamodb.ProvisionedThroughput{
 		WriteCapacityUnits: aws.Int64(int64(data["write_capacity"].(int))),
 		ReadCapacityUnits:  aws.Int64(int64(data["read_capacity"].(int))),

@@ -187,11 +187,11 @@ func resourceAwsDynamoDbTable() *schema.Resource {
 						},
 						"write_capacity": {
 							Type:     schema.TypeInt,
-							Required: true,
+							Optional: true,
 						},
 						"read_capacity": {
 							Type:     schema.TypeInt,
-							Required: true,
+							Optional: true,
 						},
 						"hash_key": {
 							Type:     schema.TypeString,
@@ -293,18 +293,17 @@ func resourceAwsDynamoDbTableCreate(d *schema.ResourceData, meta interface{}) er
 		KeySchema:   expandDynamoDbKeySchema(keySchemaMap),
 	}
 
-	if d.Get("billing_mode").(string) == dynamodb.BillingModeProvisioned {
-		v_read, ok_read := d.GetOk("read_capacity")
-		v_write, ok_write := d.GetOk("write_capacity")
-		if !ok_read || !ok_write {
-			return fmt.Errorf("Read and Write capacity should be set when billing mode is PROVISIONED")
-		}
-
-		req.ProvisionedThroughput = expandDynamoDbProvisionedThroughput(map[string]interface{}{
-			"read_capacity":  v_read,
-			"write_capacity": v_write,
-		})
+	billingMode := d.Get("billing_mode").(string)
+	capacityMap := map[string]interface{}{
+		"write_capacity": d.Get("write_capacity"),
+		"read_capacity":  d.Get("read_capacity"),
 	}
+
+	if err := validateDynamoDbProvisionedThroughput(capacityMap, billingMode); err != nil {
+		return err
+	}
+
+	req.ProvisionedThroughput = expandDynamoDbProvisionedThroughput(capacityMap, billingMode)
 
 	if v, ok := d.GetOk("attribute"); ok {
 		aSet := v.(*schema.Set)
@@ -319,9 +318,14 @@ func resourceAwsDynamoDbTableCreate(d *schema.ResourceData, meta interface{}) er
 	if v, ok := d.GetOk("global_secondary_index"); ok {
 		globalSecondaryIndexes := []*dynamodb.GlobalSecondaryIndex{}
 		gsiSet := v.(*schema.Set)
+
 		for _, gsiObject := range gsiSet.List() {
 			gsi := gsiObject.(map[string]interface{})
-			gsiObject := expandDynamoDbGlobalSecondaryIndex(gsi)
+			if err := validateDynamoDbProvisionedThroughput(gsi, billingMode); err != nil {
+				return fmt.Errorf("Failed to create GSI: %v", err)
+			}
+
+			gsiObject := expandDynamoDbGlobalSecondaryIndex(gsi, billingMode)
 			globalSecondaryIndexes = append(globalSecondaryIndexes, gsiObject)
 		}
 		req.GlobalSecondaryIndexes = globalSecondaryIndexes
@@ -379,24 +383,22 @@ func resourceAwsDynamoDbTableCreate(d *schema.ResourceData, meta interface{}) er
 
 func resourceAwsDynamoDbTableUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).dynamodbconn
+	billingMode := d.Get("billing_mode").(string)
+
 	if d.HasChange("billing_mode") && !d.IsNewResource() {
 		req := &dynamodb.UpdateTableInput{
 			TableName:   aws.String(d.Id()),
-			BillingMode: aws.String(d.Get("billing_mode").(string)),
+			BillingMode: aws.String(billingMode),
 		}
-		if d.Get("billing_mode").(string) == dynamodb.BillingModeProvisioned {
-
-			v_read, ok_read := d.GetOk("read_capacity")
-			v_write, ok_write := d.GetOk("write_capacity")
-			if !ok_read || !ok_write {
-				return fmt.Errorf("Read and Write capacity should be set when billing mode is PROVISIONED")
-			}
-
-			req.ProvisionedThroughput = expandDynamoDbProvisionedThroughput(map[string]interface{}{
-				"read_capacity":  v_read,
-				"write_capacity": v_write,
-			})
+		capacityMap := map[string]interface{}{
+			"write_capacity": d.Get("write_capacity"),
+			"read_capacity":  d.Get("read_capacity"),
 		}
+
+		if err := validateDynamoDbProvisionedThroughput(capacityMap, billingMode); err != nil {
+			return err
+		}
+
 		_, err := conn.UpdateTable(req)
 		if err != nil {
 			return fmt.Errorf("Error updating DynamoDB Table (%s) billing mode: %s", d.Id(), err)
@@ -413,7 +415,7 @@ func resourceAwsDynamoDbTableUpdate(d *schema.ResourceData, meta interface{}) er
 			ProvisionedThroughput: expandDynamoDbProvisionedThroughput(map[string]interface{}{
 				"read_capacity":  d.Get("read_capacity"),
 				"write_capacity": d.Get("write_capacity"),
-			}),
+			}, billingMode),
 		})
 		if err != nil {
 			return err
@@ -451,7 +453,7 @@ func resourceAwsDynamoDbTableUpdate(d *schema.ResourceData, meta interface{}) er
 		attributes := d.Get("attribute").(*schema.Set).List()
 
 		o, n := d.GetChange("global_secondary_index")
-		ops, err := diffDynamoDbGSI(o.(*schema.Set).List(), n.(*schema.Set).List())
+		ops, err := diffDynamoDbGSI(o.(*schema.Set).List(), n.(*schema.Set).List(), billingMode)
 		if err != nil {
 			return fmt.Errorf("Computing difference for global_secondary_index failed: %s", err)
 		}
