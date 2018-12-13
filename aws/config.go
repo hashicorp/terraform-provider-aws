@@ -88,6 +88,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
+	"github.com/aws/aws-sdk-go/service/securityhub"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
 	"github.com/aws/aws-sdk-go/service/ses"
@@ -197,6 +198,7 @@ type AWSClient struct {
 	autoscalingconn       *autoscaling.AutoScaling
 	s3conn                *s3.S3
 	secretsmanagerconn    *secretsmanager.SecretsManager
+	securityhubconn       *securityhub.SecurityHub
 	scconn                *servicecatalog.ServiceCatalog
 	sesConn               *ses.SES
 	simpledbconn          *simpledb.SimpleDB
@@ -567,6 +569,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.sdconn = servicediscovery.New(sess)
 	client.sesConn = ses.New(sess)
 	client.secretsmanagerconn = secretsmanager.New(sess)
+	client.securityhubconn = securityhub.New(sess)
 	client.sfnconn = sfn.New(sess)
 	client.snsconn = sns.New(awsSnsSess)
 	client.sqsconn = sqs.New(awsSqsSess)
