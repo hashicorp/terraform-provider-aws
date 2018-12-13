@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"regexp"
@@ -114,7 +115,7 @@ func TestAccAWSEksCluster_basic(t *testing.T) {
 }
 
 func TestAccAWSEksCluster_Version(t *testing.T) {
-	var cluster eks.Cluster
+	var cluster1, cluster2 eks.Cluster
 
 	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 	resourceName := "aws_eks_cluster.test"
@@ -127,7 +128,7 @@ func TestAccAWSEksCluster_Version(t *testing.T) {
 			{
 				Config: testAccAWSEksClusterConfig_Version(rName, "1.10"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksClusterExists(resourceName, &cluster),
+					testAccCheckAWSEksClusterExists(resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "version", "1.10"),
 				),
 			},
@@ -135,6 +136,14 @@ func TestAccAWSEksCluster_Version(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSEksClusterConfig_Version(rName, "1.11"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEksClusterExists(resourceName, &cluster2),
+					testAccCheckAWSEksClusterNotRecreated(&cluster1, &cluster2),
+					resource.TestCheckResourceAttr(resourceName, "version", "1.11"),
+				),
 			},
 		},
 	})
@@ -233,6 +242,16 @@ func testAccCheckAWSEksClusterDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccCheckAWSEksClusterNotRecreated(i, j *eks.Cluster) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if aws.TimeValue(i.CreatedAt) != aws.TimeValue(j.CreatedAt) {
+			return errors.New("EKS Cluster was recreated")
+		}
+
+		return nil
+	}
 }
 
 func testAccAWSEksClusterConfig_Base(rName string) string {
