@@ -632,7 +632,7 @@ func resourceAwsSecurityHubInsightUpdate(d *schema.ResourceData, meta interface{
 
 func resourceAwsSecurityHubInsightDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).securityhubconn
-	log.Print("[DEBUG] Deleting Security Hub insight %s", d.Id())
+	log.Printf("[DEBUG] Deleting Security Hub insight %s", d.Id())
 
 	_, err := conn.DeleteInsight(&securityhub.DeleteInsightInput{
 		InsightArn: aws.String(d.Id()),

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/service/securityhub"
 	"github.com/hashicorp/terraform/helper/schema"
 )
@@ -29,10 +28,7 @@ func resourceAwsSecurityHubAccountCreate(d *schema.ResourceData, meta interface{
 	_, err := conn.EnableSecurityHub(&securityhub.EnableSecurityHubInput{})
 
 	if err != nil {
-		// Ignore SerializationError: https://github.com/aws/aws-sdk-go/issues/2332
-		if !isAWSErr(err, request.ErrCodeSerialization, "") {
-			return fmt.Errorf("Error enabling Security Hub for account: %s", err)
-		}
+		return fmt.Errorf("Error enabling Security Hub for account: %s", err)
 	}
 
 	d.SetId("securityhub-account")
@@ -65,10 +61,7 @@ func resourceAwsSecurityHubAccountDelete(d *schema.ResourceData, meta interface{
 	_, err := conn.DisableSecurityHub(&securityhub.DisableSecurityHubInput{})
 
 	if err != nil {
-		// Ignore SerializationError: https://github.com/aws/aws-sdk-go/issues/2332
-		if !isAWSErr(err, request.ErrCodeSerialization, "") {
-			return fmt.Errorf("Error disabling Security Hub for account: %s", err)
-		}
+		return fmt.Errorf("Error disabling Security Hub for account: %s", err)
 	}
 
 	return nil
