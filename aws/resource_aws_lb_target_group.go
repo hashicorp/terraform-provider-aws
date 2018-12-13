@@ -245,6 +245,9 @@ func resourceAwsLbTargetGroupCreate(d *schema.ResourceData, meta interface{}) er
 		if _, ok := d.GetOk("vpc_id"); !ok {
 			return fmt.Errorf("vpc_id should be set when target type is %s", d.Get("target_type").(string))
 		}
+		params.Port = aws.Int64(int64(d.Get("port").(int)))
+		params.Protocol = aws.String(d.Get("protocol").(string))
+		params.VpcId = aws.String(d.Get("vpc_id").(string))
 	}
 
 	if healthChecks := d.Get("health_check").([]interface{}); len(healthChecks) == 1 {
@@ -258,7 +261,7 @@ func resourceAwsLbTargetGroupCreate(d *schema.ResourceData, meta interface{}) er
 		if t != 0 {
 			params.HealthCheckTimeoutSeconds = aws.Int64(int64(t))
 		}
-		healthCheckProtocol := strings.ToLower(healthCheck["protocol"].(string))
+		healthCheckProtocol := healthCheck["protocol"].(string)
 
 		if healthCheckProtocol != "TCP" {
 			p := healthCheck["path"].(string)
@@ -340,9 +343,9 @@ func resourceAwsLbTargetGroupUpdate(d *schema.ResourceData, meta interface{}) er
 				params.HealthCheckTimeoutSeconds = aws.Int64(int64(t))
 			}
 
-			healthCheckProtocol := strings.ToLower(healthCheck["protocol"].(string))
+			healthCheckProtocol := healthCheck["protocol"].(string)
 
-			if healthCheckProtocol != "tcp" && !d.IsNewResource() {
+			if healthCheckProtocol != "TCP" && !d.IsNewResource() {
 				params.Matcher = &elbv2.Matcher{
 					HttpCode: aws.String(healthCheck["matcher"].(string)),
 				}
@@ -512,7 +515,6 @@ func flattenAwsLbTargetGroupResource(d *schema.ResourceData, meta interface{}, t
 	d.Set("arn", targetGroup.TargetGroupArn)
 	d.Set("arn_suffix", lbTargetGroupSuffixFromARN(targetGroup.TargetGroupArn))
 	d.Set("name", targetGroup.TargetGroupName)
-	d.Set("vpc_id", targetGroup.VpcId)
 	d.Set("target_type", targetGroup.TargetType)
 
 	healthCheck := make(map[string]interface{})
@@ -529,10 +531,12 @@ func flattenAwsLbTargetGroupResource(d *schema.ResourceData, meta interface{}, t
 	if targetGroup.Matcher != nil && targetGroup.Matcher.HttpCode != nil {
 		healthCheck["matcher"] = aws.StringValue(targetGroup.Matcher.HttpCode)
 	}
-	if d.Get("target_type").(string) != elbv2.TargetTypeEnumLambda {
+	if v, _ := d.Get("target_type").(string); v != elbv2.TargetTypeEnumLambda {
+		d.Set("vpc_id", targetGroup.VpcId)
 		d.Set("port", targetGroup.Port)
 		d.Set("protocol", targetGroup.Protocol)
 	}
+
 	if err := d.Set("health_check", []interface{}{healthCheck}); err != nil {
 		return fmt.Errorf("error setting health_check: %s", err)
 	}
