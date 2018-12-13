@@ -9,6 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/aws/aws-sdk-go/aws/request"
+	"github.com/aws/aws-sdk-go/private/protocol"
+	"github.com/aws/aws-sdk-go/private/protocol/restjson"
 )
 
 const opAssociateCertificate = "AssociateCertificate"
@@ -50,6 +52,7 @@ func (c *MediaConvert) AssociateCertificateRequest(input *AssociateCertificateIn
 
 	output = &AssociateCertificateOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -139,6 +142,7 @@ func (c *MediaConvert) CancelJobRequest(input *CancelJobInput) (req *request.Req
 
 	output = &CancelJobOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -584,6 +588,7 @@ func (c *MediaConvert) DeleteJobTemplateRequest(input *DeleteJobTemplateInput) (
 
 	output = &DeleteJobTemplateOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -672,6 +677,7 @@ func (c *MediaConvert) DeletePresetRequest(input *DeletePresetInput) (req *reque
 
 	output = &DeletePresetOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -760,6 +766,7 @@ func (c *MediaConvert) DeleteQueueRequest(input *DeleteQueueInput) (req *request
 
 	output = &DeleteQueueOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -993,6 +1000,7 @@ func (c *MediaConvert) DisassociateCertificateRequest(input *DisassociateCertifi
 
 	output = &DisassociateCertificateOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -2107,6 +2115,7 @@ func (c *MediaConvert) TagResourceRequest(input *TagResourceInput) (req *request
 
 	output = &TagResourceOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -2196,6 +2205,7 @@ func (c *MediaConvert) UntagResourceRequest(input *UntagResourceInput) (req *req
 
 	output = &UntagResourceOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -3766,6 +3776,9 @@ func (s *CancelJobInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CancelJobInput"}
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
+	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -5470,6 +5483,9 @@ func (s *DeleteJobTemplateInput) Validate() error {
 	if s.Name == nil {
 		invalidParams.Add(request.NewErrParamRequired("Name"))
 	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -5524,6 +5540,9 @@ func (s *DeletePresetInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DeletePresetInput"}
 	if s.Name == nil {
 		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -5580,6 +5599,9 @@ func (s *DeleteQueueInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DeleteQueueInput"}
 	if s.Name == nil {
 		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -6744,6 +6766,9 @@ func (s *GetJobInput) Validate() error {
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
 	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -6807,6 +6832,9 @@ func (s *GetJobTemplateInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "GetJobTemplateInput"}
 	if s.Name == nil {
 		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -6873,6 +6901,9 @@ func (s *GetPresetInput) Validate() error {
 	if s.Name == nil {
 		invalidParams.Add(request.NewErrParamRequired("Name"))
 	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -6936,6 +6967,9 @@ func (s *GetQueueInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "GetQueueInput"}
 	if s.Name == nil {
 		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -10565,6 +10599,9 @@ func (s *ListTagsForResourceInput) Validate() error {
 	if s.Arn == nil {
 		invalidParams.Add(request.NewErrParamRequired("Arn"))
 	}
+	if s.Arn != nil && len(*s.Arn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Arn", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -14100,6 +14137,9 @@ func (s *UntagResourceInput) Validate() error {
 	if s.Arn == nil {
 		invalidParams.Add(request.NewErrParamRequired("Arn"))
 	}
+	if s.Arn != nil && len(*s.Arn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Arn", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -14174,6 +14214,9 @@ func (s *UpdateJobTemplateInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "UpdateJobTemplateInput"}
 	if s.Name == nil {
 		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
 	}
 	if s.Settings != nil {
 		if err := s.Settings.Validate(); err != nil {
@@ -14280,6 +14323,9 @@ func (s *UpdatePresetInput) Validate() error {
 	if s.Name == nil {
 		invalidParams.Add(request.NewErrParamRequired("Name"))
 	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
+	}
 	if s.Settings != nil {
 		if err := s.Settings.Validate(); err != nil {
 			invalidParams.AddNested("Settings", err.(request.ErrInvalidParams))
@@ -14383,6 +14429,9 @@ func (s *UpdateQueueInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "UpdateQueueInput"}
 	if s.Name == nil {
 		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
 	}
 	if s.ReservationPlanSettings != nil {
 		if err := s.ReservationPlanSettings.Validate(); err != nil {

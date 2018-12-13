@@ -165,6 +165,10 @@ func resourceAwsGlueCrawler() *schema.Resource {
 				},
 				ValidateFunc: validation.ValidateJsonString,
 			},
+			"security_configuration": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -238,6 +242,10 @@ func createCrawlerInput(crawlerName string, d *schema.ResourceData) (*glue.Creat
 			return nil, fmt.Errorf("Configuration contains an invalid JSON: %v", err)
 		}
 		crawlerInput.Configuration = aws.String(configuration)
+	}
+
+	if securityConfiguration, ok := d.GetOk("security_configuration"); ok {
+		crawlerInput.CrawlerSecurityConfiguration = aws.String(securityConfiguration.(string))
 	}
 
 	return crawlerInput, nil
@@ -412,6 +420,7 @@ func resourceAwsGlueCrawlerRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("role", crawlerOutput.Crawler.Role)
 	d.Set("configuration", crawlerOutput.Crawler.Configuration)
 	d.Set("description", crawlerOutput.Crawler.Description)
+	d.Set("security_configuration", crawlerOutput.Crawler.CrawlerSecurityConfiguration)
 	d.Set("schedule", "")
 	if crawlerOutput.Crawler.Schedule != nil {
 		d.Set("schedule", crawlerOutput.Crawler.Schedule.ScheduleExpression)

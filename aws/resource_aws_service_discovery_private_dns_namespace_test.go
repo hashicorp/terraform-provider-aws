@@ -89,7 +89,7 @@ func testAccServiceDiscoveryPrivateDnsNamespaceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-  tags {
+  tags = {
     Name = "terraform-testacc-service-discovery-private-dns-ns"
   }
 }

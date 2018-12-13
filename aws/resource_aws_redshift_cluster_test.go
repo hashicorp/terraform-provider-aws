@@ -1153,7 +1153,7 @@ resource "aws_redshift_cluster" "default" {
   automated_snapshot_retention_period = 7
   allow_version_upgrade = false
   skip_final_snapshot = true
-  tags {
+  tags = {
     environment = "Production"
     cluster = "reader"
     Type = "master"
@@ -1173,7 +1173,7 @@ resource "aws_redshift_cluster" "default" {
   automated_snapshot_retention_period = 7
   allow_version_upgrade = false
   skip_final_snapshot = true
-  tags {
+  tags = {
     environment = "Production"
   }
 }`, rInt)
@@ -1183,13 +1183,13 @@ func testAccAWSRedshiftClusterConfig_notPubliclyAccessible(rInt int) string {
 	return fmt.Sprintf(`
 	resource "aws_vpc" "foo" {
 		cidr_block = "10.1.0.0/16"
-		tags {
+	tags = {
 			Name = "terraform-testacc-redshift-cluster-not-publicly-accessible"
 		}
 	}
 	resource "aws_internet_gateway" "foo" {
 		vpc_id = "${aws_vpc.foo.id}"
-		tags {
+	tags = {
 			foo = "bar"
 		}
 	}
@@ -1197,7 +1197,7 @@ func testAccAWSRedshiftClusterConfig_notPubliclyAccessible(rInt int) string {
 		cidr_block = "10.1.1.0/24"
 		availability_zone = "us-west-2a"
 		vpc_id = "${aws_vpc.foo.id}"
-		tags {
+	tags = {
 			Name = "tf-acc-redshift-cluster-not-publicly-accessible-foo"
 		}
 	}
@@ -1205,7 +1205,7 @@ func testAccAWSRedshiftClusterConfig_notPubliclyAccessible(rInt int) string {
 		cidr_block = "10.1.2.0/24"
 		availability_zone = "us-west-2b"
 		vpc_id = "${aws_vpc.foo.id}"
-		tags {
+	tags = {
 			Name = "tf-acc-redshift-cluster-not-publicly-accessible-bar"
 		}
 	}
@@ -1213,7 +1213,7 @@ func testAccAWSRedshiftClusterConfig_notPubliclyAccessible(rInt int) string {
 		cidr_block = "10.1.3.0/24"
 		availability_zone = "us-west-2c"
 		vpc_id = "${aws_vpc.foo.id}"
-		tags {
+	tags = {
 			Name = "tf-acc-redshift-cluster-not-publicly-accessible-foobar"
 		}
 	}
@@ -1243,13 +1243,13 @@ func testAccAWSRedshiftClusterConfig_updatePubliclyAccessible(rInt int) string {
 	return fmt.Sprintf(`
 	resource "aws_vpc" "foo" {
 		cidr_block = "10.1.0.0/16"
-		tags {
+	tags = {
 			Name = "terraform-testacc-redshift-cluster-upd-publicly-accessible"
 		}
 	}
 	resource "aws_internet_gateway" "foo" {
 		vpc_id = "${aws_vpc.foo.id}"
-		tags {
+	tags = {
 			foo = "bar"
 		}
 	}
@@ -1257,7 +1257,7 @@ func testAccAWSRedshiftClusterConfig_updatePubliclyAccessible(rInt int) string {
 		cidr_block = "10.1.1.0/24"
 		availability_zone = "us-west-2a"
 		vpc_id = "${aws_vpc.foo.id}"
-		tags {
+	tags = {
 			Name = "tf-acc-redshift-cluster-upd-publicly-accessible-foo"
 		}
 	}
@@ -1265,7 +1265,7 @@ func testAccAWSRedshiftClusterConfig_updatePubliclyAccessible(rInt int) string {
 		cidr_block = "10.1.2.0/24"
 		availability_zone = "us-west-2b"
 		vpc_id = "${aws_vpc.foo.id}"
-		tags {
+	tags = {
 			Name = "tf-acc-redshift-cluster-upd-publicly-accessible-bar"
 		}
 	}
@@ -1273,7 +1273,7 @@ func testAccAWSRedshiftClusterConfig_updatePubliclyAccessible(rInt int) string {
 		cidr_block = "10.1.3.0/24"
 		availability_zone = "us-west-2c"
 		vpc_id = "${aws_vpc.foo.id}"
-		tags {
+	tags = {
 			Name = "tf-acc-redshift-cluster-upd-publicly-accessible-foobar"
 		}
 	}

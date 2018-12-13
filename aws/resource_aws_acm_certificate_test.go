@@ -407,7 +407,7 @@ resource "aws_acm_certificate" "cert" {
   domain_name       = "%s"
   validation_method = "%s"
 
-  tags {
+  tags = {
     "%s" = "%s"
   }
 }
@@ -420,7 +420,7 @@ resource "aws_acm_certificate" "cert" {
   domain_name       = "%s"
   validation_method = "%s"
 
-  tags {
+  tags = {
     "%s" = "%s"
     "%s" = "%s"
   }

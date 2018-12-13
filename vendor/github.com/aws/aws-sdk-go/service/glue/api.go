@@ -9,6 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/aws/aws-sdk-go/aws/request"
+	"github.com/aws/aws-sdk-go/private/protocol"
+	"github.com/aws/aws-sdk-go/private/protocol/jsonrpc"
 )
 
 const opBatchCreatePartition = "BatchCreatePartition"
@@ -678,6 +680,7 @@ func (c *Glue) CreateClassifierRequest(input *CreateClassifierInput) (req *reque
 
 	output = &CreateClassifierOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -765,6 +768,7 @@ func (c *Glue) CreateConnectionRequest(input *CreateConnectionInput) (req *reque
 
 	output = &CreateConnectionOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -856,6 +860,7 @@ func (c *Glue) CreateCrawlerRequest(input *CreateCrawlerInput) (req *request.Req
 
 	output = &CreateCrawlerOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -946,6 +951,7 @@ func (c *Glue) CreateDatabaseRequest(input *CreateDatabaseInput) (req *request.R
 
 	output = &CreateDatabaseOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -1237,6 +1243,7 @@ func (c *Glue) CreatePartitionRequest(input *CreatePartitionInput) (req *request
 
 	output = &CreatePartitionOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -1510,6 +1517,7 @@ func (c *Glue) CreateTableRequest(input *CreateTableInput) (req *request.Request
 
 	output = &CreateTableOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -1704,6 +1712,7 @@ func (c *Glue) CreateUserDefinedFunctionRequest(input *CreateUserDefinedFunction
 
 	output = &CreateUserDefinedFunctionOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -1801,6 +1810,7 @@ func (c *Glue) DeleteClassifierRequest(input *DeleteClassifierInput) (req *reque
 
 	output = &DeleteClassifierOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -1883,6 +1893,7 @@ func (c *Glue) DeleteConnectionRequest(input *DeleteConnectionInput) (req *reque
 
 	output = &DeleteConnectionOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -1965,6 +1976,7 @@ func (c *Glue) DeleteCrawlerRequest(input *DeleteCrawlerInput) (req *request.Req
 
 	output = &DeleteCrawlerOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -2054,6 +2066,7 @@ func (c *Glue) DeleteDatabaseRequest(input *DeleteDatabaseInput) (req *request.R
 
 	output = &DeleteDatabaseOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -2153,6 +2166,7 @@ func (c *Glue) DeleteDevEndpointRequest(input *DeleteDevEndpointInput) (req *req
 
 	output = &DeleteDevEndpointOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -2327,6 +2341,7 @@ func (c *Glue) DeletePartitionRequest(input *DeletePartitionInput) (req *request
 
 	output = &DeletePartitionOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -2415,6 +2430,7 @@ func (c *Glue) DeleteResourcePolicyRequest(input *DeleteResourcePolicyInput) (re
 
 	output = &DeleteResourcePolicyOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -2506,6 +2522,7 @@ func (c *Glue) DeleteSecurityConfigurationRequest(input *DeleteSecurityConfigura
 
 	output = &DeleteSecurityConfigurationOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -2594,6 +2611,7 @@ func (c *Glue) DeleteTableRequest(input *DeleteTableInput) (req *request.Request
 
 	output = &DeleteTableOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -2691,6 +2709,7 @@ func (c *Glue) DeleteTableVersionRequest(input *DeleteTableVersionInput) (req *r
 
 	output = &DeleteTableVersionOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -2868,6 +2887,7 @@ func (c *Glue) DeleteUserDefinedFunctionRequest(input *DeleteUserDefinedFunction
 
 	output = &DeleteUserDefinedFunctionOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -6572,6 +6592,7 @@ func (c *Glue) ImportCatalogToGlueRequest(input *ImportCatalogToGlueInput) (req 
 
 	output = &ImportCatalogToGlueOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -6654,6 +6675,7 @@ func (c *Glue) PutDataCatalogEncryptionSettingsRequest(input *PutDataCatalogEncr
 
 	output = &PutDataCatalogEncryptionSettingsOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -6920,6 +6942,7 @@ func (c *Glue) StartCrawlerRequest(input *StartCrawlerInput) (req *request.Reque
 
 	output = &StartCrawlerOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -7006,6 +7029,7 @@ func (c *Glue) StartCrawlerScheduleRequest(input *StartCrawlerScheduleInput) (re
 
 	output = &StartCrawlerScheduleOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -7287,6 +7311,7 @@ func (c *Glue) StopCrawlerRequest(input *StopCrawlerInput) (req *request.Request
 
 	output = &StopCrawlerOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -7375,6 +7400,7 @@ func (c *Glue) StopCrawlerScheduleRequest(input *StopCrawlerScheduleInput) (req 
 
 	output = &StopCrawlerScheduleOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -7555,6 +7581,7 @@ func (c *Glue) UpdateClassifierRequest(input *UpdateClassifierInput) (req *reque
 
 	output = &UpdateClassifierOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -7644,6 +7671,7 @@ func (c *Glue) UpdateConnectionRequest(input *UpdateConnectionInput) (req *reque
 
 	output = &UpdateConnectionOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -7735,6 +7763,7 @@ func (c *Glue) UpdateCrawlerRequest(input *UpdateCrawlerInput) (req *request.Req
 
 	output = &UpdateCrawlerOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -7827,6 +7856,7 @@ func (c *Glue) UpdateCrawlerScheduleRequest(input *UpdateCrawlerScheduleInput) (
 
 	output = &UpdateCrawlerScheduleOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -7918,6 +7948,7 @@ func (c *Glue) UpdateDatabaseRequest(input *UpdateDatabaseInput) (req *request.R
 
 	output = &UpdateDatabaseOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -8009,6 +8040,7 @@ func (c *Glue) UpdateDevEndpointRequest(input *UpdateDevEndpointInput) (req *req
 
 	output = &UpdateDevEndpointOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -8191,6 +8223,7 @@ func (c *Glue) UpdatePartitionRequest(input *UpdatePartitionInput) (req *request
 
 	output = &UpdatePartitionOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -8282,6 +8315,7 @@ func (c *Glue) UpdateTableRequest(input *UpdateTableInput) (req *request.Request
 
 	output = &UpdateTableOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -8470,6 +8504,7 @@ func (c *Glue) UpdateUserDefinedFunctionRequest(input *UpdateUserDefinedFunction
 
 	output = &UpdateUserDefinedFunctionOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 

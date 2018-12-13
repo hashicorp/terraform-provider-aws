@@ -610,7 +610,7 @@ func testAccAWSLaunchTemplateConfig_basic(rInt int) string {
 resource "aws_launch_template" "foo" {
   name = "foo_%d"
 
-  tags {
+  tags = {
     foo = "bar"
   }
 }
@@ -791,7 +791,7 @@ resource "aws_launch_template" "foo" {
 
   tag_specifications {
     resource_type = "instance"
-    tags {
+  tags = {
       Name = "test"
     }
   }
@@ -804,7 +804,7 @@ func testAccAWSLaunchTemplateConfig_tagsUpdate(rInt int) string {
 resource "aws_launch_template" "foo" {
   name = "foo_%d"
 
-  tags {
+  tags = {
     bar = "baz"
   }
 }

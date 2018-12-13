@@ -9,6 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/aws/aws-sdk-go/aws/request"
+	"github.com/aws/aws-sdk-go/private/protocol"
+	"github.com/aws/aws-sdk-go/private/protocol/restxml"
 )
 
 const opAssociateVPCWithHostedZone = "AssociateVPCWithHostedZone"
@@ -355,6 +357,7 @@ func (c *Route53) ChangeTagsForResourceRequest(input *ChangeTagsForResourceInput
 
 	output = &ChangeTagsForResourceOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restxml.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -1537,6 +1540,7 @@ func (c *Route53) DeleteHealthCheckRequest(input *DeleteHealthCheckInput) (req *
 
 	output = &DeleteHealthCheckOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restxml.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -1754,6 +1758,7 @@ func (c *Route53) DeleteQueryLoggingConfigRequest(input *DeleteQueryLoggingConfi
 
 	output = &DeleteQueryLoggingConfigOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restxml.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -1844,6 +1849,7 @@ func (c *Route53) DeleteReusableDelegationSetRequest(input *DeleteReusableDelega
 
 	output = &DeleteReusableDelegationSetOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restxml.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -1940,6 +1946,7 @@ func (c *Route53) DeleteTrafficPolicyRequest(input *DeleteTrafficPolicyInput) (r
 
 	output = &DeleteTrafficPolicyOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restxml.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -2030,6 +2037,7 @@ func (c *Route53) DeleteTrafficPolicyInstanceRequest(input *DeleteTrafficPolicyI
 
 	output = &DeleteTrafficPolicyInstanceOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restxml.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -2122,6 +2130,7 @@ func (c *Route53) DeleteVPCAssociationAuthorizationRequest(input *DeleteVPCAssoc
 
 	output = &DeleteVPCAssociationAuthorizationOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restxml.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -6239,6 +6248,9 @@ func (s *AssociateVPCWithHostedZoneInput) Validate() error {
 	if s.HostedZoneId == nil {
 		invalidParams.Add(request.NewErrParamRequired("HostedZoneId"))
 	}
+	if s.HostedZoneId != nil && len(*s.HostedZoneId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("HostedZoneId", 1))
+	}
 	if s.VPC == nil {
 		invalidParams.Add(request.NewErrParamRequired("VPC"))
 	}
@@ -6534,6 +6546,9 @@ func (s *ChangeResourceRecordSetsInput) Validate() error {
 	if s.HostedZoneId == nil {
 		invalidParams.Add(request.NewErrParamRequired("HostedZoneId"))
 	}
+	if s.HostedZoneId != nil && len(*s.HostedZoneId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("HostedZoneId", 1))
+	}
 	if s.ChangeBatch != nil {
 		if err := s.ChangeBatch.Validate(); err != nil {
 			invalidParams.AddNested("ChangeBatch", err.(request.ErrInvalidParams))
@@ -6641,8 +6656,14 @@ func (s *ChangeTagsForResourceInput) Validate() error {
 	if s.ResourceId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ResourceId"))
 	}
+	if s.ResourceId != nil && len(*s.ResourceId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceId", 1))
+	}
 	if s.ResourceType == nil {
 		invalidParams.Add(request.NewErrParamRequired("ResourceType"))
+	}
+	if s.ResourceType != nil && len(*s.ResourceType) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceType", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -7685,6 +7706,9 @@ func (s *CreateVPCAssociationAuthorizationInput) Validate() error {
 	if s.HostedZoneId == nil {
 		invalidParams.Add(request.NewErrParamRequired("HostedZoneId"))
 	}
+	if s.HostedZoneId != nil && len(*s.HostedZoneId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("HostedZoneId", 1))
+	}
 	if s.VPC == nil {
 		invalidParams.Add(request.NewErrParamRequired("VPC"))
 	}
@@ -7823,6 +7847,9 @@ func (s *DeleteHealthCheckInput) Validate() error {
 	if s.HealthCheckId == nil {
 		invalidParams.Add(request.NewErrParamRequired("HealthCheckId"))
 	}
+	if s.HealthCheckId != nil && len(*s.HealthCheckId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("HealthCheckId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -7876,6 +7903,9 @@ func (s *DeleteHostedZoneInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DeleteHostedZoneInput"}
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
+	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -7997,6 +8027,9 @@ func (s *DeleteReusableDelegationSetInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DeleteReusableDelegationSetInput"}
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
+	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -8198,6 +8231,9 @@ func (s *DeleteVPCAssociationAuthorizationInput) Validate() error {
 	if s.HostedZoneId == nil {
 		invalidParams.Add(request.NewErrParamRequired("HostedZoneId"))
 	}
+	if s.HostedZoneId != nil && len(*s.HostedZoneId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("HostedZoneId", 1))
+	}
 	if s.VPC == nil {
 		invalidParams.Add(request.NewErrParamRequired("VPC"))
 	}
@@ -8315,6 +8351,9 @@ func (s *DisassociateVPCFromHostedZoneInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DisassociateVPCFromHostedZoneInput"}
 	if s.HostedZoneId == nil {
 		invalidParams.Add(request.NewErrParamRequired("HostedZoneId"))
+	}
+	if s.HostedZoneId != nil && len(*s.HostedZoneId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("HostedZoneId", 1))
 	}
 	if s.VPC == nil {
 		invalidParams.Add(request.NewErrParamRequired("VPC"))
@@ -8560,6 +8599,9 @@ func (s *GetAccountLimitInput) Validate() error {
 	if s.Type == nil {
 		invalidParams.Add(request.NewErrParamRequired("Type"))
 	}
+	if s.Type != nil && len(*s.Type) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Type", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -8643,6 +8685,9 @@ func (s *GetChangeInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "GetChangeInput"}
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
+	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -8899,6 +8944,9 @@ func (s *GetHealthCheckInput) Validate() error {
 	if s.HealthCheckId == nil {
 		invalidParams.Add(request.NewErrParamRequired("HealthCheckId"))
 	}
+	if s.HealthCheckId != nil && len(*s.HealthCheckId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("HealthCheckId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -8943,6 +8991,9 @@ func (s *GetHealthCheckLastFailureReasonInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "GetHealthCheckLastFailureReasonInput"}
 	if s.HealthCheckId == nil {
 		invalidParams.Add(request.NewErrParamRequired("HealthCheckId"))
+	}
+	if s.HealthCheckId != nil && len(*s.HealthCheckId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("HealthCheckId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -9043,6 +9094,9 @@ func (s *GetHealthCheckStatusInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "GetHealthCheckStatusInput"}
 	if s.HealthCheckId == nil {
 		invalidParams.Add(request.NewErrParamRequired("HealthCheckId"))
+	}
+	if s.HealthCheckId != nil && len(*s.HealthCheckId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("HealthCheckId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -9153,6 +9207,9 @@ func (s *GetHostedZoneInput) Validate() error {
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
 	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -9204,8 +9261,14 @@ func (s *GetHostedZoneLimitInput) Validate() error {
 	if s.HostedZoneId == nil {
 		invalidParams.Add(request.NewErrParamRequired("HostedZoneId"))
 	}
+	if s.HostedZoneId != nil && len(*s.HostedZoneId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("HostedZoneId", 1))
+	}
 	if s.Type == nil {
 		invalidParams.Add(request.NewErrParamRequired("Type"))
+	}
+	if s.Type != nil && len(*s.Type) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Type", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -9411,6 +9474,9 @@ func (s *GetReusableDelegationSetInput) Validate() error {
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
 	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -9458,8 +9524,14 @@ func (s *GetReusableDelegationSetLimitInput) Validate() error {
 	if s.DelegationSetId == nil {
 		invalidParams.Add(request.NewErrParamRequired("DelegationSetId"))
 	}
+	if s.DelegationSetId != nil && len(*s.DelegationSetId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DelegationSetId", 1))
+	}
 	if s.Type == nil {
 		invalidParams.Add(request.NewErrParamRequired("Type"))
+	}
+	if s.Type != nil && len(*s.Type) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Type", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -11283,6 +11355,9 @@ func (s *ListResourceRecordSetsInput) Validate() error {
 	if s.HostedZoneId == nil {
 		invalidParams.Add(request.NewErrParamRequired("HostedZoneId"))
 	}
+	if s.HostedZoneId != nil && len(*s.HostedZoneId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("HostedZoneId", 1))
+	}
 	if s.StartRecordIdentifier != nil && len(*s.StartRecordIdentifier) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("StartRecordIdentifier", 1))
 	}
@@ -11566,8 +11641,14 @@ func (s *ListTagsForResourceInput) Validate() error {
 	if s.ResourceId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ResourceId"))
 	}
+	if s.ResourceId != nil && len(*s.ResourceId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceId", 1))
+	}
 	if s.ResourceType == nil {
 		invalidParams.Add(request.NewErrParamRequired("ResourceType"))
+	}
+	if s.ResourceType != nil && len(*s.ResourceType) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceType", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -11657,6 +11738,9 @@ func (s *ListTagsForResourcesInput) Validate() error {
 	}
 	if s.ResourceType == nil {
 		invalidParams.Add(request.NewErrParamRequired("ResourceType"))
+	}
+	if s.ResourceType != nil && len(*s.ResourceType) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceType", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -12557,6 +12641,9 @@ func (s *ListVPCAssociationAuthorizationsInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "ListVPCAssociationAuthorizationsInput"}
 	if s.HostedZoneId == nil {
 		invalidParams.Add(request.NewErrParamRequired("HostedZoneId"))
+	}
+	if s.HostedZoneId != nil && len(*s.HostedZoneId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("HostedZoneId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -14274,6 +14361,9 @@ func (s *UpdateHealthCheckInput) Validate() error {
 	if s.HealthCheckId == nil {
 		invalidParams.Add(request.NewErrParamRequired("HealthCheckId"))
 	}
+	if s.HealthCheckId != nil && len(*s.HealthCheckId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("HealthCheckId", 1))
+	}
 	if s.HealthCheckVersion != nil && *s.HealthCheckVersion < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("HealthCheckVersion", 1))
 	}
@@ -14451,6 +14541,9 @@ func (s *UpdateHostedZoneCommentInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "UpdateHostedZoneCommentInput"}
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
+	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
 	}
 
 	if invalidParams.Len() > 0 {

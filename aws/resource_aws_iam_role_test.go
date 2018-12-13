@@ -761,7 +761,7 @@ resource "aws_iam_role" "test" {
 }
 EOF
 
-  tags {
+  tags = {
     tag1 = "test-value1"
     tag2 = "test-value2"
   }
@@ -790,7 +790,7 @@ resource "aws_iam_role" "test" {
 }
 EOF
 
-  tags {
+  tags = {
     tag2 = "test-value"
   }
 }

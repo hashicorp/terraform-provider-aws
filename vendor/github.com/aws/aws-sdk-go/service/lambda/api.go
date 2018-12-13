@@ -577,8 +577,7 @@ func (c *Lambda) DeleteAliasRequest(input *DeleteAliasInput) (req *request.Reque
 
 	output = &DeleteAliasOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(restjson.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -765,8 +764,7 @@ func (c *Lambda) DeleteFunctionRequest(input *DeleteFunctionInput) (req *request
 
 	output = &DeleteFunctionOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(restjson.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -865,8 +863,7 @@ func (c *Lambda) DeleteFunctionConcurrencyRequest(input *DeleteFunctionConcurren
 
 	output = &DeleteFunctionConcurrencyOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(restjson.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -959,8 +956,7 @@ func (c *Lambda) DeleteLayerVersionRequest(input *DeleteLayerVersionInput) (req 
 
 	output = &DeleteLayerVersionOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(restjson.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -3132,8 +3128,7 @@ func (c *Lambda) RemoveLayerVersionPermissionRequest(input *RemoveLayerVersionPe
 
 	output = &RemoveLayerVersionPermissionOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(restjson.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -3231,8 +3226,7 @@ func (c *Lambda) RemovePermissionRequest(input *RemovePermissionInput) (req *req
 
 	output = &RemovePermissionOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(restjson.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -3341,8 +3335,7 @@ func (c *Lambda) TagResourceRequest(input *TagResourceInput) (req *request.Reque
 
 	output = &TagResourceOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(restjson.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -3438,8 +3431,7 @@ func (c *Lambda) UntagResourceRequest(input *UntagResourceInput) (req *request.R
 
 	output = &UntagResourceOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(restjson.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -5049,6 +5041,9 @@ func (s *DeleteEventSourceMappingInput) Validate() error {
 	if s.UUID == nil {
 		invalidParams.Add(request.NewErrParamRequired("UUID"))
 	}
+	if s.UUID != nil && len(*s.UUID) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("UUID", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -5281,7 +5276,7 @@ type Environment struct {
 	_ struct{} `type:"structure"`
 
 	// Environment variable key-value pairs.
-	Variables map[string]*string `type:"map"`
+	Variables map[string]*string `type:"map" sensitive:"true"`
 }
 
 // String returns the string representation
@@ -5308,7 +5303,7 @@ type EnvironmentError struct {
 	ErrorCode *string `type:"string"`
 
 	// The error message.
-	Message *string `type:"string"`
+	Message *string `type:"string" sensitive:"true"`
 }
 
 // String returns the string representation
@@ -5341,7 +5336,7 @@ type EnvironmentResponse struct {
 	Error *EnvironmentError `type:"structure"`
 
 	// Environment variable key-value pairs.
-	Variables map[string]*string `type:"map"`
+	Variables map[string]*string `type:"map" sensitive:"true"`
 }
 
 // String returns the string representation
@@ -5473,7 +5468,7 @@ type FunctionCode struct {
 	// AWS SDK and AWS CLI clients handle the encoding for you.
 	//
 	// ZipFile is automatically base64 encoded/decoded by the SDK.
-	ZipFile []byte `type:"blob"`
+	ZipFile []byte `type:"blob" sensitive:"true"`
 }
 
 // String returns the string representation
@@ -5900,6 +5895,9 @@ func (s *GetEventSourceMappingInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "GetEventSourceMappingInput"}
 	if s.UUID == nil {
 		invalidParams.Add(request.NewErrParamRequired("UUID"))
+	}
+	if s.UUID != nil && len(*s.UUID) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("UUID", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -6572,7 +6570,7 @@ type InvokeInput struct {
 	LogType *string `location:"header" locationName:"X-Amz-Log-Type" type:"string" enum:"LogType"`
 
 	// JSON that you want to provide to your Lambda function as input.
-	Payload []byte `type:"blob"`
+	Payload []byte `type:"blob" sensitive:"true"`
 
 	// Specify a version or alias to invoke a published version of the function.
 	Qualifier *string `location:"querystring" locationName:"Qualifier" min:"1" type:"string"`
@@ -6671,7 +6669,7 @@ type InvokeOutput struct {
 	// In the event of a function error this field contains a message describing
 	// the error. For the Handled errors the Lambda function will report this message.
 	// For Unhandled errors AWS Lambda reports the message.
-	Payload []byte `type:"blob"`
+	Payload []byte `type:"blob" sensitive:"true"`
 
 	// The HTTP status code will be in the 200 range for successful request. For
 	// the RequestResponse invocation type this status code will be 200. For the
@@ -6771,7 +6769,7 @@ type LayerVersionContentInput struct {
 	// handle the encoding for you.
 	//
 	// ZipFile is automatically base64 encoded/decoded by the SDK.
-	ZipFile []byte `type:"blob"`
+	ZipFile []byte `type:"blob" sensitive:"true"`
 }
 
 // String returns the string representation
@@ -7537,6 +7535,9 @@ func (s *ListTagsInput) Validate() error {
 	if s.Resource == nil {
 		invalidParams.Add(request.NewErrParamRequired("Resource"))
 	}
+	if s.Resource != nil && len(*s.Resource) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Resource", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -8281,6 +8282,9 @@ func (s *TagResourceInput) Validate() error {
 	if s.Resource == nil {
 		invalidParams.Add(request.NewErrParamRequired("Resource"))
 	}
+	if s.Resource != nil && len(*s.Resource) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Resource", 1))
+	}
 	if s.Tags == nil {
 		invalidParams.Add(request.NewErrParamRequired("Tags"))
 	}
@@ -8398,6 +8402,9 @@ func (s *UntagResourceInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "UntagResourceInput"}
 	if s.Resource == nil {
 		invalidParams.Add(request.NewErrParamRequired("Resource"))
+	}
+	if s.Resource != nil && len(*s.Resource) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Resource", 1))
 	}
 	if s.TagKeys == nil {
 		invalidParams.Add(request.NewErrParamRequired("TagKeys"))
@@ -8609,6 +8616,9 @@ func (s *UpdateEventSourceMappingInput) Validate() error {
 	if s.UUID == nil {
 		invalidParams.Add(request.NewErrParamRequired("UUID"))
 	}
+	if s.UUID != nil && len(*s.UUID) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("UUID", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -8696,7 +8706,7 @@ type UpdateFunctionCodeInput struct {
 	// Permissions (http://docs.aws.amazon.com/lambda/latest/dg/intro-permission-model.html#lambda-intro-execution-role.html).
 	//
 	// ZipFile is automatically base64 encoded/decoded by the SDK.
-	ZipFile []byte `type:"blob"`
+	ZipFile []byte `type:"blob" sensitive:"true"`
 }
 
 // String returns the string representation

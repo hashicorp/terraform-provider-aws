@@ -19,7 +19,7 @@ resource "aws_s3_bucket" "b" {
   bucket = "my-tf-test-bucket"
   acl    = "private"
 
-  tags {
+  tags = {
     Name        = "My bucket"
     Environment = "Dev"
   }
@@ -114,7 +114,7 @@ resource "aws_s3_bucket" "bucket" {
 
     prefix = "log/"
 
-    tags {
+  tags = {
       "rule"      = "log"
       "autoclean" = "true"
     }

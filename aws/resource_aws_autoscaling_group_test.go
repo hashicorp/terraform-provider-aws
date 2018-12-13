@@ -1760,7 +1760,7 @@ resource "aws_autoscaling_group" "bar" {
 const testAccAWSAutoScalingGroupConfigWithLoadBalancer = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
-  tags {
+  tags = {
     Name = "terraform-testacc-autoscaling-group-with-lb"
   }
 }
@@ -1772,7 +1772,7 @@ resource "aws_internet_gateway" "gw" {
 resource "aws_subnet" "foo" {
 	cidr_block = "10.1.1.0/24"
 	vpc_id = "${aws_vpc.foo.id}"
-	tags {
+	tags = {
 		Name = "tf-acc-autoscaling-group-with-load-balancer"
 	}
 }
@@ -1853,7 +1853,7 @@ resource "aws_autoscaling_group" "bar" {
 const testAccAWSAutoScalingGroupConfigWithAZ = `
 resource "aws_vpc" "default" {
   cidr_block = "10.0.0.0/16"
-  tags {
+  tags = {
     Name = "terraform-testacc-autoscaling-group-with-az"
   }
 }
@@ -1862,7 +1862,7 @@ resource "aws_subnet" "main" {
   vpc_id = "${aws_vpc.default.id}"
   cidr_block = "10.0.1.0/24"
   availability_zone = "us-west-2a"
-  tags {
+  tags = {
     Name = "tf-acc-autoscaling-group-with-az"
   }
 }
@@ -1900,7 +1900,7 @@ resource "aws_autoscaling_group" "bar" {
 const testAccAWSAutoScalingGroupConfigWithVPCIdent = `
 resource "aws_vpc" "default" {
   cidr_block = "10.0.0.0/16"
-  tags {
+  tags = {
     Name = "terraform-testacc-autoscaling-group-with-vpc-id"
   }
 }
@@ -1909,7 +1909,7 @@ resource "aws_subnet" "main" {
   vpc_id = "${aws_vpc.default.id}"
   cidr_block = "10.0.1.0/24"
   availability_zone = "us-west-2a"
-  tags {
+  tags = {
     Name = "tf-acc-autoscaling-group-with-vpc-id"
   }
 }
@@ -2113,7 +2113,7 @@ const testAccAWSAutoScalingGroupConfig_ALB_TargetGroup_pre = `
 resource "aws_vpc" "default" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-autoscaling-group-alb-target-group"
   }
 }
@@ -2130,7 +2130,7 @@ resource "aws_subnet" "main" {
   cidr_block        = "10.0.1.0/24"
   availability_zone = "us-west-2a"
 
-  tags {
+  tags = {
     Name = "tf-acc-autoscaling-group-alb-target-group-main"
   }
 }
@@ -2140,7 +2140,7 @@ resource "aws_subnet" "alt" {
   cidr_block        = "10.0.2.0/24"
   availability_zone = "us-west-2b"
 
-  tags {
+  tags = {
     Name = "tf-acc-autoscaling-group-alb-target-group-alt"
   }
 }
@@ -2194,7 +2194,7 @@ resource "aws_security_group" "tf_test_self" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags {
+  tags = {
     Name = "testAccAWSAutoScalingGroupConfig_ALB_TargetGroup"
   }
 }
@@ -2204,7 +2204,7 @@ const testAccAWSAutoScalingGroupConfig_ALB_TargetGroup_post = `
 resource "aws_vpc" "default" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-autoscaling-group-alb-target-group"
   }
 }
@@ -2221,7 +2221,7 @@ resource "aws_subnet" "main" {
   cidr_block        = "10.0.1.0/24"
   availability_zone = "us-west-2a"
 
-  tags {
+  tags = {
     Name = "tf-acc-autoscaling-group-alb-target-group-main"
   }
 }
@@ -2231,7 +2231,7 @@ resource "aws_subnet" "alt" {
   cidr_block        = "10.0.2.0/24"
   availability_zone = "us-west-2b"
 
-  tags {
+  tags = {
     Name = "tf-acc-autoscaling-group-alb-target-group-alt"
   }
 }
@@ -2287,7 +2287,7 @@ resource "aws_security_group" "tf_test_self" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags {
+  tags = {
     Name = "testAccAWSAutoScalingGroupConfig_ALB_TargetGroup"
   }
 }
@@ -2301,7 +2301,7 @@ provider "aws" {
 resource "aws_vpc" "default" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-autoscaling-group-alb-target-group"
   }
 }
@@ -2325,7 +2325,7 @@ resource "aws_subnet" "main" {
   cidr_block        = "10.0.1.0/24"
   availability_zone = "us-west-2a"
 
-  tags {
+  tags = {
     Name = "tf-acc-autoscaling-group-alb-target-group-main"
   }
 }
@@ -2335,7 +2335,7 @@ resource "aws_subnet" "alt" {
   cidr_block        = "10.0.2.0/24"
   availability_zone = "us-west-2b"
 
-  tags {
+  tags = {
     Name = "tf-acc-autoscaling-group-alb-target-group-alt"
   }
 }
@@ -2394,7 +2394,7 @@ resource "aws_security_group" "tf_test_self" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags {
+  tags = {
     Name = "testAccAWSAutoScalingGroupConfig_ALB_TargetGroup"
   }
 }
@@ -2454,7 +2454,7 @@ resource "aws_vpc" "default" {
   enable_dns_hostnames = "true"
   enable_dns_support   = "true"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-autoscaling-group-alb-target-group-elb-capacity"
   }
 }
@@ -2462,7 +2462,7 @@ resource "aws_vpc" "default" {
 resource "aws_lb" "test_lb" {
   subnets = ["${aws_subnet.main.id}", "${aws_subnet.alt.id}"]
 
-  tags {
+  tags = {
     Name = "testAccAWSAutoScalingGroupConfig_ALB_TargetGroup_ELBCapacity"
   }
 }
@@ -2491,7 +2491,7 @@ resource "aws_lb_target_group" "test" {
     matcher           = "200"
   }
 
-  tags {
+  tags = {
     Name = "testAccAWSAutoScalingGroupConfig_ALB_TargetGroup_ELBCapacity"
   }
 }
@@ -2501,7 +2501,7 @@ resource "aws_subnet" "main" {
   cidr_block        = "10.0.1.0/24"
   availability_zone = "us-west-2a"
 
-  tags {
+  tags = {
     Name = "tf-acc-autoscaling-group-alb-target-group-elb-capacity-main"
   }
 }
@@ -2511,7 +2511,7 @@ resource "aws_subnet" "alt" {
   cidr_block        = "10.0.2.0/24"
   availability_zone = "us-west-2b"
 
-  tags {
+  tags = {
     Name = "tf-acc-autoscaling-group-alb-target-group-elb-capacity-alt"
   }
 }
@@ -2719,7 +2719,7 @@ resource "aws_launch_configuration" "test" {
 const testAccAWSAutoScalingGroupConfig_emptyAvailabilityZones = `
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-  tags {
+  tags = {
     Name = "terraform-testacc-autoscaling-group-empty-azs"
   }
 }
@@ -2727,7 +2727,7 @@ resource "aws_vpc" "test" {
 resource "aws_subnet" "test" {
   vpc_id     = "${aws_vpc.test.id}"
   cidr_block = "10.0.0.0/16"
-  tags {
+  tags = {
     Name = "tf-acc-autoscaling-group-empty-availability-zones"
   }
 }

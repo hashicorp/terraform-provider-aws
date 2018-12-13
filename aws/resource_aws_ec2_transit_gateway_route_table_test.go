@@ -238,7 +238,7 @@ resource "aws_ec2_transit_gateway" "test" {}
 resource "aws_ec2_transit_gateway_route_table" "test" {
   transit_gateway_id = "${aws_ec2_transit_gateway.test.id}"
 
-  tags {
+  tags = {
     %q = %q
   }
 }
@@ -252,7 +252,7 @@ resource "aws_ec2_transit_gateway" "test" {}
 resource "aws_ec2_transit_gateway_route_table" "test" {
   transit_gateway_id = "${aws_ec2_transit_gateway.test.id}"
 
-  tags {
+  tags = {
     %q = %q
     %q = %q
   }

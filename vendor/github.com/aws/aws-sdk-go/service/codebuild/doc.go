@@ -61,6 +61,17 @@
 //    * ListCuratedEnvironmentImages: Gets information about Docker images that
 //    are managed by AWS CodeBuild.
 //
+//    * DeleteSourceCredentials: Deletes a set of GitHub, GitHub Enterprise,
+//    or Bitbucket source credentials.
+//
+//    * ImportSourceCredentials: Imports the source repository credentials for
+//    an AWS CodeBuild project that has its source code stored in a GitHub,
+//    GitHub Enterprise, or Bitbucket repository.
+//
+//    * ListSourceCredentials: Returns a list of SourceCredentialsInfo objects.
+//    Each SourceCredentialsInfo object includes the authentication type, token
+//    ARN, and type of source provider for one set of credentials.
+//
 // See https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06 for more information on this service.
 //
 // See codebuild package documentation for more information.

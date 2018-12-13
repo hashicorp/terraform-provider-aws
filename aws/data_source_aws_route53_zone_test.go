@@ -78,7 +78,7 @@ func testAccDataSourceAwsRoute53ZoneConfig(rInt int) string {
 
 	resource "aws_vpc" "test" {
 		cidr_block = "172.16.0.0/16"
-		tags {
+	tags = {
 			Name = "terraform-testacc-r53-zone-data-source"
 		}
 	}
@@ -86,7 +86,7 @@ func testAccDataSourceAwsRoute53ZoneConfig(rInt int) string {
 	resource "aws_route53_zone" "test_private" {
 		name = "test.acc-%d."
 		vpc_id = "${aws_vpc.test.id}"
-		tags {
+	tags = {
 			Environment = "dev-%d"
 		}
 	}

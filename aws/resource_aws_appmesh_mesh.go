@@ -94,7 +94,7 @@ func resourceAwsAppmeshMeshRead(d *schema.ResourceData, meta interface{}) error 
 func resourceAwsAppmeshMeshDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).appmeshconn
 
-	log.Printf("[DEBUG] App Mesh service mesh: %s", d.Id())
+	log.Printf("[DEBUG] Deleting App Mesh service mesh: %s", d.Id())
 	_, err := conn.DeleteMesh(&appmesh.DeleteMeshInput{
 		MeshName: aws.String(d.Id()),
 	})

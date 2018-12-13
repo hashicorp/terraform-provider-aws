@@ -9,6 +9,13 @@ func TestAccAWSAppmesh(t *testing.T) {
 		"Mesh": {
 			"basic": testAccAwsAppmeshMesh_basic,
 		},
+		"VirtualNode": {
+			"basic":         testAccAwsAppmeshVirtualNode_basic,
+			"allAttributes": testAccAwsAppmeshVirtualNode_allAttributes,
+		},
+		"VirtualRouter": {
+			"basic": testAccAwsAppmeshVirtualRouter_basic,
+		},
 	}
 
 	for group, m := range testCases {

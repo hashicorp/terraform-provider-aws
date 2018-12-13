@@ -39,7 +39,7 @@ func TestAccAWSCloudwatchLogSubscriptionFilter_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudwatchLogSubscriptionFilter_subscriptionFilterDisappears(t *testing.T) {
+func TestAccAWSCloudwatchLogSubscriptionFilter_disappears(t *testing.T) {
 	var filter cloudwatchlogs.SubscriptionFilter
 	rstring := acctest.RandString(5)
 
@@ -53,6 +53,32 @@ func TestAccAWSCloudwatchLogSubscriptionFilter_subscriptionFilterDisappears(t *t
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsCloudwatchLogSubscriptionFilterExists("aws_cloudwatch_log_subscription_filter.test_lambdafunction_logfilter", &filter, rstring),
 					testAccCheckCloudwatchLogSubscriptionFilterDisappears(rstring),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSCloudwatchLogSubscriptionFilter_disappears_LogGroup(t *testing.T) {
+	var filter cloudwatchlogs.SubscriptionFilter
+	var logGroup cloudwatchlogs.LogGroup
+
+	rstring := acctest.RandString(5)
+	logGroupResourceName := "aws_cloudwatch_log_group.logs"
+	resourceName := "aws_cloudwatch_log_subscription_filter.test_lambdafunction_logfilter"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckCloudwatchLogSubscriptionFilterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudwatchLogSubscriptionFilterConfig(rstring),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsCloudwatchLogSubscriptionFilterExists(resourceName, &filter, rstring),
+					testAccCheckCloudWatchLogGroupExists(logGroupResourceName, &logGroup),
+					testAccCheckCloudWatchLogGroupDisappears(&logGroup),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -174,7 +200,7 @@ resource "aws_lambda_permission" "allow_cloudwatch_logs" {
   statement_id  = "AllowExecutionFromCloudWatchLogs"
   action        = "lambda:*"
   function_name = "${aws_lambda_function.test_lambdafunction.arn}"
-  principal     = "logs.us-west-2.amazonaws.com"
+  principal     = "logs.amazonaws.com"
 }
 
 resource "aws_iam_role" "iam_for_lambda" {

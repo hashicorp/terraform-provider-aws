@@ -316,7 +316,7 @@ resource "aws_emr_cluster" "tf-test-cluster" {
   core_instance_type   = "m3.xlarge"
   core_instance_count  = 2
 
-  tags {
+  tags = {
     role     = "rolename"
     dns_zone = "env_zone"
     env      = "env"
@@ -370,7 +370,7 @@ resource "aws_security_group" "allow_all" {
     ignore_changes = ["ingress", "egress"]
   }
 
-  tags {
+  tags = {
     Name = "emr_test"
   }
 }
@@ -379,7 +379,7 @@ resource "aws_vpc" "main" {
   cidr_block           = "168.31.0.0/16"
   enable_dns_hostnames = true
 
-  tags {
+  tags = {
     Name = "terraform-testacc-appautoscaling-target-emr-cluster"
   }
 }
@@ -388,7 +388,7 @@ resource "aws_subnet" "main" {
   vpc_id     = "${aws_vpc.main.id}"
   cidr_block = "168.31.0.0/20"
 
-  tags {
+  tags = {
     Name = "tf-acc-appautoscaling-target-emr-cluster"
   }
 }

@@ -791,7 +791,7 @@ func testAccAWSCognitoUserPoolConfig_withTags(name string) string {
 resource "aws_cognito_user_pool" "pool" {
   name = "terraform-test-pool-%s"
 
-  tags {
+  tags = {
     "Name" = "Foo"
   }
 }`, name)
@@ -876,7 +876,7 @@ func testAccAWSCognitoUserPoolConfig_withTagsUpdated(name string) string {
 resource "aws_cognito_user_pool" "pool" {
   name = "terraform-test-pool-%s"
 
-  tags {
+  tags = {
     "Name"    = "FooBar"
     "Project" = "Terraform"
   }
@@ -1233,7 +1233,7 @@ resource "aws_cognito_user_pool" "pool" {
     sns_caller_arn = "${aws_iam_role.main.arn}"
   }
 
-  tags {
+  tags = {
     "Name" = "Foo"
   }
 }`, name, name, name, mfaconfig, smsAuthMsg)

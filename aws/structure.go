@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
 	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/aws/aws-sdk-go/service/appmesh"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
@@ -877,6 +878,10 @@ func flattenStringList(list []*string) []interface{} {
 		vs = append(vs, *v)
 	}
 	return vs
+}
+
+func flattenStringSet(list []*string) *schema.Set {
+	return schema.NewSet(schema.HashString, flattenStringList(list))
 }
 
 //Flattens an array of private ip addresses into a []string, where the elements returned are the IP strings e.g. "192.168.0.0"
@@ -4681,4 +4686,136 @@ func flattenRdsScalingConfigurationInfo(scalingConfigurationInfo *rds.ScalingCon
 	}
 
 	return []interface{}{m}
+}
+
+func expandAppmeshVirtualRouterSpec(vSpec []interface{}) *appmesh.VirtualRouterSpec {
+	if len(vSpec) == 0 || vSpec[0] == nil {
+		return nil
+	}
+	mSpec := vSpec[0].(map[string]interface{})
+
+	spec := &appmesh.VirtualRouterSpec{}
+
+	if vServiceNames, ok := mSpec["service_names"].(*schema.Set); ok && vServiceNames.Len() > 0 {
+		spec.ServiceNames = expandStringSet(vServiceNames)
+	}
+
+	return spec
+}
+
+func flattenAppmeshVirtualRouterSpec(spec *appmesh.VirtualRouterSpec) []interface{} {
+	if spec == nil {
+		return []interface{}{}
+	}
+
+	mSpec := map[string]interface{}{
+		"service_names": flattenStringSet(spec.ServiceNames),
+	}
+
+	return []interface{}{mSpec}
+}
+
+func expandAppmeshVirtualNodeSpec(vSpec []interface{}) *appmesh.VirtualNodeSpec {
+	spec := &appmesh.VirtualNodeSpec{}
+
+	if len(vSpec) == 0 || vSpec[0] == nil {
+		// Empty Spec is allowed.
+		return spec
+	}
+	mSpec := vSpec[0].(map[string]interface{})
+
+	if vBackends, ok := mSpec["backends"].(*schema.Set); ok && vBackends.Len() > 0 {
+		spec.Backends = expandStringSet(vBackends)
+	}
+
+	if vListeners, ok := mSpec["listener"].(*schema.Set); ok && vListeners.Len() > 0 {
+		listeners := []*appmesh.Listener{}
+
+		for _, vListener := range vListeners.List() {
+			listener := &appmesh.Listener{}
+
+			mListener := vListener.(map[string]interface{})
+
+			if vPortMapping, ok := mListener["port_mapping"].([]interface{}); ok && len(vPortMapping) > 0 && vPortMapping[0] != nil {
+				mPortMapping := vPortMapping[0].(map[string]interface{})
+
+				listener.PortMapping = &appmesh.PortMapping{}
+
+				if vPort, ok := mPortMapping["port"].(int); ok && vPort > 0 {
+					listener.PortMapping.Port = aws.Int64(int64(vPort))
+				}
+				if vProtocol, ok := mPortMapping["protocol"].(string); ok && vProtocol != "" {
+					listener.PortMapping.Protocol = aws.String(vProtocol)
+				}
+			}
+
+			listeners = append(listeners, listener)
+		}
+
+		spec.Listeners = listeners
+	}
+
+	if vServiceDiscovery, ok := mSpec["service_discovery"].([]interface{}); ok && len(vServiceDiscovery) > 0 && vServiceDiscovery[0] != nil {
+		mServiceDiscovery := vServiceDiscovery[0].(map[string]interface{})
+
+		if vDns, ok := mServiceDiscovery["dns"].([]interface{}); ok && len(vDns) > 0 && vDns[0] != nil {
+			mDns := vDns[0].(map[string]interface{})
+
+			if vServiceName, ok := mDns["service_name"].(string); ok && vServiceName != "" {
+				spec.ServiceDiscovery = &appmesh.ServiceDiscovery{
+					Dns: &appmesh.DnsServiceDiscovery{
+						ServiceName: aws.String(vServiceName),
+					},
+				}
+			}
+		}
+	}
+
+	return spec
+}
+
+func flattenAppmeshVirtualNodeSpec(spec *appmesh.VirtualNodeSpec) []interface{} {
+	if spec == nil {
+		return []interface{}{}
+	}
+
+	mSpec := map[string]interface{}{}
+
+	if spec.Backends != nil {
+		mSpec["backends"] = flattenStringSet(spec.Backends)
+	}
+
+	if spec.Listeners != nil {
+		vListeners := []interface{}{}
+
+		for _, listener := range spec.Listeners {
+			mListener := map[string]interface{}{}
+
+			if listener.PortMapping != nil {
+				mPortMapping := map[string]interface{}{
+					"port":     int(aws.Int64Value(listener.PortMapping.Port)),
+					"protocol": aws.StringValue(listener.PortMapping.Protocol),
+				}
+				mListener["port_mapping"] = []interface{}{mPortMapping}
+			}
+
+			vListeners = append(vListeners, mListener)
+		}
+
+		mSpec["listener"] = schema.NewSet(appmeshVirtualNodeListenerHash, vListeners)
+	}
+
+	if spec.ServiceDiscovery != nil && spec.ServiceDiscovery.Dns != nil {
+		mSpec["service_discovery"] = []interface{}{
+			map[string]interface{}{
+				"dns": []interface{}{
+					map[string]interface{}{
+						"service_name": aws.StringValue(spec.ServiceDiscovery.Dns.ServiceName),
+					},
+				},
+			},
+		}
+	}
+
+	return []interface{}{mSpec}
 }

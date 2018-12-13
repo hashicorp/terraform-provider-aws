@@ -9,6 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/aws/aws-sdk-go/aws/request"
+	"github.com/aws/aws-sdk-go/private/protocol"
+	"github.com/aws/aws-sdk-go/private/protocol/jsonrpc"
 )
 
 const opAddTagsToResource = "AddTagsToResource"
@@ -50,6 +52,7 @@ func (c *DatabaseMigrationService) AddTagsToResourceRequest(input *AddTagsToReso
 
 	output = &AddTagsToResourceOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -970,6 +973,7 @@ func (c *DatabaseMigrationService) DeleteReplicationSubnetGroupRequest(input *De
 
 	output = &DeleteReplicationSubnetGroupOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -4172,6 +4176,7 @@ func (c *DatabaseMigrationService) RemoveTagsFromResourceRequest(input *RemoveTa
 
 	output = &RemoveTagsFromResourceOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -4957,7 +4962,7 @@ type CreateEndpointInput struct {
 	MongoDbSettings *MongoDbSettings `type:"structure"`
 
 	// The password to be used to log in to the endpoint database.
-	Password *string `type:"string"`
+	Password *string `type:"string" sensitive:"true"`
 
 	// The port used by the endpoint database.
 	Port *int64 `type:"integer"`
@@ -8827,7 +8832,7 @@ type ModifyEndpointInput struct {
 	MongoDbSettings *MongoDbSettings `type:"structure"`
 
 	// The password to be used to login to the endpoint database.
-	Password *string `type:"string"`
+	Password *string `type:"string" sensitive:"true"`
 
 	// The port used by the endpoint database.
 	Port *int64 `type:"integer"`
@@ -9617,7 +9622,7 @@ type MongoDbSettings struct {
 	NestingLevel *string `type:"string" enum:"NestingLevelValue"`
 
 	// The password for the user account you use to access the MongoDB source endpoint.
-	Password *string `type:"string"`
+	Password *string `type:"string" sensitive:"true"`
 
 	// The port value for the MongoDB source endpoint.
 	Port *int64 `type:"integer"`

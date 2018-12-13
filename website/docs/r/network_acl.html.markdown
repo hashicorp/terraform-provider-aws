@@ -41,7 +41,7 @@ resource "aws_network_acl" "main" {
     to_port    = 80
   }
 
-  tags {
+  tags = {
     Name = "main"
   }
 }

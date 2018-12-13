@@ -644,7 +644,7 @@ resource "aws_vpc" "source" {
   enable_dns_hostnames = true
   enable_dns_support   = true
 
-  tags {
+  tags = {
     Name = "tf-acc-test-datasync-task"
   }
 }
@@ -662,7 +662,7 @@ resource "aws_subnet" "source" {
   cidr_block = "10.0.0.0/24"
   vpc_id     = "${aws_vpc.source.id}"
 
-  tags {
+  tags = {
     Name = "tf-acc-test-datasync-task"
   }
 }
@@ -670,7 +670,7 @@ resource "aws_subnet" "source" {
 resource "aws_internet_gateway" "source" {
   vpc_id = "${aws_vpc.source.id}"
 
-  tags {
+  tags = {
     Name = "tf-acc-test-datasync-task"
   }
 }
@@ -683,7 +683,7 @@ resource "aws_route_table" "source" {
     gateway_id = "${aws_internet_gateway.source.id}"
   }
 
-  tags {
+  tags = {
     Name = "tf-acc-test-datasync-task"
   }
 }
@@ -710,7 +710,7 @@ resource "aws_security_group" "source" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags {
+  tags = {
     Name = "tf-acc-test-datasync-task"
   }
 }
@@ -734,7 +734,7 @@ resource "aws_instance" "source" {
   vpc_security_group_ids      = ["${aws_security_group.source.id}"]
   subnet_id                   = "${aws_subnet.source.id}"
 
-  tags {
+  tags = {
     Name = "tf-acc-test-datasync-task"
   }
 }
@@ -903,7 +903,7 @@ resource "aws_datasync_task" "test" {
   name                     = %q
   source_location_arn      = "${aws_datasync_location_nfs.source.arn}"
 
-  tags {
+  tags = {
     %q = %q
   }
 }
@@ -917,7 +917,7 @@ resource "aws_datasync_task" "test" {
   name                     = %q
   source_location_arn      = "${aws_datasync_location_nfs.source.arn}"
 
-  tags {
+  tags = {
     %q = %q
     %q = %q
   }

@@ -271,7 +271,7 @@ resource "aws_iam_role_policy_attachment" "test-AmazonEKSServicePolicy" {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name                       = "terraform-testacc-eks-cluster-base"
     "kubernetes.io/cluster/%s" = "shared"
   }
@@ -284,7 +284,7 @@ resource "aws_subnet" "test" {
   cidr_block        = "10.0.${count.index}.0/24"
   vpc_id            = "${aws_vpc.test.id}"
 
-  tags {
+  tags = {
     Name                       = "terraform-testacc-eks-cluster-base"
     "kubernetes.io/cluster/%s" = "shared"
   }
@@ -334,7 +334,7 @@ func testAccAWSEksClusterConfig_VpcConfig_SecurityGroupIds(rName string) string 
 resource "aws_security_group" "test" {
   vpc_id = "${aws_vpc.test.id}"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-eks-cluster-sg"
   }
 }

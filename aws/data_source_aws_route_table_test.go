@@ -110,7 +110,7 @@ provider "aws" {
 resource "aws_vpc" "test" {
   cidr_block = "172.16.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-route-table-data-source"
   }
 }
@@ -118,14 +118,14 @@ resource "aws_vpc" "test" {
 resource "aws_subnet" "test" {
   cidr_block = "172.16.0.0/24"
   vpc_id     = "${aws_vpc.test.id}"
-  tags {
+  tags = {
     Name = "tf-acc-route-table-data-source"
   }
 }
 
 resource "aws_route_table" "test" {
   vpc_id = "${aws_vpc.test.id}"
-  tags {
+  tags = {
     Name = "terraform-testacc-routetable-data-source"
   }
 }
@@ -144,7 +144,7 @@ data "aws_route_table" "by_filter" {
 }
 
 data "aws_route_table" "by_tag" {
-  tags {
+  tags = {
     Name = "${aws_route_table.test.tags["Name"]}"
   }
   depends_on = ["aws_route_table_association.a"]
@@ -170,7 +170,7 @@ provider "aws" {
 resource "aws_vpc" "test" {
   cidr_block = "172.16.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-route-table-data-source-main-route"
   }
 }

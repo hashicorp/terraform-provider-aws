@@ -982,7 +982,7 @@ resource "aws_lb_target_group" "test" {
     healthy_threshold = 3
     unhealthy_threshold = 3
   }
-  tags {
+  tags = {
     Name = "TestAccAWSLBTargetGroup_application_LB_defaults"
   }
 }
@@ -990,7 +990,7 @@ resource "aws_lb_target_group" "test" {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-lb-target-group-alb-defaults"
   }
 }`, name)
@@ -1011,7 +1011,7 @@ resource "aws_lb_target_group" "test" {
                 %s
   }
 
-  tags {
+  tags = {
     Name = "TestAccAWSLBTargetGroup_application_LB_defaults"
   }
 }
@@ -1019,7 +1019,7 @@ resource "aws_lb_target_group" "test" {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-lb-target-group-nlb-defaults"
   }
 }`, name, healthCheckBlock)
@@ -1051,7 +1051,7 @@ func testAccAWSLBTargetGroupConfig_basic(targetGroupName string) string {
     matcher = "200-299"
   }
 
-  tags {
+  tags = {
     TestName = "TestAccAWSLBTargetGroup_basic"
   }
 }
@@ -1059,7 +1059,7 @@ func testAccAWSLBTargetGroupConfig_basic(targetGroupName string) string {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     TestName = "terraform-testacc-lb-target-group-basic"
   }
 }`, targetGroupName)
@@ -1091,7 +1091,7 @@ func testAccAWSLBTargetGroupConfigBackwardsCompatibility(targetGroupName string)
     matcher = "200-299"
   }
 
-  tags {
+  tags = {
     TestName = "TestAccAWSLBTargetGroup_basic"
   }
 }
@@ -1099,7 +1099,7 @@ func testAccAWSLBTargetGroupConfigBackwardsCompatibility(targetGroupName string)
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     TestName = "terraform-testacc-lb-target-group-bc"
   }
 }`, targetGroupName)
@@ -1130,7 +1130,7 @@ func testAccAWSLBTargetGroupConfig_updatedPort(targetGroupName string) string {
     matcher = "200-299"
   }
 
-  tags {
+  tags = {
     TestName = "TestAccAWSLBTargetGroup_basic"
   }
 }
@@ -1138,7 +1138,7 @@ func testAccAWSLBTargetGroupConfig_updatedPort(targetGroupName string) string {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     TestName = "terraform-testacc-lb-target-group-basic"
   }
 }`, targetGroupName)
@@ -1169,7 +1169,7 @@ func testAccAWSLBTargetGroupConfig_updatedProtocol(targetGroupName string) strin
     matcher = "200-299"
   }
 
-  tags {
+  tags = {
     TestName = "TestAccAWSLBTargetGroup_basic"
   }
 }
@@ -1177,7 +1177,7 @@ func testAccAWSLBTargetGroupConfig_updatedProtocol(targetGroupName string) strin
 resource "aws_vpc" "test2" {
   cidr_block = "10.10.0.0/16"
 
-  tags {
+  tags = {
     TestName = "terraform-testacc-lb-target-group-basic-2"
   }
 }
@@ -1185,7 +1185,7 @@ resource "aws_vpc" "test2" {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     TestName = "terraform-testacc-lb-target-group-basic"
   }
 }`, targetGroupName)
@@ -1216,7 +1216,7 @@ func testAccAWSLBTargetGroupConfig_updatedVpc(targetGroupName string) string {
     matcher = "200-299"
   }
 
-  tags {
+  tags = {
     TestName = "TestAccAWSLBTargetGroup_basic"
   }
 }
@@ -1224,7 +1224,7 @@ func testAccAWSLBTargetGroupConfig_updatedVpc(targetGroupName string) string {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     TestName = "terraform-testacc-lb-target-group-updated-vpc"
   }
 }`, targetGroupName)
@@ -1255,7 +1255,7 @@ func testAccAWSLBTargetGroupConfig_updateTags(targetGroupName string) string {
     matcher = "200-299"
   }
 
-  tags {
+  tags = {
     Environment = "Production"
     Type = "ALB Target Group"
   }
@@ -1264,7 +1264,7 @@ func testAccAWSLBTargetGroupConfig_updateTags(targetGroupName string) string {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     TestName = "terraform-testacc-lb-target-group-update-tags"
   }
 }`, targetGroupName)
@@ -1299,7 +1299,7 @@ func testAccAWSLBTargetGroupConfig_updateHealthCheck(targetGroupName string) str
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     TestName = "terraform-testacc-lb-target-group-update-health-check"
   }
 }`, targetGroupName)
@@ -1322,7 +1322,7 @@ func testAccAWSLBTargetGroupConfig_typeTCP(targetGroupName string) string {
     unhealthy_threshold = 3
   }
 
-  tags {
+  tags = {
     Name = "TestAcc_networkLB_TargetGroup"
   }
 }
@@ -1330,7 +1330,7 @@ func testAccAWSLBTargetGroupConfig_typeTCP(targetGroupName string) string {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-lb-target-group-type-tcp"
   }
 }`, targetGroupName)
@@ -1354,7 +1354,7 @@ func testAccAWSLBTargetGroupConfig_typeTCP_withProxyProtocol(targetGroupName str
     unhealthy_threshold = 3
   }
 
-  tags {
+  tags = {
     Name = "TestAcc_networkLB_TargetGroup"
   }
 }
@@ -1362,7 +1362,7 @@ func testAccAWSLBTargetGroupConfig_typeTCP_withProxyProtocol(targetGroupName str
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-lb-target-group-type-tcp"
   }
 }`, targetGroupName)
@@ -1385,7 +1385,7 @@ func testAccAWSLBTargetGroupConfig_typeTCPInvalidThreshold(targetGroupName strin
     unhealthy_threshold = 4
   }
 
-  tags {
+  tags = {
     Name = "TestAcc_networkLB_TargetGroup"
   }
 }
@@ -1393,7 +1393,7 @@ func testAccAWSLBTargetGroupConfig_typeTCPInvalidThreshold(targetGroupName strin
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-lb-target-group-type-tcp"
   }
 }`, targetGroupName)
@@ -1416,7 +1416,7 @@ func testAccAWSLBTargetGroupConfig_typeTCPThresholdUpdated(targetGroupName strin
     unhealthy_threshold = 5
   }
 
-  tags {
+  tags = {
     Name = "TestAcc_networkLB_TargetGroup"
   }
 }
@@ -1424,7 +1424,7 @@ func testAccAWSLBTargetGroupConfig_typeTCPThresholdUpdated(targetGroupName strin
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-lb-target-group-type-tcp-threshold-updated"
   }
 }`, targetGroupName)
@@ -1447,7 +1447,7 @@ func testAccAWSLBTargetGroupConfig_typeTCPIntervalUpdated(targetGroupName string
     unhealthy_threshold = 5
   }
 
-  tags {
+  tags = {
     Name = "TestAcc_networkLB_TargetGroup"
   }
 }
@@ -1455,7 +1455,7 @@ func testAccAWSLBTargetGroupConfig_typeTCPIntervalUpdated(targetGroupName string
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-lb-target-group-type-tcp-interval-updated"
   }
 }`, targetGroupName)
@@ -1479,14 +1479,14 @@ func testAccAWSLBTargetGroupConfig_typeTCP_HTTPHealthCheck(targetGroupName, path
     matcher             = "200-399"
   }
 
-  tags {
+  tags = {
     Name = "TestAcc_networkLB_HTTPHealthCheck"
   }
 }
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-  tags {
+  tags = {
     Name = "terraform-testacc-lb-target-group-type-tcp-http-health-check"
   }
 }`, targetGroupName, threshold, path)
@@ -1528,7 +1528,7 @@ func testAccAWSLBTargetGroupConfig_stickiness(targetGroupName string, addStickin
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     TestName = "terraform-testacc-lb-target-group-stickiness"
   }
 }`, targetGroupName, stickinessBlock)
@@ -1544,7 +1544,7 @@ resource "aws_lb_target_group" "test" {
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-lb-target-group-name-prefix"
 	}
 }
@@ -1559,7 +1559,7 @@ resource "aws_lb_target_group" "test" {
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-lb-target-group-generated-name"
 	}
 }
@@ -1582,7 +1582,7 @@ resource "aws_lb_target_group" "test" {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "testAccAWSLBTargetGroupConfig_namePrefix"
   }
 }

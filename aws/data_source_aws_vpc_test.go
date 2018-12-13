@@ -140,7 +140,7 @@ resource "aws_vpc" "test" {
   cidr_block = "%s"
   assign_generated_ipv6_cidr_block = true
 
-  tags {
+  tags = {
     Name = "%s"
   }
 }
@@ -159,7 +159,7 @@ provider "aws" {
 resource "aws_vpc" "test" {
   cidr_block = "%s"
 
-  tags {
+  tags = {
     Name = "%s"
   }
 }
@@ -173,7 +173,7 @@ data "aws_vpc" "by_cidr" {
 }
 
 data "aws_vpc" "by_tag" {
-  tags {
+  tags = {
     Name = "${aws_vpc.test.tags["Name"]}"
   }
 }

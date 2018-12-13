@@ -342,7 +342,7 @@ func testAccAWSCloudWatchLogGroupConfigWithTags(rInt int) string {
 resource "aws_cloudwatch_log_group" "foobar" {
     name = "foo-bar-%d"
 
-    tags {
+  tags = {
     	Environment = "Production"
     	Foo = "Bar"
     	Empty = ""
@@ -356,7 +356,7 @@ func testAccAWSCloudWatchLogGroupConfigWithTagsAdded(rInt int) string {
 resource "aws_cloudwatch_log_group" "foobar" {
     name = "foo-bar-%d"
 
-    tags {
+  tags = {
     	Environment = "Development"
     	Foo = "Bar"
     	Empty = ""
@@ -371,7 +371,7 @@ func testAccAWSCloudWatchLogGroupConfigWithTagsUpdated(rInt int) string {
 resource "aws_cloudwatch_log_group" "foobar" {
     name = "foo-bar-%d"
 
-    tags {
+  tags = {
     	Environment = "Development"
     	Foo = "UpdatedBar"
     	Empty = "NotEmpty"
