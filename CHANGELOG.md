@@ -1,43 +1,43 @@
-## 1.52.0 (Unreleased)
+## 1.52.0 (December 13, 2018)
 
 FEATURES
 
-* **New Data Source:** `aws_api_gateway_vpc_link` [GH-6763]
-* **New Resource:** `aws_appmesh_route` [GH-6766]
-* **New Resource:** `aws_appmesh_virtual_node` [GH-6764]
-* **New Resource:** `aws_rds_cluster_endpoint` [GH-6576]
-* **New Resource:** `aws_securityhub_account` [GH-6839]
-* **New Resource:** `aws_transfer_server` [GH-6639]
+* **New Data Source:** `aws_api_gateway_vpc_link` ([#6763](https://github.com/terraform-providers/terraform-provider-aws/issues/6763))
+* **New Resource:** `aws_appmesh_route` ([#6766](https://github.com/terraform-providers/terraform-provider-aws/issues/6766))
+* **New Resource:** `aws_appmesh_virtual_node` ([#6764](https://github.com/terraform-providers/terraform-provider-aws/issues/6764))
+* **New Resource:** `aws_rds_cluster_endpoint` ([#6576](https://github.com/terraform-providers/terraform-provider-aws/issues/6576))
+* **New Resource:** `aws_securityhub_account` ([#6839](https://github.com/terraform-providers/terraform-provider-aws/issues/6839))
+* **New Resource:** `aws_transfer_server` ([#6639](https://github.com/terraform-providers/terraform-provider-aws/issues/6639))
 
 ENHANCEMENTS
 
-* data-source/aws_cloudtrail_service_account: Support `ap-northeast-3` and `eu-north-1` regions [GH-6836]
-* data-source/aws_elb_hosted_zone_id: Support `ap-northeast-3` and `eu-north-1` regions [GH-6836]
-* data-source/aws_elb_service_account: Support `ap-northeast-3`, `eu-north-1`, and `us-gov-east-1` regions [GH-6836]
-* data-source/aws_instance: Add `host_id` attribute [GH-6767]
-* data-source/aws_ip_ranges: Add `url` argument [GH-6756]
-* data-source/aws_s3_bucket: Support `ap-northeast-3` and `eu-north-1` regions for `hosted_zone_id` [GH-6836]
-* provider: Support automatic region validation for `eu-north-1` [GH-6815]
-* resource/aws_acm_certificate: Automatically trim trailing period from `domain_name` and `subject_alternative_names` arguments [GH-6844]
-* resource/aws_db_instance: Allow `postgresql` and `upgrade` values for `enabled_cloudwatch_logs_exports` (e.g. Postgres specific log exports) [GH-6829]
-* resource/aws_dynamodb_table: Allow `global_secondary_index` configuration block `read_capacity` and `write_capacity` to be omitted with `billing_mode` set to `PAY_PER_REQUEST` (support on-demand billing with GSIs) [GH-6737]
-* resource/aws_eks_cluster: Support `version` update [GH-6843]
-* resource/aws_glue_crawler: Add `security_configuration` argument [GH-6797]
-* resource/aws_iam_user_ssh_key: Support resource import [GH-6727]
-* resource/aws_instance: Add `host_id` argument [GH-6767]
-* resource/aws_s3_bucket: Support `ap-northeast-3` and `eu-north-1` regions for `hosted_zone_id` [GH-6836]
-* resource/aws_ssm_maintenance_window: Support resource import [GH-6747]
+* data-source/aws_cloudtrail_service_account: Support `ap-northeast-3` and `eu-north-1` regions ([#6836](https://github.com/terraform-providers/terraform-provider-aws/issues/6836))
+* data-source/aws_elb_hosted_zone_id: Support `ap-northeast-3` and `eu-north-1` regions ([#6836](https://github.com/terraform-providers/terraform-provider-aws/issues/6836))
+* data-source/aws_elb_service_account: Support `ap-northeast-3`, `eu-north-1`, and `us-gov-east-1` regions ([#6836](https://github.com/terraform-providers/terraform-provider-aws/issues/6836))
+* data-source/aws_instance: Add `host_id` attribute ([#6767](https://github.com/terraform-providers/terraform-provider-aws/issues/6767))
+* data-source/aws_ip_ranges: Add `url` argument ([#6756](https://github.com/terraform-providers/terraform-provider-aws/issues/6756))
+* data-source/aws_s3_bucket: Support `ap-northeast-3` and `eu-north-1` regions for `hosted_zone_id` ([#6836](https://github.com/terraform-providers/terraform-provider-aws/issues/6836))
+* provider: Support automatic region validation for `eu-north-1` ([#6815](https://github.com/terraform-providers/terraform-provider-aws/issues/6815))
+* resource/aws_acm_certificate: Automatically trim trailing period from `domain_name` and `subject_alternative_names` arguments ([#6844](https://github.com/terraform-providers/terraform-provider-aws/issues/6844))
+* resource/aws_db_instance: Allow `postgresql` and `upgrade` values for `enabled_cloudwatch_logs_exports` (e.g. Postgres specific log exports) ([#6829](https://github.com/terraform-providers/terraform-provider-aws/issues/6829))
+* resource/aws_dynamodb_table: Allow `global_secondary_index` configuration block `read_capacity` and `write_capacity` to be omitted with `billing_mode` set to `PAY_PER_REQUEST` (support on-demand billing with GSIs) ([#6737](https://github.com/terraform-providers/terraform-provider-aws/issues/6737))
+* resource/aws_eks_cluster: Support `version` update ([#6843](https://github.com/terraform-providers/terraform-provider-aws/issues/6843))
+* resource/aws_glue_crawler: Add `security_configuration` argument ([#6797](https://github.com/terraform-providers/terraform-provider-aws/issues/6797))
+* resource/aws_iam_user_ssh_key: Support resource import ([#6727](https://github.com/terraform-providers/terraform-provider-aws/issues/6727))
+* resource/aws_instance: Add `host_id` argument ([#6767](https://github.com/terraform-providers/terraform-provider-aws/issues/6767))
+* resource/aws_s3_bucket: Support `ap-northeast-3` and `eu-north-1` regions for `hosted_zone_id` ([#6836](https://github.com/terraform-providers/terraform-provider-aws/issues/6836))
+* resource/aws_ssm_maintenance_window: Support resource import ([#6747](https://github.com/terraform-providers/terraform-provider-aws/issues/6747))
 
 BUG FIXES
 
-* data-source/aws_lb_listener: Add missing `default_action` attributes from resource [GH-6830]
-* resource/aws_cloudwatch_log_subscription_filter: Ignore `ResourceNotFound` error on deletion [GH-6760]
-* resource/aws_ec2_transit_gateway_route: Trigger resource recreation with deleted/deleting route state [GH-6817]
-* resource/aws_elasticache_parameter_group: Handle API reset issues with `reserved-memory` parameter updates [GH-6752]
-* resource/aws_lambda_permission: Ignore `ResourceNotFoundException` error on deletion [GH-6770]
-* resource/aws_lb_listener: Properly return an error when there are issues setting `default_action` attributes in Terraform state [GH-6830]
-* resource/aws_route53_record: Prevent scanning entire zone for missing record [GH-6753]
-* resource/aws_ssm_document: Properly batch large `permissions` updates for API limits [GH-6735]
+* data-source/aws_lb_listener: Add missing `default_action` attributes from resource ([#6830](https://github.com/terraform-providers/terraform-provider-aws/issues/6830))
+* resource/aws_cloudwatch_log_subscription_filter: Ignore `ResourceNotFound` error on deletion ([#6760](https://github.com/terraform-providers/terraform-provider-aws/issues/6760))
+* resource/aws_ec2_transit_gateway_route: Trigger resource recreation with deleted/deleting route state ([#6817](https://github.com/terraform-providers/terraform-provider-aws/issues/6817))
+* resource/aws_elasticache_parameter_group: Handle API reset issues with `reserved-memory` parameter updates ([#6752](https://github.com/terraform-providers/terraform-provider-aws/issues/6752))
+* resource/aws_lambda_permission: Ignore `ResourceNotFoundException` error on deletion ([#6770](https://github.com/terraform-providers/terraform-provider-aws/issues/6770))
+* resource/aws_lb_listener: Properly return an error when there are issues setting `default_action` attributes in Terraform state ([#6830](https://github.com/terraform-providers/terraform-provider-aws/issues/6830))
+* resource/aws_route53_record: Prevent scanning entire zone for missing record ([#6753](https://github.com/terraform-providers/terraform-provider-aws/issues/6753))
+* resource/aws_ssm_document: Properly batch large `permissions` updates for API limits ([#6735](https://github.com/terraform-providers/terraform-provider-aws/issues/6735))
 
 ## 1.51.0 (December 05, 2018)
 
