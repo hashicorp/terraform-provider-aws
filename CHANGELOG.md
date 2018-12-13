@@ -9,14 +9,19 @@ FEATURES
 
 ENHANCEMENTS
 
+* data-source/aws_cloudtrail_service_account: Support `ap-northeast-3` and `eu-north-1` regions [GH-6836]
+* data-source/aws_elb_hosted_zone_id: Support `ap-northeast-3` and `eu-north-1` regions [GH-6836]
+* data-source/aws_elb_service_account: Support `ap-northeast-3`, `eu-north-1`, and `us-gov-east-1` regions [GH-6836]
 * data-source/aws_instance: Add `host_id` attribute [GH-6767]
 * data-source/aws_ip_ranges: Add `url` argument [GH-6756]
+* data-source/aws_s3_bucket: Support `ap-northeast-3` and `eu-north-1` regions for `hosted_zone_id` [GH-6836]
 * resource/aws_db_instance: Allow `postgresql` and `upgrade` values for `enabled_cloudwatch_logs_exports` (e.g. Postgres specific log exports) [GH-6829]
 * resource/aws_dynamodb_table: Allow `global_secondary_index` configuration block `read_capacity` and `write_capacity` to be omitted with `billing_mode` set to `PAY_PER_REQUEST` (support on-demand billing with GSIs) [GH-6737]
 * resource/aws_eks_cluster: Support `version` update [GH-6843]
 * resource/aws_glue_crawler: Add `security_configuration` argument [GH-6797]
 * resource/aws_iam_user_ssh_key: Support resource import [GH-6727]
 * resource/aws_instance: Add `host_id` argument [GH-6767]
+* resource/aws_s3_bucket: Support `ap-northeast-3` and `eu-north-1` regions for `hosted_zone_id` [GH-6836]
 * resource/aws_ssm_maintenance_window: Support resource import [GH-6747]
 
 BUG FIXES
