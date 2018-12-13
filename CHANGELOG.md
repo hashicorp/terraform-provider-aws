@@ -6,6 +6,7 @@ FEATURES
 * **New Resource:** `aws_appmesh_route` [GH-6766]
 * **New Resource:** `aws_appmesh_virtual_node` [GH-6764]
 * **New Resource:** `aws_rds_cluster_endpoint` [GH-6576]
+* **New Resource:** `aws_securityhub_account` [GH-6839]
 
 ENHANCEMENTS
 
