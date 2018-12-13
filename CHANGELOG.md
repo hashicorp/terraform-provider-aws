@@ -7,6 +7,7 @@ FEATURES
 * **New Resource:** `aws_appmesh_virtual_node` [GH-6764]
 * **New Resource:** `aws_rds_cluster_endpoint` [GH-6576]
 * **New Resource:** `aws_securityhub_account` [GH-6839]
+* **New Resource:** `aws_transfer_server` [GH-6639]
 
 ENHANCEMENTS
 
