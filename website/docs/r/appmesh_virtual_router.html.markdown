@@ -41,5 +41,5 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the virtual router.
 * `arn` - The ARN of the virtual router.
-* `created_date` - The creation date of the service mesh.
-* `last_updated_date` - The last update date of the service mesh.
+* `created_date` - The creation date of the virtual router.
+* `last_updated_date` - The last update date of the virtual router.

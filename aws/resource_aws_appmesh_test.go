@@ -9,6 +9,10 @@ func TestAccAWSAppmesh(t *testing.T) {
 		"Mesh": {
 			"basic": testAccAwsAppmeshMesh_basic,
 		},
+		"Route": {
+			"basic":         testAccAwsAppmeshRoute_basic,
+			"allAttributes": testAccAwsAppmeshRoute_allAttributes,
+		},
 		"VirtualNode": {
 			"basic":         testAccAwsAppmeshVirtualNode_basic,
 			"allAttributes": testAccAwsAppmeshVirtualNode_allAttributes,
