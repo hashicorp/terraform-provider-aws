@@ -1031,6 +1031,14 @@
 			"versionExact": "v1.16.4"
 		},
 		{
+			"checksumSHA1": "rCCjRj7ky6VPqpZ3yVgcTs9tEck=",
+			"path": "github.com/aws/aws-sdk-go/service/s3control",
+			"revision": "a00e7512a2533cd96e525fe50607f9fe98badec3",
+			"revisionTime": "2018-12-12T23:19:41Z",
+			"version": "v1.16.4",
+			"versionExact": "v1.16.4"
+		},
+		{
 			"checksumSHA1": "g0+y6BHf4z9rGtXYFAOJO3NKxVk=",
 			"path": "github.com/aws/aws-sdk-go/service/sagemaker",
 			"revision": "a00e7512a2533cd96e525fe50607f9fe98badec3",
