@@ -112,8 +112,8 @@ func TestAccAWSLicenseManagerLicenseConfiguration_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLicenseManagerLicenseConfigurationExists(resourceName, &licenseConfiguration),
 					resource.TestCheckResourceAttr(resourceName, "name", "NewName"),
-					resource.TestCheckResourceAttr(resourceName, "description", "NewDescription"),
-					resource.TestCheckResourceAttr(resourceName, "license_count", ""),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "license_count", "123"),
 					resource.TestCheckResourceAttr(resourceName, "license_count_hard_limit", "false"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.test", "test"),
@@ -204,9 +204,7 @@ resource "aws_licensemanager_license_configuration" "example" {
 const testAccLicenseManagerLicenseConfigurationConfig_update = `
 resource "aws_licensemanager_license_configuration" "example" {
   name                     = "NewName"
-  description              = "NewDescription"
-  # license_count            = 99
-  license_count_hard_limit = false
+  license_count            = 123
   license_counting_type    = "Socket"
 
   license_rules = [

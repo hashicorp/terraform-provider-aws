@@ -151,18 +151,12 @@ func resourceAwsLicenseManagerLicenseConfigurationUpdate(d *schema.ResourceData,
 	opts := &licensemanager.UpdateLicenseConfigurationInput{
 		LicenseConfigurationArn: aws.String(d.Id()),
 		Name:                    aws.String(d.Get("name").(string)),
-	}
-
-	if v, ok := d.GetOk("description"); ok {
-		opts.Description = aws.String(v.(string))
+		Description:             aws.String(d.Get("description").(string)),
+		LicenseCountHardLimit:   aws.Bool(d.Get("license_count_hard_limit").(bool)),
 	}
 
 	if v, ok := d.GetOk("license_count"); ok {
 		opts.LicenseCount = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := d.GetOk("license_count_hard_limit"); ok {
-		opts.LicenseCountHardLimit = aws.Bool(v.(bool))
 	}
 
 	log.Printf("[DEBUG] License Manager license configuration: %s", opts)
