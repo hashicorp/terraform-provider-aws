@@ -666,6 +666,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_subnet":                                       resourceAwsSubnet(),
 			"aws_swf_domain":                                   resourceAwsSwfDomain(),
 			"aws_transfer_server":                              resourceAwsTransferServer(),
+			"aws_transfer_user":                                resourceAwsTransferUser(),
 			"aws_volume_attachment":                            resourceAwsVolumeAttachment(),
 			"aws_vpc_dhcp_options_association":                 resourceAwsVpcDhcpOptionsAssociation(),
 			"aws_default_vpc_dhcp_options":                     resourceAwsDefaultVpcDhcpOptions(),
