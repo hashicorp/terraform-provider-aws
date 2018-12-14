@@ -28,6 +28,10 @@ func testSweepLicenseManagerLicenseConfigurations(region string) error {
 	resp, err := conn.ListLicenseConfigurations(&licensemanager.ListLicenseConfigurationsInput{})
 
 	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping License Manager License Configuration sweep for %s: %s", region, err)
+			return nil
+		}
 		return fmt.Errorf("Error retrieving License Manager license configurations: %s", err)
 	}
 
@@ -77,6 +81,43 @@ func TestAccAWSLicenseManagerLicenseConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "license_rules.0", "#minimumSockets=3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.foo", "barr"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSLicenseManagerLicenseConfiguration_update(t *testing.T) {
+	var licenseConfiguration licensemanager.LicenseConfiguration
+	resourceName := "aws_licensemanager_license_configuration.example"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLicenseManagerLicenseConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLicenseManagerLicenseConfigurationConfig_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLicenseManagerLicenseConfigurationExists(resourceName, &licenseConfiguration),
+				),
+			},
+			{
+				Config: testAccLicenseManagerLicenseConfigurationConfig_update,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLicenseManagerLicenseConfigurationExists(resourceName, &licenseConfiguration),
+					resource.TestCheckResourceAttr(resourceName, "name", "NewName"),
+					resource.TestCheckResourceAttr(resourceName, "description", "NewDescription"),
+					resource.TestCheckResourceAttr(resourceName, "license_count", ""),
+					resource.TestCheckResourceAttr(resourceName, "license_count_hard_limit", "false"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.test", "test"),
+					resource.TestCheckResourceAttr(resourceName, "tags.abc", "def"),
 				),
 			},
 			{
@@ -156,6 +197,25 @@ resource "aws_licensemanager_license_configuration" "example" {
 
   tags {
     foo = "barr"
+  }
+}
+`
+
+const testAccLicenseManagerLicenseConfigurationConfig_update = `
+resource "aws_licensemanager_license_configuration" "example" {
+  name                     = "NewName"
+  description              = "NewDescription"
+  # license_count            = 99
+  license_count_hard_limit = false
+  license_counting_type    = "Socket"
+
+  license_rules = [
+    "#minimumSockets=3"
+  ]
+
+  tags {
+    test = "test"
+    abc = "def"
   }
 }
 `

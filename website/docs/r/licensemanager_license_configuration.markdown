@@ -42,6 +42,18 @@ The following arguments are supported:
 * `license_rules` - (Optional) Array of configured License Manager rules.
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 
+## Rules
+
+License rules should be in the format of `#RuleType=RuleValue`. Supported rule types:
+
+* `minimumVcpus` - Resource must have minimum vCPU count in order to use the license. Default: 1
+* `maximumVcpus` - Resource must have maximum vCPU count in order to use the license. Default: unbounded, limit: 10000
+* `minimumCores` - Resource must have minimum core count in order to use the license. Default: 1
+* `maximumCores` - Resource must have maximum core count in order to use the license. Default: unbounded, limit: 10000
+* `minimumSockets` - Resource must have minimum socket count in order to use the license. Default: 1
+* `maximumSockets` - Resource must have maximum socket count in order to use the license. Default: unbounded, limit: 10000
+* `allowedTenancy` - Defines where the license can be used. If set, restricts license usage to selected tenancies. Specify a comma delimited list of `EC2-Default`, `EC2-DedicatedHost`, `EC2-DedicatedInstance`
+
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:

@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/licensemanager"
@@ -49,7 +50,10 @@ func resourceAwsLicenseManagerLicenseConfiguration() *schema.Resource {
 				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringMatch(regexp.MustCompile("^#([^=]+)=(.+)$"), "Expected format is #RuleType=RuleValue"),
+				},
 			},
 			"name": {
 				Type:     schema.TypeString,
@@ -118,7 +122,9 @@ func resourceAwsLicenseManagerLicenseConfigurationRead(d *schema.ResourceData, m
 	d.Set("license_count", resp.LicenseCount)
 	d.Set("license_count_hard_limit", resp.LicenseCountHardLimit)
 	d.Set("license_counting_type", resp.LicenseCountingType)
-	d.Set("license_rules", flattenStringList(resp.LicenseRules))
+	if err := d.Set("license_rules", flattenStringList(resp.LicenseRules)); err != nil {
+		return fmt.Errorf("error setting license_rules: %s", err)
+	}
 	d.Set("name", resp.Name)
 
 	if err := d.Set("tags", tagsToMapLicenseManager(resp.Tags)); err != nil {
@@ -136,9 +142,8 @@ func resourceAwsLicenseManagerLicenseConfigurationUpdate(d *schema.ResourceData,
 	if d.HasChange("tags") {
 		if err := setTagsLicenseManager(conn, d); err != nil {
 			return err
-		} else {
-			d.SetPartial("tags")
 		}
+		d.SetPartial("tags")
 	}
 
 	d.Partial(false)
@@ -179,7 +184,6 @@ func resourceAwsLicenseManagerLicenseConfigurationDelete(d *schema.ResourceData,
 	_, err := conn.DeleteLicenseConfiguration(opts)
 	if err != nil {
 		if isAWSErr(err, licensemanager.ErrCodeInvalidParameterValueException, "") {
-			log.Printf("[WARN] License Manager license configuration (%s) not found", d.Id())
 			return nil
 		}
 		return fmt.Errorf("Error deleting License Manager license configuration: %s", err)
