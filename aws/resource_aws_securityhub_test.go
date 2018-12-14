@@ -9,6 +9,9 @@ func TestAccAWSSecurityHub(t *testing.T) {
 		"Account": {
 			"basic": testAccAWSSecurityHubAccount_basic,
 		},
+		"StandardsSubscription": {
+			"basic": testAccAWSSecurityHubStandardsSubscription_basic,
+		},
 	}
 
 	for group, m := range testCases {
