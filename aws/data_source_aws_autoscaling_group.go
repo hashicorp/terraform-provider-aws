@@ -126,16 +126,16 @@ func dataSourceAwsAutoscalingGroupRead(d *schema.ResourceData, meta interface{})
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
 			case autoscaling.ErrCodeInvalidNextToken:
-				fmt.Errorf("%s %s", autoscaling.ErrCodeInvalidNextToken, aerr.Error())
+				return fmt.Errorf("%s %s", autoscaling.ErrCodeInvalidNextToken, aerr.Error())
 			case autoscaling.ErrCodeResourceContentionFault:
-				fmt.Errorf("%s %s", autoscaling.ErrCodeResourceContentionFault, aerr.Error())
+				return fmt.Errorf("%s %s", autoscaling.ErrCodeResourceContentionFault, aerr.Error())
 			default:
-				fmt.Errorf("%s", aerr.Error())
+				return fmt.Errorf("%s", aerr.Error())
 			}
 		} else {
 			// Print the error, cast err to awserr.Error to get the Code and
 			// Message from an error.
-			fmt.Errorf("%s", err.Error())
+			return fmt.Errorf("%s", err.Error())
 		}
 	}
 
