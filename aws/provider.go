@@ -626,6 +626,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_security_group_rule":                          resourceAwsSecurityGroupRule(),
 			"aws_securityhub_account":                          resourceAwsSecurityHubAccount(),
 			"aws_servicecatalog_portfolio":                     resourceAwsServiceCatalogPortfolio(),
+			"aws_service_discovery_http_namespace":             resourceAwsServiceDiscoveryHttpNamespace(),
 			"aws_service_discovery_private_dns_namespace":      resourceAwsServiceDiscoveryPrivateDnsNamespace(),
 			"aws_service_discovery_public_dns_namespace":       resourceAwsServiceDiscoveryPublicDnsNamespace(),
 			"aws_service_discovery_service":                    resourceAwsServiceDiscoveryService(),
