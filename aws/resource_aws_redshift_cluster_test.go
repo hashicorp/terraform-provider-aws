@@ -560,6 +560,37 @@ func TestAccAWSRedshiftCluster_changeAvailabilityZone(t *testing.T) {
 	})
 }
 
+func TestAccAWSRedshiftCluster_changeEncryption(t *testing.T) {
+	var v redshift.Cluster
+
+	ri := acctest.RandInt()
+	preConfig := testAccAWSRedshiftClusterConfig_basic(ri)
+	postConfig := testAccAWSRedshiftClusterConfig_encrypted(ri)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRedshiftClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: preConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRedshiftClusterExists("aws_redshift_cluster.default", &v),
+					resource.TestCheckResourceAttr("aws_redshift_cluster.default", "encrypted", "false"),
+				),
+			},
+
+			{
+				Config: postConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRedshiftClusterExists("aws_redshift_cluster.default", &v),
+					resource.TestCheckResourceAttr("aws_redshift_cluster.default", "encrypted", "true"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSRedshiftClusterDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_redshift_cluster" {
@@ -883,6 +914,43 @@ resource "aws_redshift_cluster" "default" {
 }`, rInt)
 }
 
+func testAccAWSRedshiftClusterConfig_encrypted(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "foo" {
+	description = "Terraform acc test %d"
+	policy = <<POLICY
+	{
+	"Version": "2012-10-17",
+	"Id": "kms-tf-1",
+	"Statement": [
+		{
+		"Sid": "Enable IAM User Permissions",
+		"Effect": "Allow",
+		"Principal": {
+			"AWS": "*"
+		},
+		"Action": "kms:*",
+		"Resource": "*"
+		}
+	]
+	}
+	POLICY
+	}
+	  
+resource "aws_redshift_cluster" "default" {
+  cluster_identifier = "tf-redshift-cluster-%d"
+  availability_zone = "us-west-2a"
+  database_name = "mydb"
+  master_username = "foo_test"
+  master_password = "Mustbe8characters"
+  node_type = "dc1.large"
+  automated_snapshot_retention_period = 0
+  allow_version_upgrade = false
+  skip_final_snapshot = true
+  encrypted = true
+  kms_key_id = "${aws_kms_key.foo.arn}"
+}`, rInt, rInt)
+}
 func testAccAWSRedshiftClusterConfigWithFinalSnapshot(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_redshift_cluster" "default" {
