@@ -62,8 +62,7 @@ func resourceAwsCloudWatchLogStreamRead(d *schema.ResourceData, meta interface{}
 
 	ls, exists, err := lookupCloudWatchLogStream(conn, d.Id(), group, nil)
 	if err != nil {
-		_, err2 := lookupCloudWatchLogGroup(conn, group)
-		if err2 != nil {
+		if !isAWSErr(err, cloudwatchlogs.ErrCodeResourceNotFoundException, "") {
 			return err
 		}
 

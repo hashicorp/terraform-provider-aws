@@ -65,8 +65,9 @@ func testAccCheckCloudWatchLogStreamDisappears(ls *cloudwatchlogs.LogStream, lgn
 	}
 }
 
-func TestAccAWSCloudWatchLogStream_disappears2(t *testing.T) {
+func TestAccAWSCloudWatchLogStream_disappears_LogGroup(t *testing.T) {
 	var ls cloudwatchlogs.LogStream
+	var lg cloudwatchlogs.LogGroup
 	rName := acctest.RandString(15)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -78,25 +79,13 @@ func TestAccAWSCloudWatchLogStream_disappears2(t *testing.T) {
 				Config: testAccAWSCloudWatchLogStreamConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchLogStreamExists("aws_cloudwatch_log_stream.foobar", &ls),
-					testAccCheckCloudWatchLogStreamDisappears2(&ls, rName),
+					testAccCheckCloudWatchLogGroupExists("aws_cloudwatch_log_group.foobar", &lg),
+					testAccCheckCloudWatchLogGroupDisappears(&lg),
 				),
 				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
-}
-
-func testAccCheckCloudWatchLogStreamDisappears2(ls *cloudwatchlogs.LogStream, lgn string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).cloudwatchlogsconn
-		opts := &cloudwatchlogs.DeleteLogGroupInput{
-			LogGroupName: aws.String(lgn),
-		}
-		if _, err := conn.DeleteLogGroup(opts); err != nil {
-			return err
-		}
-		return nil
-	}
 }
 
 func testAccCheckCloudWatchLogStreamExists(n string, ls *cloudwatchlogs.LogStream) resource.TestCheckFunc {
