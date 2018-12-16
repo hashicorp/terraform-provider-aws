@@ -159,7 +159,23 @@ resource "aws_s3_bucket" "website-bucket" {
     index_document = "index.html"
   }
 }
+data "aws_iam_policy_document" "bucket-policy" {
+  statement {
+    actions   = ["s3:GetObject"]
+    resources = ["${aws_s3_bucket.website-bucket.arn}/*"]
 
+    principals {
+      type        = "*"
+      identifiers = ["*"]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "aws:UserAgent"
+      values   = ["${local.cloudfront-authentication-user-agent}"]
+    }
+  }
+}
 resource "aws_s3_bucket_policy" "bucket-policy" {
   bucket = "${aws_s3_bucket.website-bucket.id}"
 
