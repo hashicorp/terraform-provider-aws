@@ -179,7 +179,7 @@ data "aws_iam_policy_document" "bucket-policy" {
 resource "aws_s3_bucket_policy" "bucket-policy" {
   bucket = "${aws_s3_bucket.website-bucket.id}"
 
-  policy = <<POLICY
+  policy = "${data.aws_iam_policy_document.bucket-policy.json}"
 {
     "Version": "2012-10-17",
     "Statement": [
