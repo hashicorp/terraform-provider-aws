@@ -159,6 +159,7 @@ resource "aws_s3_bucket" "website-bucket" {
     index_document = "index.html"
   }
 }
+
 data "aws_iam_policy_document" "bucket-policy" {
   statement {
     actions   = ["s3:GetObject"]
@@ -176,28 +177,10 @@ data "aws_iam_policy_document" "bucket-policy" {
     }
   }
 }
+
 resource "aws_s3_bucket_policy" "bucket-policy" {
   bucket = "${aws_s3_bucket.website-bucket.id}"
-
   policy = "${data.aws_iam_policy_document.bucket-policy.json}"
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Sid": "ReadWithSecretUserAgent",
-            "Effect": "Allow",
-            "Principal": "*",
-            "Action": "s3:GetObject",
-            "Resource": "arn:aws:s3:::${aws_s3_bucket.website-bucket.id}/*",
-            "Condition": {
-                "StringEquals": {
-                    "aws:UserAgent": "${local.cloudfront-authentication-user-agent}"
-                }
-            }
-        }
-    ]
-}
-POLICY
 }
 
 resource "aws_cloudfront_distribution" "distribution" {
