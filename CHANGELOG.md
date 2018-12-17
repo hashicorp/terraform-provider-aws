@@ -1,4 +1,9 @@
 ## 1.53.0 (Unreleased)
+
+BUG FIXES
+
+* resource/aws_cloudwatch_log_stream: Trigger resource recreation on `ResourceNotFoundException` error [GH-6776]
+
 ## 1.52.0 (December 13, 2018)
 
 FEATURES
