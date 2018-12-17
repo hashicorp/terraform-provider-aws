@@ -189,7 +189,7 @@ func TestAccAWSLBTargetGroup_networkLB_TargetGroup(t *testing.T) {
 			},
 			{
 				Config:      testAccAWSLBTargetGroupConfig_typeTCPInvalidThreshold(targetGroupName),
-				ExpectError: regexp.MustCompile("healthy_threshold [0-9]+ and unhealthy_threshold [0-9]+ must be the same for target_groups with TCP protocol"),
+				ExpectError: regexp.MustCompile("health_check\\.healthy_threshold [0-9]+ and health_check\\.unhealthy_threshold [0-9]+ must be the same for target_groups with TCP protocol"),
 			},
 			{
 				Config: testAccAWSLBTargetGroupConfig_typeTCPThresholdUpdated(targetGroupName),
@@ -768,15 +768,15 @@ func TestAccAWSLBTargetGroup_defaults_network(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccNLB_defaults(targetGroupName, healthCheckInvalid1),
-				ExpectError: regexp.MustCompile("custom path is not supported for target_groups with TCP protocol"),
+				ExpectError: regexp.MustCompile("health_check.path is not supported for target_groups with TCP protocol"),
 			},
 			{
 				Config:      testAccNLB_defaults(targetGroupName, healthCheckInvalid2),
-				ExpectError: regexp.MustCompile("custom matcher is not supported for target_groups with TCP protocol"),
+				ExpectError: regexp.MustCompile("health_check.matcher is not supported for target_groups with TCP protocol"),
 			},
 			{
 				Config:      testAccNLB_defaults(targetGroupName, healthCheckInvalid3),
-				ExpectError: regexp.MustCompile("custom timeout is not supported for target_groups with TCP protocol"),
+				ExpectError: regexp.MustCompile("health_check.timeout is not supported for target_groups with TCP protocol"),
 			},
 			{
 				Config: testAccNLB_defaults(targetGroupName, healthCheckValid),
