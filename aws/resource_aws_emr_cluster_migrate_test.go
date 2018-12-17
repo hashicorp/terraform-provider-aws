@@ -71,7 +71,7 @@ func TestAwsEMRClusterMigrateState_empty(t *testing.T) {
 
 	// should handle non-nil but empty
 	is = &terraform.InstanceState{}
-	is, err = resourceAwsEMRClusterMigrateState(0, is, meta)
+	_, err = resourceAwsEMRClusterMigrateState(0, is, meta)
 
 	if err != nil {
 		t.Fatalf("err: %#v", err)

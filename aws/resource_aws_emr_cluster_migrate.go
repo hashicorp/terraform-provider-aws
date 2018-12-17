@@ -69,15 +69,9 @@ func migrateEMRClusterStateV0toV1(is *terraform.InstanceState) (*terraform.Insta
 
 	for k, v := range newEBSConfigKeys {
 		is.Attributes[k] = v
-
 	}
 
 	log.Printf("[DEBUG] EMR Cluster Attributes after migration: %#v", is.Attributes)
 
 	return is, nil
-}
-
-func updateV0ToV1EMRClusterEBSConfig(is *terraform.InstanceState) error {
-
-	return nil
 }
