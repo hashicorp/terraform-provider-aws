@@ -870,7 +870,7 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	// Amazon S3 Transfer Acceleration might not be supported in the region
-	if err != nil && !isAWSErr(err, "UnsupportedArgument", "") {
+	if err != nil && !isAWSErr(err, "MethodNotAllowed", "") && !isAWSErr(err, "UnsupportedArgument", "") {
 		return fmt.Errorf("error getting S3 Bucket acceleration configuration: %s", err)
 	}
 	if accelerate, ok := accelerateResponse.(*s3.GetBucketAccelerateConfigurationOutput); ok {
