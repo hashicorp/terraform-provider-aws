@@ -17,6 +17,7 @@ Provides a resource to manage a GuardDuty detector.
 ```hcl
 resource "aws_guardduty_detector" "MyDetector" {
   enable = true
+  finding_publishing_frequency = "SIX_HOURS"
 }
 ```
 
@@ -25,6 +26,7 @@ resource "aws_guardduty_detector" "MyDetector" {
 The following arguments are supported:
 
 * `enable` - (Optional) Enable monitoring and feedback reporting. Setting to `false` is equivalent to "suspending" GuardDuty. Defaults to `true`.
+* `finding_publishing_frequency` - (Optional) Specifies the frequency of notifications sent about the subsequent finding occurrences. Defaults to `SIX_HOURS`.
 
 ## Attributes Reference
 

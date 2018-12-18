@@ -40,6 +40,13 @@ func testAccAwsGuardDutyDetector_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enable", "true"),
 				),
 			},
+			{
+				Config: testAccGuardDutyDetectorConfig_basic4,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsGuardDutyDetectorExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "finding_publishing_frequency", "FIFTEEN_MINUTES"),
+				),
+			},
 		},
 	})
 }
@@ -113,4 +120,9 @@ resource "aws_guardduty_detector" "test" {
 const testAccGuardDutyDetectorConfig_basic3 = `
 resource "aws_guardduty_detector" "test" {
   enable = true
+}`
+
+const testAccGuardDutyDetectorConfig_basic4 = `
+resource "aws_guardduty_detector" "test" {
+  finding_publishing_frequency = "FIFTEEN_MINUTES"
 }`
