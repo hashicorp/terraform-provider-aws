@@ -110,6 +110,10 @@ func dataSourceAwsRouteTable() *schema.Resource {
 					},
 				},
 			},
+			"owner_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -158,6 +162,7 @@ func dataSourceAwsRouteTableRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("route_table_id", rt.RouteTableId)
 	d.Set("vpc_id", rt.VpcId)
 	d.Set("tags", tagsToMap(rt.Tags))
+	d.Set("owner_id", rt.OwnerId)
 	if err := d.Set("routes", dataSourceRoutesRead(rt.Routes)); err != nil {
 		return err
 	}

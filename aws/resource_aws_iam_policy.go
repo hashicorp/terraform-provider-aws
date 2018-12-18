@@ -54,7 +54,7 @@ func resourceAwsIamPolicy() *schema.Resource {
 						errors = append(errors, fmt.Errorf(
 							"%q cannot be longer than 128 characters", k))
 					}
-					if !regexp.MustCompile("^[\\w+=,.@-]*$").MatchString(value) {
+					if !regexp.MustCompile(`^[\w+=,.@-]*$`).MatchString(value) {
 						errors = append(errors, fmt.Errorf(
 							"%q must match [\\w+=,.@-]", k))
 					}
@@ -73,7 +73,7 @@ func resourceAwsIamPolicy() *schema.Resource {
 						errors = append(errors, fmt.Errorf(
 							"%q cannot be longer than 96 characters, name is limited to 128", k))
 					}
-					if !regexp.MustCompile("^[\\w+=,.@-]*$").MatchString(value) {
+					if !regexp.MustCompile(`^[\w+=,.@-]*$`).MatchString(value) {
 						errors = append(errors, fmt.Errorf(
 							"%q must match [\\w+=,.@-]", k))
 					}
@@ -283,10 +283,8 @@ func iamPolicyPruneVersions(arn string, iamconn *iam.IAM) error {
 		}
 	}
 
-	if err := iamPolicyDeleteVersion(arn, *oldestVersion.VersionId, iamconn); err != nil {
-		return err
-	}
-	return nil
+	err1 := iamPolicyDeleteVersion(arn, *oldestVersion.VersionId, iamconn)
+	return err1
 }
 
 func iamPolicyDeleteNondefaultVersions(arn string, iamconn *iam.IAM) error {

@@ -137,8 +137,8 @@ const (
 	// ErrCodeNoSuchEntityException for service response error code
 	// "NoSuchEntity".
 	//
-	// The request was rejected because it referenced an entity that does not exist.
-	// The error message describes the entity.
+	// The request was rejected because it referenced a resource entity that does
+	// not exist. The error message describes the resource.
 	ErrCodeNoSuchEntityException = "NoSuchEntity"
 
 	// ErrCodePasswordPolicyViolationException for service response error code

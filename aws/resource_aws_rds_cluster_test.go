@@ -1314,7 +1314,7 @@ resource "aws_rds_cluster" "default" {
   master_password = "mustbeeightcharaters"
   db_cluster_parameter_group_name = "default.aurora5.6"
   skip_final_snapshot = true
-  tags {
+  tags = {
     Environment = "production"
   }
   enabled_cloudwatch_logs_exports = [
@@ -1349,7 +1349,7 @@ resource "aws_rds_cluster" "test" {
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-rds-cluster-name-prefix"
 	}
 }
@@ -1358,7 +1358,7 @@ resource "aws_subnet" "a" {
   vpc_id = "${aws_vpc.test.id}"
   cidr_block = "10.0.0.0/24"
   availability_zone = "us-west-2a"
-  tags {
+  tags = {
     Name = "tf-acc-rds-cluster-name-prefix-a"
   }
 }
@@ -1367,7 +1367,7 @@ resource "aws_subnet" "b" {
   vpc_id = "${aws_vpc.test.id}"
   cidr_block = "10.0.1.0/24"
   availability_zone = "us-west-2b"
-  tags {
+  tags = {
     Name = "tf-acc-rds-cluster-name-prefix-b"
   }
 }
@@ -1467,7 +1467,7 @@ resource "aws_rds_cluster" "test" {
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-	tags {
+	tags = {
 		Name = "%s-vpc"
 	}
 }
@@ -1476,7 +1476,7 @@ resource "aws_subnet" "a" {
   vpc_id = "${aws_vpc.test.id}"
   cidr_block = "10.0.0.0/24"
   availability_zone = "us-west-2a"
-  tags {
+  tags = {
     Name = "%s-subnet-a"
   }
 }
@@ -1485,7 +1485,7 @@ resource "aws_subnet" "b" {
   vpc_id = "${aws_vpc.test.id}"
   cidr_block = "10.0.1.0/24"
   availability_zone = "us-west-2b"
-  tags {
+  tags = {
     Name = "%s-subnet-b"
   }
 }
@@ -1508,7 +1508,7 @@ resource "aws_rds_cluster" "test" {
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-rds-cluster-generated-name"
 	}
 }
@@ -1517,7 +1517,7 @@ resource "aws_subnet" "a" {
   vpc_id = "${aws_vpc.test.id}"
   cidr_block = "10.0.0.0/24"
   availability_zone = "us-west-2a"
-  tags {
+  tags = {
     Name = "tf-acc-rds-cluster-generated-name-a"
   }
 }
@@ -1526,7 +1526,7 @@ resource "aws_subnet" "b" {
   vpc_id = "${aws_vpc.test.id}"
   cidr_block = "10.0.1.0/24"
   availability_zone = "us-west-2b"
-  tags {
+  tags = {
     Name = "tf-acc-rds-cluster-generated-name-b"
   }
 }
@@ -1548,7 +1548,7 @@ resource "aws_rds_cluster" "default" {
   master_password = "mustbeeightcharaters"
   db_cluster_parameter_group_name = "default.aurora5.6"
   final_snapshot_identifier = "tf-acctest-rdscluster-snapshot-%d"
-  tags {
+  tags = {
     Environment = "production"
   }
 }`, n, n)
@@ -1574,7 +1574,7 @@ resource "aws_rds_cluster" "default" {
   master_password = "mustbeeightcharaters"
   db_cluster_parameter_group_name = "default.aurora5.6"
   skip_final_snapshot = true
-  tags {
+  tags = {
     Environment = "production"
     AnotherTag = "test"
   }
@@ -1829,7 +1829,7 @@ resource "aws_rds_cluster" "default" {
   master_password = "mustbeeightcharaters"
   db_cluster_parameter_group_name = "default.aurora5.6"
   skip_final_snapshot = true
-  tags {
+  tags = {
     Environment = "production"
   }
   depends_on = ["aws_iam_role.another_rds_sample_role", "aws_iam_role.rds_sample_role"]
@@ -1914,7 +1914,7 @@ resource "aws_rds_cluster" "default" {
   db_cluster_parameter_group_name = "default.aurora5.6"
   skip_final_snapshot = true
   iam_roles = ["${aws_iam_role.rds_sample_role.arn}","${aws_iam_role.another_rds_sample_role.arn}"]
-  tags {
+  tags = {
     Environment = "production"
   }
   depends_on = ["aws_iam_role.another_rds_sample_role", "aws_iam_role.rds_sample_role"]
@@ -1966,7 +1966,7 @@ resource "aws_rds_cluster" "default" {
   db_cluster_parameter_group_name = "default.aurora5.6"
   skip_final_snapshot = true
   iam_roles = ["${aws_iam_role.another_rds_sample_role.arn}"]
-  tags {
+  tags = {
     Environment = "production"
   }
 
@@ -2053,7 +2053,7 @@ resource "aws_kms_key" "kms_key_east" {
 resource "aws_vpc" "main" {
   provider   = "aws.useast1"
   cidr_block = "10.0.0.0/16"
-  tags {
+  tags = {
   	Name = "terraform-acctest-rds-cluster-encrypted-cross-region-replica"
   }
 }
@@ -2064,7 +2064,7 @@ resource "aws_subnet" "db" {
   vpc_id            = "${aws_vpc.main.id}"
   availability_zone = "${data.aws_availability_zones.us-east-1.names[count.index]}"
   cidr_block        = "10.0.${count.index}.0/24"
-  tags {
+  tags = {
     Name = "tf-acc-rds-cluster-encrypted-cross-region-replica-${count.index}"
   }
 }
@@ -2297,7 +2297,7 @@ resource "aws_rds_cluster" "test" {
   skip_final_snapshot = true
   snapshot_identifier = "${aws_db_cluster_snapshot.test.id}"
 
-  tags {
+  tags = {
     key1 = "value1"
   }
 }
@@ -2365,7 +2365,7 @@ resource "aws_rds_cluster" "test" {
   snapshot_identifier    = "${aws_db_cluster_snapshot.test.id}"
   vpc_security_group_ids = ["${data.aws_security_group.default.id}"]
 
-  tags {
+  tags = {
     key1 = "value1"
   }
 }

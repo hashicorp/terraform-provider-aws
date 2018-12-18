@@ -6,6 +6,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/aws/aws-sdk-go/aws/request"
+	"github.com/aws/aws-sdk-go/private/protocol"
+	"github.com/aws/aws-sdk-go/private/protocol/restjson"
 )
 
 const opCreateApiKey = "CreateApiKey"
@@ -621,6 +623,7 @@ func (c *AppSync) DeleteApiKeyRequest(input *DeleteApiKeyInput) (req *request.Re
 
 	output = &DeleteApiKeyOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -711,6 +714,7 @@ func (c *AppSync) DeleteDataSourceRequest(input *DeleteDataSourceInput) (req *re
 
 	output = &DeleteDataSourceOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -805,6 +809,7 @@ func (c *AppSync) DeleteFunctionRequest(input *DeleteFunctionInput) (req *reques
 
 	output = &DeleteFunctionOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -895,6 +900,7 @@ func (c *AppSync) DeleteGraphqlApiRequest(input *DeleteGraphqlApiInput) (req *re
 
 	output = &DeleteGraphqlApiOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -989,6 +995,7 @@ func (c *AppSync) DeleteResolverRequest(input *DeleteResolverInput) (req *reques
 
 	output = &DeleteResolverOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -1079,6 +1086,7 @@ func (c *AppSync) DeleteTypeRequest(input *DeleteTypeInput) (req *request.Reques
 
 	output = &DeleteTypeOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -3252,6 +3260,9 @@ func (s *CreateApiKeyInput) Validate() error {
 	if s.ApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApiId"))
 	}
+	if s.ApiId != nil && len(*s.ApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApiId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -3356,6 +3367,9 @@ func (s *CreateDataSourceInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CreateDataSourceInput"}
 	if s.ApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApiId"))
+	}
+	if s.ApiId != nil && len(*s.ApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApiId", 1))
 	}
 	if s.Name == nil {
 		invalidParams.Add(request.NewErrParamRequired("Name"))
@@ -3525,6 +3539,9 @@ func (s *CreateFunctionInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CreateFunctionInput"}
 	if s.ApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApiId"))
+	}
+	if s.ApiId != nil && len(*s.ApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApiId", 1))
 	}
 	if s.DataSourceName == nil {
 		invalidParams.Add(request.NewErrParamRequired("DataSourceName"))
@@ -3797,6 +3814,9 @@ func (s *CreateResolverInput) Validate() error {
 	if s.ApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApiId"))
 	}
+	if s.ApiId != nil && len(*s.ApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApiId", 1))
+	}
 	if s.FieldName == nil {
 		invalidParams.Add(request.NewErrParamRequired("FieldName"))
 	}
@@ -3811,6 +3831,9 @@ func (s *CreateResolverInput) Validate() error {
 	}
 	if s.TypeName == nil {
 		invalidParams.Add(request.NewErrParamRequired("TypeName"))
+	}
+	if s.TypeName != nil && len(*s.TypeName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TypeName", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -3926,6 +3949,9 @@ func (s *CreateTypeInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CreateTypeInput"}
 	if s.ApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApiId"))
+	}
+	if s.ApiId != nil && len(*s.ApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApiId", 1))
 	}
 	if s.Definition == nil {
 		invalidParams.Add(request.NewErrParamRequired("Definition"))
@@ -4133,8 +4159,14 @@ func (s *DeleteApiKeyInput) Validate() error {
 	if s.ApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApiId"))
 	}
+	if s.ApiId != nil && len(*s.ApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApiId", 1))
+	}
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
+	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -4199,8 +4231,14 @@ func (s *DeleteDataSourceInput) Validate() error {
 	if s.ApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApiId"))
 	}
+	if s.ApiId != nil && len(*s.ApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApiId", 1))
+	}
 	if s.Name == nil {
 		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -4265,8 +4303,14 @@ func (s *DeleteFunctionInput) Validate() error {
 	if s.ApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApiId"))
 	}
+	if s.ApiId != nil && len(*s.ApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApiId", 1))
+	}
 	if s.FunctionId == nil {
 		invalidParams.Add(request.NewErrParamRequired("FunctionId"))
+	}
+	if s.FunctionId != nil && len(*s.FunctionId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("FunctionId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -4325,6 +4369,9 @@ func (s *DeleteGraphqlApiInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DeleteGraphqlApiInput"}
 	if s.ApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApiId"))
+	}
+	if s.ApiId != nil && len(*s.ApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApiId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -4388,11 +4435,20 @@ func (s *DeleteResolverInput) Validate() error {
 	if s.ApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApiId"))
 	}
+	if s.ApiId != nil && len(*s.ApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApiId", 1))
+	}
 	if s.FieldName == nil {
 		invalidParams.Add(request.NewErrParamRequired("FieldName"))
 	}
+	if s.FieldName != nil && len(*s.FieldName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("FieldName", 1))
+	}
 	if s.TypeName == nil {
 		invalidParams.Add(request.NewErrParamRequired("TypeName"))
+	}
+	if s.TypeName != nil && len(*s.TypeName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TypeName", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -4463,8 +4519,14 @@ func (s *DeleteTypeInput) Validate() error {
 	if s.ApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApiId"))
 	}
+	if s.ApiId != nil && len(*s.ApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApiId", 1))
+	}
 	if s.TypeName == nil {
 		invalidParams.Add(request.NewErrParamRequired("TypeName"))
+	}
+	if s.TypeName != nil && len(*s.TypeName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TypeName", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -4734,8 +4796,14 @@ func (s *GetDataSourceInput) Validate() error {
 	if s.ApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApiId"))
 	}
+	if s.ApiId != nil && len(*s.ApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApiId", 1))
+	}
 	if s.Name == nil {
 		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -4809,8 +4877,14 @@ func (s *GetFunctionInput) Validate() error {
 	if s.ApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApiId"))
 	}
+	if s.ApiId != nil && len(*s.ApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApiId", 1))
+	}
 	if s.FunctionId == nil {
 		invalidParams.Add(request.NewErrParamRequired("FunctionId"))
+	}
+	if s.FunctionId != nil && len(*s.FunctionId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("FunctionId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -4879,6 +4953,9 @@ func (s *GetGraphqlApiInput) Validate() error {
 	if s.ApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApiId"))
 	}
+	if s.ApiId != nil && len(*s.ApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApiId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -4944,6 +5021,9 @@ func (s *GetIntrospectionSchemaInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "GetIntrospectionSchemaInput"}
 	if s.ApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApiId"))
+	}
+	if s.ApiId != nil && len(*s.ApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApiId", 1))
 	}
 	if s.Format == nil {
 		invalidParams.Add(request.NewErrParamRequired("Format"))
@@ -5027,11 +5107,20 @@ func (s *GetResolverInput) Validate() error {
 	if s.ApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApiId"))
 	}
+	if s.ApiId != nil && len(*s.ApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApiId", 1))
+	}
 	if s.FieldName == nil {
 		invalidParams.Add(request.NewErrParamRequired("FieldName"))
 	}
+	if s.FieldName != nil && len(*s.FieldName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("FieldName", 1))
+	}
 	if s.TypeName == nil {
 		invalidParams.Add(request.NewErrParamRequired("TypeName"))
+	}
+	if s.TypeName != nil && len(*s.TypeName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TypeName", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -5105,6 +5194,9 @@ func (s *GetSchemaCreationStatusInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "GetSchemaCreationStatusInput"}
 	if s.ApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApiId"))
+	}
+	if s.ApiId != nil && len(*s.ApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApiId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -5187,11 +5279,17 @@ func (s *GetTypeInput) Validate() error {
 	if s.ApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApiId"))
 	}
+	if s.ApiId != nil && len(*s.ApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApiId", 1))
+	}
 	if s.Format == nil {
 		invalidParams.Add(request.NewErrParamRequired("Format"))
 	}
 	if s.TypeName == nil {
 		invalidParams.Add(request.NewErrParamRequired("TypeName"))
+	}
+	if s.TypeName != nil && len(*s.TypeName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TypeName", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -5450,6 +5548,9 @@ func (s *ListApiKeysInput) Validate() error {
 	if s.ApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApiId"))
 	}
+	if s.ApiId != nil && len(*s.ApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApiId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -5540,6 +5641,9 @@ func (s *ListDataSourcesInput) Validate() error {
 	if s.ApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApiId"))
 	}
+	if s.ApiId != nil && len(*s.ApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApiId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -5629,6 +5733,9 @@ func (s *ListFunctionsInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "ListFunctionsInput"}
 	if s.ApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApiId"))
+	}
+	if s.ApiId != nil && len(*s.ApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApiId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -5791,8 +5898,14 @@ func (s *ListResolversByFunctionInput) Validate() error {
 	if s.ApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApiId"))
 	}
+	if s.ApiId != nil && len(*s.ApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApiId", 1))
+	}
 	if s.FunctionId == nil {
 		invalidParams.Add(request.NewErrParamRequired("FunctionId"))
+	}
+	if s.FunctionId != nil && len(*s.FunctionId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("FunctionId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -5894,8 +6007,14 @@ func (s *ListResolversInput) Validate() error {
 	if s.ApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApiId"))
 	}
+	if s.ApiId != nil && len(*s.ApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApiId", 1))
+	}
 	if s.TypeName == nil {
 		invalidParams.Add(request.NewErrParamRequired("TypeName"))
+	}
+	if s.TypeName != nil && len(*s.TypeName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TypeName", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -5997,6 +6116,9 @@ func (s *ListTypesInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "ListTypesInput"}
 	if s.ApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApiId"))
+	}
+	if s.ApiId != nil && len(*s.ApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApiId", 1))
 	}
 	if s.Format == nil {
 		invalidParams.Add(request.NewErrParamRequired("Format"))
@@ -6453,6 +6575,9 @@ func (s *StartSchemaCreationInput) Validate() error {
 	if s.ApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApiId"))
 	}
+	if s.ApiId != nil && len(*s.ApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApiId", 1))
+	}
 	if s.Definition == nil {
 		invalidParams.Add(request.NewErrParamRequired("Definition"))
 	}
@@ -6596,8 +6721,14 @@ func (s *UpdateApiKeyInput) Validate() error {
 	if s.ApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApiId"))
 	}
+	if s.ApiId != nil && len(*s.ApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApiId", 1))
+	}
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
+	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -6709,8 +6840,14 @@ func (s *UpdateDataSourceInput) Validate() error {
 	if s.ApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApiId"))
 	}
+	if s.ApiId != nil && len(*s.ApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApiId", 1))
+	}
 	if s.Name == nil {
 		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
 	}
 	if s.Type == nil {
 		invalidParams.Add(request.NewErrParamRequired("Type"))
@@ -6883,11 +7020,17 @@ func (s *UpdateFunctionInput) Validate() error {
 	if s.ApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApiId"))
 	}
+	if s.ApiId != nil && len(*s.ApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApiId", 1))
+	}
 	if s.DataSourceName == nil {
 		invalidParams.Add(request.NewErrParamRequired("DataSourceName"))
 	}
 	if s.FunctionId == nil {
 		invalidParams.Add(request.NewErrParamRequired("FunctionId"))
+	}
+	if s.FunctionId != nil && len(*s.FunctionId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("FunctionId", 1))
 	}
 	if s.FunctionVersion == nil {
 		invalidParams.Add(request.NewErrParamRequired("FunctionVersion"))
@@ -7023,6 +7166,9 @@ func (s *UpdateGraphqlApiInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "UpdateGraphqlApiInput"}
 	if s.ApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApiId"))
+	}
+	if s.ApiId != nil && len(*s.ApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApiId", 1))
 	}
 	if s.Name == nil {
 		invalidParams.Add(request.NewErrParamRequired("Name"))
@@ -7168,8 +7314,14 @@ func (s *UpdateResolverInput) Validate() error {
 	if s.ApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApiId"))
 	}
+	if s.ApiId != nil && len(*s.ApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApiId", 1))
+	}
 	if s.FieldName == nil {
 		invalidParams.Add(request.NewErrParamRequired("FieldName"))
+	}
+	if s.FieldName != nil && len(*s.FieldName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("FieldName", 1))
 	}
 	if s.RequestMappingTemplate == nil {
 		invalidParams.Add(request.NewErrParamRequired("RequestMappingTemplate"))
@@ -7182,6 +7334,9 @@ func (s *UpdateResolverInput) Validate() error {
 	}
 	if s.TypeName == nil {
 		invalidParams.Add(request.NewErrParamRequired("TypeName"))
+	}
+	if s.TypeName != nil && len(*s.TypeName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TypeName", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -7299,11 +7454,17 @@ func (s *UpdateTypeInput) Validate() error {
 	if s.ApiId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApiId"))
 	}
+	if s.ApiId != nil && len(*s.ApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApiId", 1))
+	}
 	if s.Format == nil {
 		invalidParams.Add(request.NewErrParamRequired("Format"))
 	}
 	if s.TypeName == nil {
 		invalidParams.Add(request.NewErrParamRequired("TypeName"))
+	}
+	if s.TypeName != nil && len(*s.TypeName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TypeName", 1))
 	}
 
 	if invalidParams.Len() > 0 {

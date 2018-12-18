@@ -1604,8 +1604,7 @@ func (c *SageMaker) DeleteAlgorithmRequest(input *DeleteAlgorithmInput) (req *re
 
 	output = &DeleteAlgorithmOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(jsonrpc.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -1680,8 +1679,7 @@ func (c *SageMaker) DeleteCodeRepositoryRequest(input *DeleteCodeRepositoryInput
 
 	output = &DeleteCodeRepositoryOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(jsonrpc.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -1756,8 +1754,7 @@ func (c *SageMaker) DeleteEndpointRequest(input *DeleteEndpointInput) (req *requ
 
 	output = &DeleteEndpointOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(jsonrpc.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -1837,8 +1834,7 @@ func (c *SageMaker) DeleteEndpointConfigRequest(input *DeleteEndpointConfigInput
 
 	output = &DeleteEndpointConfigOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(jsonrpc.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -1915,8 +1911,7 @@ func (c *SageMaker) DeleteModelRequest(input *DeleteModelInput) (req *request.Re
 
 	output = &DeleteModelOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(jsonrpc.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -1994,8 +1989,7 @@ func (c *SageMaker) DeleteModelPackageRequest(input *DeleteModelPackageInput) (r
 
 	output = &DeleteModelPackageOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(jsonrpc.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -2074,8 +2068,7 @@ func (c *SageMaker) DeleteNotebookInstanceRequest(input *DeleteNotebookInstanceI
 
 	output = &DeleteNotebookInstanceOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(jsonrpc.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -2155,8 +2148,7 @@ func (c *SageMaker) DeleteNotebookInstanceLifecycleConfigRequest(input *DeleteNo
 
 	output = &DeleteNotebookInstanceLifecycleConfigOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(jsonrpc.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -2231,6 +2223,7 @@ func (c *SageMaker) DeleteTagsRequest(input *DeleteTagsInput) (req *request.Requ
 
 	output = &DeleteTagsOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -6019,8 +6012,7 @@ func (c *SageMaker) StartNotebookInstanceRequest(input *StartNotebookInstanceInp
 
 	output = &StartNotebookInstanceOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(jsonrpc.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -6105,8 +6097,7 @@ func (c *SageMaker) StopCompilationJobRequest(input *StopCompilationJobInput) (r
 
 	output = &StopCompilationJobOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(jsonrpc.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -6195,8 +6186,7 @@ func (c *SageMaker) StopHyperParameterTuningJobRequest(input *StopHyperParameter
 
 	output = &StopHyperParameterTuningJobOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(jsonrpc.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -6282,8 +6272,7 @@ func (c *SageMaker) StopLabelingJobRequest(input *StopLabelingJobInput) (req *re
 
 	output = &StopLabelingJobOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(jsonrpc.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -6365,8 +6354,7 @@ func (c *SageMaker) StopNotebookInstanceRequest(input *StopNotebookInstanceInput
 
 	output = &StopNotebookInstanceOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(jsonrpc.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -6448,8 +6436,7 @@ func (c *SageMaker) StopTrainingJobRequest(input *StopTrainingJobInput) (req *re
 
 	output = &StopTrainingJobOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(jsonrpc.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -6541,8 +6528,7 @@ func (c *SageMaker) StopTransformJobRequest(input *StopTransformJobInput) (req *
 
 	output = &StopTransformJobOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(jsonrpc.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -6876,6 +6862,7 @@ func (c *SageMaker) UpdateNotebookInstanceRequest(input *UpdateNotebookInstanceI
 
 	output = &UpdateNotebookInstanceOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -6959,6 +6946,7 @@ func (c *SageMaker) UpdateNotebookInstanceLifecycleConfigRequest(input *UpdateNo
 
 	output = &UpdateNotebookInstanceLifecycleConfigOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -15424,6 +15412,17 @@ type HyperParameterTuningJobConfig struct {
 	//
 	// Strategy is a required field
 	Strategy *string `type:"string" required:"true" enum:"HyperParameterTuningJobStrategyType"`
+
+	// Specifies whether to use early stopping for training jobs launched by the
+	// hyperparameter tuning job. One of the following values:
+	//
+	// OFFTraining jobs launched by the hyperparameter tuning job do not use early
+	// stopping.
+	//
+	// AUTOAmazon SageMaker stops training jobs launched by the hyperparameter tuning
+	// job when they are no longer improving as measured by the objective metric
+	// of the tuning job.
+	TrainingJobEarlyStoppingType *string `type:"string" enum:"TrainingJobEarlyStoppingType"`
 }
 
 // String returns the string representation
@@ -15494,6 +15493,12 @@ func (s *HyperParameterTuningJobConfig) SetResourceLimits(v *ResourceLimits) *Hy
 // SetStrategy sets the Strategy field's value.
 func (s *HyperParameterTuningJobConfig) SetStrategy(v string) *HyperParameterTuningJobConfig {
 	s.Strategy = &v
+	return s
+}
+
+// SetTrainingJobEarlyStoppingType sets the TrainingJobEarlyStoppingType field's value.
+func (s *HyperParameterTuningJobConfig) SetTrainingJobEarlyStoppingType(v string) *HyperParameterTuningJobConfig {
+	s.TrainingJobEarlyStoppingType = &v
 	return s
 }
 
@@ -25796,6 +25801,14 @@ const (
 
 	// TrainingInstanceTypeMlC518xlarge is a TrainingInstanceType enum value
 	TrainingInstanceTypeMlC518xlarge = "ml.c5.18xlarge"
+)
+
+const (
+	// TrainingJobEarlyStoppingTypeOff is a TrainingJobEarlyStoppingType enum value
+	TrainingJobEarlyStoppingTypeOff = "Off"
+
+	// TrainingJobEarlyStoppingTypeAuto is a TrainingJobEarlyStoppingType enum value
+	TrainingJobEarlyStoppingTypeAuto = "Auto"
 )
 
 const (

@@ -1403,7 +1403,7 @@ variable "TestAccNameTag" {
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
-  tags {
+  tags = {
     Name = "${var.TestAccNameTag}"
   }
 }
@@ -1414,7 +1414,7 @@ resource "aws_subnet" "test" {
   cidr_block = "10.1.${count.index}.0/24"
   vpc_id     = "${aws_vpc.test.id}"
 
-  tags {
+  tags = {
     Name = "${var.TestAccNameTag}"
   }
 }
@@ -1607,7 +1607,7 @@ resource "aws_ec2_fleet" "test" {
     }
   }
 
-  tags {
+  tags = {
     %q = %q
   }
 

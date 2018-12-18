@@ -326,7 +326,7 @@ resource "aws_instance" "test" {
     delete_on_termination = true
   }
 
-  tags {
+  tags = {
     Name    = "test-terraform"
   }
 }
@@ -385,7 +385,7 @@ resource "aws_instance" "test" {
     delete_on_termination = true
   }
 
-  tags {
+  tags = {
     Name    = "test-terraform"
   }
 }
@@ -412,7 +412,7 @@ resource "aws_ebs_volume" "test" {
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
   type = "gp2"
   size = 10
-  tags {
+  tags = {
     Name = "tf-acc-test-ebs-volume-test"
   }
 }
@@ -425,7 +425,7 @@ resource "aws_ebs_volume" "test" {
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
   type = "sc1"
   size = 500
-  tags {
+  tags = {
     Name = "tf-acc-test-ebs-volume-test"
   }
 }
@@ -439,7 +439,7 @@ resource "aws_ebs_volume" "test" {
   type = "io1"
   size = 4
   iops = 100
-  tags {
+  tags = {
     Name = "tf-acc-test-ebs-volume-test"
   }
 }
@@ -453,7 +453,7 @@ resource "aws_ebs_volume" "test" {
   type = "io1"
   size = 4
   iops = 200
-  tags {
+  tags = {
     Name = "tf-acc-test-ebs-volume-test"
   }
 }
@@ -497,7 +497,7 @@ data "aws_availability_zones" "available" {}
 resource "aws_ebs_volume" "test" {
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
   size = 1
-  tags {
+  tags = {
     Name = "TerraformTest"
   }
 }
@@ -511,7 +511,7 @@ resource "aws_ebs_volume" "test" {
   size = 10
   type = "gp2"
   iops = 0
-  tags {
+  tags = {
     Name = "TerraformTest"
   }
 }

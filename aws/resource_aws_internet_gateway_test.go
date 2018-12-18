@@ -145,6 +145,7 @@ func TestAccAWSInternetGateway_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInternetGatewayExists(
 						"aws_internet_gateway.foo", &v),
+					testAccCheckResourceAttrAccountID("aws_internet_gateway.foo", "owner_id"),
 				),
 			},
 
@@ -154,6 +155,7 @@ func TestAccAWSInternetGateway_basic(t *testing.T) {
 					testAccCheckInternetGatewayExists(
 						"aws_internet_gateway.foo", &v2),
 					testNotEqual,
+					testAccCheckResourceAttrAccountID("aws_internet_gateway.foo", "owner_id"),
 				),
 			},
 		},
@@ -207,6 +209,7 @@ func TestAccAWSInternetGateway_tags(t *testing.T) {
 					testAccCheckInternetGatewayExists("aws_internet_gateway.foo", &v),
 					testAccCheckTags(&v.Tags, "Name", "terraform-testacc-internet-gateway-tags"),
 					testAccCheckTags(&v.Tags, "foo", "bar"),
+					testAccCheckResourceAttrAccountID("aws_internet_gateway.foo", "owner_id"),
 				),
 			},
 
@@ -217,6 +220,7 @@ func TestAccAWSInternetGateway_tags(t *testing.T) {
 					testAccCheckTags(&v.Tags, "Name", "terraform-testacc-internet-gateway-tags"),
 					testAccCheckTags(&v.Tags, "foo", ""),
 					testAccCheckTags(&v.Tags, "bar", "baz"),
+					testAccCheckResourceAttrAccountID("aws_internet_gateway.foo", "owner_id"),
 				),
 			},
 		},
@@ -287,7 +291,7 @@ func testAccCheckInternetGatewayExists(n string, ig *ec2.InternetGateway) resour
 const testAccNoInternetGatewayConfig = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-no-internet-gateway"
 	}
 }
@@ -296,14 +300,14 @@ resource "aws_vpc" "foo" {
 const testAccInternetGatewayConfig = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-internet-gateway"
 	}
 }
 
 resource "aws_internet_gateway" "foo" {
 	vpc_id = "${aws_vpc.foo.id}"
-	tags {
+	tags = {
 		Name = "terraform-testacc-internet-gateway"
 	}
 }
@@ -312,21 +316,21 @@ resource "aws_internet_gateway" "foo" {
 const testAccInternetGatewayConfigChangeVPC = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-internet-gateway-change-vpc"
 	}
 }
 
 resource "aws_vpc" "bar" {
 	cidr_block = "10.2.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-internet-gateway-change-vpc-other"
 	}
 }
 
 resource "aws_internet_gateway" "foo" {
 	vpc_id = "${aws_vpc.bar.id}"
-	tags {
+	tags = {
 		Name = "terraform-testacc-internet-gateway-change-vpc-other"
 	}
 }
@@ -335,14 +339,14 @@ resource "aws_internet_gateway" "foo" {
 const testAccCheckInternetGatewayConfigTags = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-internet-gateway-tags"
 	}
 }
 
 resource "aws_internet_gateway" "foo" {
 	vpc_id = "${aws_vpc.foo.id}"
-	tags {
+	tags = {
 		Name = "terraform-testacc-internet-gateway-tags"
 		foo = "bar"
 	}
@@ -352,14 +356,14 @@ resource "aws_internet_gateway" "foo" {
 const testAccCheckInternetGatewayConfigTagsUpdate = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-internet-gateway-tags"
 	}
 }
 
 resource "aws_internet_gateway" "foo" {
 	vpc_id = "${aws_vpc.foo.id}"
-	tags {
+	tags = {
 		Name = "terraform-testacc-internet-gateway-tags"
 		bar = "baz"
 	}

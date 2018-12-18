@@ -659,20 +659,20 @@ func resourceAwsLbTargetGroupCustomizeDiff(diff *schema.ResourceDiff, v interfac
 		if protocol == "TCP" {
 			// Cannot set custom matcher on TCP health checks
 			if m := healthCheck["matcher"].(string); m != "" {
-				return fmt.Errorf("%s: custom matcher is not supported for target_groups with TCP protocol", diff.Id())
+				return fmt.Errorf("%s: health_check.matcher is not supported for target_groups with TCP protocol", diff.Id())
 			}
 			// Cannot set custom path on TCP health checks
 			if m := healthCheck["path"].(string); m != "" {
-				return fmt.Errorf("%s: custom path is not supported for target_groups with TCP protocol", diff.Id())
+				return fmt.Errorf("%s: health_check.path is not supported for target_groups with TCP protocol", diff.Id())
 			}
 			// Cannot set custom timeout on TCP health checks
 			if t := healthCheck["timeout"].(int); t != 0 && diff.Id() == "" {
 				// timeout has a default value, so only check this if this is a network
 				// LB and is a first run
-				return fmt.Errorf("%s: custom timeout is not supported for target_groups with TCP protocol", diff.Id())
+				return fmt.Errorf("%s: health_check.timeout is not supported for target_groups with TCP protocol", diff.Id())
 			}
 			if healthCheck["healthy_threshold"].(int) != healthCheck["unhealthy_threshold"].(int) {
-				return fmt.Errorf("%s: healthy_threshold %d and unhealthy_threshold %d must be the same for target_groups with TCP protocol", diff.Id(), healthCheck["healthy_threshold"].(int), healthCheck["unhealthy_threshold"].(int))
+				return fmt.Errorf("%s: health_check.healthy_threshold %d and health_check.unhealthy_threshold %d must be the same for target_groups with TCP protocol", diff.Id(), healthCheck["healthy_threshold"].(int), healthCheck["unhealthy_threshold"].(int))
 			}
 		}
 	}

@@ -157,6 +157,7 @@ func TestAccAWSLambdaFunction_importS3(t *testing.T) {
 
 func TestAccAWSLambdaFunction_basic(t *testing.T) {
 	var conf lambda.GetFunctionOutput
+	resourceName := "aws_lambda_function.lambda_function_test"
 
 	rString := acctest.RandString(8)
 	funcName := fmt.Sprintf("tf_acc_lambda_func_basic_%s", rString)
@@ -172,10 +173,11 @@ func TestAccAWSLambdaFunction_basic(t *testing.T) {
 			{
 				Config: testAccAWSLambdaConfigBasic(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists("aws_lambda_function.lambda_function_test", funcName, &conf),
+					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
 					testAccCheckAwsLambdaFunctionName(&conf, funcName),
 					testAccCheckAwsLambdaFunctionArnHasSuffix(&conf, ":"+funcName),
-					resource.TestCheckResourceAttr("aws_lambda_function.lambda_function_test", "reserved_concurrent_executions", "0"),
+					resource.TestMatchResourceAttr(resourceName, "invoke_arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:apigateway:[^:]+:lambda:path/2015-03-31/functions/arn:[^:]+:lambda:[^:]+:[^:]+:function:%s/invocations$", funcName))),
+					resource.TestCheckResourceAttr(resourceName, "reserved_concurrent_executions", "0"),
 				),
 			},
 		},
@@ -1532,7 +1534,7 @@ EOF
 
 resource "aws_vpc" "vpc_for_lambda" {
     cidr_block = "10.0.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-lambda-function"
 	}
 }
@@ -1541,7 +1543,7 @@ resource "aws_subnet" "subnet_for_lambda" {
     vpc_id = "${aws_vpc.vpc_for_lambda.id}"
     cidr_block = "10.0.1.0/24"
 
-    tags {
+  tags = {
         Name = "tf-acc-lambda-function-1"
     }
 }
@@ -1921,7 +1923,7 @@ resource "aws_subnet" "subnet_for_lambda_2" {
     vpc_id = "${aws_vpc.vpc_for_lambda.id}"
     cidr_block = "10.0.2.0/24"
 
-    tags {
+  tags = {
         Name = "tf-acc-lambda-function-2"
     }
 }
@@ -2063,7 +2065,7 @@ resource "aws_lambda_function" "lambda_function_test" {
     role = "${aws_iam_role.iam_for_lambda.arn}"
     handler = "exports.example"
     runtime = "nodejs4.3"
-    tags {
+  tags = {
 		Key1 = "Value One"
 		Description = "Very interesting"
     }
@@ -2079,7 +2081,7 @@ resource "aws_lambda_function" "lambda_function_test" {
     role = "${aws_iam_role.iam_for_lambda.arn}"
     handler = "exports.example"
     runtime = "nodejs4.3"
-    tags {
+  tags = {
 		Key1 = "Value One Changed"
 		Key2 = "Value Two"
 		Key3 = "Value Three"

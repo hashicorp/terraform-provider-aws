@@ -10,6 +10,8 @@ description: |-
 
 Provides a CodeDeploy Deployment Group for a CodeDeploy Application
 
+~> **NOTE on blue/green deployments:** When using `green_fleet_provisioning_option` with the `COPY_AUTO_SCALING_GROUP` action, CodeDeploy will create a new ASG with a different name. This ASG is _not_ managed by terraform and will conflict with existing configuration and state. You may want to use a different approach to managing deployments that involve multiple ASG, such as `DISCOVER_EXISTING` with separate blue and green ASG.
+
 ## Example Usage
 
 ```hcl
@@ -86,6 +88,11 @@ resource "aws_codedeploy_deployment_group" "example" {
 ### Blue Green Deployments with ECS
 
 ```hcl
+resource "aws_codedeploy_app" "example" {
+  compute_platform = "ECS"
+  name             = "example"
+}
+
 resource "aws_codedeploy_deployment_group" "example" {
   app_name               = "${aws_codedeploy_app.example.name}"
   deployment_config_name = "CodeDeployDefault.ECSAllAtOnce"

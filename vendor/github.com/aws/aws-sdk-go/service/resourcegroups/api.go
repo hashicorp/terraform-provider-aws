@@ -1670,6 +1670,9 @@ func (s *GetTagsInput) Validate() error {
 	if s.Arn == nil {
 		invalidParams.Add(request.NewErrParamRequired("Arn"))
 	}
+	if s.Arn != nil && len(*s.Arn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Arn", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -2506,6 +2509,9 @@ func (s *TagInput) Validate() error {
 	if s.Arn == nil {
 		invalidParams.Add(request.NewErrParamRequired("Arn"))
 	}
+	if s.Arn != nil && len(*s.Arn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Arn", 1))
+	}
 	if s.Tags == nil {
 		invalidParams.Add(request.NewErrParamRequired("Tags"))
 	}
@@ -2589,6 +2595,9 @@ func (s *UntagInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "UntagInput"}
 	if s.Arn == nil {
 		invalidParams.Add(request.NewErrParamRequired("Arn"))
+	}
+	if s.Arn != nil && len(*s.Arn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Arn", 1))
 	}
 	if s.Keys == nil {
 		invalidParams.Add(request.NewErrParamRequired("Keys"))

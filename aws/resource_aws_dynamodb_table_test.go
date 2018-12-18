@@ -315,7 +315,7 @@ func TestDiffDynamoDbGSI(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		ops, err := diffDynamoDbGSI(tc.Old, tc.New)
+		ops, err := diffDynamoDbGSI(tc.Old, tc.New, dynamodb.BillingModeProvisioned)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -498,6 +498,15 @@ func TestAccAWSDynamoDbTable_BillingMode(t *testing.T) {
 				Config: testAccAWSDynamoDbBilling_PayPerRequest(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDynamoDbTableHasBilling_PayPerRequest("aws_dynamodb_table.basic-dynamodb-table"),
+				),
+			},
+			{
+				Config: testAccAWSDynamoDbBilling_PayPerRequestWithGSI(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDynamoDbTableHasBilling_PayPerRequest("aws_dynamodb_table.basic-dynamodb-table"),
+					resource.TestCheckResourceAttr("aws_dynamodb_table.basic-dynamodb-table", "global_secondary_index.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_dynamodb_table.basic-dynamodb-table", "global_secondary_index.427641302.name", "TestTableGSI"),
 				),
 			},
 		},
@@ -1265,6 +1274,32 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
 `, rName)
 }
 
+func testAccAWSDynamoDbBilling_PayPerRequestWithGSI(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "basic-dynamodb-table" {
+  name = "%s"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key = "TestTableHashKey"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  attribute {
+    name = "TestTableGSIKey"
+    type = "S"
+  }
+
+  global_secondary_index {
+	name 			= "TestTableGSI"
+	hash_key        = "TestTableGSIKey"
+    projection_type = "KEYS_ONLY"
+  }
+}
+`, rName)
+}
+
 func testAccAWSDynamoDbConfigInitialState(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "basic-dynamodb-table" {
@@ -1442,7 +1477,7 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
     projection_type = "KEYS_ONLY"
   }
 
-  tags {
+  tags = {
     Name = "terraform-test-table-%d"
     AccTest = "yes"
     Testing = "absolutely"

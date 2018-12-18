@@ -408,6 +408,8 @@ func resourceAwsDbInstance() *schema.Resource {
 						"listener",
 						"slowquery",
 						"trace",
+						"postgresql",
+						"upgrade",
 					}, false),
 				},
 			},

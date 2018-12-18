@@ -56,7 +56,7 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
     non_key_attributes = ["UserId"]
   }
 
-  tags {
+  tags = {
     Name        = "dynamodb-table-1"
     Environment = "production"
   }
@@ -133,8 +133,8 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/d
 #### `global_secondary_index`
 
 * `name` - (Required) The name of the index
-* `write_capacity` - (Required) The number of write units for this index
-* `read_capacity` - (Required) The number of read units for this index
+* `write_capacity` - (Optional) The number of write units for this index. Must be set if billing_mode is set to PROVISIONED.
+* `read_capacity` - (Optional) The number of read units for this index. Must be set if billing_mode is set to PROVISIONED.
 * `hash_key` - (Required) The name of the hash key in the index; must be
   defined as an attribute in the resource.
 * `range_key` - (Optional) The name of the range key; must be defined

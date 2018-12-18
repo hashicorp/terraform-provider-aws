@@ -19,6 +19,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
+	"github.com/aws/aws-sdk-go/service/appmesh"
 	"github.com/aws/aws-sdk-go/service/appsync"
 	"github.com/aws/aws-sdk-go/service/athena"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
@@ -87,6 +88,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
+	"github.com/aws/aws-sdk-go/service/securityhub"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
 	"github.com/aws/aws-sdk-go/service/ses"
@@ -98,6 +100,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/aws/aws-sdk-go/service/sts"
 	"github.com/aws/aws-sdk-go/service/swf"
+	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
 	"github.com/aws/aws-sdk-go/service/workspaces"
@@ -196,6 +199,7 @@ type AWSClient struct {
 	autoscalingconn       *autoscaling.AutoScaling
 	s3conn                *s3.S3
 	secretsmanagerconn    *secretsmanager.SecretsManager
+	securityhubconn       *securityhub.SecurityHub
 	scconn                *servicecatalog.ServiceCatalog
 	sesConn               *ses.SES
 	simpledbconn          *simpledb.SimpleDB
@@ -252,6 +256,8 @@ type AWSClient struct {
 	pricingconn           *pricing.Pricing
 	pinpointconn          *pinpoint.Pinpoint
 	workspacesconn        *workspaces.WorkSpaces
+	appmeshconn           *appmesh.AppMesh
+	transferconn          *transfer.Transfer
 }
 
 func (c *AWSClient) S3() *s3.S3 {
@@ -565,6 +571,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.sdconn = servicediscovery.New(sess)
 	client.sesConn = ses.New(sess)
 	client.secretsmanagerconn = secretsmanager.New(sess)
+	client.securityhubconn = securityhub.New(sess)
 	client.sfnconn = sfn.New(sess)
 	client.snsconn = sns.New(awsSnsSess)
 	client.sqsconn = sqs.New(awsSqsSess)
@@ -583,6 +590,8 @@ func (c *Config) Client() (interface{}, error) {
 	client.pricingconn = pricing.New(sess)
 	client.pinpointconn = pinpoint.New(sess)
 	client.workspacesconn = workspaces.New(sess)
+	client.appmeshconn = appmesh.New(sess)
+	client.transferconn = transfer.New(sess)
 
 	// Workaround for https://github.com/aws/aws-sdk-go/issues/1376
 	client.kinesisconn.Handlers.Retry.PushBack(func(r *request.Request) {

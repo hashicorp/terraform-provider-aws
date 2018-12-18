@@ -193,7 +193,7 @@ func testAccAWSEcsClusterConfigTags1(rName, tag1Key, tag1Value string) string {
 resource "aws_ecs_cluster" "test" {
   name = %q
 
-  tags {
+  tags = {
     %q = %q
   }
 }
@@ -205,7 +205,7 @@ func testAccAWSEcsClusterConfigTags2(rName, tag1Key, tag1Value, tag2Key, tag2Val
 resource "aws_ecs_cluster" "test" {
   name = %q
 
-  tags {
+  tags = {
     %q = %q
     %q = %q
   }

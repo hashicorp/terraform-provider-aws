@@ -92,7 +92,7 @@ resource "aws_api_gateway_domain_name" "example" {
   regional_certificate_arn = "${aws_acm_certificate_validation.example.certificate_arn}"
 
   endpoint_configuration {
-    type = "REGIONAL"
+    types = ["REGIONAL"]
   }
 }
 
@@ -122,7 +122,7 @@ resource "aws_api_gateway_domain_name" "example" {
   regional_certificate_name = "example-api"
 
   endpoint_configuration {
-    type = "REGIONAL"
+    types = ["REGIONAL"]
   }
 }
 

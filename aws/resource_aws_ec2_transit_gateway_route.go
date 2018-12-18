@@ -114,6 +114,13 @@ func resourceAwsEc2TransitGatewayRouteRead(d *schema.ResourceData, meta interfac
 		return nil
 	}
 
+	state := aws.StringValue(transitGatewayRoute.State)
+	if state == ec2.TransitGatewayRouteStateDeleted || state == ec2.TransitGatewayRouteStateDeleting {
+		log.Printf("[WARN] EC2 Transit Gateway Route (%s) deleted, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	d.Set("destination_cidr_block", transitGatewayRoute.DestinationCidrBlock)
 
 	d.Set("transit_gateway_attachment_id", "")
@@ -142,7 +149,7 @@ func resourceAwsEc2TransitGatewayRouteDelete(d *schema.ResourceData, meta interf
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway Route (%s): %s", d.Id(), input)
 	_, err = conn.DeleteTransitGatewayRoute(input)
 
-	if isAWSErr(err, "InvalidRouteID.NotFound", "") {
+	if isAWSErr(err, "InvalidRoute.NotFound", "") || isAWSErr(err, "InvalidRouteTableID.NotFound", "") {
 		return nil
 	}
 

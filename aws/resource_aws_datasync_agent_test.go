@@ -303,7 +303,7 @@ data "aws_ami" "aws-thinstaller" {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "tf-acc-test-datasync-agent"
   }
 }
@@ -312,7 +312,7 @@ resource "aws_subnet" "test" {
   cidr_block = "10.0.0.0/24"
   vpc_id     = "${aws_vpc.test.id}"
 
-  tags {
+  tags = {
     Name = "tf-acc-test-datasync-agent"
   }
 }
@@ -320,7 +320,7 @@ resource "aws_subnet" "test" {
 resource "aws_internet_gateway" "test" {
   vpc_id = "${aws_vpc.test.id}"
 
-  tags {
+  tags = {
     Name = "tf-acc-test-datasync-agent"
   }
 }
@@ -333,7 +333,7 @@ resource "aws_route_table" "test" {
     gateway_id = "${aws_internet_gateway.test.id}"
   }
 
-  tags {
+  tags = {
     Name = "tf-acc-test-datasync-agent"
   }
 }
@@ -360,7 +360,7 @@ resource "aws_security_group" "test" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags {
+  tags = {
     Name = "tf-acc-test-datasync-agent"
   }
 }
@@ -375,7 +375,7 @@ resource "aws_instance" "test" {
   vpc_security_group_ids      = ["${aws_security_group.test.id}"]
   subnet_id                   = "${aws_subnet.test.id}"
 
-  tags {
+  tags = {
     Name = "tf-acc-test-datasync-agent"
   }
 }
@@ -404,7 +404,7 @@ func testAccAWSDataSyncAgentConfigTags1(key1, value1 string) string {
 resource "aws_datasync_agent" "test" {
   ip_address = "${aws_instance.test.public_ip}"
 
-  tags {
+  tags = {
     %q = %q
   }
 }
@@ -416,7 +416,7 @@ func testAccAWSDataSyncAgentConfigTags2(key1, value1, key2, value2 string) strin
 resource "aws_datasync_agent" "test" {
   ip_address = "${aws_instance.test.public_ip}"
 
-  tags {
+  tags = {
     %q = %q
     %q = %q
   }

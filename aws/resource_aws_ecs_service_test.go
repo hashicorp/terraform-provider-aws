@@ -557,7 +557,7 @@ func TestAccAWSEcsService_withLaunchTypeFargate(t *testing.T) {
 	tdName := fmt.Sprintf("tf-acc-td-svc-w-ltf-%s", rString)
 	svcName := fmt.Sprintf("tf-acc-svc-w-ltf-%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
@@ -572,13 +572,6 @@ func TestAccAWSEcsService_withLaunchTypeFargate(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_ecs_service.main", "network_configuration.0.subnets.#", "2"),
 				),
 			},
-		},
-	})
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
-		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSEcsServiceWithLaunchTypeFargate(sg1Name, sg2Name, clusterName, tdName, svcName, "true"),
 				Check: resource.ComposeTestCheckFunc(
@@ -586,13 +579,6 @@ func TestAccAWSEcsService_withLaunchTypeFargate(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_ecs_service.main", "network_configuration.0.assign_public_ip", "true"),
 				),
 			},
-		},
-	})
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
-		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSEcsServiceWithLaunchTypeFargate(sg1Name, sg2Name, clusterName, tdName, svcName, "false"),
 				Check: resource.ComposeTestCheckFunc(
@@ -824,6 +810,42 @@ func TestAccAWSEcsService_ManagedTags(t *testing.T) {
 					testAccCheckAWSEcsServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "enable_ecs_managed_tags", "true"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSEcsService_PropagateTags(t *testing.T) {
+	var first, second, third ecs.Service
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_ecs_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsServiceConfigPropagateTags(rName, "SERVICE"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists(resourceName, &first),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "propagate_tags", ecs.PropagateTagsService),
+				),
+			},
+			{
+				Config: testAccAWSEcsServiceConfigPropagateTags(rName, "TASK_DEFINITION"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists(resourceName, &second),
+					resource.TestCheckResourceAttr(resourceName, "propagate_tags", ecs.PropagateTagsTaskDefinition),
+				),
+			},
+			{
+				Config: testAccAWSEcsServiceConfigManagedTags(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists(resourceName, &third),
+					resource.TestCheckResourceAttr(resourceName, "propagate_tags", "NONE"),
 				),
 			},
 		},
@@ -1224,7 +1246,7 @@ data "aws_availability_zones" "available" {}
 
 resource "aws_vpc" "main" {
   cidr_block = "10.10.0.0/16"
-  tags {
+  tags = {
     Name = "terraform-testacc-ecs-service-with-launch-type-fargate"
   }
 }
@@ -1234,7 +1256,7 @@ resource "aws_subnet" "main" {
   cidr_block = "${cidrsubnet(aws_vpc.main.cidr_block, 8, count.index)}"
   availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
   vpc_id = "${aws_vpc.main.id}"
-  tags {
+  tags = {
     Name = "tf-acc-ecs-service-with-launch-type-fargate"
   }
 }
@@ -1312,7 +1334,7 @@ data "aws_availability_zones" "available" {}
 
 resource "aws_vpc" "main" {
   cidr_block = "10.10.0.0/16"
-  tags {
+  tags = {
     Name = "%s"
   }
 }
@@ -1322,7 +1344,7 @@ resource "aws_subnet" "main" {
   cidr_block = "${cidrsubnet(aws_vpc.main.cidr_block, 8, count.index)}"
   availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
   vpc_id = "${aws_vpc.main.id}"
-  tags {
+  tags = {
     Name = "tf-acc-ecs-service-health-check-grace-period"
   }
 }
@@ -1843,7 +1865,7 @@ data "aws_availability_zones" "available" {}
 
 resource "aws_vpc" "main" {
   cidr_block = "10.10.0.0/16"
-  tags {
+  tags = {
     Name = "terraform-testacc-ecs-service-with-alb"
   }
 }
@@ -1853,7 +1875,7 @@ resource "aws_subnet" "main" {
   cidr_block = "${cidrsubnet(aws_vpc.main.cidr_block, 8, count.index)}"
   availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
   vpc_id = "${aws_vpc.main.id}"
-  tags {
+  tags = {
     Name = "tf-acc-ecs-service-with-alb"
   }
 }
@@ -1989,7 +2011,7 @@ data "aws_availability_zones" "available" {}
 
 resource "aws_vpc" "main" {
   cidr_block = "10.10.0.0/16"
-  tags {
+  tags = {
     Name = "terraform-testacc-ecs-service-with-network-config"
   }
 }
@@ -1999,7 +2021,7 @@ resource "aws_subnet" "main" {
   cidr_block = "${cidrsubnet(aws_vpc.main.cidr_block, 8, count.index)}"
   availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
   vpc_id = "${aws_vpc.main.id}"
-  tags {
+  tags = {
     Name = "tf-acc-ecs-service-with-network-config"
   }
 }
@@ -2440,7 +2462,7 @@ resource "aws_ecs_service" "test" {
   name                               = %q
   task_definition                    = "${aws_ecs_task_definition.test.arn}"
 
-  tags {
+  tags = {
     %q = %q
   }
 }
@@ -2475,7 +2497,7 @@ resource "aws_ecs_service" "test" {
   name                               = %q
   task_definition                    = "${aws_ecs_task_definition.test.arn}"
 
-  tags {
+  tags = {
     %q = %q
     %q = %q
   }
@@ -2512,11 +2534,52 @@ resource "aws_ecs_service" "test" {
   task_definition                    = "${aws_ecs_task_definition.test.arn}"
   enable_ecs_managed_tags            = true
 
-  tags {
+  tags = {
     tag-key = "tag-value"
   }
 }
 `, rName, rName, rName)
+}
+
+func testAccAWSEcsServiceConfigPropagateTags(rName, propagate string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_cluster" "test" {
+  name = %q
+}
+
+resource "aws_ecs_task_definition" "test" {
+  family = %q
+
+  container_definitions = <<DEFINITION
+[
+  {
+    "cpu": 128,
+    "essential": true,
+    "image": "mongo:latest",
+    "memory": 128,
+    "name": "mongodb"
+  }
+]
+DEFINITION
+
+  tags = {
+    tag-key = "task-def"
+  }
+}
+
+resource "aws_ecs_service" "test" {
+  cluster                            = "${aws_ecs_cluster.test.id}"
+  desired_count                      = 0
+  name                               = %q
+  task_definition                    = "${aws_ecs_task_definition.test.arn}"
+  enable_ecs_managed_tags            = true
+  propagate_tags                     = "%s"
+
+  tags = {
+    tag-key = "service"
+  }
+}
+`, rName, rName, rName, propagate)
 }
 
 func testAccAWSEcsServiceWithReplicaSchedulingStrategy(clusterName, tdName, svcName string) string {

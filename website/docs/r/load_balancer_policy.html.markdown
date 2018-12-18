@@ -25,7 +25,7 @@ resource "aws_elb" "wu-tang" {
     ssl_certificate_id = "arn:aws:iam::000000000000:server-certificate/wu-tang.net"
   }
 
-  tags {
+  tags = {
     Name = "wu-tang"
   }
 }

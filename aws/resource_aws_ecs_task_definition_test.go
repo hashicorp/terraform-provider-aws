@@ -16,6 +16,7 @@ func TestAccAWSEcsTaskDefinition_basic(t *testing.T) {
 
 	rString := acctest.RandString(8)
 	tdName := fmt.Sprintf("tf_acc_td_basic_%s", rString)
+	resourceName := "aws_ecs_task_definition.jenkins"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -25,14 +26,20 @@ func TestAccAWSEcsTaskDefinition_basic(t *testing.T) {
 			{
 				Config: testAccAWSEcsTaskDefinition(tdName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsTaskDefinitionExists("aws_ecs_task_definition.jenkins", &def),
+					testAccCheckAWSEcsTaskDefinitionExists(resourceName, &def),
 				),
 			},
 			{
 				Config: testAccAWSEcsTaskDefinitionModified(tdName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsTaskDefinitionExists("aws_ecs_task_definition.jenkins", &def),
+					testAccCheckAWSEcsTaskDefinitionExists(resourceName, &def),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSEcsTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -1498,7 +1505,7 @@ resource "aws_ecs_task_definition" "test" {
 ]
 DEFINITION
 
-  tags {
+  tags = {
     %q = %q
   }
 }
@@ -1526,10 +1533,21 @@ resource "aws_ecs_task_definition" "test" {
 ]
 DEFINITION
 
-  tags {
+  tags = {
     %q = %q
     %q = %q
   }
 }
 `, rName, rName, tag1Key, tag1Value, tag2Key, tag2Value)
+}
+
+func testAccAWSEcsTaskDefinitionImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		return rs.Primary.Attributes["arn"], nil
+	}
 }

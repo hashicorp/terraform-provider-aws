@@ -108,9 +108,9 @@ func TestAccAWSCognitoUserPool_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoUserPoolExists("aws_cognito_user_pool.pool"),
 					resource.TestMatchResourceAttr("aws_cognito_user_pool.pool", "arn",
-						regexp.MustCompile("^arn:aws:cognito-idp:[^:]+:[0-9]{12}:userpool/[\\w-]+_[0-9a-zA-Z]+$")),
+						regexp.MustCompile(`^arn:aws:cognito-idp:[^:]+:[0-9]{12}:userpool/[\w-]+_[0-9a-zA-Z]+$`)),
 					resource.TestMatchResourceAttr("aws_cognito_user_pool.pool", "endpoint",
-						regexp.MustCompile("^cognito-idp\\.[^.]+\\.amazonaws.com/[\\w-]+_[0-9a-zA-Z]+$")),
+						regexp.MustCompile(`^cognito-idp\.[^.]+\.amazonaws.com/[\w-]+_[0-9a-zA-Z]+$`)),
 					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "name", "terraform-test-pool-"+name),
 					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.pool", "creation_date"),
 					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.pool", "last_modified_date"),
@@ -689,11 +689,7 @@ func testAccCheckAWSCognitoUserPoolExists(name string) resource.TestCheckFunc {
 
 		_, err := conn.DescribeUserPool(params)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -791,7 +787,7 @@ func testAccAWSCognitoUserPoolConfig_withTags(name string) string {
 resource "aws_cognito_user_pool" "pool" {
   name = "terraform-test-pool-%s"
 
-  tags {
+  tags = {
     "Name" = "Foo"
   }
 }`, name)
@@ -876,7 +872,7 @@ func testAccAWSCognitoUserPoolConfig_withTagsUpdated(name string) string {
 resource "aws_cognito_user_pool" "pool" {
   name = "terraform-test-pool-%s"
 
-  tags {
+  tags = {
     "Name"    = "FooBar"
     "Project" = "Terraform"
   }
@@ -1233,7 +1229,7 @@ resource "aws_cognito_user_pool" "pool" {
     sns_caller_arn = "${aws_iam_role.main.arn}"
   }
 
-  tags {
+  tags = {
     "Name" = "Foo"
   }
 }`, name, name, name, mfaconfig, smsAuthMsg)

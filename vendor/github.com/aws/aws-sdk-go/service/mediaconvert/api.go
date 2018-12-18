@@ -9,6 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/aws/aws-sdk-go/aws/request"
+	"github.com/aws/aws-sdk-go/private/protocol"
+	"github.com/aws/aws-sdk-go/private/protocol/restjson"
 )
 
 const opAssociateCertificate = "AssociateCertificate"
@@ -50,6 +52,7 @@ func (c *MediaConvert) AssociateCertificateRequest(input *AssociateCertificateIn
 
 	output = &AssociateCertificateOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -139,6 +142,7 @@ func (c *MediaConvert) CancelJobRequest(input *CancelJobInput) (req *request.Req
 
 	output = &CancelJobOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -500,8 +504,8 @@ func (c *MediaConvert) CreateQueueRequest(input *CreateQueueInput) (req *request
 
 // CreateQueue API operation for AWS Elemental MediaConvert.
 //
-// Create a new transcoding queue. For information about job templates see the
-// User Guide at http://docs.aws.amazon.com/mediaconvert/latest/ug/what-is.html
+// Create a new transcoding queue. For information about queues, see Working
+// With Queues in the User Guide at https://docs.aws.amazon.com/mediaconvert/latest/ug/working-with-queues.html
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -584,6 +588,7 @@ func (c *MediaConvert) DeleteJobTemplateRequest(input *DeleteJobTemplateInput) (
 
 	output = &DeleteJobTemplateOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -672,6 +677,7 @@ func (c *MediaConvert) DeletePresetRequest(input *DeletePresetInput) (req *reque
 
 	output = &DeletePresetOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -760,6 +766,7 @@ func (c *MediaConvert) DeleteQueueRequest(input *DeleteQueueInput) (req *request
 
 	output = &DeleteQueueOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -993,6 +1000,7 @@ func (c *MediaConvert) DisassociateCertificateRequest(input *DisassociateCertifi
 
 	output = &DisassociateCertificateOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -2107,6 +2115,7 @@ func (c *MediaConvert) TagResourceRequest(input *TagResourceInput) (req *request
 
 	output = &TagResourceOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -2196,6 +2205,7 @@ func (c *MediaConvert) UntagResourceRequest(input *UntagResourceInput) (req *req
 
 	output = &UntagResourceOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -3767,6 +3777,9 @@ func (s *CancelJobInput) Validate() error {
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
 	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -5109,7 +5122,12 @@ func (s *CreatePresetOutput) SetPreset(v *Preset) *CreatePresetOutput {
 	return s
 }
 
-// Send your create queue request with the name of the queue.
+// Create an on-demand queue by sending a CreateQueue request with the name
+// of the queue. Create a reserved queue by sending a CreateQueue request with
+// the pricing plan set to RESERVED and with values specified for the settings
+// under reservationPlanSettings. When you create a reserved queue, you enter
+// into a 12-month commitment to purchase the RTS that you specify. You can't
+// cancel this commitment.
 type CreateQueueInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5121,12 +5139,11 @@ type CreateQueueInput struct {
 	// Name is a required field
 	Name *string `locationName:"name" type:"string" required:"true"`
 
-	// Optional; default is on-demand. Specifies whether the pricing plan for the
-	// queue is on-demand or reserved. The pricing plan for the queue determines
-	// whether you pay on-demand or reserved pricing for the transcoding jobs you
-	// run through the queue. For reserved queue pricing, you must set up a contract.
-	// You can create a reserved queue contract through the AWS Elemental MediaConvert
-	// console.
+	// Specifies whether the pricing plan for the queue is on-demand or reserved.
+	// For on-demand, you pay per minute, billed in increments of .01 minute. For
+	// reserved, you pay for the transcoding capacity of the entire queue, regardless
+	// of how much or how little you use it. Reserved pricing requires a 12-month
+	// commitment. When you use the API to create a queue, the default is on-demand.
 	PricingPlan *string `locationName:"pricingPlan" type:"string" enum:"PricingPlan"`
 
 	// Details about the pricing plan for your reserved queue. Required for reserved
@@ -5204,7 +5221,7 @@ type CreateQueueOutput struct {
 	// You can use queues to manage the resources that are available to your AWS
 	// account for running multiple transcoding jobs at the same time. If you don't
 	// specify a queue, the service sends all jobs through the default queue. For
-	// more information, see https://docs.aws.amazon.com/mediaconvert/latest/ug/about-resource-allocation-and-job-prioritization.html.
+	// more information, see https://docs.aws.amazon.com/mediaconvert/latest/ug/working-with-queues.html.
 	Queue *Queue `locationName:"queue" type:"structure"`
 }
 
@@ -5466,6 +5483,9 @@ func (s *DeleteJobTemplateInput) Validate() error {
 	if s.Name == nil {
 		invalidParams.Add(request.NewErrParamRequired("Name"))
 	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -5521,6 +5541,9 @@ func (s *DeletePresetInput) Validate() error {
 	if s.Name == nil {
 		invalidParams.Add(request.NewErrParamRequired("Name"))
 	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -5550,11 +5573,12 @@ func (s DeletePresetOutput) GoString() string {
 	return s.String()
 }
 
-// Delete a queue by sending a request with the queue name.
+// Delete a queue by sending a request with the queue name. You can't delete
+// a queue with an active pricing plan or one that has unprocessed jobs in it.
 type DeleteQueueInput struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the queue to be deleted.
+	// The name of the queue that you want to delete.
 	//
 	// Name is a required field
 	Name *string `location:"uri" locationName:"name" type:"string" required:"true"`
@@ -5575,6 +5599,9 @@ func (s *DeleteQueueInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DeleteQueueInput"}
 	if s.Name == nil {
 		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -6739,6 +6766,9 @@ func (s *GetJobInput) Validate() error {
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
 	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -6802,6 +6832,9 @@ func (s *GetJobTemplateInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "GetJobTemplateInput"}
 	if s.Name == nil {
 		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -6868,6 +6901,9 @@ func (s *GetPresetInput) Validate() error {
 	if s.Name == nil {
 		invalidParams.Add(request.NewErrParamRequired("Name"))
 	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -6932,6 +6968,9 @@ func (s *GetQueueInput) Validate() error {
 	if s.Name == nil {
 		invalidParams.Add(request.NewErrParamRequired("Name"))
 	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -6953,7 +6992,7 @@ type GetQueueOutput struct {
 	// You can use queues to manage the resources that are available to your AWS
 	// account for running multiple transcoding jobs at the same time. If you don't
 	// specify a queue, the service sends all jobs through the default queue. For
-	// more information, see https://docs.aws.amazon.com/mediaconvert/latest/ug/about-resource-allocation-and-job-prioritization.html.
+	// more information, see https://docs.aws.amazon.com/mediaconvert/latest/ug/working-with-queues.html.
 	Queue *Queue `locationName:"queue" type:"structure"`
 }
 
@@ -10497,8 +10536,8 @@ func (s *ListQueuesInput) SetOrder(v string) *ListQueuesInput {
 	return s
 }
 
-// Successful list queues return a JSON array of queues. If you don't specify
-// how they are ordered, you will receive them alphabetically by name.
+// Successful list queues requests return a JSON array of queues. If you don't
+// specify how they are ordered, you will receive them alphabetically by name.
 type ListQueuesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -10559,6 +10598,9 @@ func (s *ListTagsForResourceInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "ListTagsForResourceInput"}
 	if s.Arn == nil {
 		invalidParams.Add(request.NewErrParamRequired("Arn"))
+	}
+	if s.Arn != nil && len(*s.Arn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Arn", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -13085,20 +13127,20 @@ func (s *ProresSettings) SetTelecine(v string) *ProresSettings {
 // You can use queues to manage the resources that are available to your AWS
 // account for running multiple transcoding jobs at the same time. If you don't
 // specify a queue, the service sends all jobs through the default queue. For
-// more information, see https://docs.aws.amazon.com/mediaconvert/latest/ug/about-resource-allocation-and-job-prioritization.html.
+// more information, see https://docs.aws.amazon.com/mediaconvert/latest/ug/working-with-queues.html.
 type Queue struct {
 	_ struct{} `type:"structure"`
 
 	// An identifier for this resource that is unique within all of AWS.
 	Arn *string `locationName:"arn" type:"string"`
 
-	// The time stamp in epoch seconds for queue creation.
+	// The timestamp in epoch seconds for when you created the queue.
 	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp" timestampFormat:"unixTimestamp"`
 
 	// An optional description that you create for each queue.
 	Description *string `locationName:"description" type:"string"`
 
-	// The time stamp in epoch seconds when the queue was last updated.
+	// The timestamp in epoch seconds for when you most recently updated the queue.
 	LastUpdated *time.Time `locationName:"lastUpdated" type:"timestamp" timestampFormat:"unixTimestamp"`
 
 	// A name that you create for each queue. Each name must be unique within your
@@ -13107,11 +13149,11 @@ type Queue struct {
 	// Name is a required field
 	Name *string `locationName:"name" type:"string" required:"true"`
 
-	// Specifies whether the pricing plan for the queue is On-demand or Reserved.
-	// The pricing plan for the queue determines whether you pay On-demand or Reserved
-	// pricing for the transcoding jobs that you run through the queue. For Reserved
-	// queue pricing, you must set up a contract. You can create a Reserved queue
-	// contract through the AWS Elemental MediaConvert console.
+	// Specifies whether the pricing plan for the queue is on-demand or reserved.
+	// For on-demand, you pay per minute, billed in increments of .01 minute. For
+	// reserved, you pay for the transcoding capacity of the entire queue, regardless
+	// of how much or how little you use it. Reserved pricing requires a 12-month
+	// commitment.
 	PricingPlan *string `locationName:"pricingPlan" type:"string" enum:"PricingPlan"`
 
 	// The estimated number of jobs with a PROGRESSING status.
@@ -13129,9 +13171,9 @@ type Queue struct {
 	// The estimated number of jobs with a SUBMITTED status.
 	SubmittedJobsCount *int64 `locationName:"submittedJobsCount" type:"integer"`
 
-	// Specifies whether this queue is system or custom. System queues are built
-	// in. You can't modify or delete system queues. You can create and modify custom
-	// queues.
+	// Specifies whether this on-demand queue is system or custom. System queues
+	// are built in. You can't modify or delete system queues. You can create and
+	// modify custom queues.
 	Type *string `locationName:"type" type:"string" enum:"Type"`
 }
 
@@ -13351,26 +13393,27 @@ func (s *RemixSettings) SetChannelsOut(v int64) *RemixSettings {
 type ReservationPlan struct {
 	_ struct{} `type:"structure"`
 
-	// The length of time that you commit to when you set up a pricing plan contract
-	// for a reserved queue.
+	// The length of the term of your reserved queue pricing plan commitment.
 	Commitment *string `locationName:"commitment" type:"string" enum:"Commitment"`
 
-	// The time stamp, in epoch seconds, for when the pricing plan for this reserved
-	// queue expires.
+	// The timestamp in epoch seconds for when the current pricing plan term for
+	// this reserved queue expires.
 	ExpiresAt *time.Time `locationName:"expiresAt" type:"timestamp" timestampFormat:"unixTimestamp"`
 
-	// The time stamp in epoch seconds when the reserved queue's reservation plan
-	// was created.
+	// The timestamp in epoch seconds for when you set up the current pricing plan
+	// for this reserved queue.
 	PurchasedAt *time.Time `locationName:"purchasedAt" type:"timestamp" timestampFormat:"unixTimestamp"`
 
-	// Specifies whether the pricing plan contract for your reserved queue automatically
-	// renews (AUTO_RENEW) or expires (EXPIRE) at the end of the contract period.
+	// Specifies whether the term of your reserved queue pricing plan is automatically
+	// extended (AUTO_RENEW) or expires (EXPIRE) at the end of the term.
 	RenewalType *string `locationName:"renewalType" type:"string" enum:"RenewalType"`
 
 	// Specifies the number of reserved transcode slots (RTS) for this queue. The
 	// number of RTS determines how many jobs the queue can process in parallel;
-	// each RTS can process one job at a time. To increase this number, create a
-	// replacement contract through the AWS Elemental MediaConvert console.
+	// each RTS can process one job at a time. When you increase this number, you
+	// extend your existing commitment with a new 12-month commitment for a larger
+	// number of RTS. The new commitment begins when you purchase the additional
+	// capacity. You can't decrease the number of RTS in your reserved queue.
 	ReservedSlots *int64 `locationName:"reservedSlots" type:"integer"`
 
 	// Specifies whether the pricing plan for your reserved queue is ACTIVE or EXPIRED.
@@ -13428,22 +13471,27 @@ func (s *ReservationPlan) SetStatus(v string) *ReservationPlan {
 type ReservationPlanSettings struct {
 	_ struct{} `type:"structure"`
 
-	// The length of time that you commit to when you set up a pricing plan contract
-	// for a reserved queue.
+	// The length of the term of your reserved queue pricing plan commitment.
 	//
 	// Commitment is a required field
 	Commitment *string `locationName:"commitment" type:"string" required:"true" enum:"Commitment"`
 
-	// Specifies whether the pricing plan contract for your reserved queue automatically
-	// renews (AUTO_RENEW) or expires (EXPIRE) at the end of the contract period.
+	// Specifies whether the term of your reserved queue pricing plan is automatically
+	// extended (AUTO_RENEW) or expires (EXPIRE) at the end of the term. When your
+	// term is auto renewed, you extend your commitment by 12 months from the auto
+	// renew date. You can cancel this commitment.
 	//
 	// RenewalType is a required field
 	RenewalType *string `locationName:"renewalType" type:"string" required:"true" enum:"RenewalType"`
 
 	// Specifies the number of reserved transcode slots (RTS) for this queue. The
 	// number of RTS determines how many jobs the queue can process in parallel;
-	// each RTS can process one job at a time. To increase this number, create a
-	// replacement contract through the AWS Elemental MediaConvert console.
+	// each RTS can process one job at a time. You can't decrease the number of
+	// RTS in your reserved queue. You can increase the number of RTS by extending
+	// your existing commitment with a new 12-month commitment for the larger number.
+	// The new commitment begins when you purchase the additional capacity. You
+	// can't cancel your commitment or revert to your original commitment after
+	// you increase the capacity.
 	//
 	// ReservedSlots is a required field
 	ReservedSlots *int64 `locationName:"reservedSlots" type:"integer" required:"true"`
@@ -14089,6 +14137,9 @@ func (s *UntagResourceInput) Validate() error {
 	if s.Arn == nil {
 		invalidParams.Add(request.NewErrParamRequired("Arn"))
 	}
+	if s.Arn != nil && len(*s.Arn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Arn", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -14163,6 +14214,9 @@ func (s *UpdateJobTemplateInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "UpdateJobTemplateInput"}
 	if s.Name == nil {
 		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
 	}
 	if s.Settings != nil {
 		if err := s.Settings.Validate(); err != nil {
@@ -14269,6 +14323,9 @@ func (s *UpdatePresetInput) Validate() error {
 	if s.Name == nil {
 		invalidParams.Add(request.NewErrParamRequired("Name"))
 	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
+	}
 	if s.Settings != nil {
 		if err := s.Settings.Validate(); err != nil {
 			invalidParams.AddNested("Settings", err.(request.ErrInvalidParams))
@@ -14343,8 +14400,11 @@ type UpdateQueueInput struct {
 	// Name is a required field
 	Name *string `location:"uri" locationName:"name" type:"string" required:"true"`
 
-	// Details about the pricing plan for your reserved queue. Required for reserved
-	// queues and not applicable to on-demand queues.
+	// The new details of your pricing plan for your reserved queue. When you set
+	// up a new pricing plan to replace an expired one, you enter into another 12-month
+	// commitment. When you add capacity to your queue by increasing the number
+	// of RTS, you extend the term of your commitment to 12 months from when you
+	// add capacity. After you make these commitments, you can't cancel them.
 	ReservationPlanSettings *ReservationPlanSettings `locationName:"reservationPlanSettings" type:"structure"`
 
 	// Pause or activate a queue by changing its status between ACTIVE and PAUSED.
@@ -14369,6 +14429,9 @@ func (s *UpdateQueueInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "UpdateQueueInput"}
 	if s.Name == nil {
 		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
 	}
 	if s.ReservationPlanSettings != nil {
 		if err := s.ReservationPlanSettings.Validate(); err != nil {
@@ -14406,14 +14469,15 @@ func (s *UpdateQueueInput) SetStatus(v string) *UpdateQueueInput {
 	return s
 }
 
-// Successful update queue requests return the new queue information in JSON.
+// Successful update queue requests return the new queue information in JSON
+// format.
 type UpdateQueueOutput struct {
 	_ struct{} `type:"structure"`
 
 	// You can use queues to manage the resources that are available to your AWS
 	// account for running multiple transcoding jobs at the same time. If you don't
 	// specify a queue, the service sends all jobs through the default queue. For
-	// more information, see https://docs.aws.amazon.com/mediaconvert/latest/ug/about-resource-allocation-and-job-prioritization.html.
+	// more information, see https://docs.aws.amazon.com/mediaconvert/latest/ug/working-with-queues.html.
 	Queue *Queue `locationName:"queue" type:"structure"`
 }
 
@@ -15773,8 +15837,7 @@ const (
 	ColorSpaceUsageFallback = "FALLBACK"
 )
 
-// The length of time that you commit to when you set up a pricing plan contract
-// for a reserved queue.
+// The length of the term of your reserved queue pricing plan commitment.
 const (
 	// CommitmentOneYear is a Commitment enum value
 	CommitmentOneYear = "ONE_YEAR"
@@ -18452,11 +18515,11 @@ const (
 	PresetListBySystem = "SYSTEM"
 )
 
-// Specifies whether the pricing plan for the queue is On-demand or Reserved.
-// The pricing plan for the queue determines whether you pay On-demand or Reserved
-// pricing for the transcoding jobs that you run through the queue. For Reserved
-// queue pricing, you must set up a contract. You can create a Reserved queue
-// contract through the AWS Elemental MediaConvert console.
+// Specifies whether the pricing plan for the queue is on-demand or reserved.
+// For on-demand, you pay per minute, billed in increments of .01 minute. For
+// reserved, you pay for the transcoding capacity of the entire queue, regardless
+// of how much or how little you use it. Reserved pricing requires a 12-month
+// commitment.
 const (
 	// PricingPlanOnDemand is a PricingPlan enum value
 	PricingPlanOnDemand = "ON_DEMAND"
@@ -18594,8 +18657,8 @@ const (
 	QueueStatusPaused = "PAUSED"
 )
 
-// Specifies whether the pricing plan contract for your reserved queue automatically
-// renews (AUTO_RENEW) or expires (EXPIRE) at the end of the contract period.
+// Specifies whether the term of your reserved queue pricing plan is automatically
+// extended (AUTO_RENEW) or expires (EXPIRE) at the end of the term.
 const (
 	// RenewalTypeAutoRenew is a RenewalType enum value
 	RenewalTypeAutoRenew = "AUTO_RENEW"

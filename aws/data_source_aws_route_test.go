@@ -93,7 +93,7 @@ const testAccDataSourceAwsRouteGroupConfig = `
 resource "aws_vpc" "test" {
   cidr_block = "172.16.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-route-table-data-source"
   }
 }
@@ -101,7 +101,7 @@ resource "aws_vpc" "test" {
 resource "aws_vpc" "dest" {
 	cidr_block = "172.17.0.0/16"
   
-	tags {
+	tags = {
 	  Name = "terraform-testacc-route-table-data-source"
 	}
 }
@@ -115,14 +115,14 @@ resource "aws_vpc_peering_connection" "test" {
 resource "aws_subnet" "test" {
   cidr_block = "172.16.0.0/24"
   vpc_id     = "${aws_vpc.test.id}"
-  tags {
+  tags = {
     Name = "tf-acc-route-table-data-source"
   }
 }
 
 resource "aws_route_table" "test" {
 	vpc_id = "${aws_vpc.test.id}"
-	tags {
+	tags = {
 	  Name = "terraform-testacc-routetable-data-source"
 	}
 }
@@ -158,7 +158,7 @@ data "aws_ami" "ubuntu" {
 	ami           = "${data.aws_ami.ubuntu.id}"
 	instance_type = "t2.micro"
 	subnet_id = "${aws_subnet.test.id}"
-	tags {
+	tags = {
 	  Name = "HelloWorld"
 	}
   }
@@ -198,7 +198,7 @@ func testAccAWSRouteDataSourceConfigTransitGatewayID() string {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "tf-acc-test-ec2-route-datasource-transit-gateway-id"
   }
 }
@@ -207,7 +207,7 @@ resource "aws_subnet" "test" {
   cidr_block = "10.0.0.0/24"
   vpc_id     = "${aws_vpc.test.id}"
 
-  tags {
+  tags = {
     Name = "tf-acc-test-ec2-route-datasource-transit-gateway-id"
   }
 }

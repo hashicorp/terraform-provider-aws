@@ -77,7 +77,7 @@ resource "aws_launch_template" "foo" {
   tag_specifications {
     resource_type = "instance"
 
-    tags {
+  tags = {
       Name = "test"
     }
   }

@@ -9839,6 +9839,9 @@ func (s *CreateCampaignInput) Validate() error {
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
 	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
+	}
 	if s.WriteCampaignRequest == nil {
 		invalidParams.Add(request.NewErrParamRequired("WriteCampaignRequest"))
 	}
@@ -9913,6 +9916,9 @@ func (s *CreateExportJobInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CreateExportJobInput"}
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
+	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
 	}
 	if s.ExportJobRequest == nil {
 		invalidParams.Add(request.NewErrParamRequired("ExportJobRequest"))
@@ -9989,6 +9995,9 @@ func (s *CreateImportJobInput) Validate() error {
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
 	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
+	}
 	if s.ImportJobRequest == nil {
 		invalidParams.Add(request.NewErrParamRequired("ImportJobRequest"))
 	}
@@ -10063,6 +10072,9 @@ func (s *CreateSegmentInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CreateSegmentInput"}
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
+	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
 	}
 	if s.WriteSegmentRequest == nil {
 		invalidParams.Add(request.NewErrParamRequired("WriteSegmentRequest"))
@@ -10255,6 +10267,9 @@ func (s *DeleteAdmChannelInput) Validate() error {
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
 	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -10315,6 +10330,9 @@ func (s *DeleteApnsChannelInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DeleteApnsChannelInput"}
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
+	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -10377,6 +10395,9 @@ func (s *DeleteApnsSandboxChannelInput) Validate() error {
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
 	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -10437,6 +10458,9 @@ func (s *DeleteApnsVoipChannelInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DeleteApnsVoipChannelInput"}
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
+	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -10499,6 +10523,9 @@ func (s *DeleteApnsVoipSandboxChannelInput) Validate() error {
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
 	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -10560,6 +10587,9 @@ func (s *DeleteAppInput) Validate() error {
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
 	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -10620,6 +10650,9 @@ func (s *DeleteBaiduChannelInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DeleteBaiduChannelInput"}
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
+	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -10685,8 +10718,14 @@ func (s *DeleteCampaignInput) Validate() error {
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
 	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
+	}
 	if s.CampaignId == nil {
 		invalidParams.Add(request.NewErrParamRequired("CampaignId"))
+	}
+	if s.CampaignId != nil && len(*s.CampaignId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("CampaignId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -10755,6 +10794,9 @@ func (s *DeleteEmailChannelInput) Validate() error {
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
 	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -10819,8 +10861,14 @@ func (s *DeleteEndpointInput) Validate() error {
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
 	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
+	}
 	if s.EndpointId == nil {
 		invalidParams.Add(request.NewErrParamRequired("EndpointId"))
+	}
+	if s.EndpointId != nil && len(*s.EndpointId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("EndpointId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -10889,6 +10937,9 @@ func (s *DeleteEventStreamInput) Validate() error {
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
 	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -10949,6 +11000,9 @@ func (s *DeleteGcmChannelInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DeleteGcmChannelInput"}
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
+	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -11014,8 +11068,14 @@ func (s *DeleteSegmentInput) Validate() error {
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
 	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
+	}
 	if s.SegmentId == nil {
 		invalidParams.Add(request.NewErrParamRequired("SegmentId"))
+	}
+	if s.SegmentId != nil && len(*s.SegmentId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("SegmentId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -11084,6 +11144,9 @@ func (s *DeleteSmsChannelInput) Validate() error {
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
 	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -11148,8 +11211,14 @@ func (s *DeleteUserEndpointsInput) Validate() error {
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
 	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
+	}
 	if s.UserId == nil {
 		invalidParams.Add(request.NewErrParamRequired("UserId"))
+	}
+	if s.UserId != nil && len(*s.UserId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("UserId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -11217,6 +11286,9 @@ func (s *DeleteVoiceChannelInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DeleteVoiceChannelInput"}
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
+	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -13537,6 +13609,9 @@ func (s *GetAdmChannelInput) Validate() error {
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
 	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -13597,6 +13672,9 @@ func (s *GetApnsChannelInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "GetApnsChannelInput"}
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
+	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -13659,6 +13737,9 @@ func (s *GetApnsSandboxChannelInput) Validate() error {
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
 	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -13719,6 +13800,9 @@ func (s *GetApnsVoipChannelInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "GetApnsVoipChannelInput"}
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
+	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -13781,6 +13865,9 @@ func (s *GetApnsVoipSandboxChannelInput) Validate() error {
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
 	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -13842,6 +13929,9 @@ func (s *GetAppInput) Validate() error {
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
 	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -13902,6 +13992,9 @@ func (s *GetApplicationSettingsInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "GetApplicationSettingsInput"}
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
+	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -14019,6 +14112,9 @@ func (s *GetBaiduChannelInput) Validate() error {
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
 	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -14087,8 +14183,14 @@ func (s *GetCampaignActivitiesInput) Validate() error {
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
 	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
+	}
 	if s.CampaignId == nil {
 		invalidParams.Add(request.NewErrParamRequired("CampaignId"))
+	}
+	if s.CampaignId != nil && len(*s.CampaignId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("CampaignId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -14172,8 +14274,14 @@ func (s *GetCampaignInput) Validate() error {
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
 	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
+	}
 	if s.CampaignId == nil {
 		invalidParams.Add(request.NewErrParamRequired("CampaignId"))
+	}
+	if s.CampaignId != nil && len(*s.CampaignId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("CampaignId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -14248,11 +14356,20 @@ func (s *GetCampaignVersionInput) Validate() error {
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
 	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
+	}
 	if s.CampaignId == nil {
 		invalidParams.Add(request.NewErrParamRequired("CampaignId"))
 	}
+	if s.CampaignId != nil && len(*s.CampaignId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("CampaignId", 1))
+	}
 	if s.Version == nil {
 		invalidParams.Add(request.NewErrParamRequired("Version"))
+	}
+	if s.Version != nil && len(*s.Version) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Version", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -14334,8 +14451,14 @@ func (s *GetCampaignVersionsInput) Validate() error {
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
 	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
+	}
 	if s.CampaignId == nil {
 		invalidParams.Add(request.NewErrParamRequired("CampaignId"))
+	}
+	if s.CampaignId != nil && len(*s.CampaignId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("CampaignId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -14420,6 +14543,9 @@ func (s *GetCampaignsInput) Validate() error {
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
 	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -14493,6 +14619,9 @@ func (s *GetChannelsInput) Validate() error {
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
 	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -14553,6 +14682,9 @@ func (s *GetEmailChannelInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "GetEmailChannelInput"}
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
+	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -14618,8 +14750,14 @@ func (s *GetEndpointInput) Validate() error {
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
 	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
+	}
 	if s.EndpointId == nil {
 		invalidParams.Add(request.NewErrParamRequired("EndpointId"))
+	}
+	if s.EndpointId != nil && len(*s.EndpointId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("EndpointId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -14688,6 +14826,9 @@ func (s *GetEventStreamInput) Validate() error {
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
 	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -14752,8 +14893,14 @@ func (s *GetExportJobInput) Validate() error {
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
 	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
+	}
 	if s.JobId == nil {
 		invalidParams.Add(request.NewErrParamRequired("JobId"))
+	}
+	if s.JobId != nil && len(*s.JobId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("JobId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -14825,6 +14972,9 @@ func (s *GetExportJobsInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "GetExportJobsInput"}
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
+	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -14899,6 +15049,9 @@ func (s *GetGcmChannelInput) Validate() error {
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
 	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -14963,8 +15116,14 @@ func (s *GetImportJobInput) Validate() error {
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
 	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
+	}
 	if s.JobId == nil {
 		invalidParams.Add(request.NewErrParamRequired("JobId"))
+	}
+	if s.JobId != nil && len(*s.JobId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("JobId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -15036,6 +15195,9 @@ func (s *GetImportJobsInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "GetImportJobsInput"}
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
+	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -15117,8 +15279,14 @@ func (s *GetSegmentExportJobsInput) Validate() error {
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
 	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
+	}
 	if s.SegmentId == nil {
 		invalidParams.Add(request.NewErrParamRequired("SegmentId"))
+	}
+	if s.SegmentId != nil && len(*s.SegmentId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("SegmentId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -15206,8 +15374,14 @@ func (s *GetSegmentImportJobsInput) Validate() error {
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
 	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
+	}
 	if s.SegmentId == nil {
 		invalidParams.Add(request.NewErrParamRequired("SegmentId"))
+	}
+	if s.SegmentId != nil && len(*s.SegmentId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("SegmentId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -15291,8 +15465,14 @@ func (s *GetSegmentInput) Validate() error {
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
 	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
+	}
 	if s.SegmentId == nil {
 		invalidParams.Add(request.NewErrParamRequired("SegmentId"))
+	}
+	if s.SegmentId != nil && len(*s.SegmentId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("SegmentId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -15367,11 +15547,20 @@ func (s *GetSegmentVersionInput) Validate() error {
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
 	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
+	}
 	if s.SegmentId == nil {
 		invalidParams.Add(request.NewErrParamRequired("SegmentId"))
 	}
+	if s.SegmentId != nil && len(*s.SegmentId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("SegmentId", 1))
+	}
 	if s.Version == nil {
 		invalidParams.Add(request.NewErrParamRequired("Version"))
+	}
+	if s.Version != nil && len(*s.Version) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Version", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -15453,8 +15642,14 @@ func (s *GetSegmentVersionsInput) Validate() error {
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
 	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
+	}
 	if s.SegmentId == nil {
 		invalidParams.Add(request.NewErrParamRequired("SegmentId"))
+	}
+	if s.SegmentId != nil && len(*s.SegmentId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("SegmentId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -15539,6 +15734,9 @@ func (s *GetSegmentsInput) Validate() error {
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
 	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -15612,6 +15810,9 @@ func (s *GetSmsChannelInput) Validate() error {
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
 	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -15676,8 +15877,14 @@ func (s *GetUserEndpointsInput) Validate() error {
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
 	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
+	}
 	if s.UserId == nil {
 		invalidParams.Add(request.NewErrParamRequired("UserId"))
+	}
+	if s.UserId != nil && len(*s.UserId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("UserId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -15745,6 +15952,9 @@ func (s *GetVoiceChannelInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "GetVoiceChannelInput"}
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
+	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -17061,6 +17271,9 @@ func (s *PutEventStreamInput) Validate() error {
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
 	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
+	}
 	if s.WriteEventStream == nil {
 		invalidParams.Add(request.NewErrParamRequired("WriteEventStream"))
 	}
@@ -17135,6 +17348,9 @@ func (s *PutEventsInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "PutEventsInput"}
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
+	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
 	}
 	if s.EventsRequest == nil {
 		invalidParams.Add(request.NewErrParamRequired("EventsRequest"))
@@ -17315,8 +17531,14 @@ func (s *RemoveAttributesInput) Validate() error {
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
 	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
+	}
 	if s.AttributeType == nil {
 		invalidParams.Add(request.NewErrParamRequired("AttributeType"))
+	}
+	if s.AttributeType != nil && len(*s.AttributeType) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AttributeType", 1))
 	}
 	if s.UpdateAttributesRequest == nil {
 		invalidParams.Add(request.NewErrParamRequired("UpdateAttributesRequest"))
@@ -18294,6 +18516,9 @@ func (s *SendMessagesInput) Validate() error {
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
 	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
+	}
 	if s.MessageRequest == nil {
 		invalidParams.Add(request.NewErrParamRequired("MessageRequest"))
 	}
@@ -18470,6 +18695,9 @@ func (s *SendUsersMessagesInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "SendUsersMessagesInput"}
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
+	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
 	}
 	if s.SendUsersMessageRequest == nil {
 		invalidParams.Add(request.NewErrParamRequired("SendUsersMessageRequest"))
@@ -18794,6 +19022,9 @@ func (s *UpdateAdmChannelInput) Validate() error {
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
 	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -18868,6 +19099,9 @@ func (s *UpdateApnsChannelInput) Validate() error {
 	}
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
+	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -18944,6 +19178,9 @@ func (s *UpdateApnsSandboxChannelInput) Validate() error {
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
 	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -19018,6 +19255,9 @@ func (s *UpdateApnsVoipChannelInput) Validate() error {
 	}
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
+	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -19094,6 +19334,9 @@ func (s *UpdateApnsVoipSandboxChannelInput) Validate() error {
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
 	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -19165,6 +19408,9 @@ func (s *UpdateApplicationSettingsInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "UpdateApplicationSettingsInput"}
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
+	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
 	}
 	if s.WriteApplicationSettingsRequest == nil {
 		invalidParams.Add(request.NewErrParamRequired("WriteApplicationSettingsRequest"))
@@ -19265,6 +19511,9 @@ func (s *UpdateBaiduChannelInput) Validate() error {
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
 	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
+	}
 	if s.BaiduChannelRequest == nil {
 		invalidParams.Add(request.NewErrParamRequired("BaiduChannelRequest"))
 	}
@@ -19343,8 +19592,14 @@ func (s *UpdateCampaignInput) Validate() error {
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
 	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
+	}
 	if s.CampaignId == nil {
 		invalidParams.Add(request.NewErrParamRequired("CampaignId"))
+	}
+	if s.CampaignId != nil && len(*s.CampaignId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("CampaignId", 1))
 	}
 	if s.WriteCampaignRequest == nil {
 		invalidParams.Add(request.NewErrParamRequired("WriteCampaignRequest"))
@@ -19427,6 +19682,9 @@ func (s *UpdateEmailChannelInput) Validate() error {
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
 	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
+	}
 	if s.EmailChannelRequest == nil {
 		invalidParams.Add(request.NewErrParamRequired("EmailChannelRequest"))
 	}
@@ -19505,8 +19763,14 @@ func (s *UpdateEndpointInput) Validate() error {
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
 	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
+	}
 	if s.EndpointId == nil {
 		invalidParams.Add(request.NewErrParamRequired("EndpointId"))
+	}
+	if s.EndpointId != nil && len(*s.EndpointId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("EndpointId", 1))
 	}
 	if s.EndpointRequest == nil {
 		invalidParams.Add(request.NewErrParamRequired("EndpointRequest"))
@@ -19589,6 +19853,9 @@ func (s *UpdateEndpointsBatchInput) Validate() error {
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
 	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
+	}
 	if s.EndpointBatchRequest == nil {
 		invalidParams.Add(request.NewErrParamRequired("EndpointBatchRequest"))
 	}
@@ -19663,6 +19930,9 @@ func (s *UpdateGcmChannelInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "UpdateGcmChannelInput"}
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
+	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
 	}
 	if s.GCMChannelRequest == nil {
 		invalidParams.Add(request.NewErrParamRequired("GCMChannelRequest"))
@@ -19742,8 +20012,14 @@ func (s *UpdateSegmentInput) Validate() error {
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
 	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
+	}
 	if s.SegmentId == nil {
 		invalidParams.Add(request.NewErrParamRequired("SegmentId"))
+	}
+	if s.SegmentId != nil && len(*s.SegmentId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("SegmentId", 1))
 	}
 	if s.WriteSegmentRequest == nil {
 		invalidParams.Add(request.NewErrParamRequired("WriteSegmentRequest"))
@@ -19826,6 +20102,9 @@ func (s *UpdateSmsChannelInput) Validate() error {
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
 	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
+	}
 	if s.SMSChannelRequest == nil {
 		invalidParams.Add(request.NewErrParamRequired("SMSChannelRequest"))
 	}
@@ -19900,6 +20179,9 @@ func (s *UpdateVoiceChannelInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "UpdateVoiceChannelInput"}
 	if s.ApplicationId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
+	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
 	}
 	if s.VoiceChannelRequest == nil {
 		invalidParams.Add(request.NewErrParamRequired("VoiceChannelRequest"))
