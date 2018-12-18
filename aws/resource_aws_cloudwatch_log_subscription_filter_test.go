@@ -187,7 +187,7 @@ resource "aws_lambda_function" "test_lambdafunction" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = "example_lambda_name_%s"
   role          = "${aws_iam_role.iam_for_lambda.arn}"
-  runtime       = "nodejs4.3"
+  runtime       = "nodejs8.10"
   handler       = "exports.handler"
 }
 
