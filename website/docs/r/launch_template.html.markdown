@@ -58,6 +58,10 @@ resource "aws_launch_template" "foo" {
 
   key_name = "test"
 
+  license_specification {
+    license_configuration_arn = "arn:aws:license-manager:eu-west-1:123456789012:license-configuration:lic-0123456789abcdef0123456789abcdef"
+  }
+
   monitoring {
     enabled = true
   }
@@ -113,6 +117,7 @@ The following arguments are supported:
 * `instance_type` - The type of the instance.
 * `kernel_id` - The kernel ID.
 * `key_name` - The key name to use for the instance.
+* `license_specification` - A list of license specifications to associate with. See [License Specifications](#license-specificiations) below for more details.
 * `monitoring` - The monitoring option for the instance. See [Monitoring](#monitoring) below for more details.
 * `network_interfaces` - Customize network interfaces to be attached at instance boot time. See [Network
   Interfaces](#network-interfaces) below for more details.
@@ -192,6 +197,14 @@ The `iam_instance_profile` block supports the following:
 
 * `arn` - The Amazon Resource Name (ARN) of the instance profile.
 * `name` - The name of the instance profile.
+
+### License Specifications
+
+Associate one of more license configurations.
+
+The `license_specification` block supports the following:
+
+* `license_configuration_arn` - (Required) ARN of the license configuration.
 
 ### Market Options
 
