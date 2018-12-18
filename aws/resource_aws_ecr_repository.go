@@ -69,7 +69,12 @@ func resourceAwsEcrRepositoryCreate(d *schema.ResourceData, meta interface{}) er
 	d.SetId(aws.StringValue(repository.RepositoryName))
 	// ARN required for setting any tags.
 	d.Set("arn", repository.RepositoryArn)
-	return resourceAwsEcrRepositoryUpdate(d, meta)
+
+	if err := setTagsECR(conn, d); err != nil {
+		return fmt.Errorf("error setting ECR repository tags: %s", err)
+	}
+
+	return resourceAwsEcrRepositoryRead(d, meta)
 }
 
 func resourceAwsEcrRepositoryRead(d *schema.ResourceData, meta interface{}) error {

@@ -81,8 +81,10 @@ func diffTagsECR(oldTags, newTags []*ecr.Tag) ([]*ecr.Tag, []*ecr.Tag) {
 	for _, t := range oldTags {
 		old, ok := create[aws.StringValue(t.Key)]
 		if !ok || old != aws.StringValue(t.Value) {
-			// Delete it!
 			remove = append(remove, t)
+		} else if ok {
+			// already present so remove from new
+			delete(create, aws.StringValue(t.Key))
 		}
 	}
 
