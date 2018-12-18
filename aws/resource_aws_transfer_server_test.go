@@ -32,10 +32,7 @@ func TestAccAWSTransferServer_basic(t *testing.T) {
 						"aws_transfer_server.foo", "endpoint", regexp.MustCompile(fmt.Sprintf("^s-[a-z0-9]+.server.transfer.%s.amazonaws.com$", testAccGetRegion()))),
 					resource.TestCheckResourceAttr(
 						"aws_transfer_server.foo", "identity_provider_type", "SERVICE_MANAGED"),
-					resource.TestCheckResourceAttr(
-						"aws_transfer_server.foo", "tags.%", "1"),
-					resource.TestCheckResourceAttr(
-						"aws_transfer_server.foo", "tags.NAME", "tf-acc-test-transfer-server"),
+					resource.TestCheckResourceAttr("aws_transfer_server.foo", "tags.%", "0"),
 				),
 			},
 			{
@@ -181,13 +178,7 @@ func testAccCheckAWSTransferServerDestroy(s *terraform.State) error {
 }
 
 const testAccAWSTransferServerConfig_basic = `
-resource "aws_transfer_server" "foo" {
-  identity_provider_type = "SERVICE_MANAGED"
-
-  tags {
-	NAME     = "tf-acc-test-transfer-server"
-  }
-}
+resource "aws_transfer_server" "foo" {}
 `
 
 func testAccAWSTransferServerConfig_basicUpdate(rName string) string {

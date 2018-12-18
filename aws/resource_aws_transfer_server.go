@@ -70,9 +70,10 @@ func resourceAwsTransferServer() *schema.Resource {
 func resourceAwsTransferServerCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).transferconn
 	tags := tagsFromMapTransferServer(d.Get("tags").(map[string]interface{}))
+	createOpts := &transfer.CreateServerInput{}
 
-	createOpts := &transfer.CreateServerInput{
-		Tags: tags,
+	if len(tags) != 0 {
+		createOpts.Tags = tags
 	}
 
 	identityProviderDetails := &transfer.IdentityProviderDetails{}
