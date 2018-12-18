@@ -74,6 +74,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
+	"github.com/aws/aws-sdk-go/service/licensemanager"
 	"github.com/aws/aws-sdk-go/service/lightsail"
 	"github.com/aws/aws-sdk-go/service/macie"
 	"github.com/aws/aws-sdk-go/service/mediastore"
@@ -225,6 +226,7 @@ type AWSClient struct {
 	elasticbeanstalkconn  *elasticbeanstalk.ElasticBeanstalk
 	elastictranscoderconn *elastictranscoder.ElasticTranscoder
 	lambdaconn            *lambda.Lambda
+	licensemanagerconn    *licensemanager.LicenseManager
 	lightsailconn         *lightsail.Lightsail
 	macieconn             *macie.Macie
 	mqconn                *mq.MQ
@@ -556,6 +558,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.kmsconn = kms.New(awsKmsSess)
 	client.lambdaconn = lambda.New(awsLambdaSess)
 	client.lexmodelconn = lexmodelbuildingservice.New(sess)
+	client.licensemanagerconn = licensemanager.New(sess)
 	client.lightsailconn = lightsail.New(sess)
 	client.macieconn = macie.New(sess)
 	client.mqconn = mq.New(sess)
