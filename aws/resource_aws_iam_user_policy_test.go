@@ -268,11 +268,7 @@ func testAccCheckIAMUserPolicy(
 			PolicyName: aws.String(name),
 		})
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
