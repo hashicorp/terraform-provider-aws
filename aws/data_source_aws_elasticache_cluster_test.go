@@ -11,7 +11,7 @@ import (
 func TestAccAWSDataElasticacheCluster_basic(t *testing.T) {
 	rInt := acctest.RandInt()
 	rString := acctest.RandString(10)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -60,7 +60,6 @@ resource "aws_elasticache_cluster" "bar" {
     node_type = "cache.m1.small"
     num_cache_nodes = 1
     port = 11211
-    parameter_group_name = "default.memcached1.4"
     security_group_names = ["${aws_elasticache_security_group.bar.name}"]
 }
 

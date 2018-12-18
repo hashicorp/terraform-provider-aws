@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/rds"
 
 	"github.com/hashicorp/terraform/helper/resource"
@@ -31,6 +30,11 @@ func resourceAwsRDSClusterInstance() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"identifier": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -196,6 +200,12 @@ func resourceAwsRDSClusterInstance() *schema.Resource {
 				ValidateFunc: validateArn,
 			},
 
+			"copy_tags_to_snapshot": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+
 			"tags": tagsSchema(),
 		},
 	}
@@ -207,12 +217,13 @@ func resourceAwsRDSClusterInstanceCreate(d *schema.ResourceData, meta interface{
 
 	createOpts := &rds.CreateDBInstanceInput{
 		DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
+		CopyTagsToSnapshot:      aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 		DBClusterIdentifier:     aws.String(d.Get("cluster_identifier").(string)),
 		Engine:                  aws.String(d.Get("engine").(string)),
 		PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
 		PromotionTier:           aws.Int64(int64(d.Get("promotion_tier").(int))),
 		AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
-		Tags: tags,
+		Tags:                    tags,
 	}
 
 	if attr, ok := d.GetOk("availability_zone"); ok {
@@ -245,7 +256,7 @@ func resourceAwsRDSClusterInstanceCreate(d *schema.ResourceData, meta interface{
 		createOpts.MonitoringRoleArn = aws.String(attr.(string))
 	}
 
-	if attr, _ := d.GetOk("engine"); attr == "aurora-postgresql" {
+	if attr, _ := d.GetOk("engine"); attr == "aurora-postgresql" || attr == "aurora" {
 		if attr, ok := d.GetOk("performance_insights_enabled"); ok {
 			createOpts.EnablePerformanceInsights = aws.Bool(attr.(bool))
 		}
@@ -288,10 +299,7 @@ func resourceAwsRDSClusterInstanceCreate(d *schema.ResourceData, meta interface{
 
 	// reuse db_instance refresh func
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"creating", "backing-up", "modifying",
-			"configuring-enhanced-monitoring", "maintenance",
-			"rebooting", "renaming", "resetting-master-credentials",
-			"starting", "upgrading"},
+		Pending:    resourceAwsRdsClusterInstanceCreateUpdatePendingStates,
 		Target:     []string{"available"},
 		Refresh:    resourceAwsDbInstanceStateRefreshFunc(d.Id(), conn),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
@@ -312,7 +320,7 @@ func resourceAwsRDSClusterInstanceRead(d *schema.ResourceData, meta interface{})
 	db, err := resourceAwsDbInstanceRetrieve(d.Id(), meta.(*AWSClient).rdsconn)
 	// Errors from this helper are always reportable
 	if err != nil {
-		return fmt.Errorf("[WARN] Error on retrieving RDS Cluster Instance (%s): %s", d.Id(), err)
+		return fmt.Errorf("Error on retrieving RDS Cluster Instance (%s): %s", d.Id(), err)
 	}
 	// A nil response means "not found"
 	if db == nil {
@@ -339,7 +347,7 @@ func resourceAwsRDSClusterInstanceRead(d *schema.ResourceData, meta interface{})
 	}
 
 	if dbc == nil {
-		return fmt.Errorf("[WARN] Error finding RDS Cluster (%s) for Cluster Instance (%s): %s",
+		return fmt.Errorf("Error finding RDS Cluster (%s) for Cluster Instance (%s): %s",
 			*db.DBClusterIdentifier, *db.DBInstanceIdentifier, err)
 	}
 
@@ -362,22 +370,24 @@ func resourceAwsRDSClusterInstanceRead(d *schema.ResourceData, meta interface{})
 		d.Set("db_subnet_group_name", db.DBSubnetGroup.DBSubnetGroupName)
 	}
 
-	d.Set("publicly_accessible", db.PubliclyAccessible)
-	d.Set("cluster_identifier", db.DBClusterIdentifier)
-	d.Set("engine", db.Engine)
-	d.Set("engine_version", db.EngineVersion)
-	d.Set("instance_class", db.DBInstanceClass)
-	d.Set("identifier", db.DBInstanceIdentifier)
-	d.Set("dbi_resource_id", db.DbiResourceId)
-	d.Set("storage_encrypted", db.StorageEncrypted)
-	d.Set("kms_key_id", db.KmsKeyId)
+	d.Set("arn", db.DBInstanceArn)
 	d.Set("auto_minor_version_upgrade", db.AutoMinorVersionUpgrade)
-	d.Set("promotion_tier", db.PromotionTier)
-	d.Set("preferred_backup_window", db.PreferredBackupWindow)
-	d.Set("preferred_maintenance_window", db.PreferredMaintenanceWindow)
 	d.Set("availability_zone", db.AvailabilityZone)
+	d.Set("cluster_identifier", db.DBClusterIdentifier)
+	d.Set("copy_tags_to_snapshot", db.CopyTagsToSnapshot)
+	d.Set("dbi_resource_id", db.DbiResourceId)
+	d.Set("engine_version", db.EngineVersion)
+	d.Set("engine", db.Engine)
+	d.Set("identifier", db.DBInstanceIdentifier)
+	d.Set("instance_class", db.DBInstanceClass)
+	d.Set("kms_key_id", db.KmsKeyId)
 	d.Set("performance_insights_enabled", db.PerformanceInsightsEnabled)
 	d.Set("performance_insights_kms_key_id", db.PerformanceInsightsKMSKeyId)
+	d.Set("preferred_backup_window", db.PreferredBackupWindow)
+	d.Set("preferred_maintenance_window", db.PreferredMaintenanceWindow)
+	d.Set("promotion_tier", db.PromotionTier)
+	d.Set("publicly_accessible", db.PubliclyAccessible)
+	d.Set("storage_encrypted", db.StorageEncrypted)
 
 	if db.MonitoringInterval != nil {
 		d.Set("monitoring_interval", db.MonitoringInterval)
@@ -391,15 +401,7 @@ func resourceAwsRDSClusterInstanceRead(d *schema.ResourceData, meta interface{})
 		d.Set("db_parameter_group_name", db.DBParameterGroups[0].DBParameterGroupName)
 	}
 
-	// Fetch and save tags
-	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Service:   "rds",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
-		Resource:  fmt.Sprintf("db:%s", d.Id()),
-	}.String()
-	if err := saveTagsRDS(conn, d, arn); err != nil {
+	if err := saveTagsRDS(conn, d, aws.StringValue(db.DBInstanceArn)); err != nil {
 		log.Printf("[WARN] Failed to save tags for RDS Cluster Instance (%s): %s", *db.DBClusterIdentifier, err)
 	}
 
@@ -467,9 +469,21 @@ func resourceAwsRDSClusterInstanceUpdate(d *schema.ResourceData, meta interface{
 		requestUpdate = true
 	}
 
+	if d.HasChange("copy_tags_to_snapshot") {
+		d.SetPartial("copy_tags_to_snapshot")
+		req.CopyTagsToSnapshot = aws.Bool(d.Get("copy_tags_to_snapshot").(bool))
+		requestUpdate = true
+	}
+
 	if d.HasChange("promotion_tier") {
 		d.SetPartial("promotion_tier")
 		req.PromotionTier = aws.Int64(int64(d.Get("promotion_tier").(int)))
+		requestUpdate = true
+	}
+
+	if d.HasChange("publicly_accessible") {
+		d.SetPartial("publicly_accessible")
+		req.PubliclyAccessible = aws.Bool(d.Get("publicly_accessible").(bool))
 		requestUpdate = true
 	}
 
@@ -492,10 +506,7 @@ func resourceAwsRDSClusterInstanceUpdate(d *schema.ResourceData, meta interface{
 
 		// reuse db_instance refresh func
 		stateConf := &resource.StateChangeConf{
-			Pending: []string{"creating", "backing-up", "modifying",
-				"configuring-enhanced-monitoring", "maintenance",
-				"rebooting", "renaming", "resetting-master-credentials",
-				"starting", "upgrading"},
+			Pending:    resourceAwsRdsClusterInstanceCreateUpdatePendingStates,
 			Target:     []string{"available"},
 			Refresh:    resourceAwsDbInstanceStateRefreshFunc(d.Id(), conn),
 			Timeout:    d.Timeout(schema.TimeoutUpdate),
@@ -511,14 +522,7 @@ func resourceAwsRDSClusterInstanceUpdate(d *schema.ResourceData, meta interface{
 
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Service:   "rds",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
-		Resource:  fmt.Sprintf("db:%s", d.Id()),
-	}.String()
-	if err := setTagsRDS(conn, d, arn); err != nil {
+	if err := setTagsRDS(conn, d, d.Get("arn").(string)); err != nil {
 		return err
 	}
 
@@ -540,7 +544,7 @@ func resourceAwsRDSClusterInstanceDelete(d *schema.ResourceData, meta interface{
 	// re-uses db_instance refresh func
 	log.Println("[INFO] Waiting for RDS Cluster Instance to be destroyed")
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"modifying", "deleting"},
+		Pending:    resourceAwsRdsClusterInstanceDeletePendingStates,
 		Target:     []string{},
 		Refresh:    resourceAwsDbInstanceStateRefreshFunc(d.Id(), conn),
 		Timeout:    d.Timeout(schema.TimeoutDelete),
@@ -554,4 +558,24 @@ func resourceAwsRDSClusterInstanceDelete(d *schema.ResourceData, meta interface{
 
 	return nil
 
+}
+
+var resourceAwsRdsClusterInstanceCreateUpdatePendingStates = []string{
+	"backing-up",
+	"configuring-enhanced-monitoring",
+	"configuring-log-exports",
+	"creating",
+	"maintenance",
+	"modifying",
+	"rebooting",
+	"renaming",
+	"resetting-master-credentials",
+	"starting",
+	"upgrading",
+}
+
+var resourceAwsRdsClusterInstanceDeletePendingStates = []string{
+	"configuring-log-exports",
+	"modifying",
+	"deleting",
 }

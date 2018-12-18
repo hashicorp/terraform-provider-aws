@@ -49,7 +49,7 @@ resource "aws_dx_hosted_private_virtual_interface_accepter" "accepter" {
   virtual_interface_id = "${aws_dx_hosted_private_virtual_interface.creator.id}"
   vpn_gateway_id       = "${aws_vpn_gateway.vpn_gw.id}"
 
-  tags {
+  tags = {
     Side = "Accepter"
   }
 }
@@ -74,7 +74,7 @@ from your statefile and management, **but will not delete the Direct Connect vir
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the virtual interface.
 * `arn` - The ARN of the virtual interface.

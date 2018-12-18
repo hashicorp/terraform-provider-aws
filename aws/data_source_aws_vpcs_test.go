@@ -10,7 +10,7 @@ import (
 )
 
 func TestAccDataSourceAwsVpcs_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -26,7 +26,7 @@ func TestAccDataSourceAwsVpcs_basic(t *testing.T) {
 
 func TestAccDataSourceAwsVpcs_tags(t *testing.T) {
 	rName := acctest.RandString(5)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -43,7 +43,7 @@ func TestAccDataSourceAwsVpcs_tags(t *testing.T) {
 
 func TestAccDataSourceAwsVpcs_filters(t *testing.T) {
 	rName := acctest.RandString(5)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -124,7 +124,7 @@ func testAccDataSourceAwsVpcsConfig_tags(rName string) string {
 	}
 
 	data "aws_vpcs" "selected" {
-		tags {
+	tags = {
 			Name = "testacc-vpc-%s"
 			Service = "${aws_vpc.test-vpc.tags["Service"]}"
 		}

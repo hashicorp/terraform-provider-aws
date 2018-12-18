@@ -62,15 +62,18 @@ func testSweepWafRegexMatchSet(region string) error {
 			return fmt.Errorf("Error updating WAF Regex Match Set: %s", err)
 		}
 
-		wr := newWafRetryer(conn, "global")
+		wr := newWafRetryer(conn)
 		_, err = wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.DeleteRegexMatchSetInput{
 				ChangeToken:     token,
-				RegexMatchSetId: aws.String(*set.RegexMatchSetId),
+				RegexMatchSetId: set.RegexMatchSetId,
 			}
 			log.Printf("[INFO] Deleting WAF Regex Match Set: %s", req)
 			return conn.DeleteRegexMatchSet(req)
 		})
+		if err != nil {
+			return fmt.Errorf("error deleting WAF Regex Match Set (%s): %s", aws.StringValue(set.RegexMatchSetId), err)
+		}
 	}
 
 	return nil
@@ -112,7 +115,7 @@ func testAccAWSWafRegexMatchSet_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegexMatchSetDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSWafRegexMatchSetConfig(matchSetName, patternSetName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafRegexMatchSetExists("aws_waf_regex_match_set.test", &matchSet),
@@ -236,7 +239,7 @@ func testAccCheckAWSWafRegexMatchSetDisappears(set *waf.RegexMatchSet) resource.
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).wafconn
 
-		wr := newWafRetryer(conn, "global")
+		wr := newWafRetryer(conn)
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.UpdateRegexMatchSetInput{
 				ChangeToken:     token,

@@ -76,7 +76,7 @@ func TestAccAWSElasticSearchDomain_basic(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 	ri := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
@@ -94,12 +94,43 @@ func TestAccAWSElasticSearchDomain_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSElasticSearchDomain_withDedicatedMaster(t *testing.T) {
+	var domain elasticsearch.ElasticsearchDomainStatus
+	ri := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckESDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccESDomainConfig_WithDedicatedClusterMaster(ri, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &domain),
+				),
+			},
+			{
+				Config: testAccESDomainConfig_WithDedicatedClusterMaster(ri, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &domain),
+				),
+			},
+			{
+				Config: testAccESDomainConfig_WithDedicatedClusterMaster(ri, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &domain),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSElasticSearchDomain_duplicate(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 	ri := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-%d", ri)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		CheckDestroy: func(s *terraform.State) error {
@@ -136,7 +167,7 @@ func TestAccAWSElasticSearchDomain_duplicate(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_elasticsearch_domain.example", "elasticsearch_version", "1.5"),
 				),
-				ExpectError: regexp.MustCompile(`domain "[^"]+" already exists`),
+				ExpectError: regexp.MustCompile(`domain .+ already exists`),
 			},
 		},
 	})
@@ -147,7 +178,7 @@ func TestAccAWSElasticSearchDomain_importBasic(t *testing.T) {
 	ri := acctest.RandInt()
 	resourceId := fmt.Sprintf("tf-test-%d", ri)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
@@ -169,7 +200,7 @@ func TestAccAWSElasticSearchDomain_v23(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 	ri := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
@@ -190,7 +221,7 @@ func TestAccAWSElasticSearchDomain_complex(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 	ri := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
@@ -209,7 +240,7 @@ func TestAccAWSElasticSearchDomain_vpc(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 	ri := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
@@ -228,7 +259,7 @@ func TestAccAWSElasticSearchDomain_vpc_update(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 	ri := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
@@ -255,7 +286,7 @@ func TestAccAWSElasticSearchDomain_internetToVpcEndpoint(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 	ri := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
@@ -278,7 +309,7 @@ func TestAccAWSElasticSearchDomain_internetToVpcEndpoint(t *testing.T) {
 
 func TestAccAWSElasticSearchDomain_LogPublishingOptions(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
@@ -287,6 +318,60 @@ func TestAccAWSElasticSearchDomain_LogPublishingOptions(t *testing.T) {
 				Config: testAccESDomainConfig_LogPublishingOptions(acctest.RandInt()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &domain),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSElasticSearchDomain_CognitoOptionsCreateAndRemove(t *testing.T) {
+	var domain elasticsearch.ElasticsearchDomainStatus
+	ri := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckESDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccESDomainConfig_CognitoOptions(ri, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &domain),
+					testAccCheckESCognitoOptions(true, &domain),
+				),
+			},
+			{
+				Config: testAccESDomainConfig_CognitoOptions(ri, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &domain),
+					testAccCheckESCognitoOptions(false, &domain),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSElasticSearchDomain_CognitoOptionsUpdate(t *testing.T) {
+	var domain elasticsearch.ElasticsearchDomainStatus
+	ri := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckESDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccESDomainConfig_CognitoOptions(ri, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &domain),
+					testAccCheckESCognitoOptions(false, &domain),
+				),
+			},
+			{
+				Config: testAccESDomainConfig_CognitoOptions(ri, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &domain),
+					testAccCheckESCognitoOptions(true, &domain),
 				),
 			},
 		},
@@ -306,7 +391,7 @@ func testAccCheckESNumberOfSecurityGroups(numberOfSecurityGroups int, status *el
 func TestAccAWSElasticSearchDomain_policy(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
@@ -324,7 +409,7 @@ func TestAccAWSElasticSearchDomain_policy(t *testing.T) {
 func TestAccAWSElasticSearchDomain_encrypt_at_rest_default_key(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
@@ -343,7 +428,7 @@ func TestAccAWSElasticSearchDomain_encrypt_at_rest_default_key(t *testing.T) {
 func TestAccAWSElasticSearchDomain_encrypt_at_rest_specify_key(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
@@ -359,12 +444,31 @@ func TestAccAWSElasticSearchDomain_encrypt_at_rest_specify_key(t *testing.T) {
 	})
 }
 
+func TestAccAWSElasticSearchDomain_NodeToNodeEncryption(t *testing.T) {
+	var domain elasticsearch.ElasticsearchDomainStatus
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckESDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccESDomainConfigwithNodeToNodeEncryption(acctest.RandInt()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &domain),
+					testAccCheckESNodetoNodeEncrypted(true, &domain),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSElasticSearchDomain_tags(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 	var td elasticsearch.ListTagsOutput
 	ri := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSELBDestroy,
@@ -393,7 +497,7 @@ func TestAccAWSElasticSearchDomain_update(t *testing.T) {
 	var input elasticsearch.ElasticsearchDomainStatus
 	ri := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
@@ -421,7 +525,7 @@ func TestAccAWSElasticSearchDomain_update_volume_type(t *testing.T) {
 	var input elasticsearch.ElasticsearchDomainStatus
 	ri := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
@@ -496,6 +600,26 @@ func testAccCheckESEncrypted(encrypted bool, status *elasticsearch.Elasticsearch
 		conf := status.EncryptionAtRestOptions
 		if *conf.Enabled != encrypted {
 			return fmt.Errorf("Encrypt at rest not set properly. Given: %t, Expected: %t", *conf.Enabled, encrypted)
+		}
+		return nil
+	}
+}
+
+func testAccCheckESNodetoNodeEncrypted(encrypted bool, status *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		options := status.NodeToNodeEncryptionOptions
+		if aws.BoolValue(options.Enabled) != encrypted {
+			return fmt.Errorf("Node-to-Node Encryption not set properly. Given: %t, Expected: %t", aws.BoolValue(options.Enabled), encrypted)
+		}
+		return nil
+	}
+}
+
+func testAccCheckESCognitoOptions(enabled bool, status *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conf := status.CognitoOptions
+		if *conf.Enabled != enabled {
+			return fmt.Errorf("CognitoOptions not set properly. Given: %t, Expected: %t", *conf.Enabled, enabled)
 		}
 		return nil
 	}
@@ -580,6 +704,27 @@ resource "aws_elasticsearch_domain" "example" {
   }
 }
 `, randInt)
+}
+
+func testAccESDomainConfig_WithDedicatedClusterMaster(randInt int, enabled bool) string {
+	return fmt.Sprintf(`
+resource "aws_elasticsearch_domain" "example" {
+	domain_name = "tf-test-%d"
+	
+	cluster_config {
+		instance_type            = "t2.micro.elasticsearch"
+    instance_count           = "1"
+    dedicated_master_enabled = %t
+    dedicated_master_count   = "3"
+    dedicated_master_type    = "t2.micro.elasticsearch"
+	}
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+}
+`, randInt, enabled)
 }
 
 func testAccESDomainConfig_ClusterUpdate(randInt, instanceInt, snapshotInt int) string {
@@ -668,7 +813,7 @@ resource "aws_elasticsearch_domain" "example" {
     volume_size = 10
   }
 
-  tags {
+  tags = {
     foo = "bar"
     new = "type"
   }
@@ -771,6 +916,30 @@ resource "aws_elasticsearch_domain" "example" {
 `, randESId, randESId)
 }
 
+func testAccESDomainConfigwithNodeToNodeEncryption(randInt int) string {
+	return fmt.Sprintf(`
+
+resource "aws_elasticsearch_domain" "example" {
+  domain_name = "tf-test-%d"
+
+  elasticsearch_version = "6.0"
+
+  cluster_config {
+    instance_type = "m4.large.elasticsearch"
+  }
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+
+  node_to_node_encryption {
+  	enabled = true
+  }
+}
+`, randInt)
+}
+
 func testAccESDomainConfig_complex(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "example" {
@@ -794,7 +963,7 @@ resource "aws_elasticsearch_domain" "example" {
     automated_snapshot_start_hour = 23
   }
 
-  tags {
+  tags = {
     bar = "complex"
   }
 }
@@ -822,7 +991,7 @@ data "aws_availability_zones" "available" {
 
 resource "aws_vpc" "elasticsearch_in_vpc" {
   cidr_block = "192.168.0.0/22"
-  tags {
+  tags = {
     Name = "terraform-testacc-elasticsearch-domain-in-vpc"
   }
 }
@@ -831,7 +1000,7 @@ resource "aws_subnet" "first" {
   vpc_id            = "${aws_vpc.elasticsearch_in_vpc.id}"
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
   cidr_block        = "192.168.0.0/24"
-  tags {
+  tags = {
     Name = "tf-acc-elasticsearch-domain-in-vpc-first"
   }
 }
@@ -840,7 +1009,7 @@ resource "aws_subnet" "second" {
   vpc_id            = "${aws_vpc.elasticsearch_in_vpc.id}"
   availability_zone = "${data.aws_availability_zones.available.names[1]}"
   cidr_block        = "192.168.1.0/24"
-  tags {
+  tags = {
     Name = "tf-acc-elasticsearch-domain-in-vpc-second"
   }
 }
@@ -891,7 +1060,7 @@ data "aws_availability_zones" "available" {
 
 resource "aws_vpc" "elasticsearch_in_vpc" {
   cidr_block = "192.168.0.0/22"
-  tags {
+  tags = {
     Name = "terraform-testacc-elasticsearch-domain-in-vpc-update"
   }
 }
@@ -900,7 +1069,7 @@ resource "aws_subnet" "az1_first" {
   vpc_id            = "${aws_vpc.elasticsearch_in_vpc.id}"
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
   cidr_block        = "192.168.0.0/24"
-  tags {
+  tags = {
     Name = "tf-acc-elasticsearch-domain-in-vpc-update-az1-first"
   }
 }
@@ -909,7 +1078,7 @@ resource "aws_subnet" "az2_first" {
   vpc_id            = "${aws_vpc.elasticsearch_in_vpc.id}"
   availability_zone = "${data.aws_availability_zones.available.names[1]}"
   cidr_block        = "192.168.1.0/24"
-  tags {
+  tags = {
     Name = "tf-acc-elasticsearch-domain-in-vpc-update-az2-first"
   }
 }
@@ -918,7 +1087,7 @@ resource "aws_subnet" "az1_second" {
   vpc_id            = "${aws_vpc.elasticsearch_in_vpc.id}"
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
   cidr_block        = "192.168.2.0/24"
-  tags {
+  tags = {
     Name = "tf-acc-elasticsearch-domain-in-vpc-update-az1-second"
   }
 }
@@ -927,7 +1096,7 @@ resource "aws_subnet" "az2_second" {
   vpc_id            = "${aws_vpc.elasticsearch_in_vpc.id}"
   availability_zone = "${data.aws_availability_zones.available.names[1]}"
   cidr_block        = "192.168.3.0/24"
-  tags {
+  tags = {
     Name = "tf-acc-elasticsearch-domain-in-vpc-update-az2-second"
   }
 }
@@ -969,7 +1138,7 @@ data "aws_availability_zones" "available" {
 
 resource "aws_vpc" "elasticsearch_in_vpc" {
   cidr_block = "192.168.0.0/22"
-  tags {
+  tags = {
     Name = "terraform-testacc-elasticsearch-domain-internet-to-vpc-endpoint"
   }
 }
@@ -978,7 +1147,7 @@ resource "aws_subnet" "first" {
   vpc_id            = "${aws_vpc.elasticsearch_in_vpc.id}"
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
   cidr_block        = "192.168.0.0/24"
-  tags {
+  tags = {
     Name = "tf-acc-elasticsearch-domain-internet-to-vpc-endpoint-first"
   }
 }
@@ -987,7 +1156,7 @@ resource "aws_subnet" "second" {
   vpc_id            = "${aws_vpc.elasticsearch_in_vpc.id}"
   availability_zone = "${data.aws_availability_zones.available.names[1]}"
   cidr_block        = "192.168.1.0/24"
-  tags {
+  tags = {
     Name = "tf-acc-elasticsearch-domain-internet-to-vpc-endpoint-second"
   }
 }
@@ -1063,4 +1232,82 @@ resource "aws_elasticsearch_domain" "example" {
   }
 }
 `, randInt, randInt, randInt)
+}
+
+func testAccESDomainConfig_CognitoOptions(randInt int, includeCognitoOptions bool) string {
+
+	var cognitoOptions string
+	if includeCognitoOptions {
+		cognitoOptions = `
+		cognito_options {
+			enabled = true
+			user_pool_id = "${aws_cognito_user_pool.example.id}"
+			identity_pool_id = "${aws_cognito_identity_pool.example.id}"
+			role_arn = "${aws_iam_role.example.arn}"
+		}`
+	} else {
+		cognitoOptions = ""
+	}
+
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "example" {
+  name = "tf-test-%d"
+}
+
+resource "aws_cognito_user_pool_domain" "example" {
+  domain = "tf-test-%d"
+	user_pool_id = "${aws_cognito_user_pool.example.id}"
+}
+
+resource "aws_cognito_identity_pool" "example" {
+  identity_pool_name = "tf_test_%d"
+	allow_unauthenticated_identities = false
+
+  lifecycle {
+    ignore_changes = ["cognito_identity_providers"]
+  }
+}
+
+resource "aws_iam_role" "example" {
+	name = "tf-test-%d" 
+	path = "/service-role/"
+	assume_role_policy = "${data.aws_iam_policy_document.assume-role-policy.json}"
+}
+
+data "aws_iam_policy_document" "assume-role-policy" {
+  statement {
+    sid     = ""
+		actions = ["sts:AssumeRole"]
+		effect  = "Allow"
+		
+    principals {
+      type        = "Service"
+      identifiers = ["es.amazonaws.com"]
+    }
+  }
+}
+	
+resource "aws_iam_role_policy_attachment" "example" {
+	role       = "${aws_iam_role.example.name}"
+	policy_arn = "arn:aws:iam::aws:policy/AmazonESCognitoAccess"
+}
+
+resource "aws_elasticsearch_domain" "example" {
+	domain_name = "tf-test-%d"
+
+	elasticsearch_version = "6.0"
+
+	%s
+	
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+
+  depends_on = [
+		"aws_iam_role.example",
+		"aws_iam_role_policy_attachment.example"
+	]
+}
+`, randInt, randInt, randInt, randInt, randInt, cognitoOptions)
 }

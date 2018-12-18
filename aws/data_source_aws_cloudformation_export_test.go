@@ -12,12 +12,12 @@ import (
 func TestAccAWSCloudformationExportDataSource_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
-				Config: testAccCheckAwsCloudformationExportConfig(rName),
+			{
+				Config:                    testAccCheckAwsCloudformationExportConfig(rName),
 				PreventPostDestroyRefresh: true,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_cloudformation_export.waiter", "value", "waiter"),
@@ -55,7 +55,7 @@ resource "aws_cloudformation_stack" "cfs" {
   }
 }
 STACK
-  tags {
+  tags = {
     TestExport = "waiter"
     Second = "meh"
   }
@@ -88,7 +88,7 @@ Outputs:
     Export:
       Name: MyVpcId
 STACK
-  tags {
+  tags = {
     TestExport = "MyVpcId"
     Second = "meh"
   }

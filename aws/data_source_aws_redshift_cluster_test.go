@@ -10,7 +10,7 @@ import (
 
 func TestAccAWSDataSourceRedshiftCluster_basic(t *testing.T) {
 	rInt := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -43,7 +43,7 @@ func TestAccAWSDataSourceRedshiftCluster_basic(t *testing.T) {
 
 func TestAccAWSDataSourceRedshiftCluster_vpc(t *testing.T) {
 	rInt := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -62,7 +62,7 @@ func TestAccAWSDataSourceRedshiftCluster_vpc(t *testing.T) {
 
 func TestAccAWSDataSourceRedshiftCluster_logging(t *testing.T) {
 	rInt := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{

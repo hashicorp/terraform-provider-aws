@@ -45,7 +45,7 @@ func TestAccAWSSSMAssociation_basic(t *testing.T) {
 		}
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMAssociationDestroy,
@@ -83,7 +83,7 @@ func TestAccAWSSSMAssociation_withTargets(t *testing.T) {
     key = "tag:ExtraName"
     values = ["acceptanceTest"]
   }`
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMAssociationDestroy,
@@ -134,7 +134,7 @@ func TestAccAWSSSMAssociation_withTargets(t *testing.T) {
 
 func TestAccAWSSSMAssociation_withParameters(t *testing.T) {
 	name := acctest.RandString(10)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMAssociationDestroy,
@@ -163,7 +163,7 @@ func TestAccAWSSSMAssociation_withAssociationName(t *testing.T) {
 	assocName1 := acctest.RandString(10)
 	assocName2 := acctest.RandString(10)
 	rName := acctest.RandString(5)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMAssociationDestroy,
@@ -188,9 +188,41 @@ func TestAccAWSSSMAssociation_withAssociationName(t *testing.T) {
 	})
 }
 
+func TestAccAWSSSMAssociation_withAssociationNameAndScheduleExpression(t *testing.T) {
+	assocName := acctest.RandString(10)
+	rName := acctest.RandString(5)
+	resourceName := "aws_ssm_association.test"
+	scheduleExpression1 := "cron(0 16 ? * TUE *)"
+	scheduleExpression2 := "cron(0 16 ? * WED *)"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMAssociationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMAssociationConfigWithAssociationNameAndScheduleExpression(rName, assocName, scheduleExpression1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMAssociationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "association_name", assocName),
+					resource.TestCheckResourceAttr(resourceName, "schedule_expression", scheduleExpression1),
+				),
+			},
+			{
+				Config: testAccAWSSSMAssociationConfigWithAssociationNameAndScheduleExpression(rName, assocName, scheduleExpression2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMAssociationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "association_name", assocName),
+					resource.TestCheckResourceAttr(resourceName, "schedule_expression", scheduleExpression2),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSSSMAssociation_withDocumentVersion(t *testing.T) {
 	name := acctest.RandString(10)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMAssociationDestroy,
@@ -209,7 +241,7 @@ func TestAccAWSSSMAssociation_withDocumentVersion(t *testing.T) {
 
 func TestAccAWSSSMAssociation_withOutputLocation(t *testing.T) {
 	name := acctest.RandString(10)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMAssociationDestroy,
@@ -250,7 +282,7 @@ func TestAccAWSSSMAssociation_withOutputLocation(t *testing.T) {
 
 func TestAccAWSSSMAssociation_withScheduleExpression(t *testing.T) {
 	name := acctest.RandString(10)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMAssociationDestroy,
@@ -460,13 +492,13 @@ data "aws_ami" "amzn" {
 
   filter {
     name   = "name"
-    values = ["amzn2-ami-hvm-*-gp2"]
+    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
   }
 }
 
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
-  tags {
+  tags = {
     Name = "${var.name}"
   }
 }
@@ -495,7 +527,7 @@ resource "aws_instance" "foo" {
   instance_type = "t2.micro"
   vpc_security_group_ids = ["${aws_security_group.tf_test_foo.id}"]
   subnet_id = "${aws_subnet.first.id}"
-  tags {
+  tags = {
     Name = "${var.name}"
   }
 }
@@ -816,4 +848,42 @@ resource "aws_ssm_association" "foo" {
   }
 }
 `, rName, assocName)
+}
+
+func testAccAWSSSMAssociationConfigWithAssociationNameAndScheduleExpression(rName, associationName, scheduleExpression string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_document" "test" {
+  name = "test_document_association-%s",
+  document_type = "Command"
+  content = <<DOC
+  {
+    "schemaVersion": "1.2",
+    "description": "Check ip configuration of a Linux instance.",
+    "parameters": {
+    },
+    "runtimeConfig": {
+      "aws:runShellScript": {
+        "properties": [
+          {
+            "id": "0.aws:runShellScript",
+            "runCommand": ["ifconfig"]
+          }
+        ]
+      }
+    }
+  }
+DOC
+}
+
+resource "aws_ssm_association" "test" {
+  association_name    = %q
+  name                = "${aws_ssm_document.test.name}",
+  schedule_expression = %q
+
+  targets {
+    key = "tag:Name"
+    values = ["acceptanceTest"]
+  }
+}
+`, rName, associationName, scheduleExpression)
 }

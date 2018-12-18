@@ -14,7 +14,7 @@ Provides a Direct Connect Gateway.
 
 ```hcl
 resource "aws_dx_gateway" "example" {
-  name = "tf-dxg-example"
+  name            = "tf-dxg-example"
   amazon_side_asn = "64512"
 }
 ```
@@ -28,7 +28,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the gateway.
 

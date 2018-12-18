@@ -8,7 +8,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
@@ -49,7 +48,7 @@ func TestAccAWSALBTargetGroup_basic(t *testing.T) {
 	var conf elbv2.TargetGroup
 	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_alb_target_group.test",
 		Providers:     testAccProviders,
@@ -91,7 +90,7 @@ func TestAccAWSALBTargetGroup_basic(t *testing.T) {
 func TestAccAWSALBTargetGroup_namePrefix(t *testing.T) {
 	var conf elbv2.TargetGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_alb_target_group.test",
 		Providers:     testAccProviders,
@@ -111,7 +110,7 @@ func TestAccAWSALBTargetGroup_namePrefix(t *testing.T) {
 func TestAccAWSALBTargetGroup_generatedName(t *testing.T) {
 	var conf elbv2.TargetGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_alb_target_group.test",
 		Providers:     testAccProviders,
@@ -132,7 +131,7 @@ func TestAccAWSALBTargetGroup_changeNameForceNew(t *testing.T) {
 	targetGroupNameBefore := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 	targetGroupNameAfter := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(4, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_alb_target_group.test",
 		Providers:     testAccProviders,
@@ -160,7 +159,7 @@ func TestAccAWSALBTargetGroup_changeProtocolForceNew(t *testing.T) {
 	var before, after elbv2.TargetGroup
 	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_alb_target_group.test",
 		Providers:     testAccProviders,
@@ -188,7 +187,7 @@ func TestAccAWSALBTargetGroup_changePortForceNew(t *testing.T) {
 	var before, after elbv2.TargetGroup
 	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_alb_target_group.test",
 		Providers:     testAccProviders,
@@ -216,7 +215,7 @@ func TestAccAWSALBTargetGroup_changeVpcForceNew(t *testing.T) {
 	var before, after elbv2.TargetGroup
 	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_alb_target_group.test",
 		Providers:     testAccProviders,
@@ -242,7 +241,7 @@ func TestAccAWSALBTargetGroup_tags(t *testing.T) {
 	var conf elbv2.TargetGroup
 	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_alb_target_group.test",
 		Providers:     testAccProviders,
@@ -273,7 +272,7 @@ func TestAccAWSALBTargetGroup_updateHealthCheck(t *testing.T) {
 	var conf elbv2.TargetGroup
 	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_alb_target_group.test",
 		Providers:     testAccProviders,
@@ -335,7 +334,7 @@ func TestAccAWSALBTargetGroup_updateSticknessEnabled(t *testing.T) {
 	var conf elbv2.TargetGroup
 	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_alb_target_group.test",
 		Providers:     testAccProviders,
@@ -420,7 +419,7 @@ func TestAccAWSALBTargetGroup_setAndUpdateSlowStart(t *testing.T) {
 	var before, after elbv2.TargetGroup
 	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_alb_target_group.test",
 		Providers:     testAccProviders,
@@ -495,10 +494,10 @@ func testAccCheckAWSALBTargetGroupDestroy(s *terraform.State) error {
 		}
 
 		// Verify the error
-		if isTargetGroupNotFound(err) {
+		if isAWSErr(err, elbv2.ErrCodeTargetGroupNotFoundException, "") {
 			return nil
 		} else {
-			return errwrap.Wrapf("Unexpected error checking ALB destroyed: {{err}}", err)
+			return fmt.Errorf("Unexpected error checking ALB destroyed: %s", err)
 		}
 	}
 
@@ -530,7 +529,7 @@ func testAccAWSALBTargetGroupConfig_basic(targetGroupName string) string {
     matcher = "200-299"
   }
 
-  tags {
+  tags = {
     TestName = "TestAccAWSALBTargetGroup_basic"
   }
 }
@@ -538,7 +537,7 @@ func testAccAWSALBTargetGroupConfig_basic(targetGroupName string) string {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-alb-target-group-basic"
   }
 }`, targetGroupName)
@@ -569,7 +568,7 @@ func testAccAWSALBTargetGroupConfig_updatedPort(targetGroupName string) string {
     matcher = "200-299"
   }
 
-  tags {
+  tags = {
     TestName = "TestAccAWSALBTargetGroup_basic"
   }
 }
@@ -577,7 +576,7 @@ func testAccAWSALBTargetGroupConfig_updatedPort(targetGroupName string) string {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-alb-target-group-basic"
   }
 }`, targetGroupName)
@@ -608,7 +607,7 @@ func testAccAWSALBTargetGroupConfig_updatedProtocol(targetGroupName string) stri
     matcher = "200-299"
   }
 
-  tags {
+  tags = {
     TestName = "TestAccAWSALBTargetGroup_basic"
   }
 }
@@ -616,7 +615,7 @@ func testAccAWSALBTargetGroupConfig_updatedProtocol(targetGroupName string) stri
 resource "aws_vpc" "test2" {
   cidr_block = "10.10.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-alb-target-group-basic-2"
   }
 }
@@ -624,7 +623,7 @@ resource "aws_vpc" "test2" {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-alb-target-group-basic"
   }
 }`, targetGroupName)
@@ -655,7 +654,7 @@ func testAccAWSALBTargetGroupConfig_updatedVpc(targetGroupName string) string {
     matcher = "200-299"
   }
 
-  tags {
+  tags = {
     TestName = "TestAccAWSALBTargetGroup_basic"
   }
 }
@@ -663,7 +662,7 @@ func testAccAWSALBTargetGroupConfig_updatedVpc(targetGroupName string) string {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-alb-target-group-basic"
   }
 }`, targetGroupName)
@@ -694,7 +693,7 @@ func testAccAWSALBTargetGroupConfig_updateTags(targetGroupName string) string {
     matcher = "200-299"
   }
 
-  tags {
+  tags = {
     Environment = "Production"
     Type = "ALB Target Group"
   }
@@ -703,7 +702,7 @@ func testAccAWSALBTargetGroupConfig_updateTags(targetGroupName string) string {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-alb-target-group-basic"
   }
 }`, targetGroupName)
@@ -738,7 +737,7 @@ func testAccAWSALBTargetGroupConfig_updateHealthCheck(targetGroupName string) st
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-alb-target-group-basic"
   }
 }`, targetGroupName)
@@ -780,7 +779,7 @@ func testAccAWSALBTargetGroupConfig_stickiness(targetGroupName string, addSticki
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-alb-target-group-stickiness"
   }
 }`, targetGroupName, stickinessBlock)
@@ -812,7 +811,7 @@ func testAccAWSALBTargetGroupConfig_updateSlowStart(targetGroupName string, slow
     matcher = "200-299"
   }
 
-  tags {
+  tags = {
     TestName = "TestAccAWSALBTargetGroup_SlowStart"
   }
 }
@@ -820,7 +819,7 @@ func testAccAWSALBTargetGroupConfig_updateSlowStart(targetGroupName string, slow
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-alb-target-group-slowstart"
   }
 }`, targetGroupName, slowStartDuration)
@@ -836,7 +835,7 @@ resource "aws_alb_target_group" "test" {
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-alb-target-group-name-prefix"
 	}
 }
@@ -851,7 +850,7 @@ resource "aws_alb_target_group" "test" {
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-alb-target-group-generated-name"
 	}
 }

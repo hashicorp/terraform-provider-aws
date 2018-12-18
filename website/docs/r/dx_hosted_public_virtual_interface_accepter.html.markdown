@@ -40,9 +40,10 @@ resource "aws_dx_hosted_public_virtual_interface" "creator" {
 
   customer_address = "175.45.176.1/30"
   amazon_address   = "175.45.176.2/30"
+
   route_filter_prefixes = [
-      "210.52.109.0/24",
-      "175.45.176.0/22"
+    "210.52.109.0/24",
+    "175.45.176.0/22",
   ]
 }
 
@@ -51,7 +52,7 @@ resource "aws_dx_hosted_public_virtual_interface_accepter" "accepter" {
   provider             = "aws.accepter"
   virtual_interface_id = "${aws_dx_hosted_public_virtual_interface.creator.id}"
 
-  tags {
+  tags = {
     Side = "Accepter"
   }
 }
@@ -75,7 +76,7 @@ from your statefile and management, **but will not delete the Direct Connect vir
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the virtual interface.
 * `arn` - The ARN of the virtual interface.

@@ -32,7 +32,7 @@ resource "aws_lb" "test" {
     enabled = true
   }
 
-  tags {
+  tags = {
     Environment = "production"
   }
 }
@@ -49,7 +49,7 @@ resource "aws_lb" "test" {
 
   enable_deletion_protection = true
 
-  tags {
+  tags = {
     Environment = "production"
   }
 }
@@ -63,12 +63,12 @@ resource "aws_lb" "example" {
   load_balancer_type = "network"
 
   subnet_mapping {
-    subnet_id    = "${aws_subnet.example1.id}"
+    subnet_id     = "${aws_subnet.example1.id}"
     allocation_id = "${aws_eip.example1.id}"
   }
 
   subnet_mapping {
-    subnet_id    = "${aws_subnet.example2.id}"
+    subnet_id     = "${aws_subnet.example2.id}"
     allocation_id = "${aws_eip.example2.id}"
   }
 }
@@ -120,7 +120,6 @@ The following attributes are exported in addition to the arguments listed above:
 * `arn` - The ARN of the load balancer (matches `id`).
 * `arn_suffix` - The ARN suffix for use with CloudWatch Metrics.
 * `dns_name` - The DNS name of the load balancer.
-* `canonical_hosted_zone_id` - The canonical hosted zone ID of the load balancer.
 * `zone_id` - The canonical hosted zone ID of the load balancer (to be used in a Route 53 Alias record).
 
 ## Timeouts

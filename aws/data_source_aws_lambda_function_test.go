@@ -15,7 +15,7 @@ func TestAccDataSourceAWSLambdaFunction_basic(t *testing.T) {
 	sgName := fmt.Sprintf("tf-acctest-d-lambda-function-basic-sg-%s", rString)
 	funcName := fmt.Sprintf("tf-acctest-d-lambda-function-basic-func-%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -54,7 +54,7 @@ func TestAccDataSourceAWSLambdaFunction_version(t *testing.T) {
 	sgName := fmt.Sprintf("tf-acctest-d-lambda-function-version-sg-%s", rString)
 	funcName := fmt.Sprintf("tf-acctest-d-lambda-function-version-func-%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -78,7 +78,7 @@ func TestAccDataSourceAWSLambdaFunction_alias(t *testing.T) {
 	sgName := fmt.Sprintf("tf-acctest-d-lambda-function-alias-sg-%s", rString)
 	funcName := fmt.Sprintf("tf-acctest-d-lambda-function-alias-func-%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -102,7 +102,7 @@ func TestAccDataSourceAWSLambdaFunction_vpc(t *testing.T) {
 	sgName := fmt.Sprintf("tf-acctest-d-lambda-function-vpc-sg-%s", rString)
 	funcName := fmt.Sprintf("tf-acctest-d-lambda-function-vpc-func-%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -126,7 +126,7 @@ func TestAccDataSourceAWSLambdaFunction_environment(t *testing.T) {
 	sgName := fmt.Sprintf("tf-acctest-d-lambda-function-environment-sg-%s", rString)
 	funcName := fmt.Sprintf("tf-acctest-d-lambda-function-environment-func-%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
