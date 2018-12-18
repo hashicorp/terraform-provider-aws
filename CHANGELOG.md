@@ -7,6 +7,7 @@ FEATURES
 ENHANCEMENTS
 
 * data-source/aws_cloudtrail_service_account: Support `us-gov-east-1` and `us-gov-west-1` regions [GH-6893]
+* resource/aws_db_snapshot: Add `tags` argument [GH-6881]
 
 BUG FIXES
 
