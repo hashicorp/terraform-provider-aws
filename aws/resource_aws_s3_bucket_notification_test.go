@@ -246,7 +246,7 @@ func testAccCheckAWSS3BucketNotificationDestroy(s *terraform.State) error {
 
 func testAccCheckAWSS3BucketTopicNotification(n, i, t string, events []string, filters *s3.KeyFilter) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, _ := s.RootModule().Resources[n]
+		rs := s.RootModule().Resources[n]
 		topicArn := s.RootModule().Resources[t].Primary.ID
 		conn := testAccProvider.Meta().(*AWSClient).s3conn
 
@@ -303,7 +303,7 @@ func testAccCheckAWSS3BucketTopicNotification(n, i, t string, events []string, f
 
 func testAccCheckAWSS3BucketQueueNotification(n, i, t string, events []string, filters *s3.KeyFilter) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, _ := s.RootModule().Resources[n]
+		rs := s.RootModule().Resources[n]
 		queueArn := s.RootModule().Resources[t].Primary.Attributes["arn"]
 		conn := testAccProvider.Meta().(*AWSClient).s3conn
 
@@ -360,7 +360,7 @@ func testAccCheckAWSS3BucketQueueNotification(n, i, t string, events []string, f
 
 func testAccCheckAWSS3BucketLambdaFunctionConfiguration(n, i, t string, events []string, filters *s3.KeyFilter) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, _ := s.RootModule().Resources[n]
+		rs := s.RootModule().Resources[n]
 		funcArn := s.RootModule().Resources[t].Primary.Attributes["arn"]
 		conn := testAccProvider.Meta().(*AWSClient).s3conn
 
