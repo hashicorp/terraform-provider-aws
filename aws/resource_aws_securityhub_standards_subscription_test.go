@@ -14,8 +14,9 @@ func testAccAWSSecurityHubStandardsSubscription_basic(t *testing.T) {
 	var standardsSubscription *securityhub.StandardsSubscription
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSecurityHubAccountDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSecurityHubStandardsSubscriptionConfig_basic,
@@ -79,7 +80,7 @@ func testAccCheckAWSSecurityHubStandardsSubscriptionDestroy(s *terraform.State) 
 
 		if err != nil {
 			if isAWSErr(err, securityhub.ErrCodeResourceNotFoundException, "") {
-				return nil
+				continue
 			}
 			return err
 		}
@@ -87,8 +88,6 @@ func testAccCheckAWSSecurityHubStandardsSubscriptionDestroy(s *terraform.State) 
 		if len(resp.StandardsSubscriptions) != 0 {
 			return fmt.Errorf("Security Hub standard %s still exists", rs.Primary.ID)
 		}
-
-		return nil
 	}
 
 	return nil
