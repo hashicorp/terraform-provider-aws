@@ -4,6 +4,10 @@ FEATURES
 
 * **New Resource:** `aws_licensemanager_license_configuration` [GH-6835]
 
+ENHANCEMENTS
+
+* data-source/aws_cloudtrail_service_account: Support `us-gov-east-1` and `us-gov-west-1` regions [GH-6893]
+
 BUG FIXES
 
 * resource/aws_cloudwatch_log_stream: Trigger resource recreation on `ResourceNotFoundException` error [GH-6776]
