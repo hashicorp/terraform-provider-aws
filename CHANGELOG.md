@@ -11,6 +11,7 @@ ENHANCEMENTS
 BUG FIXES
 
 * resource/aws_cloudwatch_log_stream: Trigger resource recreation on `ResourceNotFoundException` error [GH-6776]
+* resource/aws_transfer_server: Prevent error when no `tags` are assigned on resource creation [GH-6883]
 
 ## 1.52.0 (December 13, 2018)
 
