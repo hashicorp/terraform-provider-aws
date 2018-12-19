@@ -3,6 +3,7 @@
 FEATURES
 
 * **New Resource:** `aws_licensemanager_license_configuration` [GH-6835]
+* **New Resource:** `aws_rds_global_cluster` [GH-6861]
 * **New Resource:** `aws_s3_account_public_access_block` [GH-6851]
 * **New Resource:** `aws_securityhub_standards_subscription` [GH-6862]
 
@@ -13,6 +14,7 @@ ENHANCEMENTS
 * resource/aws_db_snapshot: Add `tags` argument [GH-6881]
 * resource/aws_ecr_repository: Add `tags` argument [GH-6911]
 * resource/aws_lb_target_group: Add `lambda` as supported `target_type` with omitting `port`, `protocol`, and `vpc_id` arguments (support Lambda target groups) [GH-6719]
+* resource/aws_rds_cluster: Allow `global` in `engine_mode` validation and add `global_cluster_identifier` argument [GH-6861]
 
 BUG FIXES
 
