@@ -1119,7 +1119,7 @@ func resourceAwsRDSClusterUpdate(d *schema.ResourceData, meta interface{}) error
 			return errors.New("Existing RDS Clusters cannot be added to an existing RDS Global Cluster")
 		}
 
-		if o != "" && n != "" {
+		if n != "" {
 			return errors.New("Existing RDS Clusters cannot be migrated between existing RDS Global Clusters")
 		}
 
