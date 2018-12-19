@@ -61,11 +61,6 @@ func resourceAwsRDSGlobalCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"source_db_cluster_identifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
 			"storage_encrypted": {
 				Type:     schema.TypeBool,
 				Optional: true,
