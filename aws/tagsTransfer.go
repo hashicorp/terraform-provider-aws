@@ -11,12 +11,12 @@ import (
 
 // setTags is a helper to set the tags for a resource. It expects the
 // tags field to be named "tags"
-func setTagsTransferServer(conn *transfer.Transfer, d *schema.ResourceData) error {
+func setTagsTransfer(conn *transfer.Transfer, d *schema.ResourceData) error {
 	if d.HasChange("tags") {
 		oraw, nraw := d.GetChange("tags")
 		o := oraw.(map[string]interface{})
 		n := nraw.(map[string]interface{})
-		create, remove := diffTagsTransferServer(tagsFromMapTransferServer(o), tagsFromMapTransferServer(n))
+		create, remove := diffTagsTransfer(tagsFromMapTransfer(o), tagsFromMapTransfer(n))
 
 		// Set tags
 		if len(remove) > 0 {
@@ -52,7 +52,7 @@ func setTagsTransferServer(conn *transfer.Transfer, d *schema.ResourceData) erro
 // diffTags takes our tags locally and the ones remotely and returns
 // the set of tags that must be created, and the set of tags that must
 // be destroyed.
-func diffTagsTransferServer(oldTags, newTags []*transfer.Tag) ([]*transfer.Tag, []*transfer.Tag) {
+func diffTagsTransfer(oldTags, newTags []*transfer.Tag) ([]*transfer.Tag, []*transfer.Tag) {
 	// First, we're creating everything we have
 	create := make(map[string]interface{})
 	for _, t := range newTags {
@@ -72,18 +72,18 @@ func diffTagsTransferServer(oldTags, newTags []*transfer.Tag) ([]*transfer.Tag, 
 		}
 	}
 
-	return tagsFromMapTransferServer(create), remove
+	return tagsFromMapTransfer(create), remove
 }
 
 // tagsFromMap returns the tags for the given map of data.
-func tagsFromMapTransferServer(m map[string]interface{}) []*transfer.Tag {
+func tagsFromMapTransfer(m map[string]interface{}) []*transfer.Tag {
 	result := make([]*transfer.Tag, 0, len(m))
 	for k, v := range m {
 		t := &transfer.Tag{
 			Key:   aws.String(k),
 			Value: aws.String(v.(string)),
 		}
-		if !tagIgnoredTransferServer(t) {
+		if !tagIgnoredTransfer(t) {
 			result = append(result, t)
 		}
 	}
@@ -92,10 +92,10 @@ func tagsFromMapTransferServer(m map[string]interface{}) []*transfer.Tag {
 }
 
 // tagsToMap turns the list of tags into a map.
-func tagsToMapTransferServer(ts []*transfer.Tag) map[string]string {
+func tagsToMapTransfer(ts []*transfer.Tag) map[string]string {
 	result := make(map[string]string)
 	for _, t := range ts {
-		if !tagIgnoredTransferServer(t) {
+		if !tagIgnoredTransfer(t) {
 			result[aws.StringValue(t.Key)] = aws.StringValue(t.Value)
 		}
 	}
@@ -105,7 +105,7 @@ func tagsToMapTransferServer(ts []*transfer.Tag) map[string]string {
 
 // compare a tag against a list of strings and checks if it should
 // be ignored or not
-func tagIgnoredTransferServer(t *transfer.Tag) bool {
+func tagIgnoredTransfer(t *transfer.Tag) bool {
 	filter := []string{"^aws:"}
 	for _, v := range filter {
 		log.Printf("[DEBUG] Matching %v with %v\n", v, aws.StringValue(t.Key))

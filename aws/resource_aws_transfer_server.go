@@ -69,7 +69,7 @@ func resourceAwsTransferServer() *schema.Resource {
 
 func resourceAwsTransferServerCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).transferconn
-	tags := tagsFromMapTransferServer(d.Get("tags").(map[string]interface{}))
+	tags := tagsFromMapTransfer(d.Get("tags").(map[string]interface{}))
 	createOpts := &transfer.CreateServerInput{}
 
 	if len(tags) != 0 {
@@ -141,7 +141,7 @@ func resourceAwsTransferServerRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("identity_provider_type", resp.Server.IdentityProviderType)
 	d.Set("logging_role", resp.Server.LoggingRole)
 
-	if err := d.Set("tags", tagsToMapTransferServer(resp.Server.Tags)); err != nil {
+	if err := d.Set("tags", tagsToMapTransfer(resp.Server.Tags)); err != nil {
 		return fmt.Errorf("Error setting tags: %s", err)
 	}
 	return nil
@@ -184,7 +184,7 @@ func resourceAwsTransferServerUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
-	if err := setTagsTransferServer(conn, d); err != nil {
+	if err := setTagsTransfer(conn, d); err != nil {
 		return fmt.Errorf("Error update tags: %s", err)
 	}
 

@@ -8,8 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/transfer"
 )
 
-// go test -v -run="TestDiffTransferServerTags"
-func TestDiffTransferServerTags(t *testing.T) {
+// go test -v -run="TestDiffTransferTags"
+func TestDiffTransferTags(t *testing.T) {
 	cases := []struct {
 		Old, New       map[string]interface{}
 		Create, Remove map[string]string
@@ -81,9 +81,9 @@ func TestDiffTransferServerTags(t *testing.T) {
 	}
 
 	for i, tc := range cases {
-		c, r := diffTagsTransferServer(tagsFromMapTransferServer(tc.Old), tagsFromMapTransferServer(tc.New))
-		cm := tagsToMapTransferServer(c)
-		rm := tagsToMapTransferServer(r)
+		c, r := diffTagsTransfer(tagsFromMapTransfer(tc.Old), tagsFromMapTransfer(tc.New))
+		cm := tagsToMapTransfer(c)
+		rm := tagsToMapTransfer(r)
 		if !reflect.DeepEqual(cm, tc.Create) {
 			t.Fatalf("%d: bad create: %#v", i, cm)
 		}
@@ -93,8 +93,8 @@ func TestDiffTransferServerTags(t *testing.T) {
 	}
 }
 
-// go test -v -run="TestIgnoringTagsTransferServer"
-func TestIgnoringTagsTransferServer(t *testing.T) {
+// go test -v -run="TestIgnoringTagsTransfer"
+func TestIgnoringTagsTransfer(t *testing.T) {
 	var ignoredTags []*transfer.Tag
 	ignoredTags = append(ignoredTags, &transfer.Tag{
 		Key:   aws.String("aws:cloudformation:logical-id"),
@@ -105,7 +105,7 @@ func TestIgnoringTagsTransferServer(t *testing.T) {
 		Value: aws.String("baz"),
 	})
 	for _, tag := range ignoredTags {
-		if !tagIgnoredTransferServer(tag) {
+		if !tagIgnoredTransfer(tag) {
 			t.Fatalf("Tag %v with value %v not ignored, but should be!", *tag.Key, *tag.Value)
 		}
 	}

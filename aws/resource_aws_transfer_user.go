@@ -83,7 +83,7 @@ func resourceAwsTransferUserCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if attr, ok := d.GetOk("tags"); ok {
-		createOpts.Tags = tagsFromMapTransferServer(attr.(map[string]interface{}))
+		createOpts.Tags = tagsFromMapTransfer(attr.(map[string]interface{}))
 	}
 
 	log.Printf("[DEBUG] Create Transfer User Option: %#v", createOpts)
@@ -125,7 +125,7 @@ func resourceAwsTransferUserRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("policy", resp.User.Policy)
 	d.Set("role", resp.User.Role)
 
-	if err := d.Set("tags", tagsToMapTransferServer(resp.User.Tags)); err != nil {
+	if err := d.Set("tags", tagsToMapTransfer(resp.User.Tags)); err != nil {
 		return fmt.Errorf("Error setting tags: %s", err)
 	}
 	return nil
@@ -169,7 +169,7 @@ func resourceAwsTransferUserUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
-	if err := setTagsTransferServer(conn, d); err != nil {
+	if err := setTagsTransfer(conn, d); err != nil {
 		return fmt.Errorf("Error update tags: %s", err)
 	}
 
