@@ -11,6 +11,7 @@ ENHANCEMENTS
 * data-source/aws_ecr_repository: Add `tags` attribute [GH-6911]
 * resource/aws_db_snapshot: Add `tags` argument [GH-6881]
 * resource/aws_ecr_repository: Add `tags` argument [GH-6911]
+* resource/aws_lb_target_group: Add `lambda` as supported `target_type` with omitting `port`, `protocol`, and `vpc_id` arguments (support Lambda target groups) [GH-6719]
 
 BUG FIXES
 
