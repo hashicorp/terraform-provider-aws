@@ -3,6 +3,7 @@
 FEATURES
 
 * **New Resource:** `aws_licensemanager_license_configuration` [GH-6835]
+* **New Resource:** `aws_s3_account_public_access_block` [GH-6851]
 * **New Resource:** `aws_securityhub_standards_subscription` [GH-6862]
 
 ENHANCEMENTS
