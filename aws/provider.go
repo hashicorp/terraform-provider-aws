@@ -585,6 +585,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_rds_cluster_endpoint":                         resourceAwsRDSClusterEndpoint(),
 			"aws_rds_cluster_instance":                         resourceAwsRDSClusterInstance(),
 			"aws_rds_cluster_parameter_group":                  resourceAwsRDSClusterParameterGroup(),
+			"aws_rds_global_cluster":                           resourceAwsRDSGlobalCluster(),
 			"aws_redshift_cluster":                             resourceAwsRedshiftCluster(),
 			"aws_redshift_security_group":                      resourceAwsRedshiftSecurityGroup(),
 			"aws_redshift_parameter_group":                     resourceAwsRedshiftParameterGroup(),
