@@ -90,7 +90,7 @@ func resourceAwsTransferUserCreate(d *schema.ResourceData, meta interface{}) err
 
 	_, err := conn.CreateUser(createOpts)
 	if err != nil {
-		return fmt.Errorf("Error creating Transfer User: %s", err)
+		return fmt.Errorf("error creating Transfer User: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s/%s", serverID, userName))
@@ -119,7 +119,7 @@ func resourceAwsTransferUserRead(d *schema.ResourceData, meta interface{}) error
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("error reading Transfer User (%s): %s", d.Id(), err)
 	}
 
 	d.Set("server_id", resp.ServerId)
@@ -171,7 +171,7 @@ func resourceAwsTransferUserUpdate(d *schema.ResourceData, meta interface{}) err
 				d.SetId("")
 				return nil
 			}
-			return err
+			return fmt.Errorf("error updating Transfer User (%s): %s", d.Id(), err)
 		}
 	}
 
