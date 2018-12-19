@@ -21,7 +21,7 @@ func resourceAwsTransferUser() *schema.Resource {
 		Update: resourceAwsTransferUserUpdate,
 		Delete: resourceAwsTransferUserDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsTransferUserImport,
+			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
 
@@ -93,15 +93,17 @@ func resourceAwsTransferUserCreate(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("Error creating Transfer User: %s", err)
 	}
 
-	d.SetId(fmt.Sprintf("%s-%s", userName, serverID))
+	d.SetId(fmt.Sprintf("%s/%s", serverID, userName))
 
 	return resourceAwsTransferUserRead(d, meta)
 }
 
 func resourceAwsTransferUserRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).transferconn
-	userName := d.Get("user_name").(string)
-	serverID := d.Get("server_id").(string)
+	serverID, userName, err := decodeTransferUserId(d.Id())
+	if err != nil {
+		return fmt.Errorf("error parsing Transfer User ID: %s", err)
+	}
 
 	descOpts := &transfer.DescribeUserInput{
 		UserName: aws.String(userName),
@@ -120,6 +122,8 @@ func resourceAwsTransferUserRead(d *schema.ResourceData, meta interface{}) error
 		return err
 	}
 
+	d.Set("server_id", resp.ServerId)
+	d.Set("user_name", resp.User.UserName)
 	d.Set("arn", resp.User.Arn)
 	d.Set("home_directory", resp.User.HomeDirectory)
 	d.Set("policy", resp.User.Policy)
@@ -134,8 +138,10 @@ func resourceAwsTransferUserRead(d *schema.ResourceData, meta interface{}) error
 func resourceAwsTransferUserUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).transferconn
 	updateFlag := false
-	userName := d.Get("user_name").(string)
-	serverID := d.Get("server_id").(string)
+	serverID, userName, err := decodeTransferUserId(d.Id())
+	if err != nil {
+		return fmt.Errorf("error parsing Transfer User ID: %s", err)
+	}
 
 	updateOpts := &transfer.UpdateUserInput{
 		UserName: aws.String(userName),
@@ -178,8 +184,10 @@ func resourceAwsTransferUserUpdate(d *schema.ResourceData, meta interface{}) err
 
 func resourceAwsTransferUserDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).transferconn
-	userName := d.Get("user_name").(string)
-	serverID := d.Get("server_id").(string)
+	serverID, userName, err := decodeTransferUserId(d.Id())
+	if err != nil {
+		return fmt.Errorf("error parsing Transfer User ID: %s", err)
+	}
 
 	delOpts := &transfer.DeleteUserInput{
 		UserName: aws.String(userName),
@@ -188,7 +196,7 @@ func resourceAwsTransferUserDelete(d *schema.ResourceData, meta interface{}) err
 
 	log.Printf("[DEBUG] Delete Transfer User Option: %#v", delOpts)
 
-	_, err := conn.DeleteUser(delOpts)
+	_, err = conn.DeleteUser(delOpts)
 	if err != nil {
 		if isAWSErr(err, transfer.ErrCodeResourceNotFoundException, "") {
 			return nil
@@ -203,18 +211,12 @@ func resourceAwsTransferUserDelete(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func resourceAwsTransferUserImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	idParts := strings.SplitN(d.Id(), "/", 2)
+func decodeTransferUserId(id string) (string, string, error) {
+	idParts := strings.SplitN(id, "/", 2)
 	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-		return nil, fmt.Errorf("unexpected format of ID (%q), expected <user_name>/<server_id>", d.Id())
+		return "", "", fmt.Errorf("unexpected format of ID (%s), expected SERVERID/USERNAME", id)
 	}
-	userName := idParts[0]
-	serverID := idParts[1]
-	d.Set("user_name", userName)
-	d.Set("server_id", serverID)
-	d.SetId(fmt.Sprintf("%s-%s", userName, serverID))
-
-	return []*schema.ResourceData{d}, nil
+	return idParts[0], idParts[1], nil
 }
 
 func waitForTransferUserDeletion(conn *transfer.Transfer, serverID, userName string) error {
