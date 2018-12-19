@@ -283,7 +283,7 @@ func TestAccAWSLambdaFunction_updateRuntime(t *testing.T) {
 				Config: testAccAWSLambdaConfigBasic(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLambdaFunctionExists("aws_lambda_function.lambda_function_test", funcName, &conf),
-					resource.TestCheckResourceAttr("aws_lambda_function.lambda_function_test", "runtime", "nodejs4.3"),
+					resource.TestCheckResourceAttr("aws_lambda_function.lambda_function_test", "runtime", "nodejs8.10"),
 				),
 			},
 			{
@@ -1051,15 +1051,15 @@ func TestAccAWSLambdaFunction_runtimeValidation_noRuntime(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaFunction_runtimeValidation_nodeJs43(t *testing.T) {
+func TestAccAWSLambdaFunction_runtimeValidation_NodeJs810(t *testing.T) {
 	var conf lambda.GetFunctionOutput
 
 	rString := acctest.RandString(8)
 
-	funcName := fmt.Sprintf("tf_acc_lambda_func_runtime_valid_node43_%s", rString)
-	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_runtime_valid_node43_%s", rString)
-	roleName := fmt.Sprintf("tf_acc_role_lambda_func_runtime_valid_node43_%s", rString)
-	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_runtime_valid_node43_%s", rString)
+	funcName := fmt.Sprintf("tf_acc_lambda_func_runtime_valid_nodejs810_%s", rString)
+	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_runtime_valid_nodejs810_%s", rString)
+	roleName := fmt.Sprintf("tf_acc_role_lambda_func_runtime_valid_nodejs810_%s", rString)
+	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_runtime_valid_nodejs810_%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -1067,10 +1067,10 @@ func TestAccAWSLambdaFunction_runtimeValidation_nodeJs43(t *testing.T) {
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaConfigNodeJs43Runtime(funcName, policyName, roleName, sgName),
+				Config: testAccAWSLambdaConfigNodeJs810Runtime(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLambdaFunctionExists("aws_lambda_function.lambda_function_test", funcName, &conf),
-					resource.TestCheckResourceAttr("aws_lambda_function.lambda_function_test", "runtime", lambda.RuntimeNodejs43),
+					resource.TestCheckResourceAttr("aws_lambda_function.lambda_function_test", "runtime", lambda.RuntimeNodejs810),
 				),
 			},
 		},
@@ -1576,7 +1576,7 @@ resource "aws_lambda_function" "lambda_function_test" {
     function_name = "%s"
     role = "${aws_iam_role.iam_for_lambda.arn}"
     handler = "exports.example"
-    runtime = "nodejs4.3"
+    runtime = "nodejs8.10"
 }
 `, funcName)
 }
@@ -1588,7 +1588,7 @@ resource "aws_lambda_function" "lambda_function_test" {
     function_name = "%s"
     role = "${aws_iam_role.iam_for_lambda.arn}"
     handler = "exports.example"
-    runtime = "nodejs4.3"
+    runtime = "nodejs8.10"
     reserved_concurrent_executions = 111
 }
 `, funcName)
@@ -1601,7 +1601,7 @@ resource "aws_lambda_function" "lambda_function_test" {
     function_name = "%s"
     role = "${aws_iam_role.iam_for_lambda.arn}"
     handler = "exports.example"
-    runtime = "nodejs4.3"
+    runtime = "nodejs8.10"
     reserved_concurrent_executions = 222
 }
 `, funcName)
@@ -1625,7 +1625,7 @@ resource "aws_lambda_function" "lambda_function_test" {
     function_name = "%s"
     role = "${aws_iam_role.iam_for_lambda.arn}"
     handler = "exports.example"
-		runtime = "nodejs4.3"
+		runtime = "nodejs8.10"
 }
 `, funcName)
 }
@@ -1637,7 +1637,7 @@ resource "aws_lambda_function" "lambda_function_test" {
     function_name = "%s"
     role = "${aws_iam_role.iam_for_lambda.arn}"
     handler = "exports.example"
-    runtime = "nodejs4.3"
+    runtime = "nodejs8.10"
     environment {
         variables = {
             foo = "bar"
@@ -1654,7 +1654,7 @@ resource "aws_lambda_function" "lambda_function_test" {
     function_name = "%s"
     role = "${aws_iam_role.iam_for_lambda.arn}"
     handler = "exports.example"
-    runtime = "nodejs4.3"
+    runtime = "nodejs8.10"
     environment {
         variables = {
             foo = "baz"
@@ -1672,7 +1672,7 @@ resource "aws_lambda_function" "lambda_function_test" {
     function_name = "%s"
     role = "${aws_iam_role.iam_for_lambda.arn}"
     handler = "exports.example"
-    runtime = "nodejs4.3"
+    runtime = "nodejs8.10"
 }
 `, funcName)
 }
@@ -1706,7 +1706,7 @@ resource "aws_lambda_function" "lambda_function_test" {
     role = "${aws_iam_role.iam_for_lambda.arn}"
     handler = "exports.example"
     kms_key_arn = "${aws_kms_key.foo.arn}"
-    runtime = "nodejs4.3"
+    runtime = "nodejs8.10"
     environment {
         variables = {
             foo = "bar"
@@ -1744,7 +1744,7 @@ resource "aws_lambda_function" "lambda_function_test" {
     function_name = "%s"
     role = "${aws_iam_role.iam_for_lambda.arn}"
     handler = "exports.example"
-    runtime = "nodejs4.3"
+    runtime = "nodejs8.10"
     environment {
         variables = {
             foo = "bar"
@@ -1762,7 +1762,7 @@ resource "aws_lambda_function" "lambda_function_test" {
     publish = true
     role = "${aws_iam_role.iam_for_lambda.arn}"
     handler = "exports.example"
-    runtime = "nodejs4.3"
+    runtime = "nodejs8.10"
 }
 
 data "template_file" "function_version" {
@@ -1798,7 +1798,7 @@ resource "aws_lambda_function" "lambda_function_test" {
     function_name = "%s"
     role = "${aws_iam_role.iam_for_lambda.arn}"
     handler = "exports.example"
-    runtime = "nodejs4.3"
+    runtime = "nodejs8.10"
 
     tracing_config {
         mode = "Active"
@@ -1815,7 +1815,7 @@ resource "aws_lambda_function" "lambda_function_test" {
     function_name = "%s"
     role = "${aws_iam_role.iam_for_lambda.arn}"
     handler = "exports.example"
-    runtime = "nodejs4.3"
+    runtime = "nodejs8.10"
 
     tracing_config {
         mode = "PassThrough"
@@ -1832,7 +1832,7 @@ resource "aws_lambda_function" "lambda_function_test" {
     function_name = "%s"
     role = "${aws_iam_role.iam_for_lambda.arn}"
     handler = "exports.example"
-    runtime = "nodejs4.3"
+    runtime = "nodejs8.10"
 
     dead_letter_config {
         target_arn = "${aws_sns_topic.lambda_function_test.arn}"
@@ -1854,7 +1854,7 @@ resource "aws_lambda_function" "lambda_function_test" {
     function_name = "%s"
     role = "${aws_iam_role.iam_for_lambda.arn}"
     handler = "exports.example"
-    runtime = "nodejs4.3"
+    runtime = "nodejs8.10"
 
     dead_letter_config {
         target_arn = "${aws_sns_topic.lambda_function_test_2.arn}"
@@ -1879,7 +1879,7 @@ resource "aws_lambda_function" "lambda_function_test" {
     function_name = "%s"
     role = "${aws_iam_role.iam_for_lambda.arn}"
     handler = "exports.example"
-    runtime = "nodejs4.3"
+    runtime = "nodejs8.10"
 
     dead_letter_config {
         target_arn = ""
@@ -1895,7 +1895,7 @@ resource "aws_lambda_function" "lambda_function_test" {
     function_name = "%s"
     role = "${aws_iam_role.iam_for_lambda.arn}"
     handler = "exports.example"
-    runtime = "nodejs4.3"
+    runtime = "nodejs8.10"
 
     vpc_config = {
         subnet_ids = ["${aws_subnet.subnet_for_lambda.id}"]
@@ -1911,7 +1911,7 @@ resource "aws_lambda_function" "lambda_function_test" {
     function_name = "%s"
     role = "${aws_iam_role.iam_for_lambda.arn}"
     handler = "exports.example"
-    runtime = "nodejs4.3"
+    runtime = "nodejs8.10"
 
     vpc_config = {
         subnet_ids = ["${aws_subnet.subnet_for_lambda.id}", "${aws_subnet.subnet_for_lambda_2.id}"]
@@ -1959,7 +1959,7 @@ resource "aws_lambda_function" "test" {
     function_name = "%s"
     role          = "${aws_iam_role.iam_for_lambda.arn}"
     handler       = "exports.example"
-    runtime       = "nodejs4.3"
+    runtime       = "nodejs8.10"
 
     vpc_config {
         subnet_ids         = []
@@ -2005,7 +2005,7 @@ resource "aws_lambda_function" "lambda_function_s3test" {
     function_name = "%s"
     role = "${aws_iam_role.iam_for_lambda.arn}"
     handler = "exports.example"
-    runtime = "nodejs4.3"
+    runtime = "nodejs8.10"
 }
 `, bucketName, roleName, funcName)
 }
@@ -2021,14 +2021,14 @@ resource "aws_lambda_function" "lambda_function_test" {
 `, funcName)
 }
 
-func testAccAWSLambdaConfigNodeJs43Runtime(funcName, policyName, roleName, sgName string) string {
+func testAccAWSLambdaConfigNodeJs810Runtime(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "lambda_function_test" {
     filename = "test-fixtures/lambdatest.zip"
     function_name = "%s"
     role = "${aws_iam_role.iam_for_lambda.arn}"
     handler = "exports.example"
-    runtime = "nodejs4.3"
+    runtime = "nodejs8.10"
 }
 `, funcName)
 }
@@ -2064,7 +2064,7 @@ resource "aws_lambda_function" "lambda_function_test" {
     function_name = "%s"
     role = "${aws_iam_role.iam_for_lambda.arn}"
     handler = "exports.example"
-    runtime = "nodejs4.3"
+    runtime = "nodejs8.10"
   tags = {
 		Key1 = "Value One"
 		Description = "Very interesting"
@@ -2080,7 +2080,7 @@ resource "aws_lambda_function" "lambda_function_test" {
     function_name = "%s"
     role = "${aws_iam_role.iam_for_lambda.arn}"
     handler = "exports.example"
-    runtime = "nodejs4.3"
+    runtime = "nodejs8.10"
   tags = {
 		Key1 = "Value One Changed"
 		Key2 = "Value Two"
@@ -2164,7 +2164,7 @@ resource "aws_lambda_function" "lambda_function_local" {
     function_name = "%s"
     role = "${aws_iam_role.iam_for_lambda.arn}"
     handler = "exports.example"
-    runtime = "nodejs4.3"
+    runtime = "nodejs8.10"
 }
 
 data "template_file" "last_modified" {
@@ -2207,7 +2207,7 @@ resource "aws_lambda_function" "lambda_function_local" {
     function_name = "%s"
     role = "${aws_iam_role.iam_for_lambda.arn}"
     handler = "exports.example"
-    runtime = "nodejs4.3"
+    runtime = "nodejs8.10"
 }`, roleName, filePath, funcName)
 }
 
@@ -2252,7 +2252,7 @@ resource "aws_lambda_function" "lambda_function_s3" {
     function_name = "%s"
     role = "${aws_iam_role.iam_for_lambda.arn}"
     handler = "exports.example"
-    runtime = "nodejs4.3"
+    runtime = "nodejs8.10"
 }
 `, bucketName, key, path, path, roleName, funcName)
 }
@@ -2294,6 +2294,6 @@ resource "aws_lambda_function" "lambda_function_s3" {
     function_name = "%s"
     role = "${aws_iam_role.iam_for_lambda.arn}"
     handler = "exports.example"
-    runtime = "nodejs4.3"
+    runtime = "nodejs8.10"
 }`, bucketName, key, path, path, roleName, funcName)
 }
