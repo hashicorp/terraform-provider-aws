@@ -24,6 +24,7 @@ func testAccAwsGuardDutyDetector_basic(t *testing.T) {
 					testAccCheckAwsGuardDutyDetectorExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "account_id"),
 					resource.TestCheckResourceAttr(resourceName, "enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "finding_publishing_frequency", "SIX_HOURS"),
 				),
 			},
 			{
