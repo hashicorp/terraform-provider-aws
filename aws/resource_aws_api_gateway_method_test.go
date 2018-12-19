@@ -234,7 +234,7 @@ func testAccCheckAWSAPIGatewayMethodAttributesUpdate(conf *apigateway.Method) re
 		if val, ok := conf.RequestParameters["method.request.querystring.page"]; !ok {
 			return fmt.Errorf("missing updated page RequestParameters")
 		} else {
-			if !*val {
+			if *val {
 				return fmt.Errorf("wrong query string RequestParameters updated value")
 			}
 		}
