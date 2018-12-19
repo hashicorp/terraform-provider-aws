@@ -2015,6 +2015,27 @@ func validateCloudFrontPublicKeyNamePrefix(v interface{}, k string) (ws []string
 	return
 }
 
+func validateServiceDiscoveryHttpNamespaceName(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !regexp.MustCompile(`^[0-9A-Za-z_-]+$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only alphanumeric characters, underscores and hyphens allowed in %q", k))
+	}
+	if !regexp.MustCompile(`^[a-zA-Z]`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"first character of %q must be a letter", k))
+	}
+	if !regexp.MustCompile(`[a-zA-Z]$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"last character of %q must be a letter", k))
+	}
+	if len(value) > 1024 {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot be greater than 1024 characters", k))
+	}
+	return
+}
+
 func validateLbTargetGroupName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if len(value) > 32 {
