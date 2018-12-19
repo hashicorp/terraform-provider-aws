@@ -185,11 +185,7 @@ func resourceAwsDbSnapshotDelete(d *schema.ResourceData, meta interface{}) error
 		DBSnapshotIdentifier: aws.String(d.Id()),
 	}
 	_, err := conn.DeleteDBSnapshot(params)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func resourceAwsDbSnapshotUpdate(d *schema.ResourceData, meta interface{}) error {
