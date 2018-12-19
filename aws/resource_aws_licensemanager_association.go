@@ -81,7 +81,7 @@ func resourceAwsLicenseManagerAssociationRead(d *schema.ResourceData, meta inter
 	}
 
 	d.Set("resource_arn", resourceArn)
-	d.Set("license_count", licenseConfigurationArn)
+	d.Set("license_configuration_arn", licenseConfigurationArn)
 
 	return nil
 }
