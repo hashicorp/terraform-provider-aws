@@ -6,6 +6,7 @@ FEATURES
 * **New Resource:** `aws_rds_global_cluster` [GH-6861]
 * **New Resource:** `aws_s3_account_public_access_block` [GH-6851]
 * **New Resource:** `aws_securityhub_standards_subscription` [GH-6862]
+* **New Resource:** `aws_service_discovery_http_namespace` [GH-6864]
 
 ENHANCEMENTS
 
