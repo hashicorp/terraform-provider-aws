@@ -2,6 +2,7 @@ package aws
 
 import (
 	"time"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
@@ -43,17 +44,10 @@ func resourceAwsServiceDiscoveryHttpNamespaceCreate(d *schema.ResourceData, meta
 	conn := meta.(*AWSClient).sdconn
 
 	name := d.Get("name").(string)
-	// The CreatorRequestId has a limit of 64 bytes
-	var requestId string
-	if len(name) > (64 - resource.UniqueIDSuffixLength) {
-		requestId = resource.PrefixedUniqueId(name[0:(64 - resource.UniqueIDSuffixLength - 1)])
-	} else {
-		requestId = resource.PrefixedUniqueId(name)
-	}
 
 	input := &servicediscovery.CreateHttpNamespaceInput{
 		Name:             aws.String(name),
-		CreatorRequestId: aws.String(requestId),
+		CreatorRequestId: aws.String(resource.UniqueId()),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -62,7 +56,7 @@ func resourceAwsServiceDiscoveryHttpNamespaceCreate(d *schema.ResourceData, meta
 
 	resp, err := conn.CreateHttpNamespace(input)
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating Service Discovery HTTP Namespace (%s): %s", name, err)
 	}
 
 	stateConf := &resource.StateChangeConf{
@@ -74,7 +68,7 @@ func resourceAwsServiceDiscoveryHttpNamespaceCreate(d *schema.ResourceData, meta
 
 	opresp, err := stateConf.WaitForState()
 	if err != nil {
-		return err
+		return fmt.Errorf("error waiting for Service Discovery HTTP Namespace (%s) creation: %s", name, err)
 	}
 
 	d.SetId(*opresp.(*servicediscovery.GetOperationOutput).Operation.Targets["NAMESPACE"])
@@ -94,7 +88,7 @@ func resourceAwsServiceDiscoveryHttpNamespaceRead(d *schema.ResourceData, meta i
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("error reading Service Discovery HTTP Namespace (%s): %s", d.Id(), err)
 	}
 
 	d.Set("name", resp.Namespace.Name)
@@ -113,7 +107,7 @@ func resourceAwsServiceDiscoveryHttpNamespaceDelete(d *schema.ResourceData, meta
 
 	resp, err := conn.DeleteNamespace(input)
 	if err != nil {
-		return err
+		return fmt.Errorf("error deleting Service Discovery HTTP Namespace (%s): %s", d.Id(), err)
 	}
 
 	stateConf := &resource.StateChangeConf{
@@ -125,7 +119,7 @@ func resourceAwsServiceDiscoveryHttpNamespaceDelete(d *schema.ResourceData, meta
 
 	_, err = stateConf.WaitForState()
 	if err != nil {
-		return err
+		return fmt.Errorf("error waiting for Service Discovery HTTP Namespace (%s) deletion: %s", d.Id(), err)
 	}
 
 	return nil
