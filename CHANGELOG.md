@@ -11,6 +11,7 @@ ENHANCEMENTS
 
 * data-source/aws_cloudtrail_service_account: Support `us-gov-east-1` and `us-gov-west-1` regions [GH-6893]
 * data-source/aws_ecr_repository: Add `tags` attribute [GH-6911]
+* resource/aws_codebuild_project: Support `source` `report_build_status` for GitHub Enterprise [GH-6929]
 * resource/aws_db_snapshot: Add `tags` argument [GH-6881]
 * resource/aws_ecr_repository: Add `tags` argument [GH-6911]
 * resource/aws_lb_target_group: Add `lambda` as supported `target_type` with omitting `port`, `protocol`, and `vpc_id` arguments (support Lambda target groups) [GH-6719]
