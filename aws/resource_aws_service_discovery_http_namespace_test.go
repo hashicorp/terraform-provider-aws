@@ -25,6 +25,7 @@ func TestAccAWSServiceDiscoveryHttpNamespace_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceDiscoveryHttpNamespaceExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
@@ -37,7 +38,7 @@ func TestAccAWSServiceDiscoveryHttpNamespace_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSServiceDiscoveryHttpNamespace_checkDescription(t *testing.T) {
+func TestAccAWSServiceDiscoveryHttpNamespace_Description(t *testing.T) {
 	resourceName := "aws_service_discovery_http_namespace.test"
 	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandStringFromCharSet(8, acctest.CharSetAlpha))
 
@@ -47,7 +48,7 @@ func TestAccAWSServiceDiscoveryHttpNamespace_checkDescription(t *testing.T) {
 		CheckDestroy: testAccCheckAwsServiceDiscoveryHttpNamespaceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceDiscoveryHttpNamespaceConfig(rName),
+				Config: testAccServiceDiscoveryHttpNamespaceConfigDescription(rName, "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceDiscoveryHttpNamespaceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "test"),
@@ -111,7 +112,15 @@ func testAccServiceDiscoveryHttpNamespaceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_service_discovery_http_namespace" "test" {
   name = %q
-  description = "test"
 }
 `, rName)
+}
+
+func testAccServiceDiscoveryHttpNamespaceConfigDescription(rName, description string) string {
+	return fmt.Sprintf(`
+resource "aws_service_discovery_http_namespace" "test" {
+  description = %q
+  name        = %q
+}
+`, description, rName)
 }
