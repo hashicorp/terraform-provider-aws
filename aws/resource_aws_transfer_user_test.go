@@ -155,17 +155,6 @@ func testAccCheckAWSTransferUserExists(n string, res *transfer.DescribedUser) re
 	}
 }
 
-func testAccAWSTransferUserImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["user_name"], rs.Primary.Attributes["server_id"]), nil
-	}
-}
-
 func testAccCheckAWSTransferUserDisappears(serverConf *transfer.DescribedServer, userConf *transfer.DescribedUser) resource.TestCheckFunc {
 
 	return func(s *terraform.State) error {
