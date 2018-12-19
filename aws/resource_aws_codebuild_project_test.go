@@ -460,6 +460,34 @@ func TestAccAWSCodeBuildProject_Source_ReportBuildStatus_GitHub(t *testing.T) {
 	})
 }
 
+func TestAccAWSCodeBuildProject_Source_ReportBuildStatus_GitHubEnterprise(t *testing.T) {
+	var project codebuild.Project
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_codebuild_project.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodeBuildProjectConfig_Source_ReportBuildStatus_GitHubEnterprise(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "source.2964899175.report_build_status", "true"),
+				),
+			},
+			{
+				Config: testAccAWSCodeBuildProjectConfig_Source_ReportBuildStatus_GitHubEnterprise(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "source.553628638.report_build_status", "false"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSCodeBuildProject_Source_Type_Bitbucket(t *testing.T) {
 	var project codebuild.Project
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -1302,6 +1330,31 @@ resource "aws_codebuild_project" "test" {
 `, rName, reportBuildStatus)
 }
 
+func testAccAWSCodeBuildProjectConfig_Source_ReportBuildStatus_GitHubEnterprise(rName string, reportBuildStatus bool) string {
+	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + fmt.Sprintf(`
+resource "aws_codebuild_project" "test" {
+  name         = %q
+  service_role = "${aws_iam_role.test.arn}"
+
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
+
+  source {
+    location            = "https://example.com/organization/repository.git"
+    report_build_status = %t
+    type                = "GITHUB_ENTERPRISE"
+  }
+}
+`, rName, reportBuildStatus)
+}
+
 func testAccAWSCodeBuildProjectConfig_Source_Type_Bitbucket(rName string) string {
 	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
@@ -1438,8 +1491,8 @@ resource "aws_codebuild_project" "test" {
   }
 
   source {
-    type     	= "NO_SOURCE"
-    location	= "%s"
+    type      = "NO_SOURCE"
+    location  = "%s"
     buildspec = %q
   }
 }
@@ -1635,13 +1688,13 @@ resource "aws_codebuild_project" "test" {
   secondary_sources {
     location = "https://git-codecommit.region-id.amazonaws.com/v1/repos/second-repo-name"
     type     = "CODECOMMIT"
-	source_identifier = "secondarySource1"
+    source_identifier = "secondarySource1"
   }
 
   secondary_sources {
     location = "https://git-codecommit.region-id.amazonaws.com/v1/repos/third-repo-name"
     type     = "CODECOMMIT"
-	source_identifier = "secondarySource2"
+    source_identifier = "secondarySource2"
   }
 }
 `, rName)
