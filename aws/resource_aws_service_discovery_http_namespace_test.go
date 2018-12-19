@@ -6,13 +6,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
+	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccAWSServiceDiscoveryHttpNamespace_basic(t *testing.T) {
 	resourceName := "aws_service_discovery_http_namespace.test"
-	rName := "terraformtesting"
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandStringFromCharSet(8, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -25,6 +26,30 @@ func TestAccAWSServiceDiscoveryHttpNamespace_basic(t *testing.T) {
 					testAccCheckAwsServiceDiscoveryHttpNamespaceExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSServiceDiscoveryHttpNamespace_checkDescription(t *testing.T) {
+	resourceName := "aws_service_discovery_http_namespace.test"
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandStringFromCharSet(8, acctest.CharSetAlpha))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsServiceDiscoveryHttpNamespaceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceDiscoveryHttpNamespaceConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsServiceDiscoveryHttpNamespaceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "test"),
 				),
 			},
@@ -52,7 +77,7 @@ func testAccCheckAwsServiceDiscoveryHttpNamespaceDestroy(s *terraform.State) err
 		_, err := conn.GetNamespace(input)
 		if err != nil {
 			if isAWSErr(err, servicediscovery.ErrCodeNamespaceNotFound, "") {
-				return nil
+				continue
 			}
 			return err
 		}

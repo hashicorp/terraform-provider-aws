@@ -1,8 +1,8 @@
 package aws
 
 import (
-	"time"
 	"fmt"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
@@ -107,6 +107,10 @@ func resourceAwsServiceDiscoveryHttpNamespaceDelete(d *schema.ResourceData, meta
 
 	resp, err := conn.DeleteNamespace(input)
 	if err != nil {
+		if isAWSErr(err, servicediscovery.ErrCodeNamespaceNotFound, "") {
+			d.SetId("")
+			return nil
+		}
 		return fmt.Errorf("error deleting Service Discovery HTTP Namespace (%s): %s", d.Id(), err)
 	}
 
