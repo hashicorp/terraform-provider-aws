@@ -82,6 +82,34 @@ func validateTypeStringNullableFloat(v interface{}, k string) (ws []string, es [
 	return
 }
 
+func validateTransferServerID(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+
+	// https://docs.aws.amazon.com/transfer/latest/userguide/API_CreateUser.html
+	pattern := `^s-([0-9a-f]{17})$`
+	if !regexp.MustCompile(pattern).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q isn't a valid transfer server id (only lowercase alphanumeric characters are allowed): %q",
+			k, value))
+	}
+
+	return
+}
+
+func validateTransferUserName(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+
+	// https://docs.aws.amazon.com/transfer/latest/userguide/API_CreateUser.html
+	pattern := `^[a-z0-9]{3,32}$`
+	if !regexp.MustCompile(pattern).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q isn't a valid transfer user name (only lowercase alphanumeric characters are allowed): %q",
+			k, value))
+	}
+
+	return
+}
+
 func validateRdsIdentifier(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !regexp.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {
