@@ -14,6 +14,7 @@ ENHANCEMENTS
 * resource/aws_codebuild_project: Support `source` `report_build_status` for GitHub Enterprise [GH-6929]
 * resource/aws_db_snapshot: Add `tags` argument [GH-6881]
 * resource/aws_ecr_repository: Add `tags` argument [GH-6911]
+* resource/aws_guardduty_detector: Add `finding_publishing_frequency` argument [GH-6922]
 * resource/aws_lb_target_group: Add `lambda` as supported `target_type` with omitting `port`, `protocol`, and `vpc_id` arguments (support Lambda target groups) [GH-6719]
 * resource/aws_rds_cluster: Allow `global` in `engine_mode` validation and add `global_cluster_identifier` argument [GH-6861]
 
