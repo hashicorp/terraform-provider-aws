@@ -11,6 +11,7 @@ import (
 
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsTransferUser() *schema.Resource {
@@ -31,13 +32,16 @@ func resourceAwsTransferUser() *schema.Resource {
 			},
 
 			"home_directory": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(0, 1024),
 			},
 
 			"policy": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateFunc:     validateIAMPolicyJson,
+				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
 			},
 
 			"role": {
@@ -47,17 +51,19 @@ func resourceAwsTransferUser() *schema.Resource {
 			},
 
 			"server_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validateTransferServerID,
 			},
 
 			"tags": tagsSchema(),
 
 			"user_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validateTransferUserName,
 			},
 		},
 	}
