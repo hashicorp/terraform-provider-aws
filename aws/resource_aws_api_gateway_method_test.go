@@ -207,7 +207,7 @@ func testAccCheckAWSAPIGatewayMethodAttributes(conf *apigateway.Method) resource
 		if val, ok := conf.RequestParameters["method.request.header.Content-Type"]; !ok {
 			return fmt.Errorf("missing Content-Type RequestParameters")
 		} else {
-			if !*val {
+			if *val {
 				return fmt.Errorf("wrong Content-Type RequestParameters value")
 			}
 		}
