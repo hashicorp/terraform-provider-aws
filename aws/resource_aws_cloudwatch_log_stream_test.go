@@ -58,10 +58,8 @@ func testAccCheckCloudWatchLogStreamDisappears(ls *cloudwatchlogs.LogStream, lgn
 			LogGroupName:  aws.String(lgn),
 			LogStreamName: ls.LogStreamName,
 		}
-		if _, err := conn.DeleteLogStream(opts); err != nil {
-			return err
-		}
-		return nil
+		_, err := conn.DeleteLogStream(opts)
+		return err
 	}
 }
 
