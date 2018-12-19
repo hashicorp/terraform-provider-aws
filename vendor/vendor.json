@@ -383,6 +383,14 @@
 			"versionExact": "v1.16.8"
 		},
 		{
+			"checksumSHA1": "543HkjZcfWu8A1Ja318XFEAUzrY=",
+			"path": "github.com/aws/aws-sdk-go/service/apigatewayv2",
+			"revision": "8d41be8a37391ddc4feb2d16f5ca6f440eb8b356",
+			"revisionTime": "2018-12-19T00:14:48Z",
+			"version": "v1.16.8",
+			"versionExact": "v1.16.8"
+		},
+		{
 			"checksumSHA1": "MFpZ8rFizG3ym2b4mpivxbexEns=",
 			"path": "github.com/aws/aws-sdk-go/service/applicationautoscaling",
 			"revision": "8d41be8a37391ddc4feb2d16f5ca6f440eb8b356",
