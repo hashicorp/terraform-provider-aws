@@ -590,6 +590,64 @@ func TestAccAWSEcsService_withLaunchTypeFargate(t *testing.T) {
 	})
 }
 
+func TestAccAWSEcsService_withLaunchTypeFargateAndPlatformVersion(t *testing.T) {
+	var service ecs.Service
+	rString := acctest.RandString(8)
+
+	sg1Name := fmt.Sprintf("tf-acc-sg-1-svc-ltf-w-pv-%s", rString)
+	sg2Name := fmt.Sprintf("tf-acc-sg-2-svc-ltf-w-pv-%s", rString)
+	clusterName := fmt.Sprintf("tf-acc-cluster-svc-ltf-w-pv-%s", rString)
+	tdName := fmt.Sprintf("tf-acc-td-svc-ltf-w-pv-%s", rString)
+	svcName := fmt.Sprintf("tf-acc-svc-ltf-w-pv-%s", rString)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsServiceWithLaunchTypeFargateAndPlatformVersion(sg1Name, sg2Name, clusterName, tdName, svcName, "false"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists("aws_ecs_service.main", &service),
+					resource.TestCheckResourceAttr("aws_ecs_service.main", "launch_type", "FARGATE"),
+					resource.TestCheckResourceAttr("aws_ecs_service.main", "platform_version", "LATEST"),
+					resource.TestCheckResourceAttr("aws_ecs_service.main", "network_configuration.0.assign_public_ip", "false"),
+					resource.TestCheckResourceAttr("aws_ecs_service.main", "network_configuration.0.security_groups.#", "2"),
+					resource.TestCheckResourceAttr("aws_ecs_service.main", "network_configuration.0.subnets.#", "2"),
+				),
+			},
+		},
+	})
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsServiceWithLaunchTypeFargateAndPlatformVersion(sg1Name, sg2Name, clusterName, tdName, svcName, "true"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists("aws_ecs_service.main", &service),
+					resource.TestCheckResourceAttr("aws_ecs_service.main", "network_configuration.0.assign_public_ip", "true"),
+				),
+			},
+		},
+	})
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsServiceWithLaunchTypeFargateAndPlatformVersion(sg1Name, sg2Name, clusterName, tdName, svcName, "false"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists("aws_ecs_service.main", &service),
+					resource.TestCheckResourceAttr("aws_ecs_service.main", "network_configuration.0.assign_public_ip", "false"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSEcsService_withLaunchTypeEC2AndNetworkConfiguration(t *testing.T) {
 	var service ecs.Service
 	rString := acctest.RandString(8)
@@ -1318,6 +1376,97 @@ resource "aws_ecs_service" "main" {
   task_definition = "${aws_ecs_task_definition.mongo.arn}"
   desired_count = 1
   launch_type = "FARGATE"
+  network_configuration {
+    security_groups = ["${aws_security_group.allow_all_a.id}", "${aws_security_group.allow_all_b.id}"]
+    subnets = ["${aws_subnet.main.*.id}"]
+    assign_public_ip = %s
+  }
+}
+`, sg1Name, sg2Name, clusterName, tdName, svcName, assignPublicIP)
+}
+
+func testAccAWSEcsServiceWithLaunchTypeFargateAndPlatformVersion(sg1Name, sg2Name, clusterName, tdName, svcName, assignPublicIP string) string {
+	return fmt.Sprintf(`
+provider "aws" {
+  region = "us-east-1"
+}
+data "aws_availability_zones" "available" {}
+
+resource "aws_vpc" "main" {
+  cidr_block = "10.10.0.0/16"
+  tags {
+    Name = "terraform-testacc-ecs-service-with-launch-type-fargate-and-platform-version"
+  }
+}
+
+resource "aws_subnet" "main" {
+  count = 2
+  cidr_block = "${cidrsubnet(aws_vpc.main.cidr_block, 8, count.index)}"
+  availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
+  vpc_id = "${aws_vpc.main.id}"
+  tags {
+    Name = "tf-acc-ecs-service-with-launch-type-fargate-and-platform-version"
+  }
+}
+
+resource "aws_security_group" "allow_all_a" {
+  name        = "%s"
+  description = "Allow all inbound traffic"
+  vpc_id      = "${aws_vpc.main.id}"
+
+  ingress {
+    protocol = "6"
+    from_port = 80
+    to_port = 8000
+    cidr_blocks = ["${aws_vpc.main.cidr_block}"]
+  }
+}
+
+resource "aws_security_group" "allow_all_b" {
+  name        = "%s"
+  description = "Allow all inbound traffic"
+  vpc_id      = "${aws_vpc.main.id}"
+
+  ingress {
+    protocol = "6"
+    from_port = 80
+    to_port = 8000
+    cidr_blocks = ["${aws_vpc.main.cidr_block}"]
+  }
+}
+
+resource "aws_ecs_cluster" "main" {
+  name = "%s"
+}
+
+resource "aws_ecs_task_definition" "mongo" {
+  family = "%s"
+  network_mode = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu = "256"
+  memory = "512"
+
+  container_definitions = <<DEFINITION
+[
+  {
+    "cpu": 256,
+    "essential": true,
+    "image": "mongo:latest",
+    "memory": 512,
+    "name": "mongodb",
+    "networkMode": "awsvpc"
+  }
+]
+DEFINITION
+}
+
+resource "aws_ecs_service" "main" {
+  name = "%s"
+  cluster = "${aws_ecs_cluster.main.id}"
+  task_definition = "${aws_ecs_task_definition.mongo.arn}"
+  desired_count = 1
+  launch_type = "FARGATE"
+  platform_version = "LATEST"
   network_configuration {
     security_groups = ["${aws_security_group.allow_all_a.id}", "${aws_security_group.allow_all_b.id}"]
     subnets = ["${aws_subnet.main.*.id}"]
