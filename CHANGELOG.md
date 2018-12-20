@@ -7,6 +7,7 @@ FEATURES
 * **New Resource:** `aws_s3_account_public_access_block` [GH-6851]
 * **New Resource:** `aws_securityhub_standards_subscription` [GH-6862]
 * **New Resource:** `aws_service_discovery_http_namespace` [GH-6864]
+* **New Resource:** `aws_transfer_ssh_key` [GH-6932]
 * **New Resource:** `aws_transfer_user` [GH-6850]
 
 ENHANCEMENTS
