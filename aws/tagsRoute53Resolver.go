@@ -10,11 +10,11 @@ import (
 )
 
 // getTags is a helper to get the tags for a resource. It expects the
-// tags field to be named "tags"
-func getTagsRoute53Resolver(conn *route53resolver.Route53Resolver, d *schema.ResourceData, arn string) error {
+// tags field to be named "tags" and the ARN field to be named "arn".
+func getTagsRoute53Resolver(conn *route53resolver.Route53Resolver, d *schema.ResourceData) error {
 	tags := make([]*route53resolver.Tag, 0)
 	req := &route53resolver.ListTagsForResourceInput{
-		ResourceArn: aws.String(arn),
+		ResourceArn: aws.String(d.Get("arn").(string)),
 	}
 	for {
 		resp, err := conn.ListTagsForResource(req)
@@ -40,8 +40,8 @@ func getTagsRoute53Resolver(conn *route53resolver.Route53Resolver, d *schema.Res
 }
 
 // setTags is a helper to set the tags for a resource. It expects the
-// tags field to be named "tags"
-func setTagsRoute53Resolver(conn *route53resolver.Route53Resolver, d *schema.ResourceData, arn string) error {
+// tags field to be named "tags" and the ARN field to be named "arn".
+func setTagsRoute53Resolver(conn *route53resolver.Route53Resolver, d *schema.ResourceData) error {
 	if d.HasChange("tags") {
 		oraw, nraw := d.GetChange("tags")
 		o := oraw.(map[string]interface{})
@@ -57,7 +57,7 @@ func setTagsRoute53Resolver(conn *route53resolver.Route53Resolver, d *schema.Res
 			}
 
 			_, err := conn.UntagResource(&route53resolver.UntagResourceInput{
-				ResourceArn: aws.String(arn),
+				ResourceArn: aws.String(d.Get("arn").(string)),
 				TagKeys:     k,
 			})
 			if err != nil {
@@ -67,7 +67,7 @@ func setTagsRoute53Resolver(conn *route53resolver.Route53Resolver, d *schema.Res
 		if len(create) > 0 {
 			log.Printf("[DEBUG] Creating tags: %#v", create)
 			_, err := conn.TagResource(&route53resolver.TagResourceInput{
-				ResourceArn: aws.String(arn),
+				ResourceArn: aws.String(d.Get("arn").(string)),
 				Tags:        create,
 			})
 			if err != nil {
@@ -94,8 +94,10 @@ func diffTagsRoute53Resolver(oldTags, newTags []*route53resolver.Tag) ([]*route5
 	for _, t := range oldTags {
 		old, ok := create[aws.StringValue(t.Key)]
 		if !ok || old != aws.StringValue(t.Value) {
-			// Delete it!
 			remove = append(remove, t)
+		} else if ok {
+			// already present so remove from new
+			delete(create, aws.StringValue(t.Key))
 		}
 	}
 

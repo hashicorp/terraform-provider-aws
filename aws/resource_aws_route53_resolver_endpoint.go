@@ -30,10 +30,13 @@ func resourceAwsRoute53ResolverEndpoint() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"direction": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice([]string{route53resolver.ResolverEndpointDirectionInbound, route53resolver.ResolverEndpointDirectionOutbound}, false),
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					route53resolver.ResolverEndpointDirectionInbound,
+					route53resolver.ResolverEndpointDirectionOutbound,
+				}, false),
 			},
 
 			"ip_address": {
@@ -118,7 +121,7 @@ func resourceAwsRoute53ResolverEndpointCreate(d *schema.ResourceData, meta inter
 	log.Printf("[DEBUG] Creating Route53 Resolver endpoint: %#v", req)
 	resp, err := conn.CreateResolverEndpoint(req)
 	if err != nil {
-		return fmt.Errorf("Error creating Route53 Resolver endpoint: %s", err)
+		return fmt.Errorf("error creating Route53 Resolver endpoint: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.ResolverEndpoint.Id))
@@ -138,7 +141,7 @@ func resourceAwsRoute53ResolverEndpointRead(d *schema.ResourceData, meta interfa
 
 	epRaw, state, err := route53ResolverEndpointRefresh(conn, d.Id())()
 	if err != nil {
-		return fmt.Errorf("Error getting Route53 Resolver endpoint (%s): %s", d.Id(), err)
+		return fmt.Errorf("error getting Route53 Resolver endpoint (%s): %s", d.Id(), err)
 	}
 	if state == Route53ResolverEndpointStatusDeleted {
 		log.Printf("[WARN] Route53 Resolver endpoint (%s) not found, removing from state", d.Id())
@@ -162,7 +165,7 @@ func resourceAwsRoute53ResolverEndpointRead(d *schema.ResourceData, meta interfa
 	for {
 		resp, err := conn.ListResolverEndpointIpAddresses(req)
 		if err != nil {
-			return fmt.Errorf("Error getting Route53 Resolver endpoint (%s) IP addresses: %s", d.Id(), err)
+			return fmt.Errorf("error getting Route53 Resolver endpoint (%s) IP addresses: %s", d.Id(), err)
 		}
 
 		ipAddresses = append(ipAddresses, flattenRoute53ResolverIpAddresses(resp.IpAddresses)...)
@@ -176,8 +179,8 @@ func resourceAwsRoute53ResolverEndpointRead(d *schema.ResourceData, meta interfa
 		return err
 	}
 
-	if err := getTagsRoute53Resolver(conn, d, d.Get("arn").(string)); err != nil {
-		return err
+	if err := getTagsRoute53Resolver(conn, d); err != nil {
+		return fmt.Errorf("error getting Route53 Resolver endpoint (%s) tags: %s", d.Id(), err)
 	}
 
 	return nil
@@ -196,7 +199,7 @@ func resourceAwsRoute53ResolverEndpointUpdate(d *schema.ResourceData, meta inter
 		log.Printf("[DEBUG] Updating Route53 Resolver endpoint: %#v", req)
 		_, err := conn.UpdateResolverEndpoint(req)
 		if err != nil {
-			return fmt.Errorf("Error updating Route53 Resolver endpoint (%s): %s", d.Id(), err)
+			return fmt.Errorf("error updating Route53 Resolver endpoint (%s): %s", d.Id(), err)
 		}
 
 		err = route53ResolverEndpointWaitUntilTargetState(conn, d.Id(), d.Timeout(schema.TimeoutUpdate),
@@ -223,7 +226,7 @@ func resourceAwsRoute53ResolverEndpointUpdate(d *schema.ResourceData, meta inter
 				IpAddress:          expandRoute53ResolverIpAddressUpdate(v),
 			})
 			if err != nil {
-				return fmt.Errorf("Error associating Route53 Resolver endpoint (%s) IP address: %s", d.Id(), err)
+				return fmt.Errorf("error associating Route53 Resolver endpoint (%s) IP address: %s", d.Id(), err)
 			}
 
 			err = route53ResolverEndpointWaitUntilTargetState(conn, d.Id(), d.Timeout(schema.TimeoutUpdate),
@@ -240,7 +243,7 @@ func resourceAwsRoute53ResolverEndpointUpdate(d *schema.ResourceData, meta inter
 				IpAddress:          expandRoute53ResolverIpAddressUpdate(v),
 			})
 			if err != nil {
-				return fmt.Errorf("Error disassociating Route53 Resolver endpoint (%s) IP address: %s", d.Id(), err)
+				return fmt.Errorf("error disassociating Route53 Resolver endpoint (%s) IP address: %s", d.Id(), err)
 			}
 
 			err = route53ResolverEndpointWaitUntilTargetState(conn, d.Id(), d.Timeout(schema.TimeoutUpdate),
@@ -254,8 +257,8 @@ func resourceAwsRoute53ResolverEndpointUpdate(d *schema.ResourceData, meta inter
 		d.SetPartial("ip_address")
 	}
 
-	if err := setTagsRoute53Resolver(conn, d, d.Get("arn").(string)); err != nil {
-		return err
+	if err := setTagsRoute53Resolver(conn, d); err != nil {
+		return fmt.Errorf("error setting Route53 Resolver endpoint (%s) tags: %s", d.Id(), err)
 	}
 	d.SetPartial("tags")
 
@@ -275,7 +278,7 @@ func resourceAwsRoute53ResolverEndpointDelete(d *schema.ResourceData, meta inter
 			return nil
 		}
 
-		return fmt.Errorf("Error deleting Route53 Resolver endpoint (%s): %s", d.Id(), err)
+		return fmt.Errorf("error deleting Route53 Resolver endpoint (%s): %s", d.Id(), err)
 	}
 
 	err = route53ResolverEndpointWaitUntilTargetState(conn, d.Id(), d.Timeout(schema.TimeoutDelete),
@@ -315,7 +318,7 @@ func route53ResolverEndpointWaitUntilTargetState(conn *route53resolver.Route53Re
 		MinTimeout: 5 * time.Second,
 	}
 	if _, err := stateConf.WaitForState(); err != nil {
-		return fmt.Errorf("Error waiting for Route53 Resolver endpoint (%s) to reach target state: %s", epId, err)
+		return fmt.Errorf("error waiting for Route53 Resolver endpoint (%s) to reach target state: %s", epId, err)
 	}
 
 	return nil
