@@ -922,12 +922,7 @@ func resourceAwsCodeBuildProjectDelete(d *schema.ResourceData, meta interface{})
 	_, err := conn.DeleteProject(&codebuild.DeleteProjectInput{
 		Name: aws.String(d.Id()),
 	})
-
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func flattenAwsCodeBuildProjectSecondaryArtifacts(artifactsList []*codebuild.ProjectArtifacts) *schema.Set {

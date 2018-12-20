@@ -204,11 +204,7 @@ func resourceAwsCodeDeployDeploymentConfigDelete(d *schema.ResourceData, meta in
 	}
 
 	_, err := conn.DeleteDeploymentConfig(input)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func expandAwsCodeDeployConfigMinimumHealthHosts(d *schema.ResourceData) *codedeploy.MinimumHealthyHosts {
