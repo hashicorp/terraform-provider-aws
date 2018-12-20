@@ -8,7 +8,7 @@ description: |-
 
 # aws_transfer_server
 
-Provides a AWS Transfer User resource.
+Provides a AWS Transfer User resource. Managing SSH keys can be accomplished with the [`aws_transfer_ssh_key` resource](/docs/providers/aws/r/transfer_ssh_key.html).
 
 
 ```hcl
