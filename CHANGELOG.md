@@ -1,32 +1,32 @@
-## 1.53.0 (Unreleased)
+## 1.53.0 (December 20, 2018)
 
 FEATURES
 
-* **New Resource:** `aws_licensemanager_license_configuration` [GH-6835]
-* **New Resource:** `aws_rds_global_cluster` [GH-6861]
-* **New Resource:** `aws_s3_account_public_access_block` [GH-6851]
-* **New Resource:** `aws_securityhub_standards_subscription` [GH-6862]
-* **New Resource:** `aws_service_discovery_http_namespace` [GH-6864]
-* **New Resource:** `aws_transfer_ssh_key` [GH-6932]
-* **New Resource:** `aws_transfer_user` [GH-6850]
+* **New Resource:** `aws_licensemanager_license_configuration` ([#6835](https://github.com/terraform-providers/terraform-provider-aws/issues/6835))
+* **New Resource:** `aws_rds_global_cluster` ([#6861](https://github.com/terraform-providers/terraform-provider-aws/issues/6861))
+* **New Resource:** `aws_s3_account_public_access_block` ([#6851](https://github.com/terraform-providers/terraform-provider-aws/issues/6851))
+* **New Resource:** `aws_securityhub_standards_subscription` ([#6862](https://github.com/terraform-providers/terraform-provider-aws/issues/6862))
+* **New Resource:** `aws_service_discovery_http_namespace` ([#6864](https://github.com/terraform-providers/terraform-provider-aws/issues/6864))
+* **New Resource:** `aws_transfer_ssh_key` ([#6932](https://github.com/terraform-providers/terraform-provider-aws/issues/6932))
+* **New Resource:** `aws_transfer_user` ([#6850](https://github.com/terraform-providers/terraform-provider-aws/issues/6850))
 
 ENHANCEMENTS
 
-* data-source/aws_cloudtrail_service_account: Support `us-gov-east-1` and `us-gov-west-1` regions [GH-6893]
-* data-source/aws_ecr_repository: Add `tags` attribute [GH-6911]
-* resource/aws_codebuild_project: Support `source` `report_build_status` for GitHub Enterprise [GH-6929]
-* resource/aws_db_snapshot: Add `tags` argument [GH-6881]
-* resource/aws_ecr_repository: Add `tags` argument [GH-6911]
-* resource/aws_ecs_service: Add `platform_version` argument (ECS Fargate Platform Version Support) [GH-6510]
-* resource/aws_guardduty_detector: Add `finding_publishing_frequency` argument [GH-6922]
-* resource/aws_lb_target_group: Add `lambda` as supported `target_type` with omitting `port`, `protocol`, and `vpc_id` arguments (support Lambda target groups) [GH-6719]
-* resource/aws_rds_cluster: Allow `global` in `engine_mode` validation and add `global_cluster_identifier` argument [GH-6861]
+* data-source/aws_cloudtrail_service_account: Support `us-gov-east-1` and `us-gov-west-1` regions ([#6893](https://github.com/terraform-providers/terraform-provider-aws/issues/6893))
+* data-source/aws_ecr_repository: Add `tags` attribute ([#6911](https://github.com/terraform-providers/terraform-provider-aws/issues/6911))
+* resource/aws_codebuild_project: Support `source` `report_build_status` for GitHub Enterprise ([#6929](https://github.com/terraform-providers/terraform-provider-aws/issues/6929))
+* resource/aws_db_snapshot: Add `tags` argument ([#6881](https://github.com/terraform-providers/terraform-provider-aws/issues/6881))
+* resource/aws_ecr_repository: Add `tags` argument ([#6911](https://github.com/terraform-providers/terraform-provider-aws/issues/6911))
+* resource/aws_ecs_service: Add `platform_version` argument (ECS Fargate Platform Version Support) ([#6510](https://github.com/terraform-providers/terraform-provider-aws/issues/6510))
+* resource/aws_guardduty_detector: Add `finding_publishing_frequency` argument ([#6922](https://github.com/terraform-providers/terraform-provider-aws/issues/6922))
+* resource/aws_lb_target_group: Add `lambda` as supported `target_type` with omitting `port`, `protocol`, and `vpc_id` arguments (support Lambda target groups) ([#6719](https://github.com/terraform-providers/terraform-provider-aws/issues/6719))
+* resource/aws_rds_cluster: Allow `global` in `engine_mode` validation and add `global_cluster_identifier` argument ([#6861](https://github.com/terraform-providers/terraform-provider-aws/issues/6861))
 
 BUG FIXES
 
-* resource/aws_cloudwatch_log_stream: Trigger resource recreation on `ResourceNotFoundException` error [GH-6776]
-* resource/aws_s3_bucket: Skip `MethodNotAllowed` error during read for missing S3 Bucket Acceleration functionality (`eu-north-1` region support) [GH-6873]
-* resource/aws_transfer_server: Prevent error when no `tags` are assigned on resource creation [GH-6883]
+* resource/aws_cloudwatch_log_stream: Trigger resource recreation on `ResourceNotFoundException` error ([#6776](https://github.com/terraform-providers/terraform-provider-aws/issues/6776))
+* resource/aws_s3_bucket: Skip `MethodNotAllowed` error during read for missing S3 Bucket Acceleration functionality (`eu-north-1` region support) ([#6873](https://github.com/terraform-providers/terraform-provider-aws/issues/6873))
+* resource/aws_transfer_server: Prevent error when no `tags` are assigned on resource creation ([#6883](https://github.com/terraform-providers/terraform-provider-aws/issues/6883))
 
 ## 1.52.0 (December 13, 2018)
 
