@@ -279,10 +279,8 @@ func testAccCheckCloudWatchLogGroupDisappears(lg *cloudwatchlogs.LogGroup) resou
 		opts := &cloudwatchlogs.DeleteLogGroupInput{
 			LogGroupName: lg.LogGroupName,
 		}
-		if _, err := conn.DeleteLogGroup(opts); err != nil {
-			return err
-		}
-		return nil
+		_, err := conn.DeleteLogGroup(opts)
+		return err
 	}
 }
 
