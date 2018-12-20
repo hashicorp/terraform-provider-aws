@@ -77,9 +77,8 @@ func resourceAwsEcsService() *schema.Resource {
 
 			"platform_version": {
 				Type:     schema.TypeString,
-				ForceNew: false,
 				Optional: true,
-				Default:  "LATEST",
+				Computed: true,
 			},
 
 			"scheduling_strategy": {

@@ -570,6 +570,7 @@ func TestAccAWSEcsService_withLaunchTypeFargate(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_ecs_service.main", "network_configuration.0.assign_public_ip", "false"),
 					resource.TestCheckResourceAttr("aws_ecs_service.main", "network_configuration.0.security_groups.#", "2"),
 					resource.TestCheckResourceAttr("aws_ecs_service.main", "network_configuration.0.subnets.#", "2"),
+					resource.TestCheckResourceAttr("aws_ecs_service.main", "platform_version", "LATEST"),
 				),
 			},
 			{
@@ -600,48 +601,30 @@ func TestAccAWSEcsService_withLaunchTypeFargateAndPlatformVersion(t *testing.T) 
 	tdName := fmt.Sprintf("tf-acc-td-svc-ltf-w-pv-%s", rString)
 	svcName := fmt.Sprintf("tf-acc-svc-ltf-w-pv-%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsServiceWithLaunchTypeFargateAndPlatformVersion(sg1Name, sg2Name, clusterName, tdName, svcName, "false"),
+				Config: testAccAWSEcsServiceWithLaunchTypeFargateAndPlatformVersion(sg1Name, sg2Name, clusterName, tdName, svcName, "1.2.0"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists("aws_ecs_service.main", &service),
-					resource.TestCheckResourceAttr("aws_ecs_service.main", "launch_type", "FARGATE"),
+					resource.TestCheckResourceAttr("aws_ecs_service.main", "platform_version", "1.2.0"),
+				),
+			},
+			{
+				Config: testAccAWSEcsServiceWithLaunchTypeFargateAndPlatformVersion(sg1Name, sg2Name, clusterName, tdName, svcName, "1.3.0"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists("aws_ecs_service.main", &service),
+					resource.TestCheckResourceAttr("aws_ecs_service.main", "platform_version", "1.3.0"),
+				),
+			},
+			{
+				Config: testAccAWSEcsServiceWithLaunchTypeFargateAndPlatformVersion(sg1Name, sg2Name, clusterName, tdName, svcName, "LATEST"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists("aws_ecs_service.main", &service),
 					resource.TestCheckResourceAttr("aws_ecs_service.main", "platform_version", "LATEST"),
-					resource.TestCheckResourceAttr("aws_ecs_service.main", "network_configuration.0.assign_public_ip", "false"),
-					resource.TestCheckResourceAttr("aws_ecs_service.main", "network_configuration.0.security_groups.#", "2"),
-					resource.TestCheckResourceAttr("aws_ecs_service.main", "network_configuration.0.subnets.#", "2"),
-				),
-			},
-		},
-	})
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSEcsServiceWithLaunchTypeFargateAndPlatformVersion(sg1Name, sg2Name, clusterName, tdName, svcName, "true"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists("aws_ecs_service.main", &service),
-					resource.TestCheckResourceAttr("aws_ecs_service.main", "network_configuration.0.assign_public_ip", "true"),
-				),
-			},
-		},
-	})
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSEcsServiceWithLaunchTypeFargateAndPlatformVersion(sg1Name, sg2Name, clusterName, tdName, svcName, "false"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsServiceExists("aws_ecs_service.main", &service),
-					resource.TestCheckResourceAttr("aws_ecs_service.main", "network_configuration.0.assign_public_ip", "false"),
 				),
 			},
 		},
@@ -1385,11 +1368,8 @@ resource "aws_ecs_service" "main" {
 `, sg1Name, sg2Name, clusterName, tdName, svcName, assignPublicIP)
 }
 
-func testAccAWSEcsServiceWithLaunchTypeFargateAndPlatformVersion(sg1Name, sg2Name, clusterName, tdName, svcName, assignPublicIP string) string {
+func testAccAWSEcsServiceWithLaunchTypeFargateAndPlatformVersion(sg1Name, sg2Name, clusterName, tdName, svcName, platformVersion string) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
 data "aws_availability_zones" "available" {}
 
 resource "aws_vpc" "main" {
@@ -1466,14 +1446,14 @@ resource "aws_ecs_service" "main" {
   task_definition = "${aws_ecs_task_definition.mongo.arn}"
   desired_count = 1
   launch_type = "FARGATE"
-  platform_version = "LATEST"
+  platform_version = %q
   network_configuration {
     security_groups = ["${aws_security_group.allow_all_a.id}", "${aws_security_group.allow_all_b.id}"]
     subnets = ["${aws_subnet.main.*.id}"]
-    assign_public_ip = %s
+    assign_public_ip = false
   }
 }
-`, sg1Name, sg2Name, clusterName, tdName, svcName, assignPublicIP)
+`, sg1Name, sg2Name, clusterName, tdName, svcName, platformVersion)
 }
 
 func testAccAWSEcsService_healthCheckGracePeriodSeconds(vpcNameTag, clusterName, tdName, roleName, policyName,
