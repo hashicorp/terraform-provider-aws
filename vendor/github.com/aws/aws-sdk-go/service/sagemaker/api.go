@@ -704,18 +704,17 @@ func (c *SageMaker) CreateLabelingJobRequest(input *CreateLabelingJobInput) (req
 
 // CreateLabelingJob API operation for Amazon SageMaker Service.
 //
-// Creates a job that uses human workers to label the data objects in your input
-// dataset. You can use the labeled data to train machine learning models
+// Creates a job that uses workers to label the data objects in your input dataset.
+// You can use the labeled data to train machine learning models.
 //
 // You can select your workforce from one of three providers:
 //
 //    * A private workforce that you create. It can include employees, contractors,
-//    and outside experts. Use a private workforce when the data is highly confidential
-//    or a specific set of skills is required.
+//    and outside experts. Use a private workforce when want the data to stay
+//    within your organization or when a specific set of skills is required.
 //
-//    * One or more vendors that you select from the Amazon Marketplace. Vendors
-//    provide expertise in specific areas. Vendors are selected by AWS and meet
-//    a minimum standard of data security requirements.
+//    * One or more vendors that you select from the AWS Marketplace. Vendors
+//    provide expertise in specific areas.
 //
 //    * The Amazon Mechanical Turk workforce. This is the largest workforce,
 //    but it should only be used for public data or data that has been stripped
@@ -724,7 +723,8 @@ func (c *SageMaker) CreateLabelingJobRequest(input *CreateLabelingJobInput) (req
 // You can also use automated data labeling to reduce the number of data objects
 // that need to be labeled by a human. Automated data labeling uses active learning
 // to determine if a data object can be labeled by machine or if it needs to
-// be sent to a human worker.
+// be sent to a human worker. For more information, see Using Automated Data
+// Labeling (http://docs.aws.amazon.com/sagemaker/latest/dg/sms-automated-labeling.html).
 //
 // The data objects to be labeled are contained in an Amazon S3 bucket. You
 // create a manifest file that describes the location of each object. For more
@@ -923,6 +923,12 @@ func (c *SageMaker) CreateModelPackageRequest(input *CreateModelPackageInput) (r
 // Creates a model package that you can use to create Amazon SageMaker models
 // or list on AWS Marketplace. Buyers can subscribe to model packages listed
 // on AWS Marketplace to create models in Amazon SageMaker.
+//
+// To create a model package by specifying a Docker container that contains
+// your inference code and the Amazon S3 location of your model artifacts, provide
+// values for InferenceSpecification. To create a model from an algorithm resource
+// that you created or subscribed to in AWS Marketplace, provide a value for
+// SourceAlgorithmSpecification.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1222,7 +1228,7 @@ func (c *SageMaker) CreatePresignedNotebookInstanceUrlRequest(input *CreatePresi
 // or role used to access the notebook instance. Use the NotIpAddress condition
 // operator and the aws:SourceIP condition context key to specify the list of
 // IP addresses that you want to have access to the notebook instance. For more
-// information, see Limit Access to a Notebook Instance by IP Address (http://docs.aws.amazon.com/https:/docs.aws.amazon.com/sagemaker/latest/dg/howitworks-access-ws.html#nbi-ip-filter).
+// information, see Limit Access to a Notebook Instance by IP Address (http://docs.aws.amazon.com/sagemaker/latest/dg/howitworks-access-ws.html#nbi-ip-filter).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3001,10 +3007,10 @@ func (c *SageMaker) DescribeModelPackageRequest(input *DescribeModelPackageInput
 // DescribeModelPackage API operation for Amazon SageMaker Service.
 //
 // Returns a description of the specified model package, which is used to create
-// Amazon SageMaker models or list on AWS Marketplace.
+// Amazon SageMaker models or list them on AWS Marketplace.
 //
-// Buyers can subscribe to model packages listed on AWS Marketplace to create
-// models in Amazon SageMaker.
+// To create models in Amazon SageMaker, buyers can subscribe to model packages
+// listed on AWS Marketplace.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3538,8 +3544,10 @@ func (c *SageMaker) GetSearchSuggestionsRequest(input *GetSearchSuggestionsInput
 
 // GetSearchSuggestions API operation for Amazon SageMaker Service.
 //
-// Returns suggestions for the property name to use in Search queries. Provides
-// suggestions for HyperParameters, Tags, and Metrics.
+// An auto-complete API for the search functionality in the Amazon SageMaker
+// console. It returns suggestions of possible matches for the property name
+// to use in Search queries. Provides suggestions for HyperParameters, Tags,
+// and Metrics.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -5888,8 +5896,8 @@ func (c *SageMaker) SearchRequest(input *SearchInput) (req *request.Request, out
 // Search API operation for Amazon SageMaker Service.
 //
 // Finds Amazon SageMaker resources that match a search query. Matching resource
-// objects are returned as a list of SearchResult objects in the response. The
-// search results can be sorted by any resrouce property in a ascending or descending
+// objects are returned as a list of SearchResult objects in the response. You
+// can sort the search results by any resource property in a ascending or descending
 // order.
 //
 // You can query against the following value types: numerical, text, Booleans,
@@ -6106,7 +6114,7 @@ func (c *SageMaker) StopCompilationJobRequest(input *StopCompilationJobInput) (r
 // Stops a model compilation job.
 //
 // To stop a job, Amazon SageMaker sends the algorithm the SIGTERM signal. This
-// gracefully shuts the job down. If the job hasn’t stopped, it sends the SIGKILL
+// gracefully shuts the job down. If the job hasn't stopped, it sends the SIGKILL
 // signal.
 //
 // When it receives a StopCompilationJob request, Amazon SageMaker changes the
@@ -7273,7 +7281,7 @@ type AlgorithmStatusDetails struct {
 	// The status of the scan of the algorithm's Docker image container.
 	ImageScanStatuses []*AlgorithmStatusItem `type:"list"`
 
-	// The status of the validation of the algorithm.
+	// The status of algorithm validation.
 	ValidationStatuses []*AlgorithmStatusItem `type:"list"`
 }
 
@@ -7303,10 +7311,10 @@ func (s *AlgorithmStatusDetails) SetValidationStatuses(v []*AlgorithmStatusItem)
 type AlgorithmStatusItem struct {
 	_ struct{} `type:"structure"`
 
-	// The reason for failure, if the overall status is a failed state.
+	// if the overall status is Failed, the reason for the failure.
 	FailureReason *string `type:"string"`
 
-	// The name of the algorithm for which the overall status is being repoorted.
+	// The name of the algorithm for which the overall status is being reported.
 	//
 	// Name is a required field
 	Name *string `min:"1" type:"string" required:"true"`
@@ -7354,10 +7362,10 @@ type AlgorithmSummary struct {
 	// AlgorithmArn is a required field
 	AlgorithmArn *string `min:"1" type:"string" required:"true"`
 
-	// A brief statement describing the algorithm.
+	// A brief description of the algorithm.
 	AlgorithmDescription *string `type:"string"`
 
-	// The name of the algorithm which is described by the summary.
+	// The name of the algorithm that is described by the summary.
 	//
 	// AlgorithmName is a required field
 	AlgorithmName *string `min:"1" type:"string" required:"true"`
@@ -7574,25 +7582,64 @@ type AnnotationConsolidationConfig struct {
 	// The Amazon Resource Name (ARN) of a Lambda function implements the logic
 	// for annotation consolidation.
 	//
-	// Amazon SageMaker Ground Truth provides three annotation consolidation functions
-	// that you can choose to use. They are:
+	// For the built-in bounding box, image classification, semantic segmentation,
+	// and text classification task types, Amazon SageMaker Ground Truth provides
+	// the following Lambda functions:
 	//
 	//    * Bounding box - Finds the most similar boxes from different workers based
 	//    on the Jaccard index of the boxes.
 	//
-	// arn:aws:lambda:region:432418664414:function:ACS-BoundingBox
+	// arn:aws:lambda:us-east-1:432418664414:function:ACS-BoundingBox
+	//
+	// arn:aws:lambda:us-east-2:266458841044:function:ACS-BoundingBox
+	//
+	// arn:aws:lambda:us-west-2:081040173940:function:ACS-BoundingBox
+	//
+	// arn:aws:lambda:eu-west-1:568282634449:function:ACS-BoundingBox
+	//
+	// arn:aws:lambda:ap-northeast-1:477331159723:function:ACS-BoundingBox
 	//
 	//    * Image classification - Uses a variant of the Expectation Maximization
 	//    approach to estimate the true class of an image based on annotations from
 	//    individual workers.
 	//
-	// arn:aws:lambda:region:432418664414:function:ACS-ImageMultiClass
+	// arn:aws:lambda:us-east-1:432418664414:function:ACS-ImageMultiClass
+	//
+	// arn:aws:lambda:us-east-2:266458841044:function:ACS-ImageMultiClass
+	//
+	// arn:aws:lambda:us-west-2:081040173940:function:ACS-ImageMultiClass
+	//
+	// arn:aws:lambda:eu-west-1:568282634449:function:ACS-ImageMultiClass
+	//
+	// arn:aws:lambda:ap-northeast-1:477331159723:function:ACS-ImageMultiClass
+	//
+	//    * Semantic segmentation - Treats each pixel in an image as a multi-class
+	//    classification and treats pixel annotations from workers as "votes" for
+	//    the correct label.
+	//
+	// arn:aws:lambda:us-east-1:432418664414:function:ACS-SemanticSegmentation
+	//
+	// arn:aws:lambda:us-east-2:266458841044:function:ACS-SemanticSegmentation
+	//
+	// arn:aws:lambda:us-west-2:081040173940:function:ACS-SemanticSegmentation
+	//
+	// arn:aws:lambda:eu-west-1:568282634449:function:ACS-SemanticSegmentation
+	//
+	// arn:aws:lambda:ap-northeast-1:477331159723:function:ACS-SemanticSegmentation
 	//
 	//    * Text classification - Uses a variant of the Expectation Maximization
 	//    approach to estimate the true class of text based on annotations from
 	//    individual workers.
 	//
-	// arn:aws:lambda:region:432418664414:function:ACS-TextMultiClass
+	// arn:aws:lambda:us-east-1:432418664414:function:ACS-TextMultiClass
+	//
+	// arn:aws:lambda:us-east-2:266458841044:function:ACS-TextMultiClass
+	//
+	// arn:aws:lambda:us-west-2:081040173940:function:ACS-TextMultiClass
+	//
+	// arn:aws:lambda:eu-west-1:568282634449:function:ACS-TextMultiClass
+	//
+	// arn:aws:lambda:ap-northeast-1:477331159723:function:ACS-TextMultiClass
 	//
 	// For more information, see Annotation Consolidation (http://docs.aws.amazon.com/sagemaker/latest/dg/sms-annotation-consolidation.html).
 	//
@@ -7877,7 +7924,7 @@ type ChannelSpecification struct {
 	// Indicates whether the channel is required by the algorithm.
 	IsRequired *bool `type:"boolean"`
 
-	// The name of the channel./sagemaker/eia
+	// The name of the channel.
 	//
 	// Name is a required field
 	Name *string `min:"1" type:"string" required:"true"`
@@ -8145,6 +8192,9 @@ type CompilationJobSummary struct {
 	// CompilationJobStatus is a required field
 	CompilationJobStatus *string `type:"string" required:"true" enum:"CompilationJobStatus"`
 
+	// The time when the model compilation job started.
+	CompilationStartTime *time.Time `type:"timestamp"`
+
 	// The type of device that the model will run on after compilation has completed.
 	//
 	// CompilationTargetDevice is a required field
@@ -8190,6 +8240,12 @@ func (s *CompilationJobSummary) SetCompilationJobName(v string) *CompilationJobS
 // SetCompilationJobStatus sets the CompilationJobStatus field's value.
 func (s *CompilationJobSummary) SetCompilationJobStatus(v string) *CompilationJobSummary {
 	s.CompilationJobStatus = &v
+	return s
+}
+
+// SetCompilationStartTime sets the CompilationStartTime field's value.
+func (s *CompilationJobSummary) SetCompilationStartTime(v time.Time) *CompilationJobSummary {
+	s.CompilationStartTime = &v
 	return s
 }
 
@@ -8239,12 +8295,12 @@ type ContainerDefinition struct {
 	// Token Service to download model artifacts from the S3 path you provide. AWS
 	// STS is activated in your IAM user account by default. If you previously deactivated
 	// AWS STS for a region, you need to reactivate AWS STS for that region. For
-	// more information, see Activating and Deactivating AWS STS i an AWS Region
+	// more information, see Activating and Deactivating AWS STS in an AWS Region
 	// (http://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_enable-regions.html)
 	// in the AWS Identity and Access Management User Guide.
 	ModelDataUrl *string `type:"string"`
 
-	// The name of the model package in this container.
+	// The name of the model package to use to create the model.
 	ModelPackageName *string `min:"1" type:"string"`
 }
 
@@ -8429,8 +8485,7 @@ type CreateAlgorithmInput struct {
 	// A description of the algorithm.
 	AlgorithmDescription *string `type:"string"`
 
-	// The name of the algorithm. The name must have 1 to 63 characters. Valid characters
-	// are a-z, A-Z, 0-9, and - (hyphen).
+	// The name of the algorithm.
 	//
 	// AlgorithmName is a required field
 	AlgorithmName *string `min:"1" type:"string" required:"true"`
@@ -9244,13 +9299,48 @@ type CreateLabelingJobInput struct {
 
 	// The attribute name to use for the label in the output manifest file. This
 	// is the key for the key/value pair formed with the label that a worker assigns
-	// to the object. The name can't end with "-metadata" or "-ref".
+	// to the object. The name can't end with "-metadata". If you are running a
+	// semantic segmentation labeling job, the attribute name must end with "-ref".
+	// If you are running any other kind of labeling job, the attribute name must
+	// not end with "-ref".
 	//
 	// LabelAttributeName is a required field
 	LabelAttributeName *string `min:"1" type:"string" required:"true"`
 
 	// The S3 URL of the file that defines the categories used to label the data
 	// objects.
+	//
+	// The file is a JSON structure in the following format:
+	//
+	// {
+	//
+	// "document-version": "2018-11-28"
+	//
+	// "labels": [
+	//
+	// {
+	//
+	// "label": "label 1"
+	//
+	// },
+	//
+	// {
+	//
+	// "label": "label 2"
+	//
+	// },
+	//
+	// ...
+	//
+	// {
+	//
+	// "label": "label n"
+	//
+	// }
+	//
+	// ]
+	//
+	// }
 	LabelCategoryConfigS3Uri *string `type:"string"`
 
 	// Configures the information required to perform automated data labeling.
@@ -9811,6 +9901,9 @@ type CreateNotebookInstanceInput struct {
 
 	// If you provide a AWS KMS key ID, Amazon SageMaker uses it to encrypt data
 	// at rest on the ML storage volume that is attached to your notebook instance.
+	// The KMS key you provide must be enabled. For information, see Enabling and
+	// Disabling Keys (http://docs.aws.amazon.com/kms/latest/developerguide/enabling-keys.html)
+	// in the AWS Key Management Service Developer Guide.
 	KmsKeyId *string `type:"string"`
 
 	// The name of a lifecycle configuration to associate with the notebook instance.
@@ -10241,7 +10334,7 @@ type CreateTrainingJobInput struct {
 	// ResourceConfig is a required field
 	ResourceConfig *ResourceConfig `type:"structure" required:"true"`
 
-	// The Amazon Resource Name (ARN) of an IAM role that Amazon SageMaker assumes
+	// The Amazon Resource Name (ARN) of an IAM role that Amazon SageMaker can assume
 	// to perform tasks on your behalf.
 	//
 	// During model training, Amazon SageMaker needs your permission to read input
@@ -11525,7 +11618,7 @@ func (s *DescribeAlgorithmInput) SetAlgorithmName(v string) *DescribeAlgorithmIn
 type DescribeAlgorithmOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The Amazon Resource Name (ARN) of the algorithm.>
+	// The Amazon Resource Name (ARN) of the algorithm.
 	//
 	// AlgorithmArn is a required field
 	AlgorithmArn *string `min:"1" type:"string" required:"true"`
@@ -12523,6 +12616,38 @@ type DescribeLabelingJobOutput struct {
 
 	// The S3 location of the JSON file that defines the categories used to label
 	// data objects.
+	//
+	// The file is a JSON structure in the following format:
+	//
+	// {
+	//
+	// "document-version": "2018-11-28"
+	//
+	// "labels": [
+	//
+	// {
+	//
+	// "label": "label 1"
+	//
+	// },
+	//
+	// {
+	//
+	// "label": "label 2"
+	//
+	// },
+	//
+	// ...
+	//
+	// {
+	//
+	// "label": "label n"
+	//
+	// }
+	//
+	// ]
+	//
+	// }
 	LabelCategoryConfigS3Uri *string `type:"string"`
 
 	// Provides a breakdown of the number of data objects labeled by humans, the
@@ -12898,7 +13023,7 @@ type DescribeModelPackageOutput struct {
 	// ModelPackageArn is a required field
 	ModelPackageArn *string `min:"1" type:"string" required:"true"`
 
-	// A brief summary about the model package.
+	// A brief summary of the model package.
 	ModelPackageDescription *string `type:"string"`
 
 	// The name of the model package being described.
@@ -14278,7 +14403,7 @@ func (s *EndpointSummary) SetLastModifiedTime(v time.Time) *EndpointSummary {
 // value in the FailureReason field.
 //
 // If you specify a Value, but not an Operator, Amazon SageMaker uses the equals
-// operator as a default.
+// operator as the default.
 //
 // In search, there are several property types:
 //
@@ -14297,8 +14422,8 @@ func (s *EndpointSummary) SetLastModifiedTime(v time.Time) *EndpointSummary {
 // }
 //
 // HyperParametersTo define a hyperparameter filter, enter a value with the
-// form "HyperParamters.<name>". Decimal hyperparameter values are treated as
-// a decimal in a comparison if the specified Value is also a decimal value.
+// form "HyperParameters.<name>". Decimal hyperparameter values are treated
+// as a decimal in a comparison if the specified Value is also a decimal value.
 // If the specified Value is an integer, the decimal hyperparameter values are
 // treated as integers. For example, the following filter is satisfied by training
 // jobs with a "learning_rate" hyperparameter that is less than "0.5":
@@ -14317,8 +14442,9 @@ func (s *EndpointSummary) SetLastModifiedTime(v time.Time) *EndpointSummary {
 type Filter struct {
 	_ struct{} `type:"structure"`
 
-	// A property name. For example, TrainingJobName. See TrainingJob properties
-	// for the list of valid property names for each supported resource.
+	// A property name. For example, TrainingJobName. For the list of valid property
+	// names returned in a search result for each supported resource, see TrainingJob
+	// properties. You must specify a valid property name for the resource.
 	//
 	// Name is a required field
 	Name *string `min:"1" type:"string" required:"true"`
@@ -14344,9 +14470,11 @@ type Filter struct {
 	//
 	// ContainsOnly supported for text-based properties. The word-list of the property
 	// contains the specified Value.
+	//
+	// If you have specified a filter Value, the default is Equals.
 	Operator *string `type:"string" enum:"Operator"`
 
-	// A value used with Resource and Operator to determin if objects statisfy the
+	// A value used with Resource and Operator to determine if objects satisfy the
 	// filter's condition. For numerical properties, Value must be an integer or
 	// floating-point decimal. For timestamp properties, Value must be an ISO 8601
 	// date-time string of the following format: YYYY-mm-dd'T'HH:MM:SS.
@@ -14529,7 +14657,7 @@ func (s *GetSearchSuggestionsOutput) SetPropertyNameSuggestions(v []*PropertyNam
 type GitConfig struct {
 	_ struct{} `type:"structure"`
 
-	// The default brach for the git repository.
+	// The default beach for the git repository.
 	Branch *string `min:"1" type:"string"`
 
 	// The URL where the git repository is located.
@@ -14655,6 +14783,60 @@ type HumanTaskConfig struct {
 	// The Amazon Resource Name (ARN) of a Lambda function that is run before a
 	// data object is sent to a human worker. Use this function to provide input
 	// to a custom labeling job.
+	//
+	// For the built-in bounding box, image classification, semantic segmentation,
+	// and text classification task types, Amazon SageMaker Ground Truth provides
+	// the following Lambda functions:
+	//
+	// US East (Northern Virginia) (us-east-1):
+	//
+	//    * arn:aws:lambda:us-east-1:432418664414:function:PRE-BoundingBox
+	//
+	//    * arn:aws:lambda:us-east-1:432418664414:function:PRE-ImageMultiClass
+	//
+	//    * arn:aws:lambda:us-east-1:432418664414:function:PRE-SemanticSegmentation
+	//
+	//    * arn:aws:lambda:us-east-1:432418664414:function:PRE-TextMultiClass
+	//
+	// US East (Ohio) (us-east-2):
+	//
+	//    * arn:aws:lambda:us-east-2:266458841044:function:PRE-BoundingBox
+	//
+	//    * arn:aws:lambda:us-east-2:266458841044:function:PRE-ImageMultiClass
+	//
+	//    * arn:aws:lambda:us-east-2:266458841044:function:PRE-SemanticSegmentation
+	//
+	//    * arn:aws:lambda:us-east-2:266458841044:function:PRE-TextMultiClass
+	//
+	// US West (Oregon) (us-west-2):
+	//
+	//    * arn:aws:lambda:us-west-2:081040173940:function:PRE-BoundingBox
+	//
+	//    * arn:aws:lambda:us-west-2:081040173940:function:PRE-ImageMultiClass
+	//
+	//    * arn:aws:lambda:us-west-2:081040173940:function:PRE-SemanticSegmentation
+	//
+	//    * arn:aws:lambda:us-west-2:081040173940:function:PRE-TextMultiClass
+	//
+	// EU (Ireland) (eu-west-1):
+	//
+	//    * arn:aws:lambda:eu-west-1:568282634449:function:PRE-BoundingBox
+	//
+	//    * arn:aws:lambda:eu-west-1:568282634449:function:PRE-ImageMultiClass
+	//
+	//    * arn:aws:lambda:eu-west-1:568282634449:function:PRE-SemanticSegmentation
+	//
+	//    * arn:aws:lambda:eu-west-1:568282634449:function:PRE-TextMultiClass
+	//
+	// Asia Pacific (Tokyo (ap-northeast-1):
+	//
+	//    * arn:aws:lambda:ap-northeast-1:477331159723:function:PRE-BoundingBox
+	//
+	//    * arn:aws:lambda:ap-northeast-1:477331159723:function:PRE-ImageMultiClass
+	//
+	//    * arn:aws:lambda:ap-northeast-1:477331159723:function:PRE-SemanticSegmentation
+	//
+	//    * arn:aws:lambda:ap-northeast-1:477331159723:function:PRE-TextMultiClass
 	//
 	// PreHumanTaskLambdaArn is a required field
 	PreHumanTaskLambdaArn *string `type:"string" required:"true"`
@@ -15049,8 +15231,8 @@ func (s *HyperParameterSpecification) SetType(v string) *HyperParameterSpecifica
 type HyperParameterTrainingJobDefinition struct {
 	_ struct{} `type:"structure"`
 
-	// The HyperParameterAlgorithmSpecification object that specifies the algorithm
-	// to use for the training jobs that the tuning job launches.
+	// The HyperParameterAlgorithmSpecification object that specifies the resource
+	// algorithm to use for the training jobs that the tuning job launches.
 	//
 	// AlgorithmSpecification is a required field
 	AlgorithmSpecification *HyperParameterAlgorithmSpecification `type:"structure" required:"true"`
@@ -15059,8 +15241,8 @@ type HyperParameterTrainingJobDefinition struct {
 	// be made, except for calls between peers within a training cluster for distributed
 	// training. If network isolation is used for training jobs that are configured
 	// to use a VPC, Amazon SageMaker downloads and uploads customer data and model
-	// artifacts through the specifed VPC, but the training container does not have
-	// network access.
+	// artifacts through the specified VPC, but the training container does not
+	// have network access.
 	//
 	// The Semantic Segmentation built-in algorithm does not support network isolation.
 	EnableNetworkIsolation *bool `type:"boolean"`
@@ -15305,7 +15487,7 @@ type HyperParameterTrainingJobSummary struct {
 	// TunedHyperParameters is a required field
 	TunedHyperParameters map[string]*string `type:"map" required:"true"`
 
-	// The name of the hyperparameter tuning job that launched this training job.
+	// The HyperParameter tuning job that launched the training job.
 	TuningJobName *string `min:"1" type:"string"`
 }
 
@@ -15414,14 +15596,15 @@ type HyperParameterTuningJobConfig struct {
 	Strategy *string `type:"string" required:"true" enum:"HyperParameterTuningJobStrategyType"`
 
 	// Specifies whether to use early stopping for training jobs launched by the
-	// hyperparameter tuning job. One of the following values:
+	// hyperparameter tuning job. This can be one of the following values (the default
+	// value is OFF):
 	//
 	// OFFTraining jobs launched by the hyperparameter tuning job do not use early
 	// stopping.
 	//
 	// AUTOAmazon SageMaker stops training jobs launched by the hyperparameter tuning
-	// job when they are no longer improving as measured by the objective metric
-	// of the tuning job.
+	// job when they are unlikely to perform better than previously completed training
+	// jobs. For more information, see Stop Training Jobs Early (http://docs.aws.amazon.com/sagemaker/latest/dg/automatic-model-tuning-early-stopping.html).
 	TrainingJobEarlyStoppingType *string `type:"string" enum:"TrainingJobEarlyStoppingType"`
 }
 
@@ -15915,25 +16098,59 @@ type InputConfig struct {
 	// model with a JSON dictionary form. The data inputs are InputConfig$Framework
 	// specific.
 	//
-	//    * TENSORFLOW, MXNET and ONNX: You must specify the name and shape of the
+	//    * TensorFlow: You must specify the name and shape (NHWC format) of the
+	//    expected data inputs using a dictionary format for your trained model.
+	//    The dictionary formats required for the console and CLI are different.
+	//
+	// Examples for one input:
+	//
+	// If using the console, {"input":[1,1024,1024,3]}
+	//
+	// If using the CLI, {\"input\":[1,1024,1024,3]}
+	//
+	// Examples for two inputs:
+	//
+	// If using the console, {"data1": [1,28,28,1], "data2":[1,28,28,1]}
+	//
+	// If using the CLI, {\"data1\": [1,28,28,1], \"data2\":[1,28,28,1]}
+	//
+	//    * MXNET/ONNX: You must specify the name and shape (NCHW format) of the
 	//    expected data inputs in order using a dictionary format for your trained
-	//    model.
+	//    model. The dictionary formats required for the console and CLI are different.
 	//
-	// Example of one input: {‘data’:[1,3,1024,1024]}}
+	// Examples for one input:
 	//
-	// Example for two inputs: {‘var1’: [1,1,28,28], ‘var2’:[1,1,28,28]}
+	// If using the console, {"data":[1,3,1024,1024]}
 	//
-	//    * PYTORCH: You can either specify the name and shape of expected data
-	//    inputs in order using a dictionary format for your trained model or you
-	//    can specify the shape only using a list format.
+	// If using the CLI, {\"data\":[1,3,1024,1024]}
 	//
-	// Example of one input in dictionary format: {‘input0’:[1,3,224,234]}
+	// Examples for two inputs:
 	//
-	// Example of one input in list format: [1,3,224,224]
+	// If using the console, {"var1": [1,1,28,28], "var2":[1,1,28,28]}
 	//
-	// Example of two inputs in dictionary format: {‘input0’:[1,3,224,234], 'input1':[1,3,224,224]}
+	// If using the CLI, {\"var1\": [1,1,28,28], \"var2\":[1,1,28,28]}
 	//
-	// Example of two inputs in list format: [[1,3,224,224], [1,3,224,224]]
+	//    * PyTorch: You can either specify the name and shape (NCHW format) of
+	//    expected data inputs in order using a dictionary format for your trained
+	//    model or you can specify the shape only using a list format. The dictionary
+	//    formats required for the console and CLI are different. The list formats
+	//    for the console and CLI are the same.
+	//
+	// Examples for one input in dictionary format:
+	//
+	// If using the console, {"input0":[1,3,224,224]}
+	//
+	// If using the CLI, {\"input0\":[1,3,224,224]}
+	//
+	// Example for one input in list format: [[1,3,224,224]]
+	//
+	// Examples for two inputs in dictionary format:
+	//
+	// If using the console, {"input0":[1,3,224,224], "input1":[1,3,224,224]}
+	//
+	// If using the CLI, {\"input0\":[1,3,224,224], \"input1\":[1,3,224,224]}
+	//
+	// Example for two inputs in list format: [[1,3,224,224], [1,3,224,224]]
 	//
 	//    * XGBOOST: input data name and shape are not needed.
 	//
@@ -17161,6 +17378,12 @@ type ListCompilationJobsInput struct {
 	// jobs, use the token in the next request.
 	NextToken *string `type:"string"`
 
+	// The field by which to sort results. The default is CreationTime.
+	SortBy *string `type:"string" enum:"ListCompilationJobsSortBy"`
+
+	// The sort order for results. The default is Ascending.
+	SortOrder *string `type:"string" enum:"SortOrder"`
+
 	// A filter that retrieves model compilation jobs with a specific DescribeCompilationJobResponse$CompilationJobStatus
 	// status.
 	StatusEquals *string `type:"string" enum:"CompilationJobStatus"`
@@ -17228,6 +17451,18 @@ func (s *ListCompilationJobsInput) SetNameContains(v string) *ListCompilationJob
 // SetNextToken sets the NextToken field's value.
 func (s *ListCompilationJobsInput) SetNextToken(v string) *ListCompilationJobsInput {
 	s.NextToken = &v
+	return s
+}
+
+// SetSortBy sets the SortBy field's value.
+func (s *ListCompilationJobsInput) SetSortBy(v string) *ListCompilationJobsInput {
+	s.SortBy = &v
+	return s
+}
+
+// SetSortOrder sets the SortOrder field's value.
+func (s *ListCompilationJobsInput) SetSortOrder(v string) *ListCompilationJobsInput {
+	s.SortOrder = &v
 	return s
 }
 
@@ -19563,7 +19798,8 @@ type ModelPackageContainerDefinition struct {
 	// The DNS host name for the Docker container.
 	ContainerHostname *string `type:"string"`
 
-	// The Amazon EC2 Container Registry path where inference code is stored.
+	// The Amazon EC2 Container Registry (Amazon ECR) path where inference code
+	// is stored.
 	//
 	// If you are using your own custom algorithm instead of an algorithm provided
 	// by Amazon SageMaker, the inference code must meet Amazon SageMaker requirements.
@@ -19583,7 +19819,7 @@ type ModelPackageContainerDefinition struct {
 	// (.tar.gz suffix).
 	ModelDataUrl *string `type:"string"`
 
-	// The ID of the model package.
+	// The AWS Marketplace product ID of the model package.
 	ProductId *string `type:"string"`
 }
 
@@ -19647,7 +19883,7 @@ type ModelPackageStatusDetails struct {
 	// The status of the scan of the Docker image container for the model package.
 	ImageScanStatuses []*ModelPackageStatusItem `type:"list"`
 
-	// The status of the validation of the model package.
+	// The validation status of the model package.
 	//
 	// ValidationStatuses is a required field
 	ValidationStatuses []*ModelPackageStatusItem `type:"list" required:"true"`
@@ -19679,10 +19915,10 @@ func (s *ModelPackageStatusDetails) SetValidationStatuses(v []*ModelPackageStatu
 type ModelPackageStatusItem struct {
 	_ struct{} `type:"structure"`
 
-	// The reason for failure, if the overall status is a failed state.
+	// if the overall status is Failed, the reason for the failure.
 	FailureReason *string `type:"string"`
 
-	// The name of the model package for which the overall status is being repoorted.
+	// The name of the model package for which the overall status is being reported.
 	//
 	// Name is a required field
 	Name *string `min:"1" type:"string" required:"true"`
@@ -19735,7 +19971,7 @@ type ModelPackageSummary struct {
 	// ModelPackageArn is a required field
 	ModelPackageArn *string `min:"1" type:"string" required:"true"`
 
-	// A brief statement describing the model package.
+	// A brief description of the model package.
 	ModelPackageDescription *string `type:"string"`
 
 	// The name of the model package.
@@ -19789,7 +20025,7 @@ func (s *ModelPackageSummary) SetModelPackageStatus(v string) *ModelPackageSumma
 	return s
 }
 
-// Contains data such as the inputs and targeted instance types that are used
+// Contains data, such as the inputs and targeted instance types that are used
 // in the process of validating the model package.
 //
 // The data provided in the validation profile is made available to your buyers
@@ -19866,7 +20102,7 @@ type ModelPackageValidationSpecification struct {
 	// ValidationProfiles is a required field
 	ValidationProfiles []*ModelPackageValidationProfile `min:"1" type:"list" required:"true"`
 
-	// The IAM roles to be used for the validation of a model package.
+	// The IAM roles to be used for the validation of the model package.
 	//
 	// ValidationRole is a required field
 	ValidationRole *string `min:"20" type:"string" required:"true"`
@@ -19974,32 +20210,34 @@ func (s *ModelSummary) SetModelName(v string) *ModelSummary {
 	return s
 }
 
-// A NestedFilter is defined by using a resource name under NestedPropertyName,
-// which entries in a list that properties must match to be included in the
-// results. To satisfy the conditions specified in the NestedFilters call, each
-// object in the list must satisfy the conditions of all of the filters.
+// Defines a list of NestedFilter objects. To satisfy the conditions specified
+// in the NestedFilters call, a resource must satisfy the conditions of all
+// of the filters.
 //
 // For example, a NestedFilters could be defined using the training job's InputDataConfig
 // property, this would be defined as a list of Channel objects.
 //
 // A NestedFilters object contains multiple filters. For example, to find all
-// training jobs that have train in their name, and have cat/data in theirS3Uri(under InputDataConfig), you need to create a NestedFiltersobject that specfies the InputDataConfigproperty with the following Filterobjects:
+// training jobs whose name contains train and that have cat/data in their S3Uri
+// (specified in InputDataConfig), you need to create a NestedFilters object
+// that specifies the InputDataConfig property with the following Filter objects:
 //
-// '{Name:"InputDataConfig.ChannelName", "Operator":"EQUALS", "Value":"train"}',
+//    * '{Name:"InputDataConfig.ChannelName", "Operator":"EQUALS", "Value":"train"}',
 //
 //    * '{Name:"InputDataConfig.DataSource.S3DataSource.S3Uri", "Operator":"CONTAINS",
 //    "Value":"cat/data"}'
 type NestedFilters struct {
 	_ struct{} `type:"structure"`
 
-	// A list of filters. Each filter acts on a property. For example, a NestedFilters
-	// call might include a filter on the PropertyName parameter fof the InputDataConfig
-	// property: InputDataConfig.DataSource.S3DataSource.S3Uri.
+	// A list of filters. Each filter acts on a property. Filters must contain at
+	// least one Filters value. For example, a NestedFilters call might include
+	// a filter on the PropertyName parameter of the InputDataConfig property: InputDataConfig.DataSource.S3DataSource.S3Uri.
 	//
 	// Filters is a required field
 	Filters []*Filter `min:"1" type:"list" required:"true"`
 
-	// .The name of the property used in the nested filters.
+	// The name of the property to use in the nested filters. The value must match
+	// a listed property name, such as InputDataConfig.
 	//
 	// NestedPropertyName is a required field
 	NestedPropertyName *string `min:"1" type:"string" required:"true"`
@@ -20422,13 +20660,14 @@ type OutputDataConfig struct {
 	//
 	// "arn:aws:kms:us-west-2:111122223333:alias/ExampleAlias"
 	//
-	// If you don't provide the KMS key ID, Amazon SageMaker uses the default KMS
+	// If you don't provide a KMS key ID, Amazon SageMaker uses the default KMS
 	// key for Amazon S3 for your role's account. For more information, see KMS-Managed
 	// Encryption Keys (https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingKMSEncryption.html)
-	// in Amazon Simple Storage Service Developer Guide.
+	// in the Amazon Simple Storage Service Developer Guide.
 	//
 	// The KMS key policy must grant permission to the IAM role that you specify
-	// in your CreateTrainingJob request. Using Key Policies in AWS KMS (http://docs.aws.amazon.com/kms/latest/developerguide/key-policies.html)
+	// in your CreateTramsformJob request. For more information, see Using Key Policies
+	// in AWS KMS (http://docs.aws.amazon.com/kms/latest/developerguide/key-policies.html)
 	// in the AWS Key Management Service Developer Guide.
 	KmsKeyId *string `type:"string"`
 
@@ -20474,7 +20713,7 @@ func (s *OutputDataConfig) SetS3OutputPath(v string) *OutputDataConfig {
 	return s
 }
 
-// Defines the possible values for categorical, continous, and integer hyperparameters
+// Defines the possible values for categorical, continuous, and integer hyperparameters
 // to be used by an algorithm.
 type ParameterRange struct {
 	_ struct{} `type:"structure"`
@@ -20866,12 +21105,13 @@ func (s *ProductionVariantSummary) SetVariantName(v string) *ProductionVariantSu
 	return s
 }
 
-// A suggestion query for retrieving property names.
+// A type of SuggestionQuery. A suggestion query for retrieving property names
+// that match the specified hint.
 type PropertyNameQuery struct {
 	_ struct{} `type:"structure"`
 
-	// The hyperparameter, metric, and tag key property names that begin with the
-	// specified hint.
+	// Text that is part of a property's name. The property names of hyperparameter,
+	// metric, and tag key names that begin with the specified text in the PropertyNameHint.
 	//
 	// PropertyNameHint is a required field
 	PropertyNameHint *string `type:"string" required:"true"`
@@ -20911,7 +21151,8 @@ func (s *PropertyNameQuery) SetPropertyNameHint(v string) *PropertyNameQuery {
 type PropertyNameSuggestion struct {
 	_ struct{} `type:"structure"`
 
-	// A suggested property name.
+	// A suggested property name based on what you entered in the search textbox
+	// in the Amazon SageMaker console.
 	PropertyName *string `min:"1" type:"string"`
 }
 
@@ -20932,8 +21173,84 @@ func (s *PropertyNameSuggestion) SetPropertyName(v string) *PropertyNameSuggesti
 }
 
 // Defines the amount of money paid to an Amazon Mechanical Turk worker for
-// each task performed. For more information, see  Public Workforce Task Price
-// (http://docs.aws.amazon.com/sagemaker/latest/dg/sms-public-payment.html).
+// each task performed.
+//
+// Use one of the following prices for bounding box tasks. Prices are in US
+// dollars.
+//
+//    * 0.036
+//
+//    * 0.048
+//
+//    * 0.060
+//
+//    * 0.072
+//
+//    * 0.120
+//
+//    * 0.240
+//
+//    * 0.360
+//
+//    * 0.480
+//
+//    * 0.600
+//
+//    * 0.720
+//
+//    * 0.840
+//
+//    * 0.960
+//
+//    * 1.080
+//
+//    * 1.200
+//
+// Use one of the following prices for image classification, text classification,
+// and custom tasks. Prices are in US dollars.
+//
+//    * 0.012
+//
+//    * 0.024
+//
+//    * 0.036
+//
+//    * 0.048
+//
+//    * 0.060
+//
+//    * 0.072
+//
+//    * 0.120
+//
+//    * 0.240
+//
+//    * 0.360
+//
+//    * 0.480
+//
+//    * 0.600
+//
+//    * 0.720
+//
+//    * 0.840
+//
+//    * 0.960
+//
+//    * 1.080
+//
+//    * 1.200
+//
+// Use one of the following prices for semantic segmentation tasks. Prices are
+// in US dollars.
+//
+//    * 0.840
+//
+//    * 0.960
+//
+//    * 1.080
+//
+//    * 1.200
 type PublicWorkforceTaskPrice struct {
 	_ struct{} `type:"structure"`
 
@@ -20971,7 +21288,7 @@ type RenderUiTemplateInput struct {
 	// Task is a required field
 	Task *RenderableTask `type:"structure" required:"true"`
 
-	// A Tempateobject containing the worker UI template to render.
+	// A Templateobject containing the worker UI template to render.
 	//
 	// UiTemplate is a required field
 	UiTemplate *UiTemplate `type:"structure" required:"true"`
@@ -21342,7 +21659,7 @@ type S3DataSource struct {
 	//
 	// Don't choose more ML compute instances for training than available S3 objects.
 	// If you do, some nodes won't get any data and you will pay for nodes that
-	// aren't getting any training data. This applies in both File and Pipemodes.
+	// aren't getting any training data. This applies in both File and Pipe modes.
 	// Keep this in mind when developing algorithms.
 	//
 	// In distributed training, where you use multiple ML compute EC2 instances,
@@ -21393,7 +21710,7 @@ type S3DataSource struct {
 	//
 	// s3://customer_bucket/some/prefix/relative/path/to/custdata-1
 	//
-	// s3://customer_bucket/some/prefix/relative/path/custdata-1
+	// s3://customer_bucket/some/prefix/relative/path/custdata-2
 	//
 	// ...
 	//
@@ -21455,9 +21772,10 @@ func (s *S3DataSource) SetS3Uri(v string) *S3DataSource {
 	return s
 }
 
-// A multi-expression that searches for the specified resource or resources.
-// All resource objects that satisfy the expression's condition are included
-// in the search results.
+// A multi-expression that searches for the specified resource or resources
+// in a search. All resource objects that satisfy the expression's condition
+// are included in the search results. You must specify at least one subexpression,
+// filter, or nested filter. A SearchExpression can contain up to twenty elements.
 //
 // A SearchExpression contains the following components:
 //
@@ -21468,7 +21786,8 @@ func (s *S3DataSource) SetS3Uri(v string) *S3DataSource {
 //    Boolean expressions using a list of resource properties. A nested filter
 //    is satisfied if a single object in the list satisfies all Boolean expressions.
 //
-//    * A list of SearchExpression objects.
+//    * A list of SearchExpression objects. A search expression object can be
+//    nested in a list of search expression objects.
 //
 //    * A Boolean operator: And or Or.
 type SearchExpression struct {
@@ -21484,6 +21803,7 @@ type SearchExpression struct {
 	// conditional statement in all lists to be satisfied for the entire search
 	// expression to be true, specify And. If only a single conditional statement
 	// needs to be true for the entire search expression to be true, specify Or.
+	// The default value is And.
 	Operator *string `type:"string" enum:"BooleanOperator"`
 
 	// A list of search expression objects.
@@ -21592,13 +21912,18 @@ type SearchInput struct {
 	Resource *string `type:"string" required:"true" enum:"ResourceType"`
 
 	// A Boolean conditional statement. Resource objects must satisfy this condition
-	// to be included in search results.
+	// to be included in search results. You must provide at least one subexpression,
+	// filter, or nested filter. The maximum number of recursive SubExpressions,
+	// NestedFilters, and Filters that can be included in a SearchExpression object
+	// is 50.
 	SearchExpression *SearchExpression `type:"structure"`
 
-	// The name of the resource property used to sort the SearchResults.
+	// The name of the resource property used to sort the SearchResults. The default
+	// is LastModifiedTime.
 	SortBy *string `min:"1" type:"string"`
 
 	// How SearchResults are ordered. Valid values are Ascending or Descending.
+	// The default is Descending.
 	SortOrder *string `type:"string" enum:"SearchSortOrder"`
 }
 
@@ -21875,7 +22200,7 @@ func (s *SecondaryStatusTransition) SetStatusMessage(v string) *SecondaryStatusT
 type ShuffleConfig struct {
 	_ struct{} `type:"structure"`
 
-	// Determines the shuffling order in ShuffleConfig. value.
+	// Determines the shuffling order in ShuffleConfig value.
 	//
 	// Seed is a required field
 	Seed *int64 `type:"long" required:"true"`
@@ -22398,12 +22723,12 @@ func (s StopTransformJobOutput) GoString() string {
 	return s.String()
 }
 
-// Specifies how long a model training or compilation job can run. When the
-// job reaches the limit, Amazon SageMaker ends the training job. Use this API
-// to cap model processing cost.
+// Specifies how long model training can run. When model training reaches the
+// limit, Amazon SageMaker ends the training job. Use this API to cap model
+// training cost.
 //
 // To stop a job, Amazon SageMaker sends the algorithm the SIGTERM signal, which
-// delays job termination for 120 seconds. Algorithms might use this 120-second
+// delays job termination for120 seconds. Algorithms might use this 120-second
 // window to save the model artifacts, so the results of training is not lost.
 //
 // Training algorithms provided by Amazon SageMaker automatically saves the
@@ -22414,10 +22739,10 @@ func (s StopTransformJobOutput) GoString() string {
 type StoppingCondition struct {
 	_ struct{} `type:"structure"`
 
-	// The maximum length of time, in seconds, that the training or compilation
-	// job can run. If the job does not complete during this time, Amazon SageMaker
-	// ends the job. If value is not specified, default value is 1 day. Maximum
-	// value is 5 days.
+	// The maximum length of time, in seconds, that the training job can run. If
+	// model training does not complete during this time, Amazon SageMaker ends
+	// the job. If value is not specified, default value is 1 day. Maximum value
+	// is 5 days.
 	MaxRuntimeInSeconds *int64 `min:"1" type:"integer"`
 }
 
@@ -22515,8 +22840,8 @@ func (s *SubscribedWorkteam) SetWorkteamArn(v string) *SubscribedWorkteam {
 type SuggestionQuery struct {
 	_ struct{} `type:"structure"`
 
-	// Defines a property name hint. Only property names that match the specified
-	// hint are included in the response.
+	// A type of SuggestionQuery. Defines a property name hint. Only property names
+	// that match the specified hint are included in the response.
 	PropertyNameQuery *PropertyNameQuery `type:"structure"`
 }
 
@@ -22625,7 +22950,7 @@ type TrainingJob struct {
 	// If the training job failed, the reason it failed.
 	FailureReason *string `type:"string"`
 
-	// A list of final metric values that are set when the Training Job completes.
+	// A list of final metric values that are set when the training job completes.
 	// Used only if the training job was configured to use metrics.
 	FinalMetricDataList []*MetricData `type:"list"`
 
@@ -23221,7 +23546,7 @@ type TrainingSpecification struct {
 	// SupportedTrainingInstanceTypes is a required field
 	SupportedTrainingInstanceTypes []*string `type:"list" required:"true"`
 
-	// A list of the metrics that the alogorithm emits that can be used as the objective
+	// A list of the metrics that the algorithm emits that can be used as the objective
 	// metric in a hyperparameter tuning job.
 	SupportedTuningJobObjectiveMetrics []*HyperParameterTuningJobObjective `type:"list"`
 
@@ -23431,16 +23756,30 @@ type TransformInput struct {
 	// DataSource is a required field
 	DataSource *TransformDataSource `type:"structure" required:"true"`
 
-	// The method to use to split the transform job's data into smaller batches.
-	// The default value is None. If you don't want to split the data, specify None.
-	// If you want to split records on a newline character boundary, specify Line.
-	// To split records according to the RecordIO format, specify RecordIO.
+	// The method to use to split the transform job's data files into smaller batches.
+	// Splitting is necessary when the total size of each object is too large to
+	// fit in a single request. You can also use data splitting to improve performance
+	// by processing multiple concurrent mini-batches. The default value for SplitType
+	// is None, which indicates that input data files are not split, and request
+	// payloads contain the entire contents of an input object. Set the value of
+	// this parameter to Line to split records on a newline character boundary.
+	// SplitType also supports a number of record-oriented binary data formats.
 	//
-	// Amazon SageMaker will send maximum number of records per batch in each request
-	// up to the MaxPayloadInMB limit. For more information, see RecordIO data format
-	// (http://mxnet.io/architecture/note_data_loading.html#data-format).
+	// When splitting is enabled, the size of a mini-batch depends on the values
+	// of the BatchStrategy and MaxPayloadInMB parameters. When the value of BatchStrategy
+	// is MultiRecord, Amazon SageMaker sends the maximum number of records in each
+	// request, up to the MaxPayloadInMB limit. If the value of BatchStrategy is
+	// SingleRecord, Amazon SageMaker sends individual records in each request.
 	//
-	// For information about the RecordIO format, see Data Format (http://mxnet.io/architecture/note_data_loading.html#data-format).
+	// Some data formats represent a record as a binary payload wrapped with extra
+	// padding bytes. When splitting is applied to a binary data format, padding
+	// is removed if the value of BatchStrategy is set to SingleRecord. Padding
+	// is not removed if the value of BatchStrategy is set to MultiRecord.
+	//
+	// For more information about the RecordIO data format, see Data Format (http://mxnet.io/architecture/note_data_loading.html#data-format)
+	// in the MXNet documentation. For more information about the TFRecord fofmat,
+	// see Consuming TFRecord data (https://www.tensorflow.org/guide/datasets#consuming_tfrecord_data)
+	// in the TensorFlow documentation.
 	SplitType *string `type:"string" enum:"SplitType"`
 }
 
@@ -24038,7 +24377,9 @@ func (s *USD) SetTenthFractionsOfACent(v int64) *USD {
 type UiConfig struct {
 	_ struct{} `type:"structure"`
 
-	// The Amazon S3 bucket location of the UI template.
+	// The Amazon S3 bucket location of the UI template. For more information about
+	// the contents of a UI template, see  Creating Your Custom Labeling Task Template
+	// (http://docs.aws.amazon.com/sagemaker/latest/dg/sms-custom-templates-step2.html).
 	//
 	// UiTemplateS3Uri is a required field
 	UiTemplateS3Uri *string `type:"string" required:"true"`
@@ -25293,6 +25634,17 @@ const (
 )
 
 const (
+	// ListCompilationJobsSortByName is a ListCompilationJobsSortBy enum value
+	ListCompilationJobsSortByName = "Name"
+
+	// ListCompilationJobsSortByCreationTime is a ListCompilationJobsSortBy enum value
+	ListCompilationJobsSortByCreationTime = "CreationTime"
+
+	// ListCompilationJobsSortByStatus is a ListCompilationJobsSortBy enum value
+	ListCompilationJobsSortByStatus = "Status"
+)
+
+const (
 	// ListLabelingJobsForWorkteamSortByOptionsCreationTime is a ListLabelingJobsForWorkteamSortByOptions enum value
 	ListLabelingJobsForWorkteamSortByOptionsCreationTime = "CreationTime"
 )
@@ -25681,6 +26033,9 @@ const (
 
 	// SplitTypeRecordIo is a SplitType enum value
 	SplitTypeRecordIo = "RecordIO"
+
+	// SplitTypeTfrecord is a SplitType enum value
+	SplitTypeTfrecord = "TFRecord"
 )
 
 const (
