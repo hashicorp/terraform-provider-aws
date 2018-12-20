@@ -153,8 +153,7 @@ func resourceAwsRedshiftCluster() *schema.Resource {
 			"encrypted": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
-				ForceNew: true,
+				Default:  false,
 			},
 
 			"enhanced_vpc_routing": {
@@ -167,7 +166,6 @@ func resourceAwsRedshiftCluster() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ForceNew:     true,
 				ValidateFunc: validateArn,
 			},
 
@@ -710,6 +708,16 @@ func resourceAwsRedshiftClusterUpdate(d *schema.ResourceData, meta interface{}) 
 
 	if d.HasChange("enhanced_vpc_routing") {
 		req.EnhancedVpcRouting = aws.Bool(d.Get("enhanced_vpc_routing").(bool))
+		requestUpdate = true
+	}
+
+	if d.HasChange("encrypted") {
+		req.Encrypted = aws.Bool(d.Get("encrypted").(bool))
+		requestUpdate = true
+	}
+
+	if d.Get("encrypted").(bool) && d.HasChange("kms_key_id") {
+		req.KmsKeyId = aws.String(d.Get("kms_key_id").(string))
 		requestUpdate = true
 	}
 
