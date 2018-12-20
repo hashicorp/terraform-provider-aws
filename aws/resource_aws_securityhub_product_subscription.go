@@ -50,23 +50,40 @@ func resourceAwsSecurityHubProductSubscriptionRead(d *schema.ResourceData, meta 
 	conn := meta.(*AWSClient).securityhubconn
 
 	log.Printf("[DEBUG] Reading Security Hub product subscriptions to find %s", d.Id())
-	resp, err := conn.ListEnabledProductsForImport(&securityhub.ListEnabledProductsForImportInput{})
+
+	exists, err := resourceAwsSecurityHubProductSubscriptionCheckExists(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("Error reading Security Hub product subscriptions to find %s: %s", d.Id(), err)
 	}
 
-	productSubscriptions := make([]interface{}, len(resp.ProductSubscriptions))
-	for i := range resp.ProductSubscriptions {
-		productSubscriptions[i] = *resp.ProductSubscriptions[i]
-	}
-
-	if _, contains := sliceContainsString(productSubscriptions, d.Id()); !contains {
+	if !exists {
 		log.Printf("[WARN] Security Hub product subscriptions (%s) not found, removing from state", d.Id())
 		d.SetId("")
 	}
 
 	return nil
+}
+
+func resourceAwsSecurityHubProductSubscriptionCheckExists(conn *securityhub.SecurityHub, productSubscriptionArn string) (bool, error) {
+	input := &securityhub.ListEnabledProductsForImportInput{}
+	exists := false
+
+	err := conn.ListEnabledProductsForImportPages(input, func(page *securityhub.ListEnabledProductsForImportOutput, lastPage bool) bool {
+		for _, readProductSubscriptionArn := range page.ProductSubscriptions {
+			if aws.StringValue(readProductSubscriptionArn) == productSubscriptionArn {
+				exists = true
+				return false
+			}
+		}
+		return !lastPage
+	})
+
+	if err != nil {
+		return false, err
+	}
+
+	return exists, nil
 }
 
 func resourceAwsSecurityHubProductSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/securityhub"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
@@ -21,8 +20,12 @@ func testAccAWSSecurityHubProductSubscription_basic(t *testing.T) {
 					testAccCheckAWSSecurityHubProductSubscriptionExists("aws_securityhub_product_subscription.example"),
 				),
 			},
-			// Import is not supported, since the API to lookup product_arn from a product
-			// subscription is currrently private
+			{
+				ResourceName:            "aws_securityhub_product_subscription.example",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"product_arn"},
+			},
 			{
 				// Check Destroy - but only target the specific resource (otherwise Security Hub
 				// will be disabled and the destroy check will fail)
@@ -42,18 +45,13 @@ func testAccCheckAWSSecurityHubProductSubscriptionExists(n string) resource.Test
 
 		conn := testAccProvider.Meta().(*AWSClient).securityhubconn
 
-		resp, err := conn.ListEnabledProductsForImport(&securityhub.ListEnabledProductsForImportInput{})
+		exists, err := resourceAwsSecurityHubProductSubscriptionCheckExists(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		productSubscriptions := make([]interface{}, len(resp.ProductSubscriptions))
-		for i := range resp.ProductSubscriptions {
-			productSubscriptions[i] = *resp.ProductSubscriptions[i]
-		}
-
-		if _, contains := sliceContainsString(productSubscriptions, rs.Primary.ID); !contains {
+		if !exists {
 			return fmt.Errorf("Security Hub product subscription %s not found", rs.Primary.ID)
 		}
 
@@ -69,18 +67,13 @@ func testAccCheckAWSSecurityHubProductSubscriptionDestroy(s *terraform.State) er
 			continue
 		}
 
-		resp, err := conn.ListEnabledProductsForImport(&securityhub.ListEnabledProductsForImportInput{})
+		exists, err := resourceAwsSecurityHubProductSubscriptionCheckExists(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		productSubscriptions := make([]interface{}, len(resp.ProductSubscriptions))
-		for i := range resp.ProductSubscriptions {
-			productSubscriptions[i] = *resp.ProductSubscriptions[i]
-		}
-
-		if _, contains := sliceContainsString(productSubscriptions, rs.Primary.ID); contains {
+		if exists {
 			return fmt.Errorf("Security Hub product subscription %s still exists", rs.Primary.ID)
 		}
 	}
