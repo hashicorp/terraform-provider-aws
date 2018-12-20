@@ -309,7 +309,7 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 			},
 
 			"license_specification": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -848,9 +848,9 @@ func getInstanceMarketOptions(m *ec2.LaunchTemplateInstanceMarketOptions) []inte
 	return s
 }
 
-func getLicenseSpecifications(e []*ec2.LaunchTemplateLicenseConfiguration) []interface{} {
-	s := []interface{}{}
-	for _, v := range e {
+func getLicenseSpecifications(licenseSpecifications []*ec2.LaunchTemplateLicenseConfiguration) []map[string]interface{} {
+	var s []map[string]interface{}
+	for _, v := range licenseSpecifications {
 		s = append(s, map[string]interface{}{
 			"license_configuration_arn": aws.StringValue(v.LicenseConfigurationArn),
 		})
@@ -1065,7 +1065,7 @@ func buildLaunchTemplateData(d *schema.ResourceData) (*ec2.RequestLaunchTemplate
 
 	if v, ok := d.GetOk("license_specification"); ok {
 		var licenseSpecifications []*ec2.LaunchTemplateLicenseConfigurationRequest
-		lsList := v.([]interface{})
+		lsList := v.(*schema.Set).List()
 
 		for _, ls := range lsList {
 			licenseSpecifications = append(licenseSpecifications, readLicenseSpecificationFromConfig(ls.(map[string]interface{})))

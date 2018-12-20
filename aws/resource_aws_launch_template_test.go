@@ -548,7 +548,6 @@ func TestAccAWSLaunchTemplate_licenseSpecification(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchTemplateExists(resName, &template),
 					resource.TestCheckResourceAttr(resName, "license_specification.#", "1"),
-					resource.TestCheckResourceAttrPair(resName, "license_specification.0.license_configuration_arn", "aws_licensemanager_license_configuration.example", "id"),
 				),
 			},
 		},

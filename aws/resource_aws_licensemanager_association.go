@@ -115,7 +115,7 @@ func findLicenseSpecificationForResource(conn *licensemanager.LicenseManager, re
 func parseLicenseManagerAssociationId(id string) (string, string, error) {
 	parts := strings.SplitN(id, ",", 2)
 	if len(parts) != 2 {
-		return "", "", fmt.Errorf("Could not parse License Manager association ID: %s", id)
+		return "", "", fmt.Errorf("Expected License Manager Association ID in the form resource_arn,license_configuration_arn - received: %s", id)
 	}
 	return parts[0], parts[1], nil
 }
