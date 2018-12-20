@@ -1001,7 +1001,7 @@ resource "aws_redshift_cluster" "default" {
 }
 
 func testAccAWSRedshiftClusterConfig_unencrypted(rInt int) string {
-	// This is used along with the terraform config created testAccAWSRedshiftClusterConfig_encrypted, to test removal of encryption. 
+	// This is used along with the terraform config created testAccAWSRedshiftClusterConfig_encrypted, to test removal of encryption.
 	//Removing the kms key here causes the key to be deleted before the redshift cluster is unencrypted, resulting in an unstable cluster. This is to be kept for the time-being unti we find a better way to handle this.
 	return fmt.Sprintf(`
 resource "aws_kms_key" "foo" {
