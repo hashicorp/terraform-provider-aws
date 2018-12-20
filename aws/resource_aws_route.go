@@ -43,6 +43,15 @@ func resourceAwsRoute() *schema.Resource {
 					d.Set("destination_cidr_block", destination)
 				}
 				d.SetId(fmt.Sprintf("r-%s%d", routeTableID, hashcode.String(destination)))
+				_, err := resourceAwsRouteFindRoute(
+					meta.(*AWSClient).ec2conn,
+					d.Get("route_table_id").(string),
+					d.Get("destination_cidr_block").(string),
+					d.Get("destination_ipv6_cidr_block").(string))
+				if err != nil {
+					d.SetId("")
+					return nil, err
+				}
 				return []*schema.ResourceData{d}, nil
 			},
 		},
