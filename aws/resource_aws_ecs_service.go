@@ -75,6 +75,12 @@ func resourceAwsEcsService() *schema.Resource {
 				Default:  "EC2",
 			},
 
+			"platform_version": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+
 			"scheduling_strategy": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -416,6 +422,10 @@ func resourceAwsEcsServiceCreate(d *schema.ResourceData, meta interface{}) error
 		input.PropagateTags = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("platform_version"); ok {
+		input.PlatformVersion = aws.String(v.(string))
+	}
+
 	loadBalancers := expandEcsLoadBalancers(d.Get("load_balancer").(*schema.Set).List())
 	if len(loadBalancers) > 0 {
 		log.Printf("[DEBUG] Adding ECS load balancers: %s", loadBalancers)
@@ -596,6 +606,7 @@ func resourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("launch_type", service.LaunchType)
 	d.Set("enable_ecs_managed_tags", service.EnableECSManagedTags)
 	d.Set("propagate_tags", service.PropagateTags)
+	d.Set("platform_version", service.PlatformVersion)
 
 	// Save cluster in the same format
 	if strings.HasPrefix(d.Get("cluster").(string), "arn:"+meta.(*AWSClient).partition+":ecs:") {
@@ -885,6 +896,11 @@ func resourceAwsEcsServiceUpdate(d *schema.ResourceData, meta interface{}) error
 				MinimumHealthyPercent: aws.Int64(int64(d.Get("deployment_minimum_healthy_percent").(int))),
 			}
 		}
+	}
+
+	if d.HasChange("platform_version") {
+		updateService = true
+		input.PlatformVersion = aws.String(d.Get("platform_version").(string))
 	}
 
 	if d.HasChange("health_check_grace_period_seconds") {
