@@ -1,4 +1,9 @@
 ## 1.54.0 (Unreleased)
+
+ENHANCEMENTS
+
+* resource/aws_redshift_cluster: Support in-place updates for adding or removing KMS encryption [GH-6865]
+
 ## 1.53.0 (December 20, 2018)
 
 FEATURES
