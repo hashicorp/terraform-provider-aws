@@ -1,4 +1,4 @@
-## 1.54.0 (Unreleased)
+## 1.54.0 (December 21, 2018)
 
 NOTES
 
@@ -6,21 +6,21 @@ NOTES
 
 FEATURES
 
-* **New Data Source:** `aws_autoscaling_group` [GH-6849]
-* **New Resource:** `aws_licensemanager_association` [GH-6926]
-* **New Resource:** `aws_s3_bucket_public_access_block` [GH-6607]
-* **New Resource:** `aws_securityhub_product_subscription` [GH-6921]
+* **New Data Source:** `aws_autoscaling_group` ([#6849](https://github.com/terraform-providers/terraform-provider-aws/issues/6849))
+* **New Resource:** `aws_licensemanager_association` ([#6926](https://github.com/terraform-providers/terraform-provider-aws/issues/6926))
+* **New Resource:** `aws_s3_bucket_public_access_block` ([#6607](https://github.com/terraform-providers/terraform-provider-aws/issues/6607))
+* **New Resource:** `aws_securityhub_product_subscription` ([#6921](https://github.com/terraform-providers/terraform-provider-aws/issues/6921))
 
 ENHANCEMENTS
 
-* resource/aws_acm_certificate: Add `certificate_body`, `certificate_chain`, and `private_key` arguments (Support importing/uploading certificate into ACM) [GH-5453]
-* resource/aws_launch_template: Add `license_specification` argument [GH-6926]
-* resource/aws_redshift_cluster: Support in-place updates for adding or removing KMS encryption [GH-6865]
-* resource/aws_transfer_server: Add `force_destroy` argument [GH-6935]
+* resource/aws_acm_certificate: Add `certificate_body`, `certificate_chain`, and `private_key` arguments (Support importing/uploading certificate into ACM) ([#5453](https://github.com/terraform-providers/terraform-provider-aws/issues/5453))
+* resource/aws_launch_template: Add `license_specification` argument ([#6926](https://github.com/terraform-providers/terraform-provider-aws/issues/6926))
+* resource/aws_redshift_cluster: Support in-place updates for adding or removing KMS encryption ([#6865](https://github.com/terraform-providers/terraform-provider-aws/issues/6865))
+* resource/aws_transfer_server: Add `force_destroy` argument ([#6935](https://github.com/terraform-providers/terraform-provider-aws/issues/6935))
 
 BUG FIXES
 
-* resource/aws_acm_certificate: Prevent error using Terraform resource import with certificates missing domain validation options [GH-5472]
+* resource/aws_acm_certificate: Prevent error using Terraform resource import with certificates missing domain validation options ([#5472](https://github.com/terraform-providers/terraform-provider-aws/issues/5472))
 
 ## 1.53.0 (December 20, 2018)
 
