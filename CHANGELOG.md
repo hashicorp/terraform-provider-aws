@@ -9,9 +9,14 @@ FEATURES
 
 ENHANCEMENTS
 
+* resource/aws_acm_certificate: Add `certificate_body`, `certificate_chain`, and `private_key` arguments (Support importing/uploading certificate into ACM) [GH-5453]
 * resource/aws_launch_template: Add `license_specification` argument [GH-6926]
 * resource/aws_redshift_cluster: Support in-place updates for adding or removing KMS encryption [GH-6865]
 * resource/aws_transfer_server: Add `force_destroy` argument [GH-6935]
+
+BUG FIX
+
+* resource/aws_acm_certificate: Prevent error using Terraform resource import with certificates missing domain validation options [GH-5472]
 
 ## 1.53.0 (December 20, 2018)
 
