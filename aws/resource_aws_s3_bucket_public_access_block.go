@@ -72,7 +72,19 @@ func resourceAwsS3BucketPublicAccessBlockCreate(d *schema.ResourceData, meta int
 	}
 
 	log.Printf("[DEBUG] S3 bucket: %s, public access block: %v", bucket, input.PublicAccessBlockConfiguration)
-	_, err := s3conn.PutPublicAccessBlock(input)
+	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		_, err := s3conn.PutPublicAccessBlock(input)
+
+		if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") {
+			return resource.RetryableError(err)
+		}
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
 	if err != nil {
 		return fmt.Errorf("error creating public access block policy for S3 bucket (%s): %s", bucket, err)
 	}
