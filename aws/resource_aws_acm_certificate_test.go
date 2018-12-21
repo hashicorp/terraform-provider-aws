@@ -459,6 +459,39 @@ func TestAccAWSAcmCertificate_tags(t *testing.T) {
 	})
 }
 
+func TestAccAWSAcmCertificate_imported(t *testing.T) {
+	resourceName := "aws_acm_certificate.cert"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProvidersWithTLS,
+		CheckDestroy: testAccCheckAcmCertificateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAcmCertificateConfig_selfSigned("example"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com"),
+				),
+			},
+			{
+				Config: testAccAcmCertificateConfig_selfSigned("example2"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", "example2.com"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// These are not returned by the API
+				ImportStateVerifyIgnore: []string{"private_key", "certificate_body"},
+			},
+		},
+	})
+}
+
 func testAccAcmCertificateConfig(domainName, validationMethod string) string {
 	return fmt.Sprintf(`
 resource "aws_acm_certificate" "cert" {
@@ -504,6 +537,37 @@ resource "aws_acm_certificate" "cert" {
   }
 }
 `, domainName, validationMethod, tag1Key, tag1Value, tag2Key, tag2Value)
+}
+
+func testAccAcmCertificateConfig_selfSigned(certName string) string {
+	return fmt.Sprintf(`
+resource "tls_private_key" "%[1]s" {
+	algorithm = "RSA"
+}
+
+resource "tls_self_signed_cert" "%[1]s" {
+	key_algorithm   = "RSA"
+	private_key_pem = "${tls_private_key.%[1]s.private_key_pem}"
+
+	subject {
+		common_name  = "%[1]s.com"
+		organization = "ACME Examples, Inc"
+	}
+
+	validity_period_hours = 12
+
+	allowed_uses = [
+		"key_encipherment",
+		"digital_signature",
+		"server_auth",
+	]
+}
+
+resource "aws_acm_certificate" "cert" {
+  private_key 		= "${tls_private_key.%[1]s.private_key_pem}"
+  certificate_body  = "${tls_self_signed_cert.%[1]s.cert_pem}"
+}
+`, certName)
 }
 
 func testAccCheckAcmCertificateDestroy(s *terraform.State) error {
