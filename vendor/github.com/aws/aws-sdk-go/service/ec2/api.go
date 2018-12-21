@@ -5076,7 +5076,10 @@ func (c *EC2) CreatePlacementGroupRequest(input *CreatePlacementGroupInput) (req
 //
 // A cluster placement group is a logical grouping of instances within a single
 // Availability Zone that benefit from low network latency, high network throughput.
-// A spread placement group places instances on distinct hardware.
+// A spread placement group places instances on distinct hardware. A partition
+// placement group places groups of instances in different partitions, where
+// instances in one partition do not share the same hardware with instances
+// in another partition.
 //
 // For more information, see Placement Groups (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html)
 // in the Amazon Elastic Compute Cloud User Guide.
@@ -12001,7 +12004,7 @@ func (c *EC2) DescribeHostReservationOfferingsRequest(input *DescribeHostReserva
 // Describes the Dedicated Host reservations that are available to purchase.
 //
 // The results describe all the Dedicated Host reservation offerings, including
-// offerings that may not match the instance family and region of your Dedicated
+// offerings that may not match the instance family and Region of your Dedicated
 // Hosts. When purchasing an offering, ensure that the instance family and Region
 // of the offering matches that of the Dedicated Hosts with which it is to be
 // associated. For more information about supported instance types, see Dedicated
@@ -12156,7 +12159,7 @@ func (c *EC2) DescribeHostsRequest(input *DescribeHostsInput) (req *request.Requ
 //
 // Describes one or more of your Dedicated Hosts.
 //
-// The results describe only the Dedicated Hosts in the region you're currently
+// The results describe only the Dedicated Hosts in the Region you're currently
 // using. All listed instances consume capacity on your Dedicated Host. Dedicated
 // Hosts that have recently been released are listed with the state released.
 //
@@ -20064,10 +20067,10 @@ func (c *EC2) ExportClientVpnClientConfigurationRequest(input *ExportClientVpnCl
 
 // ExportClientVpnClientConfiguration API operation for Amazon Elastic Compute Cloud.
 //
-// Downloads the contents of the client configuration file for the specified
-// Client VPN endpoint. The client configuration file includes the Client VPN
-// endpoint and certificate information clients need to establish a connection
-// with the Client VPN endpoint.
+// Downloads the contents of the Client VPN endpoint configuration file for
+// the specified Client VPN endpoint. The Client VPN endpoint configuration
+// file includes the Client VPN endpoint and certificate information clients
+// need to establish a connection with the Client VPN endpoint.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -22323,8 +22326,8 @@ func (c *EC2) ModifyInstancePlacementRequest(input *ModifyInstancePlacementInput
 // name must be specified in the request. Affinity and tenancy can be modified
 // in the same request.
 //
-// To modify the host ID, tenancy, or placement group for an instance, the instance
-// must be in the stopped state.
+// To modify the host ID, tenancy, placement group, or partition for an instance,
+// the instance must be in the stopped state.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -32215,7 +32218,7 @@ func (s *ClientVpnAuthentication) SetType(v string) *ClientVpnAuthentication {
 
 // Describes the authentication method to be used by a Client VPN endpoint.
 // Client VPN supports Active Directory and mutual authentication. For more
-// information, see Athentication (vpn/latest/clientvpn-admin/authentication-authrization.html#client-authentication)
+// information, see Authentication (vpn/latest/clientvpn-admin/authentication-authrization.html#client-authentication)
 // in the AWS Client VPN Admin Guide.
 type ClientVpnAuthenticationRequest struct {
 	_ struct{} `type:"structure"`
@@ -36469,17 +36472,16 @@ type CreatePlacementGroupInput struct {
 	DryRun *bool `locationName:"dryRun" type:"boolean"`
 
 	// A name for the placement group. Must be unique within the scope of your account
-	// for the region.
+	// for the Region.
 	//
 	// Constraints: Up to 255 ASCII characters
-	//
-	// GroupName is a required field
-	GroupName *string `locationName:"groupName" type:"string" required:"true"`
+	GroupName *string `locationName:"groupName" type:"string"`
+
+	// The number of partitions. Valid only when Strategy is set to partition.
+	PartitionCount *int64 `type:"integer"`
 
 	// The placement strategy.
-	//
-	// Strategy is a required field
-	Strategy *string `locationName:"strategy" type:"string" required:"true" enum:"PlacementStrategy"`
+	Strategy *string `locationName:"strategy" type:"string" enum:"PlacementStrategy"`
 }
 
 // String returns the string representation
@@ -36492,22 +36494,6 @@ func (s CreatePlacementGroupInput) GoString() string {
 	return s.String()
 }
 
-// Validate inspects the fields of the type to determine if they are valid.
-func (s *CreatePlacementGroupInput) Validate() error {
-	invalidParams := request.ErrInvalidParams{Context: "CreatePlacementGroupInput"}
-	if s.GroupName == nil {
-		invalidParams.Add(request.NewErrParamRequired("GroupName"))
-	}
-	if s.Strategy == nil {
-		invalidParams.Add(request.NewErrParamRequired("Strategy"))
-	}
-
-	if invalidParams.Len() > 0 {
-		return invalidParams
-	}
-	return nil
-}
-
 // SetDryRun sets the DryRun field's value.
 func (s *CreatePlacementGroupInput) SetDryRun(v bool) *CreatePlacementGroupInput {
 	s.DryRun = &v
@@ -36517,6 +36503,12 @@ func (s *CreatePlacementGroupInput) SetDryRun(v bool) *CreatePlacementGroupInput
 // SetGroupName sets the GroupName field's value.
 func (s *CreatePlacementGroupInput) SetGroupName(v string) *CreatePlacementGroupInput {
 	s.GroupName = &v
+	return s
+}
+
+// SetPartitionCount sets the PartitionCount field's value.
+func (s *CreatePlacementGroupInput) SetPartitionCount(v int64) *CreatePlacementGroupInput {
+	s.PartitionCount = &v
 	return s
 }
 
@@ -46519,6 +46511,8 @@ type DescribeInstancesInput struct {
 	//
 	//    * owner-id - The AWS account ID of the instance owner.
 	//
+	//    * partition-number - The partition in which the instance is located.
+	//
 	//    * placement-group-name - The name of the placement group for the instance.
 	//
 	//    * platform - The platform. Use windows if you have Windows instances;
@@ -47888,7 +47882,7 @@ type DescribePlacementGroupsInput struct {
 	//    * state - The state of the placement group (pending | available | deleting
 	//    | deleted).
 	//
-	//    * strategy - The strategy of the placement group (cluster | spread).
+	//    * strategy - The strategy of the placement group (cluster | spread | partition).
 	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
 
 	// One or more placement group names.
@@ -56012,7 +56006,7 @@ func (s *ExportClientVpnClientConfigurationInput) SetDryRun(v bool) *ExportClien
 type ExportClientVpnClientConfigurationOutput struct {
 	_ struct{} `type:"structure"`
 
-	// the contents of the client configuration file.
+	// The contents of the Client VPN endpoint configuration file.
 	ClientConfiguration *string `locationName:"clientConfiguration" type:"string"`
 }
 
@@ -66155,7 +66149,8 @@ type ModifyInstancePlacementInput struct {
 
 	// The name of the placement group in which to place the instance. For spread
 	// placement groups, the instance must have a tenancy of default. For cluster
-	// placement groups, the instance must have a tenancy of default or dedicated.
+	// and partition placement groups, the instance must have a tenancy of default
+	// or dedicated.
 	//
 	// To remove an instance from a placement group, specify an empty string ("").
 	GroupName *string `type:"string"`
@@ -66167,6 +66162,9 @@ type ModifyInstancePlacementInput struct {
 	//
 	// InstanceId is a required field
 	InstanceId *string `locationName:"instanceId" type:"string" required:"true"`
+
+	// Reserved for future use.
+	PartitionNumber *int64 `type:"integer"`
 
 	// The tenancy for the instance.
 	Tenancy *string `locationName:"tenancy" type:"string" enum:"HostTenancy"`
@@ -66216,6 +66214,12 @@ func (s *ModifyInstancePlacementInput) SetHostId(v string) *ModifyInstancePlacem
 // SetInstanceId sets the InstanceId field's value.
 func (s *ModifyInstancePlacementInput) SetInstanceId(v string) *ModifyInstancePlacementInput {
 	s.InstanceId = &v
+	return s
+}
+
+// SetPartitionNumber sets the PartitionNumber field's value.
+func (s *ModifyInstancePlacementInput) SetPartitionNumber(v int64) *ModifyInstancePlacementInput {
+	s.PartitionNumber = &v
 	return s
 }
 
@@ -69319,6 +69323,10 @@ type Placement struct {
 	// is not supported for the ImportInstance command.
 	HostId *string `locationName:"hostId" type:"string"`
 
+	// The number of the partition the instance is in. Valid only if the placement
+	// group strategy is set to partition.
+	PartitionNumber *int64 `locationName:"partitionNumber" type:"integer"`
+
 	// Reserved for future use.
 	SpreadDomain *string `locationName:"spreadDomain" type:"string"`
 
@@ -69362,6 +69370,12 @@ func (s *Placement) SetHostId(v string) *Placement {
 	return s
 }
 
+// SetPartitionNumber sets the PartitionNumber field's value.
+func (s *Placement) SetPartitionNumber(v int64) *Placement {
+	s.PartitionNumber = &v
+	return s
+}
+
 // SetSpreadDomain sets the SpreadDomain field's value.
 func (s *Placement) SetSpreadDomain(v string) *Placement {
 	s.SpreadDomain = &v
@@ -69380,6 +69394,9 @@ type PlacementGroup struct {
 
 	// The name of the placement group.
 	GroupName *string `locationName:"groupName" type:"string"`
+
+	// The number of partitions. Valid only if strategy is set to partition.
+	PartitionCount *int64 `locationName:"partitionCount" type:"integer"`
 
 	// The state of the placement group.
 	State *string `locationName:"state" type:"string" enum:"PlacementGroupState"`
@@ -69401,6 +69418,12 @@ func (s PlacementGroup) GoString() string {
 // SetGroupName sets the GroupName field's value.
 func (s *PlacementGroup) SetGroupName(v string) *PlacementGroup {
 	s.GroupName = &v
+	return s
+}
+
+// SetPartitionCount sets the PartitionCount field's value.
+func (s *PlacementGroup) SetPartitionCount(v int64) *PlacementGroup {
+	s.PartitionCount = &v
 	return s
 }
 
@@ -85682,6 +85705,9 @@ const (
 
 	// PlacementStrategySpread is a PlacementStrategy enum value
 	PlacementStrategySpread = "spread"
+
+	// PlacementStrategyPartition is a PlacementStrategy enum value
+	PlacementStrategyPartition = "partition"
 )
 
 const (
