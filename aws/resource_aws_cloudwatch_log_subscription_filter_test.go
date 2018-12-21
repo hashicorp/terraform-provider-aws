@@ -92,10 +92,8 @@ func testAccCheckCloudwatchLogSubscriptionFilterDisappears(rName string) resourc
 		params := &cloudwatchlogs.DeleteLogGroupInput{
 			LogGroupName: aws.String(fmt.Sprintf("example_lambda_name_%s", rName)),
 		}
-		if _, err := conn.DeleteLogGroup(params); err != nil {
-			return err
-		}
-		return nil
+		_, err := conn.DeleteLogGroup(params)
+		return err
 	}
 }
 
