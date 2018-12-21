@@ -2,10 +2,12 @@
 
 FEATURES
 
+* **New Resource:** `aws_licensemanager_association` [GH-6926]
 * **New Resource:** `aws_securityhub_product_subscription` [GH-6921]
 
 ENHANCEMENTS
 
+* resource/aws_launch_template: Add `license_specification` argument [GH-6926]
 * resource/aws_redshift_cluster: Support in-place updates for adding or removing KMS encryption [GH-6865]
 
 ## 1.53.0 (December 20, 2018)
