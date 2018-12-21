@@ -6,8 +6,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	//"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/hashicorp/terraform/helper/schema"
 )
@@ -33,7 +31,7 @@ func dataSourceAwsAutoscalingGroup() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"default_cool_down": {
+			"default_cooldown": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -49,16 +47,20 @@ func dataSourceAwsAutoscalingGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"launch_configuration_name": {
+			"launch_configuration": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"load_balancer_names": {
+			"load_balancers": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
+			},
+			"new_instances_protected_from_scale_in": {
+				Type:     schema.TypeBool,
+				Computed: true,
 			},
 			"max_size": {
 				Type:     schema.TypeInt,
@@ -66,10 +68,6 @@ func dataSourceAwsAutoscalingGroup() *schema.Resource {
 			},
 			"min_size": {
 				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"new_instances_protected_from_scale_in": {
-				Type:     schema.TypeBool,
 				Computed: true,
 			},
 			"placement_group": {
@@ -110,38 +108,25 @@ func dataSourceAwsAutoscalingGroupRead(d *schema.ResourceData, meta interface{})
 	conn := meta.(*AWSClient).autoscalingconn
 	d.SetId(time.Now().UTC().String())
 
-	groupName, _ := d.GetOk("name")
+	groupName := d.Get("name").(string)
 
 	input := &autoscaling.DescribeAutoScalingGroupsInput{
 		AutoScalingGroupNames: []*string{
-			aws.String(groupName.(string)),
+			aws.String(groupName),
 		},
 	}
 
 	log.Printf("[DEBUG] Reading Autoscaling Group: %s", input)
 
 	result, err := conn.DescribeAutoScalingGroups(input)
+
 	log.Printf("[DEBUG] Checking for error: %s", err)
+
 	if err != nil {
-		if aerr, ok := err.(awserr.Error); ok {
-			switch aerr.Code() {
-			case autoscaling.ErrCodeInvalidNextToken:
-				return fmt.Errorf("%s %s", autoscaling.ErrCodeInvalidNextToken, aerr.Error())
-			case autoscaling.ErrCodeResourceContentionFault:
-				return fmt.Errorf("%s %s", autoscaling.ErrCodeResourceContentionFault, aerr.Error())
-			default:
-				return fmt.Errorf("%s", aerr.Error())
-			}
-		} else {
-			// Print the error, cast err to awserr.Error to get the Code and
-			// Message from an error.
-			return fmt.Errorf("%s", err.Error())
-		}
+		return fmt.Errorf("error describing AutoScaling Groups: %s", err)
 	}
 
 	log.Printf("[DEBUG] Found Autoscaling Group: %s", result)
-
-	var group *autoscaling.Group
 
 	if len(result.AutoScalingGroups) < 1 {
 		return fmt.Errorf("Your query did not return any results. Please try a different search criteria.")
@@ -150,39 +135,15 @@ func dataSourceAwsAutoscalingGroupRead(d *schema.ResourceData, meta interface{})
 	if len(result.AutoScalingGroups) > 1 {
 		return fmt.Errorf("Your query returned more than one result. Please try a more " +
 			"specific search criteria.")
-	} else {
-		group = result.AutoScalingGroups[0]
 	}
+
+	// If execution made it to this point, we have exactly one 1 group returned
+	// and this is a safe operation
+	group := result.AutoScalingGroups[0]
 
 	log.Printf("[DEBUG] aws_autoscaling_group - Single Auto Scaling Group found: %s", *group.AutoScalingGroupName)
 
 	if err := groupDescriptionAttributes(d, group); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// Compile the list of availability zones
-func setAvailabilityZones(d *schema.ResourceData, group *autoscaling.Group) error {
-	zones := make([]string, 0, len(group.AvailabilityZones))
-	for _, zone := range group.AvailabilityZones {
-		zones = append(zones, *zone)
-	}
-	if err := d.Set("availability_zones", zones); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// Compile the list of load balancers
-func setLoadBalancers(d *schema.ResourceData, group *autoscaling.Group) error {
-	balancers := make([]string, 0, len(group.LoadBalancerNames))
-	for _, lb := range group.LoadBalancerNames {
-		balancers = append(balancers, *lb)
-	}
-	if err := d.Set("load_balancer_names", balancers); err != nil {
 		return err
 	}
 
@@ -194,25 +155,29 @@ func groupDescriptionAttributes(d *schema.ResourceData, group *autoscaling.Group
 	log.Printf("[DEBUG] Setting attributes: %s", group)
 	d.Set("name", group.AutoScalingGroupName)
 	d.Set("arn", group.AutoScalingGroupARN)
-	if err := setAvailabilityZones(d, group); err != nil {
+	if err := d.Set("availability_zones", aws.StringValueSlice(group.AvailabilityZones)); err != nil {
 		return err
 	}
-	d.Set("default_cool_down", group.DefaultCooldown)
+	d.Set("default_cooldown", group.DefaultCooldown)
 	d.Set("desired_capacity", group.DesiredCapacity)
 	d.Set("health_check_grace_period", group.HealthCheckGracePeriod)
 	d.Set("health_check_type", group.HealthCheckType)
-	d.Set("launch_configuration_name", group.LaunchConfigurationName)
-	if err := setLoadBalancers(d, group); err != nil {
+	d.Set("launch_configuration", group.LaunchConfigurationName)
+	if err := d.Set("load_balancers", aws.StringValueSlice(group.LoadBalancerNames)); err != nil {
 		return err
 	}
+	d.Set("new_instances_protected_from_scale_in", group.NewInstancesProtectedFromScaleIn)
 	d.Set("max_size", group.MaxSize)
 	d.Set("min_size", group.MinSize)
-	d.Set("new_instances_protected_from_scale_in", group.NewInstancesProtectedFromScaleIn)
 	d.Set("placement_group", group.PlacementGroup)
 	d.Set("service_linked_role_arn", group.ServiceLinkedRoleARN)
 	d.Set("status", group.Status)
-	d.Set("target_group_arns", group.TargetGroupARNs)
-	d.Set("termination_policies", group.TerminationPolicies)
+	if err := d.Set("target_group_arns", aws.StringValueSlice(group.TargetGroupARNs)); err != nil {
+		return err
+	}
+	if err := d.Set("termination_policies", aws.StringValueSlice(group.TerminationPolicies)); err != nil {
+		return err
+	}
 	d.Set("vpc_zone_identifier", group.VPCZoneIdentifier)
 
 	return nil

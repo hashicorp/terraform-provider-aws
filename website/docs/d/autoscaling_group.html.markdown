@@ -13,7 +13,7 @@ Use this data source to get information on an existing autoscaling group.
 ## Example Usage
 
 ```hcl
-data "autoscaling_group" "foo" {
+data "aws_autoscaling_group" "foo" {
   name = "foo"
 }
 ```
@@ -34,11 +34,10 @@ interpolation.
 * `desired_capacity` - The desired size of the group.
 * `health_check_grace_period` - The amount of time, in seconds, that Amazon EC2 Auto Scaling waits before checking the health status of an EC2 instance that has come into service.
 * `health_check_type` - The service to use for the health checks. The valid values are EC2 and ELB.
-* `launch_configuration_name` - The name of the associated launch configuration.
-* `load_balancer_names` - One or more load balancers associated with the group.
+* `launch_configuratione` - The name of the associated launch configuration.
+* `load_balancers` - One or more load balancers associated with the group.
 * `max_size` - The maximum size of the group.
 * `min_size` - The minimum size of the group.
-* `new_instances_protected_from_scale_in` - Indicates whether newly launched instances are protected from termination by Auto Scaling when scaling in.
 * `placement_group` - The name of the placement group into which to launch your instances, if any. For more information, see Placement Groups (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html) in the Amazon Elastic Compute Cloud User Guide.
 * `service_linked_role_arn` - The Amazon Resource Name (ARN) of the service-linked role that the Auto Scaling group uses to call other AWS services on your behalf.
 * `status` - The current state of the group when DeleteAutoScalingGroup is in progress.
