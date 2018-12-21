@@ -77,6 +77,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/licensemanager"
 	"github.com/aws/aws-sdk-go/service/lightsail"
 	"github.com/aws/aws-sdk-go/service/macie"
+	"github.com/aws/aws-sdk-go/service/mediapackage"
 	"github.com/aws/aws-sdk-go/service/mediastore"
 	"github.com/aws/aws-sdk-go/service/mq"
 	"github.com/aws/aws-sdk-go/service/neptune"
@@ -253,6 +254,7 @@ type AWSClient struct {
 	glueconn              *glue.Glue
 	athenaconn            *athena.Athena
 	dxconn                *directconnect.DirectConnect
+	mediapackageconn      *mediapackage.MediaPackage
 	mediastoreconn        *mediastore.MediaStore
 	appsyncconn           *appsync.AppSync
 	lexmodelconn          *lexmodelbuildingservice.LexModelBuildingService
@@ -592,6 +594,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.glueconn = glue.New(sess)
 	client.athenaconn = athena.New(sess)
 	client.dxconn = directconnect.New(sess)
+	client.mediapackageconn = mediapackage.New(sess)
 	client.mediastoreconn = mediastore.New(sess)
 	client.appsyncconn = appsync.New(sess)
 	client.neptuneconn = neptune.New(sess)

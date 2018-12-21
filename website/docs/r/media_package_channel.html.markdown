@@ -1,0 +1,41 @@
+---
+layout: "aws"
+page_title: "AWS: aws_media_package_channel"
+sidebar_current: "docs-aws-resource-media-package-channel"
+description: |-
+  Provides an AWS Elemental MediaPackage Channel.
+---
+
+# aws_media_package_channel
+
+Provides an AWS Elemental MediaPackage Channel.
+
+## Example Usage
+
+```hcl
+resource "aws_media_package_channel" "kittens" {
+  channel_id  = "kitten-channel"
+  description = "A channel dedicated to amusing videos of kittens."
+}
+```
+
+## Argument Reference
+
+The following arguments are supported:
+
+* `channel_id` - (Required) A unique identifier describing the channel
+* `description` - (Optional) A description of the channel
+
+## Attributes Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - The same as `channel_id`
+* `arn` - The ARN of the channel
+* `ingest_endpoints` - A list of the ingest endpoints (see below)
+
+Ingest endpoints export the following attributes:
+
+* `password` - The password
+* `url` - The URL
+* `username` - The username
