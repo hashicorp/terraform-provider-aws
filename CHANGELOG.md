@@ -2,6 +2,7 @@
 
 FEATURES
 
+* **New Data Source:** `aws_autoscaling_group` [GH-6849]
 * **New Resource:** `aws_licensemanager_association` [GH-6926]
 * **New Resource:** `aws_securityhub_product_subscription` [GH-6921]
 
