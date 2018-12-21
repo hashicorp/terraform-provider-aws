@@ -462,7 +462,7 @@ func TestAccAWSAcmCertificate_tags(t *testing.T) {
 func TestAccAWSAcmCertificate_imported(t *testing.T) {
 	resourceName := "aws_acm_certificate.cert"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProvidersWithTLS,
 		CheckDestroy: testAccCheckAcmCertificateDestroy,
