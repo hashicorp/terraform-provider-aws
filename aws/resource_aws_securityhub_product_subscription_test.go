@@ -4,6 +4,10 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/aws/aws-sdk-go/service/securityhub"
+
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
@@ -15,6 +19,35 @@ func testAccAWSSecurityHubProductSubscription_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSSecurityHubAccountDestroy,
 		Steps: []resource.TestStep{
 			{
+				// We would like to use an AWS product subscription, but they are
+				// all automatically subscribed when enabling Security Hub.
+				// This configuration will enable Security Hub, then in a later PreConfig,
+				// we will disable an AWS product subscription so we can test (re-)enabling it.
+				Config: testAccAWSSecurityHubProductSubscriptionConfig_empty,
+				Check:  testAccCheckAWSSecurityHubAccountExists("aws_securityhub_account.example"),
+			},
+			{
+				// AWS product subscriptions happen automatically when enabling Security Hub.
+				// Here we attempt to remove one so we can attempt to (re-)enable it.
+				PreConfig: func() {
+					conn := testAccProvider.Meta().(*AWSClient).securityhubconn
+					productSubscriptionARN := arn.ARN{
+						AccountID: testAccGetAccountID(),
+						Partition: testAccGetPartition(),
+						Region:    testAccGetRegion(),
+						Resource:  "product-subscription/aws/guardduty",
+						Service:   "securityhub",
+					}.String()
+
+					input := &securityhub.DisableImportFindingsForProductInput{
+						ProductSubscriptionArn: aws.String(productSubscriptionARN),
+					}
+
+					_, err := conn.DisableImportFindingsForProduct(input)
+					if err != nil {
+						t.Fatalf("error disabling Security Hub Product Subscription for GuardDuty: %s", err)
+					}
+				},
 				Config: testAccAWSSecurityHubProductSubscriptionConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSecurityHubProductSubscriptionExists("aws_securityhub_product_subscription.example"),
@@ -103,6 +136,6 @@ data "aws_region" "current" {}
 
 resource "aws_securityhub_product_subscription" "example" {
   depends_on  = ["aws_securityhub_account.example"]
-  product_arn = "arn:aws:securityhub:${data.aws_region.current.name}:733251395267:product/alertlogic/althreatmanagement"
+  product_arn = "arn:aws:securityhub:${data.aws_region.current.name}::product/aws/guardduty"
 }
 `
