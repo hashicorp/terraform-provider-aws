@@ -1,5 +1,9 @@
 ## 1.54.0 (Unreleased)
 
+NOTES
+
+* This will be the last release until early January. Enjoy the rest of your year!
+
 FEATURES
 
 * **New Data Source:** `aws_autoscaling_group` [GH-6849]
@@ -14,7 +18,7 @@ ENHANCEMENTS
 * resource/aws_redshift_cluster: Support in-place updates for adding or removing KMS encryption [GH-6865]
 * resource/aws_transfer_server: Add `force_destroy` argument [GH-6935]
 
-BUG FIX
+BUG FIXES
 
 * resource/aws_acm_certificate: Prevent error using Terraform resource import with certificates missing domain validation options [GH-5472]
 
