@@ -1,5 +1,9 @@
 ## 1.54.0 (Unreleased)
 
+FEATURES
+
+* **New Resource:** `aws_securityhub_product_subscription` [GH-6921]
+
 ENHANCEMENTS
 
 * resource/aws_redshift_cluster: Support in-place updates for adding or removing KMS encryption [GH-6865]
