@@ -415,7 +415,7 @@ func TestAccAWSS3BucketObject_acl(t *testing.T) {
 
 func testAccCheckAWSS3BucketObjectAcl(n string, expectedPerms []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, _ := s.RootModule().Resources[n]
+		rs := s.RootModule().Resources[n]
 		s3conn := testAccProvider.Meta().(*AWSClient).s3conn
 
 		out, err := s3conn.GetObjectAcl(&s3.GetObjectAclInput{
@@ -515,7 +515,7 @@ func TestAccAWSS3BucketObject_storageClass(t *testing.T) {
 
 func testAccCheckAWSS3BucketObjectStorageClass(n, expectedClass string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, _ := s.RootModule().Resources[n]
+		rs := s.RootModule().Resources[n]
 		s3conn := testAccProvider.Meta().(*AWSClient).s3conn
 
 		out, err := s3conn.HeadObject(&s3.HeadObjectInput{
@@ -545,7 +545,7 @@ func testAccCheckAWSS3BucketObjectStorageClass(n, expectedClass string) resource
 
 func testAccCheckAWSS3BucketObjectSSE(n, expectedSSE string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, _ := s.RootModule().Resources[n]
+		rs := s.RootModule().Resources[n]
 		s3conn := testAccProvider.Meta().(*AWSClient).s3conn
 
 		out, err := s3conn.HeadObject(&s3.HeadObjectInput{

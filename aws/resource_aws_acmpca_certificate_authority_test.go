@@ -460,9 +460,7 @@ func listAcmpcaCertificateAuthorities(conn *acmpca.ACMPCA) ([]*acmpca.Certificat
 		if err != nil {
 			return certificateAuthorities, err
 		}
-		for _, certificateAuthority := range output.CertificateAuthorities {
-			certificateAuthorities = append(certificateAuthorities, certificateAuthority)
-		}
+		certificateAuthorities = append(certificateAuthorities, output.CertificateAuthorities...)
 		if output.NextToken == nil {
 			break
 		}

@@ -529,6 +529,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_lambda_permission":                            resourceAwsLambdaPermission(),
 			"aws_launch_configuration":                         resourceAwsLaunchConfiguration(),
 			"aws_launch_template":                              resourceAwsLaunchTemplate(),
+			"aws_licensemanager_license_configuration":         resourceAwsLicenseManagerLicenseConfiguration(),
 			"aws_lightsail_domain":                             resourceAwsLightsailDomain(),
 			"aws_lightsail_instance":                           resourceAwsLightsailInstance(),
 			"aws_lightsail_key_pair":                           resourceAwsLightsailKeyPair(),
@@ -585,6 +586,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_rds_cluster_endpoint":                         resourceAwsRDSClusterEndpoint(),
 			"aws_rds_cluster_instance":                         resourceAwsRDSClusterInstance(),
 			"aws_rds_cluster_parameter_group":                  resourceAwsRDSClusterParameterGroup(),
+			"aws_rds_global_cluster":                           resourceAwsRDSGlobalCluster(),
 			"aws_redshift_cluster":                             resourceAwsRedshiftCluster(),
 			"aws_redshift_security_group":                      resourceAwsRedshiftSecurityGroup(),
 			"aws_redshift_parameter_group":                     resourceAwsRedshiftParameterGroup(),
@@ -615,6 +617,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_ses_event_destination":                        resourceAwsSesEventDestination(),
 			"aws_ses_identity_notification_topic":              resourceAwsSesNotificationTopic(),
 			"aws_ses_template":                                 resourceAwsSesTemplate(),
+			"aws_s3_account_public_access_block":               resourceAwsS3AccountPublicAccessBlock(),
 			"aws_s3_bucket":                                    resourceAwsS3Bucket(),
 			"aws_s3_bucket_policy":                             resourceAwsS3BucketPolicy(),
 			"aws_s3_bucket_object":                             resourceAwsS3BucketObject(),
@@ -626,7 +629,10 @@ func Provider() terraform.ResourceProvider {
 			"aws_default_security_group":                       resourceAwsDefaultSecurityGroup(),
 			"aws_security_group_rule":                          resourceAwsSecurityGroupRule(),
 			"aws_securityhub_account":                          resourceAwsSecurityHubAccount(),
+			"aws_securityhub_product_subscription":             resourceAwsSecurityHubProductSubscription(),
+			"aws_securityhub_standards_subscription":           resourceAwsSecurityHubStandardsSubscription(),
 			"aws_servicecatalog_portfolio":                     resourceAwsServiceCatalogPortfolio(),
+			"aws_service_discovery_http_namespace":             resourceAwsServiceDiscoveryHttpNamespace(),
 			"aws_service_discovery_private_dns_namespace":      resourceAwsServiceDiscoveryPrivateDnsNamespace(),
 			"aws_service_discovery_public_dns_namespace":       resourceAwsServiceDiscoveryPublicDnsNamespace(),
 			"aws_service_discovery_service":                    resourceAwsServiceDiscoveryService(),
@@ -665,6 +671,8 @@ func Provider() terraform.ResourceProvider {
 			"aws_subnet":                                       resourceAwsSubnet(),
 			"aws_swf_domain":                                   resourceAwsSwfDomain(),
 			"aws_transfer_server":                              resourceAwsTransferServer(),
+			"aws_transfer_ssh_key":                             resourceAwsTransferSshKey(),
+			"aws_transfer_user":                                resourceAwsTransferUser(),
 			"aws_volume_attachment":                            resourceAwsVolumeAttachment(),
 			"aws_vpc_dhcp_options_association":                 resourceAwsVpcDhcpOptionsAssociation(),
 			"aws_default_vpc_dhcp_options":                     resourceAwsDefaultVpcDhcpOptions(),
@@ -813,6 +821,8 @@ func init() {
 
 		"s3_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
 
+		"s3control_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
+
 		"sns_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
 
 		"sqs_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
@@ -924,6 +934,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		config.R53Endpoint = endpoints["r53"].(string)
 		config.RdsEndpoint = endpoints["rds"].(string)
 		config.S3Endpoint = endpoints["s3"].(string)
+		config.S3ControlEndpoint = endpoints["s3control"].(string)
 		config.SnsEndpoint = endpoints["sns"].(string)
 		config.SqsEndpoint = endpoints["sqs"].(string)
 		config.StsEndpoint = endpoints["sts"].(string)
@@ -1128,6 +1139,12 @@ func endpointsSchema() *schema.Schema {
 					Optional:    true,
 					Default:     "",
 					Description: descriptions["s3_endpoint"],
+				},
+				"s3control": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: descriptions["s3control_endpoint"],
 				},
 				"sns": {
 					Type:        schema.TypeString,

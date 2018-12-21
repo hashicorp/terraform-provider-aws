@@ -34,7 +34,7 @@ func TestAccDataSourceAWSLambdaFunction_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.aws_lambda_function.acctest", "qualifier", "$LATEST"),
 					resource.TestCheckResourceAttr("data.aws_lambda_function.acctest", "handler", "exports.example"),
 					resource.TestCheckResourceAttr("data.aws_lambda_function.acctest", "memory_size", "128"),
-					resource.TestCheckResourceAttr("data.aws_lambda_function.acctest", "runtime", "nodejs4.3"),
+					resource.TestCheckResourceAttr("data.aws_lambda_function.acctest", "runtime", "nodejs8.10"),
 					resource.TestCheckResourceAttr("data.aws_lambda_function.acctest", "timeout", "3"),
 					resource.TestCheckResourceAttr("data.aws_lambda_function.acctest", "version", "$LATEST"),
 					resource.TestCheckResourceAttr("data.aws_lambda_function.acctest", "reserved_concurrent_executions", "0"),
@@ -240,7 +240,7 @@ resource "aws_lambda_function" "acctest_create" {
   filename = "test-fixtures/lambdatest.zip"
   role = "${aws_iam_role.lambda.arn}"
   handler = "exports.example"
-  runtime = "nodejs4.3"
+  runtime = "nodejs8.10"
 }
 
 data "aws_lambda_function" "acctest" {
@@ -257,7 +257,7 @@ resource "aws_lambda_function" "acctest_create" {
   filename = "test-fixtures/lambdatest.zip"
   role = "${aws_iam_role.lambda.arn}"
   handler = "exports.example"
-  runtime = "nodejs4.3"
+  runtime = "nodejs8.10"
   publish = true
 }
 
@@ -276,7 +276,7 @@ resource "aws_lambda_function" "acctest_create" {
   filename = "test-fixtures/lambdatest.zip"
   role = "${aws_iam_role.lambda.arn}"
   handler = "exports.example"
-  runtime = "nodejs4.3"
+  runtime = "nodejs8.10"
   publish = true
 }
 
@@ -301,7 +301,7 @@ resource "aws_lambda_function" "acctest_create" {
   filename = "test-fixtures/lambdatest.zip"
   role = "${aws_iam_role.lambda.arn}"
   handler = "exports.example"
-  runtime = "nodejs4.3"
+  runtime = "nodejs8.10"
 
   vpc_config = {
     subnet_ids = ["${aws_subnet.lambda.id}"]
@@ -323,7 +323,7 @@ resource "aws_lambda_function" "acctest_create" {
   filename = "test-fixtures/lambdatest.zip"
   role = "${aws_iam_role.lambda.arn}"
   handler = "exports.example"
-  runtime = "nodejs4.3"
+  runtime = "nodejs8.10"
 
   environment {
     variables = {

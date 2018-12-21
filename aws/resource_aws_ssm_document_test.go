@@ -339,11 +339,8 @@ func testAccCheckAWSSSMDocumentExists(n string) resource.TestCheckFunc {
 		_, err := conn.DescribeDocument(&ssm.DescribeDocumentInput{
 			Name: aws.String(rs.Primary.ID),
 		})
-		if err != nil {
-			return err
-		}
 
-		return nil
+		return err
 	}
 }
 

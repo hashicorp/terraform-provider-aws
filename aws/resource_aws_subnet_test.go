@@ -112,12 +112,12 @@ func TestAccAWSSubnet_basic(t *testing.T) {
 	var v ec2.Subnet
 
 	testCheck := func(*terraform.State) error {
-		if *v.CidrBlock != "10.1.1.0/24" {
-			return fmt.Errorf("bad cidr: %s", *v.CidrBlock)
+		if aws.StringValue(v.CidrBlock) != "10.1.1.0/24" {
+			return fmt.Errorf("bad cidr: %s", aws.StringValue(v.CidrBlock))
 		}
 
-		if *v.MapPublicIpOnLaunch != true {
-			return fmt.Errorf("bad MapPublicIpOnLaunch: %t", *v.MapPublicIpOnLaunch)
+		if !aws.BoolValue(v.MapPublicIpOnLaunch) {
+			return fmt.Errorf("bad MapPublicIpOnLaunch: %t", aws.BoolValue(v.MapPublicIpOnLaunch))
 		}
 
 		return nil
@@ -248,8 +248,8 @@ func testAccCheckAwsSubnetIpv6BeforeUpdate(t *testing.T, subnet *ec2.Subnet) res
 			return fmt.Errorf("Expected IPV6 CIDR Block Association")
 		}
 
-		if *subnet.AssignIpv6AddressOnCreation != true {
-			return fmt.Errorf("bad AssignIpv6AddressOnCreation: %t", *subnet.AssignIpv6AddressOnCreation)
+		if !aws.BoolValue(subnet.AssignIpv6AddressOnCreation) {
+			return fmt.Errorf("bad AssignIpv6AddressOnCreation: %t", aws.BoolValue(subnet.AssignIpv6AddressOnCreation))
 		}
 
 		return nil
@@ -258,8 +258,8 @@ func testAccCheckAwsSubnetIpv6BeforeUpdate(t *testing.T, subnet *ec2.Subnet) res
 
 func testAccCheckAwsSubnetIpv6AfterUpdate(t *testing.T, subnet *ec2.Subnet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if *subnet.AssignIpv6AddressOnCreation != false {
-			return fmt.Errorf("bad AssignIpv6AddressOnCreation: %t", *subnet.AssignIpv6AddressOnCreation)
+		if aws.BoolValue(subnet.AssignIpv6AddressOnCreation) {
+			return fmt.Errorf("bad AssignIpv6AddressOnCreation: %t", aws.BoolValue(subnet.AssignIpv6AddressOnCreation))
 		}
 
 		return nil

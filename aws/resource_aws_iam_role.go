@@ -49,7 +49,7 @@ func resourceAwsIamRole() *schema.Resource {
 						errors = append(errors, fmt.Errorf(
 							"%q cannot be longer than 64 characters", k))
 					}
-					if !regexp.MustCompile("^[\\w+=,.@-]*$").MatchString(value) {
+					if !regexp.MustCompile(`^[\w+=,.@-]*$`).MatchString(value) {
 						errors = append(errors, fmt.Errorf(
 							"%q must match [\\w+=,.@-]", k))
 					}
@@ -69,7 +69,7 @@ func resourceAwsIamRole() *schema.Resource {
 						errors = append(errors, fmt.Errorf(
 							"%q cannot be longer than 32 characters, name is limited to 64", k))
 					}
-					if !regexp.MustCompile("^[\\w+=,.@-]*$").MatchString(value) {
+					if !regexp.MustCompile(`^[\w+=,.@-]*$`).MatchString(value) {
 						errors = append(errors, fmt.Errorf(
 							"%q must match [\\w+=,.@-]", k))
 					}
@@ -396,9 +396,7 @@ func resourceAwsIamRoleDelete(d *schema.ResourceData, meta interface{}) error {
 		err = iamconn.ListRolePoliciesPages(&iam.ListRolePoliciesInput{
 			RoleName: aws.String(d.Id()),
 		}, func(page *iam.ListRolePoliciesOutput, lastPage bool) bool {
-			for _, v := range page.PolicyNames {
-				inlinePolicies = append(inlinePolicies, v)
-			}
+			inlinePolicies = append(inlinePolicies, page.PolicyNames...)
 			return len(page.PolicyNames) > 0
 		})
 		if err != nil {

@@ -82,6 +82,34 @@ func validateTypeStringNullableFloat(v interface{}, k string) (ws []string, es [
 	return
 }
 
+func validateTransferServerID(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+
+	// https://docs.aws.amazon.com/transfer/latest/userguide/API_CreateUser.html
+	pattern := `^s-([0-9a-f]{17})$`
+	if !regexp.MustCompile(pattern).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q isn't a valid transfer server id (only lowercase alphanumeric characters are allowed): %q",
+			k, value))
+	}
+
+	return
+}
+
+func validateTransferUserName(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+
+	// https://docs.aws.amazon.com/transfer/latest/userguide/API_CreateUser.html
+	pattern := `^[a-z0-9]{3,32}$`
+	if !regexp.MustCompile(pattern).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q isn't a valid transfer user name (only lowercase alphanumeric characters are allowed): %q",
+			k, value))
+	}
+
+	return
+}
+
 func validateRdsIdentifier(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !regexp.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {
@@ -2011,6 +2039,27 @@ func validateCloudFrontPublicKeyNamePrefix(v interface{}, k string) (ws []string
 	if len(value) > prefixMaxLength {
 		errors = append(errors, fmt.Errorf(
 			"%q cannot be greater than %d characters", k, prefixMaxLength))
+	}
+	return
+}
+
+func validateServiceDiscoveryHttpNamespaceName(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !regexp.MustCompile(`^[0-9A-Za-z_-]+$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only alphanumeric characters, underscores and hyphens allowed in %q", k))
+	}
+	if !regexp.MustCompile(`^[a-zA-Z]`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"first character of %q must be a letter", k))
+	}
+	if !regexp.MustCompile(`[a-zA-Z]$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"last character of %q must be a letter", k))
+	}
+	if len(value) > 1024 {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot be greater than 1024 characters", k))
 	}
 	return
 }

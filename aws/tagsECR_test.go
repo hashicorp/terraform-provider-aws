@@ -5,29 +5,28 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/transfer"
+	"github.com/aws/aws-sdk-go/service/ecr"
 )
 
-// go test -v -run="TestDiffTransferServerTags"
-func TestDiffTransferServerTags(t *testing.T) {
+// go test -v -run="TestDiffECRTags"
+func TestDiffECRTags(t *testing.T) {
 	cases := []struct {
 		Old, New       map[string]interface{}
 		Create, Remove map[string]string
 	}{
-		// Basic add/remove
+		// Add
 		{
 			Old: map[string]interface{}{
 				"foo": "bar",
 			},
 			New: map[string]interface{}{
+				"foo": "bar",
 				"bar": "baz",
 			},
 			Create: map[string]string{
 				"bar": "baz",
 			},
-			Remove: map[string]string{
-				"foo": "bar",
-			},
+			Remove: map[string]string{},
 		},
 
 		// Modify
@@ -81,9 +80,9 @@ func TestDiffTransferServerTags(t *testing.T) {
 	}
 
 	for i, tc := range cases {
-		c, r := diffTagsTransferServer(tagsFromMapTransferServer(tc.Old), tagsFromMapTransferServer(tc.New))
-		cm := tagsToMapTransferServer(c)
-		rm := tagsToMapTransferServer(r)
+		c, r := diffTagsECR(tagsFromMapECR(tc.Old), tagsFromMapECR(tc.New))
+		cm := tagsToMapECR(c)
+		rm := tagsToMapECR(r)
 		if !reflect.DeepEqual(cm, tc.Create) {
 			t.Fatalf("%d: bad create: %#v", i, cm)
 		}
@@ -93,19 +92,19 @@ func TestDiffTransferServerTags(t *testing.T) {
 	}
 }
 
-// go test -v -run="TestIgnoringTagsTransferServer"
-func TestIgnoringTagsTransferServer(t *testing.T) {
-	var ignoredTags []*transfer.Tag
-	ignoredTags = append(ignoredTags, &transfer.Tag{
+// go test -v -run="TestIgnoringTagsECR"
+func TestIgnoringTagsECR(t *testing.T) {
+	var ignoredTags []*ecr.Tag
+	ignoredTags = append(ignoredTags, &ecr.Tag{
 		Key:   aws.String("aws:cloudformation:logical-id"),
 		Value: aws.String("foo"),
 	})
-	ignoredTags = append(ignoredTags, &transfer.Tag{
+	ignoredTags = append(ignoredTags, &ecr.Tag{
 		Key:   aws.String("aws:foo:bar"),
 		Value: aws.String("baz"),
 	})
 	for _, tag := range ignoredTags {
-		if !tagIgnoredTransferServer(tag) {
+		if !tagIgnoredECR(tag) {
 			t.Fatalf("Tag %v with value %v not ignored, but should be!", *tag.Key, *tag.Value)
 		}
 	}

@@ -1555,7 +1555,7 @@ func testAccCheckAWSS3DestroyBucket(n string) resource.TestCheckFunc {
 
 func testAccCheckAWSS3BucketPolicy(n string, policy string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, _ := s.RootModule().Resources[n]
+		rs := s.RootModule().Resources[n]
 		conn := testAccProvider.Meta().(*AWSClient).s3conn
 
 		out, err := conn.GetBucketPolicy(&s3.GetBucketPolicyInput{
@@ -1602,7 +1602,7 @@ func testAccCheckAWSS3BucketPolicy(n string, policy string) resource.TestCheckFu
 
 func testAccCheckAWSS3BucketWebsite(n string, indexDoc string, errorDoc string, redirectProtocol string, redirectTo string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, _ := s.RootModule().Resources[n]
+		rs := s.RootModule().Resources[n]
 		conn := testAccProvider.Meta().(*AWSClient).s3conn
 
 		out, err := conn.GetBucketWebsite(&s3.GetBucketWebsiteInput{
@@ -1658,7 +1658,7 @@ func testAccCheckAWSS3BucketWebsite(n string, indexDoc string, errorDoc string, 
 
 func testAccCheckAWSS3BucketWebsiteRoutingRules(n string, routingRules []*s3.RoutingRule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, _ := s.RootModule().Resources[n]
+		rs := s.RootModule().Resources[n]
 		conn := testAccProvider.Meta().(*AWSClient).s3conn
 
 		out, err := conn.GetBucketWebsite(&s3.GetBucketWebsiteInput{
@@ -1682,7 +1682,7 @@ func testAccCheckAWSS3BucketWebsiteRoutingRules(n string, routingRules []*s3.Rou
 
 func testAccCheckAWSS3BucketVersioning(n string, versioningStatus string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, _ := s.RootModule().Resources[n]
+		rs := s.RootModule().Resources[n]
 		conn := testAccProvider.Meta().(*AWSClient).s3conn
 
 		out, err := conn.GetBucketVersioning(&s3.GetBucketVersioningInput{
@@ -1709,7 +1709,7 @@ func testAccCheckAWSS3BucketVersioning(n string, versioningStatus string) resour
 
 func testAccCheckAWSS3BucketCors(n string, corsRules []*s3.CORSRule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, _ := s.RootModule().Resources[n]
+		rs := s.RootModule().Resources[n]
 		conn := testAccProvider.Meta().(*AWSClient).s3conn
 
 		out, err := conn.GetBucketCors(&s3.GetBucketCorsInput{
@@ -1732,7 +1732,7 @@ func testAccCheckAWSS3BucketCors(n string, corsRules []*s3.CORSRule) resource.Te
 
 func testAccCheckAWSS3RequestPayer(n, expectedPayer string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, _ := s.RootModule().Resources[n]
+		rs := s.RootModule().Resources[n]
 		conn := testAccProvider.Meta().(*AWSClient).s3conn
 
 		out, err := conn.GetBucketRequestPayment(&s3.GetBucketRequestPaymentInput{
@@ -1754,7 +1754,7 @@ func testAccCheckAWSS3RequestPayer(n, expectedPayer string) resource.TestCheckFu
 
 func testAccCheckAWSS3BucketLogging(n, b, p string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, _ := s.RootModule().Resources[n]
+		rs := s.RootModule().Resources[n]
 		conn := testAccProvider.Meta().(*AWSClient).s3conn
 
 		out, err := conn.GetBucketLogging(&s3.GetBucketLoggingInput{
@@ -1769,7 +1769,7 @@ func testAccCheckAWSS3BucketLogging(n, b, p string) resource.TestCheckFunc {
 			return fmt.Errorf("logging not enabled for bucket: %s", rs.Primary.ID)
 		}
 
-		tb, _ := s.RootModule().Resources[b]
+		tb := s.RootModule().Resources[b]
 
 		if v := out.LoggingEnabled.TargetBucket; v == nil {
 			if tb.Primary.ID != "" {
@@ -1797,7 +1797,7 @@ func testAccCheckAWSS3BucketLogging(n, b, p string) resource.TestCheckFunc {
 
 func testAccCheckAWSS3BucketReplicationRules(n string, providerF func() *schema.Provider, rules []*s3.ReplicationRule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, _ := s.RootModule().Resources[n]
+		rs := s.RootModule().Resources[n]
 		for _, rule := range rules {
 			if dest := rule.Destination; dest != nil {
 				if account := dest.Account; account != nil && strings.HasPrefix(aws.StringValue(dest.Account), "${") {

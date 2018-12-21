@@ -128,9 +128,7 @@ func TestResourceAWSEFSMountTarget_hasEmptyMountTargets(t *testing.T) {
 		MountTargets: []*efs.MountTargetDescription{},
 	}
 
-	var actual bool
-
-	actual = hasEmptyMountTargets(mto)
+	actual := hasEmptyMountTargets(mto)
 	if !actual {
 		t.Fatalf("Expected return value to be true, got %t", actual)
 	}

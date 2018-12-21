@@ -13575,8 +13575,19 @@ type DescribeClusterSnapshotsInput struct {
 
 	// A value that indicates whether to return snapshots only for an existing cluster.
 	// Table-level restore can be performed only using a snapshot of an existing
-	// cluster, that is, a cluster that has not been deleted. If ClusterExists is
-	// set to true, ClusterIdentifier is required.
+	// cluster, that is, a cluster that has not been deleted.
+	//
+	//    * If ClusterExists is set to true, ClusterIdentifier is required.
+	//
+	//    * If ClusterExists is set to false and ClusterIdentifier is not specified,
+	//    all snapshots associated with deleted clusters (orphaned snapshots) are
+	//    returned.
+	//
+	//    * If ClusterExists is set to false and ClusterIdentifier is specified
+	//    for a deleted cluster, snapshots associated with that cluster are returned.
+	//
+	//    * If ClusterExists is set to false and ClusterIdentifier is specified
+	//    for an existing cluster, no snapshots are returned.
 	ClusterExists *bool `type:"boolean"`
 
 	// The identifier of the cluster for which information about snapshots is requested.

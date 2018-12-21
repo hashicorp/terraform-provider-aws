@@ -74,6 +74,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
+	"github.com/aws/aws-sdk-go/service/licensemanager"
 	"github.com/aws/aws-sdk-go/service/lightsail"
 	"github.com/aws/aws-sdk-go/service/macie"
 	"github.com/aws/aws-sdk-go/service/mediastore"
@@ -87,6 +88,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3control"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/aws/aws-sdk-go/service/securityhub"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
@@ -150,6 +152,7 @@ type Config struct {
 	RdsEndpoint              string
 	R53Endpoint              string
 	S3Endpoint               string
+	S3ControlEndpoint        string
 	SnsEndpoint              string
 	SqsEndpoint              string
 	StsEndpoint              string
@@ -198,6 +201,7 @@ type AWSClient struct {
 	appautoscalingconn    *applicationautoscaling.ApplicationAutoScaling
 	autoscalingconn       *autoscaling.AutoScaling
 	s3conn                *s3.S3
+	s3controlconn         *s3control.S3Control
 	secretsmanagerconn    *secretsmanager.SecretsManager
 	securityhubconn       *securityhub.SecurityHub
 	scconn                *servicecatalog.ServiceCatalog
@@ -225,6 +229,7 @@ type AWSClient struct {
 	elasticbeanstalkconn  *elasticbeanstalk.ElasticBeanstalk
 	elastictranscoderconn *elastictranscoder.ElasticTranscoder
 	lambdaconn            *lambda.Lambda
+	licensemanagerconn    *licensemanager.LicenseManager
 	lightsailconn         *lightsail.Lightsail
 	macieconn             *macie.Macie
 	mqconn                *mq.MQ
@@ -433,6 +438,7 @@ func (c *Config) Client() (interface{}, error) {
 	awsKmsSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.KmsEndpoint)})
 	awsRdsSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.RdsEndpoint)})
 	awsS3Sess := sess.Copy(&aws.Config{Endpoint: aws.String(c.S3Endpoint)})
+	awsS3ControlSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.S3ControlEndpoint)})
 	awsSnsSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.SnsEndpoint)})
 	awsSqsSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.SqsEndpoint)})
 	awsStsSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.StsEndpoint)})
@@ -556,6 +562,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.kmsconn = kms.New(awsKmsSess)
 	client.lambdaconn = lambda.New(awsLambdaSess)
 	client.lexmodelconn = lexmodelbuildingservice.New(sess)
+	client.licensemanagerconn = licensemanager.New(sess)
 	client.lightsailconn = lightsail.New(sess)
 	client.macieconn = macie.New(sess)
 	client.mqconn = mq.New(sess)
@@ -567,6 +574,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.redshiftconn = redshift.New(sess)
 	client.simpledbconn = simpledb.New(sess)
 	client.s3conn = s3.New(awsS3Sess)
+	client.s3controlconn = s3control.New(awsS3ControlSess)
 	client.scconn = servicecatalog.New(sess)
 	client.sdconn = servicediscovery.New(sess)
 	client.sesConn = ses.New(sess)

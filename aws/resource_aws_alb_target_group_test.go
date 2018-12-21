@@ -504,6 +504,51 @@ func testAccCheckAWSALBTargetGroupDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccAWSALBTargetGroup_lambda(t *testing.T) {
+	var conf elbv2.TargetGroup
+	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_alb_target_group.test",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSALBTargetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSALBTargetGroupConfig_lambda(targetGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSALBTargetGroupExists("aws_alb_target_group.test", &conf),
+					resource.TestCheckResourceAttr("aws_alb_target_group.test", "target_type", "lambda"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSALBTargetGroup_missingPortProtocolVpc(t *testing.T) {
+	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSALBTargetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSALBTargetGroupConfig_missing_port(targetGroupName),
+				ExpectError: regexp.MustCompile(`port should be set when target type is`),
+			},
+			{
+				Config:      testAccAWSALBTargetGroupConfig_missing_protocol(targetGroupName),
+				ExpectError: regexp.MustCompile(`protocol should be set when target type is`),
+			},
+			{
+				Config:      testAccAWSALBTargetGroupConfig_missing_vpc(targetGroupName),
+				ExpectError: regexp.MustCompile(`vpc_id should be set when target type is`),
+			},
+		},
+	})
+}
+
 func testAccAWSALBTargetGroupConfig_basic(targetGroupName string) string {
 	return fmt.Sprintf(`resource "aws_alb_target_group" "test" {
   name = "%s"
@@ -845,7 +890,17 @@ const testAccAWSALBTargetGroupConfig_generatedName = `
 resource "aws_alb_target_group" "test" {
   port = 80
   protocol = "HTTP"
-  vpc_id = "${aws_vpc.test.id}"
+	vpc_id = "${aws_vpc.test.id}"
+	
+	health_check {
+    path = "/health"
+    interval = 60
+    timeout = 3
+    healthy_threshold = 3
+    unhealthy_threshold = 3
+    matcher = "200-299"
+  }
+
 }
 
 resource "aws_vpc" "test" {
@@ -855,3 +910,43 @@ resource "aws_vpc" "test" {
 	}
 }
 `
+
+func testAccAWSALBTargetGroupConfig_lambda(targetGroupName string) string {
+	return fmt.Sprintf(`resource "aws_alb_target_group" "test" {
+	name = "%s"
+	target_type = "lambda"
+}`, targetGroupName)
+}
+
+func testAccAWSALBTargetGroupConfig_missing_port(targetGroupName string) string {
+	return fmt.Sprintf(`resource "aws_alb_target_group" "test" {
+  name = "%s"
+  protocol = "HTTPS"
+  vpc_id = "${aws_vpc.test.id}"
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+}`, targetGroupName)
+}
+
+func testAccAWSALBTargetGroupConfig_missing_protocol(targetGroupName string) string {
+	return fmt.Sprintf(`resource "aws_alb_target_group" "test" {
+	name = "%s"
+	port = 443
+  vpc_id = "${aws_vpc.test.id}"
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+}`, targetGroupName)
+}
+
+func testAccAWSALBTargetGroupConfig_missing_vpc(targetGroupName string) string {
+	return fmt.Sprintf(`resource "aws_alb_target_group" "test" {
+	name = "%s"
+	port = 443
+  protocol = "HTTPS"
+}
+`, targetGroupName)
+}
