@@ -71,6 +71,7 @@ func resourceAwsAcmCertificate() *schema.Resource {
 			"validation_method": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"private_key", "certificate_body", "certificate_chain"},
 			},
@@ -226,10 +227,7 @@ func resourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) err
 			return resource.NonRetryableError(err)
 		}
 
-		if _, ok := d.GetOk("validation_method"); ok {
-			d.Set("validation_method", resourceAwsAcmCertificateGuessValidationMethod(domainValidationOptions, emailValidationOptions))
-
-		}
+		d.Set("validation_method", resourceAwsAcmCertificateGuessValidationMethod(domainValidationOptions, emailValidationOptions))
 
 		params := &acm.ListTagsForCertificateInput{
 			CertificateArn: aws.String(d.Id()),
