@@ -10,6 +10,7 @@ ENHANCEMENTS
 
 * resource/aws_launch_template: Add `license_specification` argument [GH-6926]
 * resource/aws_redshift_cluster: Support in-place updates for adding or removing KMS encryption [GH-6865]
+* resource/aws_transfer_server: Add `force_destroy` argument [GH-6935]
 
 ## 1.53.0 (December 20, 2018)
 
