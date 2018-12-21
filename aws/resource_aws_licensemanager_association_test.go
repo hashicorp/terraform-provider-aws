@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/licensemanager"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
@@ -38,6 +37,8 @@ func TestAccAWSLicenseManagerAssociation_basic(t *testing.T) {
 
 func testAccCheckLicenseManagerAssociationExists(resourceName string, licenseSpecification *licensemanager.LicenseSpecification) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).licensemanagerconn
+
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("Not found: %s", resourceName)
@@ -47,28 +48,22 @@ func testAccCheckLicenseManagerAssociationExists(resourceName string, licenseSpe
 			return fmt.Errorf("No ID is set")
 		}
 
-		resourceArn, licenseConfigurationArn, err := parseLicenseManagerAssociationId(rs.Primary.ID)
+		resourceArn, licenseConfigurationArn, err := resourceAwsLicenseManagerAssociationParseId(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).licensemanagerconn
-		resp, err := conn.ListLicenseSpecificationsForResource(&licensemanager.ListLicenseSpecificationsForResourceInput{
-			ResourceArn: aws.String(resourceArn),
-		})
-
+		specification, err := resourceAwsLicenseManagerAssociationFindSpecification(conn, resourceArn, licenseConfigurationArn)
 		if err != nil {
-			return fmt.Errorf("Error retrieving License Manager association (%s): %s", rs.Primary.ID, err)
+			return err
 		}
 
-		for _, ls := range resp.LicenseSpecifications {
-			if aws.StringValue(ls.LicenseConfigurationArn) == licenseConfigurationArn {
-				*licenseSpecification = *ls
-				return nil
-			}
+		if specification == nil {
+			return fmt.Errorf("Error retrieving License Manager association (%s): Not found", rs.Primary.ID)
 		}
 
-		return fmt.Errorf("Error retrieving License Manager association (%s): Not found", rs.Primary.ID)
+		*licenseSpecification = *specification
+		return nil
 	}
 }
 
@@ -80,24 +75,18 @@ func testAccCheckLicenseManagerAssociationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		// Try to find the resource
-		resourceArn, licenseConfigurationArn, err := parseLicenseManagerAssociationId(rs.Primary.ID)
+		resourceArn, licenseConfigurationArn, err := resourceAwsLicenseManagerAssociationParseId(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		resp, err := conn.ListLicenseSpecificationsForResource(&licensemanager.ListLicenseSpecificationsForResourceInput{
-			ResourceArn: aws.String(resourceArn),
-		})
-
+		specification, err := resourceAwsLicenseManagerAssociationFindSpecification(conn, resourceArn, licenseConfigurationArn)
 		if err != nil {
 			return err
 		}
 
-		for _, ls := range resp.LicenseSpecifications {
-			if aws.StringValue(ls.LicenseConfigurationArn) == licenseConfigurationArn {
-				return fmt.Errorf("License Manager association %q still exists", rs.Primary.ID)
-			}
+		if specification != nil {
+			return fmt.Errorf("License Manager association %q still exists", rs.Primary.ID)
 		}
 	}
 

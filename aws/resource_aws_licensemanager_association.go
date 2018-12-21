@@ -64,12 +64,12 @@ func resourceAwsLicenseManagerAssociationCreate(d *schema.ResourceData, meta int
 func resourceAwsLicenseManagerAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).licensemanagerconn
 
-	resourceArn, licenseConfigurationArn, err := parseLicenseManagerAssociationId(d.Id())
+	resourceArn, licenseConfigurationArn, err := resourceAwsLicenseManagerAssociationParseId(d.Id())
 	if err != nil {
 		return err
 	}
 
-	licenseSpecification, err := findLicenseSpecificationForResource(conn, resourceArn, licenseConfigurationArn)
+	licenseSpecification, err := resourceAwsLicenseManagerAssociationFindSpecification(conn, resourceArn, licenseConfigurationArn)
 	if err != nil {
 		return fmt.Errorf("Error reading License Manager association: %s", err)
 	}
@@ -86,7 +86,7 @@ func resourceAwsLicenseManagerAssociationRead(d *schema.ResourceData, meta inter
 	return nil
 }
 
-func findLicenseSpecificationForResource(conn *licensemanager.LicenseManager, resourceArn, licenseConfigurationArn string) (*licensemanager.LicenseSpecification, error) {
+func resourceAwsLicenseManagerAssociationFindSpecification(conn *licensemanager.LicenseManager, resourceArn, licenseConfigurationArn string) (*licensemanager.LicenseSpecification, error) {
 	opts := &licensemanager.ListLicenseSpecificationsForResourceInput{
 		ResourceArn: aws.String(resourceArn),
 	}
@@ -112,7 +112,7 @@ func findLicenseSpecificationForResource(conn *licensemanager.LicenseManager, re
 	}
 }
 
-func parseLicenseManagerAssociationId(id string) (string, string, error) {
+func resourceAwsLicenseManagerAssociationParseId(id string) (string, string, error) {
 	parts := strings.SplitN(id, ",", 2)
 	if len(parts) != 2 {
 		return "", "", fmt.Errorf("Expected License Manager Association ID in the form resource_arn,license_configuration_arn - received: %s", id)
@@ -123,7 +123,7 @@ func parseLicenseManagerAssociationId(id string) (string, string, error) {
 func resourceAwsLicenseManagerAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).licensemanagerconn
 
-	resourceArn, licenseConfigurationArn, err := parseLicenseManagerAssociationId(d.Id())
+	resourceArn, licenseConfigurationArn, err := resourceAwsLicenseManagerAssociationParseId(d.Id())
 	if err != nil {
 		return err
 	}
