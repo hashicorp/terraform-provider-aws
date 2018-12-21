@@ -731,7 +731,7 @@ func resourceAwsElasticSearchDomainUpdate(d *schema.ResourceData, meta interface
 			return resource.NonRetryableError(err)
 		}
 
-		if *out.DomainStatus.Processing == false {
+		if !*out.DomainStatus.Processing {
 			return nil
 		}
 

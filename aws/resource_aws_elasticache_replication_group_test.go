@@ -614,10 +614,9 @@ func TestAccAWSElasticacheReplicationGroup_NumberCacheClusters_Failover_AutoFail
 				PreConfig: func() {
 					// Simulate failover so primary is on node we are trying to delete
 					conn := testAccProvider.Meta().(*AWSClient).elasticacheconn
-					var input *elasticache.ModifyReplicationGroupInput
 
 					// Must disable automatic failover first
-					input = &elasticache.ModifyReplicationGroupInput{
+					var input *elasticache.ModifyReplicationGroupInput = &elasticache.ModifyReplicationGroupInput{
 						ApplyImmediately:         aws.Bool(true),
 						AutomaticFailoverEnabled: aws.Bool(false),
 						ReplicationGroupId:       aws.String(rName),
