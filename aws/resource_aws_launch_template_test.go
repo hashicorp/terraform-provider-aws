@@ -533,6 +533,27 @@ func TestAccAWSLaunchTemplate_instanceMarketOptions(t *testing.T) {
 	})
 }
 
+func TestAccAWSLaunchTemplate_licenseSpecification(t *testing.T) {
+	var template ec2.LaunchTemplate
+	resName := "aws_launch_template.example"
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLaunchTemplateConfig_licenseSpecification(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resName, &template),
+					resource.TestCheckResourceAttr(resName, "license_specification.#", "1"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSLaunchTemplateExists(n string, t *ec2.LaunchTemplate) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -857,6 +878,23 @@ resource "aws_launch_template" "foo" {
   }
 }
 `, instanceType, rName, cpuCredits)
+}
+
+func testAccAWSLaunchTemplateConfig_licenseSpecification(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_licensemanager_license_configuration" "example" {
+  name                  = "Example"
+  license_counting_type = "vCPU"
+}
+
+resource "aws_launch_template" "example" {
+  name = "foo_%d"
+
+	license_specification {
+		license_configuration_arn = "${aws_licensemanager_license_configuration.example.id}"
+	}
+}
+`, rInt)
 }
 
 const testAccAWSLaunchTemplateConfig_networkInterface = `

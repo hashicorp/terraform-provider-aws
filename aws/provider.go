@@ -528,6 +528,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_lambda_permission":                            resourceAwsLambdaPermission(),
 			"aws_launch_configuration":                         resourceAwsLaunchConfiguration(),
 			"aws_launch_template":                              resourceAwsLaunchTemplate(),
+			"aws_licensemanager_association":                   resourceAwsLicenseManagerAssociation(),
 			"aws_licensemanager_license_configuration":         resourceAwsLicenseManagerLicenseConfiguration(),
 			"aws_lightsail_domain":                             resourceAwsLightsailDomain(),
 			"aws_lightsail_instance":                           resourceAwsLightsailInstance(),
