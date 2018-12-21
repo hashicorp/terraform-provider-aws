@@ -62,6 +62,12 @@ func resourceAwsTransferServer() *schema.Resource {
 				ValidateFunc: validateArn,
 			},
 
+			"force_destroy": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+
 			"tags": tagsSchema(),
 		},
 	}
@@ -194,6 +200,13 @@ func resourceAwsTransferServerUpdate(d *schema.ResourceData, meta interface{}) e
 func resourceAwsTransferServerDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).transferconn
 
+	if d.Get("force_destroy").(bool) {
+		log.Printf("[DEBUG] Transfer Server (%s) attempting to forceDestroy", d.Id())
+		if err := deleteTransferUsers(conn, d.Id(), nil); err != nil {
+			return err
+		}
+	}
+
 	delOpts := &transfer.DeleteServerInput{
 		ServerId: aws.String(d.Id()),
 	}
@@ -233,4 +246,42 @@ func waitForTransferServerDeletion(conn *transfer.Transfer, serverID string) err
 
 		return resource.RetryableError(fmt.Errorf("Transfer Server (%s) still exists", serverID))
 	})
+}
+
+func deleteTransferUsers(conn *transfer.Transfer, serverID string, nextToken *string) error {
+	listOpts := &transfer.ListUsersInput{
+		ServerId:  aws.String(serverID),
+		NextToken: nextToken,
+	}
+
+	log.Printf("[DEBUG] List Transfer User Option: %#v", listOpts)
+
+	resp, err := conn.ListUsers(listOpts)
+	if err != nil {
+		return err
+	}
+
+	for _, user := range resp.Users {
+
+		delOpts := &transfer.DeleteUserInput{
+			ServerId: aws.String(serverID),
+			UserName: user.UserName,
+		}
+
+		log.Printf("[DEBUG] Delete Transfer User Option: %#v", delOpts)
+
+		_, err = conn.DeleteUser(delOpts)
+		if err != nil {
+			if isAWSErr(err, transfer.ErrCodeResourceNotFoundException, "") {
+				continue
+			}
+			return fmt.Errorf("error deleting Transfer User (%s) for Server(%s): %s", *user.UserName, serverID, err)
+		}
+	}
+
+	if resp.NextToken != nil {
+		return deleteTransferUsers(conn, serverID, resp.NextToken)
+	}
+
+	return nil
 }
