@@ -21,10 +21,9 @@ func testAccAWSSecurityHubProductSubscription_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            "aws_securityhub_product_subscription.example",
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"product_arn"},
+				ResourceName:      "aws_securityhub_product_subscription.example",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				// Check Destroy - but only target the specific resource (otherwise Security Hub
@@ -45,7 +44,13 @@ func testAccCheckAWSSecurityHubProductSubscriptionExists(n string) resource.Test
 
 		conn := testAccProvider.Meta().(*AWSClient).securityhubconn
 
-		exists, err := resourceAwsSecurityHubProductSubscriptionCheckExists(conn, rs.Primary.ID)
+		_, productSubscriptionArn, err := resourceAwsSecurityHubProductSubscriptionParseId(rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		exists, err := resourceAwsSecurityHubProductSubscriptionCheckExists(conn, productSubscriptionArn)
 
 		if err != nil {
 			return err
@@ -67,7 +72,13 @@ func testAccCheckAWSSecurityHubProductSubscriptionDestroy(s *terraform.State) er
 			continue
 		}
 
-		exists, err := resourceAwsSecurityHubProductSubscriptionCheckExists(conn, rs.Primary.ID)
+		_, productSubscriptionArn, err := resourceAwsSecurityHubProductSubscriptionParseId(rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		exists, err := resourceAwsSecurityHubProductSubscriptionCheckExists(conn, productSubscriptionArn)
 
 		if err != nil {
 			return err
