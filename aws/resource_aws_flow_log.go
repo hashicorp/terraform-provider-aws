@@ -174,7 +174,12 @@ func resourceAwsLogFlowRead(d *schema.ResourceData, meta interface{}) error {
 	fl := resp.FlowLogs[0]
 	d.Set("traffic_type", fl.TrafficType)
 	d.Set("log_destination", fl.LogDestination)
-	d.Set("log_destination_type", fl.LogDestinationType)
+	if fl.LogDestinationType == nil {
+		log.Printf("[WARN] AWS EC2 API bug, not returning destination type (%v)", fl.LogDestinationType)
+		d.Set("log_destination_type", ec2.LogDestinationTypeCloudWatchLogs)
+	} else {
+		d.Set("log_destination_type", fl.LogDestinationType)
+	}
 	d.Set("log_group_name", fl.LogGroupName)
 	d.Set("iam_role_arn", fl.DeliverLogsPermissionArn)
 
