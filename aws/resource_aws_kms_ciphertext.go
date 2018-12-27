@@ -17,25 +17,24 @@ func resourceAwsKmsCiphertext() *schema.Resource {
 		Read:   resourceAwsKmsCiphertextRead,
 		Delete: resourceAwsKmsCiphertextDelete,
 
-
 		Schema: map[string]*schema.Schema{
 			"plaintext": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNext: true,
+				Type:      schema.TypeString,
+				Required:  true,
+				ForceNew: true,
 			},
 
 			"key_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNext: true,
+				Type:      schema.TypeString,
+				Required:  true,
+				ForceNew: true,
 			},
 
 			"context": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				ForceNext: true,
+				Type:      schema.TypeMap,
+				Optional:  true,
+				Elem:      &schema.Schema{Type: schema.TypeString},
+				ForceNew: true,
 			},
 
 			"ciphertext_blob": {
