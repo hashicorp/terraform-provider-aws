@@ -19,21 +19,21 @@ func resourceAwsKmsCiphertext() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"plaintext": {
-				Type:      schema.TypeString,
-				Required:  true,
+				Type:     schema.TypeString,
+				Required: true,
 				ForceNew: true,
 			},
 
 			"key_id": {
-				Type:      schema.TypeString,
-				Required:  true,
+				Type:     schema.TypeString,
+				Required: true,
 				ForceNew: true,
 			},
 
 			"context": {
-				Type:      schema.TypeMap,
-				Optional:  true,
-				Elem:      &schema.Schema{Type: schema.TypeString},
+				Type:     schema.TypeMap,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 				ForceNew: true,
 			},
 
@@ -45,7 +45,7 @@ func resourceAwsKmsCiphertext() *schema.Resource {
 	}
 }
 
-func resoruceAwsKmsCiphertextCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsKmsCiphertextCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kmsconn
 
 	d.SetId(time.Now().UTC().String())
