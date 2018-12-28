@@ -6,7 +6,7 @@ description: |-
   Attaches a load balancer policy to an ELB Listener.
 ---
 
-# aws_elb_load_balancer_listener_policy
+# aws_load_balancer_listener_policy
 
 Attaches a load balancer policy to an ELB Listener.
 
