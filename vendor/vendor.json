@@ -783,6 +783,14 @@
 			"versionExact": "v1.16.9"
 		},
 		{
+			"checksumSHA1": "8eDSpLZuyFe/joxw8+dMNhTo+ys=",
+			"path": "github.com/aws/aws-sdk-go/service/globalaccelerator",
+			"revision": "cae66ecf52e0171f937f1fa80e12130fbb652474",
+			"revisionTime": "2018-12-19T22:52:12Z",
+			"version": "v1.16.9",
+			"versionExact": "v1.16.9"
+		},
+		{
 			"checksumSHA1": "GmrZQswb/hr643tOiFmNasocVJ4=",
 			"path": "github.com/aws/aws-sdk-go/service/glue",
 			"revision": "cae66ecf52e0171f937f1fa80e12130fbb652474",
