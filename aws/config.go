@@ -84,6 +84,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/aws/aws-sdk-go/service/pinpoint"
 	"github.com/aws/aws-sdk-go/service/pricing"
+	"github.com/aws/aws-sdk-go/service/ram"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/aws/aws-sdk-go/service/route53"
@@ -149,6 +150,7 @@ type Config struct {
 	KinesisAnalyticsEndpoint string
 	KmsEndpoint              string
 	LambdaEndpoint           string
+	RamEndpoint              string
 	RdsEndpoint              string
 	R53Endpoint              string
 	S3Endpoint               string
@@ -216,6 +218,7 @@ type AWSClient struct {
 	accountid             string
 	supportedplatforms    []string
 	region                string
+	ramconn               *ram.RAM
 	rdsconn               *rds.RDS
 	iamconn               *iam.IAM
 	kinesisconn           *kinesis.Kinesis
@@ -436,6 +439,7 @@ func (c *Config) Client() (interface{}, error) {
 	awsKinesisSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.KinesisEndpoint)})
 	awsKinesisAnalyticsSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.KinesisAnalyticsEndpoint)})
 	awsKmsSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.KmsEndpoint)})
+	awsRamSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.RamEndpoint)})
 	awsRdsSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.RdsEndpoint)})
 	awsS3Sess := sess.Copy(&aws.Config{Endpoint: aws.String(c.S3Endpoint)})
 	awsS3ControlSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.S3ControlEndpoint)})
@@ -570,6 +574,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.opsworksconn = opsworks.New(sess)
 	client.organizationsconn = organizations.New(sess)
 	client.r53conn = route53.New(r53Sess)
+	client.ramconn = ram.New(awsRamSess)
 	client.rdsconn = rds.New(awsRdsSess)
 	client.redshiftconn = redshift.New(sess)
 	client.simpledbconn = simpledb.New(sess)
