@@ -20,7 +20,7 @@ func TestAccAwsRamResourceShare_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSClusterDestroy,
+		CheckDestroy: testAccCheckAwsRamResourceShareDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsRamResourceShareConfig_basic(shareName),
@@ -101,7 +101,6 @@ func testAccCheckAwsRamResourceShareDestroy(s *terraform.State) error {
 			if aws.StringValue(resourceShare.Status) != ram.ResourceShareStatusDeleted {
 				return fmt.Errorf("RAM resource share (%s) still exists", rs.Primary.ID)
 			}
-			return fmt.Errorf("No RAM resource share found")
 		}
 	}
 
