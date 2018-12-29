@@ -159,12 +159,13 @@ func resourceAwsGlobalAcceleratorListenerFlattenPortRanges(portRanges []*globala
 	for i, portRange := range portRanges {
 		m := make(map[string]interface{})
 
-		m["from_port"] = portRange.FromPort
-		m["to_port"] = portRange.ToPort
+		m["from_port"] = *portRange.FromPort
+		m["to_port"] = *portRange.ToPort
 
 		out[i] = m
 	}
 
+	log.Printf("[DEBUG] Flatten port_range: %s", out)
 	return out
 }
 

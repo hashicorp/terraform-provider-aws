@@ -62,5 +62,5 @@ In addition to all arguments above, the following attributes are exported:
 Global Accelerator listeners can be imported using the `id`, e.g.
 
 ```
-$ terraform import aws_globalaccelerator_listener.example arn:aws:globalaccelerator::111111111111:listener/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+$ terraform import aws_globalaccelerator_listener.example arn:aws:globalaccelerator::111111111111:accelerator/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/listener/xxxxxxxx
 ```
