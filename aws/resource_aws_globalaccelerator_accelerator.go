@@ -150,12 +150,13 @@ func resourceAwsGlobalAcceleratorAcceleratorRead(d *schema.ResourceData, meta in
 	accelerator, err := resourceAwsGlobalAcceleratorAcceleratorRetrieve(conn, d.Id())
 
 	if err != nil {
-		if isAWSErr(err, globalaccelerator.ErrCodeAcceleratorNotFoundException, "") {
-			log.Printf("[WARN] Global Accelerator accelerator (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
 		return fmt.Errorf("Error reading Global Accelerator accelerator: %s", err)
+	}
+
+	if accelerator == nil {
+		log.Printf("[WARN] Global Accelerator accelerator (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
 	d.Set("name", accelerator.Name)
