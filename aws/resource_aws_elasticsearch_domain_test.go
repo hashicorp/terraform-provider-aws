@@ -557,7 +557,7 @@ func TestAccAWSElasticSearchDomain_update_volume_type(t *testing.T) {
 }
 
 func TestAccAWSElasticSearchDomain_update_version(t *testing.T) {
-	var input elasticsearch.ElasticsearchDomainStatus
+	var domain1, domain2, domain3 elasticsearch.ElasticsearchDomainStatus
 	ri := acctest.RandInt()
 
 	resource.Test(t, resource.TestCase{
@@ -568,20 +568,23 @@ func TestAccAWSElasticSearchDomain_update_version(t *testing.T) {
 			{
 				Config: testAccESDomainConfig_ClusterUpdateVersion(ri, "5.5"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &input),
+					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &domain1),
 					resource.TestCheckResourceAttr("aws_elasticsearch_domain.example", "elasticsearch_version", "5.5"),
 				),
 			},
 			{
 				Config: testAccESDomainConfig_ClusterUpdateVersion(ri, "5.6"),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &domain2),
+					testAccCheckAWSESDomainNotRecreated(&domain1, &domain2),
 					resource.TestCheckResourceAttr("aws_elasticsearch_domain.example", "elasticsearch_version", "5.6"),
 				),
 			},
 			{
 				Config: testAccESDomainConfig_ClusterUpdateVersion(ri, "6.3"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &input),
+					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &domain3),
+					testAccCheckAWSESDomainNotRecreated(&domain2, &domain3),
 					resource.TestCheckResourceAttr("aws_elasticsearch_domain.example", "elasticsearch_version", "6.3"),
 				),
 			},
@@ -697,6 +700,31 @@ func testAccCheckESDomainExists(n string, domain *elasticsearch.ElasticsearchDom
 		}
 
 		*domain = *resp.DomainStatus
+
+		return nil
+	}
+}
+
+func testAccCheckAWSESDomainNotRecreated(i, j *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).esconn
+
+		iConfig, err := conn.DescribeElasticsearchDomainConfig(&elasticsearch.DescribeElasticsearchDomainConfigInput{
+			DomainName: i.DomainName,
+		})
+		if err != nil {
+			return err
+		}
+		jConfig, err := conn.DescribeElasticsearchDomainConfig(&elasticsearch.DescribeElasticsearchDomainConfigInput{
+			DomainName: j.DomainName,
+		})
+		if err != nil {
+			return err
+		}
+
+		if aws.TimeValue(iConfig.DomainConfig.ElasticsearchClusterConfig.Status.CreationDate) != aws.TimeValue(jConfig.DomainConfig.ElasticsearchClusterConfig.Status.CreationDate) {
+			return fmt.Errorf("ES Domain was recreated")
+		}
 
 		return nil
 	}
