@@ -560,7 +560,7 @@ func TestAccAWSElasticSearchDomain_update_version(t *testing.T) {
 	var domain1, domain2, domain3 elasticsearch.ElasticsearchDomainStatus
 	ri := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
