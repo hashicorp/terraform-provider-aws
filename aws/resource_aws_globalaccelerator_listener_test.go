@@ -100,7 +100,7 @@ func testAccCheckGlobalAcceleratorListenerDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).globalacceleratorconn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_globalaccelerator_accelerator" {
+		if rs.Type != "aws_globalaccelerator_listener" {
 			continue
 		}
 

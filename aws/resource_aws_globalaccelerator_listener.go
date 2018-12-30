@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -130,11 +131,26 @@ func resourceAwsGlobalAcceleratorListenerRead(d *schema.ResourceData, meta inter
 		return nil
 	}
 
+	acceleratorArn, err := resourceAwsGlobalAcceleratorListenerParseAcceleratorArn(d.Id())
+
+	if err != nil {
+		return err
+	}
+
+	d.Set("accelerator_arn", acceleratorArn)
 	d.Set("client_affinity", listener.ClientAffinity)
 	d.Set("protocol", listener.Protocol)
 	d.Set("port_range", resourceAwsGlobalAcceleratorListenerFlattenPortRanges(listener.PortRanges))
 
 	return nil
+}
+
+func resourceAwsGlobalAcceleratorListenerParseAcceleratorArn(listenerArn string) (string, error) {
+	parts := strings.Split(listenerArn, "/")
+	if len(parts) < 4 {
+		return "", fmt.Errorf("Unable to parse accelerator ARN from %s", listenerArn)
+	}
+	return strings.Join(parts[0:2], "/"), nil
 }
 
 func resourceAwsGlobalAcceleratorListenerExpandPortRanges(portRanges []interface{}) []*globalaccelerator.PortRange {
