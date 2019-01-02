@@ -1,12 +1,15 @@
 package aws
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsClientVpnEndpoint() *schema.Resource {
@@ -16,7 +19,7 @@ func resourceAwsClientVpnEndpoint() *schema.Resource {
 		Delete: resourceAwsClientVpnEndpointDelete,
 		Update: resourceAwsClientVpnEndpointUpdate,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsClientVpnEndpointImportState,
+			State: schema.ImportStatePassthrough,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -39,10 +42,11 @@ func resourceAwsClientVpnEndpoint() *schema.Resource {
 				Required: true,
 			},
 			"transport_protocol": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Default:  "udp",
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      "udp",
+				ValidateFunc: validation.StringInSlice([]string{"udp", "tcp"}, false),
 			},
 			"authentication_options": {
 				Type:     schema.TypeSet,
@@ -51,9 +55,10 @@ func resourceAwsClientVpnEndpoint() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"type": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice([]string{"certificate-authentication", "directory-service-authentication"}, false),
 						},
 						"active_directory_id": {
 							Type:     schema.TypeString,
@@ -151,14 +156,13 @@ func resourceAwsClientVpnEndpointCreate(d *schema.ResourceData, meta interface{}
 	}
 
 	d.SetId(*resp.ClientVpnEndpointId)
-	d.Set("dns_name", resp.DnsName)
-	d.Set("status", resp.Status)
 
 	return resourceAwsClientVpnEndpointRead(d, meta)
 }
 
 func resourceAwsClientVpnEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	var err error
 
 	result, err := conn.DescribeClientVpnEndpoints(&ec2.DescribeClientVpnEndpointsInput{
 		ClientVpnEndpointIds: []*string{aws.String(d.Id())},
@@ -168,8 +172,22 @@ func resourceAwsClientVpnEndpointRead(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("Error reading Client VPN endpoint: %s", err)
 	}
 
+	d.Set("description", result.ClientVpnEndpoints[0].Description)
+	d.Set("client_cidr_block", result.ClientVpnEndpoints[0].ClientCidrBlock)
+	d.Set("server_certificate_arn", result.ClientVpnEndpoints[0].ServerCertificateArn)
+	d.Set("transport_protocol", result.ClientVpnEndpoints[0].TransportProtocol)
 	d.Set("dns_name", result.ClientVpnEndpoints[0].DnsName)
 	d.Set("status", result.ClientVpnEndpoints[0].Status)
+
+	err = d.Set("authentication_options", flattenAuthOptsConfig(result.ClientVpnEndpoints[0].AuthenticationOptions))
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("connection_log_options", flattenConnLoggingConfig(result.ClientVpnEndpoints[0].ConnectionLogOptions))
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -276,4 +294,54 @@ func expandEc2ClientVpnAuthenticationRequest(data map[string]interface{}) *ec2.C
 	}
 
 	return req
+}
+
+func flattenConnLoggingConfig(lopts *ec2.ConnectionLogResponseOptions) *schema.Set {
+	m := make(map[string]interface{})
+	if lopts.CloudwatchLogGroup != nil {
+		m["cloudwatch_log_group"] = *lopts.CloudwatchLogGroup
+	}
+	if lopts.CloudwatchLogStream != nil {
+		m["cloudwatch_log_stream"] = *lopts.CloudwatchLogStream
+	}
+	m["enabled"] = *lopts.Enabled
+	return schema.NewSet(connLoggingConfigHash, []interface{}{m})
+}
+
+func connLoggingConfigHash(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.(map[string]interface{})
+	if m["cloudwatch_log_group"] != nil {
+		buf.WriteString(fmt.Sprintf("%s-", m["cloudwatch_log_group"].(string)))
+	}
+	if m["cloudwatch_log_stream"] != nil {
+		buf.WriteString(fmt.Sprintf("%s-", m["cloudwatch_log_stream"].(string)))
+	}
+	buf.WriteString(fmt.Sprintf("%t-", m["enabled"].(bool)))
+	return hashcode.String(buf.String())
+}
+
+func flattenAuthOptsConfig(aopts []*ec2.ClientVpnAuthentication) *schema.Set {
+	m := make(map[string]interface{})
+	if aopts[0].MutualAuthentication != nil {
+		m["root_certificate_chain_arn"] = *aopts[0].MutualAuthentication.ClientRootCertificateChain
+	}
+	if aopts[0].ActiveDirectory != nil {
+		m["active_directory_id"] = *aopts[0].ActiveDirectory.DirectoryId
+	}
+	m["type"] = *aopts[0].Type
+	return schema.NewSet(authOptsConfigHash, []interface{}{m})
+}
+
+func authOptsConfigHash(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.(map[string]interface{})
+	if m["root_certificate_chain_arn"] != nil {
+		buf.WriteString(fmt.Sprintf("%s-", m["root_certificate_chain_arn"].(string)))
+	}
+	if m["active_directory_id"] != nil {
+		buf.WriteString(fmt.Sprintf("%s-", m["active_directory_id"].(string)))
+	}
+	buf.WriteString(fmt.Sprintf("%s-", m["type"].(string)))
+	return hashcode.String(buf.String())
 }

@@ -25,8 +25,9 @@ resource "aws_client_vpn_endpoint" "example" {
   }
 
   connection_log_options {
-	  enabled = true
-	  cloudwatch_log_group = "${aws_cloudwatch_log_group.lg.name}"
+    enabled = true
+    cloudwatch_log_group = "${aws_cloudwatch_log_group.lg.name}"
+    cloudwatch_log_stream = "${aws_cloudwatch_log_stream.ls.name}"
   }
 }
 ```

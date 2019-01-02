@@ -11,20 +11,23 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAwsClientVpnEndpoint_importBasic(t *testing.T) {
-	resourceName := "aws_client_vpn_endpoint.test"
+func TestAccAwsClientVpnEndpoint_basic(t *testing.T) {
+	rStr := acctest.RandString(5)
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProvidersWithTLS,
 		CheckDestroy: testAccCheckAwsClientVpnEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClientVpnEndpointConfig(acctest.RandString(5)),
+				Config: testAccClientVpnEndpointConfig(rStr),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsClientVpnEndpointExists("aws_client_vpn_endpoint.test"),
+				),
 			},
 
 			{
-				ResourceName:      resourceName,
+				ResourceName:      "aws_client_vpn_endpoint.test",
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -32,49 +35,63 @@ func TestAccAwsClientVpnEndpoint_importBasic(t *testing.T) {
 	})
 }
 
-func TestAccAwsClientVpnEndpoint_basic(t *testing.T) {
-	resource.ParallelTest(t, resource.TestCase{
+func TestAccAwsClientVpnEndpoint_withLogGroup(t *testing.T) {
+	rStr := acctest.RandString(5)
+
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProvidersWithTLS,
 		CheckDestroy: testAccCheckAwsClientVpnEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClientVpnEndpointConfig(acctest.RandString(5)),
+				Config: testAccClientVpnEndpointConfig(rStr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsClientVpnEndpointExists("aws_client_vpn_endpoint.test"),
 				),
 			},
-		},
-	})
-}
 
-func TestAccAwsClientVpnEndpoint_withLogGroup(t *testing.T) {
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProvidersWithTLS,
-		CheckDestroy: testAccCheckAwsClientVpnEndpointDestroy,
-		Steps: []resource.TestStep{
 			{
-				Config: testAccClientVpnEndpointConfigWithLogGroup(acctest.RandString(5)),
+				Config: testAccClientVpnEndpointConfigWithLogGroup(rStr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsClientVpnEndpointExists("aws_client_vpn_endpoint.test"),
 				),
+			},
+
+			{
+				ResourceName:      "aws_client_vpn_endpoint.test",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
 func TestAccAwsClientVpnEndpoint_withDNSServers(t *testing.T) {
-	resource.ParallelTest(t, resource.TestCase{
+	rStr := acctest.RandString(5)
+
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProvidersWithTLS,
 		CheckDestroy: testAccCheckAwsClientVpnEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClientVpnEndpointConfigWithDNSServers(acctest.RandString(5)),
+				Config: testAccClientVpnEndpointConfig(rStr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsClientVpnEndpointExists("aws_client_vpn_endpoint.test"),
 				),
+			},
+
+			{
+				Config: testAccClientVpnEndpointConfigWithDNSServers(rStr),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsClientVpnEndpointExists("aws_client_vpn_endpoint.test"),
+				),
+			},
+
+			{
+				ResourceName:      "aws_client_vpn_endpoint.test",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -192,6 +209,11 @@ resource "aws_cloudwatch_log_group" "lg" {
   name = "terraform-testacc-clientvpn-loggroup-%s"
 }
 
+resource "aws_cloudwatch_log_stream" "ls" {
+  name           = "${aws_cloudwatch_log_group.lg.name}-stream"
+  log_group_name = "${aws_cloudwatch_log_group.lg.name}"
+}
+
 resource "aws_client_vpn_endpoint" "test" {
   description = "terraform-testacc-clientvpn-%s"
   server_certificate_arn = "${aws_acm_certificate.cert.arn}"
@@ -203,8 +225,9 @@ resource "aws_client_vpn_endpoint" "test" {
   }
 
   connection_log_options {
-	enabled = true
-	cloudwatch_log_group = "${aws_cloudwatch_log_group.lg.name}"
+    enabled = true
+    cloudwatch_log_group = "${aws_cloudwatch_log_group.lg.name}"
+    cloudwatch_log_stream = "${aws_cloudwatch_log_stream.ls.name}"
   }
 }
 `, rName, rName)
