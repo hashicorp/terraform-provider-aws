@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/lambda"
-	"github.com/mitchellh/go-homedir"
+	homedir "github.com/mitchellh/go-homedir"
 
 	"errors"
 
@@ -114,8 +114,11 @@ func resourceAwsLambdaFunction() *schema.Resource {
 					lambda.RuntimeNodejs43Edge,
 					lambda.RuntimeNodejs610,
 					lambda.RuntimeNodejs810,
+					lambda.RuntimeProvided,
 					lambda.RuntimePython27,
 					lambda.RuntimePython36,
+					lambda.RuntimePython37,
+					lambda.RuntimeRuby25,
 				}, false),
 			},
 			"timeout": {
@@ -566,13 +569,7 @@ func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) err
 		d.Set("qualified_arn", lastQualifiedArn)
 	}
 
-	invokeArn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Service:   "apigateway",
-		Region:    meta.(*AWSClient).region,
-		AccountID: "lambda",
-		Resource:  fmt.Sprintf("path/2015-03-31/functions/%s/invocations", *function.FunctionArn),
-	}.String()
+	invokeArn := lambdaFunctionInvokeArn(*function.FunctionArn, meta)
 	d.Set("invoke_arn", invokeArn)
 
 	return nil
@@ -883,4 +880,14 @@ func readEnvironmentVariables(ev map[string]interface{}) map[string]string {
 	}
 
 	return variables
+}
+
+func lambdaFunctionInvokeArn(functionArn string, meta interface{}) string {
+	return arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "apigateway",
+		Region:    meta.(*AWSClient).region,
+		AccountID: "lambda",
+		Resource:  fmt.Sprintf("path/2015-03-31/functions/%s/invocations", functionArn),
+	}.String()
 }

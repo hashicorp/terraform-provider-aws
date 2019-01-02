@@ -308,6 +308,20 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 				Optional: true,
 			},
 
+			"license_specification": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"license_configuration_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validateArn,
+						},
+					},
+				},
+			},
+
 			"monitoring": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -627,6 +641,10 @@ func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
+	if err := d.Set("license_specification", getLicenseSpecifications(ltData.LicenseSpecifications)); err != nil {
+		return err
+	}
+
 	if err := d.Set("monitoring", getMonitoring(ltData.Monitoring)); err != nil {
 		return err
 	}
@@ -826,6 +844,16 @@ func getInstanceMarketOptions(m *ec2.LaunchTemplateInstanceMarketOptions) []inte
 			mo["spot_options"] = []interface{}{spotOptions}
 		}
 		s = append(s, mo)
+	}
+	return s
+}
+
+func getLicenseSpecifications(licenseSpecifications []*ec2.LaunchTemplateLicenseConfiguration) []map[string]interface{} {
+	var s []map[string]interface{}
+	for _, v := range licenseSpecifications {
+		s = append(s, map[string]interface{}{
+			"license_configuration_arn": aws.StringValue(v.LicenseConfigurationArn),
+		})
 	}
 	return s
 }
@@ -1033,6 +1061,16 @@ func buildLaunchTemplateData(d *schema.ResourceData) (*ec2.RequestLaunchTemplate
 			}
 			opts.InstanceMarketOptions = instanceMarketOptions
 		}
+	}
+
+	if v, ok := d.GetOk("license_specification"); ok {
+		var licenseSpecifications []*ec2.LaunchTemplateLicenseConfigurationRequest
+		lsList := v.(*schema.Set).List()
+
+		for _, ls := range lsList {
+			licenseSpecifications = append(licenseSpecifications, readLicenseSpecificationFromConfig(ls.(map[string]interface{})))
+		}
+		opts.LicenseSpecifications = licenseSpecifications
 	}
 
 	if v, ok := d.GetOk("monitoring"); ok {
@@ -1327,6 +1365,16 @@ func readInstanceMarketOptionsFromConfig(imo map[string]interface{}) (*ec2.Launc
 	}
 
 	return instanceMarketOptions, nil
+}
+
+func readLicenseSpecificationFromConfig(ls map[string]interface{}) *ec2.LaunchTemplateLicenseConfigurationRequest {
+	licenseSpecification := &ec2.LaunchTemplateLicenseConfigurationRequest{}
+
+	if v, ok := ls["license_configuration_arn"].(string); ok && v != "" {
+		licenseSpecification.LicenseConfigurationArn = aws.String(v)
+	}
+
+	return licenseSpecification
 }
 
 func readPlacementFromConfig(p map[string]interface{}) *ec2.LaunchTemplatePlacementRequest {

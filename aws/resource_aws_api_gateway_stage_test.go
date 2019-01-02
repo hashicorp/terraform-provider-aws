@@ -270,7 +270,7 @@ resource "aws_api_gateway_stage" "test" {
     one = "1"
     two = "2"
   }
-  tags {
+  tags = {
     Name = "tf-test"
   }
 }
@@ -290,7 +290,7 @@ resource "aws_api_gateway_stage" "test" {
     one = "1"
     three = "3"
   }
-  tags {
+  tags = {
     Name = "tf-test"
     ExtraName = "tf-test"
   }
@@ -314,7 +314,7 @@ resource "aws_api_gateway_stage" "test" {
     one = "1"
     two = "2"
   }
-  tags {
+  tags = {
     Name = "tf-test"
 	}
   access_log_settings {

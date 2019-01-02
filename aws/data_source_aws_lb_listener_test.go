@@ -39,7 +39,7 @@ func TestAccDataSourceAWSLBListener_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAWSLBListenerBackwardsCompatibility(t *testing.T) {
+func TestAccDataSourceAWSLBListener_BackwardsCompatibility(t *testing.T) {
 	lbName := fmt.Sprintf("testlistener-basic-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
 	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
@@ -127,7 +127,7 @@ resource "aws_lb" "alb_test" {
   idle_timeout               = 30
   enable_deletion_protection = false
 
-  tags {
+  tags = {
     TestName = "TestAccAWSALB_basic"
   }
 }
@@ -160,7 +160,7 @@ data "aws_availability_zones" "available" {}
 resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-lb-listener-data-source-basic"
   }
 }
@@ -172,7 +172,7 @@ resource "aws_subnet" "alb_test" {
   map_public_ip_on_launch = true
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
-  tags {
+  tags = {
     Name = "tf-acc-lb-listener-data-source-basic"
   }
 }
@@ -196,7 +196,7 @@ resource "aws_security_group" "alb_test" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags {
+  tags = {
     TestName = "TestAccAWSALB_basic"
   }
 }
@@ -246,7 +246,7 @@ resource "aws_alb" "alb_test" {
   idle_timeout               = 30
   enable_deletion_protection = false
 
-  tags {
+  tags = {
     TestName = "TestAccAWSALB_basic"
   }
 }
@@ -279,7 +279,7 @@ data "aws_availability_zones" "available" {}
 resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-lb-listener-data-source-bc"
   }
 }
@@ -291,7 +291,7 @@ resource "aws_subnet" "alb_test" {
   map_public_ip_on_launch = true
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
-  tags {
+  tags = {
     Name = "tf-acc-lb-listener-data-source-bc"
   }
 }
@@ -315,7 +315,7 @@ resource "aws_security_group" "alb_test" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags {
+  tags = {
     TestName = "TestAccAWSALB_basic"
   }
 }
@@ -354,7 +354,7 @@ resource "aws_lb" "alb_test" {
   idle_timeout               = 30
   enable_deletion_protection = false
 
-  tags {
+  tags = {
     TestName = "TestAccAWSALB_basic"
   }
 
@@ -389,7 +389,7 @@ data "aws_availability_zones" "available" {}
 resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-lb-listener-data-source-https"
   }
 }
@@ -397,7 +397,7 @@ resource "aws_vpc" "alb_test" {
 resource "aws_internet_gateway" "gw" {
   vpc_id = "${aws_vpc.alb_test.id}"
 
-  tags {
+  tags = {
     Name     = "terraform-testacc-lb-listener-data-source-https"
     TestName = "TestAccAWSALB_basic"
   }
@@ -410,7 +410,7 @@ resource "aws_subnet" "alb_test" {
   map_public_ip_on_launch = true
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
-  tags {
+  tags = {
     Name = "tf-acc-lb-listener-data-source-https"
   }
 }
@@ -434,7 +434,7 @@ resource "aws_security_group" "alb_test" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags {
+  tags = {
     TestName = "TestAccAWSALB_basic"
   }
 }

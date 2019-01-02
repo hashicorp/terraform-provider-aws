@@ -131,11 +131,7 @@ func testAccCheckAppCookieStickinessPolicy(elbResource string, policyResource st
 			PolicyNames:      []*string{aws.String(policyName)},
 		})
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

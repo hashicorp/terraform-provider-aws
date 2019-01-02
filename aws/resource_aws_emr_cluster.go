@@ -63,7 +63,7 @@ func resourceAwsEMRCluster() *schema.Resource {
 								}
 							}
 						}
-					} // */
+					} */
 
 				// Everything in instance group needs to be set to forcenew if the autoscaling policy doesn't change
 				if len(oSet) == len(nSet) {
@@ -1660,18 +1660,18 @@ func resourceAwsEMRClusterInstanceGroupHash(v interface{}) int {
 		pleaseWork, _ := structure.NormalizeJsonString(v.(string))
 		buf.WriteString(fmt.Sprintf("%s-", pleaseWork))
 	}
-	/*
 
-		if v, ok := m["ebs_config"]; ok {
-			configs := v.(*schema.Set).List()
-			// Check the length of ebsConfigs to get around an ebs config being configured automatically when
-			// it isn't specified in Terraform
-			if len(configs) > 1 {
-				for _, ebsConfigs := range configs {
-					buf.WriteString(fmt.Sprintf("%d-", resourceAwsEMRClusterEBSConfigHash(ebsConfigs.(map[string]interface{}))))
-				}
+	if v, ok := m["ebs_config"]; ok {
+		configs := v.(*schema.Set).List()
+
+		// Check the length of ebsConfigs to get around an ebs config being configured automatically when
+		// it isn't specified in Terraform
+		if len(configs) > 1 {
+			for _, ebsConfigs := range configs {
+				buf.WriteString(fmt.Sprintf("%d-", resourceAwsEMRClusterEBSConfigHash(ebsConfigs.(map[string]interface{}))))
 			}
-		}*/
+		}
+	}
 
 	return hashcode.String(buf.String())
 }

@@ -124,7 +124,7 @@ func testAccDataSourceAwsVpcsConfig_tags(rName string) string {
 	}
 
 	data "aws_vpcs" "selected" {
-		tags {
+	tags = {
 			Name = "testacc-vpc-%s"
 			Service = "${aws_vpc.test-vpc.tags["Service"]}"
 		}

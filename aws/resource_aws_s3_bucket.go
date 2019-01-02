@@ -295,7 +295,7 @@ func resourceAwsS3Bucket() *schema.Resource {
 									"storage_class": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateS3BucketLifecycleStorageClass(),
+										ValidateFunc: validateS3BucketLifecycleTransitionStorageClass(),
 									},
 								},
 							},
@@ -314,7 +314,7 @@ func resourceAwsS3Bucket() *schema.Resource {
 									"storage_class": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateS3BucketLifecycleStorageClass(),
+										ValidateFunc: validateS3BucketLifecycleTransitionStorageClass(),
 									},
 								},
 							},
@@ -393,9 +393,11 @@ func resourceAwsS3Bucket() *schema.Resource {
 													Optional: true,
 													ValidateFunc: validation.StringInSlice([]string{
 														s3.StorageClassStandard,
-														s3.StorageClassOnezoneIa,
-														s3.StorageClassStandardIa,
 														s3.StorageClassReducedRedundancy,
+														s3.StorageClassStandardIa,
+														s3.StorageClassOnezoneIa,
+														s3.StorageClassIntelligentTiering,
+														s3.StorageClassGlacier,
 													}, false),
 												},
 												"replica_kms_key_id": {
@@ -868,7 +870,7 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	// Amazon S3 Transfer Acceleration might not be supported in the region
-	if err != nil && !isAWSErr(err, "UnsupportedArgument", "") {
+	if err != nil && !isAWSErr(err, "MethodNotAllowed", "") && !isAWSErr(err, "UnsupportedArgument", "") {
 		return fmt.Errorf("error getting S3 Bucket acceleration configuration: %s", err)
 	}
 	if accelerate, ok := accelerateResponse.(*s3.GetBucketAccelerateConfigurationOutput); ok {

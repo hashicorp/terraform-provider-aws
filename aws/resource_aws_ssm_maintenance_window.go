@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -14,6 +15,9 @@ func resourceAwsSsmMaintenanceWindow() *schema.Resource {
 		Read:   resourceAwsSsmMaintenanceWindowRead,
 		Update: resourceAwsSsmMaintenanceWindowUpdate,
 		Delete: resourceAwsSsmMaintenanceWindowDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -151,7 +155,7 @@ func resourceAwsSsmMaintenanceWindowDelete(d *schema.ResourceData, meta interfac
 
 	_, err := ssmconn.DeleteMaintenanceWindow(params)
 	if err != nil {
-		return err
+		return fmt.Errorf("error deleting SSM Maintenance Window (%s): %s", d.Id(), err)
 	}
 
 	return nil

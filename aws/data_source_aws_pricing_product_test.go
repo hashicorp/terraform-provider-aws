@@ -77,6 +77,10 @@ func testAccDataSourceAwsPricingProductConfigEc2(dataName string, instanceType s
 			field = "tenancy"
 			value = "Shared"
 		  },
+		  {
+			field = "capacitystatus"
+			value = "Used"
+		  },
 		]
 }
 `, dataName, instanceType)

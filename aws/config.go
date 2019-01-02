@@ -19,6 +19,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
+	"github.com/aws/aws-sdk-go/service/appmesh"
 	"github.com/aws/aws-sdk-go/service/appsync"
 	"github.com/aws/aws-sdk-go/service/athena"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
@@ -40,6 +41,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/aws/aws-sdk-go/service/databasemigrationservice"
+	"github.com/aws/aws-sdk-go/service/datasync"
 	"github.com/aws/aws-sdk-go/service/dax"
 	"github.com/aws/aws-sdk-go/service/devicefarm"
 	"github.com/aws/aws-sdk-go/service/directconnect"
@@ -72,6 +74,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
+	"github.com/aws/aws-sdk-go/service/licensemanager"
 	"github.com/aws/aws-sdk-go/service/lightsail"
 	"github.com/aws/aws-sdk-go/service/macie"
 	"github.com/aws/aws-sdk-go/service/mediastore"
@@ -85,7 +88,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3control"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
+	"github.com/aws/aws-sdk-go/service/securityhub"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
 	"github.com/aws/aws-sdk-go/service/ses"
@@ -97,6 +102,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/aws/aws-sdk-go/service/sts"
 	"github.com/aws/aws-sdk-go/service/swf"
+	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
 	"github.com/aws/aws-sdk-go/service/workspaces"
@@ -146,6 +152,7 @@ type Config struct {
 	RdsEndpoint              string
 	R53Endpoint              string
 	S3Endpoint               string
+	S3ControlEndpoint        string
 	SnsEndpoint              string
 	SqsEndpoint              string
 	StsEndpoint              string
@@ -172,6 +179,7 @@ type AWSClient struct {
 	cognitoconn           *cognitoidentity.CognitoIdentity
 	cognitoidpconn        *cognitoidentityprovider.CognitoIdentityProvider
 	configconn            *configservice.ConfigService
+	datasyncconn          *datasync.DataSync
 	daxconn               *dax.DAX
 	devicefarmconn        *devicefarm.DeviceFarm
 	dlmconn               *dlm.DLM
@@ -193,7 +201,9 @@ type AWSClient struct {
 	appautoscalingconn    *applicationautoscaling.ApplicationAutoScaling
 	autoscalingconn       *autoscaling.AutoScaling
 	s3conn                *s3.S3
+	s3controlconn         *s3control.S3Control
 	secretsmanagerconn    *secretsmanager.SecretsManager
+	securityhubconn       *securityhub.SecurityHub
 	scconn                *servicecatalog.ServiceCatalog
 	sesConn               *ses.SES
 	simpledbconn          *simpledb.SimpleDB
@@ -219,6 +229,7 @@ type AWSClient struct {
 	elasticbeanstalkconn  *elasticbeanstalk.ElasticBeanstalk
 	elastictranscoderconn *elastictranscoder.ElasticTranscoder
 	lambdaconn            *lambda.Lambda
+	licensemanagerconn    *licensemanager.LicenseManager
 	lightsailconn         *lightsail.Lightsail
 	macieconn             *macie.Macie
 	mqconn                *mq.MQ
@@ -250,6 +261,8 @@ type AWSClient struct {
 	pricingconn           *pricing.Pricing
 	pinpointconn          *pinpoint.Pinpoint
 	workspacesconn        *workspaces.WorkSpaces
+	appmeshconn           *appmesh.AppMesh
+	transferconn          *transfer.Transfer
 }
 
 func (c *AWSClient) S3() *s3.S3 {
@@ -425,6 +438,7 @@ func (c *Config) Client() (interface{}, error) {
 	awsKmsSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.KmsEndpoint)})
 	awsRdsSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.RdsEndpoint)})
 	awsS3Sess := sess.Copy(&aws.Config{Endpoint: aws.String(c.S3Endpoint)})
+	awsS3ControlSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.S3ControlEndpoint)})
 	awsSnsSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.SnsEndpoint)})
 	awsSqsSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.SqsEndpoint)})
 	awsStsSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.StsEndpoint)})
@@ -519,6 +533,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.cognitoconn = cognitoidentity.New(sess)
 	client.cognitoidpconn = cognitoidentityprovider.New(sess)
 	client.codepipelineconn = codepipeline.New(sess)
+	client.datasyncconn = datasync.New(sess)
 	client.daxconn = dax.New(awsDynamoSess)
 	client.dlmconn = dlm.New(sess)
 	client.dmsconn = databasemigrationservice.New(sess)
@@ -547,6 +562,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.kmsconn = kms.New(awsKmsSess)
 	client.lambdaconn = lambda.New(awsLambdaSess)
 	client.lexmodelconn = lexmodelbuildingservice.New(sess)
+	client.licensemanagerconn = licensemanager.New(sess)
 	client.lightsailconn = lightsail.New(sess)
 	client.macieconn = macie.New(sess)
 	client.mqconn = mq.New(sess)
@@ -558,10 +574,12 @@ func (c *Config) Client() (interface{}, error) {
 	client.redshiftconn = redshift.New(sess)
 	client.simpledbconn = simpledb.New(sess)
 	client.s3conn = s3.New(awsS3Sess)
+	client.s3controlconn = s3control.New(awsS3ControlSess)
 	client.scconn = servicecatalog.New(sess)
 	client.sdconn = servicediscovery.New(sess)
 	client.sesConn = ses.New(sess)
 	client.secretsmanagerconn = secretsmanager.New(sess)
+	client.securityhubconn = securityhub.New(sess)
 	client.sfnconn = sfn.New(sess)
 	client.snsconn = sns.New(awsSnsSess)
 	client.sqsconn = sqs.New(awsSqsSess)
@@ -580,6 +598,8 @@ func (c *Config) Client() (interface{}, error) {
 	client.pricingconn = pricing.New(sess)
 	client.pinpointconn = pinpoint.New(sess)
 	client.workspacesconn = workspaces.New(sess)
+	client.appmeshconn = appmesh.New(sess)
+	client.transferconn = transfer.New(sess)
 
 	// Workaround for https://github.com/aws/aws-sdk-go/issues/1376
 	client.kinesisconn.Handlers.Retry.PushBack(func(r *request.Request) {

@@ -559,7 +559,7 @@ resource "aws_ec2_capacity_reservation" "test" {
   instance_platform = "Linux/UNIX"
   instance_type     = "t2.micro"
 
-  tags {
+  tags = {
     %q = %q
   }
 }
@@ -576,7 +576,7 @@ resource "aws_ec2_capacity_reservation" "test" {
   instance_platform = "Linux/UNIX"
   instance_type     = "t2.micro"
 
-  tags {
+  tags = {
     %q = %q
     %q = %q
   }

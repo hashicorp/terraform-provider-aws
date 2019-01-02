@@ -60,7 +60,6 @@ resource "aws_elasticache_cluster" "bar" {
     node_type = "cache.m1.small"
     num_cache_nodes = 1
     port = 11211
-    parameter_group_name = "default.memcached1.4"
     security_group_names = ["${aws_elasticache_security_group.bar.name}"]
 }
 

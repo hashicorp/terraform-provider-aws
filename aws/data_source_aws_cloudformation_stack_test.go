@@ -72,7 +72,7 @@ resource "aws_cloudformation_stack" "cfs" {
   }
 }
 STACK
-  tags {
+  tags = {
     Name = "Form the Cloud"
     Second = "meh"
   }
@@ -141,7 +141,7 @@ Outputs:
     Value: !Ref myvpc
     Description: VPC ID
 STACK
-  tags {
+  tags = {
     Name = "Form the Cloud"
     Second = "meh"
   }

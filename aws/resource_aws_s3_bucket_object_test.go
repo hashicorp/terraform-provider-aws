@@ -415,7 +415,7 @@ func TestAccAWSS3BucketObject_acl(t *testing.T) {
 
 func testAccCheckAWSS3BucketObjectAcl(n string, expectedPerms []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, _ := s.RootModule().Resources[n]
+		rs := s.RootModule().Resources[n]
 		s3conn := testAccProvider.Meta().(*AWSClient).s3conn
 
 		out, err := s3conn.GetObjectAcl(&s3.GetObjectAclInput{
@@ -481,13 +481,41 @@ func TestAccAWSS3BucketObject_storageClass(t *testing.T) {
 						"REDUCED_REDUNDANCY"),
 				),
 			},
+			{
+				Config: testAccAWSS3BucketObjectConfig_storageClass(rInt, "GLACIER"),
+				Check: resource.ComposeTestCheckFunc(
+					// Can't GetObject on an object in Glacier without restoring it.
+					resource.TestCheckResourceAttr(
+						"aws_s3_bucket_object.object",
+						"storage_class",
+						"GLACIER"),
+					testAccCheckAWSS3BucketObjectStorageClass(
+						"aws_s3_bucket_object.object",
+						"GLACIER"),
+				),
+			},
+			{
+				Config: testAccAWSS3BucketObjectConfig_storageClass(rInt, "INTELLIGENT_TIERING"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketObjectExists(
+						"aws_s3_bucket_object.object",
+						&obj),
+					resource.TestCheckResourceAttr(
+						"aws_s3_bucket_object.object",
+						"storage_class",
+						"INTELLIGENT_TIERING"),
+					testAccCheckAWSS3BucketObjectStorageClass(
+						"aws_s3_bucket_object.object",
+						"INTELLIGENT_TIERING"),
+				),
+			},
 		},
 	})
 }
 
 func testAccCheckAWSS3BucketObjectStorageClass(n, expectedClass string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, _ := s.RootModule().Resources[n]
+		rs := s.RootModule().Resources[n]
 		s3conn := testAccProvider.Meta().(*AWSClient).s3conn
 
 		out, err := s3conn.HeadObject(&s3.HeadObjectInput{
@@ -517,7 +545,7 @@ func testAccCheckAWSS3BucketObjectStorageClass(n, expectedClass string) resource
 
 func testAccCheckAWSS3BucketObjectSSE(n, expectedSSE string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, _ := s.RootModule().Resources[n]
+		rs := s.RootModule().Resources[n]
 		s3conn := testAccProvider.Meta().(*AWSClient).s3conn
 
 		out, err := s3conn.HeadObject(&s3.HeadObjectInput{
@@ -733,7 +761,7 @@ resource "aws_s3_bucket_object" "object" {
 	bucket = "${aws_s3_bucket.object_bucket_2.bucket}"
 	key = "test-key"
 	content = "stuff"
-	tags {
+	tags = {
 		Key1 = "Value One"
 		Description = "Very interesting"
 	}
