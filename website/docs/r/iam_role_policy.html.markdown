@@ -15,7 +15,7 @@ Provides an IAM role policy.
 ```hcl
 resource "aws_iam_role_policy" "test_policy" {
   name = "test_policy"
-  role = "${aws_iam_role.test_role.id}"
+  role = "${aws_iam_role.test_role.unique_id}"
 
   policy = <<EOF
 {
