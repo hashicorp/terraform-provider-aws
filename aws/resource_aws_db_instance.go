@@ -342,9 +342,10 @@ func resourceAwsDbInstance() *schema.Resource {
 			},
 
 			"allow_major_version_upgrade": {
-				Type:     schema.TypeBool,
-				Computed: false,
-				Optional: true,
+				Type:          schema.TypeBool,
+				Computed:      false,
+				Optional:      true,
+				ConflictsWith: []string{"replicate_source_db"},
 			},
 
 			"monitoring_role_arn": {
