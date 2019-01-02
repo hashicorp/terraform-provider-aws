@@ -719,8 +719,6 @@ resource "aws_emr_cluster" "test" {
   ec2_attributes {
     subnet_id = "${aws_subnet.main.id}"
 
-    emr_managed_master_security_group = "${aws_security_group.allow_all.id}"
-    emr_managed_slave_security_group  = "${aws_security_group.allow_all.id}"
     instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
   }
 
@@ -944,36 +942,6 @@ resource "aws_route_table" "r" {
 resource "aws_main_route_table_association" "a" {
   vpc_id         = "${aws_vpc.main.id}"
   route_table_id = "${aws_route_table.r.id}"
-}
-
-resource "aws_security_group" "allow_all" {
-  name        = "allow_all"
-  description = "Allow all inbound traffic"
-  vpc_id      = "${aws_vpc.main.id}"
-
-  ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  depends_on = ["aws_subnet.main"]
-
-  lifecycle {
-    ignore_changes = ["ingress", "egress"]
-  }
-
-  tags {
-    Name = "emr_test"
-  }
 }
 
 output "cluser_id" {

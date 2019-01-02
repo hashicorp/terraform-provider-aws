@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"bytes"
 	"log"
 
 	"encoding/json"
@@ -14,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
 	"github.com/aws/aws-sdk-go/service/emr"
+	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/structure"
@@ -29,8 +31,74 @@ func resourceAwsEMRCluster() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
-		SchemaVersion: 1,
-		MigrateState:  resourceAwsEMRClusterMigrateState,
+
+		// Write a customizeDiff to look at the instance groups and determin if an ebs_config is going
+		// from 0->1 and return computed?? Maybe?
+		CustomizeDiff: func(diff *schema.ResourceDiff, v interface{}) error {
+			if diff.HasChange("instance_group") {
+				o, n := diff.GetChange("instance_group")
+				oSet := o.(*schema.Set).List()
+				nSet := n.(*schema.Set).List()
+
+				/*
+					if len(oSet) == len(nSet) {
+						for i, instanceGroup := range oSet {
+							oInstanceGroup := instanceGroup.(map[string]interface{})
+							nInstanceGroup := nSet[i].(map[string]interface{})
+
+							oEBSConfig := oInstanceGroup["ebs_config"]
+							oEBSAttrs := oEBSConfig.(*schema.Set).List()
+
+							nEBSConfig := nInstanceGroup["ebs_config"]
+							nEBSAttrs := nEBSConfig.(*schema.Set).List()
+
+							// return fmt.Errorf("%+v", diff.GetChangedKeysPrefix(fmt.Sprintf("instance_group.%d", resourceAwsEMRClusterInstanceGroupHash(oInstanceGroup))))
+
+							if len(oEBSAttrs) != 1 && len(nEBSAttrs) != 0 {
+								for _, k := range diff.GetChangedKeysPrefix(fmt.Sprintf("instance_group.%d", resourceAwsEMRClusterInstanceGroupHash(oInstanceGroup))) {
+									if strings.HasSuffix(k, ".#") {
+										k = strings.TrimSuffix(k, ".#")
+									}
+									diff.ForceNew(k)
+								}
+							}
+						}
+					} // */
+
+				// Everything in instance group needs to be set to forcenew if the autoscaling policy doesn't change
+				if len(oSet) == len(nSet) {
+					for _, currInstanceGroup := range oSet {
+						for _, nextInstanceGroup := range nSet {
+							oInstanceGroup := currInstanceGroup.(map[string]interface{})
+							nInstanceGroup := nextInstanceGroup.(map[string]interface{})
+
+							if oInstanceGroup["instance_role"].(string) == nInstanceGroup["instance_role"].(string) && oInstanceGroup["name"].(string) == nInstanceGroup["name"].(string) {
+
+								oAutoScalingPolicy := oInstanceGroup["autoscaling_policy"].(string)
+								nAutoScalingPolicy := nInstanceGroup["autoscaling_policy"].(string)
+
+								if oAutoScalingPolicy != "" && nAutoScalingPolicy != "" {
+									oJson, _ := structure.NormalizeJsonString(oAutoScalingPolicy)
+									nJson, _ := structure.NormalizeJsonString(nAutoScalingPolicy)
+
+									if oJson == nJson {
+										for _, k := range diff.GetChangedKeysPrefix(fmt.Sprintf("instance_group.%d", resourceAwsEMRClusterInstanceGroupHash(oInstanceGroup))) {
+											if strings.HasSuffix(k, ".#") {
+												k = strings.TrimSuffix(k, ".#")
+											}
+											diff.ForceNew(k)
+										}
+									}
+								}
+								break
+							}
+
+						}
+					}
+				}
+			}
+			return nil
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -201,29 +269,22 @@ func resourceAwsEMRCluster() *schema.Resource {
 			"instance_group": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				// ForceNew: true,
+				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"bid_price": {
 							Type:     schema.TypeString,
 							Optional: true,
-							// ForceNew: true,
 						},
 						"ebs_config": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Optional: true,
 							Computed: true,
-							// ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
 									"iops": {
 										Type:     schema.TypeInt,
 										Optional: true,
-										Computed: true,
 									},
 									"size": {
 										Type:     schema.TypeInt,
@@ -241,13 +302,12 @@ func resourceAwsEMRCluster() *schema.Resource {
 									},
 								},
 							},
+							Set: resourceAwsEMRClusterEBSConfigHash,
 						},
 						"instance_count": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Default:  0,
-							// TODO: Add the ability to update this attribute
-							//ForceNew: true,
 						},
 						"autoscaling_policy": {
 							Type:             schema.TypeString,
@@ -262,7 +322,6 @@ func resourceAwsEMRCluster() *schema.Resource {
 						"instance_role": {
 							Type:     schema.TypeString,
 							Required: true,
-							//ForceNew: true,
 							ValidateFunc: validation.StringInSlice([]string{
 								emr.InstanceFleetTypeMaster,
 								emr.InstanceFleetTypeCore,
@@ -272,16 +331,14 @@ func resourceAwsEMRCluster() *schema.Resource {
 						"instance_type": {
 							Type:     schema.TypeString,
 							Required: true,
-							//ForceNew: true,
 						},
 						"name": {
 							Type:     schema.TypeString,
 							Optional: true,
-							ForceNew: true,
 						},
 					},
 				},
-				// Set: resourceAwsEMRClusterInstanceGroupHash,
+				Set: resourceAwsEMRClusterInstanceGroupHash,
 			},
 			"bootstrap_action": {
 				Type:     schema.TypeSet,
@@ -704,6 +761,7 @@ func resourceAwsEMRClusterRead(d *schema.ResourceData, meta interface{}) error {
 		if masterGroup != nil {
 			d.Set("master_instance_type", masterGroup.InstanceType)
 		}
+
 		flattenedInstanceGroups, err := flattenInstanceGroups(instanceGroups)
 		if err != nil {
 			return fmt.Errorf("error flattening instance groups: %+v", err)
@@ -1081,93 +1139,101 @@ func flattenEmrStepSummary(stepSummary *emr.StepSummary) map[string]interface{} 
 	return m
 }
 
-func flattenInstanceGroups(igs []*emr.InstanceGroup) ([]map[string]interface{}, error) {
-	instanceGroupSet := make([]map[string]interface{}, 0)
-	for _, ig := range igs {
-		attrs := map[string]interface{}{}
-		if ig.BidPrice != nil {
-			attrs["bid_price"] = *ig.BidPrice
-		}
-
-		attrs["ebs_config"] = flattenEBSConfig(ig.EbsBlockDevices)
-		attrs["instance_count"] = *ig.RequestedInstanceCount
-		attrs["instance_role"] = *ig.InstanceGroupType
-		attrs["instance_type"] = *ig.InstanceType
-
-		if ig.AutoScalingPolicy != nil {
-			// AutoScalingPolicy has an additional Status field that is causing diffs in the statefile.
-			// We are purposefully omitting that field here when we generate the autoscaling policy string
-			// for the statefile.
-
-			for i, rule := range ig.AutoScalingPolicy.Rules {
-				for j, dimension := range rule.Trigger.CloudWatchAlarmDefinition.Dimensions {
-					if *dimension.Key == "JobFlowId" {
-						tmpDimensions := append(ig.AutoScalingPolicy.Rules[i].Trigger.CloudWatchAlarmDefinition.Dimensions[:j], ig.AutoScalingPolicy.Rules[i].Trigger.CloudWatchAlarmDefinition.Dimensions[j+1:]...)
-						ig.AutoScalingPolicy.Rules[i].Trigger.CloudWatchAlarmDefinition.Dimensions = tmpDimensions
-					}
-				}
-				if len(ig.AutoScalingPolicy.Rules[i].Trigger.CloudWatchAlarmDefinition.Dimensions) == 0 {
-					ig.AutoScalingPolicy.Rules[i].Trigger.CloudWatchAlarmDefinition.Dimensions = nil
-				}
-			}
-
-			tmpAutoScalingPolicy := emr.AutoScalingPolicy{
-				Constraints: ig.AutoScalingPolicy.Constraints,
-				Rules:       ig.AutoScalingPolicy.Rules,
-			}
-			autoscalingPolicyConstraintsBytes, err := json.Marshal(tmpAutoScalingPolicy.Constraints)
-			if err != nil {
-				return nil, fmt.Errorf("error parsing EMR Cluster Instance Groups AutoScalingPolicy Constraints: %s", err)
-			}
-			autoscalingPolicyConstraintsString := string(autoscalingPolicyConstraintsBytes)
-
-			autoscalingPolicyRulesBytes, err := json.Marshal(tmpAutoScalingPolicy.Rules)
-			if err != nil {
-				return nil, fmt.Errorf("error parsing EMR Cluster Instance Groups AutoScalingPolicy Rules: %s", err)
-			}
-
-			var rules []map[string]interface{}
-			if err := json.Unmarshal(autoscalingPolicyRulesBytes, &rules); err != nil {
-				return nil, err
-			}
-
-			var cleanRules []map[string]interface{}
-			for _, rule := range rules {
-				cleanRules = append(cleanRules, removeNil(rule))
-			}
-
-			withoutNulls, err := json.Marshal(cleanRules)
-			if err != nil {
-				return nil, err
-			}
-
-			autoscalingPolicyRulesString := string(withoutNulls)
-
-			autoscalingPolicyString := fmt.Sprintf("{\"Constraints\":%s,\"Rules\":%s}", autoscalingPolicyConstraintsString, autoscalingPolicyRulesString)
-
-			attrs["autoscaling_policy"] = autoscalingPolicyString
-		} else {
-			attrs["autoscaling_policy"] = ""
-		}
-
-		if attrs["name"] != nil {
-			attrs["name"] = *ig.Name
-		}
-		instanceGroupSet = append(instanceGroupSet, attrs)
+func flattenInstanceGroup(ig *emr.InstanceGroup) (map[string]interface{}, error) {
+	attrs := map[string]interface{}{}
+	if ig.BidPrice != nil {
+		attrs["bid_price"] = *ig.BidPrice
 	}
 
-	return instanceGroupSet, nil
+	attrs["ebs_config"] = flattenEBSConfig(ig.EbsBlockDevices)
+	attrs["instance_count"] = int(*ig.RequestedInstanceCount)
+	attrs["instance_role"] = *ig.InstanceGroupType
+	attrs["instance_type"] = *ig.InstanceType
+
+	if ig.AutoScalingPolicy != nil {
+		// AutoScalingPolicy has an additional Status field that is causing diffs in the statefile.
+		// We are purposefully omitting that field here when we generate the autoscaling policy string
+		// for the statefile.
+
+		for i, rule := range ig.AutoScalingPolicy.Rules {
+			for j, dimension := range rule.Trigger.CloudWatchAlarmDefinition.Dimensions {
+				if *dimension.Key == "JobFlowId" {
+					tmpDimensions := append(ig.AutoScalingPolicy.Rules[i].Trigger.CloudWatchAlarmDefinition.Dimensions[:j], ig.AutoScalingPolicy.Rules[i].Trigger.CloudWatchAlarmDefinition.Dimensions[j+1:]...)
+					ig.AutoScalingPolicy.Rules[i].Trigger.CloudWatchAlarmDefinition.Dimensions = tmpDimensions
+				}
+			}
+			if len(ig.AutoScalingPolicy.Rules[i].Trigger.CloudWatchAlarmDefinition.Dimensions) == 0 {
+				ig.AutoScalingPolicy.Rules[i].Trigger.CloudWatchAlarmDefinition.Dimensions = nil
+			}
+		}
+
+		tmpAutoScalingPolicy := emr.AutoScalingPolicy{
+			Constraints: ig.AutoScalingPolicy.Constraints,
+			Rules:       ig.AutoScalingPolicy.Rules,
+		}
+		autoscalingPolicyConstraintsBytes, err := json.Marshal(tmpAutoScalingPolicy.Constraints)
+		if err != nil {
+			return nil, fmt.Errorf("error parsing EMR Cluster Instance Groups AutoScalingPolicy Constraints: %s", err)
+		}
+		autoscalingPolicyConstraintsString := string(autoscalingPolicyConstraintsBytes)
+
+		autoscalingPolicyRulesBytes, err := json.Marshal(tmpAutoScalingPolicy.Rules)
+		if err != nil {
+			return nil, fmt.Errorf("error parsing EMR Cluster Instance Groups AutoScalingPolicy Rules: %s", err)
+		}
+
+		var rules []map[string]interface{}
+		if err := json.Unmarshal(autoscalingPolicyRulesBytes, &rules); err != nil {
+			return nil, err
+		}
+
+		var cleanRules []map[string]interface{}
+		for _, rule := range rules {
+			cleanRules = append(cleanRules, removeNil(rule))
+		}
+
+		withoutNulls, err := json.Marshal(cleanRules)
+		if err != nil {
+			return nil, err
+		}
+
+		autoscalingPolicyRulesString := string(withoutNulls)
+
+		autoscalingPolicyString := fmt.Sprintf("{\"Constraints\":%s,\"Rules\":%s}", autoscalingPolicyConstraintsString, autoscalingPolicyRulesString)
+
+		attrs["autoscaling_policy"] = autoscalingPolicyString
+	} else {
+		attrs["autoscaling_policy"] = ""
+	}
+
+	if attrs["name"] != nil {
+		attrs["name"] = *ig.Name
+	}
+	return attrs, nil
 }
 
-func flattenEBSConfig(ebsBlockDevices []*emr.EbsBlockDevice) []map[string]interface{} {
-	ebsConfig := make([]map[string]interface{}, 0)
+func flattenInstanceGroups(igs []*emr.InstanceGroup) (*schema.Set, error) {
+	instanceGroupSet := []interface{}{}
+	for _, ig := range igs {
+		flattenedInstanceGroup, err := flattenInstanceGroup(ig)
+		if err != nil {
+			return nil, err
+		}
+		instanceGroupSet = append(instanceGroupSet, flattenedInstanceGroup)
+	}
+
+	return schema.NewSet(resourceAwsEMRClusterInstanceGroupHash, instanceGroupSet), nil
+}
+
+func flattenEBSConfig(ebsBlockDevices []*emr.EbsBlockDevice) *schema.Set {
+	ebsConfig := make([]interface{}, 0)
 	for _, ebs := range ebsBlockDevices {
 		ebsAttrs := make(map[string]interface{})
 		if ebs.VolumeSpecification.Iops != nil {
-			ebsAttrs["iops"] = *ebs.VolumeSpecification.Iops
+			ebsAttrs["iops"] = int(*ebs.VolumeSpecification.Iops)
 		}
 		if ebs.VolumeSpecification.SizeInGB != nil {
-			ebsAttrs["size"] = *ebs.VolumeSpecification.SizeInGB
+			ebsAttrs["size"] = int(*ebs.VolumeSpecification.SizeInGB)
 		}
 		if ebs.VolumeSpecification.VolumeType != nil {
 			ebsAttrs["type"] = *ebs.VolumeSpecification.VolumeType
@@ -1176,7 +1242,8 @@ func flattenEBSConfig(ebsBlockDevices []*emr.EbsBlockDevice) []map[string]interf
 
 		ebsConfig = append(ebsConfig, ebsAttrs)
 	}
-	return ebsConfig
+
+	return schema.NewSet(resourceAwsEMRClusterEBSConfigHash, ebsConfig)
 }
 
 func flattenBootstrapArguments(actions []*emr.Command) []map[string]interface{} {
@@ -1394,8 +1461,8 @@ func expandInstanceGroupConfigs(instanceGroupConfigs []interface{}) ([]*emr.Inst
 			InstanceCount: aws.Int64(int64(configInstanceCount)),
 		}
 
-		applyBidPrice(config, configAttributes)
-		applyEbsConfig(configAttributes, config)
+		expandBidPrice(config, configAttributes)
+		expandEbsConfig(configAttributes, config)
 
 		if v, ok := configAttributes["autoscaling_policy"]; ok && v.(string) != "" {
 			var autoScalingPolicy *emr.AutoScalingPolicy
@@ -1415,7 +1482,7 @@ func expandInstanceGroupConfigs(instanceGroupConfigs []interface{}) ([]*emr.Inst
 	return instanceGroupConfig, nil
 }
 
-func applyBidPrice(config *emr.InstanceGroupConfig, configAttributes map[string]interface{}) {
+func expandBidPrice(config *emr.InstanceGroupConfig, configAttributes map[string]interface{}) {
 	if bidPrice, ok := configAttributes["bid_price"]; ok {
 		if bidPrice != "" {
 			config.BidPrice = aws.String(bidPrice.(string))
@@ -1426,12 +1493,12 @@ func applyBidPrice(config *emr.InstanceGroupConfig, configAttributes map[string]
 	}
 }
 
-func applyEbsConfig(configAttributes map[string]interface{}, config *emr.InstanceGroupConfig) {
+func expandEbsConfig(configAttributes map[string]interface{}, config *emr.InstanceGroupConfig) {
 	if rawEbsConfigs, ok := configAttributes["ebs_config"]; ok {
 		ebsConfig := &emr.EbsConfiguration{}
 
 		ebsBlockDeviceConfigs := make([]*emr.EbsBlockDeviceConfig, 0)
-		for _, rawEbsConfig := range rawEbsConfigs.([]interface{}) {
+		for _, rawEbsConfig := range rawEbsConfigs.(*schema.Set).List() {
 			rawEbsConfig := rawEbsConfig.(map[string]interface{})
 			ebsBlockDeviceConfig := &emr.EbsBlockDeviceConfig{
 				VolumesPerInstance: aws.Int64(int64(rawEbsConfig["volumes_per_instance"].(int))),
@@ -1573,7 +1640,6 @@ func findMasterGroup(instanceGroups []*emr.InstanceGroup) *emr.InstanceGroup {
 	return nil
 }
 
-/*
 // EMRCluster always has an instance role of either master, core, or task
 // Name is optional for core and master(only group allowed for this type) but needed for task
 // since you can have multiple task instance groups.
@@ -1581,8 +1647,43 @@ func resourceAwsEMRClusterInstanceGroupHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 	buf.WriteString(fmt.Sprintf("%s-", m["instance_role"].(string)))
-	if m["name"] != nil {
-		buf.WriteString(fmt.Sprintf("%s", m["name"].(string)))
+	buf.WriteString(fmt.Sprintf("%s-", m["instance_type"].(string)))
+	buf.WriteString(fmt.Sprintf("%d-", m["instance_count"].(int)))
+	if v, ok := m["name"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+	if v, ok := m["bid_price"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+
+	if v, ok := m["autoscaling_policy"]; ok {
+		pleaseWork, _ := structure.NormalizeJsonString(v.(string))
+		buf.WriteString(fmt.Sprintf("%s-", pleaseWork))
+	}
+	/*
+
+		if v, ok := m["ebs_config"]; ok {
+			configs := v.(*schema.Set).List()
+			// Check the length of ebsConfigs to get around an ebs config being configured automatically when
+			// it isn't specified in Terraform
+			if len(configs) > 1 {
+				for _, ebsConfigs := range configs {
+					buf.WriteString(fmt.Sprintf("%d-", resourceAwsEMRClusterEBSConfigHash(ebsConfigs.(map[string]interface{}))))
+				}
+			}
+		}*/
+
+	return hashcode.String(buf.String())
+}
+
+func resourceAwsEMRClusterEBSConfigHash(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.(map[string]interface{})
+	buf.WriteString(fmt.Sprintf("%d-", m["size"].(int)))
+	buf.WriteString(fmt.Sprintf("%s-", m["type"].(string)))
+	buf.WriteString(fmt.Sprintf("%d-", m["volumes_per_instance"].(int)))
+	if v, ok := m["iops"]; ok && v.(int) != 0 {
+		buf.WriteString(fmt.Sprintf("%d-", v.(int)))
 	}
 	return hashcode.String(buf.String())
-}*/
+}
