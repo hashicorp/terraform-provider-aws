@@ -22,6 +22,10 @@ func resourceAwsMediaPackageChannel() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"channel_id": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -33,22 +37,31 @@ func resourceAwsMediaPackageChannel() *schema.Resource {
 				Optional: true,
 				Default:  "Managed by Terraform",
 			},
-			"ingest_endpoints": {
+			"hls_ingest": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"password": {
-							Type:     schema.TypeString,
+						"ingest_endpoints": {
+							Type:     schema.TypeList,
 							Computed: true,
-						},
-						"url": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"username": {
-							Type:     schema.TypeString,
-							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"password": {
+										Type:      schema.TypeString,
+										Computed:  true,
+										Sensitive: true,
+									},
+									"url": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"username": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
 						},
 					},
 				},
@@ -67,7 +80,7 @@ func resourceAwsMediaPackageChannelCreate(d *schema.ResourceData, meta interface
 
 	_, err := conn.CreateChannel(input)
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating MediaPackage Channel: %s", err)
 	}
 
 	d.SetId(d.Get("channel_id").(string))
@@ -82,11 +95,15 @@ func resourceAwsMediaPackageChannelRead(d *schema.ResourceData, meta interface{}
 	}
 	resp, err := conn.DescribeChannel(input)
 	if err != nil {
-		return err
+		return fmt.Errorf("error describing MediaPackage Channel: %s", err)
 	}
 	d.Set("arn", resp.Arn)
+	d.Set("channel_id", resp.Id)
 	d.Set("description", resp.Description)
-	d.Set("ingest_endpoints", convertIngestEndpoints(resp.HlsIngest.IngestEndpoints))
+
+	if err := d.Set("hls_ingest", flattenMediaPackageHLSIngest(resp.HlsIngest)); err != nil {
+		return fmt.Errorf("error setting hls_ingest: %s", err)
+	}
 
 	return nil
 }
@@ -101,7 +118,7 @@ func resourceAwsMediaPackageChannelUpdate(d *schema.ResourceData, meta interface
 
 	_, err := conn.UpdateChannel(input)
 	if err != nil {
-		return err
+		return fmt.Errorf("error updating MediaPackage Channel: %s", err)
 	}
 
 	return resourceAwsMediaPackageChannelRead(d, meta)
@@ -118,7 +135,7 @@ func resourceAwsMediaPackageChannelDelete(d *schema.ResourceData, meta interface
 		if isAWSErr(err, mediapackage.ErrCodeNotFoundException, "") {
 			return nil
 		}
-		return err
+		return fmt.Errorf("error deleting MediaPackage Channel: %s", err)
 	}
 
 	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
@@ -132,25 +149,34 @@ func resourceAwsMediaPackageChannelDelete(d *schema.ResourceData, meta interface
 			}
 			return resource.NonRetryableError(err)
 		}
-		return resource.RetryableError(fmt.Errorf("Media Package Channel (%s) still exists", d.Id()))
+		return resource.RetryableError(fmt.Errorf("MediaPackage Channel (%s) still exists", d.Id()))
 	})
 	if err != nil {
-		return fmt.Errorf("error waiting for Media Package Channel (%s) deletion: %s", d.Id(), err)
+		return fmt.Errorf("error waiting for MediaPackage Channel (%s) deletion: %s", d.Id(), err)
 	}
 
 	return nil
 }
 
-func convertIngestEndpoints(es []*mediapackage.IngestEndpoint) (ingestEndpoints []map[string]interface{}) {
-	for _, e := range es {
+func flattenMediaPackageHLSIngest(h *mediapackage.HlsIngest) []map[string]interface{} {
+	if h.IngestEndpoints == nil {
+		return []map[string]interface{}{
+			{"ingest_endpoints": []map[string]interface{}{}},
+		}
+	}
+
+	var ingestEndpoints []map[string]interface{}
+	for _, e := range h.IngestEndpoints {
 		endpoint := map[string]interface{}{
-			"password": *e.Password,
-			"url":      *e.Url,
-			"username": *e.Username,
+			"password": aws.StringValue(e.Password),
+			"url":      aws.StringValue(e.Url),
+			"username": aws.StringValue(e.Username),
 		}
 
 		ingestEndpoints = append(ingestEndpoints, endpoint)
 	}
 
-	return
+	return []map[string]interface{}{
+		{"ingest_endpoints": ingestEndpoints},
+	}
 }

@@ -39,3 +39,11 @@ Ingest endpoints export the following attributes:
 * `password` - The password
 * `url` - The URL
 * `username` - The username
+
+## Import
+
+Media Package Channels can be imported via the channel ID, e.g.
+
+```
+$ terraform import aws_media_package_channel.kittens kittens-channel
+```
