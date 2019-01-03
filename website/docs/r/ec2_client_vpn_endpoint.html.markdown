@@ -1,12 +1,12 @@
 ---
 layout: "aws"
-page_title: "AWS: aws_client_vpn_endpoint"
-sidebar_current: "docs-aws-resource-client-vpn-endpoint"
+page_title: "AWS: aws_ec2_client_vpn_endpoint"
+sidebar_current: "docs-aws-resource-ec2-client-vpn-endpoint"
 description: |-
   Provides an AWS Client VPN endpoint for OpenVPN clients.
 ---
 
-# aws_client_vpn_endpoint
+# aws_ec2_client_vpn_endpoint
 
 Provides an AWS Client VPN endpoint for OpenVPN clients. For more information on usage, please see the 
 [AWS Client VPN Administrator's Guide](https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/what-is.html).
@@ -14,7 +14,7 @@ Provides an AWS Client VPN endpoint for OpenVPN clients. For more information on
 ## Example Usage
 
 ```hcl
-resource "aws_client_vpn_endpoint" "example" {
+resource "aws_ec2_client_vpn_endpoint" "example" {
   description = "terraform-clientvpn-example"
   server_certificate_arn = "${aws_acm_certificate.cert.arn}"
   client_cidr_block = "10.0.0.0/16"
@@ -73,5 +73,5 @@ In addition to all arguments above, the following attributes are exported:
 AWS Client VPN endpoints can be imported using the `id` value found via `aws ec2 describe-client-vpn-endpoints`, e.g.
 
 ```
-$ terraform import aws_client_vpn_endpoint.example cvpn-endpoint-0ac3a1abbccddd666
+$ terraform import aws_ec2_client_vpn_endpoint.example cvpn-endpoint-0ac3a1abbccddd666
 ```

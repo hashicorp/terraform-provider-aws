@@ -11,23 +11,23 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAwsClientVpnEndpoint_basic(t *testing.T) {
+func TestAccAwsEc2ClientVpnEndpoint_basic(t *testing.T) {
 	rStr := acctest.RandString(5)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProvidersWithTLS,
-		CheckDestroy: testAccCheckAwsClientVpnEndpointDestroy,
+		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClientVpnEndpointConfig(rStr),
+				Config: testAccEc2ClientVpnEndpointConfig(rStr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsClientVpnEndpointExists("aws_client_vpn_endpoint.test"),
+					testAccCheckAwsEc2ClientVpnEndpointExists("aws_ec2_client_vpn_endpoint.test"),
 				),
 			},
 
 			{
-				ResourceName:      "aws_client_vpn_endpoint.test",
+				ResourceName:      "aws_ec2_client_vpn_endpoint.test",
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -35,30 +35,30 @@ func TestAccAwsClientVpnEndpoint_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsClientVpnEndpoint_withLogGroup(t *testing.T) {
+func TestAccAwsEc2ClientVpnEndpoint_withLogGroup(t *testing.T) {
 	rStr := acctest.RandString(5)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProvidersWithTLS,
-		CheckDestroy: testAccCheckAwsClientVpnEndpointDestroy,
+		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClientVpnEndpointConfig(rStr),
+				Config: testAccEc2ClientVpnEndpointConfig(rStr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsClientVpnEndpointExists("aws_client_vpn_endpoint.test"),
+					testAccCheckAwsEc2ClientVpnEndpointExists("aws_ec2_client_vpn_endpoint.test"),
 				),
 			},
 
 			{
-				Config: testAccClientVpnEndpointConfigWithLogGroup(rStr),
+				Config: testAccEc2ClientVpnEndpointConfigWithLogGroup(rStr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsClientVpnEndpointExists("aws_client_vpn_endpoint.test"),
+					testAccCheckAwsEc2ClientVpnEndpointExists("aws_ec2_client_vpn_endpoint.test"),
 				),
 			},
 
 			{
-				ResourceName:      "aws_client_vpn_endpoint.test",
+				ResourceName:      "aws_ec2_client_vpn_endpoint.test",
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -66,30 +66,30 @@ func TestAccAwsClientVpnEndpoint_withLogGroup(t *testing.T) {
 	})
 }
 
-func TestAccAwsClientVpnEndpoint_withDNSServers(t *testing.T) {
+func TestAccAwsEc2ClientVpnEndpoint_withDNSServers(t *testing.T) {
 	rStr := acctest.RandString(5)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProvidersWithTLS,
-		CheckDestroy: testAccCheckAwsClientVpnEndpointDestroy,
+		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClientVpnEndpointConfig(rStr),
+				Config: testAccEc2ClientVpnEndpointConfig(rStr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsClientVpnEndpointExists("aws_client_vpn_endpoint.test"),
+					testAccCheckAwsEc2ClientVpnEndpointExists("aws_ec2_client_vpn_endpoint.test"),
 				),
 			},
 
 			{
-				Config: testAccClientVpnEndpointConfigWithDNSServers(rStr),
+				Config: testAccEc2ClientVpnEndpointConfigWithDNSServers(rStr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsClientVpnEndpointExists("aws_client_vpn_endpoint.test"),
+					testAccCheckAwsEc2ClientVpnEndpointExists("aws_ec2_client_vpn_endpoint.test"),
 				),
 			},
 
 			{
-				ResourceName:      "aws_client_vpn_endpoint.test",
+				ResourceName:      "aws_ec2_client_vpn_endpoint.test",
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -97,7 +97,7 @@ func TestAccAwsClientVpnEndpoint_withDNSServers(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsClientVpnEndpointDestroy(s *terraform.State) error {
+func testAccCheckAwsEc2ClientVpnEndpointDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).ec2conn
 
 	for _, rs := range s.RootModule().Resources {
@@ -119,7 +119,7 @@ func testAccCheckAwsClientVpnEndpointDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAwsClientVpnEndpointExists(name string) resource.TestCheckFunc {
+func testAccCheckAwsEc2ClientVpnEndpointExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		_, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -130,7 +130,7 @@ func testAccCheckAwsClientVpnEndpointExists(name string) resource.TestCheckFunc 
 	}
 }
 
-func testAccClientVpnEndpointConfig(rName string) string {
+func testAccEc2ClientVpnEndpointConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "tls_private_key" "example" {
   algorithm = "RSA"
@@ -159,7 +159,7 @@ resource "aws_acm_certificate" "cert" {
   certificate_body = "${tls_self_signed_cert.example.cert_pem}"
 }
 
-resource "aws_client_vpn_endpoint" "test" {
+resource "aws_ec2_client_vpn_endpoint" "test" {
   description = "terraform-testacc-clientvpn-%s"
   server_certificate_arn = "${aws_acm_certificate.cert.arn}"
   client_cidr_block = "10.0.0.0/16"
@@ -176,7 +176,7 @@ resource "aws_client_vpn_endpoint" "test" {
 `, rName)
 }
 
-func testAccClientVpnEndpointConfigWithLogGroup(rName string) string {
+func testAccEc2ClientVpnEndpointConfigWithLogGroup(rName string) string {
 	return fmt.Sprintf(`
 resource "tls_private_key" "example" {
   algorithm = "RSA"
@@ -214,7 +214,7 @@ resource "aws_cloudwatch_log_stream" "ls" {
   log_group_name = "${aws_cloudwatch_log_group.lg.name}"
 }
 
-resource "aws_client_vpn_endpoint" "test" {
+resource "aws_ec2_client_vpn_endpoint" "test" {
   description = "terraform-testacc-clientvpn-%s"
   server_certificate_arn = "${aws_acm_certificate.cert.arn}"
   client_cidr_block = "10.0.0.0/16"
@@ -233,7 +233,7 @@ resource "aws_client_vpn_endpoint" "test" {
 `, rName, rName)
 }
 
-func testAccClientVpnEndpointConfigWithDNSServers(rName string) string {
+func testAccEc2ClientVpnEndpointConfigWithDNSServers(rName string) string {
 	return fmt.Sprintf(`
 resource "tls_private_key" "example" {
   algorithm = "RSA"
@@ -262,7 +262,7 @@ resource "aws_acm_certificate" "cert" {
   certificate_body = "${tls_self_signed_cert.example.cert_pem}"
 }
 
-resource "aws_client_vpn_endpoint" "test" {
+resource "aws_ec2_client_vpn_endpoint" "test" {
   description = "terraform-testacc-clientvpn-%s"
   server_certificate_arn = "${aws_acm_certificate.cert.arn}"
   client_cidr_block = "10.0.0.0/16"
