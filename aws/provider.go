@@ -338,6 +338,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_autoscaling_schedule":                         resourceAwsAutoscalingSchedule(),
 			"aws_budgets_budget":                               resourceAwsBudgetsBudget(),
 			"aws_client_vpn_endpoint":                          resourceAwsClientVpnEndpoint(),
+			"aws_client_vpn_network_association":               resourceAwsClientVpnNetworkAssociation(),
 			"aws_cloud9_environment_ec2":                       resourceAwsCloud9EnvironmentEc2(),
 			"aws_cloudformation_stack":                         resourceAwsCloudFormationStack(),
 			"aws_cloudfront_distribution":                      resourceAwsCloudFrontDistribution(),
