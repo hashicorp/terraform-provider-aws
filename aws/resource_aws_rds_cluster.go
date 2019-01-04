@@ -217,12 +217,58 @@ func resourceAwsRDSCluster() *schema.Resource {
 				ForceNew: true,
 			},
 
+			"restore_in_time": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				MaxItems: 1,
+				ConflictsWith: []string{
+					"s3_import",
+					"snapshot_identifier",
+				},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"source_cluster_identifier": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: validateRdsIdentifier,
+						},
+
+						"restore_type": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ForceNew: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"full-copy",
+								"copy-on-write",
+							}, false),
+						},
+
+						"use_latest_restorable_time": {
+							Type:          schema.TypeBool,
+							Optional:      true,
+							ForceNew:      true,
+							ConflictsWith: []string{"restore_in_time.restore_to_time"},
+						},
+
+						"restore_to_time": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validateRdsRestorableTimeFormat,
+						},
+					},
+				},
+			},
+
 			"s3_import": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				ConflictsWith: []string{
 					"snapshot_identifier",
+					"restore_in_time",
 				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -405,7 +451,7 @@ func resourceAwsRDSCluster() *schema.Resource {
 				Default:  false,
 			},
 
-			"tags": tagsSchema(),
+			"tags": tagsSchemaComputed(),
 		},
 	}
 }
@@ -650,6 +696,126 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 			return err
 		}
 
+	} else if v, ok := d.GetOk("restore_in_time"); ok {
+		pointInTime := v.([]interface{})[0].(map[string]interface{})
+
+		restoreToTimeAttr := pointInTime["restore_to_time"].(string)
+		useLatestRestorableTimeAttr := pointInTime["use_latest_restorable_time"].(bool)
+
+		if useLatestRestorableTimeAttr && restoreToTimeAttr != "" {
+			return fmt.Errorf(`provider.aws: aws_rds_cluster: %s: Either "restore_to_time" or "use_latest_restorable_time" must be set`, d.Get("database_name").(string))
+		}
+
+		createOpts := &rds.RestoreDBClusterToPointInTimeInput{
+			DBClusterIdentifier:       aws.String(identifier),
+			DeletionProtection:        aws.Bool(d.Get("deletion_protection").(bool)),
+			SourceDBClusterIdentifier: aws.String(pointInTime["source_cluster_identifier"].(string)),
+			Tags:                      tags,
+		}
+
+		if attr, ok := pointInTime["restore_type"]; ok {
+			createOpts.RestoreType = aws.String(attr.(string))
+		}
+
+		if useLatestRestorableTimeAttr {
+			createOpts.UseLatestRestorableTime = aws.Bool(useLatestRestorableTimeAttr)
+		} else if restoreToTimeAttr != "" {
+			restoreToTime, _ := time.Parse(time.RFC3339, restoreToTimeAttr)
+			createOpts.RestoreToTime = aws.Time(restoreToTime)
+		} else {
+			return fmt.Errorf(`provider.aws: aws_rds_cluster: %s: Both "restore_to_time" and "use_latest_restorable_time" cannot be set`, d.Get("database_name").(string))
+		}
+
+		if err := validateRestoreToPointInTimeInput(d); err != nil {
+			return err
+		}
+
+		if v, ok := d.GetOk("backtrack_window"); ok && v.(int) > 0 {
+			createOpts.BacktrackWindow = aws.Int64(int64(v.(int)))
+		}
+
+		if attr, ok := d.GetOk("db_subnet_group_name"); ok {
+			createOpts.DBSubnetGroupName = aws.String(attr.(string))
+		}
+
+		if attr, ok := d.GetOk("port"); ok {
+			createOpts.Port = aws.Int64(int64(attr.(int)))
+		}
+
+		if attr, ok := d.GetOk("option_group_name"); ok {
+			createOpts.OptionGroupName = aws.String(attr.(string))
+		}
+
+		if attr := d.Get("vpc_security_group_ids").(*schema.Set); attr.Len() > 0 {
+			createOpts.VpcSecurityGroupIds = expandStringList(attr.List())
+		}
+
+		if attr, ok := d.GetOk("kms_key_id"); ok {
+			createOpts.KmsKeyId = aws.String(attr.(string))
+		}
+
+		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && len(attr.([]interface{})) > 0 {
+			createOpts.EnableCloudwatchLogsExports = expandStringList(attr.([]interface{}))
+		}
+
+		if attr, ok := d.GetOk("iam_database_authentication_enabled"); ok {
+			createOpts.EnableIAMDatabaseAuthentication = aws.Bool(attr.(bool))
+		}
+
+		if attr, ok := d.GetOk("db_cluster_parameter_group_name"); ok {
+			createOpts.DBClusterParameterGroupName = aws.String(attr.(string))
+		}
+
+		requireUpdateAttrs := []string{
+			"master_password",
+			"final_snapshot_identifier",
+			"backup_retention_period",
+			"preferred_backup_window",
+			"preferred_maintenance_window",
+			"scaling_configuration",
+		}
+
+		for _, attr := range requireUpdateAttrs {
+			if val, ok := d.GetOk(attr); ok {
+				requiresModifyDbCluster = true
+				switch attr {
+				case "master_password":
+					modifyDbClusterInput.MasterUserPassword = aws.String(val.(string))
+				case "backup_retention_period":
+					modifyDbClusterInput.BackupRetentionPeriod = aws.Int64(int64(val.(int)))
+				case "preferred_backup_window":
+					modifyDbClusterInput.PreferredBackupWindow = aws.String(val.(string))
+				case "preferred_maintenance_window":
+					modifyDbClusterInput.PreferredMaintenanceWindow = aws.String(val.(string))
+				case "scaling_configuration":
+					modifyDbClusterInput.ScalingConfiguration = expandRdsScalingConfiguration(d.Get("scaling_configuration").([]interface{}))
+				}
+			}
+		}
+
+		log.Printf("[DEBUG] RDS Cluster restore options: %s", createOpts)
+
+		err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+			resp, err := conn.RestoreDBClusterToPointInTime(createOpts)
+			if err != nil {
+				if isAWSErr(err, "DBClusterSnapshotNotFoundFault", "DBClusterSnapshotIdentifier doesn't refer to an existing DB cluster snapshot") {
+					return resource.RetryableError(err)
+				}
+				if isAWSErr(err, "KMSKeyNotAccessibleFault", "An error occurred accessing an AWS KMS key") {
+					return resource.RetryableError(err)
+				}
+
+				return resource.NonRetryableError(err)
+			}
+
+			log.Printf("[DEBUG]: RDS Cluster restore response: %s", resp)
+			return nil
+		})
+
+		if err != nil {
+			log.Printf("[ERROR] Error restoring RDS Cluster: %s", err)
+			return err
+		}
 	} else {
 
 		createOpts := &rds.CreateDBClusterInput{
@@ -821,6 +987,24 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	return resourceAwsRDSClusterRead(d, meta)
+}
+
+func validateRestoreToPointInTimeInput(d *schema.ResourceData) error {
+	invalidAttrs := []string{
+		"database_name",
+		"master_username",
+		"storage_encrypted",
+		"replication_source_identifier",
+		"source_region",
+	}
+
+	for _, attr := range invalidAttrs {
+		if _, ok := d.GetOk(attr); ok {
+			return fmt.Errorf(`provider.aws: aws_rds_cluster: %s: %q attribute must not be set for point in time restore operation`, d.Get("database_name"), attr)
+		}
+	}
+
+	return nil
 }
 
 func resourceAwsRDSClusterRead(d *schema.ResourceData, meta interface{}) error {

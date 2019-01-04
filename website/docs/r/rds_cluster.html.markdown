@@ -125,6 +125,7 @@ The following arguments are supported:
 * `preferred_backup_window` - (Optional) The daily time range during which automated backups are created if automated backups are enabled using the BackupRetentionPeriod parameter.Time in UTC. Default: A 30-minute window selected at random from an 8-hour block of time per region. e.g. 04:00-09:00
 * `preferred_maintenance_window` - (Optional) The weekly time range during which system maintenance can occur, in (UTC) e.g. wed:04:00-wed:04:30
 * `replication_source_identifier` - (Optional) ARN of a source DB cluster or DB instance if this DB cluster is to be created as a Read Replica. If DB Cluster is part of a Global Cluster, use the [`lifecycle` configuration block `ignore_changes` argument](/docs/configuration/resources.html#ignore_changes) to prevent Terraform from showing differences for this argument instead of configuring this value.
+* `restore_in_time` - (Optional) Nested attribute for [point in time restore](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_PIT.html). More details below.
 * `scaling_configuration` - (Optional) Nested attribute with scaling properties. Only valid when `engine_mode` is set to `serverless`. More details below.
 * `skip_final_snapshot` - (Optional) Determines whether a final DB snapshot is created before the DB cluster is deleted. If true is specified, no DB snapshot is created. If false is specified, a DB snapshot is created before the DB cluster is deleted, using the value from `final_snapshot_identifier`. Default is `false`.
 * `snapshot_identifier` - (Optional) Specifies whether or not to create this cluster from a snapshot. You can use either the name or ARN when specifying a DB cluster snapshot, or the ARN when specifying a DB snapshot.
@@ -132,7 +133,6 @@ The following arguments are supported:
 * `storage_encrypted` - (Optional) Specifies whether the DB cluster is encrypted. The default is `false` for `provisioned` `engine_mode` and `true` for `serverless` `engine_mode`. When restoring an unencrypted `snapshot_identifier`, the `kms_key_id` argument must be provided to encrypt the restored cluster. Terraform will only perform drift detection if a configuration value is provided.
 * `tags` - (Optional) A map of tags to assign to the DB cluster.
 * `vpc_security_group_ids` - (Optional) List of VPC security groups to associate with the Cluster
-
 
 ### S3 Import Options
 
@@ -189,6 +189,30 @@ resource "aws_rds_cluster" "example" {
 * `min_capacity` - (Optional) The minimum capacity. The minimum capacity must be lesser than or equal to the maximum capacity. Valid capacity values are `1`, `2`, `4`, `8`, `16`, `32`, `64`, `128`, and `256`. Defaults to `1`.
 * `seconds_until_auto_pause` - (Optional) The time, in seconds, before an Aurora DB cluster in serverless mode is paused. Valid values are `300` through `86400`. Defaults to `300`.
 * `timeout_action` - (Optional) The action to take when the timeout is reached. Valid values: `ForceApplyCapacityChange`, `RollbackCapacityChange`. Defaults to `RollbackCapacityChange`. See [documentation](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless.how-it-works.html#aurora-serverless.how-it-works.timeout-action).
+
+### restore_in_time Argument Reference
+
+Example:
+
+```hcl
+resource "aws_rds_cluster" "example-clone" {
+  # ... other configuration ...
+
+  restore_in_time {
+    source_cluster_identifier = "example"
+    restore_type = "copy-on-write"
+    use_latest_restorable_time = true
+  }
+}
+```
+
+* `source_cluster_identifier` - (Required) The identifier of the source database cluster from which to restore.
+* `restore_type` - (Optional) Type of restore to be performed.
+   Valid options are `full-copy` (default) and `copy-on-write`.
+* `use_latest_restorable_time` - (Optional) Set to true to restore the database cluster to the latest restorable backup time. Defaults to false.
+* `restore_to_time` - (Optional) Date and time in UTC format to restore the database cluster to.
+
+~> **NOTE:** `use_latest_restorable_time` and `restore_to_time` conflict with each other. 
 
 ## Attributes Reference
 
