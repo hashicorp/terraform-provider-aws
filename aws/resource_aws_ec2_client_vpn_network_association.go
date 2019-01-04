@@ -31,20 +31,12 @@ func resourceAwsEc2ClientVpnNetworkAssociation() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"association_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"security_groups": {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
 			},
 			"status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"target_network_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -106,11 +98,10 @@ func resourceAwsEc2ClientVpnNetworkAssociationRead(d *schema.ResourceData, meta 
 		return fmt.Errorf("Error reading Client VPN network association: %s", err)
 	}
 
-	d.Set("association_id", result.ClientVpnTargetNetworks[0].AssociationId)
 	d.Set("client_vpn_endpoint_id", result.ClientVpnTargetNetworks[0].ClientVpnEndpointId)
 	d.Set("security_groups", result.ClientVpnTargetNetworks[0].SecurityGroups)
 	d.Set("status", result.ClientVpnTargetNetworks[0].Status)
-	d.Set("target_network_id", result.ClientVpnTargetNetworks[0].TargetNetworkId)
+	d.Set("subnet_id", result.ClientVpnTargetNetworks[0].TargetNetworkId)
 	d.Set("vpc_id", result.ClientVpnTargetNetworks[0].VpcId)
 
 	return nil
