@@ -1,4 +1,9 @@
 ## 1.55.0 (Unreleased)
+
+ENHANCEMENTS
+
+* resource/aws_elasticsearch_domain: Support in-place updates of `elasticsearch_version` [GH-6243]
+
 ## 1.54.0 (December 21, 2018)
 
 NOTES
