@@ -314,5 +314,12 @@ func testSweepSkipSweepError(err error) bool {
 	if isAWSErr(err, "InvalidParameterValue", "not permitted in this API version for your account") {
 		return true
 	}
+	// GovCloud has endpoints that respond with (no message provided):
+	// AccessDeniedException:
+	// Since acceptance test sweepers are best effort and this response is very common,
+	// we allow bypassing this error globally instead of individual test sweeper fixes.
+	if isAWSErr(err, "AccessDeniedException", "") {
+		return true
+	}
 	return false
 }
