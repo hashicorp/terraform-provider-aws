@@ -11,35 +11,30 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAwsClientVpnNetworkAssociation_basic(t *testing.T) {
+func TestAccAwsEc2ClientVpnNetworkAssociation_basic(t *testing.T) {
+	var assoc1 ec2.TargetNetwork
 	rStr := acctest.RandString(5)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProvidersWithTLS,
-		CheckDestroy: testAccCheckAwsClientVpnNetworkAssociationDestroy,
+		CheckDestroy: testAccCheckAwsEc2ClientVpnNetworkAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClientVpnNetworkAssociationConfig(rStr),
+				Config: testAccEc2ClientVpnNetworkAssociationConfig(rStr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsClientVpnNetworkAssociationExists("aws_client_vpn_network_association.test"),
+					testAccCheckAwsEc2ClientVpnNetworkAssociationExists("aws_ec2_client_vpn_network_association.test", &assoc1),
 				),
-			},
-
-			{
-				ResourceName:      "aws_client_vpn_network_association.test",
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
-func testAccCheckAwsClientVpnNetworkAssociationDestroy(s *terraform.State) error {
+func testAccCheckAwsEc2ClientVpnNetworkAssociationDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).ec2conn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_client_vpn_network_association" {
+		if rs.Type != "aws_ec2_client_vpn_network_association" {
 			continue
 		}
 
@@ -49,27 +44,66 @@ func testAccCheckAwsClientVpnNetworkAssociationDestroy(s *terraform.State) error
 		})
 
 		for _, v := range resp.ClientVpnTargetNetworks {
-			if *v.AssociationId == rs.Primary.ID && !(*v.Status.Code == ec2.AssociationStatus.Code) {
+			if *v.AssociationId == rs.Primary.ID && !(*v.Status.Code == "Disassociated") {
 				return fmt.Errorf("[DESTROY ERROR] Client VPN network association (%s) not deleted", rs.Primary.ID)
 			}
 		}
 	}
+
 	return nil
 }
 
-func testAccCheckAwsClientVpnNetworkAssociationExists(name string) resource.TestCheckFunc {
+func testAccCheckAwsEc2ClientVpnNetworkAssociationExists(name string, assoc *ec2.TargetNetwork) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		_, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		return nil
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No ID is set")
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+
+		resp, err := conn.DescribeClientVpnTargetNetworks(&ec2.DescribeClientVpnTargetNetworksInput{
+			ClientVpnEndpointId: aws.String(rs.Primary.Attributes["client_vpn_endpoint_id"]),
+			AssociationIds:      []*string{aws.String(rs.Primary.ID)},
+		})
+
+		if err != nil {
+			return fmt.Errorf("Error reading Client VPN network association (%s): %s", rs.Primary.ID, err)
+		}
+
+		for _, a := range resp.ClientVpnTargetNetworks {
+			if *a.AssociationId == rs.Primary.ID && !(*a.Status.Code == "Disassociated") {
+				*assoc = *a
+				return nil
+			}
+		}
+
+		return fmt.Errorf("Client VPN network association (%s) not found", rs.Primary.ID)
 	}
 }
 
-func testAccClientVpnNetworkAssociationConfig(rName string) string {
+func testAccEc2ClientVpnNetworkAssociationConfig(rName string) string {
 	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+	cidr_block = "10.1.0.0/16"
+	tags = {
+		Name = "terraform-testacc-subnet-%s"
+	}
+}
+
+resource "aws_subnet" "test" {
+	cidr_block = "10.1.1.0/24"
+	vpc_id = "${aws_vpc.test.id}"
+	map_public_ip_on_launch = true
+	tags = {
+		Name = "tf-acc-subnet-%s"
+	}
+}
+
 resource "tls_private_key" "example" {
   algorithm = "RSA"
 }
@@ -97,7 +131,7 @@ resource "aws_acm_certificate" "cert" {
   certificate_body = "${tls_self_signed_cert.example.cert_pem}"
 }
 
-resource "aws_client_vpn_endpoint" "test" {
+resource "aws_ec2_client_vpn_endpoint" "test" {
   description = "terraform-testacc-clientvpn-%s"
   server_certificate_arn = "${aws_acm_certificate.cert.arn}"
   client_cidr_block = "10.0.0.0/16"
@@ -111,5 +145,10 @@ resource "aws_client_vpn_endpoint" "test" {
     enabled = false
   }
 }
-`, rName)
+
+resource "aws_ec2_client_vpn_network_association" "test" {
+  client_vpn_endpoint_id = "${aws_ec2_client_vpn_endpoint.test.id}"
+  subnet_id = "${aws_subnet.test.id}"
+}
+`, rName, rName, rName)
 }

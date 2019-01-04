@@ -3,17 +3,19 @@ package aws
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-func resourceAwsClientVpnNetworkAssociation() *schema.Resource {
+func resourceAwsEc2ClientVpnNetworkAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsClientVpnNetworkAssociationCreate,
-		Read:   resourceAwsClientVpnNetworkAssociationRead,
-		Delete: resourceAwsClientVpnNetworkAssociationDelete,
+		Create: resourceAwsEc2ClientVpnNetworkAssociationCreate,
+		Read:   resourceAwsEc2ClientVpnNetworkAssociationRead,
+		Delete: resourceAwsEc2ClientVpnNetworkAssociationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -51,10 +53,15 @@ func resourceAwsClientVpnNetworkAssociation() *schema.Resource {
 				Computed: true,
 			},
 		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(10 * time.Minute),
+			Delete: schema.DefaultTimeout(10 * time.Minute),
+		},
 	}
 }
 
-func resourceAwsClientVpnNetworkAssociationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsEc2ClientVpnNetworkAssociationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
 	req := &ec2.AssociateClientVpnTargetNetworkInput{
@@ -70,10 +77,23 @@ func resourceAwsClientVpnNetworkAssociationCreate(d *schema.ResourceData, meta i
 
 	d.SetId(*resp.AssociationId)
 
-	return resourceAwsClientVpnEndpointRead(d, meta)
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"associating"},
+		Target:  []string{"associated"},
+		Refresh: clientVpnNetworkAssociationRefreshFunc(conn, d.Id(), d.Get("client_vpn_endpoint_id").(string)),
+		Timeout: d.Timeout(schema.TimeoutCreate),
+	}
+
+	log.Printf("[DEBUG] Waiting for Client VPN endpoint to associate with target network: %s", d.Id())
+	_, err = stateConf.WaitForState()
+	if err != nil {
+		return fmt.Errorf("Error waiting for Client VPN endpoint to associate with target network: %s", err)
+	}
+
+	return resourceAwsEc2ClientVpnNetworkAssociationRead(d, meta)
 }
 
-func resourceAwsClientVpnNetworkAssociationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsEc2ClientVpnNetworkAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 	var err error
 
@@ -96,7 +116,7 @@ func resourceAwsClientVpnNetworkAssociationRead(d *schema.ResourceData, meta int
 	return nil
 }
 
-func resourceAwsClientVpnNetworkAssociationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsEc2ClientVpnNetworkAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
 	_, err := conn.DisassociateClientVpnTargetNetwork(&ec2.DisassociateClientVpnTargetNetworkInput{
@@ -108,4 +128,18 @@ func resourceAwsClientVpnNetworkAssociationDelete(d *schema.ResourceData, meta i
 	}
 
 	return nil
+}
+
+func clientVpnNetworkAssociationRefreshFunc(conn *ec2.EC2, cvnaID string, cvepID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		resp, err := conn.DescribeClientVpnTargetNetworks(&ec2.DescribeClientVpnTargetNetworksInput{
+			ClientVpnEndpointId: aws.String(cvepID),
+			AssociationIds:      []*string{aws.String(cvnaID)},
+		})
+		if err != nil {
+			return nil, "", err
+		}
+
+		return resp.ClientVpnTargetNetworks[0], aws.StringValue(resp.ClientVpnTargetNetworks[0].Status.Code), nil
+	}
 }
