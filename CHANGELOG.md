@@ -3,6 +3,7 @@
 ENHANCEMENTS
 
 * resource/aws_elasticsearch_domain: Support in-place updates of `elasticsearch_version` [GH-6243]
+* resource/aws_kinesis_firehose_delivery_stream: Add `extended_s3_configuration` `error_output_prefix` argument [GH-7026]
 
 ## 1.54.0 (December 21, 2018)
 
