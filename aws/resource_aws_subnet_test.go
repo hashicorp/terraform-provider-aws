@@ -53,6 +53,7 @@ func testSweepSubnets(region string) error {
 			{
 				Name: aws.String("tag-value"),
 				Values: []*string{
+					aws.String("terraform-testacc-*"),
 					aws.String("tf-acc-*"),
 				},
 			},
