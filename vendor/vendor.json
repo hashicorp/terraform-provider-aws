@@ -1047,6 +1047,18 @@
 			"versionExact": "v1.16.11"
 		},
 		{
+			"checksumSHA1": "sEjQjy4nIGc5X07ds4TuYkkw6Ro=",
+			"path": "github.com/aws/aws-sdk-go/service/s3/s3iface",
+			"revision": "a720d87b081f6f3c1829ceeed58950ccb346cf6a",
+			"revisionTime": "2018-09-28T18:55:32Z"
+		},
+		{
+			"checksumSHA1": "n642iHX42dolne0hXQqcr1cEImQ=",
+			"path": "github.com/aws/aws-sdk-go/service/s3/s3manager",
+			"revision": "a720d87b081f6f3c1829ceeed58950ccb346cf6a",
+			"revisionTime": "2018-09-28T18:55:32Z"
+		},
+		{
 			"checksumSHA1": "rCCjRj7ky6VPqpZ3yVgcTs9tEck=",
 			"path": "github.com/aws/aws-sdk-go/service/s3control",
 			"revision": "3991042237b45cf58c9d5f34295942d5533c28c6",
