@@ -98,7 +98,7 @@ func updateComputedBucketDirectoryAttributes(d *schema.ResourceDiff, meta interf
 		}
 	}
 
-	resourceEtag := md5.New()
+	resourceETag := md5.New()
 
 	var files = []map[string]string{}
 	err := filepath.Walk(source, func(path string, info os.FileInfo, err error) error {
@@ -114,10 +114,10 @@ func updateComputedBucketDirectoryAttributes(d *schema.ResourceDiff, meta interf
 
 			target := strings.Replace(path, source, target, 1)
 
-			hasher := md5.New()
-			hasher.Write(content)
-			etag := hex.EncodeToString(hasher.Sum(nil))
-			resourceEtag.Write([]byte(etag))
+			objectETag := md5.New()
+			objectETag.Write(content)
+			etag := hex.EncodeToString(objectETag.Sum(nil))
+			resourceETag.Write([]byte(etag))
 
 			parts := strings.Split(path, ".")
 			contentType := mime.TypeByExtension("." + parts[len(parts)-1])
@@ -138,7 +138,7 @@ func updateComputedBucketDirectoryAttributes(d *schema.ResourceDiff, meta interf
 		return fmt.Errorf("Walk error, %q", err.Error())
 	}
 
-	if v, ok := d.GetOk("etag"); !ok || v.(string) != hex.EncodeToString(resourceEtag.Sum(nil)) {
+	if v, ok := d.GetOk("etag"); !ok || v.(string) != hex.EncodeToString(resourceETag.Sum(nil)) {
 		d.SetNewComputed("etag")
 	}
 
@@ -162,8 +162,8 @@ func resourceAwsS3BucketDirectoryCreate(d *schema.ResourceData, meta interface{}
 		files[idx].contentType = m["content_type"].(string)
 	}
 
-	iter := directoryIterator{bucket: bucket, files: files}
-	if err := uploader.UploadWithIterator(aws.BackgroundContext(), s3manager.BatchUploadIterator(&iter)); err != nil {
+	iterator := s3manager.BatchUploadIterator(&directoryIterator{bucket: bucket, files: files})
+	if err := uploader.UploadWithIterator(aws.BackgroundContext(), iterator); err != nil {
 		return err
 	}
 
@@ -178,29 +178,22 @@ func resourceAwsS3BucketDirectoryRead(d *schema.ResourceData, meta interface{}) 
 	source := d.Get("source").(string)
 	target := d.Get("target").(string)
 
-	input := s3.ListObjectsInput{
-		Bucket: &bucket,
-		Prefix: &target,
-	}
-
+	input := s3.ListObjectsInput{Bucket: &bucket, Prefix: &target}
 	resp, err := s3conn.ListObjects(&input)
 	if err != nil {
 		return fmt.Errorf("ListObjects error, %q", err.Error())
 	}
 
-	resourceEtag := md5.New()
+	resourceETag := md5.New()
 	var files = []map[string]string{}
 	for _, obj := range resp.Contents {
-		input := s3.GetObjectInput{
-			Bucket: &bucket,
-			Key:    obj.Key,
-		}
+		input := s3.GetObjectInput{Bucket: &bucket, Key: obj.Key}
 		resp, err := s3conn.GetObject(&input)
 		if err != nil {
 			return fmt.Errorf("ListObjects error, %q", err.Error())
 		}
 
-		resourceEtag.Write([]byte(strings.Trim(*obj.ETag, `"`)))
+		resourceETag.Write([]byte(strings.Trim(*obj.ETag, `"`)))
 
 		files = append(files, map[string]string{
 			"source":       strings.Replace(*obj.Key, target, source, 1),
@@ -210,7 +203,7 @@ func resourceAwsS3BucketDirectoryRead(d *schema.ResourceData, meta interface{}) 
 		})
 	}
 
-	d.Set("etag", hex.EncodeToString(resourceEtag.Sum(nil)))
+	d.Set("etag", hex.EncodeToString(resourceETag.Sum(nil)))
 	d.Set("files", files)
 	return nil
 }
@@ -238,48 +231,37 @@ func resourceAwsS3BucketDirectoryUpdate(d *schema.ResourceData, meta interface{}
 		return err
 	}
 
-	filesAsIs := map[string]file{}
+	filesToUpload := []file{}
+	objectsToDelete := []s3manager.BatchDeleteObject{}
 	for _, elem := range d.Get("files").(*schema.Set).List() {
 		m := elem.(map[string]interface{})
-		f := file{
-			source:      m["source"].(string),
+		asIs := file{
 			target:      m["target"].(string),
 			etag:        m["etag"].(string),
 			contentType: m["content_type"].(string),
 		}
-		filesAsIs[f.target] = f
-	}
 
-	files := []file{}
-	for key, toBe := range filesToBe {
-		if asIs, present := filesAsIs[key]; present {
+		if toBe, present := filesToBe[asIs.target]; present {
 			if asIs.etag != toBe.etag || asIs.contentType != toBe.contentType {
-				files = append(files, toBe)
+				filesToUpload = append(filesToUpload, toBe)
 			}
-			delete(filesAsIs, key)
 		} else {
-			files = append(files, toBe)
+			objectsToDelete = append(objectsToDelete,
+				s3manager.BatchDeleteObject{
+					Object: &s3.DeleteObjectInput{
+						Key:    &asIs.target,
+						Bucket: &bucket,
+					},
+				})
 		}
 	}
 
-	iter := directoryIterator{bucket: bucket, files: files}
-	if err := uploader.UploadWithIterator(aws.BackgroundContext(), s3manager.BatchUploadIterator(&iter)); err != nil {
+	iterator := s3manager.BatchUploadIterator(&directoryIterator{bucket: bucket, files: filesToUpload})
+	if err := uploader.UploadWithIterator(aws.BackgroundContext(), iterator); err != nil {
 		return err
 	}
 
-	objects := []s3manager.BatchDeleteObject{}
-	for key := range filesAsIs {
-		k := key
-		objects = append(objects,
-			s3manager.BatchDeleteObject{
-				Object: &s3.DeleteObjectInput{
-					Key:    &k,
-					Bucket: &bucket,
-				},
-			})
-	}
-
-	if err := deleter.Delete(aws.BackgroundContext(), &s3manager.DeleteObjectsIterator{Objects: objects}); err != nil {
+	if err := deleter.Delete(aws.BackgroundContext(), &s3manager.DeleteObjectsIterator{Objects: objectsToDelete}); err != nil {
 		return err
 	}
 
@@ -292,10 +274,10 @@ func resourceAwsS3BucketDirectoryDelete(d *schema.ResourceData, meta interface{}
 
 	bucket := d.Get("bucket").(string)
 
-	objects := []s3manager.BatchDeleteObject{}
+	objectsToDelete := []s3manager.BatchDeleteObject{}
 	for _, elem := range d.Get("files").(*schema.Set).List() {
 		m := elem.(map[string]interface{})
-		objects = append(objects,
+		objectsToDelete = append(objectsToDelete,
 			s3manager.BatchDeleteObject{
 				Object: &s3.DeleteObjectInput{
 					Key:    aws.String(m["target"].(string)),
@@ -304,7 +286,7 @@ func resourceAwsS3BucketDirectoryDelete(d *schema.ResourceData, meta interface{}
 			})
 	}
 
-	if err := deleter.Delete(aws.BackgroundContext(), &s3manager.DeleteObjectsIterator{Objects: objects}); err != nil {
+	if err := deleter.Delete(aws.BackgroundContext(), &s3manager.DeleteObjectsIterator{Objects: objectsToDelete}); err != nil {
 		return err
 	}
 	return nil
