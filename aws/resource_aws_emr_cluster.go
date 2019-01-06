@@ -209,13 +209,11 @@ func resourceAwsEMRCluster() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
-							Computed: true,
 						},
 						"emr_managed_slave_security_group": {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
-							Computed: true,
 						},
 						"instance_profile": {
 							Type:     schema.TypeString,
