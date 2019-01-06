@@ -354,6 +354,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_api_gateway_usage_plan":                              resourceAwsApiGatewayUsagePlan(),
 			"aws_api_gateway_usage_plan_key":                          resourceAwsApiGatewayUsagePlanKey(),
 			"aws_api_gateway_vpc_link":                                resourceAwsApiGatewayVpcLink(),
+			"aws_api_gateway_v2":                                      resourceAwsApiGatewayV2(),
 			"aws_app_cookie_stickiness_policy":                        resourceAwsAppCookieStickinessPolicy(),
 			"aws_appautoscaling_target":                               resourceAwsAppautoscalingTarget(),
 			"aws_appautoscaling_policy":                               resourceAwsAppautoscalingPolicy(),
