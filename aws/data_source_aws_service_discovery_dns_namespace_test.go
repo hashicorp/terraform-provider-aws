@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 )
 
-func TestAccAWSServiceDiscoveryDnsNamespace_basic(t *testing.T) {
+func TestAccDataSourceAWSServiceDiscoveryDnsNamespace_basic(t *testing.T) {
 	resourceName := "data.aws_service_discovery_dns_namespace.test"
 
 	resource.ParallelTest(t, resource.TestCase{

@@ -21,8 +21,8 @@ func dataSourceServiceDiscoveryDnsNamespace() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.StringInSlice([]string{
-					"DNS_PUBLIC",
-					"DNS_PRIVATE",
+					servicediscovery.NamespaceTypeDnsPublic,
+					servicediscovery.NamespaceTypeDnsPrivate,
 				}, false),
 			},
 			"arn": {
