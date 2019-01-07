@@ -928,12 +928,10 @@ func resourceAwsEMRClusterUpdate(d *schema.ResourceData, meta interface{}) error
 						var autoScalingPolicy *emr.AutoScalingPolicy
 
 						err := json.Unmarshal([]byte(v.(string)), &autoScalingPolicy)
-
 						if err != nil {
 							return fmt.Errorf("error parsing EMR Auto Scaling Policy JSON for update: \n\n%s\n\n%s", v.(string), err)
 						}
 
-						// TODO Confirm that the id for instance group is obtainable from the schema. If not, the user needs to run a terraform refresh
 						putAutoScalingPolicy := &emr.PutAutoScalingPolicyInput{
 							ClusterId:         aws.String(d.Id()),
 							AutoScalingPolicy: autoScalingPolicy,
@@ -942,8 +940,7 @@ func resourceAwsEMRClusterUpdate(d *schema.ResourceData, meta interface{}) error
 
 						_, errModify := conn.PutAutoScalingPolicy(putAutoScalingPolicy)
 						if errModify != nil {
-							log.Printf("[ERROR] %s", errModify)
-							return errModify
+							return fmt.Errorf("error updating autoscaling policy for instance group %q: %s", oInstanceGroup["id"].(string), errModify)
 						}
 
 						break
@@ -1171,9 +1168,9 @@ func flattenInstanceGroup(ig *emr.InstanceGroup) (map[string]interface{}, error)
 	attrs["instance_type"] = *ig.InstanceType
 
 	if ig.AutoScalingPolicy != nil {
-		// AutoScalingPolicy has an additional Status field that is causing a new hashcode to be generated
+		// AutoScalingPolicy has an additional Status field and null values that are causing a new hashcode to be generated
 		// for `instance_group`.
-		// We are purposefully omitting that field here when we flatten the autoscaling policy string
+		// We are purposefully omitting that field and the null values here when we flatten the autoscaling policy string
 		// for the statefile.
 		for i, rule := range ig.AutoScalingPolicy.Rules {
 			for j, dimension := range rule.Trigger.CloudWatchAlarmDefinition.Dimensions {
@@ -1685,8 +1682,8 @@ func resourceAwsEMRClusterInstanceGroupHash(v interface{}) int {
 	if v, ok := m["ebs_config"]; ok {
 		configs := v.(*schema.Set).List()
 
-		// Check the length of ebsConfigs to get around an ebs config being configured automatically when
-		// it isn't specified in Terraform
+		// There is an issue where an `ebs_config` is automatically configured when not specified in Terraform and
+		// this causes the hashcode to change. Instead, we'll ignore that configuration when setting up the hashcode.
 		if len(configs) > 1 {
 			for _, ebsConfigs := range configs {
 				buf.WriteString(fmt.Sprintf("%d-", resourceAwsEMRClusterEBSConfigHash(ebsConfigs.(map[string]interface{}))))
