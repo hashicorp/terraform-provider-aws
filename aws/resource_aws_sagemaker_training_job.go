@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsSagemakerTrainingJob() *schema.Resource {
@@ -55,6 +56,10 @@ func resourceAwsSagemakerTrainingJob() *schema.Resource {
 						"input_mode": {
 							Type:     schema.TypeString,
 							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								sagemaker.TrainingInputModePipe,
+								sagemaker.TrainingInputModeFile,
+							}, false),
 						},
 					},
 				},
@@ -105,7 +110,8 @@ func resourceAwsSagemakerTrainingJob() *schema.Resource {
 			"input_data_config": {
 				Type:     schema.TypeList,
 				MinItems: 1,
-				Required: true,
+				MaxItems: 8,
+				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
@@ -149,12 +155,20 @@ func resourceAwsSagemakerTrainingJob() *schema.Resource {
 						"compression_type": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  "None",
+							Default:  sagemaker.CompressionTypeNone,
+							ValidateFunc: validation.StringInSlice([]string{
+								sagemaker.CompressionTypeGzip,
+								sagemaker.CompressionTypeNone,
+							}, false),
 						},
 						"record_wrapper_type": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  "None",
+							Default:  sagemaker.RecordWrapperNone,
+							ValidateFunc: validation.StringInSlice([]string{
+								sagemaker.RecordWrapperRecordIo,
+								sagemaker.RecordWrapperNone,
+							}, false),
 						},
 					},
 				},
@@ -177,37 +191,6 @@ func resourceAwsSagemakerTrainingJob() *schema.Resource {
 					},
 				},
 			},
-
-			"creation_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"last_modified_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"training_start_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"training_end_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"secondary_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 			"tags": tagsSchema(),
 		},
 	}
@@ -246,55 +229,9 @@ func resourceAwsSagemakerTrainingJobCreate(d *schema.ResourceData, meta interfac
 		}
 	}
 
-	var inputDataConfig []*sagemaker.Channel
 	if idc, ok := d.GetOk("input_data_config"); ok {
-		idcPorperties := idc.([]interface{})
-		inputDataConfig = make([]*sagemaker.Channel, len(idcPorperties))
-
-		for idx, idcProps := range idcPorperties {
-			idcItemProperties := idcProps.(map[string]interface{})
-
-			var channel *sagemaker.Channel = new(sagemaker.Channel)
-			if v, ok := idcItemProperties["name"]; ok {
-				channel.ChannelName = aws.String(v.(string))
-			}
-			if ds, ok := idcItemProperties["data_source"]; ok {
-				dsPorperties := ds.([]interface{})
-				dsItemPorperties := dsPorperties[0].(map[string]interface{})
-
-				var dataSource *sagemaker.DataSource = new(sagemaker.DataSource)
-				if s3ds, ok := dsItemPorperties["s3_data_source"]; ok {
-					s3dsPorperties := s3ds.([]interface{})
-					s3dsItemPorperties := s3dsPorperties[0].(map[string]interface{})
-
-					var s3DataSource *sagemaker.S3DataSource = new(sagemaker.S3DataSource)
-					if v, ok := s3dsItemPorperties["s3_data_type"]; ok {
-						s3DataSource.S3DataType = aws.String(v.(string))
-					}
-					if v, ok := s3dsItemPorperties["s3_uri"]; ok {
-						s3DataSource.S3Uri = aws.String(v.(string))
-					}
-					if v, ok := s3dsItemPorperties["s3_data_distribution_type"]; ok {
-						s3DataSource.S3DataDistributionType = aws.String(v.(string))
-					}
-					dataSource.S3DataSource = s3DataSource
-				}
-				channel.DataSource = dataSource
-			}
-			if v, ok := idcItemProperties["content_type"]; ok {
-				channel.ContentType = aws.String(v.(string))
-			}
-			if v, ok := idcItemProperties["compression_type"]; ok {
-				channel.CompressionType = aws.String(v.(string))
-			}
-			if v, ok := idcItemProperties["record_wrapper_type"]; ok {
-				channel.RecordWrapperType = aws.String(v.(string))
-			}
-			inputDataConfig[idx] = channel
-		}
+		createOpts.InputDataConfig = expandInputDataConfig(idc)
 	}
-	createOpts.InputDataConfig = inputDataConfig
-
 	var outputDataConfig *sagemaker.OutputDataConfig = new(sagemaker.OutputDataConfig)
 	if odc, ok := d.GetOk("output_data_config"); ok {
 		odcPorperties := odc.([]interface{})
@@ -403,34 +340,7 @@ func resourceAwsSagemakerTrainingJobRead(d *schema.ResourceData, meta interface{
 		log.Printf("[ERR] Error setting Output Data Config: %s", err)
 		return err
 	}
-	if err := d.Set("creation_time", trainingJob.CreationTime.Format(time.RFC3339)); err != nil {
-		log.Printf("[ERR] Error setting Creation Time: %s", err)
-		return err
-	}
-	if err := d.Set("last_modified_time", trainingJob.LastModifiedTime.Format(time.RFC3339)); err != nil {
-		log.Printf("[ERR] Error setting Last Modified Time: %s", err)
-		return err
-	}
-	if trainingJob.TrainingStartTime != nil {
-		if err := d.Set("training_start_time", trainingJob.TrainingStartTime.Format(time.RFC3339)); err != nil {
-			log.Printf("[ERR] Error setting Training Start Time: %s", err)
-			return err
-		}
-	}
-	if trainingJob.TrainingEndTime != nil {
-		if err := d.Set("training_end_time", trainingJob.TrainingEndTime.Format(time.RFC3339)); err != nil {
-			log.Printf("[ERR] Error setting Training End Time: %s", err)
-			return err
-		}
-	}
-	if err := d.Set("status", trainingJob.TrainingJobStatus); err != nil {
-		log.Printf("[ERR] Error setting Status: %s", err)
-		return err
-	}
-	if err := d.Set("secondary_status", trainingJob.SecondaryStatus); err != nil {
-		log.Printf("[ERR] Error setting Secondary Status: %s", err)
-		return err
-	}
+
 	if err := d.Set("arn", trainingJob.TrainingJobArn); err != nil {
 		log.Printf("[ERR] Error setting ARN: %s", err)
 		return err
@@ -678,4 +588,52 @@ func fromTerraformMapToStringPMapSagemaker(properties *map[string]interface{}) (
 	}
 
 	return &result, nil
+}
+
+func expandInputDataConfig(idc interface{}) []*sagemaker.Channel {
+	idcProperties := idc.([]interface{})
+	inputDataConfig := make([]*sagemaker.Channel, len(idcProperties))
+
+	for idx, idcProps := range idcProperties {
+		idcItemProperties := idcProps.(map[string]interface{})
+
+		var channel *sagemaker.Channel = new(sagemaker.Channel)
+		if v, ok := idcItemProperties["name"]; ok {
+			channel.ChannelName = aws.String(v.(string))
+		}
+		if ds, ok := idcItemProperties["data_source"]; ok {
+			dsProperties := ds.([]interface{})
+			dsItemProperties := dsProperties[0].(map[string]interface{})
+
+			var dataSource *sagemaker.DataSource = new(sagemaker.DataSource)
+			if s3ds, ok := dsItemProperties["s3_data_source"]; ok {
+				s3dsProperties := s3ds.([]interface{})
+				s3dsItemProperties := s3dsProperties[0].(map[string]interface{})
+
+				var s3DataSource *sagemaker.S3DataSource = new(sagemaker.S3DataSource)
+				if v, ok := s3dsItemProperties["s3_data_type"]; ok {
+					s3DataSource.S3DataType = aws.String(v.(string))
+				}
+				if v, ok := s3dsItemProperties["s3_uri"]; ok {
+					s3DataSource.S3Uri = aws.String(v.(string))
+				}
+				if v, ok := s3dsItemProperties["s3_data_distribution_type"]; ok {
+					s3DataSource.S3DataDistributionType = aws.String(v.(string))
+				}
+				dataSource.S3DataSource = s3DataSource
+			}
+			channel.DataSource = dataSource
+		}
+		if v, ok := idcItemProperties["content_type"]; ok {
+			channel.ContentType = aws.String(v.(string))
+		}
+		if v, ok := idcItemProperties["compression_type"]; ok {
+			channel.CompressionType = aws.String(v.(string))
+		}
+		if v, ok := idcItemProperties["record_wrapper_type"]; ok {
+			channel.RecordWrapperType = aws.String(v.(string))
+		}
+		inputDataConfig[idx] = channel
+	}
+	return inputDataConfig
 }

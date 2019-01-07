@@ -24,8 +24,8 @@ func TestAccAWSSagemakerTrainingJob_basic(t *testing.T) {
 	var trainingJob sagemaker.DescribeTrainingJobOutput
 	trainingJobName := resource.PrefixedUniqueId(sagemakerTestAccSagemakerTrainingJobResourceNamePrefix)
 	bucketName := resource.PrefixedUniqueId(sagemakerTestAccSagemakerTrainingJobResourceNamePrefix)
-
-	resource.Test(t, resource.TestCase{
+	var resourceName = "aws_sagemaker_training_job.foo"
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSagemakerTrainingJobDestroy,
@@ -33,12 +33,17 @@ func TestAccAWSSagemakerTrainingJob_basic(t *testing.T) {
 			{
 				Config: testAccSagemakerTrainingJobConfig(trainingJobName, bucketName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSagemakerTrainingJobExists("aws_sagemaker_training_job.foo", &trainingJob),
+					testAccCheckSagemakerTrainingJobExists(resourceName, &trainingJob),
 					testAccCheckSagemakerTrainingJobName(&trainingJob, trainingJobName),
 
 					resource.TestCheckResourceAttr(
-						"aws_sagemaker_training_job.foo", "name", trainingJobName),
+						resourceName, "name", trainingJobName),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -49,7 +54,7 @@ func TestAccAWSSagemakerTrainingJob_update(t *testing.T) {
 	trainingJobName := resource.PrefixedUniqueId(sagemakerTestAccSagemakerTrainingJobResourceNamePrefix)
 	bucketName := resource.PrefixedUniqueId(sagemakerTestAccSagemakerTrainingJobResourceNamePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSagemakerTrainingJobDestroy,
@@ -74,6 +79,11 @@ func TestAccAWSSagemakerTrainingJob_update(t *testing.T) {
 				),
 				ExpectError: regexp.MustCompile(`.*existing Training Jobs cannot be updated.*`),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -81,8 +91,8 @@ func TestAccAWSSagemakerTrainingJob_tags(t *testing.T) {
 	var trainingJob sagemaker.DescribeTrainingJobOutput
 	trainingJobName := resource.PrefixedUniqueId(sagemakerTestAccSagemakerTrainingJobResourceNamePrefix)
 	bucketName := resource.PrefixedUniqueId(sagemakerTestAccSagemakerTrainingJobResourceNamePrefix)
-
-	resource.Test(t, resource.TestCase{
+	var resourceName = "aws_sagemaker_training_job.foo"
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSagemakerTrainingJobDestroy,
@@ -90,26 +100,31 @@ func TestAccAWSSagemakerTrainingJob_tags(t *testing.T) {
 			{
 				Config: testAccSagemakerTrainingJobTagsConfig(trainingJobName, bucketName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSagemakerTrainingJobExists("aws_sagemaker_training_job.foo", &trainingJob),
+					testAccCheckSagemakerTrainingJobExists(resourceName, &trainingJob),
 					testAccCheckSagemakerTrainingJobTags(&trainingJob, "foo", "bar"),
 
 					resource.TestCheckResourceAttr(
-						"aws_sagemaker_training_job.foo", "name", trainingJobName),
-					resource.TestCheckResourceAttr("aws_sagemaker_training_job.foo", "tags.%", "1"),
-					resource.TestCheckResourceAttr("aws_sagemaker_training_job.foo", "tags.foo", "bar"),
+						resourceName, "name", trainingJobName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar"),
 				),
 			},
 
 			{
 				Config: testAccSagemakerTrainingJobTagsUpdateConfig(trainingJobName, bucketName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSagemakerTrainingJobExists("aws_sagemaker_training_job.foo", &trainingJob),
+					testAccCheckSagemakerTrainingJobExists(resourceName, &trainingJob),
 					testAccCheckSagemakerTrainingJobTags(&trainingJob, "foo", ""),
 					testAccCheckSagemakerTrainingJobTags(&trainingJob, "bar", "baz"),
 
-					resource.TestCheckResourceAttr("aws_sagemaker_training_job.foo", "tags.%", "1"),
-					resource.TestCheckResourceAttr("aws_sagemaker_training_job.foo", "tags.bar", "baz"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.bar", "baz"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -258,7 +273,7 @@ resource "aws_s3_bucket" "foo" {
 }
 
 resource "aws_iam_role" "foo" {
-	name = "terraform-testacc-sagemaker-foo"
+	name = "%s"
 	path = "/"
 	assume_role_policy = "${data.aws_iam_policy_document.assume_role.json}"
 }
@@ -272,7 +287,7 @@ data "aws_iam_policy_document" "assume_role" {
 		}
 	}
 }
-`, trainingJobName, bucketName)
+`, trainingJobName, bucketName, trainingJobName)
 }
 
 func testAccSagemakerTrainingJobUpdateConfig(trainingJobName string, bucketName string) string {
@@ -319,7 +334,7 @@ resource "aws_s3_bucket" "foo" {
 }
 
 resource "aws_iam_role" "foo" {
-	name = "terraform-testacc-sagemaker-foo"
+	name = "%s"
 	path = "/"
 	assume_role_policy = "${data.aws_iam_policy_document.assume_role.json}"
 }
@@ -333,7 +348,7 @@ data "aws_iam_policy_document" "assume_role" {
 		}
 	}
 }
-`, trainingJobName, bucketName)
+`, trainingJobName, bucketName, trainingJobName)
 }
 
 func testAccSagemakerTrainingJobTagsConfig(trainingJobName string, bucketName string) string {
@@ -383,7 +398,7 @@ resource "aws_s3_bucket" "foo" {
 }
 
 resource "aws_iam_role" "foo" {
-	name = "terraform-testacc-sagemaker-foo"
+	name = "%s"
 	path = "/"
 	assume_role_policy = "${data.aws_iam_policy_document.assume_role.json}"
 }
@@ -397,7 +412,7 @@ data "aws_iam_policy_document" "assume_role" {
 		}
 	}
 }
-`, trainingJobName, bucketName)
+`, trainingJobName, bucketName, trainingJobName)
 }
 
 func testAccSagemakerTrainingJobTagsUpdateConfig(trainingJobName string, bucketName string) string {
@@ -447,7 +462,7 @@ resource "aws_s3_bucket" "foo" {
 }
 
 resource "aws_iam_role" "foo" {
-	name = "terraform-testacc-sagemaker-foo"
+	name = "%s"
 	path = "/"
 	assume_role_policy = "${data.aws_iam_policy_document.assume_role.json}"
 }
@@ -461,5 +476,5 @@ data "aws_iam_policy_document" "assume_role" {
 		}
 	}
 }
-`, trainingJobName, bucketName)
+`, trainingJobName, bucketName, trainingJobName)
 }

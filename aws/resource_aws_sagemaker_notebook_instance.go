@@ -69,21 +69,6 @@ func resourceAwsSagemakerNotebookInstance() *schema.Resource {
 				ForceNew: true,
 			},
 
-			"creation_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"last_modified_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 			"tags": tagsSchema(),
 		},
 	}
@@ -182,18 +167,7 @@ func resourceAwsSagemakerNotebookInstanceRead(d *schema.ResourceData, meta inter
 		log.Printf("[ERR] Error setting KMS Key ID: %s", err)
 		return err
 	}
-	if err := d.Set("creation_time", notebookInstance.CreationTime.Format(time.RFC3339)); err != nil {
-		log.Printf("[ERR] Error setting Creation Time: %s", err)
-		return err
-	}
-	if err := d.Set("last_modified_time", notebookInstance.LastModifiedTime.Format(time.RFC3339)); err != nil {
-		log.Printf("[ERR] Error setting Last Modified Time: %s", err)
-		return err
-	}
-	if err := d.Set("status", notebookInstance.NotebookInstanceStatus); err != nil {
-		log.Printf("[ERR] Error setting Status: %s", err)
-		return err
-	}
+
 	if err := d.Set("arn", notebookInstance.NotebookInstanceArn); err != nil {
 		log.Printf("[ERR] Error setting ARN: %s", err)
 		return err

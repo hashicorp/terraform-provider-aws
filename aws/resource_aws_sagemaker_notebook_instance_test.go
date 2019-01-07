@@ -22,8 +22,8 @@ func init() {
 func TestAccAWSSagemakerNotebookInstance_basic(t *testing.T) {
 	var notebook sagemaker.DescribeNotebookInstanceOutput
 	notebookName := resource.PrefixedUniqueId(sagemakerTestAccSagemakerNotebookInstanceResourceNamePrefix)
-
-	resource.Test(t, resource.TestCase{
+	var resourceName = "aws_sagemaker_notebook_instance.foo"
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSagemakerNotebookInstanceDestroy,
@@ -31,12 +31,17 @@ func TestAccAWSSagemakerNotebookInstance_basic(t *testing.T) {
 			{
 				Config: testAccSagemakerNotebookInstanceConfig(notebookName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSagemakerNotebookInstanceExists("aws_sagemaker_notebook_instance.foo", &notebook),
+					testAccCheckSagemakerNotebookInstanceExists(resourceName, &notebook),
 					testAccCheckSagemakerNotebookInstanceName(&notebook, notebookName),
 
 					resource.TestCheckResourceAttr(
 						"aws_sagemaker_notebook_instance.foo", "name", notebookName),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -45,8 +50,8 @@ func TestAccAWSSagemakerNotebookInstance_basic(t *testing.T) {
 func TestAccAWSSagemakerNotebookInstance_update(t *testing.T) {
 	var notebook sagemaker.DescribeNotebookInstanceOutput
 	notebookName := resource.PrefixedUniqueId(sagemakerTestAccSagemakerNotebookInstanceResourceNamePrefix)
-
-	resource.Test(t, resource.TestCase{
+	var resourceName = "aws_sagemaker_notebook_instance.foo"
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSagemakerNotebookInstanceDestroy,
@@ -54,7 +59,7 @@ func TestAccAWSSagemakerNotebookInstance_update(t *testing.T) {
 			{
 				Config: testAccSagemakerNotebookInstanceConfig(notebookName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSagemakerNotebookInstanceExists("aws_sagemaker_notebook_instance.foo", &notebook),
+					testAccCheckSagemakerNotebookInstanceExists(resourceName, &notebook),
 
 					resource.TestCheckResourceAttr(
 						"aws_sagemaker_notebook_instance.foo", "instance_type", "ml.t2.medium"),
@@ -70,6 +75,11 @@ func TestAccAWSSagemakerNotebookInstance_update(t *testing.T) {
 						"aws_sagemaker_notebook_instance.foo", "instance_type", "ml.m4.xlarge"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -78,7 +88,7 @@ func TestAccAWSSagemakerNotebookInstance_tags(t *testing.T) {
 	var notebook sagemaker.DescribeNotebookInstanceOutput
 	notebookName := resource.PrefixedUniqueId(sagemakerTestAccSagemakerNotebookInstanceResourceNamePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSagemakerNotebookInstanceDestroy,
@@ -218,7 +228,7 @@ resource "aws_sagemaker_notebook_instance" "foo" {
 }
 
 resource "aws_iam_role" "foo" {
-	name = "terraform-testacc-sagemaker-foo"
+	name = "%s"
 	path = "/"
 	assume_role_policy = "${data.aws_iam_policy_document.assume_role.json}"
 }
@@ -232,7 +242,7 @@ data "aws_iam_policy_document" "assume_role" {
 		}
 	}
 }
-`, notebookName)
+`, notebookName, notebookName)
 }
 
 func testAccSagemakerNotebookInstanceUpdateConfig(notebookName string) string {
@@ -244,7 +254,7 @@ resource "aws_sagemaker_notebook_instance" "foo" {
 }
 
 resource "aws_iam_role" "foo" {
-	name = "terraform-testacc-sagemaker-foo"
+	name = "%s"
 	path = "/"
 	assume_role_policy = "${data.aws_iam_policy_document.assume_role.json}"
 }
@@ -258,7 +268,7 @@ data "aws_iam_policy_document" "assume_role" {
 		}
 	}
 }
-`, notebookName)
+`, notebookName, notebookName)
 }
 
 func testAccSagemakerNotebookInstanceTagsConfig(notebookName string) string {
@@ -273,7 +283,7 @@ resource "aws_sagemaker_notebook_instance" "foo" {
 }
 
 resource "aws_iam_role" "foo" {
-	name = "terraform-testacc-sagemaker-foo"
+	name = "%s"
 	path = "/"
 	assume_role_policy = "${data.aws_iam_policy_document.assume_role.json}"
 }
@@ -287,7 +297,7 @@ data "aws_iam_policy_document" "assume_role" {
 		}
 	}
 }
-`, notebookName)
+`, notebookName, notebookName)
 }
 
 func testAccSagemakerNotebookInstanceTagsUpdateConfig(notebookName string) string {
@@ -302,7 +312,7 @@ resource "aws_sagemaker_notebook_instance" "foo" {
 }
 
 resource "aws_iam_role" "foo" {
-	name = "terraform-testacc-sagemaker-foo"
+	name = "%s"
 	path = "/"
 	assume_role_policy = "${data.aws_iam_policy_document.assume_role.json}"
 }
@@ -316,5 +326,5 @@ data "aws_iam_policy_document" "assume_role" {
 		}
 	}
 }
-`, notebookName)
+`, notebookName, notebookName)
 }
