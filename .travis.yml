@@ -4,7 +4,7 @@ services:
   - docker
 language: go
 go:
-- "1.11.1"
+  - "1.11.x"
 
 git:
   depth: 1
@@ -31,3 +31,5 @@ matrix:
   fast_finish: true
   allow_failures:
   - go: tip
+env:
+  - GO111MODULE=off
