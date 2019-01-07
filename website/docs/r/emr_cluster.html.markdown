@@ -322,6 +322,8 @@ In addition to all arguments above, the following attributes are exported:
 * `visible_to_all_users` - Indicates whether the job flow is visible to all IAM users of the AWS account associated with the job flow.
 * `tags` - The list of tags associated with a cluster.
 
+For any instance_group the id is exported. e.g. aws_emr_cluster.instance_group.hashcode.id
+
 ## Example bootable config
 
 **NOTE:** This configuration demonstrates a minimal configuration needed to

@@ -32,38 +32,11 @@ func resourceAwsEMRCluster() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
-		// Write a customizeDiff to look at the instance groups and determin if an ebs_config is going
-		// from 0->1 and return computed?? Maybe?
 		CustomizeDiff: func(diff *schema.ResourceDiff, v interface{}) error {
 			if diff.HasChange("instance_group") {
 				o, n := diff.GetChange("instance_group")
 				oSet := o.(*schema.Set).List()
 				nSet := n.(*schema.Set).List()
-
-				/*
-					if len(oSet) == len(nSet) {
-						for i, instanceGroup := range oSet {
-							oInstanceGroup := instanceGroup.(map[string]interface{})
-							nInstanceGroup := nSet[i].(map[string]interface{})
-
-							oEBSConfig := oInstanceGroup["ebs_config"]
-							oEBSAttrs := oEBSConfig.(*schema.Set).List()
-
-							nEBSConfig := nInstanceGroup["ebs_config"]
-							nEBSAttrs := nEBSConfig.(*schema.Set).List()
-
-							// return fmt.Errorf("%+v", diff.GetChangedKeysPrefix(fmt.Sprintf("instance_group.%d", resourceAwsEMRClusterInstanceGroupHash(oInstanceGroup))))
-
-							if len(oEBSAttrs) != 1 && len(nEBSAttrs) != 0 {
-								for _, k := range diff.GetChangedKeysPrefix(fmt.Sprintf("instance_group.%d", resourceAwsEMRClusterInstanceGroupHash(oInstanceGroup))) {
-									if strings.HasSuffix(k, ".#") {
-										k = strings.TrimSuffix(k, ".#")
-									}
-									diff.ForceNew(k)
-								}
-							}
-						}
-					} */
 
 				// Everything in instance group needs to be set to forcenew if the autoscaling policy doesn't change
 				if len(oSet) == len(nSet) {
@@ -336,6 +309,10 @@ func resourceAwsEMRCluster() *schema.Resource {
 						"name": {
 							Type:     schema.TypeString,
 							Optional: true,
+						},
+						"id": {
+							Type:     schema.TypeString,
+							Computed: true,
 						},
 					},
 				},
@@ -936,6 +913,47 @@ func resourceAwsEMRClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
+	if d.HasChange("instance_group") {
+		o, n := d.GetChange("instance_group")
+		oSet := o.(*schema.Set).List()
+		nSet := n.(*schema.Set).List()
+		for _, currInstanceGroup := range oSet {
+			for _, nextInstanceGroup := range nSet {
+				oInstanceGroup := currInstanceGroup.(map[string]interface{})
+				nInstanceGroup := nextInstanceGroup.(map[string]interface{})
+
+				if oInstanceGroup["instance_role"].(string) == nInstanceGroup["instance_role"].(string) && oInstanceGroup["name"].(string) == nInstanceGroup["name"].(string) {
+
+					if v, ok := nInstanceGroup["autoscaling_policy"]; ok && v.(string) != "" {
+						var autoScalingPolicy *emr.AutoScalingPolicy
+
+						err := json.Unmarshal([]byte(v.(string)), &autoScalingPolicy)
+
+						if err != nil {
+							return fmt.Errorf("error parsing EMR Auto Scaling Policy JSON for update: \n\n%s\n\n%s", v.(string), err)
+						}
+
+						// TODO Confirm that the id for instance group is obtainable from the schema. If not, the user needs to run a terraform refresh
+						putAutoScalingPolicy := &emr.PutAutoScalingPolicyInput{
+							ClusterId:         aws.String(d.Id()),
+							AutoScalingPolicy: autoScalingPolicy,
+							InstanceGroupId:   aws.String(oInstanceGroup["id"].(string)),
+						}
+
+						_, errModify := conn.PutAutoScalingPolicy(putAutoScalingPolicy)
+						if errModify != nil {
+							log.Printf("[ERROR] %s", errModify)
+							return errModify
+						}
+
+						break
+					}
+				}
+
+			}
+		}
+	}
+
 	if err := setTagsEMR(conn, d); err != nil {
 		return err
 	} else {
@@ -1146,16 +1164,17 @@ func flattenInstanceGroup(ig *emr.InstanceGroup) (map[string]interface{}, error)
 		attrs["bid_price"] = *ig.BidPrice
 	}
 
+	attrs["id"] = *ig.Id
 	attrs["ebs_config"] = flattenEBSConfig(ig.EbsBlockDevices)
 	attrs["instance_count"] = int(*ig.RequestedInstanceCount)
 	attrs["instance_role"] = *ig.InstanceGroupType
 	attrs["instance_type"] = *ig.InstanceType
 
 	if ig.AutoScalingPolicy != nil {
-		// AutoScalingPolicy has an additional Status field that is causing diffs in the statefile.
-		// We are purposefully omitting that field here when we generate the autoscaling policy string
+		// AutoScalingPolicy has an additional Status field that is causing a new hashcode to be generated
+		// for `instance_group`.
+		// We are purposefully omitting that field here when we flatten the autoscaling policy string
 		// for the statefile.
-
 		for i, rule := range ig.AutoScalingPolicy.Rules {
 			for j, dimension := range rule.Trigger.CloudWatchAlarmDefinition.Dimensions {
 				if *dimension.Key == "JobFlowId" {
@@ -1210,6 +1229,7 @@ func flattenInstanceGroup(ig *emr.InstanceGroup) (map[string]interface{}, error)
 	if attrs["name"] != nil {
 		attrs["name"] = *ig.Name
 	}
+
 	return attrs, nil
 }
 
