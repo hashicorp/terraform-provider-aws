@@ -530,7 +530,7 @@ func TestAccAWSDBInstance_ReplicateSourceDb_BackupWindow(t *testing.T) {
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBInstanceConfig_ReplicateSourceDb_BackupWindow(rName, "00:00-08:00"),
+				Config: testAccAWSDBInstanceConfig_ReplicateSourceDb_BackupWindow(rName, "00:00-08:00", "sun:23:00-sun:23:30"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBInstanceExists(sourceResourceName, &sourceDbInstance),
 					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
@@ -627,12 +627,12 @@ func TestAccAWSDBInstance_ReplicateSourceDb_MaintenanceWindow(t *testing.T) {
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBInstanceConfig_ReplicateSourceDb_MaintenanceWindow(rName, "sun:01:00-sun:01:30"),
+				Config: testAccAWSDBInstanceConfig_ReplicateSourceDb_MaintenanceWindow(rName, "00:00-08:00", "sun:23:00-sun:23:30"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBInstanceExists(sourceResourceName, &sourceDbInstance),
 					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
 					testAccCheckAWSDBInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
-					resource.TestCheckResourceAttr(resourceName, "maintenance_window", "sun:01:00-sun:01:30"),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_window", "sun:23:00-sun:23:30"),
 				),
 			},
 		},
@@ -961,7 +961,7 @@ func TestAccAWSDBInstance_SnapshotIdentifier_BackupWindow(t *testing.T) {
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBInstanceConfig_SnapshotIdentifier_BackupWindow(rName, "00:00-08:00"),
+				Config: testAccAWSDBInstanceConfig_SnapshotIdentifier_BackupWindow(rName, "00:00-08:00", "sun:23:00-sun:23:30"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBInstanceExists(sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDbSnapshotExists(snapshotResourceName, &dbSnapshot),
@@ -1052,12 +1052,12 @@ func TestAccAWSDBInstance_SnapshotIdentifier_MaintenanceWindow(t *testing.T) {
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBInstanceConfig_SnapshotIdentifier_MaintenanceWindow(rName, "sun:01:00-sun:01:30"),
+				Config: testAccAWSDBInstanceConfig_SnapshotIdentifier_MaintenanceWindow(rName, "00:00-08:00", "sun:23:00-sun:23:30"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBInstanceExists(sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDbSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
-					resource.TestCheckResourceAttr(resourceName, "maintenance_window", "sun:01:00-sun:01:30"),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_window", "sun:23:00-sun:23:30"),
 				),
 			},
 		},
@@ -3553,7 +3553,9 @@ resource "aws_db_instance" "test" {
 `, rName, backupRetentionPeriod, rName)
 }
 
-func testAccAWSDBInstanceConfig_ReplicateSourceDb_BackupWindow(rName, backupWindow string) string {
+// We provide maintenance_window to prevent the following error from a randomly selected window:
+// InvalidParameterValue: The backup window and maintenance window must not overlap.
+func testAccAWSDBInstanceConfig_ReplicateSourceDb_BackupWindow(rName, backupWindow, maintenanceWindow string) string {
 	return fmt.Sprintf(`
 resource "aws_db_instance" "source" {
   allocated_storage       = 5
@@ -3570,10 +3572,11 @@ resource "aws_db_instance" "test" {
   backup_window       = %q
   identifier          = %q
   instance_class      = "${aws_db_instance.source.instance_class}"
+  maintenance_window  = %q
   replicate_source_db = "${aws_db_instance.source.id}"
   skip_final_snapshot = true
 }
-`, rName, backupWindow, rName)
+`, rName, backupWindow, rName, maintenanceWindow)
 }
 
 func testAccAWSDBInstanceConfig_ReplicateSourceDb_DeletionProtection(rName string, deletionProtection bool) string {
@@ -3622,7 +3625,9 @@ resource "aws_db_instance" "test" {
 `, rName, iamDatabaseAuthenticationEnabled, rName)
 }
 
-func testAccAWSDBInstanceConfig_ReplicateSourceDb_MaintenanceWindow(rName, maintenanceWindow string) string {
+// We provide backup_window to prevent the following error from a randomly selected window:
+// InvalidParameterValue: The backup window and maintenance window must not overlap.
+func testAccAWSDBInstanceConfig_ReplicateSourceDb_MaintenanceWindow(rName, backupWindow, maintenanceWindow string) string {
 	return fmt.Sprintf(`
 resource "aws_db_instance" "source" {
   allocated_storage       = 5
@@ -3636,13 +3641,14 @@ resource "aws_db_instance" "source" {
 }
 
 resource "aws_db_instance" "test" {
+  backup_window       = %q
   identifier          = %q
   instance_class      = "${aws_db_instance.source.instance_class}"
   maintenance_window  = %q
   replicate_source_db = "${aws_db_instance.source.id}"
   skip_final_snapshot = true
 }
-`, rName, rName, maintenanceWindow)
+`, rName, backupWindow, rName, maintenanceWindow)
 }
 
 func testAccAWSDBInstanceConfig_ReplicateSourceDb_Monitoring(rName string, monitoringInterval int) string {
@@ -3971,7 +3977,9 @@ resource "aws_db_instance" "test" {
 `, rName, rName, rName)
 }
 
-func testAccAWSDBInstanceConfig_SnapshotIdentifier_BackupWindow(rName, backupWindow string) string {
+// We provide maintenance_window to prevent the following error from a randomly selected window:
+// InvalidParameterValue: The backup window and maintenance window must not overlap.
+func testAccAWSDBInstanceConfig_SnapshotIdentifier_BackupWindow(rName, backupWindow, maintenanceWindow string) string {
 	return fmt.Sprintf(`
 resource "aws_db_instance" "source" {
   allocated_storage   = 5
@@ -3992,10 +4000,11 @@ resource "aws_db_instance" "test" {
   backup_window       = %q
   identifier          = %q
   instance_class      = "${aws_db_instance.source.instance_class}"
+  maintenance_window  = %q
   snapshot_identifier = "${aws_db_snapshot.test.id}"
   skip_final_snapshot = true
 }
-`, rName, rName, backupWindow, rName)
+`, rName, rName, backupWindow, rName, maintenanceWindow)
 }
 
 func testAccAWSDBInstanceConfig_SnapshotIdentifier_DeletionProtection(rName string, deletionProtection bool) string {
@@ -4052,7 +4061,9 @@ resource "aws_db_instance" "test" {
 `, rName, rName, iamDatabaseAuthenticationEnabled, rName)
 }
 
-func testAccAWSDBInstanceConfig_SnapshotIdentifier_MaintenanceWindow(rName, maintenanceWindow string) string {
+// We provide backup_window to prevent the following error from a randomly selected window:
+// InvalidParameterValue: The backup window and maintenance window must not overlap.
+func testAccAWSDBInstanceConfig_SnapshotIdentifier_MaintenanceWindow(rName, backupWindow, maintenanceWindow string) string {
 	return fmt.Sprintf(`
 resource "aws_db_instance" "source" {
   allocated_storage   = 5
@@ -4070,13 +4081,14 @@ resource "aws_db_snapshot" "test" {
 }
 
 resource "aws_db_instance" "test" {
+  backup_window       = %q
   identifier          = %q
   instance_class      = "${aws_db_instance.source.instance_class}"
   maintenance_window  = %q
   snapshot_identifier = "${aws_db_snapshot.test.id}"
   skip_final_snapshot = true
 }
-`, rName, rName, rName, maintenanceWindow)
+`, rName, rName, backupWindow, rName, maintenanceWindow)
 }
 
 func testAccAWSDBInstanceConfig_SnapshotIdentifier_Monitoring(rName string, monitoringInterval int) string {
