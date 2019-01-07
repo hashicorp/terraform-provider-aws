@@ -28,6 +28,11 @@ func testSweepEc2CapacityReservations(region string) error {
 
 	resp, err := conn.DescribeCapacityReservations(&ec2.DescribeCapacityReservationsInput{})
 
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping EC2 Capacity Reservation sweep for %s: %s", region, err)
+		return nil
+	}
+
 	if err != nil {
 		return fmt.Errorf("Error retrieving EC2 Capacity Reservations: %s", err)
 	}

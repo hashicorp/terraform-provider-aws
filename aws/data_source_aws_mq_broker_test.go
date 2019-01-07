@@ -10,7 +10,7 @@ import (
 
 func TestAccDataSourceAWSMqBroker_basic(t *testing.T) {
 	rString := acctest.RandString(7)
-	prefix := "tf-acctest-d-mq-broker"
+	prefix := "tf-acc-test-d-mq-broker"
 	brokerName := fmt.Sprintf("%s-%s", prefix, rString)
 
 	resource.ParallelTest(t, resource.TestCase{
