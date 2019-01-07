@@ -6,92 +6,78 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/aws/aws-sdk-go/service/apigatewayv2"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAWSAPIGatewayResource_basic(t *testing.T) {
-	var conf apigateway.Resource
+func TestAccAWSAPIGatewayV2_basic(t *testing.T) {
+	var conf apigatewayv2.Api
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAPIGatewayResourceDestroy,
+		CheckDestroy: testAccCheckAWSAPIGatewayV2Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayResourceConfig,
+				Config: testAccAWSAPIGatewayV2Config,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayResourceExists("aws_api_gateway_v2.test", &conf),
-					testAccCheckAWSAPIGatewayResourceAttributes(&conf, "/test"),
-					resource.TestCheckResourceAttr(
-						"aws_api_gateway_v2.test", "path_part", "test"),
-					resource.TestCheckResourceAttr(
-						"aws_api_gateway_v2.test", "path", "/test"),
+					testAccCheckAWSAPIGatewayV2Exists("aws_api_gateway_v2.test", &conf),
+					resource.TestCheckResourceAttr("aws_api_gateway_v2.test", "description", "testing things"),
+					resource.TestCheckResourceAttr("aws_api_gateway_v2.test", "name", "test"),
+					resource.TestCheckResourceAttr("aws_api_gateway_v2.test", "protocol_type", "WEBSOCKET"),
+					resource.TestCheckResourceAttr("aws_api_gateway_v2.test", "route_selection_expression", "$request.body.action"),
 				),
 			},
 			{
 				ResourceName:      "aws_api_gateway_v2.test",
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSAPIGatewayResourceImportStateIdFunc("aws_api_gateway_v2.test"),
+				ImportStateIdFunc: testAccAWSAPIGatewayV2ImportStateIdFunc("aws_api_gateway_v2.test"),
 				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
-func TestAccAWSAPIGatewayResource_update(t *testing.T) {
-	var conf apigateway.Resource
+func TestAccAWSAPIGatewayV2_update(t *testing.T) {
+	var conf apigatewayv2.Api
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAPIGatewayResourceDestroy,
+		CheckDestroy: testAccCheckAWSAPIGatewayV2Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayResourceConfig,
+				Config: testAccAWSAPIGatewayV2Config,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayResourceExists("aws_api_gateway_v2.test", &conf),
-					testAccCheckAWSAPIGatewayResourceAttributes(&conf, "/test"),
-					resource.TestCheckResourceAttr(
-						"aws_api_gateway_v2.test", "path_part", "test"),
-					resource.TestCheckResourceAttr(
-						"aws_api_gateway_v2.test", "path", "/test"),
+					testAccCheckAWSAPIGatewayV2Exists("aws_api_gateway_v2.test", &conf),
+					resource.TestCheckResourceAttr("aws_api_gateway_v2.test", "name", "test"),
+					resource.TestCheckResourceAttr("aws_api_gateway_v2.test", "description", "testing things"),
+					resource.TestCheckResourceAttr("aws_api_gateway_v2.test", "protocol_type", "WEBSOCKET"),
+					resource.TestCheckResourceAttr("aws_api_gateway_v2.test", "route_selection_expression", "$request.body.action"),
 				),
 			},
-
 			{
-				Config: testAccAWSAPIGatewayResourceConfig_updatePathPart,
+				Config: testAccAWSAPIGatewayV2Config_updatePathPart,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayResourceExists("aws_api_gateway_v2.test", &conf),
-					testAccCheckAWSAPIGatewayResourceAttributes(&conf, "/test_changed"),
-					resource.TestCheckResourceAttr(
-						"aws_api_gateway_v2.test", "path_part", "test_changed"),
-					resource.TestCheckResourceAttr(
-						"aws_api_gateway_v2.test", "path", "/test_changed"),
+					testAccCheckAWSAPIGatewayV2Exists("aws_api_gateway_v2.test", &conf),
+					resource.TestCheckResourceAttr("aws_api_gateway_v2.test", "name", "new test name"),
+					resource.TestCheckResourceAttr("aws_api_gateway_v2.test", "description", "new testing things"),
+					resource.TestCheckResourceAttr("aws_api_gateway_v2.test", "protocol_type", "HTTP"),
+					resource.TestCheckResourceAttr("aws_api_gateway_v2.test", "route_selection_expression", "$request.body.type"),
 				),
 			},
 			{
 				ResourceName:      "aws_api_gateway_v2.test",
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSAPIGatewayResourceImportStateIdFunc("aws_api_gateway_v2.test"),
+				ImportStateIdFunc: testAccAWSAPIGatewayV2ImportStateIdFunc("aws_api_gateway_v2.test"),
 				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
-func testAccCheckAWSAPIGatewayResourceAttributes(conf *apigateway.Resource, path string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if *conf.Path != path {
-			return fmt.Errorf("Wrong Path: %q", *conf.Path)
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckAWSAPIGatewayResourceExists(n string, res *apigateway.Resource) resource.TestCheckFunc {
+func testAccCheckAWSAPIGatewayV2Exists(n string, res *apigatewayv2.Api) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -99,47 +85,44 @@ func testAccCheckAWSAPIGatewayResourceExists(n string, res *apigateway.Resource)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No API Gateway Resource ID is set")
+			return fmt.Errorf("No API Gateway V2 ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apigateway
+		conn := testAccProvider.Meta().(*AWSClient).apigatewayv2
 
-		req := &apigateway.GetResourceInput{
-			ResourceId: aws.String(rs.Primary.ID),
-			RestApiId:  aws.String(s.RootModule().Resources["aws_api_gateway_rest_api.test"].Primary.ID),
+		req := &apigatewayv2.GetApiInput{
+			ApiId: aws.String(rs.Primary.ID),
 		}
-		describe, err := conn.GetResource(req)
+		api, err := conn.GetApi(req)
 		if err != nil {
 			return err
 		}
 
-		if *describe.Id != rs.Primary.ID {
-			return fmt.Errorf("APIGateway Resource not found")
+		if *api.ApiId != rs.Primary.ID {
+			return fmt.Errorf("APIGateway V2 not found")
 		}
 
-		*res = *describe
+		//*res = *api
 
 		return nil
 	}
 }
 
-func testAccCheckAWSAPIGatewayResourceDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).apigateway
+func testAccCheckAWSAPIGatewayV2Destroy(s *terraform.State) error {
+	conn := testAccProvider.Meta().(*AWSClient).apigatewayv2
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_api_gateway_v2" {
 			continue
 		}
 
-		req := &apigateway.GetResourcesInput{
-			RestApiId: aws.String(s.RootModule().Resources["aws_api_gateway_rest_api.test"].Primary.ID),
-		}
-		describe, err := conn.GetResources(req)
+		req := &apigatewayv2.GetApisInput{}
+		api, err := conn.GetApis(req)
 
 		if err == nil {
-			if len(describe.Items) != 0 &&
-				*describe.Items[0].Id == rs.Primary.ID {
-				return fmt.Errorf("API Gateway Resource still exists")
+			if len(api.Items) != 0 &&
+				*api.Items[0].ApiId == rs.Primary.ID {
+				return fmt.Errorf("API Gateway Api still exists")
 			}
 		}
 
@@ -157,37 +140,31 @@ func testAccCheckAWSAPIGatewayResourceDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSAPIGatewayResourceImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccAWSAPIGatewayV2ImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["rest_api_id"], rs.Primary.ID), nil
+		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["api_id"], rs.Primary.ID), nil
 	}
 }
 
-const testAccAWSAPIGatewayResourceConfig = `
-resource "aws_api_gateway_rest_api" "test" {
-  name = "test"
-}
-
+const testAccAWSAPIGatewayV2Config = `
 resource "aws_api_gateway_v2" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  parent_id = "${aws_api_gateway_rest_api.test.root_resource_id}"
-  path_part = "test"
+	name                       = "test"
+	description                = "testing things"
+	protocol_type              = "WEBSOCKET"
+	route_selection_expression = "$request.body.action"
 }
 `
 
-const testAccAWSAPIGatewayResourceConfig_updatePathPart = `
-resource "aws_api_gateway_rest_api" "test" {
-  name = "test"
-}
-
+const testAccAWSAPIGatewayV2Config_updatePathPart = `
 resource "aws_api_gateway_v2" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  parent_id = "${aws_api_gateway_rest_api.test.root_resource_id}"
-  path_part = "test_changed"
+	name                       = "new test name"
+	description                = "new testing things"
+	protocol_type              = "HTTP"
+	route_selection_expression = "$request.body.type"
 }
 `
