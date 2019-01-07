@@ -6,6 +6,10 @@ ENHANCEMENTS
 * resource/aws_kinesis_firehose_delivery_stream: Add `extended_s3_configuration` `error_output_prefix` argument [GH-7026]
 * resource/aws_ssm_maintenance_window: Add `end_date`, `schedule_timezone`, and `start_date` arguments [GH-7040]
 
+BUG FIXES
+
+* resource/aws_kinesis_analytics_application: Retry Lambda permission `InvalidArgumentException` errors for IAM eventual consistency [GH-7039]
+
 ## 1.54.0 (December 21, 2018)
 
 NOTES
