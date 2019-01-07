@@ -4,6 +4,7 @@ ENHANCEMENTS
 
 * resource/aws_elasticsearch_domain: Support in-place updates of `elasticsearch_version` [GH-6243]
 * resource/aws_kinesis_firehose_delivery_stream: Add `extended_s3_configuration` `error_output_prefix` argument [GH-7026]
+* resource/aws_ssm_maintenance_window: Add `end_date`, `schedule_timezone`, and `start_date` arguments [GH-7040]
 
 ## 1.54.0 (December 21, 2018)
 
