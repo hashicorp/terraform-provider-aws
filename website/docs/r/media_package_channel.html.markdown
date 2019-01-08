@@ -32,13 +32,11 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The same as `channel_id`
 * `arn` - The ARN of the channel
-* `ingest_endpoints` - A list of the ingest endpoints (see below)
-
-Ingest endpoints export the following attributes:
-
-* `password` - The password
-* `url` - The URL
-* `username` - The username
+* `hls_ingest` - A single item list of HLS ingest information
+  * `ingest_endpoints` - A list of the ingest endpoints
+    * `password` - The password
+    * `url` - The URL
+    * `username` - The username
 
 ## Import
 
