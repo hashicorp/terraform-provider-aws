@@ -9,6 +9,7 @@ ENHANCEMENTS
 BUG FIXES
 
 * resource/aws_dynamodb_table: Prevent `BillingMode` `ValidationError` on table creation [GH-7064]
+* resource/aws_instance: Skip `InvalidInstanceID.NotFound` error on resource deletion [GH-6978]
 * resource/aws_kinesis_analytics_application: Retry Lambda permission `InvalidArgumentException` errors for IAM eventual consistency [GH-7039]
 
 ## 1.54.0 (December 21, 2018)
