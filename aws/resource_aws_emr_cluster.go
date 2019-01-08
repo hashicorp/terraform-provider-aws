@@ -39,34 +39,44 @@ func resourceAwsEMRCluster() *schema.Resource {
 				nSet := n.(*schema.Set).List()
 
 				// Everything in instance group needs to be set to forcenew if the autoscaling policy doesn't change
-				if len(oSet) == len(nSet) {
-					for _, currInstanceGroup := range oSet {
-						for _, nextInstanceGroup := range nSet {
-							oInstanceGroup := currInstanceGroup.(map[string]interface{})
-							nInstanceGroup := nextInstanceGroup.(map[string]interface{})
+				if len(oSet) != len(nSet) {
+					return nil
+				}
+				for _, currInstanceGroup := range oSet {
+					for _, nextInstanceGroup := range nSet {
+						oInstanceGroup := currInstanceGroup.(map[string]interface{})
+						nInstanceGroup := nextInstanceGroup.(map[string]interface{})
 
-							if oInstanceGroup["instance_role"].(string) == nInstanceGroup["instance_role"].(string) && oInstanceGroup["name"].(string) == nInstanceGroup["name"].(string) {
-
-								oAutoScalingPolicy := oInstanceGroup["autoscaling_policy"].(string)
-								nAutoScalingPolicy := nInstanceGroup["autoscaling_policy"].(string)
-
-								if oAutoScalingPolicy != "" && nAutoScalingPolicy != "" {
-									oJson, _ := structure.NormalizeJsonString(oAutoScalingPolicy)
-									nJson, _ := structure.NormalizeJsonString(nAutoScalingPolicy)
-
-									if oJson == nJson {
-										for _, k := range diff.GetChangedKeysPrefix(fmt.Sprintf("instance_group.%d", resourceAwsEMRClusterInstanceGroupHash(oInstanceGroup))) {
-											if strings.HasSuffix(k, ".#") {
-												k = strings.TrimSuffix(k, ".#")
-											}
-											diff.ForceNew(k)
-										}
-									}
-								}
-								break
-							}
-
+						if oInstanceGroup["instance_role"].(string) != nInstanceGroup["instance_role"].(string) || oInstanceGroup["name"].(string) != nInstanceGroup["name"].(string) {
+							continue
 						}
+
+						oAutoScalingPolicy := oInstanceGroup["autoscaling_policy"].(string)
+						nAutoScalingPolicy := nInstanceGroup["autoscaling_policy"].(string)
+
+						if oAutoScalingPolicy == "" && nAutoScalingPolicy == "" {
+							continue
+						}
+
+						oJSON, err := structure.NormalizeJsonString(oAutoScalingPolicy)
+						if err != nil {
+							return fmt.Errorf("error reading old json value: %s", err)
+						}
+						nJSON, err := structure.NormalizeJsonString(nAutoScalingPolicy)
+						if err != nil {
+							return fmt.Errorf("error reading new json value: %s", err)
+						}
+
+						if oJSON != nJSON {
+							continue
+						}
+						for _, k := range diff.GetChangedKeysPrefix(fmt.Sprintf("instance_group.%d", resourceAwsEMRClusterInstanceGroupHash(oInstanceGroup))) {
+							if strings.HasSuffix(k, ".#") {
+								k = strings.TrimSuffix(k, ".#")
+							}
+							diff.ForceNew(k)
+						}
+						break
 					}
 				}
 			}
@@ -922,32 +932,33 @@ func resourceAwsEMRClusterUpdate(d *schema.ResourceData, meta interface{}) error
 				oInstanceGroup := currInstanceGroup.(map[string]interface{})
 				nInstanceGroup := nextInstanceGroup.(map[string]interface{})
 
-				if oInstanceGroup["instance_role"].(string) == nInstanceGroup["instance_role"].(string) && oInstanceGroup["name"].(string) == nInstanceGroup["name"].(string) {
-
-					if v, ok := nInstanceGroup["autoscaling_policy"]; ok && v.(string) != "" {
-						var autoScalingPolicy *emr.AutoScalingPolicy
-
-						err := json.Unmarshal([]byte(v.(string)), &autoScalingPolicy)
-						if err != nil {
-							return fmt.Errorf("error parsing EMR Auto Scaling Policy JSON for update: \n\n%s\n\n%s", v.(string), err)
-						}
-
-						putAutoScalingPolicy := &emr.PutAutoScalingPolicyInput{
-							ClusterId:         aws.String(d.Id()),
-							AutoScalingPolicy: autoScalingPolicy,
-							InstanceGroupId:   aws.String(oInstanceGroup["id"].(string)),
-						}
-
-						_, errModify := conn.PutAutoScalingPolicy(putAutoScalingPolicy)
-						if errModify != nil {
-							return fmt.Errorf("error updating autoscaling policy for instance group %q: %s", oInstanceGroup["id"].(string), errModify)
-						}
-
-						break
-					}
+				if oInstanceGroup["instance_role"].(string) != nInstanceGroup["instance_role"].(string) || oInstanceGroup["name"].(string) != nInstanceGroup["name"].(string) {
+					continue
 				}
 
+				if v, ok := nInstanceGroup["autoscaling_policy"]; ok && v.(string) != "" {
+					var autoScalingPolicy *emr.AutoScalingPolicy
+
+					err := json.Unmarshal([]byte(v.(string)), &autoScalingPolicy)
+					if err != nil {
+						return fmt.Errorf("error parsing EMR Auto Scaling Policy JSON for update: \n\n%s\n\n%s", v.(string), err)
+					}
+
+					putAutoScalingPolicy := &emr.PutAutoScalingPolicyInput{
+						ClusterId:         aws.String(d.Id()),
+						AutoScalingPolicy: autoScalingPolicy,
+						InstanceGroupId:   aws.String(oInstanceGroup["id"].(string)),
+					}
+
+					_, errModify := conn.PutAutoScalingPolicy(putAutoScalingPolicy)
+					if errModify != nil {
+						return fmt.Errorf("error updating autoscaling policy for instance group %q: %s", oInstanceGroup["id"].(string), errModify)
+					}
+
+					break
+				}
 			}
+
 		}
 	}
 
@@ -1213,7 +1224,6 @@ func flattenInstanceGroup(ig *emr.InstanceGroup) (map[string]interface{}, error)
 		if err != nil {
 			return nil, err
 		}
-
 		autoscalingPolicyRulesString := string(withoutNulls)
 
 		autoscalingPolicyString := fmt.Sprintf("{\"Constraints\":%s,\"Rules\":%s}", autoscalingPolicyConstraintsString, autoscalingPolicyRulesString)
