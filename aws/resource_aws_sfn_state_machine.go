@@ -93,7 +93,18 @@ func resourceAwsSfnStateMachineCreate(d *schema.ResourceData, meta interface{}) 
 
 	d.SetId(*activity.StateMachineArn)
 
-	return resourceAwsSfnStateMachineUpdate(d, meta)
+	if v, ok := d.GetOk("tags"); ok {
+		input := &sfn.TagResourceInput{
+			ResourceArn: aws.String(d.Id()),
+			Tags:        tagsFromMapSfn(v.(map[string]interface{})),
+		}
+		log.Printf("[DEBUG] Tagging SFN State Machine: %s", input)
+		_, err := conn.TagResource(input)
+		if err != nil {
+			return fmt.Errorf("error tagging SFN State Machine (%s): %s", d.Id(), input)
+		}
+	}
+	return resourceAwsSfnStateMachineRead(d, meta)
 }
 
 func resourceAwsSfnStateMachineRead(d *schema.ResourceData, meta interface{}) error {
@@ -128,7 +139,7 @@ func resourceAwsSfnStateMachineRead(d *schema.ResourceData, meta interface{}) er
 		},
 	)
 	if err != nil {
-		log.Printf("[DEBUG] Error retrieving tags for Step Function: %s. %s", aws.StringValue(sm.Name), err)
+		return err
 	} else {
 		d.Set("tags", tagsToMapSfn(tagsResp.Tags))
 	}

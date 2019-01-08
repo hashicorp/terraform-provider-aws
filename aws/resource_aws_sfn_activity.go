@@ -55,7 +55,18 @@ func resourceAwsSfnActivityCreate(d *schema.ResourceData, meta interface{}) erro
 
 	d.SetId(*activity.ActivityArn)
 
-	return resourceAwsSfnActivityUpdate(d, meta)
+	if v, ok := d.GetOk("tags"); ok {
+		input := &sfn.TagResourceInput{
+			ResourceArn: aws.String(d.Id()),
+			Tags:        tagsFromMapSfn(v.(map[string]interface{})),
+		}
+		log.Printf("[DEBUG] Tagging SFN Activity: %s", input)
+		_, err := conn.TagResource(input)
+		if err != nil {
+			return fmt.Errorf("error tagging SFN Activity (%s): %s", d.Id(), input)
+		}
+	}
+	return resourceAwsSfnActivityRead(d, meta)
 }
 
 func resourceAwsSfnActivityUpdate(d *schema.ResourceData, meta interface{}) error {
