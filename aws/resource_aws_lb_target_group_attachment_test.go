@@ -122,12 +122,12 @@ func testAccCheckAWSLBTargetGroupAttachmentExists(n string) resource.TestCheckFu
 		conn := testAccProvider.Meta().(*AWSClient).elbv2conn
 
 		_, hasPort := rs.Primary.Attributes["port"]
-		targetGroupArn, _ := rs.Primary.Attributes["target_group_arn"]
+		targetGroupArn := rs.Primary.Attributes["target_group_arn"]
 
 		target := &elbv2.TargetDescription{
 			Id: aws.String(rs.Primary.Attributes["target_id"]),
 		}
-		if hasPort == true {
+		if hasPort {
 			port, _ := strconv.Atoi(rs.Primary.Attributes["port"])
 			target.Port = aws.Int64(int64(port))
 		}
@@ -158,12 +158,12 @@ func testAccCheckAWSLBTargetGroupAttachmentDestroy(s *terraform.State) error {
 		}
 
 		_, hasPort := rs.Primary.Attributes["port"]
-		targetGroupArn, _ := rs.Primary.Attributes["target_group_arn"]
+		targetGroupArn := rs.Primary.Attributes["target_group_arn"]
 
 		target := &elbv2.TargetDescription{
 			Id: aws.String(rs.Primary.Attributes["target_id"]),
 		}
-		if hasPort == true {
+		if hasPort {
 			port, _ := strconv.Atoi(rs.Primary.Attributes["port"])
 			target.Port = aws.Int64(int64(port))
 		}
