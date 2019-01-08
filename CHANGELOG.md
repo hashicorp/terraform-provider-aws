@@ -1,5 +1,9 @@
 ## 1.55.0 (Unreleased)
 
+FEATURES
+
+* **New Resource:** `aws_media_package_channel` [GH-6957]
+
 ENHANCEMENTS
 
 * resource/aws_elasticsearch_domain: Support in-place updates of `elasticsearch_version` [GH-6243]
