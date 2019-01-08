@@ -2,11 +2,55 @@ package aws
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/terraform"
 )
+
+func testCheckResourceAttrPrefixSet(resourceName, prefix string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rm := s.RootModule()
+		rs, ok := rm.Resources[resourceName]
+
+		if !ok {
+			return fmt.Errorf("resource does not exist in state, %s", resourceName)
+		}
+
+		for attr := range rs.Primary.Attributes {
+			if strings.HasPrefix(attr, prefix+".") {
+				return nil
+			}
+		}
+
+		return fmt.Errorf("resource attribute prefix does not exist in state, %s", prefix)
+	}
+}
+
+func checkResourceStateComputedAttr(resourceName string, expectedResource *schema.Resource) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		actualResource, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("root module has no resource called %s", resourceName)
+		}
+
+		// Ensure the state is populated with all the computed attributes defined by the resource schema.
+		for k, v := range expectedResource.Schema {
+			if !v.Computed {
+				continue
+			}
+
+			if _, ok := actualResource.Primary.Attributes[k]; !ok {
+				return fmt.Errorf("state missing attribute %s", k)
+			}
+		}
+
+		return nil
+	}
+}
 
 func TestAccDataSourceLexBot(t *testing.T) {
 	resourceName := "aws_lex_bot.test"
