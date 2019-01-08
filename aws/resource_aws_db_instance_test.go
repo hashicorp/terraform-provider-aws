@@ -1450,7 +1450,7 @@ func TestAccAWSDBInstance_MSSQL_Domain(t *testing.T) {
 				Config: testAccAWSDBMSSQLDomain(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBInstanceExists("aws_db_instance.mssql", &vBefore),
-					testAccCheckAWSDBInstanceDomainAttributes("foo.somedomain.com", &vBefore),
+					testAccCheckAWSDBInstanceDomainAttributes("terraformtesting.com", &vBefore),
 					resource.TestCheckResourceAttrSet(
 						"aws_db_instance.mssql", "domain"),
 					resource.TestCheckResourceAttrSet(
@@ -1461,7 +1461,7 @@ func TestAccAWSDBInstance_MSSQL_Domain(t *testing.T) {
 				Config: testAccAWSDBMSSQLUpdateDomain(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBInstanceExists("aws_db_instance.mssql", &vAfter),
-					testAccCheckAWSDBInstanceDomainAttributes("bar.somedomain.com", &vAfter),
+					testAccCheckAWSDBInstanceDomainAttributes("corp.notexample.com", &vAfter),
 					resource.TestCheckResourceAttrSet(
 						"aws_db_instance.mssql", "domain"),
 					resource.TestCheckResourceAttrSet(
@@ -1486,7 +1486,7 @@ func TestAccAWSDBInstance_MSSQL_DomainSnapshotRestore(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBInstanceExists("aws_db_instance.mssql_restore", &vRestoredInstance),
 					testAccCheckAWSDBInstanceExists("aws_db_instance.mssql", &v),
-					testAccCheckAWSDBInstanceDomainAttributes("foo.somedomain.com", &vRestoredInstance),
+					testAccCheckAWSDBInstanceDomainAttributes("terraformtesting.com", &vRestoredInstance),
 					resource.TestCheckResourceAttrSet(
 						"aws_db_instance.mssql_restore", "domain"),
 					resource.TestCheckResourceAttrSet(
@@ -2791,7 +2791,7 @@ resource "aws_security_group_rule" "rds-mssql-1" {
 }
 
 resource "aws_directory_service_directory" "foo" {
-  name     = "foo.somedomain.com"
+  name     = "terraformtesting.com"
   password = "SuperSecretPassw0rd"
   type     = "MicrosoftAD"
   edition  = "Standard"
@@ -2803,7 +2803,7 @@ resource "aws_directory_service_directory" "foo" {
 }
 
 resource "aws_directory_service_directory" "bar" {
-  name     = "bar.somedomain.com"
+  name     = "corp.notexample.com"
   password = "SuperSecretPassw0rd"
   type     = "MicrosoftAD"
   edition  = "Standard"
@@ -2914,7 +2914,7 @@ resource "aws_security_group_rule" "rds-mssql-1" {
 }
 
 resource "aws_directory_service_directory" "foo" {
-  name     = "foo.somedomain.com"
+  name     = "terraformtesting.com"
   password = "SuperSecretPassw0rd"
   type     = "MicrosoftAD"
   edition  = "Standard"
@@ -2926,7 +2926,7 @@ resource "aws_directory_service_directory" "foo" {
 }
 
 resource "aws_directory_service_directory" "bar" {
-  name     = "bar.somedomain.com"
+  name     = "corp.notexample.com"
   password = "SuperSecretPassw0rd"
   type     = "MicrosoftAD"
   edition  = "Standard"
@@ -3053,7 +3053,7 @@ resource "aws_security_group_rule" "rds-mssql-1" {
 }
 
 resource "aws_directory_service_directory" "foo" {
-  name     = "foo.somedomain.com"
+  name     = "terraformtesting.com"
   password = "SuperSecretPassw0rd"
   type     = "MicrosoftAD"
   edition  = "Standard"
