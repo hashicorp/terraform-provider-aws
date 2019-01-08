@@ -1942,6 +1942,27 @@ func TestAccAWSInstance_creditSpecification_unlimitedCpuCredits_t2Tot3Taint(t *t
 	})
 }
 
+func TestAccAWSInstance_disappears(t *testing.T) {
+	var conf ec2.Instance
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists("aws_instance.foo", &conf),
+					testAccCheckInstanceDisappears(&conf),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSInstance_UserData_EmptyStringToUnspecified(t *testing.T) {
 	var instance ec2.Instance
 	rInt := acctest.RandInt()
@@ -2072,6 +2093,22 @@ func testAccCheckInstanceExistsWithProvider(n string, i *ec2.Instance, providerF
 		}
 
 		return fmt.Errorf("Instance not found")
+	}
+}
+
+func testAccCheckInstanceDisappears(conf *ec2.Instance) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+
+		params := &ec2.TerminateInstancesInput{
+			InstanceIds: []*string{conf.InstanceId},
+		}
+
+		if _, err := conn.TerminateInstances(params); err != nil {
+			return err
+		}
+
+		return waitForInstanceDeletion(conn, *conf.InstanceId, 10*time.Minute)
 	}
 }
 

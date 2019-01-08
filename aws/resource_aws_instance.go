@@ -1925,9 +1925,16 @@ func awsTerminateInstance(conn *ec2.EC2, id string, timeout time.Duration) error
 		InstanceIds: []*string{aws.String(id)},
 	}
 	if _, err := conn.TerminateInstances(req); err != nil {
+		if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "InvalidInstanceID.NotFound" {
+			return nil
+		}
 		return fmt.Errorf("Error terminating instance: %s", err)
 	}
 
+	return waitForInstanceDeletion(conn, id, timeout)
+}
+
+func waitForInstanceDeletion(conn *ec2.EC2, id string, timeout time.Duration) error {
 	log.Printf("[DEBUG] Waiting for instance (%s) to become terminated", id)
 
 	stateConf := &resource.StateChangeConf{
