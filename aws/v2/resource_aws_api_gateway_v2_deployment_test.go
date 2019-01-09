@@ -14,8 +14,8 @@ import (
 
 func TestAccAWSAPIGatewayDeployment_basic(t *testing.T) {
 	var deployment apigateway.Deployment
-	resourceName := "aws_api_gateway_deployment.test"
-	restApiResourceName := "aws_api_gateway_rest_api.test"
+	resourceName := "aws_api_gateway_v2_deployment.test"
+	restApiResourceName := "aws_api_gateway_v2.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test-deployment")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -252,7 +252,7 @@ func testAccCheckAWSAPIGatewayDeploymentDestroy(s *terraform.State) error {
 
 func testAccAWSAPIGatewayDeploymentConfigBase(uri string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
+resource "aws_api_gateway_v2" "test" {
   name = "tf-acc-test-deployment"
 }
 
