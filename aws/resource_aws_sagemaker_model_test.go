@@ -13,6 +13,10 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+const (
+	image = "174872318107.dkr.ecr.us-west-2.amazonaws.com/kmeans:1"
+)
+
 func init() {
 	resource.AddTestSweepers("aws_sagemaker_model", &resource.Sweeper{
 		Name: "aws_sagemaker_model",
@@ -32,7 +36,7 @@ func testSweepSagemakerModels(region string) error {
 	}
 	resp, err := conn.ListModels(req)
 	if err != nil {
-		return fmt.Errorf("Error listing models: %s", err)
+		return fmt.Errorf("error listing models: %s", err)
 	}
 
 	if len(resp.Models) == 0 {
@@ -46,7 +50,7 @@ func testSweepSagemakerModels(region string) error {
 		})
 		if err != nil {
 			return fmt.Errorf(
-				"Error deleting sagemaker model (%s): %s",
+				"error deleting sagemaker model (%s): %s",
 				*model.ModelName, err)
 		}
 	}
@@ -54,31 +58,8 @@ func testSweepSagemakerModels(region string) error {
 	return nil
 }
 
-func TestAccAWSSagemakerModel_importBasic(t *testing.T) {
-	rName := acctest.RandString(10)
-	image := "174872318107.dkr.ecr.us-west-2.amazonaws.com/kmeans:1"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckSagemakerModelDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccSagemakerModelConfig(rName, image),
-			},
-
-			{
-				ResourceName:      "aws_sagemaker_model.foo",
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
 func TestAccAWSSagemakerModel_basic(t *testing.T) {
 	rName := acctest.RandString(10)
-	image := "174872318107.dkr.ecr.us-west-2.amazonaws.com/kmeans:1"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -89,7 +70,6 @@ func TestAccAWSSagemakerModel_basic(t *testing.T) {
 				Config: testAccSagemakerModelConfig(rName, image),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSagemakerModelExists("aws_sagemaker_model.foo"),
-
 					resource.TestCheckResourceAttr(
 						"aws_sagemaker_model.foo", "name",
 						fmt.Sprintf("terraform-testacc-sagemaker-model-%s", rName)),
@@ -99,6 +79,11 @@ func TestAccAWSSagemakerModel_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_sagemaker_model.foo", "execution_role_arn"),
 					resource.TestCheckResourceAttrSet("aws_sagemaker_model.foo", "arn"),
 				),
+			},
+			{
+				ResourceName:      "aws_sagemaker_model.foo",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -113,7 +98,7 @@ func TestAccAWSSagemakerModel_tags(t *testing.T) {
 		CheckDestroy: testAccCheckSagemakerModelDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSagemakerModelConfigTags(rName),
+				Config: testAccSagemakerModelConfigTags(rName, image),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSagemakerModelExists("aws_sagemaker_model.foo"),
 					resource.TestCheckResourceAttr("aws_sagemaker_model.foo", "tags.%", "1"),
@@ -121,12 +106,17 @@ func TestAccAWSSagemakerModel_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccSagemakerModelConfigTagsUpdate(rName),
+				Config: testAccSagemakerModelConfigTagsUpdate(rName, image),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSagemakerModelExists("aws_sagemaker_model.foo"),
 					resource.TestCheckResourceAttr("aws_sagemaker_model.foo", "tags.%", "1"),
 					resource.TestCheckResourceAttr("aws_sagemaker_model.foo", "tags.bar", "baz"),
 				),
+			},
+			{
+				ResourceName:      "aws_sagemaker_model.foo",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -142,12 +132,17 @@ func TestAccAWSSagemakerModel_primaryContainerModelDataUrl(t *testing.T) {
 		CheckDestroy: testAccCheckSagemakerModelDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSagemakerPrimaryContainerModelDataUrlConfig(rName, modelDataUrl),
+				Config: testAccSagemakerPrimaryContainerModelDataUrlConfig(rName, image, modelDataUrl),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSagemakerModelExists("aws_sagemaker_model.foo"),
 					resource.TestCheckResourceAttr("aws_sagemaker_model.foo",
 						"primary_container.0.model_data_url", modelDataUrl),
 				),
+			},
+			{
+				ResourceName:      "aws_sagemaker_model.foo",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -162,12 +157,17 @@ func TestAccAWSSagemakerModel_primaryContainerHostname(t *testing.T) {
 		CheckDestroy: testAccCheckSagemakerModelDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSagemakerPrimaryContainerHostnameConfig(rName),
+				Config: testAccSagemakerPrimaryContainerHostnameConfig(rName, image),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSagemakerModelExists("aws_sagemaker_model.foo"),
 					resource.TestCheckResourceAttr("aws_sagemaker_model.foo",
 						"primary_container.0.container_hostname", "foo"),
 				),
+			},
+			{
+				ResourceName:      "aws_sagemaker_model.foo",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -182,7 +182,7 @@ func TestAccAWSSagemakerModel_primaryContainerEnvironment(t *testing.T) {
 		CheckDestroy: testAccCheckSagemakerModelDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSagemakerPrimaryContainerEnvironmentConfig(rName),
+				Config: testAccSagemakerPrimaryContainerEnvironmentConfig(rName, image),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSagemakerModelExists("aws_sagemaker_model.foo"),
 					resource.TestCheckResourceAttr("aws_sagemaker_model.foo",
@@ -191,13 +191,17 @@ func TestAccAWSSagemakerModel_primaryContainerEnvironment(t *testing.T) {
 						"primary_container.0.environment.foo", "bar"),
 				),
 			},
+			{
+				ResourceName:      "aws_sagemaker_model.foo",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
 
 func TestAccAWSSagemakerModel_containers(t *testing.T) {
 	rName := acctest.RandString(10)
-	image := "174872318107.dkr.ecr.us-west-2.amazonaws.com/kmeans:1"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -215,6 +219,11 @@ func TestAccAWSSagemakerModel_containers(t *testing.T) {
 						"aws_sagemaker_model.foo", "container.1.image", image),
 				),
 			},
+			{
+				ResourceName:      "aws_sagemaker_model.foo",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -228,13 +237,18 @@ func TestAccAWSSagemakerModel_vpcConfig(t *testing.T) {
 		CheckDestroy: testAccCheckSagemakerModelDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSagemakerModelVpcConfig(rName),
+				Config: testAccSagemakerModelVpcConfig(rName, image),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSagemakerModelExists("aws_sagemaker_model.foo"),
 					resource.TestCheckResourceAttr("aws_sagemaker_model.foo", "vpc_config.#", "1"),
 					resource.TestCheckResourceAttr("aws_sagemaker_model.foo", "vpc_config.0.subnets.#", "2"),
 					resource.TestCheckResourceAttr("aws_sagemaker_model.foo", "vpc_config.0.security_group_ids.#", "2"),
 				),
+			},
+			{
+				ResourceName:      "aws_sagemaker_model.foo",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -249,13 +263,17 @@ func TestAccAWSSagemakerModel_networkIsolation(t *testing.T) {
 		CheckDestroy: testAccCheckSagemakerModelDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSagemakerModelNetworkIsolation(rName),
+				Config: testAccSagemakerModelNetworkIsolation(rName, image),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSagemakerModelExists("aws_sagemaker_model.foo"),
-
 					resource.TestCheckResourceAttr(
 						"aws_sagemaker_model.foo", "enable_network_isolation", "true"),
 				),
+			},
+			{
+				ResourceName:      "aws_sagemaker_model.foo",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -345,14 +363,14 @@ data "aws_iam_policy_document" "assume_role" {
 `, rName, image, rName)
 }
 
-func testAccSagemakerModelConfigTags(rName string) string {
+func testAccSagemakerModelConfigTags(rName string, image string) string {
 	return fmt.Sprintf(`
 resource "aws_sagemaker_model" "foo" {
 	name = "terraform-testacc-sagemaker-model-%s"
 	execution_role_arn = "${aws_iam_role.foo.arn}"
 
 	primary_container {
-		image = "174872318107.dkr.ecr.us-west-2.amazonaws.com/kmeans:1"
+		image = "%s"
 	}
 
 	tags {
@@ -375,17 +393,17 @@ data "aws_iam_policy_document" "assume_role" {
     }
   }
 }
-`, rName, rName)
+`, rName, image, rName)
 }
 
-func testAccSagemakerModelConfigTagsUpdate(rName string) string {
+func testAccSagemakerModelConfigTagsUpdate(rName string, image string) string {
 	return fmt.Sprintf(`
 resource "aws_sagemaker_model" "foo" {
 	name = "terraform-testacc-sagemaker-model-%s"
 	execution_role_arn = "${aws_iam_role.foo.arn}"
 
 	primary_container {
-		image = "174872318107.dkr.ecr.us-west-2.amazonaws.com/kmeans:1"
+		image = "%s"
 	}
 
 	tags {
@@ -408,17 +426,17 @@ data "aws_iam_policy_document" "assume_role" {
     }
   }
 }
-`, rName, rName)
+`, rName, image, rName)
 }
 
-func testAccSagemakerPrimaryContainerModelDataUrlConfig(rName string, modelDataUrl string) string {
+func testAccSagemakerPrimaryContainerModelDataUrlConfig(rName string, image string, modelDataUrl string) string {
 	return fmt.Sprintf(`
 resource "aws_sagemaker_model" "foo" {
 	name = "terraform-testacc-sagemaker-model-%s"
 	execution_role_arn = "${aws_iam_role.foo.arn}"
 
 	primary_container {
-		image = "174872318107.dkr.ecr.us-west-2.amazonaws.com/kmeans:1"
+		image = "%s"
 		model_data_url = "%s"
 	}
 }
@@ -490,17 +508,17 @@ resource "aws_s3_bucket_object" "object" {
   key    = "model.tar.gz"
   content = "some-data"
 }
-`, rName, modelDataUrl, rName, rName, rName)
+`, rName, image, modelDataUrl, rName, rName, rName)
 }
 
-func testAccSagemakerPrimaryContainerHostnameConfig(rName string) string {
+func testAccSagemakerPrimaryContainerHostnameConfig(rName string, image string) string {
 	return fmt.Sprintf(`
 resource "aws_sagemaker_model" "foo" {
 	name = "terraform-testacc-sagemaker-model-%s"
 	execution_role_arn = "${aws_iam_role.foo.arn}"
 
 	primary_container {
-		image = "174872318107.dkr.ecr.us-west-2.amazonaws.com/kmeans:1"
+		image = "%s"
 		container_hostname = "foo"
 	}
 }
@@ -520,17 +538,18 @@ data "aws_iam_policy_document" "assume_role" {
     }
   }
 }
-`, rName, rName)
+`, rName, image, rName)
 }
 
-func testAccSagemakerPrimaryContainerEnvironmentConfig(rName string) string {
+func testAccSagemakerPrimaryContainerEnvironmentConfig(rName string, image string) string {
 	return fmt.Sprintf(`
 resource "aws_sagemaker_model" "foo" {
 	name = "terraform-testacc-sagemaker-model-%s"
 	execution_role_arn = "${aws_iam_role.foo.arn}"
 
 	primary_container {
-		image = "174872318107.dkr.ecr.us-west-2.amazonaws.com/kmeans:1"
+		image = "%s"
+
 		environment {
 			foo = "bar"
 		}
@@ -552,7 +571,7 @@ data "aws_iam_policy_document" "assume_role" {
     }
   }
 }
-`, rName, rName)
+`, rName, image, rName)
 }
 
 func testAccSagemakerModelContainers(rName string, image string) string {
@@ -588,7 +607,7 @@ data "aws_iam_policy_document" "assume_role" {
 `, rName, image, image, rName)
 }
 
-func testAccSagemakerModelNetworkIsolation(rName string) string {
+func testAccSagemakerModelNetworkIsolation(rName string, image string) string {
 	return fmt.Sprintf(`
 resource "aws_sagemaker_model" "foo" {
 	name = "terraform-testacc-sagemaker-model-%s"
@@ -596,7 +615,7 @@ resource "aws_sagemaker_model" "foo" {
 	enable_network_isolation = true
 
     primary_container {
-		image = "174872318107.dkr.ecr.us-west-2.amazonaws.com/kmeans:1"
+		image = "%s"
 	}
 }
 
@@ -615,10 +634,10 @@ data "aws_iam_policy_document" "assume_role" {
     }
   }
 }
-`, rName, rName)
+`, rName, image, rName)
 }
 
-func testAccSagemakerModelVpcConfig(rName string) string {
+func testAccSagemakerModelVpcConfig(rName string, image string) string {
 	return fmt.Sprintf(`
 resource "aws_sagemaker_model" "foo" {
 	name = "terraform-testacc-sagemaker-model-%s"
@@ -626,7 +645,7 @@ resource "aws_sagemaker_model" "foo" {
 	enable_network_isolation = true
 
     primary_container {
-		image = "174872318107.dkr.ecr.us-west-2.amazonaws.com/kmeans:1"
+		image = "%s"
 	}
 
     vpc_config {
@@ -686,5 +705,5 @@ resource "aws_security_group" "bar" {
 	name 	= "terraform-testacc-sagemaker-model-bar-%s"
 	vpc_id 	= "${aws_vpc.foo.id}"
 }
-`, rName, rName, rName, rName, rName, rName, rName)
+`, rName, image, rName, rName, rName, rName, rName, rName)
 }

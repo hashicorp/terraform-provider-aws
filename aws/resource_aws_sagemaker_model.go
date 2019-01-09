@@ -105,6 +105,7 @@ func resourceAwsSagemakerModel() *schema.Resource {
 			"enable_network_isolation": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				ForceNew: true,
 			},
 
 			"container": {
@@ -224,8 +225,8 @@ func resourceAwsSagemakerModelRead(d *schema.ResourceData, meta interface{}) err
 
 	model, err := conn.DescribeModel(request)
 	if err != nil {
-		if sagemakerErr, ok := err.(awserr.Error); ok && sagemakerErr.Code() == "ResourceNotFound" {
-			log.Printf("[INFO] unable to find the sagemaker resource and therfore it is removed from the state: %s", d.Id())
+		if sagemakerErr, ok := err.(awserr.Error); ok && sagemakerErr.Code() == "ValidationException" {
+			log.Printf("[INFO] unable to find the sagemaker model resource and therefore it is removed from the state: %s", d.Id())
 			d.SetId("")
 			return nil
 		}
@@ -241,6 +242,9 @@ func resourceAwsSagemakerModelRead(d *schema.ResourceData, meta interface{}) err
 	if err := d.Set("execution_role_arn", model.ExecutionRoleArn); err != nil {
 		return err
 	}
+	if err := d.Set("enable_network_isolation", model.EnableNetworkIsolation); err != nil {
+		return err
+	}
 	if err := d.Set("primary_container", flattenContainer(model.PrimaryContainer)); err != nil {
 		return err
 	}
@@ -254,6 +258,10 @@ func resourceAwsSagemakerModelRead(d *schema.ResourceData, meta interface{}) err
 	tagsOutput, err := conn.ListTags(&sagemaker.ListTagsInput{
 		ResourceArn: model.ModelArn,
 	})
+	if err != nil {
+		return fmt.Errorf("error listing tags of Sagemaker model %s: %s", d.Id(), err)
+	}
+
 	if err := d.Set("tags", tagsToMapSagemaker(tagsOutput.Tags)); err != nil {
 		return err
 	}
