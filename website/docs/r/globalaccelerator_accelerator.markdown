@@ -48,6 +48,11 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The Amazon Resource Name (ARN) of the accelerator.
 * `ip_sets` - IP address set associated with the accelerator.
 
+**ip_sets** exports the following attributes:
+
+* `ip_addresses` - The array of IP addresses in the IP address set.
+* `ip_family` - The types of IP addresses included in this IP set.
+
 ## Import
 
 Global Accelerator accelerators can be imported using the `id`, e.g.
