@@ -5,9 +5,7 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func dataSourceAwsDxPrivateVirtualInterface() *schema.Resource {
@@ -32,21 +30,16 @@ func dataSourceAwsDxPrivateVirtualInterface() *schema.Resource {
 				Computed: true,
 			},
 			"vpn_gateway_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"dx_gateway_id"},
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"dx_gateway_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"vpn_gateway_id"},
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"vlan": {
-				Type:         schema.TypeInt,
-				Computed:     true,
-				ValidateFunc: validation.IntBetween(1, 4094),
+				Type:     schema.TypeInt,
+				Computed: true,
 			},
 			"bgp_asn": {
 				Type:     schema.TypeInt,
@@ -58,31 +51,26 @@ func dataSourceAwsDxPrivateVirtualInterface() *schema.Resource {
 				Computed: true,
 			},
 			"address_family": {
-				Type:         schema.TypeString,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice([]string{directconnect.AddressFamilyIpv4, directconnect.AddressFamilyIpv6}, false),
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"customer_address": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 			"amazon_address": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 			"mtu": {
-				Type:         schema.TypeInt,
-				Default:      1500,
-				Computed:     true,
-				ValidateFunc: validateIntegerInSlice([]int{1500, 9001}),
+				Type:     schema.TypeInt,
+				Computed: true,
 			},
 			"jumbo_frame_capable": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"tags": tagsSchema(),
+			"tags": tagsSchemaComputed(),
 		},
 	}
 }
