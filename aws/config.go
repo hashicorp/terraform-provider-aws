@@ -62,6 +62,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/emr"
 	"github.com/aws/aws-sdk-go/service/firehose"
 	"github.com/aws/aws-sdk-go/service/fms"
+	"github.com/aws/aws-sdk-go/service/fsx"
 	"github.com/aws/aws-sdk-go/service/gamelift"
 	"github.com/aws/aws-sdk-go/service/glacier"
 	"github.com/aws/aws-sdk-go/service/glue"
@@ -263,6 +264,7 @@ type AWSClient struct {
 	workspacesconn        *workspaces.WorkSpaces
 	appmeshconn           *appmesh.AppMesh
 	transferconn          *transfer.Transfer
+	fsxconn               *fsx.FSx
 }
 
 func (c *AWSClient) S3() *s3.S3 {
@@ -552,6 +554,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.esconn = elasticsearch.New(awsEsSess)
 	client.firehoseconn = firehose.New(sess)
 	client.fmsconn = fms.New(sess)
+	client.fsxconn = fsx.New(sess)
 	client.inspectorconn = inspector.New(sess)
 	client.gameliftconn = gamelift.New(sess)
 	client.glacierconn = glacier.New(sess)
