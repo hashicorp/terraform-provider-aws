@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/hashicorp/terraform/helper/schema"
 )
@@ -95,6 +96,7 @@ func dataSourceAwsDxPrivateVirtualInterfaceRead(d *schema.ResourceData, meta int
 		Resource:  fmt.Sprintf("dxvif/%s", d.Get("virtual_interface_id")),
 	}.String()
 
+	d.SetId(aws.StringValue(vif.VirtualInterfaceId))
 	d.Set("arn", arn)
 	d.Set("connection_id", vif.ConnectionId)
 	d.Set("name", vif.VirtualInterfaceName)
