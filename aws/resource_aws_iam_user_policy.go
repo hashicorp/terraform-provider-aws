@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"net/url"
 	"strings"
 
@@ -101,6 +102,7 @@ func resourceAwsIamUserPolicyRead(d *schema.ResourceData, meta interface{}) erro
 	getResp, err := iamconn.GetUserPolicy(request)
 	if err != nil {
 		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+			log.Printf("[WARN] IAM User Policy (%s) for %s not found, removing from state", name, user)
 			d.SetId("")
 			return nil
 		}
