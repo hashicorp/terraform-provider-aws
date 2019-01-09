@@ -1,14 +1,14 @@
 ---
 layout: "aws"
-page_title: "AWS: sagemaker_endpoint"
+page_title: "AWS: aws_sagemaker_endpoint_configuration"
 sidebar_current: "docs-aws-resource-sagemaker-endpoint-configuration"
 description: |-
-  Provides a Sagemaker endpoint configuration resource.
+  Provides a SageMaker endpoint configuration resource.
 ---
 
-# aws\_sagemaker\_endpoint\_configuration
+# aws_sagemaker_endpoint_configuration
 
-Provides a Sagemaker endpoint configuration resource.
+Provides a SageMaker endpoint configuration resource.
 
 ## Example Usage
 
@@ -21,10 +21,9 @@ resource "aws_sagemaker_endpoint_configuration" "ec" {
 
     production_variant {
         variant_name            = "variant-1"
-        model_name              = "my-model"
+        model_name              = "${aws_sagemaker_model.m.name}"
         initial_instance_count  = 1
-        instance_type           = ""
-        initial_variant_weight  = 1
+        instance_type           = "ml.t2.medium"
     }
 
     tags {
@@ -48,15 +47,14 @@ The `production_variant` block supports:
 * `model_name` - (Required) The name of the model to use.
 * `initial_instance_count` - (Required) Initial number of instances used for auto-scaling.
 * `instance_type` (Required) - The type of instance to start.
-* `initial_variant_weight` - (Required)
-
+* `initial_variant_weight` (Optional) - Determines initial traffic distribution among all of the models that you specify in the endpoint configuration. If unspecified, it defaults to 1.0.
+* `accelerator_type` (Optional) - The size of the Elastic Inference (EI) instance to use for the production variant.
 ## Attributes Reference
 
 The following attributes are exported:
 
 * `name` - The name of the endpoint configuration.
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this endpoint configuration.
-* `creation_time` - The creation timestamp of this endpoint configuration.
 
 ## Import
 
