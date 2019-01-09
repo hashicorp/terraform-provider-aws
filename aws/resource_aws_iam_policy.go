@@ -243,13 +243,11 @@ func resourceAwsIamPolicyDelete(d *schema.ResourceData, meta interface{}) error 
 		PolicyArn: aws.String(d.Id()),
 	}
 
-	_, err := iamconn.DeletePolicy(request)
-	if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("Error deleting IAM policy %s: %#v", d.Id(), err)
+	if _, err := iamconn.DeletePolicy(request); err != nil {
+		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+			return nil
+		}
+		return fmt.Errorf("Error deleting IAM policy %s: %s", d.Id(), err)
 	}
 
 	return nil
