@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"net/url"
 	"strings"
 
@@ -97,6 +98,7 @@ func resourceAwsIamRolePolicyRead(d *schema.ResourceData, meta interface{}) erro
 	getResp, err := iamconn.GetRolePolicy(request)
 	if err != nil {
 		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+			log.Printf("[WARN] IAM Role Policy (%s) for %s not found, removing from state", name, role)
 			d.SetId("")
 			return nil
 		}
