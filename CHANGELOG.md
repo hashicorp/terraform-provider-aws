@@ -13,6 +13,7 @@ ENHANCEMENTS
 BUG FIXES
 
 * resource/aws_dynamodb_table: Prevent `BillingMode` `ValidationError` on table creation [GH-7064]
+* resource/aws_iam_user_policy: Skip `NoSuchEntity` errors on resource deletion without refresh [GH-7069]
 * resource/aws_instance: Skip `InvalidInstanceID.NotFound` error on resource deletion [GH-6978]
 * resource/aws_kinesis_analytics_application: Retry Lambda permission `InvalidArgumentException` errors for IAM eventual consistency [GH-7039]
 
