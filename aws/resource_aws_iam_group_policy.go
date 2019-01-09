@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"net/url"
 	"strings"
 
@@ -88,6 +89,7 @@ func resourceAwsIamGroupPolicyRead(d *schema.ResourceData, meta interface{}) err
 	getResp, err := iamconn.GetGroupPolicy(request)
 	if err != nil {
 		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+			log.Printf("[WARN] IAM Group Policy (%s) for %s not found, removing from state", name, group)
 			d.SetId("")
 			return nil
 		}
