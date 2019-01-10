@@ -1,30 +1,30 @@
-## 1.55.0 (Unreleased)
+## 1.55.0 (January 10, 2019)
 
 FEATURES
 
-* **New Resource:** `aws_docdb_cluster_parameter_group` [GH-7090]
-* **New Resource:** `aws_media_package_channel` [GH-6957]
-* **New Resource:** `aws_resourcegroups_group` [GH-6217]
+* **New Resource:** `aws_docdb_cluster_parameter_group` ([#7090](https://github.com/terraform-providers/terraform-provider-aws/issues/7090))
+* **New Resource:** `aws_media_package_channel` ([#6957](https://github.com/terraform-providers/terraform-provider-aws/issues/6957))
+* **New Resource:** `aws_resourcegroups_group` ([#6217](https://github.com/terraform-providers/terraform-provider-aws/issues/6217))
 
 ENHANCEMENTS
 
-* resource/aws_app_cookie_stickiness_policy: Support resource import [GH-7080]
-* resource/aws_elasticsearch_domain: Support in-place updates of `elasticsearch_version` [GH-6243]
-* resource/aws_kinesis_firehose_delivery_stream: Add `extended_s3_configuration` `error_output_prefix` argument [GH-7026]
-* resource/aws_sfn_activity: Add `tags` argument [GH-7024]
-* resource/aws_sfn_state_machine: Add `tags` argument [GH-7024]
-* resource/aws_ssm_maintenance_window: Add `end_date`, `schedule_timezone`, and `start_date` arguments [GH-7040]
+* resource/aws_app_cookie_stickiness_policy: Support resource import ([#7080](https://github.com/terraform-providers/terraform-provider-aws/issues/7080))
+* resource/aws_elasticsearch_domain: Support in-place updates of `elasticsearch_version` ([#6243](https://github.com/terraform-providers/terraform-provider-aws/issues/6243))
+* resource/aws_kinesis_firehose_delivery_stream: Add `extended_s3_configuration` `error_output_prefix` argument ([#7026](https://github.com/terraform-providers/terraform-provider-aws/issues/7026))
+* resource/aws_sfn_activity: Add `tags` argument ([#7024](https://github.com/terraform-providers/terraform-provider-aws/issues/7024))
+* resource/aws_sfn_state_machine: Add `tags` argument ([#7024](https://github.com/terraform-providers/terraform-provider-aws/issues/7024))
+* resource/aws_ssm_maintenance_window: Add `end_date`, `schedule_timezone`, and `start_date` arguments ([#7040](https://github.com/terraform-providers/terraform-provider-aws/issues/7040))
 
 BUG FIXES
 
-* resource/aws_batch_job_queue: Properly read `compute_environments` into Terraform state [GH-7079]
-* resource/aws_dynamodb_table: Prevent `BillingMode` `ValidationError` on table creation [GH-7064]
-* resource/aws_iam_group_policy: Skip `NoSuchEntity` errors on resource deletion without refresh [GH-7071]
-* resource/aws_iam_role_policy: Skip `NoSuchEntity` errors on resource deletion without refresh [GH-7070]
-* resource/aws_iam_policy: Present more human readable error message during resource deletion [GH-7072]
-* resource/aws_iam_user_policy: Skip `NoSuchEntity` errors on resource deletion without refresh [GH-7069]
-* resource/aws_instance: Skip `InvalidInstanceID.NotFound` error on resource deletion [GH-6978]
-* resource/aws_kinesis_analytics_application: Retry Lambda permission `InvalidArgumentException` errors for IAM eventual consistency [GH-7039]
+* resource/aws_batch_job_queue: Properly read `compute_environments` into Terraform state ([#7079](https://github.com/terraform-providers/terraform-provider-aws/issues/7079))
+* resource/aws_dynamodb_table: Prevent `BillingMode` `ValidationError` on table creation ([#7064](https://github.com/terraform-providers/terraform-provider-aws/issues/7064))
+* resource/aws_iam_group_policy: Skip `NoSuchEntity` errors on resource deletion without refresh ([#7071](https://github.com/terraform-providers/terraform-provider-aws/issues/7071))
+* resource/aws_iam_role_policy: Skip `NoSuchEntity` errors on resource deletion without refresh ([#7070](https://github.com/terraform-providers/terraform-provider-aws/issues/7070))
+* resource/aws_iam_policy: Present more human readable error message during resource deletion ([#7072](https://github.com/terraform-providers/terraform-provider-aws/issues/7072))
+* resource/aws_iam_user_policy: Skip `NoSuchEntity` errors on resource deletion without refresh ([#7069](https://github.com/terraform-providers/terraform-provider-aws/issues/7069))
+* resource/aws_instance: Skip `InvalidInstanceID.NotFound` error on resource deletion ([#6978](https://github.com/terraform-providers/terraform-provider-aws/issues/6978))
+* resource/aws_kinesis_analytics_application: Retry Lambda permission `InvalidArgumentException` errors for IAM eventual consistency ([#7039](https://github.com/terraform-providers/terraform-provider-aws/issues/7039))
 
 ## 1.54.0 (December 21, 2018)
 
