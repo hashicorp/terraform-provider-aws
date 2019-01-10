@@ -108,8 +108,8 @@ func resourceAwsSagemakerNotebookInstanceCreate(d *schema.ResourceData, meta int
 	d.SetId(name)
 	log.Printf("[INFO] Sagemaker Notebook Instance ID: %s", d.Id())
 
-	if err := waitSagemakerNotebookInstanceStatus(conn, d.Id(), "InService", "Failed"); err != nil {
-		log.Printf("[ERR] Sagemaker Notebook Instance (%s) did not start", d.Id())
+	if err := waitForSagemakerNotebookInstanceStatusInService(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for Sagemaker Notebook Instance %q to create: %s", d.Id(), err)
 	}
 
 	return resourceAwsSagemakerNotebookInstanceRead(d, meta)
@@ -118,7 +118,8 @@ func resourceAwsSagemakerNotebookInstanceCreate(d *schema.ResourceData, meta int
 func resourceAwsSagemakerNotebookInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).sagemakerconn
 
-	notebookInstanceRaw, _, err := SagemakerNotebookInstanceStateRefreshFunc(conn, d.Id())()
+	// TODO change this to describeNotebook Instance
+	notebookInstanceRaw, _, err := sagemakerNotebookInstanceStateRefreshFunc(conn, d.Id())()
 	if err != nil {
 		if awserr, ok := err.(awserr.Error); ok {
 			if awserr.Code() == "ResourceNotFoundException" {
@@ -202,14 +203,18 @@ func resourceAwsSagemakerNotebookInstanceUpdate(d *schema.ResourceData, meta int
 	}
 
 	if hasChanged {
+
 		// Stop notebook
-		_, previousStatus, _ := SagemakerNotebookInstanceStateRefreshFunc(conn, d.Id())()
+		_, previousStatus, _ := sagemakerNotebookInstanceStateRefreshFunc(conn, d.Id())()
 		if err := stopSagemakerNotebookInstance(conn, d.Id()); err != nil {
-			return fmt.Errorf("Error stopping Sagemaker Notebook Instance: %s", err)
+			return fmt.Errorf("error stopping Sagemaker Notebook Instance: %s", err)
 		}
 
 		if _, err := conn.UpdateNotebookInstance(updateOpts); err != nil {
-			return fmt.Errorf("Error updating Sagemaker Notebook Instance: %s", err)
+			return fmt.Errorf("error updating Sagemaker Notebook Instance: %s", err)
+		}
+		if err := waitForSagemakerNotebookInstanceStatusInService(conn, d.Id()); err != nil {
+			return fmt.Errorf("error waiting for Sagemaker Notebook Instance %q to update: %s", d.Id(), err)
 		}
 
 		// Restart if needed
@@ -220,7 +225,7 @@ func resourceAwsSagemakerNotebookInstanceUpdate(d *schema.ResourceData, meta int
 
 			if _, err := conn.StartNotebookInstance(startOpts); err != nil {
 				return fmt.Errorf("error starting Sagemaker Notebook Instance %q: %s", d.Id(), err)
-			} else if err := waitSagemakerNotebookInstanceStatus(conn, d.Id(), sagemaker.NotebookInstanceStatusInService, sagemaker.NotebookInstanceStatusFailed); err != nil {
+			} else if err := waitForSagemakerNotebookInstanceStatusInService(conn, d.Id()); err != nil {
 				return fmt.Errorf("error waiting for Sagemaker Notebook Instance %q to start: %s", d.Id(), err)
 			}
 		}
@@ -234,8 +239,20 @@ func resourceAwsSagemakerNotebookInstanceUpdate(d *schema.ResourceData, meta int
 func resourceAwsSagemakerNotebookInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).sagemakerconn
 
-	if err := stopSagemakerNotebookInstance(conn, d.Id()); err != nil {
-		return err
+	describeNotebookInput := &sagemaker.DescribeNotebookInstanceInput{
+		NotebookInstanceName: aws.String(d.Id()),
+	}
+	notebook, err := conn.DescribeNotebookInstance(describeNotebookInput)
+	if err != nil {
+		if sagemakerErr, ok := err.(awserr.Error); ok && sagemakerErr.Code() == "ResourceNotFound" {
+			return nil
+		}
+		return fmt.Errorf("unable to find sagemaker notebook instance to delete %q: %s", d.Id(), err)
+	}
+	if *notebook.NotebookInstanceStatus != sagemaker.NotebookInstanceStatusFailed {
+		if err := stopSagemakerNotebookInstance(conn, d.Id()); err != nil {
+			return err
+		}
 	}
 
 	deleteOpts := &sagemaker.DeleteNotebookInstanceInput{
@@ -243,22 +260,17 @@ func resourceAwsSagemakerNotebookInstanceDelete(d *schema.ResourceData, meta int
 	}
 
 	if _, err := conn.DeleteNotebookInstance(deleteOpts); err != nil {
-		return err
+		return fmt.Errorf("error trying to delete Sagemaker Notebook Instance %q: %s", d.Id(), err)
 	}
 
-	return resource.Retry(10*time.Minute, func() *resource.RetryError {
-		_, status, _ := SagemakerNotebookInstanceStateRefreshFunc(conn, d.Id())()
+	if err := waitForSagemakerNotebookInstanceStatusDeleted(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for Sagemaker Notebook Instance %q to delete: %s", d.Id(), err)
+	}
 
-		if status == "" {
-			log.Printf("[DEBUG] Sagemaker Notebook Instance (%s) deleted", d.Id())
-			return nil
-		}
-
-		return resource.RetryableError(fmt.Errorf("[DEBUG] Waiting for Sagemaker Notebook Instance (%s) to be deleted", d.Id()))
-	})
+	return nil
 }
 
-func SagemakerNotebookInstanceStateRefreshFunc(conn *sagemaker.SageMaker, name string) resource.StateRefreshFunc {
+func sagemakerNotebookInstanceStateRefreshFunc(conn *sagemaker.SageMaker, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		describeNotebookInput := &sagemaker.DescribeNotebookInstanceInput{
 			NotebookInstanceName: aws.String(name),
@@ -266,11 +278,9 @@ func SagemakerNotebookInstanceStateRefreshFunc(conn *sagemaker.SageMaker, name s
 		notebook, err := conn.DescribeNotebookInstance(describeNotebookInput)
 		if err != nil {
 			if sagemakerErr, ok := err.(awserr.Error); ok && sagemakerErr.Code() == "ResourceNotFound" {
-				notebook = nil
-			} else {
-				log.Printf("Error on SagemakerNotebookInstanceStateRefreshFunc: %s", err)
 				return nil, "", err
 			}
+			return nil, sagemaker.NotebookInstanceStatusFailed, err
 		}
 
 		if notebook == nil {
@@ -282,6 +292,20 @@ func SagemakerNotebookInstanceStateRefreshFunc(conn *sagemaker.SageMaker, name s
 }
 
 func stopSagemakerNotebookInstance(conn *sagemaker.SageMaker, id string) error {
+	describeNotebookInput := &sagemaker.DescribeNotebookInstanceInput{
+		NotebookInstanceName: aws.String(id),
+	}
+	notebook, err := conn.DescribeNotebookInstance(describeNotebookInput)
+	if err != nil {
+		if sagemakerErr, ok := err.(awserr.Error); ok && sagemakerErr.Code() == "ResourceNotFound" {
+			return nil
+		}
+		return fmt.Errorf("unable to find sagemaker notebook instance %q: %s", id, err)
+	}
+	if *notebook.NotebookInstanceStatus == sagemaker.NotebookInstanceStatusStopped {
+		return nil
+	}
+
 	stopOpts := &sagemaker.StopNotebookInstanceInput{
 		NotebookInstanceName: aws.String(id),
 	}
@@ -290,35 +314,49 @@ func stopSagemakerNotebookInstance(conn *sagemaker.SageMaker, id string) error {
 		return fmt.Errorf("Error stopping Sagemaker Notebook Instance: %s", err)
 	}
 
-	return waitSagemakerNotebookInstanceStatus(conn, id, "Stopped")
+	return waitForSagemakerNotebookInstanceStatusStopped(conn, id)
 }
 
-func waitSagemakerNotebookInstanceStatus(conn *sagemaker.SageMaker, id string, desiredStatus ...string) error {
-	return resource.Retry(10*time.Minute, func() *resource.RetryError {
-		_, status, err := SagemakerNotebookInstanceStateRefreshFunc(conn, id)()
-
-		if err == nil {
-			if status == "" {
-				log.Printf("[DEBUG] Sagemaker Notebook Instance (%s) not found", id)
-				return nil
-			}
-
-			for _, s := range desiredStatus {
-				if status == s {
-					log.Printf("[DEBUG] Sagemaker Notebook Instance (%s) is %s", id, s)
-					return nil
-				}
-			}
-		}
-
-		return resource.RetryableError(fmt.Errorf("[DEBUG] Waiting for Sagemaker Notebook Instance (%s) to be %s", id, desiredStatus))
-	})
-}
-
-func fromStringPSliceToStringSliceSagemaker(sgs *[]*string) *[]string {
-	result := make([]string, 0, len(*sgs))
-	for _, sg := range *sgs {
-		result = append(result, *sg)
+func waitForSagemakerNotebookInstanceStatusInService(conn *sagemaker.SageMaker, id string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			sagemaker.NotebookInstanceStatusUpdating,
+			sagemaker.NotebookInstanceStatusPending,
+			sagemaker.NotebookInstanceStatusStopped,
+		},
+		Target:  []string{sagemaker.NotebookInstanceStatusInService},
+		Refresh: sagemakerNotebookInstanceStateRefreshFunc(conn, id),
+		Timeout: 10 * time.Minute,
 	}
-	return &result
+	_, err := stateConf.WaitForState()
+
+	return err
+}
+
+func waitForSagemakerNotebookInstanceStatusStopped(conn *sagemaker.SageMaker, id string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			sagemaker.NotebookInstanceStatusStopping,
+		},
+		Target:  []string{sagemaker.NotebookInstanceStatusStopped},
+		Refresh: sagemakerNotebookInstanceStateRefreshFunc(conn, id),
+		Timeout: 10 * time.Minute,
+	}
+	_, err := stateConf.WaitForState()
+
+	return err
+}
+
+func waitForSagemakerNotebookInstanceStatusDeleted(conn *sagemaker.SageMaker, id string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			sagemaker.NotebookInstanceStatusDeleting,
+		},
+		Target:  []string{""},
+		Refresh: sagemakerNotebookInstanceStateRefreshFunc(conn, id),
+		Timeout: 10 * time.Minute,
+	}
+	_, err := stateConf.WaitForState()
+
+	return err
 }

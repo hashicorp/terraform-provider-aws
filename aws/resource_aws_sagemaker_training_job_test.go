@@ -54,7 +54,7 @@ func TestAccAWSSagemakerTrainingJob_update(t *testing.T) {
 	trainingJobName := resource.PrefixedUniqueId(sagemakerTestAccSagemakerTrainingJobResourceNamePrefix)
 	bucketName := resource.PrefixedUniqueId(sagemakerTestAccSagemakerTrainingJobResourceNamePrefix)
 	var resourceName = "aws_sagemaker_training_job.foo"
-	
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
