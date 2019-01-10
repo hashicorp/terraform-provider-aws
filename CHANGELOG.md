@@ -4,6 +4,7 @@ FEATURES
 
 * **New Resource:** `aws_docdb_cluster_parameter_group` [GH-7090]
 * **New Resource:** `aws_media_package_channel` [GH-6957]
+* **New Resource:** `aws_resourcegroups_group` [GH-6217]
 
 ENHANCEMENTS
 
