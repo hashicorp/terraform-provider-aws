@@ -9,6 +9,8 @@ ENHANCEMENTS
 * resource/aws_app_cookie_stickiness_policy: Support resource import [GH-7080]
 * resource/aws_elasticsearch_domain: Support in-place updates of `elasticsearch_version` [GH-6243]
 * resource/aws_kinesis_firehose_delivery_stream: Add `extended_s3_configuration` `error_output_prefix` argument [GH-7026]
+* resource/aws_sfn_activity: Add `tags` argument [GH-7024]
+* resource/aws_sfn_state_machine: Add `tags` argument [GH-7024]
 * resource/aws_ssm_maintenance_window: Add `end_date`, `schedule_timezone`, and `start_date` arguments [GH-7040]
 
 BUG FIXES
