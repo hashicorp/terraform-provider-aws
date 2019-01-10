@@ -59,12 +59,11 @@ func TestAccAWSResourceGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 				),
 			},
-			// See comment in resource. We can't cleanly import resources as of 10/20/2018.
-			// {
-			// 	    ResourceName:      resourceName,
-			//	    ImportState:       true,
-			//	    ImportStateVerify: true,
-			// },
+			{
+				    ResourceName:      resourceName,
+				    ImportState:       true,
+				    ImportStateVerify: true,
+			},
 			{
 				Config: testAccAWSResourceGroupConfig_basic(n, desc2, query2),
 				Check: resource.ComposeTestCheckFunc(

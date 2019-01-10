@@ -17,15 +17,9 @@ func resourceAwsResourceGroupsGroup() *schema.Resource {
 		Update: resourceAwsResourceGroupsGroupUpdate,
 		Delete: resourceAwsResourceGroupsGroupDelete,
 
-		// As of 10/20/2018 it's not possible to import a complete resource because
-		// a resource group's tags are not returned by GetGroup nor ListGroups. This
-		// leads to dirty plans after an import, which breaks import tests.
-		//
-		// For now we ForceNew on the tags attribute and disable importing.
-		//
-		// Importer: &schema.ResourceImporter{
-		//		State: schema.ImportStatePassthrough,
-		// },
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -67,12 +61,6 @@ func resourceAwsResourceGroupsGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"tags": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				ForceNew: true,
-			},
 		},
 	}
 }
@@ -102,7 +90,6 @@ func resourceAwsResourceGroupsGroupCreate(d *schema.ResourceData, meta interface
 		Description:   aws.String(d.Get("description").(string)),
 		Name:          aws.String(d.Get("name").(string)),
 		ResourceQuery: extractResourceGroupResourceQuery(d.Get("resource_query").([]interface{})),
-		Tags:          extractResourceGroupTags(d.Get("tags").(map[string]interface{})),
 	}
 
 	res, err := conn.CreateGroup(&input)
@@ -147,7 +134,9 @@ func resourceAwsResourceGroupsGroupRead(d *schema.ResourceData, meta interface{}
 	resultQuery := map[string]interface{}{}
 	resultQuery["query"] = aws.StringValue(q.GroupQuery.ResourceQuery.Query)
 	resultQuery["type"] = aws.StringValue(q.GroupQuery.ResourceQuery.Type)
-	d.Set("resource_query", []map[string]interface{}{resultQuery})
+	if err := d.Set("resource_query", []map[string]interface{}{resultQuery}); err != nil {
+		return fmt.Errorf("error setting resource_query: %s", err)
+	}
 
 	return nil
 }
