@@ -1159,7 +1159,7 @@ func setTagsEMR(conn *emr.EMR, d *schema.ResourceData) error {
 		// Set tags
 		if len(remove) > 0 {
 			log.Printf("[DEBUG] Removing tags: %s", remove)
-			k := make([]*string, len(remove), len(remove))
+			k := make([]*string, len(remove))
 			for i, t := range remove {
 				k[i] = t.Key
 			}
