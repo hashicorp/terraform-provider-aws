@@ -639,6 +639,14 @@
 			"versionExact": "v1.16.16"
 		},
 		{
+			"checksumSHA1": "FN6E2vgp/dPX3Hii541ic7AVMkc=",
+			"path": "github.com/aws/aws-sdk-go/service/docdb",
+			"revision": "1f8a24693bc965514ee0d7aadbabe0ceed184a88",
+			"revisionTime": "2019-01-09T22:37:56Z",
+			"version": "v1.16.16",
+			"versionExact": "v1.16.16"
+		},
+		{
 			"checksumSHA1": "+A01UsrVTeV6HuSfAdcQrrZZ3LI=",
 			"path": "github.com/aws/aws-sdk-go/service/dynamodb",
 			"revision": "1f8a24693bc965514ee0d7aadbabe0ceed184a88",
