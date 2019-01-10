@@ -627,6 +627,8 @@ func Provider() terraform.ResourceProvider {
 			"aws_s3_bucket_notification":                       resourceAwsS3BucketNotification(),
 			"aws_s3_bucket_metric":                             resourceAwsS3BucketMetric(),
 			"aws_s3_bucket_inventory":                          resourceAwsS3BucketInventory(),
+			"aws_sagemaker_notebook_instance":                  resourceAwsSagemakerNotebookInstance(),
+			"aws_sagemaker_training_job":                       resourceAwsSagemakerTrainingJob(),
 			"aws_security_group":                               resourceAwsSecurityGroup(),
 			"aws_network_interface_sg_attachment":              resourceAwsNetworkInterfaceSGAttachment(),
 			"aws_default_security_group":                       resourceAwsDefaultSecurityGroup(),
