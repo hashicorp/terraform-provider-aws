@@ -720,7 +720,7 @@ func testAccCheckAWSSpotFleetRequest_IamInstanceProfileArn(
 			return fmt.Errorf("Expected IamInstanceProfile to be set, got nil")
 		}
 		//Validate the string whether it is ARN
-		re := regexp.MustCompile("arn:aws:iam::\\d{12}:instance-profile/?[a-zA-Z0-9+=,.@-_].*")
+		re := regexp.MustCompile(`arn:aws:iam::\d{12}:instance-profile/?[a-zA-Z0-9+=,.@-_].*`)
 		if !re.MatchString(*profile.Arn) {
 			return fmt.Errorf("Expected IamInstanceProfile input as ARN, got %s", *profile.Arn)
 		}
