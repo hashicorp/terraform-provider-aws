@@ -74,15 +74,6 @@ func extractResourceGroupResourceQuery(resourceQueryList []interface{}) *resourc
 	}
 }
 
-func extractResourceGroupTags(m map[string]interface{}) map[string]*string {
-	result := make(map[string]*string)
-	for k, v := range m {
-		result[k] = aws.String(v.(string))
-	}
-
-	return result
-}
-
 func resourceAwsResourceGroupsGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).resourcegroupsconn
 
