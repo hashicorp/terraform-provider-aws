@@ -15,10 +15,10 @@ import (
 
 func resourceAwsApiGatewayV2Route() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsApiGatewayV2Create,
-		Read:   resourceAwsApiGatewayV2Read,
-		Update: resourceAwsApiGatewayV2Update,
-		Delete: resourceAwsApiGatewayV2Delete,
+		Create: resourceAwsApiGatewayV2RouteCreate,
+		Read:   resourceAwsApiGatewayV2RouteRead,
+		Update: resourceAwsApiGatewayV2RouteUpdate,
+		Delete: resourceAwsApiGatewayV2RouteDelete,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
@@ -28,32 +28,85 @@ func resourceAwsApiGatewayV2Route() *schema.Resource {
 				restApiID := idParts[0]
 				resourceID := idParts[1]
 				d.Set("request_validator_id", resourceID)
-				d.Set("rest_api_id", restApiID)
+				d.Set("api_id", restApiID)
 				d.SetId(resourceID)
 				return []*schema.ResourceData{d}, nil
 			},
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			"api_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"description": {
+			"route_key": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
-			"protocol_type": {
+			"authorization_type": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
-
-			"route_selection_expression": {
+			"authorizer_id": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
-			"api_key_selection_expression": {
+			"api_key_required": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"authorization_scopes": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"model_selection_expression": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"request_parameters": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"required": {
+							Type:     schema.TypeBool,
+							Required: true,
+						},
+					},
+				},
+			},
+			// "request_models": {
+			// 	Type:     schema.TypeSet,
+			// 	Optional: true,
+			// 	Elem: &schema.Resource{
+			// 		Schema: map[string]*schema.Schema{
+			// 			"name": {
+			// 				Type:     schema.TypeString,
+			// 				Required: true,
+			// 			},
+			// 			"required": {
+			// 				Type:     schema.TypeBool,
+			// 				Required: true,
+			// 			},
+			// 		},
+			// 	},
+			// },
+			"target": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"operation_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"route_response_selection_expression": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -61,33 +114,52 @@ func resourceAwsApiGatewayV2Route() *schema.Resource {
 	}
 }
 
-func resourceAwsApiGatewayV2Create(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2
-	log.Printf("[DEBUG] Creating API Gateway V2 for API %s", d.Get("name").(string))
+func resourceAwsApiGatewayV2RouteCreate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).apigatewayv2conn
+	log.Printf("[DEBUG] Creating API Gateway V2 for API %s", d.Get("route_key").(string))
 
 	var err error
-	createApiInput := &apigatewayv2.CreateApiInput{
-		Name:                     aws.String(d.Get("name").(string)),
-		ProtocolType:             aws.String(d.Get("protocol_type").(string)),
-		RouteSelectionExpression: aws.String(d.Get("route_selection_expression").(string)),
-		Description:              aws.String(d.Get("description").(string)),
+	createRouteInput := &apigatewayv2.CreateRouteInput{
+		ApiId:    aws.String(d.Get("api_id").(string)),
+		RouteKey: aws.String(d.Get("route_key").(string)),
 	}
-	if v, ok := d.GetOk("api_key_selection_expression"); ok {
-		createApiInput.ApiKeySelectionExpression = aws.String(v.(string))
+	if v, ok := d.GetOk("api_key_required"); ok {
+		createRouteInput.ApiKeyRequired = aws.Bool(v.(bool))
 	}
-	resource, err := conn.CreateApi(createApiInput)
+
+	if v, ok := d.GetOk("authorization_type"); ok {
+		createRouteInput.AuthorizationType = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("model_selection_expression"); ok {
+		createRouteInput.ModelSelectionExpression = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("operation_name"); ok {
+		createRouteInput.OperationName = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("route_response_selection_expression"); ok {
+		createRouteInput.RouteResponseSelectionExpression = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("target"); ok {
+		createRouteInput.Target = aws.String(v.(string))
+	}
+
+	resource, err := conn.CreateRoute(createRouteInput)
 
 	if err != nil {
 		return fmt.Errorf("Error creating API Gateway V2: %s", err)
 	}
 
-	d.SetId(*resource.ApiId)
+	d.SetId(*resource.RouteId)
 
-	return resourceAwsApiGatewayV2Read(d, meta)
+	return resourceAwsApiGatewayV2RouteRead(d, meta)
 }
 
-func resourceAwsApiGatewayV2Read(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2
+func resourceAwsApiGatewayV2RouteRead(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).apigatewayv2conn
 
 	log.Printf("[DEBUG] Reading API Gateway V2 %s", d.Id())
 	resource, err := conn.GetApi(&apigatewayv2.GetApiInput{
@@ -113,14 +185,14 @@ func resourceAwsApiGatewayV2Read(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func resourceAwsApiGatewayV2Update(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2
+func resourceAwsApiGatewayV2RouteUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).apigatewayv2conn
 
 	log.Printf("[DEBUG] Updating API Gateway Resource %s", d.Id())
 	updateApiConfig := &apigatewayv2.UpdateApiInput{
-		ApiId:       aws.String(d.Get("api_id").(string)),
-		Description: aws.String(d.Get("description").(string)),
-		Name:        aws.String(d.Get("name").(string)),
+		ApiId:                    aws.String(d.Get("api_id").(string)),
+		Description:              aws.String(d.Get("description").(string)),
+		Name:                     aws.String(d.Get("name").(string)),
 		RouteSelectionExpression: aws.String(d.Get("route_selection_expression").(string)),
 	}
 
@@ -134,11 +206,11 @@ func resourceAwsApiGatewayV2Update(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
-	return resourceAwsApiGatewayV2Read(d, meta)
+	return resourceAwsApiGatewayV2RouteRead(d, meta)
 }
 
-func resourceAwsApiGatewayV2Delete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2
+func resourceAwsApiGatewayV2RouteDelete(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).apigatewayv2conn
 	log.Printf("[DEBUG] Deleting API Gateway V2: %s", d.Id())
 
 	return resource.Retry(5*time.Minute, func() *resource.RetryError {

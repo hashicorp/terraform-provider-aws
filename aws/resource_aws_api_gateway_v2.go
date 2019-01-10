@@ -35,6 +35,10 @@ func resourceAwsApiGatewayV2() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"api_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
