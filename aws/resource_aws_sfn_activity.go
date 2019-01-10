@@ -132,6 +132,20 @@ func resourceAwsSfnActivityRead(d *schema.ResourceData, meta interface{}) error 
 		log.Printf("[DEBUG] Error setting creation_date: %s", err)
 	}
 
+	tagsResp, err := conn.ListTagsForResource(
+		&sfn.ListTagsForResourceInput{
+			ResourceArn: aws.String(d.Id()),
+		},
+	)
+
+	if err != nil {
+		return fmt.Errorf("error listing SFN Activity (%s) tags: %s", d.Id(), err)
+	}
+
+	if err := d.Set("tags", tagsToMapSfn(tagsResp.Tags)); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
 	return nil
 }
 

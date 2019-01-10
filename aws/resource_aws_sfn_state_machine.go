@@ -139,9 +139,10 @@ func resourceAwsSfnStateMachineRead(d *schema.ResourceData, meta interface{}) er
 		},
 	)
 	if err != nil {
-		return err
-	} else {
-		d.Set("tags", tagsToMapSfn(tagsResp.Tags))
+		return fmt.Errorf("error listing SFN Activity (%s) tags: %s", d.Id(), err)
+	}
+	if err := d.Set("tags", tagsToMapSfn(tagsResp.Tags)); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	return nil
