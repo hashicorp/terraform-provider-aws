@@ -1,9 +1,28 @@
 ## 1.55.0 (Unreleased)
 
+FEATURES
+
+* **New Resource:** `aws_media_package_channel` [GH-6957]
+
 ENHANCEMENTS
 
+* resource/aws_app_cookie_stickiness_policy: Support resource import [GH-7080]
 * resource/aws_elasticsearch_domain: Support in-place updates of `elasticsearch_version` [GH-6243]
 * resource/aws_kinesis_firehose_delivery_stream: Add `extended_s3_configuration` `error_output_prefix` argument [GH-7026]
+* resource/aws_sfn_activity: Add `tags` argument [GH-7024]
+* resource/aws_sfn_state_machine: Add `tags` argument [GH-7024]
+* resource/aws_ssm_maintenance_window: Add `end_date`, `schedule_timezone`, and `start_date` arguments [GH-7040]
+
+BUG FIXES
+
+* resource/aws_batch_job_queue: Properly read `compute_environments` into Terraform state [GH-7079]
+* resource/aws_dynamodb_table: Prevent `BillingMode` `ValidationError` on table creation [GH-7064]
+* resource/aws_iam_group_policy: Skip `NoSuchEntity` errors on resource deletion without refresh [GH-7071]
+* resource/aws_iam_role_policy: Skip `NoSuchEntity` errors on resource deletion without refresh [GH-7070]
+* resource/aws_iam_policy: Present more human readable error message during resource deletion [GH-7072]
+* resource/aws_iam_user_policy: Skip `NoSuchEntity` errors on resource deletion without refresh [GH-7069]
+* resource/aws_instance: Skip `InvalidInstanceID.NotFound` error on resource deletion [GH-6978]
+* resource/aws_kinesis_analytics_application: Retry Lambda permission `InvalidArgumentException` errors for IAM eventual consistency [GH-7039]
 
 ## 1.54.0 (December 21, 2018)
 

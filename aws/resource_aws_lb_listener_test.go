@@ -100,7 +100,7 @@ func TestAccAWSLBListener_https(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_lb_listener.front_end", "default_action.0.redirect.#", "0"),
 					resource.TestCheckResourceAttr("aws_lb_listener.front_end", "default_action.0.fixed_response.#", "0"),
 					resource.TestCheckResourceAttrSet("aws_lb_listener.front_end", "certificate_arn"),
-					resource.TestCheckResourceAttr("aws_lb_listener.front_end", "ssl_policy", "ELBSecurityPolicy-2015-05"),
+					resource.TestCheckResourceAttr("aws_lb_listener.front_end", "ssl_policy", "ELBSecurityPolicy-2016-08"),
 				),
 			},
 		},
@@ -584,7 +584,7 @@ func testAccAWSLBListenerConfig_https(lbName, targetGroupName string) string {
    load_balancer_arn = "${aws_lb.alb_test.id}"
    protocol = "HTTPS"
    port = "443"
-   ssl_policy = "ELBSecurityPolicy-2015-05"
+   ssl_policy = "ELBSecurityPolicy-2016-08"
    certificate_arn = "${aws_iam_server_certificate.test_cert.arn}"
 
    default_action {
@@ -1004,7 +1004,7 @@ resource "aws_lb_listener" "test" {
   load_balancer_arn = "${aws_lb.test.id}"
   protocol = "HTTPS"
   port = "443"
-  ssl_policy = "ELBSecurityPolicy-2015-05"
+  ssl_policy = "ELBSecurityPolicy-2016-08"
   certificate_arn = "${aws_iam_server_certificate.test.arn}"
 
   default_action {
@@ -1131,7 +1131,7 @@ resource "aws_lb_listener" "test" {
   load_balancer_arn = "${aws_lb.test.id}"
   protocol = "HTTPS"
   port = "443"
-  ssl_policy = "ELBSecurityPolicy-2015-05"
+  ssl_policy = "ELBSecurityPolicy-2016-08"
   certificate_arn = "${aws_iam_server_certificate.test.arn}"
 
   default_action {
@@ -1170,7 +1170,7 @@ resource "aws_lb_listener" "test" {
   load_balancer_arn = "${aws_lb.test.id}"
   protocol          = "HTTPS"
   port              = "443"
-  ssl_policy        = "ELBSecurityPolicy-2015-05"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
   certificate_arn   = "${aws_iam_server_certificate.test.arn}"
 
   default_action {

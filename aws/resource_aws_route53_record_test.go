@@ -439,6 +439,7 @@ func TestAccAWSRoute53Record_aliasUppercase(t *testing.T) {
 
 func TestAccAWSRoute53Record_s3_alias(t *testing.T) {
 	var record1 route53.ResourceRecordSet
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -446,7 +447,7 @@ func TestAccAWSRoute53Record_s3_alias(t *testing.T) {
 		CheckDestroy: testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53S3AliasRecord,
+				Config: testAccRoute53S3AliasRecord(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53RecordExists("aws_route53_record.alias", &record1),
 				),
@@ -1241,13 +1242,14 @@ resource "aws_elb" "main" {
 }
 `
 
-const testAccRoute53S3AliasRecord = `
+func testAccRoute53S3AliasRecord(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_route53_zone" "main" {
   name = "notexample.com"
 }
 
 resource "aws_s3_bucket" "website" {
-  bucket = "website.notexample.com"
+  bucket = %q
 	acl = "public-read"
 	website {
 		index_document = "index.html"
@@ -1265,7 +1267,8 @@ resource "aws_route53_record" "alias" {
     evaluate_target_health = true
   }
 }
-`
+`, rName)
+}
 
 const testAccRoute53WeightedElbAliasRecord = `
 resource "aws_route53_zone" "main" {
