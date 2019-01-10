@@ -543,7 +543,7 @@ func flattenProcessingConfiguration(pc *firehose.ProcessingConfiguration, roleAr
 		"BufferIntervalInSeconds": "60",
 	}
 
-	processors := make([]interface{}, len(pc.Processors), len(pc.Processors))
+	processors := make([]interface{}, len(pc.Processors))
 	for i, p := range pc.Processors {
 		t := aws.StringValue(p.Type)
 		parameters := make([]interface{}, 0)

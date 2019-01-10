@@ -21,7 +21,7 @@ func setTagsTransfer(conn *transfer.Transfer, d *schema.ResourceData) error {
 		// Set tags
 		if len(remove) > 0 {
 			log.Printf("[DEBUG] Removing tags: %#v", remove)
-			k := make([]*string, len(remove), len(remove))
+			k := make([]*string, len(remove))
 			for i, t := range remove {
 				k[i] = t.Key
 			}
@@ -109,7 +109,7 @@ func tagIgnoredTransfer(t *transfer.Tag) bool {
 	filter := []string{"^aws:"}
 	for _, v := range filter {
 		log.Printf("[DEBUG] Matching %v with %v\n", v, aws.StringValue(t.Key))
-		if r, _ := regexp.MatchString(v, aws.StringValue(t.Key)); r == true {
+		if r, _ := regexp.MatchString(v, aws.StringValue(t.Key)); r {
 			log.Printf("[DEBUG] Found AWS specific tag %s (val: %s), ignoring.\n", aws.StringValue(t.Key), aws.StringValue(t.Value))
 			return true
 		}
