@@ -267,7 +267,7 @@ func resourceAwsEc2Fleet() *schema.Resource {
 									return false
 								}
 								totalTargetCapacityO, _ := d.GetChange("target_capacity_specification.0.total_target_capacity")
-								return oldInt != totalTargetCapacityO.(int)
+								return oldInt == totalTargetCapacityO.(int)
 							},
 						},
 						"total_target_capacity": {
