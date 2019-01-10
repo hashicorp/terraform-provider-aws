@@ -47,6 +47,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
 	"github.com/aws/aws-sdk-go/service/dlm"
+	"github.com/aws/aws-sdk-go/service/docdb"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/ecr"
@@ -265,6 +266,7 @@ type AWSClient struct {
 	workspacesconn        *workspaces.WorkSpaces
 	appmeshconn           *appmesh.AppMesh
 	transferconn          *transfer.Transfer
+	docdbconn             *docdb.DocDB
 }
 
 func (c *AWSClient) S3() *s3.S3 {
@@ -603,6 +605,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.workspacesconn = workspaces.New(sess)
 	client.appmeshconn = appmesh.New(sess)
 	client.transferconn = transfer.New(sess)
+	client.docdbconn = docdb.New(sess)
 
 	// Workaround for https://github.com/aws/aws-sdk-go/issues/1376
 	client.kinesisconn.Handlers.Retry.PushBack(func(r *request.Request) {
