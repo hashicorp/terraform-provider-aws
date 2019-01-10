@@ -11,9 +11,6 @@ import (
 // value pairs and not complex or mixed types. That is why these resources are defined using the
 // schema.TypeList and a max of 1 item instead of the schema.TypeMap.
 
-// Each flatten and expand function handles empty input by returning nil. This allows the CRUD
-// functions to be more simple since nil can be passed to the Amazon Lex APIs and still be valid.
-
 // Convert a slice of items to a map[string]interface{}
 // Expects input as a single item slice.
 // Required because we use TypeList instead of TypeMap due to TypeMap not supporting nested and mixed complex values.
