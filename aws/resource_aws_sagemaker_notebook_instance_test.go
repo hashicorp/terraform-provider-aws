@@ -13,12 +13,6 @@ import (
 
 const sagemakerTestAccSagemakerNotebookInstanceResourceNamePrefix = "terraform-testacc-"
 
-func init() {
-	resource.AddTestSweepers("aws_sagemaker_notebook_instance", &resource.Sweeper{
-		Name: "aws_sagemaker_notebook_instance",
-	})
-}
-
 func TestAccAWSSagemakerNotebookInstance_basic(t *testing.T) {
 	var notebook sagemaker.DescribeNotebookInstanceOutput
 	notebookName := resource.PrefixedUniqueId(sagemakerTestAccSagemakerNotebookInstanceResourceNamePrefix)

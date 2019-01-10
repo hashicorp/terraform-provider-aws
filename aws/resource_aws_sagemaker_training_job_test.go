@@ -14,12 +14,6 @@ import (
 
 const sagemakerTestAccSagemakerTrainingJobResourceNamePrefix = "terraform-testacc-"
 
-func init() {
-	resource.AddTestSweepers("aws_sagemaker_training_job", &resource.Sweeper{
-		Name: "aws_sagemaker_training_job",
-	})
-}
-
 func TestAccAWSSagemakerTrainingJob_basic(t *testing.T) {
 	var trainingJob sagemaker.DescribeTrainingJobOutput
 	trainingJobName := resource.PrefixedUniqueId(sagemakerTestAccSagemakerTrainingJobResourceNamePrefix)

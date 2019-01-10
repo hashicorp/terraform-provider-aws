@@ -221,12 +221,7 @@ func resourceAwsSagemakerTrainingJobCreate(d *schema.ResourceData, meta interfac
 	createOpts.AlgorithmSpecification = algorithmSpecification
 
 	if hp, ok := d.GetOk("hyper_parameters"); ok {
-		properties := hp.(map[string]interface{})
-		if stringProperties, err := fromTerraformMapToStringPMapSagemaker(&properties); err != nil {
-			return fmt.Errorf("Error converting Sagemaker Training Job Hyper Parameters to string map: %s", err)
-		} else {
-			createOpts.HyperParameters = *stringProperties
-		}
+		createOpts.HyperParameters = stringMapToPointers(hp.(map[string]interface{}))
 	}
 
 	if idc, ok := d.GetOk("input_data_config"); ok {
@@ -280,17 +275,13 @@ func resourceAwsSagemakerTrainingJobCreate(d *schema.ResourceData, meta interfac
 	}
 
 	log.Printf("[DEBUG] Sagemaker Training Job create config: %#v", *createOpts)
-	createResponse, err := conn.CreateTrainingJob(createOpts)
+	_, err := conn.CreateTrainingJob(createOpts)
 	if err != nil {
 		return fmt.Errorf("Error creating Sagemaker Training Job: %s", err)
 	}
 
 	d.SetId(name)
-	if err := d.Set("arn", createResponse.TrainingJobArn); err != nil {
-		return err
-	}
 	log.Printf("[INFO] Sagemaker Training Job ID: %s", d.Id())
-
 	return resourceAwsSagemakerTrainingJobRead(d, meta)
 }
 
@@ -302,6 +293,7 @@ func resourceAwsSagemakerTrainingJobRead(d *schema.ResourceData, meta interface{
 		return err
 	}
 	if trainingJobRaw == nil {
+		log.Printf("[INFO] Unable to find SageMaker training job %q; removing from state file", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -309,41 +301,32 @@ func resourceAwsSagemakerTrainingJobRead(d *schema.ResourceData, meta interface{
 	trainingJob := trainingJobRaw.(*sagemaker.DescribeTrainingJobOutput)
 
 	if err := d.Set("name", trainingJob.TrainingJobName); err != nil {
-		log.Printf("[ERR] Error setting Name: %s", err)
-		return err
+		return fmt.Errorf("error setting name for sagemaker training job %q: %s", d.Id(), err)
 	}
 	if err := d.Set("role_arn", trainingJob.RoleArn); err != nil {
-		log.Printf("[ERR] Error setting Role ARN: %s", err)
-		return err
+		return fmt.Errorf("error setting role_arn for sagemaker training job %q: %s", d.Id(), err)
 	}
 	if err := d.Set("algorithm_specification", flattenAlgorithmSpecification(trainingJob.AlgorithmSpecification)); err != nil {
-		log.Printf("[ERR] Error setting Algorithm Specification: %s", err)
-		return err
+		return fmt.Errorf("error setting algorithm_specification for sagemaker training job %q: %s", d.Id(), err)
 	}
 	if err := d.Set("resource_config", flattenResourceConfig(trainingJob.ResourceConfig)); err != nil {
-		log.Printf("[ERR] Error setting Resource Config: %s", err)
-		return err
+		return fmt.Errorf("error setting resource_config for sagemaker training job %q: %s", d.Id(), err)
 	}
 	if err := d.Set("stopping_condition", flattenStoppingCondition(trainingJob.StoppingCondition)); err != nil {
-		log.Printf("[ERR] Error setting Stopping Condition: %s", err)
-		return err
+		return fmt.Errorf("error setting stopping_condition for sagemaker training job %q: %s", d.Id(), err)
 	}
-	if err := d.Set("hyper_parameters", fromStringPMapToTerraformMapSagemaker(&trainingJob.HyperParameters)); err != nil {
-		log.Printf("[ERR] Error setting Hyper Parameters: %s", err)
-		return err
+	if err := d.Set("hyper_parameters", pointersMapToStringList(trainingJob.HyperParameters)); err != nil {
+		return fmt.Errorf("error setting hyper_parameters for sagemaker training job %q: %s", d.Id(), err)
 	}
 	if err := d.Set("input_data_config", flattenInputDataConfig(trainingJob.InputDataConfig)); err != nil {
-		log.Printf("[ERR] Error setting Input Data Config: %s", err)
-		return err
+		return fmt.Errorf("error setting input_data_config for sagemaker training job %q: %s", d.Id(), err)
 	}
 	if err := d.Set("output_data_config", flattenOutputDataConfig(trainingJob.OutputDataConfig)); err != nil {
-		log.Printf("[ERR] Error setting Output Data Config: %s", err)
-		return err
+		return fmt.Errorf("error setting output_data_config for sagemaker training job %q: %s", d.Id(), err)
 	}
 
 	if err := d.Set("arn", trainingJob.TrainingJobArn); err != nil {
-		log.Printf("[ERR] Error setting ARN: %s", err)
-		return err
+		return fmt.Errorf("error setting arn for sagemaker training job %q: %s", d.Id(), err)
 	}
 
 	tagsOutput, err := conn.ListTags(&sagemaker.ListTagsInput{
@@ -354,8 +337,9 @@ func resourceAwsSagemakerTrainingJobRead(d *schema.ResourceData, meta interface{
 		return err
 	}
 
-	d.Set("tags", tagsToMapSagemaker(tagsOutput.Tags))
-
+	if err := d.Set("tags", tagsToMapSagemaker(tagsOutput.Tags)); err != nil {
+		return fmt.Errorf("error setting tags for sagemaker training job %q: %s", d.Id(), err)
+	}
 	return nil
 }
 
@@ -561,33 +545,6 @@ func flattenOutputDataConfig(odc *sagemaker.OutputDataConfig) []map[string]inter
 	result = append(result, attrs)
 
 	return result
-}
-
-func fromStringPMapToTerraformMapSagemaker(properties *map[string]*string) *map[string]interface{} {
-	props := *properties
-	result := make(map[string]interface{}, len(props))
-	for k, v := range props {
-		result[k] = *v
-	}
-	return &result
-}
-
-func fromTerraformMapToStringPMapSagemaker(properties *map[string]interface{}) (*map[string]*string, error) {
-	props := *properties
-	result := make(map[string]*string, len(props))
-
-	for k, v := range props {
-		switch value := v.(type) {
-		case string:
-			result[k] = &value
-		case *string:
-			result[k] = value
-		default:
-			return nil, fmt.Errorf("Cannot convert propert '%s' value '%s' to *string", k, v)
-		}
-	}
-
-	return &result, nil
 }
 
 func expandInputDataConfig(idc interface{}) []*sagemaker.Channel {

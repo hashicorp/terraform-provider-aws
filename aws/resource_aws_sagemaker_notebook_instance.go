@@ -131,8 +131,8 @@ func resourceAwsSagemakerNotebookInstanceRead(d *schema.ResourceData, meta inter
 	}
 
 	if notebookInstanceRaw == nil {
+		log.Printf("[INFO] Unable to find SageMaker notebook instance %q; removing from state file", d.Id())
 		d.SetId("")
-		log.Printf("[LOG] Unable to find SageMaker notebook instance %q; removing from state file", d.Id())
 		return nil
 	}
 
@@ -140,24 +140,24 @@ func resourceAwsSagemakerNotebookInstanceRead(d *schema.ResourceData, meta inter
 
 	d.Set("security_groups", flattenStringList(notebookInstance.SecurityGroups))
 	if err := d.Set("name", notebookInstance.NotebookInstanceName); err != nil {
-		return fmt.Errorf("error setting name for notebook instance %q: %s", d.Id(), err)
+		return fmt.Errorf("error setting name for sagemaker notebook instance %q: %s", d.Id(), err)
 	}
 	if err := d.Set("role_arn", notebookInstance.RoleArn); err != nil {
-		return fmt.Errorf("error setting role_arn for notebook instance %q: %s", d.Id(), err)
+		return fmt.Errorf("error setting role_arn for sagemaker notebook instance %q: %s", d.Id(), err)
 	}
 	if err := d.Set("instance_type", notebookInstance.InstanceType); err != nil {
-		return fmt.Errorf("error setting instance_type for notebook instance %q: %s", d.Id(), err)
+		return fmt.Errorf("error setting instance_type for sagemaker notebook instance %q: %s", d.Id(), err)
 	}
 	if err := d.Set("subnet_id", notebookInstance.SubnetId); err != nil {
-		return fmt.Errorf("error setting subnet_id for notebook instance %q: %s", d.Id(), err)
+		return fmt.Errorf("error setting subnet_id for sagemaker notebook instance %q: %s", d.Id(), err)
 	}
 
 	if err := d.Set("kms_key_id", notebookInstance.KmsKeyId); err != nil {
-		return fmt.Errorf("error setting kms_key_id for notebook instance %q: %s", d.Id(), err)
+		return fmt.Errorf("error setting kms_key_id for sagemaker notebook instance %q: %s", d.Id(), err)
 	}
 
 	if err := d.Set("arn", notebookInstance.NotebookInstanceArn); err != nil {
-		return fmt.Errorf("error setting arn for notebook instance %q: %s", d.Id(), err)
+		return fmt.Errorf("error setting arn for sagemaker notebook instance %q: %s", d.Id(), err)
 	}
 	// d.Set("tags", tagsToMap()) TODO tags SageMaker functions
 	tagsOutput, err := conn.ListTags(&sagemaker.ListTagsInput{
