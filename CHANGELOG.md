@@ -12,6 +12,7 @@ ENHANCEMENTS
 
 BUG FIXES
 
+* resource/aws_batch_job_queue: Properly read `compute_environments` into Terraform state [GH-7079]
 * resource/aws_dynamodb_table: Prevent `BillingMode` `ValidationError` on table creation [GH-7064]
 * resource/aws_iam_group_policy: Skip `NoSuchEntity` errors on resource deletion without refresh [GH-7071]
 * resource/aws_iam_role_policy: Skip `NoSuchEntity` errors on resource deletion without refresh [GH-7070]
