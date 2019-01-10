@@ -23,6 +23,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/dax"
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
+	"github.com/aws/aws-sdk-go/service/docdb"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/ecs"
@@ -339,6 +340,28 @@ func expandRedshiftParameters(configured []interface{}) ([]*redshift.Parameter, 
 		}
 
 		p := &redshift.Parameter{
+			ParameterName:  aws.String(data["name"].(string)),
+			ParameterValue: aws.String(data["value"].(string)),
+		}
+
+		parameters = append(parameters, p)
+	}
+
+	return parameters, nil
+}
+
+// Takes the result of flatmap.Expand for an array of parameters and
+// returns Parameter API compatible objects
+func expandDocDBParameters(configured []interface{}) ([]*docdb.Parameter, error) {
+	parameters := make([]*docdb.Parameter, 0, len(configured))
+
+	// Loop over our configured parameters and create
+	// an array of aws-sdk-go compatible objects
+	for _, pRaw := range configured {
+		data := pRaw.(map[string]interface{})
+
+		p := &docdb.Parameter{
+			ApplyMethod:    aws.String(data["apply_method"].(string)),
 			ParameterName:  aws.String(data["name"].(string)),
 			ParameterValue: aws.String(data["value"].(string)),
 		}
@@ -829,6 +852,21 @@ func flattenElastiCacheParameters(list []*elasticache.Parameter) []map[string]in
 
 // Flattens an array of Parameters into a []map[string]interface{}
 func flattenNeptuneParameters(list []*neptune.Parameter) []map[string]interface{} {
+	result := make([]map[string]interface{}, 0, len(list))
+	for _, i := range list {
+		if i.ParameterValue != nil {
+			result = append(result, map[string]interface{}{
+				"apply_method": aws.StringValue(i.ApplyMethod),
+				"name":         aws.StringValue(i.ParameterName),
+				"value":        aws.StringValue(i.ParameterValue),
+			})
+		}
+	}
+	return result
+}
+
+// Flattens an array of Parameters into a []map[string]interface{}
+func flattenDocDBParameters(list []*docdb.Parameter) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, len(list))
 	for _, i := range list {
 		if i.ParameterValue != nil {
