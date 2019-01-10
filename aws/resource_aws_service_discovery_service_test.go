@@ -136,11 +136,7 @@ func testAccCheckAwsServiceDiscoveryServiceExists(name string) resource.TestChec
 		}
 
 		_, err := conn.GetService(input)
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
