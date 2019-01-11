@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -48,7 +47,6 @@ func dataSourceAwsDxPrivateVirtualInterface() *schema.Resource {
 			},
 			"bgp_auth_key": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 			"address_family": {
@@ -84,8 +82,7 @@ func dataSourceAwsDxPrivateVirtualInterfaceRead(d *schema.ResourceData, meta int
 		return err
 	}
 	if vif == nil {
-		log.Printf("[WARN] Direct Connect virtual interface (%s) not found", d.Get("virtual_interface_id").(string))
-		return nil
+		return fmt.Errorf("[ERR] Direct Connect virtual interface (%s) not found", d.Get("virtual_interface_id").(string))
 	}
 
 	arn := arn.ARN{

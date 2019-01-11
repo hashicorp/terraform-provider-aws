@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/acctest"
@@ -28,7 +29,33 @@ func TestAccDataSourceAwsDxPrivateVirtualInterface_basic(t *testing.T) {
 				Config: testAccDxPrivateVirtualInterfaceConfigBasic(connectionID, vifName, bgpAsn, vlan),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceAwsDxPrivateVirtualInterfaceExists("data.aws_dx_private_virtual_interface.foo"),
+					resource.TestCheckResourceAttrPair(
+						"data.aws_dx_private_virtual_interface.foo", "connection_id",
+						"aws_dx_private_virtual_interface.foo", "connection_id"),
 					resource.TestCheckResourceAttr("data.aws_dx_private_virtual_interface.foo", "name", vifName),
+					resource.TestCheckResourceAttr("data.aws_dx_private_virtual_interface.foo", "vlan", strconv.Itoa(vlan)),
+					resource.TestCheckResourceAttr("data.aws_dx_private_virtual_interface.foo", "bgp_asn", strconv.Itoa(bgpAsn)),
+					resource.TestCheckResourceAttrPair(
+						"data.aws_dx_private_virtual_interface.foo", "bgp_auth_key",
+						"aws_dx_private_virtual_interface.foo", "bgp_auth_key"),
+					resource.TestCheckResourceAttrPair(
+						"data.aws_dx_private_virtual_interface.foo", "address_family",
+						"aws_dx_private_virtual_interface.foo", "address_family"),
+					resource.TestCheckResourceAttrPair(
+						"data.aws_dx_private_virtual_interface.foo", "customer_address",
+						"aws_dx_private_virtual_interface.foo", "customer_address"),
+					resource.TestCheckResourceAttrPair(
+						"data.aws_dx_private_virtual_interface.foo", "amazon_address",
+						"aws_dx_private_virtual_interface.foo", "amazon_address"),
+					resource.TestCheckResourceAttrPair(
+						"data.aws_dx_private_virtual_interface.foo", "vpn_gateway_id",
+						"aws_dx_private_virtual_interface.foo", "vpn_gateway_id"),
+					resource.TestCheckResourceAttrPair(
+						"data.aws_dx_private_virtual_interface.foo", "dx_gateway_id",
+						"aws_dx_private_virtual_interface.foo", "dx_gateway_id"),
+					resource.TestCheckResourceAttrPair(
+						"data.aws_dx_private_virtual_interface.foo", "mtu",
+						"aws_dx_private_virtual_interface.foo", "mtu"),
 					resource.TestCheckResourceAttr("data.aws_dx_private_virtual_interface.foo", "tags.%", "0"),
 				),
 			},
