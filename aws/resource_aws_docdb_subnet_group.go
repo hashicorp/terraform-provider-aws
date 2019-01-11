@@ -89,7 +89,7 @@ func resourceAwsDocDBSubnetGroupCreate(d *schema.ResourceData, meta interface{})
 	log.Printf("[DEBUG] Create DocDB Subnet Group: %#v", createOpts)
 	_, err := conn.CreateDBSubnetGroup(&createOpts)
 	if err != nil {
-		return fmt.Errorf("Error creating DocDB Subnet Group: %s", err)
+		return fmt.Errorf("error creating DocDB Subnet Group: %s", err)
 	}
 
 	d.SetId(groupName)
@@ -119,7 +119,7 @@ func resourceAwsDocDBSubnetGroupRead(d *schema.ResourceData, meta interface{}) e
 
 	if len(subnetGroups) != 1 ||
 		*subnetGroups[0].DBSubnetGroupName != d.Id() {
-		return fmt.Errorf("Unable to find DocDB Subnet Group: %s, removing from state", d.Id())
+		return fmt.Errorf("unable to find DocDB Subnet Group: %s, removing from state", d.Id())
 	}
 
 	subnetGroup := subnetGroups[0]
@@ -140,11 +140,11 @@ func resourceAwsDocDBSubnetGroupRead(d *schema.ResourceData, meta interface{}) e
 	})
 
 	if err != nil {
-		log.Printf("[DEBUG] Error retrieving tags for ARN: %s", aws.StringValue(subnetGroup.DBSubnetGroupArn))
+		return fmt.Errorf("error retrieving tags for ARN: %s", aws.StringValue(subnetGroup.DBSubnetGroupArn))
 	}
 
 	if err := d.Set("tags", tagsToMapDocDB(resp.TagList)); err != nil {
-		return fmt.Errorf("Error setting DocDB Subnet Group tags: %s", err)
+		return fmt.Errorf("error setting DocDB Subnet Group tags: %s", err)
 	}
 	return nil
 }
