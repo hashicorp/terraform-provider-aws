@@ -1,5 +1,9 @@
 ## 1.56.0 (Unreleased)
 
+FEATURES
+
+* **New Resource:** `aws_docdb_subnet_group` [GH-7106]
+
 ENHANCEMENTS
 
 * resource/aws_inspector_assessment_target: Allow omitting resource_group_arn argument (support matching all EC2 instances) [GH-7112]
