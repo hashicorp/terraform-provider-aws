@@ -68,11 +68,7 @@ func resourceAwsDocDBSubnetGroupCreate(d *schema.ResourceData, meta interface{})
 	conn := meta.(*AWSClient).docdbconn
 	tags := tagsFromMapDocDB(d.Get("tags").(map[string]interface{}))
 
-	subnetIdsSet := d.Get("subnet_ids").(*schema.Set)
-	subnetIds := make([]*string, subnetIdsSet.Len())
-	for i, subnetID := range subnetIdsSet.List() {
-		subnetIds[i] = aws.String(subnetID.(string))
-	}
+	subnetIds := expandStringSet(d.Get("subnet_ids").(*schema.Set))
 
 	var groupName string
 	if v, ok := d.GetOk("name"); ok {
@@ -110,9 +106,7 @@ func resourceAwsDocDBSubnetGroupRead(d *schema.ResourceData, meta interface{}) e
 
 	var subnetGroups []*docdb.DBSubnetGroup
 	if err := conn.DescribeDBSubnetGroupsPages(&describeOpts, func(resp *docdb.DescribeDBSubnetGroupsOutput, lastPage bool) bool {
-		for _, v := range resp.DBSubnetGroups {
-			subnetGroups = append(subnetGroups, v)
-		}
+		subnetGroups = append(subnetGroups, resp.DBSubnetGroups...)
 		return !lastPage
 	}); err != nil {
 		if isAWSErr(err, docdb.ErrCodeDBSubnetGroupNotFoundFault, "") {
@@ -163,12 +157,7 @@ func resourceAwsDocDBSubnetGroupUpdate(d *schema.ResourceData, meta interface{})
 		if n == nil {
 			n = new(schema.Set)
 		}
-		ns := n.(*schema.Set)
-
-		var sIds []*string
-		for _, s := range ns.List() {
-			sIds = append(sIds, aws.String(s.(string)))
-		}
+		sIds := expandStringSet(n.(*schema.Set))
 
 		_, err := conn.ModifyDBSubnetGroup(&docdb.ModifyDBSubnetGroupInput{
 			DBSubnetGroupName:        aws.String(d.Id()),
