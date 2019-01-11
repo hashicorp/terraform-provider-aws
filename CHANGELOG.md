@@ -6,12 +6,15 @@ FEATURES
 
 ENHANCEMENTS
 
+* resource/aws_emr_cluster: Support resource import [GH-4488] / [GH-6498]
+* resource/aws_emr_cluster: Support `instance_group` `autoscaling_policy` updates [GH-6498]
 * resource/aws_inspector_assessment_target: Allow omitting resource_group_arn argument (support matching all EC2 instances) [GH-7112]
 * resource/aws_inspector_assessment_target: Support resource import [GH-7112]
 
 BUG FIXES
 
 * resource/aws_ec2_transit_gateway_route: Prevent crash with externally removed attachment [GH-7117]
+* resource/aws_emr_cluster: Properly read `core_instance_count`, `master_instance_type`, and `termination_policies` into Terraform state [GH-4488] / [GH-6498]
 * resource/aws_inspector_assessment_target: Properly read resource_group_arn attribute into Terraform state [GH-7112]
 
 ## 1.55.0 (January 10, 2019)
