@@ -1,8 +1,14 @@
 ## 1.56.0 (Unreleased)
 
+ENHANCEMENTS
+
+* resource/aws_inspector_assessment_target: Allow omitting resource_group_arn argument (support matching all EC2 instances) [GH-7112]
+* resource/aws_inspector_assessment_target: Support resource import [GH-7112]
+
 BUG FIXES
 
 * resource/aws_ec2_transit_gateway_route: Prevent crash with externally removed attachment [GH-7117]
+* resource/aws_inspector_assessment_target: Properly read resource_group_arn attribute into Terraform state [GH-7112]
 
 ## 1.55.0 (January 10, 2019)
 
