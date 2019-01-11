@@ -129,11 +129,7 @@ func resourceAwsServiceDiscoveryPublicDnsNamespaceDelete(d *schema.ResourceData,
 	}
 
 	_, err = stateConf.WaitForState()
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func servicediscoveryOperationRefreshStatusFunc(conn *servicediscovery.ServiceDiscovery, oid string) resource.StateRefreshFunc {

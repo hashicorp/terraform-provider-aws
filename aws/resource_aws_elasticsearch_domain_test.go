@@ -556,6 +556,41 @@ func TestAccAWSElasticSearchDomain_update_volume_type(t *testing.T) {
 		}})
 }
 
+func TestAccAWSElasticSearchDomain_update_version(t *testing.T) {
+	var domain1, domain2, domain3 elasticsearch.ElasticsearchDomainStatus
+	ri := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckESDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccESDomainConfig_ClusterUpdateVersion(ri, "5.5"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &domain1),
+					resource.TestCheckResourceAttr("aws_elasticsearch_domain.example", "elasticsearch_version", "5.5"),
+				),
+			},
+			{
+				Config: testAccESDomainConfig_ClusterUpdateVersion(ri, "5.6"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &domain2),
+					testAccCheckAWSESDomainNotRecreated(&domain1, &domain2),
+					resource.TestCheckResourceAttr("aws_elasticsearch_domain.example", "elasticsearch_version", "5.6"),
+				),
+			},
+			{
+				Config: testAccESDomainConfig_ClusterUpdateVersion(ri, "6.3"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &domain3),
+					testAccCheckAWSESDomainNotRecreated(&domain2, &domain3),
+					resource.TestCheckResourceAttr("aws_elasticsearch_domain.example", "elasticsearch_version", "6.3"),
+				),
+			},
+		}})
+}
+
 func testAccCheckESEBSVolumeSize(ebsVolumeSize int, status *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conf := status.EBSOptions
@@ -670,6 +705,31 @@ func testAccCheckESDomainExists(n string, domain *elasticsearch.ElasticsearchDom
 	}
 }
 
+func testAccCheckAWSESDomainNotRecreated(i, j *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).esconn
+
+		iConfig, err := conn.DescribeElasticsearchDomainConfig(&elasticsearch.DescribeElasticsearchDomainConfigInput{
+			DomainName: i.DomainName,
+		})
+		if err != nil {
+			return err
+		}
+		jConfig, err := conn.DescribeElasticsearchDomainConfig(&elasticsearch.DescribeElasticsearchDomainConfigInput{
+			DomainName: j.DomainName,
+		})
+		if err != nil {
+			return err
+		}
+
+		if aws.TimeValue(iConfig.DomainConfig.ElasticsearchClusterConfig.Status.CreationDate) != aws.TimeValue(jConfig.DomainConfig.ElasticsearchClusterConfig.Status.CreationDate) {
+			return fmt.Errorf("ES Domain was recreated")
+		}
+
+		return nil
+	}
+}
+
 func testAccCheckESDomainDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_elasticsearch_domain" {
@@ -778,6 +838,27 @@ resource "aws_elasticsearch_domain" "example" {
   }
 }
 `, randInt, volumeSize)
+}
+
+func testAccESDomainConfig_ClusterUpdateVersion(randInt int, version string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticsearch_domain" "example" {
+  domain_name = "tf-test-%d"
+
+  elasticsearch_version = "%v"
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+
+  cluster_config {
+    instance_count = 1
+    zone_awareness_enabled = false
+    instance_type = "t2.small.elasticsearch"
+  }
+}
+`, randInt, version)
 }
 
 func testAccESDomainConfig_ClusterUpdateInstanceStore(randInt int) string {

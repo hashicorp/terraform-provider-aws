@@ -189,7 +189,7 @@ func TestAccAWSLBTargetGroup_networkLB_TargetGroup(t *testing.T) {
 			},
 			{
 				Config:      testAccAWSLBTargetGroupConfig_typeTCPInvalidThreshold(targetGroupName),
-				ExpectError: regexp.MustCompile("health_check\\.healthy_threshold [0-9]+ and health_check\\.unhealthy_threshold [0-9]+ must be the same for target_groups with TCP protocol"),
+				ExpectError: regexp.MustCompile(`health_check\.healthy_threshold [0-9]+ and health_check\.unhealthy_threshold [0-9]+ must be the same for target_groups with TCP protocol`),
 			},
 			{
 				Config: testAccAWSLBTargetGroupConfig_typeTCPThresholdUpdated(targetGroupName),

@@ -293,6 +293,52 @@ func validateDbParamGroupNamePrefix(v interface{}, k string) (ws []string, error
 	return
 }
 
+func validateDocDBParamGroupName(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !regexp.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only lowercase alphanumeric characters and hyphens allowed in parameter group %q", k))
+	}
+	if !regexp.MustCompile(`^[a-z]`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"first character of parameter group %q must be a letter", k))
+	}
+	if regexp.MustCompile(`--`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"parameter group %q cannot contain two consecutive hyphens", k))
+	}
+	if regexp.MustCompile(`-$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"parameter group %q cannot end with a hyphen", k))
+	}
+	if len(value) > 255 {
+		errors = append(errors, fmt.Errorf(
+			"parameter group %q cannot be greater than 255 characters", k))
+	}
+	return
+}
+
+func validateDocDBParamGroupNamePrefix(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !regexp.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only lowercase alphanumeric characters and hyphens allowed in parameter group %q", k))
+	}
+	if !regexp.MustCompile(`^[a-z]`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"first character of parameter group %q must be a letter", k))
+	}
+	if regexp.MustCompile(`--`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"parameter group %q cannot contain two consecutive hyphens", k))
+	}
+	if len(value) > 255 {
+		errors = append(errors, fmt.Errorf(
+			"parameter group %q cannot be greater than 226 characters", k))
+	}
+	return
+}
+
 func validateElbName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if len(value) == 0 {

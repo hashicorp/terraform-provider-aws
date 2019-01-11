@@ -1654,7 +1654,7 @@ resource "aws_lb_listener" "front_end" {
    load_balancer_arn = "${aws_lb.alb_test.id}"
    protocol = "HTTPS"
    port = "443"
-   ssl_policy = "ELBSecurityPolicy-2015-05"
+   ssl_policy = "ELBSecurityPolicy-2016-08"
    certificate_arn = "${aws_iam_server_certificate.test.arn}"
 
    default_action {
@@ -1832,7 +1832,7 @@ resource "aws_lb_listener" "front_end" {
    load_balancer_arn = "${aws_lb.alb_test.id}"
    protocol = "HTTPS"
    port = "443"
-   ssl_policy = "ELBSecurityPolicy-2015-05"
+   ssl_policy = "ELBSecurityPolicy-2016-08"
    certificate_arn = "${aws_iam_server_certificate.test.arn}"
 
    default_action {
@@ -1997,7 +1997,7 @@ resource "aws_lb_listener" "test" {
   load_balancer_arn = "${aws_lb.test.id}"
   protocol          = "HTTPS"
   port              = "443"
-  ssl_policy        = "ELBSecurityPolicy-2015-05"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
   certificate_arn   = "${aws_iam_server_certificate.test.arn}"
 
   default_action {
