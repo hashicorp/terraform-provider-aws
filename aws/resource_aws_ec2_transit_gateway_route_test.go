@@ -62,6 +62,33 @@ func TestAccAWSEc2TransitGatewayRoute_disappears(t *testing.T) {
 	})
 }
 
+func TestAccAWSEc2TransitGatewayRoute_disappears_TransitGatewayAttachment(t *testing.T) {
+	var transitGateway1 ec2.TransitGateway
+	var transitGatewayRoute1 ec2.TransitGatewayRoute
+	var transitGatewayVpcAttachment1 ec2.TransitGatewayVpcAttachment
+	resourceName := "aws_ec2_transit_gateway_route.test"
+	transitGatewayVpcAttachmentResourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
+	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEc2TransitGatewayRouteDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEc2TransitGatewayRouteConfigDestinationCidrBlock(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEc2TransitGatewayExists(transitGatewayResourceName, &transitGateway1),
+					testAccCheckAWSEc2TransitGatewayRouteExists(resourceName, &transitGatewayRoute1),
+					testAccCheckAWSEc2TransitGatewayVpcAttachmentExists(transitGatewayVpcAttachmentResourceName, &transitGatewayVpcAttachment1),
+					testAccCheckAWSEc2TransitGatewayVpcAttachmentDisappears(&transitGatewayVpcAttachment1),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSEc2TransitGatewayRouteExists(resourceName string, transitGatewayRoute *ec2.TransitGatewayRoute) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
