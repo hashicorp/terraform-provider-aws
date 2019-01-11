@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"os"
-	"strconv"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/acctest"
@@ -30,11 +29,18 @@ func TestAccDataSourceAwsDxPrivateVirtualInterface_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceAwsDxPrivateVirtualInterfaceExists("data.aws_dx_private_virtual_interface.foo"),
 					resource.TestCheckResourceAttrPair(
+						"data.aws_dx_private_virtual_interface.foo", "arn",
+						"aws_dx_private_virtual_interface.foo", "arn"),
+					resource.TestCheckResourceAttrPair(
 						"data.aws_dx_private_virtual_interface.foo", "connection_id",
 						"aws_dx_private_virtual_interface.foo", "connection_id"),
 					resource.TestCheckResourceAttr("data.aws_dx_private_virtual_interface.foo", "name", vifName),
-					resource.TestCheckResourceAttr("data.aws_dx_private_virtual_interface.foo", "vlan", strconv.Itoa(vlan)),
-					resource.TestCheckResourceAttr("data.aws_dx_private_virtual_interface.foo", "bgp_asn", strconv.Itoa(bgpAsn)),
+					resource.TestCheckResourceAttrPair(
+						"data.aws_dx_private_virtual_interface.foo", "bvlan",
+						"aws_dx_private_virtual_interface.foo", "vlan"),
+					resource.TestCheckResourceAttrPair(
+						"data.aws_dx_private_virtual_interface.foo", "bgp_asn",
+						"aws_dx_private_virtual_interface.foo", "bgp_asn"),
 					resource.TestCheckResourceAttrPair(
 						"data.aws_dx_private_virtual_interface.foo", "bgp_auth_key",
 						"aws_dx_private_virtual_interface.foo", "bgp_auth_key"),
