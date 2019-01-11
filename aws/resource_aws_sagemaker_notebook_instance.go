@@ -223,10 +223,17 @@ func resourceAwsSagemakerNotebookInstanceUpdate(d *schema.ResourceData, meta int
 				NotebookInstanceName: aws.String(d.Id()),
 			}
 
-			if _, err := conn.StartNotebookInstance(startOpts); err != nil {
-				return fmt.Errorf("error starting Sagemaker Notebook Instance %q: %s", d.Id(), err)
-			} else if err := waitForSagemakerNotebookInstanceStatusInService(conn, d.Id()); err != nil {
-				return fmt.Errorf("error waiting for Sagemaker Notebook Instance %q to start: %s", d.Id(), err)
+			// TODO Check for a status change every 30 seconds to make sure the resource starts
+			err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+				if _, err := conn.StartNotebookInstance(startOpts); err != nil {
+					return resource.NonRetryableError(fmt.Errorf("error starting Sagemaker Notebook Instance %q: %s", d.Id(), err))
+				} else if err := waitForSagemakerNotebookInstanceStatusInService(conn, d.Id()); err != nil {
+					return resource.RetryableError(fmt.Errorf("error waiting for Sagemaker Notebook Instance %q to start: %s", d.Id(), err))
+				}
+				return nil
+			})
+			if err != nil {
+				return err
 			}
 		}
 	}
@@ -277,10 +284,9 @@ func sagemakerNotebookInstanceStateRefreshFunc(conn *sagemaker.SageMaker, name s
 		}
 		notebook, err := conn.DescribeNotebookInstance(describeNotebookInput)
 		if err != nil {
-			if sagemakerErr, ok := err.(awserr.Error); ok && sagemakerErr.Code() == "ResourceNotFound" {
-				return nil, "", err
+			if sagemakerErr, ok := err.(awserr.Error); ok && sagemakerErr.Message() == "RecordNotFound" {
+				return 1, "", nil
 			}
-			return nil, sagemaker.NotebookInstanceStatusFailed, err
 		}
 
 		if notebook == nil {
