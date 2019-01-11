@@ -4,9 +4,9 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-func dataSourceAwsMksCluster() *schema.Resource {
+func dataSourceAwsMskCluster() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsMksClusterRead,
+		Read: dataSourceAwsMskClusterRead,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -15,7 +15,7 @@ func dataSourceAwsMksCluster() *schema.Resource {
 			},
 			"broker_node_group_info": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 			"encrypt_rest_key": {
 				Type:     schema.TypeString,
@@ -27,13 +27,23 @@ func dataSourceAwsMksCluster() *schema.Resource {
 			},
 			"kafka_version": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 			"broker_count": {
 				Type:     schema.TypeInt,
-				Required: true,
+				Optional: true,
 			},
 			"arn": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"bootstrap_brokers": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"zookeeper_connect": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -42,11 +52,11 @@ func dataSourceAwsMksCluster() *schema.Resource {
 	}
 }
 
-func dataSourceAwsMksClusterRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAwsMskClusterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kafkaconn
-	arn := d.Get("arn").(string)
+	name := d.Get("name").(string)
 
-	state, err := readMskClusterState(conn, arn)
+	state, err := readMskClusterState(conn, name)
 	if err != nil {
 		return err
 	}
@@ -54,7 +64,10 @@ func dataSourceAwsMksClusterRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("arn", state.arn)
 	d.Set("status", state.status)
 	d.Set("creation_timestamp", state.creationTimestamp)
-	d.Set("encrypt_rest_arn", state.encryptRestArn)
+	d.Set("broker_count", state)
+	d.Set("encrypt_rest_key", state.encryptRestKey)
+	d.Set("bootstrap_brokers", state.bootstrapBrokers)
+	d.Set("zookeeper_connect", state.zookeeperConnect)
 
 	return nil
 }

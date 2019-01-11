@@ -29,6 +29,8 @@ func TestAccAWSMskCluster_basic(t *testing.T) {
 					testAccCheckMskClusterExists("aws_msk_cluster.test_cluster", &cluster),
 					testAccCheckAWSMskClusterAttributes(&cluster),
 					resource.TestCheckResourceAttr("aws_msk_cluster.test_cluster", "broker_security_groups.#", "1"),
+					resource.TestCheckResourceAttrSet("aws_msk_cluster.test_cluster", "zookeeper_connect"),
+					resource.TestCheckResourceAttrSet("aws_msk_cluster.test_cluster", "bootstrap_brokers"),
 				),
 			},
 		},
@@ -50,11 +52,65 @@ func TestAccAWSMskCluster_encryptAtRest(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMskClusterExists("aws_msk_cluster.test_cluster", &cluster),
 					testAccCheckAWSMskClusterAttributes(&cluster),
+					resource.TestCheckResourceAttrSet("aws_msk_cluster.test_cluster", "zookeeper_connect"),
+					resource.TestCheckResourceAttrSet("aws_msk_cluster.test_cluster", "bootstrap_brokers"),
 				),
 			},
 		},
 	})
 }
+
+func TestAccAWSMskCluster_brokerMonitoring(t *testing.T) {
+	var cluster kafka.ClusterInfo
+
+	rInt := acctest.RandInt()
+
+	monitoring_type := "PER_BROKER"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckMskClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testMskClusterConfigBrokerMonitoring(rInt, monitoring_type),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMskClusterExists("aws_msk_cluster.test_cluster", &cluster),
+					testAccCheckAWSMskClusterAttributes(&cluster),
+					resource.TestCheckResourceAttrSet("aws_msk_cluster.test_cluster", "zookeeper_connect"),
+					resource.TestCheckResourceAttrSet("aws_msk_cluster.test_cluster", "bootstrap_brokers"),
+					resource.TestCheckResourceAttr("aws_msk_cluster.test_cluster", "enhanced_monitoring", "PER_BROKER"),
+				),
+			},
+		},
+	})
+}
+
+/*func TestAccAWSMskCluster_topicMonitoring(t *testing.T) {
+	var cluster kafka.ClusterInfo
+
+	rInt := acctest.RandInt()
+
+	monitoring_type := "PER_TOPIC_PER_BROKER"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckMskClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testMskClusterConfigBrokerMonitoring(rInt, monitoring_type),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMskClusterExists("aws_msk_cluster.test_cluster", &cluster),
+					testAccCheckAWSMskClusterAttributes(&cluster),
+					resource.TestCheckResourceAttrSet("aws_msk_cluster.test_cluster", "zookeeper_connect"),
+					resource.TestCheckResourceAttrSet("aws_msk_cluster.test_cluster", "bootstrap_brokers"),
+					resource.TestCheckResourceAttr("aws_msk_cluster.test_cluster", "enhanced_monitoring", monitoring_type),
+				),
+			},
+		},
+	})
+}*/
 
 func testMskClusterCommonConfig(rInt int) string {
 	return fmt.Sprintf(`
@@ -126,8 +182,21 @@ resource "aws_msk_cluster" "test_cluster" {
 	broker_instance_type = "kafka.m5.large"
 	broker_volume_size = 10
 	client_subnets = ["${aws_subnet.test_subnet_a.id}", "${aws_subnet.test_subnet_b.id}", "${aws_subnet.test_subnet_c.id}"]
-	encrypt_rest_key = "${aws_kms_key.test_key.key_id}"
+	encrypt_rest_arn = "${aws_kms_key.test_key.arn}"
 }`, rInt)
+}
+
+func testMskClusterConfigBrokerMonitoring(rInt int, monitoring_type string) string {
+	return testMskClusterCommonConfig(rInt) + fmt.Sprintf(`
+
+resource "aws_msk_cluster" "test_cluster" {
+	name = "terraform-msk-test-%d"
+	broker_count = 3
+	broker_instance_type = "kafka.m5.large"
+	broker_volume_size = 10
+	client_subnets = ["${aws_subnet.test_subnet_a.id}", "${aws_subnet.test_subnet_b.id}", "${aws_subnet.test_subnet_c.id}"]
+	enhanced_monitoring = "%s"
+}`, rInt, monitoring_type)
 }
 
 func testAccCheckMskClusterExists(n string, cluster *kafka.ClusterInfo) resource.TestCheckFunc {
