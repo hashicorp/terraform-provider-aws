@@ -1,4 +1,9 @@
 ## 1.56.0 (Unreleased)
+
+BUG FIXES
+
+* resource/aws_ec2_transit_gateway_route: Prevent crash with externally removed attachment [GH-7117]
+
 ## 1.55.0 (January 10, 2019)
 
 FEATURES
