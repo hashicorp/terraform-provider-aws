@@ -36,7 +36,7 @@ func TestAccDataSourceAwsDxPrivateVirtualInterface_basic(t *testing.T) {
 						"aws_dx_private_virtual_interface.foo", "connection_id"),
 					resource.TestCheckResourceAttr("data.aws_dx_private_virtual_interface.foo", "name", vifName),
 					resource.TestCheckResourceAttrPair(
-						"data.aws_dx_private_virtual_interface.foo", "bvlan",
+						"data.aws_dx_private_virtual_interface.foo", "vlan",
 						"aws_dx_private_virtual_interface.foo", "vlan"),
 					resource.TestCheckResourceAttrPair(
 						"data.aws_dx_private_virtual_interface.foo", "bgp_asn",
