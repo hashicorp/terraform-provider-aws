@@ -281,6 +281,9 @@ var awsPartition = partition{
 			},
 			Endpoints: endpoints{
 				"ap-northeast-1": endpoint{},
+				"ap-southeast-1": endpoint{},
+				"ap-southeast-2": endpoint{},
+				"eu-central-1":   endpoint{},
 				"eu-west-1":      endpoint{},
 				"us-east-1":      endpoint{},
 				"us-west-2":      endpoint{},
@@ -813,6 +816,21 @@ var awsPartition = partition{
 				"us-west-2":      endpoint{},
 			},
 		},
+		"datasync": service{
+
+			Endpoints: endpoints{
+				"ap-northeast-1": endpoint{},
+				"ap-northeast-2": endpoint{},
+				"ap-southeast-1": endpoint{},
+				"ap-southeast-2": endpoint{},
+				"eu-central-1":   endpoint{},
+				"eu-west-1":      endpoint{},
+				"us-east-1":      endpoint{},
+				"us-east-2":      endpoint{},
+				"us-west-1":      endpoint{},
+				"us-west-2":      endpoint{},
+			},
+		},
 		"dax": service{
 
 			Endpoints: endpoints{
@@ -1257,10 +1275,7 @@ var awsPartition = partition{
 			},
 		},
 		"fsx": service{
-			Defaults: endpoint{
-				SSLCommonName: "fsx.us-west-2.amazonaws.com",
-				Protocols:     []string{"https"},
-			},
+
 			Endpoints: endpoints{
 				"eu-west-1": endpoint{},
 				"us-east-1": endpoint{},
@@ -1747,6 +1762,12 @@ var awsPartition = partition{
 					Hostname: "rds.ap-southeast-1.amazonaws.com",
 					CredentialScope: credentialScope{
 						Region: "ap-southeast-1",
+					},
+				},
+				"ap-southeast-2": endpoint{
+					Hostname: "rds.ap-southeast-2.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "ap-southeast-2",
 					},
 				},
 				"eu-central-1": endpoint{
