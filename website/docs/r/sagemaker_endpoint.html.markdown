@@ -17,10 +17,10 @@ Basic usage:
 ```hcl
 resource "aws_sagemaker_endpoint" "e" {
     name = "my-endpoint"
-    configuration_name = "my-endpoint-config"
+    configuration_name = "${aws_sagemaker_endpoint_configuration.ec.name}"
 
     tags {
-      Name = "main"
+      Name = "foo"
     }
 }
 ```
@@ -39,8 +39,6 @@ The following attributes are exported:
 
 * `name` - The name of the endpoint.
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this endpoint.
-* `creation_timestamp` - The creation timestamp of this endpoint.
-* `last_modified_time` - Last time the endpoint has been modified.
 
 ## Import
 

@@ -84,29 +84,6 @@ func resourceAwsSagemakerModel() *schema.Resource {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      schema.HashString,
-						},
-						"security_group_ids": {
-							Type:     schema.TypeSet,
-							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      schema.HashString,
-						},
-					},
-				},
-			},
-
-			"vpc_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"subnets": {
-							Type:     schema.TypeSet,
-							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"security_group_ids": {
 							Type:     schema.TypeSet,
@@ -211,11 +188,6 @@ func resourceAwsSagemakerModelCreate(d *schema.ResourceData, meta interface{}) e
 		createOpts.SetEnableNetworkIsolation(v.(bool))
 	}
 
-	if v, ok := d.GetOk("vpc_config"); ok {
-		vpcConfig := expandSageMakerVpcConfigRequest(v.([]interface{}))
-		createOpts.SetVpcConfig(vpcConfig)
-	}
-
 	log.Printf("[DEBUG] Sagemaker model create config: %#v", *createOpts)
 	_, err := retryOnAwsCode("ValidationException", func() (interface{}, error) {
 		return conn.CreateModel(createOpts)
@@ -227,19 +199,6 @@ func resourceAwsSagemakerModelCreate(d *schema.ResourceData, meta interface{}) e
 	d.SetId(name)
 
 	return resourceAwsSagemakerModelRead(d, meta)
-}
-
-func expandSageMakerVpcConfigRequest(l []interface{}) *sagemaker.VpcConfig {
-	if len(l) == 0 {
-		return nil
-	}
-
-	m := l[0].(map[string]interface{})
-
-	return &sagemaker.VpcConfig{
-		SecurityGroupIds: expandStringSet(m["security_group_ids"].(*schema.Set)),
-		Subnets:          expandStringSet(m["subnets"].(*schema.Set)),
-	}
 }
 
 func expandSageMakerVpcConfigRequest(l []interface{}) *sagemaker.VpcConfig {

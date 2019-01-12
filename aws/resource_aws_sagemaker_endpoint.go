@@ -2,13 +2,14 @@ package aws
 
 import (
 	"fmt"
+	"log"
+	"time"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
-	"log"
-	"time"
 )
 
 func resourceAwsSagemakerEndpoint() *schema.Resource {
@@ -36,18 +37,9 @@ func resourceAwsSagemakerEndpoint() *schema.Resource {
 			},
 
 			"endpoint_config_name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-
-			"creation_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"last_modified_time": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validateSagemakerName,
 			},
 
 			"tags": tagsSchema(),
@@ -70,16 +62,17 @@ func resourceAwsSagemakerEndpointCreate(d *schema.ResourceData, meta interface{}
 		EndpointConfigName: aws.String(d.Get("endpoint_config_name").(string)),
 	}
 
+	if v, ok := d.GetOk("tags"); ok {
+		createOpts.Tags = tagsFromMapSagemaker(v.(map[string]interface{}))
+	}
+
 	log.Printf("[DEBUG] SageMaker endpoint create config: %#v", *createOpts)
-	endpoint, err := conn.CreateEndpoint(createOpts)
+	_, err := conn.CreateEndpoint(createOpts)
 	if err != nil {
 		return fmt.Errorf("error creating SageMaker endpoint: %s", err)
 	}
 
 	d.SetId(name)
-	if err := d.Set("arn", endpoint.EndpointArn); err != nil {
-		return err
-	}
 	log.Printf("[INFO] SageMaker endpoint ID: %s", d.Id())
 
 	log.Printf("[DEBUG] Waiting for SageMaker endpoint (%s) to become available", d.Id())
@@ -95,7 +88,7 @@ func resourceAwsSagemakerEndpointCreate(d *schema.ResourceData, meta interface{}
 			d.Id(), err)
 	}
 
-	return resourceAwsSagemakerEndpointUpdate(d, meta)
+	return resourceAwsSagemakerEndpointRead(d, meta)
 }
 
 func resourceAwsSagemakerEndpointRead(d *schema.ResourceData, meta interface{}) error {
@@ -104,6 +97,7 @@ func resourceAwsSagemakerEndpointRead(d *schema.ResourceData, meta interface{}) 
 	endpointRaw, _, err := SagemakerEndpointStateRefreshFunc(conn, d.Id())()
 	if err != nil {
 		if sagemakerErr, ok := err.(awserr.Error); ok && sagemakerErr.Code() == "ValidationException" {
+			log.Printf("[INFO] unable to find the sagemaker endpoint resource and therefore it is removed from the state: %s", d.Id())
 			d.SetId("")
 			return nil
 		}
@@ -122,12 +116,7 @@ func resourceAwsSagemakerEndpointRead(d *schema.ResourceData, meta interface{}) 
 	if err := d.Set("endpoint_config_name", endpoint.EndpointConfigName); err != nil {
 		return err
 	}
-	if err := d.Set("creation_time", endpoint.CreationTime.Format(time.RFC3339)); err != nil {
-		return err
-	}
-	if err := d.Set("last_modified_time", endpoint.LastModifiedTime.Format(time.RFC3339)); err != nil {
-		return err
-	}
+
 	if err := d.Set("arn", endpoint.EndpointArn); err != nil {
 		return err
 	}
@@ -135,8 +124,9 @@ func resourceAwsSagemakerEndpointRead(d *schema.ResourceData, meta interface{}) 
 	tagsOutput, err := conn.ListTags(&sagemaker.ListTagsInput{
 		ResourceArn: endpoint.EndpointArn,
 	})
-
-	d.Set("tags", tagsToMapSagemaker(tagsOutput.Tags))
+	if err := d.Set("tags", tagsToMapSagemaker(tagsOutput.Tags)); err != nil {
+		return err
+	}
 
 	return nil
 }
