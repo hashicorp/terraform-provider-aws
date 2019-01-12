@@ -372,7 +372,7 @@ func expandDocDBParameters(configured []interface{}) ([]*docdb.Parameter, error)
 	return parameters, nil
 }
 
-func expandOptionConfiguration(configured []interface{}) ([]*rds.OptionConfiguration, error) {
+func expandOptionConfiguration(configured []interface{}) []*rds.OptionConfiguration {
 	var option []*rds.OptionConfiguration
 
 	for _, pRaw := range configured {
@@ -414,7 +414,7 @@ func expandOptionConfiguration(configured []interface{}) ([]*rds.OptionConfigura
 		option = append(option, o)
 	}
 
-	return option, nil
+	return option
 }
 
 func expandOptionSetting(list []interface{}) []*rds.OptionSetting {
@@ -748,57 +748,96 @@ func flattenEcsContainerDefinitions(definitions []*ecs.ContainerDefinition) (str
 }
 
 // Flattens an array of Options into a []map[string]interface{}
-func flattenOptions(list []*rds.Option) []map[string]interface{} {
-	result := make([]map[string]interface{}, 0, len(list))
-	for _, i := range list {
-		if i.OptionName != nil {
-			r := make(map[string]interface{})
-			r["option_name"] = strings.ToLower(*i.OptionName)
-			// Default empty string, guard against nil parameter values
-			r["port"] = ""
-			if i.Port != nil {
-				r["port"] = int(*i.Port)
-			}
-			r["version"] = ""
-			if i.OptionVersion != nil {
-				r["version"] = strings.ToLower(*i.OptionVersion)
-			}
-			if i.VpcSecurityGroupMemberships != nil {
-				vpcs := make([]string, 0, len(i.VpcSecurityGroupMemberships))
-				for _, vpc := range i.VpcSecurityGroupMemberships {
-					id := vpc.VpcSecurityGroupId
-					vpcs = append(vpcs, *id)
-				}
+func flattenOptions(apiOptions []*rds.Option, optionConfigurations []*rds.OptionConfiguration) []map[string]interface{} {
+	result := make([]map[string]interface{}, 0)
 
-				r["vpc_security_group_memberships"] = vpcs
-			}
-			if i.DBSecurityGroupMemberships != nil {
-				dbs := make([]string, 0, len(i.DBSecurityGroupMemberships))
-				for _, db := range i.DBSecurityGroupMemberships {
-					id := db.DBSecurityGroupName
-					dbs = append(dbs, *id)
-				}
-
-				r["db_security_group_memberships"] = dbs
-			}
-			if i.OptionSettings != nil {
-				settings := make([]map[string]interface{}, 0, len(i.OptionSettings))
-				for _, j := range i.OptionSettings {
-					setting := map[string]interface{}{
-						"name": *j.Name,
-					}
-					if j.Value != nil {
-						setting["value"] = *j.Value
-					}
-
-					settings = append(settings, setting)
-				}
-
-				r["option_settings"] = settings
-			}
-			result = append(result, r)
+	for _, apiOption := range apiOptions {
+		if apiOption == nil || apiOption.OptionName == nil {
+			continue
 		}
+
+		var configuredOption *rds.OptionConfiguration
+
+		for _, optionConfiguration := range optionConfigurations {
+			if aws.StringValue(apiOption.OptionName) == aws.StringValue(optionConfiguration.OptionName) {
+				configuredOption = optionConfiguration
+				break
+			}
+		}
+
+		dbSecurityGroupMemberships := make([]interface{}, 0)
+		for _, db := range apiOption.DBSecurityGroupMemberships {
+			if db != nil {
+				dbSecurityGroupMemberships = append(dbSecurityGroupMemberships, aws.StringValue(db.DBSecurityGroupName))
+			}
+		}
+
+		optionSettings := make([]interface{}, 0)
+		for _, apiOptionSetting := range apiOption.OptionSettings {
+			// The RDS API responds with all settings. Omit settings that match default value,
+			// but only if unconfigured. This is to prevent operators from continually needing
+			// to continually update their Terraform configurations to match new option settings
+			// when added by the API.
+			var configuredOptionSetting *rds.OptionSetting
+
+			if configuredOption != nil {
+				for _, configuredOptionOptionSetting := range configuredOption.OptionSettings {
+					if aws.StringValue(apiOptionSetting.Name) == aws.StringValue(configuredOptionOptionSetting.Name) {
+						configuredOptionSetting = configuredOptionOptionSetting
+						break
+					}
+				}
+			}
+
+			if configuredOptionSetting == nil && aws.StringValue(apiOptionSetting.Value) == aws.StringValue(apiOptionSetting.DefaultValue) {
+				continue
+			}
+
+			optionSetting := map[string]interface{}{
+				"name":  aws.StringValue(apiOptionSetting.Name),
+				"value": aws.StringValue(apiOptionSetting.Value),
+			}
+
+			// Some values, like passwords, are sent back from the API as ****.
+			// Set the response to match the configuration to prevent an unexpected difference
+			if configuredOptionSetting != nil && aws.StringValue(apiOptionSetting.Value) == "****" {
+				optionSetting["value"] = aws.StringValue(configuredOptionSetting.Value)
+			}
+
+			optionSettings = append(optionSettings, optionSetting)
+		}
+		optionSettingsResource := &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"name": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"value": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			},
+		}
+
+		vpcSecurityGroupMemberships := make([]interface{}, 0)
+		for _, vpc := range apiOption.VpcSecurityGroupMemberships {
+			if vpc != nil {
+				vpcSecurityGroupMemberships = append(vpcSecurityGroupMemberships, aws.StringValue(vpc.VpcSecurityGroupId))
+			}
+		}
+
+		r := map[string]interface{}{
+			"db_security_group_memberships":  schema.NewSet(schema.HashString, dbSecurityGroupMemberships),
+			"option_name":                    aws.StringValue(apiOption.OptionName),
+			"option_settings":                schema.NewSet(schema.HashResource(optionSettingsResource), optionSettings),
+			"port":                           aws.Int64Value(apiOption.Port),
+			"version":                        aws.StringValue(apiOption.OptionVersion),
+			"vpc_security_group_memberships": schema.NewSet(schema.HashString, vpcSecurityGroupMemberships),
+		}
+
+		result = append(result, r)
 	}
+
 	return result
 }
 
