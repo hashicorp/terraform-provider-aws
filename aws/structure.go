@@ -1487,6 +1487,14 @@ func flattenLambdaEnvironment(lambdaEnv *lambda.EnvironmentResponse) []interface
 	return []interface{}{envs}
 }
 
+func flattenLambdaLayers(layers []*lambda.Layer) []interface{} {
+	arns := make([]*string, len(layers))
+	for i, layer := range layers {
+		arns[i] = layer.Arn
+	}
+	return flattenStringList(arns)
+}
+
 func flattenLambdaVpcConfigResponse(s *lambda.VpcConfigResponse) []map[string]interface{} {
 	settings := make(map[string]interface{})
 

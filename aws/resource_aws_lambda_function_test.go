@@ -642,6 +642,75 @@ func TestAccAWSLambdaFunction_tracingConfig(t *testing.T) {
 	})
 }
 
+func TestAccAWSLambdaFunction_Layers(t *testing.T) {
+	var conf lambda.GetFunctionOutput
+
+	rString := acctest.RandString(8)
+	funcName := fmt.Sprintf("tf_acc_lambda_func_layer_%s", rString)
+	layerName := fmt.Sprintf("tf_acc_layer_lambda_func_layer_%s", rString)
+	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_layer_%s", rString)
+	roleName := fmt.Sprintf("tf_acc_role_lambda_func_layer_%s", rString)
+	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_layer_%s", rString)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLambdaConfigWithLayers(funcName, layerName, policyName, roleName, sgName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaFunctionExists("aws_lambda_function.lambda_function_test", funcName, &conf),
+					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckAwsLambdaFunctionArnHasSuffix(&conf, ":"+funcName),
+					testAccCheckAWSLambdaFunctionVersion(&conf, "$LATEST"),
+					resource.TestCheckResourceAttr("aws_lambda_function.lambda_function_test", "layers.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLambdaFunction_LayersUpdate(t *testing.T) {
+	var conf lambda.GetFunctionOutput
+
+	rString := acctest.RandString(8)
+	funcName := fmt.Sprintf("tf_acc_lambda_func_layer_%s", rString)
+	layerName := fmt.Sprintf("tf_acc_lambda_layer_%s", rString)
+	layer2Name := fmt.Sprintf("tf_acc_lambda_layer2_%s", rString)
+	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_vpc_%s", rString)
+	roleName := fmt.Sprintf("tf_acc_role_lambda_func_vpc_%s", rString)
+	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_vpc_%s", rString)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLambdaConfigWithLayers(funcName, layerName, policyName, roleName, sgName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaFunctionExists("aws_lambda_function.lambda_function_test", funcName, &conf),
+					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckAwsLambdaFunctionArnHasSuffix(&conf, ":"+funcName),
+					testAccCheckAWSLambdaFunctionVersion(&conf, "$LATEST"),
+					resource.TestCheckResourceAttr("aws_lambda_function.lambda_function_test", "layers.#", "1"),
+				),
+			},
+			{
+				Config: testAccAWSLambdaConfigWithLayersUpdated(funcName, layerName, layer2Name, policyName, roleName, sgName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaFunctionExists("aws_lambda_function.lambda_function_test", funcName, &conf),
+					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckAwsLambdaFunctionArnHasSuffix(&conf, ":"+funcName),
+					testAccCheckAWSLambdaFunctionVersion(&conf, "$LATEST"),
+					resource.TestCheckResourceAttr("aws_lambda_function.lambda_function_test", "layers.#", "2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSLambdaFunction_VPC(t *testing.T) {
 	var conf lambda.GetFunctionOutput
 
@@ -1886,6 +1955,53 @@ resource "aws_lambda_function" "lambda_function_test" {
     }
 }
 `, funcName)
+}
+
+func testAccAWSLambdaConfigWithLayers(funcName, layerName, policyName, roleName, sgName string) string {
+	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
+resource "aws_lambda_layer_version" "lambda_function_test" {
+    filename = "test-fixtures/lambdatest.zip"
+    layer_name = "%s"
+    compatible_runtimes = ["nodejs8.10"]
+}
+
+resource "aws_lambda_function" "lambda_function_test" {
+    filename = "test-fixtures/lambdatest.zip"
+    function_name = "%s"
+    role = "${aws_iam_role.iam_for_lambda.arn}"
+    handler = "exports.example"
+    runtime = "nodejs8.10"
+    layers = ["${aws_lambda_layer_version.lambda_function_test.layer_arn}"]
+}
+`, layerName, funcName)
+}
+
+func testAccAWSLambdaConfigWithLayersUpdated(funcName, layerName, layer2Name, policyName, roleName, sgName string) string {
+	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
+resource "aws_lambda_layer_version" "lambda_function_test" {
+    filename = "test-fixtures/lambdatest.zip"
+    layer_name = "%s"
+    compatible_runtimes = ["nodejs8.10"]
+}
+
+resource "aws_lambda_layer_version" "lambda_function_test_2" {
+    filename = "test-fixtures/lambdatest_modified.zip"
+    layer_name = "%s"
+    compatible_runtimes = ["nodejs8.10"]
+}
+
+resource "aws_lambda_function" "lambda_function_test" {
+    filename = "test-fixtures/lambdatest.zip"
+    function_name = "%s"
+    role = "${aws_iam_role.iam_for_lambda.arn}"
+    handler = "exports.example"
+    runtime = "nodejs8.10"
+    layers = [
+        "${aws_lambda_layer_version.lambda_function_test.layer_arn}",
+        "${aws_lambda_layer_version.lambda_function_test_2.layer_arn}",
+    ]
+}
+`, layerName, layer2Name, funcName)
 }
 
 func testAccAWSLambdaConfigWithVPC(funcName, policyName, roleName, sgName string) string {
