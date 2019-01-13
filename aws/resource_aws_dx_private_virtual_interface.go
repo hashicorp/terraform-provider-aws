@@ -189,6 +189,7 @@ func resourceAwsDxPrivateVirtualInterfaceRead(d *schema.ResourceData, meta inter
 	d.Set("dx_gateway_id", vif.DirectConnectGatewayId)
 	d.Set("mtu", vif.Mtu)
 	d.Set("jumbo_frame_capable", vif.JumboFrameCapable)
+	d.Set("aws_device", vif.AwsDeviceV2)
 	err1 := getTagsDX(conn, d, d.Get("arn").(string))
 	return err1
 }
