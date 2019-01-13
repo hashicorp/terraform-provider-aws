@@ -1,26 +1,25 @@
 package aws
 
 import (
-	"errors"
-	"log"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appsync"
 	"github.com/hashicorp/terraform/helper/schema"
-	"time"
+	"github.com/hashicorp/terraform/helper/resource"
+	"fmt"
 )
 
 func resourceAwsAppsyncSchema() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsAppsyncSchemaPut,
-		Read:   resourceAwsAppsyncSchemaNil,
+		Read:   schema.Noop,
 		Update: resourceAwsAppsyncSchemaPut,
-		Delete: resourceAwsAppsyncSchemaNil,
+		Delete: schema.Noop,
 
 		Schema: map[string]*schema.Schema{
 			"api_id": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			"definition": &schema.Schema{
 				Type:     schema.TypeString,
@@ -45,42 +44,26 @@ func resourceAwsAppsyncSchemaPut(d *schema.ResourceData, meta interface{}) error
 			return err
 		}
 
-		if err := waitForSchemaToBeActive(apiId, meta); err != nil {
-			log.Printf("[DEBUG] Error waiting for schema to be active: %s", err)
-			return err
-		}
-	}
+		activeSchemaConfig := &resource.StateChangeConf{
+			Pending: []string{ "PROCESSING" },
+			Target: []string{ "ACTIVE" },
+			Refresh: func() (interface{}, string, error) {
+				conn := meta.(*AWSClient).appsyncconn
+				input := &appsync.GetSchemaCreationStatusInput{
+					ApiId: aws.String(apiId),
+				}
+				result, err := conn.GetSchemaCreationStatus(input)
 
-	return nil
-}
-
-func resourceAwsAppsyncSchemaNil(d *schema.ResourceData, meta interface{}) error {
-	return nil
-}
-
-func waitForSchemaToBeActive(apiId string, meta interface{}) error {
-	conn := meta.(*AWSClient).appsyncconn
-
-	input := &appsync.GetSchemaCreationStatusInput{
-		ApiId: aws.String(apiId),
-	}
-
-	iterations := 0
-	for iterations < 24 {
-		result, err := conn.GetSchemaCreationStatus(input)
-
-		if err != nil {
-			return err
-		} else if *result.Status == "SUCCESS" {
-			return nil
-		} else if *result.Status == "FAILED" {
-			return errors.New(*result.Details)
+				if err != nil {
+					return 0, "", err
+				}
+				return result, *result.Status, nil
+			},
 		}
 
-		// Wait for a few seconds
-		log.Printf("[DEBUG] Sleeping for 5 seconds for schema to become active")
-		time.Sleep(5 * time.Second)
-		iterations += 1
+		if _, err := activeSchemaConfig.WaitForState(); err != nil {
+			return fmt.Errorf("Error waiting for schema creation status on AppSync API %s: %s", apiId, err)
+		}
 	}
 
 	return nil
