@@ -30,6 +30,30 @@ func dataSourceAwsIAMGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"members": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"user_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"user_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"path": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -58,6 +82,20 @@ func dataSourceAwsIAMGroupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", group.Arn)
 	d.Set("path", group.Path)
 	d.Set("group_id", group.GroupId)
+	d.Set("members", dataSourceUsersRead(resp.Users))
 
 	return nil
+}
+
+func dataSourceUsersRead(iamUsers []*iam.User) []map[string]interface{} {
+	users := make([]map[string]interface{}, 0, len(iamUsers))
+	for _, i := range iamUsers {
+		u := make(map[string]interface{})
+		u["arn"] = aws.StringValue(i.Arn)
+		u["user_id"] = aws.StringValue(i.UserId)
+		u["user_name"] = aws.StringValue(i.UserName)
+		u["path"] = aws.StringValue(i.Path)
+		users = append(users, u)
+	}
+	return users
 }
