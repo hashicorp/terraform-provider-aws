@@ -17,6 +17,7 @@ ENHANCEMENTS
 
 BUG FIXES
 
+* resource/aws_acm_certificate: Prevent crash with empty `SubjectAlternativeNames` (e.g. `IMPORTED` type certificates with IP address `CommonName`) [GH-7127]
 * resource/aws_db_option_group: Read `option` attribute into Terraform state for drift detection [GH-7125]
 * resource/aws_db_option_group: Skip erroneous `ModifyOptionGroup` error when no option updates are being performed [GH-7125]
 * resource/aws_ec2_transit_gateway_route: Prevent crash with externally removed attachment [GH-7117]
