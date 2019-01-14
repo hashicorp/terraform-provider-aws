@@ -48,6 +48,7 @@ func expandDistributionConfig(d *schema.ResourceData) *cloudfront.DistributionCo
 		IsIPV6Enabled:        aws.Bool(d.Get("is_ipv6_enabled").(bool)),
 		HttpVersion:          aws.String(d.Get("http_version").(string)),
 		Origins:              expandOrigins(d.Get("origin").(*schema.Set)),
+		OriginGroups:         expandOriginGroups(d.Get("origin_group").(*schema.Set)),
 		PriceClass:           aws.String(d.Get("price_class").(string)),
 	}
 	if v, ok := d.GetOk("ordered_cache_behavior"); ok {
@@ -775,6 +776,19 @@ func expandOrigins(s *schema.Set) *cloudfront.Origins {
 	}
 }
 
+func expandOriginGroups(s *schema.Set) *cloudfront.OriginGroups {
+	qty := 0
+	items := []*cloudfront.OriginGroup{}
+	for _, v := range s.List() {
+		items = append(items, expandOriginGroup(v.(map[string]interface{})))
+		qty++
+	}
+	return &cloudfront.OriginGroups{
+		Quantity: aws.Int64(int64(qty)),
+		Items:    items,
+	}
+}
+
 func flattenOrigins(ors *cloudfront.Origins) *schema.Set {
 	s := []interface{}{}
 	for _, v := range ors.Items {
@@ -816,6 +830,71 @@ func expandOrigin(m map[string]interface{}) *cloudfront.Origin {
 	return origin
 }
 
+func expandOriginGroup(m map[string]interface{}) *cloudfront.OriginGroup {
+	originGroup := &cloudfront.OriginGroup{
+		Id: aws.String(m["origin_id"].(string)),
+	}
+	if v, ok := m["failover_criteria"]; ok {
+		originGroup.FailoverCriteria = expandFailoverCriteria(v.(*schema.Set))
+	}
+	if v, ok := m["members"]; ok {
+		originGroup.Members = expandOriginGroupMembers(v.(*schema.Set))
+	}
+
+	return originGroup
+}
+
+func expandFailoverCriteria(as *schema.Set) *cloudfront.OriginGroupFailoverCriteria {
+	s := as.List()
+	return &cloudfront.OriginGroupFailoverCriteria{
+		StatusCodes: expandFailOverStatusCodes(s[0].(map[string]interface{})["status_codes"].([]interface{})),
+	}
+}
+
+func expandFailOverStatusCodes(s []interface{}) *cloudfront.StatusCodes {
+	items := expandStatusCodesList(s)
+	return &cloudfront.StatusCodes{
+		Quantity: aws.Int64(int64(len(items))),
+		Items:    items,
+	}
+}
+
+func expandStatusCodesList(status_codes []interface{}) []*int64 {
+	vs := make([]*int64, 0, len(status_codes))
+	for _, v := range status_codes {
+		val, ok := v.(int)
+		if ok {
+			vs = append(vs, aws.Int64(int64(val)))
+		}
+	}
+	return vs
+}
+
+func expandOriginGroupMembers(s *schema.Set) *cloudfront.OriginGroupMembers {
+	members := s.List()[0].(map[string]interface{})["ordered_origin_group_member"]
+	qty := 0
+	items := []*cloudfront.OriginGroupMember{}
+	for _, v := range members.([]interface{}) {
+		items = append(items, expandOriginGroupMember(v.(map[string]interface{})))
+		qty++
+	}
+	return &cloudfront.OriginGroupMembers{
+		Quantity: aws.Int64(int64(qty)),
+		Items:    items,
+	}
+}
+
+func expandOriginGroupMember(m map[string]interface{}) *cloudfront.OriginGroupMember {
+	return &cloudfront.OriginGroupMember{
+		OriginId: aws.String(m["origin_id"].(string)),
+	}
+}
+
+func expandOrderedGroupMember(as *schema.Set) *string {
+	s := as.List()
+	return aws.String(s[0].(map[string]interface{})["origin_id"].(string))
+}
+
 func flattenOrigin(or *cloudfront.Origin) map[string]interface{} {
 	m := make(map[string]interface{})
 	m["origin_id"] = *or.Id
@@ -845,6 +924,30 @@ func originHash(v interface{}) int {
 	buf.WriteString(fmt.Sprintf("%s-", m["origin_id"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["domain_name"].(string)))
 	if v, ok := m["custom_header"]; ok {
+		buf.WriteString(fmt.Sprintf("%d-", customHeadersHash(v.(*schema.Set))))
+	}
+	if v, ok := m["custom_origin_config"]; ok {
+		if s := v.(*schema.Set).List(); len(s) > 0 {
+			buf.WriteString(fmt.Sprintf("%d-", customOriginConfigHash((s[0].(map[string]interface{})))))
+		}
+	}
+	if v, ok := m["origin_path"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+	if v, ok := m["s3_origin_config"]; ok {
+		if s := v.(*schema.Set).List(); len(s) > 0 {
+			buf.WriteString(fmt.Sprintf("%d-", s3OriginConfigHash((s[0].(map[string]interface{})))))
+		}
+	}
+	return hashcode.String(buf.String())
+}
+
+func originGroupHash(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.(map[string]interface{})
+	buf.WriteString(fmt.Sprintf("%s-", m["origin_id"].(string)))
+
+	if v, ok := m["failover_criteria"]; ok {
 		buf.WriteString(fmt.Sprintf("%d-", customHeadersHash(v.(*schema.Set))))
 	}
 	if v, ok := m["custom_origin_config"]; ok {

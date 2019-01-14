@@ -583,6 +583,58 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 					},
 				},
 			},
+			"origin_group": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"origin_id": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.NoZeroValues,
+						},
+						"failover_criteria": {
+							Type:     schema.TypeSet,
+							Required: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"status_codes": {
+										Type:     schema.TypeList,
+										Required: true,
+										Elem: &schema.Schema{
+											Type:     schema.TypeInt,
+											MinItems: 1,
+										},
+									},
+								},
+							},
+						},
+						"members": {
+							Type:     schema.TypeSet,
+							Required: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"ordered_origin_group_member": {
+										Type:     schema.TypeList,
+										Required: true,
+										MinItems: 2,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"origin_id": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.NoZeroValues,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"price_class": {
 				Type:     schema.TypeString,
 				Optional: true,
