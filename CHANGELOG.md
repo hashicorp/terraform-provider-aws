@@ -1,5 +1,9 @@
 ## 1.56.0 (Unreleased)
 
+NOTES
+
+* resource/aws_db_option_group: The Terraform resource is now able to perform drift detection on and import the state of the `option` attribute. The caveat is that while RDS returns only modified options, it will return all option settings whether modified or not from their default values. To workaround this option settings issue, we pass in the options from the Terraform configuration and ignore default values that are not present in the configuration. Some Terraform configurations may require minor updates to match the expected values.
+
 FEATURES
 
 * **New Resource:** `aws_docdb_subnet_group` [GH-7106]
