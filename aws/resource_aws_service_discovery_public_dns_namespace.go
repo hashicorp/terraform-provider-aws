@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -138,9 +139,20 @@ func servicediscoveryOperationRefreshStatusFunc(conn *servicediscovery.ServiceDi
 			OperationId: aws.String(oid),
 		}
 		resp, err := conn.GetOperation(input)
+
 		if err != nil {
-			return nil, "failed", err
+			return nil, servicediscovery.OperationStatusFail, err
 		}
-		return resp, *resp.Operation.Status, nil
+
+		// Error messages can also be contained in the response with FAIL status
+		//   "ErrorCode":"CANNOT_CREATE_HOSTED_ZONE",
+		//   "ErrorMessage":"The VPC that you chose, vpc-xxx in region xxx, is already associated with another private hosted zone that has an overlapping name space, xxx.. (Service: AmazonRoute53; Status Code: 400; Error Code: ConflictingDomainExists; Request ID: xxx)"
+		//   "Status":"FAIL",
+
+		if aws.StringValue(resp.Operation.Status) == servicediscovery.OperationStatusFail {
+			return resp, servicediscovery.OperationStatusFail, fmt.Errorf("%s: %s", aws.StringValue(resp.Operation.ErrorCode), aws.StringValue(resp.Operation.ErrorMessage))
+		}
+
+		return resp, aws.StringValue(resp.Operation.Status), nil
 	}
 }
