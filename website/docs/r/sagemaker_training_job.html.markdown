@@ -6,11 +6,11 @@ description: |-
   Provides a Sagemaker Training Job resource.
 ---
 
-# aws\_sagemaker\_training\_job
+# aws_sagemaker_training_job
 
 Provides a Sagemaker Training Job resource.
 
-Training Job cannot be deleted once they are create. Check the [AWS SageMaker docs](https://docs.aws.amazon.com/sagemaker/latest/dg/whatis.html) for more details.
+~> **NOTE:** Training Jobs cannot be deleted once they are created. Check the [AWS SageMaker docs](https://docs.aws.amazon.com/sagemaker/latest/dg/whatis.html) for more details.
 
 ## Example Usage
 
