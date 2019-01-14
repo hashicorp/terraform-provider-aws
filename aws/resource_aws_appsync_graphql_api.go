@@ -8,8 +8,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appsync"
-	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 )
 
@@ -35,7 +35,7 @@ func resourceAwsAppsyncGraphqlApi() *schema.Resource {
 					appsync.AuthenticationTypeOpenidConnect,
 				}, false),
 			},
-			"schema": &schema.Schema{
+			"schema": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -390,8 +390,8 @@ func resourceAwsAppsyncSchemaPut(apiId string, d *schema.ResourceData, meta inte
 		}
 
 		activeSchemaConfig := &resource.StateChangeConf{
-			Pending: []string{ "PROCESSING" },
-			Target: []string{ "ACTIVE", "SUCCESS" },
+			Pending: []string{"PROCESSING"},
+			Target:  []string{"ACTIVE", "SUCCESS"},
 			Refresh: func() (interface{}, string, error) {
 				conn := meta.(*AWSClient).appsyncconn
 				input := &appsync.GetSchemaCreationStatusInput{
@@ -406,7 +406,7 @@ func resourceAwsAppsyncSchemaPut(apiId string, d *schema.ResourceData, meta inte
 			},
 			Timeout:    d.Timeout(schema.TimeoutCreate),
 			Delay:      10 * time.Second,
-            MinTimeout: 5 * time.Second,
+			MinTimeout: 5 * time.Second,
 		}
 
 		if _, err := activeSchemaConfig.WaitForState(); err != nil {

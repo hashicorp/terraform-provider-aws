@@ -69,9 +69,9 @@ func TestAccAWSAppsyncGraphqlApi_schema(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"schema"},
 			},
 		},
