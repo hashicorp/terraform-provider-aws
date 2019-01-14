@@ -1976,6 +1976,21 @@ func sortInterfaceSlice(in []interface{}) []interface{} {
 	return b
 }
 
+func sortIntInterfaceSlice(in []interface{}) []int {
+	a := []int{}
+	for _, v := range in {
+		val, ok := v.(int)
+		if !ok {
+			val = int(v.(int64))
+		}
+		a = append(a, val)
+	}
+
+	sort.Ints(a)
+
+	return a
+}
+
 // This function sorts List A to look like a list found in the tf file.
 func sortListBasedonTFFile(in []string, d *schema.ResourceData) ([]string, error) {
 	listName := "layer_ids"

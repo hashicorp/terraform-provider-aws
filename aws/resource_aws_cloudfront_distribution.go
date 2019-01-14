@@ -490,6 +490,56 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 					},
 				},
 			},
+			"origin_group": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Set:      originGroupHash,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"origin_id": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.NoZeroValues,
+						},
+						"failover_criteria": {
+							Type:     schema.TypeSet,
+							Required: true,
+							Set:      failoverCriteriaHash,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"status_codes": {
+										Type:     schema.TypeList,
+										Required: true,
+										Elem:     &schema.Schema{Type: schema.TypeInt},
+									},
+								},
+							},
+						},
+						"members": {
+							Type:     schema.TypeSet,
+							Required: true,
+							Set:      membersHash,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"ordered_origin_group_member": {
+										Type:     schema.TypeList,
+										Required: true,
+										MinItems: 2,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"origin_id": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"origin": {
 				Type:     schema.TypeSet,
 				Required: true,
@@ -721,6 +771,7 @@ func resourceAwsCloudFrontDistributionCreate(d *schema.ResourceData, meta interf
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		var err error
 		resp, err = conn.CreateDistributionWithTags(params)
+
 		if err != nil {
 			// ACM and IAM certificate eventual consistency
 			// InvalidViewerCertificate: The specified SSL certificate doesn't exist, isn't in us-east-1 region, isn't valid, or doesn't include a valid certificate chain.
