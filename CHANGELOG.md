@@ -13,6 +13,8 @@ ENHANCEMENTS
 
 BUG FIXES
 
+* resource/aws_db_option_group: Read `option` attribute into Terraform state for drift detection [GH-7125]
+* resource/aws_db_option_group: Skip erroneous `ModifyOptionGroup` error when no option updates are being performed [GH-7125]
 * resource/aws_ec2_transit_gateway_route: Prevent crash with externally removed attachment [GH-7117]
 * resource/aws_emr_cluster: Properly read `core_instance_count`, `master_instance_type`, and `termination_policies` into Terraform state [GH-4488] / [GH-6498]
 * resource/aws_inspector_assessment_target: Properly read resource_group_arn attribute into Terraform state [GH-7112]
