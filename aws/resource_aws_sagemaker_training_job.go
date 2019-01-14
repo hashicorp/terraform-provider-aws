@@ -297,7 +297,7 @@ func resourceAwsSagemakerTrainingJobCreate(d *schema.ResourceData, meta interfac
 func resourceAwsSagemakerTrainingJobRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).sagemakerconn
 
-	trainingJobRaw, _, err := SagemakerTrainingJobStateRefreshFunc(conn, d.Id())()
+	trainingJobRaw, _, err := sagemakerTrainingJobStateRefreshFunc(conn, d.Id())()
 	if err != nil {
 		return err
 	}
@@ -384,7 +384,7 @@ func resourceAwsSagemakerTrainingJobDelete(d *schema.ResourceData, meta interfac
 	// Deleting a training job actually means stopping the job since training jobs cannot be deleted
 	conn := meta.(*AWSClient).sagemakerconn
 
-	_, jobStatus, err := SagemakerTrainingJobStateRefreshFunc(conn, d.Id())()
+	_, jobStatus, err := sagemakerTrainingJobStateRefreshFunc(conn, d.Id())()
 	if err != nil {
 		return err
 	}
@@ -418,7 +418,7 @@ func resourceAwsSagemakerTrainingJobDelete(d *schema.ResourceData, meta interfac
 	})
 }
 
-func SagemakerTrainingJobStateRefreshFunc(conn *sagemaker.SageMaker, name string) resource.StateRefreshFunc {
+func sagemakerTrainingJobStateRefreshFunc(conn *sagemaker.SageMaker, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		describeTrainingInput := &sagemaker.DescribeTrainingJobInput{
 			TrainingJobName: aws.String(name),
@@ -428,7 +428,7 @@ func SagemakerTrainingJobStateRefreshFunc(conn *sagemaker.SageMaker, name string
 			if sagemakerErr, ok := err.(awserr.Error); ok && sagemakerErr.Code() == "ResourceNotFound" {
 				trainingJob = nil
 			} else {
-				log.Printf("Error on SagemakerTrainingJobStateRefreshFunc: %s", err)
+				log.Printf("Error on sagemakerTrainingJobStateRefreshFunc: %s", err)
 				return nil, "", err
 			}
 		}

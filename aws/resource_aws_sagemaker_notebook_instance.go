@@ -182,9 +182,8 @@ func resourceAwsSagemakerNotebookInstanceUpdate(d *schema.ResourceData, meta int
 
 	if err := setSagemakerTags(conn, d); err != nil {
 		return err
-	} else {
-		d.SetPartial("tags")
 	}
+	d.SetPartial("tags")
 
 	hasChanged := false
 	// Update
@@ -213,7 +212,17 @@ func resourceAwsSagemakerNotebookInstanceUpdate(d *schema.ResourceData, meta int
 		if _, err := conn.UpdateNotebookInstance(updateOpts); err != nil {
 			return fmt.Errorf("error updating Sagemaker Notebook Instance: %s", err)
 		}
-		if err := waitForSagemakerNotebookInstanceStatusInService(conn, d.Id()); err != nil {
+
+		stateConf := &resource.StateChangeConf{
+			Pending: []string{
+				sagemaker.NotebookInstanceStatusUpdating,
+			},
+			Target:  []string{sagemaker.NotebookInstanceStatusStopped},
+			Refresh: sagemakerNotebookInstanceStateRefreshFunc(conn, d.Id()),
+			Timeout: 10 * time.Minute,
+		}
+		_, err := stateConf.WaitForState()
+		if err != nil {
 			return fmt.Errorf("error waiting for Sagemaker Notebook Instance %q to update: %s", d.Id(), err)
 		}
 
@@ -223,15 +232,32 @@ func resourceAwsSagemakerNotebookInstanceUpdate(d *schema.ResourceData, meta int
 				NotebookInstanceName: aws.String(d.Id()),
 			}
 
-			// TODO Check for a status change every 30 seconds to make sure the resource starts
+			// StartNotebookInstance sometimes doesn't take so we'll check for a state change and if
+			// it doesn't change we'll send another request
 			err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 				if _, err := conn.StartNotebookInstance(startOpts); err != nil {
 					return resource.NonRetryableError(fmt.Errorf("error starting Sagemaker Notebook Instance %q: %s", d.Id(), err))
-				} else if err := waitForSagemakerNotebookInstanceStatusInService(conn, d.Id()); err != nil {
+				}
+				stateConf := &resource.StateChangeConf{
+					Pending: []string{
+						sagemaker.NotebookInstanceStatusStopped,
+					},
+					Target:  []string{sagemaker.NotebookInstanceStatusInService, sagemaker.NotebookInstanceStatusPending},
+					Refresh: sagemakerNotebookInstanceStateRefreshFunc(conn, d.Id()),
+					Timeout: 30 * time.Second,
+				}
+				_, err := stateConf.WaitForState()
+				if err != nil {
 					return resource.RetryableError(fmt.Errorf("error waiting for Sagemaker Notebook Instance %q to start: %s", d.Id(), err))
 				}
+
 				return nil
 			})
+
+			if err := waitForSagemakerNotebookInstanceStatusInService(conn, d.Id()); err != nil {
+				return fmt.Errorf("error waiting for Sagemaker Notebook Instance %q to start after update: %s", d.Id(), err)
+			}
+
 			if err != nil {
 				return err
 			}
