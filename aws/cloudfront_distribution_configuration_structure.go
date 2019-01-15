@@ -948,21 +948,41 @@ func originGroupHash(v interface{}) int {
 	buf.WriteString(fmt.Sprintf("%s-", m["origin_id"].(string)))
 
 	if v, ok := m["failover_criteria"]; ok {
-		buf.WriteString(fmt.Sprintf("%d-", customHeadersHash(v.(*schema.Set))))
-	}
-	if v, ok := m["custom_origin_config"]; ok {
 		if s := v.(*schema.Set).List(); len(s) > 0 {
-			buf.WriteString(fmt.Sprintf("%d-", customOriginConfigHash((s[0].(map[string]interface{})))))
+			buf.WriteString(fmt.Sprintf("%d-", failoverCriteriaHash((s[0].(map[string]interface{})))))
 		}
 	}
-	if v, ok := m["origin_path"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	}
-	if v, ok := m["s3_origin_config"]; ok {
+	if v, ok := m["members"]; ok {
 		if s := v.(*schema.Set).List(); len(s) > 0 {
-			buf.WriteString(fmt.Sprintf("%d-", s3OriginConfigHash((s[0].(map[string]interface{})))))
+			buf.WriteString(fmt.Sprintf("%d-", membersHash((s[0].(map[string]interface{})))))
 		}
 	}
+
+	return hashcode.String(buf.String())
+}
+
+func failoverCriteriaHash(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.(map[string]interface{})
+	for _, v := range m["status_codes"].([]interface{}) {
+		buf.WriteString(fmt.Sprintf("%d-", v.(int)))
+	}
+	return hashcode.String(buf.String())
+}
+
+func membersHash(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.(map[string]interface{})
+	for _, v := range s.List() {
+		buf.WriteString(fmt.Sprintf("%d-", originGroupMembersHash(v)))
+	}
+	return hashcode.String(buf.String())
+}
+
+func originGroupMembersHash(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.(map[string]interface{})
+	buf.WriteString(fmt.Sprintf("%s-", m["origin_id"]))
 	return hashcode.String(buf.String())
 }
 

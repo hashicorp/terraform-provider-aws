@@ -586,6 +586,7 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 			"origin_group": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Set: originGroupHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"origin_id": {
@@ -597,6 +598,7 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 							Type:     schema.TypeSet,
 							Required: true,
 							MaxItems: 1,
+							Set: failoverCriteriaHash,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"status_codes": {
@@ -613,11 +615,13 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 						"members": {
 							Type:     schema.TypeSet,
 							Required: true,
+							Set: membersHash,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"ordered_origin_group_member": {
 										Type:     schema.TypeList,
 										Required: true,
+										Set: originGroupHash,
 										MinItems: 2,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
