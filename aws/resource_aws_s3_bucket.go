@@ -533,7 +533,6 @@ func resourceAwsS3Bucket() *schema.Resource {
 			"object_lock_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
-				MinItems: 0,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -547,9 +546,8 @@ func resourceAwsS3Bucket() *schema.Resource {
 						},
 
 						"rule": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Optional: true,
-							MinItems: 0,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -585,7 +583,6 @@ func resourceAwsS3Bucket() *schema.Resource {
 									},
 								},
 							},
-							Set: s3ObjectLockConfigurationRuleHash,
 						},
 					},
 				},
@@ -2503,8 +2500,8 @@ func expandS3ObjectLockConfiguration(vConf []interface{}) *s3.ObjectLockConfigur
 		conf.ObjectLockEnabled = aws.String(vObjectLockEnabled)
 	}
 
-	if vRule, ok := mConf["rule"].(*schema.Set); ok && vRule.Len() > 0 {
-		mRule := vRule.List()[0].(map[string]interface{})
+	if vRule, ok := mConf["rule"].([]interface{}); ok && len(vRule) > 0 {
+		mRule := vRule[0].(map[string]interface{})
 
 		if vDefaultRetention, ok := mRule["default_retention"].([]interface{}); ok && len(vDefaultRetention) > 0 && vDefaultRetention[0] != nil {
 			mDefaultRetention := vDefaultRetention[0].(map[string]interface{})
@@ -2548,26 +2545,8 @@ func flattenS3ObjectLockConfiguration(conf *s3.ObjectLockConfiguration) []interf
 			},
 		}
 
-		mConf["rule"] = schema.NewSet(s3ObjectLockConfigurationRuleHash, []interface{}{mRule})
+		mConf["rule"] = []interface{}{mRule}
 	}
 
 	return []interface{}{mConf}
-}
-
-func s3ObjectLockConfigurationRuleHash(vRule interface{}) int {
-	var buf bytes.Buffer
-	mRule := vRule.(map[string]interface{})
-	if vDefaultRetention, ok := mRule["default_retention"].([]interface{}); ok && len(vDefaultRetention) > 0 && vDefaultRetention[0] != nil {
-		mDefaultRetention := vDefaultRetention[0].(map[string]interface{})
-		if v, ok := mDefaultRetention["mode"].(string); ok {
-			buf.WriteString(fmt.Sprintf("%s-", v))
-		}
-		if v, ok := mDefaultRetention["days"].(int); ok {
-			buf.WriteString(fmt.Sprintf("%d-", v))
-		}
-		if v, ok := mDefaultRetention["years"].(int); ok {
-			buf.WriteString(fmt.Sprintf("%d-", v))
-		}
-	}
-	return hashcode.String(buf.String())
 }

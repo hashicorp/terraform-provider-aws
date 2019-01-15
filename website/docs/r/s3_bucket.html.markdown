@@ -479,6 +479,10 @@ The `default_retention` object supports the following:
 
 Either `days` or `years` must be specified, but not both.
 
+~> **NOTE on `object_lock_configuration`:** You can only enable S3 Object Lock for new buckets. If you need to turn on S3 Object Lock for an existing bucket, please contact AWS Support.
+When you create a bucket with S3 Object Lock enabled, Amazon S3 automatically enables versioning for the bucket.
+Once you create a bucket with S3 Object Lock enabled, you can't disable Object Lock or suspend versioning for the bucket.
+
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
