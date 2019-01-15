@@ -105,6 +105,15 @@ func resourceAwsLambdaFunction() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"layers": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 5,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validateArn,
+				},
+			},
 			"memory_size": {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -317,6 +326,10 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 		Publish:      aws.Bool(d.Get("publish").(bool)),
 	}
 
+	if v, ok := d.GetOk("layers"); ok && len(v.([]interface{})) > 0 {
+		params.Layers = expandStringList(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("dead_letter_config"); ok {
 		dlcMaps := v.([]interface{})
 		if len(dlcMaps) == 1 { // Schema guarantees either 0 or 1
@@ -510,6 +523,12 @@ func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("source_code_hash", function.CodeSha256)
 	d.Set("source_code_size", function.CodeSize)
 
+	layers := flattenLambdaLayers(function.Layers)
+	log.Printf("[INFO] Setting Lambda %s Layers %#v from API", d.Id(), layers)
+	if err := d.Set("layers", layers); err != nil {
+		return fmt.Errorf("Error setting layers for Lambda Function (%s): %s", d.Id(), err)
+	}
+
 	config := flattenLambdaVpcConfigResponse(function.VpcConfig)
 	log.Printf("[INFO] Setting Lambda %s VPC config %#v from API", d.Id(), config)
 	if err := d.Set("vpc_config", config); err != nil {
@@ -662,6 +681,11 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 	}
 	if d.HasChange("kms_key_arn") {
 		configReq.KMSKeyArn = aws.String(d.Get("kms_key_arn").(string))
+		configUpdate = true
+	}
+	if d.HasChange("layers") {
+		layers := d.Get("layers").([]interface{})
+		configReq.Layers = expandStringList(layers)
 		configUpdate = true
 	}
 	if d.HasChange("dead_letter_config") {
