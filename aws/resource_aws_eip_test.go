@@ -336,7 +336,7 @@ func TestAccAWSEIP_PublicIpv4Pool_custom(t *testing.T) {
 	var conf ec2.Address
 	resourceName := "aws_eip.bar"
 
-	poolName := fmt.Sprintf("%s", os.Getenv("AWS_EC2_EIP_PUBLIC_IPV4_POOL"))
+	poolName := os.Getenv("AWS_EC2_EIP_PUBLIC_IPV4_POOL")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },

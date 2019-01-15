@@ -1214,11 +1214,8 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	if err := awsTerminateInstance(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return err
-	}
-
-	return nil
+	err := awsTerminateInstance(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
+	return err
 }
 
 // InstanceStateRefreshFunc returns a resource.StateRefreshFunc that is used to watch
