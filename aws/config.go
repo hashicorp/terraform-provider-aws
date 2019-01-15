@@ -153,7 +153,6 @@ type Config struct {
 	KinesisAnalyticsEndpoint string
 	KmsEndpoint              string
 	LambdaEndpoint           string
-	RamEndpoint              string
 	RdsEndpoint              string
 	R53Endpoint              string
 	S3Endpoint               string
@@ -445,7 +444,6 @@ func (c *Config) Client() (interface{}, error) {
 	awsKinesisSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.KinesisEndpoint)})
 	awsKinesisAnalyticsSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.KinesisAnalyticsEndpoint)})
 	awsKmsSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.KmsEndpoint)})
-	awsRamSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.RamEndpoint)})
 	awsRdsSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.RdsEndpoint)})
 	awsS3Sess := sess.Copy(&aws.Config{Endpoint: aws.String(c.S3Endpoint)})
 	awsS3ControlSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.S3ControlEndpoint)})
@@ -580,7 +578,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.opsworksconn = opsworks.New(sess)
 	client.organizationsconn = organizations.New(sess)
 	client.r53conn = route53.New(r53Sess)
-	client.ramconn = ram.New(awsRamSess)
+	client.ramconn = ram.New(sess)
 	client.rdsconn = rds.New(awsRdsSess)
 	client.redshiftconn = redshift.New(sess)
 	client.resourcegroupsconn = resourcegroups.New(sess)

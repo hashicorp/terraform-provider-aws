@@ -23,19 +23,129 @@ func TestAccAwsRamResourceShare_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAwsRamResourceShareDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsRamResourceShareConfig_basic(shareName),
+				Config: testAccAwsRamResourceShareConfigName(shareName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsRamResourceShareExists(resourceName, &resourceShare),
+					resource.TestCheckResourceAttr(resourceName, "allow_external_principals", "false"),
 					resource.TestCheckResourceAttr(resourceName, "name", shareName),
-					resource.TestCheckResourceAttr(resourceName, "allow_external_principals", "true"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "Production"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAwsRamResourceShare_AllowExternalPrincipals(t *testing.T) {
+	var resourceShare1, resourceShare2 ram.ResourceShare
+	resourceName := "aws_ram_resource_share.example"
+	shareName := fmt.Sprintf("tf-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsRamResourceShareDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsRamResourceShareConfigAllowExternalPrincipals(shareName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsRamResourceShareExists(resourceName, &resourceShare1),
+					resource.TestCheckResourceAttr(resourceName, "allow_external_principals", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAwsRamResourceShareConfigAllowExternalPrincipals(shareName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsRamResourceShareExists(resourceName, &resourceShare2),
+					resource.TestCheckResourceAttr(resourceName, "allow_external_principals", "true"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAwsRamResourceShare_Name(t *testing.T) {
+	var resourceShare1, resourceShare2 ram.ResourceShare
+	resourceName := "aws_ram_resource_share.example"
+	shareName1 := fmt.Sprintf("tf-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	shareName2 := fmt.Sprintf("tf-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsRamResourceShareDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsRamResourceShareConfigName(shareName1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsRamResourceShareExists(resourceName, &resourceShare1),
+					resource.TestCheckResourceAttr(resourceName, "name", shareName1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAwsRamResourceShareConfigName(shareName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsRamResourceShareExists(resourceName, &resourceShare2),
+					resource.TestCheckResourceAttr(resourceName, "name", shareName2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAwsRamResourceShare_Tags(t *testing.T) {
+	var resourceShare1, resourceShare2, resourceShare3 ram.ResourceShare
+	resourceName := "aws_ram_resource_share.example"
+	shareName := fmt.Sprintf("tf-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsRamResourceShareDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsRamResourceShareConfigTags1(shareName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsRamResourceShareExists(resourceName, &resourceShare1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAwsRamResourceShareConfigTags2(shareName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsRamResourceShareExists(resourceName, &resourceShare2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAwsRamResourceShareConfigTags1(shareName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsRamResourceShareExists(resourceName, &resourceShare3),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
 			},
 		},
 	})
@@ -107,15 +217,44 @@ func testAccCheckAwsRamResourceShareDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAwsRamResourceShareConfig_basic(shareName string) string {
+func testAccAwsRamResourceShareConfigAllowExternalPrincipals(shareName string, allowExternalPrincipals bool) string {
 	return fmt.Sprintf(`
 resource "aws_ram_resource_share" "example" {
-  name                      = "%s"
-  allow_external_principals = true
+  allow_external_principals = %t
+  name                      = %q
+}
+`, allowExternalPrincipals, shareName)
+}
 
-  tags {
-    Environment = "Production"
-  }
+func testAccAwsRamResourceShareConfigName(shareName string) string {
+	return fmt.Sprintf(`
+resource "aws_ram_resource_share" "example" {
+  name = %q
 }
 `, shareName)
+}
+
+func testAccAwsRamResourceShareConfigTags1(shareName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_ram_resource_share" "example" {
+  name = %q
+
+  tags = {
+    %q = %q
+  }
+}
+`, shareName, tagKey1, tagValue1)
+}
+
+func testAccAwsRamResourceShareConfigTags2(shareName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_ram_resource_share" "example" {
+  name = %q
+
+  tags = {
+    %q = %q
+    %q = %q
+  }
+}
+`, shareName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
