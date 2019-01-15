@@ -38,6 +38,11 @@ func resourceAwsMskCluster() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				ForceNew: true,
 			},
+			"broker_count": {
+				Type:     schema.TypeInt,
+				Required: true,
+				ForceNew: true,
+			},
 			"broker_instance_type": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -62,8 +67,7 @@ func resourceAwsMskCluster() *schema.Resource {
 			},
 			"enhanced_monitoring": {
 				Type:     schema.TypeString,
-				Optional: true,
-				Default:  kafka.EnhancedMonitoringDefault,
+				Required: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					kafka.EnhancedMonitoringDefault,
 					kafka.EnhancedMonitoringPerBroker,
@@ -75,11 +79,6 @@ func resourceAwsMskCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "1.1.1",
-				ForceNew: true,
-			},
-			"broker_count": {
-				Type:     schema.TypeInt,
-				Required: true,
 				ForceNew: true,
 			},
 			"arn": {

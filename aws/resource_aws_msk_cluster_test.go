@@ -86,7 +86,7 @@ func TestAccAWSMskCluster_brokerMonitoring(t *testing.T) {
 	})
 }
 
-/*func TestAccAWSMskCluster_topicMonitoring(t *testing.T) {
+func TestAccAWSMskCluster_topicMonitoring(t *testing.T) {
 	var cluster kafka.ClusterInfo
 
 	rInt := acctest.RandInt()
@@ -110,7 +110,7 @@ func TestAccAWSMskCluster_brokerMonitoring(t *testing.T) {
 			},
 		},
 	})
-}*/
+}
 
 func testMskClusterCommonConfig(rInt int) string {
 	return fmt.Sprintf(`
@@ -165,6 +165,7 @@ resource "aws_msk_cluster" "test_cluster" {
 	broker_volume_size = 10
 	broker_security_groups =["${aws_security_group.test_sg_a.id}"]
 	client_subnets = ["${aws_subnet.test_subnet_a.id}", "${aws_subnet.test_subnet_b.id}", "${aws_subnet.test_subnet_c.id}"]
+	enhanced_monitoring = "DEFAULT"
 }`, rInt)
 }
 
@@ -183,6 +184,7 @@ resource "aws_msk_cluster" "test_cluster" {
 	broker_volume_size = 10
 	client_subnets = ["${aws_subnet.test_subnet_a.id}", "${aws_subnet.test_subnet_b.id}", "${aws_subnet.test_subnet_c.id}"]
 	encrypt_rest_arn = "${aws_kms_key.test_key.arn}"
+	enhanced_monitoring = "DEFAULT"
 }`, rInt)
 }
 

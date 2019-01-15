@@ -65,6 +65,7 @@ resource "aws_msk_cluster" "test_cluster" {
 	broker_count = 3
 	broker_instance_type = "kafka.m5.large"
 	broker_volume_size = 10
+	enhanced_monitoring = "DEFAULT"
 	client_subnets = ["${aws_subnet.test_subnet_a.id}", "${aws_subnet.test_subnet_b.id}", "${aws_subnet.test_subnet_c.id}"]
 }
 
