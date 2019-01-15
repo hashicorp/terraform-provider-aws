@@ -471,6 +471,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_gamelift_game_session_queue":                  resourceAwsGameliftGameSessionQueue(),
 			"aws_glacier_vault":                                resourceAwsGlacierVault(),
 			"aws_glacier_vault_lock":                           resourceAwsGlacierVaultLock(),
+			"aws_globalaccelerator_accelerator":                resourceAwsGlobalAcceleratorAccelerator(),
 			"aws_glue_catalog_database":                        resourceAwsGlueCatalogDatabase(),
 			"aws_glue_catalog_table":                           resourceAwsGlueCatalogTable(),
 			"aws_glue_classifier":                              resourceAwsGlueClassifier(),
