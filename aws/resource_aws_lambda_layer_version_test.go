@@ -237,7 +237,7 @@ func testAccCheckLambdaLayerVersionDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).lambdaconn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_lambda_layer" {
+		if rs.Type != "aws_lambda_layer_version" {
 			continue
 		}
 
