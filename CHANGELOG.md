@@ -30,6 +30,8 @@ BUG FIXES
 * resource/aws_emr_cluster: Properly read `core_instance_count`, `master_instance_type`, and `termination_policies` into Terraform state [GH-4488] / [GH-6498]
 * resource/aws_inspector_assessment_target: Properly read resource_group_arn attribute into Terraform state [GH-7112]
 * resource/aws_launch_template: Prevent crashes with empty configuration blocks for top-level attributes [GH-7134]
+* resource/aws_s3_bucket_object: Prevent creating new S3 object version when updating ACL or tags [GH-7138]
+* resource/aws_s3_bucket_object: Prevent `NoSuchKey` errors reading tags on resource creation [GH-7138]
 * service/applicationautoscaling: Use proper endpoint information in AWS GovCloud (US) [GH-7142]
 * service/servicediscovery: Return full error messaging for failed operations [GH-7118]
 
