@@ -65,6 +65,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/fms"
 	"github.com/aws/aws-sdk-go/service/gamelift"
 	"github.com/aws/aws-sdk-go/service/glacier"
+	"github.com/aws/aws-sdk-go/service/globalaccelerator"
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/aws/aws-sdk-go/service/iam"
@@ -270,6 +271,7 @@ type AWSClient struct {
 	workspacesconn        *workspaces.WorkSpaces
 	appmeshconn           *appmesh.AppMesh
 	transferconn          *transfer.Transfer
+	globalacceleratorconn *globalaccelerator.GlobalAccelerator
 	docdbconn             *docdb.DocDB
 }
 
@@ -563,6 +565,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.inspectorconn = inspector.New(sess)
 	client.gameliftconn = gamelift.New(sess)
 	client.glacierconn = glacier.New(sess)
+	client.globalacceleratorconn = globalaccelerator.New(sess)
 	client.guarddutyconn = guardduty.New(sess)
 	client.iotconn = iot.New(sess)
 	client.kinesisconn = kinesis.New(awsKinesisSess)
