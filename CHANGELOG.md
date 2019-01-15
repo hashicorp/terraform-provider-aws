@@ -6,6 +6,7 @@ NOTES
 
 FEATURES
 
+* **New Data Source:** `aws_elastic_beanstalk_application` [GH-7144]
 * **New Resource:** `aws_docdb_subnet_group` [GH-7106]
 * **New Resource:** `aws_globalaccelerator_accelerator` [GH-7002]
 * **New Resource:** `aws_lambda_layer_version` [GH-6782]
