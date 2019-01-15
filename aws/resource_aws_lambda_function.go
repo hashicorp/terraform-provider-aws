@@ -21,6 +21,24 @@ import (
 
 const awsMutexLambdaKey = `aws_lambda_function`
 
+var validLambdaRuntimes = []string{
+	// lambda.RuntimeNodejs has reached end of life since October 2016 so not included here
+	lambda.RuntimeDotnetcore10,
+	lambda.RuntimeDotnetcore20,
+	lambda.RuntimeDotnetcore21,
+	lambda.RuntimeGo1X,
+	lambda.RuntimeJava8,
+	lambda.RuntimeNodejs43,
+	lambda.RuntimeNodejs43Edge,
+	lambda.RuntimeNodejs610,
+	lambda.RuntimeNodejs810,
+	lambda.RuntimeProvided,
+	lambda.RuntimePython27,
+	lambda.RuntimePython36,
+	lambda.RuntimePython37,
+	lambda.RuntimeRuby25,
+}
+
 func resourceAwsLambdaFunction() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsLambdaFunctionCreate,
@@ -101,25 +119,9 @@ func resourceAwsLambdaFunction() *schema.Resource {
 				Required: true,
 			},
 			"runtime": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					// lambda.RuntimeNodejs has reached end of life since October 2016 so not included here
-					lambda.RuntimeDotnetcore10,
-					lambda.RuntimeDotnetcore20,
-					lambda.RuntimeDotnetcore21,
-					lambda.RuntimeGo1X,
-					lambda.RuntimeJava8,
-					lambda.RuntimeNodejs43,
-					lambda.RuntimeNodejs43Edge,
-					lambda.RuntimeNodejs610,
-					lambda.RuntimeNodejs810,
-					lambda.RuntimeProvided,
-					lambda.RuntimePython27,
-					lambda.RuntimePython36,
-					lambda.RuntimePython37,
-					lambda.RuntimeRuby25,
-				}, false),
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(validLambdaRuntimes, false),
 			},
 			"timeout": {
 				Type:     schema.TypeInt,
