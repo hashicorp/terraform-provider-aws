@@ -61,6 +61,10 @@ func dataSourceAwsDxPrivateVirtualInterface() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"aws_device": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"mtu": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -103,6 +107,7 @@ func dataSourceAwsDxPrivateVirtualInterfaceRead(d *schema.ResourceData, meta int
 	d.Set("address_family", vif.AddressFamily)
 	d.Set("customer_address", vif.CustomerAddress)
 	d.Set("amazon_address", vif.AmazonAddress)
+	d.Set("aws_device", vif.AwsDeviceV2)
 	d.Set("vpn_gateway_id", vif.VirtualGatewayId)
 	d.Set("dx_gateway_id", vif.DirectConnectGatewayId)
 	d.Set("mtu", vif.Mtu)
