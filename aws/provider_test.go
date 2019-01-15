@@ -62,14 +62,14 @@ func TestProvider_impl(t *testing.T) {
 }
 
 func testAccPreCheck(t *testing.T) {
-	//if v := os.Getenv("AWS_PROFILE"); v == "" {
-	//	if v := os.Getenv("AWS_ACCESS_KEY_ID"); v == "" {
-	//		t.Fatal("AWS_ACCESS_KEY_ID must be set for acceptance tests")
-	//	}
-	//	if v := os.Getenv("AWS_SECRET_ACCESS_KEY"); v == "" {
-	//		t.Fatal("AWS_SECRET_ACCESS_KEY must be set for acceptance tests")
-	//	}
-	//}
+	if v := os.Getenv("AWS_PROFILE"); v == "" {
+		if v := os.Getenv("AWS_ACCESS_KEY_ID"); v == "" {
+			t.Fatal("AWS_ACCESS_KEY_ID must be set for acceptance tests")
+		}
+		if v := os.Getenv("AWS_SECRET_ACCESS_KEY"); v == "" {
+			t.Fatal("AWS_SECRET_ACCESS_KEY must be set for acceptance tests")
+		}
+	}
 
 	region := testAccGetRegion()
 	log.Printf("[INFO] Test: Using %s as test region", region)
