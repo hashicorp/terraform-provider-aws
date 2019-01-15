@@ -8,6 +8,7 @@ FEATURES
 
 * **New Resource:** `aws_docdb_subnet_group` [GH-7106]
 * **New Resource:** `aws_lambda_layer_version` [GH-6782]
+* **New Resource:** `aws_ram_resource_share` [GH-6528]
 
 ENHANCEMENTS
 
