@@ -257,6 +257,9 @@ func resourceAwsSagemakerNotebookInstanceUpdate(d *schema.ResourceData, meta int
 
 				return nil
 			})
+			if err != nil {
+				return err
+			}
 
 			stateConf := &resource.StateChangeConf{
 				Pending: []string{
