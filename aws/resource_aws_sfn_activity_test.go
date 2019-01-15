@@ -55,6 +55,43 @@ func TestAccAWSSfnActivity_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSSfnActivity_Tags(t *testing.T) {
+	name := acctest.RandString(10)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSfnActivityDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSfnActivityBasicConfigTags1(name, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSfnActivityExists("aws_sfn_activity.foo"),
+					resource.TestCheckResourceAttr("aws_sfn_activity.foo", "tags.%", "1"),
+					resource.TestCheckResourceAttr("aws_sfn_activity.foo", "tags.key1", "value1"),
+				),
+			},
+			{
+				Config: testAccAWSSfnActivityBasicConfigTags2(name, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSfnActivityExists("aws_sfn_activity.foo"),
+					resource.TestCheckResourceAttr("aws_sfn_activity.foo", "tags.%", "2"),
+					resource.TestCheckResourceAttr("aws_sfn_activity.foo", "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr("aws_sfn_activity.foo", "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSSfnActivityBasicConfigTags1(name, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSfnActivityExists("aws_sfn_activity.foo"),
+					resource.TestCheckResourceAttr("aws_sfn_activity.foo", "tags.%", "1"),
+					resource.TestCheckResourceAttr("aws_sfn_activity.foo", "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSSfnActivityExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -125,4 +162,27 @@ resource "aws_sfn_activity" "foo" {
   name = "%s"
 }
 `, rName)
+}
+
+func testAccAWSSfnActivityBasicConfigTags1(rName, tag1Key, tag1Value string) string {
+	return fmt.Sprintf(`
+resource "aws_sfn_activity" "foo" {
+  name = "%s"
+  tags = {
+	%q = %q
+}
+}
+`, rName, tag1Key, tag1Value)
+}
+
+func testAccAWSSfnActivityBasicConfigTags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+	return fmt.Sprintf(`
+resource "aws_sfn_activity" "foo" {
+  name = "%s"
+  tags = {
+	%q = %q
+	%q = %q
+}
+}
+`, rName, tag1Key, tag1Value, tag2Key, tag2Value)
 }

@@ -16100,6 +16100,13 @@ func (c *EC2) DescribeSpotInstanceRequestsRequest(input *DescribeSpotInstanceReq
 // instance. Alternatively, you can use DescribeInstances with a filter to look
 // for instances where the instance lifecycle is spot.
 //
+// We recommend that you set MaxResults to a value between 5 and 1000 to limit
+// the number of results returned. This paginates the output, which makes the
+// list more manageable and returns the results faster. If the list of results
+// exceeds your MaxResults value, then that number of results is returned along
+// with a NextToken value that can be passed to a subsequent DescribeSpotInstanceRequests
+// request to retrieve the remaining results.
+//
 // Spot Instance requests are deleted four hours after they are canceled and
 // their instances are terminated.
 //
@@ -46511,9 +46518,10 @@ type DescribeInstancesInput struct {
 	//
 	//    * owner-id - The AWS account ID of the instance owner.
 	//
-	//    * partition-number - The partition in which the instance is located.
-	//
 	//    * placement-group-name - The name of the placement group for the instance.
+	//
+	//    * placement-partition-number - The partition in which the instance is
+	//    located.
 	//
 	//    * platform - The platform. Use windows if you have Windows instances;
 	//    otherwise, leave blank.
@@ -50376,6 +50384,15 @@ type DescribeSpotInstanceRequestsInput struct {
 	//    * valid-until - The end date of the request.
 	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
 
+	// The maximum number of results to return in a single call. Specify a value
+	// between 5 and 1000. To retrieve the remaining results, make another call
+	// with the returned NextToken value.
+	MaxResults *int64 `type:"integer"`
+
+	// The token to request the next set of results. This value is null when there
+	// are no more results to return.
+	NextToken *string `type:"string"`
+
 	// One or more Spot Instance request IDs.
 	SpotInstanceRequestIds []*string `locationName:"SpotInstanceRequestId" locationNameList:"SpotInstanceRequestId" type:"list"`
 }
@@ -50402,6 +50419,18 @@ func (s *DescribeSpotInstanceRequestsInput) SetFilters(v []*Filter) *DescribeSpo
 	return s
 }
 
+// SetMaxResults sets the MaxResults field's value.
+func (s *DescribeSpotInstanceRequestsInput) SetMaxResults(v int64) *DescribeSpotInstanceRequestsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeSpotInstanceRequestsInput) SetNextToken(v string) *DescribeSpotInstanceRequestsInput {
+	s.NextToken = &v
+	return s
+}
+
 // SetSpotInstanceRequestIds sets the SpotInstanceRequestIds field's value.
 func (s *DescribeSpotInstanceRequestsInput) SetSpotInstanceRequestIds(v []*string) *DescribeSpotInstanceRequestsInput {
 	s.SpotInstanceRequestIds = v
@@ -50411,6 +50440,10 @@ func (s *DescribeSpotInstanceRequestsInput) SetSpotInstanceRequestIds(v []*strin
 // Contains the output of DescribeSpotInstanceRequests.
 type DescribeSpotInstanceRequestsOutput struct {
 	_ struct{} `type:"structure"`
+
+	// The token to use to retrieve the next set of results. This value is null
+	// when there are no more results to return.
+	NextToken *string `locationName:"nextToken" type:"string"`
 
 	// One or more Spot Instance requests.
 	SpotInstanceRequests []*SpotInstanceRequest `locationName:"spotInstanceRequestSet" locationNameList:"item" type:"list"`
@@ -50424,6 +50457,12 @@ func (s DescribeSpotInstanceRequestsOutput) String() string {
 // GoString returns the string representation
 func (s DescribeSpotInstanceRequestsOutput) GoString() string {
 	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeSpotInstanceRequestsOutput) SetNextToken(v string) *DescribeSpotInstanceRequestsOutput {
+	s.NextToken = &v
+	return s
 }
 
 // SetSpotInstanceRequests sets the SpotInstanceRequests field's value.
@@ -50924,15 +50963,15 @@ type DescribeTransitGatewayAttachmentsInput struct {
 
 	// One or more filters. The possible values are:
 	//
-	//    * association-id - The ID of the association.
+	//    * association.transit-gateway-route-table-id - The ID of the route table
+	//    for the transit gateway.
 	//
-	//    * association-route-table-id - The ID of the route table for the transit
-	//    gateway.
-	//
-	//    * associate-state - The state of the association (associating | associated
+	//    * association.state - The state of the association (associating | associated
 	//    | disassociating).
 	//
 	//    * resource-id - The ID of the resource.
+	//
+	//    * resource-owner - The ID of the AWS account that owns the resource.
 	//
 	//    * resource-type - The resource type (vpc | vpn).
 	//
@@ -51061,13 +51100,13 @@ type DescribeTransitGatewayRouteTablesInput struct {
 	//    * default-propagation-route-table - Indicates whether this is the default
 	//    propagation route table for the transit gateway (true | false).
 	//
+	//    * state - The state of the attachment (pendingAcceptance | pending | available
+	//    | modifying | deleting | deleted | failed | rejected).
+	//
 	//    * transit-gateway-id - The ID of the transit gateway.
 	//
 	//    * transit-gateway-route-table-id - The ID of the transit gateway route
 	//    table.
-	//
-	//    * transit-gateway-route-table-state - The state (pending | available |
-	//    deleting | deleted).
 	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
 
 	// The maximum number of results to return with a single call. To retrieve the
@@ -51178,10 +51217,10 @@ type DescribeTransitGatewayVpcAttachmentsInput struct {
 
 	// One or more filters. The possible values are:
 	//
-	//    * transit-gateway-attachment-id - The ID of the attachment.
+	//    * state - The state of the attachment (pendingAcceptance | pending | available
+	//    | modifying | deleting | deleted | failed | rejected).
 	//
-	//    * transit-gateway-attachment-state - The state of the attachment (pendingAcceptance
-	//    | pending | available | modifying | deleting | deleted | failed | rejected).
+	//    * transit-gateway-attachment-id - The ID of the attachment.
 	//
 	//    * transit-gateway-id - The ID of the transit gateway.
 	//
@@ -51296,23 +51335,36 @@ type DescribeTransitGatewaysInput struct {
 
 	// One or more filters. The possible values are:
 	//
-	//    * amazon-side-asn - The private ASN for the Amazon side of a BGP session.
+	//    * owner-id - The ID of the AWS account that owns the transit gateway.
 	//
-	//    * association-default-route-table-id - The ID of the default association
+	//    * options.propagation-default-route-table-id - The ID of the default propagation
 	//    route table.
 	//
-	//    * default-route-table-association - Indicates whether resource attachments
-	//    are automatically associated with the default association route table
-	//    (enable | disable).
+	//    * options.amazon-side-asn - The private ASN for the Amazon side of a BGP
+	//    session.
 	//
-	//    * default-route-table-propagation - Indicates whether resource attachments
-	//    automatically propagate routes to the default propagation route table
-	//    (enable | disable).
-	//
-	//    * owner-account-id - The ID of the AWS account that owns the transit gateway.
-	//
-	//    * propagation-default-route-table-id - The ID of the default propagation
+	//    * options.association-default-route-table-id - The ID of the default association
 	//    route table.
+	//
+	//    * options.auto-accept-shared-attachments - Indicates whether there is
+	//    automatic acceptance of attachment requests (enable | disable).
+	//
+	//    * options.default-route-table-association - Indicates whether resource
+	//    attachments are automatically associated with the default association
+	//    route table (enable | disable).
+	//
+	//    * options.default-route-table-propagation - Indicates whether resource
+	//    attachments automatically propagate routes to the default propagation
+	//    route table (enable | disable).
+	//
+	//    * options.dns-support - Indicates whether DNS support is enabled (enable
+	//    | disable).
+	//
+	//    * options.vpn-ecmp-support - Indicates whether Equal Cost Multipath Protocol
+	//    support is enabled (enable | disable).
+	//
+	//    * state - The state of the attachment (pendingAcceptance | pending | available
+	//    | modifying | deleting | deleted | failed | rejected).
 	//
 	//    * transit-gateway-id - The ID of the transit gateway.
 	//
@@ -58077,8 +58129,6 @@ type GetTransitGatewayRouteTableAssociationsInput struct {
 	DryRun *bool `type:"boolean"`
 
 	// One or more filters. The possible values are:
-	//
-	//    * association-id - The ID of the association.
 	//
 	//    * resource-id - The ID of the resource.
 	//
@@ -69081,6 +69131,10 @@ type OnDemandOptions struct {
 	// minimum target capacity is not reached, the fleet launches no instances.
 	MinTargetCapacity *int64 `locationName:"minTargetCapacity" type:"integer"`
 
+	// Indicates that the fleet launches all On-Demand Instances into a single Availability
+	// Zone.
+	SingleAvailabilityZone *bool `locationName:"singleAvailabilityZone" type:"boolean"`
+
 	// Indicates that the fleet uses a single instance type to launch all On-Demand
 	// Instances in the fleet.
 	SingleInstanceType *bool `locationName:"singleInstanceType" type:"boolean"`
@@ -69108,6 +69162,12 @@ func (s *OnDemandOptions) SetMinTargetCapacity(v int64) *OnDemandOptions {
 	return s
 }
 
+// SetSingleAvailabilityZone sets the SingleAvailabilityZone field's value.
+func (s *OnDemandOptions) SetSingleAvailabilityZone(v bool) *OnDemandOptions {
+	s.SingleAvailabilityZone = &v
+	return s
+}
+
 // SetSingleInstanceType sets the SingleInstanceType field's value.
 func (s *OnDemandOptions) SetSingleInstanceType(v bool) *OnDemandOptions {
 	s.SingleInstanceType = &v
@@ -69129,6 +69189,10 @@ type OnDemandOptionsRequest struct {
 	// The minimum target capacity for On-Demand Instances in the fleet. If the
 	// minimum target capacity is not reached, the fleet launches no instances.
 	MinTargetCapacity *int64 `type:"integer"`
+
+	// Indicates that the fleet launches all On-Demand Instances into a single Availability
+	// Zone.
+	SingleAvailabilityZone *bool `type:"boolean"`
 
 	// Indicates that the fleet uses a single instance type to launch all On-Demand
 	// Instances in the fleet.
@@ -69154,6 +69218,12 @@ func (s *OnDemandOptionsRequest) SetAllocationStrategy(v string) *OnDemandOption
 // SetMinTargetCapacity sets the MinTargetCapacity field's value.
 func (s *OnDemandOptionsRequest) SetMinTargetCapacity(v int64) *OnDemandOptionsRequest {
 	s.MinTargetCapacity = &v
+	return s
+}
+
+// SetSingleAvailabilityZone sets the SingleAvailabilityZone field's value.
+func (s *OnDemandOptionsRequest) SetSingleAvailabilityZone(v bool) *OnDemandOptionsRequest {
+	s.SingleAvailabilityZone = &v
 	return s
 }
 
@@ -76868,8 +76938,6 @@ type SearchTransitGatewayRoutesInput struct {
 	//
 	//    * transit-gateway-route-type - The route type (static | propagated).
 	//
-	//    * transit-gateway-route-vpn-connection-id - The ID of the VPN connection.
-	//
 	// Filters is a required field
 	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list" required:"true"`
 
@@ -77698,7 +77766,7 @@ type SnapshotDiskContainer struct {
 
 	// The format of the disk image being imported.
 	//
-	// Valid values: VHD | VMDK | OVA
+	// Valid values: VHD | VMDK
 	Format *string `type:"string"`
 
 	// The URL to the Amazon S3-based disk image being imported. It can either be
@@ -78303,9 +78371,10 @@ type SpotFleetRequestConfigData struct {
 	// capacity or also attempts to maintain it. When this value is request, the
 	// Spot Fleet only places the required requests. It does not attempt to replenish
 	// Spot Instances if capacity is diminished, nor does it submit requests in
-	// alternative Spot pools if capacity is not available. To maintain a certain
-	// target capacity, the Spot Fleet places the required requests to meet capacity
-	// and automatically replenishes any interrupted instances. Default: maintain.
+	// alternative Spot pools if capacity is not available. When this value is maintain,
+	// the Spot Fleet maintains the target capacity. The Spot Fleet places the required
+	// requests to meet capacity and automatically replenishes any interrupted instances.
+	// Default: maintain. instant is listed but is not used by Spot Fleet.
 	Type *string `locationName:"type" type:"string" enum:"FleetType"`
 
 	// The start date and time of the request, in UTC format (for example, YYYY-MM-DDTHH:MM:SSZ).
@@ -78879,6 +78948,10 @@ type SpotOptions struct {
 	// target capacity is not reached, the fleet launches no instances.
 	MinTargetCapacity *int64 `locationName:"minTargetCapacity" type:"integer"`
 
+	// Indicates that the fleet launches all Spot Instances into a single Availability
+	// Zone.
+	SingleAvailabilityZone *bool `locationName:"singleAvailabilityZone" type:"boolean"`
+
 	// Indicates that the fleet uses a single instance type to launch all Spot Instances
 	// in the fleet.
 	SingleInstanceType *bool `locationName:"singleInstanceType" type:"boolean"`
@@ -78918,6 +78991,12 @@ func (s *SpotOptions) SetMinTargetCapacity(v int64) *SpotOptions {
 	return s
 }
 
+// SetSingleAvailabilityZone sets the SingleAvailabilityZone field's value.
+func (s *SpotOptions) SetSingleAvailabilityZone(v bool) *SpotOptions {
+	s.SingleAvailabilityZone = &v
+	return s
+}
+
 // SetSingleInstanceType sets the SingleInstanceType field's value.
 func (s *SpotOptions) SetSingleInstanceType(v bool) *SpotOptions {
 	s.SingleInstanceType = &v
@@ -78944,6 +79023,10 @@ type SpotOptionsRequest struct {
 	// The minimum target capacity for Spot Instances in the fleet. If the minimum
 	// target capacity is not reached, the fleet launches no instances.
 	MinTargetCapacity *int64 `type:"integer"`
+
+	// Indicates that the fleet launches all Spot Instances into a single Availability
+	// Zone.
+	SingleAvailabilityZone *bool `type:"boolean"`
 
 	// Indicates that the fleet uses a single instance type to launch all Spot Instances
 	// in the fleet.
@@ -78981,6 +79064,12 @@ func (s *SpotOptionsRequest) SetInstancePoolsToUseCount(v int64) *SpotOptionsReq
 // SetMinTargetCapacity sets the MinTargetCapacity field's value.
 func (s *SpotOptionsRequest) SetMinTargetCapacity(v int64) *SpotOptionsRequest {
 	s.MinTargetCapacity = &v
+	return s
+}
+
+// SetSingleAvailabilityZone sets the SingleAvailabilityZone field's value.
+func (s *SpotOptionsRequest) SetSingleAvailabilityZone(v bool) *SpotOptionsRequest {
+	s.SingleAvailabilityZone = &v
 	return s
 }
 

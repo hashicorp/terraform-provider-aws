@@ -42,7 +42,7 @@ func TestAccAWSCodeBuildProject_importBasic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -64,7 +64,7 @@ func TestAccAWSCodeBuildProject_basic(t *testing.T) {
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -115,7 +115,7 @@ func TestAccAWSCodeBuildProject_BadgeEnabled(t *testing.T) {
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -137,7 +137,7 @@ func TestAccAWSCodeBuildProject_BuildTimeout(t *testing.T) {
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -165,7 +165,7 @@ func TestAccAWSCodeBuildProject_Cache(t *testing.T) {
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -225,7 +225,7 @@ func TestAccAWSCodeBuildProject_Description(t *testing.T) {
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -253,7 +253,7 @@ func TestAccAWSCodeBuildProject_EncryptionKey(t *testing.T) {
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -274,7 +274,7 @@ func TestAccAWSCodeBuildProject_Environment_EnvironmentVariable_Type(t *testing.
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -306,7 +306,7 @@ func TestAccAWSCodeBuildProject_Environment_Certificate(t *testing.T) {
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -327,7 +327,7 @@ func TestAccAWSCodeBuildProject_Source_Auth(t *testing.T) {
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -354,7 +354,7 @@ func TestAccAWSCodeBuildProject_Source_GitCloneDepth(t *testing.T) {
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -382,7 +382,7 @@ func TestAccAWSCodeBuildProject_Source_InsecureSSL(t *testing.T) {
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -410,7 +410,7 @@ func TestAccAWSCodeBuildProject_Source_ReportBuildStatus_Bitbucket(t *testing.T)
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -438,7 +438,7 @@ func TestAccAWSCodeBuildProject_Source_ReportBuildStatus_GitHub(t *testing.T) {
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -466,7 +466,7 @@ func TestAccAWSCodeBuildProject_Source_ReportBuildStatus_GitHubEnterprise(t *tes
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -494,7 +494,7 @@ func TestAccAWSCodeBuildProject_Source_Type_Bitbucket(t *testing.T) {
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -515,7 +515,7 @@ func TestAccAWSCodeBuildProject_Source_Type_CodeCommit(t *testing.T) {
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -536,7 +536,7 @@ func TestAccAWSCodeBuildProject_Source_Type_CodePipeline(t *testing.T) {
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -557,7 +557,7 @@ func TestAccAWSCodeBuildProject_Source_Type_GitHubEnterprise(t *testing.T) {
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -578,7 +578,7 @@ func TestAccAWSCodeBuildProject_Source_Type_S3(t *testing.T) {
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -605,7 +605,7 @@ phases:
       - rspec hello_world_spec.rb`
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -630,7 +630,7 @@ phases:
       - rspec hello_world_spec.rb`
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -652,7 +652,7 @@ func TestAccAWSCodeBuildProject_Tags(t *testing.T) {
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -684,7 +684,7 @@ func TestAccAWSCodeBuildProject_VpcConfig(t *testing.T) {
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -725,7 +725,7 @@ func TestAccAWSCodeBuildProject_WindowsContainer(t *testing.T) {
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -752,7 +752,7 @@ func TestAccAWSCodeBuildProject_Artifacts_EncryptionDisabled(t *testing.T) {
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -775,7 +775,7 @@ func TestAccAWSCodeBuildProject_SecondaryArtifacts(t *testing.T) {
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -798,7 +798,7 @@ func TestAccAWSCodeBuildProject_SecondarySources_CodeCommit(t *testing.T) {
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
@@ -903,6 +903,24 @@ func testAccCheckAWSCodeBuildProjectCertificate(project *codebuild.Project, expe
 			return fmt.Errorf("CodeBuild Project certificate (%s) did not match: %s", aws.StringValue(project.Environment.Certificate), expectedCertificate)
 		}
 		return nil
+	}
+}
+
+func testAccPreCheckAWSCodeBuild(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).codebuildconn
+
+	input := &codebuild.BatchGetProjectsInput{
+		Names: []*string{aws.String("tf-acc-test-precheck")},
+	}
+
+	_, err := conn.BatchGetProjects(input)
+
+	if testAccPreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
 

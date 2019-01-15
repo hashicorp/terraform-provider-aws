@@ -85,7 +85,7 @@ func TestAccAWSDataSyncLocationNfs_basic(t *testing.T) {
 	resourceName := "aws_datasync_location_nfs.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataSync(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDataSyncLocationNfsDestroy,
 		Steps: []resource.TestStep{
@@ -118,7 +118,7 @@ func TestAccAWSDataSyncLocationNfs_disappears(t *testing.T) {
 	resourceName := "aws_datasync_location_nfs.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataSync(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDataSyncLocationNfsDestroy,
 		Steps: []resource.TestStep{
@@ -140,7 +140,7 @@ func TestAccAWSDataSyncLocationNfs_AgentARNs_Multple(t *testing.T) {
 	resourceName := "aws_datasync_location_nfs.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataSync(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDataSyncLocationNfsDestroy,
 		Steps: []resource.TestStep{
@@ -168,7 +168,7 @@ func TestAccAWSDataSyncLocationNfs_Subdirectory(t *testing.T) {
 	resourceName := "aws_datasync_location_nfs.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataSync(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDataSyncLocationNfsDestroy,
 		Steps: []resource.TestStep{
@@ -195,7 +195,7 @@ func TestAccAWSDataSyncLocationNfs_Tags(t *testing.T) {
 	resourceName := "aws_datasync_location_nfs.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataSync(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDataSyncLocationNfsDestroy,
 		Steps: []resource.TestStep{

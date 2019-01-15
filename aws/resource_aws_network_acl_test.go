@@ -575,7 +575,7 @@ func testIngressRuleLength(networkAcl *ec2.NetworkAcl, length int) resource.Test
 	return func(s *terraform.State) error {
 		var ingressEntries []*ec2.NetworkAclEntry
 		for _, e := range networkAcl.Entries {
-			if *e.Egress == false {
+			if !*e.Egress {
 				ingressEntries = append(ingressEntries, e)
 			}
 		}

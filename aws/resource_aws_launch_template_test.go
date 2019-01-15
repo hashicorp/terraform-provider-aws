@@ -430,6 +430,28 @@ func TestAccAWSLaunchTemplate_creditSpecification_t3(t *testing.T) {
 	})
 }
 
+// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/6757
+func TestAccAWSLaunchTemplate_IamInstanceProfile_EmptyConfigurationBlock(t *testing.T) {
+	var template1 ec2.LaunchTemplate
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_launch_template.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLaunchTemplateConfigIamInstanceProfileEmptyConfigurationBlock(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resourceName, &template1),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSLaunchTemplate_networkInterface(t *testing.T) {
 	var template ec2.LaunchTemplate
 	resName := "aws_launch_template.test"
@@ -878,6 +900,16 @@ resource "aws_launch_template" "foo" {
   }
 }
 `, instanceType, rName, cpuCredits)
+}
+
+func testAccAWSLaunchTemplateConfigIamInstanceProfileEmptyConfigurationBlock(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name = %q
+
+  iam_instance_profile {}
+}
+`, rName)
 }
 
 func testAccAWSLaunchTemplateConfig_licenseSpecification(rInt int) string {
