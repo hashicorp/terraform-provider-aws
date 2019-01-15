@@ -676,7 +676,7 @@ func TestAccAWSRoute53Record_allowOverwrite(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccRoute53RecordConfig_allowOverwrite(false),
-				ExpectError: regexp.MustCompile("Tried to create resource record set \\[name='www.notexample.com.', type='A'] but it already exists"),
+				ExpectError: regexp.MustCompile(`Tried to create resource record set \[name='www.notexample.com.', type='A'] but it already exists`),
 			},
 			{
 				Config: testAccRoute53RecordConfig_allowOverwrite(true),

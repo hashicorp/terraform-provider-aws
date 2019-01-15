@@ -748,10 +748,6 @@ func resourceAwsRoute53RecordDelete(d *schema.ResourceData, meta interface{}) er
 	}
 
 	err = waitForRoute53RecordSetToSync(conn, cleanChangeID(*changeInfo.Id))
-	if err != nil {
-		return err
-	}
-
 	return err
 }
 
