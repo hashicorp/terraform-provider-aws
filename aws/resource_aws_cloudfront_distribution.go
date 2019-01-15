@@ -621,7 +621,6 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 									"ordered_origin_group_member": {
 										Type:     schema.TypeList,
 										Required: true,
-										Set:      originGroupHash,
 										MinItems: 2,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{

@@ -890,11 +890,6 @@ func expandOriginGroupMember(m map[string]interface{}) *cloudfront.OriginGroupMe
 	}
 }
 
-func expandOrderedGroupMember(as *schema.Set) *string {
-	s := as.List()
-	return aws.String(s[0].(map[string]interface{})["origin_id"].(string))
-}
-
 func flattenOrigin(or *cloudfront.Origin) map[string]interface{} {
 	m := make(map[string]interface{})
 	m["origin_id"] = *or.Id
@@ -954,7 +949,7 @@ func originGroupHash(v interface{}) int {
 	}
 	if v, ok := m["members"]; ok {
 		if s := v.(*schema.Set).List(); len(s) > 0 {
-			buf.WriteString(fmt.Sprintf("%d-", membersHash((s[0].(map[string]interface{})))))
+			buf.WriteString(fmt.Sprintf("%d-", membersHash(s[0].(map[string]interface{}))))
 		}
 	}
 
@@ -973,7 +968,8 @@ func failoverCriteriaHash(v interface{}) int {
 func membersHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
-	for _, v := range s.List() {
+	members := m["ordered_origin_group_member"]
+	for _, v := range members.([]interface{}) {
 		buf.WriteString(fmt.Sprintf("%d-", originGroupMembersHash(v)))
 	}
 	return hashcode.String(buf.String())
