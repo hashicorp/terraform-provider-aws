@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -43,45 +42,6 @@ func TestAccAWSSagemakerTrainingJob_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerTrainingJob_update(t *testing.T) {
-	var trainingJob sagemaker.DescribeTrainingJobOutput
-	trainingJobName := resource.PrefixedUniqueId(sagemakerTestAccSagemakerTrainingJobResourceNamePrefix)
-	bucketName := resource.PrefixedUniqueId(sagemakerTestAccSagemakerTrainingJobResourceNamePrefix)
-	var resourceName = "aws_sagemaker_training_job.foo"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckSagemakerTrainingJobDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccSagemakerTrainingJobConfig(trainingJobName, bucketName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSagemakerTrainingJobExists("aws_sagemaker_training_job.foo", &trainingJob),
-
-					resource.TestCheckResourceAttr(
-						"aws_sagemaker_training_job.foo", "hyper_parameters.epochs", "3"),
-				),
-			},
-
-			{
-				Config: testAccSagemakerTrainingJobUpdateConfig(trainingJobName, bucketName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSagemakerTrainingJobExists("aws_sagemaker_training_job.foo", &trainingJob),
-
-					resource.TestCheckResourceAttr(
-						"aws_sagemaker_training_job.foo", "hyper_parameters.epochs", "3"),
-				),
-				ExpectError: regexp.MustCompile(`.*existing Training Jobs cannot be updated.*`),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
 func TestAccAWSSagemakerTrainingJob_tags(t *testing.T) {
 	var trainingJob sagemaker.DescribeTrainingJobOutput
 	trainingJobName := resource.PrefixedUniqueId(sagemakerTestAccSagemakerTrainingJobResourceNamePrefix)
@@ -97,7 +57,6 @@ func TestAccAWSSagemakerTrainingJob_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSagemakerTrainingJobExists(resourceName, &trainingJob),
 					testAccCheckSagemakerTrainingJobTags(&trainingJob, "foo", "bar"),
-
 					resource.TestCheckResourceAttr(
 						resourceName, "name", trainingJobName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -139,7 +98,7 @@ func testAccCheckSagemakerTrainingJobDestroy(s *terraform.State) error {
 		})
 		if err == nil {
 			if len(resp.TrainingJobSummaries) > 0 {
-				return fmt.Errorf("Sagemaker Training Job still exist.")
+				return fmt.Errorf("sagemaker training Job still exist")
 			}
 
 			return nil

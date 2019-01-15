@@ -44,9 +44,6 @@ The following attributes are exported:
 
 * `id` - The name of the notebook instance.
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this notebook instance.
-* `creation_time` - The creation timestamp of the notebook instance.
-* `last_modified_time` - The last modification timestamp of the notebook instance.
-* `status` -  The status of the notebook instance.
 
 ## Import
 

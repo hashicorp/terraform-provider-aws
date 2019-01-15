@@ -32,7 +32,6 @@ func resourceAwsSagemakerTrainingJob() *schema.Resource {
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
-				Computed:     false,
 				ForceNew:     true,
 				ValidateFunc: validateSagemakerName,
 			},
@@ -40,22 +39,25 @@ func resourceAwsSagemakerTrainingJob() *schema.Resource {
 			"role_arn": {
 				Type:     schema.TypeString,
 				Required: true,
-				Computed: false,
+				ForceNew: true,
 			},
 
 			"algorithm_specification": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Required: true,
+				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"image": {
 							Type:     schema.TypeString,
 							Required: true,
+							ForceNew: true,
 						},
 						"input_mode": {
 							Type:     schema.TypeString,
 							Required: true,
+							ForceNew: true,
 							ValidateFunc: validation.StringInSlice([]string{
 								sagemaker.TrainingInputModePipe,
 								sagemaker.TrainingInputModeFile,
@@ -69,19 +71,23 @@ func resourceAwsSagemakerTrainingJob() *schema.Resource {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Required: true,
+				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"instance_type": {
 							Type:     schema.TypeString,
 							Required: true,
+							ForceNew: true,
 						},
 						"instance_count": {
 							Type:     schema.TypeInt,
 							Required: true,
+							ForceNew: true,
 						},
 						"volume_size_in_gb": {
 							Type:     schema.TypeInt,
 							Required: true,
+							ForceNew: true,
 						},
 					},
 				},
@@ -91,12 +97,14 @@ func resourceAwsSagemakerTrainingJob() *schema.Resource {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Optional: true,
+				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"max_runtime_in_seconds": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Default:  24 * 60 * 60, // 24 hours
+							ForceNew: true,
 						},
 					},
 				},
@@ -105,6 +113,7 @@ func resourceAwsSagemakerTrainingJob() *schema.Resource {
 			"hyper_parameters": {
 				Type:     schema.TypeMap,
 				Optional: true,
+				ForceNew: true,
 			},
 
 			"input_data_config": {
@@ -112,35 +121,42 @@ func resourceAwsSagemakerTrainingJob() *schema.Resource {
 				MinItems: 1,
 				MaxItems: 8,
 				Optional: true,
+				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
 							Type:     schema.TypeString,
 							Required: true,
+							ForceNew: true,
 						},
 						"data_source": {
 							Type:     schema.TypeList,
 							MaxItems: 1,
 							Required: true,
+							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"s3_data_source": {
 										Type:     schema.TypeList,
 										MaxItems: 1,
 										Optional: true,
+										ForceNew: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"s3_data_type": {
 													Type:     schema.TypeString,
 													Required: true,
+													ForceNew: true,
 												},
 												"s3_uri": {
 													Type:     schema.TypeString,
 													Required: true,
+													ForceNew: true,
 												},
 												"s3_data_distribution_type": {
 													Type:     schema.TypeString,
 													Required: true,
+													ForceNew: true,
 												},
 											},
 										},
@@ -151,11 +167,13 @@ func resourceAwsSagemakerTrainingJob() *schema.Resource {
 						"content_type": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 						"compression_type": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Default:  sagemaker.CompressionTypeNone,
+							ForceNew: true,
 							ValidateFunc: validation.StringInSlice([]string{
 								sagemaker.CompressionTypeGzip,
 								sagemaker.CompressionTypeNone,
@@ -165,6 +183,7 @@ func resourceAwsSagemakerTrainingJob() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							Default:  sagemaker.RecordWrapperNone,
+							ForceNew: true,
 							ValidateFunc: validation.StringInSlice([]string{
 								sagemaker.RecordWrapperRecordIo,
 								sagemaker.RecordWrapperNone,
@@ -178,15 +197,18 @@ func resourceAwsSagemakerTrainingJob() *schema.Resource {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Required: true,
+				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"s3_output_path": {
 							Type:     schema.TypeString,
 							Required: true,
+							ForceNew: true,
 						},
 						"kms_key_id": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 					},
 				},
@@ -206,7 +228,7 @@ func resourceAwsSagemakerTrainingJobCreate(d *schema.ResourceData, meta interfac
 		RoleArn:         aws.String(d.Get("role_arn").(string)),
 	}
 
-	var algorithmSpecification *sagemaker.AlgorithmSpecification = new(sagemaker.AlgorithmSpecification)
+	var algorithmSpecification = new(sagemaker.AlgorithmSpecification)
 	if as, ok := d.GetOk("algorithm_specification"); ok {
 		asPorperties := as.([]interface{})
 		properties := asPorperties[0].(map[string]interface{})
@@ -227,7 +249,7 @@ func resourceAwsSagemakerTrainingJobCreate(d *schema.ResourceData, meta interfac
 	if idc, ok := d.GetOk("input_data_config"); ok {
 		createOpts.InputDataConfig = expandInputDataConfig(idc)
 	}
-	var outputDataConfig *sagemaker.OutputDataConfig = new(sagemaker.OutputDataConfig)
+	var outputDataConfig = new(sagemaker.OutputDataConfig)
 	if odc, ok := d.GetOk("output_data_config"); ok {
 		odcPorperties := odc.([]interface{})
 		properties := odcPorperties[0].(map[string]interface{})
@@ -241,7 +263,7 @@ func resourceAwsSagemakerTrainingJobCreate(d *schema.ResourceData, meta interfac
 	}
 	createOpts.OutputDataConfig = outputDataConfig
 
-	var resourceConfig *sagemaker.ResourceConfig = new(sagemaker.ResourceConfig)
+	var resourceConfig = new(sagemaker.ResourceConfig)
 	if rc, ok := d.GetOk("resource_config"); ok {
 		rcPorperties := rc.([]interface{})
 		properties := rcPorperties[0].(map[string]interface{})
@@ -258,7 +280,7 @@ func resourceAwsSagemakerTrainingJobCreate(d *schema.ResourceData, meta interfac
 	}
 	createOpts.ResourceConfig = resourceConfig
 
-	var stoppingCondition *sagemaker.StoppingCondition = new(sagemaker.StoppingCondition)
+	var stoppingCondition = new(sagemaker.StoppingCondition)
 	if sc, ok := d.GetOk("stopping_condition"); ok {
 		scPorperties := sc.([]interface{})
 		properties := scPorperties[0].(map[string]interface{})
@@ -274,31 +296,33 @@ func resourceAwsSagemakerTrainingJobCreate(d *schema.ResourceData, meta interfac
 		createOpts.Tags = tagsFromMapSagemaker(tagsIn)
 	}
 
-	log.Printf("[DEBUG] Sagemaker Training Job create config: %#v", *createOpts)
+	log.Printf("[DEBUG] sagemaker training job create config: %#v", *createOpts)
 	_, err := conn.CreateTrainingJob(createOpts)
 	if err != nil {
-		return fmt.Errorf("Error creating Sagemaker Training Job: %s", err)
+		return fmt.Errorf("error creating sagemaker training job: %s", err)
 	}
 
 	d.SetId(name)
-	log.Printf("[INFO] Sagemaker Training Job ID: %s", d.Id())
+	log.Printf("[INFO] sagemaker training job id: %s", d.Id())
 	return resourceAwsSagemakerTrainingJobRead(d, meta)
 }
 
 func resourceAwsSagemakerTrainingJobRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).sagemakerconn
 
-	trainingJobRaw, _, err := sagemakerTrainingJobStateRefreshFunc(conn, d.Id())()
+	describeTrainingInput := &sagemaker.DescribeTrainingJobInput{
+		TrainingJobName: aws.String(d.Id()),
+	}
+	trainingJob, err := conn.DescribeTrainingJob(describeTrainingInput)
 	if err != nil {
-		return err
-	}
-	if trainingJobRaw == nil {
-		log.Printf("[INFO] Unable to find SageMaker training job %q; removing from state file", d.Id())
-		d.SetId("")
-		return nil
-	}
+		if isAWSErr(err, "", "RecordNotFound") {
+			log.Printf("[LOG] unable to find sagemaker training job %q; removing from state file", d.Id())
+			d.SetId("")
+			return nil
+		}
+		return fmt.Errorf("error finding sagemaker notebook instance %q: %s", d.Id(), err)
 
-	trainingJob := trainingJobRaw.(*sagemaker.DescribeTrainingJobOutput)
+	}
 
 	if err := d.Set("name", trainingJob.TrainingJobName); err != nil {
 		return fmt.Errorf("error setting name for sagemaker training job %q: %s", d.Id(), err)
@@ -332,8 +356,9 @@ func resourceAwsSagemakerTrainingJobRead(d *schema.ResourceData, meta interface{
 	tagsOutput, err := conn.ListTags(&sagemaker.ListTagsInput{
 		ResourceArn: trainingJob.TrainingJobArn,
 	})
+
 	if err != nil {
-		log.Printf("[ERR] Error reading tags: %s", err)
+		log.Printf("[ERR] error reading tags: %s", err)
 		return err
 	}
 
@@ -350,14 +375,9 @@ func resourceAwsSagemakerTrainingJobUpdate(d *schema.ResourceData, meta interfac
 
 	if err := setSagemakerTags(conn, d); err != nil {
 		return err
-	} else {
-		d.SetPartial("tags")
 	}
 
-	// Once a training job is created it cannot be modified/updated
-	if d.HasChange("algorithm_specification") || d.HasChange("resource_config") || d.HasChange("stopping_condition") || d.HasChange("hyper_parameters") || d.HasChange("input_data_config") || d.HasChange("output_data_config") {
-		return fmt.Errorf("Error existing Training Jobs cannot be updated")
-	}
+	d.SetPartial("tags")
 
 	d.Partial(false)
 
@@ -554,7 +574,7 @@ func expandInputDataConfig(idc interface{}) []*sagemaker.Channel {
 	for idx, idcProps := range idcProperties {
 		idcItemProperties := idcProps.(map[string]interface{})
 
-		var channel *sagemaker.Channel = new(sagemaker.Channel)
+		var channel = new(sagemaker.Channel)
 		if v, ok := idcItemProperties["name"]; ok {
 			channel.ChannelName = aws.String(v.(string))
 		}
@@ -562,12 +582,12 @@ func expandInputDataConfig(idc interface{}) []*sagemaker.Channel {
 			dsProperties := ds.([]interface{})
 			dsItemProperties := dsProperties[0].(map[string]interface{})
 
-			var dataSource *sagemaker.DataSource = new(sagemaker.DataSource)
+			var dataSource = new(sagemaker.DataSource)
 			if s3ds, ok := dsItemProperties["s3_data_source"]; ok {
 				s3dsProperties := s3ds.([]interface{})
 				s3dsItemProperties := s3dsProperties[0].(map[string]interface{})
 
-				var s3DataSource *sagemaker.S3DataSource = new(sagemaker.S3DataSource)
+				var s3DataSource = new(sagemaker.S3DataSource)
 				if v, ok := s3dsItemProperties["s3_data_type"]; ok {
 					s3DataSource.S3DataType = aws.String(v.(string))
 				}

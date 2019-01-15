@@ -138,12 +138,6 @@ The following attributes are exported:
 
 * `id` - The name of the training jab.
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this training job.
-* `creation_time` - The creation timestamp of the training job.
-* `last_modified_time` - The last modification timestamp of the training job.
-* `training_start_time` - The timestamp when the training job started.
-* `training_end_time` - The timestamp when the training job ended.
-* `status` -  The status of the training job.
-* `secondary_status` -  The secondary status of the training job.
 
 ## Import
 
