@@ -13,10 +13,12 @@ FEATURES
 
 ENHANCEMENTS
 
+* data-source/aws_lambda_function: Add `layers` argument [GH-7126]
 * resource/aws_emr_cluster: Support resource import [GH-4488] / [GH-6498]
 * resource/aws_emr_cluster: Support `instance_group` `autoscaling_policy` updates [GH-6498]
 * resource/aws_inspector_assessment_target: Allow omitting resource_group_arn argument (support matching all EC2 instances) [GH-7112]
 * resource/aws_inspector_assessment_target: Support resource import [GH-7112]
+* resource/aws_lambda_function: Add `layers` argument [GH-7126]
 
 BUG FIXES
 
