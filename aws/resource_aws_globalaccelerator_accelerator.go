@@ -62,7 +62,6 @@ func resourceAwsGlobalAcceleratorAccelerator() *schema.Resource {
 			"attributes": {
 				Type:     schema.TypeList,
 				Optional: true,
-				Computed: true,
 				MaxItems: 1,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					if old == "1" && new == "0" {

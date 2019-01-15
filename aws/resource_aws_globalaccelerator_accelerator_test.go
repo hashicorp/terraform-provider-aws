@@ -61,7 +61,7 @@ func TestAccAwsGlobalAcceleratorAccelerator_update(t *testing.T) {
 				Config: testAccGlobalAcceleratorAccelerator_basic(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalAcceleratorAcceleratorExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", newName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 				),
 			},
