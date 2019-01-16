@@ -178,10 +178,8 @@ func testAccCheckIAMGroupPolicyDisappears(out *iam.GetGroupPolicyOutput) resourc
 			GroupName:  out.GroupName,
 		}
 
-		if _, err := iamconn.DeleteGroupPolicy(params); err != nil {
-			return err
-		}
-		return nil
+		_, err := iamconn.DeleteGroupPolicy(params)
+		return err
 	}
 }
 
