@@ -1033,6 +1033,10 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 					if filter.Prefix != nil && *filter.Prefix != "" {
 						rule["prefix"] = *filter.Prefix
 					}
+					// Tag
+					if filter.Tag != nil {
+						rule["tags"] = tagsToMapS3([]*s3.Tag{filter.Tag})
+					}
 				}
 			} else {
 				if lifecycleRule.Prefix != nil {
