@@ -67,7 +67,8 @@ func resourceAwsMskCluster() *schema.Resource {
 			},
 			"enhanced_monitoring": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
+				Default:  kafka.EnhancedMonitoringDefault,
 				ValidateFunc: validation.StringInSlice([]string{
 					kafka.EnhancedMonitoringDefault,
 					kafka.EnhancedMonitoringPerBroker,
@@ -77,8 +78,7 @@ func resourceAwsMskCluster() *schema.Resource {
 			},
 			"kafka_version": {
 				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "1.1.1",
+				Required: true,
 				ForceNew: true,
 			},
 			"arn": {

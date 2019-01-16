@@ -163,9 +163,9 @@ resource "aws_msk_cluster" "test_cluster" {
 	broker_count = 3
 	broker_instance_type = "kafka.m5.large"
 	broker_volume_size = 10
+	kafka_version = "1.1.1"
 	broker_security_groups =["${aws_security_group.test_sg_a.id}"]
 	client_subnets = ["${aws_subnet.test_subnet_a.id}", "${aws_subnet.test_subnet_b.id}", "${aws_subnet.test_subnet_c.id}"]
-	enhanced_monitoring = "DEFAULT"
 }`, rInt)
 }
 
@@ -182,9 +182,9 @@ resource "aws_msk_cluster" "test_cluster" {
 	broker_count = 3
 	broker_instance_type = "kafka.m5.large"
 	broker_volume_size = 10
+	kafka_version = "1.1.1"
 	client_subnets = ["${aws_subnet.test_subnet_a.id}", "${aws_subnet.test_subnet_b.id}", "${aws_subnet.test_subnet_c.id}"]
 	encrypt_rest_arn = "${aws_kms_key.test_key.arn}"
-	enhanced_monitoring = "DEFAULT"
 }`, rInt)
 }
 
@@ -196,6 +196,7 @@ resource "aws_msk_cluster" "test_cluster" {
 	broker_count = 3
 	broker_instance_type = "kafka.m5.large"
 	broker_volume_size = 10
+	kafka_version = "1.1.1"
 	client_subnets = ["${aws_subnet.test_subnet_a.id}", "${aws_subnet.test_subnet_b.id}", "${aws_subnet.test_subnet_c.id}"]
 	enhanced_monitoring = "%s"
 }`, rInt, monitoring_type)
