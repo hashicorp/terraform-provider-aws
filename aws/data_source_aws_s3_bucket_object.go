@@ -101,6 +101,19 @@ func dataSourceAwsS3BucketObject() *schema.Resource {
 			},
 
 			"tags": tagsSchemaComputed(),
+
+			"legal_hold": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"status": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -167,6 +180,14 @@ func dataSourceAwsS3BucketObjectRead(d *schema.ResourceData, meta interface{}) e
 		d.Set("storage_class", out.StorageClass)
 	}
 
+	if err := d.Set("legal_hold", flattenS3ObjectLockLegalHoldFromString(out.ObjectLockLegalHoldStatus)); err != nil {
+		return fmt.Errorf("error getting S3 object lock legal hold (bucket: %s, key: %s): %s", bucket, key, err)
+	}
+
+	if err := getTagsS3Object(conn, d); err != nil {
+		return fmt.Errorf("error getting S3 object tags (bucket: %s, key: %s): %s", bucket, key, err)
+	}
+
 	if isContentTypeAllowed(out.ContentType) {
 		input := s3.GetObjectInput{
 			Bucket: aws.String(bucket),
@@ -202,16 +223,6 @@ func dataSourceAwsS3BucketObjectRead(d *schema.ResourceData, meta interface{}) e
 		log.Printf("[INFO] Ignoring body of S3 object %s with Content-Type %q",
 			uniqueId, contentType)
 	}
-
-	tagResp, err := conn.GetObjectTagging(
-		&s3.GetObjectTaggingInput{
-			Bucket: aws.String(bucket),
-			Key:    aws.String(key),
-		})
-	if err != nil {
-		return err
-	}
-	d.Set("tags", tagsToMapS3(tagResp.TagSet))
 
 	return nil
 }

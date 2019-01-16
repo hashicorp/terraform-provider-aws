@@ -83,3 +83,8 @@ In addition to all arguments above, the following attributes are exported:
 * `version_id` - The latest version ID of the object returned.
 * `website_redirect_location` - If the bucket is configured as a website, redirects requests for this object to another object in the same bucket or to an external URL. Amazon S3 stores the value of this header in the object metadata.
 * `tags`  - A mapping of tags assigned to the object.
+* `legal_hold` - A configuration of [object lock legal holds](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.html#object-lock-legal-holds) (documented below).
+
+The `legal_hold` object has the following attributes:
+
+* `status` - Indicates whether the object has a Legal Hold in place. Valid values are `ON` and `OFF`.

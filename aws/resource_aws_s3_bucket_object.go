@@ -153,6 +153,32 @@ func resourceAwsS3BucketObject() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+
+			"force_delete": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+
+			"legal_hold": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: suppressUnsetContainerAttribute,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"status": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  s3.ObjectLockLegalHoldStatusOff,
+							ValidateFunc: validation.StringInSlice([]string{
+								s3.ObjectLockLegalHoldStatusOn,
+								s3.ObjectLockLegalHoldStatusOff,
+							}, false),
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -252,6 +278,10 @@ func resourceAwsS3BucketObjectPut(d *schema.ResourceData, meta interface{}) erro
 		putInput.WebsiteRedirectLocation = aws.String(v.(string))
 	}
 
+	if objectLockLegalHold := expandS3ObjectLockLegalHold(d.Get("legal_hold").([]interface{})); objectLockLegalHold != nil {
+		putInput.ObjectLockLegalHoldStatus = objectLockLegalHold.Status
+	}
+
 	if _, err := s3conn.PutObject(putInput); err != nil {
 		return fmt.Errorf("Error putting object in S3 bucket (%s): %s", bucket, err)
 	}
@@ -322,6 +352,10 @@ func resourceAwsS3BucketObjectRead(d *schema.ResourceData, meta interface{}) err
 		d.Set("storage_class", resp.StorageClass)
 	}
 
+	if err := d.Set("legal_hold", flattenS3ObjectLockLegalHoldFromString(resp.ObjectLockLegalHoldStatus)); err != nil {
+		return fmt.Errorf("error getting S3 object lock legal hold (bucket: %s, key: %s): %s", bucket, key, err)
+	}
+
 	if err := getTagsS3Object(s3conn, d); err != nil {
 		return fmt.Errorf("error getting S3 object tags (bucket: %s, key: %s): %s", bucket, key, err)
 	}
@@ -368,49 +402,72 @@ func resourceAwsS3BucketObjectUpdate(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("error setting S3 object tags: %s", err)
 	}
 
+	if d.HasChange("legal_hold") {
+		_, err := conn.PutObjectLegalHold(&s3.PutObjectLegalHoldInput{
+			Bucket:    aws.String(d.Get("bucket").(string)),
+			Key:       aws.String(d.Get("key").(string)),
+			LegalHold: expandS3ObjectLockLegalHold(d.Get("legal_hold").([]interface{})),
+		})
+		if err != nil {
+			return fmt.Errorf("error putting S3 object lock legal hold: %s", err)
+		}
+	}
+
 	return resourceAwsS3BucketObjectRead(d, meta)
 }
 
 func resourceAwsS3BucketObjectDelete(d *schema.ResourceData, meta interface{}) error {
-	s3conn := meta.(*AWSClient).s3conn
+	conn := meta.(*AWSClient).s3conn
 
 	bucket := d.Get("bucket").(string)
 	key := d.Get("key").(string)
 	// We are effectively ignoring any leading '/' in the key name as aws.Config.DisableRestProtocolURICleaning is false
 	key = strings.TrimPrefix(key, "/")
 
-	if _, ok := d.GetOk("version_id"); ok {
-		// Bucket is versioned, we need to delete all versions
-		vInput := s3.ListObjectVersionsInput{
-			Bucket: aws.String(bucket),
-			Prefix: aws.String(key),
-		}
-		out, err := s3conn.ListObjectVersions(&vInput)
-		if err != nil {
-			return fmt.Errorf("Failed listing S3 object versions: %s", err)
+	respList, err := conn.ListObjectVersions(&s3.ListObjectVersionsInput{
+		Bucket: aws.String(bucket),
+		Prefix: aws.String(key),
+	})
+	if err != nil {
+		return fmt.Errorf("error listing S3 object versions: %s", err)
+	}
+
+	force := d.Get("force_delete").(bool)
+	for _, v := range respList.Versions {
+		if aws.StringValue(v.Key) != key {
+			continue
 		}
 
-		for _, v := range out.Versions {
-			input := s3.DeleteObjectInput{
+		if force {
+			respHead, err := conn.HeadObject(&s3.HeadObjectInput{
 				Bucket:    aws.String(bucket),
-				Key:       aws.String(key),
+				Key:       v.Key,
 				VersionId: v.VersionId,
-			}
-			_, err := s3conn.DeleteObject(&input)
+			})
 			if err != nil {
-				return fmt.Errorf("Error deleting S3 object version of %s:\n %s:\n %s",
-					key, v, err)
+				return fmt.Errorf("error getting S3 object metadata: %s", err)
+			}
+
+			// Remove any legal hold.
+			if aws.StringValue(respHead.ObjectLockLegalHoldStatus) == s3.ObjectLockLegalHoldStatusOn {
+				_, err := conn.PutObjectLegalHold(&s3.PutObjectLegalHoldInput{
+					Bucket:    aws.String(bucket),
+					Key:       v.Key,
+					LegalHold: &s3.ObjectLockLegalHold{Status: aws.String(s3.ObjectLockLegalHoldStatusOff)},
+				})
+				if err != nil {
+					return fmt.Errorf("error putting S3 object lock legal hold: %s", err)
+				}
 			}
 		}
-	} else {
-		// Just delete the object
-		input := s3.DeleteObjectInput{
-			Bucket: aws.String(bucket),
-			Key:    aws.String(key),
-		}
-		_, err := s3conn.DeleteObject(&input)
+
+		_, err := conn.DeleteObject(&s3.DeleteObjectInput{
+			Bucket:    aws.String(bucket),
+			Key:       v.Key,
+			VersionId: v.VersionId,
+		})
 		if err != nil {
-			return fmt.Errorf("Error deleting S3 bucket object: %s  Bucket: %q Object: %q", err, bucket, key)
+			return fmt.Errorf("error deleting S3 bucket object: %s  Bucket: %q Object:\n %s", err, bucket, v)
 		}
 	}
 
@@ -423,4 +480,36 @@ func resourceAwsS3BucketObjectCustomizeDiff(d *schema.ResourceDiff, meta interfa
 	}
 
 	return nil
+}
+
+//
+// S3 Object Lock legal hold functions.
+//
+
+func expandS3ObjectLockLegalHold(vLegalHold []interface{}) *s3.ObjectLockLegalHold {
+	if len(vLegalHold) == 0 || vLegalHold[0] == nil {
+		return nil
+	}
+
+	mLegalHold := vLegalHold[0].(map[string]interface{})
+
+	objectLockLegalHold := &s3.ObjectLockLegalHold{}
+
+	if vStatus, ok := mLegalHold["status"].(string); ok && vStatus != "" {
+		objectLockLegalHold.Status = aws.String(vStatus)
+	}
+
+	return objectLockLegalHold
+}
+
+func flattenS3ObjectLockLegalHoldFromString(objectLockLegalHoldStatus *string) []interface{} {
+	if objectLockLegalHoldStatus == nil {
+		return []interface{}{}
+	}
+
+	mLegalHold := map[string]interface{}{
+		"status": aws.StringValue(objectLockLegalHoldStatus),
+	}
+
+	return []interface{}{mLegalHold}
 }

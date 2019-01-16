@@ -190,8 +190,7 @@ func TestAccAWSS3BucketObject_content(t *testing.T) {
 		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {},
-				Config:    testAccAWSS3BucketObjectConfigContent(rInt, "some_bucket_content"),
+				Config: testAccAWSS3BucketObjectConfigContent(rInt, "some_bucket_content"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketObjectExists(resourceName, &obj),
 					testAccCheckAWSS3BucketObjectBody(&obj, "some_bucket_content"),
@@ -212,8 +211,7 @@ func TestAccAWSS3BucketObject_contentBase64(t *testing.T) {
 		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {},
-				Config:    testAccAWSS3BucketObjectConfigContentBase64(rInt, base64.StdEncoding.EncodeToString([]byte("some_bucket_content"))),
+				Config: testAccAWSS3BucketObjectConfigContentBase64(rInt, base64.StdEncoding.EncodeToString([]byte("some_bucket_content"))),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketObjectExists(resourceName, &obj),
 					testAccCheckAWSS3BucketObjectBody(&obj, "some_bucket_content"),
@@ -334,8 +332,7 @@ func TestAccAWSS3BucketObject_kms(t *testing.T) {
 		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {},
-				Config:    testAccAWSS3BucketObjectConfig_withKMSId(rInt, source),
+				Config: testAccAWSS3BucketObjectConfig_withKMSId(rInt, source),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketObjectExists(resourceName, &obj),
 					testAccCheckAWSS3BucketObjectSSE(resourceName, "aws:kms"),
@@ -360,8 +357,7 @@ func TestAccAWSS3BucketObject_sse(t *testing.T) {
 		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {},
-				Config:    testAccAWSS3BucketObjectConfig_withSSE(rInt, source),
+				Config: testAccAWSS3BucketObjectConfig_withSSE(rInt, source),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketObjectExists(resourceName, &obj),
 					testAccCheckAWSS3BucketObjectSSE(resourceName, "AES256"),
@@ -426,8 +422,7 @@ func TestAccAWSS3BucketObject_storageClass(t *testing.T) {
 		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {},
-				Config:    testAccAWSS3BucketObjectConfigContent(rInt, "some_bucket_content"),
+				Config: testAccAWSS3BucketObjectConfigContent(rInt, "some_bucket_content"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketObjectExists(resourceName, &obj),
 					resource.TestCheckResourceAttr(resourceName, "storage_class", "STANDARD"),
@@ -482,8 +477,7 @@ func TestAccAWSS3BucketObject_tags(t *testing.T) {
 		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {},
-				Config:    testAccAWSS3BucketObjectConfig_withTags(rInt, key, "stuff"),
+				Config: testAccAWSS3BucketObjectConfig_withTags(rInt, key, "stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketObjectExists(resourceName, &obj1),
 					testAccCheckAWSS3BucketObjectBody(&obj1, "stuff"),
@@ -494,8 +488,7 @@ func TestAccAWSS3BucketObject_tags(t *testing.T) {
 				),
 			},
 			{
-				PreConfig: func() {},
-				Config:    testAccAWSS3BucketObjectConfig_withUpdatedTags(rInt, key, "stuff"),
+				Config: testAccAWSS3BucketObjectConfig_withUpdatedTags(rInt, key, "stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketObjectExists(resourceName, &obj2),
 					testAccCheckAWSS3BucketObjectVersionIdEquals(&obj2, &obj1),
@@ -508,8 +501,7 @@ func TestAccAWSS3BucketObject_tags(t *testing.T) {
 				),
 			},
 			{
-				PreConfig: func() {},
-				Config:    testAccAWSS3BucketObjectConfig_withNoTags(rInt, key, "stuff"),
+				Config: testAccAWSS3BucketObjectConfig_withNoTags(rInt, key, "stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketObjectExists(resourceName, &obj3),
 					testAccCheckAWSS3BucketObjectVersionIdEquals(&obj3, &obj2),
@@ -518,8 +510,7 @@ func TestAccAWSS3BucketObject_tags(t *testing.T) {
 				),
 			},
 			{
-				PreConfig: func() {},
-				Config:    testAccAWSS3BucketObjectConfig_withTags(rInt, key, "changed stuff"),
+				Config: testAccAWSS3BucketObjectConfig_withTags(rInt, key, "changed stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketObjectExists(resourceName, &obj4),
 					testAccCheckAWSS3BucketObjectVersionIdDiffers(&obj4, &obj3),
@@ -546,8 +537,7 @@ func TestAccAWSS3BucketObject_tagsLeadingSlash(t *testing.T) {
 		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {},
-				Config:    testAccAWSS3BucketObjectConfig_withTags(rInt, key, "stuff"),
+				Config: testAccAWSS3BucketObjectConfig_withTags(rInt, key, "stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketObjectExists(resourceName, &obj1),
 					testAccCheckAWSS3BucketObjectBody(&obj1, "stuff"),
@@ -558,8 +548,7 @@ func TestAccAWSS3BucketObject_tagsLeadingSlash(t *testing.T) {
 				),
 			},
 			{
-				PreConfig: func() {},
-				Config:    testAccAWSS3BucketObjectConfig_withUpdatedTags(rInt, key, "stuff"),
+				Config: testAccAWSS3BucketObjectConfig_withUpdatedTags(rInt, key, "stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketObjectExists(resourceName, &obj2),
 					testAccCheckAWSS3BucketObjectVersionIdEquals(&obj2, &obj1),
@@ -572,8 +561,7 @@ func TestAccAWSS3BucketObject_tagsLeadingSlash(t *testing.T) {
 				),
 			},
 			{
-				PreConfig: func() {},
-				Config:    testAccAWSS3BucketObjectConfig_withNoTags(rInt, key, "stuff"),
+				Config: testAccAWSS3BucketObjectConfig_withNoTags(rInt, key, "stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketObjectExists(resourceName, &obj3),
 					testAccCheckAWSS3BucketObjectVersionIdEquals(&obj3, &obj2),
@@ -582,8 +570,7 @@ func TestAccAWSS3BucketObject_tagsLeadingSlash(t *testing.T) {
 				),
 			},
 			{
-				PreConfig: func() {},
-				Config:    testAccAWSS3BucketObjectConfig_withTags(rInt, key, "changed stuff"),
+				Config: testAccAWSS3BucketObjectConfig_withTags(rInt, key, "changed stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketObjectExists(resourceName, &obj4),
 					testAccCheckAWSS3BucketObjectVersionIdDiffers(&obj4, &obj3),
@@ -593,6 +580,94 @@ func TestAccAWSS3BucketObject_tagsLeadingSlash(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSS3BucketObject_legalHoldStartWithNone(t *testing.T) {
+	var obj1, obj2, obj3 s3.GetObjectOutput
+	resourceName := "aws_s3_bucket_object.object"
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketObjectConfig_noLegalHold(rInt, "stuff"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketObjectExists(resourceName, &obj1),
+					testAccCheckAWSS3BucketObjectBody(&obj1, "stuff"),
+					resource.TestCheckResourceAttr(resourceName, "legal_hold.#", "0"),
+				),
+			},
+			{
+				Config: testAccAWSS3BucketObjectConfig_withLegalHold(rInt, "stuff", "ON"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketObjectExists(resourceName, &obj2),
+					testAccCheckAWSS3BucketObjectVersionIdEquals(&obj2, &obj1),
+					testAccCheckAWSS3BucketObjectBody(&obj2, "stuff"),
+					resource.TestCheckResourceAttr(resourceName, "legal_hold.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "legal_hold.0.status", "ON"),
+				),
+			},
+			// Ensure it shows a difference when removing legal_hold configuration
+			{
+				Config:             testAccAWSS3BucketObjectConfig_noLegalHold(rInt, "stuff"),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: true,
+			},
+			// Remove legal hold but create a new object version to test force_delete
+			{
+				Config: testAccAWSS3BucketObjectConfig_noLegalHold(rInt, "changed stuff"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketObjectExists(resourceName, &obj3),
+					testAccCheckAWSS3BucketObjectVersionIdDiffers(&obj3, &obj2),
+					testAccCheckAWSS3BucketObjectBody(&obj3, "changed stuff"),
+					resource.TestCheckResourceAttr(resourceName, "legal_hold.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "legal_hold.0.status", "OFF"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSS3BucketObject_legalHoldStartWithOn(t *testing.T) {
+	var obj1, obj2 s3.GetObjectOutput
+	resourceName := "aws_s3_bucket_object.object"
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketObjectConfig_withLegalHold(rInt, "stuff", "ON"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketObjectExists(resourceName, &obj1),
+					testAccCheckAWSS3BucketObjectBody(&obj1, "stuff"),
+					resource.TestCheckResourceAttr(resourceName, "legal_hold.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "legal_hold.0.status", "ON"),
+				),
+			},
+			{
+				Config: testAccAWSS3BucketObjectConfig_withLegalHold(rInt, "stuff", "OFF"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketObjectExists(resourceName, &obj2),
+					testAccCheckAWSS3BucketObjectVersionIdEquals(&obj2, &obj1),
+					testAccCheckAWSS3BucketObjectBody(&obj2, "stuff"),
+					resource.TestCheckResourceAttr(resourceName, "legal_hold.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "legal_hold.0.status", "OFF"),
+				),
+			},
+			// Ensure it shows no difference when removing legal_hold configuration
+			{
+				Config:             testAccAWSS3BucketObjectConfig_noLegalHold(rInt, "stuff"),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: false,
 			},
 		},
 	})
@@ -1009,4 +1084,49 @@ resource "aws_s3_bucket_object" "object" {
   content = "%s"
 }
 `, randInt, key, content)
+}
+
+func testAccAWSS3BucketObjectConfig_noLegalHold(randInt int, content string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "object_bucket" {
+  bucket = "tf-object-test-bucket-%d"
+  versioning {
+    enabled = true
+  }
+  object_lock_configuration {
+    object_lock_enabled = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_object" "object" {
+  bucket = "${aws_s3_bucket.object_bucket.bucket}"
+  key = "test-key"
+  content = "%s"
+  force_delete = true
+}
+`, randInt, content)
+}
+
+func testAccAWSS3BucketObjectConfig_withLegalHold(randInt int, content, legalHoldStatus string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "object_bucket" {
+  bucket = "tf-object-test-bucket-%d"
+  versioning {
+    enabled = true
+  }
+  object_lock_configuration {
+    object_lock_enabled = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_object" "object" {
+  bucket = "${aws_s3_bucket.object_bucket.bucket}"
+  key = "test-key"
+  content = "%s"
+  legal_hold {
+    status = "%s"
+  }
+  force_delete = true
+}
+`, randInt, content, legalHoldStatus)
 }
