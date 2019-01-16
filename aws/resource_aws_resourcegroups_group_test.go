@@ -92,11 +92,7 @@ func testAccCheckAWSResourceGroupExists(n string) resource.TestCheckFunc {
 			GroupName: aws.String(rs.Primary.ID),
 		})
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

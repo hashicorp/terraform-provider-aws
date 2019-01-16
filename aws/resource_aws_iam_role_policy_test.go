@@ -239,10 +239,8 @@ func testAccCheckIAMRolePolicyDisappears(out *iam.GetRolePolicyOutput) resource.
 			RoleName:   out.RoleName,
 		}
 
-		if _, err := iamconn.DeleteRolePolicy(params); err != nil {
-			return err
-		}
-		return nil
+		_, err := iamconn.DeleteRolePolicy(params)
+		return err
 	}
 }
 

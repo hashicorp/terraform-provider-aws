@@ -102,11 +102,7 @@ func testAccCheckAWSSfnExists(n string) resource.TestCheckFunc {
 			StateMachineArn: aws.String(rs.Primary.ID),
 		})
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

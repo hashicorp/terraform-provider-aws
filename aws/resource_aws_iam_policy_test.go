@@ -242,10 +242,8 @@ func testAccCheckAWSIAMPolicyDisappears(out *iam.GetPolicyOutput) resource.TestC
 			PolicyArn: out.Policy.Arn,
 		}
 
-		if _, err := iamconn.DeletePolicy(params); err != nil {
-			return err
-		}
-		return nil
+		_, err := iamconn.DeletePolicy(params)
+		return err
 	}
 }
 

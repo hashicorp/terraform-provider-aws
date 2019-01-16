@@ -16,8 +16,8 @@ import (
 
 func TestAccAWSLoadBalancerListenerPolicy_basic(t *testing.T) {
 	rChar := acctest.RandStringFromCharSet(6, acctest.CharSetAlpha)
-	lbName := fmt.Sprintf("%s", rChar)
-	mcName := fmt.Sprintf("%s", rChar)
+	lbName := rChar
+	mcName := rChar
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
