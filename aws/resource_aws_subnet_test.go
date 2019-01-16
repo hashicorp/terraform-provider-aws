@@ -74,6 +74,14 @@ func testSweepSubnets(region string) error {
 	}
 
 	for _, subnet := range resp.Subnets {
+		if subnet == nil {
+			continue
+		}
+
+		if aws.BoolValue(subnet.DefaultForAz) {
+			continue
+		}
+
 		// delete the subnet
 		_, err := conn.DeleteSubnet(&ec2.DeleteSubnetInput{
 			SubnetId: subnet.SubnetId,
