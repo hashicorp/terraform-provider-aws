@@ -11,6 +11,7 @@ FEATURES
 * **New Resource:** `aws_globalaccelerator_accelerator` [GH-7002]
 * **New Resource:** `aws_lambda_layer_version` [GH-6782]
 * **New Resource:** `aws_ram_resource_share` [GH-6528]
+* **New Resource:** `aws_sagemaker_notebook_instance` [GH-7139]
 
 ENHANCEMENTS
 
