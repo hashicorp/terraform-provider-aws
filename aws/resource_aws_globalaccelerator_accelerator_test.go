@@ -13,7 +13,7 @@ import (
 func TestAccAwsGlobalAcceleratorAccelerator_basic(t *testing.T) {
 	resourceName := "aws_globalaccelerator_accelerator.example"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	ipRegex := regexp.MustCompile("\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}")
+	ipRegex := regexp.MustCompile(`\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}`)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
