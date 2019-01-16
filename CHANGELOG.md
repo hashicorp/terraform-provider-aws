@@ -1,4 +1,4 @@
-## 1.56.0 (Unreleased)
+## 1.56.0 (January 16, 2019)
 
 NOTES
 
@@ -6,37 +6,37 @@ NOTES
 
 FEATURES
 
-* **New Data Source:** `aws_elastic_beanstalk_application` [GH-7144]
-* **New Resource:** `aws_docdb_subnet_group` [GH-7106]
-* **New Resource:** `aws_globalaccelerator_accelerator` [GH-7002]
-* **New Resource:** `aws_lambda_layer_version` [GH-6782]
-* **New Resource:** `aws_ram_resource_share` [GH-6528]
-* **New Resource:** `aws_sagemaker_notebook_instance` [GH-7139]
+* **New Data Source:** `aws_elastic_beanstalk_application` ([#7144](https://github.com/terraform-providers/terraform-provider-aws/issues/7144))
+* **New Resource:** `aws_docdb_subnet_group` ([#7106](https://github.com/terraform-providers/terraform-provider-aws/issues/7106))
+* **New Resource:** `aws_globalaccelerator_accelerator` ([#7002](https://github.com/terraform-providers/terraform-provider-aws/issues/7002))
+* **New Resource:** `aws_lambda_layer_version` ([#6782](https://github.com/terraform-providers/terraform-provider-aws/issues/6782))
+* **New Resource:** `aws_ram_resource_share` ([#6528](https://github.com/terraform-providers/terraform-provider-aws/issues/6528))
+* **New Resource:** `aws_sagemaker_notebook_instance` ([#7139](https://github.com/terraform-providers/terraform-provider-aws/issues/7139))
 
 ENHANCEMENTS
 
-* data-source/aws_lambda_function: Add `layers` attribute [GH-7126]
-* resource/aws_emr_cluster: Support resource import [GH-4488] / [GH-6498]
-* resource/aws_emr_cluster: Support `instance_group` `autoscaling_policy` updates [GH-6498]
-* resource/aws_inspector_assessment_target: Allow omitting resource_group_arn argument (support matching all EC2 instances) [GH-7112]
-* resource/aws_inspector_assessment_target: Support resource import [GH-7112]
-* resource/aws_lambda_function: Add `layers` argument [GH-7126]
-* resource/aws_s3_bucket: Add `object_lock_configuration` argument (support S3 Object Lock) [GH-6964]
+* data-source/aws_lambda_function: Add `layers` attribute ([#7126](https://github.com/terraform-providers/terraform-provider-aws/issues/7126))
+* resource/aws_emr_cluster: Support resource import ([#4488](https://github.com/terraform-providers/terraform-provider-aws/issues/4488)] / [[#6498](https://github.com/terraform-providers/terraform-provider-aws/issues/6498))
+* resource/aws_emr_cluster: Support `instance_group` `autoscaling_policy` updates ([#6498](https://github.com/terraform-providers/terraform-provider-aws/issues/6498))
+* resource/aws_inspector_assessment_target: Allow omitting resource_group_arn argument (support matching all EC2 instances) ([#7112](https://github.com/terraform-providers/terraform-provider-aws/issues/7112))
+* resource/aws_inspector_assessment_target: Support resource import ([#7112](https://github.com/terraform-providers/terraform-provider-aws/issues/7112))
+* resource/aws_lambda_function: Add `layers` argument ([#7126](https://github.com/terraform-providers/terraform-provider-aws/issues/7126))
+* resource/aws_s3_bucket: Add `object_lock_configuration` argument (support S3 Object Lock) ([#6964](https://github.com/terraform-providers/terraform-provider-aws/issues/6964))
 
 BUG FIXES
 
-* resource/aws_acm_certificate: Prevent crash with empty `SubjectAlternativeNames` (e.g. `IMPORTED` type certificates with IP address `CommonName`) [GH-7127]
-* resource/aws_api_gateway_method_settings: Prevent crash when using `cache_data_encrypted` [GH-7133]
-* resource/aws_db_option_group: Read `option` attribute into Terraform state for drift detection [GH-7125]
-* resource/aws_db_option_group: Skip erroneous `ModifyOptionGroup` error when no option updates are being performed [GH-7125]
-* resource/aws_ec2_transit_gateway_route: Prevent crash with externally removed attachment [GH-7117]
-* resource/aws_emr_cluster: Properly read `core_instance_count`, `master_instance_type`, and `termination_policies` into Terraform state [GH-4488] / [GH-6498]
-* resource/aws_inspector_assessment_target: Properly read resource_group_arn attribute into Terraform state [GH-7112]
-* resource/aws_launch_template: Prevent crashes with empty configuration blocks for top-level attributes [GH-7134]
-* resource/aws_s3_bucket_object: Prevent creating new S3 object version when updating ACL or tags [GH-7138]
-* resource/aws_s3_bucket_object: Prevent `NoSuchKey` errors reading tags on resource creation [GH-7138]
-* service/applicationautoscaling: Use proper endpoint information in AWS GovCloud (US) [GH-7142]
-* service/servicediscovery: Return full error messaging for failed operations [GH-7118]
+* resource/aws_acm_certificate: Prevent crash with empty `SubjectAlternativeNames` (e.g. `IMPORTED` type certificates with IP address `CommonName`) ([#7127](https://github.com/terraform-providers/terraform-provider-aws/issues/7127))
+* resource/aws_api_gateway_method_settings: Prevent crash when using `cache_data_encrypted` ([#7133](https://github.com/terraform-providers/terraform-provider-aws/issues/7133))
+* resource/aws_db_option_group: Read `option` attribute into Terraform state for drift detection ([#7125](https://github.com/terraform-providers/terraform-provider-aws/issues/7125))
+* resource/aws_db_option_group: Skip erroneous `ModifyOptionGroup` error when no option updates are being performed ([#7125](https://github.com/terraform-providers/terraform-provider-aws/issues/7125))
+* resource/aws_ec2_transit_gateway_route: Prevent crash with externally removed attachment ([#7117](https://github.com/terraform-providers/terraform-provider-aws/issues/7117))
+* resource/aws_emr_cluster: Properly read `core_instance_count`, `master_instance_type`, and `termination_policies` into Terraform state ([#4488](https://github.com/terraform-providers/terraform-provider-aws/issues/4488)] / [[#6498](https://github.com/terraform-providers/terraform-provider-aws/issues/6498))
+* resource/aws_inspector_assessment_target: Properly read resource_group_arn attribute into Terraform state ([#7112](https://github.com/terraform-providers/terraform-provider-aws/issues/7112))
+* resource/aws_launch_template: Prevent crashes with empty configuration blocks for top-level attributes ([#7134](https://github.com/terraform-providers/terraform-provider-aws/issues/7134))
+* resource/aws_s3_bucket_object: Prevent creating new S3 object version when updating ACL or tags ([#7138](https://github.com/terraform-providers/terraform-provider-aws/issues/7138))
+* resource/aws_s3_bucket_object: Prevent `NoSuchKey` errors reading tags on resource creation ([#7138](https://github.com/terraform-providers/terraform-provider-aws/issues/7138))
+* service/applicationautoscaling: Use proper endpoint information in AWS GovCloud (US) ([#7142](https://github.com/terraform-providers/terraform-provider-aws/issues/7142))
+* service/servicediscovery: Return full error messaging for failed operations ([#7118](https://github.com/terraform-providers/terraform-provider-aws/issues/7118))
 
 ## 1.55.0 (January 10, 2019)
 
