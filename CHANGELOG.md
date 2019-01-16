@@ -21,6 +21,7 @@ ENHANCEMENTS
 * resource/aws_inspector_assessment_target: Allow omitting resource_group_arn argument (support matching all EC2 instances) [GH-7112]
 * resource/aws_inspector_assessment_target: Support resource import [GH-7112]
 * resource/aws_lambda_function: Add `layers` argument [GH-7126]
+* resource/aws_s3_bucket: Add `object_lock_configuration` argument (support S3 Object Lock) [GH-6964]
 
 BUG FIXES
 
