@@ -23,6 +23,34 @@ func TestAccAwsEc2ClientVpnEndpoint_basic(t *testing.T) {
 				Config: testAccEc2ClientVpnEndpointConfig(rStr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsEc2ClientVpnEndpointExists("aws_ec2_client_vpn_endpoint.test"),
+					resource.TestCheckResourceAttr("aws_ec2_client_vpn_endpoint.test", "authentication_options.#", "1"),
+					resource.TestCheckResourceAttr("aws_ec2_client_vpn_endpoint.test", "authentication_options.0.type", "certificate-authentication"),
+				),
+			},
+
+			{
+				ResourceName:      "aws_ec2_client_vpn_endpoint.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAwsEc2ClientVpnEndpoint_msAD(t *testing.T) {
+	rStr := acctest.RandString(5)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProvidersWithTLS,
+		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEc2ClientVpnEndpointConfigWithMicrosoftAD(rStr),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsEc2ClientVpnEndpointExists("aws_ec2_client_vpn_endpoint.test"),
+					resource.TestCheckResourceAttr("aws_ec2_client_vpn_endpoint.test", "authentication_options.#", "1"),
+					resource.TestCheckResourceAttr("aws_ec2_client_vpn_endpoint.test", "authentication_options.0.type", "directory-service-authentication"),
 				),
 			},
 
@@ -272,6 +300,78 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
   authentication_options {
     type = "certificate-authentication"
     root_certificate_chain_arn = "${aws_acm_certificate.cert.arn}"
+  }
+
+  connection_log_options {
+    enabled = false
+  }
+}
+`, rName)
+}
+
+func testAccEc2ClientVpnEndpointConfigWithMicrosoftAD(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block  = "10.0.0.0/16"
+}
+
+resource "aws_subnet" "test1" {
+  vpc_id     				= "${aws_vpc.test.id}"
+  cidr_block 				= "10.0.1.0/24"
+  availability_zone = "us-east-1a"
+}
+
+resource "aws_subnet" "test2" {
+  vpc_id     				= "${aws_vpc.test.id}"
+  cidr_block 				= "10.0.2.0/24"
+  availability_zone = "us-east-1d"
+}
+
+resource "aws_directory_service_directory" "test" {
+  name = "corp.notexample.com"
+  password = "SuperSecretPassw0rd"
+  type = "MicrosoftAD"
+  vpc_settings {
+    vpc_id = "${aws_vpc.test.id}"
+    subnet_ids = ["${aws_subnet.test1.id}", "${aws_subnet.test2.id}"]
+  }
+}
+
+resource "tls_private_key" "example" {
+  algorithm = "RSA"
+}
+
+resource "tls_self_signed_cert" "example" {
+  key_algorithm   = "RSA"
+  private_key_pem = "${tls_private_key.example.private_key_pem}"
+
+  subject {
+    common_name  = "example.com"
+    organization = "ACME Examples, Inc"
+  }
+
+  validity_period_hours = 12
+
+  allowed_uses = [
+    "key_encipherment",
+    "digital_signature",
+    "server_auth",
+  ]
+}
+
+resource "aws_acm_certificate" "cert" {
+  private_key      = "${tls_private_key.example.private_key_pem}"
+  certificate_body = "${tls_self_signed_cert.example.cert_pem}"
+}
+
+resource "aws_ec2_client_vpn_endpoint" "test" {
+  description = "terraform-testacc-clientvpn-%s"
+  server_certificate_arn = "${aws_acm_certificate.cert.arn}"
+  client_cidr_block = "10.0.0.0/16"
+
+  authentication_options {
+    type = "directory-service-authentication"
+    active_directory_id = "${aws_directory_service_directory.test.id}"
   }
 
   connection_log_options {
