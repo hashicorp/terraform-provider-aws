@@ -425,7 +425,7 @@ func kmsGrantConstraintsIsValid(constraints *schema.Set) bool {
 		}
 	}
 
-	return constraintCount > 1
+	return constraintCount <= 1
 
 }
 
