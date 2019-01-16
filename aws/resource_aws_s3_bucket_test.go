@@ -867,7 +867,7 @@ func TestAccAWSS3Bucket_Logging(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3Bucket_Lifecycle(t *testing.T) {
+func TestAccAWSS3Bucket_LifecycleBasic(t *testing.T) {
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
