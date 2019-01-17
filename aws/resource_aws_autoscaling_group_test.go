@@ -2789,7 +2789,7 @@ resource "aws_autoscaling_group" "bar" {
   desired_capacity = 0
   max_size = 0
   min_size = 0
-  launch_template = {
+  launch_template {
     id = "${aws_launch_template.foobar.id}"
     version = "${aws_launch_template.foobar.default_version}"
   }
@@ -2872,7 +2872,7 @@ resource "aws_autoscaling_group" "bar" {
   desired_capacity = 0
   max_size = 0
   min_size = 0
-  launch_template = {
+  launch_template {
     name = "foobar2"
   }
 }
@@ -2917,7 +2917,7 @@ resource "aws_autoscaling_group" "bar" {
   desired_capacity = 0
   max_size = 0
   min_size = 0
-  launch_template = {
+  launch_template {
     id = "${aws_launch_template.foobar.id}"
     version = "$$Latest"
   }
