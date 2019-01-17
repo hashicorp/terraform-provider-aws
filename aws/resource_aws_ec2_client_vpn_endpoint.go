@@ -192,6 +192,18 @@ func resourceAwsEc2ClientVpnEndpointRead(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("Error reading Client VPN endpoint: %s", err)
 	}
 
+	if result == nil || len(result.ClientVpnEndpoints) == 0 || result.ClientVpnEndpoints[0] == nil {
+		log.Printf("[WARN] EC2 Client VPN Endpoint (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if result.ClientVpnEndpoints[0].Status != nil && aws.StringValue(result.ClientVpnEndpoints[0].Status.Code) == ec2.ClientVpnEndpointStatusCodeDeleted {
+		log.Printf("[WARN] EC2 Client VPN Endpoint (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	d.Set("description", result.ClientVpnEndpoints[0].Description)
 	d.Set("client_cidr_block", result.ClientVpnEndpoints[0].ClientCidrBlock)
 	d.Set("server_certificate_arn", result.ClientVpnEndpoints[0].ServerCertificateArn)
