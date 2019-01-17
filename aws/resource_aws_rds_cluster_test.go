@@ -1848,10 +1848,7 @@ resource "aws_rds_cluster" "default" {
 
 func testAccAWSClusterConfig_EngineVersion(rInt int, engine, engineVersion string) string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {}
-
 resource "aws_rds_cluster" "test" {
-  availability_zones              = ["${data.aws_availability_zones.available.names}"]
   cluster_identifier              = "tf-acc-test-%d"
   database_name                   = "mydb"
   db_cluster_parameter_group_name = "default.aurora-postgresql9.6"
@@ -1866,11 +1863,7 @@ resource "aws_rds_cluster" "test" {
 
 func testAccAWSClusterConfig_EngineVersionWithPrimaryInstance(rInt int, engine, engineVersion string) string {
 	return fmt.Sprintf(`
-
-data "aws_availability_zones" "available" {}
-
 resource "aws_rds_cluster" "test" {
-  availability_zones              = ["${data.aws_availability_zones.available.names}"]
   cluster_identifier              = "tf-acc-test-%d"
   database_name                   = "mydb"
   db_cluster_parameter_group_name = "default.aurora-postgresql9.6"
@@ -1892,10 +1885,7 @@ resource "aws_rds_cluster_instance" "test" {
 
 func testAccAWSClusterConfig_Port(rInt, port int) string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {}
-
 resource "aws_rds_cluster" "test" {
-  availability_zones              = ["${data.aws_availability_zones.available.names}"]
   cluster_identifier              = "tf-acc-test-%d"
   database_name                   = "mydb"
   db_cluster_parameter_group_name = "default.aurora-postgresql9.6"
