@@ -19,7 +19,7 @@ func TestAccAWSEc2TransitGatewayVpcAttachment_basic(t *testing.T) {
 	vpcResourceName := "aws_vpc.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayVpcAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -52,7 +52,7 @@ func TestAccAWSEc2TransitGatewayVpcAttachment_disappears(t *testing.T) {
 	resourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayVpcAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -73,7 +73,7 @@ func TestAccAWSEc2TransitGatewayVpcAttachment_DnsSupport(t *testing.T) {
 	resourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayVpcAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -106,7 +106,7 @@ func TestAccAWSEc2TransitGatewayVpcAttachment_Ipv6Support(t *testing.T) {
 	resourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayVpcAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -140,7 +140,7 @@ func TestAccAWSEc2TransitGatewayVpcAttachment_SubnetIds(t *testing.T) {
 	resourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayVpcAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -181,7 +181,7 @@ func TestAccAWSEc2TransitGatewayVpcAttachment_Tags(t *testing.T) {
 	resourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayVpcAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -228,7 +228,7 @@ func TestAccAWSEc2TransitGatewayVpcAttachment_TransitGatewayDefaultRouteTableAss
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayVpcAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -259,7 +259,7 @@ func TestAccAWSEc2TransitGatewayVpcAttachment_TransitGatewayDefaultRouteTableAss
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayVpcAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -308,7 +308,7 @@ func TestAccAWSEc2TransitGatewayVpcAttachment_TransitGatewayDefaultRouteTablePro
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayVpcAttachmentDestroy,
 		Steps: []resource.TestStep{

@@ -362,13 +362,19 @@ func resourceAwsDynamoDbTableCreate(d *schema.ResourceData, meta interface{}) er
 			if isAWSErr(err, dynamodb.ErrCodeLimitExceededException, "indexed tables that can be created simultaneously") {
 				return resource.RetryableError(err)
 			}
+			// AWS GovCloud (US) and others may reply with the following until their API is updated:
+			// ValidationException: One or more parameter values were invalid: Unsupported input parameter BillingMode
+			if isAWSErr(err, "ValidationException", "Unsupported input parameter BillingMode") {
+				req.BillingMode = nil
+				return resource.RetryableError(err)
+			}
 
 			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating DynamoDB Table: %s", err)
 	}
 
 	d.SetId(*output.TableDescription.TableName)

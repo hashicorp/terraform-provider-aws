@@ -29,7 +29,7 @@ func TestAccAWSInspectorTemplate_basic(t *testing.T) {
 			{
 				Config: testAccCheckAWSInspectorTemplatetModified(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSInspectorTargetExists("aws_inspector_assessment_template.foo"),
+					testAccCheckAWSInspectorTemplateExists("aws_inspector_assessment_template.foo"),
 				),
 			},
 		},

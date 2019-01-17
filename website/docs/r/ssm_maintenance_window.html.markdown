@@ -30,6 +30,10 @@ The following arguments are supported:
 * `cutoff` - (Required) The number of hours before the end of the Maintenance Window that Systems Manager stops scheduling new tasks for execution.
 * `duration` - (Required) The duration of the Maintenance Window in hours.
 * `allow_unassociated_targets` - (Optional) Whether targets must be registered with the Maintenance Window before tasks can be defined for those targets.
+* `enabled` - (Optional) Whether the maintenance window is enabled. Default: `true`.
+* `end_date` - (Optional) Timestamp in [ISO-8601 extended format](https://www.iso.org/iso-8601-date-and-time-format.html) when to no longer run the maintenance window.
+* `schedule_timezone` - (Optional) Timezone for schedule in [Internet Assigned Numbers Authority (IANA) Time Zone Database format](https://www.iana.org/time-zones). For example: `America/Los_Angeles`, `etc/UTC`, or `Asia/Seoul`.
+* `start_date` - (Optional) Timestamp in [ISO-8601 extended format](https://www.iso.org/iso-8601-date-and-time-format.html) when to begin the maintenance window.
 
 ## Attributes Reference
 

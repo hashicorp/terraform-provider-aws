@@ -334,6 +334,7 @@ the costs of any data transfer. See [Requester Pays Buckets](http://docs.aws.ama
 developer guide for more information.
 * `replication_configuration` - (Optional) A configuration of [replication configuration](http://docs.aws.amazon.com/AmazonS3/latest/dev/crr.html) (documented below).
 * `server_side_encryption_configuration` - (Optional) A configuration of [server-side encryption configuration](http://docs.aws.amazon.com/AmazonS3/latest/dev/bucket-encryption.html) (documented below)
+* `object_lock_configuration` - (Optional) A configuration of [S3 object locking](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock.html) (documented below)
 
 ~> **NOTE:** You cannot use `acceleration_status` in `cn-north-1` or `us-gov-west-1`
 
@@ -460,6 +461,27 @@ The `apply_server_side_encryption_by_default` object supports the following:
 The `access_control_translation` object supports the following:
 
 * `owner` - (Required) The override value for the owner on replicated objects. Currently only `Destination` is supported.
+
+The `object_lock_configuration` object supports the following:
+
+* `object_lock_enabled` - (Required) Indicates whether this bucket has an Object Lock configuration enabled. Valid value is `Enabled`.
+* `rule` - (Optional) The Object Lock rule in place for this bucket.
+
+The `rule` object supports the following:
+
+* `default_retention` - (Required) The default retention period that you want to apply to new objects placed in this bucket.
+
+The `default_retention` object supports the following:
+
+* `mode` - (Required) The default Object Lock retention mode you want to apply to new objects placed in this bucket. Valid values are `GOVERNANCE` and `COMPLIANCE`.
+* `days` - (Optional) The number of days that you want to specify for the default retention period.
+* `years` - (Optional) The number of years that you want to specify for the default retention period.
+
+Either `days` or `years` must be specified, but not both.
+
+~> **NOTE on `object_lock_configuration`:** You can only enable S3 Object Lock for new buckets. If you need to turn on S3 Object Lock for an existing bucket, please contact AWS Support.
+When you create a bucket with S3 Object Lock enabled, Amazon S3 automatically enables versioning for the bucket.
+Once you create a bucket with S3 Object Lock enabled, you can't disable Object Lock or suspend versioning for the bucket.
 
 ## Attributes Reference
 

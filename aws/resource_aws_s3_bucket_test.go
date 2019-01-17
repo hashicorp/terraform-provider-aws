@@ -1357,6 +1357,38 @@ func TestAccAWSS3Bucket_ReplicationSchemaV2(t *testing.T) {
 	})
 }
 
+func TestAccAWSS3Bucket_objectLock(t *testing.T) {
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketObjectLockEnabledNoDefaultRetention(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketExists("aws_s3_bucket.arbitrary"),
+					resource.TestCheckResourceAttr("aws_s3_bucket.arbitrary", "object_lock_configuration.#", "1"),
+					resource.TestCheckResourceAttr("aws_s3_bucket.arbitrary", "object_lock_configuration.0.object_lock_enabled", "Enabled"),
+					resource.TestCheckResourceAttr("aws_s3_bucket.arbitrary", "object_lock_configuration.0.rule.#", "0"),
+				),
+			},
+			{
+				Config: testAccAWSS3BucketObjectLockEnabledWithDefaultRetention(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketExists("aws_s3_bucket.arbitrary"),
+					resource.TestCheckResourceAttr("aws_s3_bucket.arbitrary", "object_lock_configuration.#", "1"),
+					resource.TestCheckResourceAttr("aws_s3_bucket.arbitrary", "object_lock_configuration.0.object_lock_enabled", "Enabled"),
+					resource.TestCheckResourceAttr("aws_s3_bucket.arbitrary", "object_lock_configuration.0.rule.#", "1"),
+					resource.TestCheckResourceAttr("aws_s3_bucket.arbitrary", "object_lock_configuration.0.rule.0.default_retention.0.mode", "COMPLIANCE"),
+					resource.TestCheckResourceAttr("aws_s3_bucket.arbitrary", "object_lock_configuration.0.rule.0.default_retention.0.days", "3"),
+				),
+			},
+		},
+	})
+}
+
 func TestAWSS3BucketName(t *testing.T) {
 	validDnsNames := []string{
 		"foobar",
@@ -2951,6 +2983,37 @@ resource "aws_s3_bucket" "destination" {
     }
 }
 `, randInt, randInt, randInt)
+}
+
+func testAccAWSS3BucketObjectLockEnabledNoDefaultRetention(randInt int) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "arbitrary" {
+  bucket = "tf-test-bucket-%d"
+
+  object_lock_configuration {
+    object_lock_enabled = "Enabled"
+  }
+}
+`, randInt)
+}
+
+func testAccAWSS3BucketObjectLockEnabledWithDefaultRetention(randInt int) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "arbitrary" {
+  bucket = "tf-test-bucket-%d"
+
+  object_lock_configuration {
+    object_lock_enabled = "Enabled"
+
+    rule {
+      default_retention {
+        mode = "COMPLIANCE"
+        days = 3
+      }
+    }
+  }
+}
+`, randInt)
 }
 
 const testAccAWSS3BucketConfig_namePrefix = `

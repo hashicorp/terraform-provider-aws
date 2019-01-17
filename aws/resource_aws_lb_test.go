@@ -1873,7 +1873,7 @@ data "aws_iam_policy_document" "logs_bucket" {
     effect    = "Allow"
     resources = ["arn:${data.aws_partition.current.partition}:s3:::${var.bucket_name}/${var.bucket_prefix}${var.bucket_prefix == "" ? "" : "/"}AWSLogs/${data.aws_caller_identity.current.account_id}/*"]
 
-    principals = {
+    principals {
       type        = "AWS"
       identifiers = ["${data.aws_elb_service_account.current.arn}"]
     }

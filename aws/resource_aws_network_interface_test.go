@@ -253,7 +253,7 @@ func testAccCheckAWSENIAttributes(conf *ec2.NetworkInterface) resource.TestCheck
 			return fmt.Errorf("expected private dns name to be ip-172-16-10-100.us-west-2.compute.internal, but was %s", *conf.PrivateDnsName)
 		}
 
-		if *conf.SourceDestCheck != true {
+		if !*conf.SourceDestCheck {
 			return fmt.Errorf("expected source_dest_check to be true, but was %t", *conf.SourceDestCheck)
 		}
 

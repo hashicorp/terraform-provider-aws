@@ -16,7 +16,10 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_internet_gateway", &resource.Sweeper{
 		Name: "aws_internet_gateway",
-		F:    testSweepInternetGateways,
+		Dependencies: []string{
+			"aws_subnet",
+		},
+		F: testSweepInternetGateways,
 	})
 }
 
