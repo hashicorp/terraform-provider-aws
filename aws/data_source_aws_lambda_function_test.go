@@ -350,7 +350,7 @@ resource "aws_lambda_function" "acctest_create" {
   handler = "exports.example"
   runtime = "nodejs8.10"
 
-  vpc_config = {
+  vpc_config {
     subnet_ids = ["${aws_subnet.lambda.id}"]
     security_group_ids = ["${aws_security_group.lambda.id}"]
   }
