@@ -47,6 +47,20 @@ func stringSliceToVariableValue(values []string) []ast.Variable {
 	return output
 }
 
+// listVariableSliceToVariableValue converts a list of lists into the value
+// required to be returned from interpolation functions which return TypeList.
+func listVariableSliceToVariableValue(values [][]ast.Variable) []ast.Variable {
+	output := make([]ast.Variable, len(values))
+
+	for index, value := range values {
+		output[index] = ast.Variable{
+			Type:  ast.TypeList,
+			Value: value,
+		}
+	}
+	return output
+}
+
 func listVariableValueToStringSlice(values []ast.Variable) ([]string, error) {
 	output := make([]string, len(values))
 	for index, value := range values {

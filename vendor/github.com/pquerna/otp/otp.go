@@ -138,11 +138,6 @@ func (k *Key) Secret() string {
 	return q.Get("secret")
 }
 
-// URL returns the OTP URL as a string
-func (k *Key) URL() string {
-	return k.url.String()
-}
-
 // Algorithm represents the hashing function to use in the HMAC
 // operation needed for OTPs.
 type Algorithm int

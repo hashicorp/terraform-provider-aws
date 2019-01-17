@@ -164,13 +164,13 @@ github.com/bgentry/go-netrc/netrc
 github.com/bgentry/speakeasy
 # github.com/blang/semver v3.5.1+incompatible
 github.com/blang/semver
-# github.com/boombuler/barcode v0.0.0-20180809052337-34fff276c74e
+# github.com/boombuler/barcode v1.0.0
 github.com/boombuler/barcode
 github.com/boombuler/barcode/qr
 github.com/boombuler/barcode/utils
 # github.com/davecgh/go-spew v1.1.1
 github.com/davecgh/go-spew/spew
-# github.com/golang/protobuf v0.0.0-20171113180720-1e59b77b52bf
+# github.com/golang/protobuf v1.2.0
 github.com/golang/protobuf/proto
 github.com/golang/protobuf/ptypes
 github.com/golang/protobuf/ptypes/any
@@ -178,6 +178,11 @@ github.com/golang/protobuf/ptypes/duration
 github.com/golang/protobuf/ptypes/timestamp
 # github.com/golang/snappy v0.0.0-20180518054509-2e65f85255db
 github.com/golang/snappy
+# github.com/google/go-cmp v0.2.0
+github.com/google/go-cmp/cmp
+github.com/google/go-cmp/cmp/internal/diff
+github.com/google/go-cmp/cmp/internal/function
+github.com/google/go-cmp/cmp/internal/value
 # github.com/hashicorp/errwrap v1.0.0
 github.com/hashicorp/errwrap
 # github.com/hashicorp/go-cleanhttp v0.5.0
@@ -185,19 +190,20 @@ github.com/hashicorp/go-cleanhttp
 # github.com/hashicorp/go-getter v0.0.0-20180327010114-90bb99a48d86
 github.com/hashicorp/go-getter
 github.com/hashicorp/go-getter/helper/url
-# github.com/hashicorp/go-hclog v0.0.0-20171005151751-ca137eb4b438
+# github.com/hashicorp/go-hclog v0.0.0-20181001195459-61d530d6c27f
 github.com/hashicorp/go-hclog
 # github.com/hashicorp/go-multierror v1.0.0
 github.com/hashicorp/go-multierror
-# github.com/hashicorp/go-plugin v0.0.0-20170816151819-a5174f84d7f8
+# github.com/hashicorp/go-plugin v0.0.0-20181212150838-f444068e8f5a
 github.com/hashicorp/go-plugin
+github.com/hashicorp/go-plugin/internal/proto
 # github.com/hashicorp/go-safetemp v1.0.0
 github.com/hashicorp/go-safetemp
 # github.com/hashicorp/go-uuid v1.0.0
 github.com/hashicorp/go-uuid
 # github.com/hashicorp/go-version v1.0.0
 github.com/hashicorp/go-version
-# github.com/hashicorp/hcl v0.0.0-20170504190234-a4b07c25de5f
+# github.com/hashicorp/hcl v1.0.0
 github.com/hashicorp/hcl
 github.com/hashicorp/hcl/hcl/ast
 github.com/hashicorp/hcl/hcl/parser
@@ -207,21 +213,25 @@ github.com/hashicorp/hcl/hcl/scanner
 github.com/hashicorp/hcl/hcl/strconv
 github.com/hashicorp/hcl/json/scanner
 github.com/hashicorp/hcl/json/token
-# github.com/hashicorp/hcl2 v0.0.0-20171003232734-44bad6dbf549
-github.com/hashicorp/hcl2/gohcl
+# github.com/hashicorp/hcl2 v0.0.0-20181220012050-6631d7cd0a68
 github.com/hashicorp/hcl2/hcl
-github.com/hashicorp/hcl2/hclparse
-github.com/hashicorp/hcl2/hcldec
 github.com/hashicorp/hcl2/hcl/hclsyntax
+github.com/hashicorp/hcl2/hcldec
+github.com/hashicorp/hcl2/hcled
+github.com/hashicorp/hcl2/hclparse
+github.com/hashicorp/hcl2/gohcl
+github.com/hashicorp/hcl2/ext/typeexpr
+github.com/hashicorp/hcl2/ext/dynblock
 github.com/hashicorp/hcl2/hcl/json
-# github.com/hashicorp/hil v0.0.0-20170512213305-fac2259da677
+github.com/hashicorp/hcl2/hclwrite
+# github.com/hashicorp/hil v0.0.0-20170627220502-fa9f258a9250
 github.com/hashicorp/hil
 github.com/hashicorp/hil/ast
 github.com/hashicorp/hil/parser
 github.com/hashicorp/hil/scanner
 # github.com/hashicorp/logutils v1.0.0
 github.com/hashicorp/logutils
-# github.com/hashicorp/terraform v0.11.9-beta1
+# github.com/hashicorp/terraform v0.12.0-alpha4.0.20190116193128-2ad9f0513a2b
 github.com/hashicorp/terraform/plugin
 github.com/hashicorp/terraform/flatmap
 github.com/hashicorp/terraform/helper/customdiff
@@ -234,31 +244,52 @@ github.com/hashicorp/terraform/helper/schema
 github.com/hashicorp/terraform/helper/structure
 github.com/hashicorp/terraform/helper/validation
 github.com/hashicorp/terraform/terraform
+github.com/hashicorp/terraform/configs/configschema
+github.com/hashicorp/terraform/helper/plugin
+github.com/hashicorp/terraform/internal/tfplugin5
+github.com/hashicorp/terraform/plugin/convert
 github.com/hashicorp/terraform/plugin/discovery
-github.com/hashicorp/terraform/config/module
-github.com/hashicorp/terraform/helper/config
-github.com/hashicorp/terraform/config
-github.com/hashicorp/terraform/config/configschema
-github.com/hashicorp/terraform/dag
-github.com/hashicorp/terraform/helper/hilmapstructure
-github.com/hashicorp/terraform/httpclient
-github.com/hashicorp/terraform/moduledeps
-github.com/hashicorp/terraform/tfdiags
+github.com/hashicorp/terraform/providers
+github.com/hashicorp/terraform/provisioners
 github.com/hashicorp/terraform/version
+github.com/hashicorp/terraform/addrs
+github.com/hashicorp/terraform/command/format
+github.com/hashicorp/terraform/config
+github.com/hashicorp/terraform/config/hcl2shim
+github.com/hashicorp/terraform/configs
+github.com/hashicorp/terraform/configs/configload
+github.com/hashicorp/terraform/helper/config
+github.com/hashicorp/terraform/internal/initwd
+github.com/hashicorp/terraform/plans
+github.com/hashicorp/terraform/states
+github.com/hashicorp/terraform/tfdiags
+github.com/hashicorp/terraform/config/module
+github.com/hashicorp/terraform/dag
+github.com/hashicorp/terraform/helper/didyoumean
+github.com/hashicorp/terraform/httpclient
+github.com/hashicorp/terraform/lang
+github.com/hashicorp/terraform/moduledeps
+github.com/hashicorp/terraform/plans/objchange
+github.com/hashicorp/terraform/states/statefile
 github.com/hashicorp/terraform/helper/acctest
 github.com/hashicorp/terraform/registry
 github.com/hashicorp/terraform/registry/regsrc
 github.com/hashicorp/terraform/registry/response
 github.com/hashicorp/terraform/svchost/disco
-github.com/hashicorp/terraform/config/hcl2shim
+github.com/hashicorp/terraform/helper/hilmapstructure
+github.com/hashicorp/terraform/internal/modsdir
+github.com/hashicorp/terraform/internal/earlyconfig
+github.com/hashicorp/terraform/lang/funcs
 github.com/hashicorp/terraform/helper/pathorcontents
 github.com/hashicorp/terraform/svchost
 github.com/hashicorp/terraform/svchost/auth
+# github.com/hashicorp/terraform-config-inspect v0.0.0-20181213005350-314d8affa1db
+github.com/hashicorp/terraform-config-inspect/tfconfig
 # github.com/hashicorp/vault v0.10.4
 github.com/hashicorp/vault/helper/pgpkeys
 github.com/hashicorp/vault/helper/jsonutil
 github.com/hashicorp/vault/helper/compressutil
-# github.com/hashicorp/yamux v0.0.0-20160720233140-d1caa6c97c9f
+# github.com/hashicorp/yamux v0.0.0-20180604194846-3520598351bb
 github.com/hashicorp/yamux
 # github.com/jen20/awspolicyequivalence v1.0.0
 github.com/jen20/awspolicyequivalence
@@ -276,8 +307,10 @@ github.com/keybase/go-crypto/cast5
 github.com/keybase/go-crypto/openpgp/elgamal
 # github.com/mattn/go-isatty v0.0.4
 github.com/mattn/go-isatty
-# github.com/mitchellh/cli v0.0.0-20170803042910-8a539dbef410
+# github.com/mitchellh/cli v0.0.0-20171129193617-33edc47170b5
 github.com/mitchellh/cli
+# github.com/mitchellh/colorstring v0.0.0-20150917214807-8631ce90f286
+github.com/mitchellh/colorstring
 # github.com/mitchellh/copystructure v1.0.0
 github.com/mitchellh/copystructure
 # github.com/mitchellh/go-homedir v1.0.0
@@ -292,33 +325,42 @@ github.com/mitchellh/hashstructure
 github.com/mitchellh/mapstructure
 # github.com/mitchellh/reflectwalk v1.0.0
 github.com/mitchellh/reflectwalk
-# github.com/posener/complete v0.0.0-20170730193024-f4461a52b632
+# github.com/oklog/run v1.0.0
+github.com/oklog/run
+# github.com/posener/complete v0.0.0-20171219111128-6bee943216c8
 github.com/posener/complete
 github.com/posener/complete/cmd/install
 github.com/posener/complete/cmd
 github.com/posener/complete/match
-# github.com/pquerna/otp v0.0.0-20180813144649-be78767b3e39
+# github.com/pquerna/otp v1.0.0
 github.com/pquerna/otp/totp
 github.com/pquerna/otp
 github.com/pquerna/otp/hotp
-# github.com/terraform-providers/terraform-provider-template v0.1.1
+# github.com/spf13/afero v1.0.2
+github.com/spf13/afero
+github.com/spf13/afero/mem
+# github.com/terraform-providers/terraform-provider-template v1.0.0
 github.com/terraform-providers/terraform-provider-template/template
-# github.com/terraform-providers/terraform-provider-tls v0.1.0
+# github.com/terraform-providers/terraform-provider-tls v1.2.0
 github.com/terraform-providers/terraform-provider-tls/tls
 # github.com/ulikunitz/xz v0.5.4
 github.com/ulikunitz/xz
 github.com/ulikunitz/xz/internal/xlog
 github.com/ulikunitz/xz/lzma
 github.com/ulikunitz/xz/internal/hash
-# github.com/zclconf/go-cty v0.0.0-20180106055834-709e4033eeb0
+# github.com/vmihailenco/msgpack v4.0.1+incompatible
+github.com/vmihailenco/msgpack
+github.com/vmihailenco/msgpack/codes
+# github.com/zclconf/go-cty v0.0.0-20181218225846-4fe1e489ee06
 github.com/zclconf/go-cty/cty
+github.com/zclconf/go-cty/cty/msgpack
+github.com/zclconf/go-cty/cty/json
 github.com/zclconf/go-cty/cty/convert
+github.com/zclconf/go-cty/cty/gocty
+github.com/zclconf/go-cty/cty/set
 github.com/zclconf/go-cty/cty/function
 github.com/zclconf/go-cty/cty/function/stdlib
-github.com/zclconf/go-cty/cty/set
-github.com/zclconf/go-cty/cty/gocty
-github.com/zclconf/go-cty/cty/json
-# golang.org/x/crypto v0.0.0-20180110145155-b3c9a1d25cfb
+# golang.org/x/crypto v0.0.0-20181127143415-eb0de9b17e85
 golang.org/x/crypto/openpgp
 golang.org/x/crypto/bcrypt
 golang.org/x/crypto/ssh
@@ -329,30 +371,42 @@ golang.org/x/crypto/openpgp/s2k
 golang.org/x/crypto/blowfish
 golang.org/x/crypto/curve25519
 golang.org/x/crypto/ed25519
+golang.org/x/crypto/internal/chacha20
+golang.org/x/crypto/poly1305
 golang.org/x/crypto/cast5
 golang.org/x/crypto/openpgp/elgamal
 golang.org/x/crypto/ed25519/internal/edwards25519
-# golang.org/x/net v0.0.0-20171024115130-4b14673ba32b
+golang.org/x/crypto/internal/subtle
+# golang.org/x/net v0.0.0-20181129055619-fae4c4e3ad76
 golang.org/x/net/context
-golang.org/x/net/html
 golang.org/x/net/http2
 golang.org/x/net/trace
-golang.org/x/net/html/atom
+golang.org/x/net/http/httpguts
 golang.org/x/net/http2/hpack
 golang.org/x/net/idna
-golang.org/x/net/lex/httplex
 golang.org/x/net/internal/timeseries
-# golang.org/x/sys v0.0.0-20170803140359-d8f5ea21b929
+# golang.org/x/sys v0.0.0-20181128092732-4ed8d59d0b35
 golang.org/x/sys/unix
-# golang.org/x/text v0.0.0-20171024115504-6eab0e8f74e8
+# golang.org/x/text v0.3.0
 golang.org/x/text/unicode/norm
 golang.org/x/text/transform
 golang.org/x/text/secure/bidirule
 golang.org/x/text/unicode/bidi
-# google.golang.org/genproto v0.0.0-20171002232614-f676e0f3ac63
+# google.golang.org/appengine v1.3.0
+google.golang.org/appengine/datastore
+google.golang.org/appengine
+google.golang.org/appengine/internal
+google.golang.org/appengine/internal/datastore
+google.golang.org/appengine/internal/app_identity
+google.golang.org/appengine/internal/modules
+google.golang.org/appengine/internal/base
+google.golang.org/appengine/internal/log
+google.golang.org/appengine/internal/remote_api
+# google.golang.org/genproto v0.0.0-20180831171423-11092d34479b
 google.golang.org/genproto/googleapis/rpc/status
-# google.golang.org/grpc v0.0.0-20171025225919-b5eab4ccac6d
+# google.golang.org/grpc v1.14.0
 google.golang.org/grpc
+google.golang.org/grpc/test/bufconn
 google.golang.org/grpc/credentials
 google.golang.org/grpc/health
 google.golang.org/grpc/health/grpc_health_v1
@@ -360,9 +414,15 @@ google.golang.org/grpc/balancer
 google.golang.org/grpc/balancer/roundrobin
 google.golang.org/grpc/codes
 google.golang.org/grpc/connectivity
-google.golang.org/grpc/grpclb/grpc_lb_v1/messages
+google.golang.org/grpc/encoding
+google.golang.org/grpc/encoding/proto
 google.golang.org/grpc/grpclog
 google.golang.org/grpc/internal
+google.golang.org/grpc/internal/backoff
+google.golang.org/grpc/internal/channelz
+google.golang.org/grpc/internal/envconfig
+google.golang.org/grpc/internal/grpcrand
+google.golang.org/grpc/internal/transport
 google.golang.org/grpc/keepalive
 google.golang.org/grpc/metadata
 google.golang.org/grpc/naming
@@ -373,6 +433,6 @@ google.golang.org/grpc/resolver/passthrough
 google.golang.org/grpc/stats
 google.golang.org/grpc/status
 google.golang.org/grpc/tap
-google.golang.org/grpc/transport
-# gopkg.in/yaml.v2 v2.2.1
+google.golang.org/grpc/balancer/base
+# gopkg.in/yaml.v2 v2.2.2
 gopkg.in/yaml.v2
