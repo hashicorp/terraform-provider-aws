@@ -22,7 +22,7 @@ resource "aws_budgets_budget" "ec2" {
   time_period_start = "2017-07-01_00:00"
   time_unit         = "MONTHLY"
 
-  cost_filters {
+  cost_filters = {
     Service = "Amazon Elastic Compute Cloud - Compute"
   }
 }
