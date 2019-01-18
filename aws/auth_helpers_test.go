@@ -890,11 +890,11 @@ var ec2metadata_instanceIdEndpoint = &endpoint{
 }
 
 var ec2metadata_securityCredentialsEndpoints = []*endpoint{
-	&endpoint{
+	{
 		Uri:  "/latest/meta-data/iam/security-credentials/",
 		Body: "test_role",
 	},
-	&endpoint{
+	{
 		Uri:  "/latest/meta-data/iam/security-credentials/test_role",
 		Body: "{\"Code\":\"Success\",\"LastUpdated\":\"2015-12-11T17:17:25Z\",\"Type\":\"AWS-HMAC\",\"AccessKeyId\":\"somekey\",\"SecretAccessKey\":\"somesecret\",\"Token\":\"sometoken\"}",
 	},

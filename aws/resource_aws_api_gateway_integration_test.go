@@ -16,7 +16,7 @@ import (
 func TestAccAWSAPIGatewayIntegration_basic(t *testing.T) {
 	var conf apigateway.Integration
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayIntegrationDestroy,
@@ -30,7 +30,7 @@ func TestAccAWSAPIGatewayIntegration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "uri", "https://www.google.de"),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "passthrough_behavior", "WHEN_NO_MATCH"),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "content_handling", "CONVERT_TO_TEXT"),
-					resource.TestCheckNoResourceAttr("aws_api_gateway_integration.test", "credentials"),
+					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "credentials", ""),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "request_parameters.%", "2"),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "request_parameters.integration.request.header.X-Authorization", "'static'"),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "request_parameters.integration.request.header.X-Foo", "'Bar'"),
@@ -50,7 +50,7 @@ func TestAccAWSAPIGatewayIntegration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "uri", "https://www.google.de"),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "passthrough_behavior", "WHEN_NO_MATCH"),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "content_handling", "CONVERT_TO_TEXT"),
-					resource.TestCheckNoResourceAttr("aws_api_gateway_integration.test", "credentials"),
+					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "credentials", ""),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "request_parameters.%", "2"),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "request_parameters.integration.request.header.X-Authorization", "'updated'"),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "request_parameters.integration.request.header.X-FooBar", "'Baz'"),
@@ -70,7 +70,7 @@ func TestAccAWSAPIGatewayIntegration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "uri", "https://www.google.de/updated"),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "passthrough_behavior", "WHEN_NO_MATCH"),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "content_handling", "CONVERT_TO_TEXT"),
-					resource.TestCheckNoResourceAttr("aws_api_gateway_integration.test", "credentials"),
+					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "credentials", ""),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "request_parameters.%", "2"),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "request_parameters.integration.request.header.X-Authorization", "'static'"),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "request_parameters.integration.request.header.X-Foo", "'Bar'"),
@@ -90,7 +90,7 @@ func TestAccAWSAPIGatewayIntegration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "uri", "https://www.google.de"),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "passthrough_behavior", "WHEN_NO_MATCH"),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "content_handling", "CONVERT_TO_TEXT"),
-					resource.TestCheckNoResourceAttr("aws_api_gateway_integration.test", "credentials"),
+					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "credentials", ""),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "request_parameters.%", "0"),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "request_templates.%", "0"),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "timeout_milliseconds", "2000"),
@@ -106,7 +106,7 @@ func TestAccAWSAPIGatewayIntegration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "uri", "https://www.google.de"),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "passthrough_behavior", "WHEN_NO_MATCH"),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "content_handling", "CONVERT_TO_TEXT"),
-					resource.TestCheckNoResourceAttr("aws_api_gateway_integration.test", "credentials"),
+					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "credentials", ""),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "request_parameters.%", "2"),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "request_parameters.integration.request.header.X-Authorization", "'static'"),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "request_templates.%", "2"),
@@ -115,6 +115,12 @@ func TestAccAWSAPIGatewayIntegration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "timeout_milliseconds", "29000"),
 				),
 			},
+			{
+				ResourceName:      "aws_api_gateway_integration.test",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSAPIGatewayIntegrationImportStateIdFunc("aws_api_gateway_integration.test"),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -122,7 +128,7 @@ func TestAccAWSAPIGatewayIntegration_basic(t *testing.T) {
 func TestAccAWSAPIGatewayIntegration_contentHandling(t *testing.T) {
 	var conf apigateway.Integration
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayIntegrationDestroy,
@@ -136,7 +142,7 @@ func TestAccAWSAPIGatewayIntegration_contentHandling(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "uri", "https://www.google.de"),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "passthrough_behavior", "WHEN_NO_MATCH"),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "content_handling", "CONVERT_TO_TEXT"),
-					resource.TestCheckNoResourceAttr("aws_api_gateway_integration.test", "credentials"),
+					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "credentials", ""),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "request_parameters.%", "2"),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "request_parameters.integration.request.header.X-Authorization", "'static'"),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "request_parameters.integration.request.header.X-Foo", "'Bar'"),
@@ -155,7 +161,7 @@ func TestAccAWSAPIGatewayIntegration_contentHandling(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "uri", "https://www.google.de"),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "passthrough_behavior", "WHEN_NO_MATCH"),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "content_handling", "CONVERT_TO_BINARY"),
-					resource.TestCheckNoResourceAttr("aws_api_gateway_integration.test", "credentials"),
+					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "credentials", ""),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "request_parameters.%", "2"),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "request_parameters.integration.request.header.X-Authorization", "'static'"),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "request_parameters.integration.request.header.X-Foo", "'Bar'"),
@@ -174,7 +180,7 @@ func TestAccAWSAPIGatewayIntegration_contentHandling(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "uri", "https://www.google.de"),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "passthrough_behavior", "WHEN_NO_MATCH"),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "content_handling", ""),
-					resource.TestCheckNoResourceAttr("aws_api_gateway_integration.test", "credentials"),
+					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "credentials", ""),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "request_parameters.%", "2"),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "request_parameters.integration.request.header.X-Authorization", "'static'"),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "request_parameters.integration.request.header.X-Foo", "'Bar'"),
@@ -183,6 +189,12 @@ func TestAccAWSAPIGatewayIntegration_contentHandling(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "request_templates.application/xml", "#set($inputRoot = $input.path('$'))\n{ }"),
 				),
 			},
+			{
+				ResourceName:      "aws_api_gateway_integration.test",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSAPIGatewayIntegrationImportStateIdFunc("aws_api_gateway_integration.test"),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -190,7 +202,7 @@ func TestAccAWSAPIGatewayIntegration_contentHandling(t *testing.T) {
 func TestAccAWSAPIGatewayIntegration_cache_key_parameters(t *testing.T) {
 	var conf apigateway.Integration
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayIntegrationDestroy,
@@ -204,7 +216,7 @@ func TestAccAWSAPIGatewayIntegration_cache_key_parameters(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "uri", "https://www.google.de"),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "passthrough_behavior", "WHEN_NO_MATCH"),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "content_handling", "CONVERT_TO_TEXT"),
-					resource.TestCheckNoResourceAttr("aws_api_gateway_integration.test", "credentials"),
+					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "credentials", ""),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "request_parameters.%", "3"),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "request_parameters.integration.request.header.X-Authorization", "'static'"),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "request_parameters.integration.request.header.X-Foo", "'Bar'"),
@@ -217,6 +229,12 @@ func TestAccAWSAPIGatewayIntegration_cache_key_parameters(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "request_templates.application/xml", "#set($inputRoot = $input.path('$'))\n{ }"),
 				),
 			},
+			{
+				ResourceName:      "aws_api_gateway_integration.test",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSAPIGatewayIntegrationImportStateIdFunc("aws_api_gateway_integration.test"),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -226,7 +244,7 @@ func TestAccAWSAPIGatewayIntegration_integrationType(t *testing.T) {
 
 	rName := fmt.Sprintf("tf-acctest-apigw-int-%s", acctest.RandString(7))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayIntegrationDestroy,
@@ -254,7 +272,14 @@ func TestAccAWSAPIGatewayIntegration_integrationType(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "connection_type", "INTERNET"),
 					resource.TestCheckResourceAttr("aws_api_gateway_integration.test", "connection_id", ""),
 				),
-			}},
+			},
+			{
+				ResourceName:      "aws_api_gateway_integration.test",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSAPIGatewayIntegrationImportStateIdFunc("aws_api_gateway_integration.test"),
+				ImportStateVerify: true,
+			},
+		},
 	})
 }
 
@@ -318,6 +343,17 @@ func testAccCheckAWSAPIGatewayIntegrationDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccAWSAPIGatewayIntegrationImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		return fmt.Sprintf("%s/%s/%s", rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes["resource_id"], rs.Primary.Attributes["http_method"]), nil
+	}
 }
 
 const testAccAWSAPIGatewayIntegrationConfig = `
@@ -649,7 +685,7 @@ data "aws_availability_zones" "test" {}
 resource "aws_vpc" "test" {
   cidr_block = "10.10.0.0/16"
 
-  tags {
+  tags = {
     Name = "${var.name}"
   }
 }

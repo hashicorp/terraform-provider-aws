@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
@@ -617,7 +616,7 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 		return resource.NonRetryableError(err)
 	})
 	if err != nil {
-		return errwrap.Wrapf("Error creating Cognito User Pool: {{err}}", err)
+		return fmt.Errorf("Error creating Cognito User Pool: %s", err)
 	}
 
 	d.SetId(*resp.UserPool.Id)
@@ -862,7 +861,7 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 		return resource.NonRetryableError(err)
 	})
 	if err != nil {
-		return errwrap.Wrapf("Error updating Cognito User pool: {{err}}", err)
+		return fmt.Errorf("Error updating Cognito User pool: %s", err)
 	}
 
 	return resourceAwsCognitoUserPoolRead(d, meta)
@@ -880,7 +879,7 @@ func resourceAwsCognitoUserPoolDelete(d *schema.ResourceData, meta interface{}) 
 	_, err := conn.DeleteUserPool(params)
 
 	if err != nil {
-		return errwrap.Wrapf("Error deleting user pool: {{err}}", err)
+		return fmt.Errorf("Error deleting user pool: %s", err)
 	}
 
 	return nil

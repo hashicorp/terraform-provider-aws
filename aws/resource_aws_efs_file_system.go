@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/efs"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -26,12 +27,16 @@ func resourceAwsEfsFileSystem() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"creation_token": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ValidateFunc: validateMaxLength(64),
+				ValidateFunc: validation.StringLenBetween(0, 64),
 			},
 
 			"reference_name": {
@@ -250,9 +255,7 @@ func resourceAwsEfsFileSystemRead(d *schema.ResourceData, meta interface{}) erro
 				d.Id(), err.Error())
 		}
 
-		for _, tag := range tagsResp.Tags {
-			tags = append(tags, tag)
-		}
+		tags = append(tags, tagsResp.Tags...)
 
 		if tagsResp.NextMarker != nil {
 			marker = *tagsResp.NextMarker
@@ -279,6 +282,15 @@ func resourceAwsEfsFileSystemRead(d *schema.ResourceData, meta interface{}) erro
 		return nil
 	}
 
+	fsARN := arn.ARN{
+		AccountID: meta.(*AWSClient).accountid,
+		Partition: meta.(*AWSClient).partition,
+		Region:    meta.(*AWSClient).region,
+		Resource:  fmt.Sprintf("file-system/%s", aws.StringValue(fs.FileSystemId)),
+		Service:   "elasticfilesystem",
+	}.String()
+
+	d.Set("arn", fsARN)
 	d.Set("creation_token", fs.CreationToken)
 	d.Set("encrypted", fs.Encrypted)
 	d.Set("kms_key_id", fs.KmsKeyId)
@@ -287,9 +299,8 @@ func resourceAwsEfsFileSystemRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("throughput_mode", fs.ThroughputMode)
 
 	region := meta.(*AWSClient).region
-	err = d.Set("dns_name", resourceAwsEfsDnsName(*fs.FileSystemId, region))
-	if err != nil {
-		return err
+	if err := d.Set("dns_name", resourceAwsEfsDnsName(aws.StringValue(fs.FileSystemId), region)); err != nil {
+		return fmt.Errorf("error setting dns_name: %s", err)
 	}
 
 	return nil

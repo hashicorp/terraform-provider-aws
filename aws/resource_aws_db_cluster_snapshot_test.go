@@ -17,7 +17,7 @@ func TestAccAWSDBClusterSnapshot_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_db_cluster_snapshot.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDbClusterSnapshotDestroy,
@@ -117,7 +117,7 @@ data "aws_availability_zones" "available" {}
 resource "aws_vpc" "test" {
   cidr_block = "192.168.0.0/16"
 
-  tags {
+  tags = {
    Name = %q
   }
 }
@@ -129,7 +129,7 @@ resource "aws_subnet" "test" {
   cidr_block        = "192.168.${count.index}.0/24"
   vpc_id            = "${aws_vpc.test.id}"
 
-  tags {
+  tags = {
     Name = %q
   }
 }

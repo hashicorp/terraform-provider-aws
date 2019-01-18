@@ -141,7 +141,7 @@ The following arguments are supported:
   prefix. Conflicts with `name`.
 * `image_id` - (Required) The EC2 image ID to launch.
 * `instance_type` - (Required) The size of instance to launch.
-* `iam_instance_profile` - (Optional) The IAM instance profile to associate
+* `iam_instance_profile` - (Optional) The name attribute of the IAM instance profile to associate
      with launched instances.
 * `key_name` - (Optional) The key name that should be used for the instance.
 * `security_groups` - (Optional) A list of associated security group IDS.

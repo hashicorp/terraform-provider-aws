@@ -17,7 +17,7 @@ resource "aws_api_gateway_rest_api" "test" {
   name = "MyDemoAPI"
 }
 
-...
+# ...
 
 resource "aws_api_gateway_usage_plan" "myusageplan" {
   name = "my_usage_plan"

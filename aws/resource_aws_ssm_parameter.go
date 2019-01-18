@@ -106,7 +106,7 @@ func resourceAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error
 
 	describeParamsInput := &ssm.DescribeParametersInput{
 		ParameterFilters: []*ssm.ParameterStringFilter{
-			&ssm.ParameterStringFilter{
+			{
 				Key:    aws.String("Name"),
 				Option: aws.String("Equals"),
 				Values: []*string{aws.String(d.Get("name").(string))},
@@ -159,7 +159,7 @@ func resourceAwsSsmParameterDelete(d *schema.ResourceData, meta interface{}) err
 		Name: aws.String(d.Get("name").(string)),
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("error deleting SSM Parameter (%s): %s", d.Id(), err)
 	}
 
 	return nil

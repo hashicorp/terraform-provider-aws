@@ -17,7 +17,7 @@ func TestAccAWSSpotInstanceRequest_basic(t *testing.T) {
 	var sir ec2.SpotInstanceRequest
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotInstanceRequestDestroy,
@@ -45,7 +45,7 @@ func TestAccAWSSpotInstanceRequest_withLaunchGroup(t *testing.T) {
 	var sir ec2.SpotInstanceRequest
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotInstanceRequestDestroy,
@@ -73,7 +73,7 @@ func TestAccAWSSpotInstanceRequest_withBlockDuration(t *testing.T) {
 	var sir ec2.SpotInstanceRequest
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotInstanceRequestDestroy,
@@ -101,7 +101,7 @@ func TestAccAWSSpotInstanceRequest_vpc(t *testing.T) {
 	var sir ec2.SpotInstanceRequest
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotInstanceRequestDestroy,
@@ -129,7 +129,7 @@ func TestAccAWSSpotInstanceRequest_validUntil(t *testing.T) {
 	rInt := acctest.RandInt()
 	validUntil := testAccAWSSpotInstanceRequestValidUntil(t)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotInstanceRequestDestroy,
@@ -156,7 +156,7 @@ func TestAccAWSSpotInstanceRequest_withoutSpotPrice(t *testing.T) {
 	var sir ec2.SpotInstanceRequest
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotInstanceRequestDestroy,
@@ -181,7 +181,7 @@ func TestAccAWSSpotInstanceRequest_SubnetAndSGAndPublicIpAddress(t *testing.T) {
 	var sir ec2.SpotInstanceRequest
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotInstanceRequestDestroy,
@@ -204,7 +204,7 @@ func TestAccAWSSpotInstanceRequest_NetworkInterfaceAttributes(t *testing.T) {
 	var sir ec2.SpotInstanceRequest
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotInstanceRequestDestroy,
@@ -228,7 +228,7 @@ func TestAccAWSSpotInstanceRequest_getPasswordData(t *testing.T) {
 	var sir ec2.SpotInstanceRequest
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotInstanceRequestDestroy,
@@ -482,7 +482,7 @@ func testAccCheckAWSSpotInstanceRequestAttributesVPC(
 func TestAccAWSSpotInstanceRequestInterruptStop(t *testing.T) {
 	var sir ec2.SpotInstanceRequest
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotInstanceRequestDestroy,
@@ -507,7 +507,7 @@ func TestAccAWSSpotInstanceRequestInterruptStop(t *testing.T) {
 func TestAccAWSSpotInstanceRequestInterruptHibernate(t *testing.T) {
 	var sir ec2.SpotInstanceRequest
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotInstanceRequestDestroy,
@@ -549,7 +549,7 @@ func testAccAWSSpotInstanceRequestConfig(rInt int) string {
 		// and verify termination behavior
 		wait_for_fulfillment = true
 
-		tags {
+	tags = {
 			Name = "terraform-test"
 		}
 	}`, rInt)
@@ -579,7 +579,7 @@ func testAccAWSSpotInstanceRequestConfigValidUntil(rInt int, validUntil string) 
 		// and verify termination behavior
 		wait_for_fulfillment = true
 
-		tags {
+	tags = {
 			Name = "terraform-test"
 		}
 	}`, rInt, validUntil)
@@ -603,7 +603,7 @@ func testAccAWSSpotInstanceRequestConfig_withoutSpotPrice(rInt int) string {
 		# and verify termination behavior
 		wait_for_fulfillment = true
 
-		tags {
+	tags = {
 			Name = "terraform-test"
 		}
 	}`, rInt)
@@ -631,7 +631,7 @@ func testAccAWSSpotInstanceRequestConfig_withLaunchGroup(rInt int) string {
 
 		launch_group = "terraform-test-group"
 
-		tags {
+	tags = {
 			Name = "terraform-test"
 		}
 	}`, rInt)
@@ -659,7 +659,7 @@ func testAccAWSSpotInstanceRequestConfig_withBlockDuration(rInt int) string {
 
 		block_duration_minutes = 60
 
-		tags {
+	tags = {
 			Name = "terraform-test"
 		}
 	}`, rInt)
@@ -669,7 +669,7 @@ func testAccAWSSpotInstanceRequestConfigVPC(rInt int) string {
 	return fmt.Sprintf(`
 	resource "aws_vpc" "foo_VPC" {
 		cidr_block = "10.1.0.0/16"
-		tags {
+	tags = {
 			Name = "terraform-testacc-spot-instance-request-vpc"
 		}
 	}
@@ -677,7 +677,7 @@ func testAccAWSSpotInstanceRequestConfigVPC(rInt int) string {
 	resource "aws_subnet" "foo_VPC" {
 		cidr_block = "10.1.1.0/24"
 		vpc_id = "${aws_vpc.foo_VPC.id}"
-		tags {
+	tags = {
 			Name = "tf-acc-spot-instance-request-vpc"
 		}
 	}
@@ -703,7 +703,7 @@ func testAccAWSSpotInstanceRequestConfigVPC(rInt int) string {
 		// and verify termination behavior
 		wait_for_fulfillment = true
 
-		tags {
+	tags = {
 			Name = "terraform-test-VPC"
 		}
 	}`, rInt)
@@ -725,7 +725,7 @@ func testAccAWSSpotInstanceRequestConfig_SubnetAndSGAndPublicIpAddress(rInt int)
 		cidr_block           = "10.0.0.0/16"
 		enable_dns_hostnames = true
 
-		tags {
+	tags = {
 			Name = "terraform-testacc-spot-instance-request-subnet-and-sg-public-ip"
 		}
 	}
@@ -735,7 +735,7 @@ func testAccAWSSpotInstanceRequestConfig_SubnetAndSGAndPublicIpAddress(rInt int)
 		cidr_block              = "10.0.0.0/24"
 		map_public_ip_on_launch = true
 
-		tags {
+	tags = {
 			Name = "tf-acc-spot-instance-request-subnet-and-sg-public-ip"
 		}
 	}
@@ -745,7 +745,7 @@ func testAccAWSSpotInstanceRequestConfig_SubnetAndSGAndPublicIpAddress(rInt int)
 		description = "tf_test_sg_ssh"
 		vpc_id      = "${aws_vpc.default.id}"
 
-		tags {
+	tags = {
 			Name = "tf_test_sg_ssh-%d"
 		}
 	}`, rInt, rInt)

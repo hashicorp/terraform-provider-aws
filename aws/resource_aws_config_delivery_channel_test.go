@@ -46,6 +46,10 @@ func testSweepConfigDeliveryChannels(region string) error {
 		return nil
 	})
 	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping Config Delivery Channels sweep for %s: %s", region, err)
+			return nil
+		}
 		return fmt.Errorf("Error describing Delivery Channels: %s", err)
 	}
 
@@ -129,11 +133,11 @@ func testAccConfigDeliveryChannel_importBasic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigDeliveryChannelDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccConfigDeliveryChannelConfig_basic(rInt),
 			},
 
-			resource.TestStep{
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,

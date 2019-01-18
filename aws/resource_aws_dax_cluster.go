@@ -95,6 +95,27 @@ func resourceAwsDaxCluster() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
+			"server_side_encryption": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == "1" && new == "0" {
+						return true
+					}
+					return false
+				},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+							ForceNew: true,
+						},
+					},
+				},
+			},
 			"subnet_group_name": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -188,6 +209,12 @@ func resourceAwsDaxClusterCreate(d *schema.ResourceData, meta interface{}) error
 		req.AvailabilityZones = azs
 	}
 
+	if v, ok := d.GetOk("server_side_encryption"); ok && len(v.([]interface{})) > 0 {
+		options := v.([]interface{})
+		s := options[0].(map[string]interface{})
+		req.SSESpecification = expandDaxEncryptAtRestOptions(s)
+	}
+
 	// IAM roles take some time to propagate
 	var resp *dax.CreateClusterOutput
 	err := resource.Retry(30*time.Second, func() *resource.RetryError {
@@ -263,9 +290,9 @@ func resourceAwsDaxClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("replication_factor", c.TotalNodes)
 
 	if c.ClusterDiscoveryEndpoint != nil {
-		d.Set("port", c.ClusterDiscoveryEndpoint.Port)
-		d.Set("configuration_endpoint", aws.String(fmt.Sprintf("%s:%d", *c.ClusterDiscoveryEndpoint.Address, *c.ClusterDiscoveryEndpoint.Port)))
-		d.Set("cluster_address", aws.String(fmt.Sprintf("%s", *c.ClusterDiscoveryEndpoint.Address)))
+		d.Set("port", aws.Int64Value(c.ClusterDiscoveryEndpoint.Port))
+		d.Set("configuration_endpoint", fmt.Sprintf("%s:%d", aws.StringValue(c.ClusterDiscoveryEndpoint.Address), aws.Int64Value(c.ClusterDiscoveryEndpoint.Port)))
+		d.Set("cluster_address", aws.StringValue(c.ClusterDiscoveryEndpoint.Address))
 	}
 
 	d.Set("subnet_group_name", c.SubnetGroup)
@@ -285,6 +312,10 @@ func resourceAwsDaxClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	if err := setDaxClusterNodeData(d, c); err != nil {
 		return err
+	}
+
+	if err := d.Set("server_side_encryption", flattenDaxEncryptAtRestOptions(c.SSEDescription)); err != nil {
+		return fmt.Errorf("error setting server_side_encryption: %s", err)
 	}
 
 	// list tags for resource
@@ -354,7 +385,7 @@ func resourceAwsDaxClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		log.Printf("[DEBUG] Modifying DAX Cluster (%s), opts:\n%s", d.Id(), req)
 		_, err := conn.UpdateCluster(req)
 		if err != nil {
-			return fmt.Errorf("[WARN] Error updating DAX cluster (%s), error: %s", d.Id(), err)
+			return fmt.Errorf("Error updating DAX cluster (%s), error: %s", d.Id(), err)
 		}
 		awaitUpdate = true
 	}
@@ -370,7 +401,7 @@ func resourceAwsDaxClusterUpdate(d *schema.ResourceData, meta interface{}) error
 				NewReplicationFactor: aws.Int64(int64(nraw.(int))),
 			})
 			if err != nil {
-				return fmt.Errorf("[WARN] Error increasing nodes in DAX cluster %s, error: %s", d.Id(), err)
+				return fmt.Errorf("Error increasing nodes in DAX cluster %s, error: %s", d.Id(), err)
 			}
 			awaitUpdate = true
 		}
@@ -381,7 +412,7 @@ func resourceAwsDaxClusterUpdate(d *schema.ResourceData, meta interface{}) error
 				NewReplicationFactor: aws.Int64(int64(nraw.(int))),
 			})
 			if err != nil {
-				return fmt.Errorf("[WARN] Error increasing nodes in DAX cluster %s, error: %s", d.Id(), err)
+				return fmt.Errorf("Error increasing nodes in DAX cluster %s, error: %s", d.Id(), err)
 			}
 			awaitUpdate = true
 		}
@@ -493,7 +524,7 @@ func daxClusterStateRefreshFunc(conn *dax.DAX, clusterID, givenState string, pen
 		}
 
 		if len(resp.Clusters) == 0 {
-			return nil, "", fmt.Errorf("[WARN] Error: no DAX clusters found for id (%s)", clusterID)
+			return nil, "", fmt.Errorf("Error: no DAX clusters found for id (%s)", clusterID)
 		}
 
 		var c *dax.Cluster
@@ -505,7 +536,7 @@ func daxClusterStateRefreshFunc(conn *dax.DAX, clusterID, givenState string, pen
 		}
 
 		if c == nil {
-			return nil, "", fmt.Errorf("[WARN] Error: no matching DAX cluster for id (%s)", clusterID)
+			return nil, "", fmt.Errorf("Error: no matching DAX cluster for id (%s)", clusterID)
 		}
 
 		// DescribeCluster returns a response without status late on in the

@@ -9,6 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/aws/aws-sdk-go/aws/request"
+	"github.com/aws/aws-sdk-go/private/protocol"
+	"github.com/aws/aws-sdk-go/private/protocol/jsonrpc"
 )
 
 const opCopyBackupToRegion = "CopyBackupToRegion"
@@ -16,7 +18,7 @@ const opCopyBackupToRegion = "CopyBackupToRegion"
 // CopyBackupToRegionRequest generates a "aws/request.Request" representing the
 // client's request for the CopyBackupToRegion operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -54,6 +56,8 @@ func (c *CloudHSMV2) CopyBackupToRegionRequest(input *CopyBackupToRegionInput) (
 }
 
 // CopyBackupToRegion API operation for AWS CloudHSM V2.
+//
+// Copy an AWS CloudHSM cluster backup to a different region.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -107,7 +111,7 @@ const opCreateCluster = "CreateCluster"
 // CreateClusterRequest generates a "aws/request.Request" representing the
 // client's request for the CreateCluster operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -200,7 +204,7 @@ const opCreateHsm = "CreateHsm"
 // CreateHsmRequest generates a "aws/request.Request" representing the
 // client's request for the CreateHsm operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -289,12 +293,107 @@ func (c *CloudHSMV2) CreateHsmWithContext(ctx aws.Context, input *CreateHsmInput
 	return out, req.Send()
 }
 
+const opDeleteBackup = "DeleteBackup"
+
+// DeleteBackupRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteBackup operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteBackup for more information on using the DeleteBackup
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteBackupRequest method.
+//    req, resp := client.DeleteBackupRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudhsmv2-2017-04-28/DeleteBackup
+func (c *CloudHSMV2) DeleteBackupRequest(input *DeleteBackupInput) (req *request.Request, output *DeleteBackupOutput) {
+	op := &request.Operation{
+		Name:       opDeleteBackup,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteBackupInput{}
+	}
+
+	output = &DeleteBackupOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeleteBackup API operation for AWS CloudHSM V2.
+//
+// Deletes a specified AWS CloudHSM backup. A backup can be restored up to 7
+// days after the DeleteBackup request. For more information on restoring a
+// backup, see RestoreBackup
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS CloudHSM V2's
+// API operation DeleteBackup for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeCloudHsmInternalFailureException "CloudHsmInternalFailureException"
+//   The request was rejected because of an AWS CloudHSM internal failure. The
+//   request can be retried.
+//
+//   * ErrCodeCloudHsmServiceException "CloudHsmServiceException"
+//   The request was rejected because an error occurred.
+//
+//   * ErrCodeCloudHsmResourceNotFoundException "CloudHsmResourceNotFoundException"
+//   The request was rejected because it refers to a resource that cannot be found.
+//
+//   * ErrCodeCloudHsmInvalidRequestException "CloudHsmInvalidRequestException"
+//   The request was rejected because it is not a valid request.
+//
+//   * ErrCodeCloudHsmAccessDeniedException "CloudHsmAccessDeniedException"
+//   The request was rejected because the requester does not have permission to
+//   perform the requested operation.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudhsmv2-2017-04-28/DeleteBackup
+func (c *CloudHSMV2) DeleteBackup(input *DeleteBackupInput) (*DeleteBackupOutput, error) {
+	req, out := c.DeleteBackupRequest(input)
+	return out, req.Send()
+}
+
+// DeleteBackupWithContext is the same as DeleteBackup with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteBackup for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CloudHSMV2) DeleteBackupWithContext(ctx aws.Context, input *DeleteBackupInput, opts ...request.Option) (*DeleteBackupOutput, error) {
+	req, out := c.DeleteBackupRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDeleteCluster = "DeleteCluster"
 
 // DeleteClusterRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteCluster operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -389,7 +488,7 @@ const opDeleteHsm = "DeleteHsm"
 // DeleteHsmRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteHsm operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -485,7 +584,7 @@ const opDescribeBackups = "DescribeBackups"
 // DescribeBackupsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeBackups operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -641,7 +740,7 @@ const opDescribeClusters = "DescribeClusters"
 // DescribeClustersRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeClusters operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -794,7 +893,7 @@ const opInitializeCluster = "InitializeCluster"
 // InitializeClusterRequest generates a "aws/request.Request" representing the
 // client's request for the InitializeCluster operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -890,7 +989,7 @@ const opListTags = "ListTags"
 // ListTagsRequest generates a "aws/request.Request" representing the
 // client's request for the ListTags operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1040,12 +1139,106 @@ func (c *CloudHSMV2) ListTagsPagesWithContext(ctx aws.Context, input *ListTagsIn
 	return p.Err()
 }
 
+const opRestoreBackup = "RestoreBackup"
+
+// RestoreBackupRequest generates a "aws/request.Request" representing the
+// client's request for the RestoreBackup operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See RestoreBackup for more information on using the RestoreBackup
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the RestoreBackupRequest method.
+//    req, resp := client.RestoreBackupRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudhsmv2-2017-04-28/RestoreBackup
+func (c *CloudHSMV2) RestoreBackupRequest(input *RestoreBackupInput) (req *request.Request, output *RestoreBackupOutput) {
+	op := &request.Operation{
+		Name:       opRestoreBackup,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &RestoreBackupInput{}
+	}
+
+	output = &RestoreBackupOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// RestoreBackup API operation for AWS CloudHSM V2.
+//
+// Restores a specified AWS CloudHSM backup that is in the PENDING_DELETION
+// state. For more information on deleting a backup, see DeleteBackup.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS CloudHSM V2's
+// API operation RestoreBackup for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeCloudHsmInternalFailureException "CloudHsmInternalFailureException"
+//   The request was rejected because of an AWS CloudHSM internal failure. The
+//   request can be retried.
+//
+//   * ErrCodeCloudHsmServiceException "CloudHsmServiceException"
+//   The request was rejected because an error occurred.
+//
+//   * ErrCodeCloudHsmResourceNotFoundException "CloudHsmResourceNotFoundException"
+//   The request was rejected because it refers to a resource that cannot be found.
+//
+//   * ErrCodeCloudHsmInvalidRequestException "CloudHsmInvalidRequestException"
+//   The request was rejected because it is not a valid request.
+//
+//   * ErrCodeCloudHsmAccessDeniedException "CloudHsmAccessDeniedException"
+//   The request was rejected because the requester does not have permission to
+//   perform the requested operation.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudhsmv2-2017-04-28/RestoreBackup
+func (c *CloudHSMV2) RestoreBackup(input *RestoreBackupInput) (*RestoreBackupOutput, error) {
+	req, out := c.RestoreBackupRequest(input)
+	return out, req.Send()
+}
+
+// RestoreBackupWithContext is the same as RestoreBackup with the addition of
+// the ability to pass a context and additional request options.
+//
+// See RestoreBackup for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CloudHSMV2) RestoreBackupWithContext(ctx aws.Context, input *RestoreBackupInput, opts ...request.Option) (*RestoreBackupOutput, error) {
+	req, out := c.RestoreBackupRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opTagResource = "TagResource"
 
 // TagResourceRequest generates a "aws/request.Request" representing the
 // client's request for the TagResource operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1079,6 +1272,7 @@ func (c *CloudHSMV2) TagResourceRequest(input *TagResourceInput) (req *request.R
 
 	output = &TagResourceOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -1138,7 +1332,7 @@ const opUntagResource = "UntagResource"
 // UntagResourceRequest generates a "aws/request.Request" representing the
 // client's request for the UntagResource operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1172,6 +1366,7 @@ func (c *CloudHSMV2) UntagResourceRequest(input *UntagResourceInput) (req *reque
 
 	output = &UntagResourceOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -1246,6 +1441,9 @@ type Backup struct {
 	// The date and time when the backup was created.
 	CreateTimestamp *time.Time `type:"timestamp"`
 
+	// The date and time when the backup will be permanently deleted.
+	DeleteTimestamp *time.Time `type:"timestamp"`
+
 	SourceBackup *string `type:"string"`
 
 	SourceCluster *string `type:"string"`
@@ -1290,6 +1488,12 @@ func (s *Backup) SetCopyTimestamp(v time.Time) *Backup {
 // SetCreateTimestamp sets the CreateTimestamp field's value.
 func (s *Backup) SetCreateTimestamp(v time.Time) *Backup {
 	s.CreateTimestamp = &v
+	return s
+}
+
+// SetDeleteTimestamp sets the DeleteTimestamp field's value.
+func (s *Backup) SetDeleteTimestamp(v time.Time) *Backup {
+	s.DeleteTimestamp = &v
 	return s
 }
 
@@ -1510,9 +1714,13 @@ func (s *Cluster) SetVpcId(v string) *Cluster {
 type CopyBackupToRegionInput struct {
 	_ struct{} `type:"structure"`
 
+	// The ID of the backup that will be copied to the destination region.
+	//
 	// BackupId is a required field
 	BackupId *string `type:"string" required:"true"`
 
+	// The AWS region that will contain your copied CloudHSM cluster backup.
+	//
 	// DestinationRegion is a required field
 	DestinationRegion *string `type:"string" required:"true"`
 }
@@ -1558,6 +1766,14 @@ func (s *CopyBackupToRegionInput) SetDestinationRegion(v string) *CopyBackupToRe
 type CopyBackupToRegionOutput struct {
 	_ struct{} `type:"structure"`
 
+	// Information on the backup that will be copied to the destination region,
+	// including CreateTimestamp, SourceBackup, SourceCluster, and Source Region.
+	// CreateTimestamp of the destination backup will be the same as that of the
+	// source backup.
+	//
+	// You will need to use the sourceBackupID returned in this operation to use
+	// the DescribeBackups operation on the backup that will be copied to the destination
+	// region.
 	DestinationBackup *DestinationBackup `type:"structure"`
 }
 
@@ -1761,6 +1977,68 @@ func (s *CreateHsmOutput) SetHsm(v *Hsm) *CreateHsmOutput {
 	return s
 }
 
+type DeleteBackupInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the backup to be deleted. To find the ID of a backup, use the DescribeBackups
+	// operation.
+	//
+	// BackupId is a required field
+	BackupId *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteBackupInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteBackupInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteBackupInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteBackupInput"}
+	if s.BackupId == nil {
+		invalidParams.Add(request.NewErrParamRequired("BackupId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetBackupId sets the BackupId field's value.
+func (s *DeleteBackupInput) SetBackupId(v string) *DeleteBackupInput {
+	s.BackupId = &v
+	return s
+}
+
+type DeleteBackupOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Information on the Backup object deleted.
+	Backup *Backup `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteBackupOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteBackupOutput) GoString() string {
+	return s.String()
+}
+
+// SetBackup sets the Backup field's value.
+func (s *DeleteBackupOutput) SetBackup(v *Backup) *DeleteBackupOutput {
+	s.Backup = v
+	return s
+}
+
 type DeleteClusterInput struct {
 	_ struct{} `type:"structure"`
 
@@ -1920,6 +2198,10 @@ type DescribeBackupsInput struct {
 	//
 	// Use the backupIds filter to return only the specified backups. Specify backups
 	// by their backup identifier (ID).
+	//
+	// Use the sourceBackupIds filter to return only the backups created from a
+	// source backup. The sourceBackupID of a source backup is returned by the CopyBackupToRegion
+	// operation.
 	//
 	// Use the clusterIds filter to return only the backups for the specified clusters.
 	// Specify clusters by their cluster identifier (ID).
@@ -2456,6 +2738,68 @@ func (s *ListTagsOutput) SetTagList(v []*Tag) *ListTagsOutput {
 	return s
 }
 
+type RestoreBackupInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the backup to be restored. To find the ID of a backup, use the
+	// DescribeBackups operation.
+	//
+	// BackupId is a required field
+	BackupId *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s RestoreBackupInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RestoreBackupInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *RestoreBackupInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "RestoreBackupInput"}
+	if s.BackupId == nil {
+		invalidParams.Add(request.NewErrParamRequired("BackupId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetBackupId sets the BackupId field's value.
+func (s *RestoreBackupInput) SetBackupId(v string) *RestoreBackupInput {
+	s.BackupId = &v
+	return s
+}
+
+type RestoreBackupOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Information on the Backup object created.
+	Backup *Backup `type:"structure"`
+}
+
+// String returns the string representation
+func (s RestoreBackupOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RestoreBackupOutput) GoString() string {
+	return s.String()
+}
+
+// SetBackup sets the Backup field's value.
+func (s *RestoreBackupOutput) SetBackup(v *Backup) *RestoreBackupOutput {
+	s.Backup = v
+	return s
+}
+
 // Contains a tag. A tag is a key-value pair.
 type Tag struct {
 	_ struct{} `type:"structure"`
@@ -2677,6 +3021,9 @@ const (
 
 	// BackupStateDeleted is a BackupState enum value
 	BackupStateDeleted = "DELETED"
+
+	// BackupStatePendingDeletion is a BackupState enum value
+	BackupStatePendingDeletion = "PENDING_DELETION"
 )
 
 const (

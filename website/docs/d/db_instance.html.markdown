@@ -41,6 +41,7 @@ In addition to all arguments above, the following attributes are exported:
 * `db_security_groups` - Provides List of DB security groups associated to this DB instance.
 * `db_subnet_group` - Specifies the name of the subnet group associated with the DB instance.
 * `db_instance_port` - Specifies the port that the DB instance listens on.
+* `enabled_cloudwatch_logs_exports` - List of log types to export to cloudwatch.
 * `endpoint` - The connection endpoint in `address:port` format.
 * `engine` - Provides the name of the database engine to be used for this DB instance.
 * `engine_version` - Indicates the database engine version.

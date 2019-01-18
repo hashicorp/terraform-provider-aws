@@ -16,7 +16,7 @@ import (
 func TestAccAWSNeptuneClusterInstance_basic(t *testing.T) {
 	var v neptune.DBInstance
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
@@ -65,7 +65,7 @@ func TestAccAWSNeptuneClusterInstance_basic(t *testing.T) {
 func TestAccAWSNeptuneClusterInstance_withaz(t *testing.T) {
 	var v neptune.DBInstance
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
@@ -86,7 +86,7 @@ func TestAccAWSNeptuneClusterInstance_namePrefix(t *testing.T) {
 	var v neptune.DBInstance
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
@@ -108,7 +108,7 @@ func TestAccAWSNeptuneClusterInstance_withSubnetGroup(t *testing.T) {
 	var v neptune.DBInstance
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
@@ -129,7 +129,7 @@ func TestAccAWSNeptuneClusterInstance_withSubnetGroup(t *testing.T) {
 func TestAccAWSNeptuneClusterInstance_generatedName(t *testing.T) {
 	var v neptune.DBInstance
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
@@ -151,7 +151,7 @@ func TestAccAWSNeptuneClusterInstance_kmsKey(t *testing.T) {
 	var v neptune.DBInstance
 	keyRegex := regexp.MustCompile("^arn:aws:kms:")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
@@ -239,7 +239,7 @@ resource "aws_neptune_parameter_group" "bar" {
     value        = "25"
   }
 
-  tags {
+  tags = {
     foo = "bar"
   }
 }
@@ -272,7 +272,7 @@ resource "aws_neptune_parameter_group" "bar" {
     value        = "25"
   }
 
-  tags {
+  tags = {
     foo = "bar"
   }
 }
@@ -285,7 +285,7 @@ data "aws_availability_zones" "available" {}
 
 resource "aws_neptune_cluster" "default" {
   cluster_identifier 	= "tf-neptune-cluster-test-%d"
-  availability_zones 	= ["${data.aws_availability_zones.available.names}"]
+  availability_zones 	= ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}"]
   skip_final_snapshot 	= true
 }
 
@@ -307,7 +307,7 @@ resource "aws_neptune_parameter_group" "bar" {
     value        = "25"
   }
 
-  tags {
+  tags = {
     foo = "bar"
   }
 }
@@ -330,7 +330,7 @@ resource "aws_neptune_cluster" "test" {
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-neptune-cluster-instance-name-prefix"
 	}
 }
@@ -339,7 +339,7 @@ resource "aws_subnet" "a" {
   vpc_id = "${aws_vpc.test.id}"
   cidr_block = "10.0.0.0/24"
   availability_zone = "us-west-2a"
-  tags {
+  tags = {
     Name = "tf-acc-neptune-cluster-instance-name-prefix-a"
   }
 }
@@ -348,7 +348,7 @@ resource "aws_subnet" "b" {
   vpc_id = "${aws_vpc.test.id}"
   cidr_block = "10.0.1.0/24"
   availability_zone = "us-west-2b"
-  tags {
+  tags = {
     Name = "tf-acc-neptune-cluster-instance-name-prefix-b"
   }
 }
@@ -376,7 +376,7 @@ resource "aws_neptune_cluster" "test" {
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-neptune-cluster-instance-name-prefix"
 	}
 }
@@ -385,7 +385,7 @@ resource "aws_subnet" "a" {
   vpc_id = "${aws_vpc.test.id}"
   cidr_block = "10.0.0.0/24"
   availability_zone = "us-west-2a"
-  tags {
+  tags = {
     Name = "tf-acc-neptune-cluster-instance-name-prefix-a"
   }
 }
@@ -394,7 +394,7 @@ resource "aws_subnet" "b" {
   vpc_id = "${aws_vpc.test.id}"
   cidr_block = "10.0.1.0/24"
   availability_zone = "us-west-2b"
-  tags {
+  tags = {
     Name = "tf-acc-neptune-cluster-instance-name-prefix-b"
   }
 }
@@ -421,7 +421,7 @@ resource "aws_neptune_cluster" "test" {
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-neptune-cluster-instance-name-prefix"
 	}
 }
@@ -430,7 +430,7 @@ resource "aws_subnet" "a" {
   vpc_id = "${aws_vpc.test.id}"
   cidr_block = "10.0.0.0/24"
   availability_zone = "us-west-2a"
-  tags {
+  tags = {
     Name = "tf-acc-neptune-cluster-instance-name-prefix-a"
   }
 }
@@ -439,7 +439,7 @@ resource "aws_subnet" "b" {
   vpc_id = "${aws_vpc.test.id}"
   cidr_block = "10.0.1.0/24"
   availability_zone = "us-west-2b"
-  tags {
+  tags = {
     Name = "tf-acc-neptune-cluster-instance-name-prefix-b"
   }
 }
@@ -499,7 +499,7 @@ resource "aws_neptune_parameter_group" "bar" {
     value        = "25"
   }
 
-  tags {
+  tags = {
     foo = "bar"
   }
 }

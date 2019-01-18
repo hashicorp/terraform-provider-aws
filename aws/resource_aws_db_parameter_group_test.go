@@ -15,17 +15,39 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestAccAWSDBParameterGroup_importBasic(t *testing.T) {
+	resourceName := "aws_db_parameter_group.bar"
+	groupName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBParameterGroupConfig(groupName),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSDBParameterGroup_limit(t *testing.T) {
 	var v rds.DBParameterGroup
 
 	groupName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: createAwsDbParameterGroupsExceedDefaultAwsLimit(groupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBParameterGroupExists("aws_db_parameter_group.large", &v),
@@ -118,7 +140,7 @@ func TestAccAWSDBParameterGroup_limit(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_db_parameter_group.large", "parameter.748684209.value", "repeatable-read"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: updateAwsDbParameterGroupsExceedDefaultAwsLimit(groupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBParameterGroupExists("aws_db_parameter_group.large", &v),
@@ -220,12 +242,12 @@ func TestAccAWSDBParameterGroup_basic(t *testing.T) {
 
 	groupName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSDBParameterGroupConfig(groupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBParameterGroupExists("aws_db_parameter_group.bar", &v),
@@ -254,7 +276,7 @@ func TestAccAWSDBParameterGroup_basic(t *testing.T) {
 						"aws_db_parameter_group.bar", "arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:rds:[^:]+:\\d{12}:pg:%s", groupName))),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAWSDBParameterGroupAddParametersConfig(groupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBParameterGroupExists("aws_db_parameter_group.bar", &v),
@@ -298,12 +320,12 @@ func TestAccAWSDBParameterGroup_basic(t *testing.T) {
 func TestAccAWSDBParameterGroup_Disappears(t *testing.T) {
 	var v rds.DBParameterGroup
 	groupName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSDBParameterGroupConfig(groupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBParameterGroupExists("aws_db_parameter_group.bar", &v),
@@ -318,12 +340,12 @@ func TestAccAWSDBParameterGroup_Disappears(t *testing.T) {
 func TestAccAWSDBParameterGroup_namePrefix(t *testing.T) {
 	var v rds.DBParameterGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDBParameterGroupConfig_namePrefix,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBParameterGroupExists("aws_db_parameter_group.test", &v),
@@ -338,12 +360,12 @@ func TestAccAWSDBParameterGroup_namePrefix(t *testing.T) {
 func TestAccAWSDBParameterGroup_generatedName(t *testing.T) {
 	var v rds.DBParameterGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDBParameterGroupConfig_generatedName,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBParameterGroupExists("aws_db_parameter_group.test", &v),
@@ -358,12 +380,12 @@ func TestAccAWSDBParameterGroup_withApplyMethod(t *testing.T) {
 
 	groupName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSDBParameterGroupConfigWithApplyMethod(groupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBParameterGroupExists("aws_db_parameter_group.bar", &v),
@@ -396,12 +418,12 @@ func TestAccAWSDBParameterGroup_Only(t *testing.T) {
 	var v rds.DBParameterGroup
 
 	groupName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSDBParameterGroupOnlyConfig(groupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBParameterGroupExists("aws_db_parameter_group.bar", &v),
@@ -420,12 +442,12 @@ func TestAccAWSDBParameterGroup_MatchDefault(t *testing.T) {
 	var v rds.DBParameterGroup
 
 	groupName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSDBParameterGroupIncludeDefaultConfig(groupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBParameterGroupExists("aws_db_parameter_group.bar", &v),
@@ -566,7 +588,7 @@ resource "aws_db_parameter_group" "bar" {
 	  name = "character_set_results"
 	  value = "utf8"
 	}
-	tags {
+	tags = {
 		foo = "bar"
 	}
 }`, n)
@@ -586,7 +608,7 @@ resource "aws_db_parameter_group" "bar" {
 	  value = "utf8"
 	  apply_method = "pending-reboot"
 	}
-	tags {
+	tags = {
 		foo = "bar"
 	}
 }`, n)
@@ -618,7 +640,7 @@ resource "aws_db_parameter_group" "bar" {
 	  name = "collation_connection"
 	  value = "utf8_unicode_ci"
 	}
-	tags {
+	tags = {
 		foo = "bar"
 		baz = "foo"
 	}

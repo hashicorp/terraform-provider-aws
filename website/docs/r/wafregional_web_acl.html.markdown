@@ -15,7 +15,7 @@ Provides a WAF Regional Web ACL Resource for use with Application Load Balancer.
 ```hcl
 resource "aws_wafregional_ipset" "ipset" {
   name = "tfIPSet"
-  
+
   ip_set_descriptor {
     type  = "IPV4"
     value = "192.0.7.0/24"
@@ -25,7 +25,7 @@ resource "aws_wafregional_ipset" "ipset" {
 resource "aws_wafregional_rule" "wafrule" {
   name        = "tfWAFRule"
   metric_name = "tfWAFRule"
-  
+
   predicate {
     data_id = "${aws_wafregional_ipset.ipset.id}"
     negated = false
@@ -36,16 +36,16 @@ resource "aws_wafregional_rule" "wafrule" {
 resource "aws_wafregional_web_acl" "wafacl" {
   name        = "tfWebACL"
   metric_name = "tfWebACL"
-  
+
   default_action {
     type = "ALLOW"
   }
-  
+
   rule {
     action {
-       type = "BLOCK"
+      type = "BLOCK"
     }
-    
+
     priority = 1
     rule_id  = "${aws_wafregional_rule.wafrule.id}"
     type     = "REGULAR"
@@ -74,7 +74,7 @@ See [docs](https://docs.aws.amazon.com/waf/latest/APIReference/API_regional_Acti
 * `override_action` - (Required) Override the action that a group requests CloudFront or AWS WAF takes when a web request matches the conditions in the rule.  Only used if `type` is `GROUP`.
 * `priority` - (Required) Specifies the order in which the rules in a WebACL are evaluated.
   Rules with a lower value are evaluated before rules with a higher value.
-* `rule_id` - (Required) ID of the associated [rule](/docs/providers/aws/r/wafregional_rule.html)
+* `rule_id` - (Required) ID of the associated WAF (Regional) rule (e.g. [`aws_wafregional_rule`](/docs/providers/aws/r/wafregional_rule.html)). WAF (Global) rules cannot be used.
 * `type` - (Optional) The rule type, either `REGULAR`, as defined by [Rule](http://docs.aws.amazon.com/waf/latest/APIReference/API_Rule.html), `RATE_BASED`, as defined by [RateBasedRule](http://docs.aws.amazon.com/waf/latest/APIReference/API_RateBasedRule.html), or `GROUP`, as defined by [RuleGroup](https://docs.aws.amazon.com/waf/latest/APIReference/API_RuleGroup.html). The default is REGULAR. If you add a RATE_BASED rule, you need to set `type` as `RATE_BASED`. If you add a GROUP rule, you need to set `type` as `GROUP`.
 
 ### `default_action` / `action`

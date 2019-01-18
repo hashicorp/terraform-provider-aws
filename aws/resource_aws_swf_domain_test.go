@@ -16,7 +16,7 @@ func TestAccAWSSwfDomain_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_swf_domain.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 		},
@@ -43,7 +43,7 @@ func TestAccAWSSwfDomain_basic(t *testing.T) {
 func TestAccAWSSwfDomain_NamePrefix(t *testing.T) {
 	resourceName := "aws_swf_domain.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 		},
@@ -70,7 +70,7 @@ func TestAccAWSSwfDomain_NamePrefix(t *testing.T) {
 func TestAccAWSSwfDomain_GeneratedName(t *testing.T) {
 	resourceName := "aws_swf_domain.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 		},
@@ -96,7 +96,7 @@ func TestAccAWSSwfDomain_Description(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_swf_domain.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 		},
