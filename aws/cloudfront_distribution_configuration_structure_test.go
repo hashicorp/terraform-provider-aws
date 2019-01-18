@@ -165,10 +165,10 @@ func multiOriginConf() *schema.Set {
 func orderedMemberConf() map[string]interface{} {
 	return map[string]interface{}{
 		"ordered_origin_group_member": []interface{}{map[string]interface{}{
-				"origin_id": "S3failover",
-			}, map[string]interface{}{
-				"origin_id": "S3origin",
-			}},
+			"origin_id": "S3failover",
+		}, map[string]interface{}{
+			"origin_id": "S3origin",
+		}},
 	}
 }
 
