@@ -14,7 +14,7 @@ require (
 	github.com/hashicorp/go-safetemp v1.0.0 // indirect
 	github.com/hashicorp/go-version v1.0.0
 	github.com/hashicorp/logutils v1.0.0 // indirect
-	github.com/hashicorp/terraform v0.12.0-alpha4.0.20190116193128-2ad9f0513a2b
+	github.com/hashicorp/terraform v0.12.0-alpha4.0.20190118003454-565eeac5d104
 	github.com/hashicorp/vault v0.10.4
 	github.com/jen20/awspolicyequivalence v1.0.0
 	github.com/mattn/go-isatty v0.0.4 // indirect
