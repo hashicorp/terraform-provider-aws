@@ -3,9 +3,11 @@ package aws
 import (
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -38,6 +40,16 @@ func resourceAwsGlueCrawler() *schema.Resource {
 			"role": {
 				Type:     schema.TypeString,
 				Required: true,
+				// Glue API always returns name
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					newARN, err := arn.Parse(new)
+
+					if err != nil {
+						return false
+					}
+
+					return old == strings.TrimPrefix(newARN.Resource, "role/")
+				},
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -151,7 +163,11 @@ func resourceAwsGlueCrawler() *schema.Resource {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
-				ValidateFunc: validateJsonString,
+				ValidateFunc: validation.ValidateJsonString,
+			},
+			"security_configuration": {
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 		},
 	}
@@ -228,6 +244,10 @@ func createCrawlerInput(crawlerName string, d *schema.ResourceData) (*glue.Creat
 		crawlerInput.Configuration = aws.String(configuration)
 	}
 
+	if securityConfiguration, ok := d.GetOk("security_configuration"); ok {
+		crawlerInput.CrawlerSecurityConfiguration = aws.String(securityConfiguration.(string))
+	}
+
 	return crawlerInput, nil
 }
 
@@ -273,7 +293,7 @@ func expandGlueDynamoDBTargets(targets []interface{}) []*glue.DynamoDBTarget {
 		return []*glue.DynamoDBTarget{}
 	}
 
-	perms := make([]*glue.DynamoDBTarget, len(targets), len(targets))
+	perms := make([]*glue.DynamoDBTarget, len(targets))
 	for i, rawCfg := range targets {
 		cfg := rawCfg.(map[string]interface{})
 		perms[i] = expandGlueDynamoDBTarget(cfg)
@@ -294,7 +314,7 @@ func expandGlueS3Targets(targets []interface{}) []*glue.S3Target {
 		return []*glue.S3Target{}
 	}
 
-	perms := make([]*glue.S3Target, len(targets), len(targets))
+	perms := make([]*glue.S3Target, len(targets))
 	for i, rawCfg := range targets {
 		cfg := rawCfg.(map[string]interface{})
 		perms[i] = expandGlueS3Target(cfg)
@@ -318,7 +338,7 @@ func expandGlueJdbcTargets(targets []interface{}) []*glue.JdbcTarget {
 		return []*glue.JdbcTarget{}
 	}
 
-	perms := make([]*glue.JdbcTarget, len(targets), len(targets))
+	perms := make([]*glue.JdbcTarget, len(targets))
 	for i, rawCfg := range targets {
 		cfg := rawCfg.(map[string]interface{})
 		perms[i] = expandGlueJdbcTarget(cfg)
@@ -400,6 +420,7 @@ func resourceAwsGlueCrawlerRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("role", crawlerOutput.Crawler.Role)
 	d.Set("configuration", crawlerOutput.Crawler.Configuration)
 	d.Set("description", crawlerOutput.Crawler.Description)
+	d.Set("security_configuration", crawlerOutput.Crawler.CrawlerSecurityConfiguration)
 	d.Set("schedule", "")
 	if crawlerOutput.Crawler.Schedule != nil {
 		d.Set("schedule", crawlerOutput.Crawler.Schedule.ScheduleExpression)

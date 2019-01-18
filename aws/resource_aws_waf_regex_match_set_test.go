@@ -62,7 +62,7 @@ func testSweepWafRegexMatchSet(region string) error {
 			return fmt.Errorf("Error updating WAF Regex Match Set: %s", err)
 		}
 
-		wr := newWafRetryer(conn, "global")
+		wr := newWafRetryer(conn)
 		_, err = wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.DeleteRegexMatchSetInput{
 				ChangeToken:     token,
@@ -239,7 +239,7 @@ func testAccCheckAWSWafRegexMatchSetDisappears(set *waf.RegexMatchSet) resource.
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).wafconn
 
-		wr := newWafRetryer(conn, "global")
+		wr := newWafRetryer(conn)
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.UpdateRegexMatchSetInput{
 				ChangeToken:     token,

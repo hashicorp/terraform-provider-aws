@@ -17,7 +17,7 @@ func TestAccAWSWafXssMatchSet_basic(t *testing.T) {
 	var v waf.XssMatchSet
 	xssMatchSet := fmt.Sprintf("xssMatchSet-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafXssMatchSetDestroy,
@@ -57,7 +57,7 @@ func TestAccAWSWafXssMatchSet_changeNameForceNew(t *testing.T) {
 	xssMatchSet := fmt.Sprintf("xssMatchSet-%s", acctest.RandString(5))
 	xssMatchSetNewName := fmt.Sprintf("xssMatchSetNewName-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafXssMatchSetDestroy,
@@ -90,7 +90,7 @@ func TestAccAWSWafXssMatchSet_disappears(t *testing.T) {
 	var v waf.XssMatchSet
 	xssMatchSet := fmt.Sprintf("xssMatchSet-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafXssMatchSetDestroy,
@@ -111,7 +111,7 @@ func TestAccAWSWafXssMatchSet_changeTuples(t *testing.T) {
 	var before, after waf.XssMatchSet
 	setName := fmt.Sprintf("xssMatchSet-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafXssMatchSetDestroy,
@@ -176,7 +176,7 @@ func TestAccAWSWafXssMatchSet_noTuples(t *testing.T) {
 	var ipset waf.XssMatchSet
 	setName := fmt.Sprintf("xssMatchSet-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafXssMatchSetDestroy,
@@ -199,7 +199,7 @@ func testAccCheckAWSWafXssMatchSetDisappears(v *waf.XssMatchSet) resource.TestCh
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).wafconn
 
-		wr := newWafRetryer(conn, "global")
+		wr := newWafRetryer(conn)
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.UpdateXssMatchSetInput{
 				ChangeToken:   token,

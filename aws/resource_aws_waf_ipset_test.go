@@ -21,7 +21,7 @@ func TestAccAWSWafIPSet_basic(t *testing.T) {
 	var v waf.IPSet
 	ipsetName := fmt.Sprintf("ip-set-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafIPSetDestroy,
@@ -52,7 +52,7 @@ func TestAccAWSWafIPSet_basic(t *testing.T) {
 func TestAccAWSWafIPSet_disappears(t *testing.T) {
 	var v waf.IPSet
 	ipsetName := fmt.Sprintf("ip-set-%s", acctest.RandString(5))
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafIPSetDestroy,
@@ -74,7 +74,7 @@ func TestAccAWSWafIPSet_changeNameForceNew(t *testing.T) {
 	ipsetName := fmt.Sprintf("ip-set-%s", acctest.RandString(5))
 	ipsetNewName := fmt.Sprintf("ip-set-new-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafIPSetDestroy,
@@ -111,7 +111,7 @@ func TestAccAWSWafIPSet_changeDescriptors(t *testing.T) {
 	var before, after waf.IPSet
 	ipsetName := fmt.Sprintf("ip-set-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafIPSetDestroy,
@@ -152,7 +152,7 @@ func TestAccAWSWafIPSet_noDescriptors(t *testing.T) {
 	var ipset waf.IPSet
 	ipsetName := fmt.Sprintf("ip-set-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafIPSetDestroy,
@@ -195,7 +195,7 @@ func TestAccAWSWafIPSet_IpSetDescriptors_1000UpdateLimit(t *testing.T) {
 		ipSetDescriptors = append(ipSetDescriptors, fmt.Sprintf("ip_set_descriptors {\ntype=\"IPV4\"\nvalue=\"%s/32\"\n}", ip))
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafIPSetDestroy,
@@ -320,7 +320,7 @@ func testAccCheckAWSWafIPSetDisappears(v *waf.IPSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).wafconn
 
-		wr := newWafRetryer(conn, "global")
+		wr := newWafRetryer(conn)
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.UpdateIPSetInput{
 				ChangeToken: token,

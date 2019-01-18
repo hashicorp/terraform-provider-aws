@@ -15,7 +15,7 @@ func TestAccAWSCloudwatchLogDestinationPolicy_importBasic(t *testing.T) {
 
 	rstring := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudwatchLogDestinationPolicyDestroy,
@@ -38,7 +38,7 @@ func TestAccAWSCloudwatchLogDestinationPolicy_basic(t *testing.T) {
 
 	rstring := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudwatchLogDestinationPolicyDestroy,
@@ -110,7 +110,7 @@ data "aws_region" "current" {
 data "aws_iam_policy_document" "role" {
   statement {
     effect = "Allow"
-    principals = {
+    principals {
       type = "Service"
       identifiers = [
         "logs.${data.aws_region.current.name}.amazonaws.com"
@@ -164,7 +164,7 @@ resource "aws_cloudwatch_log_destination" "test" {
 data "aws_iam_policy_document" "access" {
   statement {
     effect = "Allow"
-    principals = {
+    principals {
       type = "AWS"
       identifiers = [
         "000000000000"

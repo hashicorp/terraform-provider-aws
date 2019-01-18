@@ -13,7 +13,7 @@ import (
 func TestAccAWSEmrSecurityConfiguration_importBasic(t *testing.T) {
 	resourceName := "aws_emr_security_configuration.foo"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEmrSecurityConfigurationDestroy,
@@ -32,7 +32,7 @@ func TestAccAWSEmrSecurityConfiguration_importBasic(t *testing.T) {
 }
 
 func TestAccAWSEmrSecurityConfiguration_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEmrSecurityConfigurationDestroy,

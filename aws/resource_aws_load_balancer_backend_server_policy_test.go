@@ -17,7 +17,7 @@ func TestAccAWSLoadBalancerBackendServerPolicy_basic(t *testing.T) {
 	rString := acctest.RandString(8)
 	lbName := fmt.Sprintf("tf-acc-lb-bsp-basic-%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() { testAccPreCheck(t) },
 		Providers: map[string]terraform.ResourceProvider{
 			"aws": testAccProvider,
@@ -181,7 +181,7 @@ resource "aws_elb" "test-lb" {
     ssl_certificate_id = "${aws_iam_server_certificate.test-iam-cert0.arn}"
   }
 
-  tags {
+  tags = {
     Name = "tf-acc-test"
   }
 }
@@ -280,7 +280,7 @@ resource "aws_elb" "test-lb" {
     ssl_certificate_id = "${aws_iam_server_certificate.test-iam-cert0.arn}"
   }
 
-  tags {
+  tags = {
     Name = "tf-acc-test"
   }
 }
@@ -389,7 +389,7 @@ resource "aws_elb" "test-lb" {
     ssl_certificate_id = "${aws_iam_server_certificate.test-iam-cert0.arn}"
   }
 
-  tags {
+  tags = {
     Name = "tf-acc-test"
   }
 }

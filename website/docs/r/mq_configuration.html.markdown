@@ -20,7 +20,8 @@ resource "aws_mq_configuration" "example" {
   name           = "example"
   engine_type    = "ActiveMQ"
   engine_version = "5.15.0"
-  data           = <<DATA
+
+  data = <<DATA
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <broker xmlns="http://activemq.apache.org/schema/core">
   <plugins>

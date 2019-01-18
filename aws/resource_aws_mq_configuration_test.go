@@ -14,7 +14,7 @@ import (
 func TestAccAWSMqConfiguration_basic(t *testing.T) {
 	configurationName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqConfigurationDestroy,
@@ -50,7 +50,7 @@ func TestAccAWSMqConfiguration_basic(t *testing.T) {
 func TestAccAWSMqConfiguration_withData(t *testing.T) {
 	configurationName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqConfigurationDestroy,

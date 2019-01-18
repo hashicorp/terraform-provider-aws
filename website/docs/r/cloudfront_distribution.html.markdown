@@ -29,7 +29,7 @@ resource "aws_s3_bucket" "b" {
   bucket = "mybucket"
   acl    = "private"
 
-  tags {
+  tags = {
     Name = "My bucket"
   }
 }
@@ -89,7 +89,8 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
 
     forwarded_values {
       query_string = false
-      headers = ["Origin"]
+      headers      = ["Origin"]
+
       cookies {
         forward = "none"
       }
@@ -111,6 +112,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
 
     forwarded_values {
       query_string = false
+
       cookies {
         forward = "none"
       }
@@ -132,7 +134,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
     }
   }
 
-  tags {
+  tags = {
     Environment = "production"
   }
 

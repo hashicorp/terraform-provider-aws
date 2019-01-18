@@ -15,7 +15,7 @@ func TestAccAWSKmsAlias_importBasic(t *testing.T) {
 	rInt := acctest.RandInt()
 	kmsAliasTimestamp := time.Now().Format(time.RFC1123)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSKmsAliasDestroy,
@@ -36,7 +36,7 @@ func TestAccAWSKmsAlias_importBasic(t *testing.T) {
 func TestAccAWSKmsAlias_basic(t *testing.T) {
 	rInt := acctest.RandInt()
 	kmsAliasTimestamp := time.Now().Format(time.RFC1123)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSKmsAliasDestroy,
@@ -61,7 +61,7 @@ func TestAccAWSKmsAlias_basic(t *testing.T) {
 func TestAccAWSKmsAlias_name_prefix(t *testing.T) {
 	rInt := acctest.RandInt()
 	kmsAliasTimestamp := time.Now().Format(time.RFC1123)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSKmsAliasDestroy,
@@ -80,7 +80,7 @@ func TestAccAWSKmsAlias_name_prefix(t *testing.T) {
 func TestAccAWSKmsAlias_no_name(t *testing.T) {
 	rInt := acctest.RandInt()
 	kmsAliasTimestamp := time.Now().Format(time.RFC1123)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSKmsAliasDestroy,
@@ -99,7 +99,7 @@ func TestAccAWSKmsAlias_no_name(t *testing.T) {
 func TestAccAWSKmsAlias_multiple(t *testing.T) {
 	rInt := acctest.RandInt()
 	kmsAliasTimestamp := time.Now().Format(time.RFC1123)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSKmsAliasDestroy,
@@ -120,7 +120,7 @@ func TestAccAWSKmsAlias_multiple(t *testing.T) {
 func TestAccAWSKmsAlias_ArnDiffSuppress(t *testing.T) {
 	rInt := acctest.RandInt()
 	kmsAliasTimestamp := time.Now().Format(time.RFC1123)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSKmsAliasDestroy,

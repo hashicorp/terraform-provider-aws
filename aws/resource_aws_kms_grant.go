@@ -275,11 +275,7 @@ func resourceAwsKmsGrantDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Checking if grant is revoked: %s", grantId)
 	err = waitForKmsGrantToBeRevoked(conn, keyId, grantId)
 
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func resourceAwsKmsGrantExists(d *schema.ResourceData, meta interface{}) (bool, error) {
@@ -429,10 +425,8 @@ func kmsGrantConstraintsIsValid(constraints *schema.Set) bool {
 		}
 	}
 
-	if constraintCount > 1 {
-		return false
-	}
-	return true
+	return constraintCount <= 1
+
 }
 
 func expandKmsGrantConstraints(configured *schema.Set) *kms.GrantConstraints {
@@ -468,13 +462,13 @@ func sortStringMapKeys(m map[string]*string) []string {
 // NB: For the constraint hash to be deterministic the order in which
 // print the keys and values of the encryption context maps needs to be
 // determistic, so sort them.
-func sortedConcatStringMap(m map[string]*string, sep string) string {
+func sortedConcatStringMap(m map[string]*string) string {
 	var strList []string
 	mapKeys := sortStringMapKeys(m)
 	for _, key := range mapKeys {
 		strList = append(strList, key, *m[key])
 	}
-	return strings.Join(strList, sep)
+	return strings.Join(strList, "-")
 }
 
 // The hash needs to encapsulate what type of constraint it is
@@ -488,12 +482,12 @@ func resourceKmsGrantConstraintsHash(v interface{}) int {
 
 	if v, ok := m["encryption_context_equals"]; ok {
 		if len(v.(map[string]interface{})) > 0 {
-			buf.WriteString(fmt.Sprintf("encryption_context_equals-%s-", sortedConcatStringMap(stringMapToPointers(v.(map[string]interface{})), "-")))
+			buf.WriteString(fmt.Sprintf("encryption_context_equals-%s-", sortedConcatStringMap(stringMapToPointers(v.(map[string]interface{})))))
 		}
 	}
 	if v, ok := m["encryption_context_subset"]; ok {
 		if len(v.(map[string]interface{})) > 0 {
-			buf.WriteString(fmt.Sprintf("encryption_context_subset-%s-", sortedConcatStringMap(stringMapToPointers(v.(map[string]interface{})), "-")))
+			buf.WriteString(fmt.Sprintf("encryption_context_subset-%s-", sortedConcatStringMap(stringMapToPointers(v.(map[string]interface{})))))
 		}
 	}
 
@@ -506,7 +500,7 @@ func flattenKmsGrantConstraints(constraint *kms.GrantConstraints) *schema.Set {
 		return constraints
 	}
 
-	m := make(map[string]interface{}, 0)
+	m := make(map[string]interface{})
 	if constraint.EncryptionContextEquals != nil {
 		if len(constraint.EncryptionContextEquals) > 0 {
 			m["encryption_context_equals"] = pointersMapToStringList(constraint.EncryptionContextEquals)

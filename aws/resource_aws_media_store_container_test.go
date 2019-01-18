@@ -12,7 +12,7 @@ import (
 )
 
 func TestAccAWSMediaStoreContainer_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMediaStoreContainerDestroy,
@@ -30,7 +30,7 @@ func TestAccAWSMediaStoreContainer_basic(t *testing.T) {
 func TestAccAWSMediaStoreContainer_import(t *testing.T) {
 	resourceName := "aws_media_store_container.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMediaStoreContainerDestroy,
@@ -88,11 +88,8 @@ func testAccCheckAwsMediaStoreContainerExists(name string) resource.TestCheckFun
 		}
 
 		_, err := conn.DescribeContainer(input)
-		if err != nil {
-			return err
-		}
 
-		return nil
+		return err
 	}
 }
 

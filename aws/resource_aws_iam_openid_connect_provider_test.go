@@ -16,7 +16,7 @@ func TestAccAWSIAMOpenIDConnectProvider_basic(t *testing.T) {
 	rString := acctest.RandString(5)
 	url := "accounts.google.com/" + rString
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckIAMOpenIDConnectProviderDestroy,
@@ -53,7 +53,7 @@ func TestAccAWSIAMOpenIDConnectProvider_importBasic(t *testing.T) {
 	resourceName := "aws_iam_openid_connect_provider.goog"
 	rString := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckIAMOpenIDConnectProviderDestroy,
@@ -74,7 +74,7 @@ func TestAccAWSIAMOpenIDConnectProvider_importBasic(t *testing.T) {
 func TestAccAWSIAMOpenIDConnectProvider_disappears(t *testing.T) {
 	rString := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckIAMOpenIDConnectProviderDestroy,
@@ -154,11 +154,7 @@ func testAccCheckIAMOpenIDConnectProvider(id string) resource.TestCheckFunc {
 			OpenIDConnectProviderArn: aws.String(rs.Primary.ID),
 		})
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

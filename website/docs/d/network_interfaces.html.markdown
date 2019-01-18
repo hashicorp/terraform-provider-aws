@@ -24,7 +24,7 @@ The following example retrieves a list of all network interface ids with a custo
 
 ```hcl
 data "aws_network_interfaces" "example" {
-  tags {
+  tags = {
     Name = "test"
   }
 }
@@ -40,7 +40,7 @@ with specific subnet.
 ```hcl
 data "aws_network_interfaces" "example" {
   filter {
-    name = "subnet-id"
+    name   = "subnet-id"
     values = ["${aws_subnet.test.id}"]
   }
 }

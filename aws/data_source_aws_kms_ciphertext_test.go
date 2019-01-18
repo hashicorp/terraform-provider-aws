@@ -7,7 +7,7 @@ import (
 )
 
 func TestAccDataSourceAwsKmsCiphertext_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -23,7 +23,7 @@ func TestAccDataSourceAwsKmsCiphertext_basic(t *testing.T) {
 }
 
 func TestAccDataSourceAwsKmsCiphertext_validate(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -43,7 +43,7 @@ func TestAccDataSourceAwsKmsCiphertext_validate(t *testing.T) {
 }
 
 func TestAccDataSourceAwsKmsCiphertext_validate_withContext(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{

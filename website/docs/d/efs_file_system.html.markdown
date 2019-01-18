@@ -14,7 +14,7 @@ Provides information about an Elastic File System (EFS).
 
 ```hcl
 variable "file_system_id" {
-  type = "string"
+  type    = "string"
   default = ""
 }
 
@@ -34,6 +34,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `arn` - Amazon Resource Name of the file system.
 * `performance_mode` - The PerformanceMode of the file system.
 * `tags` - The list of tags assigned to the file system.
 * `encrypted` - Whether EFS is encrypted.

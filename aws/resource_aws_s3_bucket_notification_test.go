@@ -88,7 +88,7 @@ func TestAccAWSS3BucketNotification_basic(t *testing.T) {
 	roleName := fmt.Sprintf("tf-acc-role-s3-b-notification-%s", rString)
 	lambdaFuncName := fmt.Sprintf("tf-acc-lambda-func-s3-b-notification-%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketNotificationDestroy,
@@ -186,7 +186,7 @@ func TestAccAWSS3BucketNotification_withoutFilter(t *testing.T) {
 	topicName := fmt.Sprintf("tf-acc-topic-s3-b-notification-wo-f-%s", rString)
 	bucketName := fmt.Sprintf("tf-acc-bucket-notification-wo-f-%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketNotificationDestroy,
@@ -246,7 +246,7 @@ func testAccCheckAWSS3BucketNotificationDestroy(s *terraform.State) error {
 
 func testAccCheckAWSS3BucketTopicNotification(n, i, t string, events []string, filters *s3.KeyFilter) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, _ := s.RootModule().Resources[n]
+		rs := s.RootModule().Resources[n]
 		topicArn := s.RootModule().Resources[t].Primary.ID
 		conn := testAccProvider.Meta().(*AWSClient).s3conn
 
@@ -303,7 +303,7 @@ func testAccCheckAWSS3BucketTopicNotification(n, i, t string, events []string, f
 
 func testAccCheckAWSS3BucketQueueNotification(n, i, t string, events []string, filters *s3.KeyFilter) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, _ := s.RootModule().Resources[n]
+		rs := s.RootModule().Resources[n]
 		queueArn := s.RootModule().Resources[t].Primary.Attributes["arn"]
 		conn := testAccProvider.Meta().(*AWSClient).s3conn
 
@@ -360,7 +360,7 @@ func testAccCheckAWSS3BucketQueueNotification(n, i, t string, events []string, f
 
 func testAccCheckAWSS3BucketLambdaFunctionConfiguration(n, i, t string, events []string, filters *s3.KeyFilter) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, _ := s.RootModule().Resources[n]
+		rs := s.RootModule().Resources[n]
 		funcArn := s.RootModule().Resources[t].Primary.Attributes["arn"]
 		conn := testAccProvider.Meta().(*AWSClient).s3conn
 
@@ -547,7 +547,7 @@ resource "aws_lambda_function" "func" {
     function_name = "%s"
     role = "${aws_iam_role.iam_for_lambda.arn}"
     handler = "exports.example"
-		runtime = "nodejs4.3"
+		runtime = "nodejs8.10"
 }
 
 resource "aws_s3_bucket" "bucket" {

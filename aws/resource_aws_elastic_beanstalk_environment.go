@@ -121,12 +121,18 @@ func resourceAwsElasticBeanstalkEnvironment() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
-				ConflictsWith: []string{"template_name"},
+				ConflictsWith: []string{"platform_arn", "template_name"},
+			},
+			"platform_arn": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"solution_stack_name", "template_name"},
 			},
 			"template_name": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"solution_stack_name"},
+				ConflictsWith: []string{"solution_stack_name", "platform_arn"},
 			},
 			"wait_for_ready_timeout": {
 				Type:     schema.TypeString,
@@ -211,6 +217,7 @@ func resourceAwsElasticBeanstalkEnvironmentCreate(d *schema.ResourceData, meta i
 	version := d.Get("version_label").(string)
 	settings := d.Get("setting").(*schema.Set)
 	solutionStack := d.Get("solution_stack_name").(string)
+	platformArn := d.Get("platform_arn").(string)
 	templateName := d.Get("template_name").(string)
 
 	// TODO set tags
@@ -252,6 +259,10 @@ func resourceAwsElasticBeanstalkEnvironmentCreate(d *schema.ResourceData, meta i
 
 	if solutionStack != "" {
 		createOpts.SolutionStackName = aws.String(solutionStack)
+	}
+
+	if platformArn != "" {
+		createOpts.PlatformArn = aws.String(platformArn)
 	}
 
 	if templateName != "" {
@@ -398,6 +409,13 @@ func resourceAwsElasticBeanstalkEnvironmentUpdate(d *schema.ResourceData, meta i
 		}
 
 		updateOpts.OptionSettings = add
+	}
+
+	if d.HasChange("platform_arn") {
+		hasChange = true
+		if v, ok := d.GetOk("platform_arn"); ok {
+			updateOpts.PlatformArn = aws.String(v.(string))
+		}
 	}
 
 	if d.HasChange("template_name") {
@@ -605,6 +623,10 @@ func resourceAwsElasticBeanstalkEnvironmentRead(d *schema.ResourceData, meta int
 	}
 
 	if err := d.Set("solution_stack_name", env.SolutionStackName); err != nil {
+		return err
+	}
+
+	if err := d.Set("platform_arn", env.PlatformArn); err != nil {
 		return err
 	}
 

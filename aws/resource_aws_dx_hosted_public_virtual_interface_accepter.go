@@ -65,7 +65,7 @@ func resourceAwsDxHostedPublicVirtualInterfaceAccepterCreate(d *schema.ResourceD
 	}.String()
 	d.Set("arn", arn)
 
-	if err := dxHostedPublicVirtualInterfaceAccepterWaitUntilAvailable(d, conn); err != nil {
+	if err := dxHostedPublicVirtualInterfaceAccepterWaitUntilAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return err
 	}
 
@@ -94,11 +94,8 @@ func resourceAwsDxHostedPublicVirtualInterfaceAccepterRead(d *schema.ResourceDat
 	}
 
 	d.Set("virtual_interface_id", vif.VirtualInterfaceId)
-	if err := getTagsDX(conn, d, d.Get("arn").(string)); err != nil {
-		return err
-	}
-
-	return nil
+	err1 := getTagsDX(conn, d, d.Get("arn").(string))
+	return err1
 }
 
 func resourceAwsDxHostedPublicVirtualInterfaceAccepterUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -127,10 +124,11 @@ func resourceAwsDxHostedPublicVirtualInterfaceAccepterImport(d *schema.ResourceD
 	return []*schema.ResourceData{d}, nil
 }
 
-func dxHostedPublicVirtualInterfaceAccepterWaitUntilAvailable(d *schema.ResourceData, conn *directconnect.DirectConnect) error {
+func dxHostedPublicVirtualInterfaceAccepterWaitUntilAvailable(conn *directconnect.DirectConnect, vifId string, timeout time.Duration) error {
 	return dxVirtualInterfaceWaitUntilAvailable(
-		d,
 		conn,
+		vifId,
+		timeout,
 		[]string{
 			directconnect.VirtualInterfaceStateConfirming,
 			directconnect.VirtualInterfaceStatePending,

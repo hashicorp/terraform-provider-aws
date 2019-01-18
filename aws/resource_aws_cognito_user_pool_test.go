@@ -78,7 +78,7 @@ func TestAccAWSCognitoUserPool_importBasic(t *testing.T) {
 	resourceName := "aws_cognito_user_pool.pool"
 	name := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchDashboardDestroy,
@@ -98,7 +98,7 @@ func TestAccAWSCognitoUserPool_importBasic(t *testing.T) {
 func TestAccAWSCognitoUserPool_basic(t *testing.T) {
 	name := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolDestroy,
@@ -108,9 +108,9 @@ func TestAccAWSCognitoUserPool_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoUserPoolExists("aws_cognito_user_pool.pool"),
 					resource.TestMatchResourceAttr("aws_cognito_user_pool.pool", "arn",
-						regexp.MustCompile("^arn:aws:cognito-idp:[^:]+:[0-9]{12}:userpool/[\\w-]+_[0-9a-zA-Z]+$")),
+						regexp.MustCompile(`^arn:aws:cognito-idp:[^:]+:[0-9]{12}:userpool/[\w-]+_[0-9a-zA-Z]+$`)),
 					resource.TestMatchResourceAttr("aws_cognito_user_pool.pool", "endpoint",
-						regexp.MustCompile("^cognito-idp\\.[^.]+\\.amazonaws.com/[\\w-]+_[0-9a-zA-Z]+$")),
+						regexp.MustCompile(`^cognito-idp\.[^.]+\.amazonaws.com/[\w-]+_[0-9a-zA-Z]+$`)),
 					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "name", "terraform-test-pool-"+name),
 					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.pool", "creation_date"),
 					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.pool", "last_modified_date"),
@@ -123,7 +123,7 @@ func TestAccAWSCognitoUserPool_basic(t *testing.T) {
 func TestAccAWSCognitoUserPool_withAdminCreateUserConfiguration(t *testing.T) {
 	name := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolDestroy,
@@ -156,7 +156,7 @@ func TestAccAWSCognitoUserPool_withAdminCreateUserConfiguration(t *testing.T) {
 func TestAccAWSCognitoUserPool_withDeviceConfiguration(t *testing.T) {
 	name := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolDestroy,
@@ -187,7 +187,7 @@ func TestAccAWSCognitoUserPool_withEmailVerificationMessage(t *testing.T) {
 	message := fmt.Sprintf("%s {####}", acctest.RandString(10))
 	upatedMessage := fmt.Sprintf("%s {####}", acctest.RandString(10))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolDestroy,
@@ -218,7 +218,7 @@ func TestAccAWSCognitoUserPool_withSmsVerificationMessage(t *testing.T) {
 	verificationMessage := fmt.Sprintf("%s {####}", acctest.RandString(10))
 	upatedVerificationMessage := fmt.Sprintf("%s {####}", acctest.RandString(10))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolDestroy,
@@ -245,7 +245,7 @@ func TestAccAWSCognitoUserPool_withSmsVerificationMessage(t *testing.T) {
 func TestAccAWSCognitoUserPool_withEmailConfiguration(t *testing.T) {
 	name := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolDestroy,
@@ -272,7 +272,7 @@ func TestAccAWSCognitoUserPool_withEmailConfiguration(t *testing.T) {
 func TestAccAWSCognitoUserPool_withSmsConfiguration(t *testing.T) {
 	name := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolDestroy,
@@ -293,7 +293,7 @@ func TestAccAWSCognitoUserPool_withSmsConfiguration(t *testing.T) {
 func TestAccAWSCognitoUserPool_withSmsConfigurationUpdated(t *testing.T) {
 	name := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolDestroy,
@@ -320,7 +320,7 @@ func TestAccAWSCognitoUserPool_withSmsConfigurationUpdated(t *testing.T) {
 func TestAccAWSCognitoUserPool_withTags(t *testing.T) {
 	name := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolDestroy,
@@ -346,7 +346,7 @@ func TestAccAWSCognitoUserPool_withTags(t *testing.T) {
 func TestAccAWSCognitoUserPool_withAliasAttributes(t *testing.T) {
 	name := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolDestroy,
@@ -377,7 +377,7 @@ func TestAccAWSCognitoUserPool_withAliasAttributes(t *testing.T) {
 func TestAccAWSCognitoUserPool_withPasswordPolicy(t *testing.T) {
 	name := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolDestroy,
@@ -412,7 +412,7 @@ func TestAccAWSCognitoUserPool_withPasswordPolicy(t *testing.T) {
 func TestAccAWSCognitoUserPool_withLambdaConfig(t *testing.T) {
 	name := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolDestroy,
@@ -457,7 +457,7 @@ func TestAccAWSCognitoUserPool_withLambdaConfig(t *testing.T) {
 func TestAccAWSCognitoUserPool_withSchemaAttributes(t *testing.T) {
 	name := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolDestroy,
@@ -530,7 +530,7 @@ func TestAccAWSCognitoUserPool_withSchemaAttributes(t *testing.T) {
 func TestAccAWSCognitoUserPool_withVerificationMessageTemplate(t *testing.T) {
 	name := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolDestroy,
@@ -564,7 +564,7 @@ func TestAccAWSCognitoUserPool_update(t *testing.T) {
 	authenticationMessage := fmt.Sprintf("%s {####}", acctest.RandString(10))
 	updatedAuthenticationMessage := fmt.Sprintf("%s {####}", acctest.RandString(10))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolDestroy,
@@ -689,11 +689,7 @@ func testAccCheckAWSCognitoUserPoolExists(name string) resource.TestCheckFunc {
 
 		_, err := conn.DescribeUserPool(params)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -791,7 +787,7 @@ func testAccAWSCognitoUserPoolConfig_withTags(name string) string {
 resource "aws_cognito_user_pool" "pool" {
   name = "terraform-test-pool-%s"
 
-  tags {
+  tags = {
     "Name" = "Foo"
   }
 }`, name)
@@ -876,7 +872,7 @@ func testAccAWSCognitoUserPoolConfig_withTagsUpdated(name string) string {
 resource "aws_cognito_user_pool" "pool" {
   name = "terraform-test-pool-%s"
 
-  tags {
+  tags = {
     "Name"    = "FooBar"
     "Project" = "Terraform"
   }
@@ -958,7 +954,7 @@ resource "aws_lambda_function" "main" {
   function_name = "%[1]s"
   role          = "${aws_iam_role.main.arn}"
   handler       = "exports.example"
-  runtime       = "nodejs4.3"
+  runtime       = "nodejs8.10"
 }
 
 resource "aws_cognito_user_pool" "main" {
@@ -1005,7 +1001,7 @@ resource "aws_lambda_function" "main" {
   function_name = "%[1]s"
   role          = "${aws_iam_role.main.arn}"
   handler       = "exports.example"
-  runtime       = "nodejs4.3"
+  runtime       = "nodejs8.10"
 }
 
 resource "aws_lambda_function" "second" {
@@ -1013,7 +1009,7 @@ resource "aws_lambda_function" "second" {
   function_name = "%[1]s_second"
   role          = "${aws_iam_role.main.arn}"
   handler       = "exports.example"
-  runtime       = "nodejs4.3"
+  runtime       = "nodejs8.10"
 }
 
 resource "aws_cognito_user_pool" "main" {
@@ -1233,7 +1229,7 @@ resource "aws_cognito_user_pool" "pool" {
     sns_caller_arn = "${aws_iam_role.main.arn}"
   }
 
-  tags {
+  tags = {
     "Name" = "Foo"
   }
 }`, name, name, name, mfaconfig, smsAuthMsg)

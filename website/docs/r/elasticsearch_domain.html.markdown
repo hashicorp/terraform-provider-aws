@@ -3,13 +3,39 @@ layout: "aws"
 page_title: "AWS: aws_elasticsearch_domain"
 sidebar_current: "docs-aws-resource-elasticsearch-domain"
 description: |-
-  Provides an Elasticsearch Domain.
+  Terraform resource for managing an AWS Elasticsearch Domain.
 ---
 
 # aws_elasticsearch_domain
 
+Manages an AWS Elasticsearch Domain.
 
 ## Example Usage
+
+### Basic Usage
+
+```hcl
+resource "aws_elasticsearch_domain" "example" {
+  domain_name           = "example"
+  elasticsearch_version = "1.5"
+
+  cluster_config {
+    instance_type = "r4.large.elasticsearch"
+  }
+
+  snapshot_options {
+    automated_snapshot_start_hour = 23
+  }
+
+  tags = {
+    Domain = "TestDomain"
+  }
+}
+```
+
+### Access Policy
+
+-> See also: [`aws_elasticsearch_domain_policy` resource](/docs/providers/aws/r/elasticsearch_domain_policy.html)
 
 ```hcl
 variable "domain" {
@@ -20,40 +46,65 @@ data "aws_region" "current" {}
 
 data "aws_caller_identity" "current" {}
 
-resource "aws_elasticsearch_domain" "es" {
-  domain_name           = "${var.domain}"
-  elasticsearch_version = "1.5"
-  cluster_config {
-    instance_type = "r3.large.elasticsearch"
-  }
+resource "aws_elasticsearch_domain" "example" {
+  domain_name = "${var.domain}"
+  # ... other configuration ...
 
-  advanced_options {
-    "rest.action.multi.allow_explicit_index" = "true"
-  }
-
-  access_policies = <<CONFIG
+  access_policies = <<POLICY
 {
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Action": "es:*",
-			"Principal": "*",
-			"Effect": "Allow",
-			"Resource": "arn:aws:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/${var.domain}/*",
-			"Condition": {
-				"IpAddress": {"aws:SourceIp": ["66.193.100.22/32"]}
-			}
-		}
-	]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "es:*",
+      "Principal": "*",
+      "Effect": "Allow",
+      "Resource": "arn:aws:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/${var.domain}/*",
+      "Condition": {
+        "IpAddress": {"aws:SourceIp": ["66.193.100.22/32"]}
+      }
+    }
+  ]
+}
+POLICY
+}
+```
+
+### Log Publishing to CloudWatch Logs
+
+```hcl
+resource "aws_cloudwatch_log_group" "example" {
+  name = "example"
+}
+
+resource "aws_cloudwatch_log_resource_policy" "example" {
+  policy_name = "example"
+  policy_document = <<CONFIG
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "es.amazonaws.com"
+      },
+      "Action": [
+        "logs:PutLogEvents",
+        "logs:PutLogEventsBatch",
+        "logs:CreateLogStream"
+      ],
+      "Resource": "arn:aws:logs:*"
+    }
+  ]
 }
 CONFIG
+}
 
-  snapshot_options {
-    automated_snapshot_start_hour = 23
-  }
+resource "aws_elasticsearch_domain" "example" {
+  # .. other configuration ...
 
-  tags {
-    Domain = "TestDomain"
+  log_publishing_options {
+    cloudwatch_log_group_arn = "${aws_cloudwatch_log_group.example.arn}"
+    log_type                 = "INDEX_SLOW_LOGS"
   }
 }
 ```
@@ -70,6 +121,7 @@ The following arguments are supported:
    domain on every apply.
 * `ebs_options` - (Optional) EBS related options, may be required based on chosen [instance size](https://aws.amazon.com/elasticsearch-service/pricing/). See below.
 * `encrypt_at_rest` - (Optional) Encrypt at rest options. Only available for [certain instance types](http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/aes-supported-instance-types.html). See below.
+* `node_to_node_encryption` - (Optional) Node-to-node encryption options. See below.
 * `cluster_config` - (Optional) Cluster configuration of the domain, see below.
 * `snapshot_options` - (Optional) Snapshot related options, see below.
 * `vpc_options` - (Optional) VPC related options, see below. Adding or removing this configuration forces a new resource ([documentation](https://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-vpc.html#es-vpc-limitations)).
@@ -99,6 +151,10 @@ The following arguments are supported:
 * `dedicated_master_type` - (Optional) Instance type of the dedicated master nodes in the cluster.
 * `dedicated_master_count` - (Optional) Number of dedicated master nodes in the cluster
 * `zone_awareness_enabled` - (Optional) Indicates whether zone awareness is enabled.
+
+**node_to_node_encryption** supports the following attributes:
+
+* `enabled` - (Required) Whether to enable node-to-node encryption. If the `node_to_node_encryption` block is not provided then this defaults to `false`.
 
 **vpc_options** supports the following attributes:
 

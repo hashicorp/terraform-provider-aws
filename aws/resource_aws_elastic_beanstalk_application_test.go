@@ -83,7 +83,7 @@ func TestAWSElasticBeanstalkApplication_importBasic(t *testing.T) {
 	resourceName := "aws_elastic_beanstalk_application.tftest"
 	config := fmt.Sprintf("tf-test-name-%d", acctest.RandInt())
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBeanstalkAppDestroy,
@@ -112,7 +112,7 @@ func TestAccAWSBeanstalkApp_basic(t *testing.T) {
 	var app elasticbeanstalk.ApplicationDescription
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBeanstalkAppDestroy,
@@ -131,7 +131,7 @@ func TestAccAWSBeanstalkApp_appversionlifecycle(t *testing.T) {
 	var app elasticbeanstalk.ApplicationDescription
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBeanstalkAppDestroy,

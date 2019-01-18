@@ -14,7 +14,7 @@ import (
 func TestAccAWSMediaStoreContainerPolicy_basic(t *testing.T) {
 	rname := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMediaStoreContainerPolicyDestroy,
@@ -42,7 +42,7 @@ func TestAccAWSMediaStoreContainerPolicy_basic(t *testing.T) {
 func TestAccAWSMediaStoreContainerPolicy_import(t *testing.T) {
 	resourceName := "aws_media_store_container_policy.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMediaStoreContainerPolicyDestroy,
@@ -104,11 +104,8 @@ func testAccCheckAwsMediaStoreContainerPolicyExists(name string) resource.TestCh
 		}
 
 		_, err := conn.GetContainerPolicy(input)
-		if err != nil {
-			return err
-		}
 
-		return nil
+		return err
 	}
 }
 
