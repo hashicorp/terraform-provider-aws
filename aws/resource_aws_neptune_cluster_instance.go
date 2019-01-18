@@ -196,7 +196,7 @@ func resourceAwsNeptuneClusterInstanceCreate(d *schema.ResourceData, meta interf
 		PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
 		PromotionTier:           aws.Int64(int64(d.Get("promotion_tier").(int))),
 		AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
-		Tags: tags,
+		Tags:                    tags,
 	}
 
 	if attr, ok := d.GetOk("availability_zone"); ok {
@@ -304,7 +304,7 @@ func resourceAwsNeptuneClusterInstanceRead(d *schema.ResourceData, meta interfac
 	}
 	for _, m := range dbc.DBClusterMembers {
 		if aws.StringValue(db.DBInstanceIdentifier) == aws.StringValue(m.DBInstanceIdentifier) {
-			if aws.BoolValue(m.IsClusterWriter) == true {
+			if aws.BoolValue(m.IsClusterWriter) {
 				d.Set("writer", true)
 			} else {
 				d.Set("writer", false)
@@ -460,11 +460,8 @@ func resourceAwsNeptuneClusterInstanceDelete(d *schema.ResourceData, meta interf
 		Delay:      30 * time.Second,
 	}
 
-	if _, err := stateConf.WaitForState(); err != nil {
-		return err
-	}
-
-	return nil
+	_, err := stateConf.WaitForState()
+	return err
 
 }
 

@@ -22,12 +22,12 @@ func TestAccAWSS3BucketInventory_basic(t *testing.T) {
 	bucketName := fmt.Sprintf("tf-acc-bucket-inventory-%s", rString)
 	inventoryName := t.Name()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketInventoryDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSS3BucketInventoryConfig(bucketName, inventoryName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketInventoryConfigExists(resourceName, &conf),
@@ -50,7 +50,7 @@ func TestAccAWSS3BucketInventory_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination.0.bucket.0.prefix", "inventory"),
 				),
 			},
-			resource.TestStep{
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -60,8 +60,6 @@ func TestAccAWSS3BucketInventory_basic(t *testing.T) {
 }
 
 func TestAccAWSS3BucketInventory_encryptWithSSES3(t *testing.T) {
-	t.Skip("SSE-S3 is not supported by the SDK.")
-
 	var conf s3.InventoryConfiguration
 	rString := acctest.RandString(8)
 	resourceName := "aws_s3_bucket_inventory.test"
@@ -69,19 +67,19 @@ func TestAccAWSS3BucketInventory_encryptWithSSES3(t *testing.T) {
 	bucketName := fmt.Sprintf("tf-acc-bucket-inventory-%s", rString)
 	inventoryName := t.Name()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketInventoryDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSS3BucketInventoryConfigEncryptWithSSES3(bucketName, inventoryName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketInventoryConfigExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "destination.0.bucket.0.encryption.0.sse_s3.#", "1"),
 				),
 			},
-			resource.TestStep{
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -98,12 +96,12 @@ func TestAccAWSS3BucketInventory_encryptWithSSEKMS(t *testing.T) {
 	bucketName := fmt.Sprintf("tf-acc-bucket-inventory-%s", rString)
 	inventoryName := t.Name()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketInventoryDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSS3BucketInventoryConfigEncryptWithSSEKMS(bucketName, inventoryName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketInventoryConfigExists(resourceName, &conf),
@@ -111,7 +109,7 @@ func TestAccAWSS3BucketInventory_encryptWithSSEKMS(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "destination.0.bucket.0.encryption.0.sse_kms.0.key_id", regexp.MustCompile("^arn:aws:kms:")),
 				),
 			},
-			resource.TestStep{
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -233,7 +231,7 @@ resource "aws_s3_bucket_inventory" "test" {
     }
   }
 }
-`, testAccAWSS3BucketMetricsConfigBucket(bucketName), inventoryName)
+`, testAccAWSS3BucketInventoryConfigBucket(bucketName), inventoryName)
 }
 
 func testAccAWSS3BucketInventoryConfigEncryptWithSSES3(bucketName, inventoryName string) string {
@@ -260,7 +258,7 @@ resource "aws_s3_bucket_inventory" "test" {
     }
   }
 }
-`, testAccAWSS3BucketMetricsConfigBucket(bucketName), inventoryName)
+`, testAccAWSS3BucketInventoryConfigBucket(bucketName), inventoryName)
 }
 
 func testAccAWSS3BucketInventoryConfigEncryptWithSSEKMS(bucketName, inventoryName string) string {
@@ -283,7 +281,7 @@ resource "aws_s3_bucket_inventory" "test" {
 
   destination {
     bucket {
-      format = "ORC"
+      format = "Parquet"
       bucket_arn = "${aws_s3_bucket.bucket.arn}"
 
       encryption {
@@ -294,5 +292,5 @@ resource "aws_s3_bucket_inventory" "test" {
     }
   }
 }
-`, testAccAWSS3BucketMetricsConfigBucket(bucketName), bucketName, inventoryName)
+`, testAccAWSS3BucketInventoryConfigBucket(bucketName), bucketName, inventoryName)
 }

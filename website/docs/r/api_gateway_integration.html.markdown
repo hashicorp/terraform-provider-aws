@@ -45,7 +45,7 @@ resource "aws_api_gateway_integration" "MyDemoIntegration" {
   }
 
   # Transforms the incoming XML request to JSON
-  request_templates {
+  request_templates = {
     "application/xml" = <<EOF
 {
    "body" : $input.json('$')
@@ -60,6 +60,7 @@ EOF
 ```hcl
 # Variables
 variable "myregion" {}
+
 variable "accountId" {}
 
 # API Gateway
@@ -68,8 +69,8 @@ resource "aws_api_gateway_rest_api" "api" {
 }
 
 resource "aws_api_gateway_resource" "resource" {
-  path_part = "resource"
-  parent_id = "${aws_api_gateway_rest_api.api.root_resource_id}"
+  path_part   = "resource"
+  parent_id   = "${aws_api_gateway_rest_api.api.root_resource_id}"
   rest_api_id = "${aws_api_gateway_rest_api.api.id}"
 }
 
@@ -97,7 +98,7 @@ resource "aws_lambda_permission" "apigw_lambda" {
   principal     = "apigateway.amazonaws.com"
 
   # More: http://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-control-access-using-iam-policies-to-invoke-api.html
-  source_arn = "arn:aws:execute-api:${var.myregion}:${var.accountId}:${aws_api_gateway_rest_api.api.id}/*/${aws_api_gateway_method.method.http_method}${aws_api_gateway_resource.resource.path}"
+  source_arn = "arn:aws:execute-api:${var.myregion}:${var.accountId}:${aws_api_gateway_rest_api.api.id}/*/${aws_api_gateway_method.method.http_method} ${aws_api_gateway_resource.resource.path}"
 }
 
 resource "aws_lambda_function" "lambda" {
@@ -225,3 +226,11 @@ The following arguments are supported:
 * `request_parameters_in_json` - **Deprecated**, use `request_parameters` instead.
 * `content_handling` - (Optional) Specifies how to handle request payload content type conversions. Supported values are `CONVERT_TO_BINARY` and `CONVERT_TO_TEXT`. If this property is not defined, the request payload will be passed through from the method request to integration request without modification, provided that the passthroughBehaviors is configured to support payload pass-through.
 * `timeout_milliseconds` - (Optional) Custom timeout between 50 and 29,000 milliseconds. The default value is 29,000 milliseconds.
+
+## Import
+
+`aws_api_gateway_integration` can be imported using `REST-API-ID/RESOURCE-ID/HTTP-METHOD`, e.g.
+
+```
+$ terraform import aws_api_gateway_integration.example 12345abcde/67890fghij/GET
+```

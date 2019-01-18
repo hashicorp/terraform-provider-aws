@@ -13,7 +13,7 @@ func TestAccDataSourceAwsVpcDhcpOptions_basic(t *testing.T) {
 	resourceName := "aws_vpc_dhcp_options.test"
 	datasourceName := "data.aws_vpc_dhcp_options.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -36,6 +36,7 @@ func TestAccDataSourceAwsVpcDhcpOptions_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "ntp_servers.0", resourceName, "ntp_servers.0"),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.Name", resourceName, "tags.Name"),
+					resource.TestCheckResourceAttrPair(datasourceName, "owner_id", resourceName, "owner_id"),
 				),
 			},
 		},
@@ -47,7 +48,7 @@ func TestAccDataSourceAwsVpcDhcpOptions_Filter(t *testing.T) {
 	resourceName := "aws_vpc_dhcp_options.test"
 	datasourceName := "data.aws_vpc_dhcp_options.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -66,6 +67,7 @@ func TestAccDataSourceAwsVpcDhcpOptions_Filter(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "ntp_servers.0", resourceName, "ntp_servers.0"),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.Name", resourceName, "tags.Name"),
+					resource.TestCheckResourceAttrPair(datasourceName, "owner_id", resourceName, "owner_id"),
 				),
 			},
 			{
@@ -94,7 +96,7 @@ resource "aws_vpc_dhcp_options" "test" {
   netbios_node_type    = 2
   ntp_servers          = ["127.0.0.1"]
 
-  tags {
+  tags = {
     Name = "tf-acc-test"
   }
 }
@@ -119,7 +121,7 @@ resource "aws_vpc_dhcp_options" "test" {
   netbios_node_type    = 2
   ntp_servers          = ["127.0.0.1"]
 
-  tags {
+  tags = {
     Name = "tf-acc-test-%d"
   }
 }

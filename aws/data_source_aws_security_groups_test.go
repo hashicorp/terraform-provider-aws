@@ -2,14 +2,15 @@ package aws
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
-	"testing"
 )
 
 func TestAccDataSourceAwsSecurityGroups_tag(t *testing.T) {
 	rInt := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -26,7 +27,7 @@ func TestAccDataSourceAwsSecurityGroups_tag(t *testing.T) {
 
 func TestAccDataSourceAwsSecurityGroups_filter(t *testing.T) {
 	rInt := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -45,7 +46,7 @@ func testAccDataSourceAwsSecurityGroupsConfig_tag(rInt int) string {
 	return fmt.Sprintf(`
 	resource "aws_vpc" "test_tag" {
 		cidr_block = "172.16.0.0/16"
-		tags {
+	tags = {
 			Name = "terraform-testacc-security-group-data-source"
 		}
 	}
@@ -54,13 +55,13 @@ func testAccDataSourceAwsSecurityGroupsConfig_tag(rInt int) string {
 		count = 3
 		vpc_id = "${aws_vpc.test_tag.id}"
 		name = "tf-%[1]d-${count.index}"
-		tags {
+	tags = {
 			Seed = "%[1]d"
 		}
 	}
 
 	data "aws_security_groups" "by_tag" {
-		tags {
+	tags = {
 			Seed = "${aws_security_group.test.0.tags["Seed"]}"
 		}
 	}
@@ -71,7 +72,7 @@ func testAccDataSourceAwsSecurityGroupsConfig_filter(rInt int) string {
 	return fmt.Sprintf(`
 	resource "aws_vpc" "test_filter" {
 		cidr_block = "172.16.0.0/16"
-		tags {
+	tags = {
 			Name = "terraform-testacc-security-group-data-source"
 		}
 	}
@@ -80,7 +81,7 @@ func testAccDataSourceAwsSecurityGroupsConfig_filter(rInt int) string {
 		count = 3
 		vpc_id = "${aws_vpc.test_filter.id}"
 		name = "tf-%[1]d-${count.index}"
-		tags {
+	tags = {
 			Seed = "%[1]d"
 		}
 	}

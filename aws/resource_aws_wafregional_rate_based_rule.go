@@ -42,7 +42,7 @@ func resourceAwsWafRegionalRateBasedRule() *schema.Resource {
 						"data_id": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateMaxLength(128),
+							ValidateFunc: validation.StringLenBetween(0, 128),
 						},
 						"type": {
 							Type:         schema.TypeString,

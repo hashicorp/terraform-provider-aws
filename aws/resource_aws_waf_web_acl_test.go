@@ -16,7 +16,7 @@ func TestAccAWSWafWebAcl_basic(t *testing.T) {
 	rName := fmt.Sprintf("wafacl%s", acctest.RandString(5))
 	resourceName := "aws_waf_web_acl.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafWebAclDestroy,
@@ -47,7 +47,7 @@ func TestAccAWSWafWebAcl_changeNameForceNew(t *testing.T) {
 	rName2 := fmt.Sprintf("wafacl%s", acctest.RandString(5))
 	resourceName := "aws_waf_web_acl.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafWebAclDestroy,
@@ -88,7 +88,7 @@ func TestAccAWSWafWebAcl_DefaultAction(t *testing.T) {
 	rName := fmt.Sprintf("wafacl%s", acctest.RandString(5))
 	resourceName := "aws_waf_web_acl.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafWebAclDestroy,
@@ -123,7 +123,7 @@ func TestAccAWSWafWebAcl_Rules(t *testing.T) {
 	rName := fmt.Sprintf("wafacl%s", acctest.RandString(5))
 	resourceName := "aws_waf_web_acl.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafWebAclDestroy,
@@ -167,7 +167,7 @@ func TestAccAWSWafWebAcl_disappears(t *testing.T) {
 	rName := fmt.Sprintf("wafacl%s", acctest.RandString(5))
 	resourceName := "aws_waf_web_acl.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafWebAclDestroy,
@@ -188,7 +188,7 @@ func testAccCheckAWSWafWebAclDisappears(v *waf.WebACL) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).wafconn
 
-		wr := newWafRetryer(conn, "global")
+		wr := newWafRetryer(conn)
 
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 			opts := &waf.DeleteWebACLInput{

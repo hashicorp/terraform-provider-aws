@@ -18,7 +18,7 @@ resource "aws_eks_cluster" "example" {
   role_arn = "${aws_iam_role.example.arn}"
 
   vpc_config {
-    subnet_ids  = ["${aws_subnet.example1.id}", "${aws_subnet.example2.id}"]
+    subnet_ids = ["${aws_subnet.example1.id}", "${aws_subnet.example2.id}"]
   }
 }
 
@@ -54,6 +54,7 @@ In addition to all arguments above, the following attributes are exported:
 * `certificate_authority` - Nested attribute containing `certificate-authority-data` for your cluster.
   * `data` - The base64 encoded certificate data required to communicate with your cluster. Add this to the `certificate-authority-data` section of the `kubeconfig` file for your cluster.
 * `endpoint` - The endpoint for your Kubernetes API server.
+* `platform_version` - The platform version for the cluster.
 * `version` - The Kubernetes server version for the cluster.
 * `vpc_config` - Additional nested attributes:
   * `vpc_id` - The VPC associated with your cluster.
@@ -64,6 +65,7 @@ In addition to all arguments above, the following attributes are exported:
 [Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
 
 * `create` - (Default `15 minutes`) How long to wait for the EKS Cluster to be created.
+* `update` - (Default `60 minutes`) How long to wait for the EKS Cluster to be updated.
 * `delete` - (Default `15 minutes`) How long to wait for the EKS Cluster to be deleted.
 
 ## Import

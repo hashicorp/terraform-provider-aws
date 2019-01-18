@@ -14,11 +14,12 @@ Provides a Gamelift Alias resource.
 
 ```hcl
 resource "aws_gamelift_alias" "example" {
-  name = "example-alias"
+  name        = "example-alias"
   description = "Example Description"
+
   routing_strategy {
     message = "Example Message"
-    type = "TERMINAL"
+    type    = "TERMINAL"
   }
 }
 ```
