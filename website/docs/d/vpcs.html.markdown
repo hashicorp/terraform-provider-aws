@@ -18,7 +18,7 @@ The following shows outputing all VPC Ids.
 
 ```hcl
 data "aws_vpcs" "foo" {
-  tags {
+  tags = {
     service = "production"
   }
 }
@@ -35,9 +35,9 @@ data "aws_vpcs" "foo" {}
 
 resource "aws_flow_log" "test_flow_log" {
   count = "${length(data.aws_vpcs.foo.ids)}"
-  ...
+  # ...
   vpc_id = "${element(data.aws_vpcs.foo.ids, count.index)}"
-  ...
+  # ...
 }
 
 output "foo" {

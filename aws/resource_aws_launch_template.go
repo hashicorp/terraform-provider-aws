@@ -139,6 +139,37 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 				},
 			},
 
+			"capacity_reservation_specification": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"capacity_reservation_preference": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								ec2.CapacityReservationPreferenceOpen,
+								ec2.CapacityReservationPreferenceNone,
+							}, false),
+						},
+						"capacity_reservation_target": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"capacity_reservation_id": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+
 			"credit_specification": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -275,6 +306,20 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 			"key_name": {
 				Type:     schema.TypeString,
 				Optional: true,
+			},
+
+			"license_specification": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"license_configuration_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validateArn,
+						},
+					},
+				},
 			},
 
 			"monitoring": {
@@ -463,7 +508,7 @@ func resourceAwsLaunchTemplateCreate(d *schema.ResourceData, meta interface{}) e
 		ltName = resource.UniqueId()
 	}
 
-	launchTemplateData, err := buildLaunchTemplateData(d, meta)
+	launchTemplateData, err := buildLaunchTemplateData(d)
 	if err != nil {
 		return err
 	}
@@ -574,6 +619,10 @@ func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
+	if err := d.Set("capacity_reservation_specification", getCapacityReservationSpecification(ltData.CapacityReservationSpecification)); err != nil {
+		return err
+	}
+
 	if strings.HasPrefix(aws.StringValue(ltData.InstanceType), "t2") || strings.HasPrefix(aws.StringValue(ltData.InstanceType), "t3") {
 		if err := d.Set("credit_specification", getCreditSpecification(ltData.CreditSpecification)); err != nil {
 			return err
@@ -589,6 +638,10 @@ func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if err := d.Set("instance_market_options", getInstanceMarketOptions(ltData.InstanceMarketOptions)); err != nil {
+		return err
+	}
+
+	if err := d.Set("license_specification", getLicenseSpecifications(ltData.LicenseSpecifications)); err != nil {
 		return err
 	}
 
@@ -615,7 +668,7 @@ func resourceAwsLaunchTemplateUpdate(d *schema.ResourceData, meta interface{}) e
 	conn := meta.(*AWSClient).ec2conn
 
 	if !d.IsNewResource() {
-		launchTemplateData, err := buildLaunchTemplateData(d, meta)
+		launchTemplateData, err := buildLaunchTemplateData(d)
 		if err != nil {
 			return err
 		}
@@ -706,6 +759,27 @@ func getBlockDeviceMappings(m []*ec2.LaunchTemplateBlockDeviceMapping) []interfa
 	return s
 }
 
+func getCapacityReservationSpecification(crs *ec2.LaunchTemplateCapacityReservationSpecificationResponse) []interface{} {
+	s := []interface{}{}
+	if crs != nil {
+		s = append(s, map[string]interface{}{
+			"capacity_reservation_preference": aws.StringValue(crs.CapacityReservationPreference),
+			"capacity_reservation_target":     getCapacityReservationTarget(crs.CapacityReservationTarget),
+		})
+	}
+	return s
+}
+
+func getCapacityReservationTarget(crt *ec2.CapacityReservationTargetResponse) []interface{} {
+	s := []interface{}{}
+	if crt != nil {
+		s = append(s, map[string]interface{}{
+			"capacity_reservation_id": aws.StringValue(crt.CapacityReservationId),
+		})
+	}
+	return s
+}
+
 func getCreditSpecification(cs *ec2.CreditSpecification) []interface{} {
 	s := []interface{}{}
 	if cs != nil {
@@ -770,6 +844,16 @@ func getInstanceMarketOptions(m *ec2.LaunchTemplateInstanceMarketOptions) []inte
 			mo["spot_options"] = []interface{}{spotOptions}
 		}
 		s = append(s, mo)
+	}
+	return s
+}
+
+func getLicenseSpecifications(licenseSpecifications []*ec2.LaunchTemplateLicenseConfiguration) []map[string]interface{} {
+	var s []map[string]interface{}
+	for _, v := range licenseSpecifications {
+		s = append(s, map[string]interface{}{
+			"license_configuration_arn": aws.StringValue(v.LicenseConfigurationArn),
+		})
 	}
 	return s
 }
@@ -869,7 +953,7 @@ func getTagSpecifications(t []*ec2.LaunchTemplateTagSpecification) []interface{}
 	return s
 }
 
-func buildLaunchTemplateData(d *schema.ResourceData, meta interface{}) (*ec2.RequestLaunchTemplateData, error) {
+func buildLaunchTemplateData(d *schema.ResourceData) (*ec2.RequestLaunchTemplateData, error) {
 	opts := &ec2.RequestLaunchTemplateData{
 		UserData: aws.String(d.Get("user_data").(string)),
 	}
@@ -924,6 +1008,9 @@ func buildLaunchTemplateData(d *schema.ResourceData, meta interface{}) (*ec2.Req
 		bdms := v.([]interface{})
 
 		for _, bdm := range bdms {
+			if bdm == nil {
+				continue
+			}
 			blockDeviceMapping, err := readBlockDeviceMappingFromConfig(bdm.(map[string]interface{}))
 			if err != nil {
 				return nil, err
@@ -933,10 +1020,18 @@ func buildLaunchTemplateData(d *schema.ResourceData, meta interface{}) (*ec2.Req
 		opts.BlockDeviceMappings = blockDeviceMappings
 	}
 
+	if v, ok := d.GetOk("capacity_reservation_specification"); ok {
+		crs := v.([]interface{})
+
+		if len(crs) > 0 && crs[0] != nil {
+			opts.CapacityReservationSpecification = readCapacityReservationSpecificationFromConfig(crs[0].(map[string]interface{}))
+		}
+	}
+
 	if v, ok := d.GetOk("credit_specification"); ok && (strings.HasPrefix(instanceType, "t2") || strings.HasPrefix(instanceType, "t3")) {
 		cs := v.([]interface{})
 
-		if len(cs) > 0 {
+		if len(cs) > 0 && cs[0] != nil {
 			opts.CreditSpecification = readCreditSpecificationFromConfig(cs[0].(map[string]interface{}))
 		}
 	}
@@ -954,7 +1049,7 @@ func buildLaunchTemplateData(d *schema.ResourceData, meta interface{}) (*ec2.Req
 	if v, ok := d.GetOk("iam_instance_profile"); ok {
 		iip := v.([]interface{})
 
-		if len(iip) > 0 {
+		if len(iip) > 0 && iip[0] != nil {
 			opts.IamInstanceProfile = readIamInstanceProfileFromConfig(iip[0].(map[string]interface{}))
 		}
 	}
@@ -962,7 +1057,7 @@ func buildLaunchTemplateData(d *schema.ResourceData, meta interface{}) (*ec2.Req
 	if v, ok := d.GetOk("instance_market_options"); ok {
 		imo := v.([]interface{})
 
-		if len(imo) > 0 {
+		if len(imo) > 0 && imo[0] != nil {
 			instanceMarketOptions, err := readInstanceMarketOptionsFromConfig(imo[0].(map[string]interface{}))
 			if err != nil {
 				return nil, err
@@ -971,9 +1066,22 @@ func buildLaunchTemplateData(d *schema.ResourceData, meta interface{}) (*ec2.Req
 		}
 	}
 
+	if v, ok := d.GetOk("license_specification"); ok {
+		var licenseSpecifications []*ec2.LaunchTemplateLicenseConfigurationRequest
+		lsList := v.(*schema.Set).List()
+
+		for _, ls := range lsList {
+			if ls == nil {
+				continue
+			}
+			licenseSpecifications = append(licenseSpecifications, readLicenseSpecificationFromConfig(ls.(map[string]interface{})))
+		}
+		opts.LicenseSpecifications = licenseSpecifications
+	}
+
 	if v, ok := d.GetOk("monitoring"); ok {
 		m := v.([]interface{})
-		if len(m) > 0 {
+		if len(m) > 0 && m[0] != nil {
 			mData := m[0].(map[string]interface{})
 			monitoring := &ec2.LaunchTemplatesMonitoringRequest{
 				Enabled: aws.Bool(mData["enabled"].(bool)),
@@ -987,6 +1095,9 @@ func buildLaunchTemplateData(d *schema.ResourceData, meta interface{}) (*ec2.Req
 		niList := v.([]interface{})
 
 		for _, ni := range niList {
+			if ni == nil {
+				continue
+			}
 			niData := ni.(map[string]interface{})
 			networkInterface := readNetworkInterfacesFromConfig(niData)
 			networkInterfaces = append(networkInterfaces, networkInterface)
@@ -997,7 +1108,7 @@ func buildLaunchTemplateData(d *schema.ResourceData, meta interface{}) (*ec2.Req
 	if v, ok := d.GetOk("placement"); ok {
 		p := v.([]interface{})
 
-		if len(p) > 0 {
+		if len(p) > 0 && p[0] != nil {
 			opts.Placement = readPlacementFromConfig(p[0].(map[string]interface{}))
 		}
 	}
@@ -1007,6 +1118,9 @@ func buildLaunchTemplateData(d *schema.ResourceData, meta interface{}) (*ec2.Req
 		t := v.([]interface{})
 
 		for _, ts := range t {
+			if ts == nil {
+				continue
+			}
 			tsData := ts.(map[string]interface{})
 			tags := tagsFromMap(tsData["tags"].(map[string]interface{}))
 			tagSpecification := &ec2.LaunchTemplateTagSpecificationRequest{
@@ -1174,6 +1288,34 @@ func readIamInstanceProfileFromConfig(iip map[string]interface{}) *ec2.LaunchTem
 	return iamInstanceProfile
 }
 
+func readCapacityReservationSpecificationFromConfig(crs map[string]interface{}) *ec2.LaunchTemplateCapacityReservationSpecificationRequest {
+	capacityReservationSpecification := &ec2.LaunchTemplateCapacityReservationSpecificationRequest{}
+
+	if v, ok := crs["capacity_reservation_preference"].(string); ok && v != "" {
+		capacityReservationSpecification.CapacityReservationPreference = aws.String(v)
+	}
+
+	if v, ok := crs["capacity_reservation_target"]; ok {
+		crt := v.([]interface{})
+
+		if len(crt) > 0 {
+			capacityReservationSpecification.CapacityReservationTarget = readCapacityReservationTargetFromConfig(crt[0].(map[string]interface{}))
+		}
+	}
+
+	return capacityReservationSpecification
+}
+
+func readCapacityReservationTargetFromConfig(crt map[string]interface{}) *ec2.CapacityReservationTarget {
+	capacityReservationTarget := &ec2.CapacityReservationTarget{}
+
+	if v, ok := crt["capacity_reservation_id"].(string); ok && v != "" {
+		capacityReservationTarget.CapacityReservationId = aws.String(v)
+	}
+
+	return capacityReservationTarget
+}
+
 func readCreditSpecificationFromConfig(cs map[string]interface{}) *ec2.CreditSpecificationRequest {
 	creditSpecification := &ec2.CreditSpecificationRequest{}
 
@@ -1235,6 +1377,16 @@ func readInstanceMarketOptionsFromConfig(imo map[string]interface{}) (*ec2.Launc
 	}
 
 	return instanceMarketOptions, nil
+}
+
+func readLicenseSpecificationFromConfig(ls map[string]interface{}) *ec2.LaunchTemplateLicenseConfigurationRequest {
+	licenseSpecification := &ec2.LaunchTemplateLicenseConfigurationRequest{}
+
+	if v, ok := ls["license_configuration_arn"].(string); ok && v != "" {
+		licenseSpecification.LicenseConfigurationArn = aws.String(v)
+	}
+
+	return licenseSpecification
 }
 
 func readPlacementFromConfig(p map[string]interface{}) *ec2.LaunchTemplatePlacementRequest {

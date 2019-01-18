@@ -14,7 +14,7 @@ func TestAccAWSVpnGatewayAttachment_basic(t *testing.T) {
 	var vpc ec2.Vpc
 	var vgw ec2.VpnGateway
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_vpn_gateway_attachment.test",
 		Providers:     testAccProviders,
@@ -52,7 +52,7 @@ func TestAccAWSVpnGatewayAttachment_deleted(t *testing.T) {
 		}
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_vpn_gateway_attachment.test",
 		Providers:     testAccProviders,
@@ -144,7 +144,7 @@ func testAccCheckVpnGatewayAttachmentDestroy(s *terraform.State) error {
 const testAccNoVpnGatewayAttachmentConfig = `
 resource "aws_vpc" "test" {
 	cidr_block = "10.0.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-vpn-gateway-attachment-basic"
 	}
 }
@@ -155,7 +155,7 @@ resource "aws_vpn_gateway" "test" { }
 const testAccVpnGatewayAttachmentConfig = `
 resource "aws_vpc" "test" {
 	cidr_block = "10.0.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-vpn-gateway-attachment-deleted"
 	}
 }

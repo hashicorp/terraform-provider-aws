@@ -12,7 +12,7 @@ import (
 func TestAccAWSVPCPeeringConnectionAccepter_sameRegion(t *testing.T) {
 	var connection ec2.VpcPeeringConnection
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccAwsVPCPeeringConnectionAccepterDestroy,
@@ -37,7 +37,7 @@ func TestAccAWSVPCPeeringConnectionAccepter_differentRegion(t *testing.T) {
 
 	var providers []*schema.Provider
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviderFactories(&providers),
 		CheckDestroy:      testAccAwsVPCPeeringConnectionAccepterDestroy,
@@ -65,14 +65,14 @@ func testAccAwsVPCPeeringConnectionAccepterDestroy(s *terraform.State) error {
 const testAccAwsVPCPeeringConnectionAccepterSameRegion = `
 resource "aws_vpc" "main" {
 	cidr_block = "10.0.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-vpc-peering-conn-accepter-same-region-main"
 	}
 }
 
 resource "aws_vpc" "peer" {
 	cidr_block = "10.1.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-vpc-peering-conn-accepter-same-region-peer"
 	}
 }
@@ -105,7 +105,7 @@ provider "aws" {
 resource "aws_vpc" "main" {
 	provider = "aws.main"
 	cidr_block = "10.0.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-vpc-peering-conn-accepter-diff-region-main"
 	}
 }
@@ -113,7 +113,7 @@ resource "aws_vpc" "main" {
 resource "aws_vpc" "peer" {
 	provider = "aws.peer"
 	cidr_block = "10.1.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-vpc-peering-conn-accepter-diff-region-peer"
 	}
 }

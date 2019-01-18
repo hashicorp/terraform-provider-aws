@@ -36,7 +36,6 @@ resource "aws_neptune_cluster_instance" "example" {
   instance_class     = "db.r4.large"
   apply_immediately  = true
 }
-
 ```
 
 ## Argument Reference

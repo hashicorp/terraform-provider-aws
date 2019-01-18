@@ -88,6 +88,47 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"group": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringLenBetween(1, 255),
+						},
+						"launch_type": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "EC2",
+						},
+						"network_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"security_groups": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+										Set:      schema.HashString,
+									},
+									"subnets": {
+										Type:     schema.TypeSet,
+										Required: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+										Set:      schema.HashString,
+									},
+									"assign_public_ip": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  false,
+									},
+								},
+							},
+						},
+						"platform_version": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringLenBetween(0, 1600),
+						},
 						"task_count": {
 							Type:         schema.TypeInt,
 							Optional:     true,
@@ -421,11 +462,42 @@ func expandAwsCloudWatchEventTargetEcsParameters(config []interface{}) *events.E
 	ecsParameters := &events.EcsParameters{}
 	for _, c := range config {
 		param := c.(map[string]interface{})
+		if val, ok := param["group"].(string); ok && val != "" {
+			ecsParameters.Group = aws.String(val)
+		}
+		if val, ok := param["launch_type"].(string); ok && val != "" {
+			ecsParameters.LaunchType = aws.String(val)
+		}
+		if val, ok := param["network_configuration"]; ok {
+			ecsParameters.NetworkConfiguration = expandAwsCloudWatchEventTargetEcsParametersNetworkConfiguration(val.([]interface{}))
+		}
+		if val, ok := param["platform_version"].(string); ok && val != "" {
+			ecsParameters.PlatformVersion = aws.String(val)
+		}
 		ecsParameters.TaskCount = aws.Int64(int64(param["task_count"].(int)))
 		ecsParameters.TaskDefinitionArn = aws.String(param["task_definition_arn"].(string))
 	}
 
 	return ecsParameters
+}
+func expandAwsCloudWatchEventTargetEcsParametersNetworkConfiguration(nc []interface{}) *events.NetworkConfiguration {
+	if len(nc) == 0 {
+		return nil
+	}
+	awsVpcConfig := &events.AwsVpcConfiguration{}
+	raw := nc[0].(map[string]interface{})
+	if val, ok := raw["security_groups"]; ok {
+		awsVpcConfig.SecurityGroups = expandStringSet(val.(*schema.Set))
+	}
+	awsVpcConfig.Subnets = expandStringSet(raw["subnets"].(*schema.Set))
+	if val, ok := raw["assign_public_ip"].(bool); ok {
+		awsVpcConfig.AssignPublicIp = aws.String(events.AssignPublicIpDisabled)
+		if val {
+			awsVpcConfig.AssignPublicIp = aws.String(events.AssignPublicIpEnabled)
+		}
+	}
+
+	return &events.NetworkConfiguration{AwsvpcConfiguration: awsVpcConfig}
 }
 
 func expandAwsCloudWatchEventTargetBatchParameters(config []interface{}) *events.BatchParameters {
@@ -508,10 +580,35 @@ func flattenAwsCloudWatchEventTargetRunParameters(runCommand *events.RunCommandP
 }
 func flattenAwsCloudWatchEventTargetEcsParameters(ecsParameters *events.EcsParameters) []map[string]interface{} {
 	config := make(map[string]interface{})
+	if ecsParameters.Group != nil {
+		config["group"] = *ecsParameters.Group
+	}
+	if ecsParameters.LaunchType != nil {
+		config["launch_type"] = *ecsParameters.LaunchType
+	}
+	config["network_configuration"] = flattenAwsCloudWatchEventTargetEcsParametersNetworkConfiguration(ecsParameters.NetworkConfiguration)
+	if ecsParameters.PlatformVersion != nil {
+		config["platform_version"] = *ecsParameters.PlatformVersion
+	}
 	config["task_count"] = *ecsParameters.TaskCount
 	config["task_definition_arn"] = *ecsParameters.TaskDefinitionArn
 	result := []map[string]interface{}{config}
 	return result
+}
+func flattenAwsCloudWatchEventTargetEcsParametersNetworkConfiguration(nc *events.NetworkConfiguration) []interface{} {
+	if nc == nil {
+		return nil
+	}
+
+	result := make(map[string]interface{})
+	result["security_groups"] = schema.NewSet(schema.HashString, flattenStringList(nc.AwsvpcConfiguration.SecurityGroups))
+	result["subnets"] = schema.NewSet(schema.HashString, flattenStringList(nc.AwsvpcConfiguration.Subnets))
+
+	if nc.AwsvpcConfiguration.AssignPublicIp != nil {
+		result["assign_public_ip"] = *nc.AwsvpcConfiguration.AssignPublicIp == events.AssignPublicIpEnabled
+	}
+
+	return []interface{}{result}
 }
 
 func flattenAwsCloudWatchEventTargetBatchParameters(batchParameters *events.BatchParameters) []map[string]interface{} {

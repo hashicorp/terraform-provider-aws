@@ -18,7 +18,7 @@ resource "aws_eks_cluster" "example" {
   role_arn = "${aws_iam_role.example.arn}"
 
   vpc_config {
-    subnet_ids  = ["${aws_subnet.example1.id}", "${aws_subnet.example2.id}"]
+    subnet_ids = ["${aws_subnet.example1.id}", "${aws_subnet.example2.id}"]
   }
 }
 
@@ -65,6 +65,7 @@ In addition to all arguments above, the following attributes are exported:
 [Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
 
 * `create` - (Default `15 minutes`) How long to wait for the EKS Cluster to be created.
+* `update` - (Default `60 minutes`) How long to wait for the EKS Cluster to be updated.
 * `delete` - (Default `15 minutes`) How long to wait for the EKS Cluster to be deleted.
 
 ## Import

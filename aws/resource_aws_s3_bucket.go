@@ -72,7 +72,7 @@ func resourceAwsS3Bucket() *schema.Resource {
 			"policy": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				ValidateFunc:     validateJsonString,
+				ValidateFunc:     validation.ValidateJsonString,
 				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
 			},
 
@@ -112,6 +112,7 @@ func resourceAwsS3Bucket() *schema.Resource {
 			"website": {
 				Type:     schema.TypeList,
 				Optional: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"index_document": {
@@ -137,7 +138,7 @@ func resourceAwsS3Bucket() *schema.Resource {
 						"routing_rules": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateJsonString,
+							ValidateFunc: validation.ValidateJsonString,
 							StateFunc: func(v interface{}) string {
 								json, _ := structure.NormalizeJsonString(v)
 								return json
@@ -294,7 +295,7 @@ func resourceAwsS3Bucket() *schema.Resource {
 									"storage_class": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateS3BucketLifecycleStorageClass(),
+										ValidateFunc: validateS3BucketLifecycleTransitionStorageClass(),
 									},
 								},
 							},
@@ -313,7 +314,7 @@ func resourceAwsS3Bucket() *schema.Resource {
 									"storage_class": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateS3BucketLifecycleStorageClass(),
+										ValidateFunc: validateS3BucketLifecycleTransitionStorageClass(),
 									},
 								},
 							},
@@ -377,6 +378,11 @@ func resourceAwsS3Bucket() *schema.Resource {
 										Set:      destinationHash,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
+												"account_id": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validateAwsAccountId,
+												},
 												"bucket": {
 													Type:         schema.TypeString,
 													Required:     true,
@@ -387,14 +393,33 @@ func resourceAwsS3Bucket() *schema.Resource {
 													Optional: true,
 													ValidateFunc: validation.StringInSlice([]string{
 														s3.StorageClassStandard,
-														s3.StorageClassOnezoneIa,
-														s3.StorageClassStandardIa,
 														s3.StorageClassReducedRedundancy,
+														s3.StorageClassStandardIa,
+														s3.StorageClassOnezoneIa,
+														s3.StorageClassIntelligentTiering,
+														s3.StorageClassGlacier,
 													}, false),
 												},
 												"replica_kms_key_id": {
 													Type:     schema.TypeString,
 													Optional: true,
+												},
+												"access_control_translation": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MinItems: 1,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"owner": {
+																Type:     schema.TypeString,
+																Required: true,
+																ValidateFunc: validation.StringInSlice([]string{
+																	s3.OwnerOverrideDestination,
+																}, false),
+															},
+														},
+													},
 												},
 											},
 										},
@@ -427,7 +452,7 @@ func resourceAwsS3Bucket() *schema.Resource {
 									},
 									"prefix": {
 										Type:         schema.TypeString,
-										Required:     true,
+										Optional:     true,
 										ValidateFunc: validation.StringLenBetween(0, 1024),
 									},
 									"status": {
@@ -437,6 +462,26 @@ func resourceAwsS3Bucket() *schema.Resource {
 											s3.ReplicationRuleStatusEnabled,
 											s3.ReplicationRuleStatusDisabled,
 										}, false),
+									},
+									"priority": {
+										Type:     schema.TypeInt,
+										Optional: true,
+									},
+									"filter": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MinItems: 1,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"prefix": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.StringLenBetween(0, 1024),
+												},
+												"tags": tagsSchema(),
+											},
+										},
 									},
 								},
 							},
@@ -474,6 +519,64 @@ func resourceAwsS3Bucket() *schema.Resource {
 														s3.ServerSideEncryptionAes256,
 														s3.ServerSideEncryptionAwsKms,
 													}, false),
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+
+			"object_lock_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"object_lock_enabled": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								s3.ObjectLockEnabledEnabled,
+							}, false),
+						},
+
+						"rule": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"default_retention": {
+										Type:     schema.TypeList,
+										Required: true,
+										MinItems: 1,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"mode": {
+													Type:     schema.TypeString,
+													Required: true,
+													ValidateFunc: validation.StringInSlice([]string{
+														s3.ObjectLockModeGovernance,
+														s3.ObjectLockModeCompliance,
+													}, false),
+												},
+
+												"days": {
+													Type:         schema.TypeInt,
+													Optional:     true,
+													ValidateFunc: validation.IntAtLeast(1),
+												},
+
+												"years": {
+													Type:         schema.TypeInt,
+													Optional:     true,
+													ValidateFunc: validation.IntAtLeast(1),
 												},
 											},
 										},
@@ -530,6 +633,12 @@ func resourceAwsS3BucketCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if err := validateS3BucketName(bucket, awsRegion); err != nil {
 		return fmt.Errorf("Error validating S3 bucket name: %s", err)
+	}
+
+	// S3 Object Lock can only be enabled on bucket creation.
+	objectLockConfiguration := expandS3ObjectLockConfiguration(d.Get("object_lock_configuration").([]interface{}))
+	if objectLockConfiguration != nil && aws.StringValue(objectLockConfiguration.ObjectLockEnabled) == s3.ObjectLockEnabledEnabled {
+		req.ObjectLockEnabledForBucket = aws.Bool(true)
 	}
 
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
@@ -626,6 +735,12 @@ func resourceAwsS3BucketUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("server_side_encryption_configuration") {
 		if err := resourceAwsS3BucketServerSideEncryptionConfigurationUpdate(s3conn, d); err != nil {
+			return err
+		}
+	}
+
+	if d.HasChange("object_lock_configuration") {
+		if err := resourceAwsS3BucketObjectLockConfigurationUpdate(s3conn, d); err != nil {
 			return err
 		}
 	}
@@ -825,7 +940,7 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	// Amazon S3 Transfer Acceleration might not be supported in the region
-	if err != nil && !isAWSErr(err, "UnsupportedArgument", "") {
+	if err != nil && !isAWSErr(err, "MethodNotAllowed", "") && !isAWSErr(err, "UnsupportedArgument", "") {
 		return fmt.Errorf("error getting S3 Bucket acceleration configuration: %s", err)
 	}
 	if accelerate, ok := accelerateResponse.(*s3.GetBucketAccelerateConfigurationOutput); ok {
@@ -1035,6 +1150,15 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	if err := d.Set("server_side_encryption_configuration", serverSideEncryptionConfiguration); err != nil {
 		return fmt.Errorf("error setting server_side_encryption_configuration: %s", err)
+	}
+
+	// Object Lock configuration.
+	if conf, err := readS3ObjectLockConfiguration(s3conn, d.Id()); err != nil {
+		return fmt.Errorf("error getting S3 Bucket Object Lock configuration: %s", err)
+	} else {
+		if err := d.Set("object_lock_configuration", conf); err != nil {
+			return fmt.Errorf("error setting object_lock_configuration: %s", err)
+		}
 	}
 
 	// Add the region as an attribute
@@ -1293,19 +1417,17 @@ func resourceAwsS3BucketCorsUpdate(s3conn *s3.S3, d *schema.ResourceData) error 
 func resourceAwsS3BucketWebsiteUpdate(s3conn *s3.S3, d *schema.ResourceData) error {
 	ws := d.Get("website").([]interface{})
 
-	if len(ws) == 1 {
-		var w map[string]interface{}
-		if ws[0] != nil {
-			w = ws[0].(map[string]interface{})
-		} else {
-			w = make(map[string]interface{})
-		}
-		return resourceAwsS3BucketWebsitePut(s3conn, d, w)
-	} else if len(ws) == 0 {
+	if len(ws) == 0 {
 		return resourceAwsS3BucketWebsiteDelete(s3conn, d)
-	} else {
-		return fmt.Errorf("Cannot specify more than one website.")
 	}
+
+	var w map[string]interface{}
+	if ws[0] != nil {
+		w = ws[0].(map[string]interface{})
+	} else {
+		w = make(map[string]interface{})
+	}
+	return resourceAwsS3BucketWebsitePut(s3conn, d, w)
 }
 
 func resourceAwsS3BucketWebsitePut(s3conn *s3.S3, d *schema.ResourceData, website map[string]interface{}) error {
@@ -1686,6 +1808,23 @@ func resourceAwsS3BucketServerSideEncryptionConfigurationUpdate(s3conn *s3.S3, d
 	return nil
 }
 
+func resourceAwsS3BucketObjectLockConfigurationUpdate(s3conn *s3.S3, d *schema.ResourceData) error {
+	// S3 Object Lock configuration cannot be deleted, only updated.
+	req := &s3.PutObjectLockConfigurationInput{
+		Bucket:                  aws.String(d.Get("bucket").(string)),
+		ObjectLockConfiguration: expandS3ObjectLockConfiguration(d.Get("object_lock_configuration").([]interface{})),
+	}
+
+	_, err := retryOnAwsCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+		return s3conn.PutObjectLockConfiguration(req)
+	})
+	if err != nil {
+		return fmt.Errorf("error putting S3 object lock configuration: %s", err)
+	}
+
+	return nil
+}
+
 func resourceAwsS3BucketReplicationConfigurationUpdate(s3conn *s3.S3, d *schema.ResourceData) error {
 	bucket := d.Get("bucket").(string)
 	replicationConfiguration := d.Get("replication_configuration").([]interface{})
@@ -1732,12 +1871,14 @@ func resourceAwsS3BucketReplicationConfigurationUpdate(s3conn *s3.S3, d *schema.
 	rules := []*s3.ReplicationRule{}
 	for _, v := range rcRules {
 		rr := v.(map[string]interface{})
-		rcRule := &s3.ReplicationRule{
-			Prefix: aws.String(rr["prefix"].(string)),
-			Status: aws.String(rr["status"].(string)),
+		rcRule := &s3.ReplicationRule{}
+		if status, ok := rr["status"]; ok && status != "" {
+			rcRule.Status = aws.String(status.(string))
+		} else {
+			continue
 		}
 
-		if rrid, ok := rr["id"]; ok {
+		if rrid, ok := rr["id"]; ok && rrid != "" {
 			rcRule.ID = aws.String(rrid.(string))
 		}
 
@@ -1755,6 +1896,18 @@ func resourceAwsS3BucketReplicationConfigurationUpdate(s3conn *s3.S3, d *schema.
 					ReplicaKmsKeyID: aws.String(replicaKmsKeyId.(string)),
 				}
 			}
+
+			if account, ok := bd["account_id"]; ok && account != "" {
+				ruleDestination.Account = aws.String(account.(string))
+			}
+
+			if aclTranslation, ok := bd["access_control_translation"].([]interface{}); ok && len(aclTranslation) > 0 {
+				aclTranslationValues := aclTranslation[0].(map[string]interface{})
+				ruleAclTranslation := &s3.AccessControlTranslation{}
+				ruleAclTranslation.Owner = aws.String(aclTranslationValues["owner"].(string))
+				ruleDestination.AccessControlTranslation = ruleAclTranslation
+			}
+
 		}
 		rcRule.Destination = ruleDestination
 
@@ -1773,6 +1926,29 @@ func resourceAwsS3BucketReplicationConfigurationUpdate(s3conn *s3.S3, d *schema.
 			}
 			rcRule.SourceSelectionCriteria = ruleSsc
 		}
+
+		if f, ok := rr["filter"].([]interface{}); ok && len(f) > 0 {
+			// XML schema V2.
+			rcRule.Priority = aws.Int64(int64(rr["priority"].(int)))
+			rcRule.Filter = &s3.ReplicationRuleFilter{}
+			filter := f[0].(map[string]interface{})
+			tags := filter["tags"].(map[string]interface{})
+			if len(tags) > 0 {
+				rcRule.Filter.And = &s3.ReplicationRuleAndOperator{
+					Prefix: aws.String(filter["prefix"].(string)),
+					Tags:   tagsFromMapS3(tags),
+				}
+			} else {
+				rcRule.Filter.Prefix = aws.String(filter["prefix"].(string))
+			}
+			rcRule.DeleteMarkerReplication = &s3.DeleteMarkerReplication{
+				Status: aws.String(s3.DeleteMarkerReplicationStatusDisabled),
+			}
+		} else {
+			// XML schema V1.
+			rcRule.Prefix = aws.String(rr["prefix"].(string))
+		}
+
 		rules = append(rules, rcRule)
 	}
 
@@ -1783,8 +1959,15 @@ func resourceAwsS3BucketReplicationConfigurationUpdate(s3conn *s3.S3, d *schema.
 	}
 	log.Printf("[DEBUG] S3 put bucket replication configuration: %#v", i)
 
-	_, err := retryOnAwsCode("NoSuchBucket", func() (interface{}, error) {
-		return s3conn.PutBucketReplication(i)
+	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		if _, err := s3conn.PutBucketReplication(i); err != nil {
+			if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") ||
+				isAWSErr(err, "InvalidRequest", "Versioning must be 'Enabled' on the bucket") {
+				return resource.RetryableError(err)
+			}
+			return resource.NonRetryableError(err)
+		}
+		return nil
 	})
 	if err != nil {
 		return fmt.Errorf("Error putting S3 replication configuration: %s", err)
@@ -2000,6 +2183,15 @@ func flattenAwsS3BucketReplicationConfiguration(r *s3.ReplicationConfiguration) 
 					rd["replica_kms_key_id"] = *v.Destination.EncryptionConfiguration.ReplicaKmsKeyID
 				}
 			}
+			if v.Destination.Account != nil {
+				rd["account_id"] = *v.Destination.Account
+			}
+			if v.Destination.AccessControlTranslation != nil {
+				rdt := map[string]interface{}{
+					"owner": aws.StringValue(v.Destination.AccessControlTranslation.Owner),
+				}
+				rd["access_control_translation"] = []interface{}{rdt}
+			}
 			t["destination"] = schema.NewSet(destinationHash, []interface{}{rd})
 		}
 
@@ -2025,6 +2217,26 @@ func flattenAwsS3BucketReplicationConfiguration(r *s3.ReplicationConfiguration) 
 			}
 			t["source_selection_criteria"] = schema.NewSet(sourceSelectionCriteriaHash, []interface{}{tssc})
 		}
+
+		if v.Priority != nil {
+			t["priority"] = int(aws.Int64Value(v.Priority))
+		}
+
+		if f := v.Filter; f != nil {
+			m := map[string]interface{}{}
+			if f.Prefix != nil {
+				m["prefix"] = aws.StringValue(f.Prefix)
+			}
+			if t := f.Tag; t != nil {
+				m["tags"] = tagsMapToRaw(tagsToMapS3([]*s3.Tag{t}))
+			}
+			if a := f.And; a != nil {
+				m["prefix"] = aws.StringValue(a.Prefix)
+				m["tags"] = tagsMapToRaw(tagsToMapS3(a.Tags))
+			}
+			t["filter"] = []interface{}{m}
+		}
+
 		rules = append(rules, t)
 	}
 	m["rules"] = schema.NewSet(rulesHash, rules)
@@ -2170,6 +2382,24 @@ func rulesHash(v interface{}) int {
 	if v, ok := m["source_selection_criteria"].(*schema.Set); ok && v.Len() > 0 && v.List()[0] != nil {
 		buf.WriteString(fmt.Sprintf("%d-", sourceSelectionCriteriaHash(v.List()[0])))
 	}
+	if v, ok := m["priority"]; ok {
+		buf.WriteString(fmt.Sprintf("%d-", v.(int)))
+	}
+	if v, ok := m["filter"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		buf.WriteString(fmt.Sprintf("%d-", replicationRuleFilterHash(v[0])))
+	}
+	return hashcode.String(buf.String())
+}
+
+func replicationRuleFilterHash(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.(map[string]interface{})
+	if v, ok := m["prefix"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+	if v, ok := m["tags"]; ok {
+		buf.WriteString(fmt.Sprintf("%d-", tagsMapToHash(v.(map[string]interface{}))))
+	}
 	return hashcode.String(buf.String())
 }
 
@@ -2184,6 +2414,26 @@ func destinationHash(v interface{}) int {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
 	if v, ok := m["replica_kms_key_id"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+	if v, ok := m["account"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+	if v, ok := m["access_control_translation"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		buf.WriteString(fmt.Sprintf("%d-", accessControlTranslationHash(v[0])))
+	}
+	return hashcode.String(buf.String())
+}
+
+func accessControlTranslationHash(v interface{}) int {
+	// v is nil if empty access_control_translation is given.
+	if v == nil {
+		return 0
+	}
+	var buf bytes.Buffer
+	m := v.(map[string]interface{})
+
+	if v, ok := m["owner"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
 	return hashcode.String(buf.String())
@@ -2215,4 +2465,88 @@ func sourceSseKmsObjectsHash(v interface{}) int {
 
 type S3Website struct {
 	Endpoint, Domain string
+}
+
+//
+// S3 Object Lock functions.
+//
+
+func readS3ObjectLockConfiguration(conn *s3.S3, bucket string) (interface{}, error) {
+	resp, err := retryOnAwsCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+		return conn.GetObjectLockConfiguration(&s3.GetObjectLockConfigurationInput{
+			Bucket: aws.String(bucket),
+		})
+	})
+	if err != nil {
+		if isAWSErr(err, "ObjectLockConfigurationNotFoundError", "") {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return flattenS3ObjectLockConfiguration(resp.(*s3.GetObjectLockConfigurationOutput).ObjectLockConfiguration), nil
+}
+
+func expandS3ObjectLockConfiguration(vConf []interface{}) *s3.ObjectLockConfiguration {
+	if len(vConf) == 0 || vConf[0] == nil {
+		return nil
+	}
+
+	mConf := vConf[0].(map[string]interface{})
+
+	conf := &s3.ObjectLockConfiguration{}
+
+	if vObjectLockEnabled, ok := mConf["object_lock_enabled"].(string); ok && vObjectLockEnabled != "" {
+		conf.ObjectLockEnabled = aws.String(vObjectLockEnabled)
+	}
+
+	if vRule, ok := mConf["rule"].([]interface{}); ok && len(vRule) > 0 {
+		mRule := vRule[0].(map[string]interface{})
+
+		if vDefaultRetention, ok := mRule["default_retention"].([]interface{}); ok && len(vDefaultRetention) > 0 && vDefaultRetention[0] != nil {
+			mDefaultRetention := vDefaultRetention[0].(map[string]interface{})
+
+			conf.Rule = &s3.ObjectLockRule{
+				DefaultRetention: &s3.DefaultRetention{},
+			}
+
+			if vMode, ok := mDefaultRetention["mode"].(string); ok && vMode != "" {
+				conf.Rule.DefaultRetention.Mode = aws.String(vMode)
+			}
+			if vDays, ok := mDefaultRetention["days"].(int); ok && vDays > 0 {
+				conf.Rule.DefaultRetention.Days = aws.Int64(int64(vDays))
+			}
+			if vYears, ok := mDefaultRetention["years"].(int); ok && vYears > 0 {
+				conf.Rule.DefaultRetention.Years = aws.Int64(int64(vYears))
+			}
+		}
+	}
+
+	return conf
+}
+
+func flattenS3ObjectLockConfiguration(conf *s3.ObjectLockConfiguration) []interface{} {
+	if conf == nil {
+		return []interface{}{}
+	}
+
+	mConf := map[string]interface{}{
+		"object_lock_enabled": aws.StringValue(conf.ObjectLockEnabled),
+	}
+
+	if conf.Rule != nil && conf.Rule.DefaultRetention != nil {
+		mRule := map[string]interface{}{
+			"default_retention": []interface{}{
+				map[string]interface{}{
+					"mode":  aws.StringValue(conf.Rule.DefaultRetention.Mode),
+					"days":  int(aws.Int64Value(conf.Rule.DefaultRetention.Days)),
+					"years": int(aws.Int64Value(conf.Rule.DefaultRetention.Years)),
+				},
+			},
+		}
+
+		mConf["rule"] = []interface{}{mRule}
+	}
+
+	return []interface{}{mConf}
 }

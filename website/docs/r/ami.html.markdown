@@ -24,15 +24,15 @@ it's better to use `aws_ami_launch_permission` instead.
 # an EBS volume populated from a snapshot. It is assumed that such a snapshot
 # already exists with the id "snap-xxxxxxxx".
 resource "aws_ami" "example" {
-    name = "terraform-example"
-    virtualization_type = "hvm"
-    root_device_name = "/dev/xvda"
+  name                = "terraform-example"
+  virtualization_type = "hvm"
+  root_device_name    = "/dev/xvda"
 
-    ebs_block_device {
-        device_name = "/dev/xvda"
-        snapshot_id = "snap-xxxxxxxx"
-        volume_size = 8
-    }
+  ebs_block_device {
+    device_name = "/dev/xvda"
+    snapshot_id = "snap-xxxxxxxx"
+    volume_size = 8
+  }
 }
 ```
 
@@ -52,6 +52,7 @@ The following arguments are supported:
   attached to created instances. The structure of this block is described below.
 * `ephemeral_block_device` - (Optional) Nested block describing an ephemeral block device that
   should be attached to created instances. The structure of this block is described below.
+* `tags` - (Optional) A mapping of tags to assign to the resource.
 
 When `virtualization_type` is "paravirtual" the following additional arguments apply:
 

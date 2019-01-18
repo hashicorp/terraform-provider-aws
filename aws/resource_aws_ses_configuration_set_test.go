@@ -11,7 +11,7 @@ import (
 )
 
 func TestAccAWSSESConfigurationSet_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 		},
@@ -23,6 +23,11 @@ func TestAccAWSSESConfigurationSet_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSESConfigurationSetExists("aws_ses_configuration_set.test"),
 				),
+			},
+			{
+				ResourceName:      "aws_ses_configuration_set.test",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})

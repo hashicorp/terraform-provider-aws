@@ -78,7 +78,7 @@ func TestAwsEcsContainerDefinitionsAreEquivalent_basic(t *testing.T) {
     }
 ]`
 
-	equal, err := ecsContainerDefinitionsAreEquivalent(cfgRepresention, apiRepresentation, false)
+	equal, err := EcsContainerDefinitionsAreEquivalent(cfgRepresention, apiRepresentation, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -125,7 +125,7 @@ func TestAwsEcsContainerDefinitionsAreEquivalent_portMappings(t *testing.T) {
     }
 ]`
 
-	equal, err := ecsContainerDefinitionsAreEquivalent(cfgRepresention, apiRepresentation, false)
+	equal, err := EcsContainerDefinitionsAreEquivalent(cfgRepresention, apiRepresentation, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -167,7 +167,7 @@ func TestAwsEcsContainerDefinitionsAreEquivalent_portMappingsIgnoreHostPort(t *t
 		err   error
 	)
 
-	equal, err = ecsContainerDefinitionsAreEquivalent(cfgRepresention, apiRepresentation, false)
+	equal, err = EcsContainerDefinitionsAreEquivalent(cfgRepresention, apiRepresentation, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -175,7 +175,7 @@ func TestAwsEcsContainerDefinitionsAreEquivalent_portMappingsIgnoreHostPort(t *t
 		t.Fatal("Expected definitions to differ.")
 	}
 
-	equal, err = ecsContainerDefinitionsAreEquivalent(cfgRepresention, apiRepresentation, true)
+	equal, err = EcsContainerDefinitionsAreEquivalent(cfgRepresention, apiRepresentation, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -428,7 +428,7 @@ func TestAwsEcsContainerDefinitionsAreEquivalent_arrays(t *testing.T) {
 ]
 `
 
-	equal, err := ecsContainerDefinitionsAreEquivalent(cfgRepresention, apiRepresentation, false)
+	equal, err := EcsContainerDefinitionsAreEquivalent(cfgRepresention, apiRepresentation, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -466,7 +466,7 @@ func TestAwsEcsContainerDefinitionsAreEquivalent_negative(t *testing.T) {
     }
 ]`
 
-	equal, err := ecsContainerDefinitionsAreEquivalent(cfgRepresention, apiRepresentation, false)
+	equal, err := EcsContainerDefinitionsAreEquivalent(cfgRepresention, apiRepresentation, false)
 	if err != nil {
 		t.Fatal(err)
 	}

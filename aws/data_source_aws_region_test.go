@@ -82,7 +82,7 @@ func TestAccDataSourceAwsRegion_basic(t *testing.T) {
 
 	resourceName := "data.aws_region.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -114,7 +114,7 @@ func TestAccDataSourceAwsRegion_endpoint(t *testing.T) {
 	description2 := "US East (Ohio)"
 	resourceName := "data.aws_region.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -160,7 +160,7 @@ func TestAccDataSourceAwsRegion_endpointAndName(t *testing.T) {
 	description2 := "US East (Ohio)"
 	resourceName := "data.aws_region.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -220,7 +220,7 @@ func TestAccDataSourceAwsRegion_name(t *testing.T) {
 	description2 := "US East (Ohio)"
 	resourceName := "data.aws_region.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{

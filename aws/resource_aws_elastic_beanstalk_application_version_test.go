@@ -16,7 +16,7 @@ import (
 func TestAccAWSBeanstalkAppVersion_basic(t *testing.T) {
 	var appVersion elasticbeanstalk.ApplicationVersionDescription
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckApplicationVersionDestroy,
@@ -35,7 +35,7 @@ func TestAccAWSBeanstalkAppVersion_duplicateLabels(t *testing.T) {
 	var firstAppVersion elasticbeanstalk.ApplicationVersionDescription
 	var secondAppVersion elasticbeanstalk.ApplicationVersionDescription
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckApplicationVersionDestroy,

@@ -14,9 +14,9 @@ const resourceName = "aws_dynamodb_table_item_attribute.test"
 
 func TestAccAWSDynamoDbTableItemAttribute_basic(t *testing.T) {
 	tableName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8))
-	hashKey := fmt.Sprintf("%s", acctest.RandString(8))
-	attributeKey := fmt.Sprintf("%s", acctest.RandString(8))
-	attributeValue := fmt.Sprintf("%s", acctest.RandString(8))
+	hashKey := acctest.RandString(8)
+	attributeKey := acctest.RandString(8)
+	attributeValue := acctest.RandString(8)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -45,10 +45,10 @@ func TestAccAWSDynamoDbTableItemAttribute_basic(t *testing.T) {
 
 func TestAccAWSDynamoDbTableItemAttribute_update(t *testing.T) {
 	tableName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8))
-	hashKey := fmt.Sprintf("%s", acctest.RandString(8))
-	attributeKey := fmt.Sprintf("%s", acctest.RandString(8))
-	attributeValue := fmt.Sprintf("%s", acctest.RandString(8))
-	attributeValue2 := fmt.Sprintf("%s", acctest.RandString(8))
+	hashKey := acctest.RandString(8)
+	attributeKey := acctest.RandString(8)
+	attributeValue := acctest.RandString(8)
+	attributeValue2 := acctest.RandString(8)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -83,10 +83,10 @@ func TestAccAWSDynamoDbTableItemAttribute_update(t *testing.T) {
 
 func TestAccAWSDynamoDbTableItemAttribute_withRangeKey(t *testing.T) {
 	tableName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8))
-	hashKey := fmt.Sprintf("%s", acctest.RandString(8))
-	rangeKey := fmt.Sprintf("%s", acctest.RandString(8))
-	attributeKey := fmt.Sprintf("%s", acctest.RandString(8))
-	attributeValue := fmt.Sprintf("%s", acctest.RandString(8))
+	hashKey := acctest.RandString(8)
+	rangeKey := acctest.RandString(8)
+	attributeKey := acctest.RandString(8)
+	attributeValue := acctest.RandString(8)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -115,11 +115,11 @@ func TestAccAWSDynamoDbTableItemAttribute_withRangeKey(t *testing.T) {
 
 func TestAccAWSDynamoDbTableItemAttribute_withRangeKey_update(t *testing.T) {
 	tableName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8))
-	hashKey := fmt.Sprintf("%s", acctest.RandString(8))
-	rangeKey := fmt.Sprintf("%s", acctest.RandString(8))
-	attributeKey := fmt.Sprintf("%s", acctest.RandString(8))
-	attributeValue := fmt.Sprintf("%s", acctest.RandString(8))
-	attributeValue2 := fmt.Sprintf("%s", acctest.RandString(8))
+	hashKey := acctest.RandString(8)
+	rangeKey := acctest.RandString(8)
+	attributeKey := acctest.RandString(8)
+	attributeValue := acctest.RandString(8)
+	attributeValue2 := acctest.RandString(8)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },

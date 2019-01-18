@@ -13,7 +13,7 @@ import (
 )
 
 func TestAccAWSAutoscalingGroups_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -50,7 +50,7 @@ func testAccCheckAwsAutoscalingGroups(n string) resource.TestCheckFunc {
 
 		expected := actual
 		sort.Strings(expected)
-		if reflect.DeepEqual(expected, actual) != true {
+		if !reflect.DeepEqual(expected, actual) {
 			return fmt.Errorf("ASG not sorted - expected %v, got %v", expected, actual)
 		}
 		return nil

@@ -12,7 +12,7 @@ import (
 )
 
 func TestAccAwsDxGatewayAssociation_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDxGatewayAssociationDestroy,
@@ -28,7 +28,7 @@ func TestAccAwsDxGatewayAssociation_basic(t *testing.T) {
 }
 
 func TestAccAwsDxGatewayAssociation_multiVgws(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDxGatewayAssociationDestroy,
@@ -84,13 +84,13 @@ resource "aws_dx_gateway" "test" {
 
 resource "aws_vpc" "test" {
   cidr_block = "10.255.255.0/28"
-  tags {
+  tags = {
     Name = "terraform-testacc-dxgwassoc-%s"
   }
 }
 
 resource "aws_vpn_gateway" "test" {
-  tags {
+  tags = {
     Name = "terraform-testacc-dxgwassoc-%s"
   }
 }
@@ -116,13 +116,13 @@ resource "aws_dx_gateway" "test" {
 
 resource "aws_vpc" "test1" {
   cidr_block = "10.255.255.16/28"
-  tags {
+  tags = {
     Name = "terraform-testacc-dxgwassoc-%s-1"
   }
 }
 
 resource "aws_vpn_gateway" "test1" {
-  tags {
+  tags = {
     Name = "terraform-testacc-dxgwassoc-%s-1"
   }
 }
@@ -139,13 +139,13 @@ resource "aws_dx_gateway_association" "test1" {
 
 resource "aws_vpc" "test2" {
   cidr_block = "10.255.255.32/28"
-  tags {
+  tags = {
     Name = "terraform-testacc-dxgwassoc-%s-2"
   }
 }
 
 resource "aws_vpn_gateway" "test2" {
-  tags {
+  tags = {
     Name = "terraform-testacc-dxgwassoc-%s-2"
   }
 }

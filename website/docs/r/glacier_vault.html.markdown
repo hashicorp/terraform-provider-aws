@@ -1,7 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_glacier_vault"
-sidebar_current: "docs-aws-resource-glacier-vault"
+sidebar_current: "docs-aws-resource-glacier-vault-x"
 description: |-
   Provides a Glacier Vault.
 ---
@@ -45,7 +45,7 @@ resource "aws_glacier_vault" "my_archive" {
 }
 EOF
 
-  tags {
+  tags = {
     Test = "MyArchive"
   }
 }

@@ -23,7 +23,7 @@ func TestAccAWSGroupMembership_basic(t *testing.T) {
 	userName3 := fmt.Sprintf("tf-acc-user-gm-basic-three-%s", rString)
 	membershipName := fmt.Sprintf("tf-acc-membership-gm-basic-%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGroupMembershipDestroy,
@@ -63,7 +63,7 @@ func TestAccAWSGroupMembership_paginatedUserList(t *testing.T) {
 	membershipName := fmt.Sprintf("tf-acc-membership-gm-pul-%s", rString)
 	userNamePrefix := fmt.Sprintf("tf-acc-user-gm-pul-%s-", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGroupMembershipDestroy,

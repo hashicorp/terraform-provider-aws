@@ -60,7 +60,7 @@ that will cost you money against your AWS bill.
 The sample architecture introduced here includes the following resources:
 
 * EKS Cluster: AWS managed Kubernetes cluster of master servers
-* AutoScaling Group containing 2 m4.large instances based on the latest EKS Amazon Linux 2 AMI: Operator managed Kuberneted worker nodes for running Kubernetes service deployments
+* AutoScaling Group containing 2 m4.large instances based on the latest EKS Amazon Linux 2 AMI: Operator managed Kubernetes worker nodes for running Kubernetes service deployments
 * Associated VPC, Internet Gateway, Security Groups, and Subnets: Operator managed networking resources for the EKS Cluster and worker node instances
 * Associated IAM Roles and Policies: Operator managed access resources for EKS and worker node instances
 
@@ -430,7 +430,17 @@ resource "aws_security_group_rule" "demo-node-ingress-self" {
   type                     = "ingress"
 }
 
-resource "aws_security_group_rule" "demo-node-ingress-cluster" {
+resource "aws_security_group_rule" "demo-node-ingress-cluster-https" {
+  description              = "Allow worker Kubelets and pods to receive communication from the cluster control plane"
+  from_port                = 443
+  protocol                 = "tcp"
+  security_group_id        = "${aws_security_group.demo-node.id}"
+  source_security_group_id = "${aws_security_group.demo-cluster.id}"
+  to_port                  = 443
+  type                     = "ingress"
+}
+
+resource "aws_security_group_rule" "demo-node-ingress-cluster-others" {
   description              = "Allow worker Kubelets and pods to receive communication from the cluster control plane"
   from_port                = 1025
   protocol                 = "tcp"
@@ -563,7 +573,7 @@ Terraform configuration:
 
 ```hcl
 locals {
-  config-map-aws-auth = <<CONFIGMAPAWSAUTH
+  config_map_aws_auth = <<CONFIGMAPAWSAUTH
 
 
 apiVersion: v1
@@ -581,13 +591,13 @@ data:
 CONFIGMAPAWSAUTH
 }
 
-output "config-map-aws-auth" {
-  value = "${local.config-map-aws-auth}"
+output "config_map_aws_auth" {
+  value = "${local.config_map_aws_auth}"
 }
 ```
 
-* Run `terraform output config-map-aws-auth` and save the configuration into a file, e.g. `config-map-aws-auth.yaml`
-* Run `kubectl apply -f config-map-aws-auth.yaml`
+* Run `terraform output config_map_aws_auth` and save the configuration into a file, e.g. `config_map_aws_auth.yaml`
+* Run `kubectl apply -f config_map_aws_auth.yaml`
 * You can verify the worker nodes are joining the cluster via: `kubectl get nodes --watch`
 
 At this point, you should be able to utilize Kubernetes as expected!

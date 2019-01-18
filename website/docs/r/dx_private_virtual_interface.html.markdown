@@ -33,6 +33,8 @@ The following arguments are supported:
 * `name` - (Required) The name for the virtual interface.
 * `vlan` - (Required) The VLAN ID.
 * `amazon_address` - (Optional) The IPv4 CIDR address to use to send traffic to Amazon. Required for IPv4 BGP peers.
+* `mtu` - (Optional) The maximum transmission unit (MTU) is the size, in bytes, of the largest permissible packet that can be passed over the connection.
+The MTU of a virtual private interface can be either `1500` or `9001` (jumbo frames). Default is `1500`.
 * `bgp_auth_key` - (Optional) The authentication key for BGP configuration.
 * `customer_address` - (Optional) The IPv4 CIDR destination address to which Amazon should send traffic. Required for IPv4 BGP peers.
 * `dx_gateway_id` - (Optional) The ID of the Direct Connect gateway to which to connect the virtual interface.
@@ -45,6 +47,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the virtual interface.
 * `arn` - The ARN of the virtual interface.
+* `jumbo_frame_capable` - Indicates whether jumbo frames (9001 MTU) are supported.
 
 ## Timeouts
 
@@ -52,6 +55,7 @@ In addition to all arguments above, the following attributes are exported:
 [Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
 
 - `create` - (Default `10 minutes`) Used for creating virtual interface
+- `update` - (Default `10 minutes`) Used for virtual interface modifications
 - `delete` - (Default `10 minutes`) Used for destroying virtual interface
 
 ## Import
