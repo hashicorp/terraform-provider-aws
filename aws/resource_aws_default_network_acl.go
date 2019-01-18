@@ -146,6 +146,11 @@ func resourceAwsDefaultNetworkAcl() *schema.Resource {
 			},
 
 			"tags": tagsSchema(),
+
+			"owner_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -261,7 +266,7 @@ func revokeAllNetworkACLEntries(netaclId string, meta interface{}) error {
 	}
 
 	if resp == nil {
-		return fmt.Errorf("[ERR] Error looking up Default Network ACL Entries: No results")
+		return fmt.Errorf("Error looking up Default Network ACL Entries: No results")
 	}
 
 	networkAcl := resp.NetworkAcls[0]
@@ -275,7 +280,7 @@ func revokeAllNetworkACLEntries(netaclId string, meta interface{}) error {
 
 		// track if this is an egress or ingress rule, for logging purposes
 		rt := "ingress"
-		if *e.Egress == true {
+		if *e.Egress {
 			rt = "egress"
 		}
 

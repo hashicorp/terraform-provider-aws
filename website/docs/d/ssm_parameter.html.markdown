@@ -12,11 +12,9 @@ Provides an SSM Parameter data source.
 
 ## Example Usage
 
-To store a basic string parameter:
-
 ```hcl
 data "aws_ssm_parameter" "foo" {
-  name  = "foo"
+  name = "foo"
 }
 ```
 
@@ -38,6 +36,6 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The ARN of the parameter.
-* `name` - (Required) The name of the parameter.
-* `type` - (Required) The type of the parameter. Valid types are `String`, `StringList` and `SecureString`.
-* `value` - (Required) The value of the parameter.
+* `name` - The name of the parameter.
+* `type` - The type of the parameter. Valid types are `String`, `StringList` and `SecureString`.
+* `value` - The value of the parameter.

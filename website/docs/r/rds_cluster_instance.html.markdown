@@ -21,6 +21,8 @@ Cluster, or you may specify different Cluster Instance resources with various
 
 For more information on Amazon Aurora, see [Aurora on Amazon RDS][2] in the Amazon RDS User Guide.
 
+~> **NOTE:** Deletion Protection from the RDS service can only be enabled at the cluster level, not for individual cluster instances. You can still add the [`prevent_destroy` lifecycle behavior](https://www.terraform.io/docs/configuration/resources.html#prevent_destroy) to your Terraform resource configuration if you desire protection from accidental deletion.
+
 ## Example Usage
 
 ```hcl
@@ -28,7 +30,7 @@ resource "aws_rds_cluster_instance" "cluster_instances" {
   count              = 2
   identifier         = "aurora-cluster-demo-${count.index}"
   cluster_identifier = "${aws_rds_cluster.default.id}"
-  instance_class     = "db.r3.large"
+  instance_class     = "db.r4.large"
 }
 
 resource "aws_rds_cluster" "default" {
@@ -57,7 +59,7 @@ in the Amazon RDS User Guide.
 * `engine_version` - (Optional) The database engine version.
 * `instance_class` - (Required) The instance class to use. For details on CPU
 and memory, see [Scaling Aurora DB Instances][4]. Aurora currently
-  supports the below instance classes.
+  supports the below instance classes. Please see [AWS Documentation][7] for complete details.
   - db.t2.small
   - db.t2.medium
   - db.r3.large
@@ -91,12 +93,14 @@ what IAM permissions are needed to allow Enhanced Monitoring for RDS Instances.
 * `auto_minor_version_upgrade` - (Optional) Indicates that minor engine upgrades will be applied automatically to the DB instance during the maintenance window. Default `true`.
 * `performance_insights_enabled` - (Optional) Specifies whether Performance Insights is enabled or not.
 * `performance_insights_kms_key_id` - (Optional) The ARN for the KMS key to encrypt Performance Insights data. When specifying `performance_insights_kms_key_id`, `performance_insights_enabled` needs to be set to true.
+* `copy_tags_to_snapshot` – (Optional, boolean) Indicates whether to copy all of the user-defined tags from the DB instance to snapshots of the DB instance. Default `false`.
 * `tags` - (Optional) A mapping of tags to assign to the instance.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
+* `arn` - Amazon Resource Name (ARN) of cluster instance
 * `cluster_identifier` - The RDS Cluster Identifier
 * `identifier` - The Instance identifier
 * `id` - The Instance identifier
@@ -120,6 +124,7 @@ In addition to all arguments above, the following attributes are exported:
 [4]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Aurora.Managing.html
 [5]: /docs/configuration/resources.html#count
 [6]: https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html
+[7]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html
 
 ## Timeouts
 

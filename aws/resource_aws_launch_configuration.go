@@ -35,10 +35,11 @@ func resourceAwsLaunchConfiguration() *schema.Resource {
 			},
 
 			"name_prefix": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255-resource.UniqueIDSuffixLength),
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name"},
+				ValidateFunc:  validation.StringLenBetween(1, 255-resource.UniqueIDSuffixLength),
 			},
 
 			"image_id": {
@@ -624,7 +625,7 @@ func readBlockDevicesFromLaunchConfiguration(d *schema.ResourceData, lc *autosca
 
 	// Collect existing configured devices, so we can check
 	// existing value of delete_on_termination below
-	existingEbsBlockDevices := make(map[string]map[string]interface{}, 0)
+	existingEbsBlockDevices := make(map[string]map[string]interface{})
 	if v, ok := d.GetOk("ebs_block_device"); ok {
 		ebsBlocks := v.(*schema.Set)
 		for _, ebd := range ebsBlocks.List() {

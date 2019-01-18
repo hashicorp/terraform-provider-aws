@@ -27,7 +27,7 @@ See the AWS Docs on [Modifying an ElastiCache Cache Cluster][2] for more informa
 resource "aws_elasticache_cluster" "example" {
   cluster_id           = "cluster-example"
   engine               = "memcached"
-  node_type            = "cache.m3.medium"
+  node_type            = "cache.m4.large"
   num_cache_nodes      = 2
   parameter_group_name = "default.memcached1.4"
   port                 = 11211
@@ -40,9 +40,10 @@ resource "aws_elasticache_cluster" "example" {
 resource "aws_elasticache_cluster" "example" {
   cluster_id           = "cluster-example"
   engine               = "redis"
-  node_type            = "cache.m3.medium"
+  node_type            = "cache.m4.large"
   num_cache_nodes      = 1
   parameter_group_name = "default.redis3.2"
+  engine_version       = "3.2.10"
   port                 = 6379
 }
 ```
@@ -71,7 +72,7 @@ The following arguments are supported:
  Valid values for this parameter are `memcached` or `redis`
 
 * `engine_version` – (Optional) Version number of the cache engine to be used.
-See [Selecting a Cache Engine and Version](https://docs.aws.amazon.com/AmazonElastiCache/latest/UserGuide/SelectEngine.html)
+See [Describe Cache Engine Versions](https://docs.aws.amazon.com/cli/latest/reference/elasticache/describe-cache-engine-versions.html)
 in the AWS Documentation center for supported versions
 
 * `maintenance_window` – (Optional) Specifies the weekly time range for when maintenance

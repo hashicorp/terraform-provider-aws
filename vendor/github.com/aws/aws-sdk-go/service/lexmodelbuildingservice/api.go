@@ -18,7 +18,7 @@ const opCreateBotVersion = "CreateBotVersion"
 // CreateBotVersionRequest generates a "aws/request.Request" representing the
 // client's request for the CreateBotVersion operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -125,7 +125,7 @@ const opCreateIntentVersion = "CreateIntentVersion"
 // CreateIntentVersionRequest generates a "aws/request.Request" representing the
 // client's request for the CreateIntentVersion operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -234,7 +234,7 @@ const opCreateSlotTypeVersion = "CreateSlotTypeVersion"
 // CreateSlotTypeVersionRequest generates a "aws/request.Request" representing the
 // client's request for the CreateSlotTypeVersion operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -342,7 +342,7 @@ const opDeleteBot = "DeleteBot"
 // DeleteBotRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteBot operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -376,8 +376,7 @@ func (c *LexModelBuildingService) DeleteBotRequest(input *DeleteBotInput) (req *
 
 	output = &DeleteBotOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(restjson.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -459,7 +458,7 @@ const opDeleteBotAlias = "DeleteBotAlias"
 // DeleteBotAliasRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteBotAlias operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -493,8 +492,7 @@ func (c *LexModelBuildingService) DeleteBotAliasRequest(input *DeleteBotAliasInp
 
 	output = &DeleteBotAliasOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(restjson.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -575,7 +573,7 @@ const opDeleteBotChannelAssociation = "DeleteBotChannelAssociation"
 // DeleteBotChannelAssociationRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteBotChannelAssociation operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -609,8 +607,7 @@ func (c *LexModelBuildingService) DeleteBotChannelAssociationRequest(input *Dele
 
 	output = &DeleteBotChannelAssociationOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(restjson.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -673,7 +670,7 @@ const opDeleteBotVersion = "DeleteBotVersion"
 // DeleteBotVersionRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteBotVersion operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -707,8 +704,7 @@ func (c *LexModelBuildingService) DeleteBotVersionRequest(input *DeleteBotVersio
 
 	output = &DeleteBotVersionOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(restjson.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -784,7 +780,7 @@ const opDeleteIntent = "DeleteIntent"
 // DeleteIntentRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteIntent operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -818,8 +814,7 @@ func (c *LexModelBuildingService) DeleteIntentRequest(input *DeleteIntentInput) 
 
 	output = &DeleteIntentOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(restjson.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -905,7 +900,7 @@ const opDeleteIntentVersion = "DeleteIntentVersion"
 // DeleteIntentVersionRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteIntentVersion operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -939,8 +934,7 @@ func (c *LexModelBuildingService) DeleteIntentVersionRequest(input *DeleteIntent
 
 	output = &DeleteIntentVersionOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(restjson.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -1016,7 +1010,7 @@ const opDeleteSlotType = "DeleteSlotType"
 // DeleteSlotTypeRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteSlotType operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1050,8 +1044,7 @@ func (c *LexModelBuildingService) DeleteSlotTypeRequest(input *DeleteSlotTypeInp
 
 	output = &DeleteSlotTypeOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(restjson.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -1139,7 +1132,7 @@ const opDeleteSlotTypeVersion = "DeleteSlotTypeVersion"
 // DeleteSlotTypeVersionRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteSlotTypeVersion operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1173,8 +1166,7 @@ func (c *LexModelBuildingService) DeleteSlotTypeVersionRequest(input *DeleteSlot
 
 	output = &DeleteSlotTypeVersionOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(restjson.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -1250,7 +1242,7 @@ const opDeleteUtterances = "DeleteUtterances"
 // DeleteUtterancesRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteUtterances operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1284,8 +1276,7 @@ func (c *LexModelBuildingService) DeleteUtterancesRequest(input *DeleteUtterance
 
 	output = &DeleteUtterancesOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(restjson.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -1352,7 +1343,7 @@ const opGetBot = "GetBot"
 // GetBotRequest generates a "aws/request.Request" representing the
 // client's request for the GetBot operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1445,7 +1436,7 @@ const opGetBotAlias = "GetBotAlias"
 // GetBotAliasRequest generates a "aws/request.Request" representing the
 // client's request for the GetBotAlias operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1538,7 +1529,7 @@ const opGetBotAliases = "GetBotAliases"
 // GetBotAliasesRequest generates a "aws/request.Request" representing the
 // client's request for the GetBotAliases operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1682,7 +1673,7 @@ const opGetBotChannelAssociation = "GetBotChannelAssociation"
 // GetBotChannelAssociationRequest generates a "aws/request.Request" representing the
 // client's request for the GetBotChannelAssociation operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1776,7 +1767,7 @@ const opGetBotChannelAssociations = "GetBotChannelAssociations"
 // GetBotChannelAssociationsRequest generates a "aws/request.Request" representing the
 // client's request for the GetBotChannelAssociations operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1921,7 +1912,7 @@ const opGetBotVersions = "GetBotVersions"
 // GetBotVersionsRequest generates a "aws/request.Request" representing the
 // client's request for the GetBotVersions operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2077,7 +2068,7 @@ const opGetBots = "GetBots"
 // GetBotsRequest generates a "aws/request.Request" representing the
 // client's request for the GetBots operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2232,7 +2223,7 @@ const opGetBuiltinIntent = "GetBuiltinIntent"
 // GetBuiltinIntentRequest generates a "aws/request.Request" representing the
 // client's request for the GetBuiltinIntent operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2324,7 +2315,7 @@ const opGetBuiltinIntents = "GetBuiltinIntents"
 // GetBuiltinIntentsRequest generates a "aws/request.Request" representing the
 // client's request for the GetBuiltinIntents operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2468,7 +2459,7 @@ const opGetBuiltinSlotTypes = "GetBuiltinSlotTypes"
 // GetBuiltinSlotTypesRequest generates a "aws/request.Request" representing the
 // client's request for the GetBuiltinSlotTypes operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2615,7 +2606,7 @@ const opGetExport = "GetExport"
 // GetExportRequest generates a "aws/request.Request" representing the
 // client's request for the GetExport operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2705,7 +2696,7 @@ const opGetImport = "GetImport"
 // GetImportRequest generates a "aws/request.Request" representing the
 // client's request for the GetImport operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2795,7 +2786,7 @@ const opGetIntent = "GetIntent"
 // GetIntentRequest generates a "aws/request.Request" representing the
 // client's request for the GetIntent operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2888,7 +2879,7 @@ const opGetIntentVersions = "GetIntentVersions"
 // GetIntentVersionsRequest generates a "aws/request.Request" representing the
 // client's request for the GetIntentVersions operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3044,7 +3035,7 @@ const opGetIntents = "GetIntents"
 // GetIntentsRequest generates a "aws/request.Request" representing the
 // client's request for the GetIntents operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3198,7 +3189,7 @@ const opGetSlotType = "GetSlotType"
 // GetSlotTypeRequest generates a "aws/request.Request" representing the
 // client's request for the GetSlotType operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3291,7 +3282,7 @@ const opGetSlotTypeVersions = "GetSlotTypeVersions"
 // GetSlotTypeVersionsRequest generates a "aws/request.Request" representing the
 // client's request for the GetSlotTypeVersions operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3447,7 +3438,7 @@ const opGetSlotTypes = "GetSlotTypes"
 // GetSlotTypesRequest generates a "aws/request.Request" representing the
 // client's request for the GetSlotTypes operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3601,7 +3592,7 @@ const opGetUtterancesView = "GetUtterancesView"
 // GetUtterancesViewRequest generates a "aws/request.Request" representing the
 // client's request for the GetUtterancesView operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3707,7 +3698,7 @@ const opPutBot = "PutBot"
 // PutBotRequest generates a "aws/request.Request" representing the
 // client's request for the PutBot operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3813,7 +3804,7 @@ const opPutBotAlias = "PutBotAlias"
 // PutBotAliasRequest generates a "aws/request.Request" representing the
 // client's request for the PutBotAlias operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3910,7 +3901,7 @@ const opPutIntent = "PutIntent"
 // PutIntentRequest generates a "aws/request.Request" representing the
 // client's request for the PutIntent operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4048,7 +4039,7 @@ const opPutSlotType = "PutSlotType"
 // PutSlotTypeRequest generates a "aws/request.Request" representing the
 // client's request for the PutSlotType operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4154,7 +4145,7 @@ const opStartImport = "StartImport"
 // StartImportRequest generates a "aws/request.Request" representing the
 // client's request for the StartImport operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4249,14 +4240,14 @@ type BotAliasMetadata struct {
 	Checksum *string `locationName:"checksum" type:"string"`
 
 	// The date that the bot alias was created.
-	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp" timestampFormat:"unix"`
+	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp"`
 
 	// A description of the bot alias.
 	Description *string `locationName:"description" type:"string"`
 
 	// The date that the bot alias was updated. When you create a resource, the
 	// creation date and last updated date are the same.
-	LastUpdatedDate *time.Time `locationName:"lastUpdatedDate" type:"timestamp" timestampFormat:"unix"`
+	LastUpdatedDate *time.Time `locationName:"lastUpdatedDate" type:"timestamp"`
 
 	// The name of the bot alias.
 	Name *string `locationName:"name" min:"1" type:"string"`
@@ -4324,7 +4315,7 @@ type BotChannelAssociation struct {
 	BotAlias *string `locationName:"botAlias" min:"1" type:"string"`
 
 	// Provides information necessary to communicate with the messaging platform.
-	BotConfiguration map[string]*string `locationName:"botConfiguration" min:"1" type:"map"`
+	BotConfiguration map[string]*string `locationName:"botConfiguration" min:"1" type:"map" sensitive:"true"`
 
 	// The name of the Amazon Lex bot to which this association is being made.
 	//
@@ -4334,7 +4325,7 @@ type BotChannelAssociation struct {
 
 	// The date that the association between the Amazon Lex bot and the channel
 	// was created.
-	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp" timestampFormat:"unix"`
+	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp"`
 
 	// A text description of the association you are creating.
 	Description *string `locationName:"description" type:"string"`
@@ -4430,14 +4421,14 @@ type BotMetadata struct {
 	_ struct{} `type:"structure"`
 
 	// The date that the bot was created.
-	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp" timestampFormat:"unix"`
+	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp"`
 
 	// A description of the bot.
 	Description *string `locationName:"description" type:"string"`
 
 	// The date that the bot was updated. When you create a bot, the creation date
 	// and last updated date are the same.
-	LastUpdatedDate *time.Time `locationName:"lastUpdatedDate" type:"timestamp" timestampFormat:"unix"`
+	LastUpdatedDate *time.Time `locationName:"lastUpdatedDate" type:"timestamp"`
 
 	// The name of the bot.
 	Name *string `locationName:"name" min:"2" type:"string"`
@@ -4745,7 +4736,7 @@ type CreateBotVersionOutput struct {
 	ClarificationPrompt *Prompt `locationName:"clarificationPrompt" type:"structure"`
 
 	// The date when the bot version was created.
-	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp" timestampFormat:"unix"`
+	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp"`
 
 	// A description of the bot.
 	Description *string `locationName:"description" type:"string"`
@@ -4762,7 +4753,7 @@ type CreateBotVersionOutput struct {
 	Intents []*Intent `locationName:"intents" type:"list"`
 
 	// The date when the $LATEST version of this bot was updated.
-	LastUpdatedDate *time.Time `locationName:"lastUpdatedDate" type:"timestamp" timestampFormat:"unix"`
+	LastUpdatedDate *time.Time `locationName:"lastUpdatedDate" type:"timestamp"`
 
 	// Specifies the target locale for the bot.
 	Locale *string `locationName:"locale" type:"string" enum:"Locale"`
@@ -4954,7 +4945,7 @@ type CreateIntentVersionOutput struct {
 	ConfirmationPrompt *Prompt `locationName:"confirmationPrompt" type:"structure"`
 
 	// The date that the intent was created.
-	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp" timestampFormat:"unix"`
+	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp"`
 
 	// A description of the intent.
 	Description *string `locationName:"description" type:"string"`
@@ -4970,7 +4961,7 @@ type CreateIntentVersionOutput struct {
 	FulfillmentActivity *FulfillmentActivity `locationName:"fulfillmentActivity" type:"structure"`
 
 	// The date that the intent was updated.
-	LastUpdatedDate *time.Time `locationName:"lastUpdatedDate" type:"timestamp" timestampFormat:"unix"`
+	LastUpdatedDate *time.Time `locationName:"lastUpdatedDate" type:"timestamp"`
 
 	// The name of the intent.
 	Name *string `locationName:"name" min:"1" type:"string"`
@@ -5155,7 +5146,7 @@ type CreateSlotTypeVersionOutput struct {
 	Checksum *string `locationName:"checksum" type:"string"`
 
 	// The date that the slot type was created.
-	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp" timestampFormat:"unix"`
+	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp"`
 
 	// A description of the slot type.
 	Description *string `locationName:"description" type:"string"`
@@ -5166,7 +5157,7 @@ type CreateSlotTypeVersionOutput struct {
 
 	// The date that the slot type was updated. When you create a resource, the
 	// creation date and last update date are the same.
-	LastUpdatedDate *time.Time `locationName:"lastUpdatedDate" type:"timestamp" timestampFormat:"unix"`
+	LastUpdatedDate *time.Time `locationName:"lastUpdatedDate" type:"timestamp"`
 
 	// The name of the slot type.
 	Name *string `locationName:"name" min:"1" type:"string"`
@@ -6128,14 +6119,14 @@ type GetBotAliasOutput struct {
 	Checksum *string `locationName:"checksum" type:"string"`
 
 	// The date that the bot alias was created.
-	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp" timestampFormat:"unix"`
+	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp"`
 
 	// A description of the bot alias.
 	Description *string `locationName:"description" type:"string"`
 
 	// The date that the bot alias was updated. When you create a resource, the
 	// creation date and the last updated date are the same.
-	LastUpdatedDate *time.Time `locationName:"lastUpdatedDate" type:"timestamp" timestampFormat:"unix"`
+	LastUpdatedDate *time.Time `locationName:"lastUpdatedDate" type:"timestamp"`
 
 	// The name of the bot alias.
 	Name *string `locationName:"name" min:"1" type:"string"`
@@ -6394,13 +6385,13 @@ type GetBotChannelAssociationOutput struct {
 
 	// Provides information that the messaging platform needs to communicate with
 	// the Amazon Lex bot.
-	BotConfiguration map[string]*string `locationName:"botConfiguration" min:"1" type:"map"`
+	BotConfiguration map[string]*string `locationName:"botConfiguration" min:"1" type:"map" sensitive:"true"`
 
 	// The name of the Amazon Lex bot.
 	BotName *string `locationName:"botName" min:"2" type:"string"`
 
 	// The date that the association between the bot and the channel was created.
-	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp" timestampFormat:"unix"`
+	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp"`
 
 	// A description of the association between the bot and the channel.
 	Description *string `locationName:"description" type:"string"`
@@ -6661,6 +6652,9 @@ func (s *GetBotInput) Validate() error {
 	if s.VersionOrAlias == nil {
 		invalidParams.Add(request.NewErrParamRequired("VersionOrAlias"))
 	}
+	if s.VersionOrAlias != nil && len(*s.VersionOrAlias) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("VersionOrAlias", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -6721,7 +6715,7 @@ type GetBotOutput struct {
 	ClarificationPrompt *Prompt `locationName:"clarificationPrompt" type:"structure"`
 
 	// The date that the bot was created.
-	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp" timestampFormat:"unix"`
+	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp"`
 
 	// A description of the bot.
 	Description *string `locationName:"description" type:"string"`
@@ -6738,7 +6732,7 @@ type GetBotOutput struct {
 
 	// The date that the bot was updated. When you create a resource, the creation
 	// date and last updated date are the same.
-	LastUpdatedDate *time.Time `locationName:"lastUpdatedDate" type:"timestamp" timestampFormat:"unix"`
+	LastUpdatedDate *time.Time `locationName:"lastUpdatedDate" type:"timestamp"`
 
 	// The target locale for the bot.
 	Locale *string `locationName:"locale" type:"string" enum:"Locale"`
@@ -7084,6 +7078,9 @@ func (s *GetBuiltinIntentInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "GetBuiltinIntentInput"}
 	if s.Signature == nil {
 		invalidParams.Add(request.NewErrParamRequired("Signature"))
+	}
+	if s.Signature != nil && len(*s.Signature) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Signature", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -7545,6 +7542,9 @@ func (s *GetImportInput) Validate() error {
 	if s.ImportId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ImportId"))
 	}
+	if s.ImportId != nil && len(*s.ImportId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ImportId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -7562,7 +7562,7 @@ type GetImportOutput struct {
 	_ struct{} `type:"structure"`
 
 	// A timestamp for the date and time that the import job was created.
-	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp" timestampFormat:"unix"`
+	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp"`
 
 	// A string that describes why an import job failed to complete.
 	FailureReason []*string `locationName:"failureReason" type:"list"`
@@ -7710,7 +7710,7 @@ type GetIntentOutput struct {
 	ConfirmationPrompt *Prompt `locationName:"confirmationPrompt" type:"structure"`
 
 	// The date that the intent was created.
-	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp" timestampFormat:"unix"`
+	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp"`
 
 	// A description of the intent.
 	Description *string `locationName:"description" type:"string"`
@@ -7728,7 +7728,7 @@ type GetIntentOutput struct {
 
 	// The date that the intent was updated. When you create a resource, the creation
 	// date and the last updated date are the same.
-	LastUpdatedDate *time.Time `locationName:"lastUpdatedDate" type:"timestamp" timestampFormat:"unix"`
+	LastUpdatedDate *time.Time `locationName:"lastUpdatedDate" type:"timestamp"`
 
 	// The name of the intent.
 	Name *string `locationName:"name" min:"1" type:"string"`
@@ -8112,7 +8112,7 @@ type GetSlotTypeOutput struct {
 	Checksum *string `locationName:"checksum" type:"string"`
 
 	// The date that the slot type was created.
-	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp" timestampFormat:"unix"`
+	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp"`
 
 	// A description of the slot type.
 	Description *string `locationName:"description" type:"string"`
@@ -8123,7 +8123,7 @@ type GetSlotTypeOutput struct {
 
 	// The date that the slot type was updated. When you create a resource, the
 	// creation date and last update date are the same.
-	LastUpdatedDate *time.Time `locationName:"lastUpdatedDate" type:"timestamp" timestampFormat:"unix"`
+	LastUpdatedDate *time.Time `locationName:"lastUpdatedDate" type:"timestamp"`
 
 	// The name of the slot type.
 	Name *string `locationName:"name" min:"1" type:"string"`
@@ -8565,14 +8565,14 @@ type IntentMetadata struct {
 	_ struct{} `type:"structure"`
 
 	// The date that the intent was created.
-	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp" timestampFormat:"unix"`
+	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp"`
 
 	// A description of the intent.
 	Description *string `locationName:"description" type:"string"`
 
 	// The date that the intent was updated. When you create an intent, the creation
 	// date and last updated date are the same.
-	LastUpdatedDate *time.Time `locationName:"lastUpdatedDate" type:"timestamp" timestampFormat:"unix"`
+	LastUpdatedDate *time.Time `locationName:"lastUpdatedDate" type:"timestamp"`
 
 	// The name of the intent.
 	Name *string `locationName:"name" min:"1" type:"string"`
@@ -8893,14 +8893,14 @@ type PutBotAliasOutput struct {
 	Checksum *string `locationName:"checksum" type:"string"`
 
 	// The date that the bot alias was created.
-	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp" timestampFormat:"unix"`
+	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp"`
 
 	// A description of the alias.
 	Description *string `locationName:"description" type:"string"`
 
 	// The date that the bot alias was updated. When you create a resource, the
 	// creation date and the last updated date are the same.
-	LastUpdatedDate *time.Time `locationName:"lastUpdatedDate" type:"timestamp" timestampFormat:"unix"`
+	LastUpdatedDate *time.Time `locationName:"lastUpdatedDate" type:"timestamp"`
 
 	// The name of the alias.
 	Name *string `locationName:"name" min:"1" type:"string"`
@@ -9251,7 +9251,7 @@ type PutBotOutput struct {
 	CreateVersion *bool `locationName:"createVersion" type:"boolean"`
 
 	// The date that the bot was created.
-	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp" timestampFormat:"unix"`
+	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp"`
 
 	// A description of the bot.
 	Description *string `locationName:"description" type:"string"`
@@ -9269,7 +9269,7 @@ type PutBotOutput struct {
 
 	// The date that the bot was updated. When you create a resource, the creation
 	// date and last updated date are the same.
-	LastUpdatedDate *time.Time `locationName:"lastUpdatedDate" type:"timestamp" timestampFormat:"unix"`
+	LastUpdatedDate *time.Time `locationName:"lastUpdatedDate" type:"timestamp"`
 
 	// The target locale for the bot.
 	Locale *string `locationName:"locale" type:"string" enum:"Locale"`
@@ -9683,7 +9683,7 @@ type PutIntentOutput struct {
 	CreateVersion *bool `locationName:"createVersion" type:"boolean"`
 
 	// The date that the intent was created.
-	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp" timestampFormat:"unix"`
+	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp"`
 
 	// A description of the intent.
 	Description *string `locationName:"description" type:"string"`
@@ -9703,7 +9703,7 @@ type PutIntentOutput struct {
 
 	// The date that the intent was updated. When you create a resource, the creation
 	// date and last update dates are the same.
-	LastUpdatedDate *time.Time `locationName:"lastUpdatedDate" type:"timestamp" timestampFormat:"unix"`
+	LastUpdatedDate *time.Time `locationName:"lastUpdatedDate" type:"timestamp"`
 
 	// The name of the intent.
 	Name *string `locationName:"name" min:"1" type:"string"`
@@ -9973,7 +9973,7 @@ type PutSlotTypeOutput struct {
 	CreateVersion *bool `locationName:"createVersion" type:"boolean"`
 
 	// The date that the slot type was created.
-	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp" timestampFormat:"unix"`
+	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp"`
 
 	// A description of the slot type.
 	Description *string `locationName:"description" type:"string"`
@@ -9984,7 +9984,7 @@ type PutSlotTypeOutput struct {
 
 	// The date that the slot type was updated. When you create a slot type, the
 	// creation date and last update date are the same.
-	LastUpdatedDate *time.Time `locationName:"lastUpdatedDate" type:"timestamp" timestampFormat:"unix"`
+	LastUpdatedDate *time.Time `locationName:"lastUpdatedDate" type:"timestamp"`
 
 	// The name of the slot type.
 	Name *string `locationName:"name" min:"1" type:"string"`
@@ -10248,14 +10248,14 @@ type SlotTypeMetadata struct {
 	_ struct{} `type:"structure"`
 
 	// The date that the slot type was created.
-	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp" timestampFormat:"unix"`
+	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp"`
 
 	// A description of the slot type.
 	Description *string `locationName:"description" type:"string"`
 
 	// The date that the slot type was updated. When you create a resource, the
 	// creation date and last updated date are the same.
-	LastUpdatedDate *time.Time `locationName:"lastUpdatedDate" type:"timestamp" timestampFormat:"unix"`
+	LastUpdatedDate *time.Time `locationName:"lastUpdatedDate" type:"timestamp"`
 
 	// The name of the slot type.
 	Name *string `locationName:"name" min:"1" type:"string"`
@@ -10393,7 +10393,7 @@ type StartImportOutput struct {
 	_ struct{} `type:"structure"`
 
 	// A timestamp for the date and time that the import job was requested.
-	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp" timestampFormat:"unix"`
+	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp"`
 
 	// The identifier for the specific import job.
 	ImportId *string `locationName:"importId" type:"string"`
@@ -10537,10 +10537,10 @@ type UtteranceData struct {
 	DistinctUsers *int64 `locationName:"distinctUsers" type:"integer"`
 
 	// The date that the utterance was first recorded.
-	FirstUtteredDate *time.Time `locationName:"firstUtteredDate" type:"timestamp" timestampFormat:"unix"`
+	FirstUtteredDate *time.Time `locationName:"firstUtteredDate" type:"timestamp"`
 
 	// The date that the utterance was last recorded.
-	LastUtteredDate *time.Time `locationName:"lastUtteredDate" type:"timestamp" timestampFormat:"unix"`
+	LastUtteredDate *time.Time `locationName:"lastUtteredDate" type:"timestamp"`
 
 	// The text that was entered by the user or the text representation of an audio
 	// clip.
@@ -10770,6 +10770,9 @@ const (
 
 	// StatusReady is a Status enum value
 	StatusReady = "READY"
+
+	// StatusReadyBasicTesting is a Status enum value
+	StatusReadyBasicTesting = "READY_BASIC_TESTING"
 
 	// StatusFailed is a Status enum value
 	StatusFailed = "FAILED"

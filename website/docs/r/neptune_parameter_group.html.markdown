@@ -18,8 +18,8 @@ resource "aws_neptune_parameter_group" "example" {
   name   = "example"
 
   parameter {
-    name         = "neptune_query_timeout"
-    value        = "25"
+    name  = "neptune_query_timeout"
+    value = "25"
   }
 }
 ```
@@ -43,7 +43,7 @@ Parameter blocks support the following:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The Neptune parameter group name.
 * `arn` - The Neptune parameter group Amazon Resource Name (ARN).

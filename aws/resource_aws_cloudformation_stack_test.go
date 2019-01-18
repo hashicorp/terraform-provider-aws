@@ -16,7 +16,7 @@ func TestAccAWSCloudFormationStack_importBasic(t *testing.T) {
 
 	resourceName := "aws_cloudformation_stack.network"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudFormationDestroy,
@@ -37,7 +37,7 @@ func TestAccAWSCloudFormationStack_basic(t *testing.T) {
 	var stack cloudformation.Stack
 	stackName := fmt.Sprintf("tf-acc-test-basic-%s", acctest.RandString(10))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudFormationDestroy,
@@ -56,7 +56,7 @@ func TestAccAWSCloudFormationStack_yaml(t *testing.T) {
 	var stack cloudformation.Stack
 	stackName := fmt.Sprintf("tf-acc-test-yaml-%s", acctest.RandString(10))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudFormationDestroy,
@@ -75,7 +75,7 @@ func TestAccAWSCloudFormationStack_defaultParams(t *testing.T) {
 	var stack cloudformation.Stack
 	stackName := fmt.Sprintf("tf-acc-test-default-params-%s", acctest.RandString(10))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudFormationDestroy,
@@ -95,7 +95,7 @@ func TestAccAWSCloudFormationStack_allAttributes(t *testing.T) {
 	stackName := fmt.Sprintf("tf-acc-test-all-attributes-%s", acctest.RandString(10))
 
 	expectedPolicyBody := "{\"Statement\":[{\"Action\":\"Update:*\",\"Effect\":\"Deny\",\"Principal\":\"*\",\"Resource\":\"LogicalResourceId/StaticVPC\"},{\"Action\":\"Update:*\",\"Effect\":\"Allow\",\"Principal\":\"*\",\"Resource\":\"*\"}]}"
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudFormationDestroy,
@@ -145,7 +145,7 @@ func TestAccAWSCloudFormationStack_withParams(t *testing.T) {
 	var stack cloudformation.Stack
 	stackName := fmt.Sprintf("tf-acc-test-with-params-%s", acctest.RandString(10))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudFormationDestroy,
@@ -171,7 +171,7 @@ func TestAccAWSCloudFormationStack_withUrl_withParams(t *testing.T) {
 	var stack cloudformation.Stack
 	rName := fmt.Sprintf("tf-acc-test-with-url-and-params-%s", acctest.RandString(10))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudFormationDestroy,
@@ -196,7 +196,7 @@ func TestAccAWSCloudFormationStack_withUrl_withParams_withYaml(t *testing.T) {
 	var stack cloudformation.Stack
 	rName := fmt.Sprintf("tf-acc-test-with-params-and-yaml-%s", acctest.RandString(10))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudFormationDestroy,
@@ -216,7 +216,7 @@ func TestAccAWSCloudFormationStack_withUrl_withParams_noUpdate(t *testing.T) {
 	var stack cloudformation.Stack
 	rName := fmt.Sprintf("tf-acc-test-with-params-no-update-%s", acctest.RandString(10))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudFormationDestroy,
@@ -395,7 +395,7 @@ resource "aws_cloudformation_stack" "asg-demo" {
 }
 BODY
 
-  parameters {
+  parameters = {
     TopicName = "%[1]s"
   }
 }
@@ -460,7 +460,7 @@ resource "aws_cloudformation_stack" "full" {
   }
 }
 STACK
-  parameters {
+  parameters = {
     VpcCIDR = "10.0.0.0/16"
   }
 
@@ -471,7 +471,7 @@ POLICY
   notification_arns = ["${aws_sns_topic.cf-updates.arn}"]
   on_failure = "DELETE"
   timeout_in_minutes = 10
-  tags {
+  tags = {
     First = "Mickey"
     Second = "Mouse"
   }
@@ -518,7 +518,7 @@ func testAccAWSCloudFormationStackConfig_allAttributesWithBodies_modified(stackN
 var tpl_testAccAWSCloudFormationStackConfig_withParams = `
 resource "aws_cloudformation_stack" "with_params" {
   name = "%[1]s"
-  parameters {
+  parameters = {
     VpcCIDR = "%[2]s"
   }
   template_body = <<STACK
@@ -598,7 +598,7 @@ resource "aws_s3_bucket_object" "object" {
 
 resource "aws_cloudformation_stack" "with-url-and-params" {
   name = "%[1]s"
-  parameters {
+  parameters = {
     VpcCIDR = "%[3]s"
   }
   template_url = "https://${aws_s3_bucket.b.id}.s3-us-west-2.amazonaws.com/${aws_s3_bucket_object.object.key}"
@@ -644,7 +644,7 @@ resource "aws_s3_bucket_object" "object" {
 
 resource "aws_cloudformation_stack" "with-url-and-params-and-yaml" {
   name = "%[1]s"
-  parameters {
+  parameters = {
     VpcCIDR = "%[3]s"
   }
   template_url = "https://${aws_s3_bucket.b.id}.s3-us-west-2.amazonaws.com/${aws_s3_bucket_object.object.key}"

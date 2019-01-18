@@ -36,11 +36,12 @@ func resourceAwsNeptuneSubnetGroup() *schema.Resource {
 				ValidateFunc:  validateNeptuneSubnetGroupName,
 			},
 			"name_prefix": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validateNeptuneSubnetGroupNamePrefix,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name"},
+				ValidateFunc:  validateNeptuneSubnetGroupNamePrefix,
 			},
 
 			"description": {
@@ -108,9 +109,7 @@ func resourceAwsNeptuneSubnetGroupRead(d *schema.ResourceData, meta interface{})
 
 	var subnetGroups []*neptune.DBSubnetGroup
 	if err := conn.DescribeDBSubnetGroupsPages(&describeOpts, func(resp *neptune.DescribeDBSubnetGroupsOutput, lastPage bool) bool {
-		for _, v := range resp.DBSubnetGroups {
-			subnetGroups = append(subnetGroups, v)
-		}
+		subnetGroups = append(subnetGroups, resp.DBSubnetGroups...)
 		return !lastPage
 	}); err != nil {
 		if isAWSErr(err, neptune.ErrCodeDBSubnetGroupNotFoundFault, "") {
@@ -127,8 +126,7 @@ func resourceAwsNeptuneSubnetGroupRead(d *schema.ResourceData, meta interface{})
 		return nil
 	}
 
-	var subnetGroup *neptune.DBSubnetGroup
-	subnetGroup = subnetGroups[0]
+	var subnetGroup *neptune.DBSubnetGroup = subnetGroups[0]
 
 	if subnetGroup.DBSubnetGroupName == nil {
 		return fmt.Errorf("Unable to find Neptune Subnet Group: %#v", subnetGroups)

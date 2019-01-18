@@ -23,29 +23,29 @@ resource "aws_spot_fleet_request" "cheap_compute" {
   valid_until         = "2019-11-04T20:44:20Z"
 
   launch_specification {
-    instance_type             = "m4.10xlarge"
-    ami                       = "ami-1234"
-    spot_price                = "2.793"
-    placement_tenancy         = "dedicated"
-    iam_instance_profile_arn  = "${aws_iam_instance_profile.example.arn}"
+    instance_type            = "m4.10xlarge"
+    ami                      = "ami-1234"
+    spot_price               = "2.793"
+    placement_tenancy        = "dedicated"
+    iam_instance_profile_arn = "${aws_iam_instance_profile.example.arn}"
   }
 
   launch_specification {
-    instance_type             = "m4.4xlarge"
-    ami                       = "ami-5678"
-    key_name                  = "my-key"
-    spot_price                = "1.117"
-    iam_instance_profile_arn  = "${aws_iam_instance_profile.example.arn}"
-    availability_zone         = "us-west-1a"
-    subnet_id                 = "subnet-1234"
-    weighted_capacity         = 35
+    instance_type            = "m4.4xlarge"
+    ami                      = "ami-5678"
+    key_name                 = "my-key"
+    spot_price               = "1.117"
+    iam_instance_profile_arn = "${aws_iam_instance_profile.example.arn}"
+    availability_zone        = "us-west-1a"
+    subnet_id                = "subnet-1234"
+    weighted_capacity        = 35
 
     root_block_device {
       volume_size = "300"
       volume_type = "gp2"
     }
 
-    tags {
+  tags = {
       Name = "spot-fleet-example"
     }
   }
@@ -70,7 +70,7 @@ resource "aws_spot_fleet_request" "foo" {
   }
 
   launch_specification {
-    instance_type     = "m3.large"
+    instance_type     = "m5.large"
     ami               = "ami-d06a90b0"
     key_name          = "my-key"
     availability_zone = "us-west-2a"
@@ -106,10 +106,15 @@ across different markets and instance types.
   timeout of 10m is reached.
 * `target_capacity` - The number of units to request. You can choose to set the
   target capacity in terms of instances or a performance characteristic that is
-important to your application workload, such as vCPUs, memory, or I/O.
+  important to your application workload, such as vCPUs, memory, or I/O.
 * `allocation_strategy` - Indicates how to allocate the target capacity across
   the Spot pools specified by the Spot fleet request. The default is
-lowestPrice.
+  `lowestPrice`.
+* `instance_pools_to_use_count` - (Optional; Default: 1)
+  The number of Spot pools across which to allocate your target Spot capacity. 
+  Valid only when `allocation_strategy` is set to `lowestPrice`. Spot Fleet selects 
+  the cheapest Spot pools and evenly allocates your target Spot capacity across 
+  the number of Spot pools that you specify.
 * `excess_capacity_termination_policy` - Indicates whether running Spot
   instances should be terminated if the target capacity of the Spot fleet
   request is decreased below the current size of the Spot fleet.
@@ -123,8 +128,8 @@ lowestPrice.
 * `valid_until` - (Optional) The end date and time of the request, in UTC [RFC3339](https://tools.ietf.org/html/rfc3339#section-5.8) format(for example, YYYY-MM-DDTHH:MM:SSZ). At this point, no new Spot instance requests are placed or enabled to fulfill the request. Defaults to 24 hours.
 * `valid_from` - (Optional) The start date and time of the request, in UTC [RFC3339](https://tools.ietf.org/html/rfc3339#section-5.8) format(for example, YYYY-MM-DDTHH:MM:SSZ). The default is to start fulfilling the request immediately.
 * `load_balancers` (Optional) A list of elastic load balancer names to add to the Spot fleet.
-* `target_group_arns` (Optional) A list of `aws_alb_target_group` ARNs, for use with
-Application Load Balancing.
+* `target_group_arns` (Optional) A list of `aws_alb_target_group` ARNs, for use with Application Load Balancing.
+* `tags` - (Optional) A mapping of tags to assign to the resource.
 
 ### Timeouts
 

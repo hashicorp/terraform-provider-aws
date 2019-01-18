@@ -38,10 +38,11 @@ func resourceAwsKmsAlias() *schema.Resource {
 				ValidateFunc:  validateAwsKmsName,
 			},
 			"name_prefix": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validateAwsKmsName,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name"},
+				ValidateFunc:  validateAwsKmsName,
 			},
 			"target_key_id": {
 				Type:             schema.TypeString,
