@@ -24,6 +24,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/appsync"
 	"github.com/aws/aws-sdk-go/service/athena"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
+	"github.com/aws/aws-sdk-go/service/backup"
 	"github.com/aws/aws-sdk-go/service/batch"
 	"github.com/aws/aws-sdk-go/service/budgets"
 	"github.com/aws/aws-sdk-go/service/cloud9"
@@ -553,6 +554,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.appsyncconn = appsync.New(sess)
 	client.athenaconn = athena.New(sess)
 	client.autoscalingconn = autoscaling.New(awsAutoscalingSess)
+	client.backupconn = backup.New(sess)
 	client.batchconn = batch.New(sess)
 	client.budgetconn = budgets.New(sess)
 	client.cfconn = cloudformation.New(awsCfSess)
