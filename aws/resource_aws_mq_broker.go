@@ -346,11 +346,7 @@ func resourceAwsMqBrokerRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if err = getTagsMQ(conn, d, aws.StringValue(out.BrokerArn)); err != nil {
-		return err
-	}
-
-	return nil
+	return getTagsMQ(conn, d, aws.StringValue(out.BrokerArn))
 }
 
 func resourceAwsMqBrokerUpdate(d *schema.ResourceData, meta interface{}) error {

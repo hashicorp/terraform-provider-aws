@@ -135,11 +135,7 @@ func resourceAwsMqConfigurationRead(d *schema.ResourceData, meta interface{}) er
 
 	d.Set("data", string(b))
 
-	if err = getTagsMQ(conn, d, aws.StringValue(out.Arn)); err != nil {
-		return err
-	}
-
-	return nil
+	return getTagsMQ(conn, d, aws.StringValue(out.Arn))
 }
 
 func resourceAwsMqConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
