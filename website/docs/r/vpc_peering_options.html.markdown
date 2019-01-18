@@ -30,9 +30,9 @@ resource "aws_vpc" "bar" {
 }
 
 resource "aws_vpc_peering_connection" "foo" {
-  vpc_id        = "${aws_vpc.foo.id}"
-  peer_vpc_id   = "${aws_vpc.bar.id}"
-  auto_accept   = true
+  vpc_id      = "${aws_vpc.foo.id}"
+  peer_vpc_id = "${aws_vpc.bar.id}"
+  auto_accept = true
 }
 
 resource "aws_vpc_peering_connection_options" "foo" {
@@ -95,7 +95,7 @@ resource "aws_vpc_peering_connection" "peer" {
   peer_owner_id = "${data.aws_caller_identity.peer.account_id}"
   auto_accept   = false
 
-  tags {
+  tags = {
     Side = "Requester"
   }
 }
@@ -107,7 +107,7 @@ resource "aws_vpc_peering_connection_accepter" "peer" {
   vpc_peering_connection_id = "${aws_vpc_peering_connection.peer.id}"
   auto_accept               = true
 
-  tags {
+  tags = {
     Side = "Accepter"
   }
 }
@@ -154,8 +154,10 @@ must have support for the DNS hostnames enabled. This can be done using the [`en
 (vpc.html#enable_dns_hostnames) attribute in the [`aws_vpc`](vpc.html) resource. See [Using DNS with Your VPC]
 (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/vpc-dns.html) user guide for more information.
 
-* `allow_remote_vpc_dns_resolution` - (Optional) Allow a local VPC to resolve public DNS hostnames to private
-IP addresses when queried from instances in the peer VPC.
+* `allow_remote_vpc_dns_resolution` - (Optional) Allow a local VPC to resolve public DNS hostnames to
+private IP addresses when queried from instances in the peer VPC. This is
+[not supported](https://docs.aws.amazon.com/vpc/latest/peering/modify-peering-connections.html) for
+inter-region VPC peering.
 * `allow_classic_link_to_remote_vpc` - (Optional) Allow a local linked EC2-Classic instance to communicate
 with instances in a peer VPC. This enables an outbound communication from the local ClassicLink connection
 to the remote VPC.

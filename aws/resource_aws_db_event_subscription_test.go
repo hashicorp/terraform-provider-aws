@@ -18,7 +18,7 @@ func TestAccAWSDBEventSubscription_importBasic(t *testing.T) {
 	rInt := acctest.RandInt()
 	subscriptionName := fmt.Sprintf("tf-acc-test-rds-event-subs-%d", rInt)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBEventSubscriptionDestroy,
@@ -42,7 +42,7 @@ func TestAccAWSDBEventSubscription_basicUpdate(t *testing.T) {
 	rInt := acctest.RandInt()
 	rName := fmt.Sprintf("tf-acc-test-rds-event-subs-%d", rInt)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBEventSubscriptionDestroy,
@@ -78,7 +78,7 @@ func TestAccAWSDBEventSubscription_withPrefix(t *testing.T) {
 	rInt := acctest.RandInt()
 	startsWithPrefix := regexp.MustCompile("^tf-acc-test-rds-event-subs-")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBEventSubscriptionDestroy,
@@ -105,7 +105,7 @@ func TestAccAWSDBEventSubscription_withSourceIds(t *testing.T) {
 	var v rds.EventSubscription
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBEventSubscriptionDestroy,
@@ -146,7 +146,7 @@ func TestAccAWSDBEventSubscription_categoryUpdate(t *testing.T) {
 	var v rds.EventSubscription
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBEventSubscriptionDestroy,
@@ -265,7 +265,7 @@ resource "aws_db_event_subscription" "bar" {
     "deletion",
     "maintenance"
   ]
-  tags {
+  tags = {
     Name = "name"
   }
 }`, rInt, rInt)
@@ -288,7 +288,7 @@ resource "aws_db_event_subscription" "bar" {
     "deletion",
     "maintenance"
   ]
-  tags {
+  tags = {
     Name = "name"
   }
 }`, rInt)
@@ -308,7 +308,7 @@ resource "aws_db_event_subscription" "bar" {
   event_categories = [
     "configuration change"
   ]
-  tags {
+  tags = {
     Name = "new-name"
   }
 }`, rInt, rInt)
@@ -334,7 +334,7 @@ resource "aws_db_event_subscription" "bar" {
   event_categories = [
     "configuration change"
   ]
-  tags {
+  tags = {
     Name = "name"
   }
 }`, rInt, rInt, rInt)
@@ -366,7 +366,7 @@ func testAccAWSDBEventSubscriptionConfigUpdateSourceIds(rInt int) string {
 		event_categories = [
 			"configuration change"
 		]
-		tags {
+	tags = {
 			Name = "name"
 		}
 	}`, rInt, rInt, rInt, rInt)
@@ -385,7 +385,7 @@ resource "aws_db_event_subscription" "bar" {
   event_categories = [
     "availability",
   ]
-  tags {
+  tags = {
     Name = "name"
   }
 }`, rInt, rInt)

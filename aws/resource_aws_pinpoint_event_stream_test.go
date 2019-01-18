@@ -20,7 +20,7 @@ func TestAccAWSPinpointEventStream_basic(t *testing.T) {
 	var stream pinpoint.EventStream
 	resourceName := "aws_pinpoint_event_stream.test_event_stream"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
@@ -36,6 +36,12 @@ func TestAccAWSPinpointEventStream_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSPinpointEventStreamConfig_update,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSPinpointEventStreamExists(resourceName, &stream),
+				),
 			},
 		},
 	})
@@ -85,6 +91,63 @@ resource "aws_pinpoint_event_stream" "test_event_stream" {
 
 resource "aws_kinesis_stream" "test_stream" {
   name        = "terraform-kinesis-test"
+  shard_count = 1
+}
+
+resource "aws_iam_role" "test_role" {
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "pinpoint.us-east-1.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "test_role_policy" {
+  name   = "test_policy"
+  role   = "${aws_iam_role.test_role.id}"
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": {
+    "Action": [
+      "kinesis:PutRecords",
+      "kinesis:DescribeStream"
+    ],
+    "Effect": "Allow",
+    "Resource": [
+      "arn:aws:kinesis:us-east-1:*:*/*"
+    ]
+  }
+}
+EOF
+}
+`
+
+const testAccAWSPinpointEventStreamConfig_update = `
+provider "aws" {
+  region = "us-east-1"
+}
+
+resource "aws_pinpoint_app" "test_app" {}
+
+resource "aws_pinpoint_event_stream" "test_event_stream" {
+  application_id         = "${aws_pinpoint_app.test_app.application_id}"
+  destination_stream_arn = "${aws_kinesis_stream.test_stream_updated.arn}"
+  role_arn               = "${aws_iam_role.test_role.arn}"
+}
+
+resource "aws_kinesis_stream" "test_stream_updated" {
+  name        = "terraform-kinesis-test-updated"
   shard_count = 1
 }
 

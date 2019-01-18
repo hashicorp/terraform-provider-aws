@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
 	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/hashicorp/terraform/helper/customdiff"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/structure"
@@ -27,12 +28,37 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 			State: resourceAwsElasticSearchDomainImport,
 		},
 
+		CustomizeDiff: customdiff.Sequence(
+			customdiff.ForceNewIf("elasticsearch_version", func(d *schema.ResourceDiff, meta interface{}) bool {
+				newVersion := d.Get("elasticsearch_version").(string)
+				domainName := d.Get("domain_name").(string)
+
+				conn := meta.(*AWSClient).esconn
+				resp, err := conn.GetCompatibleElasticsearchVersions(&elasticsearch.GetCompatibleElasticsearchVersionsInput{
+					DomainName: aws.String(domainName),
+				})
+				if err != nil {
+					log.Printf("[ERROR] Failed to get compatible ElasticSearch versions %s", domainName)
+					return false
+				}
+				if len(resp.CompatibleElasticsearchVersions) != 1 {
+					return true
+				}
+				for _, targetVersion := range resp.CompatibleElasticsearchVersions[0].TargetVersions {
+					if aws.StringValue(targetVersion) == newVersion {
+						return false
+					}
+				}
+				return true
+			}),
+		),
+
 		Schema: map[string]*schema.Schema{
 			"access_policies": {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
-				ValidateFunc:     validateJsonString,
+				ValidateFunc:     validation.ValidateJsonString,
 				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
 			},
 			"advanced_options": {
@@ -73,6 +99,7 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"ebs_enabled": {
@@ -136,6 +163,7 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"dedicated_master_count": {
@@ -173,6 +201,7 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 			"snapshot_options": {
 				Type:     schema.TypeList,
 				Optional: true,
+				MaxItems: 1,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					if old == "1" && new == "0" {
 						return true
@@ -250,7 +279,6 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "1.5",
-				ForceNew: true,
 			},
 			"cognito_options": {
 				Type:             schema.TypeList,
@@ -352,9 +380,7 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 	if v, ok := d.GetOk("ebs_options"); ok {
 		options := v.([]interface{})
 
-		if len(options) > 1 {
-			return fmt.Errorf("Only a single ebs_options block is expected")
-		} else if len(options) == 1 {
+		if len(options) == 1 {
 			if options[0] == nil {
 				return fmt.Errorf("At least one field is expected inside ebs_options")
 			}
@@ -377,9 +403,7 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 	if v, ok := d.GetOk("cluster_config"); ok {
 		config := v.([]interface{})
 
-		if len(config) > 1 {
-			return fmt.Errorf("Only a single cluster_config block is expected")
-		} else if len(config) == 1 {
+		if len(config) == 1 {
 			if config[0] == nil {
 				return fmt.Errorf("At least one field is expected inside cluster_config")
 			}
@@ -398,9 +422,7 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 	if v, ok := d.GetOk("snapshot_options"); ok {
 		options := v.([]interface{})
 
-		if len(options) > 1 {
-			return fmt.Errorf("Only a single snapshot_options block is expected")
-		} else if len(options) == 1 {
+		if len(options) == 1 {
 			if options[0] == nil {
 				return fmt.Errorf("At least one field is expected inside snapshot_options")
 			}
@@ -668,9 +690,7 @@ func resourceAwsElasticSearchDomainUpdate(d *schema.ResourceData, meta interface
 	if d.HasChange("ebs_options") || d.HasChange("cluster_config") {
 		options := d.Get("ebs_options").([]interface{})
 
-		if len(options) > 1 {
-			return fmt.Errorf("Only a single ebs_options block is expected")
-		} else if len(options) == 1 {
+		if len(options) == 1 {
 			s := options[0].(map[string]interface{})
 			input.EBSOptions = expandESEBSOptions(s)
 		}
@@ -678,9 +698,7 @@ func resourceAwsElasticSearchDomainUpdate(d *schema.ResourceData, meta interface
 		if d.HasChange("cluster_config") {
 			config := d.Get("cluster_config").([]interface{})
 
-			if len(config) > 1 {
-				return fmt.Errorf("Only a single cluster_config block is expected")
-			} else if len(config) == 1 {
+			if len(config) == 1 {
 				m := config[0].(map[string]interface{})
 				input.ElasticsearchClusterConfig = expandESClusterConfig(m)
 			}
@@ -691,9 +709,7 @@ func resourceAwsElasticSearchDomainUpdate(d *schema.ResourceData, meta interface
 	if d.HasChange("snapshot_options") {
 		options := d.Get("snapshot_options").([]interface{})
 
-		if len(options) > 1 {
-			return fmt.Errorf("Only a single snapshot_options block is expected")
-		} else if len(options) == 1 {
+		if len(options) == 1 {
 			o := options[0].(map[string]interface{})
 
 			snapshotOptions := elasticsearch.SnapshotOptions{
@@ -740,7 +756,7 @@ func resourceAwsElasticSearchDomainUpdate(d *schema.ResourceData, meta interface
 			return resource.NonRetryableError(err)
 		}
 
-		if *out.DomainStatus.Processing == false {
+		if !*out.DomainStatus.Processing {
 			return nil
 		}
 
@@ -749,6 +765,40 @@ func resourceAwsElasticSearchDomainUpdate(d *schema.ResourceData, meta interface
 	})
 	if err != nil {
 		return err
+	}
+
+	if d.HasChange("elasticsearch_version") {
+		upgradeInput := elasticsearch.UpgradeElasticsearchDomainInput{
+			DomainName:    aws.String(d.Get("domain_name").(string)),
+			TargetVersion: aws.String(d.Get("elasticsearch_version").(string)),
+		}
+
+		_, err := conn.UpgradeElasticsearchDomain(&upgradeInput)
+		if err != nil {
+			return fmt.Errorf("Failed to upgrade elasticsearch domain: %s", err)
+		}
+
+		stateConf := &resource.StateChangeConf{
+			Pending: []string{elasticsearch.UpgradeStatusInProgress},
+			Target:  []string{elasticsearch.UpgradeStatusSucceeded},
+			Refresh: func() (interface{}, string, error) {
+				out, err := conn.GetUpgradeStatus(&elasticsearch.GetUpgradeStatusInput{
+					DomainName: aws.String(d.Get("domain_name").(string)),
+				})
+				if err != nil {
+					return nil, "", err
+				}
+
+				return out, aws.StringValue(out.StepStatus), nil
+			},
+			Timeout:    60 * time.Minute, // TODO: Make this configurable. Large ES domains may take a very long time to upgrade
+			MinTimeout: 10 * time.Second,
+			Delay:      30 * time.Second, // The upgrade status isn't instantly available for the current upgrade so will either be nil or reflect a previous upgrade
+		}
+		_, waitErr := stateConf.WaitForState()
+		if waitErr != nil {
+			return waitErr
+		}
 	}
 
 	d.Partial(false)

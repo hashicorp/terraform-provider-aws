@@ -90,7 +90,7 @@ func resourceAwsDxHostedPrivateVirtualInterfaceAccepterCreate(d *schema.Resource
 	}.String()
 	d.Set("arn", arn)
 
-	if err := dxHostedPrivateVirtualInterfaceAccepterWaitUntilAvailable(d, conn); err != nil {
+	if err := dxHostedPrivateVirtualInterfaceAccepterWaitUntilAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return err
 	}
 
@@ -120,11 +120,8 @@ func resourceAwsDxHostedPrivateVirtualInterfaceAccepterRead(d *schema.ResourceDa
 	d.Set("virtual_interface_id", vif.VirtualInterfaceId)
 	d.Set("vpn_gateway_id", vif.VirtualGatewayId)
 	d.Set("dx_gateway_id", vif.DirectConnectGatewayId)
-	if err := getTagsDX(conn, d, d.Get("arn").(string)); err != nil {
-		return err
-	}
-
-	return nil
+	err1 := getTagsDX(conn, d, d.Get("arn").(string))
+	return err1
 }
 
 func resourceAwsDxHostedPrivateVirtualInterfaceAccepterUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -153,10 +150,11 @@ func resourceAwsDxHostedPrivateVirtualInterfaceAccepterImport(d *schema.Resource
 	return []*schema.ResourceData{d}, nil
 }
 
-func dxHostedPrivateVirtualInterfaceAccepterWaitUntilAvailable(d *schema.ResourceData, conn *directconnect.DirectConnect) error {
+func dxHostedPrivateVirtualInterfaceAccepterWaitUntilAvailable(conn *directconnect.DirectConnect, vifId string, timeout time.Duration) error {
 	return dxVirtualInterfaceWaitUntilAvailable(
-		d,
 		conn,
+		vifId,
+		timeout,
 		[]string{
 			directconnect.VirtualInterfaceStateConfirming,
 			directconnect.VirtualInterfaceStatePending,

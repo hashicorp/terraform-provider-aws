@@ -67,7 +67,7 @@ func TestAccAWSConfigConfigurationAggregator_account(t *testing.T) {
 	rString := acctest.RandString(10)
 	expectedName := fmt.Sprintf("tf-%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSConfigConfigurationAggregatorDestroy,
@@ -80,7 +80,7 @@ func TestAccAWSConfigConfigurationAggregator_account(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_config_configuration_aggregator.example", "name", expectedName),
 					resource.TestCheckResourceAttr("aws_config_configuration_aggregator.example", "account_aggregation_source.#", "1"),
 					resource.TestCheckResourceAttr("aws_config_configuration_aggregator.example", "account_aggregation_source.0.account_ids.#", "1"),
-					resource.TestMatchResourceAttr("aws_config_configuration_aggregator.example", "account_aggregation_source.0.account_ids.0", regexp.MustCompile("^\\d{12}$")),
+					resource.TestMatchResourceAttr("aws_config_configuration_aggregator.example", "account_aggregation_source.0.account_ids.0", regexp.MustCompile(`^\d{12}$`)),
 					resource.TestCheckResourceAttr("aws_config_configuration_aggregator.example", "account_aggregation_source.0.regions.#", "1"),
 					resource.TestCheckResourceAttr("aws_config_configuration_aggregator.example", "account_aggregation_source.0.regions.0", "us-west-2"),
 				),
@@ -99,7 +99,7 @@ func TestAccAWSConfigConfigurationAggregator_organization(t *testing.T) {
 	rString := acctest.RandString(10)
 	expectedName := fmt.Sprintf("tf-%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSConfigConfigurationAggregatorDestroy,
@@ -111,7 +111,7 @@ func TestAccAWSConfigConfigurationAggregator_organization(t *testing.T) {
 					testAccCheckAWSConfigConfigurationAggregatorName("aws_config_configuration_aggregator.example", expectedName, &ca),
 					resource.TestCheckResourceAttr("aws_config_configuration_aggregator.example", "name", expectedName),
 					resource.TestCheckResourceAttr("aws_config_configuration_aggregator.example", "organization_aggregation_source.#", "1"),
-					resource.TestMatchResourceAttr("aws_config_configuration_aggregator.example", "organization_aggregation_source.0.role_arn", regexp.MustCompile("^arn:aws:iam::\\d+:role/")),
+					resource.TestMatchResourceAttr("aws_config_configuration_aggregator.example", "organization_aggregation_source.0.role_arn", regexp.MustCompile(`^arn:aws:iam::\d+:role/`)),
 					resource.TestCheckResourceAttr("aws_config_configuration_aggregator.example", "organization_aggregation_source.0.all_regions", "true"),
 				),
 			},
@@ -127,7 +127,7 @@ func TestAccAWSConfigConfigurationAggregator_organization(t *testing.T) {
 func TestAccAWSConfigConfigurationAggregator_switch(t *testing.T) {
 	rString := acctest.RandString(10)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSConfigConfigurationAggregatorDestroy,

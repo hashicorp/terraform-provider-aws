@@ -15,7 +15,7 @@ func TestAccAWSRedshiftSnapshotCopyGrant_Basic(t *testing.T) {
 
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRedshiftSnapshotCopyGrantDestroy,
@@ -42,11 +42,7 @@ func testAccCheckAWSRedshiftSnapshotCopyGrantDestroy(s *terraform.State) error {
 		}
 
 		err := waitForAwsRedshiftSnapshotCopyGrantToBeDeleted(conn, rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 
 	return nil
@@ -93,7 +89,7 @@ func testAccAWSRedshiftSnapshotCopyGrant_Basic(rName string) string {
 resource "aws_redshift_snapshot_copy_grant" "basic" {
   snapshot_copy_grant_name = "%s"
 
-  tags {
+  tags = {
     Name = "tf-redshift-snapshot-copy-grant-basic"
   }
 }

@@ -27,7 +27,7 @@ func TestAccAWSIAMPolicyAttachment_basic(t *testing.T) {
 	policyName := fmt.Sprintf("tf-acc-policy-pa-basic-%s", rString)
 	attachmentName := fmt.Sprintf("tf-acc-attachment-pa-basic-%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSPolicyAttachmentDestroy,
@@ -62,7 +62,7 @@ func TestAccAWSIAMPolicyAttachment_paginatedEntities(t *testing.T) {
 	policyName := fmt.Sprintf("tf-acc-policy-pa-pe-%s-", rString)
 	attachmentName := fmt.Sprintf("tf-acc-attachment-pa-pe-%s-", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSPolicyAttachmentDestroy,

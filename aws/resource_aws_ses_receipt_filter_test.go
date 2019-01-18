@@ -15,7 +15,7 @@ func TestAccAWSSESReceiptFilter_basic(t *testing.T) {
 	resourceName := "aws_ses_receipt_filter.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSESReceiptFilterDestroy,

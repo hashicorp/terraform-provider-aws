@@ -160,6 +160,14 @@ adopted by the Default Network ACL. In order to avoid a reoccurring plan, they
 will need to be reassigned, destroyed, or added to the `subnet_ids` attribute of
 the `aws_default_network_acl` entry.
 
+As an alternative to the above, you can also specify the following lifecycle configuration in your `aws_default_network_acl` resource:
+
+```hcl
+lifecycle {
+  ignore_changes = ["subnet_ids"]
+}
+```
+
 ### Removing `aws_default_network_acl` from your configuration
 
 Each AWS VPC comes with a Default Network ACL that cannot be deleted. The `aws_default_network_acl`
@@ -178,5 +186,6 @@ In addition to all arguments above, the following attributes are exported:
 * `ingress` - Set of ingress rules
 * `egress` - Set of egress rules
 * `subnet_ids` – IDs of associated Subnets
+* `owner_id` - The ID of the AWS account that owns the Default Network ACL
 
 [aws-network-acls]: http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_ACLs.html

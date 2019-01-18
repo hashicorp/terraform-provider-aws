@@ -39,9 +39,9 @@ resource "aws_s3_bucket_metric" "example-filtered" {
   filter {
     prefix = "documents/"
 
-    tags {
+  tags = {
       priority = "high"
-      class = "blue"
+      class    = "blue"
     }
   }
 }

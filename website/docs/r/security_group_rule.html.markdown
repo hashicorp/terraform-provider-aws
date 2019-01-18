@@ -18,6 +18,10 @@ defined in-line. At this time you cannot use a Security Group with in-line rules
 in conjunction with any Security Group Rule resources. Doing so will cause
 a conflict of rule settings and will overwrite rules.
 
+~> **NOTE:** Setting `protocol = "all"` or `protocol = -1` with `from_port` and `to_port` will result in the EC2 API creating a security group rule with all ports open. This API behavior cannot be controlled by Terraform and may generate warnings in the future.
+
+~> **NOTE:** Referencing Security Groups across VPC peering has certain restrictions. More information is available in the [VPC Peering User Guide](https://docs.aws.amazon.com/vpc/latest/peering/vpc-peering-security-groups.html).
+
 ## Example Usage
 
 Basic usage
@@ -123,11 +127,11 @@ $ terraform import aws_security_group_rule.egress sg-62726f6479_egress_tcp_8000_
 Import a rule applicable to all protocols and ports with a security group source:
 
 ```console
-$ example: sg-7472697374616e_ingress_all_0_65536_sg-6176657279
+$ terraform import aws_security_group_rule.ingress_rule sg-7472697374616e_ingress_all_0_65536_sg-6176657279
 ```
 
 Import a rule that has itself and an IPv6 CIDR block as sources:
 
 ```console
-$ example: sg-656c65616e6f72_ingress_tcp_80_80_self_2001:db8::/48
+$ terraform import aws_security_group_rule.rule_name sg-656c65616e6f72_ingress_tcp_80_80_self_2001:db8::/48
 ```

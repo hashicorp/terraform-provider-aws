@@ -16,7 +16,7 @@ import (
 func TestAccAWSIAMGroupPolicy_basic(t *testing.T) {
 	var groupPolicy1, groupPolicy2 iam.GetGroupPolicyOutput
 	rInt := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckIAMGroupPolicyDestroy,
@@ -46,10 +46,35 @@ func TestAccAWSIAMGroupPolicy_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSIAMGroupPolicy_disappears(t *testing.T) {
+	var out iam.GetGroupPolicyOutput
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckIAMGroupPolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIAMGroupPolicyConfig(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIAMGroupPolicyExists(
+						"aws_iam_group.group",
+						"aws_iam_group_policy.foo",
+						&out,
+					),
+					testAccCheckIAMGroupPolicyDisappears(&out),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSIAMGroupPolicy_namePrefix(t *testing.T) {
 	var groupPolicy1, groupPolicy2 iam.GetGroupPolicyOutput
 	rInt := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_iam_group_policy.test",
 		Providers:     testAccProviders,
@@ -83,7 +108,7 @@ func TestAccAWSIAMGroupPolicy_namePrefix(t *testing.T) {
 func TestAccAWSIAMGroupPolicy_generatedName(t *testing.T) {
 	var groupPolicy1, groupPolicy2 iam.GetGroupPolicyOutput
 	rInt := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_iam_group_policy.test",
 		Providers:     testAccProviders,
@@ -142,6 +167,20 @@ func testAccCheckIAMGroupPolicyDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccCheckIAMGroupPolicyDisappears(out *iam.GetGroupPolicyOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+
+		params := &iam.DeleteGroupPolicyInput{
+			PolicyName: out.PolicyName,
+			GroupName:  out.GroupName,
+		}
+
+		_, err := iamconn.DeleteGroupPolicy(params)
+		return err
+	}
 }
 
 func testAccCheckIAMGroupPolicyExists(

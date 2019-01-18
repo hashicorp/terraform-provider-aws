@@ -12,11 +12,9 @@ Provides an SSM Parameter data source.
 
 ## Example Usage
 
-To store a basic string parameter:
-
 ```hcl
 data "aws_ssm_parameter" "foo" {
-  name  = "foo"
+  name = "foo"
 }
 ```
 

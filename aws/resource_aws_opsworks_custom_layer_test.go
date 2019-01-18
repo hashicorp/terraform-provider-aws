@@ -21,7 +21,7 @@ func TestAccAWSOpsworksCustomLayer_importBasic(t *testing.T) {
 
 	resourceName := "aws_opsworks_custom_layer.tf-acc"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOpsworksCustomLayerDestroy,
@@ -42,7 +42,7 @@ func TestAccAWSOpsworksCustomLayer_importBasic(t *testing.T) {
 func TestAccAWSOpsworksCustomLayer_basic(t *testing.T) {
 	stackName := fmt.Sprintf("tf-%d", acctest.RandInt())
 	var opslayer opsworks.Layer
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOpsworksCustomLayerDestroy,

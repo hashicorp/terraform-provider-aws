@@ -16,7 +16,7 @@ func TestAccAWSRedshiftSubnetGroup_importBasic(t *testing.T) {
 	resourceName := "aws_redshift_subnet_group.foo"
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRedshiftSubnetGroupDestroy,
@@ -40,7 +40,7 @@ func TestAccAWSRedshiftSubnetGroup_basic(t *testing.T) {
 	var v redshift.ClusterSubnetGroup
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRedshiftSubnetGroupDestroy,
@@ -63,7 +63,7 @@ func TestAccAWSRedshiftSubnetGroup_updateDescription(t *testing.T) {
 	var v redshift.ClusterSubnetGroup
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRedshiftSubnetGroupDestroy,
@@ -93,7 +93,7 @@ func TestAccAWSRedshiftSubnetGroup_updateSubnetIds(t *testing.T) {
 	var v redshift.ClusterSubnetGroup
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRedshiftSubnetGroupDestroy,
@@ -123,7 +123,7 @@ func TestAccAWSRedshiftSubnetGroup_tags(t *testing.T) {
 	var v redshift.ClusterSubnetGroup
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRedshiftSubnetGroupDestroy,
@@ -254,7 +254,7 @@ func testAccRedshiftSubnetGroupConfig(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-redshift-subnet-group"
 	}
 }
@@ -263,7 +263,7 @@ resource "aws_subnet" "foo" {
 	cidr_block = "10.1.1.0/24"
 	availability_zone = "us-west-2a"
 	vpc_id = "${aws_vpc.foo.id}"
-	tags {
+	tags = {
 		Name = "tf-acc-redshift-subnet-group-foo"
 	}
 }
@@ -272,7 +272,7 @@ resource "aws_subnet" "bar" {
 	cidr_block = "10.1.2.0/24"
 	availability_zone = "us-west-2b"
 	vpc_id = "${aws_vpc.foo.id}"
-	tags {
+	tags = {
 		Name = "tf-acc-redshift-subnet-group-bar"
 	}
 }
@@ -289,7 +289,7 @@ func testAccRedshiftSubnetGroup_updateDescription(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-redshift-subnet-group-upd-description"
 	}
 }
@@ -298,7 +298,7 @@ resource "aws_subnet" "foo" {
 	cidr_block = "10.1.1.0/24"
 	availability_zone = "us-west-2a"
 	vpc_id = "${aws_vpc.foo.id}"
-	tags {
+	tags = {
 		Name = "tf-acc-redshift-subnet-group-upd-description-foo"
 	}
 }
@@ -307,7 +307,7 @@ resource "aws_subnet" "bar" {
 	cidr_block = "10.1.2.0/24"
 	availability_zone = "us-west-2b"
 	vpc_id = "${aws_vpc.foo.id}"
-	tags {
+	tags = {
 		Name = "tf-acc-redshift-subnet-group-upd-description-bar"
 	}
 }
@@ -324,7 +324,7 @@ func testAccRedshiftSubnetGroupConfigWithTags(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-redshift-subnet-group-with-tags"
 	}
 }
@@ -333,7 +333,7 @@ resource "aws_subnet" "foo" {
 	cidr_block = "10.1.1.0/24"
 	availability_zone = "us-west-2a"
 	vpc_id = "${aws_vpc.foo.id}"
-	tags {
+	tags = {
 		Name = "tf-acc-redshift-subnet-group-with-tags-foo"
 	}
 }
@@ -342,7 +342,7 @@ resource "aws_subnet" "bar" {
 	cidr_block = "10.1.2.0/24"
 	availability_zone = "us-west-2b"
 	vpc_id = "${aws_vpc.foo.id}"
-	tags {
+	tags = {
 		Name = "tf-acc-redshift-subnet-group-with-tags-bar"
 	}
 }
@@ -350,7 +350,7 @@ resource "aws_subnet" "bar" {
 resource "aws_redshift_subnet_group" "foo" {
 	name = "foo-%d"
 	subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
-	tags {
+	tags = {
 		Name = "tf-redshift-subnetgroup"
 	}
 }
@@ -361,7 +361,7 @@ func testAccRedshiftSubnetGroupConfigWithTagsUpdated(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-redshift-subnet-group-with-tags"
 	}
 }
@@ -370,7 +370,7 @@ resource "aws_subnet" "foo" {
 	cidr_block = "10.1.1.0/24"
 	availability_zone = "us-west-2a"
 	vpc_id = "${aws_vpc.foo.id}"
-	tags {
+	tags = {
 		Name = "tf-acc-redshift-subnet-group-with-tags-foo"
 	}
 }
@@ -379,7 +379,7 @@ resource "aws_subnet" "bar" {
 	cidr_block = "10.1.2.0/24"
 	availability_zone = "us-west-2b"
 	vpc_id = "${aws_vpc.foo.id}"
-	tags {
+	tags = {
 		Name = "tf-acc-redshift-subnet-group-with-tags-bar"
 	}
 }
@@ -387,7 +387,7 @@ resource "aws_subnet" "bar" {
 resource "aws_redshift_subnet_group" "foo" {
 	name = "foo-%d"
 	subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
-	tags {
+	tags = {
 		Name = "tf-redshift-subnetgroup"
 		environment = "production"
 		foo = "bar"
@@ -400,7 +400,7 @@ func testAccRedshiftSubnetGroupConfig_updateSubnetIds(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-redshift-subnet-group-upd-subnet-ids"
 	}
 }
@@ -409,7 +409,7 @@ resource "aws_subnet" "foo" {
 	cidr_block = "10.1.1.0/24"
 	availability_zone = "us-west-2a"
 	vpc_id = "${aws_vpc.foo.id}"
-	tags {
+	tags = {
 		Name = "tf-acc-redshift-subnet-group-upd-subnet-ids-foo"
 	}
 }
@@ -418,7 +418,7 @@ resource "aws_subnet" "bar" {
 	cidr_block = "10.1.2.0/24"
 	availability_zone = "us-west-2b"
 	vpc_id = "${aws_vpc.foo.id}"
-	tags {
+	tags = {
 		Name = "tf-acc-redshift-subnet-group-upd-subnet-ids-bar"
 	}
 }
@@ -427,7 +427,7 @@ resource "aws_subnet" "foobar" {
 	cidr_block = "10.1.3.0/24"
 	availability_zone = "us-west-2c"
 	vpc_id = "${aws_vpc.foo.id}"
-	tags {
+	tags = {
 		Name = "tf-acc-redshift-subnet-group-upd-subnet-ids-foobar"
 	}
 }

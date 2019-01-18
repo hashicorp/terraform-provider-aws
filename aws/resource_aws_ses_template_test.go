@@ -17,7 +17,7 @@ import (
 func TestAccAWSSesTemplate_Basic(t *testing.T) {
 	name := acctest.RandString(5)
 	var template ses.Template
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSesTemplateDestroy,
@@ -40,7 +40,7 @@ func TestAccAWSSesTemplate_Update(t *testing.T) {
 	t.Skipf("Skip due to SES.UpdateTemplate eventual consistency issues")
 	name := acctest.RandString(5)
 	var template ses.Template
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSesTemplateDestroy,
@@ -84,7 +84,7 @@ func TestAccAWSSesTemplate_Import(t *testing.T) {
 
 	name := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSesTemplateDestroy,
@@ -119,11 +119,7 @@ func testAccCheckSesTemplate(pr string, template *ses.Template) resource.TestChe
 		}
 
 		_, err := conn.GetTemplate(&input)
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

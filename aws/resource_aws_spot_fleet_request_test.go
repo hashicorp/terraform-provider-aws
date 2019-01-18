@@ -61,7 +61,7 @@ func TestAccAWSSpotFleetRequest_associatePublicIpAddress(t *testing.T) {
 	rName := acctest.RandString(10)
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
@@ -88,7 +88,7 @@ func TestAccAWSSpotFleetRequest_instanceInterruptionBehavior(t *testing.T) {
 	rName := acctest.RandString(10)
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
@@ -113,7 +113,7 @@ func TestAccAWSSpotFleetRequest_fleetType(t *testing.T) {
 	rName := acctest.RandString(10)
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
@@ -138,7 +138,7 @@ func TestAccAWSSpotFleetRequest_iamInstanceProfileArn(t *testing.T) {
 	rName := acctest.RandString(10)
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
@@ -162,7 +162,7 @@ func TestAccAWSSpotFleetRequest_changePriceForcesNewRequest(t *testing.T) {
 	rName := acctest.RandString(10)
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
@@ -203,7 +203,7 @@ func TestAccAWSSpotFleetRequest_lowestPriceAzOrSubnetInRegion(t *testing.T) {
 	rName := acctest.RandString(10)
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
@@ -228,7 +228,7 @@ func TestAccAWSSpotFleetRequest_lowestPriceAzInGivenList(t *testing.T) {
 	rName := acctest.RandString(10)
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
@@ -257,7 +257,7 @@ func TestAccAWSSpotFleetRequest_lowestPriceSubnetInGivenList(t *testing.T) {
 	rName := acctest.RandString(10)
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
@@ -282,7 +282,7 @@ func TestAccAWSSpotFleetRequest_multipleInstanceTypesInSameAz(t *testing.T) {
 	rName := acctest.RandString(10)
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
@@ -315,7 +315,7 @@ func TestAccAWSSpotFleetRequest_multipleInstanceTypesInSameSubnet(t *testing.T) 
 	rName := acctest.RandString(10)
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
@@ -340,7 +340,7 @@ func TestAccAWSSpotFleetRequest_overriddingSpotPrice(t *testing.T) {
 	rName := acctest.RandString(10)
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
@@ -375,7 +375,7 @@ func TestAccAWSSpotFleetRequest_withoutSpotPrice(t *testing.T) {
 	rName := acctest.RandString(10)
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
@@ -400,7 +400,7 @@ func TestAccAWSSpotFleetRequest_diversifiedAllocation(t *testing.T) {
 	rName := acctest.RandString(10)
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
@@ -427,7 +427,7 @@ func TestAccAWSSpotFleetRequest_multipleInstancePools(t *testing.T) {
 	rName := acctest.RandString(10)
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
@@ -470,7 +470,7 @@ func TestAccAWSSpotFleetRequest_withWeightedCapacity(t *testing.T) {
 		}
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
@@ -504,7 +504,7 @@ func TestAccAWSSpotFleetRequest_withEBSDisk(t *testing.T) {
 	rName := acctest.RandString(10)
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
@@ -527,7 +527,7 @@ func TestAccAWSSpotFleetRequest_withTags(t *testing.T) {
 	rName := acctest.RandString(10)
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
@@ -550,7 +550,7 @@ func TestAccAWSSpotFleetRequest_placementTenancy(t *testing.T) {
 	rName := acctest.RandString(10)
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
@@ -684,7 +684,7 @@ func TestAccAWSSpotFleetRequest_WithELBs(t *testing.T) {
 	rName := acctest.RandString(10)
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
@@ -720,7 +720,7 @@ func testAccCheckAWSSpotFleetRequest_IamInstanceProfileArn(
 			return fmt.Errorf("Expected IamInstanceProfile to be set, got nil")
 		}
 		//Validate the string whether it is ARN
-		re := regexp.MustCompile("arn:aws:iam::\\d{12}:instance-profile/?[a-zA-Z0-9+=,.@-_].*")
+		re := regexp.MustCompile(`arn:aws:iam::\d{12}:instance-profile/?[a-zA-Z0-9+=,.@-_].*`)
 		if !re.MatchString(*profile.Arn) {
 			return fmt.Errorf("Expected IamInstanceProfile input as ARN, got %s", *profile.Arn)
 		}
@@ -734,7 +734,7 @@ func TestAccAWSSpotFleetRequest_WithTargetGroups(t *testing.T) {
 	rName := acctest.RandString(10)
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
@@ -1290,7 +1290,7 @@ EOF
 
 resource "aws_vpc" "foo" {
     cidr_block = "10.1.0.0/16"
-    tags {
+  tags = {
         Name = "terraform-testacc-spot-fleet-request-w-subnet"
     }
 }
@@ -1299,7 +1299,7 @@ resource "aws_subnet" "foo" {
     cidr_block = "10.1.1.0/24"
     vpc_id = "${aws_vpc.foo.id}"
     availability_zone = "us-west-2a"
-    tags {
+  tags = {
         Name = "tf-acc-spot-fleet-request-w-subnet-foo"
     }
 }
@@ -1308,7 +1308,7 @@ resource "aws_subnet" "bar" {
     cidr_block = "10.1.20.0/24"
     vpc_id = "${aws_vpc.foo.id}"
     availability_zone = "us-west-2b"
-    tags {
+  tags = {
         Name = "tf-acc-spot-fleet-request-w-subnet-bar"
     }
 }
@@ -1403,7 +1403,7 @@ resource "aws_subnet" "foo" {
     cidr_block = "10.1.1.0/24"
     vpc_id = "${aws_vpc.foo.id}"
     availability_zone = "us-west-2a"
-    tags {
+  tags = {
         Name = "tf-acc-spot-fleet-request-with-elb-foo"
     }
 }
@@ -1412,7 +1412,7 @@ resource "aws_subnet" "bar" {
     cidr_block = "10.1.20.0/24"
     vpc_id = "${aws_vpc.foo.id}"
     availability_zone = "us-west-2b"
-    tags {
+  tags = {
         Name = "tf-acc-spot-fleet-request-with-elb-bar"
     }
 }
@@ -1515,7 +1515,7 @@ resource "aws_subnet" "foo" {
     cidr_block = "10.1.1.0/24"
     vpc_id = "${aws_vpc.foo.id}"
     availability_zone = "us-west-2a"
-    tags {
+  tags = {
         Name = "tf-acc-spot-fleet-request-with-target-groups-foo"
     }
 }
@@ -1524,7 +1524,7 @@ resource "aws_subnet" "bar" {
     cidr_block = "10.1.20.0/24"
     vpc_id = "${aws_vpc.foo.id}"
     availability_zone = "us-west-2b"
-    tags {
+  tags = {
         Name = "tf-acc-spot-fleet-request-with-target-groups-bar"
     }
 }
@@ -1714,7 +1714,7 @@ EOF
 
 resource "aws_vpc" "foo" {
     cidr_block = "10.1.0.0/16"
-    tags {
+  tags = {
         Name = "terraform-testacc-spot-fleet-request-multi-instance-types"
     }
 }
@@ -1723,7 +1723,7 @@ resource "aws_subnet" "foo" {
     cidr_block = "10.1.1.0/24"
     vpc_id = "${aws_vpc.foo.id}"
     availability_zone = "us-west-2a"
-    tags {
+  tags = {
         Name = "tf-acc-spot-fleet-request-multi-instance-types"
     }
 }
@@ -2322,7 +2322,7 @@ resource "aws_spot_fleet_request" "foo" {
     launch_specification {
         instance_type = "m1.small"
         ami = "ami-516b9131"
-        tags {
+  tags = {
             First = "TfAccTest"
             Second = "Terraform"
         }

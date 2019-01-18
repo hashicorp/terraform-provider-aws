@@ -15,7 +15,7 @@ import (
 
 func TestAccAWSVpnConnectionRoute_basic(t *testing.T) {
 	rBgpAsn := acctest.RandIntRange(64512, 65534)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccAwsVpnConnectionRouteDestroy,
@@ -137,18 +137,14 @@ func testAccAwsVpnConnectionRoute(
 		_, err := ec2conn.DescribeVpnConnections(&ec2.DescribeVpnConnectionsInput{
 			Filters: routeFilters,
 		})
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
 func testAccAwsVpnConnectionRouteConfig(rBgpAsn int) string {
 	return fmt.Sprintf(`
 	resource "aws_vpn_gateway" "vpn_gateway" {
-		tags {
+	tags = {
 			Name = "vpn_gateway"
 		}
 	}
@@ -177,7 +173,7 @@ func testAccAwsVpnConnectionRouteConfig(rBgpAsn int) string {
 func testAccAwsVpnConnectionRouteConfigUpdate(rBgpAsn int) string {
 	return fmt.Sprintf(`
 	resource "aws_vpn_gateway" "vpn_gateway" {
-		tags {
+	tags = {
 			Name = "vpn_gateway"
 		}
 	}

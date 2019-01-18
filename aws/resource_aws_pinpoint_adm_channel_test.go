@@ -52,7 +52,7 @@ func TestAccAWSPinpointADMChannel_basic(t *testing.T) {
 
 	config := testAccAwsPinpointADMChannelConfigurationFromEnv(t)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
@@ -62,6 +62,7 @@ func TestAccAWSPinpointADMChannel_basic(t *testing.T) {
 				Config: testAccAWSPinpointADMChannelConfig_basic(config),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSPinpointADMChannelExists(resourceName, &channel),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
 				),
 			},
 			{
@@ -69,6 +70,13 @@ func TestAccAWSPinpointADMChannel_basic(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"client_id", "client_secret"},
+			},
+			{
+				Config: testAccAWSPinpointADMChannelConfig_basic(config),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSPinpointADMChannelExists(resourceName, &channel),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+				),
 			},
 		},
 	})
@@ -116,7 +124,7 @@ resource "aws_pinpoint_adm_channel" "channel" {
 
     client_id     = "%s"
     client_secret = "%s"
-    enabled       = true
+    enabled       = false
 }
 `, conf.ClientID, conf.ClientSecret)
 }

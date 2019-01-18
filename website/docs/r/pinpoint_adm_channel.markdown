@@ -20,11 +20,10 @@ Provides a Pinpoint ADM (Amazon Device Messaging) Channel resource.
 resource "aws_pinpoint_app" "app" {}
 
 resource "aws_pinpoint_adm_channel" "channel" {
-    application_id = "${aws_pinpoint_app.app.application_id}"
-    client_id      = ""
-    client_secret  = ""
-    enabled        = true
-    
+  application_id = "${aws_pinpoint_app.app.application_id}"
+  client_id      = ""
+  client_secret  = ""
+  enabled        = true
 }
 ```
 
@@ -36,7 +35,7 @@ The following arguments are supported:
 * `application_id` - (Required) The application ID.
 * `client_id` - (Required) Client ID (part of OAuth Credentials) obtained via Amazon Developer Account.
 * `client_secret` - (Required) Client Secret (part of OAuth Credentials) obtained via Amazon Developer Account.
-* `enabled` - (Optional) Specifies whether to enable the channel. Defaults to `false`.
+* `enabled` - (Optional) Specifies whether to enable the channel. Defaults to `true`.
 
 ## Import
 

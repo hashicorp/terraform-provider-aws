@@ -14,7 +14,7 @@ import (
 func TestAccAWSDxConnection_importBasic(t *testing.T) {
 	resourceName := "aws_dx_connection.hoge"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDxConnectionDestroy,
@@ -35,7 +35,7 @@ func TestAccAWSDxConnection_importBasic(t *testing.T) {
 func TestAccAWSDxConnection_basic(t *testing.T) {
 	connectionName := fmt.Sprintf("tf-dx-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDxConnectionDestroy,
@@ -57,7 +57,7 @@ func TestAccAWSDxConnection_basic(t *testing.T) {
 func TestAccAWSDxConnection_tags(t *testing.T) {
 	connectionName := fmt.Sprintf("tf-dx-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDxConnectionDestroy,
@@ -137,7 +137,7 @@ resource "aws_dx_connection" "hoge" {
   bandwidth = "1Gbps"
   location = "EqSe2"
 
-  tags {
+  tags = {
     Environment = "production"
     Usage = "original"
   }
@@ -152,7 +152,7 @@ resource "aws_dx_connection" "hoge" {
   bandwidth = "1Gbps"
   location = "EqSe2"
 
-  tags {
+  tags = {
     Usage = "changed"
   }
 }

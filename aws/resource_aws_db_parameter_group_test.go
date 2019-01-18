@@ -19,7 +19,7 @@ func TestAccAWSDBParameterGroup_importBasic(t *testing.T) {
 	resourceName := "aws_db_parameter_group.bar"
 	groupName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
@@ -42,7 +42,7 @@ func TestAccAWSDBParameterGroup_limit(t *testing.T) {
 
 	groupName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
@@ -242,7 +242,7 @@ func TestAccAWSDBParameterGroup_basic(t *testing.T) {
 
 	groupName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
@@ -320,7 +320,7 @@ func TestAccAWSDBParameterGroup_basic(t *testing.T) {
 func TestAccAWSDBParameterGroup_Disappears(t *testing.T) {
 	var v rds.DBParameterGroup
 	groupName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
@@ -340,7 +340,7 @@ func TestAccAWSDBParameterGroup_Disappears(t *testing.T) {
 func TestAccAWSDBParameterGroup_namePrefix(t *testing.T) {
 	var v rds.DBParameterGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
@@ -360,7 +360,7 @@ func TestAccAWSDBParameterGroup_namePrefix(t *testing.T) {
 func TestAccAWSDBParameterGroup_generatedName(t *testing.T) {
 	var v rds.DBParameterGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
@@ -380,7 +380,7 @@ func TestAccAWSDBParameterGroup_withApplyMethod(t *testing.T) {
 
 	groupName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
@@ -418,7 +418,7 @@ func TestAccAWSDBParameterGroup_Only(t *testing.T) {
 	var v rds.DBParameterGroup
 
 	groupName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
@@ -442,7 +442,7 @@ func TestAccAWSDBParameterGroup_MatchDefault(t *testing.T) {
 	var v rds.DBParameterGroup
 
 	groupName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
@@ -588,7 +588,7 @@ resource "aws_db_parameter_group" "bar" {
 	  name = "character_set_results"
 	  value = "utf8"
 	}
-	tags {
+	tags = {
 		foo = "bar"
 	}
 }`, n)
@@ -608,7 +608,7 @@ resource "aws_db_parameter_group" "bar" {
 	  value = "utf8"
 	  apply_method = "pending-reboot"
 	}
-	tags {
+	tags = {
 		foo = "bar"
 	}
 }`, n)
@@ -640,7 +640,7 @@ resource "aws_db_parameter_group" "bar" {
 	  name = "collation_connection"
 	  value = "utf8_unicode_ci"
 	}
-	tags {
+	tags = {
 		foo = "bar"
 		baz = "foo"
 	}
