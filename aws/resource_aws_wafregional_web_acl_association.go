@@ -74,21 +74,31 @@ func resourceAwsWafRegionalWebAclAssociationRead(d *schema.ResourceData, meta in
 
 	webAclId, resourceArn := resourceAwsWafRegionalWebAclAssociationParseId(d.Id())
 
-	// List all resources for Web ACL and see if we get a match
-	params := &wafregional.ListResourcesForWebACLInput{
-		WebACLId: aws.String(webAclId),
-	}
-
-	resp, err := conn.ListResourcesForWebACL(params)
-	if err != nil {
-		return err
-	}
-
-	// Find match
+	/*
+		AWS does not return all resource types on ListResourcesForWebACL, default
+		behavior is to only return ALB resources. Make call for each possible
+		resource type
+	*/
 	found := false
-	for _, listResourceArn := range resp.ResourceArns {
-		if resourceArn == *listResourceArn {
-			found = true
+	RESOURCE_TYPES := []string{"APPLICATION_LOAD_BALANCER", "API_GATEWAY"}
+	for _, resource := range RESOURCE_TYPES {
+		// List all resources for Web ACL of resource type to see if theres a match
+		params := &wafregional.ListResourcesForWebACLInput{
+			WebACLId:     aws.String(webAclId),
+			ResourceType: aws.String(resource),
+		}
+		resp, err := conn.ListResourcesForWebACL(params)
+		if err != nil {
+			return err
+		}
+
+		for _, listResourceArn := range resp.ResourceArns {
+			if resourceArn == *listResourceArn {
+				found = true
+				break
+			}
+		}
+		if found {
 			break
 		}
 	}
