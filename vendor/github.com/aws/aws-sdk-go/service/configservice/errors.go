@@ -102,8 +102,12 @@ const (
 	// ErrCodeLimitExceededException for service response error code
 	// "LimitExceededException".
 	//
-	// This exception is thrown if an evaluation is in progress or if you call the
-	// StartConfigRulesEvaluation API more than once per minute.
+	// For StartConfigRulesEvaluation API, this exception is thrown if an evaluation
+	// is in progress or if you call the StartConfigRulesEvaluation API more than
+	// once per minute.
+	//
+	// For PutConfigurationAggregator API, this exception is thrown if the number
+	// of accounts and aggregators exceeds the limit.
 	ErrCodeLimitExceededException = "LimitExceededException"
 
 	// ErrCodeMaxNumberOfConfigRulesExceededException for service response error code
@@ -125,6 +129,13 @@ const (
 	//
 	// You have reached the limit of the number of delivery channels you can create.
 	ErrCodeMaxNumberOfDeliveryChannelsExceededException = "MaxNumberOfDeliveryChannelsExceededException"
+
+	// ErrCodeMaxNumberOfRetentionConfigurationsExceededException for service response error code
+	// "MaxNumberOfRetentionConfigurationsExceededException".
+	//
+	// Failed to add the retention configuration because a retention configuration
+	// with that name already exists.
+	ErrCodeMaxNumberOfRetentionConfigurationsExceededException = "MaxNumberOfRetentionConfigurationsExceededException"
 
 	// ErrCodeNoAvailableConfigurationRecorderException for service response error code
 	// "NoAvailableConfigurationRecorderException".
@@ -182,6 +193,12 @@ const (
 	// You have specified a delivery channel that does not exist.
 	ErrCodeNoSuchDeliveryChannelException = "NoSuchDeliveryChannelException"
 
+	// ErrCodeNoSuchRetentionConfigurationException for service response error code
+	// "NoSuchRetentionConfigurationException".
+	//
+	// You have specified a retention configuration that does not exist.
+	ErrCodeNoSuchRetentionConfigurationException = "NoSuchRetentionConfigurationException"
+
 	// ErrCodeOrganizationAccessDeniedException for service response error code
 	// "OrganizationAccessDeniedException".
 	//
@@ -194,6 +211,12 @@ const (
 	// The configuration aggregator cannot be created because organization does
 	// not have all features enabled.
 	ErrCodeOrganizationAllFeaturesNotEnabledException = "OrganizationAllFeaturesNotEnabledException"
+
+	// ErrCodeOversizedConfigurationItemException for service response error code
+	// "OversizedConfigurationItemException".
+	//
+	// The configuration item size is outside the allowable range.
+	ErrCodeOversizedConfigurationItemException = "OversizedConfigurationItemException"
 
 	// ErrCodeResourceInUseException for service response error code
 	// "ResourceInUseException".

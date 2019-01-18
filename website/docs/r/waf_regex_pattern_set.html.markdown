@@ -14,7 +14,7 @@ Provides a WAF Regex Pattern Set Resource
 
 ```hcl
 resource "aws_waf_regex_pattern_set" "example" {
-  name = "tf_waf_regex_pattern_set"
+  name                  = "tf_waf_regex_pattern_set"
   regex_pattern_strings = ["one", "two"]
 }
 ```
@@ -28,6 +28,6 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the WAF Regex Pattern Set.

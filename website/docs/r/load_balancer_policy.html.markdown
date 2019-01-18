@@ -6,7 +6,7 @@ description: |-
   Provides a load balancer policy, which can be attached to an ELB listener or backend server.
 ---
 
-# aws_elb_load_balancer_policy
+# aws_load_balancer_policy
 
 Provides a load balancer policy, which can be attached to an ELB listener or backend server.
 
@@ -25,7 +25,7 @@ resource "aws_elb" "wu-tang" {
     ssl_certificate_id = "arn:aws:iam::000000000000:server-certificate/wu-tang.net"
   }
 
-  tags {
+  tags = {
     Name = "wu-tang"
   }
 }
@@ -106,7 +106,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the policy.
 * `policy_name` - The name of the stickiness policy.

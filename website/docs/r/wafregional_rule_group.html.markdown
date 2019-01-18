@@ -19,14 +19,16 @@ resource "aws_wafregional_rule" "example" {
 }
 
 resource "aws_wafregional_rule_group" "example" {
-  name = "example"
+  name        = "example"
   metric_name = "example"
+
   activated_rule {
     action {
       type = "COUNT"
     }
+
     priority = 50
-    rule_id = "${aws_wafregional_rule.example.id}"
+    rule_id  = "${aws_wafregional_rule.example.id}"
   }
 }
 ```
@@ -53,6 +55,6 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the WAF Regional Rule Group.

@@ -38,6 +38,10 @@ func testSweepBatchComputeEnvironments(region string) error {
 
 	out, err := conn.DescribeComputeEnvironments(&batch.DescribeComputeEnvironmentsInput{})
 	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping Batch Compute Environment sweep for %s: %s", region, err)
+			return nil
+		}
 		return fmt.Errorf("Error retrieving Batch Compute Environments: %s", err)
 	}
 	for _, computeEnvironment := range out.ComputeEnvironments {
@@ -74,7 +78,7 @@ func testSweepBatchComputeEnvironments(region string) error {
 func TestAccAWSBatchComputeEnvironment_createEc2(t *testing.T) {
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
@@ -92,7 +96,7 @@ func TestAccAWSBatchComputeEnvironment_createEc2(t *testing.T) {
 func TestAccAWSBatchComputeEnvironment_createEc2WithTags(t *testing.T) {
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
@@ -112,7 +116,7 @@ func TestAccAWSBatchComputeEnvironment_createEc2WithTags(t *testing.T) {
 func TestAccAWSBatchComputeEnvironment_createSpot(t *testing.T) {
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
@@ -130,7 +134,7 @@ func TestAccAWSBatchComputeEnvironment_createSpot(t *testing.T) {
 func TestAccAWSBatchComputeEnvironment_createUnmanaged(t *testing.T) {
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
@@ -148,7 +152,7 @@ func TestAccAWSBatchComputeEnvironment_createUnmanaged(t *testing.T) {
 func TestAccAWSBatchComputeEnvironment_updateMaxvCpus(t *testing.T) {
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
@@ -174,7 +178,7 @@ func TestAccAWSBatchComputeEnvironment_updateMaxvCpus(t *testing.T) {
 func TestAccAWSBatchComputeEnvironment_updateInstanceType(t *testing.T) {
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
@@ -202,7 +206,7 @@ func TestAccAWSBatchComputeEnvironment_updateComputeEnvironmentName(t *testing.T
 	expectedName := fmt.Sprintf("tf_acc_test_%d", rInt)
 	expectedUpdatedName := fmt.Sprintf("tf_acc_test_updated_%d", rInt)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
@@ -228,7 +232,7 @@ func TestAccAWSBatchComputeEnvironment_updateComputeEnvironmentName(t *testing.T
 func TestAccAWSBatchComputeEnvironment_createEc2WithoutComputeResources(t *testing.T) {
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
@@ -244,7 +248,7 @@ func TestAccAWSBatchComputeEnvironment_createEc2WithoutComputeResources(t *testi
 func TestAccAWSBatchComputeEnvironment_createUnmanagedWithComputeResources(t *testing.T) {
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
@@ -263,7 +267,7 @@ func TestAccAWSBatchComputeEnvironment_createUnmanagedWithComputeResources(t *te
 func TestAccAWSBatchComputeEnvironment_createSpotWithoutBidPercentage(t *testing.T) {
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
@@ -279,7 +283,7 @@ func TestAccAWSBatchComputeEnvironment_createSpotWithoutBidPercentage(t *testing
 func TestAccAWSBatchComputeEnvironment_updateState(t *testing.T) {
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
@@ -317,7 +321,7 @@ func testAccCheckBatchComputeEnvironmentDestroy(s *terraform.State) error {
 		})
 
 		if err != nil {
-			return fmt.Errorf("Error occured when get compute environment information.")
+			return fmt.Errorf("Error occurred when get compute environment information.")
 		}
 		if len(result.ComputeEnvironments) == 1 {
 			return fmt.Errorf("Compute environment still exists.")
@@ -344,7 +348,7 @@ func testAccCheckAwsBatchComputeEnvironmentExists() resource.TestCheckFunc {
 			})
 
 			if err != nil {
-				return fmt.Errorf("Error occured when get compute environment information.")
+				return fmt.Errorf("Error occurred when get compute environment information.")
 			}
 			if len(result.ComputeEnvironments) == 0 {
 				return fmt.Errorf("Compute environment doesn't exists.")
@@ -450,7 +454,7 @@ resource "aws_security_group" "test_acc" {
 
 resource "aws_vpc" "test_acc" {
   cidr_block = "10.1.0.0/16"
-  tags {
+  tags = {
     Name = "terraform-testacc-batch-compute-environment"
   }
 }
@@ -458,7 +462,7 @@ resource "aws_vpc" "test_acc" {
 resource "aws_subnet" "test_acc" {
   vpc_id = "${aws_vpc.test_acc.id}"
   cidr_block = "10.1.1.0/24"
-  tags {
+  tags = {
     Name = "tf-acc-batch-compute-environment"
   }
 }
@@ -509,7 +513,7 @@ resource "aws_batch_compute_environment" "ec2" {
       "${aws_subnet.test_acc.id}"
     ]
     type = "EC2"
-    tags {
+  tags = {
       Key1 = "Value1"
     }
   }

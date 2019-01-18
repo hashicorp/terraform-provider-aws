@@ -15,10 +15,10 @@ import (
 )
 
 func TestAccAWSCognitoIdentityPoolRolesAttachment_basic(t *testing.T) {
-	name := fmt.Sprintf("%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
-	updatedName := fmt.Sprintf("%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	updatedName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoIdentityPoolRolesAttachmentDestroy,
@@ -44,9 +44,9 @@ func TestAccAWSCognitoIdentityPoolRolesAttachment_basic(t *testing.T) {
 }
 
 func TestAccAWSCognitoIdentityPoolRolesAttachment_roleMappings(t *testing.T) {
-	name := fmt.Sprintf("%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoIdentityPoolRolesAttachmentDestroy,
@@ -92,9 +92,9 @@ func TestAccAWSCognitoIdentityPoolRolesAttachment_roleMappings(t *testing.T) {
 }
 
 func TestAccAWSCognitoIdentityPoolRolesAttachment_roleMappingsWithAmbiguousRoleResolutionError(t *testing.T) {
-	name := fmt.Sprintf("%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoIdentityPoolRolesAttachmentDestroy,
@@ -108,9 +108,9 @@ func TestAccAWSCognitoIdentityPoolRolesAttachment_roleMappingsWithAmbiguousRoleR
 }
 
 func TestAccAWSCognitoIdentityPoolRolesAttachment_roleMappingsWithRulesTypeError(t *testing.T) {
-	name := fmt.Sprintf("%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoIdentityPoolRolesAttachmentDestroy,
@@ -124,9 +124,9 @@ func TestAccAWSCognitoIdentityPoolRolesAttachment_roleMappingsWithRulesTypeError
 }
 
 func TestAccAWSCognitoIdentityPoolRolesAttachment_roleMappingsWithTokenTypeError(t *testing.T) {
-	name := fmt.Sprintf("%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoIdentityPoolRolesAttachmentDestroy,
@@ -156,11 +156,7 @@ func testAccCheckAWSCognitoIdentityPoolRolesAttachmentExists(n string) resource.
 			IdentityPoolId: aws.String(rs.Primary.Attributes["identity_pool_id"]),
 		})
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

@@ -8,7 +8,7 @@ description: |-
 
 # aws_appautoscaling_target
 
-Provides an Application AutoScaling ScalableTarget resource.
+Provides an Application AutoScaling ScalableTarget resource. To manage policies which get attached to the target, see the [`aws_appautoscaling_policy` resource](/docs/providers/aws/r/appautoscaling_policy.html).
 
 ## Example Usage
 
@@ -48,6 +48,18 @@ resource "aws_appautoscaling_target" "ecs_target" {
   role_arn           = "${var.ecs_iam_role}"
   scalable_dimension = "ecs:service:DesiredCount"
   service_namespace  = "ecs"
+}
+```
+
+### Aurora Read Replica Autoscaling
+
+```hcl
+resource "aws_appautoscaling_target" "replicas" {
+  service_namespace  = "rds"
+  scalable_dimension = "rds:cluster:ReadReplicaCount"
+  resource_id        = "cluster:${aws_rds_cluster.example.id}"
+  min_capacity       = 1
+  max_capacity       = 15
 }
 ```
 

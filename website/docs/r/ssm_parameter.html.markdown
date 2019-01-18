@@ -39,12 +39,12 @@ resource "aws_db_instance" "default" {
 }
 
 resource "aws_ssm_parameter" "secret" {
-  name  = "${var.environment}/database/password/master"
-  description  = "The parameter description"
-  type  = "SecureString"
-  value = "${var.database_master_password}"
+  name        = "${var.environment}/database/password/master"
+  description = "The parameter description"
+  type        = "SecureString"
+  value       = "${var.database_master_password}"
 
-  tags {
+  tags = {
     environment = "${var.environment}"
   }
 }
@@ -68,7 +68,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The ARN of the parameter.
 * `name` - (Required) The name of the parameter.
