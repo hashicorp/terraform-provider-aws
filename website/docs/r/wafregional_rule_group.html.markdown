@@ -51,7 +51,7 @@ The following arguments are supported:
   * `type` - (Required) e.g. `BLOCK`, `ALLOW`, or `COUNT`
 * `priority` - (Required) Specifies the order in which the rules are evaluated. Rules with a lower value are evaluated before rules with a higher value.
 * `rule_id` - (Required) The ID of a [rule](/docs/providers/aws/r/wafregional_rule.html)
-* `type` - (Optional) The rule type, either [`REGULAR`](/docs/providers/aws/r/wafregional_rule.html), [`RATE_BASED`]((/docs/providers/aws/r/wafregional_rate_based_rule.html), or `GROUP`. Defaults to `REGULAR`.
+* `type` - (Optional) The rule type, either [`REGULAR`](/docs/providers/aws/r/wafregional_rule.html), [`RATE_BASED`](/docs/providers/aws/r/wafregional_rate_based_rule.html), or `GROUP`. Defaults to `REGULAR`.
 
 ## Attributes Reference
 
