@@ -30,6 +30,39 @@ func TestAccAWSDHCPOptionsAssociation_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSDHCPOptionsAssociationImport_basic(t *testing.T) {
+	resourceName := "aws_vpc_dhcp_options_association.bar"
+	vpcName := "aws_vpc.foo"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckDHCPOptionsAssociationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDHCPOptionsAssociationConfig,
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccDHCPOptionsAssociationVPCImportIdFunc(vpcName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccDHCPOptionsAssociationVPCImportIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		return rs.Primary.Attributes["id"], nil
+	}
+}
+
 func testAccCheckDHCPOptionsAssociationDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).ec2conn
 
