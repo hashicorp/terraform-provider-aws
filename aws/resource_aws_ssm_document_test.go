@@ -474,7 +474,7 @@ resource "aws_ssm_document" "foo" {
   name = "test_document-%s"
 	document_type = "Command"
 
-  permissions = {
+  permissions {
     type        = "Share"
     account_ids = "all"
   }
@@ -508,7 +508,7 @@ resource "aws_ssm_document" "foo" {
   name = "test_document-%s"
 	document_type = "Command"
 
-  permissions = {
+  permissions {
     type        = "Share"
     account_ids = "%s"
   }
