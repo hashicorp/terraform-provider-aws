@@ -82,7 +82,7 @@ func TestAccAWSEcsService_basicImport(t *testing.T) {
 				ImportStateId:     fmt.Sprintf("%s/nonexistent", clusterName),
 				ImportState:       true,
 				ImportStateVerify: false,
-				ExpectError:       regexp.MustCompile(`Please verify the ID is correct`),
+				ExpectError:       regexp.MustCompile(`(Please verify the ID is correct|Cannot import non-existent remote object)`),
 			},
 		},
 	})
@@ -1361,7 +1361,7 @@ resource "aws_ecs_service" "main" {
   launch_type = "FARGATE"
   network_configuration {
     security_groups = ["${aws_security_group.allow_all_a.id}", "${aws_security_group.allow_all_b.id}"]
-    subnets = ["${aws_subnet.main.*.id}"]
+    subnets = ["${aws_subnet.main.*.id[0]}", "${aws_subnet.main.*.id[1]}"]
     assign_public_ip = %s
   }
 }
@@ -1374,7 +1374,7 @@ data "aws_availability_zones" "available" {}
 
 resource "aws_vpc" "main" {
   cidr_block = "10.10.0.0/16"
-  tags {
+  tags = {
     Name = "terraform-testacc-ecs-service-with-launch-type-fargate-and-platform-version"
   }
 }
@@ -1384,7 +1384,7 @@ resource "aws_subnet" "main" {
   cidr_block = "${cidrsubnet(aws_vpc.main.cidr_block, 8, count.index)}"
   availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
   vpc_id = "${aws_vpc.main.id}"
-  tags {
+  tags = {
     Name = "tf-acc-ecs-service-with-launch-type-fargate-and-platform-version"
   }
 }
@@ -1449,7 +1449,7 @@ resource "aws_ecs_service" "main" {
   platform_version = %q
   network_configuration {
     security_groups = ["${aws_security_group.allow_all_a.id}", "${aws_security_group.allow_all_b.id}"]
-    subnets = ["${aws_subnet.main.*.id}"]
+    subnets = ["${aws_subnet.main.*.id[0]}", "${aws_subnet.main.*.id[1]}"]
     assign_public_ip = false
   }
 }
@@ -1556,7 +1556,7 @@ resource "aws_lb_target_group" "test" {
 resource "aws_lb" "main" {
   name     = "%s"
   internal = true
-  subnets  = ["${aws_subnet.main.*.id}"]
+  subnets  = ["${aws_subnet.main.*.id[0]}", "${aws_subnet.main.*.id[1]}"]
 }
 
 resource "aws_lb_listener" "front_end" {
@@ -1683,7 +1683,7 @@ EOF
 
 resource "aws_elb" "main" {
   internal = true
-  subnets  = ["${aws_subnet.test.*.id}"]
+  subnets  = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
 
   listener {
     instance_port = 8080
@@ -1834,7 +1834,7 @@ EOF
 
 resource "aws_elb" "main" {
   internal = true
-  subnets  = ["${aws_subnet.test.*.id}"]
+  subnets  = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
 
   listener {
     instance_port = %[6]d
@@ -2087,7 +2087,7 @@ resource "aws_lb_target_group" "test" {
 resource "aws_lb" "main" {
   name            = "%s"
   internal        = true
-  subnets         = ["${aws_subnet.main.*.id}"]
+  subnets         = ["${aws_subnet.main.*.id[0]}", "${aws_subnet.main.*.id[1]}"]
 }
 
 resource "aws_lb_listener" "front_end" {
@@ -2208,7 +2208,7 @@ resource "aws_ecs_service" "main" {
   desired_count = 1
   network_configuration {
     security_groups = [%s]
-    subnets = ["${aws_subnet.main.*.id}"]
+    subnets = ["${aws_subnet.main.*.id[0]}", "${aws_subnet.main.*.id[1]}"]
   }
 }
 `, sg1Name, sg2Name, clusterName, tdName, svcName, securityGroups)
@@ -2289,7 +2289,7 @@ resource "aws_ecs_service" "test" {
   }
   network_configuration {
     security_groups = ["${aws_security_group.test.id}"]
-    subnets = ["${aws_subnet.test.*.id}"]
+    subnets = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
   }
 }
 `, rName, rName, rName, clusterName, tdName, svcName)
@@ -2464,7 +2464,7 @@ resource "aws_subnet" "test" {
 resource "aws_lb" "test" {
   internal = true
   name     = %q
-  subnets  = ["${aws_subnet.test.*.id}"]
+  subnets  = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
 }
 
 resource "aws_lb_listener" "test" {

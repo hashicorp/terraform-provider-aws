@@ -1008,11 +1008,11 @@ TASK_DEFINITION
     docker_volume_configuration {
         driver = "local"
         scope  = "shared"
-        driver_opts {
+        driver_opts = {
             device = "tmpfs"
             uid    = "1000"
         }
-        labels {
+        labels = {
             environment = "test"
             stack       = "april"
         }
