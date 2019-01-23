@@ -42,7 +42,7 @@ resource "aws_kms_grant" "a" {
   operations        = ["Encrypt", "Decrypt", "GenerateDataKey"]
 
   constraints {
-    encryption_context_equals {
+    encryption_context_equals = {
       Department = "Finance"
     }
   }
