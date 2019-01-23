@@ -136,7 +136,7 @@ resource "aws_vpc" "foo" {
   enable_dns_support   = true
   enable_dns_hostnames = true
 
-  tags {
+  tags = {
     Name = "terraform-testacc-r53-resolver-vpc-%d"
   }
 }
@@ -148,7 +148,7 @@ resource "aws_subnet" "sn1" {
   cidr_block        = "${cidrsubnet(aws_vpc.foo.cidr_block, 2, 0)}"
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
 
-  tags {
+  tags = {
     Name = "tf-acc-r53-resolver-sn1-%d"
   }
 }
@@ -158,7 +158,7 @@ resource "aws_subnet" "sn2" {
   cidr_block        = "${cidrsubnet(aws_vpc.foo.cidr_block, 2, 1)}"
   availability_zone = "${data.aws_availability_zones.available.names[1]}"
 
-  tags {
+  tags = {
     Name = "tf-acc-r53-resolver-sn2-%d"
   }
 }
@@ -168,7 +168,7 @@ resource "aws_subnet" "sn3" {
   cidr_block        = "${cidrsubnet(aws_vpc.foo.cidr_block, 2, 2)}"
   availability_zone = "${data.aws_availability_zones.available.names[2]}"
 
-  tags {
+  tags = {
     Name = "tf-acc-r53-resolver-sn3-%d"
   }
 }
@@ -177,7 +177,7 @@ resource "aws_security_group" "sg1" {
   vpc_id = "${aws_vpc.foo.id}"
   name   = "tf-acc-r53-resolver-sg1-%d"
 
-  tags {
+  tags = {
     Name = "tf-acc-r53-resolver-sg1-%d"
   }
 }
@@ -186,7 +186,7 @@ resource "aws_security_group" "sg2" {
   vpc_id = "${aws_vpc.foo.id}"
   name   = "tf-acc-r53-resolver-sg2-%d"
 
-  tags {
+  tags = {
     Name = "tf-acc-r53-resolver-sg2-%d"
   }
 }
@@ -215,7 +215,7 @@ resource "aws_route53_resolver_endpoint" "foo" {
     ip        = "${cidrhost(aws_subnet.sn2.cidr_block, 8)}"
   }
 
-  tags {
+  tags = {
     Environment = "production"
     Usage = "original"
   }
@@ -244,7 +244,7 @@ resource "aws_route53_resolver_endpoint" "foo" {
     subnet_id = "${aws_subnet.sn3.id}"
   }
 
-  tags {
+  tags = {
     Usage = "changed"
   }
 }
