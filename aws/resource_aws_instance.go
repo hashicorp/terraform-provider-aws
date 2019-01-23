@@ -1351,6 +1351,10 @@ func fetchRootDeviceName(ami string, conn *ec2.EC2) (*string, error) {
 	res, err := conn.DescribeImages(&ec2.DescribeImagesInput{
 		ImageIds: []*string{aws.String(ami)},
 	})
+	if isAWSErr(err, "InvalidAMIID.Unavailable", "") ||
+		isAWSErr(err, "InvalidAMIID.NotFound", "") {
+		return nil, nil
+	}
 	if err != nil {
 		return nil, err
 	}
