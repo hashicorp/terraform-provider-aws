@@ -32,3 +32,10 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the association
 
+## Import
+
+Route table associations can be imported by providing the id in the following format:
+
+```
+$ terraform import aws_route_table_association.imported <route_table_id>/<subnet_id>
+```

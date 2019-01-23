@@ -14,6 +14,10 @@ import (
 func TestAccAWSRouteTableAssociation_basic(t *testing.T) {
 	var v, v2 ec2.RouteTable
 
+	resourceName := "aws_route_table_association.baz"
+	targetSubnet := "aws_subnet.baz"
+	targetTable := "aws_route_table.bar"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -34,8 +38,30 @@ func TestAccAWSRouteTableAssociation_basic(t *testing.T) {
 						"aws_route_table_association.foo", &v2),
 				),
 			},
+
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccRouteTableAssociationImportIdFunc(targetTable, targetSubnet),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
+}
+
+func testAccRouteTableAssociationImportIdFunc(table, subnet string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		tr, ok := s.RootModule().Resources[table]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", table)
+		}
+		ts, ok := s.RootModule().Resources[subnet]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", subnet)
+		}
+
+		return tr.Primary.Attributes["id"] + "/" + ts.Primary.Attributes["id"], nil
+	}
 }
 
 func testAccCheckRouteTableAssociationDestroy(s *terraform.State) error {
@@ -159,6 +185,14 @@ resource "aws_subnet" "foo" {
 	}
 }
 
+resource "aws_subnet" "baz" {
+	vpc_id = "${aws_vpc.foo.id}"
+	cidr_block = "10.1.2.0/24"
+	tags = {
+		Name = "tf-acc-route-table-association2"
+	}
+}
+
 resource "aws_internet_gateway" "foo" {
 	vpc_id = "${aws_vpc.foo.id}"
 
@@ -178,5 +212,10 @@ resource "aws_route_table" "bar" {
 resource "aws_route_table_association" "foo" {
 	route_table_id = "${aws_route_table.bar.id}"
 	subnet_id = "${aws_subnet.foo.id}"
+}
+
+resource "aws_route_table_association" "baz" {
+	route_table_id = "${aws_route_table.bar.id}"
+	subnet_id = "${aws_subnet.baz.id}"
 }
 `
