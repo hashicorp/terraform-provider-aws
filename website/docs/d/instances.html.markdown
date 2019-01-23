@@ -25,7 +25,7 @@ and you'd need to re-run `apply` every time an instance comes up or dies.
 
 ```hcl
 data "aws_instances" "test" {
-  instance_tags {
+  instance_tags = {
     Role = "HardWorker"
   }
 
