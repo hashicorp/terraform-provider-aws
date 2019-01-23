@@ -328,6 +328,7 @@ func TestAccAWSS3BucketObject_tags(t *testing.T) {
 	var obj1, obj2, obj3, obj4 s3.GetObjectOutput
 	resourceName := "aws_s3_bucket_object.object"
 	rInt := acctest.RandInt()
+	key := "test-key"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -336,7 +337,7 @@ func TestAccAWSS3BucketObject_tags(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {},
-				Config:    testAccAWSS3BucketObjectConfig_withTags(rInt, "stuff"),
+				Config:    testAccAWSS3BucketObjectConfig_withTags(rInt, key, "stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketObjectExists(resourceName, &obj1),
 					testAccCheckAWSS3BucketObjectBody(&obj1, "stuff"),
@@ -348,7 +349,7 @@ func TestAccAWSS3BucketObject_tags(t *testing.T) {
 			},
 			{
 				PreConfig: func() {},
-				Config:    testAccAWSS3BucketObjectConfig_withUpdatedTags(rInt, "stuff"),
+				Config:    testAccAWSS3BucketObjectConfig_withUpdatedTags(rInt, key, "stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketObjectExists(resourceName, &obj2),
 					testAccCheckAWSS3BucketObjectVersionIdEquals(&obj2, &obj1),
@@ -362,7 +363,7 @@ func TestAccAWSS3BucketObject_tags(t *testing.T) {
 			},
 			{
 				PreConfig: func() {},
-				Config:    testAccAWSS3BucketObjectConfig_withNoTags(rInt, "stuff"),
+				Config:    testAccAWSS3BucketObjectConfig_withNoTags(rInt, key, "stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketObjectExists(resourceName, &obj3),
 					testAccCheckAWSS3BucketObjectVersionIdEquals(&obj3, &obj2),
@@ -372,7 +373,71 @@ func TestAccAWSS3BucketObject_tags(t *testing.T) {
 			},
 			{
 				PreConfig: func() {},
-				Config:    testAccAWSS3BucketObjectConfig_withTags(rInt, "changed stuff"),
+				Config:    testAccAWSS3BucketObjectConfig_withTags(rInt, key, "changed stuff"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketObjectExists(resourceName, &obj4),
+					testAccCheckAWSS3BucketObjectVersionIdDiffers(&obj4, &obj3),
+					testAccCheckAWSS3BucketObjectBody(&obj4, "changed stuff"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "AAA"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSS3BucketObject_tagsLeadingSlash(t *testing.T) {
+	var obj1, obj2, obj3, obj4 s3.GetObjectOutput
+	resourceName := "aws_s3_bucket_object.object"
+	rInt := acctest.RandInt()
+	key := "/test-key"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {},
+				Config:    testAccAWSS3BucketObjectConfig_withTags(rInt, key, "stuff"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketObjectExists(resourceName, &obj1),
+					testAccCheckAWSS3BucketObjectBody(&obj1, "stuff"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "AAA"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
+				),
+			},
+			{
+				PreConfig: func() {},
+				Config:    testAccAWSS3BucketObjectConfig_withUpdatedTags(rInt, key, "stuff"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketObjectExists(resourceName, &obj2),
+					testAccCheckAWSS3BucketObjectVersionIdEquals(&obj2, &obj1),
+					testAccCheckAWSS3BucketObjectBody(&obj2, "stuff"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "4"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "XXX"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key4", "DDD"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key5", "EEE"),
+				),
+			},
+			{
+				PreConfig: func() {},
+				Config:    testAccAWSS3BucketObjectConfig_withNoTags(rInt, key, "stuff"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketObjectExists(resourceName, &obj3),
+					testAccCheckAWSS3BucketObjectVersionIdEquals(&obj3, &obj2),
+					testAccCheckAWSS3BucketObjectBody(&obj3, "stuff"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				PreConfig: func() {},
+				Config:    testAccAWSS3BucketObjectConfig_withTags(rInt, key, "changed stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketObjectExists(resourceName, &obj4),
 					testAccCheckAWSS3BucketObjectVersionIdDiffers(&obj4, &obj3),
@@ -731,7 +796,7 @@ resource "aws_s3_bucket_object" "object" {
 `, randInt, storage_class)
 }
 
-func testAccAWSS3BucketObjectConfig_withTags(randInt int, content string) string {
+func testAccAWSS3BucketObjectConfig_withTags(randInt int, key, content string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "object_bucket" {
   bucket = "tf-object-test-bucket-%d"
@@ -742,7 +807,7 @@ resource "aws_s3_bucket" "object_bucket" {
 
 resource "aws_s3_bucket_object" "object" {
   bucket = "${aws_s3_bucket.object_bucket.bucket}"
-  key = "test-key"
+  key = "%s"
   content = "%s"
   tags = {
     Key1 = "AAA"
@@ -750,10 +815,10 @@ resource "aws_s3_bucket_object" "object" {
     Key3 = "CCC"
   }
 }
-`, randInt, content)
+`, randInt, key, content)
 }
 
-func testAccAWSS3BucketObjectConfig_withUpdatedTags(randInt int, content string) string {
+func testAccAWSS3BucketObjectConfig_withUpdatedTags(randInt int, key, content string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "object_bucket" {
   bucket = "tf-object-test-bucket-%d"
@@ -764,7 +829,7 @@ resource "aws_s3_bucket" "object_bucket" {
 
 resource "aws_s3_bucket_object" "object" {
   bucket = "${aws_s3_bucket.object_bucket.bucket}"
-  key = "test-key"
+  key = "%s"
   content = "%s"
   tags = {
     Key2 = "BBB"
@@ -773,10 +838,10 @@ resource "aws_s3_bucket_object" "object" {
     Key5 = "EEE"
   }
 }
-`, randInt, content)
+`, randInt, key, content)
 }
 
-func testAccAWSS3BucketObjectConfig_withNoTags(randInt int, content string) string {
+func testAccAWSS3BucketObjectConfig_withNoTags(randInt int, key, content string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "object_bucket" {
   bucket = "tf-object-test-bucket-%d"
@@ -787,8 +852,8 @@ resource "aws_s3_bucket" "object_bucket" {
 
 resource "aws_s3_bucket_object" "object" {
   bucket = "${aws_s3_bucket.object_bucket.bucket}"
-  key = "test-key"
+  key = "%s"
   content = "%s"
 }
-`, randInt, content)
+`, randInt, key, content)
 }
