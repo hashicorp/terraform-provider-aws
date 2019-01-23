@@ -4,7 +4,11 @@ services:
   - docker
 language: go
 go:
-- 1.9.1
+- "1.11.x"
+env:
+  GO111MODULE=on
+  SWEEPARGS=-vet=off
+  TESTARGS=-vet=off
 
 git:
   depth: 1
@@ -14,18 +18,17 @@ install:
 # go.googlesource.com so rate limits are higher when using `go get` to fetch
 # packages that live there.
 # See: https://github.com/golang/go/issues/12933
-- bash scripts/gogetcookie.sh
-- go get github.com/kardianos/govendor
+# disable things that wont work or arent needed on go1.11
+# - bash scripts/gogetcookie.sh
+# - go get github.com/kardianos/govendor
 
 script:
 - make test
-- make vendor-status
-- make vet
-- make website-test
+# disable things that wont work or arent needed on go1.11
+# - make vendor-status
+# - make vet
+# - make website-test
 
-branches:
-  only:
-  - master
 matrix:
   fast_finish: true
   allow_failures:
