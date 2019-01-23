@@ -19,9 +19,11 @@ import (
 
 func TestFetchRootDevice(t *testing.T) {
 	cases := []struct {
-		label  string
-		images []*ec2.Image
-		name   string
+		label   string
+		images  []*ec2.Image
+		err     error
+		name    string
+		wantErr bool
 	}{
 		{
 			"device name in mappings",
@@ -33,7 +35,9 @@ func TestFetchRootDevice(t *testing.T) {
 					{DeviceName: aws.String("/dev/xvda")},
 				},
 			}},
+			nil,
 			"/dev/xvda",
+			false,
 		},
 		{
 			"device name not in mappings",
@@ -45,12 +49,44 @@ func TestFetchRootDevice(t *testing.T) {
 					{DeviceName: aws.String("/dev/xvdc")},
 				},
 			}},
+			nil,
 			"/dev/xvdb",
+			false,
 		},
 		{
 			"no images",
 			[]*ec2.Image{},
+			nil,
 			"",
+			false,
+		},
+		{
+			"unknown error",
+			[]*ec2.Image{},
+			fmt.Errorf("test error"),
+			"",
+			true,
+		},
+		{
+			"ami unavailable",
+			[]*ec2.Image{},
+			awserr.New("InvalidAMIID.Unavailable", "", nil),
+			"",
+			false,
+		},
+		{
+			"ami not found",
+			[]*ec2.Image{},
+			awserr.New("InvalidAMIID.NotFound", "", nil),
+			"",
+			false,
+		},
+		{
+			"unsupported aws err",
+			[]*ec2.Image{},
+			awserr.New("BadRequest", "", nil),
+			"",
+			true,
 		},
 	}
 
@@ -62,10 +98,14 @@ func TestFetchRootDevice(t *testing.T) {
 			conn.Handlers.Send.PushBack(func(r *request.Request) {
 				data := r.Data.(*ec2.DescribeImagesOutput)
 				data.Images = tc.images
+				r.Error = tc.err
 			})
 			name, err := fetchRootDeviceName("ami-123", conn)
-			if err != nil {
+			if !tc.wantErr && err != nil {
 				t.Errorf("Error fetching device name: %s", err)
+			}
+			if tc.wantErr && err == nil {
+				t.Error("Expected error go nil")
 			}
 			if tc.name != aws.StringValue(name) {
 				t.Errorf("Expected name %s, got %s", tc.name, aws.StringValue(name))
