@@ -734,7 +734,6 @@ func testAccCheckAWSEmrClusterExists(n string, v *emr.Cluster) resource.TestChec
 func testAccAWSEmrClusterConfig_bootstrap(r string) string {
 	return fmt.Sprintf(`
 resource "aws_emr_cluster" "test" {
-  count                = 1
   name                 = "%s"
   release_label        = "emr-5.0.0"
   applications         = ["Hadoop", "Hive"]
@@ -755,23 +754,21 @@ resource "aws_emr_cluster" "test" {
     name = "runif"
     args = ["instance.isMaster=true", "echo running on master node"]
   }
-  bootstrap_action = [
-    {
-      path = "s3://${aws_s3_bucket.tester.bucket}/testscript.sh"
-      name = "test"
-      args = ["1",
-        "2",
-        "3",
-        "4",
-        "5",
-        "6",
-        "7",
-        "8",
-        "9",
-        "10",
-      ]
-    },
-  ]
+  bootstrap_action {
+    path = "s3://${aws_s3_bucket.tester.bucket}/testscript.sh"
+    name = "test"
+    args = ["1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10",
+    ]
+  }
 }
 resource "aws_iam_instance_profile" "emr_profile" {
   name = "%s_profile"
@@ -2549,18 +2546,17 @@ resource "aws_emr_cluster" "tf-test-cluster" {
     instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
   }
 
-  instance_group = [
-    {
-      instance_role = "CORE"
-      instance_type = "c4.large"
-      instance_count = "1"
-      ebs_config {
-        size = "40"
-        type = "gp2"
-        volumes_per_instance = 1
-      }
-      bid_price = "0.30"
-      autoscaling_policy = <<EOT
+  instance_group {
+    instance_role = "CORE"
+    instance_type = "c4.large"
+    instance_count = "1"
+    ebs_config {
+      size = "40"
+      type = "gp2"
+      volumes_per_instance = 1
+    }
+    bid_price = "0.30"
+    autoscaling_policy = <<EOT
 {
   "Constraints": {
     "MinCapacity": 1,
@@ -2593,13 +2589,13 @@ resource "aws_emr_cluster" "tf-test-cluster" {
   ]
 }
 EOT
-    },
-    {
-      instance_role = "MASTER"
-      instance_type = "c4.large"
-      instance_count = 1
-    }
-  ]
+  }
+
+  instance_group {
+    instance_role = "MASTER"
+    instance_type = "c4.large"
+    instance_count = 1
+  }
 
   tags = {
     role     = "rolename"
@@ -2899,18 +2895,17 @@ resource "aws_emr_cluster" "tf-test-cluster" {
     instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
   }
 
-  instance_group = [
-    {
-      instance_role = "CORE"
-      instance_type = "c4.large"
-      instance_count = "1"
-      ebs_config {
-        size = "40"
-        type = "gp2"
-        volumes_per_instance = 1
-      }
-      bid_price = "0.30"
-      autoscaling_policy = <<EOT
+  instance_group {
+    instance_role = "CORE"
+    instance_type = "c4.large"
+    instance_count = "1"
+    ebs_config {
+      size = "40"
+      type = "gp2"
+      volumes_per_instance = 1
+    }
+    bid_price = "0.30"
+    autoscaling_policy = <<EOT
 {
   "Constraints": {
     "MinCapacity": 1,
@@ -2943,13 +2938,13 @@ resource "aws_emr_cluster" "tf-test-cluster" {
   ]
 }
 EOT
-    },
-    {
-      instance_role = "MASTER"
-      instance_type = "c4.large"
-      instance_count = 1
-    }
-  ]
+  }
+
+  instance_group {
+    instance_role = "MASTER"
+    instance_type = "c4.large"
+    instance_count = 1
+  }
 
   tags = {
     role     = "rolename"
@@ -3249,18 +3244,17 @@ resource "aws_emr_cluster" "tf-test-cluster" {
     instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
   }
 
-  instance_group = [
-    {
-      instance_role = "CORE"
-      instance_type = "c4.large"
-      instance_count = "1"
-      ebs_config {
-        size = "500"
-        type = "st1"
-        volumes_per_instance = 1
-      }
-      bid_price = "0.30"
-      autoscaling_policy = <<EOT
+  instance_group {
+    instance_role = "CORE"
+    instance_type = "c4.large"
+    instance_count = "1"
+    ebs_config {
+      size = "500"
+      type = "st1"
+      volumes_per_instance = 1
+    }
+    bid_price = "0.30"
+    autoscaling_policy = <<EOT
 {
   "Constraints": {
     "MinCapacity": 1,
@@ -3293,13 +3287,13 @@ resource "aws_emr_cluster" "tf-test-cluster" {
   ]
 }
 EOT
-    },
-    {
-      instance_role = "MASTER"
-      instance_type = "c4.large"
-      instance_count = 1
-    }
-  ]
+  }
+
+  instance_group {
+    instance_role = "MASTER"
+    instance_type = "c4.large"
+    instance_count = 1
+  }
 
   tags = {
     role     = "rolename"
@@ -3597,18 +3591,17 @@ resource "aws_emr_cluster" "tf-test-cluster" {
     instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
   }
 
-  instance_group = [
-    {
-      instance_role = "CORE"
-      instance_type = "c4.large"
-      instance_count = "1"
-      ebs_config {
-        size = "500"
-        type = "st1"
-        volumes_per_instance = 1
-      }
-      bid_price = "0.30"
-      autoscaling_policy = <<EOT
+  instance_group {
+    instance_role = "CORE"
+    instance_type = "c4.large"
+    instance_count = "1"
+    ebs_config {
+      size = "500"
+      type = "st1"
+      volumes_per_instance = 1
+    }
+    bid_price = "0.30"
+    autoscaling_policy = <<EOT
 {
   "Constraints": {
     "MinCapacity": 1,
@@ -3641,13 +3634,13 @@ resource "aws_emr_cluster" "tf-test-cluster" {
   ]
 }
 EOT
-    },
-    {
-      instance_role = "MASTER"
-      instance_type = "c4.large"
-      instance_count = 1
-    }
-  ]
+  }
+
+  instance_group {
+    instance_role = "MASTER"
+    instance_type = "c4.large"
+    instance_count = 1
+  }
 
   tags = {
     role     = "rolename"
