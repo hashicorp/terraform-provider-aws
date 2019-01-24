@@ -156,8 +156,8 @@ github.com/hashicorp/logutils v1.0.0/go.mod h1:QIAnNjmIWmVIIkWDTG1z5v++HQmx9WQRO
 github.com/hashicorp/memberlist v0.1.0/go.mod h1:ncdBp14cuox2iFOq3kDiquKU6fqsTBc3W6JvZwjxxsE=
 github.com/hashicorp/serf v0.0.0-20160124182025-e4ec8cc423bb h1:ZbgmOQt8DOg796figP87/EFCVx2v2h9yRvwHF/zceX4=
 github.com/hashicorp/serf v0.0.0-20160124182025-e4ec8cc423bb/go.mod h1:h/Ru6tmZazX7WO/GDmwdpS975F019L4t5ng5IgwbNrE=
-github.com/hashicorp/terraform v0.12.0-alpha4.0.20190118003454-565eeac5d104 h1:UNRrFzBZGyJ8BKxXVq/B5ld191IaKshyY3Q5RZGKmXM=
-github.com/hashicorp/terraform v0.12.0-alpha4.0.20190118003454-565eeac5d104/go.mod h1:T3MsVA1QE6bB8SC7JOAG2P6yLx9lrF46ZW3qzOgH3qU=
+github.com/hashicorp/terraform v0.12.0-alpha4.0.20190124012834-1592b4aa67ad h1:/7jgbuxgWUaE4h+L5Bu9zJ9rrzcFcbAs9euA8uM19ow=
+github.com/hashicorp/terraform v0.12.0-alpha4.0.20190124012834-1592b4aa67ad/go.mod h1:T3MsVA1QE6bB8SC7JOAG2P6yLx9lrF46ZW3qzOgH3qU=
 github.com/hashicorp/terraform-config-inspect v0.0.0-20181213005350-314d8affa1db h1:AcZb6ClKGJoY9vDFvxw+t5s8EmtWP8fMerxP6j+veKc=
 github.com/hashicorp/terraform-config-inspect v0.0.0-20181213005350-314d8affa1db/go.mod h1:2zR/i7/tO81bLaVoMEJlSLRJ36/TvPLapEmy682Zizo=
 github.com/hashicorp/vault v0.0.0-20161029210149-9a60bf2a50e4/go.mod h1:KfSyffbKxoVyspOdlaGVjIuwLobi07qD1bAbosPMpP0=

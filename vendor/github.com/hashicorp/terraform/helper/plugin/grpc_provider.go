@@ -513,16 +513,6 @@ func (s *GRPCProviderServer) PlanResourceChange(_ context.Context, req *proto.Pl
 		return resp, nil
 	}
 
-	if diff != nil {
-		// strip out non-diffs
-		for k, v := range diff.Attributes {
-			if v.New == v.Old && !v.NewComputed {
-				delete(diff.Attributes, k)
-			}
-		}
-
-	}
-
 	if diff == nil || len(diff.Attributes) == 0 {
 		// schema.Provider.Diff returns nil if it ends up making a diff with no
 		// changes, but our new interface wants us to return an actual change
@@ -564,6 +554,20 @@ func (s *GRPCProviderServer) PlanResourceChange(_ context.Context, req *proto.Pl
 
 	plannedStateVal = copyTimeoutValues(plannedStateVal, proposedNewStateVal)
 
+	// The old SDK code has some inprecisions that cause it to sometimes
+	// generate differences that the SDK itself does not consider significant
+	// but Terraform Core would. To avoid producing weird do-nothing diffs
+	// in that case, we'll check if the provider as produced something we
+	// think is "equivalent" to the prior state and just return the prior state
+	// itself if so, thus ensuring that Terraform Core will treat this as
+	// a no-op. See the docs for ValuesSDKEquivalent for some caveats on its
+	// accuracy.
+	forceNoChanges := false
+	if hcl2shim.ValuesSDKEquivalent(priorStateVal, plannedStateVal) {
+		plannedStateVal = priorStateVal
+		forceNoChanges = true
+	}
+
 	plannedMP, err := msgpack.Marshal(plannedStateVal, block.ImpliedType())
 	if err != nil {
 		resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
@@ -600,9 +604,11 @@ func (s *GRPCProviderServer) PlanResourceChange(_ context.Context, req *proto.Pl
 	// collect the attributes that require instance replacement, and convert
 	// them to cty.Paths.
 	var requiresNew []string
-	for attr, d := range diff.Attributes {
-		if d.RequiresNew {
-			requiresNew = append(requiresNew, attr)
+	if !forceNoChanges {
+		for attr, d := range diff.Attributes {
+			if d.RequiresNew {
+				requiresNew = append(requiresNew, attr)
+			}
 		}
 	}
 
@@ -688,13 +694,6 @@ func (s *GRPCProviderServer) ApplyResourceChange(_ context.Context, req *proto.A
 		diff = &terraform.InstanceDiff{
 			Attributes: make(map[string]*terraform.ResourceAttrDiff),
 			Meta:       make(map[string]interface{}),
-		}
-	}
-
-	// strip out non-diffs
-	for k, v := range diff.Attributes {
-		if v.New == v.Old && !v.NewComputed && !v.NewRemoved {
-			delete(diff.Attributes, k)
 		}
 	}
 
@@ -950,6 +949,8 @@ func normalizeFlatmapContainers(prior map[string]string, attrs map[string]string
 		// schema.
 		if isCount(k) && v == "1" {
 			ones[k] = true
+			// make sure we don't have the same key under both categories.
+			delete(zeros, k)
 		}
 	}
 
