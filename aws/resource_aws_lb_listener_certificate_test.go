@@ -197,7 +197,7 @@ resource "aws_lb_listener_certificate" "additional_2" {
 
 resource "aws_lb" "test" {
   name_prefix    = "%s"
-  subnets = ["${aws_subnet.test.*.id}"]
+  subnets = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
   internal = true
 }
 
