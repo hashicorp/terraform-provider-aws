@@ -148,7 +148,7 @@ func resourceAwsEcsService() *schema.Resource {
 			},
 
 			"load_balancer": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: true,
 				MaxItems: 1,
@@ -179,7 +179,6 @@ func resourceAwsEcsService() *schema.Resource {
 						},
 					},
 				},
-				Set: resourceAwsEcsLoadBalancerHash,
 			},
 			"network_configuration": {
 				Type:     schema.TypeList,
@@ -417,7 +416,7 @@ func resourceAwsEcsServiceCreate(d *schema.ResourceData, meta interface{}) error
 		input.PlatformVersion = aws.String(v.(string))
 	}
 
-	loadBalancers := expandEcsLoadBalancers(d.Get("load_balancer").(*schema.Set).List())
+	loadBalancers := expandEcsLoadBalancers(d.Get("load_balancer").([]interface{}))
 	if len(loadBalancers) > 0 {
 		log.Printf("[DEBUG] Adding ECS load balancers: %s", loadBalancers)
 		input.LoadBalancers = loadBalancers
