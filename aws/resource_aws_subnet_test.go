@@ -26,6 +26,7 @@ func init() {
 			"aws_beanstalk_environment",
 			"aws_db_instance",
 			"aws_directory_service_directory",
+			"aws_ec2_transit_gateway_vpc_attachment",
 			"aws_eks_cluster",
 			"aws_elasticache_cluster",
 			"aws_elasticache_replication_group",
