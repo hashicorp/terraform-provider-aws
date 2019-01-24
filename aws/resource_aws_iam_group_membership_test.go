@@ -233,6 +233,7 @@ resource "aws_iam_group" "group" {
 resource "aws_iam_group_membership" "team" {
 	name = "%s"
 	group = "${aws_iam_group.group.name}"
+	# TODO: Switch back to simple list reference when test configurations are upgraded to 0.12 syntax
 	users = [
 		"${aws_iam_user.user.*.name[0]}",
 		"${aws_iam_user.user.*.name[1]}",
