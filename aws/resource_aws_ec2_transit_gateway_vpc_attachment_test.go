@@ -3,6 +3,7 @@ package aws
 import (
 	"errors"
 	"fmt"
+	"log"
 	"regexp"
 	"testing"
 
@@ -11,6 +12,74 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_ec2_transit_gateway_vpc_attachment", &resource.Sweeper{
+		Name: "aws_ec2_transit_gateway_vpc_attachment",
+		F:    testSweepEc2TransitGatewayVpcAttachments,
+	})
+}
+
+func testSweepEc2TransitGatewayVpcAttachments(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).ec2conn
+	input := &ec2.DescribeTransitGatewayAttachmentsInput{}
+
+	for {
+		output, err := conn.DescribeTransitGatewayAttachments(input)
+
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping EC2 Transit Gateway VPC Attachment sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error retrieving EC2 Transit Gateway VPC Attachments: %s", err)
+		}
+
+		for _, attachment := range output.TransitGatewayAttachments {
+			if aws.StringValue(attachment.ResourceType) != ec2.TransitGatewayAttachmentResourceTypeVpc {
+				continue
+			}
+
+			if aws.StringValue(attachment.State) == ec2.TransitGatewayAttachmentStateDeleted {
+				continue
+			}
+
+			id := aws.StringValue(attachment.TransitGatewayAttachmentId)
+
+			input := &ec2.DeleteTransitGatewayVpcAttachmentInput{
+				TransitGatewayAttachmentId: aws.String(id),
+			}
+
+			log.Printf("[INFO] Deleting EC2 Transit Gateway VPC Attachment: %s", id)
+			_, err := conn.DeleteTransitGatewayVpcAttachment(input)
+
+			if isAWSErr(err, "InvalidTransitGatewayAttachmentID.NotFound", "") {
+				continue
+			}
+
+			if err != nil {
+				return fmt.Errorf("error deleting EC2 Transit Gateway VPC Attachment (%s): %s", id, err)
+			}
+
+			if err := waitForEc2TransitGatewayRouteTableAttachmentDeletion(conn, id); err != nil {
+				return fmt.Errorf("error waiting for EC2 Transit Gateway VPC Attachment (%s) deletion: %s", id, err)
+			}
+		}
+
+		if aws.StringValue(output.NextToken) == "" {
+			break
+		}
+
+		input.NextToken = output.NextToken
+	}
+
+	return nil
+}
 
 func TestAccAWSEc2TransitGatewayVpcAttachment_basic(t *testing.T) {
 	var transitGatewayVpcAttachment1 ec2.TransitGatewayVpcAttachment
