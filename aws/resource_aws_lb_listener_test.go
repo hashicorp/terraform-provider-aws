@@ -403,7 +403,7 @@ resource "aws_lb" "alb_test" {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id}"]
+  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
   idle_timeout = 30
   enable_deletion_protection = false
@@ -499,7 +499,7 @@ resource "aws_alb" "alb_test" {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id}"]
+  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
   idle_timeout = 30
   enable_deletion_protection = false
@@ -597,7 +597,7 @@ resource "aws_lb" "alb_test" {
   name            = "%s"
   internal        = false
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id}"]
+  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
   idle_timeout = 30
   enable_deletion_protection = false
@@ -736,7 +736,7 @@ resource "aws_lb" "alb_test" {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id}"]
+  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
   idle_timeout = 30
   enable_deletion_protection = false
@@ -818,7 +818,7 @@ resource "aws_lb" "alb_test" {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id}"]
+  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
   idle_timeout = 30
   enable_deletion_protection = false
@@ -886,7 +886,7 @@ resource "aws_lb" "test" {
   name            = "%s"
   internal        = false
   security_groups = ["${aws_security_group.test.id}"]
-  subnets         = ["${aws_subnet.test.*.id}"]
+  subnets         = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
   enable_deletion_protection = false
 }
 
@@ -1014,7 +1014,7 @@ resource "aws_lb_listener" "test" {
       user_pool_client_id = "${aws_cognito_user_pool_client.test.id}"
       user_pool_domain = "${aws_cognito_user_pool_domain.test.domain}"
 
-      authentication_request_extra_params {
+      authentication_request_extra_params = {
         param  = "test"
       }
     }
@@ -1034,7 +1034,7 @@ resource "aws_lb" "test" {
   name            = "%s"
   internal        = false
   security_groups = ["${aws_security_group.test.id}"]
-  subnets         = ["${aws_subnet.test.*.id}"]
+  subnets         = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
   enable_deletion_protection = false
 }
 
@@ -1144,7 +1144,7 @@ resource "aws_lb_listener" "test" {
       token_endpoint = "https://example.com/token_endpoint"
       user_info_endpoint = "https://example.com/user_info_endpoint"
 
-      authentication_request_extra_params {
+      authentication_request_extra_params = {
         param  = "test"
       }
     }
@@ -1185,7 +1185,7 @@ resource "aws_lb_listener" "test" {
       token_endpoint         = "https://example.com/token_endpoint"
       user_info_endpoint     = "https://example.com/user_info_endpoint"
 
-      authentication_request_extra_params {
+      authentication_request_extra_params = {
         param  = "test"
       }
     }
@@ -1229,7 +1229,7 @@ resource "aws_lb" "test" {
   internal                   = true
   name                       = "${var.rName}"
   security_groups            = ["${aws_security_group.test.id}"]
-  subnets                    = ["${aws_subnet.test.*.id}"]
+  subnets                    = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
 }
 
 resource "aws_lb_target_group" "test" {
