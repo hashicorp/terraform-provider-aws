@@ -756,7 +756,7 @@ resource "aws_mq_broker" "test" {
   }
   publicly_accessible = true
   security_groups = ["${aws_security_group.mq1.id}", "${aws_security_group.mq2.id}"]
-  subnet_ids = ["${aws_subnet.private.*.id}"]
+  subnet_ids = ["${aws_subnet.private.*.id[0]}", "${aws_subnet.private.*.id[1]}"]
   user {
     username = "Test"
     password = "TestTest1234"
