@@ -58,6 +58,7 @@ func resourceAwsRouteTableAssociationImport(d *schema.ResourceData, meta interfa
 	found := false
 	for _, a := range rt.Associations {
 		if *a.SubnetId == idData[1] {
+			found = true
 			if err = d.Set("subnet_id", idData[1]); err != nil {
 				return nil, err
 			}
