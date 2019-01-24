@@ -35,7 +35,7 @@ resource "aws_load_balancer_policy" "wu-tang-ca-pubkey-policy" {
   policy_name        = "wu-tang-ca-pubkey-policy"
   policy_type_name   = "PublicKeyPolicyType"
 
-  policy_attribute = {
+  policy_attribute {
     name  = "PublicKey"
     value = "${file("wu-tang-pubkey")}"
   }
@@ -46,7 +46,7 @@ resource "aws_load_balancer_policy" "wu-tang-root-ca-backend-auth-policy" {
   policy_name        = "wu-tang-root-ca-backend-auth-policy"
   policy_type_name   = "BackendServerAuthenticationPolicyType"
 
-  policy_attribute = {
+  policy_attribute {
     name  = "PublicKeyPolicyName"
     value = "${aws_load_balancer_policy.wu-tang-root-ca-pubkey-policy.policy_name}"
   }
@@ -57,12 +57,12 @@ resource "aws_load_balancer_policy" "wu-tang-ssl" {
   policy_name        = "wu-tang-ssl"
   policy_type_name   = "SSLNegotiationPolicyType"
 
-  policy_attribute = {
+  policy_attribute {
     name  = "ECDHE-ECDSA-AES128-GCM-SHA256"
     value = "true"
   }
 
-  policy_attribute = {
+  policy_attribute {
     name  = "Protocol-TLSv1.2"
     value = "true"
   }
