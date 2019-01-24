@@ -1440,16 +1440,16 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
   extended_s3_configuration {
     role_arn = "${aws_iam_role.firehose.arn}"
     bucket_arn = "${aws_s3_bucket.bucket.arn}"
-    processing_configuration = [{
-    	enabled = "false",
-    	processors = [{
-    		type = "Lambda"
-    		parameters = [{
-    			parameter_name = "LambdaArn"
-    			parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
-    		}]
-    	}]
-    }],
+    processing_configuration {
+      enabled = false
+      processors {
+        type = "Lambda"
+        parameters {
+          parameter_name = "LambdaArn"
+          parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
+        }
+      }
+    }
     s3_backup_mode = "Disabled"
   }
 }
@@ -1757,16 +1757,16 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
     role_arn = "${aws_iam_role.firehose.arn}"
     bucket_arn = "${aws_s3_bucket.bucket.arn}"
     kms_key_arn = "${aws_kms_key.test.arn}"
-    processing_configuration = [{
-    	enabled = "false",
-    	processors = [{
-    		type = "Lambda"
-    		parameters = [{
-    			parameter_name = "LambdaArn"
-    			parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
-    		}]
-    	}]
-    }]
+    processing_configuration {
+      enabled = false
+      processors {
+        type = "Lambda"
+        parameters {
+          parameter_name = "LambdaArn"
+          parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
+        }
+      }
+    }
   }
 }
 `
@@ -1779,16 +1779,16 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
   extended_s3_configuration {
     role_arn = "${aws_iam_role.firehose.arn}"
     bucket_arn = "${aws_s3_bucket.bucket.arn}"
-    processing_configuration = [{
-    	enabled = "false",
-    	processors = [{
-    		type = "NotLambda"
-    		parameters = [{
-    			parameter_name = "LambdaArn"
-    			parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
-    		}]
-    	}]
-    }]
+    processing_configuration {
+      enabled = false
+      processors {
+        type = "NotLambda"
+        parameters {
+          parameter_name = "LambdaArn"
+          parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
+        }
+      }
+    }
   }
 }
 `
@@ -1801,16 +1801,16 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
   extended_s3_configuration {
     role_arn = "${aws_iam_role.firehose.arn}"
     bucket_arn = "${aws_s3_bucket.bucket.arn}"
-    processing_configuration = [{
-    	enabled = "false",
-    	processors = [{
-    		type = "Lambda"
-    		parameters = [{
-    			parameter_name = "NotLambdaArn"
-    			parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
-    		}]
-    	}]
-    }]
+    processing_configuration {
+      enabled = false
+      processors {
+        type = "Lambda"
+        parameters {
+          parameter_name = "NotLambdaArn"
+          parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
+        }
+      }
+    }
   }
 }
 `
@@ -1823,16 +1823,16 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
   extended_s3_configuration {
     role_arn = "${aws_iam_role.firehose.arn}"
     bucket_arn = "${aws_s3_bucket.bucket.arn}"
-    processing_configuration = [{
-    	enabled = "false",
-    	processors = [{
-    		type = "Lambda"
-    		parameters = [{
-    			parameter_name = "LambdaArn"
-    			parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
-    		}]
-    	}]
-    }]
+    processing_configuration {
+      enabled = false
+      processors {
+        type = "Lambda"
+        parameters {
+          parameter_name = "LambdaArn"
+          parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
+        }
+      }
+    }
     buffer_size = 10
     buffer_interval = 400
     compression_format = "GZIP"
@@ -1899,16 +1899,16 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
     data_table_name = "test-table"
     copy_options = "GZIP"
     data_table_columns = "test-col"
-    processing_configuration = [{
-      enabled = false,
-      processors = [{
+    processing_configuration {
+      enabled = false
+      processors {
         type = "Lambda"
-        parameters = [{
+        parameters {
           parameter_name = "LambdaArn"
           parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
-        }]
-      }]
-    }]
+        }
+      }
+    }
   }
 }`
 
@@ -1945,34 +1945,29 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
     hec_acknowledgment_timeout = 600
     hec_endpoint_type = "Event"
     s3_backup_mode = "FailedEventsOnly"
-    processing_configuration = [
-      {
-        enabled = "true"
-        processors = [
-          {
-            type = "Lambda"
-            parameters = [
-              {
-                parameter_name = "LambdaArn"
-                parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
-              },
-              {
-                parameter_name = "RoleArn"
-                parameter_value = "${aws_iam_role.firehose.arn}"
-              },
-              {
-                parameter_name = "BufferSizeInMBs"
-                parameter_value = 1
-              },
-              {
-                parameter_name = "BufferIntervalInSeconds"
-                parameter_value = 120
-              }
-            ]
-          }
-        ]
+    processing_configuration {
+      enabled = true
+      processors {
+        type = "Lambda"
+
+        parameters {
+          parameter_name = "LambdaArn"
+          parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
+        }
+        parameters {
+          parameter_name = "RoleArn"
+          parameter_value = "${aws_iam_role.firehose.arn}"
+        }
+        parameters {
+          parameter_name = "BufferSizeInMBs"
+          parameter_value = 1
+        }
+        parameters {
+          parameter_name = "BufferIntervalInSeconds"
+          parameter_value = 120
+        }
       }
-    ]
+    }
   }
 }`
 
@@ -2041,16 +2036,16 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream_es" {
     index_name = "test"
     type_name = "test"
     buffering_interval = 500
-    processing_configuration = [{
-      enabled = "false",
-      processors = [{
+    processing_configuration {
+      enabled = false
+      processors {
         type = "Lambda"
-        parameters = [{
+        parameters {
           parameter_name = "LambdaArn"
           parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
-        }]
-      }]
-    }]
+        }
+      }
+    }
   }
 }`
 
