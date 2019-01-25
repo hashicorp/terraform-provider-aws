@@ -37,6 +37,7 @@ func init() {
 			"aws_mq_broker",
 			"aws_network_interface",
 			"aws_redshift_cluster",
+			"aws_route53_resolver_endpoint",
 			"aws_spot_fleet_request",
 			"aws_vpc_endpoint",
 		},

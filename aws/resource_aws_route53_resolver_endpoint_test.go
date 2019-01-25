@@ -2,7 +2,10 @@ package aws
 
 import (
 	"fmt"
+	"log"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
@@ -10,6 +13,66 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_route53_resolver_endpoint", &resource.Sweeper{
+		Name: "aws_route53_resolver_endpoint",
+		F:    testSweepRoute53ResolverEndpoints,
+	})
+}
+
+func testSweepRoute53ResolverEndpoints(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).r53resolverconn
+
+	err = conn.ListResolverEndpointsPages(&route53resolver.ListResolverEndpointsInput{}, func(page *route53resolver.ListResolverEndpointsOutput, isLast bool) bool {
+		if page == nil {
+			return !isLast
+		}
+
+		for _, resolverEndpoint := range page.ResolverEndpoints {
+			if !strings.HasPrefix(aws.StringValue(resolverEndpoint.Name), "terraform-testacc-") {
+				continue
+			}
+
+			id := aws.StringValue(resolverEndpoint.Id)
+
+			log.Printf("[INFO] Deleting Route53 Resolver endpoint: %s", id)
+			_, err := conn.DeleteResolverEndpoint(&route53resolver.DeleteResolverEndpointInput{
+				ResolverEndpointId: aws.String(id),
+			})
+			if err != nil {
+				if isAWSErr(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+					continue
+				}
+
+				log.Printf("[ERROR] Error deleting Route53 Resolver endpoint (%s): %s", id, err)
+				continue
+			}
+
+			err = route53ResolverEndpointWaitUntilTargetState(conn, id, 10*time.Minute,
+				[]string{route53resolver.ResolverEndpointStatusDeleting},
+				[]string{Route53ResolverEndpointStatusDeleted})
+			if err != nil {
+				log.Printf("[ERROR] %s", err)
+			}
+		}
+
+		return !isLast
+	})
+	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping Route53 Resolver endpoint sweep for %s: %s", region, err)
+			return nil
+		}
+		return fmt.Errorf("error retrievingRoute53 Resolver endpoints: %s", err)
+	}
+
+	return nil
+}
 
 func TestAccAwsRoute53ResolverEndpoint_basicInbound(t *testing.T) {
 	var ep route53resolver.ResolverEndpoint
