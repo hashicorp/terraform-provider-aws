@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -19,6 +20,9 @@ func resourceAwsAutoscalingPolicy() *schema.Resource {
 		Read:   resourceAwsAutoscalingPolicyRead,
 		Update: resourceAwsAutoscalingPolicyUpdate,
 		Delete: resourceAwsAutoscalingPolicyDelete,
+		Importer: &schema.ResourceImporter{
+			State: resourceAwsAutoscalingPolicyImport,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -274,6 +278,22 @@ func resourceAwsAutoscalingPolicyDelete(d *schema.ResourceData, meta interface{}
 	}
 
 	return nil
+}
+
+func resourceAwsAutoscalingPolicyImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	idParts := strings.SplitN(d.Id(), "/", 2)
+	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
+		return nil, fmt.Errorf("unexpected format (%q), expected <asg-name>/<policy-name>", d.Id())
+	}
+
+	asgName := idParts[0]
+	policyName := idParts[1]
+
+	d.Set("name", policyName)
+	d.Set("autoscaling_group_name", asgName)
+	d.SetId(policyName)
+
+	return []*schema.ResourceData{d}, nil
 }
 
 // PutScalingPolicy can safely resend all parameters without destroying the

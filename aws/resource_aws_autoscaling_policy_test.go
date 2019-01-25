@@ -55,6 +55,12 @@ func TestAccAWSAutoscalingPolicy_basic(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      "aws_autoscaling_policy.foobar_simple",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSAutoscalingPolicyImportStateIdFunc("aws_autoscaling_policy.foobar_simple"),
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccAWSAutoscalingPolicyConfig_basicUpdate(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScalingPolicyExists("aws_autoscaling_policy.foobar_simple", &policy),
@@ -304,6 +310,17 @@ func testAccCheckAWSAutoscalingPolicyDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccAWSAutoscalingPolicyImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.Attributes["name"]), nil
+	}
 }
 
 func testAccAWSAutoscalingPolicyConfig_base(name string) string {
