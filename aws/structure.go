@@ -2992,9 +2992,9 @@ func flattenIoTRuleSqsActions(actions []*iot.Action) []map[string]interface{} {
 		result := make(map[string]interface{})
 		v := a.Sqs
 		if v != nil {
-			result["role_arn"] = *v.RoleArn
-			result["use_base64"] = *v.UseBase64
-			result["queue_url"] = *v.QueueUrl
+			result["role_arn"] = aws.StringValue(v.RoleArn)
+			result["use_base64"] = aws.BoolValue(v.UseBase64)
+			result["queue_url"] = aws.StringValue(v.QueueUrl)
 
 			results = append(results, result)
 		}
