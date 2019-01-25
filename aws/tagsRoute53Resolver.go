@@ -22,9 +22,7 @@ func getTagsRoute53Resolver(conn *route53resolver.Route53Resolver, d *schema.Res
 			return err
 		}
 
-		for _, tag := range resp.Tags {
-			tags = append(tags, tag)
-		}
+		tags = append(tags, resp.Tags...)
 
 		if resp.NextToken == nil {
 			break
@@ -51,7 +49,7 @@ func setTagsRoute53Resolver(conn *route53resolver.Route53Resolver, d *schema.Res
 		// Set tags
 		if len(remove) > 0 {
 			log.Printf("[DEBUG] Removing tags: %#v", remove)
-			k := make([]*string, len(remove), len(remove))
+			k := make([]*string, len(remove))
 			for i, t := range remove {
 				k[i] = t.Key
 			}
@@ -138,7 +136,7 @@ func tagIgnoredRoute53Resolver(t *route53resolver.Tag) bool {
 	filter := []string{"^aws:"}
 	for _, v := range filter {
 		log.Printf("[DEBUG] Matching %v with %v\n", v, *t.Key)
-		if r, _ := regexp.MatchString(v, *t.Key); r == true {
+		if r, _ := regexp.MatchString(v, *t.Key); r {
 			log.Printf("[DEBUG] Found AWS specific tag %s (val: %s), ignoring.\n", *t.Key, *t.Value)
 			return true
 		}
