@@ -6,7 +6,7 @@ description: |-
   Provides an SES receipt filter
 ---
 
-# aws\_ses\_receipt_filter
+# aws_ses_receipt_filter
 
 Provides an SES receipt filter resource
 

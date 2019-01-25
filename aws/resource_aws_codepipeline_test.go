@@ -13,6 +13,31 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestAccAWSCodePipeline_Import_basic(t *testing.T) {
+	if os.Getenv("GITHUB_TOKEN") == "" {
+		t.Skip("Environment variable GITHUB_TOKEN is not set")
+	}
+
+	name := acctest.RandString(10)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodePipelineConfig_basic(name),
+			},
+
+			{
+				ResourceName:      "aws_codepipeline.bar",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSCodePipeline_basic(t *testing.T) {
 	if os.Getenv("GITHUB_TOKEN") == "" {
 		t.Skip("Environment variable GITHUB_TOKEN is not set")
@@ -20,7 +45,7 @@ func TestAccAWSCodePipeline_basic(t *testing.T) {
 
 	name := acctest.RandString(10)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
@@ -29,6 +54,8 @@ func TestAccAWSCodePipeline_basic(t *testing.T) {
 				Config: testAccAWSCodePipelineConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodePipelineExists("aws_codepipeline.bar"),
+					resource.TestMatchResourceAttr("aws_codepipeline.bar", "arn",
+						regexp.MustCompile(fmt.Sprintf("^arn:aws:codepipeline:[^:]+:[0-9]{12}:test-pipeline-%s", name))),
 					resource.TestCheckResourceAttr("aws_codepipeline.bar", "artifact_store.0.type", "S3"),
 					resource.TestCheckResourceAttr("aws_codepipeline.bar", "artifact_store.0.encryption_key.0.id", "1234"),
 					resource.TestCheckResourceAttr("aws_codepipeline.bar", "artifact_store.0.encryption_key.0.type", "KMS"),
@@ -47,6 +74,40 @@ func TestAccAWSCodePipeline_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSCodePipeline_emptyArtifacts(t *testing.T) {
+	if os.Getenv("GITHUB_TOKEN") == "" {
+		t.Skip("Environment variable GITHUB_TOKEN is not set")
+	}
+
+	name := acctest.RandString(10)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodePipelineConfig_emptyArtifacts(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodePipelineExists("aws_codepipeline.bar"),
+					resource.TestMatchResourceAttr("aws_codepipeline.bar", "arn",
+						regexp.MustCompile(fmt.Sprintf("^arn:aws:codepipeline:[^:]+:[0-9]{12}:test-pipeline-%s", name))),
+					resource.TestCheckResourceAttr("aws_codepipeline.bar", "artifact_store.0.type", "S3"),
+					resource.TestCheckResourceAttr("aws_codepipeline.bar", "stage.1.name", "Build"),
+					resource.TestCheckResourceAttr("aws_codepipeline.bar", "stage.1.action.#", "1"),
+					resource.TestCheckResourceAttr("aws_codepipeline.bar", "stage.1.action.0.name", "Build"),
+					resource.TestCheckResourceAttr("aws_codepipeline.bar", "stage.1.action.0.category", "Build"),
+					resource.TestCheckResourceAttr("aws_codepipeline.bar", "stage.1.action.0.owner", "AWS"),
+					resource.TestCheckResourceAttr("aws_codepipeline.bar", "stage.1.action.0.provider", "CodeBuild"),
+					resource.TestCheckResourceAttr("aws_codepipeline.bar", "stage.1.action.0.input_artifacts.#", "1"),
+					resource.TestCheckResourceAttr("aws_codepipeline.bar", "stage.1.action.0.output_artifacts.#", "0"),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSCodePipeline_deployWithServiceRole(t *testing.T) {
 	if os.Getenv("GITHUB_TOKEN") == "" {
 		t.Skip("Environment variable GITHUB_TOKEN is not set")
@@ -54,7 +115,7 @@ func TestAccAWSCodePipeline_deployWithServiceRole(t *testing.T) {
 
 	name := acctest.RandString(10)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
@@ -91,10 +152,7 @@ func testAccCheckAWSCodePipelineExists(n string) resource.TestCheckFunc {
 			Name: aws.String(rs.Primary.ID),
 		})
 
-		if err != nil {
-			return err
-		}
-		return nil
+		return err
 	}
 }
 
@@ -203,7 +261,7 @@ resource "aws_codepipeline" "bar" {
       version          = "1"
       output_artifacts = ["test"]
 
-      configuration {
+      configuration = {
         Owner  = "lifesum-terraform"
         Repo   = "test"
         Branch = "master"
@@ -222,7 +280,7 @@ resource "aws_codepipeline" "bar" {
       input_artifacts = ["test"]
       version         = "1"
 
-      configuration {
+      configuration = {
         ProjectName = "test"
       }
     }
@@ -315,7 +373,7 @@ resource "aws_codepipeline" "bar" {
       version          = "1"
       output_artifacts = ["bar"]
 
-      configuration {
+      configuration = {
         Owner  = "foo-terraform"
         Repo   = "bar"
         Branch = "stable"
@@ -334,8 +392,116 @@ resource "aws_codepipeline" "bar" {
       input_artifacts = ["bar"]
       version         = "1"
 
-      configuration {
+      configuration = {
         ProjectName = "foo"
+      }
+    }
+  }
+}
+`, rName, rName, rName)
+}
+
+func testAccAWSCodePipelineConfig_emptyArtifacts(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "foo" {
+  bucket = "tf-test-pipeline-%s"
+  acl    = "private"
+}
+
+resource "aws_iam_role" "codepipeline_role" {
+  name = "codepipeline-role-%s"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "codepipeline.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "codepipeline_policy" {
+  name = "codepipeline_policy"
+  role = "${aws_iam_role.codepipeline_role.id}"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect":"Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:GetObjectVersion",
+        "s3:GetBucketVersioning"
+      ],
+      "Resource": [
+        "${aws_s3_bucket.foo.arn}",
+        "${aws_s3_bucket.foo.arn}/*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "codebuild:BatchGetBuilds",
+        "codebuild:StartBuild"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_codepipeline" "bar" {
+  name     = "test-pipeline-%s"
+  role_arn = "${aws_iam_role.codepipeline_role.arn}"
+
+  artifact_store {
+    location = "${aws_s3_bucket.foo.bucket}"
+    type     = "S3"
+  }
+
+  stage {
+    name = "Source"
+
+    action {
+      name             = "Source"
+      category         = "Source"
+      owner            = "ThirdParty"
+      provider         = "GitHub"
+      version          = "1"
+      output_artifacts = ["test"]
+
+      configuration = {
+        Owner  = "lifesum-terraform"
+        Repo   = "test"
+        Branch = "master"
+      }
+    }
+  }
+
+  stage {
+    name = "Build"
+
+    action {
+      name             = "Build"
+      category         = "Build"
+      owner            = "AWS"
+      provider         = "CodeBuild"
+      input_artifacts  = ["test", ""]
+      output_artifacts = [""]
+      version          = "1"
+
+      configuration = {
+        ProjectName = "test"
       }
     }
   }
@@ -480,7 +646,7 @@ resource "aws_codepipeline" "bar" {
       version          = "1"
       output_artifacts = ["bar"]
 
-      configuration {
+      configuration = {
         Owner  = "foo-terraform"
         Repo   = "bar"
         Branch = "stable"
@@ -500,7 +666,7 @@ resource "aws_codepipeline" "bar" {
       output_artifacts = ["baz"]
       version          = "1"
 
-      configuration {
+      configuration = {
         ProjectName = "foo"
       }
     }
@@ -518,13 +684,14 @@ resource "aws_codepipeline" "bar" {
       role_arn        = "${aws_iam_role.codepipeline_action_role.arn}"
       version         = "1"
 
-      configuration {
+      configuration = {
         ActionMode    = "CHANGE_SET_REPLACE"
         ChangeSetName = "changeset"
         StackName     = "stack"
         TemplatePath  = "baz::template.yaml"
       }
     }
-  }}
+  }
+}
 `, rName, rName, rName, rName)
 }

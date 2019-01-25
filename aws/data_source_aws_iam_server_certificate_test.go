@@ -41,14 +41,11 @@ func TestResourceSortByExpirationDate(t *testing.T) {
 func TestAccAWSDataSourceIAMServerCertificate_basic(t *testing.T) {
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProvidersWithTLS,
 		CheckDestroy: testAccCheckIAMServerCertificateDestroy,
 		Steps: []resource.TestStep{
-			{
-				Config: testAccIAMServerCertConfig(rInt),
-			},
 			{
 				Config: testAccAwsDataIAMServerCertConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
@@ -57,6 +54,9 @@ func TestAccAWSDataSourceIAMServerCertificate_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("data.aws_iam_server_certificate.test", "id"),
 					resource.TestCheckResourceAttrSet("data.aws_iam_server_certificate.test", "name"),
 					resource.TestCheckResourceAttrSet("data.aws_iam_server_certificate.test", "path"),
+					resource.TestCheckResourceAttrSet("data.aws_iam_server_certificate.test", "upload_date"),
+					resource.TestCheckResourceAttr("data.aws_iam_server_certificate.test", "certificate_chain", ""),
+					resource.TestMatchResourceAttr("data.aws_iam_server_certificate.test", "certificate_body", regexp.MustCompile("^-----BEGIN CERTIFICATE-----")),
 				),
 			},
 		},
@@ -64,7 +64,7 @@ func TestAccAWSDataSourceIAMServerCertificate_basic(t *testing.T) {
 }
 
 func TestAccAWSDataSourceIAMServerCertificate_matchNamePrefix(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckIAMServerCertificateDestroy,
@@ -72,6 +72,26 @@ func TestAccAWSDataSourceIAMServerCertificate_matchNamePrefix(t *testing.T) {
 			{
 				Config:      testAccAwsDataIAMServerCertConfigMatchNamePrefix,
 				ExpectError: regexp.MustCompile(`Search for AWS IAM server certificate returned no results`),
+			},
+		},
+	})
+}
+
+func TestAccAWSDataSourceIAMServerCertificate_path(t *testing.T) {
+	rInt := acctest.RandInt()
+	path := "/test-path/"
+	pathPrefix := "/test-path/"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProvidersWithTLS,
+		CheckDestroy: testAccCheckIAMServerCertificateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsDataIAMServerCertConfigPath(rInt, path, pathPrefix),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.aws_iam_server_certificate.test", "path", path),
+				),
 			},
 		},
 	})
@@ -86,6 +106,18 @@ data "aws_iam_server_certificate" "test" {
   latest = true
 }
 `, testAccIAMServerCertConfig(rInt))
+}
+
+func testAccAwsDataIAMServerCertConfigPath(rInt int, path, pathPrefix string) string {
+	return fmt.Sprintf(`
+%s
+
+data "aws_iam_server_certificate" "test" {
+  name = "${aws_iam_server_certificate.test_cert.name}"
+  path_prefix = "%s"
+  latest = true
+}
+`, testAccIAMServerCertConfig_path(rInt, path), pathPrefix)
 }
 
 var testAccAwsDataIAMServerCertConfigMatchNamePrefix = `

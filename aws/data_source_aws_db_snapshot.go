@@ -152,6 +152,7 @@ func dataSourceAwsDbSnapshotRead(d *schema.ResourceData, meta interface{}) error
 		params.DBSnapshotIdentifier = aws.String(snapshotIdentifier.(string))
 	}
 
+	log.Printf("[DEBUG] Reading DB Snapshot: %s", params)
 	resp, err := conn.DescribeDBSnapshots(params)
 	if err != nil {
 		return err
@@ -182,6 +183,14 @@ type rdsSnapshotSort []*rds.DBSnapshot
 func (a rdsSnapshotSort) Len() int      { return len(a) }
 func (a rdsSnapshotSort) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 func (a rdsSnapshotSort) Less(i, j int) bool {
+	// Snapshot creation can be in progress
+	if a[i].SnapshotCreateTime == nil {
+		return true
+	}
+	if a[j].SnapshotCreateTime == nil {
+		return false
+	}
+
 	return (*a[i].SnapshotCreateTime).Before(*a[j].SnapshotCreateTime)
 }
 
@@ -212,7 +221,9 @@ func dbSnapshotDescriptionAttributes(d *schema.ResourceData, snapshot *rds.DBSna
 	d.Set("source_region", snapshot.SourceRegion)
 	d.Set("status", snapshot.Status)
 	d.Set("vpc_id", snapshot.VpcId)
-	d.Set("snapshot_create_time", snapshot.SnapshotCreateTime.Format(time.RFC3339))
+	if snapshot.SnapshotCreateTime != nil {
+		d.Set("snapshot_create_time", snapshot.SnapshotCreateTime.Format(time.RFC3339))
+	}
 
 	return nil
 }

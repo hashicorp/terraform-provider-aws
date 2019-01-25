@@ -16,10 +16,33 @@ import (
 // These tests assume the existence of predefined Opsworks IAM roles named `aws-opsworks-ec2-role`
 // and `aws-opsworks-service-role`.
 
-func TestAccAWSOpsworksCustomLayer(t *testing.T) {
+func TestAccAWSOpsworksCustomLayer_importBasic(t *testing.T) {
+	name := acctest.RandString(10)
+
+	resourceName := "aws_opsworks_custom_layer.tf-acc"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsOpsworksCustomLayerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsOpsworksCustomLayerConfigVpcCreate(name),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSOpsworksCustomLayer_basic(t *testing.T) {
 	stackName := fmt.Sprintf("tf-%d", acctest.RandInt())
 	var opslayer opsworks.Layer
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOpsworksCustomLayerDestroy,
@@ -220,11 +243,12 @@ func testAccCheckAWSOpsworksCreateLayerAttributes(
 
 		expectedEbsVolumes := []*opsworks.VolumeConfiguration{
 			{
-				VolumeType:    aws.String("gp2"),
-				NumberOfDisks: aws.Int64(2),
+				Encrypted:     aws.Bool(false),
 				MountPoint:    aws.String("/home"),
-				Size:          aws.Int64(100),
+				NumberOfDisks: aws.Int64(2),
 				RaidLevel:     aws.Int64(0),
+				Size:          aws.Int64(100),
+				VolumeType:    aws.String("gp2"),
 			},
 		}
 
@@ -358,7 +382,7 @@ resource "aws_opsworks_custom_layer" "tf-acc" {
 func testAccAwsOpsworksCustomLayerConfigUpdate(name string) string {
 	return fmt.Sprintf(`
 resource "aws_security_group" "tf-ops-acc-layer3" {
-  name = "tf-ops-acc-layer3"
+  name = "tf-ops-acc-layer-%[1]s"
   ingress {
     from_port = 8
     to_port = -1
@@ -368,7 +392,7 @@ resource "aws_security_group" "tf-ops-acc-layer3" {
 }
 resource "aws_opsworks_custom_layer" "tf-acc" {
   stack_id = "${aws_opsworks_stack.tf-acc.id}"
-  name = "%s"
+  name = "%[1]s"
   short_name = "tf-ops-acc-custom-layer"
   auto_assign_public_ips = true
   custom_security_group_ids = [

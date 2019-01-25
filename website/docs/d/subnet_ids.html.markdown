@@ -6,7 +6,7 @@ description: |-
     Provides a list of subnet Ids for a VPC
 ---
 
-# aws\_subnet\_ids
+# Data Source: aws_subnet_ids
 
 `aws_subnet_ids` provides a list of ids for a vpc_id
 
@@ -23,7 +23,7 @@ data "aws_subnet_ids" "example" {
 
 data "aws_subnet" "example" {
   count = "${length(data.aws_subnet_ids.example.ids)}"
-  id = "${data.aws_subnet_ids.example.ids[count.index]}"
+  id    = "${data.aws_subnet_ids.example.ids[count.index]}"
 }
 
 output "subnet_cidr_blocks" {
@@ -38,7 +38,8 @@ can loop through the subnets, putting instances across availability zones.
 ```hcl
 data "aws_subnet_ids" "private" {
   vpc_id = "${var.vpc_id}"
-  tags {
+
+  tags = {
     Tier = "Private"
   }
 }
@@ -60,4 +61,4 @@ resource "aws_instance" "app" {
 
 ## Attributes Reference
 
-* `ids` - Is a list of all the subnet ids found. If none found. This data source will fail out.
+* `ids` - A list of all the subnet ids found. This data source will fail if none are found.

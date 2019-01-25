@@ -6,7 +6,7 @@ description: |-
   Provides an AutoScaling Scaling Group resource.
 ---
 
-# aws\_cloudwatch\_metric\_alarm
+# aws_cloudwatch_metric_alarm
 
 Provides a CloudWatch Metric Alarm resource.
 
@@ -48,7 +48,7 @@ resource "aws_cloudwatch_metric_alarm" "bat" {
   statistic           = "Average"
   threshold           = "80"
 
-  dimensions {
+  dimensions = {
     AutoScalingGroupName = "${aws_autoscaling_group.bar.name}"
   }
 
@@ -68,6 +68,7 @@ for details about valid values.
 The following arguments are supported:
 
 * `alarm_name` - (Required) The descriptive name for the alarm. This name must be unique within the user's AWS account
+* `arn` - The ARN of the cloudwatch metric alarm.
 * `comparison_operator` - (Required) The arithmetic operation to use when comparing the specified Statistic and Threshold. The specified Statistic value is used as the first operand. Either of the following is supported: `GreaterThanOrEqualToThreshold`, `GreaterThanThreshold`, `LessThanThreshold`, `LessThanOrEqualToThreshold`.
 * `evaluation_periods` - (Required) The number of periods over which data is compared to the specified threshold.
 * `metric_name` - (Required) The name for the alarm's associated metric.
@@ -81,6 +82,7 @@ The following arguments are supported:
 * `actions_enabled` - (Optional) Indicates whether or not actions should be executed during any changes to the alarm's state. Defaults to `true`.
 * `alarm_actions` - (Optional) The list of actions to execute when this alarm transitions into an ALARM state from any other state. Each action is specified as an Amazon Resource Number (ARN).
 * `alarm_description` - (Optional) The description for the alarm.
+* `datapoints_to_alarm` - (Optional) The number of datapoints that must be breaching to trigger the alarm.
 * `dimensions` - (Optional) The dimensions for the alarm's associated metric.  For the list of available dimensions see the AWS documentation [here](http://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/CW_Support_For_AWS.html).
 * `insufficient_data_actions` - (Optional) The list of actions to execute when this alarm transitions into an INSUFFICIENT_DATA state from any other state. Each action is specified as an Amazon Resource Number (ARN).
 * `ok_actions` - (Optional) The list of actions to execute when this alarm transitions into an OK state from any other state. Each action is specified as an Amazon Resource Number (ARN).
@@ -96,7 +98,7 @@ The following values are supported: `ignore`, and `evaluate`.
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the health check
 

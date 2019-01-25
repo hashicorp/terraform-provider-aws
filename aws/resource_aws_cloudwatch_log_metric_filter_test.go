@@ -15,7 +15,7 @@ func TestAccAWSCloudWatchLogMetricFilter_basic(t *testing.T) {
 	var mf cloudwatchlogs.MetricFilter
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchLogMetricFilterDestroy,
@@ -51,10 +51,12 @@ func TestAccAWSCloudWatchLogMetricFilter_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_cloudwatch_log_metric_filter.foobar", "metric_transformation.0.name", "AccessDeniedCount"),
 					resource.TestCheckResourceAttr("aws_cloudwatch_log_metric_filter.foobar", "metric_transformation.0.namespace", "MyNamespace"),
 					resource.TestCheckResourceAttr("aws_cloudwatch_log_metric_filter.foobar", "metric_transformation.0.value", "2"),
+					resource.TestCheckResourceAttr("aws_cloudwatch_log_metric_filter.foobar", "metric_transformation.0.default_value", "1"),
 					testAccCheckCloudWatchLogMetricFilterTransformation(&mf, &cloudwatchlogs.MetricTransformation{
 						MetricName:      aws.String("AccessDeniedCount"),
 						MetricNamespace: aws.String("MyNamespace"),
 						MetricValue:     aws.String("2"),
+						DefaultValue:    aws.Float64(1),
 					}),
 				),
 			},
@@ -106,6 +108,14 @@ func testAccCheckCloudWatchLogMetricFilterTransformation(mf *cloudwatchlogs.Metr
 		if *given.MetricValue != *expected.MetricValue {
 			return fmt.Errorf("Expected metric value: %q, received: %q",
 				*expected.MetricValue, *given.MetricValue)
+		}
+
+		if (given.DefaultValue != nil) != (expected.DefaultValue != nil) {
+			return fmt.Errorf("Expected default value to be present: %t, received: %t",
+				expected.DefaultValue != nil, given.DefaultValue != nil)
+		} else if (given.DefaultValue != nil) && *given.DefaultValue != *expected.DefaultValue {
+			return fmt.Errorf("Expected metric value: %g, received: %g",
+				*expected.DefaultValue, *given.DefaultValue)
 		}
 
 		return nil
@@ -181,6 +191,7 @@ PATTERN
   	name = "AccessDeniedCount"
   	namespace = "MyNamespace"
   	value = "2"
+  	default_value = "1"
   }
 }
 

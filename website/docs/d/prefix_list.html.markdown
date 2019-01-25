@@ -6,7 +6,7 @@ description: |-
     Provides details about a specific prefix list
 ---
 
-# aws\_prefix\_list
+# Data Source: aws_prefix_list
 
 `aws_prefix_list` provides details about a specific prefix list (PL)
 in the current region.
@@ -56,7 +56,7 @@ whose data will be exported as attributes.
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the selected prefix list.
 

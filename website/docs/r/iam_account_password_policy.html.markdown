@@ -6,7 +6,7 @@ description: |-
   Manages Password Policy for the AWS Account.
 ---
 
-# aws\_iam\_account_password_policy
+# aws_iam_account_password_policy
 
 -> **Note:** There is only a single policy allowed per AWS account. An existing policy will be lost when using this resource as an effect of this limitation.
 
@@ -44,7 +44,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `expire_passwords` - Indicates whether passwords in the account expire.
 	Returns `true` if `max_password_age` contains a value greater than `0`.

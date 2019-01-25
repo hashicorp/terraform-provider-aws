@@ -16,41 +16,39 @@ import (
 func TestAccAWSGroupMembership_basic(t *testing.T) {
 	var group iam.GetGroupOutput
 
-	rString := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
-	configBase := fmt.Sprintf(testAccAWSGroupMemberConfig, rString, rString, rString)
-	configUpdate := fmt.Sprintf(testAccAWSGroupMemberConfigUpdate, rString, rString, rString, rString, rString)
-	configUpdateDown := fmt.Sprintf(testAccAWSGroupMemberConfigUpdateDown, rString, rString, rString)
+	rString := acctest.RandString(8)
+	groupName := fmt.Sprintf("tf-acc-group-gm-basic-%s", rString)
+	userName := fmt.Sprintf("tf-acc-user-gm-basic-%s", rString)
+	userName2 := fmt.Sprintf("tf-acc-user-gm-basic-two-%s", rString)
+	userName3 := fmt.Sprintf("tf-acc-user-gm-basic-three-%s", rString)
+	membershipName := fmt.Sprintf("tf-acc-membership-gm-basic-%s", rString)
 
-	testUser := fmt.Sprintf("test-user-%s", rString)
-	testUserTwo := fmt.Sprintf("test-user-two-%s", rString)
-	testUserThree := fmt.Sprintf("test-user-three-%s", rString)
-
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGroupMembershipDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
-				Config: configBase,
+			{
+				Config: testAccAWSGroupMemberConfig(groupName, userName, membershipName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGroupMembershipExists("aws_iam_group_membership.team", &group),
-					testAccCheckAWSGroupMembershipAttributes(&group, []string{testUser}),
+					testAccCheckAWSGroupMembershipAttributes(&group, groupName, []string{userName}),
 				),
 			},
 
-			resource.TestStep{
-				Config: configUpdate,
+			{
+				Config: testAccAWSGroupMemberConfigUpdate(groupName, userName, userName2, userName3, membershipName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGroupMembershipExists("aws_iam_group_membership.team", &group),
-					testAccCheckAWSGroupMembershipAttributes(&group, []string{testUserTwo, testUserThree}),
+					testAccCheckAWSGroupMembershipAttributes(&group, groupName, []string{userName2, userName3}),
 				),
 			},
 
-			resource.TestStep{
-				Config: configUpdateDown,
+			{
+				Config: testAccAWSGroupMemberConfigUpdateDown(groupName, userName3, membershipName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGroupMembershipExists("aws_iam_group_membership.team", &group),
-					testAccCheckAWSGroupMembershipAttributes(&group, []string{testUserThree}),
+					testAccCheckAWSGroupMembershipAttributes(&group, groupName, []string{userName3}),
 				),
 			},
 		},
@@ -60,13 +58,18 @@ func TestAccAWSGroupMembership_basic(t *testing.T) {
 func TestAccAWSGroupMembership_paginatedUserList(t *testing.T) {
 	var group iam.GetGroupOutput
 
-	resource.Test(t, resource.TestCase{
+	rString := acctest.RandString(8)
+	groupName := fmt.Sprintf("tf-acc-group-gm-pul-%s", rString)
+	membershipName := fmt.Sprintf("tf-acc-membership-gm-pul-%s", rString)
+	userNamePrefix := fmt.Sprintf("tf-acc-user-gm-pul-%s-", rString)
+
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGroupMembershipDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
-				Config: testAccAWSGroupMemberConfigPaginatedUserList,
+			{
+				Config: testAccAWSGroupMemberConfigPaginatedUserList(groupName, membershipName, userNamePrefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGroupMembershipExists("aws_iam_group_membership.team", &group),
 					resource.TestCheckResourceAttr(
@@ -132,10 +135,10 @@ func testAccCheckAWSGroupMembershipExists(n string, g *iam.GetGroupOutput) resou
 	}
 }
 
-func testAccCheckAWSGroupMembershipAttributes(group *iam.GetGroupOutput, users []string) resource.TestCheckFunc {
+func testAccCheckAWSGroupMembershipAttributes(group *iam.GetGroupOutput, groupName string, users []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if !strings.Contains(*group.Group.GroupName, "test-group") {
-			return fmt.Errorf("Bad group membership: expected %s, got %s", "test-group", *group.Group.GroupName)
+		if !strings.Contains(*group.Group.GroupName, groupName) {
+			return fmt.Errorf("Bad group membership: expected %s, got %s", groupName, *group.Group.GroupName)
 		}
 
 		uc := len(users)
@@ -154,80 +157,191 @@ func testAccCheckAWSGroupMembershipAttributes(group *iam.GetGroupOutput, users [
 	}
 }
 
-const testAccAWSGroupMemberConfig = `
+func testAccAWSGroupMemberConfig(groupName, userName, membershipName string) string {
+	return fmt.Sprintf(`
 resource "aws_iam_group" "group" {
-	name = "test-group-%s"
+	name = "%s"
 }
 
 resource "aws_iam_user" "user" {
-	name = "test-user-%s"
+	name = "%s"
 }
 
 resource "aws_iam_group_membership" "team" {
-	name = "tf-testing-group-membership-%s"
+	name = "%s"
 	users = ["${aws_iam_user.user.name}"]
 	group = "${aws_iam_group.group.name}"
 }
-`
+`, groupName, userName, membershipName)
+}
 
-const testAccAWSGroupMemberConfigUpdate = `
+func testAccAWSGroupMemberConfigUpdate(groupName, userName, userName2, userName3, membershipName string) string {
+	return fmt.Sprintf(`
 resource "aws_iam_group" "group" {
-	name = "test-group-%s"
+	name = "%s"
 }
 
 resource "aws_iam_user" "user" {
-	name = "test-user-%s"
+	name = "%s"
 }
 
 resource "aws_iam_user" "user_two" {
-	name = "test-user-two-%s"
+	name = "%s"
 }
 
 resource "aws_iam_user" "user_three" {
-	name = "test-user-three-%s"
+	name = "%s"
 }
 
 resource "aws_iam_group_membership" "team" {
-	name = "tf-testing-group-membership-%s"
+	name = "%s"
 	users = [
 		"${aws_iam_user.user_two.name}",
 		"${aws_iam_user.user_three.name}",
 	]
 	group = "${aws_iam_group.group.name}"
 }
-`
+`, groupName, userName, userName2, userName3, membershipName)
+}
 
-const testAccAWSGroupMemberConfigUpdateDown = `
+func testAccAWSGroupMemberConfigUpdateDown(groupName, userName3, membershipName string) string {
+	return fmt.Sprintf(`
 resource "aws_iam_group" "group" {
-	name = "test-group-%s"
+	name = "%s"
 }
 
 resource "aws_iam_user" "user_three" {
-	name = "test-user-three-%s"
+	name = "%s"
 }
 
 resource "aws_iam_group_membership" "team" {
-	name = "tf-testing-group-membership-%s"
+	name = "%s"
 	users = [
 		"${aws_iam_user.user_three.name}",
 	]
 	group = "${aws_iam_group.group.name}"
 }
-`
+`, groupName, userName3, membershipName)
+}
 
-const testAccAWSGroupMemberConfigPaginatedUserList = `
+func testAccAWSGroupMemberConfigPaginatedUserList(groupName, membershipName, userNamePrefix string) string {
+	return fmt.Sprintf(`
 resource "aws_iam_group" "group" {
-	name = "test-paginated-group"
+	name = "%s"
 }
 
 resource "aws_iam_group_membership" "team" {
-	name = "tf-testing-paginated-group-membership"
-	users = ["${aws_iam_user.user.*.name}"]
+	name = "%s"
 	group = "${aws_iam_group.group.name}"
+	# TODO: Switch back to simple list reference when test configurations are upgraded to 0.12 syntax
+	users = [
+		"${aws_iam_user.user.*.name[0]}",
+		"${aws_iam_user.user.*.name[1]}",
+		"${aws_iam_user.user.*.name[2]}",
+		"${aws_iam_user.user.*.name[3]}",
+		"${aws_iam_user.user.*.name[4]}",
+		"${aws_iam_user.user.*.name[5]}",
+		"${aws_iam_user.user.*.name[6]}",
+		"${aws_iam_user.user.*.name[7]}",
+		"${aws_iam_user.user.*.name[8]}",
+		"${aws_iam_user.user.*.name[9]}",
+		"${aws_iam_user.user.*.name[10]}",
+		"${aws_iam_user.user.*.name[11]}",
+		"${aws_iam_user.user.*.name[12]}",
+		"${aws_iam_user.user.*.name[13]}",
+		"${aws_iam_user.user.*.name[14]}",
+		"${aws_iam_user.user.*.name[15]}",
+		"${aws_iam_user.user.*.name[16]}",
+		"${aws_iam_user.user.*.name[17]}",
+		"${aws_iam_user.user.*.name[18]}",
+		"${aws_iam_user.user.*.name[19]}",
+		"${aws_iam_user.user.*.name[20]}",
+		"${aws_iam_user.user.*.name[21]}",
+		"${aws_iam_user.user.*.name[22]}",
+		"${aws_iam_user.user.*.name[23]}",
+		"${aws_iam_user.user.*.name[24]}",
+		"${aws_iam_user.user.*.name[25]}",
+		"${aws_iam_user.user.*.name[26]}",
+		"${aws_iam_user.user.*.name[27]}",
+		"${aws_iam_user.user.*.name[28]}",
+		"${aws_iam_user.user.*.name[29]}",
+		"${aws_iam_user.user.*.name[30]}",
+		"${aws_iam_user.user.*.name[31]}",
+		"${aws_iam_user.user.*.name[32]}",
+		"${aws_iam_user.user.*.name[33]}",
+		"${aws_iam_user.user.*.name[34]}",
+		"${aws_iam_user.user.*.name[35]}",
+		"${aws_iam_user.user.*.name[36]}",
+		"${aws_iam_user.user.*.name[37]}",
+		"${aws_iam_user.user.*.name[38]}",
+		"${aws_iam_user.user.*.name[39]}",
+		"${aws_iam_user.user.*.name[40]}",
+		"${aws_iam_user.user.*.name[41]}",
+		"${aws_iam_user.user.*.name[42]}",
+		"${aws_iam_user.user.*.name[43]}",
+		"${aws_iam_user.user.*.name[44]}",
+		"${aws_iam_user.user.*.name[45]}",
+		"${aws_iam_user.user.*.name[46]}",
+		"${aws_iam_user.user.*.name[47]}",
+		"${aws_iam_user.user.*.name[48]}",
+		"${aws_iam_user.user.*.name[49]}",
+		"${aws_iam_user.user.*.name[50]}",
+		"${aws_iam_user.user.*.name[51]}",
+		"${aws_iam_user.user.*.name[52]}",
+		"${aws_iam_user.user.*.name[53]}",
+		"${aws_iam_user.user.*.name[54]}",
+		"${aws_iam_user.user.*.name[55]}",
+		"${aws_iam_user.user.*.name[56]}",
+		"${aws_iam_user.user.*.name[57]}",
+		"${aws_iam_user.user.*.name[58]}",
+		"${aws_iam_user.user.*.name[59]}",
+		"${aws_iam_user.user.*.name[60]}",
+		"${aws_iam_user.user.*.name[61]}",
+		"${aws_iam_user.user.*.name[62]}",
+		"${aws_iam_user.user.*.name[63]}",
+		"${aws_iam_user.user.*.name[64]}",
+		"${aws_iam_user.user.*.name[65]}",
+		"${aws_iam_user.user.*.name[66]}",
+		"${aws_iam_user.user.*.name[67]}",
+		"${aws_iam_user.user.*.name[68]}",
+		"${aws_iam_user.user.*.name[69]}",
+		"${aws_iam_user.user.*.name[70]}",
+		"${aws_iam_user.user.*.name[71]}",
+		"${aws_iam_user.user.*.name[72]}",
+		"${aws_iam_user.user.*.name[73]}",
+		"${aws_iam_user.user.*.name[74]}",
+		"${aws_iam_user.user.*.name[75]}",
+		"${aws_iam_user.user.*.name[76]}",
+		"${aws_iam_user.user.*.name[77]}",
+		"${aws_iam_user.user.*.name[78]}",
+		"${aws_iam_user.user.*.name[79]}",
+		"${aws_iam_user.user.*.name[80]}",
+		"${aws_iam_user.user.*.name[81]}",
+		"${aws_iam_user.user.*.name[82]}",
+		"${aws_iam_user.user.*.name[83]}",
+		"${aws_iam_user.user.*.name[84]}",
+		"${aws_iam_user.user.*.name[85]}",
+		"${aws_iam_user.user.*.name[86]}",
+		"${aws_iam_user.user.*.name[87]}",
+		"${aws_iam_user.user.*.name[88]}",
+		"${aws_iam_user.user.*.name[89]}",
+		"${aws_iam_user.user.*.name[90]}",
+		"${aws_iam_user.user.*.name[91]}",
+		"${aws_iam_user.user.*.name[92]}",
+		"${aws_iam_user.user.*.name[93]}",
+		"${aws_iam_user.user.*.name[94]}",
+		"${aws_iam_user.user.*.name[95]}",
+		"${aws_iam_user.user.*.name[96]}",
+		"${aws_iam_user.user.*.name[97]}",
+		"${aws_iam_user.user.*.name[98]}",
+		"${aws_iam_user.user.*.name[99]}",
+		"${aws_iam_user.user.*.name[100]}",
+	]
 }
 
 resource "aws_iam_user" "user" {
 	count = 101
-	name = "${format("paged-test-user-%d", count.index + 1)}"
+	name = "${format("%s%%d", count.index + 1)}"
 }
-`
+`, groupName, membershipName, userNamePrefix)
+}

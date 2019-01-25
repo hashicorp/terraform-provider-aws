@@ -6,7 +6,7 @@ description: |-
   Provides an OpsWorks HAProxy layer resource.
 ---
 
-# aws\_opsworks\_haproxy\_layer
+# aws_opsworks_haproxy_layer
 
 Provides an OpsWorks haproxy layer resource.
 
@@ -66,6 +66,6 @@ An `ebs_volume` block supports the following arguments:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The id of the layer.

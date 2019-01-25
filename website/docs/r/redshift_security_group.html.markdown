@@ -6,7 +6,7 @@ description: |-
   Provides a Redshift security group resource.
 ---
 
-# aws\_redshift\_security\_group
+# aws_redshift_security_group
 
 Creates a new Amazon Redshift security group. You use security groups to control access to non-VPC clusters
 
@@ -39,7 +39,7 @@ Ingress blocks support the following:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The Redshift security group ID.
 

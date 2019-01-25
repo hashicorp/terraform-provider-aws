@@ -6,7 +6,7 @@ description: |-
   Provides a proxy protocol policy, which allows an ELB to carry a client connection information to a backend.
 ---
 
-# aws\_proxy\_protocol\_policy
+# aws_proxy_protocol_policy
 
 Provides a proxy protocol policy, which allows an ELB to carry a client connection information to a backend.
 
@@ -49,7 +49,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the policy.
 * `load_balancer` - The load balancer to which the policy is attached.

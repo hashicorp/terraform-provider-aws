@@ -6,7 +6,7 @@ description: |-
   Creates and manages a custom Amazon Machine Image (AMI).
 ---
 
-# aws\_ami
+# aws_ami
 
 The AMI resource allows the creation and management of a completely-custom
 *Amazon Machine Image* (AMI).
@@ -24,15 +24,15 @@ it's better to use `aws_ami_launch_permission` instead.
 # an EBS volume populated from a snapshot. It is assumed that such a snapshot
 # already exists with the id "snap-xxxxxxxx".
 resource "aws_ami" "example" {
-    name = "terraform-example"
-    virtualization_type = "hvm"
-    root_device_name = "/dev/xvda"
+  name                = "terraform-example"
+  virtualization_type = "hvm"
+  root_device_name    = "/dev/xvda"
 
-    ebs_block_device {
-        device_name = "/dev/xvda"
-        snapshot_id = "snap-xxxxxxxx"
-        volume_size = 8
-    }
+  ebs_block_device {
+    device_name = "/dev/xvda"
+    snapshot_id = "snap-xxxxxxxx"
+    volume_size = 8
+  }
 }
 ```
 
@@ -42,6 +42,7 @@ The following arguments are supported:
 
 * `name` - (Required) A region-unique name for the AMI.
 * `description` - (Optional) A longer, human-readable description for the AMI.
+* `ena_support` - (Optional) Specifies whether enhanced networking with ENA is enabled. Defaults to `false`.
 * `root_device_name` - (Optional) The name of the root device (for example, `/dev/sda1`, or `/dev/xvda`).
 * `virtualization_type` - (Optional) Keyword to choose what virtualization mode created instances
   will use. Can be either "paravirtual" (the default) or "hvm". The choice of virtualization type
@@ -51,6 +52,7 @@ The following arguments are supported:
   attached to created instances. The structure of this block is described below.
 * `ephemeral_block_device` - (Optional) Nested block describing an ephemeral block device that
   should be attached to created instances. The structure of this block is described below.
+* `tags` - (Optional) A mapping of tags to assign to the resource.
 
 When `virtualization_type` is "paravirtual" the following additional arguments apply:
 
@@ -71,7 +73,7 @@ Nested `ebs_block_device` blocks have the following structure:
 * `device_name` - (Required) The path at which the device is exposed to created instances.
 * `delete_on_termination` - (Optional) Boolean controlling whether the EBS volumes created to
   support each created instance will be deleted once that instance is terminated.
-* `encrypted` - (Optional) Boolean controlling whether the created EBS volumes will be encrypted.
+* `encrypted` - (Optional) Boolean controlling whether the created EBS volumes will be encrypted. Can't be used with `snapshot_id`.
 * `iops` - (Required only when `volume_type` is "io1") Number of I/O operations per second the
   created volumes will support.
 * `snapshot_id` - (Optional) The id of an EBS snapshot that will be used to initialize the created
@@ -94,9 +96,25 @@ Nested `ephemeral_block_device` blocks have the following structure:
 * `virtual_name` - (Required) A name for the ephemeral device, of the form "ephemeralN" where
   *N* is a volume number starting from zero.
 
+### Timeouts
+
+The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/resources.html#timeouts) for certain actions:
+
+* `create` - (Defaults to 40 mins) Used when creating the AMI
+* `update` - (Defaults to 40 mins) Used when updating the AMI
+* `delete` - (Defaults to 90 mins) Used when deregistering the AMI
+
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the created AMI.
 * `root_snapshot_id` - The Snapshot ID for the root volume (for EBS-backed AMIs)
+
+## Import
+
+`aws_ami` can be imported using the ID of the AMI, e.g.
+
+```
+$ terraform import aws_ami.example ami-12345678
+```

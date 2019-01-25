@@ -6,7 +6,7 @@ description: |-
   Provides an Lightsail Domain
 ---
 
-# aws\_lightsail\_domain
+# aws_lightsail_domain
 
 Creates a domain resource for the specified domain (e.g., example.com).
 You cannot register a new domain name using Lightsail. You must register

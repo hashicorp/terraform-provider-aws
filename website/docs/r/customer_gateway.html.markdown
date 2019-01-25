@@ -8,7 +8,7 @@ description: |-
   establish tunnels between your network and the VPC.
 ---
 
-# aws\_customer\_gateway
+# aws_customer_gateway
 
 Provides a customer gateway inside a VPC. These objects can be connected to VPN gateways via VPN connections, and allow you to establish tunnels between your network and the VPC.
 
@@ -20,7 +20,7 @@ resource "aws_customer_gateway" "main" {
   ip_address = "172.83.124.10"
   type       = "ipsec.1"
 
-  tags {
+  tags = {
     Name = "main-customer-gateway"
   }
 }
@@ -38,7 +38,7 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The amazon-assigned ID of the gateway.
 * `bgp_asn` - The gateway's Border Gateway Protocol (BGP) Autonomous System Number (ASN).

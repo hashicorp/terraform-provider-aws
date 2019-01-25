@@ -5,9 +5,7 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 )
@@ -36,6 +34,12 @@ func resourceAwsLbTargetGroupAttachment() *schema.Resource {
 				ForceNew: true,
 				Optional: true,
 			},
+
+			"availability_zone": {
+				Type:     schema.TypeString,
+				ForceNew: true,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -51,6 +55,10 @@ func resourceAwsLbAttachmentCreate(d *schema.ResourceData, meta interface{}) err
 		target.Port = aws.Int64(int64(v.(int)))
 	}
 
+	if v, ok := d.GetOk("availability_zone"); ok {
+		target.AvailabilityZone = aws.String(v.(string))
+	}
+
 	params := &elbv2.RegisterTargetsInput{
 		TargetGroupArn: aws.String(d.Get("target_group_arn").(string)),
 		Targets:        []*elbv2.TargetDescription{target},
@@ -61,7 +69,7 @@ func resourceAwsLbAttachmentCreate(d *schema.ResourceData, meta interface{}) err
 
 	_, err := elbconn.RegisterTargets(params)
 	if err != nil {
-		return errwrap.Wrapf("Error registering targets with target group: {{err}}", err)
+		return fmt.Errorf("Error registering targets with target group: %s", err)
 	}
 
 	d.SetId(resource.PrefixedUniqueId(fmt.Sprintf("%s-", d.Get("target_group_arn"))))
@@ -80,17 +88,19 @@ func resourceAwsLbAttachmentDelete(d *schema.ResourceData, meta interface{}) err
 		target.Port = aws.Int64(int64(v.(int)))
 	}
 
+	if v, ok := d.GetOk("availability_zone"); ok {
+		target.AvailabilityZone = aws.String(v.(string))
+	}
+
 	params := &elbv2.DeregisterTargetsInput{
 		TargetGroupArn: aws.String(d.Get("target_group_arn").(string)),
 		Targets:        []*elbv2.TargetDescription{target},
 	}
 
 	_, err := elbconn.DeregisterTargets(params)
-	if err != nil && !isTargetGroupNotFound(err) {
-		return errwrap.Wrapf("Error deregistering Targets: {{err}}", err)
+	if err != nil && !isAWSErr(err, elbv2.ErrCodeTargetGroupNotFoundException, "") {
+		return fmt.Errorf("Error deregistering Targets: %s", err)
 	}
-
-	d.SetId("")
 
 	return nil
 }
@@ -108,22 +118,26 @@ func resourceAwsLbAttachmentRead(d *schema.ResourceData, meta interface{}) error
 		target.Port = aws.Int64(int64(v.(int)))
 	}
 
+	if v, ok := d.GetOk("availability_zone"); ok {
+		target.AvailabilityZone = aws.String(v.(string))
+	}
+
 	resp, err := elbconn.DescribeTargetHealth(&elbv2.DescribeTargetHealthInput{
 		TargetGroupArn: aws.String(d.Get("target_group_arn").(string)),
 		Targets:        []*elbv2.TargetDescription{target},
 	})
 	if err != nil {
-		if isTargetGroupNotFound(err) {
+		if isAWSErr(err, elbv2.ErrCodeTargetGroupNotFoundException, "") {
 			log.Printf("[WARN] Target group does not exist, removing target attachment %s", d.Id())
 			d.SetId("")
 			return nil
 		}
-		if isInvalidTarget(err) {
+		if isAWSErr(err, elbv2.ErrCodeInvalidTargetException, "") {
 			log.Printf("[WARN] Target does not exist, removing target attachment %s", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return errwrap.Wrapf("Error reading Target Health: {{err}}", err)
+		return fmt.Errorf("Error reading Target Health: %s", err)
 	}
 
 	if len(resp.TargetHealthDescriptions) != 1 {
@@ -133,9 +147,4 @@ func resourceAwsLbAttachmentRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	return nil
-}
-
-func isInvalidTarget(err error) bool {
-	elberr, ok := err.(awserr.Error)
-	return ok && elberr.Code() == "InvalidTarget"
 }

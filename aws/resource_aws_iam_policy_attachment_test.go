@@ -11,47 +11,64 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAWSPolicyAttachment_basic(t *testing.T) {
+func TestAccAWSIAMPolicyAttachment_basic(t *testing.T) {
 	var out iam.ListEntitiesForPolicyOutput
 
-	user1 := fmt.Sprintf("test-user-%d", acctest.RandInt())
-	user2 := fmt.Sprintf("test-user-%d", acctest.RandInt())
-	user3 := fmt.Sprintf("test-user-%d", acctest.RandInt())
+	rString := acctest.RandString(8)
+	userName := fmt.Sprintf("tf-acc-user-pa-basic-%s", rString)
+	userName2 := fmt.Sprintf("tf-acc-user-pa-basic-2-%s", rString)
+	userName3 := fmt.Sprintf("tf-acc-user-pa-basic-3-%s", rString)
+	roleName := fmt.Sprintf("tf-acc-role-pa-basic-%s", rString)
+	roleName2 := fmt.Sprintf("tf-acc-role-pa-basic-2-%s", rString)
+	roleName3 := fmt.Sprintf("tf-acc-role-pa-basic-3-%s", rString)
+	groupName := fmt.Sprintf("tf-acc-group-pa-basic-%s", rString)
+	groupName2 := fmt.Sprintf("tf-acc-group-pa-basic-2-%s", rString)
+	groupName3 := fmt.Sprintf("tf-acc-group-pa-basic-3-%s", rString)
+	policyName := fmt.Sprintf("tf-acc-policy-pa-basic-%s", rString)
+	attachmentName := fmt.Sprintf("tf-acc-attachment-pa-basic-%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
-				Config: testAccAWSPolicyAttachConfig(user1),
+			{
+				Config: testAccAWSPolicyAttachConfig(userName, roleName, groupName, policyName, attachmentName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSPolicyAttachmentExists("aws_iam_policy_attachment.test-attach", 3, &out),
-					testAccCheckAWSPolicyAttachmentAttributes([]string{user1}, []string{"test-role"}, []string{"test-group"}, &out),
+					testAccCheckAWSPolicyAttachmentAttributes([]string{userName}, []string{roleName}, []string{groupName}, &out),
 				),
 			},
-			resource.TestStep{
-				Config: testAccAWSPolicyAttachConfigUpdate(user1, user2, user3),
+			{
+				Config: testAccAWSPolicyAttachConfigUpdate(userName, userName2, userName3,
+					roleName, roleName2, roleName3,
+					groupName, groupName2, groupName3,
+					policyName, attachmentName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSPolicyAttachmentExists("aws_iam_policy_attachment.test-attach", 6, &out),
-					testAccCheckAWSPolicyAttachmentAttributes([]string{user3, user3}, []string{"test-role2", "test-role3"}, []string{"test-group2", "test-group3"}, &out),
+					testAccCheckAWSPolicyAttachmentAttributes([]string{userName2, userName3},
+						[]string{roleName2, roleName3}, []string{groupName2, groupName3}, &out),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAWSPolicyAttachment_paginatedEntities(t *testing.T) {
+func TestAccAWSIAMPolicyAttachment_paginatedEntities(t *testing.T) {
 	var out iam.ListEntitiesForPolicyOutput
-	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	rString := acctest.RandString(8)
+	userNamePrefix := fmt.Sprintf("tf-acc-user-pa-pe-%s-", rString)
+	policyName := fmt.Sprintf("tf-acc-policy-pa-pe-%s-", rString)
+	attachmentName := fmt.Sprintf("tf-acc-attachment-pa-pe-%s-", rString)
+
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
-				Config: testAccAWSPolicyPaginatedAttachConfig(rInt),
+			{
+				Config: testAccAWSPolicyPaginatedAttachConfig(userNamePrefix, policyName, attachmentName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSPolicyAttachmentExists("aws_iam_policy_attachment.test-paginated-attach", 101, &out),
 				),
@@ -133,13 +150,13 @@ func testAccCheckAWSPolicyAttachmentAttributes(users []string, roles []string, g
 	}
 }
 
-func testAccAWSPolicyAttachConfig(u1 string) string {
+func testAccAWSPolicyAttachConfig(userName, roleName, groupName, policyName, attachmentName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "user" {
     name = "%s"
 }
 resource "aws_iam_role" "role" {
-    name = "test-role"
+    name = "%s"
 	  assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -157,11 +174,11 @@ resource "aws_iam_role" "role" {
 EOF
 }
 resource "aws_iam_group" "group" {
-    name = "test-group"
+    name = "%s"
 }
 
 resource "aws_iam_policy" "policy" {
-    name = "test-policy"
+    name = "%s"
     description = "A test policy"
     policy = <<EOF
 {
@@ -180,15 +197,18 @@ EOF
 }
 
 resource "aws_iam_policy_attachment" "test-attach" {
-    name = "test-attachment"
+    name = "%s"
     users = ["${aws_iam_user.user.name}"]
     roles = ["${aws_iam_role.role.name}"]
     groups = ["${aws_iam_group.group.name}"]
     policy_arn = "${aws_iam_policy.policy.arn}"
-}`, u1)
+}`, userName, roleName, groupName, policyName, attachmentName)
 }
 
-func testAccAWSPolicyAttachConfigUpdate(u1, u2, u3 string) string {
+func testAccAWSPolicyAttachConfigUpdate(userName, userName2, userName3,
+	roleName, roleName2, roleName3,
+	groupName, groupName2, groupName3,
+	policyName, attachmentName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "user" {
     name = "%s"
@@ -200,7 +220,7 @@ resource "aws_iam_user" "user3" {
     name = "%s"
 }
 resource "aws_iam_role" "role" {
-    name = "test-role"
+    name = "%s"
 	  assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -219,7 +239,7 @@ EOF
 }
 
 resource "aws_iam_role" "role2" {
-    name = "test-role2"
+    name = "%s"
 	  assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -238,7 +258,7 @@ EOF
 
 }
 resource "aws_iam_role" "role3" {
-    name = "test-role3"
+    name = "%s"
 	  assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -257,17 +277,17 @@ EOF
 
 }
 resource "aws_iam_group" "group" {
-    name = "test-group"
+    name = "%s"
 }
 resource "aws_iam_group" "group2" {
-    name = "test-group2"
+    name = "%s"
 }
 resource "aws_iam_group" "group3" {
-    name = "test-group3"
+    name = "%s"
 }
 
 resource "aws_iam_policy" "policy" {
-    name = "test-policy"
+    name = "%s"
     description = "A test policy"
     policy = <<EOF
 {
@@ -286,7 +306,7 @@ EOF
 }
 
 resource "aws_iam_policy_attachment" "test-attach" {
-    name = "test-attachment"
+    name = "%s"
     users = [
         "${aws_iam_user.user2.name}",
         "${aws_iam_user.user3.name}"
@@ -300,17 +320,20 @@ resource "aws_iam_policy_attachment" "test-attach" {
         "${aws_iam_group.group3.name}"
     ]
     policy_arn = "${aws_iam_policy.policy.arn}"
-}`, u1, u2, u3)
+}`, userName, userName2, userName3,
+		roleName, roleName2, roleName3,
+		groupName, groupName2, groupName3,
+		policyName, attachmentName)
 }
 
-func testAccAWSPolicyPaginatedAttachConfig(rInt int) string {
+func testAccAWSPolicyPaginatedAttachConfig(userNamePrefix, policyName, attachmentName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "user" {
 	count = 101
-	name = "${format("paged-test-user-%d-%%d", count.index + 1)}"
+	name = "${format("%s%%d", count.index + 1)}"
 }
 resource "aws_iam_policy" "policy" {
-	name = "tf-acc-test-policy-%d"
+	name = "%s"
 	description = "A test policy"
 	policy = <<EOF
 {
@@ -328,8 +351,111 @@ resource "aws_iam_policy" "policy" {
 EOF
 }
 resource "aws_iam_policy_attachment" "test-paginated-attach" {
-	name = "test-attachment"
-	users = ["${aws_iam_user.user.*.name}"]
+	name = "%s"
 	policy_arn = "${aws_iam_policy.policy.arn}"
-}`, rInt, rInt)
+	# TODO: Switch back to simple list reference when test configurations are upgraded to 0.12 syntax
+	users = [
+		"${aws_iam_user.user.*.name[0]}",
+		"${aws_iam_user.user.*.name[1]}",
+		"${aws_iam_user.user.*.name[2]}",
+		"${aws_iam_user.user.*.name[3]}",
+		"${aws_iam_user.user.*.name[4]}",
+		"${aws_iam_user.user.*.name[5]}",
+		"${aws_iam_user.user.*.name[6]}",
+		"${aws_iam_user.user.*.name[7]}",
+		"${aws_iam_user.user.*.name[8]}",
+		"${aws_iam_user.user.*.name[9]}",
+		"${aws_iam_user.user.*.name[10]}",
+		"${aws_iam_user.user.*.name[11]}",
+		"${aws_iam_user.user.*.name[12]}",
+		"${aws_iam_user.user.*.name[13]}",
+		"${aws_iam_user.user.*.name[14]}",
+		"${aws_iam_user.user.*.name[15]}",
+		"${aws_iam_user.user.*.name[16]}",
+		"${aws_iam_user.user.*.name[17]}",
+		"${aws_iam_user.user.*.name[18]}",
+		"${aws_iam_user.user.*.name[19]}",
+		"${aws_iam_user.user.*.name[20]}",
+		"${aws_iam_user.user.*.name[21]}",
+		"${aws_iam_user.user.*.name[22]}",
+		"${aws_iam_user.user.*.name[23]}",
+		"${aws_iam_user.user.*.name[24]}",
+		"${aws_iam_user.user.*.name[25]}",
+		"${aws_iam_user.user.*.name[26]}",
+		"${aws_iam_user.user.*.name[27]}",
+		"${aws_iam_user.user.*.name[28]}",
+		"${aws_iam_user.user.*.name[29]}",
+		"${aws_iam_user.user.*.name[30]}",
+		"${aws_iam_user.user.*.name[31]}",
+		"${aws_iam_user.user.*.name[32]}",
+		"${aws_iam_user.user.*.name[33]}",
+		"${aws_iam_user.user.*.name[34]}",
+		"${aws_iam_user.user.*.name[35]}",
+		"${aws_iam_user.user.*.name[36]}",
+		"${aws_iam_user.user.*.name[37]}",
+		"${aws_iam_user.user.*.name[38]}",
+		"${aws_iam_user.user.*.name[39]}",
+		"${aws_iam_user.user.*.name[40]}",
+		"${aws_iam_user.user.*.name[41]}",
+		"${aws_iam_user.user.*.name[42]}",
+		"${aws_iam_user.user.*.name[43]}",
+		"${aws_iam_user.user.*.name[44]}",
+		"${aws_iam_user.user.*.name[45]}",
+		"${aws_iam_user.user.*.name[46]}",
+		"${aws_iam_user.user.*.name[47]}",
+		"${aws_iam_user.user.*.name[48]}",
+		"${aws_iam_user.user.*.name[49]}",
+		"${aws_iam_user.user.*.name[50]}",
+		"${aws_iam_user.user.*.name[51]}",
+		"${aws_iam_user.user.*.name[52]}",
+		"${aws_iam_user.user.*.name[53]}",
+		"${aws_iam_user.user.*.name[54]}",
+		"${aws_iam_user.user.*.name[55]}",
+		"${aws_iam_user.user.*.name[56]}",
+		"${aws_iam_user.user.*.name[57]}",
+		"${aws_iam_user.user.*.name[58]}",
+		"${aws_iam_user.user.*.name[59]}",
+		"${aws_iam_user.user.*.name[60]}",
+		"${aws_iam_user.user.*.name[61]}",
+		"${aws_iam_user.user.*.name[62]}",
+		"${aws_iam_user.user.*.name[63]}",
+		"${aws_iam_user.user.*.name[64]}",
+		"${aws_iam_user.user.*.name[65]}",
+		"${aws_iam_user.user.*.name[66]}",
+		"${aws_iam_user.user.*.name[67]}",
+		"${aws_iam_user.user.*.name[68]}",
+		"${aws_iam_user.user.*.name[69]}",
+		"${aws_iam_user.user.*.name[70]}",
+		"${aws_iam_user.user.*.name[71]}",
+		"${aws_iam_user.user.*.name[72]}",
+		"${aws_iam_user.user.*.name[73]}",
+		"${aws_iam_user.user.*.name[74]}",
+		"${aws_iam_user.user.*.name[75]}",
+		"${aws_iam_user.user.*.name[76]}",
+		"${aws_iam_user.user.*.name[77]}",
+		"${aws_iam_user.user.*.name[78]}",
+		"${aws_iam_user.user.*.name[79]}",
+		"${aws_iam_user.user.*.name[80]}",
+		"${aws_iam_user.user.*.name[81]}",
+		"${aws_iam_user.user.*.name[82]}",
+		"${aws_iam_user.user.*.name[83]}",
+		"${aws_iam_user.user.*.name[84]}",
+		"${aws_iam_user.user.*.name[85]}",
+		"${aws_iam_user.user.*.name[86]}",
+		"${aws_iam_user.user.*.name[87]}",
+		"${aws_iam_user.user.*.name[88]}",
+		"${aws_iam_user.user.*.name[89]}",
+		"${aws_iam_user.user.*.name[90]}",
+		"${aws_iam_user.user.*.name[91]}",
+		"${aws_iam_user.user.*.name[92]}",
+		"${aws_iam_user.user.*.name[93]}",
+		"${aws_iam_user.user.*.name[94]}",
+		"${aws_iam_user.user.*.name[95]}",
+		"${aws_iam_user.user.*.name[96]}",
+		"${aws_iam_user.user.*.name[97]}",
+		"${aws_iam_user.user.*.name[98]}",
+		"${aws_iam_user.user.*.name[99]}",
+		"${aws_iam_user.user.*.name[100]}",
+	]
+}`, userNamePrefix, policyName, attachmentName)
 }

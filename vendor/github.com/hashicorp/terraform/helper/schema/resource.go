@@ -85,6 +85,37 @@ type Resource struct {
 	Delete DeleteFunc
 	Exists ExistsFunc
 
+	// CustomizeDiff is a custom function for working with the diff that
+	// Terraform has created for this resource - it can be used to customize the
+	// diff that has been created, diff values not controlled by configuration,
+	// or even veto the diff altogether and abort the plan. It is passed a
+	// *ResourceDiff, a structure similar to ResourceData but lacking most write
+	// functions like Set, while introducing new functions that work with the
+	// diff such as SetNew, SetNewComputed, and ForceNew.
+	//
+	// The phases Terraform runs this in, and the state available via functions
+	// like Get and GetChange, are as follows:
+	//
+	//  * New resource: One run with no state
+	//  * Existing resource: One run with state
+	//   * Existing resource, forced new: One run with state (before ForceNew),
+	//     then one run without state (as if new resource)
+	//  * Tainted resource: No runs (custom diff logic is skipped)
+	//  * Destroy: No runs (standard diff logic is skipped on destroy diffs)
+	//
+	// This function needs to be resilient to support all scenarios.
+	//
+	// If this function needs to access external API resources, remember to flag
+	// the RequiresRefresh attribute mentioned below to ensure that
+	// -refresh=false is blocked when running plan or apply, as this means that
+	// this resource requires refresh-like behaviour to work effectively.
+	//
+	// For the most part, only computed fields can be customized by this
+	// function.
+	//
+	// This function is only allowed on regular resources (not data sources).
+	CustomizeDiff CustomizeDiffFunc
+
 	// Importer is the ResourceImporter implementation for this resource.
 	// If this is nil, then this resource does not support importing. If
 	// this is non-nil, then it supports importing and ResourceImporter
@@ -93,9 +124,7 @@ type Resource struct {
 	Importer *ResourceImporter
 
 	// If non-empty, this string is emitted as a warning during Validate.
-	// This is a private interface for now, for use by DataSourceResourceShim,
-	// and not for general use. (But maybe later...)
-	deprecationMessage string
+	DeprecationMessage string
 
 	// Timeouts allow users to specify specific time durations in which an
 	// operation should time out, to allow them to extend an action to suit their
@@ -125,6 +154,9 @@ type ExistsFunc func(*ResourceData, interface{}) (bool, error)
 // See Resource documentation.
 type StateMigrateFunc func(
 	int, *terraform.InstanceState, interface{}) (*terraform.InstanceState, error)
+
+// See Resource documentation.
+type CustomizeDiffFunc func(*ResourceDiff, interface{}) error
 
 // Apply creates, updates, and/or deletes a resource.
 func (r *Resource) Apply(
@@ -202,11 +234,11 @@ func (r *Resource) Apply(
 	return r.recordCurrentSchemaVersion(data.State()), err
 }
 
-// Diff returns a diff of this resource and is API compatible with the
-// ResourceProvider interface.
+// Diff returns a diff of this resource.
 func (r *Resource) Diff(
 	s *terraform.InstanceState,
-	c *terraform.ResourceConfig) (*terraform.InstanceDiff, error) {
+	c *terraform.ResourceConfig,
+	meta interface{}) (*terraform.InstanceDiff, error) {
 
 	t := &ResourceTimeout{}
 	err := t.ConfigDecode(r, c)
@@ -215,7 +247,7 @@ func (r *Resource) Diff(
 		return nil, fmt.Errorf("[ERR] Error decoding timeout: %s", err)
 	}
 
-	instanceDiff, err := schemaMap(r.Schema).Diff(s, c)
+	instanceDiff, err := schemaMap(r.Schema).Diff(s, c, r.CustomizeDiff, meta)
 	if err != nil {
 		return instanceDiff, err
 	}
@@ -235,8 +267,8 @@ func (r *Resource) Diff(
 func (r *Resource) Validate(c *terraform.ResourceConfig) ([]string, []error) {
 	warns, errs := schemaMap(r.Schema).Validate(c)
 
-	if r.deprecationMessage != "" {
-		warns = append(warns, r.deprecationMessage)
+	if r.DeprecationMessage != "" {
+		warns = append(warns, r.DeprecationMessage)
 	}
 
 	return warns, errs
@@ -248,7 +280,6 @@ func (r *Resource) ReadDataApply(
 	d *terraform.InstanceDiff,
 	meta interface{},
 ) (*terraform.InstanceState, error) {
-
 	// Data sources are always built completely from scratch
 	// on each read, so the source state is always nil.
 	data, err := schemaMap(r.Schema).Data(nil, d)
@@ -346,6 +377,11 @@ func (r *Resource) InternalValidate(topSchemaMap schemaMap, writable bool) error
 		if r.Create != nil || r.Update != nil || r.Delete != nil {
 			return fmt.Errorf("must not implement Create, Update or Delete")
 		}
+
+		// CustomizeDiff cannot be defined for read-only resources
+		if r.CustomizeDiff != nil {
+			return fmt.Errorf("cannot implement CustomizeDiff")
+		}
 	}
 
 	tsm := topSchemaMap
@@ -393,19 +429,43 @@ func (r *Resource) InternalValidate(topSchemaMap schemaMap, writable bool) error
 				return err
 			}
 		}
+
+		for k, f := range tsm {
+			if isReservedResourceFieldName(k, f) {
+				return fmt.Errorf("%s is a reserved field name", k)
+			}
+		}
 	}
 
-	// Resource-specific checks
-	for k, _ := range tsm {
-		if isReservedResourceFieldName(k) {
-			return fmt.Errorf("%s is a reserved field name for a resource", k)
+	// Data source
+	if r.isTopLevel() && !writable {
+		tsm = schemaMap(r.Schema)
+		for k, _ := range tsm {
+			if isReservedDataSourceFieldName(k) {
+				return fmt.Errorf("%s is a reserved field name", k)
+			}
 		}
 	}
 
 	return schemaMap(r.Schema).InternalValidate(tsm)
 }
 
-func isReservedResourceFieldName(name string) bool {
+func isReservedDataSourceFieldName(name string) bool {
+	for _, reservedName := range config.ReservedDataSourceFields {
+		if name == reservedName {
+			return true
+		}
+	}
+	return false
+}
+
+func isReservedResourceFieldName(name string, s *Schema) bool {
+	// Allow phasing out "id"
+	// See https://github.com/terraform-providers/terraform-provider-aws/pull/1626#issuecomment-328881415
+	if name == "id" && (s.Deprecated != "" || s.Removed != "") {
+		return false
+	}
+
 	for _, reservedName := range config.ReservedResourceFields {
 		if name == reservedName {
 			return true
@@ -430,6 +490,12 @@ func (r *Resource) Data(s *terraform.InstanceState) *ResourceData {
 		panic(err)
 	}
 
+	// load the Resource timeouts
+	result.timeouts = r.Timeouts
+	if result.timeouts == nil {
+		result.timeouts = &ResourceTimeout{}
+	}
+
 	// Set the schema version to latest by default
 	result.meta = map[string]interface{}{
 		"schema_version": strconv.Itoa(r.SchemaVersion),
@@ -450,7 +516,7 @@ func (r *Resource) TestResourceData() *ResourceData {
 // Returns true if the resource is "top level" i.e. not a sub-resource.
 func (r *Resource) isTopLevel() bool {
 	// TODO: This is a heuristic; replace with a definitive attribute?
-	return r.Create != nil
+	return (r.Create != nil || r.Read != nil)
 }
 
 // Determines if a given InstanceState needs to be migrated by checking the

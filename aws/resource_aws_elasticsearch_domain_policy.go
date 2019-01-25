@@ -40,7 +40,7 @@ func resourceAwsElasticSearchDomainPolicyRead(d *schema.ResourceData, meta inter
 		DomainName: aws.String(name),
 	})
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "ResourceNotFound" {
+		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "ResourceNotFoundException" {
 			log.Printf("[WARN] ElasticSearch Domain %q not found, removing", name)
 			d.SetId("")
 			return nil
@@ -77,7 +77,7 @@ func resourceAwsElasticSearchDomainPolicyUpsert(d *schema.ResourceData, meta int
 			return resource.NonRetryableError(err)
 		}
 
-		if *out.DomainStatus.Processing == false {
+		if !*out.DomainStatus.Processing {
 			return nil
 		}
 
@@ -111,17 +111,12 @@ func resourceAwsElasticSearchDomainPolicyDelete(d *schema.ResourceData, meta int
 			return resource.NonRetryableError(err)
 		}
 
-		if *out.DomainStatus.Processing == false {
+		if !*out.DomainStatus.Processing {
 			return nil
 		}
 
 		return resource.RetryableError(
 			fmt.Errorf("%q: Timeout while waiting for policy to be deleted", d.Id()))
 	})
-	if err != nil {
-		return err
-	}
-
-	d.SetId("")
-	return nil
+	return err
 }

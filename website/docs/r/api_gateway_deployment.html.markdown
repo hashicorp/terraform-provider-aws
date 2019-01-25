@@ -6,7 +6,7 @@ description: |-
   Provides an API Gateway Deployment.
 ---
 
-# aws\_api\_gateway\_deployment
+# aws_api_gateway_deployment
 
 Provides an API Gateway Deployment.
 
@@ -42,7 +42,7 @@ resource "aws_api_gateway_integration" "MyDemoIntegration" {
 }
 
 resource "aws_api_gateway_deployment" "MyDemoDeployment" {
-  depends_on = ["aws_api_gateway_method.MyDemoMethod"]
+  depends_on = ["aws_api_gateway_integration.MyDemoIntegration"]
 
   rest_api_id = "${aws_api_gateway_rest_api.MyDemoAPI.id}"
   stage_name  = "test"
@@ -58,14 +58,14 @@ resource "aws_api_gateway_deployment" "MyDemoDeployment" {
 The following arguments are supported:
 
 * `rest_api_id` - (Required) The ID of the associated REST API
-* `stage_name` - (Required) The name of the stage
+* `stage_name` - (Required) The name of the stage. If the specified stage already exists, it will be updated to point to the new deployment. If the stage does not exist, a new one will be created and point to this deployment. Use `""` to point at the default stage.
 * `description` - (Optional) The description of the deployment
 * `stage_description` - (Optional) The description of the stage
 * `variables` - (Optional) A map that defines variables for the stage
 
 ## Attribute Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the deployment
 * `invoke_url` - The URL to invoke the API pointing to the stage,

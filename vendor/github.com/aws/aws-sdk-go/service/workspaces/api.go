@@ -9,14 +9,309 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/aws/aws-sdk-go/aws/request"
+	"github.com/aws/aws-sdk-go/private/protocol"
+	"github.com/aws/aws-sdk-go/private/protocol/jsonrpc"
 )
+
+const opAssociateIpGroups = "AssociateIpGroups"
+
+// AssociateIpGroupsRequest generates a "aws/request.Request" representing the
+// client's request for the AssociateIpGroups operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See AssociateIpGroups for more information on using the AssociateIpGroups
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the AssociateIpGroupsRequest method.
+//    req, resp := client.AssociateIpGroupsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/AssociateIpGroups
+func (c *WorkSpaces) AssociateIpGroupsRequest(input *AssociateIpGroupsInput) (req *request.Request, output *AssociateIpGroupsOutput) {
+	op := &request.Operation{
+		Name:       opAssociateIpGroups,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &AssociateIpGroupsInput{}
+	}
+
+	output = &AssociateIpGroupsOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// AssociateIpGroups API operation for Amazon WorkSpaces.
+//
+// Associates the specified IP access control group with the specified directory.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon WorkSpaces's
+// API operation AssociateIpGroups for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidParameterValuesException "InvalidParameterValuesException"
+//   One or more parameter values are not valid.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The resource could not be found.
+//
+//   * ErrCodeResourceLimitExceededException "ResourceLimitExceededException"
+//   Your resource limits have been exceeded.
+//
+//   * ErrCodeInvalidResourceStateException "InvalidResourceStateException"
+//   The state of the resource is not valid for this operation.
+//
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   The user is not authorized to access a resource.
+//
+//   * ErrCodeOperationNotSupportedException "OperationNotSupportedException"
+//   This operation is not supported.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/AssociateIpGroups
+func (c *WorkSpaces) AssociateIpGroups(input *AssociateIpGroupsInput) (*AssociateIpGroupsOutput, error) {
+	req, out := c.AssociateIpGroupsRequest(input)
+	return out, req.Send()
+}
+
+// AssociateIpGroupsWithContext is the same as AssociateIpGroups with the addition of
+// the ability to pass a context and additional request options.
+//
+// See AssociateIpGroups for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WorkSpaces) AssociateIpGroupsWithContext(ctx aws.Context, input *AssociateIpGroupsInput, opts ...request.Option) (*AssociateIpGroupsOutput, error) {
+	req, out := c.AssociateIpGroupsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opAuthorizeIpRules = "AuthorizeIpRules"
+
+// AuthorizeIpRulesRequest generates a "aws/request.Request" representing the
+// client's request for the AuthorizeIpRules operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See AuthorizeIpRules for more information on using the AuthorizeIpRules
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the AuthorizeIpRulesRequest method.
+//    req, resp := client.AuthorizeIpRulesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/AuthorizeIpRules
+func (c *WorkSpaces) AuthorizeIpRulesRequest(input *AuthorizeIpRulesInput) (req *request.Request, output *AuthorizeIpRulesOutput) {
+	op := &request.Operation{
+		Name:       opAuthorizeIpRules,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &AuthorizeIpRulesInput{}
+	}
+
+	output = &AuthorizeIpRulesOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// AuthorizeIpRules API operation for Amazon WorkSpaces.
+//
+// Adds one or more rules to the specified IP access control group.
+//
+// This action gives users permission to access their WorkSpaces from the CIDR
+// address ranges specified in the rules.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon WorkSpaces's
+// API operation AuthorizeIpRules for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidParameterValuesException "InvalidParameterValuesException"
+//   One or more parameter values are not valid.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The resource could not be found.
+//
+//   * ErrCodeResourceLimitExceededException "ResourceLimitExceededException"
+//   Your resource limits have been exceeded.
+//
+//   * ErrCodeInvalidResourceStateException "InvalidResourceStateException"
+//   The state of the resource is not valid for this operation.
+//
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   The user is not authorized to access a resource.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/AuthorizeIpRules
+func (c *WorkSpaces) AuthorizeIpRules(input *AuthorizeIpRulesInput) (*AuthorizeIpRulesOutput, error) {
+	req, out := c.AuthorizeIpRulesRequest(input)
+	return out, req.Send()
+}
+
+// AuthorizeIpRulesWithContext is the same as AuthorizeIpRules with the addition of
+// the ability to pass a context and additional request options.
+//
+// See AuthorizeIpRules for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WorkSpaces) AuthorizeIpRulesWithContext(ctx aws.Context, input *AuthorizeIpRulesInput, opts ...request.Option) (*AuthorizeIpRulesOutput, error) {
+	req, out := c.AuthorizeIpRulesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opCreateIpGroup = "CreateIpGroup"
+
+// CreateIpGroupRequest generates a "aws/request.Request" representing the
+// client's request for the CreateIpGroup operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateIpGroup for more information on using the CreateIpGroup
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateIpGroupRequest method.
+//    req, resp := client.CreateIpGroupRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/CreateIpGroup
+func (c *WorkSpaces) CreateIpGroupRequest(input *CreateIpGroupInput) (req *request.Request, output *CreateIpGroupOutput) {
+	op := &request.Operation{
+		Name:       opCreateIpGroup,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &CreateIpGroupInput{}
+	}
+
+	output = &CreateIpGroupOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateIpGroup API operation for Amazon WorkSpaces.
+//
+// Creates an IP access control group.
+//
+// An IP access control group provides you with the ability to control the IP
+// addresses from which users are allowed to access their WorkSpaces. To specify
+// the CIDR address ranges, add rules to your IP access control group and then
+// associate the group with your directory. You can add rules when you create
+// the group or at any time using AuthorizeIpRules.
+//
+// There is a default IP access control group associated with your directory.
+// If you don't associate an IP access control group with your directory, the
+// default group is used. The default group includes a default rule that allows
+// users to access their WorkSpaces from anywhere. You cannot modify the default
+// IP access control group for your directory.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon WorkSpaces's
+// API operation CreateIpGroup for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidParameterValuesException "InvalidParameterValuesException"
+//   One or more parameter values are not valid.
+//
+//   * ErrCodeResourceLimitExceededException "ResourceLimitExceededException"
+//   Your resource limits have been exceeded.
+//
+//   * ErrCodeResourceAlreadyExistsException "ResourceAlreadyExistsException"
+//   The specified resource already exists.
+//
+//   * ErrCodeResourceCreationFailedException "ResourceCreationFailedException"
+//   The resource could not be created.
+//
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   The user is not authorized to access a resource.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/CreateIpGroup
+func (c *WorkSpaces) CreateIpGroup(input *CreateIpGroupInput) (*CreateIpGroupOutput, error) {
+	req, out := c.CreateIpGroupRequest(input)
+	return out, req.Send()
+}
+
+// CreateIpGroupWithContext is the same as CreateIpGroup with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateIpGroup for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WorkSpaces) CreateIpGroupWithContext(ctx aws.Context, input *CreateIpGroupInput, opts ...request.Option) (*CreateIpGroupOutput, error) {
+	req, out := c.CreateIpGroupRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
 
 const opCreateTags = "CreateTags"
 
 // CreateTagsRequest generates a "aws/request.Request" representing the
 // client's request for the CreateTags operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -36,7 +331,7 @@ const opCreateTags = "CreateTags"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/CreateTags
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/CreateTags
 func (c *WorkSpaces) CreateTagsRequest(input *CreateTagsInput) (req *request.Request, output *CreateTagsOutput) {
 	op := &request.Operation{
 		Name:       opCreateTags,
@@ -50,12 +345,13 @@ func (c *WorkSpaces) CreateTagsRequest(input *CreateTagsInput) (req *request.Req
 
 	output = &CreateTagsOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
 // CreateTags API operation for Amazon WorkSpaces.
 //
-// Creates tags for a WorkSpace.
+// Creates the specified tags for the specified WorkSpace.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -74,7 +370,7 @@ func (c *WorkSpaces) CreateTagsRequest(input *CreateTagsInput) (req *request.Req
 //   * ErrCodeResourceLimitExceededException "ResourceLimitExceededException"
 //   Your resource limits have been exceeded.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/CreateTags
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/CreateTags
 func (c *WorkSpaces) CreateTags(input *CreateTagsInput) (*CreateTagsOutput, error) {
 	req, out := c.CreateTagsRequest(input)
 	return out, req.Send()
@@ -100,8 +396,8 @@ const opCreateWorkspaces = "CreateWorkspaces"
 
 // CreateWorkspacesRequest generates a "aws/request.Request" representing the
 // client's request for the CreateWorkspaces operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -121,7 +417,7 @@ const opCreateWorkspaces = "CreateWorkspaces"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/CreateWorkspaces
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/CreateWorkspaces
 func (c *WorkSpaces) CreateWorkspacesRequest(input *CreateWorkspacesInput) (req *request.Request, output *CreateWorkspacesOutput) {
 	op := &request.Operation{
 		Name:       opCreateWorkspaces,
@@ -158,7 +454,7 @@ func (c *WorkSpaces) CreateWorkspacesRequest(input *CreateWorkspacesInput) (req 
 //   * ErrCodeInvalidParameterValuesException "InvalidParameterValuesException"
 //   One or more parameter values are not valid.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/CreateWorkspaces
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/CreateWorkspaces
 func (c *WorkSpaces) CreateWorkspaces(input *CreateWorkspacesInput) (*CreateWorkspacesOutput, error) {
 	req, out := c.CreateWorkspacesRequest(input)
 	return out, req.Send()
@@ -180,12 +476,103 @@ func (c *WorkSpaces) CreateWorkspacesWithContext(ctx aws.Context, input *CreateW
 	return out, req.Send()
 }
 
+const opDeleteIpGroup = "DeleteIpGroup"
+
+// DeleteIpGroupRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteIpGroup operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteIpGroup for more information on using the DeleteIpGroup
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteIpGroupRequest method.
+//    req, resp := client.DeleteIpGroupRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DeleteIpGroup
+func (c *WorkSpaces) DeleteIpGroupRequest(input *DeleteIpGroupInput) (req *request.Request, output *DeleteIpGroupOutput) {
+	op := &request.Operation{
+		Name:       opDeleteIpGroup,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteIpGroupInput{}
+	}
+
+	output = &DeleteIpGroupOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DeleteIpGroup API operation for Amazon WorkSpaces.
+//
+// Deletes the specified IP access control group.
+//
+// You cannot delete an IP access control group that is associated with a directory.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon WorkSpaces's
+// API operation DeleteIpGroup for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidParameterValuesException "InvalidParameterValuesException"
+//   One or more parameter values are not valid.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The resource could not be found.
+//
+//   * ErrCodeResourceAssociatedException "ResourceAssociatedException"
+//   The resource is associated with a directory.
+//
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   The user is not authorized to access a resource.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DeleteIpGroup
+func (c *WorkSpaces) DeleteIpGroup(input *DeleteIpGroupInput) (*DeleteIpGroupOutput, error) {
+	req, out := c.DeleteIpGroupRequest(input)
+	return out, req.Send()
+}
+
+// DeleteIpGroupWithContext is the same as DeleteIpGroup with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteIpGroup for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WorkSpaces) DeleteIpGroupWithContext(ctx aws.Context, input *DeleteIpGroupInput, opts ...request.Option) (*DeleteIpGroupOutput, error) {
+	req, out := c.DeleteIpGroupRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDeleteTags = "DeleteTags"
 
 // DeleteTagsRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteTags operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -205,7 +592,7 @@ const opDeleteTags = "DeleteTags"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DeleteTags
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DeleteTags
 func (c *WorkSpaces) DeleteTagsRequest(input *DeleteTagsInput) (req *request.Request, output *DeleteTagsOutput) {
 	op := &request.Operation{
 		Name:       opDeleteTags,
@@ -219,12 +606,13 @@ func (c *WorkSpaces) DeleteTagsRequest(input *DeleteTagsInput) (req *request.Req
 
 	output = &DeleteTagsOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
 // DeleteTags API operation for Amazon WorkSpaces.
 //
-// Deletes tags from a WorkSpace.
+// Deletes the specified tags from the specified WorkSpace.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -240,7 +628,7 @@ func (c *WorkSpaces) DeleteTagsRequest(input *DeleteTagsInput) (req *request.Req
 //   * ErrCodeInvalidParameterValuesException "InvalidParameterValuesException"
 //   One or more parameter values are not valid.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DeleteTags
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DeleteTags
 func (c *WorkSpaces) DeleteTags(input *DeleteTagsInput) (*DeleteTagsOutput, error) {
 	req, out := c.DeleteTagsRequest(input)
 	return out, req.Send()
@@ -262,12 +650,426 @@ func (c *WorkSpaces) DeleteTagsWithContext(ctx aws.Context, input *DeleteTagsInp
 	return out, req.Send()
 }
 
+const opDeleteWorkspaceImage = "DeleteWorkspaceImage"
+
+// DeleteWorkspaceImageRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteWorkspaceImage operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteWorkspaceImage for more information on using the DeleteWorkspaceImage
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteWorkspaceImageRequest method.
+//    req, resp := client.DeleteWorkspaceImageRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DeleteWorkspaceImage
+func (c *WorkSpaces) DeleteWorkspaceImageRequest(input *DeleteWorkspaceImageInput) (req *request.Request, output *DeleteWorkspaceImageOutput) {
+	op := &request.Operation{
+		Name:       opDeleteWorkspaceImage,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteWorkspaceImageInput{}
+	}
+
+	output = &DeleteWorkspaceImageOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DeleteWorkspaceImage API operation for Amazon WorkSpaces.
+//
+// Deletes the specified image from your account. To delete an image, you must
+// first delete any bundles that are associated with the image.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon WorkSpaces's
+// API operation DeleteWorkspaceImage for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeResourceAssociatedException "ResourceAssociatedException"
+//   The resource is associated with a directory.
+//
+//   * ErrCodeInvalidResourceStateException "InvalidResourceStateException"
+//   The state of the resource is not valid for this operation.
+//
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   The user is not authorized to access a resource.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DeleteWorkspaceImage
+func (c *WorkSpaces) DeleteWorkspaceImage(input *DeleteWorkspaceImageInput) (*DeleteWorkspaceImageOutput, error) {
+	req, out := c.DeleteWorkspaceImageRequest(input)
+	return out, req.Send()
+}
+
+// DeleteWorkspaceImageWithContext is the same as DeleteWorkspaceImage with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteWorkspaceImage for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WorkSpaces) DeleteWorkspaceImageWithContext(ctx aws.Context, input *DeleteWorkspaceImageInput, opts ...request.Option) (*DeleteWorkspaceImageOutput, error) {
+	req, out := c.DeleteWorkspaceImageRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeAccount = "DescribeAccount"
+
+// DescribeAccountRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeAccount operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeAccount for more information on using the DescribeAccount
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeAccountRequest method.
+//    req, resp := client.DescribeAccountRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DescribeAccount
+func (c *WorkSpaces) DescribeAccountRequest(input *DescribeAccountInput) (req *request.Request, output *DescribeAccountOutput) {
+	op := &request.Operation{
+		Name:       opDescribeAccount,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeAccountInput{}
+	}
+
+	output = &DescribeAccountOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeAccount API operation for Amazon WorkSpaces.
+//
+// Retrieves a list that describes the configuration of bring your own license
+// (BYOL) for the specified account.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon WorkSpaces's
+// API operation DescribeAccount for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   The user is not authorized to access a resource.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DescribeAccount
+func (c *WorkSpaces) DescribeAccount(input *DescribeAccountInput) (*DescribeAccountOutput, error) {
+	req, out := c.DescribeAccountRequest(input)
+	return out, req.Send()
+}
+
+// DescribeAccountWithContext is the same as DescribeAccount with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeAccount for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WorkSpaces) DescribeAccountWithContext(ctx aws.Context, input *DescribeAccountInput, opts ...request.Option) (*DescribeAccountOutput, error) {
+	req, out := c.DescribeAccountRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeAccountModifications = "DescribeAccountModifications"
+
+// DescribeAccountModificationsRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeAccountModifications operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeAccountModifications for more information on using the DescribeAccountModifications
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeAccountModificationsRequest method.
+//    req, resp := client.DescribeAccountModificationsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DescribeAccountModifications
+func (c *WorkSpaces) DescribeAccountModificationsRequest(input *DescribeAccountModificationsInput) (req *request.Request, output *DescribeAccountModificationsOutput) {
+	op := &request.Operation{
+		Name:       opDescribeAccountModifications,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeAccountModificationsInput{}
+	}
+
+	output = &DescribeAccountModificationsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeAccountModifications API operation for Amazon WorkSpaces.
+//
+// Retrieves a list that describes modifications to the configuration of bring
+// your own license (BYOL) for the specified account.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon WorkSpaces's
+// API operation DescribeAccountModifications for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   The user is not authorized to access a resource.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DescribeAccountModifications
+func (c *WorkSpaces) DescribeAccountModifications(input *DescribeAccountModificationsInput) (*DescribeAccountModificationsOutput, error) {
+	req, out := c.DescribeAccountModificationsRequest(input)
+	return out, req.Send()
+}
+
+// DescribeAccountModificationsWithContext is the same as DescribeAccountModifications with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeAccountModifications for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WorkSpaces) DescribeAccountModificationsWithContext(ctx aws.Context, input *DescribeAccountModificationsInput, opts ...request.Option) (*DescribeAccountModificationsOutput, error) {
+	req, out := c.DescribeAccountModificationsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeClientProperties = "DescribeClientProperties"
+
+// DescribeClientPropertiesRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeClientProperties operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeClientProperties for more information on using the DescribeClientProperties
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeClientPropertiesRequest method.
+//    req, resp := client.DescribeClientPropertiesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DescribeClientProperties
+func (c *WorkSpaces) DescribeClientPropertiesRequest(input *DescribeClientPropertiesInput) (req *request.Request, output *DescribeClientPropertiesOutput) {
+	op := &request.Operation{
+		Name:       opDescribeClientProperties,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeClientPropertiesInput{}
+	}
+
+	output = &DescribeClientPropertiesOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeClientProperties API operation for Amazon WorkSpaces.
+//
+// Retrieves a list that describes one or more specified Amazon WorkSpaces clients.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon WorkSpaces's
+// API operation DescribeClientProperties for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidParameterValuesException "InvalidParameterValuesException"
+//   One or more parameter values are not valid.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The resource could not be found.
+//
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   The user is not authorized to access a resource.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DescribeClientProperties
+func (c *WorkSpaces) DescribeClientProperties(input *DescribeClientPropertiesInput) (*DescribeClientPropertiesOutput, error) {
+	req, out := c.DescribeClientPropertiesRequest(input)
+	return out, req.Send()
+}
+
+// DescribeClientPropertiesWithContext is the same as DescribeClientProperties with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeClientProperties for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WorkSpaces) DescribeClientPropertiesWithContext(ctx aws.Context, input *DescribeClientPropertiesInput, opts ...request.Option) (*DescribeClientPropertiesOutput, error) {
+	req, out := c.DescribeClientPropertiesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeIpGroups = "DescribeIpGroups"
+
+// DescribeIpGroupsRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeIpGroups operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeIpGroups for more information on using the DescribeIpGroups
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeIpGroupsRequest method.
+//    req, resp := client.DescribeIpGroupsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DescribeIpGroups
+func (c *WorkSpaces) DescribeIpGroupsRequest(input *DescribeIpGroupsInput) (req *request.Request, output *DescribeIpGroupsOutput) {
+	op := &request.Operation{
+		Name:       opDescribeIpGroups,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeIpGroupsInput{}
+	}
+
+	output = &DescribeIpGroupsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeIpGroups API operation for Amazon WorkSpaces.
+//
+// Describes one or more of your IP access control groups.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon WorkSpaces's
+// API operation DescribeIpGroups for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidParameterValuesException "InvalidParameterValuesException"
+//   One or more parameter values are not valid.
+//
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   The user is not authorized to access a resource.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DescribeIpGroups
+func (c *WorkSpaces) DescribeIpGroups(input *DescribeIpGroupsInput) (*DescribeIpGroupsOutput, error) {
+	req, out := c.DescribeIpGroupsRequest(input)
+	return out, req.Send()
+}
+
+// DescribeIpGroupsWithContext is the same as DescribeIpGroups with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeIpGroups for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WorkSpaces) DescribeIpGroupsWithContext(ctx aws.Context, input *DescribeIpGroupsInput, opts ...request.Option) (*DescribeIpGroupsOutput, error) {
+	req, out := c.DescribeIpGroupsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDescribeTags = "DescribeTags"
 
 // DescribeTagsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeTags operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -287,7 +1089,7 @@ const opDescribeTags = "DescribeTags"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DescribeTags
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DescribeTags
 func (c *WorkSpaces) DescribeTagsRequest(input *DescribeTagsInput) (req *request.Request, output *DescribeTagsOutput) {
 	op := &request.Operation{
 		Name:       opDescribeTags,
@@ -306,7 +1108,7 @@ func (c *WorkSpaces) DescribeTagsRequest(input *DescribeTagsInput) (req *request
 
 // DescribeTags API operation for Amazon WorkSpaces.
 //
-// Describes tags for a WorkSpace.
+// Describes the specified tags for the specified WorkSpace.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -319,7 +1121,7 @@ func (c *WorkSpaces) DescribeTagsRequest(input *DescribeTagsInput) (req *request
 //   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
 //   The resource could not be found.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DescribeTags
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DescribeTags
 func (c *WorkSpaces) DescribeTags(input *DescribeTagsInput) (*DescribeTagsOutput, error) {
 	req, out := c.DescribeTagsRequest(input)
 	return out, req.Send()
@@ -345,8 +1147,8 @@ const opDescribeWorkspaceBundles = "DescribeWorkspaceBundles"
 
 // DescribeWorkspaceBundlesRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeWorkspaceBundles operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -366,7 +1168,7 @@ const opDescribeWorkspaceBundles = "DescribeWorkspaceBundles"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DescribeWorkspaceBundles
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DescribeWorkspaceBundles
 func (c *WorkSpaces) DescribeWorkspaceBundlesRequest(input *DescribeWorkspaceBundlesInput) (req *request.Request, output *DescribeWorkspaceBundlesOutput) {
 	op := &request.Operation{
 		Name:       opDescribeWorkspaceBundles,
@@ -391,16 +1193,9 @@ func (c *WorkSpaces) DescribeWorkspaceBundlesRequest(input *DescribeWorkspaceBun
 
 // DescribeWorkspaceBundles API operation for Amazon WorkSpaces.
 //
-// Obtains information about the WorkSpace bundles that are available to your
-// account in the specified region.
+// Retrieves a list that describes the available WorkSpace bundles.
 //
-// You can filter the results with either the BundleIds parameter, or the Owner
-// parameter, but not both.
-//
-// This operation supports pagination with the use of the NextToken request
-// and response parameters. If more results are available, the NextToken response
-// member contains a token that you pass in the next call to this operation
-// to retrieve the next set of items.
+// You can filter the results using either bundle ID or owner, but not both.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -413,7 +1208,7 @@ func (c *WorkSpaces) DescribeWorkspaceBundlesRequest(input *DescribeWorkspaceBun
 //   * ErrCodeInvalidParameterValuesException "InvalidParameterValuesException"
 //   One or more parameter values are not valid.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DescribeWorkspaceBundles
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DescribeWorkspaceBundles
 func (c *WorkSpaces) DescribeWorkspaceBundles(input *DescribeWorkspaceBundlesInput) (*DescribeWorkspaceBundlesOutput, error) {
 	req, out := c.DescribeWorkspaceBundlesRequest(input)
 	return out, req.Send()
@@ -489,8 +1284,8 @@ const opDescribeWorkspaceDirectories = "DescribeWorkspaceDirectories"
 
 // DescribeWorkspaceDirectoriesRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeWorkspaceDirectories operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -510,7 +1305,7 @@ const opDescribeWorkspaceDirectories = "DescribeWorkspaceDirectories"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DescribeWorkspaceDirectories
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DescribeWorkspaceDirectories
 func (c *WorkSpaces) DescribeWorkspaceDirectoriesRequest(input *DescribeWorkspaceDirectoriesInput) (req *request.Request, output *DescribeWorkspaceDirectoriesOutput) {
 	op := &request.Operation{
 		Name:       opDescribeWorkspaceDirectories,
@@ -535,14 +1330,8 @@ func (c *WorkSpaces) DescribeWorkspaceDirectoriesRequest(input *DescribeWorkspac
 
 // DescribeWorkspaceDirectories API operation for Amazon WorkSpaces.
 //
-// Retrieves information about the AWS Directory Service directories in the
-// region that are registered with Amazon WorkSpaces and are available to your
-// account.
-//
-// This operation supports pagination with the use of the NextToken request
-// and response parameters. If more results are available, the NextToken response
-// member contains a token that you pass in the next call to this operation
-// to retrieve the next set of items.
+// Describes the available AWS Directory Service directories that are registered
+// with Amazon WorkSpaces.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -555,7 +1344,7 @@ func (c *WorkSpaces) DescribeWorkspaceDirectoriesRequest(input *DescribeWorkspac
 //   * ErrCodeInvalidParameterValuesException "InvalidParameterValuesException"
 //   One or more parameter values are not valid.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DescribeWorkspaceDirectories
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DescribeWorkspaceDirectories
 func (c *WorkSpaces) DescribeWorkspaceDirectories(input *DescribeWorkspaceDirectoriesInput) (*DescribeWorkspaceDirectoriesOutput, error) {
 	req, out := c.DescribeWorkspaceDirectoriesRequest(input)
 	return out, req.Send()
@@ -627,12 +1416,92 @@ func (c *WorkSpaces) DescribeWorkspaceDirectoriesPagesWithContext(ctx aws.Contex
 	return p.Err()
 }
 
+const opDescribeWorkspaceImages = "DescribeWorkspaceImages"
+
+// DescribeWorkspaceImagesRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeWorkspaceImages operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeWorkspaceImages for more information on using the DescribeWorkspaceImages
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeWorkspaceImagesRequest method.
+//    req, resp := client.DescribeWorkspaceImagesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DescribeWorkspaceImages
+func (c *WorkSpaces) DescribeWorkspaceImagesRequest(input *DescribeWorkspaceImagesInput) (req *request.Request, output *DescribeWorkspaceImagesOutput) {
+	op := &request.Operation{
+		Name:       opDescribeWorkspaceImages,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeWorkspaceImagesInput{}
+	}
+
+	output = &DescribeWorkspaceImagesOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeWorkspaceImages API operation for Amazon WorkSpaces.
+//
+// Retrieves a list that describes one or more specified images, if the image
+// identifiers are provided. Otherwise, all images in the account are described.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon WorkSpaces's
+// API operation DescribeWorkspaceImages for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   The user is not authorized to access a resource.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DescribeWorkspaceImages
+func (c *WorkSpaces) DescribeWorkspaceImages(input *DescribeWorkspaceImagesInput) (*DescribeWorkspaceImagesOutput, error) {
+	req, out := c.DescribeWorkspaceImagesRequest(input)
+	return out, req.Send()
+}
+
+// DescribeWorkspaceImagesWithContext is the same as DescribeWorkspaceImages with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeWorkspaceImages for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WorkSpaces) DescribeWorkspaceImagesWithContext(ctx aws.Context, input *DescribeWorkspaceImagesInput, opts ...request.Option) (*DescribeWorkspaceImagesOutput, error) {
+	req, out := c.DescribeWorkspaceImagesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDescribeWorkspaces = "DescribeWorkspaces"
 
 // DescribeWorkspacesRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeWorkspaces operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -652,7 +1521,7 @@ const opDescribeWorkspaces = "DescribeWorkspaces"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DescribeWorkspaces
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DescribeWorkspaces
 func (c *WorkSpaces) DescribeWorkspacesRequest(input *DescribeWorkspacesInput) (req *request.Request, output *DescribeWorkspacesOutput) {
 	op := &request.Operation{
 		Name:       opDescribeWorkspaces,
@@ -677,15 +1546,10 @@ func (c *WorkSpaces) DescribeWorkspacesRequest(input *DescribeWorkspacesInput) (
 
 // DescribeWorkspaces API operation for Amazon WorkSpaces.
 //
-// Obtains information about the specified WorkSpaces.
+// Describes the specified WorkSpaces.
 //
-// Only one of the filter parameters, such as BundleId, DirectoryId, or WorkspaceIds,
-// can be specified at a time.
-//
-// This operation supports pagination with the use of the NextToken request
-// and response parameters. If more results are available, the NextToken response
-// member contains a token that you pass in the next call to this operation
-// to retrieve the next set of items.
+// You can filter the results by using the bundle identifier, directory identifier,
+// or owner, but you can specify only one filter at a time.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -701,7 +1565,7 @@ func (c *WorkSpaces) DescribeWorkspacesRequest(input *DescribeWorkspacesInput) (
 //   * ErrCodeResourceUnavailableException "ResourceUnavailableException"
 //   The specified resource is not available.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DescribeWorkspaces
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DescribeWorkspaces
 func (c *WorkSpaces) DescribeWorkspaces(input *DescribeWorkspacesInput) (*DescribeWorkspacesOutput, error) {
 	req, out := c.DescribeWorkspacesRequest(input)
 	return out, req.Send()
@@ -777,8 +1641,8 @@ const opDescribeWorkspacesConnectionStatus = "DescribeWorkspacesConnectionStatus
 
 // DescribeWorkspacesConnectionStatusRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeWorkspacesConnectionStatus operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -798,7 +1662,7 @@ const opDescribeWorkspacesConnectionStatus = "DescribeWorkspacesConnectionStatus
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DescribeWorkspacesConnectionStatus
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DescribeWorkspacesConnectionStatus
 func (c *WorkSpaces) DescribeWorkspacesConnectionStatusRequest(input *DescribeWorkspacesConnectionStatusInput) (req *request.Request, output *DescribeWorkspacesConnectionStatusOutput) {
 	op := &request.Operation{
 		Name:       opDescribeWorkspacesConnectionStatus,
@@ -817,7 +1681,7 @@ func (c *WorkSpaces) DescribeWorkspacesConnectionStatusRequest(input *DescribeWo
 
 // DescribeWorkspacesConnectionStatus API operation for Amazon WorkSpaces.
 //
-// Describes the connection status of a specified WorkSpace.
+// Describes the connection status of the specified WorkSpaces.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -830,7 +1694,7 @@ func (c *WorkSpaces) DescribeWorkspacesConnectionStatusRequest(input *DescribeWo
 //   * ErrCodeInvalidParameterValuesException "InvalidParameterValuesException"
 //   One or more parameter values are not valid.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DescribeWorkspacesConnectionStatus
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DescribeWorkspacesConnectionStatus
 func (c *WorkSpaces) DescribeWorkspacesConnectionStatus(input *DescribeWorkspacesConnectionStatusInput) (*DescribeWorkspacesConnectionStatusOutput, error) {
 	req, out := c.DescribeWorkspacesConnectionStatusRequest(input)
 	return out, req.Send()
@@ -852,12 +1716,462 @@ func (c *WorkSpaces) DescribeWorkspacesConnectionStatusWithContext(ctx aws.Conte
 	return out, req.Send()
 }
 
+const opDisassociateIpGroups = "DisassociateIpGroups"
+
+// DisassociateIpGroupsRequest generates a "aws/request.Request" representing the
+// client's request for the DisassociateIpGroups operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DisassociateIpGroups for more information on using the DisassociateIpGroups
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DisassociateIpGroupsRequest method.
+//    req, resp := client.DisassociateIpGroupsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DisassociateIpGroups
+func (c *WorkSpaces) DisassociateIpGroupsRequest(input *DisassociateIpGroupsInput) (req *request.Request, output *DisassociateIpGroupsOutput) {
+	op := &request.Operation{
+		Name:       opDisassociateIpGroups,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DisassociateIpGroupsInput{}
+	}
+
+	output = &DisassociateIpGroupsOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DisassociateIpGroups API operation for Amazon WorkSpaces.
+//
+// Disassociates the specified IP access control group from the specified directory.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon WorkSpaces's
+// API operation DisassociateIpGroups for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidParameterValuesException "InvalidParameterValuesException"
+//   One or more parameter values are not valid.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The resource could not be found.
+//
+//   * ErrCodeInvalidResourceStateException "InvalidResourceStateException"
+//   The state of the resource is not valid for this operation.
+//
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   The user is not authorized to access a resource.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DisassociateIpGroups
+func (c *WorkSpaces) DisassociateIpGroups(input *DisassociateIpGroupsInput) (*DisassociateIpGroupsOutput, error) {
+	req, out := c.DisassociateIpGroupsRequest(input)
+	return out, req.Send()
+}
+
+// DisassociateIpGroupsWithContext is the same as DisassociateIpGroups with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DisassociateIpGroups for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WorkSpaces) DisassociateIpGroupsWithContext(ctx aws.Context, input *DisassociateIpGroupsInput, opts ...request.Option) (*DisassociateIpGroupsOutput, error) {
+	req, out := c.DisassociateIpGroupsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opImportWorkspaceImage = "ImportWorkspaceImage"
+
+// ImportWorkspaceImageRequest generates a "aws/request.Request" representing the
+// client's request for the ImportWorkspaceImage operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ImportWorkspaceImage for more information on using the ImportWorkspaceImage
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ImportWorkspaceImageRequest method.
+//    req, resp := client.ImportWorkspaceImageRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/ImportWorkspaceImage
+func (c *WorkSpaces) ImportWorkspaceImageRequest(input *ImportWorkspaceImageInput) (req *request.Request, output *ImportWorkspaceImageOutput) {
+	op := &request.Operation{
+		Name:       opImportWorkspaceImage,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ImportWorkspaceImageInput{}
+	}
+
+	output = &ImportWorkspaceImageOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ImportWorkspaceImage API operation for Amazon WorkSpaces.
+//
+// Imports the specified Windows 7 or Windows 10 bring your own license (BYOL)
+// image into Amazon WorkSpaces. The image must be an already licensed EC2 image
+// that is in your AWS account, and you must own the image.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon WorkSpaces's
+// API operation ImportWorkspaceImage for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeResourceLimitExceededException "ResourceLimitExceededException"
+//   Your resource limits have been exceeded.
+//
+//   * ErrCodeResourceAlreadyExistsException "ResourceAlreadyExistsException"
+//   The specified resource already exists.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The resource could not be found.
+//
+//   * ErrCodeOperationNotSupportedException "OperationNotSupportedException"
+//   This operation is not supported.
+//
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   The user is not authorized to access a resource.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/ImportWorkspaceImage
+func (c *WorkSpaces) ImportWorkspaceImage(input *ImportWorkspaceImageInput) (*ImportWorkspaceImageOutput, error) {
+	req, out := c.ImportWorkspaceImageRequest(input)
+	return out, req.Send()
+}
+
+// ImportWorkspaceImageWithContext is the same as ImportWorkspaceImage with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ImportWorkspaceImage for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WorkSpaces) ImportWorkspaceImageWithContext(ctx aws.Context, input *ImportWorkspaceImageInput, opts ...request.Option) (*ImportWorkspaceImageOutput, error) {
+	req, out := c.ImportWorkspaceImageRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opListAvailableManagementCidrRanges = "ListAvailableManagementCidrRanges"
+
+// ListAvailableManagementCidrRangesRequest generates a "aws/request.Request" representing the
+// client's request for the ListAvailableManagementCidrRanges operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListAvailableManagementCidrRanges for more information on using the ListAvailableManagementCidrRanges
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListAvailableManagementCidrRangesRequest method.
+//    req, resp := client.ListAvailableManagementCidrRangesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/ListAvailableManagementCidrRanges
+func (c *WorkSpaces) ListAvailableManagementCidrRangesRequest(input *ListAvailableManagementCidrRangesInput) (req *request.Request, output *ListAvailableManagementCidrRangesOutput) {
+	op := &request.Operation{
+		Name:       opListAvailableManagementCidrRanges,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ListAvailableManagementCidrRangesInput{}
+	}
+
+	output = &ListAvailableManagementCidrRangesOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListAvailableManagementCidrRanges API operation for Amazon WorkSpaces.
+//
+// Retrieves a list of IP address ranges, specified as IPv4 CIDR blocks, that
+// you can use for the network management interface when you enable bring your
+// own license (BYOL).
+//
+// The management network interface is connected to a secure Amazon WorkSpaces
+// management network. It is used for interactive streaming of the WorkSpace
+// desktop to Amazon WorkSpaces clients, and to allow Amazon WorkSpaces to manage
+// the WorkSpace.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon WorkSpaces's
+// API operation ListAvailableManagementCidrRanges for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidParameterValuesException "InvalidParameterValuesException"
+//   One or more parameter values are not valid.
+//
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   The user is not authorized to access a resource.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/ListAvailableManagementCidrRanges
+func (c *WorkSpaces) ListAvailableManagementCidrRanges(input *ListAvailableManagementCidrRangesInput) (*ListAvailableManagementCidrRangesOutput, error) {
+	req, out := c.ListAvailableManagementCidrRangesRequest(input)
+	return out, req.Send()
+}
+
+// ListAvailableManagementCidrRangesWithContext is the same as ListAvailableManagementCidrRanges with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListAvailableManagementCidrRanges for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WorkSpaces) ListAvailableManagementCidrRangesWithContext(ctx aws.Context, input *ListAvailableManagementCidrRangesInput, opts ...request.Option) (*ListAvailableManagementCidrRangesOutput, error) {
+	req, out := c.ListAvailableManagementCidrRangesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opModifyAccount = "ModifyAccount"
+
+// ModifyAccountRequest generates a "aws/request.Request" representing the
+// client's request for the ModifyAccount operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ModifyAccount for more information on using the ModifyAccount
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ModifyAccountRequest method.
+//    req, resp := client.ModifyAccountRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/ModifyAccount
+func (c *WorkSpaces) ModifyAccountRequest(input *ModifyAccountInput) (req *request.Request, output *ModifyAccountOutput) {
+	op := &request.Operation{
+		Name:       opModifyAccount,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ModifyAccountInput{}
+	}
+
+	output = &ModifyAccountOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// ModifyAccount API operation for Amazon WorkSpaces.
+//
+// Modifies the configuration of bring your own license (BYOL) for the specified
+// account.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon WorkSpaces's
+// API operation ModifyAccount for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidParameterValuesException "InvalidParameterValuesException"
+//   One or more parameter values are not valid.
+//
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   The user is not authorized to access a resource.
+//
+//   * ErrCodeInvalidResourceStateException "InvalidResourceStateException"
+//   The state of the resource is not valid for this operation.
+//
+//   * ErrCodeResourceUnavailableException "ResourceUnavailableException"
+//   The specified resource is not available.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The resource could not be found.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/ModifyAccount
+func (c *WorkSpaces) ModifyAccount(input *ModifyAccountInput) (*ModifyAccountOutput, error) {
+	req, out := c.ModifyAccountRequest(input)
+	return out, req.Send()
+}
+
+// ModifyAccountWithContext is the same as ModifyAccount with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ModifyAccount for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WorkSpaces) ModifyAccountWithContext(ctx aws.Context, input *ModifyAccountInput, opts ...request.Option) (*ModifyAccountOutput, error) {
+	req, out := c.ModifyAccountRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opModifyClientProperties = "ModifyClientProperties"
+
+// ModifyClientPropertiesRequest generates a "aws/request.Request" representing the
+// client's request for the ModifyClientProperties operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ModifyClientProperties for more information on using the ModifyClientProperties
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ModifyClientPropertiesRequest method.
+//    req, resp := client.ModifyClientPropertiesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/ModifyClientProperties
+func (c *WorkSpaces) ModifyClientPropertiesRequest(input *ModifyClientPropertiesInput) (req *request.Request, output *ModifyClientPropertiesOutput) {
+	op := &request.Operation{
+		Name:       opModifyClientProperties,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ModifyClientPropertiesInput{}
+	}
+
+	output = &ModifyClientPropertiesOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// ModifyClientProperties API operation for Amazon WorkSpaces.
+//
+// Modifies the properties of the specified Amazon WorkSpaces client.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon WorkSpaces's
+// API operation ModifyClientProperties for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidParameterValuesException "InvalidParameterValuesException"
+//   One or more parameter values are not valid.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The resource could not be found.
+//
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   The user is not authorized to access a resource.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/ModifyClientProperties
+func (c *WorkSpaces) ModifyClientProperties(input *ModifyClientPropertiesInput) (*ModifyClientPropertiesOutput, error) {
+	req, out := c.ModifyClientPropertiesRequest(input)
+	return out, req.Send()
+}
+
+// ModifyClientPropertiesWithContext is the same as ModifyClientProperties with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ModifyClientProperties for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WorkSpaces) ModifyClientPropertiesWithContext(ctx aws.Context, input *ModifyClientPropertiesInput, opts ...request.Option) (*ModifyClientPropertiesOutput, error) {
+	req, out := c.ModifyClientPropertiesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opModifyWorkspaceProperties = "ModifyWorkspaceProperties"
 
 // ModifyWorkspacePropertiesRequest generates a "aws/request.Request" representing the
 // client's request for the ModifyWorkspaceProperties operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -877,7 +2191,7 @@ const opModifyWorkspaceProperties = "ModifyWorkspaceProperties"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/ModifyWorkspaceProperties
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/ModifyWorkspaceProperties
 func (c *WorkSpaces) ModifyWorkspacePropertiesRequest(input *ModifyWorkspacePropertiesInput) (req *request.Request, output *ModifyWorkspacePropertiesOutput) {
 	op := &request.Operation{
 		Name:       opModifyWorkspaceProperties,
@@ -891,13 +2205,13 @@ func (c *WorkSpaces) ModifyWorkspacePropertiesRequest(input *ModifyWorkspaceProp
 
 	output = &ModifyWorkspacePropertiesOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
 // ModifyWorkspaceProperties API operation for Amazon WorkSpaces.
 //
-// Modifies the WorkSpace properties, including the running mode and AutoStop
-// time.
+// Modifies the specified WorkSpace properties.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -911,7 +2225,7 @@ func (c *WorkSpaces) ModifyWorkspacePropertiesRequest(input *ModifyWorkspaceProp
 //   One or more parameter values are not valid.
 //
 //   * ErrCodeInvalidResourceStateException "InvalidResourceStateException"
-//   The state of the WorkSpace is not valid for this operation.
+//   The state of the resource is not valid for this operation.
 //
 //   * ErrCodeOperationInProgressException "OperationInProgressException"
 //   The properties of this WorkSpace are currently being modified. Try again
@@ -930,7 +2244,7 @@ func (c *WorkSpaces) ModifyWorkspacePropertiesRequest(input *ModifyWorkspaceProp
 //   * ErrCodeResourceUnavailableException "ResourceUnavailableException"
 //   The specified resource is not available.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/ModifyWorkspaceProperties
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/ModifyWorkspaceProperties
 func (c *WorkSpaces) ModifyWorkspaceProperties(input *ModifyWorkspacePropertiesInput) (*ModifyWorkspacePropertiesOutput, error) {
 	req, out := c.ModifyWorkspacePropertiesRequest(input)
 	return out, req.Send()
@@ -952,12 +2266,103 @@ func (c *WorkSpaces) ModifyWorkspacePropertiesWithContext(ctx aws.Context, input
 	return out, req.Send()
 }
 
+const opModifyWorkspaceState = "ModifyWorkspaceState"
+
+// ModifyWorkspaceStateRequest generates a "aws/request.Request" representing the
+// client's request for the ModifyWorkspaceState operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ModifyWorkspaceState for more information on using the ModifyWorkspaceState
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ModifyWorkspaceStateRequest method.
+//    req, resp := client.ModifyWorkspaceStateRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/ModifyWorkspaceState
+func (c *WorkSpaces) ModifyWorkspaceStateRequest(input *ModifyWorkspaceStateInput) (req *request.Request, output *ModifyWorkspaceStateOutput) {
+	op := &request.Operation{
+		Name:       opModifyWorkspaceState,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ModifyWorkspaceStateInput{}
+	}
+
+	output = &ModifyWorkspaceStateOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// ModifyWorkspaceState API operation for Amazon WorkSpaces.
+//
+// Sets the state of the specified WorkSpace.
+//
+// To maintain a WorkSpace without being interrupted, set the WorkSpace state
+// to ADMIN_MAINTENANCE. WorkSpaces in this state do not respond to requests
+// to reboot, stop, start, or rebuild. An AutoStop WorkSpace in this state is
+// not stopped. Users can log into a WorkSpace in the ADMIN_MAINTENANCE state.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon WorkSpaces's
+// API operation ModifyWorkspaceState for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidParameterValuesException "InvalidParameterValuesException"
+//   One or more parameter values are not valid.
+//
+//   * ErrCodeInvalidResourceStateException "InvalidResourceStateException"
+//   The state of the resource is not valid for this operation.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The resource could not be found.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/ModifyWorkspaceState
+func (c *WorkSpaces) ModifyWorkspaceState(input *ModifyWorkspaceStateInput) (*ModifyWorkspaceStateOutput, error) {
+	req, out := c.ModifyWorkspaceStateRequest(input)
+	return out, req.Send()
+}
+
+// ModifyWorkspaceStateWithContext is the same as ModifyWorkspaceState with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ModifyWorkspaceState for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WorkSpaces) ModifyWorkspaceStateWithContext(ctx aws.Context, input *ModifyWorkspaceStateInput, opts ...request.Option) (*ModifyWorkspaceStateOutput, error) {
+	req, out := c.ModifyWorkspaceStateRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opRebootWorkspaces = "RebootWorkspaces"
 
 // RebootWorkspacesRequest generates a "aws/request.Request" representing the
 // client's request for the RebootWorkspaces operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -977,7 +2382,7 @@ const opRebootWorkspaces = "RebootWorkspaces"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/RebootWorkspaces
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/RebootWorkspaces
 func (c *WorkSpaces) RebootWorkspacesRequest(input *RebootWorkspacesInput) (req *request.Request, output *RebootWorkspacesOutput) {
 	op := &request.Operation{
 		Name:       opRebootWorkspaces,
@@ -998,8 +2403,7 @@ func (c *WorkSpaces) RebootWorkspacesRequest(input *RebootWorkspacesInput) (req 
 //
 // Reboots the specified WorkSpaces.
 //
-// To be able to reboot a WorkSpace, the WorkSpace must have a State of AVAILABLE,
-// IMPAIRED, or INOPERABLE.
+// You cannot reboot a WorkSpace unless its state is AVAILABLE or UNHEALTHY.
 //
 // This operation is asynchronous and returns before the WorkSpaces have rebooted.
 //
@@ -1009,7 +2413,7 @@ func (c *WorkSpaces) RebootWorkspacesRequest(input *RebootWorkspacesInput) (req 
 //
 // See the AWS API reference guide for Amazon WorkSpaces's
 // API operation RebootWorkspaces for usage and error information.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/RebootWorkspaces
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/RebootWorkspaces
 func (c *WorkSpaces) RebootWorkspaces(input *RebootWorkspacesInput) (*RebootWorkspacesOutput, error) {
 	req, out := c.RebootWorkspacesRequest(input)
 	return out, req.Send()
@@ -1035,8 +2439,8 @@ const opRebuildWorkspaces = "RebuildWorkspaces"
 
 // RebuildWorkspacesRequest generates a "aws/request.Request" representing the
 // client's request for the RebuildWorkspaces operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1056,7 +2460,7 @@ const opRebuildWorkspaces = "RebuildWorkspaces"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/RebuildWorkspaces
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/RebuildWorkspaces
 func (c *WorkSpaces) RebuildWorkspacesRequest(input *RebuildWorkspacesInput) (req *request.Request, output *RebuildWorkspacesOutput) {
 	op := &request.Operation{
 		Name:       opRebuildWorkspaces,
@@ -1075,22 +2479,12 @@ func (c *WorkSpaces) RebuildWorkspacesRequest(input *RebuildWorkspacesInput) (re
 
 // RebuildWorkspaces API operation for Amazon WorkSpaces.
 //
-// Rebuilds the specified WorkSpaces.
+// Rebuilds the specified WorkSpace.
+//
+// You cannot rebuild a WorkSpace unless its state is AVAILABLE, ERROR, or UNHEALTHY.
 //
 // Rebuilding a WorkSpace is a potentially destructive action that can result
-// in the loss of data. Rebuilding a WorkSpace causes the following to occur:
-//
-//    * The system is restored to the image of the bundle that the WorkSpace
-//    is created from. Any applications that have been installed, or system
-//    settings that have been made since the WorkSpace was created will be lost.
-//
-//    * The data drive (D drive) is re-created from the last automatic snapshot
-//    taken of the data drive. The current contents of the data drive are overwritten.
-//    Automatic snapshots of the data drive are taken every 12 hours, so the
-//    snapshot can be as much as 12 hours old.
-//
-// To be able to rebuild a WorkSpace, the WorkSpace must have a State of AVAILABLE
-// or ERROR.
+// in the loss of data. For more information, see Rebuild a WorkSpace (http://docs.aws.amazon.com/workspaces/latest/adminguide/reset-workspace.html).
 //
 // This operation is asynchronous and returns before the WorkSpaces have been
 // completely rebuilt.
@@ -1101,7 +2495,7 @@ func (c *WorkSpaces) RebuildWorkspacesRequest(input *RebuildWorkspacesInput) (re
 //
 // See the AWS API reference guide for Amazon WorkSpaces's
 // API operation RebuildWorkspaces for usage and error information.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/RebuildWorkspaces
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/RebuildWorkspaces
 func (c *WorkSpaces) RebuildWorkspaces(input *RebuildWorkspacesInput) (*RebuildWorkspacesOutput, error) {
 	req, out := c.RebuildWorkspacesRequest(input)
 	return out, req.Send()
@@ -1123,12 +2517,101 @@ func (c *WorkSpaces) RebuildWorkspacesWithContext(ctx aws.Context, input *Rebuil
 	return out, req.Send()
 }
 
+const opRevokeIpRules = "RevokeIpRules"
+
+// RevokeIpRulesRequest generates a "aws/request.Request" representing the
+// client's request for the RevokeIpRules operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See RevokeIpRules for more information on using the RevokeIpRules
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the RevokeIpRulesRequest method.
+//    req, resp := client.RevokeIpRulesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/RevokeIpRules
+func (c *WorkSpaces) RevokeIpRulesRequest(input *RevokeIpRulesInput) (req *request.Request, output *RevokeIpRulesOutput) {
+	op := &request.Operation{
+		Name:       opRevokeIpRules,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &RevokeIpRulesInput{}
+	}
+
+	output = &RevokeIpRulesOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// RevokeIpRules API operation for Amazon WorkSpaces.
+//
+// Removes one or more rules from the specified IP access control group.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon WorkSpaces's
+// API operation RevokeIpRules for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidParameterValuesException "InvalidParameterValuesException"
+//   One or more parameter values are not valid.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The resource could not be found.
+//
+//   * ErrCodeInvalidResourceStateException "InvalidResourceStateException"
+//   The state of the resource is not valid for this operation.
+//
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   The user is not authorized to access a resource.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/RevokeIpRules
+func (c *WorkSpaces) RevokeIpRules(input *RevokeIpRulesInput) (*RevokeIpRulesOutput, error) {
+	req, out := c.RevokeIpRulesRequest(input)
+	return out, req.Send()
+}
+
+// RevokeIpRulesWithContext is the same as RevokeIpRules with the addition of
+// the ability to pass a context and additional request options.
+//
+// See RevokeIpRules for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WorkSpaces) RevokeIpRulesWithContext(ctx aws.Context, input *RevokeIpRulesInput, opts ...request.Option) (*RevokeIpRulesOutput, error) {
+	req, out := c.RevokeIpRulesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opStartWorkspaces = "StartWorkspaces"
 
 // StartWorkspacesRequest generates a "aws/request.Request" representing the
 // client's request for the StartWorkspaces operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1148,7 +2631,7 @@ const opStartWorkspaces = "StartWorkspaces"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/StartWorkspaces
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/StartWorkspaces
 func (c *WorkSpaces) StartWorkspacesRequest(input *StartWorkspacesInput) (req *request.Request, output *StartWorkspacesOutput) {
 	op := &request.Operation{
 		Name:       opStartWorkspaces,
@@ -1167,8 +2650,10 @@ func (c *WorkSpaces) StartWorkspacesRequest(input *StartWorkspacesInput) (req *r
 
 // StartWorkspaces API operation for Amazon WorkSpaces.
 //
-// Starts the specified WorkSpaces. The WorkSpaces must have a running mode
-// of AutoStop and a state of STOPPED.
+// Starts the specified WorkSpaces.
+//
+// You cannot start a WorkSpace unless it has a running mode of AutoStop and
+// a state of STOPPED.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1176,7 +2661,7 @@ func (c *WorkSpaces) StartWorkspacesRequest(input *StartWorkspacesInput) (req *r
 //
 // See the AWS API reference guide for Amazon WorkSpaces's
 // API operation StartWorkspaces for usage and error information.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/StartWorkspaces
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/StartWorkspaces
 func (c *WorkSpaces) StartWorkspaces(input *StartWorkspacesInput) (*StartWorkspacesOutput, error) {
 	req, out := c.StartWorkspacesRequest(input)
 	return out, req.Send()
@@ -1202,8 +2687,8 @@ const opStopWorkspaces = "StopWorkspaces"
 
 // StopWorkspacesRequest generates a "aws/request.Request" representing the
 // client's request for the StopWorkspaces operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1223,7 +2708,7 @@ const opStopWorkspaces = "StopWorkspaces"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/StopWorkspaces
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/StopWorkspaces
 func (c *WorkSpaces) StopWorkspacesRequest(input *StopWorkspacesInput) (req *request.Request, output *StopWorkspacesOutput) {
 	op := &request.Operation{
 		Name:       opStopWorkspaces,
@@ -1242,8 +2727,10 @@ func (c *WorkSpaces) StopWorkspacesRequest(input *StopWorkspacesInput) (req *req
 
 // StopWorkspaces API operation for Amazon WorkSpaces.
 //
-// Stops the specified WorkSpaces. The WorkSpaces must have a running mode of
-// AutoStop and a state of AVAILABLE, IMPAIRED, UNHEALTHY, or ERROR.
+// Stops the specified WorkSpaces.
+//
+// You cannot stop a WorkSpace unless it has a running mode of AutoStop and
+// a state of AVAILABLE, IMPAIRED, UNHEALTHY, or ERROR.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1251,7 +2738,7 @@ func (c *WorkSpaces) StopWorkspacesRequest(input *StopWorkspacesInput) (req *req
 //
 // See the AWS API reference guide for Amazon WorkSpaces's
 // API operation StopWorkspaces for usage and error information.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/StopWorkspaces
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/StopWorkspaces
 func (c *WorkSpaces) StopWorkspaces(input *StopWorkspacesInput) (*StopWorkspacesOutput, error) {
 	req, out := c.StopWorkspacesRequest(input)
 	return out, req.Send()
@@ -1277,8 +2764,8 @@ const opTerminateWorkspaces = "TerminateWorkspaces"
 
 // TerminateWorkspacesRequest generates a "aws/request.Request" representing the
 // client's request for the TerminateWorkspaces operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1298,7 +2785,7 @@ const opTerminateWorkspaces = "TerminateWorkspaces"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/TerminateWorkspaces
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/TerminateWorkspaces
 func (c *WorkSpaces) TerminateWorkspacesRequest(input *TerminateWorkspacesInput) (req *request.Request, output *TerminateWorkspacesOutput) {
 	op := &request.Operation{
 		Name:       opTerminateWorkspaces,
@@ -1320,8 +2807,8 @@ func (c *WorkSpaces) TerminateWorkspacesRequest(input *TerminateWorkspacesInput)
 // Terminates the specified WorkSpaces.
 //
 // Terminating a WorkSpace is a permanent action and cannot be undone. The user's
-// data is not maintained and will be destroyed. If you need to archive any
-// user data, contact Amazon Web Services before terminating the WorkSpace.
+// data is destroyed. If you need to archive any user data, contact Amazon Web
+// Services before terminating the WorkSpace.
 //
 // You can terminate a WorkSpace that is in any state except SUSPENDED.
 //
@@ -1334,7 +2821,7 @@ func (c *WorkSpaces) TerminateWorkspacesRequest(input *TerminateWorkspacesInput)
 //
 // See the AWS API reference guide for Amazon WorkSpaces's
 // API operation TerminateWorkspaces for usage and error information.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/TerminateWorkspaces
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/TerminateWorkspaces
 func (c *WorkSpaces) TerminateWorkspaces(input *TerminateWorkspacesInput) (*TerminateWorkspacesOutput, error) {
 	req, out := c.TerminateWorkspacesRequest(input)
 	return out, req.Send()
@@ -1356,12 +2843,367 @@ func (c *WorkSpaces) TerminateWorkspacesWithContext(ctx aws.Context, input *Term
 	return out, req.Send()
 }
 
-// Contains information about the compute type of a WorkSpace bundle.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/ComputeType
+const opUpdateRulesOfIpGroup = "UpdateRulesOfIpGroup"
+
+// UpdateRulesOfIpGroupRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateRulesOfIpGroup operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateRulesOfIpGroup for more information on using the UpdateRulesOfIpGroup
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateRulesOfIpGroupRequest method.
+//    req, resp := client.UpdateRulesOfIpGroupRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/UpdateRulesOfIpGroup
+func (c *WorkSpaces) UpdateRulesOfIpGroupRequest(input *UpdateRulesOfIpGroupInput) (req *request.Request, output *UpdateRulesOfIpGroupOutput) {
+	op := &request.Operation{
+		Name:       opUpdateRulesOfIpGroup,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &UpdateRulesOfIpGroupInput{}
+	}
+
+	output = &UpdateRulesOfIpGroupOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// UpdateRulesOfIpGroup API operation for Amazon WorkSpaces.
+//
+// Replaces the current rules of the specified IP access control group with
+// the specified rules.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon WorkSpaces's
+// API operation UpdateRulesOfIpGroup for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidParameterValuesException "InvalidParameterValuesException"
+//   One or more parameter values are not valid.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The resource could not be found.
+//
+//   * ErrCodeResourceLimitExceededException "ResourceLimitExceededException"
+//   Your resource limits have been exceeded.
+//
+//   * ErrCodeInvalidResourceStateException "InvalidResourceStateException"
+//   The state of the resource is not valid for this operation.
+//
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   The user is not authorized to access a resource.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/UpdateRulesOfIpGroup
+func (c *WorkSpaces) UpdateRulesOfIpGroup(input *UpdateRulesOfIpGroupInput) (*UpdateRulesOfIpGroupOutput, error) {
+	req, out := c.UpdateRulesOfIpGroupRequest(input)
+	return out, req.Send()
+}
+
+// UpdateRulesOfIpGroupWithContext is the same as UpdateRulesOfIpGroup with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateRulesOfIpGroup for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WorkSpaces) UpdateRulesOfIpGroupWithContext(ctx aws.Context, input *UpdateRulesOfIpGroupInput, opts ...request.Option) (*UpdateRulesOfIpGroupOutput, error) {
+	req, out := c.UpdateRulesOfIpGroupRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// Describes a modification to the configuration of bring your own license (BYOL)
+// for the specified account.
+type AccountModification struct {
+	_ struct{} `type:"structure"`
+
+	// The IP address range, specified as an IPv4 CIDR block, for the management
+	// network interface used for the account.
+	DedicatedTenancyManagementCidrRange *string `type:"string"`
+
+	// The status of BYOL (whether BYOL is being enabled or disabled).
+	DedicatedTenancySupport *string `type:"string" enum:"DedicatedTenancySupportResultEnum"`
+
+	// The error code that is returned if the configuration of BYOL cannot be modified.
+	ErrorCode *string `type:"string"`
+
+	// The text of the error message that is returned if the configuration of BYOL
+	// cannot be modified.
+	ErrorMessage *string `type:"string"`
+
+	// The state of the modification to the configuration of BYOL.
+	ModificationState *string `type:"string" enum:"DedicatedTenancyModificationStateEnum"`
+
+	// The timestamp when the modification of the BYOL configuration was started.
+	StartTime *time.Time `type:"timestamp"`
+}
+
+// String returns the string representation
+func (s AccountModification) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AccountModification) GoString() string {
+	return s.String()
+}
+
+// SetDedicatedTenancyManagementCidrRange sets the DedicatedTenancyManagementCidrRange field's value.
+func (s *AccountModification) SetDedicatedTenancyManagementCidrRange(v string) *AccountModification {
+	s.DedicatedTenancyManagementCidrRange = &v
+	return s
+}
+
+// SetDedicatedTenancySupport sets the DedicatedTenancySupport field's value.
+func (s *AccountModification) SetDedicatedTenancySupport(v string) *AccountModification {
+	s.DedicatedTenancySupport = &v
+	return s
+}
+
+// SetErrorCode sets the ErrorCode field's value.
+func (s *AccountModification) SetErrorCode(v string) *AccountModification {
+	s.ErrorCode = &v
+	return s
+}
+
+// SetErrorMessage sets the ErrorMessage field's value.
+func (s *AccountModification) SetErrorMessage(v string) *AccountModification {
+	s.ErrorMessage = &v
+	return s
+}
+
+// SetModificationState sets the ModificationState field's value.
+func (s *AccountModification) SetModificationState(v string) *AccountModification {
+	s.ModificationState = &v
+	return s
+}
+
+// SetStartTime sets the StartTime field's value.
+func (s *AccountModification) SetStartTime(v time.Time) *AccountModification {
+	s.StartTime = &v
+	return s
+}
+
+type AssociateIpGroupsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The identifier of the directory.
+	//
+	// DirectoryId is a required field
+	DirectoryId *string `type:"string" required:"true"`
+
+	// The identifiers of one or more IP access control groups.
+	//
+	// GroupIds is a required field
+	GroupIds []*string `type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s AssociateIpGroupsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AssociateIpGroupsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AssociateIpGroupsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AssociateIpGroupsInput"}
+	if s.DirectoryId == nil {
+		invalidParams.Add(request.NewErrParamRequired("DirectoryId"))
+	}
+	if s.GroupIds == nil {
+		invalidParams.Add(request.NewErrParamRequired("GroupIds"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDirectoryId sets the DirectoryId field's value.
+func (s *AssociateIpGroupsInput) SetDirectoryId(v string) *AssociateIpGroupsInput {
+	s.DirectoryId = &v
+	return s
+}
+
+// SetGroupIds sets the GroupIds field's value.
+func (s *AssociateIpGroupsInput) SetGroupIds(v []*string) *AssociateIpGroupsInput {
+	s.GroupIds = v
+	return s
+}
+
+type AssociateIpGroupsOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s AssociateIpGroupsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AssociateIpGroupsOutput) GoString() string {
+	return s.String()
+}
+
+type AuthorizeIpRulesInput struct {
+	_ struct{} `type:"structure"`
+
+	// The identifier of the group.
+	//
+	// GroupId is a required field
+	GroupId *string `type:"string" required:"true"`
+
+	// The rules to add to the group.
+	//
+	// UserRules is a required field
+	UserRules []*IpRuleItem `type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s AuthorizeIpRulesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AuthorizeIpRulesInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AuthorizeIpRulesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AuthorizeIpRulesInput"}
+	if s.GroupId == nil {
+		invalidParams.Add(request.NewErrParamRequired("GroupId"))
+	}
+	if s.UserRules == nil {
+		invalidParams.Add(request.NewErrParamRequired("UserRules"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetGroupId sets the GroupId field's value.
+func (s *AuthorizeIpRulesInput) SetGroupId(v string) *AuthorizeIpRulesInput {
+	s.GroupId = &v
+	return s
+}
+
+// SetUserRules sets the UserRules field's value.
+func (s *AuthorizeIpRulesInput) SetUserRules(v []*IpRuleItem) *AuthorizeIpRulesInput {
+	s.UserRules = v
+	return s
+}
+
+type AuthorizeIpRulesOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s AuthorizeIpRulesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AuthorizeIpRulesOutput) GoString() string {
+	return s.String()
+}
+
+// Describes an Amazon WorkSpaces client.
+type ClientProperties struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies whether users can cache their credentials on the Amazon WorkSpaces
+	// client. When enabled, users can choose to reconnect to their WorkSpaces without
+	// re-entering their credentials.
+	ReconnectEnabled *string `type:"string" enum:"ReconnectEnum"`
+}
+
+// String returns the string representation
+func (s ClientProperties) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ClientProperties) GoString() string {
+	return s.String()
+}
+
+// SetReconnectEnabled sets the ReconnectEnabled field's value.
+func (s *ClientProperties) SetReconnectEnabled(v string) *ClientProperties {
+	s.ReconnectEnabled = &v
+	return s
+}
+
+// Information about the Amazon WorkSpaces client.
+type ClientPropertiesResult struct {
+	_ struct{} `type:"structure"`
+
+	// Information about the Amazon WorkSpaces client.
+	ClientProperties *ClientProperties `type:"structure"`
+
+	// The resource identifier, in the form of a directory ID.
+	ResourceId *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ClientPropertiesResult) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ClientPropertiesResult) GoString() string {
+	return s.String()
+}
+
+// SetClientProperties sets the ClientProperties field's value.
+func (s *ClientPropertiesResult) SetClientProperties(v *ClientProperties) *ClientPropertiesResult {
+	s.ClientProperties = v
+	return s
+}
+
+// SetResourceId sets the ResourceId field's value.
+func (s *ClientPropertiesResult) SetResourceId(v string) *ClientPropertiesResult {
+	s.ResourceId = &v
+	return s
+}
+
+// Describes the compute type.
 type ComputeType struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the compute type for the bundle.
+	// The compute type.
 	Name *string `type:"string" enum:"Compute"`
 }
 
@@ -1381,17 +3223,94 @@ func (s *ComputeType) SetName(v string) *ComputeType {
 	return s
 }
 
-// The request of the CreateTags operation.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/CreateTagsRequest
+type CreateIpGroupInput struct {
+	_ struct{} `type:"structure"`
+
+	// The description of the group.
+	GroupDesc *string `type:"string"`
+
+	// The name of the group.
+	//
+	// GroupName is a required field
+	GroupName *string `type:"string" required:"true"`
+
+	// The rules to add to the group.
+	UserRules []*IpRuleItem `type:"list"`
+}
+
+// String returns the string representation
+func (s CreateIpGroupInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateIpGroupInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateIpGroupInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateIpGroupInput"}
+	if s.GroupName == nil {
+		invalidParams.Add(request.NewErrParamRequired("GroupName"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetGroupDesc sets the GroupDesc field's value.
+func (s *CreateIpGroupInput) SetGroupDesc(v string) *CreateIpGroupInput {
+	s.GroupDesc = &v
+	return s
+}
+
+// SetGroupName sets the GroupName field's value.
+func (s *CreateIpGroupInput) SetGroupName(v string) *CreateIpGroupInput {
+	s.GroupName = &v
+	return s
+}
+
+// SetUserRules sets the UserRules field's value.
+func (s *CreateIpGroupInput) SetUserRules(v []*IpRuleItem) *CreateIpGroupInput {
+	s.UserRules = v
+	return s
+}
+
+type CreateIpGroupOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The identifier of the group.
+	GroupId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s CreateIpGroupOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateIpGroupOutput) GoString() string {
+	return s.String()
+}
+
+// SetGroupId sets the GroupId field's value.
+func (s *CreateIpGroupOutput) SetGroupId(v string) *CreateIpGroupOutput {
+	s.GroupId = &v
+	return s
+}
+
 type CreateTagsInput struct {
 	_ struct{} `type:"structure"`
 
-	// The resource ID of the request.
+	// The identifier of the WorkSpace. To find this ID, use DescribeWorkspaces.
 	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
 
-	// The tags of the request.
+	// The tags. Each WorkSpace can have a maximum of 50 tags.
 	//
 	// Tags is a required field
 	Tags []*Tag `type:"list" required:"true"`
@@ -1448,8 +3367,6 @@ func (s *CreateTagsInput) SetTags(v []*Tag) *CreateTagsInput {
 	return s
 }
 
-// The result of the CreateTags operation.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/CreateTagsResult
 type CreateTagsOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -1464,12 +3381,10 @@ func (s CreateTagsOutput) GoString() string {
 	return s.String()
 }
 
-// Contains the inputs for the CreateWorkspaces operation.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/CreateWorkspacesRequest
 type CreateWorkspacesInput struct {
 	_ struct{} `type:"structure"`
 
-	// An array of structures that specify the WorkSpaces to create.
+	// The WorkSpaces to create. You can specify up to 25 WorkSpaces.
 	//
 	// Workspaces is a required field
 	Workspaces []*WorkspaceRequest `min:"1" type:"list" required:"true"`
@@ -1517,19 +3432,17 @@ func (s *CreateWorkspacesInput) SetWorkspaces(v []*WorkspaceRequest) *CreateWork
 	return s
 }
 
-// Contains the result of the CreateWorkspaces operation.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/CreateWorkspacesResult
 type CreateWorkspacesOutput struct {
 	_ struct{} `type:"structure"`
 
-	// An array of structures that represent the WorkSpaces that could not be created.
+	// Information about the WorkSpaces that could not be created.
 	FailedRequests []*FailedCreateWorkspaceRequest `type:"list"`
 
-	// An array of structures that represent the WorkSpaces that were created.
+	// Information about the WorkSpaces that were created.
 	//
-	// Because this operation is asynchronous, the identifier in WorkspaceId is
-	// not immediately available. If you immediately call DescribeWorkspaces with
-	// this identifier, no information will be returned.
+	// Because this operation is asynchronous, the identifier returned is not immediately
+	// available for use with other operations. For example, if you call DescribeWorkspaces
+	// before the WorkSpace is created, the information returned can be incomplete.
 	PendingRequests []*Workspace `type:"list"`
 }
 
@@ -1555,27 +3468,24 @@ func (s *CreateWorkspacesOutput) SetPendingRequests(v []*Workspace) *CreateWorks
 	return s
 }
 
-// Contains default WorkSpace creation information.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DefaultWorkspaceCreationProperties
+// Describes the default values used to create a WorkSpace.
 type DefaultWorkspaceCreationProperties struct {
 	_ struct{} `type:"structure"`
 
-	// The identifier of any custom security groups that are applied to the WorkSpaces
-	// when they are created.
+	// The identifier of any security groups to apply to WorkSpaces when they are
+	// created.
 	CustomSecurityGroupId *string `type:"string"`
 
-	// The organizational unit (OU) in the directory that the WorkSpace machine
-	// accounts are placed in.
+	// The organizational unit (OU) in the directory for the WorkSpace machine accounts.
 	DefaultOu *string `type:"string"`
 
-	// A public IP address will be attached to all WorkSpaces that are created or
-	// rebuilt.
+	// The public IP address to attach to all WorkSpaces that are created or rebuilt.
 	EnableInternetAccess *bool `type:"boolean"`
 
-	// Specifies if the directory is enabled for Amazon WorkDocs.
+	// Specifies whether the directory is enabled for Amazon WorkDocs.
 	EnableWorkDocs *bool `type:"boolean"`
 
-	// The WorkSpace user is an administrator on the WorkSpace.
+	// Specifies whether the WorkSpace user is an administrator on the WorkSpace.
 	UserEnabledAsLocalAdministrator *bool `type:"boolean"`
 }
 
@@ -1619,17 +3529,67 @@ func (s *DefaultWorkspaceCreationProperties) SetUserEnabledAsLocalAdministrator(
 	return s
 }
 
-// The request of the DeleteTags operation.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DeleteTagsRequest
+type DeleteIpGroupInput struct {
+	_ struct{} `type:"structure"`
+
+	// The identifier of the IP access control group.
+	//
+	// GroupId is a required field
+	GroupId *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteIpGroupInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteIpGroupInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteIpGroupInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteIpGroupInput"}
+	if s.GroupId == nil {
+		invalidParams.Add(request.NewErrParamRequired("GroupId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetGroupId sets the GroupId field's value.
+func (s *DeleteIpGroupInput) SetGroupId(v string) *DeleteIpGroupInput {
+	s.GroupId = &v
+	return s
+}
+
+type DeleteIpGroupOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteIpGroupOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteIpGroupOutput) GoString() string {
+	return s.String()
+}
+
 type DeleteTagsInput struct {
 	_ struct{} `type:"structure"`
 
-	// The resource ID of the request.
+	// The identifier of the WorkSpace. To find this ID, use DescribeWorkspaces.
 	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
 
-	// The tag keys of the request.
+	// The tag keys.
 	//
 	// TagKeys is a required field
 	TagKeys []*string `type:"list" required:"true"`
@@ -1676,8 +3636,6 @@ func (s *DeleteTagsInput) SetTagKeys(v []*string) *DeleteTagsInput {
 	return s
 }
 
-// The result of the DeleteTags operation.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DeleteTagsResult
 type DeleteTagsOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -1692,12 +3650,339 @@ func (s DeleteTagsOutput) GoString() string {
 	return s.String()
 }
 
-// The request of the DescribeTags operation.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DescribeTagsRequest
+type DeleteWorkspaceImageInput struct {
+	_ struct{} `type:"structure"`
+
+	// The identifier of the image.
+	//
+	// ImageId is a required field
+	ImageId *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteWorkspaceImageInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteWorkspaceImageInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteWorkspaceImageInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteWorkspaceImageInput"}
+	if s.ImageId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ImageId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetImageId sets the ImageId field's value.
+func (s *DeleteWorkspaceImageInput) SetImageId(v string) *DeleteWorkspaceImageInput {
+	s.ImageId = &v
+	return s
+}
+
+type DeleteWorkspaceImageOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteWorkspaceImageOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteWorkspaceImageOutput) GoString() string {
+	return s.String()
+}
+
+type DescribeAccountInput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DescribeAccountInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeAccountInput) GoString() string {
+	return s.String()
+}
+
+type DescribeAccountModificationsInput struct {
+	_ struct{} `type:"structure"`
+
+	// If you received a NextToken from a previous call that was paginated, provide
+	// this token to receive the next set of results.
+	NextToken *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeAccountModificationsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeAccountModificationsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeAccountModificationsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeAccountModificationsInput"}
+	if s.NextToken != nil && len(*s.NextToken) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeAccountModificationsInput) SetNextToken(v string) *DescribeAccountModificationsInput {
+	s.NextToken = &v
+	return s
+}
+
+type DescribeAccountModificationsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The list of modifications to the configuration of BYOL.
+	AccountModifications []*AccountModification `type:"list"`
+
+	// The token to use to retrieve the next set of results, or null if no more
+	// results are available.
+	NextToken *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeAccountModificationsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeAccountModificationsOutput) GoString() string {
+	return s.String()
+}
+
+// SetAccountModifications sets the AccountModifications field's value.
+func (s *DescribeAccountModificationsOutput) SetAccountModifications(v []*AccountModification) *DescribeAccountModificationsOutput {
+	s.AccountModifications = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeAccountModificationsOutput) SetNextToken(v string) *DescribeAccountModificationsOutput {
+	s.NextToken = &v
+	return s
+}
+
+type DescribeAccountOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The IP address range, specified as an IPv4 CIDR block, used for the management
+	// network interface.
+	//
+	// The management network interface is connected to a secure Amazon WorkSpaces
+	// management network. It is used for interactive streaming of the WorkSpace
+	// desktop to Amazon WorkSpaces clients, and to allow Amazon WorkSpaces to manage
+	// the WorkSpace.
+	DedicatedTenancyManagementCidrRange *string `type:"string"`
+
+	// The status of BYOL (whether BYOL is enabled or disabled).
+	DedicatedTenancySupport *string `type:"string" enum:"DedicatedTenancySupportResultEnum"`
+}
+
+// String returns the string representation
+func (s DescribeAccountOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeAccountOutput) GoString() string {
+	return s.String()
+}
+
+// SetDedicatedTenancyManagementCidrRange sets the DedicatedTenancyManagementCidrRange field's value.
+func (s *DescribeAccountOutput) SetDedicatedTenancyManagementCidrRange(v string) *DescribeAccountOutput {
+	s.DedicatedTenancyManagementCidrRange = &v
+	return s
+}
+
+// SetDedicatedTenancySupport sets the DedicatedTenancySupport field's value.
+func (s *DescribeAccountOutput) SetDedicatedTenancySupport(v string) *DescribeAccountOutput {
+	s.DedicatedTenancySupport = &v
+	return s
+}
+
+type DescribeClientPropertiesInput struct {
+	_ struct{} `type:"structure"`
+
+	// The resource identifiers, in the form of directory IDs.
+	//
+	// ResourceIds is a required field
+	ResourceIds []*string `min:"1" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeClientPropertiesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeClientPropertiesInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeClientPropertiesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeClientPropertiesInput"}
+	if s.ResourceIds == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceIds"))
+	}
+	if s.ResourceIds != nil && len(s.ResourceIds) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceIds", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetResourceIds sets the ResourceIds field's value.
+func (s *DescribeClientPropertiesInput) SetResourceIds(v []*string) *DescribeClientPropertiesInput {
+	s.ResourceIds = v
+	return s
+}
+
+type DescribeClientPropertiesOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Information about the specified Amazon WorkSpaces clients.
+	ClientPropertiesList []*ClientPropertiesResult `type:"list"`
+}
+
+// String returns the string representation
+func (s DescribeClientPropertiesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeClientPropertiesOutput) GoString() string {
+	return s.String()
+}
+
+// SetClientPropertiesList sets the ClientPropertiesList field's value.
+func (s *DescribeClientPropertiesOutput) SetClientPropertiesList(v []*ClientPropertiesResult) *DescribeClientPropertiesOutput {
+	s.ClientPropertiesList = v
+	return s
+}
+
+type DescribeIpGroupsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The identifiers of one or more IP access control groups.
+	GroupIds []*string `type:"list"`
+
+	// The maximum number of items to return.
+	MaxResults *int64 `min:"1" type:"integer"`
+
+	// If you received a NextToken from a previous call that was paginated, provide
+	// this token to receive the next set of results.
+	NextToken *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeIpGroupsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeIpGroupsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeIpGroupsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeIpGroupsInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+	if s.NextToken != nil && len(*s.NextToken) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetGroupIds sets the GroupIds field's value.
+func (s *DescribeIpGroupsInput) SetGroupIds(v []*string) *DescribeIpGroupsInput {
+	s.GroupIds = v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *DescribeIpGroupsInput) SetMaxResults(v int64) *DescribeIpGroupsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeIpGroupsInput) SetNextToken(v string) *DescribeIpGroupsInput {
+	s.NextToken = &v
+	return s
+}
+
+type DescribeIpGroupsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The token to use to retrieve the next set of results, or null if no more
+	// results are available.
+	NextToken *string `min:"1" type:"string"`
+
+	// Information about the IP access control groups.
+	Result []*IpGroup `type:"list"`
+}
+
+// String returns the string representation
+func (s DescribeIpGroupsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeIpGroupsOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeIpGroupsOutput) SetNextToken(v string) *DescribeIpGroupsOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetResult sets the Result field's value.
+func (s *DescribeIpGroupsOutput) SetResult(v []*IpGroup) *DescribeIpGroupsOutput {
+	s.Result = v
+	return s
+}
+
 type DescribeTagsInput struct {
 	_ struct{} `type:"structure"`
 
-	// The resource ID of the request.
+	// The identifier of the WorkSpace. To find this ID, use DescribeWorkspaces.
 	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
@@ -1735,12 +4020,10 @@ func (s *DescribeTagsInput) SetResourceId(v string) *DescribeTagsInput {
 	return s
 }
 
-// The result of the DescribeTags operation.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DescribeTagsResult
 type DescribeTagsOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The list of tags.
+	// The tags.
 	TagList []*Tag `type:"list"`
 }
 
@@ -1760,27 +4043,22 @@ func (s *DescribeTagsOutput) SetTagList(v []*Tag) *DescribeTagsOutput {
 	return s
 }
 
-// Contains the inputs for the DescribeWorkspaceBundles operation.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DescribeWorkspaceBundlesRequest
 type DescribeWorkspaceBundlesInput struct {
 	_ struct{} `type:"structure"`
 
-	// An array of strings that contains the identifiers of the bundles to retrieve.
-	// This parameter cannot be combined with any other filter parameter.
+	// The identifiers of the bundles. You cannot combine this parameter with any
+	// other filter.
 	BundleIds []*string `min:"1" type:"list"`
 
-	// The NextToken value from a previous call to this operation. Pass null if
-	// this is the first call.
+	// The token for the next set of results. (You received this token from a previous
+	// call.)
 	NextToken *string `min:"1" type:"string"`
 
-	// The owner of the bundles to retrieve. This parameter cannot be combined with
-	// any other filter parameter.
+	// The owner of the bundles. You cannot combine this parameter with any other
+	// filter.
 	//
-	// This contains one of the following values:
-	//
-	//    * null- Retrieves the bundles that belong to the account making the call.
-	//
-	//    * AMAZON- Retrieves the bundles that are provided by AWS.
+	// Specify AMAZON to describe the bundles provided by AWS or null to describe
+	// the bundles that belong to your account.
 	Owner *string `type:"string"`
 }
 
@@ -1828,18 +4106,15 @@ func (s *DescribeWorkspaceBundlesInput) SetOwner(v string) *DescribeWorkspaceBun
 	return s
 }
 
-// Contains the results of the DescribeWorkspaceBundles operation.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DescribeWorkspaceBundlesResult
 type DescribeWorkspaceBundlesOutput struct {
 	_ struct{} `type:"structure"`
 
-	// An array of structures that contain information about the bundles.
+	// Information about the bundles.
 	Bundles []*WorkspaceBundle `type:"list"`
 
-	// If not null, more results are available. Pass this value for the NextToken
-	// parameter in a subsequent call to this operation to retrieve the next set
-	// of items. This token is valid for one day and must be used within that time
-	// frame.
+	// The token to use to retrieve the next set of results, or null if there are
+	// no more results available. This token is valid for one day and must be used
+	// within that time frame.
 	NextToken *string `min:"1" type:"string"`
 }
 
@@ -1865,17 +4140,15 @@ func (s *DescribeWorkspaceBundlesOutput) SetNextToken(v string) *DescribeWorkspa
 	return s
 }
 
-// Contains the inputs for the DescribeWorkspaceDirectories operation.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DescribeWorkspaceDirectoriesRequest
 type DescribeWorkspaceDirectoriesInput struct {
 	_ struct{} `type:"structure"`
 
-	// An array of strings that contains the directory identifiers to retrieve information
-	// for. If this member is null, all directories are retrieved.
+	// The identifiers of the directories. If the value is null, all directories
+	// are retrieved.
 	DirectoryIds []*string `min:"1" type:"list"`
 
-	// The NextToken value from a previous call to this operation. Pass null if
-	// this is the first call.
+	// If you received a NextToken from a previous call that was paginated, provide
+	// this token to receive the next set of results.
 	NextToken *string `min:"1" type:"string"`
 }
 
@@ -1917,18 +4190,14 @@ func (s *DescribeWorkspaceDirectoriesInput) SetNextToken(v string) *DescribeWork
 	return s
 }
 
-// Contains the results of the DescribeWorkspaceDirectories operation.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DescribeWorkspaceDirectoriesResult
 type DescribeWorkspaceDirectoriesOutput struct {
 	_ struct{} `type:"structure"`
 
-	// An array of structures that contain information about the directories.
+	// Information about the directories.
 	Directories []*WorkspaceDirectory `type:"list"`
 
-	// If not null, more results are available. Pass this value for the NextToken
-	// parameter in a subsequent call to this operation to retrieve the next set
-	// of items. This token is valid for one day and must be used within that time
-	// frame.
+	// The token to use to retrieve the next set of results, or null if no more
+	// results are available.
 	NextToken *string `min:"1" type:"string"`
 }
 
@@ -1954,14 +4223,108 @@ func (s *DescribeWorkspaceDirectoriesOutput) SetNextToken(v string) *DescribeWor
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DescribeWorkspacesConnectionStatusRequest
+type DescribeWorkspaceImagesInput struct {
+	_ struct{} `type:"structure"`
+
+	// The identifier of the image.
+	ImageIds []*string `min:"1" type:"list"`
+
+	// The maximum number of items to return.
+	MaxResults *int64 `min:"1" type:"integer"`
+
+	// If you received a NextToken from a previous call that was paginated, provide
+	// this token to receive the next set of results.
+	NextToken *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeWorkspaceImagesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeWorkspaceImagesInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeWorkspaceImagesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeWorkspaceImagesInput"}
+	if s.ImageIds != nil && len(s.ImageIds) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ImageIds", 1))
+	}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+	if s.NextToken != nil && len(*s.NextToken) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetImageIds sets the ImageIds field's value.
+func (s *DescribeWorkspaceImagesInput) SetImageIds(v []*string) *DescribeWorkspaceImagesInput {
+	s.ImageIds = v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *DescribeWorkspaceImagesInput) SetMaxResults(v int64) *DescribeWorkspaceImagesInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeWorkspaceImagesInput) SetNextToken(v string) *DescribeWorkspaceImagesInput {
+	s.NextToken = &v
+	return s
+}
+
+type DescribeWorkspaceImagesOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Information about the images.
+	Images []*WorkspaceImage `type:"list"`
+
+	// The token to use to retrieve the next set of results, or null if no more
+	// results are available.
+	NextToken *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeWorkspaceImagesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeWorkspaceImagesOutput) GoString() string {
+	return s.String()
+}
+
+// SetImages sets the Images field's value.
+func (s *DescribeWorkspaceImagesOutput) SetImages(v []*WorkspaceImage) *DescribeWorkspaceImagesOutput {
+	s.Images = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeWorkspaceImagesOutput) SetNextToken(v string) *DescribeWorkspaceImagesOutput {
+	s.NextToken = &v
+	return s
+}
+
 type DescribeWorkspacesConnectionStatusInput struct {
 	_ struct{} `type:"structure"`
 
-	// The next token of the request.
+	// If you received a NextToken from a previous call that was paginated, provide
+	// this token to receive the next set of results.
 	NextToken *string `min:"1" type:"string"`
 
-	// An array of strings that contain the identifiers of the WorkSpaces.
+	// The identifiers of the WorkSpaces. You can specify up to 25 WorkSpaces.
 	WorkspaceIds []*string `min:"1" type:"list"`
 }
 
@@ -2003,14 +4366,14 @@ func (s *DescribeWorkspacesConnectionStatusInput) SetWorkspaceIds(v []*string) *
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DescribeWorkspacesConnectionStatusResult
 type DescribeWorkspacesConnectionStatusOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The next token of the result.
+	// The token to use to retrieve the next set of results, or null if no more
+	// results are available.
 	NextToken *string `min:"1" type:"string"`
 
-	// The connection status of the WorkSpace.
+	// Information about the connection status of the WorkSpace.
 	WorkspacesConnectionStatus []*WorkspaceConnectionStatus `type:"list"`
 }
 
@@ -2036,35 +4399,30 @@ func (s *DescribeWorkspacesConnectionStatusOutput) SetWorkspacesConnectionStatus
 	return s
 }
 
-// Contains the inputs for the DescribeWorkspaces operation.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DescribeWorkspacesRequest
 type DescribeWorkspacesInput struct {
 	_ struct{} `type:"structure"`
 
-	// The identifier of a bundle to obtain the WorkSpaces for. All WorkSpaces that
-	// are created from this bundle will be retrieved. This parameter cannot be
-	// combined with any other filter parameter.
+	// The identifier of the bundle. All WorkSpaces that are created from this bundle
+	// are retrieved. You cannot combine this parameter with any other filter.
 	BundleId *string `type:"string"`
 
-	// Specifies the directory identifier to which to limit the WorkSpaces. Optionally,
-	// you can specify a specific directory user with the UserName parameter. This
-	// parameter cannot be combined with any other filter parameter.
+	// The identifier of the directory. In addition, you can optionally specify
+	// a specific directory user (see UserName). You cannot combine this parameter
+	// with any other filter.
 	DirectoryId *string `type:"string"`
 
 	// The maximum number of items to return.
 	Limit *int64 `min:"1" type:"integer"`
 
-	// The NextToken value from a previous call to this operation. Pass null if
-	// this is the first call.
+	// If you received a NextToken from a previous call that was paginated, provide
+	// this token to receive the next set of results.
 	NextToken *string `min:"1" type:"string"`
 
-	// Used with the DirectoryId parameter to specify the directory user for whom
-	// to obtain the WorkSpace.
+	// The name of the directory user. You must specify this parameter with DirectoryId.
 	UserName *string `min:"1" type:"string"`
 
-	// An array of strings that contain the identifiers of the WorkSpaces for which
-	// to retrieve information. This parameter cannot be combined with any other
-	// filter parameter.
+	// The identifiers of the WorkSpaces. You cannot combine this parameter with
+	// any other filter.
 	//
 	// Because the CreateWorkspaces operation is asynchronous, the identifier it
 	// returns is not immediately available. If you immediately call DescribeWorkspaces
@@ -2140,21 +4498,17 @@ func (s *DescribeWorkspacesInput) SetWorkspaceIds(v []*string) *DescribeWorkspac
 	return s
 }
 
-// Contains the results for the DescribeWorkspaces operation.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DescribeWorkspacesResult
 type DescribeWorkspacesOutput struct {
 	_ struct{} `type:"structure"`
 
-	// If not null, more results are available. Pass this value for the NextToken
-	// parameter in a subsequent call to this operation to retrieve the next set
-	// of items. This token is valid for one day and must be used within that time
-	// frame.
+	// The token to use to retrieve the next set of results, or null if no more
+	// results are available.
 	NextToken *string `min:"1" type:"string"`
 
-	// An array of structures that contain the information about the WorkSpaces.
+	// Information about the WorkSpaces.
 	//
-	// Because the CreateWorkspaces operation is asynchronous, some of this information
-	// may be incomplete for a newly-created WorkSpace.
+	// Because CreateWorkspaces is an asynchronous operation, some of the returned
+	// information could be incomplete.
 	Workspaces []*Workspace `type:"list"`
 }
 
@@ -2180,19 +4534,84 @@ func (s *DescribeWorkspacesOutput) SetWorkspaces(v []*Workspace) *DescribeWorksp
 	return s
 }
 
-// Contains information about a WorkSpace that could not be created.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/FailedCreateWorkspaceRequest
+type DisassociateIpGroupsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The identifier of the directory.
+	//
+	// DirectoryId is a required field
+	DirectoryId *string `type:"string" required:"true"`
+
+	// The identifiers of one or more IP access control groups.
+	//
+	// GroupIds is a required field
+	GroupIds []*string `type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s DisassociateIpGroupsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DisassociateIpGroupsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DisassociateIpGroupsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DisassociateIpGroupsInput"}
+	if s.DirectoryId == nil {
+		invalidParams.Add(request.NewErrParamRequired("DirectoryId"))
+	}
+	if s.GroupIds == nil {
+		invalidParams.Add(request.NewErrParamRequired("GroupIds"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDirectoryId sets the DirectoryId field's value.
+func (s *DisassociateIpGroupsInput) SetDirectoryId(v string) *DisassociateIpGroupsInput {
+	s.DirectoryId = &v
+	return s
+}
+
+// SetGroupIds sets the GroupIds field's value.
+func (s *DisassociateIpGroupsInput) SetGroupIds(v []*string) *DisassociateIpGroupsInput {
+	s.GroupIds = v
+	return s
+}
+
+type DisassociateIpGroupsOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DisassociateIpGroupsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DisassociateIpGroupsOutput) GoString() string {
+	return s.String()
+}
+
+// Describes a WorkSpace that cannot be created.
 type FailedCreateWorkspaceRequest struct {
 	_ struct{} `type:"structure"`
 
-	// The error code.
+	// The error code that is returned if the WorkSpace cannot be created.
 	ErrorCode *string `type:"string"`
 
-	// The textual error message.
+	// The text of the error message that is returned if the WorkSpace cannot be
+	// created.
 	ErrorMessage *string `type:"string"`
 
-	// A FailedCreateWorkspaceRequest$WorkspaceRequest object that contains the
-	// information about the WorkSpace that could not be created.
+	// Information about the WorkSpace.
 	WorkspaceRequest *WorkspaceRequest `type:"structure"`
 }
 
@@ -2224,17 +4643,17 @@ func (s *FailedCreateWorkspaceRequest) SetWorkspaceRequest(v *WorkspaceRequest) 
 	return s
 }
 
-// Contains information about a WorkSpace that could not be rebooted (RebootWorkspaces),
-// rebuilt (RebuildWorkspaces), terminated (TerminateWorkspaces), started (StartWorkspaces),
+// Describes a WorkSpace that could not be rebooted. (RebootWorkspaces), rebuilt
+// (RebuildWorkspaces), terminated (TerminateWorkspaces), started (StartWorkspaces),
 // or stopped (StopWorkspaces).
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/FailedWorkspaceChangeRequest
 type FailedWorkspaceChangeRequest struct {
 	_ struct{} `type:"structure"`
 
-	// The error code.
+	// The error code that is returned if the WorkSpace cannot be rebooted.
 	ErrorCode *string `type:"string"`
 
-	// The textual error message.
+	// The text of the error message that is returned if the WorkSpace cannot be
+	// rebooted.
 	ErrorMessage *string `type:"string"`
 
 	// The identifier of the WorkSpace.
@@ -2269,16 +4688,454 @@ func (s *FailedWorkspaceChangeRequest) SetWorkspaceId(v string) *FailedWorkspace
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/ModifyWorkspacePropertiesRequest
+type ImportWorkspaceImageInput struct {
+	_ struct{} `type:"structure"`
+
+	// The identifier of the EC2 image.
+	//
+	// Ec2ImageId is a required field
+	Ec2ImageId *string `type:"string" required:"true"`
+
+	// The description of the WorkSpace image.
+	//
+	// ImageDescription is a required field
+	ImageDescription *string `min:"1" type:"string" required:"true"`
+
+	// The name of the WorkSpace image.
+	//
+	// ImageName is a required field
+	ImageName *string `min:"1" type:"string" required:"true"`
+
+	// The ingestion process to be used when importing the image.
+	//
+	// IngestionProcess is a required field
+	IngestionProcess *string `type:"string" required:"true" enum:"WorkspaceImageIngestionProcess"`
+}
+
+// String returns the string representation
+func (s ImportWorkspaceImageInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ImportWorkspaceImageInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ImportWorkspaceImageInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ImportWorkspaceImageInput"}
+	if s.Ec2ImageId == nil {
+		invalidParams.Add(request.NewErrParamRequired("Ec2ImageId"))
+	}
+	if s.ImageDescription == nil {
+		invalidParams.Add(request.NewErrParamRequired("ImageDescription"))
+	}
+	if s.ImageDescription != nil && len(*s.ImageDescription) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ImageDescription", 1))
+	}
+	if s.ImageName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ImageName"))
+	}
+	if s.ImageName != nil && len(*s.ImageName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ImageName", 1))
+	}
+	if s.IngestionProcess == nil {
+		invalidParams.Add(request.NewErrParamRequired("IngestionProcess"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetEc2ImageId sets the Ec2ImageId field's value.
+func (s *ImportWorkspaceImageInput) SetEc2ImageId(v string) *ImportWorkspaceImageInput {
+	s.Ec2ImageId = &v
+	return s
+}
+
+// SetImageDescription sets the ImageDescription field's value.
+func (s *ImportWorkspaceImageInput) SetImageDescription(v string) *ImportWorkspaceImageInput {
+	s.ImageDescription = &v
+	return s
+}
+
+// SetImageName sets the ImageName field's value.
+func (s *ImportWorkspaceImageInput) SetImageName(v string) *ImportWorkspaceImageInput {
+	s.ImageName = &v
+	return s
+}
+
+// SetIngestionProcess sets the IngestionProcess field's value.
+func (s *ImportWorkspaceImageInput) SetIngestionProcess(v string) *ImportWorkspaceImageInput {
+	s.IngestionProcess = &v
+	return s
+}
+
+type ImportWorkspaceImageOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The identifier of the WorkSpace image.
+	ImageId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ImportWorkspaceImageOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ImportWorkspaceImageOutput) GoString() string {
+	return s.String()
+}
+
+// SetImageId sets the ImageId field's value.
+func (s *ImportWorkspaceImageOutput) SetImageId(v string) *ImportWorkspaceImageOutput {
+	s.ImageId = &v
+	return s
+}
+
+// Describes an IP access control group.
+type IpGroup struct {
+	_ struct{} `type:"structure"`
+
+	// The description of the group.
+	GroupDesc *string `locationName:"groupDesc" type:"string"`
+
+	// The identifier of the group.
+	GroupId *string `locationName:"groupId" type:"string"`
+
+	// The name of the group.
+	GroupName *string `locationName:"groupName" type:"string"`
+
+	// The rules.
+	UserRules []*IpRuleItem `locationName:"userRules" type:"list"`
+}
+
+// String returns the string representation
+func (s IpGroup) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s IpGroup) GoString() string {
+	return s.String()
+}
+
+// SetGroupDesc sets the GroupDesc field's value.
+func (s *IpGroup) SetGroupDesc(v string) *IpGroup {
+	s.GroupDesc = &v
+	return s
+}
+
+// SetGroupId sets the GroupId field's value.
+func (s *IpGroup) SetGroupId(v string) *IpGroup {
+	s.GroupId = &v
+	return s
+}
+
+// SetGroupName sets the GroupName field's value.
+func (s *IpGroup) SetGroupName(v string) *IpGroup {
+	s.GroupName = &v
+	return s
+}
+
+// SetUserRules sets the UserRules field's value.
+func (s *IpGroup) SetUserRules(v []*IpRuleItem) *IpGroup {
+	s.UserRules = v
+	return s
+}
+
+// Describes a rule for an IP access control group.
+type IpRuleItem struct {
+	_ struct{} `type:"structure"`
+
+	// The IP address range, in CIDR notation.
+	IpRule *string `locationName:"ipRule" type:"string"`
+
+	// The description.
+	RuleDesc *string `locationName:"ruleDesc" type:"string"`
+}
+
+// String returns the string representation
+func (s IpRuleItem) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s IpRuleItem) GoString() string {
+	return s.String()
+}
+
+// SetIpRule sets the IpRule field's value.
+func (s *IpRuleItem) SetIpRule(v string) *IpRuleItem {
+	s.IpRule = &v
+	return s
+}
+
+// SetRuleDesc sets the RuleDesc field's value.
+func (s *IpRuleItem) SetRuleDesc(v string) *IpRuleItem {
+	s.RuleDesc = &v
+	return s
+}
+
+type ListAvailableManagementCidrRangesInput struct {
+	_ struct{} `type:"structure"`
+
+	// The IP address range to search. Specify an IP address range that is compatible
+	// with your network and in CIDR notation (that is, specify the range as an
+	// IPv4 CIDR block).
+	//
+	// ManagementCidrRangeConstraint is a required field
+	ManagementCidrRangeConstraint *string `type:"string" required:"true"`
+
+	// The maximum number of items to return.
+	MaxResults *int64 `min:"1" type:"integer"`
+
+	// If you received a NextToken from a previous call that was paginated, provide
+	// this token to receive the next set of results.
+	NextToken *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ListAvailableManagementCidrRangesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListAvailableManagementCidrRangesInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListAvailableManagementCidrRangesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListAvailableManagementCidrRangesInput"}
+	if s.ManagementCidrRangeConstraint == nil {
+		invalidParams.Add(request.NewErrParamRequired("ManagementCidrRangeConstraint"))
+	}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+	if s.NextToken != nil && len(*s.NextToken) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetManagementCidrRangeConstraint sets the ManagementCidrRangeConstraint field's value.
+func (s *ListAvailableManagementCidrRangesInput) SetManagementCidrRangeConstraint(v string) *ListAvailableManagementCidrRangesInput {
+	s.ManagementCidrRangeConstraint = &v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListAvailableManagementCidrRangesInput) SetMaxResults(v int64) *ListAvailableManagementCidrRangesInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListAvailableManagementCidrRangesInput) SetNextToken(v string) *ListAvailableManagementCidrRangesInput {
+	s.NextToken = &v
+	return s
+}
+
+type ListAvailableManagementCidrRangesOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The list of available IP address ranges, specified as IPv4 CIDR blocks.
+	ManagementCidrRanges []*string `type:"list"`
+
+	// The token to use to retrieve the next set of results, or null if no more
+	// results are available.
+	NextToken *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ListAvailableManagementCidrRangesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListAvailableManagementCidrRangesOutput) GoString() string {
+	return s.String()
+}
+
+// SetManagementCidrRanges sets the ManagementCidrRanges field's value.
+func (s *ListAvailableManagementCidrRangesOutput) SetManagementCidrRanges(v []*string) *ListAvailableManagementCidrRangesOutput {
+	s.ManagementCidrRanges = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListAvailableManagementCidrRangesOutput) SetNextToken(v string) *ListAvailableManagementCidrRangesOutput {
+	s.NextToken = &v
+	return s
+}
+
+// Describes a WorkSpace modification.
+type ModificationState struct {
+	_ struct{} `type:"structure"`
+
+	// The resource.
+	Resource *string `type:"string" enum:"ModificationResourceEnum"`
+
+	// The modification state.
+	State *string `type:"string" enum:"ModificationStateEnum"`
+}
+
+// String returns the string representation
+func (s ModificationState) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ModificationState) GoString() string {
+	return s.String()
+}
+
+// SetResource sets the Resource field's value.
+func (s *ModificationState) SetResource(v string) *ModificationState {
+	s.Resource = &v
+	return s
+}
+
+// SetState sets the State field's value.
+func (s *ModificationState) SetState(v string) *ModificationState {
+	s.State = &v
+	return s
+}
+
+type ModifyAccountInput struct {
+	_ struct{} `type:"structure"`
+
+	// The IP address range, specified as an IPv4 CIDR block, for the management
+	// network interface. Specify an IP address range that is compatible with your
+	// network and in CIDR notation (that is, specify the range as an IPv4 CIDR
+	// block). The CIDR block size must be /16 (for example, 203.0.113.25/16). It
+	// must also be specified as available by the ListAvailableManagementCidrRanges
+	// operation.
+	DedicatedTenancyManagementCidrRange *string `type:"string"`
+
+	// The status of BYOL.
+	DedicatedTenancySupport *string `type:"string" enum:"DedicatedTenancySupportEnum"`
+}
+
+// String returns the string representation
+func (s ModifyAccountInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ModifyAccountInput) GoString() string {
+	return s.String()
+}
+
+// SetDedicatedTenancyManagementCidrRange sets the DedicatedTenancyManagementCidrRange field's value.
+func (s *ModifyAccountInput) SetDedicatedTenancyManagementCidrRange(v string) *ModifyAccountInput {
+	s.DedicatedTenancyManagementCidrRange = &v
+	return s
+}
+
+// SetDedicatedTenancySupport sets the DedicatedTenancySupport field's value.
+func (s *ModifyAccountInput) SetDedicatedTenancySupport(v string) *ModifyAccountInput {
+	s.DedicatedTenancySupport = &v
+	return s
+}
+
+type ModifyAccountOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s ModifyAccountOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ModifyAccountOutput) GoString() string {
+	return s.String()
+}
+
+type ModifyClientPropertiesInput struct {
+	_ struct{} `type:"structure"`
+
+	// Information about the Amazon WorkSpaces client.
+	ClientProperties *ClientProperties `type:"structure"`
+
+	// The resource identifiers, in the form of directory IDs.
+	//
+	// ResourceId is a required field
+	ResourceId *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ModifyClientPropertiesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ModifyClientPropertiesInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ModifyClientPropertiesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ModifyClientPropertiesInput"}
+	if s.ResourceId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceId"))
+	}
+	if s.ResourceId != nil && len(*s.ResourceId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetClientProperties sets the ClientProperties field's value.
+func (s *ModifyClientPropertiesInput) SetClientProperties(v *ClientProperties) *ModifyClientPropertiesInput {
+	s.ClientProperties = v
+	return s
+}
+
+// SetResourceId sets the ResourceId field's value.
+func (s *ModifyClientPropertiesInput) SetResourceId(v string) *ModifyClientPropertiesInput {
+	s.ResourceId = &v
+	return s
+}
+
+type ModifyClientPropertiesOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s ModifyClientPropertiesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ModifyClientPropertiesOutput) GoString() string {
+	return s.String()
+}
+
 type ModifyWorkspacePropertiesInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ID of the WorkSpace.
+	// The identifier of the WorkSpace.
 	//
 	// WorkspaceId is a required field
 	WorkspaceId *string `type:"string" required:"true"`
 
-	// The WorkSpace properties of the request.
+	// The properties of the WorkSpace.
 	//
 	// WorkspaceProperties is a required field
 	WorkspaceProperties *WorkspaceProperties `type:"structure" required:"true"`
@@ -2322,7 +5179,6 @@ func (s *ModifyWorkspacePropertiesInput) SetWorkspaceProperties(v *WorkspaceProp
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/ModifyWorkspacePropertiesResult
 type ModifyWorkspacePropertiesOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -2337,13 +5193,101 @@ func (s ModifyWorkspacePropertiesOutput) GoString() string {
 	return s.String()
 }
 
-// Contains information used with the RebootWorkspaces operation to reboot a
-// WorkSpace.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/RebootRequest
+type ModifyWorkspaceStateInput struct {
+	_ struct{} `type:"structure"`
+
+	// The identifier of the WorkSpace.
+	//
+	// WorkspaceId is a required field
+	WorkspaceId *string `type:"string" required:"true"`
+
+	// The WorkSpace state.
+	//
+	// WorkspaceState is a required field
+	WorkspaceState *string `type:"string" required:"true" enum:"TargetWorkspaceState"`
+}
+
+// String returns the string representation
+func (s ModifyWorkspaceStateInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ModifyWorkspaceStateInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ModifyWorkspaceStateInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ModifyWorkspaceStateInput"}
+	if s.WorkspaceId == nil {
+		invalidParams.Add(request.NewErrParamRequired("WorkspaceId"))
+	}
+	if s.WorkspaceState == nil {
+		invalidParams.Add(request.NewErrParamRequired("WorkspaceState"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetWorkspaceId sets the WorkspaceId field's value.
+func (s *ModifyWorkspaceStateInput) SetWorkspaceId(v string) *ModifyWorkspaceStateInput {
+	s.WorkspaceId = &v
+	return s
+}
+
+// SetWorkspaceState sets the WorkspaceState field's value.
+func (s *ModifyWorkspaceStateInput) SetWorkspaceState(v string) *ModifyWorkspaceStateInput {
+	s.WorkspaceState = &v
+	return s
+}
+
+type ModifyWorkspaceStateOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s ModifyWorkspaceStateOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ModifyWorkspaceStateOutput) GoString() string {
+	return s.String()
+}
+
+// The operating system that the image is running.
+type OperatingSystem struct {
+	_ struct{} `type:"structure"`
+
+	// The operating system.
+	Type *string `type:"string" enum:"OperatingSystemType"`
+}
+
+// String returns the string representation
+func (s OperatingSystem) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OperatingSystem) GoString() string {
+	return s.String()
+}
+
+// SetType sets the Type field's value.
+func (s *OperatingSystem) SetType(v string) *OperatingSystem {
+	s.Type = &v
+	return s
+}
+
+// Describes the information used to reboot a WorkSpace.
 type RebootRequest struct {
 	_ struct{} `type:"structure"`
 
-	// The identifier of the WorkSpace to reboot.
+	// The identifier of the WorkSpace.
 	//
 	// WorkspaceId is a required field
 	WorkspaceId *string `type:"string" required:"true"`
@@ -2378,12 +5322,10 @@ func (s *RebootRequest) SetWorkspaceId(v string) *RebootRequest {
 	return s
 }
 
-// Contains the inputs for the RebootWorkspaces operation.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/RebootWorkspacesRequest
 type RebootWorkspacesInput struct {
 	_ struct{} `type:"structure"`
 
-	// An array of structures that specify the WorkSpaces to reboot.
+	// The WorkSpaces to reboot. You can specify up to 25 WorkSpaces.
 	//
 	// RebootWorkspaceRequests is a required field
 	RebootWorkspaceRequests []*RebootRequest `min:"1" type:"list" required:"true"`
@@ -2431,12 +5373,10 @@ func (s *RebootWorkspacesInput) SetRebootWorkspaceRequests(v []*RebootRequest) *
 	return s
 }
 
-// Contains the results of the RebootWorkspaces operation.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/RebootWorkspacesResult
 type RebootWorkspacesOutput struct {
 	_ struct{} `type:"structure"`
 
-	// An array of structures representing any WorkSpaces that could not be rebooted.
+	// Information about the WorkSpaces that could not be rebooted.
 	FailedRequests []*FailedWorkspaceChangeRequest `type:"list"`
 }
 
@@ -2456,13 +5396,11 @@ func (s *RebootWorkspacesOutput) SetFailedRequests(v []*FailedWorkspaceChangeReq
 	return s
 }
 
-// Contains information used with the RebuildWorkspaces operation to rebuild
-// a WorkSpace.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/RebuildRequest
+// Describes the information used to rebuild a WorkSpace.
 type RebuildRequest struct {
 	_ struct{} `type:"structure"`
 
-	// The identifier of the WorkSpace to rebuild.
+	// The identifier of the WorkSpace.
 	//
 	// WorkspaceId is a required field
 	WorkspaceId *string `type:"string" required:"true"`
@@ -2497,12 +5435,10 @@ func (s *RebuildRequest) SetWorkspaceId(v string) *RebuildRequest {
 	return s
 }
 
-// Contains the inputs for the RebuildWorkspaces operation.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/RebuildWorkspacesRequest
 type RebuildWorkspacesInput struct {
 	_ struct{} `type:"structure"`
 
-	// An array of structures that specify the WorkSpaces to rebuild.
+	// The WorkSpace to rebuild. You can specify a single WorkSpace.
 	//
 	// RebuildWorkspaceRequests is a required field
 	RebuildWorkspaceRequests []*RebuildRequest `min:"1" type:"list" required:"true"`
@@ -2550,12 +5486,10 @@ func (s *RebuildWorkspacesInput) SetRebuildWorkspaceRequests(v []*RebuildRequest
 	return s
 }
 
-// Contains the results of the RebuildWorkspaces operation.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/RebuildWorkspacesResult
 type RebuildWorkspacesOutput struct {
 	_ struct{} `type:"structure"`
 
-	// An array of structures representing any WorkSpaces that could not be rebuilt.
+	// Information about the WorkSpace that could not be rebuilt.
 	FailedRequests []*FailedWorkspaceChangeRequest `type:"list"`
 }
 
@@ -2575,12 +5509,101 @@ func (s *RebuildWorkspacesOutput) SetFailedRequests(v []*FailedWorkspaceChangeRe
 	return s
 }
 
-// Describes the start request.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/StartRequest
+type RevokeIpRulesInput struct {
+	_ struct{} `type:"structure"`
+
+	// The identifier of the group.
+	//
+	// GroupId is a required field
+	GroupId *string `type:"string" required:"true"`
+
+	// The rules to remove from the group.
+	//
+	// UserRules is a required field
+	UserRules []*string `type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s RevokeIpRulesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RevokeIpRulesInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *RevokeIpRulesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "RevokeIpRulesInput"}
+	if s.GroupId == nil {
+		invalidParams.Add(request.NewErrParamRequired("GroupId"))
+	}
+	if s.UserRules == nil {
+		invalidParams.Add(request.NewErrParamRequired("UserRules"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetGroupId sets the GroupId field's value.
+func (s *RevokeIpRulesInput) SetGroupId(v string) *RevokeIpRulesInput {
+	s.GroupId = &v
+	return s
+}
+
+// SetUserRules sets the UserRules field's value.
+func (s *RevokeIpRulesInput) SetUserRules(v []*string) *RevokeIpRulesInput {
+	s.UserRules = v
+	return s
+}
+
+type RevokeIpRulesOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s RevokeIpRulesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RevokeIpRulesOutput) GoString() string {
+	return s.String()
+}
+
+// Describes the root volume for a WorkSpace bundle.
+type RootStorage struct {
+	_ struct{} `type:"structure"`
+
+	// The size of the root volume.
+	Capacity *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s RootStorage) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RootStorage) GoString() string {
+	return s.String()
+}
+
+// SetCapacity sets the Capacity field's value.
+func (s *RootStorage) SetCapacity(v string) *RootStorage {
+	s.Capacity = &v
+	return s
+}
+
+// Information used to start a WorkSpace.
 type StartRequest struct {
 	_ struct{} `type:"structure"`
 
-	// The ID of the WorkSpace.
+	// The identifier of the WorkSpace.
 	WorkspaceId *string `type:"string"`
 }
 
@@ -2600,11 +5623,10 @@ func (s *StartRequest) SetWorkspaceId(v string) *StartRequest {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/StartWorkspacesRequest
 type StartWorkspacesInput struct {
 	_ struct{} `type:"structure"`
 
-	// The requests.
+	// The WorkSpaces to start. You can specify up to 25 WorkSpaces.
 	//
 	// StartWorkspaceRequests is a required field
 	StartWorkspaceRequests []*StartRequest `min:"1" type:"list" required:"true"`
@@ -2642,11 +5664,10 @@ func (s *StartWorkspacesInput) SetStartWorkspaceRequests(v []*StartRequest) *Sta
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/StartWorkspacesResult
 type StartWorkspacesOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The failed requests.
+	// Information about the WorkSpaces that could not be started.
 	FailedRequests []*FailedWorkspaceChangeRequest `type:"list"`
 }
 
@@ -2666,12 +5687,11 @@ func (s *StartWorkspacesOutput) SetFailedRequests(v []*FailedWorkspaceChangeRequ
 	return s
 }
 
-// Describes the stop request.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/StopRequest
+// Describes the information used to stop a WorkSpace.
 type StopRequest struct {
 	_ struct{} `type:"structure"`
 
-	// The ID of the WorkSpace.
+	// The identifier of the WorkSpace.
 	WorkspaceId *string `type:"string"`
 }
 
@@ -2691,11 +5711,10 @@ func (s *StopRequest) SetWorkspaceId(v string) *StopRequest {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/StopWorkspacesRequest
 type StopWorkspacesInput struct {
 	_ struct{} `type:"structure"`
 
-	// The requests.
+	// The WorkSpaces to stop. You can specify up to 25 WorkSpaces.
 	//
 	// StopWorkspaceRequests is a required field
 	StopWorkspaceRequests []*StopRequest `min:"1" type:"list" required:"true"`
@@ -2733,11 +5752,10 @@ func (s *StopWorkspacesInput) SetStopWorkspaceRequests(v []*StopRequest) *StopWo
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/StopWorkspacesResult
 type StopWorkspacesOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The failed requests.
+	// Information about the WorkSpaces that could not be stopped.
 	FailedRequests []*FailedWorkspaceChangeRequest `type:"list"`
 }
 
@@ -2757,8 +5775,7 @@ func (s *StopWorkspacesOutput) SetFailedRequests(v []*FailedWorkspaceChangeReque
 	return s
 }
 
-// Describes the tag of the WorkSpace.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/Tag
+// Describes a tag.
 type Tag struct {
 	_ struct{} `type:"structure"`
 
@@ -2809,13 +5826,11 @@ func (s *Tag) SetValue(v string) *Tag {
 	return s
 }
 
-// Contains information used with the TerminateWorkspaces operation to terminate
-// a WorkSpace.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/TerminateRequest
+// Describes the information used to terminate a WorkSpace.
 type TerminateRequest struct {
 	_ struct{} `type:"structure"`
 
-	// The identifier of the WorkSpace to terminate.
+	// The identifier of the WorkSpace.
 	//
 	// WorkspaceId is a required field
 	WorkspaceId *string `type:"string" required:"true"`
@@ -2850,12 +5865,10 @@ func (s *TerminateRequest) SetWorkspaceId(v string) *TerminateRequest {
 	return s
 }
 
-// Contains the inputs for the TerminateWorkspaces operation.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/TerminateWorkspacesRequest
 type TerminateWorkspacesInput struct {
 	_ struct{} `type:"structure"`
 
-	// An array of structures that specify the WorkSpaces to terminate.
+	// The WorkSpaces to terminate. You can specify up to 25 WorkSpaces.
 	//
 	// TerminateWorkspaceRequests is a required field
 	TerminateWorkspaceRequests []*TerminateRequest `min:"1" type:"list" required:"true"`
@@ -2903,12 +5916,10 @@ func (s *TerminateWorkspacesInput) SetTerminateWorkspaceRequests(v []*TerminateR
 	return s
 }
 
-// Contains the results of the TerminateWorkspaces operation.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/TerminateWorkspacesResult
 type TerminateWorkspacesOutput struct {
 	_ struct{} `type:"structure"`
 
-	// An array of structures representing any WorkSpaces that could not be terminated.
+	// Information about the WorkSpaces that could not be terminated.
 	FailedRequests []*FailedWorkspaceChangeRequest `type:"list"`
 }
 
@@ -2928,12 +5939,77 @@ func (s *TerminateWorkspacesOutput) SetFailedRequests(v []*FailedWorkspaceChange
 	return s
 }
 
-// Contains information about the user storage for a WorkSpace bundle.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/UserStorage
+type UpdateRulesOfIpGroupInput struct {
+	_ struct{} `type:"structure"`
+
+	// The identifier of the group.
+	//
+	// GroupId is a required field
+	GroupId *string `type:"string" required:"true"`
+
+	// One or more rules.
+	//
+	// UserRules is a required field
+	UserRules []*IpRuleItem `type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateRulesOfIpGroupInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateRulesOfIpGroupInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateRulesOfIpGroupInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateRulesOfIpGroupInput"}
+	if s.GroupId == nil {
+		invalidParams.Add(request.NewErrParamRequired("GroupId"))
+	}
+	if s.UserRules == nil {
+		invalidParams.Add(request.NewErrParamRequired("UserRules"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetGroupId sets the GroupId field's value.
+func (s *UpdateRulesOfIpGroupInput) SetGroupId(v string) *UpdateRulesOfIpGroupInput {
+	s.GroupId = &v
+	return s
+}
+
+// SetUserRules sets the UserRules field's value.
+func (s *UpdateRulesOfIpGroupInput) SetUserRules(v []*IpRuleItem) *UpdateRulesOfIpGroupInput {
+	s.UserRules = v
+	return s
+}
+
+type UpdateRulesOfIpGroupOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s UpdateRulesOfIpGroupOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateRulesOfIpGroupOutput) GoString() string {
+	return s.String()
+}
+
+// Describes the user storage for a WorkSpace bundle.
 type UserStorage struct {
 	_ struct{} `type:"structure"`
 
-	// The amount of user storage for the bundle.
+	// The size of the user storage.
 	Capacity *string `min:"1" type:"string"`
 }
 
@@ -2953,44 +6029,45 @@ func (s *UserStorage) SetCapacity(v string) *UserStorage {
 	return s
 }
 
-// Contains information about a WorkSpace.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/Workspace
+// Describes a WorkSpace.
 type Workspace struct {
 	_ struct{} `type:"structure"`
 
-	// The identifier of the bundle that the WorkSpace was created from.
+	// The identifier of the bundle used to create the WorkSpace.
 	BundleId *string `type:"string"`
 
-	// The name of the WorkSpace as seen by the operating system.
+	// The name of the WorkSpace, as seen by the operating system.
 	ComputerName *string `type:"string"`
 
-	// The identifier of the AWS Directory Service directory that the WorkSpace
-	// belongs to.
+	// The identifier of the AWS Directory Service directory for the WorkSpace.
 	DirectoryId *string `type:"string"`
 
-	// If the WorkSpace could not be created, this contains the error code.
+	// The error code that is returned if the WorkSpace cannot be created.
 	ErrorCode *string `type:"string"`
 
-	// If the WorkSpace could not be created, this contains a textual error message
-	// that describes the failure.
+	// The text of the error message that is returned if the WorkSpace cannot be
+	// created.
 	ErrorMessage *string `type:"string"`
 
 	// The IP address of the WorkSpace.
 	IpAddress *string `type:"string"`
 
-	// Specifies whether the data stored on the root volume, or C: drive, is encrypted.
+	// The modification states of the WorkSpace.
+	ModificationStates []*ModificationState `type:"list"`
+
+	// Indicates whether the data stored on the root volume is encrypted.
 	RootVolumeEncryptionEnabled *bool `type:"boolean"`
 
 	// The operational state of the WorkSpace.
 	State *string `type:"string" enum:"WorkspaceState"`
 
-	// The identifier of the subnet that the WorkSpace is in.
+	// The identifier of the subnet for the WorkSpace.
 	SubnetId *string `type:"string"`
 
-	// The user that the WorkSpace is assigned to.
+	// The user for the WorkSpace.
 	UserName *string `min:"1" type:"string"`
 
-	// Specifies whether the data stored on the user volume, or D: drive, is encrypted.
+	// Indicates whether the data stored on the user volume is encrypted.
 	UserVolumeEncryptionEnabled *bool `type:"boolean"`
 
 	// The KMS key used to encrypt data stored on your WorkSpace.
@@ -2999,7 +6076,7 @@ type Workspace struct {
 	// The identifier of the WorkSpace.
 	WorkspaceId *string `type:"string"`
 
-	// Describes the properties of a WorkSpace.
+	// The properties of the WorkSpace.
 	WorkspaceProperties *WorkspaceProperties `type:"structure"`
 }
 
@@ -3046,6 +6123,12 @@ func (s *Workspace) SetErrorMessage(v string) *Workspace {
 // SetIpAddress sets the IpAddress field's value.
 func (s *Workspace) SetIpAddress(v string) *Workspace {
 	s.IpAddress = &v
+	return s
+}
+
+// SetModificationStates sets the ModificationStates field's value.
+func (s *Workspace) SetModificationStates(v []*ModificationState) *Workspace {
+	s.ModificationStates = v
 	return s
 }
 
@@ -3097,29 +6180,30 @@ func (s *Workspace) SetWorkspaceProperties(v *WorkspaceProperties) *Workspace {
 	return s
 }
 
-// Contains information about a WorkSpace bundle.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/WorkspaceBundle
+// Describes a WorkSpace bundle.
 type WorkspaceBundle struct {
 	_ struct{} `type:"structure"`
 
 	// The bundle identifier.
 	BundleId *string `type:"string"`
 
-	// A ComputeType object that specifies the compute type for the bundle.
+	// The compute type. For more information, see Amazon WorkSpaces Bundles (http://aws.amazon.com/workspaces/details/#Amazon_WorkSpaces_Bundles).
 	ComputeType *ComputeType `type:"structure"`
 
-	// The bundle description.
+	// A description.
 	Description *string `type:"string"`
 
 	// The name of the bundle.
 	Name *string `min:"1" type:"string"`
 
-	// The owner of the bundle. This contains the owner's account identifier, or
+	// The owner of the bundle. This is the account identifier of the owner, or
 	// AMAZON if the bundle is provided by AWS.
 	Owner *string `type:"string"`
 
-	// A UserStorage object that specifies the amount of user storage that the bundle
-	// contains.
+	// The size of the root volume.
+	RootStorage *RootStorage `type:"structure"`
+
+	// The size of the user storage.
 	UserStorage *UserStorage `type:"structure"`
 }
 
@@ -3163,6 +6247,12 @@ func (s *WorkspaceBundle) SetOwner(v string) *WorkspaceBundle {
 	return s
 }
 
+// SetRootStorage sets the RootStorage field's value.
+func (s *WorkspaceBundle) SetRootStorage(v *RootStorage) *WorkspaceBundle {
+	s.RootStorage = v
+	return s
+}
+
 // SetUserStorage sets the UserStorage field's value.
 func (s *WorkspaceBundle) SetUserStorage(v *UserStorage) *WorkspaceBundle {
 	s.UserStorage = v
@@ -3170,21 +6260,20 @@ func (s *WorkspaceBundle) SetUserStorage(v *UserStorage) *WorkspaceBundle {
 }
 
 // Describes the connection status of a WorkSpace.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/WorkspaceConnectionStatus
 type WorkspaceConnectionStatus struct {
 	_ struct{} `type:"structure"`
 
-	// The connection state of the WorkSpace. Returns UNKOWN if the WorkSpace is
-	// in a Stopped state.
+	// The connection state of the WorkSpace. The connection state is unknown if
+	// the WorkSpace is stopped.
 	ConnectionState *string `type:"string" enum:"ConnectionState"`
 
-	// The timestamp of the connection state check.
-	ConnectionStateCheckTimestamp *time.Time `type:"timestamp" timestampFormat:"unix"`
+	// The timestamp of the connection status check.
+	ConnectionStateCheckTimestamp *time.Time `type:"timestamp"`
 
 	// The timestamp of the last known user connection.
-	LastKnownUserConnectionTimestamp *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastKnownUserConnectionTimestamp *time.Time `type:"timestamp"`
 
-	// The ID of the WorkSpace.
+	// The identifier of the WorkSpace.
 	WorkspaceId *string `type:"string"`
 }
 
@@ -3222,9 +6311,7 @@ func (s *WorkspaceConnectionStatus) SetWorkspaceId(v string) *WorkspaceConnectio
 	return s
 }
 
-// Contains information about an AWS Directory Service directory for use with
-// Amazon WorkSpaces.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/WorkspaceDirectory
+// Describes an AWS Directory Service directory that is used with Amazon WorkSpaces.
 type WorkspaceDirectory struct {
 	_ struct{} `type:"structure"`
 
@@ -3243,13 +6330,15 @@ type WorkspaceDirectory struct {
 	// The directory type.
 	DirectoryType *string `type:"string" enum:"WorkspaceDirectoryType"`
 
-	// An array of strings that contains the IP addresses of the DNS servers for
-	// the directory.
+	// The IP addresses of the DNS servers for the directory.
 	DnsIpAddresses []*string `type:"list"`
 
 	// The identifier of the IAM role. This is the role that allows Amazon WorkSpaces
 	// to make calls to other services, such as Amazon EC2, on your behalf.
 	IamRoleId *string `type:"string"`
+
+	// The identifiers of the IP access control groups associated with the directory.
+	IpGroupIds []*string `locationName:"ipGroupIds" type:"list"`
 
 	// The registration code for the directory. This is the code that users enter
 	// in their Amazon WorkSpaces client application to connect to the directory.
@@ -3258,12 +6347,10 @@ type WorkspaceDirectory struct {
 	// The state of the directory's registration with Amazon WorkSpaces
 	State *string `type:"string" enum:"WorkspaceDirectoryState"`
 
-	// An array of strings that contains the identifiers of the subnets used with
-	// the directory.
+	// The identifiers of the subnets used with the directory.
 	SubnetIds []*string `type:"list"`
 
-	// A structure that specifies the default creation properties for all WorkSpaces
-	// in the directory.
+	// The default creation properties for all WorkSpaces in the directory.
 	WorkspaceCreationProperties *DefaultWorkspaceCreationProperties `type:"structure"`
 
 	// The identifier of the security group that is assigned to new WorkSpaces.
@@ -3322,6 +6409,12 @@ func (s *WorkspaceDirectory) SetIamRoleId(v string) *WorkspaceDirectory {
 	return s
 }
 
+// SetIpGroupIds sets the IpGroupIds field's value.
+func (s *WorkspaceDirectory) SetIpGroupIds(v []*string) *WorkspaceDirectory {
+	s.IpGroupIds = v
+	return s
+}
+
 // SetRegistrationCode sets the RegistrationCode field's value.
 func (s *WorkspaceDirectory) SetRegistrationCode(v string) *WorkspaceDirectory {
 	s.RegistrationCode = &v
@@ -3352,19 +6445,114 @@ func (s *WorkspaceDirectory) SetWorkspaceSecurityGroupId(v string) *WorkspaceDir
 	return s
 }
 
-// Describes the properties of a WorkSpace.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/WorkspaceProperties
+// Describes a WorkSpace image.
+type WorkspaceImage struct {
+	_ struct{} `type:"structure"`
+
+	// The description of the image.
+	Description *string `min:"1" type:"string"`
+
+	// The error code that is returned for the image.
+	ErrorCode *string `type:"string"`
+
+	// The text of the error message that is returned for the image.
+	ErrorMessage *string `type:"string"`
+
+	// The identifier of the image.
+	ImageId *string `type:"string"`
+
+	// The name of the image.
+	Name *string `min:"1" type:"string"`
+
+	// The operating system that the image is running.
+	OperatingSystem *OperatingSystem `type:"structure"`
+
+	// Specifies whether the image is running on dedicated hardware. When bring
+	// your own license (BYOL) is enabled, this value is set to DEDICATED.
+	RequiredTenancy *string `type:"string" enum:"WorkspaceImageRequiredTenancy"`
+
+	// The status of the image.
+	State *string `type:"string" enum:"WorkspaceImageState"`
+}
+
+// String returns the string representation
+func (s WorkspaceImage) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s WorkspaceImage) GoString() string {
+	return s.String()
+}
+
+// SetDescription sets the Description field's value.
+func (s *WorkspaceImage) SetDescription(v string) *WorkspaceImage {
+	s.Description = &v
+	return s
+}
+
+// SetErrorCode sets the ErrorCode field's value.
+func (s *WorkspaceImage) SetErrorCode(v string) *WorkspaceImage {
+	s.ErrorCode = &v
+	return s
+}
+
+// SetErrorMessage sets the ErrorMessage field's value.
+func (s *WorkspaceImage) SetErrorMessage(v string) *WorkspaceImage {
+	s.ErrorMessage = &v
+	return s
+}
+
+// SetImageId sets the ImageId field's value.
+func (s *WorkspaceImage) SetImageId(v string) *WorkspaceImage {
+	s.ImageId = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *WorkspaceImage) SetName(v string) *WorkspaceImage {
+	s.Name = &v
+	return s
+}
+
+// SetOperatingSystem sets the OperatingSystem field's value.
+func (s *WorkspaceImage) SetOperatingSystem(v *OperatingSystem) *WorkspaceImage {
+	s.OperatingSystem = v
+	return s
+}
+
+// SetRequiredTenancy sets the RequiredTenancy field's value.
+func (s *WorkspaceImage) SetRequiredTenancy(v string) *WorkspaceImage {
+	s.RequiredTenancy = &v
+	return s
+}
+
+// SetState sets the State field's value.
+func (s *WorkspaceImage) SetState(v string) *WorkspaceImage {
+	s.State = &v
+	return s
+}
+
+// Describes a WorkSpace.
 type WorkspaceProperties struct {
 	_ struct{} `type:"structure"`
 
-	// The running mode of the WorkSpace. AlwaysOn WorkSpaces are billed monthly.
-	// AutoStop WorkSpaces are billed by the hour and stopped when no longer being
-	// used in order to save on costs.
+	// The compute type. For more information, see Amazon WorkSpaces Bundles (http://aws.amazon.com/workspaces/details/#Amazon_WorkSpaces_Bundles).
+	ComputeTypeName *string `type:"string" enum:"Compute"`
+
+	// The size of the root volume.
+	RootVolumeSizeGib *int64 `type:"integer"`
+
+	// The running mode. For more information, see Manage the WorkSpace Running
+	// Mode (http://docs.aws.amazon.com/workspaces/latest/adminguide/running-mode.html).
 	RunningMode *string `type:"string" enum:"RunningMode"`
 
 	// The time after a user logs off when WorkSpaces are automatically stopped.
 	// Configured in 60 minute intervals.
 	RunningModeAutoStopTimeoutInMinutes *int64 `type:"integer"`
+
+	// The size of the user storage.
+	UserVolumeSizeGib *int64 `type:"integer"`
 }
 
 // String returns the string representation
@@ -3375,6 +6563,18 @@ func (s WorkspaceProperties) String() string {
 // GoString returns the string representation
 func (s WorkspaceProperties) GoString() string {
 	return s.String()
+}
+
+// SetComputeTypeName sets the ComputeTypeName field's value.
+func (s *WorkspaceProperties) SetComputeTypeName(v string) *WorkspaceProperties {
+	s.ComputeTypeName = &v
+	return s
+}
+
+// SetRootVolumeSizeGib sets the RootVolumeSizeGib field's value.
+func (s *WorkspaceProperties) SetRootVolumeSizeGib(v int64) *WorkspaceProperties {
+	s.RootVolumeSizeGib = &v
+	return s
 }
 
 // SetRunningMode sets the RunningMode field's value.
@@ -3389,44 +6589,47 @@ func (s *WorkspaceProperties) SetRunningModeAutoStopTimeoutInMinutes(v int64) *W
 	return s
 }
 
-// Contains information about a WorkSpace creation request.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/WorkspaceRequest
+// SetUserVolumeSizeGib sets the UserVolumeSizeGib field's value.
+func (s *WorkspaceProperties) SetUserVolumeSizeGib(v int64) *WorkspaceProperties {
+	s.UserVolumeSizeGib = &v
+	return s
+}
+
+// Describes the information used to create a WorkSpace.
 type WorkspaceRequest struct {
 	_ struct{} `type:"structure"`
 
-	// The identifier of the bundle to create the WorkSpace from. You can use the
-	// DescribeWorkspaceBundles operation to obtain a list of the bundles that are
-	// available.
+	// The identifier of the bundle for the WorkSpace. You can use DescribeWorkspaceBundles
+	// to list the available bundles.
 	//
 	// BundleId is a required field
 	BundleId *string `type:"string" required:"true"`
 
-	// The identifier of the AWS Directory Service directory to create the WorkSpace
-	// in. You can use the DescribeWorkspaceDirectories operation to obtain a list
-	// of the directories that are available.
+	// The identifier of the AWS Directory Service directory for the WorkSpace.
+	// You can use DescribeWorkspaceDirectories to list the available directories.
 	//
 	// DirectoryId is a required field
 	DirectoryId *string `type:"string" required:"true"`
 
-	// Specifies whether the data stored on the root volume, or C: drive, is encrypted.
+	// Indicates whether the data stored on the root volume is encrypted.
 	RootVolumeEncryptionEnabled *bool `type:"boolean"`
 
-	// The tags of the WorkSpace request.
+	// The tags for the WorkSpace.
 	Tags []*Tag `type:"list"`
 
-	// The username that the WorkSpace is assigned to. This username must exist
-	// in the AWS Directory Service directory specified by the DirectoryId member.
+	// The username of the user for the WorkSpace. This username must exist in the
+	// AWS Directory Service directory for the WorkSpace.
 	//
 	// UserName is a required field
 	UserName *string `min:"1" type:"string" required:"true"`
 
-	// Specifies whether the data stored on the user volume, or D: drive, is encrypted.
+	// Indicates whether the data stored on the user volume is encrypted.
 	UserVolumeEncryptionEnabled *bool `type:"boolean"`
 
 	// The KMS key used to encrypt data stored on your WorkSpace.
 	VolumeEncryptionKey *string `type:"string"`
 
-	// Describes the properties of a WorkSpace.
+	// The WorkSpace properties.
 	WorkspaceProperties *WorkspaceProperties `type:"structure"`
 }
 
@@ -3529,6 +6732,18 @@ const (
 
 	// ComputePerformance is a Compute enum value
 	ComputePerformance = "PERFORMANCE"
+
+	// ComputePower is a Compute enum value
+	ComputePower = "POWER"
+
+	// ComputeGraphics is a Compute enum value
+	ComputeGraphics = "GRAPHICS"
+
+	// ComputePowerpro is a Compute enum value
+	ComputePowerpro = "POWERPRO"
+
+	// ComputeGraphicspro is a Compute enum value
+	ComputeGraphicspro = "GRAPHICSPRO"
 )
 
 const (
@@ -3543,11 +6758,78 @@ const (
 )
 
 const (
+	// DedicatedTenancyModificationStateEnumPending is a DedicatedTenancyModificationStateEnum enum value
+	DedicatedTenancyModificationStateEnumPending = "PENDING"
+
+	// DedicatedTenancyModificationStateEnumCompleted is a DedicatedTenancyModificationStateEnum enum value
+	DedicatedTenancyModificationStateEnumCompleted = "COMPLETED"
+
+	// DedicatedTenancyModificationStateEnumFailed is a DedicatedTenancyModificationStateEnum enum value
+	DedicatedTenancyModificationStateEnumFailed = "FAILED"
+)
+
+const (
+	// DedicatedTenancySupportEnumEnabled is a DedicatedTenancySupportEnum enum value
+	DedicatedTenancySupportEnumEnabled = "ENABLED"
+)
+
+const (
+	// DedicatedTenancySupportResultEnumEnabled is a DedicatedTenancySupportResultEnum enum value
+	DedicatedTenancySupportResultEnumEnabled = "ENABLED"
+
+	// DedicatedTenancySupportResultEnumDisabled is a DedicatedTenancySupportResultEnum enum value
+	DedicatedTenancySupportResultEnumDisabled = "DISABLED"
+)
+
+const (
+	// ModificationResourceEnumRootVolume is a ModificationResourceEnum enum value
+	ModificationResourceEnumRootVolume = "ROOT_VOLUME"
+
+	// ModificationResourceEnumUserVolume is a ModificationResourceEnum enum value
+	ModificationResourceEnumUserVolume = "USER_VOLUME"
+
+	// ModificationResourceEnumComputeType is a ModificationResourceEnum enum value
+	ModificationResourceEnumComputeType = "COMPUTE_TYPE"
+)
+
+const (
+	// ModificationStateEnumUpdateInitiated is a ModificationStateEnum enum value
+	ModificationStateEnumUpdateInitiated = "UPDATE_INITIATED"
+
+	// ModificationStateEnumUpdateInProgress is a ModificationStateEnum enum value
+	ModificationStateEnumUpdateInProgress = "UPDATE_IN_PROGRESS"
+)
+
+const (
+	// OperatingSystemTypeWindows is a OperatingSystemType enum value
+	OperatingSystemTypeWindows = "WINDOWS"
+
+	// OperatingSystemTypeLinux is a OperatingSystemType enum value
+	OperatingSystemTypeLinux = "LINUX"
+)
+
+const (
+	// ReconnectEnumEnabled is a ReconnectEnum enum value
+	ReconnectEnumEnabled = "ENABLED"
+
+	// ReconnectEnumDisabled is a ReconnectEnum enum value
+	ReconnectEnumDisabled = "DISABLED"
+)
+
+const (
 	// RunningModeAutoStop is a RunningMode enum value
 	RunningModeAutoStop = "AUTO_STOP"
 
 	// RunningModeAlwaysOn is a RunningMode enum value
 	RunningModeAlwaysOn = "ALWAYS_ON"
+)
+
+const (
+	// TargetWorkspaceStateAvailable is a TargetWorkspaceState enum value
+	TargetWorkspaceStateAvailable = "AVAILABLE"
+
+	// TargetWorkspaceStateAdminMaintenance is a TargetWorkspaceState enum value
+	TargetWorkspaceStateAdminMaintenance = "ADMIN_MAINTENANCE"
 )
 
 const (
@@ -3576,6 +6858,36 @@ const (
 )
 
 const (
+	// WorkspaceImageIngestionProcessByolRegular is a WorkspaceImageIngestionProcess enum value
+	WorkspaceImageIngestionProcessByolRegular = "BYOL_REGULAR"
+
+	// WorkspaceImageIngestionProcessByolGraphics is a WorkspaceImageIngestionProcess enum value
+	WorkspaceImageIngestionProcessByolGraphics = "BYOL_GRAPHICS"
+
+	// WorkspaceImageIngestionProcessByolGraphicspro is a WorkspaceImageIngestionProcess enum value
+	WorkspaceImageIngestionProcessByolGraphicspro = "BYOL_GRAPHICSPRO"
+)
+
+const (
+	// WorkspaceImageRequiredTenancyDefault is a WorkspaceImageRequiredTenancy enum value
+	WorkspaceImageRequiredTenancyDefault = "DEFAULT"
+
+	// WorkspaceImageRequiredTenancyDedicated is a WorkspaceImageRequiredTenancy enum value
+	WorkspaceImageRequiredTenancyDedicated = "DEDICATED"
+)
+
+const (
+	// WorkspaceImageStateAvailable is a WorkspaceImageState enum value
+	WorkspaceImageStateAvailable = "AVAILABLE"
+
+	// WorkspaceImageStatePending is a WorkspaceImageState enum value
+	WorkspaceImageStatePending = "PENDING"
+
+	// WorkspaceImageStateError is a WorkspaceImageState enum value
+	WorkspaceImageStateError = "ERROR"
+)
+
+const (
 	// WorkspaceStatePending is a WorkspaceState enum value
 	WorkspaceStatePending = "PENDING"
 
@@ -3600,6 +6912,9 @@ const (
 	// WorkspaceStateMaintenance is a WorkspaceState enum value
 	WorkspaceStateMaintenance = "MAINTENANCE"
 
+	// WorkspaceStateAdminMaintenance is a WorkspaceState enum value
+	WorkspaceStateAdminMaintenance = "ADMIN_MAINTENANCE"
+
 	// WorkspaceStateTerminating is a WorkspaceState enum value
 	WorkspaceStateTerminating = "TERMINATING"
 
@@ -3608,6 +6923,9 @@ const (
 
 	// WorkspaceStateSuspended is a WorkspaceState enum value
 	WorkspaceStateSuspended = "SUSPENDED"
+
+	// WorkspaceStateUpdating is a WorkspaceState enum value
+	WorkspaceStateUpdating = "UPDATING"
 
 	// WorkspaceStateStopping is a WorkspaceState enum value
 	WorkspaceStateStopping = "STOPPING"

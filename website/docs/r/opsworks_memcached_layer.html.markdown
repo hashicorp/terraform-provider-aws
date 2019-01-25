@@ -6,7 +6,7 @@ description: |-
   Provides an OpsWorks memcached layer resource.
 ---
 
-# aws\_opsworks\_memcached\_layer
+# aws_opsworks_memcached_layer
 
 Provides an OpsWorks memcached layer resource.
 
@@ -60,6 +60,6 @@ An `ebs_volume` block supports the following arguments:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The id of the layer.

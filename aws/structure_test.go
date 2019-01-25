@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
+	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/aws/aws-sdk-go/service/elb"
@@ -74,34 +75,34 @@ func TestExpandIPPerms(t *testing.T) {
 	}
 
 	expected := []ec2.IpPermission{
-		ec2.IpPermission{
+		{
 			IpProtocol: aws.String("icmp"),
 			FromPort:   aws.Int64(int64(1)),
 			ToPort:     aws.Int64(int64(-1)),
 			IpRanges: []*ec2.IpRange{
-				&ec2.IpRange{
+				{
 					CidrIp:      aws.String("0.0.0.0/0"),
 					Description: aws.String("desc"),
 				},
 			},
 			UserIdGroupPairs: []*ec2.UserIdGroupPair{
-				&ec2.UserIdGroupPair{
+				{
 					UserId:      aws.String("foo"),
 					GroupId:     aws.String("sg-22222"),
 					Description: aws.String("desc"),
 				},
-				&ec2.UserIdGroupPair{
+				{
 					GroupId:     aws.String("sg-11111"),
 					Description: aws.String("desc"),
 				},
 			},
 		},
-		ec2.IpPermission{
+		{
 			IpProtocol: aws.String("icmp"),
 			FromPort:   aws.Int64(int64(1)),
 			ToPort:     aws.Int64(int64(-1)),
 			UserIdGroupPairs: []*ec2.UserIdGroupPair{
-				&ec2.UserIdGroupPair{
+				{
 					GroupId: aws.String("foo"),
 				},
 			},
@@ -183,17 +184,17 @@ func TestExpandIPPerms_NegOneProtocol(t *testing.T) {
 	}
 
 	expected := []ec2.IpPermission{
-		ec2.IpPermission{
+		{
 			IpProtocol: aws.String("-1"),
 			FromPort:   aws.Int64(int64(0)),
 			ToPort:     aws.Int64(int64(0)),
-			IpRanges:   []*ec2.IpRange{&ec2.IpRange{CidrIp: aws.String("0.0.0.0/0")}},
+			IpRanges:   []*ec2.IpRange{{CidrIp: aws.String("0.0.0.0/0")}},
 			UserIdGroupPairs: []*ec2.UserIdGroupPair{
-				&ec2.UserIdGroupPair{
+				{
 					UserId:  aws.String("foo"),
 					GroupId: aws.String("sg-22222"),
 				},
-				&ec2.UserIdGroupPair{
+				{
 					GroupId: aws.String("sg-11111"),
 				},
 			},
@@ -279,26 +280,26 @@ func TestExpandIPPerms_nonVPC(t *testing.T) {
 	}
 
 	expected := []ec2.IpPermission{
-		ec2.IpPermission{
+		{
 			IpProtocol: aws.String("icmp"),
 			FromPort:   aws.Int64(int64(1)),
 			ToPort:     aws.Int64(int64(-1)),
-			IpRanges:   []*ec2.IpRange{&ec2.IpRange{CidrIp: aws.String("0.0.0.0/0")}},
+			IpRanges:   []*ec2.IpRange{{CidrIp: aws.String("0.0.0.0/0")}},
 			UserIdGroupPairs: []*ec2.UserIdGroupPair{
-				&ec2.UserIdGroupPair{
+				{
 					GroupName: aws.String("sg-22222"),
 				},
-				&ec2.UserIdGroupPair{
+				{
 					GroupName: aws.String("sg-11111"),
 				},
 			},
 		},
-		ec2.IpPermission{
+		{
 			IpProtocol: aws.String("icmp"),
 			FromPort:   aws.Int64(int64(1)),
 			ToPort:     aws.Int64(int64(-1)),
 			UserIdGroupPairs: []*ec2.UserIdGroupPair{
-				&ec2.UserIdGroupPair{
+				{
 					GroupName: aws.String("foo"),
 				},
 			},
@@ -422,7 +423,7 @@ func TestFlattenHealthCheck(t *testing.T) {
 				Interval:           aws.Int64(int64(30)),
 			},
 			Output: []map[string]interface{}{
-				map[string]interface{}{
+				{
 					"unhealthy_threshold": int64(10),
 					"healthy_threshold":   int64(10),
 					"target":              "HTTP:80/",
@@ -590,13 +591,13 @@ func TestFlattenParameters(t *testing.T) {
 	}{
 		{
 			Input: []*rds.Parameter{
-				&rds.Parameter{
+				{
 					ParameterName:  aws.String("character_set_client"),
 					ParameterValue: aws.String("utf8"),
 				},
 			},
 			Output: []map[string]interface{}{
-				map[string]interface{}{
+				{
 					"name":  "character_set_client",
 					"value": "utf8",
 				},
@@ -619,13 +620,13 @@ func TestFlattenRedshiftParameters(t *testing.T) {
 	}{
 		{
 			Input: []*redshift.Parameter{
-				&redshift.Parameter{
+				{
 					ParameterName:  aws.String("character_set_client"),
 					ParameterValue: aws.String("utf8"),
 				},
 			},
 			Output: []map[string]interface{}{
-				map[string]interface{}{
+				{
 					"name":  "character_set_client",
 					"value": "utf8",
 				},
@@ -648,13 +649,13 @@ func TestFlattenElasticacheParameters(t *testing.T) {
 	}{
 		{
 			Input: []*elasticache.Parameter{
-				&elasticache.Parameter{
+				{
 					ParameterName:  aws.String("activerehashing"),
 					ParameterValue: aws.String("yes"),
 				},
 			},
 			Output: []map[string]interface{}{
-				map[string]interface{}{
+				{
 					"name":  "activerehashing",
 					"value": "yes",
 				},
@@ -673,8 +674,8 @@ func TestFlattenElasticacheParameters(t *testing.T) {
 func TestExpandInstanceString(t *testing.T) {
 
 	expected := []*elb.Instance{
-		&elb.Instance{InstanceId: aws.String("test-one")},
-		&elb.Instance{InstanceId: aws.String("test-two")},
+		{InstanceId: aws.String("test-one")},
+		{InstanceId: aws.String("test-two")},
 	}
 
 	ids := []interface{}{
@@ -691,8 +692,8 @@ func TestExpandInstanceString(t *testing.T) {
 
 func TestFlattenNetworkInterfacesPrivateIPAddresses(t *testing.T) {
 	expanded := []*ec2.NetworkInterfacePrivateIpAddress{
-		&ec2.NetworkInterfacePrivateIpAddress{PrivateIpAddress: aws.String("192.168.0.1")},
-		&ec2.NetworkInterfacePrivateIpAddress{PrivateIpAddress: aws.String("192.168.0.2")},
+		{PrivateIpAddress: aws.String("192.168.0.1")},
+		{PrivateIpAddress: aws.String("192.168.0.2")},
 	}
 
 	result := flattenNetworkInterfacesPrivateIPAddresses(expanded)
@@ -716,8 +717,8 @@ func TestFlattenNetworkInterfacesPrivateIPAddresses(t *testing.T) {
 
 func TestFlattenGroupIdentifiers(t *testing.T) {
 	expanded := []*ec2.GroupIdentifier{
-		&ec2.GroupIdentifier{GroupId: aws.String("sg-001")},
-		&ec2.GroupIdentifier{GroupId: aws.String("sg-002")},
+		{GroupId: aws.String("sg-001")},
+		{GroupId: aws.String("sg-002")},
 	}
 
 	result := flattenGroupIdentifiers(expanded)
@@ -804,7 +805,7 @@ func TestFlattenAttachmentWhenNoInstanceId(t *testing.T) {
 
 func TestFlattenStepAdjustments(t *testing.T) {
 	expanded := []*autoscaling.StepAdjustment{
-		&autoscaling.StepAdjustment{
+		{
 			MetricIntervalLowerBound: aws.Float64(1.0),
 			MetricIntervalUpperBound: aws.Float64(2.0),
 			ScalingAdjustment:        aws.Int64(int64(1)),
@@ -886,8 +887,8 @@ func checkFlattenResourceRecords(
 
 func TestFlattenAsgEnabledMetrics(t *testing.T) {
 	expanded := []*autoscaling.EnabledMetric{
-		&autoscaling.EnabledMetric{Granularity: aws.String("1Minute"), Metric: aws.String("GroupTotalInstances")},
-		&autoscaling.EnabledMetric{Granularity: aws.String("1Minute"), Metric: aws.String("GroupMaxSize")},
+		{Granularity: aws.String("1Minute"), Metric: aws.String("GroupTotalInstances")},
+		{Granularity: aws.String("1Minute"), Metric: aws.String("GroupMaxSize")},
 	}
 
 	result := flattenAsgEnabledMetrics(expanded)
@@ -907,7 +908,7 @@ func TestFlattenAsgEnabledMetrics(t *testing.T) {
 
 func TestFlattenKinesisShardLevelMetrics(t *testing.T) {
 	expanded := []*kinesis.EnhancedMetrics{
-		&kinesis.EnhancedMetrics{
+		{
 			ShardLevelMetrics: []*string{
 				aws.String("IncomingBytes"),
 				aws.String("IncomingRecords"),
@@ -936,12 +937,12 @@ func TestFlattenSecurityGroups(t *testing.T) {
 		{
 			ownerId: aws.String("user1234"),
 			pairs: []*ec2.UserIdGroupPair{
-				&ec2.UserIdGroupPair{
+				{
 					GroupId: aws.String("sg-12345"),
 				},
 			},
 			expected: []*GroupIdentifier{
-				&GroupIdentifier{
+				{
 					GroupId: aws.String("sg-12345"),
 				},
 			},
@@ -951,13 +952,13 @@ func TestFlattenSecurityGroups(t *testing.T) {
 		{
 			ownerId: aws.String("user1234"),
 			pairs: []*ec2.UserIdGroupPair{
-				&ec2.UserIdGroupPair{
+				{
 					GroupId: aws.String("sg-12345"),
 					UserId:  aws.String("user1234"),
 				},
 			},
 			expected: []*GroupIdentifier{
-				&GroupIdentifier{
+				{
 					GroupId: aws.String("sg-12345"),
 				},
 			},
@@ -968,14 +969,14 @@ func TestFlattenSecurityGroups(t *testing.T) {
 		{
 			ownerId: aws.String("user1234"),
 			pairs: []*ec2.UserIdGroupPair{
-				&ec2.UserIdGroupPair{
+				{
 					GroupId:   aws.String("sg-12345"),
 					GroupName: aws.String("somegroup"), // GroupName is only included in Classic
 					UserId:    aws.String("user4321"),
 				},
 			},
 			expected: []*GroupIdentifier{
-				&GroupIdentifier{
+				{
 					GroupId:   aws.String("sg-12345"),
 					GroupName: aws.String("user4321/somegroup"),
 				},
@@ -987,13 +988,13 @@ func TestFlattenSecurityGroups(t *testing.T) {
 		{
 			ownerId: aws.String("user1234"),
 			pairs: []*ec2.UserIdGroupPair{
-				&ec2.UserIdGroupPair{
+				{
 					GroupId: aws.String("sg-12345"),
 					UserId:  aws.String("user4321"),
 				},
 			},
 			expected: []*GroupIdentifier{
-				&GroupIdentifier{
+				{
 					GroupId: aws.String("user4321/sg-12345"),
 				},
 			},
@@ -1003,13 +1004,13 @@ func TestFlattenSecurityGroups(t *testing.T) {
 		{
 			ownerId: aws.String("user1234"),
 			pairs: []*ec2.UserIdGroupPair{
-				&ec2.UserIdGroupPair{
+				{
 					GroupId:     aws.String("sg-12345"),
 					Description: aws.String("desc"),
 				},
 			},
 			expected: []*GroupIdentifier{
-				&GroupIdentifier{
+				{
 					GroupId:     aws.String("sg-12345"),
 					Description: aws.String("desc"),
 				},
@@ -1075,11 +1076,11 @@ func TestFlattenApiGatewayStageKeys(t *testing.T) {
 				aws.String("e5d4c3b2a1/test"),
 			},
 			Output: []map[string]interface{}{
-				map[string]interface{}{
+				{
 					"stage_name":  "dev",
 					"rest_api_id": "a1b2c3d4e5",
 				},
-				map[string]interface{}{
+				{
 					"stage_name":  "test",
 					"rest_api_id": "e5d4c3b2a1",
 				},
@@ -1177,7 +1178,7 @@ func TestFlattenPolicyAttributes(t *testing.T) {
 	}{
 		{
 			Input: []*elb.PolicyAttributeDescription{
-				&elb.PolicyAttributeDescription{
+				{
 					AttributeName:  aws.String("Protocol-TLSv1.2"),
 					AttributeValue: aws.String("true"),
 				},
@@ -1196,70 +1197,6 @@ func TestFlattenPolicyAttributes(t *testing.T) {
 		if !reflect.DeepEqual(output, tc.Output) {
 			t.Fatalf("Got:\n\n%#v\n\nExpected:\n\n%#v", output, tc.Output)
 		}
-	}
-}
-
-func TestNormalizeJsonString(t *testing.T) {
-	var err error
-	var actual string
-
-	// Well formatted and valid.
-	validJson := `{
-   "abc": {
-      "def": 123,
-      "xyz": [
-         {
-            "a": "ホリネズミ"
-         },
-         {
-            "b": "1\\n2"
-         }
-      ]
-   }
-}`
-	expected := `{"abc":{"def":123,"xyz":[{"a":"ホリネズミ"},{"b":"1\\n2"}]}}`
-
-	actual, err = normalizeJsonString(validJson)
-	if err != nil {
-		t.Fatalf("Expected not to throw an error while parsing JSON, but got: %s", err)
-	}
-
-	if actual != expected {
-		t.Fatalf("Got:\n\n%s\n\nExpected:\n\n%s\n", actual, expected)
-	}
-
-	// Well formatted but not valid,
-	// missing closing squre bracket.
-	invalidJson := `{
-   "abc": {
-      "def": 123,
-      "xyz": [
-         {
-            "a": "1"
-         }
-      }
-   }
-}`
-	actual, err = normalizeJsonString(invalidJson)
-	if err == nil {
-		t.Fatalf("Expected to throw an error while parsing JSON, but got: %s", err)
-	}
-
-	// We expect the invalid JSON to be shown back to us again.
-	if actual != invalidJson {
-		t.Fatalf("Got:\n\n%s\n\nExpected:\n\n%s\n", actual, invalidJson)
-	}
-
-	// Verify that it leaves strings alone
-	testString := "2016-07-28t04:07:02z\nsomething else"
-	expected = "2016-07-28t04:07:02z\nsomething else"
-	actual, err = normalizeJsonString(testString)
-	if err == nil {
-		t.Fatalf("Expected to throw an error while parsing JSON, but got: %s", err)
-	}
-
-	if actual != expected {
-		t.Fatalf("Got:\n\n%s\n\nExpected:\n\n%s\n", actual, expected)
 	}
 }
 
@@ -1322,3 +1259,324 @@ func TestNormalizeCloudFormationTemplate(t *testing.T) {
 		t.Fatalf("Got:\n\n%s\n\nExpected:\n\n%s\n", actual, validNormalizedYaml)
 	}
 }
+
+func TestCognitoUserPoolSchemaAttributeMatchesStandardAttribute(t *testing.T) {
+	cases := []struct {
+		Input    *cognitoidentityprovider.SchemaAttributeType
+		Expected bool
+	}{
+		{
+			Input: &cognitoidentityprovider.SchemaAttributeType{
+				AttributeDataType:      aws.String(cognitoidentityprovider.AttributeDataTypeString),
+				DeveloperOnlyAttribute: aws.Bool(false),
+				Mutable:                aws.Bool(true),
+				Name:                   aws.String("birthdate"),
+				Required:               aws.Bool(false),
+				StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
+					MaxLength: aws.String("10"),
+					MinLength: aws.String("10"),
+				},
+			},
+			Expected: true,
+		},
+		{
+			Input: &cognitoidentityprovider.SchemaAttributeType{
+				AttributeDataType:      aws.String(cognitoidentityprovider.AttributeDataTypeString),
+				DeveloperOnlyAttribute: aws.Bool(true),
+				Mutable:                aws.Bool(true),
+				Name:                   aws.String("birthdate"),
+				Required:               aws.Bool(false),
+				StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
+					MaxLength: aws.String("10"),
+					MinLength: aws.String("10"),
+				},
+			},
+			Expected: false,
+		},
+		{
+			Input: &cognitoidentityprovider.SchemaAttributeType{
+				AttributeDataType:      aws.String(cognitoidentityprovider.AttributeDataTypeString),
+				DeveloperOnlyAttribute: aws.Bool(false),
+				Mutable:                aws.Bool(false),
+				Name:                   aws.String("birthdate"),
+				Required:               aws.Bool(false),
+				StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
+					MaxLength: aws.String("10"),
+					MinLength: aws.String("10"),
+				},
+			},
+			Expected: false,
+		},
+		{
+			Input: &cognitoidentityprovider.SchemaAttributeType{
+				AttributeDataType:      aws.String(cognitoidentityprovider.AttributeDataTypeString),
+				DeveloperOnlyAttribute: aws.Bool(false),
+				Mutable:                aws.Bool(true),
+				Name:                   aws.String("non-existent"),
+				Required:               aws.Bool(false),
+				StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
+					MaxLength: aws.String("10"),
+					MinLength: aws.String("10"),
+				},
+			},
+			Expected: false,
+		},
+		{
+			Input: &cognitoidentityprovider.SchemaAttributeType{
+				AttributeDataType:      aws.String(cognitoidentityprovider.AttributeDataTypeString),
+				DeveloperOnlyAttribute: aws.Bool(false),
+				Mutable:                aws.Bool(true),
+				Name:                   aws.String("birthdate"),
+				Required:               aws.Bool(true),
+				StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
+					MaxLength: aws.String("10"),
+					MinLength: aws.String("10"),
+				},
+			},
+			Expected: false,
+		},
+		{
+			Input: &cognitoidentityprovider.SchemaAttributeType{
+				AttributeDataType:      aws.String(cognitoidentityprovider.AttributeDataTypeString),
+				DeveloperOnlyAttribute: aws.Bool(false),
+				Mutable:                aws.Bool(true),
+				Name:                   aws.String("birthdate"),
+				Required:               aws.Bool(false),
+				StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
+					MaxLength: aws.String("999"),
+					MinLength: aws.String("10"),
+				},
+			},
+			Expected: false,
+		},
+		{
+			Input: &cognitoidentityprovider.SchemaAttributeType{
+				AttributeDataType:      aws.String(cognitoidentityprovider.AttributeDataTypeString),
+				DeveloperOnlyAttribute: aws.Bool(false),
+				Mutable:                aws.Bool(true),
+				Name:                   aws.String("birthdate"),
+				Required:               aws.Bool(false),
+				StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
+					MaxLength: aws.String("10"),
+					MinLength: aws.String("999"),
+				},
+			},
+			Expected: false,
+		},
+		{
+			Input: &cognitoidentityprovider.SchemaAttributeType{
+				AttributeDataType:      aws.String(cognitoidentityprovider.AttributeDataTypeBoolean),
+				DeveloperOnlyAttribute: aws.Bool(false),
+				Mutable:                aws.Bool(true),
+				Name:                   aws.String("email_verified"),
+				Required:               aws.Bool(false),
+			},
+			Expected: true,
+		},
+		{
+			Input: &cognitoidentityprovider.SchemaAttributeType{
+				AttributeDataType:      aws.String(cognitoidentityprovider.AttributeDataTypeNumber),
+				DeveloperOnlyAttribute: aws.Bool(false),
+				Mutable:                aws.Bool(true),
+				Name:                   aws.String("updated_at"),
+				NumberAttributeConstraints: &cognitoidentityprovider.NumberAttributeConstraintsType{
+					MinValue: aws.String("0"),
+				},
+				Required: aws.Bool(false),
+			},
+			Expected: true,
+		},
+	}
+
+	for _, tc := range cases {
+		output := cognitoUserPoolSchemaAttributeMatchesStandardAttribute(tc.Input)
+		if output != tc.Expected {
+			t.Fatalf("Expected %t match with standard attribute on input: \n\n%#v\n\n", tc.Expected, tc.Input)
+		}
+	}
+}
+
+func TestCanonicalXML(t *testing.T) {
+	cases := []struct {
+		Name        string
+		Config      string
+		Expected    string
+		ExpectError bool
+	}{
+		{
+			Name:     "Config sample from MSDN",
+			Config:   testExampleXML_from_msdn,
+			Expected: testExampleXML_from_msdn,
+		},
+		{
+			Name:     "Config sample from MSDN, modified",
+			Config:   testExampleXML_from_msdn,
+			Expected: testExampleXML_from_msdn_modified,
+		},
+		{
+			Name:        "Config sample from MSDN, flaw",
+			Config:      testExampleXML_from_msdn,
+			Expected:    testExampleXML_from_msdn_flawed,
+			ExpectError: true,
+		},
+		{
+			Name: "A note",
+			Config: `
+<?xml version="1.0"?>
+<note>
+<to>You</to>
+<from>Me</from>
+<heading>Reminder</heading>
+<body>You're awesome</body>
+<rant/>
+<rant/>
+</note>
+`,
+			Expected: `
+<?xml version="1.0"?>
+<note>
+	<to>You</to>
+	<from>Me</from>
+	<heading>
+    Reminder
+    </heading>
+	<body>You're awesome</body>
+	<rant/>
+	<rant>
+</rant>
+</note>`,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.Name, func(t *testing.T) {
+			config, err := canonicalXML(tc.Config)
+			if err != nil {
+				t.Fatalf("Error getting canonical xml for given config: %s", err)
+			}
+			expected, err := canonicalXML(tc.Expected)
+			if err != nil {
+				t.Fatalf("Error getting canonical xml for expected config: %s", err)
+			}
+
+			if config != expected {
+				if !tc.ExpectError {
+					t.Fatalf("Error matching canonical xmls:\n\tconfig: %s\n\n\texpected: %s\n", config, expected)
+				}
+			}
+		})
+	}
+}
+
+const testExampleXML_from_msdn = `
+<?xml version="1.0"?>
+<purchaseOrder xmlns="http://tempuri.org/po.xsd" orderDate="1999-10-20">
+    <shipTo country="US">
+        <name>Alice Smith</name>
+        <street>123 Maple Street</street>
+        <city>Mill Valley</city>
+        <state>CA</state>
+        <zip>90952</zip>
+    </shipTo>
+    <billTo country="US">
+        <name>Robert Smith</name>
+        <street>8 Oak Avenue</street>
+        <city>Old Town</city>
+        <state>PA</state>
+        <zip>95819</zip>
+    </billTo>
+    <comment>Hurry, my lawn is going wild!</comment>
+    <items>
+        <item partNum="872-AA">
+            <productName>Lawnmower</productName>
+            <quantity>1</quantity>
+            <USPrice>148.95</USPrice>
+            <comment>Confirm this is electric</comment>
+        </item>
+        <item partNum="926-AA">
+            <productName>Baby Monitor</productName>
+            <quantity>1</quantity>
+            <USPrice>39.98</USPrice>
+            <shipDate>1999-05-21</shipDate>
+        </item>
+				<item/>
+				<item/>
+    </items>
+</purchaseOrder>
+`
+
+const testExampleXML_from_msdn_modified = `
+<?xml version="1.0"?>
+<purchaseOrder xmlns="http://tempuri.org/po.xsd" orderDate="1999-10-20">
+    <shipTo country="US">
+        <name>Alice Smith</name>
+        <street>123 Maple Street</street>
+        <city>Mill Valley</city>
+        <state>CA</state>
+        <zip>90952</zip>
+    </shipTo>
+    <billTo country="US">
+        <name>Robert Smith</name>
+        <street>8 Oak Avenue</street>
+        <city>Old Town</city>
+        <state>PA</state>
+        <zip>95819</zip>
+    </billTo>
+    <comment>Hurry, my lawn is going wild!</comment>
+    <items>
+        <item partNum="872-AA">
+            <productName>Lawnmower</productName>
+            <quantity>1</quantity>
+            <USPrice>148.95</USPrice>
+            <comment>Confirm this is electric</comment>
+        </item>
+        <item partNum="926-AA">
+            <productName>Baby Monitor</productName>
+            <quantity>1</quantity>
+            <USPrice>39.98</USPrice>
+            <shipDate>1999-05-21</shipDate>
+        </item>
+				  	 <item></item>
+				<item>
+</item>
+    </items>
+</purchaseOrder>
+`
+
+const testExampleXML_from_msdn_flawed = `
+<?xml version="1.0"?>
+<purchaseOrder xmlns="http://tempuri.org/po.xsd" orderDate="1999-10-20">
+    <shipTo country="US">
+        <name>Alice Smith</name>
+        <street>123 Maple Street</street>
+        <city>Mill Valley</city>
+        <state>CA</state>
+        <zip>90952</zip>
+    </shipTo>
+    <billTo country="US">
+        <name>Robert Smith</name>
+        <street>8 Oak Avenue</street>
+        <city>Old Town</city>
+        <state>PA</state>
+        <zip>95819</zip>
+    </billTo>
+    <comment>Hurry, my lawn is going wild!</comment>
+    <items>
+        <item partNum="872-AA">
+            <productName>Lawnmower</productName>
+            <quantity>1</quantity>
+            <USPrice>148.95</USPrice>
+            <comment>Confirm this is electric</comment>
+        </item>
+        <item partNum="926-AA">
+            <productName>Baby Monitor</productName>
+            <quantity>1</quantity>
+            <USPrice>39.98</USPrice>
+            <shipDate>1999-05-21</shipDate>
+        </item>
+				<item>
+				flaw
+				</item>
+    </items>
+</purchaseOrder>
+`

@@ -6,7 +6,7 @@ description: |-
   Provides a AWS WAF XssMatchSet resource.
 ---
 
-# aws\_waf\_xss\_match\_set
+# aws_waf_xss_match_set
 
 Provides a WAF XSS Match Set Resource
 
@@ -68,6 +68,6 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the WAF XssMatchSet.

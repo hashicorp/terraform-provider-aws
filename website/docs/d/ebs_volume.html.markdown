@@ -6,7 +6,7 @@ description: |-
   Get information on an EBS volume.
 ---
 
-# aws\_ebs\_volume
+# Data Source: aws_ebs_volume
 
 Use this data source to get information about an EBS volume for use in other
 resources.
@@ -42,10 +42,11 @@ several valid keys, for a full reference, check out
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The volume ID (e.g. vol-59fcb34e).
 * `volume_id` - The volume ID (e.g. vol-59fcb34e).
+* `arn` - The volume ARN (e.g. arn:aws:ec2:us-east-1:0123456789012:volume/vol-59fcb34e).
 * `availability_zone` - The AZ where the EBS volume exists.
 * `encrypted` - Whether the disk is encrypted.
 * `iops` - The amount of IOPS for the disk.

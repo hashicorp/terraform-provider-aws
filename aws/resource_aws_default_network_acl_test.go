@@ -28,7 +28,7 @@ var ipv6IngressAcl = &ec2.NetworkAclEntry{
 func TestAccAWSDefaultNetworkAcl_basic(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDefaultNetworkAclDestroy,
@@ -38,6 +38,7 @@ func TestAccAWSDefaultNetworkAcl_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccGetAWSDefaultNetworkAcl("aws_default_network_acl.default", &networkAcl),
 					testAccCheckAWSDefaultACLAttributes(&networkAcl, []*ec2.NetworkAclEntry{}, 0, 2),
+					testAccCheckResourceAttrAccountID("aws_default_network_acl.default", "owner_id"),
 				),
 			},
 		},
@@ -47,7 +48,7 @@ func TestAccAWSDefaultNetworkAcl_basic(t *testing.T) {
 func TestAccAWSDefaultNetworkAcl_basicIpv6Vpc(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDefaultNetworkAclDestroy,
@@ -69,7 +70,7 @@ func TestAccAWSDefaultNetworkAcl_deny_ingress(t *testing.T) {
 	// additional Egress.
 	var networkAcl ec2.NetworkAcl
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDefaultNetworkAclDestroy,
@@ -88,7 +89,7 @@ func TestAccAWSDefaultNetworkAcl_deny_ingress(t *testing.T) {
 func TestAccAWSDefaultNetworkAcl_withIpv6Ingress(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDefaultNetworkAclDestroy,
@@ -107,7 +108,7 @@ func TestAccAWSDefaultNetworkAcl_withIpv6Ingress(t *testing.T) {
 func TestAccAWSDefaultNetworkAcl_SubnetRemoval(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDefaultNetworkAclDestroy,
@@ -138,7 +139,7 @@ func TestAccAWSDefaultNetworkAcl_SubnetRemoval(t *testing.T) {
 func TestAccAWSDefaultNetworkAcl_SubnetReassign(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDefaultNetworkAclDestroy,
@@ -232,16 +233,16 @@ const testAccAWSDefaultNetworkConfig_basic = `
 resource "aws_vpc" "tftestvpc" {
   cidr_block = "10.1.0.0/16"
 
-  tags {
-    Name = "TestAccAWSDefaultNetworkAcl_basic"
+  tags = {
+    Name = "terraform-testacc-default-network-acl-basic"
   }
 }
 
 resource "aws_default_network_acl" "default" {
   default_network_acl_id = "${aws_vpc.tftestvpc.default_network_acl_id}"
 
-  tags {
-    Name = "TestAccAWSDefaultNetworkAcl_basic"
+  tags = {
+    Name = "tf-acc-default-acl-basic"
   }
 }
 `
@@ -250,8 +251,8 @@ const testAccAWSDefaultNetworkConfig_includingIpv6Rule = `
 resource "aws_vpc" "tftestvpc" {
   cidr_block = "10.1.0.0/16"
 
-  tags {
-    Name = "TestAccAWSDefaultNetworkAcl_basic"
+  tags = {
+    Name = "terraform-testacc-default-network-acl-including-ipv6-rule"
   }
 }
 
@@ -267,8 +268,8 @@ resource "aws_default_network_acl" "default" {
     to_port    = 0
   }
 
-  tags {
-    Name = "TestAccAWSDefaultNetworkAcl_basic"
+  tags = {
+    Name = "tf-acc-default-acl-basic-including-ipv6-rule"
   }
 }
 `
@@ -277,8 +278,8 @@ const testAccAWSDefaultNetworkConfig_deny_ingress = `
 resource "aws_vpc" "tftestvpc" {
   cidr_block = "10.1.0.0/16"
 
-  tags {
-    Name = "TestAccAWSDefaultNetworkAcl_basic"
+  tags = {
+    Name = "terraform-testacc-default-network-acl-deny-ingress"
   }
 }
 
@@ -294,8 +295,8 @@ resource "aws_default_network_acl" "default" {
     to_port    = 0
   }
 
-  tags {
-    Name = "TestAccAWSDefaultNetworkAcl_basic"
+  tags = {
+    Name = "tf-acc-default-acl-deny-ingress"
   }
 }
 `
@@ -304,8 +305,8 @@ const testAccAWSDefaultNetworkConfig_Subnets = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
 
-  tags {
-    Name = "TestAccAWSDefaultNetworkAcl_SubnetRemoval"
+  tags = {
+    Name = "terraform-testacc-default-network-acl-subnets"
   }
 }
 
@@ -313,8 +314,8 @@ resource "aws_subnet" "one" {
   cidr_block = "10.1.111.0/24"
   vpc_id     = "${aws_vpc.foo.id}"
 
-  tags {
-    Name = "TestAccAWSDefaultNetworkAcl_SubnetRemoval"
+  tags = {
+    Name = "tf-acc-default-network-acl-one"
   }
 }
 
@@ -322,16 +323,16 @@ resource "aws_subnet" "two" {
   cidr_block = "10.1.1.0/24"
   vpc_id     = "${aws_vpc.foo.id}"
 
-  tags {
-    Name = "TestAccAWSDefaultNetworkAcl_SubnetRemoval"
+  tags = {
+    Name = "tf-acc-default-network-acl-two"
   }
 }
 
 resource "aws_network_acl" "bar" {
   vpc_id = "${aws_vpc.foo.id}"
 
-  tags {
-    Name = "TestAccAWSDefaultNetworkAcl_SubnetRemoval"
+  tags = {
+    Name = "tf-acc-default-acl-subnets"
   }
 }
 
@@ -340,8 +341,8 @@ resource "aws_default_network_acl" "default" {
 
   subnet_ids = ["${aws_subnet.one.id}", "${aws_subnet.two.id}"]
 
-  tags {
-    Name = "TestAccAWSDefaultNetworkAcl_SubnetRemoval"
+  tags = {
+    Name = "tf-acc-default-acl-subnets"
   }
 }
 `
@@ -350,8 +351,8 @@ const testAccAWSDefaultNetworkConfig_Subnets_remove = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
 
-  tags {
-    Name = "TestAccAWSDefaultNetworkAcl_SubnetRemoval"
+  tags = {
+    Name = "terraform-testacc-default-network-acl-subnets-remove"
   }
 }
 
@@ -359,8 +360,8 @@ resource "aws_subnet" "one" {
   cidr_block = "10.1.111.0/24"
   vpc_id     = "${aws_vpc.foo.id}"
 
-  tags {
-    Name = "TestAccAWSDefaultNetworkAcl_SubnetRemoval"
+  tags = {
+    Name = "tf-acc-default-network-acl-subnets-remove-one"
   }
 }
 
@@ -368,24 +369,24 @@ resource "aws_subnet" "two" {
   cidr_block = "10.1.1.0/24"
   vpc_id     = "${aws_vpc.foo.id}"
 
-  tags {
-    Name = "TestAccAWSDefaultNetworkAcl_SubnetRemoval"
+  tags = {
+    Name = "tf-acc-default-network-acl-subnets-remove-two"
   }
 }
 
 resource "aws_network_acl" "bar" {
   vpc_id = "${aws_vpc.foo.id}"
 
-  tags {
-    Name = "TestAccAWSDefaultNetworkAcl_SubnetRemoval"
+  tags = {
+    Name = "tf-acc-default-acl-subnets-remove"
   }
 }
 
 resource "aws_default_network_acl" "default" {
   default_network_acl_id = "${aws_vpc.foo.default_network_acl_id}"
 
-  tags {
-    Name = "TestAccAWSDefaultNetworkAcl_SubnetRemoval"
+  tags = {
+    Name = "tf-acc-default-acl-subnets-remove"
   }
 }
 `
@@ -394,8 +395,8 @@ const testAccAWSDefaultNetworkConfig_Subnets_move = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
 
-  tags {
-    Name = "TestAccAWSDefaultNetworkAcl_SubnetRemoval"
+  tags = {
+    Name = "terraform-testacc-default-network-acl-subnets-move"
   }
 }
 
@@ -403,8 +404,8 @@ resource "aws_subnet" "one" {
   cidr_block = "10.1.111.0/24"
   vpc_id     = "${aws_vpc.foo.id}"
 
-  tags {
-    Name = "TestAccAWSDefaultNetworkAcl_SubnetRemoval"
+  tags = {
+    Name = "tf-acc-default-network-acl-subnets-move-one"
   }
 }
 
@@ -412,8 +413,8 @@ resource "aws_subnet" "two" {
   cidr_block = "10.1.1.0/24"
   vpc_id     = "${aws_vpc.foo.id}"
 
-  tags {
-    Name = "TestAccAWSDefaultNetworkAcl_SubnetRemoval"
+  tags = {
+    Name = "tf-acc-default-network-acl-subnets-move-two"
   }
 }
 
@@ -422,8 +423,8 @@ resource "aws_network_acl" "bar" {
 
   subnet_ids = ["${aws_subnet.one.id}", "${aws_subnet.two.id}"]
 
-  tags {
-    Name = "TestAccAWSDefaultNetworkAcl_SubnetRemoval"
+  tags = {
+    Name = "tf-acc-default-acl-subnets-move"
   }
 }
 
@@ -432,8 +433,8 @@ resource "aws_default_network_acl" "default" {
 
   depends_on = ["aws_network_acl.bar"]
 
-  tags {
-    Name = "TestAccAWSDefaultNetworkAcl_SubnetRemoval"
+  tags = {
+    Name = "tf-acc-default-acl-subnets-move"
   }
 }
 `
@@ -447,16 +448,16 @@ resource "aws_vpc" "tftestvpc" {
 	cidr_block = "10.1.0.0/16"
 	assign_generated_ipv6_cidr_block = true
 
-	tags {
-		Name = "TestAccAWSDefaultNetworkAcl_basicIpv6Vpc"
+	tags = {
+		Name = "terraform-testacc-default-network-acl-basic-ipv6-vpc"
 	}
 }
 
 resource "aws_default_network_acl" "default" {
   default_network_acl_id = "${aws_vpc.tftestvpc.default_network_acl_id}"
 
-  tags {
-    Name = "TestAccAWSDefaultNetworkAcl_basicIpv6Vpc"
+  tags = {
+    Name = "tf-acc-default-acl-subnets-basic-ipv6-vpc"
   }
 }
 `

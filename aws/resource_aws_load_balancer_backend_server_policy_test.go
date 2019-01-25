@@ -7,14 +7,17 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elb"
-
+	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 	tlsprovider "github.com/terraform-providers/terraform-provider-tls/tls"
 )
 
 func TestAccAWSLoadBalancerBackendServerPolicy_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	rString := acctest.RandString(8)
+	lbName := fmt.Sprintf("tf-acc-lb-bsp-basic-%s", rString)
+
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() { testAccPreCheck(t) },
 		Providers: map[string]terraform.ResourceProvider{
 			"aws": testAccProvider,
@@ -22,27 +25,27 @@ func TestAccAWSLoadBalancerBackendServerPolicy_basic(t *testing.T) {
 		},
 		CheckDestroy: testAccCheckAWSLoadBalancerBackendServerPolicyDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
-				Config: testAccAWSLoadBalancerBackendServerPolicyConfig_basic0,
+			{
+				Config: testAccAWSLoadBalancerBackendServerPolicyConfig_basic0(lbName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLoadBalancerPolicyState("aws_elb.test-lb", "aws_load_balancer_policy.test-pubkey-policy0"),
 					testAccCheckAWSLoadBalancerPolicyState("aws_elb.test-lb", "aws_load_balancer_policy.test-backend-auth-policy0"),
-					testAccCheckAWSLoadBalancerBackendServerPolicyState("test-aws-policies-lb", "test-backend-auth-policy0", true),
+					testAccCheckAWSLoadBalancerBackendServerPolicyState(lbName, "test-backend-auth-policy0", true),
 				),
 			},
-			resource.TestStep{
-				Config: testAccAWSLoadBalancerBackendServerPolicyConfig_basic1,
+			{
+				Config: testAccAWSLoadBalancerBackendServerPolicyConfig_basic1(lbName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLoadBalancerPolicyState("aws_elb.test-lb", "aws_load_balancer_policy.test-pubkey-policy0"),
 					testAccCheckAWSLoadBalancerPolicyState("aws_elb.test-lb", "aws_load_balancer_policy.test-pubkey-policy1"),
 					testAccCheckAWSLoadBalancerPolicyState("aws_elb.test-lb", "aws_load_balancer_policy.test-backend-auth-policy0"),
-					testAccCheckAWSLoadBalancerBackendServerPolicyState("test-aws-policies-lb", "test-backend-auth-policy0", true),
+					testAccCheckAWSLoadBalancerBackendServerPolicyState(lbName, "test-backend-auth-policy0", true),
 				),
 			},
-			resource.TestStep{
-				Config: testAccAWSLoadBalancerBackendServerPolicyConfig_basic2,
+			{
+				Config: testAccAWSLoadBalancerBackendServerPolicyConfig_basic2(lbName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSLoadBalancerBackendServerPolicyState("test-aws-policies-lb", "test-backend-auth-policy0", false),
+					testAccCheckAWSLoadBalancerBackendServerPolicyState(lbName, "test-backend-auth-policy0", false),
 				),
 			},
 		},
@@ -136,7 +139,8 @@ func testAccCheckAWSLoadBalancerBackendServerPolicyState(loadBalancerName string
 	}
 }
 
-const testAccAWSLoadBalancerBackendServerPolicyConfig_basic0 = `
+func testAccAWSLoadBalancerBackendServerPolicyConfig_basic0(lbName string) string {
+	return fmt.Sprintf(`
 resource "tls_private_key" "example0" {
     algorithm = "RSA"
 }
@@ -166,7 +170,7 @@ resource "aws_iam_server_certificate" "test-iam-cert0" {
 }
 
 resource "aws_elb" "test-lb" {
-  name = "test-aws-policies-lb"
+  name = "%s"
   availability_zones = ["us-west-2a"]
 
   listener {
@@ -177,7 +181,7 @@ resource "aws_elb" "test-lb" {
     ssl_certificate_id = "${aws_iam_server_certificate.test-iam-cert0.arn}"
   }
 
-  tags {
+  tags = {
     Name = "tf-acc-test"
   }
 }
@@ -186,7 +190,7 @@ resource "aws_load_balancer_policy" "test-pubkey-policy0" {
   load_balancer_name = "${aws_elb.test-lb.name}"
   policy_name = "test-pubkey-policy0"
   policy_type_name = "PublicKeyPolicyType"
-  policy_attribute = {
+  policy_attribute {
     name = "PublicKey"
     value = "${replace(replace(replace(tls_private_key.example0.public_key_pem, "\n", ""), "-----BEGIN PUBLIC KEY-----", ""), "-----END PUBLIC KEY-----", "")}"
   }
@@ -196,7 +200,7 @@ resource "aws_load_balancer_policy" "test-backend-auth-policy0" {
   load_balancer_name = "${aws_elb.test-lb.name}"
   policy_name = "test-backend-auth-policy0"
   policy_type_name = "BackendServerAuthenticationPolicyType"
-  policy_attribute = {
+  policy_attribute {
     name = "PublicKeyPolicyName"
     value = "${aws_load_balancer_policy.test-pubkey-policy0.policy_name}"
   }
@@ -209,9 +213,11 @@ resource "aws_load_balancer_backend_server_policy" "test-backend-auth-policies-4
     "${aws_load_balancer_policy.test-backend-auth-policy0.policy_name}"
   ]
 }
-`
+`, lbName)
+}
 
-const testAccAWSLoadBalancerBackendServerPolicyConfig_basic1 = `
+func testAccAWSLoadBalancerBackendServerPolicyConfig_basic1(lbName string) string {
+	return fmt.Sprintf(`
 resource "tls_private_key" "example0" {
     algorithm = "RSA"
 }
@@ -263,7 +269,7 @@ resource "aws_iam_server_certificate" "test-iam-cert0" {
 }
 
 resource "aws_elb" "test-lb" {
-  name = "test-aws-policies-lb"
+  name = "%s"
   availability_zones = ["us-west-2a"]
 
   listener {
@@ -274,7 +280,7 @@ resource "aws_elb" "test-lb" {
     ssl_certificate_id = "${aws_iam_server_certificate.test-iam-cert0.arn}"
   }
 
-  tags {
+  tags = {
     Name = "tf-acc-test"
   }
 }
@@ -283,7 +289,7 @@ resource "aws_load_balancer_policy" "test-pubkey-policy0" {
   load_balancer_name = "${aws_elb.test-lb.name}"
   policy_name = "test-pubkey-policy0"
   policy_type_name = "PublicKeyPolicyType"
-  policy_attribute = {
+  policy_attribute {
     name = "PublicKey"
     value = "${replace(replace(replace(tls_private_key.example0.public_key_pem, "\n", ""), "-----BEGIN PUBLIC KEY-----", ""), "-----END PUBLIC KEY-----", "")}"
   }
@@ -293,7 +299,7 @@ resource "aws_load_balancer_policy" "test-pubkey-policy1" {
   load_balancer_name = "${aws_elb.test-lb.name}"
   policy_name = "test-pubkey-policy1"
   policy_type_name = "PublicKeyPolicyType"
-  policy_attribute = {
+  policy_attribute {
     name = "PublicKey"
     value = "${replace(replace(replace(tls_private_key.example1.public_key_pem, "\n", ""), "-----BEGIN PUBLIC KEY-----", ""), "-----END PUBLIC KEY-----", "")}"
   }
@@ -303,7 +309,7 @@ resource "aws_load_balancer_policy" "test-backend-auth-policy0" {
   load_balancer_name = "${aws_elb.test-lb.name}"
   policy_name = "test-backend-auth-policy0"
   policy_type_name = "BackendServerAuthenticationPolicyType"
-  policy_attribute = {
+  policy_attribute {
     name = "PublicKeyPolicyName"
     value = "${aws_load_balancer_policy.test-pubkey-policy1.policy_name}"
   }
@@ -316,9 +322,11 @@ resource "aws_load_balancer_backend_server_policy" "test-backend-auth-policies-4
     "${aws_load_balancer_policy.test-backend-auth-policy0.policy_name}"
   ]
 }
-`
+`, lbName)
+}
 
-const testAccAWSLoadBalancerBackendServerPolicyConfig_basic2 = `
+func testAccAWSLoadBalancerBackendServerPolicyConfig_basic2(lbName string) string {
+	return fmt.Sprintf(`
 resource "tls_private_key" "example0" {
     algorithm = "RSA"
 }
@@ -370,7 +378,7 @@ resource "aws_iam_server_certificate" "test-iam-cert0" {
 }
 
 resource "aws_elb" "test-lb" {
-  name = "test-aws-policies-lb"
+  name = "%s"
   availability_zones = ["us-west-2a"]
 
   listener {
@@ -381,8 +389,9 @@ resource "aws_elb" "test-lb" {
     ssl_certificate_id = "${aws_iam_server_certificate.test-iam-cert0.arn}"
   }
 
-  tags {
+  tags = {
     Name = "tf-acc-test"
   }
 }
-`
+`, lbName)
+}

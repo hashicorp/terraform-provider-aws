@@ -16,7 +16,7 @@ import (
 func TestAccAWSEMRInstanceGroup_basic(t *testing.T) {
 	var ig emr.InstanceGroup
 	rInt := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEmrInstanceGroupDestroy,
@@ -33,7 +33,7 @@ func TestAccAWSEMRInstanceGroup_basic(t *testing.T) {
 func TestAccAWSEMRInstanceGroup_zero_count(t *testing.T) {
 	var ig emr.InstanceGroup
 	rInt := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEmrInstanceGroupDestroy,
@@ -53,7 +53,7 @@ func TestAccAWSEMRInstanceGroup_zero_count(t *testing.T) {
 func TestAccAWSEMRInstanceGroup_ebsBasic(t *testing.T) {
 	var ig emr.InstanceGroup
 	rInt := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEmrInstanceGroupDestroy,
@@ -146,11 +146,11 @@ resource "aws_emr_cluster" "tf-test-cluster" {
     instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
   }
 
-  master_instance_type = "m3.xlarge"
-  core_instance_type   = "m3.xlarge"
+  master_instance_type = "c4.large"
+  core_instance_type   = "c4.large"
   core_instance_count  = 2
 
-  tags {
+  tags = {
     role     = "rolename"
     dns_zone = "env_zone"
     env      = "env"
@@ -178,7 +178,7 @@ resource "aws_security_group" "allow_all" {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    self        = true
   }
 
   egress {
@@ -199,8 +199,8 @@ resource "aws_vpc" "main" {
   cidr_block           = "168.31.0.0/16"
   enable_dns_hostnames = true
 
-	tags {
-		Name = "tf_acc_emr_tests"
+	tags = {
+		Name = "terraform-testacc-emr-instance-group"
 	}
 }
 
@@ -208,7 +208,9 @@ resource "aws_subnet" "main" {
   vpc_id     = "${aws_vpc.main.id}"
   cidr_block = "168.31.0.0/20"
 
-  #  map_public_ip_on_launch = true
+  tags = {
+    Name = "tf-acc-emr-instance-group"
+  }
 }
 
 resource "aws_internet_gateway" "gw" {
@@ -401,7 +403,7 @@ func testAccAWSEmrInstanceGroupConfig(r int) string {
 	resource "aws_emr_instance_group" "task" {
     cluster_id     = "${aws_emr_cluster.tf-test-cluster.id}"
     instance_count = 1
-    instance_type  = "m1.small"
+    instance_type  = "c4.large"
   }
 	`, r, r, r, r, r, r)
 }
@@ -411,7 +413,7 @@ func testAccAWSEmrInstanceGroupConfig_zero_count(r int) string {
 	resource "aws_emr_instance_group" "task" {
     cluster_id     = "${aws_emr_cluster.tf-test-cluster.id}"
     instance_count = 0
-    instance_type  = "m1.small"
+    instance_type  = "c4.large"
   }
 	`, r, r, r, r, r, r)
 }
@@ -421,7 +423,7 @@ func testAccAWSEmrInstanceGroupConfig_ebsBasic(r int) string {
 		resource "aws_emr_instance_group" "task" {
     cluster_id     = "${aws_emr_cluster.tf-test-cluster.id}"
     instance_count = 1
-    instance_type  = "m3.xlarge"
+    instance_type  = "c4.large"
     ebs_optimized = true
     ebs_config {
       "size" = 10,

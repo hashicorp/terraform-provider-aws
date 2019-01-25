@@ -20,10 +20,6 @@ func resourceAwsOpsworksRdsDbInstance() *schema.Resource {
 		Read:   resourceAwsOpsworksRdsDbInstanceRead,
 
 		Schema: map[string]*schema.Schema{
-			"id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"stack_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -69,7 +65,7 @@ func resourceAwsOpsworksRdsDbInstanceUpdate(d *schema.ResourceData, meta interfa
 		requestUpdate = true
 	}
 
-	if true == requestUpdate {
+	if requestUpdate {
 		log.Printf("[DEBUG] Opsworks RDS DB Instance Modification request: %s", req)
 
 		err := resource.Retry(2*time.Minute, func() *resource.RetryError {
@@ -125,11 +121,7 @@ func resourceAwsOpsworksRdsDbInstanceDeregister(d *schema.ResourceData, meta int
 		return nil
 	})
 
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func resourceAwsOpsworksRdsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
@@ -139,7 +131,7 @@ func resourceAwsOpsworksRdsDbInstanceRead(d *schema.ResourceData, meta interface
 		StackId: aws.String(d.Get("stack_id").(string)),
 	}
 
-	log.Printf("[DEBUG] Reading OpsWorks registerd rds db instances for stack: %s", d.Get("stack_id"))
+	log.Printf("[DEBUG] Reading OpsWorks registered rds db instances for stack: %s", d.Get("stack_id"))
 
 	resp, err := client.DescribeRdsDbInstances(req)
 	if err != nil {
@@ -154,7 +146,6 @@ func resourceAwsOpsworksRdsDbInstanceRead(d *schema.ResourceData, meta interface
 		if fmt.Sprintf("%s%s", d.Get("rds_db_instance_arn").(string), d.Get("stack_id").(string)) == id {
 			found = true
 			d.SetId(id)
-			d.Set("id", id)
 			d.Set("stack_id", instance.StackId)
 			d.Set("rds_db_instance_arn", instance.RdsDbInstanceArn)
 			d.Set("db_user", instance.DbUser)
@@ -162,7 +153,7 @@ func resourceAwsOpsworksRdsDbInstanceRead(d *schema.ResourceData, meta interface
 
 	}
 
-	if false == found {
+	if !found {
 		d.SetId("")
 		log.Printf("[INFO] The rds instance '%s' could not be found for stack: '%s'", d.Get("rds_db_instance_arn"), d.Get("stack_id"))
 	}

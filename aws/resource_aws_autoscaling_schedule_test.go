@@ -15,19 +15,10 @@ import (
 func TestAccAWSAutoscalingSchedule_basic(t *testing.T) {
 	var schedule autoscaling.ScheduledUpdateGroupAction
 	rName := fmt.Sprintf("tf-test-%d", acctest.RandInt())
-	n := time.Now().UTC()
-	d, err := time.ParseDuration("2h")
-	if err != nil {
-		t.Fatalf("err parsing time duration: %s", err)
-	}
-	s, err := time.ParseDuration("1h")
-	if err != nil {
-		t.Fatalf("err parsing time duration: %s", err)
-	}
-	start := n.Add(s).Format(awsAutoscalingScheduleTimeLayout)
-	end := n.Add(d).Format(awsAutoscalingScheduleTimeLayout)
+	start := testAccAWSAutoscalingScheduleValidStart(t)
+	end := testAccAWSAutoscalingScheduleValidEnd(t)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAutoscalingScheduleDestroy,
@@ -45,19 +36,10 @@ func TestAccAWSAutoscalingSchedule_basic(t *testing.T) {
 func TestAccAWSAutoscalingSchedule_disappears(t *testing.T) {
 	var schedule autoscaling.ScheduledUpdateGroupAction
 	rName := fmt.Sprintf("tf-test-%d", acctest.RandInt())
-	n := time.Now().UTC()
-	d, err := time.ParseDuration("2h")
-	if err != nil {
-		t.Fatalf("err parsing time duration: %s", err)
-	}
-	s, err := time.ParseDuration("1h")
-	if err != nil {
-		t.Fatalf("err parsing time duration: %s", err)
-	}
-	start := n.Add(s).Format(awsAutoscalingScheduleTimeLayout)
-	end := n.Add(d).Format(awsAutoscalingScheduleTimeLayout)
+	start := testAccAWSAutoscalingScheduleValidStart(t)
+	end := testAccAWSAutoscalingScheduleValidEnd(t)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAutoscalingScheduleDestroy,
@@ -81,10 +63,8 @@ func testAccCheckScalingScheduleDisappears(schedule *autoscaling.ScheduledUpdate
 			AutoScalingGroupName: schedule.AutoScalingGroupName,
 			ScheduledActionName:  schedule.ScheduledActionName,
 		}
-		if _, err := autoscalingconn.DeleteScheduledAction(params); err != nil {
-			return err
-		}
-		return nil
+		_, err := autoscalingconn.DeleteScheduledAction(params)
+		return err
 	}
 }
 
@@ -92,7 +72,7 @@ func TestAccAWSAutoscalingSchedule_recurrence(t *testing.T) {
 	var schedule autoscaling.ScheduledUpdateGroupAction
 
 	rName := fmt.Sprintf("tf-test-%d", acctest.RandInt())
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAutoscalingScheduleDestroy,
@@ -112,13 +92,16 @@ func TestAccAWSAutoscalingSchedule_zeroValues(t *testing.T) {
 	var schedule autoscaling.ScheduledUpdateGroupAction
 
 	rName := fmt.Sprintf("tf-test-%d", acctest.RandInt())
-	resource.Test(t, resource.TestCase{
+	start := testAccAWSAutoscalingScheduleValidStart(t)
+	end := testAccAWSAutoscalingScheduleValidEnd(t)
+
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAutoscalingScheduleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAutoscalingScheduleConfig_zeroValues(rName),
+				Config: testAccAWSAutoscalingScheduleConfig_zeroValues(rName, start, end),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScalingScheduleExists("aws_autoscaling_schedule.foobar", &schedule),
 				),
@@ -131,13 +114,16 @@ func TestAccAWSAutoscalingSchedule_negativeOne(t *testing.T) {
 	var schedule autoscaling.ScheduledUpdateGroupAction
 
 	rName := fmt.Sprintf("tf-test-%d", acctest.RandInt())
-	resource.Test(t, resource.TestCase{
+	start := testAccAWSAutoscalingScheduleValidStart(t)
+	end := testAccAWSAutoscalingScheduleValidEnd(t)
+
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAutoscalingScheduleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAutoscalingScheduleConfig_negativeOne(rName),
+				Config: testAccAWSAutoscalingScheduleConfig_negativeOne(rName, start, end),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScalingScheduleExists("aws_autoscaling_schedule.foobar", &schedule),
 					testAccCheckScalingScheduleHasNoDesiredCapacity(&schedule),
@@ -148,6 +134,23 @@ func TestAccAWSAutoscalingSchedule_negativeOne(t *testing.T) {
 	})
 }
 
+func testAccAWSAutoscalingScheduleValidEnd(t *testing.T) string {
+	return testAccAWSAutoscalingScheduleTime(t, "2h")
+}
+
+func testAccAWSAutoscalingScheduleValidStart(t *testing.T) string {
+	return testAccAWSAutoscalingScheduleTime(t, "1h")
+}
+
+func testAccAWSAutoscalingScheduleTime(t *testing.T, duration string) string {
+	n := time.Now().UTC()
+	d, err := time.ParseDuration(duration)
+	if err != nil {
+		t.Fatalf("err parsing time duration: %s", err)
+	}
+	return n.Add(d).Format(awsAutoscalingScheduleTimeLayout)
+}
+
 func testAccCheckScalingScheduleExists(n string, policy *autoscaling.ScheduledUpdateGroupAction) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -155,7 +158,7 @@ func testAccCheckScalingScheduleExists(n string, policy *autoscaling.ScheduledUp
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		autoScalingGroup, _ := rs.Primary.Attributes["autoscaling_group_name"]
+		autoScalingGroup := rs.Primary.Attributes["autoscaling_group_name"]
 		conn := testAccProvider.Meta().(*AWSClient).autoscalingconn
 		params := &autoscaling.DescribeScheduledActionsInput{
 			AutoScalingGroupName: aws.String(autoScalingGroup),
@@ -184,7 +187,7 @@ func testAccCheckAWSAutoscalingScheduleDestroy(s *terraform.State) error {
 			continue
 		}
 
-		autoScalingGroup, _ := rs.Primary.Attributes["autoscaling_group_name"]
+		autoScalingGroup := rs.Primary.Attributes["autoscaling_group_name"]
 		params := &autoscaling.DescribeScheduledActionsInput{
 			AutoScalingGroupName: aws.String(autoScalingGroup),
 			ScheduledActionNames: []*string{aws.String(rs.Primary.ID)},
@@ -285,7 +288,7 @@ resource "aws_autoscaling_schedule" "foobar" {
 }`, r, r)
 }
 
-func testAccAWSAutoscalingScheduleConfig_zeroValues(r string) string {
+func testAccAWSAutoscalingScheduleConfig_zeroValues(r, start, end string) string {
 	return fmt.Sprintf(`
 resource "aws_launch_configuration" "foobar" {
     name = "%s"
@@ -315,13 +318,13 @@ resource "aws_autoscaling_schedule" "foobar" {
     max_size = 0
     min_size = 0
     desired_capacity = 0
-    start_time = "2018-01-16T07:00:00Z"
-    end_time = "2018-01-16T13:00:00Z"
+    start_time = "%s"
+    end_time = "%s"
     autoscaling_group_name = "${aws_autoscaling_group.foobar.name}"
-}`, r, r)
+}`, r, r, start, end)
 }
 
-func testAccAWSAutoscalingScheduleConfig_negativeOne(r string) string {
+func testAccAWSAutoscalingScheduleConfig_negativeOne(r, start, end string) string {
 	return fmt.Sprintf(`
 resource "aws_launch_configuration" "foobar" {
     name = "%s"
@@ -351,8 +354,8 @@ resource "aws_autoscaling_schedule" "foobar" {
     max_size = 3
     min_size = 1
     desired_capacity = -1
-    start_time = "2018-01-16T07:00:00Z"
-    end_time = "2018-01-16T13:00:00Z"
+    start_time = "%s"
+    end_time = "%s"
     autoscaling_group_name = "${aws_autoscaling_group.foobar.name}"
-}`, r, r)
+}`, r, r, start, end)
 }

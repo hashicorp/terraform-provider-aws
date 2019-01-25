@@ -6,7 +6,7 @@ description: |-
   Provides an EC2 placement group.
 ---
 
-# aws\_placement\_group
+# aws_placement_group
 
 Provides an EC2 placement group. Read more about placement groups
 in [AWS Docs](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html).
@@ -25,11 +25,11 @@ resource "aws_placement_group" "web" {
 The following arguments are supported:
 
 * `name` - (Required) The name of the placement group.
-* `strategy` - (Required) The placement strategy. The only supported value is `cluster`
+* `strategy` - (Required) The placement strategy.
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The name of the placement group.
 

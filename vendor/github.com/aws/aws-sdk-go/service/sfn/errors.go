@@ -27,7 +27,9 @@ const (
 	// ErrCodeExecutionAlreadyExists for service response error code
 	// "ExecutionAlreadyExists".
 	//
-	// An execution with the same name already exists.
+	// The execution has the same name as another execution (but a different input).
+	//
+	// Executions with the same name and input are considered idempotent.
 	ErrCodeExecutionAlreadyExists = "ExecutionAlreadyExists"
 
 	// ErrCodeExecutionDoesNotExist for service response error code
@@ -79,6 +81,20 @@ const (
 	// The provided token is invalid.
 	ErrCodeInvalidToken = "InvalidToken"
 
+	// ErrCodeMissingRequiredParameter for service response error code
+	// "MissingRequiredParameter".
+	//
+	// Request is missing a required parameter. This error occurs if both definition
+	// and roleArn are not specified.
+	ErrCodeMissingRequiredParameter = "MissingRequiredParameter"
+
+	// ErrCodeResourceNotFound for service response error code
+	// "ResourceNotFound".
+	//
+	// Could not fine the referenced resource. Only state machine and activity ARNs
+	// are supported.
+	ErrCodeResourceNotFound = "ResourceNotFound"
+
 	// ErrCodeStateMachineAlreadyExists for service response error code
 	// "StateMachineAlreadyExists".
 	//
@@ -112,4 +128,12 @@ const (
 	// ErrCodeTaskTimedOut for service response error code
 	// "TaskTimedOut".
 	ErrCodeTaskTimedOut = "TaskTimedOut"
+
+	// ErrCodeTooManyTags for service response error code
+	// "TooManyTags".
+	//
+	// You've exceeded the number of tags allowed for a resource. See the  Limits
+	// Topic (http://docs.aws.amazon.com/step-functions/latest/dg/limits.html) in
+	// the AWS Step Functions Developer Guide.
+	ErrCodeTooManyTags = "TooManyTags"
 )

@@ -6,7 +6,7 @@ description: |-
   Provides a CloudWatch Logs destination.
 ---
 
-# aws\_cloudwatch\_log\_destination
+# aws_cloudwatch_log_destination
 
 Provides a CloudWatch Logs destination resource.
 
@@ -30,7 +30,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The Amazon Resource Name (ARN) specifying the log destination.
 

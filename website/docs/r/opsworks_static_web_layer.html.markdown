@@ -6,7 +6,7 @@ description: |-
   Provides an OpsWorks static web server layer resource.
 ---
 
-# aws\_opsworks\_static\_web\_layer
+# aws_opsworks_static_web_layer
 
 Provides an OpsWorks static web server layer resource.
 
@@ -58,6 +58,6 @@ An `ebs_volume` block supports the following arguments:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The id of the layer.

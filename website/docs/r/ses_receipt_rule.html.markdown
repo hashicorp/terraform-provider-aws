@@ -6,7 +6,7 @@ description: |-
   Provides an SES receipt rule resource
 ---
 
-# aws\_ses\_receipt_rule
+# aws_ses_receipt_rule
 
 Provides an SES receipt rule resource
 
@@ -97,3 +97,11 @@ WorkMail actions support the following:
 * `organization_arn` - (Required) The ARN of the WorkMail organization
 * `topic_arn` - (Optional) The ARN of an SNS topic to notify
 * `position` - (Required) The position of the action in the receipt rule
+
+## Import
+
+SES receipt rules can be imported using the ruleset name and rule name separated by `:`.
+
+```
+$ terraform import aws_ses_receipt_rule.my_rule my_rule_set:my_rule
+```

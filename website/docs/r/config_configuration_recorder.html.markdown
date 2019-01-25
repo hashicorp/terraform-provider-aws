@@ -6,7 +6,7 @@ description: |-
   Provides an AWS Config Configuration Recorder.
 ---
 
-# aws\_config\_configuration\_recorder
+# aws_config_configuration_recorder
 
 Provides an AWS Config Configuration Recorder. Please note that this resource **does not start** the created recorder automatically.
 
@@ -64,7 +64,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - Name of the recorder
 

@@ -8,14 +8,16 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/aws/aws-sdk-go/aws/request"
+	"github.com/aws/aws-sdk-go/private/protocol"
+	"github.com/aws/aws-sdk-go/private/protocol/jsonrpc"
 )
 
 const opBatchGetNamedQuery = "BatchGetNamedQuery"
 
 // BatchGetNamedQueryRequest generates a "aws/request.Request" representing the
 // client's request for the BatchGetNamedQuery operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -35,7 +37,7 @@ const opBatchGetNamedQuery = "BatchGetNamedQuery"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/BatchGetNamedQuery
+// See also, https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/BatchGetNamedQuery
 func (c *Athena) BatchGetNamedQueryRequest(input *BatchGetNamedQueryInput) (req *request.Request, output *BatchGetNamedQueryOutput) {
 	op := &request.Operation{
 		Name:       opBatchGetNamedQuery,
@@ -78,7 +80,7 @@ func (c *Athena) BatchGetNamedQueryRequest(input *BatchGetNamedQueryInput) (req 
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/BatchGetNamedQuery
+// See also, https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/BatchGetNamedQuery
 func (c *Athena) BatchGetNamedQuery(input *BatchGetNamedQueryInput) (*BatchGetNamedQueryOutput, error) {
 	req, out := c.BatchGetNamedQueryRequest(input)
 	return out, req.Send()
@@ -104,8 +106,8 @@ const opBatchGetQueryExecution = "BatchGetQueryExecution"
 
 // BatchGetQueryExecutionRequest generates a "aws/request.Request" representing the
 // client's request for the BatchGetQueryExecution operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -125,7 +127,7 @@ const opBatchGetQueryExecution = "BatchGetQueryExecution"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/BatchGetQueryExecution
+// See also, https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/BatchGetQueryExecution
 func (c *Athena) BatchGetQueryExecutionRequest(input *BatchGetQueryExecutionInput) (req *request.Request, output *BatchGetQueryExecutionOutput) {
 	op := &request.Operation{
 		Name:       opBatchGetQueryExecution,
@@ -166,7 +168,7 @@ func (c *Athena) BatchGetQueryExecutionRequest(input *BatchGetQueryExecutionInpu
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/BatchGetQueryExecution
+// See also, https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/BatchGetQueryExecution
 func (c *Athena) BatchGetQueryExecution(input *BatchGetQueryExecutionInput) (*BatchGetQueryExecutionOutput, error) {
 	req, out := c.BatchGetQueryExecutionRequest(input)
 	return out, req.Send()
@@ -192,8 +194,8 @@ const opCreateNamedQuery = "CreateNamedQuery"
 
 // CreateNamedQueryRequest generates a "aws/request.Request" representing the
 // client's request for the CreateNamedQuery operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -213,7 +215,7 @@ const opCreateNamedQuery = "CreateNamedQuery"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/CreateNamedQuery
+// See also, https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/CreateNamedQuery
 func (c *Athena) CreateNamedQueryRequest(input *CreateNamedQueryInput) (req *request.Request, output *CreateNamedQueryOutput) {
 	op := &request.Operation{
 		Name:       opCreateNamedQuery,
@@ -254,7 +256,7 @@ func (c *Athena) CreateNamedQueryRequest(input *CreateNamedQueryInput) (req *req
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/CreateNamedQuery
+// See also, https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/CreateNamedQuery
 func (c *Athena) CreateNamedQuery(input *CreateNamedQueryInput) (*CreateNamedQueryOutput, error) {
 	req, out := c.CreateNamedQueryRequest(input)
 	return out, req.Send()
@@ -280,8 +282,8 @@ const opDeleteNamedQuery = "DeleteNamedQuery"
 
 // DeleteNamedQueryRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteNamedQuery operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -301,7 +303,7 @@ const opDeleteNamedQuery = "DeleteNamedQuery"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/DeleteNamedQuery
+// See also, https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/DeleteNamedQuery
 func (c *Athena) DeleteNamedQueryRequest(input *DeleteNamedQueryInput) (req *request.Request, output *DeleteNamedQueryOutput) {
 	op := &request.Operation{
 		Name:       opDeleteNamedQuery,
@@ -315,6 +317,7 @@ func (c *Athena) DeleteNamedQueryRequest(input *DeleteNamedQueryInput) (req *req
 
 	output = &DeleteNamedQueryOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -342,7 +345,7 @@ func (c *Athena) DeleteNamedQueryRequest(input *DeleteNamedQueryInput) (req *req
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/DeleteNamedQuery
+// See also, https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/DeleteNamedQuery
 func (c *Athena) DeleteNamedQuery(input *DeleteNamedQueryInput) (*DeleteNamedQueryOutput, error) {
 	req, out := c.DeleteNamedQueryRequest(input)
 	return out, req.Send()
@@ -368,8 +371,8 @@ const opGetNamedQuery = "GetNamedQuery"
 
 // GetNamedQueryRequest generates a "aws/request.Request" representing the
 // client's request for the GetNamedQuery operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -389,7 +392,7 @@ const opGetNamedQuery = "GetNamedQuery"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/GetNamedQuery
+// See also, https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/GetNamedQuery
 func (c *Athena) GetNamedQueryRequest(input *GetNamedQueryInput) (req *request.Request, output *GetNamedQueryOutput) {
 	op := &request.Operation{
 		Name:       opGetNamedQuery,
@@ -426,7 +429,7 @@ func (c *Athena) GetNamedQueryRequest(input *GetNamedQueryInput) (req *request.R
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/GetNamedQuery
+// See also, https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/GetNamedQuery
 func (c *Athena) GetNamedQuery(input *GetNamedQueryInput) (*GetNamedQueryOutput, error) {
 	req, out := c.GetNamedQueryRequest(input)
 	return out, req.Send()
@@ -452,8 +455,8 @@ const opGetQueryExecution = "GetQueryExecution"
 
 // GetQueryExecutionRequest generates a "aws/request.Request" representing the
 // client's request for the GetQueryExecution operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -473,7 +476,7 @@ const opGetQueryExecution = "GetQueryExecution"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/GetQueryExecution
+// See also, https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/GetQueryExecution
 func (c *Athena) GetQueryExecutionRequest(input *GetQueryExecutionInput) (req *request.Request, output *GetQueryExecutionOutput) {
 	op := &request.Operation{
 		Name:       opGetQueryExecution,
@@ -511,7 +514,7 @@ func (c *Athena) GetQueryExecutionRequest(input *GetQueryExecutionInput) (req *r
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/GetQueryExecution
+// See also, https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/GetQueryExecution
 func (c *Athena) GetQueryExecution(input *GetQueryExecutionInput) (*GetQueryExecutionOutput, error) {
 	req, out := c.GetQueryExecutionRequest(input)
 	return out, req.Send()
@@ -537,8 +540,8 @@ const opGetQueryResults = "GetQueryResults"
 
 // GetQueryResultsRequest generates a "aws/request.Request" representing the
 // client's request for the GetQueryResults operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -558,7 +561,7 @@ const opGetQueryResults = "GetQueryResults"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/GetQueryResults
+// See also, https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/GetQueryResults
 func (c *Athena) GetQueryResultsRequest(input *GetQueryResultsInput) (req *request.Request, output *GetQueryResultsOutput) {
 	op := &request.Operation{
 		Name:       opGetQueryResults,
@@ -603,7 +606,7 @@ func (c *Athena) GetQueryResultsRequest(input *GetQueryResultsInput) (req *reque
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/GetQueryResults
+// See also, https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/GetQueryResults
 func (c *Athena) GetQueryResults(input *GetQueryResultsInput) (*GetQueryResultsOutput, error) {
 	req, out := c.GetQueryResultsRequest(input)
 	return out, req.Send()
@@ -679,8 +682,8 @@ const opListNamedQueries = "ListNamedQueries"
 
 // ListNamedQueriesRequest generates a "aws/request.Request" representing the
 // client's request for the ListNamedQueries operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -700,7 +703,7 @@ const opListNamedQueries = "ListNamedQueries"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/ListNamedQueries
+// See also, https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/ListNamedQueries
 func (c *Athena) ListNamedQueriesRequest(input *ListNamedQueriesInput) (req *request.Request, output *ListNamedQueriesOutput) {
 	op := &request.Operation{
 		Name:       opListNamedQueries,
@@ -747,7 +750,7 @@ func (c *Athena) ListNamedQueriesRequest(input *ListNamedQueriesInput) (req *req
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/ListNamedQueries
+// See also, https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/ListNamedQueries
 func (c *Athena) ListNamedQueries(input *ListNamedQueriesInput) (*ListNamedQueriesOutput, error) {
 	req, out := c.ListNamedQueriesRequest(input)
 	return out, req.Send()
@@ -823,8 +826,8 @@ const opListQueryExecutions = "ListQueryExecutions"
 
 // ListQueryExecutionsRequest generates a "aws/request.Request" representing the
 // client's request for the ListQueryExecutions operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -844,7 +847,7 @@ const opListQueryExecutions = "ListQueryExecutions"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/ListQueryExecutions
+// See also, https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/ListQueryExecutions
 func (c *Athena) ListQueryExecutionsRequest(input *ListQueryExecutionsInput) (req *request.Request, output *ListQueryExecutionsOutput) {
 	op := &request.Operation{
 		Name:       opListQueryExecutions,
@@ -891,7 +894,7 @@ func (c *Athena) ListQueryExecutionsRequest(input *ListQueryExecutionsInput) (re
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/ListQueryExecutions
+// See also, https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/ListQueryExecutions
 func (c *Athena) ListQueryExecutions(input *ListQueryExecutionsInput) (*ListQueryExecutionsOutput, error) {
 	req, out := c.ListQueryExecutionsRequest(input)
 	return out, req.Send()
@@ -967,8 +970,8 @@ const opStartQueryExecution = "StartQueryExecution"
 
 // StartQueryExecutionRequest generates a "aws/request.Request" representing the
 // client's request for the StartQueryExecution operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -988,7 +991,7 @@ const opStartQueryExecution = "StartQueryExecution"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/StartQueryExecution
+// See also, https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/StartQueryExecution
 func (c *Athena) StartQueryExecutionRequest(input *StartQueryExecutionInput) (req *request.Request, output *StartQueryExecutionOutput) {
 	op := &request.Operation{
 		Name:       opStartQueryExecution,
@@ -1030,9 +1033,10 @@ func (c *Athena) StartQueryExecutionRequest(input *StartQueryExecutionInput) (re
 //   a required parameter may be missing or out of range.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
-//   Indicates that the request was throttled.
+//   Indicates that the request was throttled and includes the reason for throttling,
+//   for example, the limit of concurrent queries has been exceeded.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/StartQueryExecution
+// See also, https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/StartQueryExecution
 func (c *Athena) StartQueryExecution(input *StartQueryExecutionInput) (*StartQueryExecutionOutput, error) {
 	req, out := c.StartQueryExecutionRequest(input)
 	return out, req.Send()
@@ -1058,8 +1062,8 @@ const opStopQueryExecution = "StopQueryExecution"
 
 // StopQueryExecutionRequest generates a "aws/request.Request" representing the
 // client's request for the StopQueryExecution operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1079,7 +1083,7 @@ const opStopQueryExecution = "StopQueryExecution"
 //        fmt.Println(resp)
 //    }
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/StopQueryExecution
+// See also, https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/StopQueryExecution
 func (c *Athena) StopQueryExecutionRequest(input *StopQueryExecutionInput) (req *request.Request, output *StopQueryExecutionOutput) {
 	op := &request.Operation{
 		Name:       opStopQueryExecution,
@@ -1093,6 +1097,7 @@ func (c *Athena) StopQueryExecutionRequest(input *StopQueryExecutionInput) (req 
 
 	output = &StopQueryExecutionOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -1120,7 +1125,7 @@ func (c *Athena) StopQueryExecutionRequest(input *StopQueryExecutionInput) (req 
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/StopQueryExecution
+// See also, https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/StopQueryExecution
 func (c *Athena) StopQueryExecution(input *StopQueryExecutionInput) (*StopQueryExecutionOutput, error) {
 	req, out := c.StopQueryExecutionRequest(input)
 	return out, req.Send()
@@ -1142,7 +1147,6 @@ func (c *Athena) StopQueryExecutionWithContext(ctx aws.Context, input *StopQuery
 	return out, req.Send()
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/BatchGetNamedQueryInput
 type BatchGetNamedQueryInput struct {
 	_ struct{} `type:"structure"`
 
@@ -1184,7 +1188,6 @@ func (s *BatchGetNamedQueryInput) SetNamedQueryIds(v []*string) *BatchGetNamedQu
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/BatchGetNamedQueryOutput
 type BatchGetNamedQueryOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -1217,7 +1220,6 @@ func (s *BatchGetNamedQueryOutput) SetUnprocessedNamedQueryIds(v []*UnprocessedN
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/BatchGetQueryExecutionInput
 type BatchGetQueryExecutionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -1259,7 +1261,6 @@ func (s *BatchGetQueryExecutionInput) SetQueryExecutionIds(v []*string) *BatchGe
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/BatchGetQueryExecutionOutput
 type BatchGetQueryExecutionOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -1293,7 +1294,6 @@ func (s *BatchGetQueryExecutionOutput) SetUnprocessedQueryExecutionIds(v []*Unpr
 }
 
 // Information about the columns in a query execution result.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/ColumnInfo
 type ColumnInfo struct {
 	_ struct{} `type:"structure"`
 
@@ -1404,7 +1404,6 @@ func (s *ColumnInfo) SetType(v string) *ColumnInfo {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/CreateNamedQueryInput
 type CreateNamedQueryInput struct {
 	_ struct{} `type:"structure"`
 
@@ -1511,7 +1510,6 @@ func (s *CreateNamedQueryInput) SetQueryString(v string) *CreateNamedQueryInput 
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/CreateNamedQueryOutput
 type CreateNamedQueryOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -1536,7 +1534,6 @@ func (s *CreateNamedQueryOutput) SetNamedQueryId(v string) *CreateNamedQueryOutp
 }
 
 // A piece of data (a field in the table).
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/Datum
 type Datum struct {
 	_ struct{} `type:"structure"`
 
@@ -1560,14 +1557,11 @@ func (s *Datum) SetVarCharValue(v string) *Datum {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/DeleteNamedQueryInput
 type DeleteNamedQueryInput struct {
 	_ struct{} `type:"structure"`
 
 	// The unique ID of the query to delete.
-	//
-	// NamedQueryId is a required field
-	NamedQueryId *string `type:"string" required:"true" idempotencyToken:"true"`
+	NamedQueryId *string `type:"string" idempotencyToken:"true"`
 }
 
 // String returns the string representation
@@ -1580,26 +1574,12 @@ func (s DeleteNamedQueryInput) GoString() string {
 	return s.String()
 }
 
-// Validate inspects the fields of the type to determine if they are valid.
-func (s *DeleteNamedQueryInput) Validate() error {
-	invalidParams := request.ErrInvalidParams{Context: "DeleteNamedQueryInput"}
-	if s.NamedQueryId == nil {
-		invalidParams.Add(request.NewErrParamRequired("NamedQueryId"))
-	}
-
-	if invalidParams.Len() > 0 {
-		return invalidParams
-	}
-	return nil
-}
-
 // SetNamedQueryId sets the NamedQueryId field's value.
 func (s *DeleteNamedQueryInput) SetNamedQueryId(v string) *DeleteNamedQueryInput {
 	s.NamedQueryId = &v
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/DeleteNamedQueryOutput
 type DeleteNamedQueryOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -1614,9 +1594,8 @@ func (s DeleteNamedQueryOutput) GoString() string {
 	return s.String()
 }
 
-// If query results are encrypted in Amazon S3, indicates the Amazon S3 encryption
-// option used.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/EncryptionConfiguration
+// If query results are encrypted in Amazon S3, indicates the encryption option
+// used (for example, SSE-KMS or CSE-KMS) and key information.
 type EncryptionConfiguration struct {
 	_ struct{} `type:"structure"`
 
@@ -1666,7 +1645,6 @@ func (s *EncryptionConfiguration) SetKmsKey(v string) *EncryptionConfiguration {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/GetNamedQueryInput
 type GetNamedQueryInput struct {
 	_ struct{} `type:"structure"`
 
@@ -1705,7 +1683,6 @@ func (s *GetNamedQueryInput) SetNamedQueryId(v string) *GetNamedQueryInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/GetNamedQueryOutput
 type GetNamedQueryOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -1729,7 +1706,6 @@ func (s *GetNamedQueryOutput) SetNamedQuery(v *NamedQuery) *GetNamedQueryOutput 
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/GetQueryExecutionInput
 type GetQueryExecutionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -1768,7 +1744,6 @@ func (s *GetQueryExecutionInput) SetQueryExecutionId(v string) *GetQueryExecutio
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/GetQueryExecutionOutput
 type GetQueryExecutionOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -1792,7 +1767,6 @@ func (s *GetQueryExecutionOutput) SetQueryExecution(v *QueryExecution) *GetQuery
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/GetQueryResultsInput
 type GetQueryResultsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -1850,7 +1824,6 @@ func (s *GetQueryResultsInput) SetQueryExecutionId(v string) *GetQueryResultsInp
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/GetQueryResultsOutput
 type GetQueryResultsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -1859,6 +1832,9 @@ type GetQueryResultsOutput struct {
 
 	// The results of the query execution.
 	ResultSet *ResultSet `type:"structure"`
+
+	// The number of rows inserted with a CREATE TABLE AS SELECT statement.
+	UpdateCount *int64 `type:"long"`
 }
 
 // String returns the string representation
@@ -1883,7 +1859,12 @@ func (s *GetQueryResultsOutput) SetResultSet(v *ResultSet) *GetQueryResultsOutpu
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/ListNamedQueriesInput
+// SetUpdateCount sets the UpdateCount field's value.
+func (s *GetQueryResultsOutput) SetUpdateCount(v int64) *GetQueryResultsOutput {
+	s.UpdateCount = &v
+	return s
+}
+
 type ListNamedQueriesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -1917,7 +1898,6 @@ func (s *ListNamedQueriesInput) SetNextToken(v string) *ListNamedQueriesInput {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/ListNamedQueriesOutput
 type ListNamedQueriesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -1950,7 +1930,6 @@ func (s *ListNamedQueriesOutput) SetNextToken(v string) *ListNamedQueriesOutput 
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/ListQueryExecutionsInput
 type ListQueryExecutionsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -1984,7 +1963,6 @@ func (s *ListQueryExecutionsInput) SetNextToken(v string) *ListQueryExecutionsIn
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/ListQueryExecutionsOutput
 type ListQueryExecutionsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -2019,7 +1997,6 @@ func (s *ListQueryExecutionsOutput) SetQueryExecutionIds(v []*string) *ListQuery
 
 // A query, where QueryString is the SQL query statements that comprise the
 // query.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/NamedQuery
 type NamedQuery struct {
 	_ struct{} `type:"structure"`
 
@@ -2086,7 +2063,6 @@ func (s *NamedQuery) SetQueryString(v string) *NamedQuery {
 }
 
 // Information about a single instance of a query execution.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/QueryExecution
 type QueryExecution struct {
 	_ struct{} `type:"structure"`
 
@@ -2103,8 +2079,14 @@ type QueryExecution struct {
 	// option, if any, used for query results.
 	ResultConfiguration *ResultConfiguration `type:"structure"`
 
+	// The type of query statement that was run. DDL indicates DDL query statements.
+	// DML indicates DML (Data Manipulation Language) query statements, such as
+	// CREATE TABLE AS SELECT. UTILITY indicates query statements other than DDL
+	// and DML, such as SHOW CREATE TABLE, or DESCRIBE <table>.
+	StatementType *string `type:"string" enum:"StatementType"`
+
 	// The amount of data scanned during the query execution and the amount of time
-	// that it took to execute.
+	// that it took to execute, and the type of statement that was run.
 	Statistics *QueryExecutionStatistics `type:"structure"`
 
 	// The completion date, current state, submission time, and state change reason
@@ -2146,6 +2128,12 @@ func (s *QueryExecution) SetResultConfiguration(v *ResultConfiguration) *QueryEx
 	return s
 }
 
+// SetStatementType sets the StatementType field's value.
+func (s *QueryExecution) SetStatementType(v string) *QueryExecution {
+	s.StatementType = &v
+	return s
+}
+
 // SetStatistics sets the Statistics field's value.
 func (s *QueryExecution) SetStatistics(v *QueryExecutionStatistics) *QueryExecution {
 	s.Statistics = v
@@ -2159,7 +2147,6 @@ func (s *QueryExecution) SetStatus(v *QueryExecutionStatus) *QueryExecution {
 }
 
 // The database in which the query execution occurs.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/QueryExecutionContext
 type QueryExecutionContext struct {
 	_ struct{} `type:"structure"`
 
@@ -2197,8 +2184,7 @@ func (s *QueryExecutionContext) SetDatabase(v string) *QueryExecutionContext {
 }
 
 // The amount of data scanned during the query execution and the amount of time
-// that it took to execute.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/QueryExecutionStatistics
+// that it took to execute, and the type of statement that was run.
 type QueryExecutionStatistics struct {
 	_ struct{} `type:"structure"`
 
@@ -2233,25 +2219,25 @@ func (s *QueryExecutionStatistics) SetEngineExecutionTimeInMillis(v int64) *Quer
 
 // The completion date, current state, submission time, and state change reason
 // (if applicable) for the query execution.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/QueryExecutionStatus
 type QueryExecutionStatus struct {
 	_ struct{} `type:"structure"`
 
 	// The date and time that the query completed.
-	CompletionDateTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CompletionDateTime *time.Time `type:"timestamp"`
 
-	// The state of query execution. SUBMITTED indicates that the query is queued
-	// for execution. RUNNING indicates that the query is scanning data and returning
-	// results. SUCCEEDED indicates that the query completed without error. FAILED
-	// indicates that the query experienced an error and did not complete processing.
-	// CANCELLED indicates that user input interrupted query execution.
+	// The state of query execution. QUEUED state is listed but is not used by Athena
+	// and is reserved for future use. RUNNING indicates that the query has been
+	// submitted to the service, and Athena will execute the query as soon as resources
+	// are available. SUCCEEDED indicates that the query completed without error.
+	// FAILED indicates that the query experienced an error and did not complete
+	// processing.CANCELLED indicates that user input interrupted query execution.
 	State *string `type:"string" enum:"QueryExecutionState"`
 
 	// Further detail about the status of the query.
 	StateChangeReason *string `type:"string"`
 
 	// The date and time that the query was submitted.
-	SubmissionDateTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	SubmissionDateTime *time.Time `type:"timestamp"`
 }
 
 // String returns the string representation
@@ -2290,15 +2276,15 @@ func (s *QueryExecutionStatus) SetSubmissionDateTime(v time.Time) *QueryExecutio
 
 // The location in Amazon S3 where query results are stored and the encryption
 // option, if any, used for query results.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/ResultConfiguration
 type ResultConfiguration struct {
 	_ struct{} `type:"structure"`
 
-	// If query results are encrypted in S3, indicates the S3 encryption option
-	// used (for example, SSE-KMS or CSE-KMS and key information.
+	// If query results are encrypted in Amazon S3, indicates the encryption option
+	// used (for example, SSE-KMS or CSE-KMS) and key information.
 	EncryptionConfiguration *EncryptionConfiguration `type:"structure"`
 
-	// The location in S3 where query results are stored.
+	// The location in Amazon S3 where your query results are stored, such as s3://path/to/query/bucket/.
+	// For more information, see Queries and Query Result Files.  (http://docs.aws.amazon.com/athena/latest/ug/querying.html)
 	//
 	// OutputLocation is a required field
 	OutputLocation *string `type:"string" required:"true"`
@@ -2346,7 +2332,6 @@ func (s *ResultConfiguration) SetOutputLocation(v string) *ResultConfiguration {
 
 // The metadata and rows that comprise a query result set. The metadata describes
 // the column structure and data types.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/ResultSet
 type ResultSet struct {
 	_ struct{} `type:"structure"`
 
@@ -2382,11 +2367,10 @@ func (s *ResultSet) SetRows(v []*Row) *ResultSet {
 
 // The metadata that describes the column structure and data types of a table
 // of query results.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/ResultSetMetadata
 type ResultSetMetadata struct {
 	_ struct{} `type:"structure"`
 
-	// Information about the columns in a query execution result.
+	// Information about the columns returned in a query result metadata.
 	ColumnInfo []*ColumnInfo `type:"list"`
 }
 
@@ -2407,7 +2391,6 @@ func (s *ResultSetMetadata) SetColumnInfo(v []*ColumnInfo) *ResultSetMetadata {
 }
 
 // The rows that comprise a query result table.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/Row
 type Row struct {
 	_ struct{} `type:"structure"`
 
@@ -2431,7 +2414,6 @@ func (s *Row) SetData(v []*Datum) *Row {
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/StartQueryExecutionInput
 type StartQueryExecutionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -2526,7 +2508,6 @@ func (s *StartQueryExecutionInput) SetResultConfiguration(v *ResultConfiguration
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/StartQueryExecutionOutput
 type StartQueryExecutionOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -2550,14 +2531,11 @@ func (s *StartQueryExecutionOutput) SetQueryExecutionId(v string) *StartQueryExe
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/StopQueryExecutionInput
 type StopQueryExecutionInput struct {
 	_ struct{} `type:"structure"`
 
 	// The unique ID of the query execution to stop.
-	//
-	// QueryExecutionId is a required field
-	QueryExecutionId *string `type:"string" required:"true" idempotencyToken:"true"`
+	QueryExecutionId *string `type:"string" idempotencyToken:"true"`
 }
 
 // String returns the string representation
@@ -2570,26 +2548,12 @@ func (s StopQueryExecutionInput) GoString() string {
 	return s.String()
 }
 
-// Validate inspects the fields of the type to determine if they are valid.
-func (s *StopQueryExecutionInput) Validate() error {
-	invalidParams := request.ErrInvalidParams{Context: "StopQueryExecutionInput"}
-	if s.QueryExecutionId == nil {
-		invalidParams.Add(request.NewErrParamRequired("QueryExecutionId"))
-	}
-
-	if invalidParams.Len() > 0 {
-		return invalidParams
-	}
-	return nil
-}
-
 // SetQueryExecutionId sets the QueryExecutionId field's value.
 func (s *StopQueryExecutionInput) SetQueryExecutionId(v string) *StopQueryExecutionInput {
 	s.QueryExecutionId = &v
 	return s
 }
 
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/StopQueryExecutionOutput
 type StopQueryExecutionOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -2605,7 +2569,6 @@ func (s StopQueryExecutionOutput) GoString() string {
 }
 
 // Information about a named query ID that could not be processed.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/UnprocessedNamedQueryId
 type UnprocessedNamedQueryId struct {
 	_ struct{} `type:"structure"`
 
@@ -2650,7 +2613,6 @@ func (s *UnprocessedNamedQueryId) SetNamedQueryId(v string) *UnprocessedNamedQue
 }
 
 // Describes a query execution that failed to process.
-// Please also see https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/UnprocessedQueryExecutionId
 type UnprocessedQueryExecutionId struct {
 	_ struct{} `type:"structure"`
 
@@ -2732,6 +2694,19 @@ const (
 	QueryExecutionStateCancelled = "CANCELLED"
 )
 
+const (
+	// StatementTypeDdl is a StatementType enum value
+	StatementTypeDdl = "DDL"
+
+	// StatementTypeDml is a StatementType enum value
+	StatementTypeDml = "DML"
+
+	// StatementTypeUtility is a StatementType enum value
+	StatementTypeUtility = "UTILITY"
+)
+
+// The reason for the query throttling, for example, when it exceeds the concurrent
+// query limit.
 const (
 	// ThrottleReasonConcurrentQueryLimitExceeded is a ThrottleReason enum value
 	ThrottleReasonConcurrentQueryLimitExceeded = "CONCURRENT_QUERY_LIMIT_EXCEEDED"

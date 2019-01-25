@@ -6,7 +6,7 @@ description: |-
   Provides a Route53 Delegation Set resource.
 ---
 
-# aws\_route53\_delegation_set
+# aws_route53_delegation_set
 
 Provides a [Route53 Delegation Set](https://docs.aws.amazon.com/Route53/latest/APIReference/actions-on-reusable-delegation-sets.html) resource.
 
@@ -37,7 +37,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The delegation set ID
 * `name_servers` - A list of authoritative name servers for the hosted zone

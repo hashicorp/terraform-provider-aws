@@ -1,0 +1,29 @@
+{
+    "Deadline": "5m",
+    "Enable": [
+        "deadcode",
+        "errcheck",
+        "gofmt",
+        "ineffassign",
+        "interfacer",
+        "misspell",
+        "staticcheck",
+        "structcheck",
+        "unconvert",
+        "unparam",
+        "varcheck",
+        "vet"
+    ],
+    "EnableGC": true,
+    "Linters": {
+        "errcheck": {
+            "Command": "errcheck -abspath {not_tests=-ignoretests} -ignore github.com/hashicorp/terraform/helper/schema:ForceNew|Set -ignore io:Close"
+        }
+    },
+    "Sort": [
+        "path",
+        "line"
+    ],
+    "Vendor": true,
+    "WarnUnmatchedDirective": true
+}

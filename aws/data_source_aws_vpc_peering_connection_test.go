@@ -9,19 +9,31 @@ import (
 )
 
 func TestAccDataSourceAwsVpcPeeringConnection_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDataSourceAwsVpcPeeringConnectionConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsVpcPeeringConnectionCheck("data.aws_vpc_peering_connection.test_by_id"),
+					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_id", "id"),
+					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_id", "cidr_block"),
 					testAccDataSourceAwsVpcPeeringConnectionCheck("data.aws_vpc_peering_connection.test_by_requester_vpc_id"),
+					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_requester_vpc_id", "id"),
+					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_requester_vpc_id", "cidr_block"),
 					testAccDataSourceAwsVpcPeeringConnectionCheck("data.aws_vpc_peering_connection.test_by_accepter_vpc_id"),
+					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_accepter_vpc_id", "id"),
+					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_accepter_vpc_id", "cidr_block"),
 					testAccDataSourceAwsVpcPeeringConnectionCheck("data.aws_vpc_peering_connection.test_by_requester_cidr_block"),
+					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_requester_cidr_block", "id"),
+					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_requester_cidr_block", "cidr_block"),
 					testAccDataSourceAwsVpcPeeringConnectionCheck("data.aws_vpc_peering_connection.test_by_accepter_cidr_block"),
+					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_accepter_cidr_block", "id"),
+					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_accepter_cidr_block", "cidr_block"),
 					testAccDataSourceAwsVpcPeeringConnectionCheck("data.aws_vpc_peering_connection.test_by_owner_ids"),
+					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_owner_ids", "id"),
+					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_owner_ids", "cidr_block"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -56,14 +68,10 @@ func testAccDataSourceAwsVpcPeeringConnectionCheck(name string) resource.TestChe
 }
 
 const testAccDataSourceAwsVpcPeeringConnectionConfig = `
-provider "aws" {
-  region = "us-west-2"
-}
-
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
 
-  tags {
+  tags = {
 	  Name = "terraform-testacc-vpc-peering-connection-data-source-foo"
   }
 }
@@ -71,7 +79,7 @@ resource "aws_vpc" "foo" {
 resource "aws_vpc" "bar" {
   cidr_block = "10.2.0.0/16"
 
-  tags {
+  tags = {
 	  Name = "terraform-testacc-vpc-peering-connection-data-source-bar"
   }
 }
@@ -81,7 +89,7 @@ resource "aws_vpc_peering_connection" "test" {
 	peer_vpc_id = "${aws_vpc.bar.id}"
 	auto_accept = true
 
-    tags {
+  tags = {
       Name = "terraform-testacc-vpc-peering-connection-data-source-foo-to-bar"
     }
 }

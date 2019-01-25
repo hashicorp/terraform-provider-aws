@@ -6,7 +6,7 @@ description: |-
     Provides details about a single container within an ecs task definition
 ---
 
-# aws\_ecs\_container\_definition
+# Data Source: aws_ecs_container_definition
 
 The ECS container definition data source allows access to details of
 a specific container within an AWS ECS service.
@@ -29,7 +29,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `image` - The docker image in use, including the digest
 * `image_digest` - The digest of the docker image in use

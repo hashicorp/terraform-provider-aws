@@ -6,7 +6,7 @@ description: |-
   Provides an AWS EBS Volume Attachment
 ---
 
-# aws\_volume\_attachment
+# aws_volume_attachment
 
 Provides an AWS EBS Volume Attachment as a top level resource, to attach and
 detach volumes from AWS Instances.
@@ -27,7 +27,7 @@ resource "aws_instance" "web" {
   availability_zone = "us-west-2a"
   instance_type     = "t1.micro"
 
-  tags {
+  tags = {
     Name = "HelloWorld"
   }
 }

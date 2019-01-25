@@ -6,7 +6,7 @@ description: |-
   Get an elastic beanstalk solution stack.
 ---
 
-# aws\_elastic\_beanstalk\_solution\_stack
+# Data Source: aws_elastic_beanstalk_solution_stack
 
 Use this data source to get the name of a elastic beanstalk solution stack.
 
@@ -14,9 +14,9 @@ Use this data source to get the name of a elastic beanstalk solution stack.
 
 ```hcl
 data "aws_elastic_beanstalk_solution_stack" "multi_docker" {
-  most_recent   = true
+  most_recent = true
 
-  name_regex    = "^64bit Amazon Linux (.*) Multi-container Docker (.*)$"
+  name_regex = "^64bit Amazon Linux (.*) Multi-container Docker (.*)$"
 }
 ```
 

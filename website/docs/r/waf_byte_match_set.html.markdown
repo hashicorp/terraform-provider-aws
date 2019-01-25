@@ -6,7 +6,7 @@ description: |-
   Provides a AWS WAF Byte Match Set resource.
 ---
 
-# aws\_waf\_byte\_match\_set
+# aws_waf_byte_match_set
 
 Provides a WAF Byte Match Set Resource
 
@@ -74,6 +74,6 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the WAF Byte Match Set.

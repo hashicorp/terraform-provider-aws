@@ -11,6 +11,7 @@ var websiteEndpoints = []struct {
 	{"us-west-2", "bucket-name.s3-website-us-west-2.amazonaws.com"},
 	{"us-west-1", "bucket-name.s3-website-us-west-1.amazonaws.com"},
 	{"eu-west-1", "bucket-name.s3-website-eu-west-1.amazonaws.com"},
+	{"eu-west-3", "bucket-name.s3-website.eu-west-3.amazonaws.com"},
 	{"eu-central-1", "bucket-name.s3-website.eu-central-1.amazonaws.com"},
 	{"ap-south-1", "bucket-name.s3-website.ap-south-1.amazonaws.com"},
 	{"ap-southeast-1", "bucket-name.s3-website-ap-southeast-1.amazonaws.com"},

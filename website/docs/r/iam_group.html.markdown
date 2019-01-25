@@ -6,7 +6,7 @@ description: |-
   Provides an IAM group.
 ---
 
-# aws\_iam\_group
+# aws_iam_group
 
 Provides an IAM group.
 
@@ -28,7 +28,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The group's ID.
 * `arn` - The ARN assigned by AWS for this group.

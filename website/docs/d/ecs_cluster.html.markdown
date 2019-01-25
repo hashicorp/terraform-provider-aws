@@ -6,7 +6,7 @@ description: |-
     Provides details about an ecs cluster
 ---
 
-# aws\_ecs\_cluster
+# Data Source: aws_ecs_cluster
 
 The ECS Cluster data source allows access to details of a specific
 cluster within an AWS ECS service.
@@ -27,7 +27,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The ARN of the ECS Cluster
 * `status` - The status of the ECS Cluster

@@ -9,7 +9,7 @@ import (
 )
 
 func TestAccAWSEbsVolumeDataSource_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -17,6 +17,7 @@ func TestAccAWSEbsVolumeDataSource_basic(t *testing.T) {
 				Config: testAccCheckAwsEbsVolumeDataSourceConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsEbsVolumeDataSourceID("data.aws_ebs_volume.ebs_volume"),
+					resource.TestCheckResourceAttrSet("data.aws_ebs_volume.ebs_volume", "arn"),
 					resource.TestCheckResourceAttr("data.aws_ebs_volume.ebs_volume", "size", "40"),
 					resource.TestCheckResourceAttr("data.aws_ebs_volume.ebs_volume", "tags.%", "1"),
 					resource.TestCheckResourceAttr("data.aws_ebs_volume.ebs_volume", "tags.Name", "External Volume"),
@@ -27,7 +28,7 @@ func TestAccAWSEbsVolumeDataSource_basic(t *testing.T) {
 }
 
 func TestAccAWSEbsVolumeDataSource_multipleFilters(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -60,11 +61,13 @@ func testAccCheckAwsEbsVolumeDataSourceID(n string) resource.TestCheckFunc {
 }
 
 const testAccCheckAwsEbsVolumeDataSourceConfig = `
+data "aws_availability_zones" "available" {}
+
 resource "aws_ebs_volume" "example" {
-  availability_zone = "us-west-2a"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
   type = "gp2"
   size = 40
-  tags {
+  tags = {
     Name = "External Volume"
   }
 }
@@ -83,11 +86,13 @@ data "aws_ebs_volume" "ebs_volume" {
 `
 
 const testAccCheckAwsEbsVolumeDataSourceConfigWithMultipleFilters = `
+data "aws_availability_zones" "available" {}
+
 resource "aws_ebs_volume" "external1" {
-  availability_zone = "us-west-2a"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
   type = "gp2"
   size = 10
-  tags {
+  tags = {
     Name = "External Volume 1"
   }
 }

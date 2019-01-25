@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccDataSourceAwsSecurityGroup(t *testing.T) {
+func TestAccDataSourceAwsSecurityGroup_basic(t *testing.T) {
 	rInt := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -21,6 +21,7 @@ func TestAccDataSourceAwsSecurityGroup(t *testing.T) {
 				Config: testAccDataSourceAwsSecurityGroupConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsSecurityGroupCheck("data.aws_security_group.by_id"),
+					resource.TestCheckResourceAttr("data.aws_security_group.by_id", "description", "sg description"),
 					testAccDataSourceAwsSecurityGroupCheck("data.aws_security_group.by_tag"),
 					testAccDataSourceAwsSecurityGroupCheck("data.aws_security_group.by_filter"),
 					testAccDataSourceAwsSecurityGroupCheck("data.aws_security_group.by_name"),
@@ -103,24 +104,22 @@ func testAccDataSourceAwsSecurityGroupCheckDefault(name string) resource.TestChe
 
 func testAccDataSourceAwsSecurityGroupConfig(rInt int) string {
 	return fmt.Sprintf(`
-	provider "aws" {
-		region = "eu-west-1"
-	}
 	resource "aws_vpc" "test" {
 		cidr_block = "172.16.0.0/16"
 
-		tags {
-			Name = "terraform-testacc-subnet-data-source"
+	tags = {
+			Name = "terraform-testacc-security-group-data-source"
 		}
 	}
 
 	resource "aws_security_group" "test" {
 		vpc_id = "${aws_vpc.test.id}"
 		name = "test-%d"
-		tags {
+	tags = {
 			Name = "tf-acctest"
 			Seed = "%d"
 		}
+		description = "sg description"
 	}
 
 	data "aws_security_group" "by_id" {
@@ -137,7 +136,7 @@ func testAccDataSourceAwsSecurityGroupConfig(rInt int) string {
 	}
 
 	data "aws_security_group" "by_tag" {
-		tags {
+	tags = {
 			Seed = "${aws_security_group.test.tags["Seed"]}"
 		}
 	}
