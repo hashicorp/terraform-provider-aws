@@ -61,6 +61,18 @@ func TestAccAWSAutoscalingPolicy_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
+				ResourceName:      "aws_autoscaling_policy.foobar_step",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSAutoscalingPolicyImportStateIdFunc("aws_autoscaling_policy.foobar_step"),
+				ImportStateVerify: true,
+			},
+			{
+				ResourceName:      "aws_autoscaling_policy.foobar_target_tracking",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSAutoscalingPolicyImportStateIdFunc("aws_autoscaling_policy.foobar_target_tracking"),
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccAWSAutoscalingPolicyConfig_basicUpdate(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScalingPolicyExists("aws_autoscaling_policy.foobar_simple", &policy),
@@ -192,6 +204,12 @@ func TestAccAWSAutoscalingPolicy_SimpleScalingStepAdjustment(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_simple", "scaling_adjustment", "0"),
 				),
 			},
+			{
+				ResourceName:      "aws_autoscaling_policy.foobar_simple",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSAutoscalingPolicyImportStateIdFunc("aws_autoscaling_policy.foobar_simple"),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -212,6 +230,12 @@ func TestAccAWSAutoscalingPolicy_TargetTrack_Predefined(t *testing.T) {
 					testAccCheckScalingPolicyExists("aws_autoscaling_policy.test", &policy),
 				),
 			},
+			{
+				ResourceName:      "aws_autoscaling_policy.test",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSAutoscalingPolicyImportStateIdFunc("aws_autoscaling_policy.test"),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -231,6 +255,12 @@ func TestAccAWSAutoscalingPolicy_TargetTrack_Custom(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScalingPolicyExists("aws_autoscaling_policy.test", &policy),
 				),
+			},
+			{
+				ResourceName:      "aws_autoscaling_policy.test",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSAutoscalingPolicyImportStateIdFunc("aws_autoscaling_policy.test"),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -255,6 +285,18 @@ func TestAccAWSAutoscalingPolicy_zerovalue(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_step", "min_adjustment_magnitude", "1"),
 					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_step", "estimated_instance_warmup", "0"),
 				),
+			},
+			{
+				ResourceName:      "aws_autoscaling_policy.foobar_simple",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSAutoscalingPolicyImportStateIdFunc("aws_autoscaling_policy.foobar_simple"),
+				ImportStateVerify: true,
+			},
+			{
+				ResourceName:      "aws_autoscaling_policy.foobar_step",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSAutoscalingPolicyImportStateIdFunc("aws_autoscaling_policy.foobar_step"),
+				ImportStateVerify: true,
 			},
 		},
 	})
