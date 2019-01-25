@@ -15,6 +15,67 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func init() {
+	resource.AddTestSweepers("aws_emr_cluster", &resource.Sweeper{
+		Name: "aws_emr_cluster",
+		F:    testSweepEmrClusters,
+	})
+}
+
+func testSweepEmrClusters(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).emrconn
+
+	input := &emr.ListClustersInput{
+		ClusterStates: []*string{
+			aws.String(emr.ClusterStateBootstrapping),
+			aws.String(emr.ClusterStateRunning),
+			aws.String(emr.ClusterStateStarting),
+			aws.String(emr.ClusterStateWaiting),
+		},
+	}
+	err = conn.ListClustersPages(input, func(page *emr.ListClustersOutput, isLast bool) bool {
+		if page == nil {
+			return !isLast
+		}
+
+		for _, cluster := range page.Clusters {
+			describeClusterInput := &emr.DescribeClusterInput{
+				ClusterId: cluster.Id,
+			}
+			terminateJobFlowsInput := &emr.TerminateJobFlowsInput{
+				JobFlowIds: []*string{cluster.Id},
+			}
+			id := aws.StringValue(cluster.Id)
+
+			log.Printf("[INFO] Deleting EMR Cluster: %s", id)
+			_, err = conn.TerminateJobFlows(terminateJobFlowsInput)
+
+			if err != nil {
+				log.Printf("[ERROR] Error terminating EMR Cluster (%s): %s", id, err)
+			}
+
+			if err := conn.WaitUntilClusterTerminated(describeClusterInput); err != nil {
+				log.Printf("[ERROR] Error waiting for EMR Cluster (%s) termination: %s", id, err)
+			}
+		}
+
+		return !isLast
+	})
+	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping EMR Cluster sweep for %s: %s", region, err)
+			return nil
+		}
+		return fmt.Errorf("error retrieving EMR Clusters: %s", err)
+	}
+
+	return nil
+}
+
 func TestAccAWSEMRCluster_basic(t *testing.T) {
 	var cluster emr.Cluster
 	r := acctest.RandInt()

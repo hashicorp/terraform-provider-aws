@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"math/rand"
 	"testing"
 	"time"
@@ -12,6 +13,74 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_dx_gateway", &resource.Sweeper{
+		Name: "aws_dx_gateway",
+		F:    testSweepDirectConnectGateways,
+		Dependencies: []string{
+			"aws_dx_gateway_association",
+		},
+	})
+}
+
+func testSweepDirectConnectGateways(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).dxconn
+	input := &directconnect.DescribeDirectConnectGatewaysInput{}
+
+	for {
+		output, err := conn.DescribeDirectConnectGateways(input)
+
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping Direct Connect Gateway sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error retrieving Direct Connect Gateways: %s", err)
+		}
+
+		for _, gateway := range output.DirectConnectGateways {
+			id := aws.StringValue(gateway.DirectConnectGatewayId)
+
+			if aws.StringValue(gateway.DirectConnectGatewayState) != directconnect.GatewayStateAvailable {
+				log.Printf("[INFO] Skipping Direct Connect Gateway in non-available (%s) state: %s", aws.StringValue(gateway.DirectConnectGatewayState), id)
+				continue
+			}
+
+			input := &directconnect.DeleteDirectConnectGatewayInput{
+				DirectConnectGatewayId: aws.String(id),
+			}
+
+			log.Printf("[INFO] Deleting Direct Connect Gateway: %s", id)
+			_, err := conn.DeleteDirectConnectGateway(input)
+
+			if isAWSErr(err, directconnect.ErrCodeClientException, "does not exist") {
+				continue
+			}
+
+			if err != nil {
+				return fmt.Errorf("error deleting Direct Connect Gateway (%s): %s", id, err)
+			}
+
+			if err := waitForDirectConnectGatewayDeletion(conn, id, 20*time.Minute); err != nil {
+				return fmt.Errorf("error waiting for Direct Connect Gateway (%s) to be deleted: %s", id, err)
+			}
+		}
+
+		if aws.StringValue(output.NextToken) == "" {
+			break
+		}
+
+		input.NextToken = output.NextToken
+	}
+
+	return nil
+}
 
 func TestAccAwsDxGateway_importBasic(t *testing.T) {
 	resourceName := "aws_dx_gateway.test"
