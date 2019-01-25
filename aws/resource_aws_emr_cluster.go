@@ -1177,6 +1177,9 @@ func flattenInstanceGroup(ig *emr.InstanceGroup) (map[string]interface{}, error)
 	attrs["instance_count"] = int(*ig.RequestedInstanceCount)
 	attrs["instance_role"] = *ig.InstanceGroupType
 	attrs["instance_type"] = *ig.InstanceType
+	if ig.Name != nil {
+		attrs["name"] = *ig.Name
+	}
 
 	if ig.AutoScalingPolicy != nil {
 		// AutoScalingPolicy has an additional Status field and null values that are causing a new hashcode to be generated
