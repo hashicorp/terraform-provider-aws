@@ -5,6 +5,7 @@ BUG FIXES
 * resource/aws_emr_cluster: Fix regression with `instance_group` differences when using `name` [GH-7324]
 * resource/aws_lambda_permission: Retry for Lambda function eventual consistency on creation [GH-7327]
 * resource/aws_rds_cluster_parameter_group: Prevent missing DBClusterParameterGroupName error on creation with generated names and `name_prefix` [GH-7326]
+* resource/aws_s3_bucket_object: Delete S3 objects with leading '/' in the key name [GH-7268]
 
 ## 1.56.0 (January 16, 2019)
 
