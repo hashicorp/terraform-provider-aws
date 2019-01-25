@@ -8,6 +8,7 @@ BUG FIXES
 
 * resource/aws_autoscaling_policy: Properly read `step_adjustment` into Terraform state [GH-7336]
 * resource/aws_emr_cluster: Fix regression with `instance_group` differences when using `name` [GH-7324]
+* resource/aws_iot_topic_rule: Prevent panic with missing SQS UseBase64 attribute in API response [GH-7337]
 * resource/aws_lambda_permission: Retry for Lambda function eventual consistency on creation [GH-7327]
 * resource/aws_rds_cluster_parameter_group: Prevent missing DBClusterParameterGroupName error on creation with generated names and `name_prefix` [GH-7326]
 * resource/aws_s3_bucket_object: Delete S3 objects with leading '/' in the key name [GH-7268]
