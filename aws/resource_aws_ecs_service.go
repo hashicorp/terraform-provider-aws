@@ -26,6 +26,10 @@ func resourceAwsEcsService() *schema.Resource {
 			State: resourceAwsEcsServiceImport,
 		},
 
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(2 * time.Minute),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -1038,6 +1042,7 @@ func resourceAwsEcsServiceDelete(d *schema.ResourceData, meta interface{}) error
 		Target:     []string{"INACTIVE"},
 		Timeout:    10 * time.Minute,
 		MinTimeout: 1 * time.Second,
+
 		Refresh: func() (interface{}, string, error) {
 			log.Printf("[DEBUG] Checking if ECS service %s is INACTIVE", d.Id())
 			resp, err := conn.DescribeServices(&ecs.DescribeServicesInput{
