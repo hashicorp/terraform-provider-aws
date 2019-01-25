@@ -122,6 +122,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
+	"github.com/aws/aws-sdk-go/service/worklink"
 	"github.com/aws/aws-sdk-go/service/workspaces"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/hashicorp/go-cleanhttp"
@@ -296,6 +297,7 @@ type AWSClient struct {
 	transferconn                        *transfer.Transfer
 	wafconn                             *waf.WAF
 	wafregionalconn                     *wafregional.WAFRegional
+	worklinkconn                        *worklink.WorkLink
 	workspacesconn                      *workspaces.WorkSpaces
 }
 
@@ -650,6 +652,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.transferconn = transfer.New(sess)
 	client.wafconn = waf.New(sess)
 	client.wafregionalconn = wafregional.New(sess)
+	client.worklinkconn = worklink.New(sess)
 	client.workspacesconn = workspaces.New(sess)
 
 	// Workaround for https://github.com/aws/aws-sdk-go/issues/1376
