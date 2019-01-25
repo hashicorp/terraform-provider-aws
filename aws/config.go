@@ -138,10 +138,11 @@ type Config struct {
 	Region        string
 	MaxRetries    int
 
-	AssumeRoleARN         string
-	AssumeRoleExternalID  string
-	AssumeRoleSessionName string
-	AssumeRolePolicy      string
+	AssumeRoleARN             string
+	AssumeRoleExternalID      string
+	AssumeRoleSessionName     string
+	AssumeRoleSessionDuration int
+	AssumeRolePolicy          string
 
 	AllowedAccountIds   []interface{}
 	ForbiddenAccountIds []interface{}

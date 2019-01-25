@@ -140,9 +140,10 @@ Usage:
 ```hcl
 provider "aws" {
   assume_role {
-    role_arn     = "arn:aws:iam::ACCOUNT_ID:role/ROLE_NAME"
-    session_name = "SESSION_NAME"
-    external_id  = "EXTERNAL_ID"
+    role_arn         = "arn:aws:iam::ACCOUNT_ID:role/ROLE_NAME"
+    session_name     = "SESSION_NAME"
+    session_duration = "SESSION_DURATION"
+    external_id      = "EXTERNAL_ID"
   }
 }
 ```
@@ -271,6 +272,9 @@ The nested `assume_role` block supports the following:
 * `role_arn` - (Required) The ARN of the role to assume.
 
 * `session_name` - (Optional) The session name to use when making the
+  AssumeRole call.
+
+* `session_duration` - (Optional) The session duration to use when making the
   AssumeRole call.
 
 * `external_id` - (Optional) The external ID to use when making the

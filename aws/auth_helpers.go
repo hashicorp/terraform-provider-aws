@@ -229,8 +229,8 @@ func GetCredentials(c *Config) (*awsCredentials.Credentials, error) {
 
 	// Otherwise we need to construct and STS client with the main credentials, and verify
 	// that we can assume the defined role.
-	log.Printf("[INFO] Attempting to AssumeRole %s (SessionName: %q, ExternalId: %q, Policy: %q)",
-		c.AssumeRoleARN, c.AssumeRoleSessionName, c.AssumeRoleExternalID, c.AssumeRolePolicy)
+	log.Printf("[INFO] Attempting to AssumeRole %s (SessionName: %q, SessionDuration: %d, ExternalId: %q, Policy: %q)",
+		c.AssumeRoleARN, c.AssumeRoleSessionName, c.AssumeRoleSessionDuration, c.AssumeRoleExternalID, c.AssumeRolePolicy)
 
 	creds := awsCredentials.NewChainCredentials(providers)
 	cp, err := creds.Get()
@@ -269,10 +269,20 @@ func GetCredentials(c *Config) (*awsCredentials.Credentials, error) {
 		assumeRoleProvider.Policy = aws.String(c.AssumeRolePolicy)
 	}
 
+	if c.AssumeRoleSessionDuration < 900 || c.AssumeRoleSessionDuration > 43200 {
+		return nil, fmt.Errorf("The role %q cannot be assumed.\n\n"+
+			"  The session duration value %d is invalid, must be in [900, 43200]\n",
+			c.AssumeRoleARN,
+			c.AssumeRoleSessionDuration,
+		)
+	}
+	assumeRoleProvider.Duration = time.Duration(c.AssumeRoleSessionDuration) * time.Second
+
 	providers = []awsCredentials.Provider{assumeRoleProvider}
 
 	assumeRoleCreds := awsCredentials.NewChainCredentials(providers)
 	_, err = assumeRoleCreds.Get()
+
 	if err != nil {
 		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "NoCredentialProviders" {
 			return nil, fmt.Errorf("The role %q cannot be assumed.\n\n"+

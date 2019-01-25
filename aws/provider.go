@@ -868,6 +868,9 @@ func init() {
 		"assume_role_session_name": "The session name to use when assuming the role. If omitted," +
 			" no session name is passed to the AssumeRole call.",
 
+		"assume_role_session_duration": "The length of the session when assuming the role. If omitted" +
+			" the default duration of 15 minutes is used.",
+
 		"assume_role_external_id": "The external ID to use when assuming the role. If omitted," +
 			" no external ID is passed to the AssumeRole call.",
 
@@ -906,14 +909,15 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		assumeRole := assumeRoleList[0].(map[string]interface{})
 		config.AssumeRoleARN = assumeRole["role_arn"].(string)
 		config.AssumeRoleSessionName = assumeRole["session_name"].(string)
+		config.AssumeRoleSessionDuration = assumeRole["session_duration"].(int)
 		config.AssumeRoleExternalID = assumeRole["external_id"].(string)
 
 		if v := assumeRole["policy"].(string); v != "" {
 			config.AssumeRolePolicy = v
 		}
 
-		log.Printf("[INFO] assume_role configuration set: (ARN: %q, SessionID: %q, ExternalID: %q, Policy: %q)",
-			config.AssumeRoleARN, config.AssumeRoleSessionName, config.AssumeRoleExternalID, config.AssumeRolePolicy)
+		log.Printf("[INFO] assume_role configuration set: (ARN: %q, SessionID: %q, SessionDuration: %d, ExternalID: %q, Policy: %q)",
+			config.AssumeRoleARN, config.AssumeRoleSessionName, config.AssumeRoleSessionDuration, config.AssumeRoleExternalID, config.AssumeRolePolicy)
 	} else {
 		log.Printf("[INFO] No assume_role block read from configuration")
 	}
@@ -983,6 +987,13 @@ func assumeRoleSchema() *schema.Schema {
 					Type:        schema.TypeString,
 					Optional:    true,
 					Description: descriptions["assume_role_session_name"],
+				},
+
+				"session_duration": {
+					Type:        schema.TypeInt,
+					Optional:    true,
+					Default:     900,
+					Description: descriptions["assume_role_session_duration"],
 				},
 
 				"external_id": {
