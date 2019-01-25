@@ -2,6 +2,7 @@
 
 BUG FIXES
 
+* resource/aws_rds_cluster_parameter_group: Prevent missing DBClusterParameterGroupName error on creation with generated names and `name_prefix` [GH-7326]
 * resource/aws_emr_cluster: Fix regression with `instance_group` differences when using `name` [GH-7324]
 
 ## 1.56.0 (January 16, 2019)
