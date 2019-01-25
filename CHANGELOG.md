@@ -1,7 +1,12 @@
 ## 1.57.0 (Unreleased)
 
+ENHANCEMENTS
+
+* resource/aws_autoscaling_policy: Support resource import [GH-7195]
+
 BUG FIXES
 
+* resource/aws_autoscaling_policy: Properly read `step_adjustment` into Terraform state [GH-7336]
 * resource/aws_emr_cluster: Fix regression with `instance_group` differences when using `name` [GH-7324]
 * resource/aws_lambda_permission: Retry for Lambda function eventual consistency on creation [GH-7327]
 * resource/aws_rds_cluster_parameter_group: Prevent missing DBClusterParameterGroupName error on creation with generated names and `name_prefix` [GH-7326]
