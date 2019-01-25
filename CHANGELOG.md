@@ -1,4 +1,9 @@
-## 2.0.0 (Unreleased)
+## 1.57.0 (Unreleased)
+
+BUG FIXES
+
+* resource/aws_emr_cluster: Fix regression with `instance_group` differences when using `name` [GH-7324]
+
 ## 1.56.0 (January 16, 2019)
 
 NOTES
