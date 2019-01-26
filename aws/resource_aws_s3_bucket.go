@@ -675,7 +675,7 @@ func resourceAwsS3BucketCreate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAwsS3BucketUpdate(d *schema.ResourceData, meta interface{}) error {
 	s3conn := meta.(*AWSClient).s3conn
-	if err := setTagsS3(s3conn, d); err != nil {
+	if err := setTagsS3Bucket(s3conn, d); err != nil {
 		return fmt.Errorf("%q: %s", d.Get("bucket").(string), err)
 	}
 
@@ -1222,9 +1222,9 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	tagSet, err := getTagSetS3(s3conn, d.Id())
+	tagSet, err := getTagSetS3Bucket(s3conn, d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("error getting S3 bucket tags: %s", err)
 	}
 
 	if err := d.Set("tags", tagsToMapS3(tagSet)); err != nil {
