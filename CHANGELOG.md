@@ -1,8 +1,13 @@
 ## 1.57.0 (Unreleased)
 
+NOTES:
+
+* provider: Fairly light release this week due to Terraform 0.12 upgrade and Terraform AWS Provider 2.0 related activities happening behind the scenes, which will continue through at least next week. For additional tracking information about those efforts, see the v2.0.0 milestone in GitHub.
+
 ENHANCEMENTS
 
 * data-source/aws_mq_broker: Add `tags` attribute [GH-7193]
+* provider: Switch codebase dependency management from `govendor` to Go modules [GH-7165]
 * resource/aws_autoscaling_policy: Support resource import [GH-7195]
 * resource/aws_lb_listener: Add `TLS` to `protocol` argument validation [GH-7338]
 * resource/aws_lb_target_group: Add `TLS` to `protocol` argument validation [GH-7338]
