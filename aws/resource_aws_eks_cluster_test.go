@@ -320,7 +320,7 @@ resource "aws_eks_cluster" "test" {
   role_arn = "${aws_iam_role.test.arn}"
 
   vpc_config {
-    subnet_ids = ["${aws_subnet.test.*.id}"]
+    subnet_ids = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
   }
 
   depends_on = ["aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy", "aws_iam_role_policy_attachment.test-AmazonEKSServicePolicy"]
@@ -338,7 +338,7 @@ resource "aws_eks_cluster" "test" {
   version  = "%s"
 
   vpc_config {
-    subnet_ids = ["${aws_subnet.test.*.id}"]
+    subnet_ids = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
   }
 
   depends_on = ["aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy", "aws_iam_role_policy_attachment.test-AmazonEKSServicePolicy"]
@@ -364,7 +364,7 @@ resource "aws_eks_cluster" "test" {
 
   vpc_config {
     security_group_ids = ["${aws_security_group.test.id}"]
-    subnet_ids         = ["${aws_subnet.test.*.id}"]
+    subnet_ids         = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
   }
 
   depends_on = ["aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy", "aws_iam_role_policy_attachment.test-AmazonEKSServicePolicy"]

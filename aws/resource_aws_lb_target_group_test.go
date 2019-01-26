@@ -226,6 +226,27 @@ func TestAccAWSLBTargetGroup_networkLB_TargetGroup(t *testing.T) {
 	})
 }
 
+func TestAccAWSLBTargetGroup_Protocol_Tls(t *testing.T) {
+	var targetGroup1 elbv2.TargetGroup
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_lb_target_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLBTargetGroupConfig_Protocol_Tls(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBTargetGroupExists(resourceName, &targetGroup1),
+					resource.TestCheckResourceAttr(resourceName, "protocol", "TLS"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSLBTargetGroup_networkLB_TargetGroupWithProxy(t *testing.T) {
 	var confBefore, confAfter elbv2.TargetGroup
 	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
@@ -1303,6 +1324,37 @@ resource "aws_vpc" "test" {
     TestName = "terraform-testacc-lb-target-group-update-health-check"
   }
 }`, targetGroupName)
+}
+
+func testAccAWSLBTargetGroupConfig_Protocol_Tls(targetGroupName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "tf-acc-test-lb-target-group-protocol-tls"
+  }
+}
+
+resource "aws_lb_target_group" "test" {
+  name     = %q
+  port     = 443
+  protocol = "TLS"
+  vpc_id   = "${aws_vpc.test.id}"
+
+  health_check {
+    interval            = 10
+    port                = "traffic-port"
+    protocol            = "TCP"
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+  }
+
+  tags = {
+    Name = "tf-acc-test-lb-target-group-protocol-tls"
+  }
+}
+`, targetGroupName)
 }
 
 func testAccAWSLBTargetGroupConfig_typeTCP(targetGroupName string) string {

@@ -48,7 +48,7 @@ resource "aws_cloudwatch_metric_alarm" "bat" {
   statistic           = "Average"
   threshold           = "80"
 
-  dimensions {
+  dimensions = {
     AutoScalingGroupName = "${aws_autoscaling_group.bar.name}"
   }
 

@@ -323,7 +323,7 @@ func testAccAWSDAXClusterConfig(rString string) string {
 		  replication_factor = 1
 		  description        = "test cluster"
 
-		  tags {
+		  tags = {
 		    foo = "bar"
 		  }
 		}
@@ -339,7 +339,7 @@ func testAccAWSDAXClusterConfigWithEncryption(rString string, enabled bool) stri
 		  replication_factor = 1
 		  description        = "test cluster"
 
-		  tags {
+		  tags = {
 		    foo = "bar"
 		  }
 

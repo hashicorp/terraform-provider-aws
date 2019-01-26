@@ -107,6 +107,27 @@ func TestAccAWSLBListener_https(t *testing.T) {
 	})
 }
 
+func TestAccAWSLBListener_Protocol_Tls(t *testing.T) {
+	var listener1 elbv2.Listener
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_lb_listener.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProvidersWithTLS,
+		CheckDestroy: testAccCheckAWSLBListenerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLBListenerConfig_Protocol_Tls(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBListenerExists(resourceName, &listener1),
+					resource.TestCheckResourceAttr(resourceName, "protocol", "TLS"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSLBListener_redirect(t *testing.T) {
 	var conf elbv2.Listener
 	lbName := fmt.Sprintf("testlistener-redirect-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
@@ -403,7 +424,7 @@ resource "aws_lb" "alb_test" {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id}"]
+  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
   idle_timeout = 30
   enable_deletion_protection = false
@@ -499,7 +520,7 @@ resource "aws_alb" "alb_test" {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id}"]
+  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
   idle_timeout = 30
   enable_deletion_protection = false
@@ -597,7 +618,7 @@ resource "aws_lb" "alb_test" {
   name            = "%s"
   internal        = false
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id}"]
+  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
   idle_timeout = 30
   enable_deletion_protection = false
@@ -716,6 +737,100 @@ resource "tls_self_signed_cert" "example" {
 `, lbName, targetGroupName, acctest.RandInt())
 }
 
+func testAccAWSLBListenerConfig_Protocol_Tls(rName string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {}
+
+resource "tls_private_key" "test" {
+  algorithm = "RSA"
+}
+
+resource "tls_self_signed_cert" "test" {
+  allowed_uses = [
+    "key_encipherment",
+    "digital_signature",
+    "server_auth",
+  ]
+  key_algorithm         = "RSA"
+  private_key_pem       = "${tls_private_key.test.private_key_pem}"
+  validity_period_hours = 12
+
+  subject {
+    common_name  = "example.com"
+    organization = "ACME Examples, Inc"
+  }
+}
+
+resource "aws_acm_certificate" "test" {
+  certificate_body = "${tls_self_signed_cert.test.cert_pem}"
+  private_key      = "${tls_private_key.test.private_key_pem}"
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "tf-acc-test-lb-listener-protocol-tls"
+  }
+}
+
+resource "aws_subnet" "test" {
+  count = 2
+
+  availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
+  cidr_block        = "10.0.${count.index}.0/24"
+  vpc_id            = "${aws_vpc.test.id}"
+
+  tags = {
+    Name = "tf-acc-test-lb-listener-protocol-tls"
+  }
+}
+
+resource "aws_lb" "test" {
+  internal           = true
+  load_balancer_type = "network"
+  name               = %q
+  subnets            = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
+
+  tags = {
+    Name = "tf-acc-test-lb-listener-protocol-tls"
+  }
+}
+
+resource "aws_lb_target_group" "test" {
+  name     = %q
+  port     = 443
+  protocol = "TCP"
+  vpc_id   = "${aws_vpc.test.id}"
+
+  health_check {
+    interval            = 10
+    port                = "traffic-port"
+    protocol            = "TCP"
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+  }
+
+  tags = {
+    Name = "tf-acc-test-lb-listener-protocol-tls"
+  }
+}
+
+resource "aws_lb_listener" "test" {
+  certificate_arn   = "${aws_acm_certificate.test.arn}"
+  load_balancer_arn = "${aws_lb.test.arn}"
+  port              = "443"
+  protocol          = "TLS"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
+
+  default_action {
+    target_group_arn = "${aws_lb_target_group.test.arn}"
+    type             = "forward"
+  }
+}
+`, rName, rName)
+}
+
 func testAccAWSLBListenerConfig_redirect(lbName string) string {
 	return fmt.Sprintf(`resource "aws_lb_listener" "front_end" {
   load_balancer_arn = "${aws_lb.alb_test.id}"
@@ -736,7 +851,7 @@ resource "aws_lb" "alb_test" {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id}"]
+  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
   idle_timeout = 30
   enable_deletion_protection = false
@@ -818,7 +933,7 @@ resource "aws_lb" "alb_test" {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id}"]
+  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
   idle_timeout = 30
   enable_deletion_protection = false
@@ -886,7 +1001,7 @@ resource "aws_lb" "test" {
   name            = "%s"
   internal        = false
   security_groups = ["${aws_security_group.test.id}"]
-  subnets         = ["${aws_subnet.test.*.id}"]
+  subnets         = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
   enable_deletion_protection = false
 }
 
@@ -1014,7 +1129,7 @@ resource "aws_lb_listener" "test" {
       user_pool_client_id = "${aws_cognito_user_pool_client.test.id}"
       user_pool_domain = "${aws_cognito_user_pool_domain.test.domain}"
 
-      authentication_request_extra_params {
+      authentication_request_extra_params = {
         param  = "test"
       }
     }
@@ -1034,7 +1149,7 @@ resource "aws_lb" "test" {
   name            = "%s"
   internal        = false
   security_groups = ["${aws_security_group.test.id}"]
-  subnets         = ["${aws_subnet.test.*.id}"]
+  subnets         = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
   enable_deletion_protection = false
 }
 
@@ -1144,7 +1259,7 @@ resource "aws_lb_listener" "test" {
       token_endpoint = "https://example.com/token_endpoint"
       user_info_endpoint = "https://example.com/user_info_endpoint"
 
-      authentication_request_extra_params {
+      authentication_request_extra_params = {
         param  = "test"
       }
     }
@@ -1185,7 +1300,7 @@ resource "aws_lb_listener" "test" {
       token_endpoint         = "https://example.com/token_endpoint"
       user_info_endpoint     = "https://example.com/user_info_endpoint"
 
-      authentication_request_extra_params {
+      authentication_request_extra_params = {
         param  = "test"
       }
     }
@@ -1229,7 +1344,7 @@ resource "aws_lb" "test" {
   internal                   = true
   name                       = "${var.rName}"
   security_groups            = ["${aws_security_group.test.id}"]
-  subnets                    = ["${aws_subnet.test.*.id}"]
+  subnets                    = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
 }
 
 resource "aws_lb_target_group" "test" {

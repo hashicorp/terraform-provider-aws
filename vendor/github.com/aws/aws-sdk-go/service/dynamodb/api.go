@@ -1534,6 +1534,8 @@ func (c *DynamoDB) DescribeEndpointsRequest(input *DescribeEndpointsInput) (req 
 
 // DescribeEndpoints API operation for Amazon DynamoDB.
 //
+// Returns the regional endpoint information.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -3924,29 +3926,38 @@ func (c *DynamoDB) TransactGetItemsRequest(input *TransactGetItemsInput) (req *r
 //   * ErrCodeTransactionCanceledException "TransactionCanceledException"
 //   The entire transaction request was rejected.
 //
-//   DynamoDB will reject the entire TransactWriteItems request if any of the
-//   following is true:
+//   DynamoDB rejects a TransactWriteItems request under the following circumstances:
 //
-//      *  A table in the TransactWriteItems request does not exist.
+//      * A condition in one of the condition expressions is not met.
 //
-//      *  A table in the TransactWriteItems request is on a different account
+//      * A table in the TransactWriteItems request is in a different account
 //      or region.
 //
-//      *  Operations contain item schema violations.
+//      * More than one action in the TransactWriteItems operation targets the
+//      same item.
 //
-//      *  More than one write operation (UpdateItem, PutItem, DeleteItem) operates
-//      on the same item.
+//      * There is insufficient provisioned capacity for the transaction to be
+//      completed.
 //
-//      *  More than one check operation operates on the same item.
+//      * An item size becomes too large (larger than 400 KB), or a local secondary
+//      index (LSI) becomes too large, or a similar validation error occurs because
+//      of changes made by the transaction.
 //
-//      *  The number of operations sent in the TransactWriteItems request is
-//      0 or greater than 10.
+//      * There is a user error, such as an invalid data format.
 //
-//      *  A TransactWriteItems request exceeds the maximum 4 MB request size.
+//   DynamoDB rejects a TransactGetItems request under the following circumstances:
 //
+//      * There is an ongoing TransactGetItems operation that conflicts with a
+//      concurrent PutItem, UpdateItem, DeleteItem or TransactWriteItems request.
+//      In this case the TransactGetItems operation fails with a TransactionCanceledException.
 //
-//      *  Any operation in the TransactWriteItems request would cause an item
-//      to become larger than 400KB.
+//      * A table in the TransactGetItems request is in a different account or
+//      region.
+//
+//      * There is insufficient provisioned capacity for the transaction to be
+//      completed.
+//
+//      * There is a user error, such as an invalid data format.
 //
 //   * ErrCodeProvisionedThroughputExceededException "ProvisionedThroughputExceededException"
 //   Your request rate is too high. The AWS SDKs for DynamoDB automatically retry
@@ -4114,29 +4125,38 @@ func (c *DynamoDB) TransactWriteItemsRequest(input *TransactWriteItemsInput) (re
 //   * ErrCodeTransactionCanceledException "TransactionCanceledException"
 //   The entire transaction request was rejected.
 //
-//   DynamoDB will reject the entire TransactWriteItems request if any of the
-//   following is true:
+//   DynamoDB rejects a TransactWriteItems request under the following circumstances:
 //
-//      *  A table in the TransactWriteItems request does not exist.
+//      * A condition in one of the condition expressions is not met.
 //
-//      *  A table in the TransactWriteItems request is on a different account
+//      * A table in the TransactWriteItems request is in a different account
 //      or region.
 //
-//      *  Operations contain item schema violations.
+//      * More than one action in the TransactWriteItems operation targets the
+//      same item.
 //
-//      *  More than one write operation (UpdateItem, PutItem, DeleteItem) operates
-//      on the same item.
+//      * There is insufficient provisioned capacity for the transaction to be
+//      completed.
 //
-//      *  More than one check operation operates on the same item.
+//      * An item size becomes too large (larger than 400 KB), or a local secondary
+//      index (LSI) becomes too large, or a similar validation error occurs because
+//      of changes made by the transaction.
 //
-//      *  The number of operations sent in the TransactWriteItems request is
-//      0 or greater than 10.
+//      * There is a user error, such as an invalid data format.
 //
-//      *  A TransactWriteItems request exceeds the maximum 4 MB request size.
+//   DynamoDB rejects a TransactGetItems request under the following circumstances:
 //
+//      * There is an ongoing TransactGetItems operation that conflicts with a
+//      concurrent PutItem, UpdateItem, DeleteItem or TransactWriteItems request.
+//      In this case the TransactGetItems operation fails with a TransactionCanceledException.
 //
-//      *  Any operation in the TransactWriteItems request would cause an item
-//      to become larger than 400KB.
+//      * A table in the TransactGetItems request is in a different account or
+//      region.
+//
+//      * There is insufficient provisioned capacity for the transaction to be
+//      completed.
+//
+//      * There is a user error, such as an invalid data format.
 //
 //   * ErrCodeTransactionInProgressException "TransactionInProgressException"
 //   The transaction with the given request token is already in progress.
@@ -5194,7 +5214,7 @@ type AttributeValue struct {
 
 	// An attribute of type List. For example:
 	//
-	// "L": ["Cookies", "Coffee", 3.14159]
+	// "L": [ {"S": "Cookies"} , {"S": "Coffee"}, {"N", "3.14159"}]
 	L []*AttributeValue `type:"list"`
 
 	// An attribute of type Map. For example:
@@ -5887,6 +5907,8 @@ type BackupDetails struct {
 	//    no additional cost). System backups allow you to restore the deleted table
 	//    to the state it was in just before the point of deletion.
 	//
+	//    * AWS_BACKUP - On-demand backup created by you from AWS Backup service.
+	//
 	// BackupType is a required field
 	BackupType *string `type:"string" required:"true" enum:"BackupType"`
 }
@@ -5974,6 +5996,8 @@ type BackupSummary struct {
 	//    a SYSTEM backup is automatically created and is retained for 35 days (at
 	//    no additional cost). System backups allow you to restore the deleted table
 	//    to the state it was in just before the point of deletion.
+	//
+	//    * AWS_BACKUP - On-demand backup created by you from AWS Backup service.
 	BackupType *string `type:"string" enum:"BackupType"`
 
 	// ARN associated with the table.
@@ -7247,8 +7271,8 @@ type CreateTableInput struct {
 	//    using PAY_PER_REQUEST for unpredictable workloads.
 	BillingMode *string `type:"string" enum:"BillingMode"`
 
-	// One or more global secondary indexes (the maximum is five) to be created
-	// on the table. Each global secondary index in the array includes the following:
+	// One or more global secondary indexes (the maximum is 20) to be created on
+	// the table. Each global secondary index in the array includes the following:
 	//
 	//    * IndexName - The name of the global secondary index. Must be unique only
 	//    for this table.
@@ -7272,7 +7296,7 @@ type CreateTableInput struct {
 	// NonKeyAttributes - A list of one or more non-key attribute names that are
 	//    projected into the secondary index. The total count of attributes provided
 	//    in NonKeyAttributes, summed across all of the secondary indexes, must
-	//    not exceed 20. If you project the same attribute into two different indexes,
+	//    not exceed 100. If you project the same attribute into two different indexes,
 	//    this counts as two distinct attributes when determining the total.
 	//
 	//    * ProvisionedThroughput - The provisioned throughput settings for the
@@ -7316,10 +7340,10 @@ type CreateTableInput struct {
 	// KeySchema is a required field
 	KeySchema []*KeySchemaElement `min:"1" type:"list" required:"true"`
 
-	// One or more local secondary indexes (the maximum is five) to be created on
-	// the table. Each index is scoped to a given partition key value. There is
-	// a 10 GB size limit per partition key value; otherwise, the size of a local
-	// secondary index is unconstrained.
+	// One or more local secondary indexes (the maximum is 5) to be created on the
+	// table. Each index is scoped to a given partition key value. There is a 10
+	// GB size limit per partition key value; otherwise, the size of a local secondary
+	// index is unconstrained.
 	//
 	// Each local secondary index in the array includes the following:
 	//
@@ -7346,7 +7370,7 @@ type CreateTableInput struct {
 	// NonKeyAttributes - A list of one or more non-key attribute names that are
 	//    projected into the secondary index. The total count of attributes provided
 	//    in NonKeyAttributes, summed across all of the secondary indexes, must
-	//    not exceed 20. If you project the same attribute into two different indexes,
+	//    not exceed 100. If you project the same attribute into two different indexes,
 	//    this counts as two distinct attributes when determining the total.
 	LocalSecondaryIndexes []*LocalSecondaryIndex `type:"list"`
 
@@ -8331,6 +8355,8 @@ func (s DescribeEndpointsInput) GoString() string {
 type DescribeEndpointsOutput struct {
 	_ struct{} `type:"structure"`
 
+	// List of endpoints.
+	//
 	// Endpoints is a required field
 	Endpoints []*Endpoint `type:"list" required:"true"`
 }
@@ -8690,12 +8716,17 @@ func (s *DescribeTimeToLiveOutput) SetTimeToLiveDescription(v *TimeToLiveDescrip
 	return s
 }
 
+// An endpoint information details.
 type Endpoint struct {
 	_ struct{} `type:"structure"`
 
+	// IP address of the endpoint.
+	//
 	// Address is a required field
 	Address *string `type:"string" required:"true"`
 
+	// Endpoint cache time to live (TTL) value.
+	//
 	// CachePeriodInMinutes is a required field
 	CachePeriodInMinutes *int64 `type:"long" required:"true"`
 }
@@ -15737,6 +15768,9 @@ const (
 
 	// BackupTypeSystem is a BackupType enum value
 	BackupTypeSystem = "SYSTEM"
+
+	// BackupTypeAwsBackup is a BackupType enum value
+	BackupTypeAwsBackup = "AWS_BACKUP"
 )
 
 const (
@@ -15745,6 +15779,9 @@ const (
 
 	// BackupTypeFilterSystem is a BackupTypeFilter enum value
 	BackupTypeFilterSystem = "SYSTEM"
+
+	// BackupTypeFilterAwsBackup is a BackupTypeFilter enum value
+	BackupTypeFilterAwsBackup = "AWS_BACKUP"
 
 	// BackupTypeFilterAll is a BackupTypeFilter enum value
 	BackupTypeFilterAll = "ALL"

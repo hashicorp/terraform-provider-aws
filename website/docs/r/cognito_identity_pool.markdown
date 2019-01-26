@@ -34,7 +34,7 @@ resource "aws_cognito_identity_pool" "main" {
     server_side_token_check = false
   }
 
-  supported_login_providers {
+  supported_login_providers = {
     "graph.facebook.com"  = "7346241598935552"
     "accounts.google.com" = "123456789012.apps.googleusercontent.com"
   }

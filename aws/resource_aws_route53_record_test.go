@@ -1077,7 +1077,7 @@ resource "aws_route53_record" "www-off" {
   name = "www"
   type = "CNAME"
   ttl = "5"
-  weighted_routing_policy = {
+  weighted_routing_policy {
 	weight = 0
   }
   set_identifier = "off"

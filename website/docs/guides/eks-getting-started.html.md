@@ -477,13 +477,13 @@ This offers flexibility to scale up and down the worker nodes on demand when
 used in conjunction with AutoScaling policies (not implemented here).
 
 First, let us create a data source to fetch the latest Amazon Machine Image
-(AMI) that Amazon provides with an EKS compatible Kubernetes baked in.
+(AMI) that Amazon provides with an EKS compatible Kubernetes baked in. It will filter for and select an AMI compatible with the specific Kubernetes version being deployed.
 
 ```hcl
 data "aws_ami" "eks-worker" {
   filter {
     name   = "name"
-    values = ["amazon-eks-node-v*"]
+    values = ["amazon-eks-node-${aws_eks_cluster.demo.version}-v*"]
   }
 
   most_recent = true

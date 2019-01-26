@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"testing"
 	"time"
@@ -12,6 +13,95 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_ecs_service", &resource.Sweeper{
+		Name: "aws_ecs_service",
+		F:    testSweepEcsServices,
+	})
+}
+
+func testSweepEcsServices(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).ecsconn
+
+	err = conn.ListClustersPages(&ecs.ListClustersInput{}, func(page *ecs.ListClustersOutput, isLast bool) bool {
+		if page == nil {
+			return !isLast
+		}
+
+		for _, clusterARNPtr := range page.ClusterArns {
+			input := &ecs.ListServicesInput{
+				Cluster: clusterARNPtr,
+			}
+
+			err = conn.ListServicesPages(input, func(page *ecs.ListServicesOutput, isLast bool) bool {
+				if page == nil {
+					return !isLast
+				}
+
+				for _, serviceARNPtr := range page.ServiceArns {
+					describeServicesInput := &ecs.DescribeServicesInput{
+						Cluster:  clusterARNPtr,
+						Services: []*string{serviceARNPtr},
+					}
+					serviceARN := aws.StringValue(serviceARNPtr)
+
+					log.Printf("[DEBUG] Describing ECS Service: %s", serviceARN)
+					describeServicesOutput, err := conn.DescribeServices(describeServicesInput)
+
+					if isAWSErr(err, ecs.ErrCodeServiceNotFoundException, "") {
+						continue
+					}
+
+					if err != nil {
+						log.Printf("[ERROR] Error describing ECS Service (%s): %s", serviceARN, err)
+						continue
+					}
+
+					if describeServicesOutput == nil || len(describeServicesOutput.Services) == 0 {
+						continue
+					}
+
+					service := describeServicesOutput.Services[0]
+
+					if aws.StringValue(service.Status) == "INACTIVE" {
+						continue
+					}
+
+					deleteServiceInput := &ecs.DeleteServiceInput{
+						Cluster: service.ClusterArn,
+						Force:   aws.Bool(true),
+						Service: service.ServiceArn,
+					}
+
+					log.Printf("[INFO] Deleting ECS Service: %s", serviceARN)
+					_, err = conn.DeleteService(deleteServiceInput)
+
+					if err != nil {
+						log.Printf("[ERROR] Error deleting ECS Service (%s): %s", serviceARN, err)
+					}
+				}
+
+				return !isLast
+			})
+		}
+
+		return !isLast
+	})
+	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping ECS Service sweep for %s: %s", region, err)
+			return nil
+		}
+		return fmt.Errorf("error retrieving ECS Services: %s", err)
+	}
+
+	return nil
+}
 
 func TestAccAWSEcsService_withARN(t *testing.T) {
 	var service ecs.Service
@@ -82,7 +172,7 @@ func TestAccAWSEcsService_basicImport(t *testing.T) {
 				ImportStateId:     fmt.Sprintf("%s/nonexistent", clusterName),
 				ImportState:       true,
 				ImportStateVerify: false,
-				ExpectError:       regexp.MustCompile(`Please verify the ID is correct`),
+				ExpectError:       regexp.MustCompile(`(Please verify the ID is correct|Cannot import non-existent remote object)`),
 			},
 		},
 	})
@@ -1361,7 +1451,7 @@ resource "aws_ecs_service" "main" {
   launch_type = "FARGATE"
   network_configuration {
     security_groups = ["${aws_security_group.allow_all_a.id}", "${aws_security_group.allow_all_b.id}"]
-    subnets = ["${aws_subnet.main.*.id}"]
+    subnets = ["${aws_subnet.main.*.id[0]}", "${aws_subnet.main.*.id[1]}"]
     assign_public_ip = %s
   }
 }
@@ -1374,7 +1464,7 @@ data "aws_availability_zones" "available" {}
 
 resource "aws_vpc" "main" {
   cidr_block = "10.10.0.0/16"
-  tags {
+  tags = {
     Name = "terraform-testacc-ecs-service-with-launch-type-fargate-and-platform-version"
   }
 }
@@ -1384,7 +1474,7 @@ resource "aws_subnet" "main" {
   cidr_block = "${cidrsubnet(aws_vpc.main.cidr_block, 8, count.index)}"
   availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
   vpc_id = "${aws_vpc.main.id}"
-  tags {
+  tags = {
     Name = "tf-acc-ecs-service-with-launch-type-fargate-and-platform-version"
   }
 }
@@ -1449,7 +1539,7 @@ resource "aws_ecs_service" "main" {
   platform_version = %q
   network_configuration {
     security_groups = ["${aws_security_group.allow_all_a.id}", "${aws_security_group.allow_all_b.id}"]
-    subnets = ["${aws_subnet.main.*.id}"]
+    subnets = ["${aws_subnet.main.*.id[0]}", "${aws_subnet.main.*.id[1]}"]
     assign_public_ip = false
   }
 }
@@ -1556,7 +1646,7 @@ resource "aws_lb_target_group" "test" {
 resource "aws_lb" "main" {
   name     = "%s"
   internal = true
-  subnets  = ["${aws_subnet.main.*.id}"]
+  subnets  = ["${aws_subnet.main.*.id[0]}", "${aws_subnet.main.*.id[1]}"]
 }
 
 resource "aws_lb_listener" "front_end" {
@@ -1683,7 +1773,7 @@ EOF
 
 resource "aws_elb" "main" {
   internal = true
-  subnets  = ["${aws_subnet.test.*.id}"]
+  subnets  = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
 
   listener {
     instance_port = 8080
@@ -1834,7 +1924,7 @@ EOF
 
 resource "aws_elb" "main" {
   internal = true
-  subnets  = ["${aws_subnet.test.*.id}"]
+  subnets  = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
 
   listener {
     instance_port = %[6]d
@@ -2087,7 +2177,7 @@ resource "aws_lb_target_group" "test" {
 resource "aws_lb" "main" {
   name            = "%s"
   internal        = true
-  subnets         = ["${aws_subnet.main.*.id}"]
+  subnets         = ["${aws_subnet.main.*.id[0]}", "${aws_subnet.main.*.id[1]}"]
 }
 
 resource "aws_lb_listener" "front_end" {
@@ -2208,7 +2298,7 @@ resource "aws_ecs_service" "main" {
   desired_count = 1
   network_configuration {
     security_groups = [%s]
-    subnets = ["${aws_subnet.main.*.id}"]
+    subnets = ["${aws_subnet.main.*.id[0]}", "${aws_subnet.main.*.id[1]}"]
   }
 }
 `, sg1Name, sg2Name, clusterName, tdName, svcName, securityGroups)
@@ -2289,7 +2379,7 @@ resource "aws_ecs_service" "test" {
   }
   network_configuration {
     security_groups = ["${aws_security_group.test.id}"]
-    subnets = ["${aws_subnet.test.*.id}"]
+    subnets = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
   }
 }
 `, rName, rName, rName, clusterName, tdName, svcName)
@@ -2464,7 +2554,7 @@ resource "aws_subnet" "test" {
 resource "aws_lb" "test" {
   internal = true
   name     = %q
-  subnets  = ["${aws_subnet.test.*.id}"]
+  subnets  = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
 }
 
 resource "aws_lb_listener" "test" {

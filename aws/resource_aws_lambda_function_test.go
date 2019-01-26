@@ -1837,7 +1837,7 @@ resource "aws_lambda_function" "lambda_function_test" {
 data "template_file" "function_version" {
   template = "$${function_version}"
 
-  vars {
+  vars = {
     function_version = "${aws_lambda_function.lambda_function_test.version}"
   }
 }
@@ -1845,7 +1845,7 @@ data "template_file" "function_version" {
 data "template_file" "last_modified" {
   template = "$${last_modified}"
 
-  vars {
+  vars = {
     last_modified = "${aws_lambda_function.lambda_function_test.last_modified}"
   }
 }
@@ -1853,7 +1853,7 @@ data "template_file" "last_modified" {
 data "template_file" "qualified_arn" {
   template = "$${qualified_arn}"
 
-  vars {
+  vars = {
     qualified_arn = "${aws_lambda_function.lambda_function_test.qualified_arn}"
   }
 }
@@ -2013,7 +2013,7 @@ resource "aws_lambda_function" "lambda_function_test" {
     handler = "exports.example"
     runtime = "nodejs8.10"
 
-    vpc_config = {
+    vpc_config {
         subnet_ids = ["${aws_subnet.subnet_for_lambda.id}"]
         security_group_ids = ["${aws_security_group.sg_for_lambda.id}"]
     }
@@ -2029,7 +2029,7 @@ resource "aws_lambda_function" "lambda_function_test" {
     handler = "exports.example"
     runtime = "nodejs8.10"
 
-    vpc_config = {
+    vpc_config {
         subnet_ids = ["${aws_subnet.subnet_for_lambda.id}", "${aws_subnet.subnet_for_lambda_2.id}"]
         security_group_ids = ["${aws_security_group.sg_for_lambda.id}", "${aws_security_group.sg_for_lambda_2.id}"]
     }
@@ -2286,7 +2286,7 @@ resource "aws_lambda_function" "lambda_function_local" {
 data "template_file" "last_modified" {
   template = "$${last_modified}"
 
-  vars {
+  vars = {
     last_modified = "${aws_lambda_function.lambda_function_local.last_modified}"
   }
 }

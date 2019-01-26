@@ -564,6 +564,46 @@ func TestAccAWSMqBroker_updateUsers(t *testing.T) {
 	})
 }
 
+func TestAccAWSMqBroker_updateTags(t *testing.T) {
+	sgName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	brokerName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMqBrokerConfig_updateTags1(sgName, brokerName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsMqBrokerExists("aws_mq_broker.test"),
+					resource.TestCheckResourceAttr("aws_mq_broker.test", "tags.%", "1"),
+					resource.TestCheckResourceAttr("aws_mq_broker.test", "tags.env", "test"),
+				),
+			},
+			// Adding new user + modify existing
+			{
+				Config: testAccMqBrokerConfig_updateTags2(sgName, brokerName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsMqBrokerExists("aws_mq_broker.test"),
+					resource.TestCheckResourceAttr("aws_mq_broker.test", "tags.%", "2"),
+					resource.TestCheckResourceAttr("aws_mq_broker.test", "tags.env", "test2"),
+					resource.TestCheckResourceAttr("aws_mq_broker.test", "tags.role", "test-role"),
+				),
+			},
+			// Deleting user + modify existing
+			{
+				Config: testAccMqBrokerConfig_updateTags3(sgName, brokerName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsMqBrokerExists("aws_mq_broker.test"),
+					resource.TestCheckResourceAttr("aws_mq_broker.test", "tags.%", "1"),
+					resource.TestCheckResourceAttr("aws_mq_broker.test", "tags.role", "test-role"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAwsMqBrokerDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).mqconn
 
@@ -756,7 +796,7 @@ resource "aws_mq_broker" "test" {
   }
   publicly_accessible = true
   security_groups = ["${aws_security_group.mq1.id}", "${aws_security_group.mq2.id}"]
-  subnet_ids = ["${aws_subnet.private.*.id}"]
+  subnet_ids = ["${aws_subnet.private.*.id[0]}", "${aws_subnet.private.*.id[1]}"]
   user {
     username = "Test"
     password = "TestTest1234"
@@ -834,6 +874,79 @@ resource "aws_mq_broker" "test" {
     username = "second"
     password = "TestTest2222"
     groups = ["admin"]
+  }
+}`, sgName, brokerName)
+}
+
+func testAccMqBrokerConfig_updateTags1(sgName, brokerName string) string {
+	return fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name = "%s"
+}
+
+resource "aws_mq_broker" "test" {
+  apply_immediately = true
+  broker_name = "%s"
+  engine_type = "ActiveMQ"
+  engine_version = "5.15.0"
+  host_instance_type = "mq.t2.micro"
+	security_groups = ["${aws_security_group.test.id}"]
+  user {
+    username = "Test"
+    password = "TestTest1234"
+	}
+
+  tags {
+    env = "test"
+  }
+}`, sgName, brokerName)
+}
+
+func testAccMqBrokerConfig_updateTags2(sgName, brokerName string) string {
+	return fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name = "%s"
+}
+
+resource "aws_mq_broker" "test" {
+  apply_immediately = true
+  broker_name = "%s"
+  engine_type = "ActiveMQ"
+  engine_version = "5.15.0"
+  host_instance_type = "mq.t2.micro"
+	security_groups = ["${aws_security_group.test.id}"]
+  user {
+    username = "Test"
+    password = "TestTest1234"
+	}
+
+  tags {
+		env = "test2"
+		role = "test-role"
+  }
+}`, sgName, brokerName)
+}
+
+func testAccMqBrokerConfig_updateTags3(sgName, brokerName string) string {
+	return fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name = "%s"
+}
+
+resource "aws_mq_broker" "test" {
+  apply_immediately = true
+  broker_name = "%s"
+  engine_type = "ActiveMQ"
+  engine_version = "5.15.0"
+  host_instance_type = "mq.t2.micro"
+	security_groups = ["${aws_security_group.test.id}"]
+  user {
+    username = "Test"
+    password = "TestTest1234"
+	}
+
+  tags {
+		role = "test-role"
   }
 }`, sgName, brokerName)
 }

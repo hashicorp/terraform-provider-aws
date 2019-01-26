@@ -1,4 +1,29 @@
-## 2.0.0 (Unreleased)
+## 1.58.0 (Unreleased)
+## 1.57.0 (January 26, 2019)
+
+NOTES:
+
+* provider: Fairly light release this week due to Terraform 0.12 upgrade and Terraform AWS Provider 2.0 related activities happening behind the scenes, which will continue through at least next week. For additional tracking information about those efforts, see the v2.0.0 milestone in GitHub.
+
+ENHANCEMENTS
+
+* data-source/aws_mq_broker: Add `tags` attribute ([#7193](https://github.com/terraform-providers/terraform-provider-aws/issues/7193))
+* provider: Switch codebase dependency management from `govendor` to Go modules ([#7165](https://github.com/terraform-providers/terraform-provider-aws/issues/7165))
+* resource/aws_autoscaling_policy: Support resource import ([#7195](https://github.com/terraform-providers/terraform-provider-aws/issues/7195))
+* resource/aws_lb_listener: Add `TLS` to `protocol` argument validation ([#7338](https://github.com/terraform-providers/terraform-provider-aws/issues/7338))
+* resource/aws_lb_target_group: Add `TLS` to `protocol` argument validation ([#7338](https://github.com/terraform-providers/terraform-provider-aws/issues/7338))
+* resource/aws_mq_broker: Add `tags` argument ([#7193](https://github.com/terraform-providers/terraform-provider-aws/issues/7193))
+* resource/aws_mq_configuration: Add `tags` argument ([#7193](https://github.com/terraform-providers/terraform-provider-aws/issues/7193))
+
+BUG FIXES
+
+* resource/aws_autoscaling_policy: Properly read `step_adjustment` into Terraform state ([#7336](https://github.com/terraform-providers/terraform-provider-aws/issues/7336))
+* resource/aws_emr_cluster: Fix regression with `instance_group` differences when using `name` ([#7324](https://github.com/terraform-providers/terraform-provider-aws/issues/7324))
+* resource/aws_iot_topic_rule: Prevent panic with missing SQS UseBase64 attribute in API response ([#7337](https://github.com/terraform-providers/terraform-provider-aws/issues/7337))
+* resource/aws_lambda_permission: Retry for Lambda function eventual consistency on creation ([#7327](https://github.com/terraform-providers/terraform-provider-aws/issues/7327))
+* resource/aws_rds_cluster_parameter_group: Prevent missing DBClusterParameterGroupName error on creation with generated names and `name_prefix` ([#7326](https://github.com/terraform-providers/terraform-provider-aws/issues/7326))
+* resource/aws_s3_bucket_object: Delete S3 objects with leading '/' in the key name ([#7268](https://github.com/terraform-providers/terraform-provider-aws/issues/7268))
+
 ## 1.56.0 (January 16, 2019)
 
 NOTES
