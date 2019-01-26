@@ -41,6 +41,30 @@ func TestAccAwsSESIdentityNotificationTopic_basic(t *testing.T) {
 	})
 }
 
+func TestAccAwsSESIdentityNotification_importBasic(t *testing.T) {
+	resourceName := "aws_ses_identity_notification_topic.test"
+	domain := fmt.Sprintf(
+		"%s.terraformtesting.com",
+		acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	topicName := fmt.Sprintf("test-topic-%d", acctest.RandInt())
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsSESIdentityNotificationTopicDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(testAccAwsSESIdentityNotificationTopicConfig_update, domain, topicName),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAwsSESIdentityNotificationTopicDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).sesConn
 

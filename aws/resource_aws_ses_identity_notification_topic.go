@@ -17,6 +17,9 @@ func resourceAwsSesNotificationTopic() *schema.Resource {
 		Read:   resourceAwsSesNotificationTopicRead,
 		Update: resourceAwsSesNotificationTopicSet,
 		Delete: resourceAwsSesNotificationTopicDelete,
+		Importer: &schema.ResourceImporter{
+			State: resourceAwsSesNotificationImport,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"topic_arn": {
@@ -134,6 +137,16 @@ func resourceAwsSesNotificationTopicDelete(d *schema.ResourceData, meta interfac
 	}
 
 	return resourceAwsSesNotificationTopicRead(d, meta)
+}
+
+func resourceAwsSesNotificationImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	identity, notificationType, err := decodeSesIdentityNotificationTopicId(d.Id())
+	if err != nil {
+		return nil, err
+	}
+	d.Set("identity", identity)
+	d.Set("notification_type", notificationType)
+	return []*schema.ResourceData{d}, nil
 }
 
 func decodeSesIdentityNotificationTopicId(id string) (string, string, error) {
