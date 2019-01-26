@@ -2,7 +2,10 @@
 
 ENHANCEMENTS
 
+* data-source/aws_mq_broker: Add `tags` attribute [GH-7193]
 * resource/aws_autoscaling_policy: Support resource import [GH-7195]
+* resource/aws_mq_broker: Add `tags` argument [GH-7193]
+* resource/aws_mq_configuration: Add `tags` argument [GH-7193]
 
 BUG FIXES
 
