@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/backup"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
@@ -55,13 +56,15 @@ func testAccCheckAwsBackupVaultDestroy(s *terraform.State) error {
 			BackupVaultName: aws.String(rs.Primary.ID),
 		}
 
-		resp, err := conn.DescriptBackupVault(input)
+		resp, err := conn.DescribeBackupVault(input)
 		if err != nil {
 			return err
 		}
 
-		if !isAWSErr(err, backup.ErrCodeResourceNotFoundException, "") {
-			return fmt.Errorf("Vault '%s' was not deleted properly", rs.Primary.ID)
+		if err == nil {
+			if *resp.BackupVaultName == rs.Primary.ID {
+				return fmt.Errorf("Vault '%s' was not deleted properly", rs.Primary.ID)
+			}
 		}
 	}
 

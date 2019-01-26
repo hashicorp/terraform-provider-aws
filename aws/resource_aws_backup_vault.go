@@ -1,16 +1,12 @@
 package aws
 
 import (
-	"fmt"
 	"regexp"
-	"strings"
-	"time"
 
 	"github.com/hashicorp/terraform/helper/validation"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/backup"
-	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -26,7 +22,7 @@ func resourceAwsBackupVault() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile("[a-z0-9\-]+")),
+				ValidateFunc: validation.StringMatch(regexp.MustCompile("[a-z0-9\\-]+"), "must contain alphanumeric characters or underscores"),
 			},
 			"tags": {
 				Type:     schema.TypeMap,
@@ -35,17 +31,17 @@ func resourceAwsBackupVault() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"kms_key_arn": {
-				Type:     		schema.TypeString,
-				Optional: 		true,
-				ValidateFunc:	validateArn,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validateArn,
 			},
 			"arn": {
-				Type:     		schema.TypeString,
-				Computed: 		true,
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"recovery_points": {
-				Type:     		schema.TypeInt,
-				Computed: 		true,
+				Type:     schema.TypeInt,
+				Computed: true,
 			},
 		},
 	}
@@ -55,18 +51,18 @@ func resourceAwsBackupVaultCreate(d *schema.ResourceData, meta interface{}) erro
 	conn := meta.(*AWSClient).backupconn
 
 	input := &backup.CreateBackupVaultInput{
-		BackupVaultName:	aws.String(d.Get("name").(string)),
+		BackupVaultName: aws.String(d.Get("name").(string)),
 	}
 
 	if v, ok := d.GetOk("tags"); ok {
-		input.BackupVaultTags = v.(map[string]interface{})
-	}	
+		input.BackupVaultTags = v.(map[string]*string)
+	}
 
 	if v, ok := d.GetOk("kms_key_arn"); ok {
 		input.EncryptionKeyArn = aws.String(v.(string))
 	}
 
-	resp, err := conn.CreateBackupVault(input)
+	_, err := conn.CreateBackupVault(input)
 	if err != nil {
 		return err
 	}
@@ -80,7 +76,7 @@ func resourceAwsBackupVaultRead(d *schema.ResourceData, meta interface{}) error 
 	conn := meta.(*AWSClient).backupconn
 
 	input := &backup.DescribeBackupVaultInput{
-		BackupVaultName:	aws.String(d.Id()),
+		BackupVaultName: aws.String(d.Id()),
 	}
 
 	resp, err := conn.DescribeBackupVault(input)
@@ -88,8 +84,8 @@ func resourceAwsBackupVaultRead(d *schema.ResourceData, meta interface{}) error 
 		return err
 	}
 
-	d.Set(d.Get("arn"), resp.BackupVaultArn)
-	d.Set(d.Get("recovery_points"), resp.NumberOfRecoveryPoints)
+	d.Set("arn", resp.BackupVaultArn)
+	d.Set("recovery_points", resp.NumberOfRecoveryPoints)
 
 	return nil
 }
@@ -102,10 +98,10 @@ func resourceAwsBackupVaultDelete(d *schema.ResourceData, meta interface{}) erro
 	conn := meta.(*AWSClient).backupconn
 
 	input := &backup.DeleteBackupVaultInput{
-		BackupVaultName:	aws.String(d.Get("name").(string)),
+		BackupVaultName: aws.String(d.Get("name").(string)),
 	}
 
-	resp, err := conn.DeleteBackupVault(input)
+	_, err := conn.DeleteBackupVault(input)
 	if err != nil {
 		return err
 	}
