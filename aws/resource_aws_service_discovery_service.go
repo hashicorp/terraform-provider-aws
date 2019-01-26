@@ -36,6 +36,7 @@ func resourceAwsServiceDiscoveryService() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
+				Computed: true,
 			},
 			"dns_config": {
 				Type:     schema.TypeList,
@@ -209,11 +210,8 @@ func resourceAwsServiceDiscoveryServiceUpdate(d *schema.ResourceData, meta inter
 		Id: aws.String(d.Id()),
 	}
 
-	sc := &servicediscovery.ServiceChange{}
-
-	if d.HasChange("dns_config") {
-		dnsConfig := d.Get("dns_config").([]interface{})
-		sc.DnsConfig = expandServiceDiscoveryDnsConfigChange(dnsConfig[0].(map[string]interface{}))
+	sc := &servicediscovery.ServiceChange{
+		DnsConfig: expandServiceDiscoveryDnsConfigChange(d.Get("dns_config").([]interface{})[0].(map[string]interface{})),
 	}
 
 	if d.HasChange("description") {
