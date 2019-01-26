@@ -4,6 +4,8 @@ ENHANCEMENTS
 
 * data-source/aws_mq_broker: Add `tags` attribute [GH-7193]
 * resource/aws_autoscaling_policy: Support resource import [GH-7195]
+* resource/aws_lb_listener: Add `TLS` to `protocol` argument validation [GH-7338]
+* resource/aws_lb_target_group: Add `TLS` to `protocol` argument validation [GH-7338]
 * resource/aws_mq_broker: Add `tags` argument [GH-7193]
 * resource/aws_mq_configuration: Add `tags` argument [GH-7193]
 
