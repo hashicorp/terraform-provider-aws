@@ -57,24 +57,6 @@ func resourceAwsIotRoleAliasCreate(d *schema.ResourceData, meta interface{}) err
 	return resourceAwsIotRoleAliasRead(d, meta)
 }
 
-func listIotRoleAliasPages(conn *iot.IoT, input *iot.ListRoleAliasesInput,
-	fn func(out *iot.ListRoleAliasesOutput, lastPage bool) bool) error {
-	for {
-		page, err := conn.ListRoleAliases(input)
-		if err != nil {
-			return err
-		}
-		lastPage := page.NextMarker == nil
-
-		shouldContinue := fn(page, lastPage)
-		if !shouldContinue || lastPage {
-			break
-		}
-		input.Marker = page.NextMarker
-	}
-	return nil
-}
-
 func getIotRoleAliasDescription(conn *iot.IoT, alias string) (*iot.RoleAliasDescription, error) {
 
 	roleAliasDescriptionOutput, err := conn.DescribeRoleAlias(&iot.DescribeRoleAliasInput{

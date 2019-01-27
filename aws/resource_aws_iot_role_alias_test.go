@@ -70,6 +70,24 @@ func TestAccAWSIotRoleAlias_basic(t *testing.T) {
 
 }
 
+func listIotRoleAliasPages(conn *iot.IoT, input *iot.ListRoleAliasesInput,
+	fn func(out *iot.ListRoleAliasesOutput, lastPage bool) bool) error {
+	for {
+		page, err := conn.ListRoleAliases(input)
+		if err != nil {
+			return err
+		}
+		lastPage := page.NextMarker == nil
+
+		shouldContinue := fn(page, lastPage)
+		if !shouldContinue || lastPage {
+			break
+		}
+		input.Marker = page.NextMarker
+	}
+	return nil
+}
+
 func testAccCheckAWSIotRoleAliasDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).iotconn
 	for _, rs := range s.RootModule().Resources {
