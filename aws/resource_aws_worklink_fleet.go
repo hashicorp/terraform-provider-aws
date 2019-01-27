@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform/helper/validation"
 )
 
-func resourceAwsWorkLink() *schema.Resource {
+func resourceAwsWorkLinkFleet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsWorkLinkCreate,
-		Read:   resourceAwsWorkLinkRead,
-		Update: resourceAwsWorkLinkUpdate,
-		Delete: resourceAwsWorkLinkDelete,
+		Create: resourceAwsWorkLinkFleetCreate,
+		Read:   resourceAwsWorkLinkFleetRead,
+		Update: resourceAwsWorkLinkFleetUpdate,
+		Delete: resourceAwsWorkLinkFleetDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -117,7 +117,7 @@ func resourceAwsWorkLink() *schema.Resource {
 	}
 }
 
-func resourceAwsWorkLinkCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsWorkLinkFleetCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).worklinkconn
 
 	input := &worklink.CreateFleetInput{
@@ -135,10 +135,10 @@ func resourceAwsWorkLinkCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(aws.StringValue(resp.FleetArn))
-	return resourceAwsWorkLinkUpdate(d, meta)
+	return resourceAwsWorkLinkFleetUpdate(d, meta)
 }
 
-func resourceAwsWorkLinkRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsWorkLinkFleetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).worklinkconn
 
 	resp, err := conn.DescribeFleetMetadata(&worklink.DescribeFleetMetadataInput{
@@ -197,7 +197,7 @@ func resourceAwsWorkLinkRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsWorkLinkUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsWorkLinkFleetUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).worklinkconn
 
 	input := &worklink.UpdateFleetMetadataInput{
@@ -245,10 +245,10 @@ func resourceAwsWorkLinkUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	return resourceAwsWorkLinkRead(d, meta)
+	return resourceAwsWorkLinkFleetRead(d, meta)
 }
 
-func resourceAwsWorkLinkDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsWorkLinkFleetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).worklinkconn
 
 	input := &worklink.DeleteFleetInput{

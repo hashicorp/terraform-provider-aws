@@ -13,19 +13,19 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAWSWorkLink_Basic(t *testing.T) {
+func TestAccAWSWorkLinkFleet_Basic(t *testing.T) {
 	suffix := randomString(10)
-	resourceName := "aws_worklink.test"
+	resourceName := "aws_worklink_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSWorkLinkDestroy,
+		CheckDestroy: testAccCheckAWSWorkLinkFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSWorkLinkConfig(suffix),
+				Config: testAccAWSWorkLinkFleetConfig(suffix),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWorkLinkExists(resourceName),
+					testAccCheckAWSWorkLinkFleetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "optimize_for_end_user_location", "true"),
 					resource.TestCheckResourceAttrSet(resourceName, "company_code"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_time"),
@@ -40,26 +40,26 @@ func TestAccAWSWorkLink_Basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSWorkLink_DisplayName(t *testing.T) {
+func TestAccAWSWorkLinkFleet_DisplayName(t *testing.T) {
 	suffix := randomString(10)
-	resourceName := "aws_worklink.test"
+	resourceName := "aws_worklink_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSWorkLinkDestroy,
+		CheckDestroy: testAccCheckAWSWorkLinkFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSWorkLinkConfigDisplayName(suffix, "display1"),
+				Config: testAccAWSWorkLinkFleetConfigDisplayName(suffix, "display1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWorkLinkExists(resourceName),
+					testAccCheckAWSWorkLinkFleetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "display_name", "display1"),
 				),
 			},
 			{
-				Config: testAccAWSWorkLinkConfigDisplayName(suffix, "display2"),
+				Config: testAccAWSWorkLinkFleetConfigDisplayName(suffix, "display2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWorkLinkExists(resourceName),
+					testAccCheckAWSWorkLinkFleetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "display_name", "display2"),
 				),
 			},
@@ -72,26 +72,26 @@ func TestAccAWSWorkLink_DisplayName(t *testing.T) {
 	})
 }
 
-func TestAccAWSWorkLink_OptimizeForEndUserLocation(t *testing.T) {
+func TestAccAWSWorkLinkFleet_OptimizeForEndUserLocation(t *testing.T) {
 	suffix := randomString(10)
-	resourceName := "aws_worklink.test"
+	resourceName := "aws_worklink_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSWorkLinkDestroy,
+		CheckDestroy: testAccCheckAWSWorkLinkFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSWorkLinkConfigOptimizeForEndUserLocation(suffix, false),
+				Config: testAccAWSWorkLinkFleetConfigOptimizeForEndUserLocation(suffix, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWorkLinkExists(resourceName),
+					testAccCheckAWSWorkLinkFleetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "optimize_for_end_user_location", "false"),
 				),
 			},
 			{
-				Config: testAccAWSWorkLinkConfigOptimizeForEndUserLocation(suffix, true),
+				Config: testAccAWSWorkLinkFleetConfigOptimizeForEndUserLocation(suffix, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWorkLinkExists(resourceName),
+					testAccCheckAWSWorkLinkFleetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "optimize_for_end_user_location", "true"),
 				),
 			},
@@ -104,19 +104,19 @@ func TestAccAWSWorkLink_OptimizeForEndUserLocation(t *testing.T) {
 	})
 }
 
-func TestAccAWSWorkLink_AuditStreamArn(t *testing.T) {
+func TestAccAWSWorkLinkFleet_AuditStreamArn(t *testing.T) {
 	rName := randomString(10)
-	resourceName := "aws_worklink.test"
+	resourceName := "aws_worklink_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSWorkLinkDestroy,
+		CheckDestroy: testAccCheckAWSWorkLinkFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSWorkLinkConfigAuditStreamArn(rName),
+				Config: testAccAWSWorkLinkFleetConfigAuditStreamArn(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWorkLinkExists(resourceName),
+					testAccCheckAWSWorkLinkFleetExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "audit_stream_arn", "aws_kinesis_stream.test_stream", "arn"),
 				),
 			},
@@ -129,19 +129,19 @@ func TestAccAWSWorkLink_AuditStreamArn(t *testing.T) {
 	})
 }
 
-func TestAccAWSWorkLink_Network(t *testing.T) {
+func TestAccAWSWorkLinkFleet_Network(t *testing.T) {
 	rName := randomString(10)
-	resourceName := "aws_worklink.test"
+	resourceName := "aws_worklink_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSWorkLinkDestroy,
+		CheckDestroy: testAccCheckAWSWorkLinkFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSWorkLinkConfigNetwork(rName),
+				Config: testAccAWSWorkLinkFleetConfigNetwork(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWorkLinkExists(resourceName),
+					testAccCheckAWSWorkLinkFleetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "network.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "network.0.vpc_id", "aws_vpc.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "network.0.subnet_ids.#", "2"),
@@ -157,20 +157,20 @@ func TestAccAWSWorkLink_Network(t *testing.T) {
 	})
 }
 
-func TestAccAWSWorkLink_DeviceCaCertificate(t *testing.T) {
+func TestAccAWSWorkLinkFleet_DeviceCaCertificate(t *testing.T) {
 	rName := randomString(10)
-	resourceName := "aws_worklink.test"
+	resourceName := "aws_worklink_fleet.test"
 	fName := "test-fixtures/worklink-device-ca-certificate.pem"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSWorkLinkDestroy,
+		CheckDestroy: testAccCheckAWSWorkLinkFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSWorkLinkConfigDeviceCaCertificate(rName, fName),
+				Config: testAccAWSWorkLinkFleetConfigDeviceCaCertificate(rName, fName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWorkLinkExists(resourceName),
+					testAccCheckAWSWorkLinkFleetExists(resourceName),
 					resource.TestMatchResourceAttr(resourceName, "device_ca_certificate", regexp.MustCompile("^-----BEGIN CERTIFICATE-----")),
 				),
 			},
@@ -183,20 +183,20 @@ func TestAccAWSWorkLink_DeviceCaCertificate(t *testing.T) {
 	})
 }
 
-func TestAccAWSWorkLink_IdentityProvider(t *testing.T) {
+func TestAccAWSWorkLinkFleet_IdentityProvider(t *testing.T) {
 	rName := randomString(10)
-	resourceName := "aws_worklink.test"
+	resourceName := "aws_worklink_fleet.test"
 	fName := "test-fixtures/saml-metadata.xml"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSWorkLinkDestroy,
+		CheckDestroy: testAccCheckAWSWorkLinkFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSWorkLinkConfigIdentityProvider(rName, fName),
+				Config: testAccAWSWorkLinkFleetConfigIdentityProvider(rName, fName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWorkLinkExists(resourceName),
+					testAccCheckAWSWorkLinkFleetExists(resourceName),
 				),
 			},
 			{
@@ -208,20 +208,20 @@ func TestAccAWSWorkLink_IdentityProvider(t *testing.T) {
 	})
 }
 
-func TestAccAWSWorkLink_Disappears(t *testing.T) {
+func TestAccAWSWorkLinkFleet_Disappears(t *testing.T) {
 	rName := randomString(10)
-	resourceName := "aws_worklink.test"
+	resourceName := "aws_worklink_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSWorkLinkDestroy,
+		CheckDestroy: testAccCheckAWSWorkLinkFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSWorkLinkConfig(rName),
+				Config: testAccAWSWorkLinkFleetConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWorkLinkExists(resourceName),
-					testAccCheckAWSWorkLinkDisappears(resourceName),
+					testAccCheckAWSWorkLinkFleetExists(resourceName),
+					testAccCheckAWSWorkLinkFleetDisappears(resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -229,7 +229,7 @@ func TestAccAWSWorkLink_Disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSWorkLinkDisappears(resourceName string) resource.TestCheckFunc {
+func testAccCheckAWSWorkLinkFleetDisappears(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -265,11 +265,11 @@ func testAccCheckAWSWorkLinkDisappears(resourceName string) resource.TestCheckFu
 	}
 }
 
-func testAccCheckAWSWorkLinkDestroy(s *terraform.State) error {
+func testAccCheckAWSWorkLinkFleetDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).worklinkconn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_worklink" {
+		if rs.Type != "aws_worklink_fleet" {
 			continue
 		}
 
@@ -292,7 +292,7 @@ func testAccCheckAWSWorkLinkDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSWorkLinkExists(n string) resource.TestCheckFunc {
+func testAccCheckAWSWorkLinkFleetExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -312,20 +312,20 @@ func testAccCheckAWSWorkLinkExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccAWSWorkLinkConfig(r string) string {
+func testAccAWSWorkLinkFleetConfig(r string) string {
 	return fmt.Sprintf(`
 
-resource "aws_worklink" "test" {
+resource "aws_worklink_fleet" "test" {
 	name = "tf-worklink-fleet-%s"
 }
 
 `, r)
 }
 
-func testAccAWSWorkLinkConfigDisplayName(r, displayName string) string {
+func testAccAWSWorkLinkFleetConfigDisplayName(r, displayName string) string {
 	return fmt.Sprintf(`
 
-resource "aws_worklink" "test" {
+resource "aws_worklink_fleet" "test" {
 	name = "tf-worklink-fleet-%s"
 	display_name = "%s"
 }
@@ -333,10 +333,10 @@ resource "aws_worklink" "test" {
 `, r, displayName)
 }
 
-func testAccAWSWorkLinkConfigOptimizeForEndUserLocation(r string, b bool) string {
+func testAccAWSWorkLinkFleetConfigOptimizeForEndUserLocation(r string, b bool) string {
 	return fmt.Sprintf(`
 
-resource "aws_worklink" "test" {
+resource "aws_worklink_fleet" "test" {
 	name = "tf-worklink-fleet-%s"
 	optimize_for_end_user_location = %t
 }
@@ -344,7 +344,7 @@ resource "aws_worklink" "test" {
 `, r, b)
 }
 
-func testAccAWSWorkLinkConfigNetwork_Base(rName string) string {
+func testAccAWSWorkLinkFleetConfigNetwork_Base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {}
 
@@ -383,11 +383,11 @@ resource "aws_subnet" "test" {
 `, rName, rName)
 }
 
-func testAccAWSWorkLinkConfigNetwork(r string) string {
+func testAccAWSWorkLinkFleetConfigNetwork(r string) string {
 	return fmt.Sprintf(`
 %s
 
-resource "aws_worklink" "test" {
+resource "aws_worklink_fleet" "test" {
 	name = "tf-worklink-fleet-%s"
 
 	network {
@@ -397,10 +397,10 @@ resource "aws_worklink" "test" {
 	}
 }
 
-`, testAccAWSWorkLinkConfigNetwork_Base(r), r)
+`, testAccAWSWorkLinkFleetConfigNetwork_Base(r), r)
 }
 
-func testAccAWSWorkLinkConfigAuditStreamArn(r string) string {
+func testAccAWSWorkLinkFleetConfigAuditStreamArn(r string) string {
 	return fmt.Sprintf(`
 
 resource "aws_kinesis_stream" "test_stream" {
@@ -408,7 +408,7 @@ resource "aws_kinesis_stream" "test_stream" {
 	shard_count = 1
 }
 
-resource "aws_worklink" "test" {
+resource "aws_worklink_fleet" "test" {
 	name = "tf-worklink-fleet-%s"
 
 	audit_stream_arn = "${aws_kinesis_stream.test_stream.arn}"
@@ -417,10 +417,10 @@ resource "aws_worklink" "test" {
 `, r, r)
 }
 
-func testAccAWSWorkLinkConfigDeviceCaCertificate(r string, fName string) string {
+func testAccAWSWorkLinkFleetConfigDeviceCaCertificate(r string, fName string) string {
 	return fmt.Sprintf(`
 
-resource "aws_worklink" "test" {
+resource "aws_worklink_fleet" "test" {
 	name = "tf-worklink-fleet-%s"
 
 	device_ca_certificate = "${file("%s")}"
@@ -429,10 +429,10 @@ resource "aws_worklink" "test" {
 `, r, fName)
 }
 
-func testAccAWSWorkLinkConfigIdentityProvider(r string, fName string) string {
+func testAccAWSWorkLinkFleetConfigIdentityProvider(r string, fName string) string {
 	return fmt.Sprintf(`
 
-resource "aws_worklink" "test" {
+resource "aws_worklink_fleet" "test" {
 	name = "tf-worklink-fleet-%s"
 
 	identity_provider {

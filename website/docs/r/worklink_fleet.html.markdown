@@ -1,19 +1,19 @@
 ---
 layout: "aws"
-page_title: "AWS: aws_worklink"
-sidebar_current: "docs-aws-resource-worklink"
+page_title: "AWS: aws_worklink_fleet"
+sidebar_current: "docs-aws-resource-worklink-fleet"
 description: |-
-  Provides a AWS Worklink resource.
+  Provides a AWS WorkLink Fleet resource.
 ---
 
-# aws_worklink
+# aws_worklink_fleet
 
 ## Example Usage
 
 Basic usage:
 
 ```hcl
-resource "aws_worklink" "example" {
+resource "aws_worklink_fleet" "example" {
   name  = "terraform-example"
 }
 ```
@@ -21,7 +21,7 @@ resource "aws_worklink" "example" {
 Network Configuration Usage:
 
 ```hcl
-resource "aws_worklink" "example" {
+resource "aws_worklink_fleet" "example" {
   name = "terraform-example"
 
   network {
@@ -35,7 +35,7 @@ resource "aws_worklink" "example" {
 Identity Provider Configuration Usage:
 
 ```hcl
-resource "aws_worklink" "test" {
+resource "aws_worklink_fleet" "test" {
 	name = "tf-worklink-fleet-%s"
 
 	identity_provider {
@@ -84,5 +84,5 @@ In addition to all arguments above, the following attributes are exported:
 WorkLink can be imported using the ARN, e.g.
 
 ```
-$ terraform import aws_worklink.test arn:aws:worklink::123456789012:fleet/example
+$ terraform import aws_worklink_fleet.test arn:aws:worklink::123456789012:fleet/example
 ```
