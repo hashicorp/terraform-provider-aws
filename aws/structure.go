@@ -3752,7 +3752,7 @@ func flattenWorkLinkNetworkConfigResponse(c *worklink.DescribeCompanyNetworkConf
 func flattenWorkLinkIdentityProviderConfigResponse(c *worklink.DescribeIdentityProviderConfigurationOutput) []map[string]interface{} {
 	config := make(map[string]interface{})
 
-	if c == nil {
+	if c.IdentityProviderType == nil && c.IdentityProviderSamlMetadata == nil {
 		return nil
 	}
 
@@ -3761,9 +3761,6 @@ func flattenWorkLinkIdentityProviderConfigResponse(c *worklink.DescribeIdentityP
 	}
 	if c.IdentityProviderSamlMetadata != nil {
 		config["saml_metadata"] = aws.StringValue(c.IdentityProviderSamlMetadata)
-	}
-	if c.ServiceProviderSamlMetadata != nil {
-		config["service_provider_saml_metadata"] = aws.StringValue(c.ServiceProviderSamlMetadata)
 	}
 
 	return []map[string]interface{}{config}

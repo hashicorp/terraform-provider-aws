@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -72,11 +73,17 @@ func resourceAwsWorkLinkFleet() *schema.Resource {
 			"device_ca_certificate": {
 				Type:     schema.TypeString,
 				Optional: true,
+				StateFunc: func(v interface{}) string {
+					s, ok := v.(string)
+					if !ok {
+						return ""
+					}
+					return strings.TrimSpace(s)
+				},
 			},
 			"identity_provider": {
 				Type:     schema.TypeList,
 				Optional: true,
-				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -86,12 +93,8 @@ func resourceAwsWorkLinkFleet() *schema.Resource {
 						},
 						"saml_metadata": {
 							Type:         schema.TypeString,
-							Optional:     true,
+							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 204800),
-						},
-						"service_provider_saml_metadata": {
-							Type:     schema.TypeString,
-							Computed: true,
 						},
 					},
 				},
@@ -166,7 +169,9 @@ func resourceAwsWorkLinkFleetRead(d *schema.ResourceData, meta interface{}) erro
 		FleetArn: aws.String(d.Id()),
 	})
 	if err != nil {
-		return fmt.Errorf("Error describe worklink audit stream configuration: %s", err)
+		if !isAWSErr(err, worklink.ErrCodeResourceNotFoundException, "") {
+			return fmt.Errorf("Error describe worklink audit stream configuration: %s", err)
+		}
 	}
 	d.Set("audit_stream_arn", auditStreamConfigurationResp.AuditStreamArn)
 
@@ -190,9 +195,11 @@ func resourceAwsWorkLinkFleetRead(d *schema.ResourceData, meta interface{}) erro
 		FleetArn: aws.String(d.Id()),
 	})
 	if err != nil {
-		return fmt.Errorf("Error describe worklink device policy configuration: %s", err)
+		if !isAWSErr(err, worklink.ErrCodeResourceNotFoundException, "") {
+			return fmt.Errorf("Error describe worklink device policy configuration: %s", err)
+		}
 	}
-	d.Set("device_ca_certificate", devicePolicyConfigurationResp.DeviceCaCertificate)
+	d.Set("device_ca_certificate", strings.TrimSpace(aws.StringValue(devicePolicyConfigurationResp.DeviceCaCertificate)))
 
 	return nil
 }
@@ -239,7 +246,8 @@ func resourceAwsWorkLinkFleetUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	if d.HasChange("identity_provider") || d.IsNewResource() {
+	log.Printf("HasChange: %t", d.HasChange("identity_provider"))
+	if d.HasChange("identity_provider") {
 		if err := updateIdentityProviderConfiguration(conn, d); err != nil {
 			return err
 		}
@@ -299,10 +307,13 @@ func worklinkFleetStateRefresh(conn *worklink.WorkLink, arn string) resource.Sta
 }
 
 func updateAuditStreamConfiguration(conn *worklink.WorkLink, d *schema.ResourceData) error {
-	if _, err := conn.UpdateAuditStreamConfiguration(&worklink.UpdateAuditStreamConfigurationInput{
-		AuditStreamArn: aws.String(d.Get("audit_stream_arn").(string)),
-		FleetArn:       aws.String(d.Id()),
-	}); err != nil {
+	input := &worklink.UpdateAuditStreamConfigurationInput{
+		FleetArn: aws.String(d.Id()),
+	}
+	if v, ok := d.GetOk("audit_stream_arn"); ok {
+		input.AuditStreamArn = aws.String(v.(string))
+	}
+	if _, err := conn.UpdateAuditStreamConfiguration(input); err != nil {
 		if isAWSErr(err, worklink.ErrCodeResourceNotFoundException, "") {
 			log.Printf("[WARN] Worklink Fleet (%s) not found, removing from state", d.Id())
 			d.SetId("")
@@ -315,9 +326,14 @@ func updateAuditStreamConfiguration(conn *worklink.WorkLink, d *schema.ResourceD
 }
 
 func updateCompanyNetworkConfiguration(conn *worklink.WorkLink, d *schema.ResourceData) error {
+	oldNetwork, newNetwork := d.GetChange("network")
+	if len(oldNetwork.([]interface{})) > 0 && len(newNetwork.([]interface{})) == 0 {
+		return fmt.Errorf("Company Network Configuration cannot be removed from WorkLink Fleet(%s),"+
+			" use 'terraform taint' to recreate the resource if you wish.", d.Id())
+	}
+
 	if v, ok := d.GetOk("network"); ok && len(v.([]interface{})) > 0 {
 		config := v.([]interface{})[0].(map[string]interface{})
-
 		input := &worklink.UpdateCompanyNetworkConfigurationInput{
 			FleetArn:         aws.String(d.Id()),
 			SecurityGroupIds: expandStringSet(config["security_group_ids"].(*schema.Set)),
@@ -337,10 +353,13 @@ func updateCompanyNetworkConfiguration(conn *worklink.WorkLink, d *schema.Resour
 }
 
 func updateDevicePolicyConfiguration(conn *worklink.WorkLink, d *schema.ResourceData) error {
-	if _, err := conn.UpdateDevicePolicyConfiguration(&worklink.UpdateDevicePolicyConfigurationInput{
-		DeviceCaCertificate: aws.String(d.Get("device_ca_certificate").(string)),
-		FleetArn:            aws.String(d.Id()),
-	}); err != nil {
+	input := &worklink.UpdateDevicePolicyConfigurationInput{
+		FleetArn: aws.String(d.Id()),
+	}
+	if v, ok := d.GetOk("device_ca_certificate"); ok {
+		input.DeviceCaCertificate = aws.String(v.(string))
+	}
+	if _, err := conn.UpdateDevicePolicyConfiguration(input); err != nil {
 		if isAWSErr(err, worklink.ErrCodeResourceNotFoundException, "") {
 			log.Printf("[WARN] Worklink Fleet (%s) not found, removing from state", d.Id())
 			d.SetId("")
@@ -352,13 +371,19 @@ func updateDevicePolicyConfiguration(conn *worklink.WorkLink, d *schema.Resource
 }
 
 func updateIdentityProviderConfiguration(conn *worklink.WorkLink, d *schema.ResourceData) error {
+	oldIdentityProvider, newIdentityProvider := d.GetChange("identity_provider")
+
+	if len(oldIdentityProvider.([]interface{})) > 0 && len(newIdentityProvider.([]interface{})) == 0 {
+		return fmt.Errorf("Identity Provider Configuration cannot be removed from WorkLink Fleet(%s),"+
+			" use 'terraform taint' to recreate the resource if you wish.", d.Id())
+	}
+
 	if v, ok := d.GetOk("identity_provider"); ok && len(v.([]interface{})) > 0 {
 		config := v.([]interface{})[0].(map[string]interface{})
-
 		input := &worklink.UpdateIdentityProviderConfigurationInput{
 			FleetArn:                     aws.String(d.Id()),
-			IdentityProviderSamlMetadata: aws.String(config["saml_metadata"].(string)),
 			IdentityProviderType:         aws.String(config["type"].(string)),
+			IdentityProviderSamlMetadata: aws.String(config["saml_metadata"].(string)),
 		}
 		if _, err := conn.UpdateIdentityProviderConfiguration(input); err != nil {
 			if isAWSErr(err, worklink.ErrCodeResourceNotFoundException, "") {

@@ -14,7 +14,7 @@ import (
 )
 
 func TestAccAWSWorkLinkFleet_Basic(t *testing.T) {
-	suffix := randomString(10)
+	suffix := randomString(20)
 	resourceName := "aws_worklink_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -41,7 +41,7 @@ func TestAccAWSWorkLinkFleet_Basic(t *testing.T) {
 }
 
 func TestAccAWSWorkLinkFleet_DisplayName(t *testing.T) {
-	suffix := randomString(10)
+	suffix := randomString(20)
 	resourceName := "aws_worklink_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -73,7 +73,7 @@ func TestAccAWSWorkLinkFleet_DisplayName(t *testing.T) {
 }
 
 func TestAccAWSWorkLinkFleet_OptimizeForEndUserLocation(t *testing.T) {
-	suffix := randomString(10)
+	suffix := randomString(20)
 	resourceName := "aws_worklink_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -105,7 +105,7 @@ func TestAccAWSWorkLinkFleet_OptimizeForEndUserLocation(t *testing.T) {
 }
 
 func TestAccAWSWorkLinkFleet_AuditStreamArn(t *testing.T) {
-	rName := randomString(10)
+	rName := randomString(20)
 	resourceName := "aws_worklink_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -130,7 +130,7 @@ func TestAccAWSWorkLinkFleet_AuditStreamArn(t *testing.T) {
 }
 
 func TestAccAWSWorkLinkFleet_Network(t *testing.T) {
-	rName := randomString(10)
+	rName := randomString(20)
 	resourceName := "aws_worklink_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -139,7 +139,17 @@ func TestAccAWSWorkLinkFleet_Network(t *testing.T) {
 		CheckDestroy: testAccCheckAWSWorkLinkFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSWorkLinkFleetConfigNetwork(rName),
+				Config: testAccAWSWorkLinkFleetConfigNetwork(rName, "192.168.0.0/16"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSWorkLinkFleetExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "network.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "network.0.vpc_id", "aws_vpc.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, "network.0.subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "network.0.security_group_ids.#", "1"),
+				),
+			},
+			{
+				Config: testAccAWSWorkLinkFleetConfigNetwork(rName, "10.0.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWorkLinkFleetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "network.#", "1"),
@@ -153,12 +163,16 @@ func TestAccAWSWorkLinkFleet_Network(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+			{
+				Config:      testAccAWSWorkLinkFleetConfig(rName),
+				ExpectError: regexp.MustCompile(`Company Network Configuration cannot be removed`),
+			},
 		},
 	})
 }
 
 func TestAccAWSWorkLinkFleet_DeviceCaCertificate(t *testing.T) {
-	rName := randomString(10)
+	rName := randomString(20)
 	resourceName := "aws_worklink_fleet.test"
 	fName := "test-fixtures/worklink-device-ca-certificate.pem"
 
@@ -179,12 +193,19 @@ func TestAccAWSWorkLinkFleet_DeviceCaCertificate(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+			{
+				Config: testAccAWSWorkLinkFleetConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSWorkLinkFleetExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "device_ca_certificate", ""),
+				),
+			},
 		},
 	})
 }
 
 func TestAccAWSWorkLinkFleet_IdentityProvider(t *testing.T) {
-	rName := randomString(10)
+	rName := randomString(20)
 	resourceName := "aws_worklink_fleet.test"
 	fName := "test-fixtures/saml-metadata.xml"
 
@@ -197,6 +218,8 @@ func TestAccAWSWorkLinkFleet_IdentityProvider(t *testing.T) {
 				Config: testAccAWSWorkLinkFleetConfigIdentityProvider(rName, fName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWorkLinkFleetExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "identity_provider.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "identity_provider.0.type", "SAML"),
 				),
 			},
 			{
@@ -204,12 +227,16 @@ func TestAccAWSWorkLinkFleet_IdentityProvider(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+			{
+				Config:      testAccAWSWorkLinkFleetConfig(rName),
+				ExpectError: regexp.MustCompile(`Identity Provider Configuration cannot be removed`),
+			},
 		},
 	})
 }
 
 func TestAccAWSWorkLinkFleet_Disappears(t *testing.T) {
-	rName := randomString(10)
+	rName := randomString(20)
 	resourceName := "aws_worklink_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -344,12 +371,12 @@ resource "aws_worklink_fleet" "test" {
 `, r, b)
 }
 
-func testAccAWSWorkLinkFleetConfigNetwork_Base(rName string) string {
+func testAccAWSWorkLinkFleetConfigNetwork_Base(rName, cidrBlock string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {}
 
 resource "aws_vpc" "test" {
-	cidr_block = "192.168.0.0/16"
+	cidr_block = "%s"
 
 	tags = {
 		Name = %q
@@ -373,17 +400,17 @@ resource "aws_subnet" "test" {
 	count = 2
 
 	availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
-	cidr_block        = "192.168.${count.index}.0/24"
+	cidr_block        = "${cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)}"
 	vpc_id            = "${aws_vpc.test.id}"
 
 	tags = {
 		Name = %q
 	}
 }
-`, rName, rName)
+`, cidrBlock, rName, rName)
 }
 
-func testAccAWSWorkLinkFleetConfigNetwork(r string) string {
+func testAccAWSWorkLinkFleetConfigNetwork(r, cidrBlock string) string {
 	return fmt.Sprintf(`
 %s
 
@@ -395,9 +422,11 @@ resource "aws_worklink_fleet" "test" {
 		subnet_ids = ["${aws_subnet.test.*.id}"]
 		security_group_ids = ["${aws_security_group.test.id}"]
 	}
+
+	depends_on = ["aws_vpc.test", "aws_subnet.test"]
 }
 
-`, testAccAWSWorkLinkFleetConfigNetwork_Base(r), r)
+`, testAccAWSWorkLinkFleetConfigNetwork_Base(r, cidrBlock), r)
 }
 
 func testAccAWSWorkLinkFleetConfigAuditStreamArn(r string) string {

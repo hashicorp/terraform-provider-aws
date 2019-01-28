@@ -60,14 +60,18 @@ The following arguments are supported:
 
 **network** requires the following:
 
+~> **NOTE:** `network` is cannot removed without forece recreating by `terraform taint`.
+
 * `vpc_id` - (Required) The VPC ID with connectivity to associated websites.
 * `subnet_ids` - (Required) A list of subnet IDs used for X-ENI connections from Amazon WorkLink rendering containers.
 * `security_group_ids` - (Required) A list of security group IDs associated with access to the provided subnets.
 
 **identity_provider** requires the following:
 
+~> **NOTE:** `identity_provider` is cannot removed without forece recreating by `terraform taint`.
+
 * `type` - (Required) The type of identity provider.
-* `saml_metadata` - (Optional) The SAML metadata document provided by the customer’s identity provider. The existing IdentityProviderSamlMetadata is unset if null is passed.
+* `saml_metadata` - (Required) The SAML metadata document provided by the customer’s identity provider.
 
 ## Attributes Reference
 
