@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/backup"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
@@ -34,17 +35,16 @@ func testAccCheckAwsBackupPlanDestroy(s *terraform.State) error {
 			continue
 		}
 
-		input := &backup.DescribeBackupPlan\Input{
+		input := &backup.GetBackupPlanInput{
 			BackupPlanId: aws.String(rs.Primary.ID),
 		}
 
 		resp, err := conn.GetBackupPlan(input)
-		if err != nil {
-			return err
-		}
 
-		if !isAWSErr(err, backup.ErrCodeResourceNotFoundException, "") {
-			return fmt.Errorf("Plan '%s' was not deleted properly", rs.Primary.ID)
+		if err == nil {
+			if *resp.BackupPlanId == rs.Primary.ID {
+				return fmt.Errorf("Plane '%s' was not deleted properly", rs.Primary.ID)
+			}
 		}
 	}
 
@@ -63,14 +63,18 @@ func testAccCheckAwsBackupPlanExists(name string) resource.TestCheckFunc {
 
 func testAccBackupPlanConfig(randInt int) string {
 	return fmt.Sprintf(`
+resource "aws_backup_vault" "test" {
+	name = "tf_acc_test_backup_vault_%d"
+}
+
 resource "aws_backup_plan" "test" {
 	name = "tf_acc_test_backup_plan_%d"
 
 	rule {
 		rule_name 			= "tf_acc_test_backup_rule_%d"
-		target_backup_vault = "${aws_backup_vault.test.name}"
-
+		target_vault_name 	= "${aws_backup_vault.test.name}"
+		schedule			= "cron(0 12 * * ? *)"
 	}
 }
-`, randInt, randInt)
+`, randInt, randInt, randInt)
 }
