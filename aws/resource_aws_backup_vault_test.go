@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	//"github.com/aws/aws-sdk-go/aws"
-	//"github.com/aws/aws-sdk-go/service/backup"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/backup"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
@@ -14,9 +14,9 @@ import (
 func TestAccAwsBackupVault_basic(t *testing.T) {
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
-		//CheckDestroy: testAccCheckAwsBackupVaultDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsBackupVaultDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackupVaultConfig(rInt),
@@ -31,9 +31,9 @@ func TestAccAwsBackupVault_basic(t *testing.T) {
 func TestAccAwsBackupVault_withKmsKey(t *testing.T) {
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
-		//CheckDestroy: testAccCheckAwsBackupVaultDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsBackupVaultDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackupVaultWithKmsKey(rInt),
@@ -45,31 +45,28 @@ func TestAccAwsBackupVault_withKmsKey(t *testing.T) {
 	})
 }
 
-// func testAccCheckAwsBackupVaultDestroy(s *terraform.State) error {
-// 	conn := testAccProvider.Meta().(*AWSClient).backupconn
-// 	for _, rs := range s.RootModule().Resources {
-// 		if rs.Type != "aws_backup_vault" {
-// 			continue
-// 		}
+func testAccCheckAwsBackupVaultDestroy(s *terraform.State) error {
+	conn := testAccProvider.Meta().(*AWSClient).backupconn
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_backup_vault" {
+			continue
+		}
 
-// 		input := &backup.DescribeBackupVaultInput{
-// 			BackupVaultName: aws.String(rs.Primary.ID),
-// 		}
+		input := &backup.DescribeBackupVaultInput{
+			BackupVaultName: aws.String(rs.Primary.ID),
+		}
 
-// 		resp, err := conn.DescribeBackupVault(input)
-// 		if err != nil {
-// 			return err
-// 		}
+		resp, err := conn.DescribeBackupVault(input)
 
-// 		if err == nil {
-// 			if *resp.BackupVaultName == rs.Primary.ID {
-// 				return fmt.Errorf("Vault '%s' was not deleted properly", rs.Primary.ID)
-// 			}
-// 		}
-// 	}
+		if err == nil {
+			if *resp.BackupVaultName == rs.Primary.ID {
+				return fmt.Errorf("Vault '%s' was not deleted properly", rs.Primary.ID)
+			}
+		}
+	}
 
-// 	return nil
-// }
+	return nil
+}
 
 func testAccCheckAwsBackupVaultExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
