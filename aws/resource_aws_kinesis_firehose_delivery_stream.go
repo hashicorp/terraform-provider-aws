@@ -228,6 +228,7 @@ func flattenFirehoseExtendedS3Configuration(description *firehose.ExtendedS3Dest
 		"cloudwatch_logging_options":           flattenCloudwatchLoggingOptions(description.CloudWatchLoggingOptions),
 		"compression_format":                   aws.StringValue(description.CompressionFormat),
 		"data_format_conversion_configuration": flattenFirehoseDataFormatConversionConfiguration(description.DataFormatConversionConfiguration),
+		"error_output_prefix":                  aws.StringValue(description.ErrorOutputPrefix),
 		"prefix":                               aws.StringValue(description.Prefix),
 		"processing_configuration":             flattenProcessingConfiguration(description.ProcessingConfiguration, aws.StringValue(description.RoleARN)),
 		"role_arn":                             aws.StringValue(description.RoleARN),
@@ -542,7 +543,7 @@ func flattenProcessingConfiguration(pc *firehose.ProcessingConfiguration, roleAr
 		"BufferIntervalInSeconds": "60",
 	}
 
-	processors := make([]interface{}, len(pc.Processors), len(pc.Processors))
+	processors := make([]interface{}, len(pc.Processors))
 	for i, p := range pc.Processors {
 		t := aws.StringValue(p.Type)
 		parameters := make([]interface{}, 0)
@@ -997,6 +998,11 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 							},
 						},
 
+						"error_output_prefix": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+
 						"kms_key_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -1396,6 +1402,10 @@ func createExtendedS3Config(d *schema.ResourceData) *firehose.ExtendedS3Destinat
 		configuration.CloudWatchLoggingOptions = extractCloudWatchLoggingConfiguration(s3)
 	}
 
+	if v, ok := s3["error_output_prefix"]; ok && v.(string) != "" {
+		configuration.ErrorOutputPrefix = aws.String(v.(string))
+	}
+
 	if s3BackupMode, ok := s3["s3_backup_mode"]; ok {
 		configuration.S3BackupMode = aws.String(s3BackupMode.(string))
 		configuration.S3BackupConfiguration = expandS3BackupConfig(d.Get("extended_s3_configuration").([]interface{})[0].(map[string]interface{}))
@@ -1475,6 +1485,10 @@ func updateExtendedS3Config(d *schema.ResourceData) *firehose.ExtendedS3Destinat
 
 	if _, ok := s3["cloudwatch_logging_options"]; ok {
 		configuration.CloudWatchLoggingOptions = extractCloudWatchLoggingConfiguration(s3)
+	}
+
+	if v, ok := s3["error_output_prefix"]; ok && v.(string) != "" {
+		configuration.ErrorOutputPrefix = aws.String(v.(string))
 	}
 
 	if s3BackupMode, ok := s3["s3_backup_mode"]; ok {

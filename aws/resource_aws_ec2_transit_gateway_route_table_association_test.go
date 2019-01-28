@@ -16,7 +16,7 @@ func TestAccAWSEc2TransitGatewayRouteTableAssociation_basic(t *testing.T) {
 	transitGatewayVpcAttachmentResourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayRouteTableAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -113,7 +113,7 @@ func testAccAWSEc2TransitGatewayRouteTableAssociationConfig() string {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "tf-acc-test-ec2-transit-gateway-route"
   }
 }
@@ -122,7 +122,7 @@ resource "aws_subnet" "test" {
   cidr_block = "10.0.0.0/24"
   vpc_id     = "${aws_vpc.test.id}"
 
-  tags {
+  tags = {
     Name = "tf-acc-test-ec2-transit-gateway-route"
   }
 }

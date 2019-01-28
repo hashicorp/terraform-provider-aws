@@ -12,7 +12,7 @@ func TestAccAWSEc2TransitGatewayVpcAttachmentDataSource_Filter(t *testing.T) {
 	resourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -37,7 +37,7 @@ func TestAccAWSEc2TransitGatewayVpcAttachmentDataSource_ID(t *testing.T) {
 	resourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -62,7 +62,7 @@ func testAccAWSEc2TransitGatewayVpcAttachmentDataSourceConfigFilter() string {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "tf-acc-test-ec2-transit-gateway-vpc-attachment"
   }
 }
@@ -71,7 +71,7 @@ resource "aws_subnet" "test" {
   cidr_block = "10.0.0.0/24"
   vpc_id     = "${aws_vpc.test.id}"
 
-  tags {
+  tags = {
     Name = "tf-acc-test-ec2-transit-gateway-vpc-attachment"
   }
 }
@@ -98,7 +98,7 @@ func testAccAWSEc2TransitGatewayVpcAttachmentDataSourceConfigID() string {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "tf-acc-test-ec2-transit-gateway-vpc-attachment"
   }
 }
@@ -107,7 +107,7 @@ resource "aws_subnet" "test" {
   cidr_block = "10.0.0.0/24"
   vpc_id     = "${aws_vpc.test.id}"
 
-  tags {
+  tags = {
     Name = "tf-acc-test-ec2-transit-gateway-vpc-attachment"
   }
 }

@@ -298,6 +298,20 @@ func testAccCheckWithProviders(f func(*terraform.State, *schema.Provider) error,
 	}
 }
 
+// Check service API call error for reasons to skip acceptance testing
+// These include missing API endpoints and unsupported API calls
+func testAccPreCheckSkipError(err error) bool {
+	// Ignore missing API endpoints
+	if isAWSErr(err, "RequestError", "send request failed") {
+		return true
+	}
+	// Ignore unsupported API calls
+	if isAWSErr(err, "UnsupportedOperation", "") {
+		return true
+	}
+	return false
+}
+
 // Check sweeper API call error for reasons to skip sweeping
 // These include missing API endpoints and unsupported API calls
 func testSweepSkipSweepError(err error) bool {
@@ -312,6 +326,13 @@ func testSweepSkipSweepError(err error) bool {
 	// Ignore more unsupported API calls
 	// InvalidParameterValue: Use of cache security groups is not permitted in this API version for your account.
 	if isAWSErr(err, "InvalidParameterValue", "not permitted in this API version for your account") {
+		return true
+	}
+	// GovCloud has endpoints that respond with (no message provided):
+	// AccessDeniedException:
+	// Since acceptance test sweepers are best effort and this response is very common,
+	// we allow bypassing this error globally instead of individual test sweeper fixes.
+	if isAWSErr(err, "AccessDeniedException", "") {
 		return true
 	}
 	return false

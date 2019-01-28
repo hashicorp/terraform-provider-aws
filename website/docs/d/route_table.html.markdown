@@ -65,7 +65,9 @@ which take the following arguments:
 All of the argument attributes except `filter` and `subnet_id` blocks are also exported as
 result attributes. This data source will complete the data by populating
 any fields that are not included in the configuration with the data for
-the selected Route Table.
+the selected Route Table. In addition the following attributes are exported:
+
+* `owner_id` - The ID of the AWS account that owns the route table
 
 `routes` are also exported with the following attributes, when there are relevants:
 Each route supports the following:

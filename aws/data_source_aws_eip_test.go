@@ -154,7 +154,7 @@ func testAccDataSourceAwsEipConfigFilter(rName string) string {
 resource "aws_eip" "test" {
   vpc = true
 
-  tags {
+  tags = {
     Name = %q
   }
 }
@@ -205,13 +205,13 @@ func testAccDataSourceAwsEipConfigTags(rName string) string {
 resource "aws_eip" "test" {
   vpc = true
 
-  tags {
+  tags = {
     Name = %q
   }
 }
 
 data "aws_eip" "test" {
-  tags {
+  tags = {
     Name = "${aws_eip.test.tags["Name"]}"
   }
 }

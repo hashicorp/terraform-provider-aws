@@ -43,7 +43,7 @@ data "aws_eip" "by_public_ip" {
 
 ```hcl
 data "aws_eip" "by_tags" {
-  tags {
+  tags = {
     Name = "exampleNameTagValue"
   }
 }

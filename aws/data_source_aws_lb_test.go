@@ -93,12 +93,12 @@ func testAccDataSourceAWSLBConfigBasic(lbName string) string {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id}"]
+  subnets         = ["${aws_subnet.alb_test.0.id}", "${aws_subnet.alb_test.1.id}"]
 
   idle_timeout = 30
   enable_deletion_protection = false
 
-  tags {
+  tags = {
     TestName = "TestAccAWSALB_basic"
   }
 }
@@ -113,7 +113,7 @@ data "aws_availability_zones" "available" {}
 resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-lb-data-source-basic"
   }
 }
@@ -125,7 +125,7 @@ resource "aws_subnet" "alb_test" {
   map_public_ip_on_launch = true
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
-  tags {
+  tags = {
     Name = "tf-acc-lb-data-source-basic"
   }
 }
@@ -149,7 +149,7 @@ resource "aws_security_group" "alb_test" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags {
+  tags = {
     TestName = "TestAccAWSALB_basic"
   }
 }
@@ -168,12 +168,12 @@ func testAccDataSourceAWSLBConfigBackardsCompatibility(albName string) string {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id}"]
+  subnets         = ["${aws_subnet.alb_test.0.id}", "${aws_subnet.alb_test.1.id}"]
 
   idle_timeout = 30
   enable_deletion_protection = false
 
-  tags {
+  tags = {
     TestName = "TestAccAWSALB_basic"
   }
 }
@@ -188,7 +188,7 @@ data "aws_availability_zones" "available" {}
 resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-lb-data-source-bc"
   }
 }
@@ -200,7 +200,7 @@ resource "aws_subnet" "alb_test" {
   map_public_ip_on_launch = true
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
-  tags {
+  tags = {
     Name = "tf-acc-lb-data-source-bc"
   }
 }
@@ -224,7 +224,7 @@ resource "aws_security_group" "alb_test" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags {
+  tags = {
     TestName = "TestAccAWSALB_basic"
   }
 }

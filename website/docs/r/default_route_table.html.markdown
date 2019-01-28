@@ -50,7 +50,7 @@ resource "aws_default_route_table" "r" {
     # ...
   }
 
-  tags {
+  tags = {
     Name = "default table"
   }
 }
@@ -89,6 +89,7 @@ Note that the default route, mapping the VPC's CIDR block to "local", is created
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the routing table
+* `owner_id` - The ID of the AWS account that owns the route table
 
 
 [aws-route-tables]: http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Route_Tables.html#Route_Replacing_Main_Table

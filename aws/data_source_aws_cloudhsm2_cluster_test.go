@@ -42,7 +42,7 @@ data "aws_availability_zones" "available" {}
 resource "aws_vpc" "cloudhsm2_test_vpc" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-aws_cloudhsm_v2_cluster-data-source-basic"
   }
 }
@@ -54,15 +54,15 @@ resource "aws_subnet" "cloudhsm2_test_subnets" {
   map_public_ip_on_launch = false
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
-  tags {
+  tags = {
     Name = "tf-acc-aws_cloudhsm_v2_cluster-data-source-basic"
   }
 }
 
 resource "aws_cloudhsm_v2_cluster" "cluster" {
   hsm_type = "hsm1.medium"  
-  subnet_ids = ["${aws_subnet.cloudhsm2_test_subnets.*.id}"]
-  tags {
+  subnet_ids = ["${aws_subnet.cloudhsm2_test_subnets.0.id}", "${aws_subnet.cloudhsm2_test_subnets.1.id}"]
+  tags = {
     Name = "tf-acc-aws_cloudhsm_v2_cluster-data-source-basic-%d"
   }
 }

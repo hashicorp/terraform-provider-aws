@@ -45,7 +45,7 @@ resource "aws_route_table" "r" {
     egress_only_gateway_id = "${aws_egress_only_internet_gateway.foo.id}"
   }
 
-  tags {
+  tags = {
     Name = "main"
   }
 }
@@ -86,6 +86,7 @@ In addition to all arguments above, the following attributes are exported:
 attribute once the route resource is created.
 
 * `id` - The ID of the routing table
+* `owner_id` - The ID of the AWS account that owns the route table
 
 ## Import
 

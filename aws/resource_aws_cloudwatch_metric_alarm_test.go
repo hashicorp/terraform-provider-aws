@@ -331,7 +331,7 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
   threshold                 = "80"
   alarm_description         = "This metric monitors ec2 cpu utilization"
   insufficient_data_actions = []
-  dimensions {
+  dimensions = {
     InstanceId = "i-abc123"
   }
 }`, rInt)
@@ -351,7 +351,7 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
   threshold                 = "80"
   alarm_description         = "This metric monitors ec2 cpu utilization"
   insufficient_data_actions = []
-  dimensions {
+  dimensions = {
     InstanceId = "i-abc123"
   }
 }`, rInt)
@@ -371,7 +371,7 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
   alarm_description         = "This metric monitors ec2 cpu utilization"
   treat_missing_data        = "missing"
   insufficient_data_actions = []
-  dimensions {
+  dimensions = {
     InstanceId = "i-abc123"
   }
 }`, rInt)
@@ -391,7 +391,7 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
   alarm_description         = "This metric monitors ec2 cpu utilization"
   treat_missing_data        = "breaching"
   insufficient_data_actions = []
-  dimensions {
+  dimensions = {
     InstanceId = "i-abc123"
   }
 }`, rInt)
@@ -411,7 +411,7 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
   alarm_description         = "This metric monitors ec2 cpu utilization"
   evaluate_low_sample_count_percentiles = "evaluate"
   insufficient_data_actions = []
-  dimensions {
+  dimensions = {
     InstanceId = "i-abc123"
   }
 }`, rInt)
@@ -431,7 +431,7 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
   alarm_description         = "This metric monitors ec2 cpu utilization"
   evaluate_low_sample_count_percentiles = "ignore"
   insufficient_data_actions = []
-  dimensions {
+  dimensions = {
     InstanceId = "i-abc123"
   }
 }`, rInt)
@@ -450,7 +450,7 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
   threshold                 = "80"
   alarm_description         = "This metric monitors ec2 cpu utilization"
   insufficient_data_actions = []
-  dimensions {
+  dimensions = {
     InstanceId = "i-abc123"
   }
 }`, rInt)
@@ -468,7 +468,7 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
   threshold                 = "80"
   alarm_description         = "This metric monitors ec2 cpu utilization"
   insufficient_data_actions = []
-  dimensions {
+  dimensions = {
     InstanceId = "i-abc123"
   }
 }`, rInt)
@@ -499,7 +499,7 @@ data "aws_region" "current" {}
 resource "aws_vpc" "test" {
   cidr_block = "172.16.0.0/16"
 
-  tags {
+  tags = {
     Name = %q
   }
 }
@@ -508,7 +508,7 @@ resource "aws_subnet" "test" {
   vpc_id     = "${aws_vpc.test.id}"
   cidr_block = "172.16.0.0/24"
 
-  tags {
+  tags = {
     Name = %q
   }
 }
@@ -518,7 +518,7 @@ resource "aws_instance" "test" {
   instance_type = "t2.micro"
   subnet_id     = "${aws_subnet.test.id}"
 
-  tags {
+  tags = {
     Name = %q
   }
 }
@@ -536,7 +536,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
   threshold           = "0"
   unit                = "Count"
 
-  dimensions {
+  dimensions = {
     InstanceId = "${aws_instance.test.id}"
   }
 }
@@ -562,7 +562,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
   threshold           = "0"
   unit                = "Count"
 
-  dimensions {
+  dimensions = {
     InstanceId = "i-abc123"
   }
 }
@@ -590,7 +590,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
   threshold           = "0"
   unit                = "Count"
 
-  dimensions {
+  dimensions = {
     InstanceId = "i-abc123"
   }
 }

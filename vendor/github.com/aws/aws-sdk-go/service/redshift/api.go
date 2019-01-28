@@ -1833,8 +1833,7 @@ func (c *Redshift) CreateTagsRequest(input *CreateTagsInput) (req *request.Reque
 
 	output = &CreateTagsOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(query.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(query.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -2037,8 +2036,7 @@ func (c *Redshift) DeleteClusterParameterGroupRequest(input *DeleteClusterParame
 
 	output = &DeleteClusterParameterGroupOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(query.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(query.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -2125,8 +2123,7 @@ func (c *Redshift) DeleteClusterSecurityGroupRequest(input *DeleteClusterSecurit
 
 	output = &DeleteClusterSecurityGroupOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(query.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(query.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -2307,8 +2304,7 @@ func (c *Redshift) DeleteClusterSubnetGroupRequest(input *DeleteClusterSubnetGro
 
 	output = &DeleteClusterSubnetGroupOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(query.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(query.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -2395,8 +2391,7 @@ func (c *Redshift) DeleteEventSubscriptionRequest(input *DeleteEventSubscription
 
 	output = &DeleteEventSubscriptionOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(query.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(query.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -2481,8 +2476,7 @@ func (c *Redshift) DeleteHsmClientCertificateRequest(input *DeleteHsmClientCerti
 
 	output = &DeleteHsmClientCertificateOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(query.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(query.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -2566,8 +2560,7 @@ func (c *Redshift) DeleteHsmConfigurationRequest(input *DeleteHsmConfigurationIn
 
 	output = &DeleteHsmConfigurationOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(query.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(query.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -2651,8 +2644,7 @@ func (c *Redshift) DeleteSnapshotCopyGrantRequest(input *DeleteSnapshotCopyGrant
 
 	output = &DeleteSnapshotCopyGrantOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(query.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(query.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -2737,8 +2729,7 @@ func (c *Redshift) DeleteSnapshotScheduleRequest(input *DeleteSnapshotScheduleIn
 
 	output = &DeleteSnapshotScheduleOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(query.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(query.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -2821,8 +2812,7 @@ func (c *Redshift) DeleteTagsRequest(input *DeleteTagsInput) (req *request.Reque
 
 	output = &DeleteTagsOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(query.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(query.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -7171,8 +7161,7 @@ func (c *Redshift) ModifyClusterSnapshotScheduleRequest(input *ModifyClusterSnap
 
 	output = &ModifyClusterSnapshotScheduleOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(query.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(query.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -9817,6 +9806,36 @@ func (s *Cluster) SetVpcSecurityGroups(v []*VpcSecurityGroupMembership) *Cluster
 	return s
 }
 
+type ClusterAssociatedToSchedule struct {
+	_ struct{} `type:"structure"`
+
+	ClusterIdentifier *string `type:"string"`
+
+	ScheduleAssociationState *string `type:"string" enum:"ScheduleState"`
+}
+
+// String returns the string representation
+func (s ClusterAssociatedToSchedule) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ClusterAssociatedToSchedule) GoString() string {
+	return s.String()
+}
+
+// SetClusterIdentifier sets the ClusterIdentifier field's value.
+func (s *ClusterAssociatedToSchedule) SetClusterIdentifier(v string) *ClusterAssociatedToSchedule {
+	s.ClusterIdentifier = &v
+	return s
+}
+
+// SetScheduleAssociationState sets the ScheduleAssociationState field's value.
+func (s *ClusterAssociatedToSchedule) SetScheduleAssociationState(v string) *ClusterAssociatedToSchedule {
+	s.ScheduleAssociationState = &v
+	return s
+}
+
 // Describes a ClusterDbRevision.
 type ClusterDbRevision struct {
 	_ struct{} `type:"structure"`
@@ -12047,6 +12066,10 @@ func (s *CreateSnapshotScheduleInput) SetTags(v []*Tag) *CreateSnapshotScheduleI
 type CreateSnapshotScheduleOutput struct {
 	_ struct{} `type:"structure"`
 
+	AssociatedClusterCount *int64 `type:"integer"`
+
+	AssociatedClusters []*ClusterAssociatedToSchedule `locationNameList:"ClusterAssociatedToSchedule" type:"list"`
+
 	NextInvocations []*time.Time `locationNameList:"SnapshotTime" type:"list"`
 
 	// A list of ScheduleDefinitions
@@ -12070,6 +12093,18 @@ func (s CreateSnapshotScheduleOutput) String() string {
 // GoString returns the string representation
 func (s CreateSnapshotScheduleOutput) GoString() string {
 	return s.String()
+}
+
+// SetAssociatedClusterCount sets the AssociatedClusterCount field's value.
+func (s *CreateSnapshotScheduleOutput) SetAssociatedClusterCount(v int64) *CreateSnapshotScheduleOutput {
+	s.AssociatedClusterCount = &v
+	return s
+}
+
+// SetAssociatedClusters sets the AssociatedClusters field's value.
+func (s *CreateSnapshotScheduleOutput) SetAssociatedClusters(v []*ClusterAssociatedToSchedule) *CreateSnapshotScheduleOutput {
+	s.AssociatedClusters = v
+	return s
 }
 
 // SetNextInvocations sets the NextInvocations field's value.
@@ -16842,7 +16877,7 @@ type GetClusterCredentialsOutput struct {
 
 	// A temporary password that authorizes the user name returned by DbUser to
 	// log on to the database DbName.
-	DbPassword *string `type:"string"`
+	DbPassword *string `type:"string" sensitive:"true"`
 
 	// A database user name that is authorized to log on to the database DbName
 	// using the password DbPassword. If the specified DbUser exists in the database,
@@ -18574,6 +18609,10 @@ func (s *ModifySnapshotScheduleInput) SetScheduleIdentifier(v string) *ModifySna
 type ModifySnapshotScheduleOutput struct {
 	_ struct{} `type:"structure"`
 
+	AssociatedClusterCount *int64 `type:"integer"`
+
+	AssociatedClusters []*ClusterAssociatedToSchedule `locationNameList:"ClusterAssociatedToSchedule" type:"list"`
+
 	NextInvocations []*time.Time `locationNameList:"SnapshotTime" type:"list"`
 
 	// A list of ScheduleDefinitions
@@ -18597,6 +18636,18 @@ func (s ModifySnapshotScheduleOutput) String() string {
 // GoString returns the string representation
 func (s ModifySnapshotScheduleOutput) GoString() string {
 	return s.String()
+}
+
+// SetAssociatedClusterCount sets the AssociatedClusterCount field's value.
+func (s *ModifySnapshotScheduleOutput) SetAssociatedClusterCount(v int64) *ModifySnapshotScheduleOutput {
+	s.AssociatedClusterCount = &v
+	return s
+}
+
+// SetAssociatedClusters sets the AssociatedClusters field's value.
+func (s *ModifySnapshotScheduleOutput) SetAssociatedClusters(v []*ClusterAssociatedToSchedule) *ModifySnapshotScheduleOutput {
+	s.AssociatedClusters = v
+	return s
 }
 
 // SetNextInvocations sets the NextInvocations field's value.
@@ -20874,6 +20925,10 @@ func (s *SnapshotErrorMessage) SetSnapshotIdentifier(v string) *SnapshotErrorMes
 type SnapshotSchedule struct {
 	_ struct{} `type:"structure"`
 
+	AssociatedClusterCount *int64 `type:"integer"`
+
+	AssociatedClusters []*ClusterAssociatedToSchedule `locationNameList:"ClusterAssociatedToSchedule" type:"list"`
+
 	NextInvocations []*time.Time `locationNameList:"SnapshotTime" type:"list"`
 
 	// A list of ScheduleDefinitions
@@ -20897,6 +20952,18 @@ func (s SnapshotSchedule) String() string {
 // GoString returns the string representation
 func (s SnapshotSchedule) GoString() string {
 	return s.String()
+}
+
+// SetAssociatedClusterCount sets the AssociatedClusterCount field's value.
+func (s *SnapshotSchedule) SetAssociatedClusterCount(v int64) *SnapshotSchedule {
+	s.AssociatedClusterCount = &v
+	return s
+}
+
+// SetAssociatedClusters sets the AssociatedClusters field's value.
+func (s *SnapshotSchedule) SetAssociatedClusters(v []*ClusterAssociatedToSchedule) *SnapshotSchedule {
+	s.AssociatedClusters = v
+	return s
 }
 
 // SetNextInvocations sets the NextInvocations field's value.

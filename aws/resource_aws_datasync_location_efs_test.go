@@ -85,7 +85,7 @@ func TestAccAWSDataSyncLocationEfs_basic(t *testing.T) {
 	subnetResourceName := "aws_subnet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataSync(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDataSyncLocationEfsDestroy,
 		Steps: []resource.TestStep{
@@ -118,7 +118,7 @@ func TestAccAWSDataSyncLocationEfs_disappears(t *testing.T) {
 	resourceName := "aws_datasync_location_efs.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataSync(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDataSyncLocationEfsDestroy,
 		Steps: []resource.TestStep{
@@ -139,7 +139,7 @@ func TestAccAWSDataSyncLocationEfs_Subdirectory(t *testing.T) {
 	resourceName := "aws_datasync_location_efs.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataSync(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDataSyncLocationEfsDestroy,
 		Steps: []resource.TestStep{
@@ -165,7 +165,7 @@ func TestAccAWSDataSyncLocationEfs_Tags(t *testing.T) {
 	resourceName := "aws_datasync_location_efs.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataSync(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDataSyncLocationEfsDestroy,
 		Steps: []resource.TestStep{
@@ -289,7 +289,7 @@ func testAccAWSDataSyncLocationEfsConfigBase() string {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "tf-acc-test-datasync-location-efs"
   }
 }
@@ -298,7 +298,7 @@ resource "aws_subnet" "test" {
   cidr_block = "10.0.0.0/24"
   vpc_id     = "${aws_vpc.test.id}"
 
-  tags {
+  tags = {
     Name = "tf-acc-test-datasync-location-efs"
   }
 }
@@ -306,7 +306,7 @@ resource "aws_subnet" "test" {
 resource "aws_security_group" "test" {
   vpc_id = "${aws_vpc.test.id}"
 
-  tags {
+  tags = {
     Name = "tf-acc-test-datasync-location-efs"
   }
 }
@@ -357,7 +357,7 @@ resource "aws_datasync_location_efs" "test" {
     subnet_arn          = "${aws_subnet.test.arn}"
   }
 
-  tags {
+  tags = {
     %q = %q
   }
 }
@@ -374,7 +374,7 @@ resource "aws_datasync_location_efs" "test" {
     subnet_arn          = "${aws_subnet.test.arn}"
   }
 
-  tags {
+  tags = {
     %q = %q
     %q = %q
   }

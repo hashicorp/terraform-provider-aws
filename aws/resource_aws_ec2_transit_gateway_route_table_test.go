@@ -17,7 +17,7 @@ func TestAccAWSEc2TransitGatewayRouteTable_basic(t *testing.T) {
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayRouteTableDestroy,
 		Steps: []resource.TestStep{
@@ -45,7 +45,7 @@ func TestAccAWSEc2TransitGatewayRouteTable_disappears(t *testing.T) {
 	resourceName := "aws_ec2_transit_gateway_route_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayRouteTableDestroy,
 		Steps: []resource.TestStep{
@@ -68,7 +68,7 @@ func TestAccAWSEc2TransitGatewayRouteTable_disappears_TransitGateway(t *testing.
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayRouteTableDestroy,
 		Steps: []resource.TestStep{
@@ -90,7 +90,7 @@ func TestAccAWSEc2TransitGatewayRouteTable_Tags(t *testing.T) {
 	resourceName := "aws_ec2_transit_gateway_route_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayRouteTableDestroy,
 		Steps: []resource.TestStep{
@@ -238,7 +238,7 @@ resource "aws_ec2_transit_gateway" "test" {}
 resource "aws_ec2_transit_gateway_route_table" "test" {
   transit_gateway_id = "${aws_ec2_transit_gateway.test.id}"
 
-  tags {
+  tags = {
     %q = %q
   }
 }
@@ -252,7 +252,7 @@ resource "aws_ec2_transit_gateway" "test" {}
 resource "aws_ec2_transit_gateway_route_table" "test" {
   transit_gateway_id = "${aws_ec2_transit_gateway.test.id}"
 
-  tags {
+  tags = {
     %q = %q
     %q = %q
   }

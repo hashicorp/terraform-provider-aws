@@ -9,6 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/aws/aws-sdk-go/aws/request"
+	"github.com/aws/aws-sdk-go/private/protocol"
+	"github.com/aws/aws-sdk-go/private/protocol/restjson"
 )
 
 const opAssociateCertificate = "AssociateCertificate"
@@ -50,6 +52,7 @@ func (c *MediaConvert) AssociateCertificateRequest(input *AssociateCertificateIn
 
 	output = &AssociateCertificateOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -139,6 +142,7 @@ func (c *MediaConvert) CancelJobRequest(input *CancelJobInput) (req *request.Req
 
 	output = &CancelJobOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -500,8 +504,8 @@ func (c *MediaConvert) CreateQueueRequest(input *CreateQueueInput) (req *request
 
 // CreateQueue API operation for AWS Elemental MediaConvert.
 //
-// Create a new transcoding queue. For information about job templates see the
-// User Guide at http://docs.aws.amazon.com/mediaconvert/latest/ug/what-is.html
+// Create a new transcoding queue. For information about queues, see Working
+// With Queues in the User Guide at https://docs.aws.amazon.com/mediaconvert/latest/ug/working-with-queues.html
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -584,6 +588,7 @@ func (c *MediaConvert) DeleteJobTemplateRequest(input *DeleteJobTemplateInput) (
 
 	output = &DeleteJobTemplateOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -672,6 +677,7 @@ func (c *MediaConvert) DeletePresetRequest(input *DeletePresetInput) (req *reque
 
 	output = &DeletePresetOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -760,6 +766,7 @@ func (c *MediaConvert) DeleteQueueRequest(input *DeleteQueueInput) (req *request
 
 	output = &DeleteQueueOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -993,6 +1000,7 @@ func (c *MediaConvert) DisassociateCertificateRequest(input *DisassociateCertifi
 
 	output = &DisassociateCertificateOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -2107,6 +2115,7 @@ func (c *MediaConvert) TagResourceRequest(input *TagResourceInput) (req *request
 
 	output = &TagResourceOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -2196,6 +2205,7 @@ func (c *MediaConvert) UntagResourceRequest(input *UntagResourceInput) (req *req
 
 	output = &UntagResourceOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -2531,8 +2541,13 @@ type AacSettings struct {
 	// and FollowInputAudioType.
 	AudioDescriptionBroadcasterMix *string `locationName:"audioDescriptionBroadcasterMix" type:"string" enum:"AacAudioDescriptionBroadcasterMix"`
 
-	// Average bitrate in bits/second. Defaults and valid values depend on rate
-	// control mode and profile.
+	// Average bitrate in bits/second. The set of valid values for this setting
+	// is: 6000, 8000, 10000, 12000, 14000, 16000, 20000, 24000, 28000, 32000, 40000,
+	// 48000, 56000, 64000, 80000, 96000, 112000, 128000, 160000, 192000, 224000,
+	// 256000, 288000, 320000, 384000, 448000, 512000, 576000, 640000, 768000, 896000,
+	// 1024000. The value you set is also constrained by the values you choose for
+	// Profile (codecProfile), Bitrate control mode (codingMode), and Sample rate
+	// (sampleRate). Default values depend on Bitrate control mode and Profile.
 	Bitrate *int64 `locationName:"bitrate" min:"6000" type:"integer"`
 
 	// AAC Profile.
@@ -2753,6 +2768,45 @@ func (s *Ac3Settings) SetMetadataControl(v string) *Ac3Settings {
 // SetSampleRate sets the SampleRate field's value.
 func (s *Ac3Settings) SetSampleRate(v int64) *Ac3Settings {
 	s.SampleRate = &v
+	return s
+}
+
+// Acceleration settings for job execution.
+type AccelerationSettings struct {
+	_ struct{} `type:"structure"`
+
+	// Acceleration configuration for the job.
+	//
+	// Mode is a required field
+	Mode *string `locationName:"mode" type:"string" required:"true" enum:"AccelerationMode"`
+}
+
+// String returns the string representation
+func (s AccelerationSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AccelerationSettings) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AccelerationSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AccelerationSettings"}
+	if s.Mode == nil {
+		invalidParams.Add(request.NewErrParamRequired("Mode"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMode sets the Mode field's value.
+func (s *AccelerationSettings) SetMode(v string) *AccelerationSettings {
+	s.Mode = &v
 	return s
 }
 
@@ -3554,6 +3608,12 @@ type BurninDestinationSettings struct {
 	// DVB-Sub font settings must match.
 	FontResolution *int64 `locationName:"fontResolution" min:"96" type:"integer"`
 
+	// Provide the font script, using an ISO 15924 script code, if the LanguageCode
+	// is not sufficient for determining the script type. Where LanguageCode or
+	// CustomLanguageCode is sufficient, use "AUTOMATIC" or leave unset. This is
+	// used to help determine the appropriate font for rendering burn-in captions.
+	FontScript *string `locationName:"fontScript" type:"string" enum:"FontScript"`
+
 	// A positive integer indicates the exact font size in points. Set to 0 for
 	// automatic font size selection. All burn-in and DVB-Sub font settings must
 	// match.
@@ -3681,6 +3741,12 @@ func (s *BurninDestinationSettings) SetFontResolution(v int64) *BurninDestinatio
 	return s
 }
 
+// SetFontScript sets the FontScript field's value.
+func (s *BurninDestinationSettings) SetFontScript(v string) *BurninDestinationSettings {
+	s.FontScript = &v
+	return s
+}
+
 // SetFontSize sets the FontSize field's value.
 func (s *BurninDestinationSettings) SetFontSize(v int64) *BurninDestinationSettings {
 	s.FontSize = &v
@@ -3767,6 +3833,9 @@ func (s *CancelJobInput) Validate() error {
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
 	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -3806,14 +3875,22 @@ type CaptionDescription struct {
 	CaptionSelectorName *string `locationName:"captionSelectorName" min:"1" type:"string"`
 
 	// Indicates the language of the caption output track, using the ISO 639-2 or
-	// ISO 639-3 three-letter language code
+	// ISO 639-3 three-letter language code. For most captions output formats, the
+	// encoder puts this language information in the output captions metadata. If
+	// your output captions format is DVB-Sub or Burn in, the encoder uses this
+	// language information to choose the font language for rendering the captions
+	// text.
 	CustomLanguageCode *string `locationName:"customLanguageCode" min:"3" type:"string"`
 
 	// Specific settings required by destination type. Note that burnin_destination_settings
 	// are not available if the source of the caption data is Embedded or Teletext.
 	DestinationSettings *CaptionDestinationSettings `locationName:"destinationSettings" type:"structure"`
 
-	// Indicates the language of the caption output track.
+	// Specify the language of this captions output track. For most captions output
+	// formats, the encoder puts this language information in the output captions
+	// metadata. If your output captions format is DVB-Sub or Burn in, the encoder
+	// uses this language information to choose the font language for rendering
+	// the captions text.
 	LanguageCode *string `locationName:"languageCode" type:"string" enum:"LanguageCode"`
 
 	// Human readable information to indicate captions available for players (eg.
@@ -3888,14 +3965,22 @@ type CaptionDescriptionPreset struct {
 	_ struct{} `type:"structure"`
 
 	// Indicates the language of the caption output track, using the ISO 639-2 or
-	// ISO 639-3 three-letter language code
+	// ISO 639-3 three-letter language code. For most captions output formats, the
+	// encoder puts this language information in the output captions metadata. If
+	// your output captions format is DVB-Sub or Burn in, the encoder uses this
+	// language information to choose the font language for rendering the captions
+	// text.
 	CustomLanguageCode *string `locationName:"customLanguageCode" min:"3" type:"string"`
 
 	// Specific settings required by destination type. Note that burnin_destination_settings
 	// are not available if the source of the caption data is Embedded or Teletext.
 	DestinationSettings *CaptionDestinationSettings `locationName:"destinationSettings" type:"structure"`
 
-	// Indicates the language of the caption output track.
+	// Specify the language of this captions output track. For most captions output
+	// formats, the encoder puts this language information in the output captions
+	// metadata. If your output captions format is DVB-Sub or Burn in, the encoder
+	// uses this language information to choose the font language for rendering
+	// the captions text.
 	LanguageCode *string `locationName:"languageCode" type:"string" enum:"LanguageCode"`
 
 	// Human readable information to indicate captions available for players (eg.
@@ -3964,12 +4049,20 @@ type CaptionDestinationSettings struct {
 	// Burn-In Destination Settings.
 	BurninDestinationSettings *BurninDestinationSettings `locationName:"burninDestinationSettings" type:"structure"`
 
-	// Type of Caption output, including Burn-In, Embedded (with or without SCTE20),
-	// SCC, SMI, SRT, TTML, WebVTT, DVB-Sub, Teletext.
+	// Specify the format for this set of captions on this output. The default format
+	// is embedded without SCTE-20. Other options are embedded with SCTE-20, burn-in,
+	// DVB-sub, SCC, SRT, teletext, TTML, and web-VTT. If you are using SCTE-20,
+	// choose SCTE-20 plus embedded (SCTE20_PLUS_EMBEDDED) to create an output that
+	// complies with the SCTE-43 spec. To create a non-compliant output where the
+	// embedded captions come first, choose Embedded plus SCTE-20 (EMBEDDED_PLUS_SCTE20).
 	DestinationType *string `locationName:"destinationType" type:"string" enum:"CaptionDestinationType"`
 
 	// DVB-Sub Destination Settings
 	DvbSubDestinationSettings *DvbSubDestinationSettings `locationName:"dvbSubDestinationSettings" type:"structure"`
+
+	// Settings specific to embedded/ancillary caption outputs, including 608/708
+	// Channel destination number.
+	EmbeddedDestinationSettings *EmbeddedDestinationSettings `locationName:"embeddedDestinationSettings" type:"structure"`
 
 	// Settings for SCC caption output.
 	SccDestinationSettings *SccDestinationSettings `locationName:"sccDestinationSettings" type:"structure"`
@@ -4005,6 +4098,11 @@ func (s *CaptionDestinationSettings) Validate() error {
 			invalidParams.AddNested("DvbSubDestinationSettings", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.EmbeddedDestinationSettings != nil {
+		if err := s.EmbeddedDestinationSettings.Validate(); err != nil {
+			invalidParams.AddNested("EmbeddedDestinationSettings", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.TeletextDestinationSettings != nil {
 		if err := s.TeletextDestinationSettings.Validate(); err != nil {
 			invalidParams.AddNested("TeletextDestinationSettings", err.(request.ErrInvalidParams))
@@ -4032,6 +4130,12 @@ func (s *CaptionDestinationSettings) SetDestinationType(v string) *CaptionDestin
 // SetDvbSubDestinationSettings sets the DvbSubDestinationSettings field's value.
 func (s *CaptionDestinationSettings) SetDvbSubDestinationSettings(v *DvbSubDestinationSettings) *CaptionDestinationSettings {
 	s.DvbSubDestinationSettings = v
+	return s
+}
+
+// SetEmbeddedDestinationSettings sets the EmbeddedDestinationSettings field's value.
+func (s *CaptionDestinationSettings) SetEmbeddedDestinationSettings(v *EmbeddedDestinationSettings) *CaptionDestinationSettings {
+	s.EmbeddedDestinationSettings = v
 	return s
 }
 
@@ -4148,6 +4252,10 @@ type CaptionSourceSettings struct {
 
 	// Settings specific to Teletext caption sources, including Page number.
 	TeletextSourceSettings *TeletextSourceSettings `locationName:"teletextSourceSettings" type:"structure"`
+
+	// Settings specific to caption sources that are specfied by track number. Sources
+	// include IMSC in IMF.
+	TrackSourceSettings *TrackSourceSettings `locationName:"trackSourceSettings" type:"structure"`
 }
 
 // String returns the string representation
@@ -4186,6 +4294,11 @@ func (s *CaptionSourceSettings) Validate() error {
 	if s.TeletextSourceSettings != nil {
 		if err := s.TeletextSourceSettings.Validate(); err != nil {
 			invalidParams.AddNested("TeletextSourceSettings", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.TrackSourceSettings != nil {
+		if err := s.TrackSourceSettings.Validate(); err != nil {
+			invalidParams.AddNested("TrackSourceSettings", err.(request.ErrInvalidParams))
 		}
 	}
 
@@ -4228,6 +4341,12 @@ func (s *CaptionSourceSettings) SetSourceType(v string) *CaptionSourceSettings {
 // SetTeletextSourceSettings sets the TeletextSourceSettings field's value.
 func (s *CaptionSourceSettings) SetTeletextSourceSettings(v *TeletextSourceSettings) *CaptionSourceSettings {
 	s.TeletextSourceSettings = v
+	return s
+}
+
+// SetTrackSourceSettings sets the TrackSourceSettings field's value.
+func (s *CaptionSourceSettings) SetTrackSourceSettings(v *TrackSourceSettings) *CaptionSourceSettings {
+	s.TrackSourceSettings = v
 	return s
 }
 
@@ -4562,12 +4681,7 @@ type ColorCorrector struct {
 	Contrast *int64 `locationName:"contrast" min:"1" type:"integer"`
 
 	// Use the HDR master display (Hdr10Metadata) settings to correct HDR metadata
-	// or to provide missing metadata. These values vary depending on the input
-	// video and must be provided by a color grader. Range is 0 to 50,000, each
-	// increment represents 0.00002 in CIE1931 color coordinate. Note that these
-	// settings are not color correction. Note that if you are creating HDR outputs
-	// inside of an HLS CMAF package, to comply with the Apple specification, you
-	// must use the HVC1 for H.265 setting.
+	// or to provide missing metadata. Note that these settings are not color correction.
 	Hdr10Metadata *Hdr10Metadata `locationName:"hdr10Metadata" type:"structure"`
 
 	// Hue in degrees.
@@ -4740,6 +4854,10 @@ func (s *ContainerSettings) SetMp4Settings(v *Mp4Settings) *ContainerSettings {
 type CreateJobInput struct {
 	_ struct{} `type:"structure"`
 
+	// This is a beta feature. If you are interested in using this feature, please
+	// contact AWS customer support.
+	AccelerationSettings *AccelerationSettings `locationName:"accelerationSettings" type:"structure"`
+
 	// Optional. Choose a tag type that AWS Billing and Cost Management will use
 	// to sort your AWS Elemental MediaConvert costs on any billing report that
 	// you set up. Any transcoding outputs that don't have an associated tag will
@@ -4794,6 +4912,11 @@ func (s *CreateJobInput) Validate() error {
 	if s.Settings == nil {
 		invalidParams.Add(request.NewErrParamRequired("Settings"))
 	}
+	if s.AccelerationSettings != nil {
+		if err := s.AccelerationSettings.Validate(); err != nil {
+			invalidParams.AddNested("AccelerationSettings", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.Settings != nil {
 		if err := s.Settings.Validate(); err != nil {
 			invalidParams.AddNested("Settings", err.(request.ErrInvalidParams))
@@ -4804,6 +4927,12 @@ func (s *CreateJobInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetAccelerationSettings sets the AccelerationSettings field's value.
+func (s *CreateJobInput) SetAccelerationSettings(v *AccelerationSettings) *CreateJobInput {
+	s.AccelerationSettings = v
+	return s
 }
 
 // SetBillingTagsSource sets the BillingTagsSource field's value.
@@ -4879,6 +5008,10 @@ func (s *CreateJobOutput) SetJob(v *Job) *CreateJobOutput {
 type CreateJobTemplateInput struct {
 	_ struct{} `type:"structure"`
 
+	// This is a beta feature. If you are interested in using this feature please
+	// contact AWS customer support.
+	AccelerationSettings *AccelerationSettings `locationName:"accelerationSettings" type:"structure"`
+
 	// Optional. A category for the job template you are creating
 	Category *string `locationName:"category" type:"string"`
 
@@ -4924,6 +5057,11 @@ func (s *CreateJobTemplateInput) Validate() error {
 	if s.Settings == nil {
 		invalidParams.Add(request.NewErrParamRequired("Settings"))
 	}
+	if s.AccelerationSettings != nil {
+		if err := s.AccelerationSettings.Validate(); err != nil {
+			invalidParams.AddNested("AccelerationSettings", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.Settings != nil {
 		if err := s.Settings.Validate(); err != nil {
 			invalidParams.AddNested("Settings", err.(request.ErrInvalidParams))
@@ -4934,6 +5072,12 @@ func (s *CreateJobTemplateInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetAccelerationSettings sets the AccelerationSettings field's value.
+func (s *CreateJobTemplateInput) SetAccelerationSettings(v *AccelerationSettings) *CreateJobTemplateInput {
+	s.AccelerationSettings = v
+	return s
 }
 
 // SetCategory sets the Category field's value.
@@ -5109,7 +5253,12 @@ func (s *CreatePresetOutput) SetPreset(v *Preset) *CreatePresetOutput {
 	return s
 }
 
-// Send your create queue request with the name of the queue.
+// Create an on-demand queue by sending a CreateQueue request with the name
+// of the queue. Create a reserved queue by sending a CreateQueue request with
+// the pricing plan set to RESERVED and with values specified for the settings
+// under reservationPlanSettings. When you create a reserved queue, you enter
+// into a 12-month commitment to purchase the RTS that you specify. You can't
+// cancel this commitment.
 type CreateQueueInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5121,12 +5270,11 @@ type CreateQueueInput struct {
 	// Name is a required field
 	Name *string `locationName:"name" type:"string" required:"true"`
 
-	// Optional; default is on-demand. Specifies whether the pricing plan for the
-	// queue is on-demand or reserved. The pricing plan for the queue determines
-	// whether you pay on-demand or reserved pricing for the transcoding jobs you
-	// run through the queue. For reserved queue pricing, you must set up a contract.
-	// You can create a reserved queue contract through the AWS Elemental MediaConvert
-	// console.
+	// Specifies whether the pricing plan for the queue is on-demand or reserved.
+	// For on-demand, you pay per minute, billed in increments of .01 minute. For
+	// reserved, you pay for the transcoding capacity of the entire queue, regardless
+	// of how much or how little you use it. Reserved pricing requires a 12-month
+	// commitment. When you use the API to create a queue, the default is on-demand.
 	PricingPlan *string `locationName:"pricingPlan" type:"string" enum:"PricingPlan"`
 
 	// Details about the pricing plan for your reserved queue. Required for reserved
@@ -5204,7 +5352,7 @@ type CreateQueueOutput struct {
 	// You can use queues to manage the resources that are available to your AWS
 	// account for running multiple transcoding jobs at the same time. If you don't
 	// specify a queue, the service sends all jobs through the default queue. For
-	// more information, see https://docs.aws.amazon.com/mediaconvert/latest/ug/about-resource-allocation-and-job-prioritization.html.
+	// more information, see https://docs.aws.amazon.com/mediaconvert/latest/ug/working-with-queues.html.
 	Queue *Queue `locationName:"queue" type:"structure"`
 }
 
@@ -5466,6 +5614,9 @@ func (s *DeleteJobTemplateInput) Validate() error {
 	if s.Name == nil {
 		invalidParams.Add(request.NewErrParamRequired("Name"))
 	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -5521,6 +5672,9 @@ func (s *DeletePresetInput) Validate() error {
 	if s.Name == nil {
 		invalidParams.Add(request.NewErrParamRequired("Name"))
 	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -5550,11 +5704,12 @@ func (s DeletePresetOutput) GoString() string {
 	return s.String()
 }
 
-// Delete a queue by sending a request with the queue name.
+// Delete a queue by sending a request with the queue name. You can't delete
+// a queue with an active pricing plan or one that has unprocessed jobs in it.
 type DeleteQueueInput struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the queue to be deleted.
+	// The name of the queue that you want to delete.
 	//
 	// Name is a required field
 	Name *string `location:"uri" locationName:"name" type:"string" required:"true"`
@@ -5575,6 +5730,9 @@ func (s *DeleteQueueInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DeleteQueueInput"}
 	if s.Name == nil {
 		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -5920,6 +6078,12 @@ type DvbSubDestinationSettings struct {
 	// DVB-Sub font settings must match.
 	FontResolution *int64 `locationName:"fontResolution" min:"96" type:"integer"`
 
+	// Provide the font script, using an ISO 15924 script code, if the LanguageCode
+	// is not sufficient for determining the script type. Where LanguageCode or
+	// CustomLanguageCode is sufficient, use "AUTOMATIC" or leave unset. This is
+	// used to help determine the appropriate font for rendering DVB-Sub captions.
+	FontScript *string `locationName:"fontScript" type:"string" enum:"FontScript"`
+
 	// A positive integer indicates the exact font size in points. Set to 0 for
 	// automatic font size selection. All burn-in and DVB-Sub font settings must
 	// match.
@@ -6044,6 +6208,12 @@ func (s *DvbSubDestinationSettings) SetFontOpacity(v int64) *DvbSubDestinationSe
 // SetFontResolution sets the FontResolution field's value.
 func (s *DvbSubDestinationSettings) SetFontResolution(v int64) *DvbSubDestinationSettings {
 	s.FontResolution = &v
+	return s
+}
+
+// SetFontScript sets the FontScript field's value.
+func (s *DvbSubDestinationSettings) SetFontScript(v string) *DvbSubDestinationSettings {
+	s.FontScript = &v
 	return s
 }
 
@@ -6426,6 +6596,51 @@ func (s *Eac3Settings) SetSurroundMode(v string) *Eac3Settings {
 	return s
 }
 
+// Settings specific to embedded/ancillary caption outputs, including 608/708
+// Channel destination number.
+type EmbeddedDestinationSettings struct {
+	_ struct{} `type:"structure"`
+
+	// Ignore this setting unless your input captions are SCC format and your output
+	// container is MXF. With this combination of input captions format and output
+	// container, you can optionally use this setting to replace the input channel
+	// number with the track number that you specify. If you don't specify an output
+	// track number, the system uses the input channel number for the output channel
+	// number. This setting applies to each output individually. Channels must be
+	// unique and may only be combined in the following combinations: (1+3, 2+4,
+	// 1+4, 2+3).
+	Destination608ChannelNumber *int64 `locationName:"destination608ChannelNumber" min:"1" type:"integer"`
+}
+
+// String returns the string representation
+func (s EmbeddedDestinationSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s EmbeddedDestinationSettings) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *EmbeddedDestinationSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "EmbeddedDestinationSettings"}
+	if s.Destination608ChannelNumber != nil && *s.Destination608ChannelNumber < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("Destination608ChannelNumber", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDestination608ChannelNumber sets the Destination608ChannelNumber field's value.
+func (s *EmbeddedDestinationSettings) SetDestination608ChannelNumber(v int64) *EmbeddedDestinationSettings {
+	s.Destination608ChannelNumber = &v
+	return s
+}
+
 // Settings for embedded captions Source
 type EmbeddedSourceSettings struct {
 	_ struct{} `type:"structure"`
@@ -6739,6 +6954,9 @@ func (s *GetJobInput) Validate() error {
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
 	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -6802,6 +7020,9 @@ func (s *GetJobTemplateInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "GetJobTemplateInput"}
 	if s.Name == nil {
 		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -6868,6 +7089,9 @@ func (s *GetPresetInput) Validate() error {
 	if s.Name == nil {
 		invalidParams.Add(request.NewErrParamRequired("Name"))
 	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -6932,6 +7156,9 @@ func (s *GetQueueInput) Validate() error {
 	if s.Name == nil {
 		invalidParams.Add(request.NewErrParamRequired("Name"))
 	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -6953,7 +7180,7 @@ type GetQueueOutput struct {
 	// You can use queues to manage the resources that are available to your AWS
 	// account for running multiple transcoding jobs at the same time. If you don't
 	// specify a queue, the service sends all jobs through the default queue. For
-	// more information, see https://docs.aws.amazon.com/mediaconvert/latest/ug/about-resource-allocation-and-job-prioritization.html.
+	// more information, see https://docs.aws.amazon.com/mediaconvert/latest/ug/working-with-queues.html.
 	Queue *Queue `locationName:"queue" type:"structure"`
 }
 
@@ -7047,7 +7274,8 @@ type H264Settings struct {
 	// bitrates must be unique when rounded down to the nearest multiple of 1000.
 	Bitrate *int64 `locationName:"bitrate" min:"1000" type:"integer"`
 
-	// H.264 Level.
+	// Specify an H.264 level that is consistent with your output video settings.
+	// If you aren't sure what level to specify, choose Auto (AUTO).
 	CodecLevel *string `locationName:"codecLevel" type:"string" enum:"H264CodecLevel"`
 
 	// H.264 Profile. High 4:2:2 and 10-bit profiles are only available with the
@@ -7070,31 +7298,31 @@ type H264Settings struct {
 	// Adjust quantization within each frame to reduce flicker or 'pop' on I-frames.
 	FlickerAdaptiveQuantization *string `locationName:"flickerAdaptiveQuantization" type:"string" enum:"H264FlickerAdaptiveQuantization"`
 
-	// If you are using the console, use the Framerate setting to specify the framerate
-	// for this output. If you want to keep the same framerate as the input video,
-	// choose Follow source. If you want to do framerate conversion, choose a framerate
-	// from the dropdown list or choose Custom. The framerates shown in the dropdown
-	// list are decimal approximations of fractions. If you choose Custom, specify
-	// your framerate as a fraction. If you are creating your transcoding job specification
-	// as a JSON file without the console, use FramerateControl to specify which
-	// value the service uses for the framerate for this output. Choose INITIALIZE_FROM_SOURCE
-	// if you want the service to use the framerate from the input. Choose SPECIFIED
-	// if you want the service to use the framerate you specify in the settings
-	// FramerateNumerator and FramerateDenominator.
+	// If you are using the console, use the Framerate setting to specify the frame
+	// rate for this output. If you want to keep the same frame rate as the input
+	// video, choose Follow source. If you want to do frame rate conversion, choose
+	// a frame rate from the dropdown list or choose Custom. The framerates shown
+	// in the dropdown list are decimal approximations of fractions. If you choose
+	// Custom, specify your frame rate as a fraction. If you are creating your transcoding
+	// job specification as a JSON file without the console, use FramerateControl
+	// to specify which value the service uses for the frame rate for this output.
+	// Choose INITIALIZE_FROM_SOURCE if you want the service to use the frame rate
+	// from the input. Choose SPECIFIED if you want the service to use the frame
+	// rate you specify in the settings FramerateNumerator and FramerateDenominator.
 	FramerateControl *string `locationName:"framerateControl" type:"string" enum:"H264FramerateControl"`
 
-	// When set to INTERPOLATE, produces smoother motion during framerate conversion.
+	// When set to INTERPOLATE, produces smoother motion during frame rate conversion.
 	FramerateConversionAlgorithm *string `locationName:"framerateConversionAlgorithm" type:"string" enum:"H264FramerateConversionAlgorithm"`
 
-	// When you use the API for transcode jobs that use framerate conversion, specify
-	// the framerate as a fraction. For example, 24000 / 1001 = 23.976 fps. Use
+	// When you use the API for transcode jobs that use frame rate conversion, specify
+	// the frame rate as a fraction. For example, 24000 / 1001 = 23.976 fps. Use
 	// FramerateDenominator to specify the denominator of this fraction. In this
 	// example, use 1001 for the value of FramerateDenominator. When you use the
-	// console for transcode jobs that use framerate conversion, provide the value
+	// console for transcode jobs that use frame rate conversion, provide the value
 	// as a decimal number for Framerate. In this example, specify 23.976.
 	FramerateDenominator *int64 `locationName:"framerateDenominator" min:"1" type:"integer"`
 
-	// Framerate numerator - framerate is a fraction, e.g. 24000 / 1001 = 23.976
+	// Frame rate numerator - frame rate is a fraction, e.g. 24000 / 1001 = 23.976
 	// fps.
 	FramerateNumerator *int64 `locationName:"framerateNumerator" min:"1" type:"integer"`
 
@@ -7602,26 +7830,26 @@ type H265Settings struct {
 	// Adjust quantization within each frame to reduce flicker or 'pop' on I-frames.
 	FlickerAdaptiveQuantization *string `locationName:"flickerAdaptiveQuantization" type:"string" enum:"H265FlickerAdaptiveQuantization"`
 
-	// If you are using the console, use the Framerate setting to specify the framerate
-	// for this output. If you want to keep the same framerate as the input video,
-	// choose Follow source. If you want to do framerate conversion, choose a framerate
-	// from the dropdown list or choose Custom. The framerates shown in the dropdown
-	// list are decimal approximations of fractions. If you choose Custom, specify
-	// your framerate as a fraction. If you are creating your transcoding job sepecification
-	// as a JSON file without the console, use FramerateControl to specify which
-	// value the service uses for the framerate for this output. Choose INITIALIZE_FROM_SOURCE
-	// if you want the service to use the framerate from the input. Choose SPECIFIED
-	// if you want the service to use the framerate you specify in the settings
-	// FramerateNumerator and FramerateDenominator.
+	// If you are using the console, use the Framerate setting to specify the frame
+	// rate for this output. If you want to keep the same frame rate as the input
+	// video, choose Follow source. If you want to do frame rate conversion, choose
+	// a frame rate from the dropdown list or choose Custom. The framerates shown
+	// in the dropdown list are decimal approximations of fractions. If you choose
+	// Custom, specify your frame rate as a fraction. If you are creating your transcoding
+	// job sepecification as a JSON file without the console, use FramerateControl
+	// to specify which value the service uses for the frame rate for this output.
+	// Choose INITIALIZE_FROM_SOURCE if you want the service to use the frame rate
+	// from the input. Choose SPECIFIED if you want the service to use the frame
+	// rate you specify in the settings FramerateNumerator and FramerateDenominator.
 	FramerateControl *string `locationName:"framerateControl" type:"string" enum:"H265FramerateControl"`
 
-	// When set to INTERPOLATE, produces smoother motion during framerate conversion.
+	// When set to INTERPOLATE, produces smoother motion during frame rate conversion.
 	FramerateConversionAlgorithm *string `locationName:"framerateConversionAlgorithm" type:"string" enum:"H265FramerateConversionAlgorithm"`
 
-	// Framerate denominator.
+	// Frame rate denominator.
 	FramerateDenominator *int64 `locationName:"framerateDenominator" min:"1" type:"integer"`
 
-	// Framerate numerator - framerate is a fraction, e.g. 24000 / 1001 = 23.976
+	// Frame rate numerator - frame rate is a fraction, e.g. 24000 / 1001 = 23.976
 	// fps.
 	FramerateNumerator *int64 `locationName:"framerateNumerator" min:"1" type:"integer"`
 
@@ -8048,13 +8276,15 @@ func (s *H265Settings) SetWriteMp4PackagingType(v string) *H265Settings {
 	return s
 }
 
-// Use the HDR master display (Hdr10Metadata) settings to correct HDR metadata
-// or to provide missing metadata. These values vary depending on the input
-// video and must be provided by a color grader. Range is 0 to 50,000, each
-// increment represents 0.00002 in CIE1931 color coordinate. Note that these
-// settings are not color correction. Note that if you are creating HDR outputs
-// inside of an HLS CMAF package, to comply with the Apple specification, you
-// must use the HVC1 for H.265 setting.
+// Use the "HDR master display information" (Hdr10Metadata) settings to correct
+// HDR metadata or to provide missing metadata. These values vary depending
+// on the input video and must be provided by a color grader. Range is 0 to
+// 50,000; each increment represents 0.00002 in CIE1931 color coordinate. Note
+// that these settings are not color correction. Note that if you are creating
+// HDR outputs inside of an HLS CMAF package, to comply with the Apple specification,
+// you must use the following settings. Set "MP4 packaging type" (writeMp4PackagingType)
+// to HVC1 (HVC1). Set "Profile" (H265Settings > codecProfile) to Main10/High
+// (MAIN10_HIGH). Set "Level" (H265Settings > codecLevel) to 5 (LEVEL_5).
 type Hdr10Metadata struct {
 	_ struct{} `type:"structure"`
 
@@ -8759,9 +8989,9 @@ func (s *Id3Insertion) SetTimecode(v string) *Id3Insertion {
 	return s
 }
 
-// Enable the Image inserter (ImageInserter) feature to include a graphic overlay
-// on your video. Enable or disable this feature for each input or output individually.
-// This setting is disabled by default.
+// Enable the image inserter feature to include a graphic overlay on your video.
+// Enable or disable this feature for each input or output individually. This
+// setting is disabled by default.
 type ImageInserter struct {
 	_ struct{} `type:"structure"`
 
@@ -8830,8 +9060,7 @@ type Input struct {
 	// video inputs.
 	DeblockFilter *string `locationName:"deblockFilter" type:"string" enum:"InputDeblockFilter"`
 
-	// If the input file is encrypted, decryption settings to decrypt the media
-	// file
+	// Settings for decrypting any input files that are encrypted.
 	DecryptionSettings *InputDecryptionSettings `locationName:"decryptionSettings" type:"structure"`
 
 	// Enable Denoise (InputDenoiseFilter) to filter noise from the input. Default
@@ -8839,9 +9068,13 @@ type Input struct {
 	// inputs.
 	DenoiseFilter *string `locationName:"denoiseFilter" type:"string" enum:"InputDenoiseFilter"`
 
-	// Use Input (fileInput) to define the source file used in the transcode job.
-	// There can be multiple inputs in a job. These inputs are concantenated, in
-	// the order they are specified in the job, to create the output.
+	// Specify the source file for your transcoding job. You can use multiple inputs
+	// in a single job. The service concatenates these inputs, in the order that
+	// you specify them in the job, to create the outputs. If your input format
+	// is IMF, specify your input by providing the path to your CPL. For example,
+	// "s3://bucket/vf/cpl.xml". If the CPL is in an incomplete IMP, make sure to
+	// use *Supplemental IMPs* (SupplementalImps) to specify any supplemental IMPs
+	// that contain assets referenced by the CPL.
 	FileInput *string `locationName:"fileInput" type:"string"`
 
 	// Use Filter enable (InputFilterEnable) to specify how the transcoding service
@@ -8857,9 +9090,9 @@ type Input struct {
 	// settings (Deblock and Denoise). The range is -5 to 5. Default is 0.
 	FilterStrength *int64 `locationName:"filterStrength" type:"integer"`
 
-	// Enable the Image inserter (ImageInserter) feature to include a graphic overlay
-	// on your video. Enable or disable this feature for each input individually.
-	// This setting is disabled by default.
+	// Enable the image inserter feature to include a graphic overlay on your video.
+	// Enable or disable this feature for each input individually. This setting
+	// is disabled by default.
 	ImageInserter *ImageInserter `locationName:"imageInserter" type:"structure"`
 
 	// (InputClippings) contains sets of start and end times that together specify
@@ -8880,6 +9113,14 @@ type Input struct {
 	// which data the demux process to scans. * Ignore PSI - Scan all PIDs for audio
 	// and video. * Use PSI - Scan only PSI data.
 	PsiControl *string `locationName:"psiControl" type:"string" enum:"InputPsiControl"`
+
+	// Provide a list of any necessary supplemental IMPs. You need supplemental
+	// IMPs if the CPL that you're using for your input is in an incomplete IMP.
+	// Specify either the supplemental IMP directories with a trailing slash or
+	// the ASSETMAP.xml files. For example ["s3://bucket/ov/", "s3://bucket/vf2/ASSETMAP.xml"].
+	// You don't need to specify the IMP that contains your input CPL, because the
+	// service automatically detects it.
+	SupplementalImps []*string `locationName:"supplementalImps" type:"list"`
 
 	// Timecode source under input settings (InputTimecodeSource) only affects the
 	// behavior of features that apply to a single input at a time, such as input
@@ -9030,6 +9271,12 @@ func (s *Input) SetProgramNumber(v int64) *Input {
 // SetPsiControl sets the PsiControl field's value.
 func (s *Input) SetPsiControl(v string) *Input {
 	s.PsiControl = &v
+	return s
+}
+
+// SetSupplementalImps sets the SupplementalImps field's value.
+func (s *Input) SetSupplementalImps(v []*string) *Input {
+	s.SupplementalImps = v
 	return s
 }
 
@@ -9207,9 +9454,9 @@ type InputTemplate struct {
 	// settings (Deblock and Denoise). The range is -5 to 5. Default is 0.
 	FilterStrength *int64 `locationName:"filterStrength" type:"integer"`
 
-	// Enable the Image inserter (ImageInserter) feature to include a graphic overlay
-	// on your video. Enable or disable this feature for each input individually.
-	// This setting is disabled by default.
+	// Enable the image inserter feature to include a graphic overlay on your video.
+	// Enable or disable this feature for each input individually. This setting
+	// is disabled by default.
 	ImageInserter *ImageInserter `locationName:"imageInserter" type:"structure"`
 
 	// (InputClippings) contains sets of start and end times that together specify
@@ -9378,18 +9625,19 @@ func (s *InputTemplate) SetVideoSelector(v *VideoSelector) *InputTemplate {
 	return s
 }
 
-// Settings that specify how your overlay appears.
+// Settings that specify how your still graphic overlay appears.
 type InsertableImage struct {
 	_ struct{} `type:"structure"`
 
-	// Set the time, in milliseconds, for the image to remain on the output video.
+	// Specify the time, in milliseconds, for the image to remain on the output
+	// video. This duration includes fade-in time but not fade-out time.
 	Duration *int64 `locationName:"duration" type:"integer"`
 
-	// Set the length of time, in milliseconds, between the Start time that you
-	// specify for the image insertion and the time that the image appears at full
-	// opacity. Full opacity is the level that you specify for the opacity setting.
-	// If you don't specify a value for Fade-in, the image will appear abruptly
-	// at the overlay start time.
+	// Specify the length of time, in milliseconds, between the Start time that
+	// you specify for the image insertion and the time that the image appears at
+	// full opacity. Full opacity is the level that you specify for the opacity
+	// setting. If you don't specify a value for Fade-in, the image will appear
+	// abruptly at the overlay start time.
 	FadeIn *int64 `locationName:"fadeIn" type:"integer"`
 
 	// Specify the length of time, in milliseconds, between the end of the time
@@ -9404,19 +9652,16 @@ type InsertableImage struct {
 	// blank.
 	Height *int64 `locationName:"height" type:"integer"`
 
-	// Use Image location (imageInserterInput) to specify the Amazon S3 location
-	// of the image to be inserted into the output. Use a PNG or TGA file that fits
-	// inside the video frame.
+	// Specify the Amazon S3 location of the image that you want to overlay on the
+	// video. Use a PNG or TGA file.
 	ImageInserterInput *string `locationName:"imageInserterInput" min:"14" type:"string"`
 
-	// Use Left (ImageX) to set the distance, in pixels, between the inserted image
-	// and the left edge of the video frame. Required for any image overlay that
-	// you specify.
+	// Specify the distance, in pixels, between the inserted image and the left
+	// edge of the video frame. Required for any image overlay that you specify.
 	ImageX *int64 `locationName:"imageX" type:"integer"`
 
-	// Use Top (ImageY) to set the distance, in pixels, between the overlaid image
-	// and the top edge of the video frame. Required for any image overlay that
-	// you specify.
+	// Specify the distance, in pixels, between the overlaid image and the top edge
+	// of the video frame. Required for any image overlay that you specify.
 	ImageY *int64 `locationName:"imageY" type:"integer"`
 
 	// Specify how overlapping inserted images appear. Images with higher values
@@ -9428,9 +9673,9 @@ type InsertableImage struct {
 	// 50.
 	Opacity *int64 `locationName:"opacity" type:"integer"`
 
-	// Use Start time (StartTime) to specify the video timecode when the image is
-	// inserted in the output. This must be in timecode (HH:MM:SS:FF or HH:MM:SS;FF)
-	// format.
+	// Specify the timecode of the frame that you want the overlay to first appear
+	// on. This must be in timecode (HH:MM:SS:FF or HH:MM:SS;FF) format. Remember
+	// to take into account your timecode source settings.
 	StartTime *string `locationName:"startTime" type:"string"`
 
 	// Specify the width of the inserted image in pixels. If you specify a value
@@ -9534,6 +9779,9 @@ func (s *InsertableImage) SetWidth(v int64) *InsertableImage {
 type Job struct {
 	_ struct{} `type:"structure"`
 
+	// Acceleration settings for job execution.
+	AccelerationSettings *AccelerationSettings `locationName:"accelerationSettings" type:"structure"`
+
 	// An identifier for this resource that is unique within all of AWS.
 	Arn *string `locationName:"arn" type:"string"`
 
@@ -9600,6 +9848,12 @@ func (s Job) String() string {
 // GoString returns the string representation
 func (s Job) GoString() string {
 	return s.String()
+}
+
+// SetAccelerationSettings sets the AccelerationSettings field's value.
+func (s *Job) SetAccelerationSettings(v *AccelerationSettings) *Job {
+	s.AccelerationSettings = v
+	return s
 }
 
 // SetArn sets the Arn field's value.
@@ -9837,6 +10091,9 @@ func (s *JobSettings) SetTimedMetadataInsertion(v *TimedMetadataInsertion) *JobS
 type JobTemplate struct {
 	_ struct{} `type:"structure"`
 
+	// Acceleration settings for job execution.
+	AccelerationSettings *AccelerationSettings `locationName:"accelerationSettings" type:"structure"`
+
 	// An identifier for this resource that is unique within all of AWS.
 	Arn *string `locationName:"arn" type:"string"`
 
@@ -9881,6 +10138,12 @@ func (s JobTemplate) String() string {
 // GoString returns the string representation
 func (s JobTemplate) GoString() string {
 	return s.String()
+}
+
+// SetAccelerationSettings sets the AccelerationSettings field's value.
+func (s *JobTemplate) SetAccelerationSettings(v *AccelerationSettings) *JobTemplate {
+	s.AccelerationSettings = v
+	return s
 }
 
 // SetArn sets the Arn field's value.
@@ -10497,8 +10760,8 @@ func (s *ListQueuesInput) SetOrder(v string) *ListQueuesInput {
 	return s
 }
 
-// Successful list queues return a JSON array of queues. If you don't specify
-// how they are ordered, you will receive them alphabetically by name.
+// Successful list queues requests return a JSON array of queues. If you don't
+// specify how they are ordered, you will receive them alphabetically by name.
 type ListQueuesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -10559,6 +10822,9 @@ func (s *ListTagsForResourceInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "ListTagsForResourceInput"}
 	if s.Arn == nil {
 		invalidParams.Add(request.NewErrParamRequired("Arn"))
+	}
+	if s.Arn != nil && len(*s.Arn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Arn", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -10659,6 +10925,11 @@ type M2tsSettings struct {
 
 	// Controls whether to include the ES Rate field in the PES header.
 	EsRateInPes *string `locationName:"esRateInPes" type:"string" enum:"M2tsEsRateInPes"`
+
+	// Keep the default value (DEFAULT) unless you know that your audio EBP markers
+	// are incorrectly appearing before your video EBP markers. Set this value to
+	// Force (FORCE) to correct this problem.
+	ForceTsVideoEbpOrder *string `locationName:"forceTsVideoEbpOrder" type:"string" enum:"M2tsForceTsVideoEbpOrder"`
 
 	// The length in seconds of each fragment. Only used with EBP markers.
 	FragmentTime *float64 `locationName:"fragmentTime" type:"double"`
@@ -10891,6 +11162,12 @@ func (s *M2tsSettings) SetEbpPlacement(v string) *M2tsSettings {
 // SetEsRateInPes sets the EsRateInPes field's value.
 func (s *M2tsSettings) SetEsRateInPes(v string) *M2tsSettings {
 	s.EsRateInPes = &v
+	return s
+}
+
+// SetForceTsVideoEbpOrder sets the ForceTsVideoEbpOrder field's value.
+func (s *M2tsSettings) SetForceTsVideoEbpOrder(v string) *M2tsSettings {
+	s.ForceTsVideoEbpOrder = &v
 	return s
 }
 
@@ -11224,12 +11501,12 @@ type MotionImageInserter struct {
 	_ struct{} `type:"structure"`
 
 	// If your motion graphic asset is a .mov file, keep this setting unspecified.
-	// If your motion graphic asset is a series of .png files, specify the framerate
-	// of the overlay in frames per second, as a fraction. For example, specify
+	// If your motion graphic asset is a series of .png files, specify the frame
+	// rate of the overlay in frames per second, as a fraction. For example, specify
 	// 24 fps as 24/1. Make sure that the number of images in your series matches
-	// the framerate and your intended overlay duration. For example, if you want
+	// the frame rate and your intended overlay duration. For example, if you want
 	// a 30-second overlay at 30 fps, you should have 900 .png images. This overlay
-	// framerate doesn't need to match the framerate of the underlying video.
+	// frame rate doesn't need to match the frame rate of the underlying video.
 	Framerate *MotionImageInsertionFramerate `locationName:"framerate" type:"structure"`
 
 	// Specify the .mov file or series of .png files that you want to overlay on
@@ -11338,19 +11615,19 @@ func (s *MotionImageInserter) SetStartTime(v string) *MotionImageInserter {
 	return s
 }
 
-// For motion overlays that don't have a built-in framerate, specify the framerate
-// of the overlay in frames per second, as a fraction. For example, specify
-// 24 fps as 24/1. The overlay framerate doesn't need to match the framerate
+// For motion overlays that don't have a built-in frame rate, specify the frame
+// rate of the overlay in frames per second, as a fraction. For example, specify
+// 24 fps as 24/1. The overlay frame rate doesn't need to match the frame rate
 // of the underlying video.
 type MotionImageInsertionFramerate struct {
 	_ struct{} `type:"structure"`
 
-	// The bottom of the fraction that expresses your overlay framerate. For example,
-	// if your framerate is 24 fps, set this value to 1.
+	// The bottom of the fraction that expresses your overlay frame rate. For example,
+	// if your frame rate is 24 fps, set this value to 1.
 	FramerateDenominator *int64 `locationName:"framerateDenominator" min:"1" type:"integer"`
 
-	// The top of the fraction that expresses your overlay framerate. For example,
-	// if your framerate is 24 fps, set this value to 24.
+	// The top of the fraction that expresses your overlay frame rate. For example,
+	// if your frame rate is 24 fps, set this value to 24.
 	FramerateNumerator *int64 `locationName:"framerateNumerator" min:"1" type:"integer"`
 }
 
@@ -11450,9 +11727,7 @@ type MovSettings struct {
 	// If set to OMNEON, inserts Omneon-compatible padding
 	PaddingControl *string `locationName:"paddingControl" type:"string" enum:"MovPaddingControl"`
 
-	// A value of 'external' creates separate media files and the wrapper file (.mov)
-	// contains references to these media files. A value of 'self_contained' creates
-	// only a wrapper (.mov) file and this file contains all of the media.
+	// Always keep the default value (SELF_CONTAINED) for this setting.
 	Reference *string `locationName:"reference" type:"string" enum:"MovReference"`
 }
 
@@ -11643,26 +11918,26 @@ type Mpeg2Settings struct {
 	// value you provide for the setting B frames between reference frames (numberBFramesBetweenReferenceFrames).
 	DynamicSubGop *string `locationName:"dynamicSubGop" type:"string" enum:"Mpeg2DynamicSubGop"`
 
-	// If you are using the console, use the Framerate setting to specify the framerate
-	// for this output. If you want to keep the same framerate as the input video,
-	// choose Follow source. If you want to do framerate conversion, choose a framerate
-	// from the dropdown list or choose Custom. The framerates shown in the dropdown
-	// list are decimal approximations of fractions. If you choose Custom, specify
-	// your framerate as a fraction. If you are creating your transcoding job sepecification
-	// as a JSON file without the console, use FramerateControl to specify which
-	// value the service uses for the framerate for this output. Choose INITIALIZE_FROM_SOURCE
-	// if you want the service to use the framerate from the input. Choose SPECIFIED
-	// if you want the service to use the framerate you specify in the settings
-	// FramerateNumerator and FramerateDenominator.
+	// If you are using the console, use the Framerate setting to specify the frame
+	// rate for this output. If you want to keep the same frame rate as the input
+	// video, choose Follow source. If you want to do frame rate conversion, choose
+	// a frame rate from the dropdown list or choose Custom. The framerates shown
+	// in the dropdown list are decimal approximations of fractions. If you choose
+	// Custom, specify your frame rate as a fraction. If you are creating your transcoding
+	// job sepecification as a JSON file without the console, use FramerateControl
+	// to specify which value the service uses for the frame rate for this output.
+	// Choose INITIALIZE_FROM_SOURCE if you want the service to use the frame rate
+	// from the input. Choose SPECIFIED if you want the service to use the frame
+	// rate you specify in the settings FramerateNumerator and FramerateDenominator.
 	FramerateControl *string `locationName:"framerateControl" type:"string" enum:"Mpeg2FramerateControl"`
 
-	// When set to INTERPOLATE, produces smoother motion during framerate conversion.
+	// When set to INTERPOLATE, produces smoother motion during frame rate conversion.
 	FramerateConversionAlgorithm *string `locationName:"framerateConversionAlgorithm" type:"string" enum:"Mpeg2FramerateConversionAlgorithm"`
 
-	// Framerate denominator.
+	// Frame rate denominator.
 	FramerateDenominator *int64 `locationName:"framerateDenominator" min:"1" type:"integer"`
 
-	// Framerate numerator - framerate is a fraction, e.g. 24000 / 1001 = 23.976
+	// Frame rate numerator - frame rate is a fraction, e.g. 24000 / 1001 = 23.976
 	// fps.
 	FramerateNumerator *int64 `locationName:"framerateNumerator" min:"24" type:"integer"`
 
@@ -12039,7 +12314,7 @@ type MsSmoothGroupSettings struct {
 	Encryption *MsSmoothEncryptionSettings `locationName:"encryption" type:"structure"`
 
 	// Use Fragment length (FragmentLength) to specify the mp4 fragment sizes in
-	// seconds. Fragment length must be compatible with GOP size and framerate.
+	// seconds. Fragment length must be compatible with GOP size and frame rate.
 	FragmentLength *int64 `locationName:"fragmentLength" min:"1" type:"integer"`
 
 	// Use Manifest encoding (MsSmoothManifestEncoding) to specify the encoding
@@ -12922,27 +13197,27 @@ type ProresSettings struct {
 	// to use for this output.
 	CodecProfile *string `locationName:"codecProfile" type:"string" enum:"ProresCodecProfile"`
 
-	// If you are using the console, use the Framerate setting to specify the framerate
-	// for this output. If you want to keep the same framerate as the input video,
-	// choose Follow source. If you want to do framerate conversion, choose a framerate
-	// from the dropdown list or choose Custom. The framerates shown in the dropdown
-	// list are decimal approximations of fractions. If you choose Custom, specify
-	// your framerate as a fraction. If you are creating your transcoding job sepecification
-	// as a JSON file without the console, use FramerateControl to specify which
-	// value the service uses for the framerate for this output. Choose INITIALIZE_FROM_SOURCE
-	// if you want the service to use the framerate from the input. Choose SPECIFIED
-	// if you want the service to use the framerate you specify in the settings
-	// FramerateNumerator and FramerateDenominator.
+	// If you are using the console, use the Framerate setting to specify the frame
+	// rate for this output. If you want to keep the same frame rate as the input
+	// video, choose Follow source. If you want to do frame rate conversion, choose
+	// a frame rate from the dropdown list or choose Custom. The framerates shown
+	// in the dropdown list are decimal approximations of fractions. If you choose
+	// Custom, specify your frame rate as a fraction. If you are creating your transcoding
+	// job sepecification as a JSON file without the console, use FramerateControl
+	// to specify which value the service uses for the frame rate for this output.
+	// Choose INITIALIZE_FROM_SOURCE if you want the service to use the frame rate
+	// from the input. Choose SPECIFIED if you want the service to use the frame
+	// rate you specify in the settings FramerateNumerator and FramerateDenominator.
 	FramerateControl *string `locationName:"framerateControl" type:"string" enum:"ProresFramerateControl"`
 
-	// When set to INTERPOLATE, produces smoother motion during framerate conversion.
+	// When set to INTERPOLATE, produces smoother motion during frame rate conversion.
 	FramerateConversionAlgorithm *string `locationName:"framerateConversionAlgorithm" type:"string" enum:"ProresFramerateConversionAlgorithm"`
 
-	// Framerate denominator.
+	// Frame rate denominator.
 	FramerateDenominator *int64 `locationName:"framerateDenominator" min:"1" type:"integer"`
 
-	// When you use the API for transcode jobs that use framerate conversion, specify
-	// the framerate as a fraction. For example, 24000 / 1001 = 23.976 fps. Use
+	// When you use the API for transcode jobs that use frame rate conversion, specify
+	// the frame rate as a fraction. For example, 24000 / 1001 = 23.976 fps. Use
 	// FramerateNumerator to specify the numerator of this fraction. In this example,
 	// use 24000 for the value of FramerateNumerator.
 	FramerateNumerator *int64 `locationName:"framerateNumerator" min:"1" type:"integer"`
@@ -13085,20 +13360,20 @@ func (s *ProresSettings) SetTelecine(v string) *ProresSettings {
 // You can use queues to manage the resources that are available to your AWS
 // account for running multiple transcoding jobs at the same time. If you don't
 // specify a queue, the service sends all jobs through the default queue. For
-// more information, see https://docs.aws.amazon.com/mediaconvert/latest/ug/about-resource-allocation-and-job-prioritization.html.
+// more information, see https://docs.aws.amazon.com/mediaconvert/latest/ug/working-with-queues.html.
 type Queue struct {
 	_ struct{} `type:"structure"`
 
 	// An identifier for this resource that is unique within all of AWS.
 	Arn *string `locationName:"arn" type:"string"`
 
-	// The time stamp in epoch seconds for queue creation.
+	// The timestamp in epoch seconds for when you created the queue.
 	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp" timestampFormat:"unixTimestamp"`
 
 	// An optional description that you create for each queue.
 	Description *string `locationName:"description" type:"string"`
 
-	// The time stamp in epoch seconds when the queue was last updated.
+	// The timestamp in epoch seconds for when you most recently updated the queue.
 	LastUpdated *time.Time `locationName:"lastUpdated" type:"timestamp" timestampFormat:"unixTimestamp"`
 
 	// A name that you create for each queue. Each name must be unique within your
@@ -13107,11 +13382,11 @@ type Queue struct {
 	// Name is a required field
 	Name *string `locationName:"name" type:"string" required:"true"`
 
-	// Specifies whether the pricing plan for the queue is On-demand or Reserved.
-	// The pricing plan for the queue determines whether you pay On-demand or Reserved
-	// pricing for the transcoding jobs that you run through the queue. For Reserved
-	// queue pricing, you must set up a contract. You can create a Reserved queue
-	// contract through the AWS Elemental MediaConvert console.
+	// Specifies whether the pricing plan for the queue is on-demand or reserved.
+	// For on-demand, you pay per minute, billed in increments of .01 minute. For
+	// reserved, you pay for the transcoding capacity of the entire queue, regardless
+	// of how much or how little you use it. Reserved pricing requires a 12-month
+	// commitment.
 	PricingPlan *string `locationName:"pricingPlan" type:"string" enum:"PricingPlan"`
 
 	// The estimated number of jobs with a PROGRESSING status.
@@ -13129,9 +13404,9 @@ type Queue struct {
 	// The estimated number of jobs with a SUBMITTED status.
 	SubmittedJobsCount *int64 `locationName:"submittedJobsCount" type:"integer"`
 
-	// Specifies whether this queue is system or custom. System queues are built
-	// in. You can't modify or delete system queues. You can create and modify custom
-	// queues.
+	// Specifies whether this on-demand queue is system or custom. System queues
+	// are built in. You can't modify or delete system queues. You can create and
+	// modify custom queues.
 	Type *string `locationName:"type" type:"string" enum:"Type"`
 }
 
@@ -13351,26 +13626,27 @@ func (s *RemixSettings) SetChannelsOut(v int64) *RemixSettings {
 type ReservationPlan struct {
 	_ struct{} `type:"structure"`
 
-	// The length of time that you commit to when you set up a pricing plan contract
-	// for a reserved queue.
+	// The length of the term of your reserved queue pricing plan commitment.
 	Commitment *string `locationName:"commitment" type:"string" enum:"Commitment"`
 
-	// The time stamp, in epoch seconds, for when the pricing plan for this reserved
-	// queue expires.
+	// The timestamp in epoch seconds for when the current pricing plan term for
+	// this reserved queue expires.
 	ExpiresAt *time.Time `locationName:"expiresAt" type:"timestamp" timestampFormat:"unixTimestamp"`
 
-	// The time stamp in epoch seconds when the reserved queue's reservation plan
-	// was created.
+	// The timestamp in epoch seconds for when you set up the current pricing plan
+	// for this reserved queue.
 	PurchasedAt *time.Time `locationName:"purchasedAt" type:"timestamp" timestampFormat:"unixTimestamp"`
 
-	// Specifies whether the pricing plan contract for your reserved queue automatically
-	// renews (AUTO_RENEW) or expires (EXPIRE) at the end of the contract period.
+	// Specifies whether the term of your reserved queue pricing plan is automatically
+	// extended (AUTO_RENEW) or expires (EXPIRE) at the end of the term.
 	RenewalType *string `locationName:"renewalType" type:"string" enum:"RenewalType"`
 
 	// Specifies the number of reserved transcode slots (RTS) for this queue. The
 	// number of RTS determines how many jobs the queue can process in parallel;
-	// each RTS can process one job at a time. To increase this number, create a
-	// replacement contract through the AWS Elemental MediaConvert console.
+	// each RTS can process one job at a time. When you increase this number, you
+	// extend your existing commitment with a new 12-month commitment for a larger
+	// number of RTS. The new commitment begins when you purchase the additional
+	// capacity. You can't decrease the number of RTS in your reserved queue.
 	ReservedSlots *int64 `locationName:"reservedSlots" type:"integer"`
 
 	// Specifies whether the pricing plan for your reserved queue is ACTIVE or EXPIRED.
@@ -13428,22 +13704,27 @@ func (s *ReservationPlan) SetStatus(v string) *ReservationPlan {
 type ReservationPlanSettings struct {
 	_ struct{} `type:"structure"`
 
-	// The length of time that you commit to when you set up a pricing plan contract
-	// for a reserved queue.
+	// The length of the term of your reserved queue pricing plan commitment.
 	//
 	// Commitment is a required field
 	Commitment *string `locationName:"commitment" type:"string" required:"true" enum:"Commitment"`
 
-	// Specifies whether the pricing plan contract for your reserved queue automatically
-	// renews (AUTO_RENEW) or expires (EXPIRE) at the end of the contract period.
+	// Specifies whether the term of your reserved queue pricing plan is automatically
+	// extended (AUTO_RENEW) or expires (EXPIRE) at the end of the term. When your
+	// term is auto renewed, you extend your commitment by 12 months from the auto
+	// renew date. You can cancel this commitment.
 	//
 	// RenewalType is a required field
 	RenewalType *string `locationName:"renewalType" type:"string" required:"true" enum:"RenewalType"`
 
 	// Specifies the number of reserved transcode slots (RTS) for this queue. The
 	// number of RTS determines how many jobs the queue can process in parallel;
-	// each RTS can process one job at a time. To increase this number, create a
-	// replacement contract through the AWS Elemental MediaConvert console.
+	// each RTS can process one job at a time. You can't decrease the number of
+	// RTS in your reserved queue. You can increase the number of RTS by extending
+	// your existing commitment with a new 12-month commitment for the larger number.
+	// The new commitment begins when you purchase the additional capacity. You
+	// can't cancel your commitment or revert to your original commitment after
+	// you increase the capacity.
 	//
 	// ReservedSlots is a required field
 	ReservedSlots *int64 `locationName:"reservedSlots" type:"integer" required:"true"`
@@ -13535,10 +13816,11 @@ type SccDestinationSettings struct {
 	_ struct{} `type:"structure"`
 
 	// Set Framerate (SccDestinationFramerate) to make sure that the captions and
-	// the video are synchronized in the output. Specify a framerate that matches
-	// the framerate of the associated video. If the video framerate is 29.97, choose
-	// 29.97 dropframe (FRAMERATE_29_97_DROPFRAME) only if the video has video_insertion=true
-	// and drop_frame_timecode=true; otherwise, choose 29.97 non-dropframe (FRAMERATE_29_97_NON_DROPFRAME).
+	// the video are synchronized in the output. Specify a frame rate that matches
+	// the frame rate of the associated video. If the video frame rate is 29.97,
+	// choose 29.97 dropframe (FRAMERATE_29_97_DROPFRAME) only if the video has
+	// video_insertion=true and drop_frame_timecode=true; otherwise, choose 29.97
+	// non-dropframe (FRAMERATE_29_97_NON_DROPFRAME).
 	Framerate *string `locationName:"framerate" type:"string" enum:"SccDestinationFramerate"`
 }
 
@@ -13890,7 +14172,7 @@ type TimecodeConfig struct {
 	// If you use an editing platform that relies on an anchor timecode, use Anchor
 	// Timecode (Anchor) to specify a timecode that will match the input video frame
 	// to the output video frame. Use 24-hour format with frame number, (HH:MM:SS:FF)
-	// or (HH:MM:SS;FF). This setting ignores framerate conversion. System behavior
+	// or (HH:MM:SS;FF). This setting ignores frame rate conversion. System behavior
 	// for Anchor Timecode varies depending on your setting for Source (TimecodeSource).
 	// * If Source (TimecodeSource) is set to Specified Start (SPECIFIEDSTART),
 	// the first input frame is the specified value in Start Timecode (Start). Anchor
@@ -14032,6 +14314,49 @@ func (s *Timing) SetSubmitTime(v time.Time) *Timing {
 	return s
 }
 
+// Settings specific to caption sources that are specfied by track number. Sources
+// include IMSC in IMF.
+type TrackSourceSettings struct {
+	_ struct{} `type:"structure"`
+
+	// Use this setting to select a single captions track from a source. Track numbers
+	// correspond to the order in the captions source file. For IMF sources, track
+	// numbering is based on the order that the captions appear in the CPL. For
+	// example, use 1 to select the captions asset that is listed first in the CPL.
+	// To include more than one captions track in your job outputs, create multiple
+	// input captions selectors. Specify one track per selector.
+	TrackNumber *int64 `locationName:"trackNumber" min:"1" type:"integer"`
+}
+
+// String returns the string representation
+func (s TrackSourceSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TrackSourceSettings) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *TrackSourceSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "TrackSourceSettings"}
+	if s.TrackNumber != nil && *s.TrackNumber < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("TrackNumber", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetTrackNumber sets the TrackNumber field's value.
+func (s *TrackSourceSettings) SetTrackNumber(v int64) *TrackSourceSettings {
+	s.TrackNumber = &v
+	return s
+}
+
 // Settings specific to TTML caption outputs, including Pass style information
 // (TtmlStylePassthrough).
 type TtmlDestinationSettings struct {
@@ -14089,6 +14414,9 @@ func (s *UntagResourceInput) Validate() error {
 	if s.Arn == nil {
 		invalidParams.Add(request.NewErrParamRequired("Arn"))
 	}
+	if s.Arn != nil && len(*s.Arn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Arn", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -14129,6 +14457,10 @@ func (s UntagResourceOutput) GoString() string {
 type UpdateJobTemplateInput struct {
 	_ struct{} `type:"structure"`
 
+	// This is a beta feature. If you are interested in using this feature, please
+	// contact AWS customer support.
+	AccelerationSettings *AccelerationSettings `locationName:"accelerationSettings" type:"structure"`
+
 	// The new category for the job template, if you are changing it.
 	Category *string `locationName:"category" type:"string"`
 
@@ -14164,6 +14496,14 @@ func (s *UpdateJobTemplateInput) Validate() error {
 	if s.Name == nil {
 		invalidParams.Add(request.NewErrParamRequired("Name"))
 	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
+	}
+	if s.AccelerationSettings != nil {
+		if err := s.AccelerationSettings.Validate(); err != nil {
+			invalidParams.AddNested("AccelerationSettings", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.Settings != nil {
 		if err := s.Settings.Validate(); err != nil {
 			invalidParams.AddNested("Settings", err.(request.ErrInvalidParams))
@@ -14174,6 +14514,12 @@ func (s *UpdateJobTemplateInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetAccelerationSettings sets the AccelerationSettings field's value.
+func (s *UpdateJobTemplateInput) SetAccelerationSettings(v *AccelerationSettings) *UpdateJobTemplateInput {
+	s.AccelerationSettings = v
+	return s
 }
 
 // SetCategory sets the Category field's value.
@@ -14269,6 +14615,9 @@ func (s *UpdatePresetInput) Validate() error {
 	if s.Name == nil {
 		invalidParams.Add(request.NewErrParamRequired("Name"))
 	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
+	}
 	if s.Settings != nil {
 		if err := s.Settings.Validate(); err != nil {
 			invalidParams.AddNested("Settings", err.(request.ErrInvalidParams))
@@ -14343,8 +14692,11 @@ type UpdateQueueInput struct {
 	// Name is a required field
 	Name *string `location:"uri" locationName:"name" type:"string" required:"true"`
 
-	// Details about the pricing plan for your reserved queue. Required for reserved
-	// queues and not applicable to on-demand queues.
+	// The new details of your pricing plan for your reserved queue. When you set
+	// up a new pricing plan to replace an expired one, you enter into another 12-month
+	// commitment. When you add capacity to your queue by increasing the number
+	// of RTS, you extend the term of your commitment to 12 months from when you
+	// add capacity. After you make these commitments, you can't cancel them.
 	ReservationPlanSettings *ReservationPlanSettings `locationName:"reservationPlanSettings" type:"structure"`
 
 	// Pause or activate a queue by changing its status between ACTIVE and PAUSED.
@@ -14369,6 +14721,9 @@ func (s *UpdateQueueInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "UpdateQueueInput"}
 	if s.Name == nil {
 		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
 	}
 	if s.ReservationPlanSettings != nil {
 		if err := s.ReservationPlanSettings.Validate(); err != nil {
@@ -14406,14 +14761,15 @@ func (s *UpdateQueueInput) SetStatus(v string) *UpdateQueueInput {
 	return s
 }
 
-// Successful update queue requests return the new queue information in JSON.
+// Successful update queue requests return the new queue information in JSON
+// format.
 type UpdateQueueOutput struct {
 	_ struct{} `type:"structure"`
 
 	// You can use queues to manage the resources that are available to your AWS
 	// account for running multiple transcoding jobs at the same time. If you don't
 	// specify a queue, the service sends all jobs through the default queue. For
-	// more information, see https://docs.aws.amazon.com/mediaconvert/latest/ug/about-resource-allocation-and-job-prioritization.html.
+	// more information, see https://docs.aws.amazon.com/mediaconvert/latest/ug/working-with-queues.html.
 	Queue *Queue `locationName:"queue" type:"structure"`
 }
 
@@ -14581,8 +14937,9 @@ type VideoDescription struct {
 	// Applies only if your input aspect ratio is different from your output aspect
 	// ratio. Use Input cropping rectangle (Crop) to specify the video area the
 	// service will include in the output. This will crop the input source, causing
-	// video pixels to be removed on encode. Do not use this setting if you have
-	// enabled Stretch to output (stretchToOutput) in your output settings.
+	// video pixels to be removed on encode. If you crop your input frame size to
+	// smaller than your output frame size, make sure to specify the behavior you
+	// want in your output setting "Scaling behavior".
 	Crop *Rectangle `locationName:"crop" type:"structure"`
 
 	// Applies only to 29.97 fps outputs. When this feature is enabled, the service
@@ -14616,10 +14973,10 @@ type VideoDescription struct {
 	RespondToAfd *string `locationName:"respondToAfd" type:"string" enum:"RespondToAfd"`
 
 	// Applies only if your input aspect ratio is different from your output aspect
-	// ratio. Enable Stretch to output (StretchToOutput) to have the service stretch
-	// your video image to fit. Leave this setting disabled to allow the service
-	// to letterbox your video instead. This setting overrides any positioning value
-	// you specify elsewhere in the job.
+	// ratio. Choose "Stretch to output" to have the service stretch your video
+	// image to fit. Keep the setting "Default" to allow the service to letterbox
+	// your video instead. This setting overrides any positioning value you specify
+	// elsewhere in the job.
 	ScalingBehavior *string `locationName:"scalingBehavior" type:"string" enum:"ScalingBehavior"`
 
 	// Use Sharpness (Sharpness)setting to specify the strength of anti-aliasing.
@@ -14630,7 +14987,7 @@ type VideoDescription struct {
 	Sharpness *int64 `locationName:"sharpness" type:"integer"`
 
 	// Applies only to H.264, H.265, MPEG2, and ProRes outputs. Only enable Timecode
-	// insertion when the input framerate is identical to the output framerate.
+	// insertion when the input frame rate is identical to the output frame rate.
 	// To include timecodes in this output, set Timecode insertion (VideoTimecodeInsertion)
 	// to PIC_TIMING_SEI. To leave them out, set it to DISABLED. Default is DISABLED.
 	// When the service inserts timecodes in an output, by default, it uses any
@@ -14946,13 +15303,15 @@ type VideoSelector struct {
 	// the system will use user-supplied color metadata values if available.
 	ColorSpaceUsage *string `locationName:"colorSpaceUsage" type:"string" enum:"ColorSpaceUsage"`
 
-	// Use the HDR master display (Hdr10Metadata) settings to correct HDR metadata
-	// or to provide missing metadata. These values vary depending on the input
-	// video and must be provided by a color grader. Range is 0 to 50,000, each
-	// increment represents 0.00002 in CIE1931 color coordinate. Note that these
-	// settings are not color correction. Note that if you are creating HDR outputs
-	// inside of an HLS CMAF package, to comply with the Apple specification, you
-	// must use the HVC1 for H.265 setting.
+	// Use the "HDR master display information" (Hdr10Metadata) settings to correct
+	// HDR metadata or to provide missing metadata. These values vary depending
+	// on the input video and must be provided by a color grader. Range is 0 to
+	// 50,000; each increment represents 0.00002 in CIE1931 color coordinate. Note
+	// that these settings are not color correction. Note that if you are creating
+	// HDR outputs inside of an HLS CMAF package, to comply with the Apple specification,
+	// you must use the following settings. Set "MP4 packaging type" (writeMp4PackagingType)
+	// to HVC1 (HVC1). Set "Profile" (H265Settings > codecProfile) to Main10/High
+	// (MAIN10_HIGH). Set "Level" (H265Settings > codecLevel) to 5 (LEVEL_5).
 	Hdr10Metadata *Hdr10Metadata `locationName:"hdr10Metadata" type:"structure"`
 
 	// Use PID (Pid) to select specific video data from an input file. Specify this
@@ -15267,6 +15626,15 @@ const (
 	Ac3MetadataControlUseConfigured = "USE_CONFIGURED"
 )
 
+// Acceleration configuration for the job.
+const (
+	// AccelerationModeDisabled is a AccelerationMode enum value
+	AccelerationModeDisabled = "DISABLED"
+
+	// AccelerationModeEnabled is a AccelerationMode enum value
+	AccelerationModeEnabled = "ENABLED"
+)
+
 // This setting only applies to H.264, H.265, and MPEG2 outputs. Use Insert
 // AFD signaling (AfdSignaling) to specify whether the service includes AFD
 // values in the output video data and what those values are. * Choose None
@@ -15525,8 +15893,12 @@ const (
 	BurninSubtitleTeletextSpacingProportional = "PROPORTIONAL"
 )
 
-// Type of Caption output, including Burn-In, Embedded (with or without SCTE20),
-// SCC, SMI, SRT, TTML, WebVTT, DVB-Sub, Teletext.
+// Specify the format for this set of captions on this output. The default format
+// is embedded without SCTE-20. Other options are embedded with SCTE-20, burn-in,
+// DVB-sub, SCC, SRT, teletext, TTML, and web-VTT. If you are using SCTE-20,
+// choose SCTE-20 plus embedded (SCTE20_PLUS_EMBEDDED) to create an output that
+// complies with the SCTE-43 spec. To create a non-compliant output where the
+// embedded captions come first, choose Embedded plus SCTE-20 (EMBEDDED_PLUS_SCTE20).
 const (
 	// CaptionDestinationTypeBurnIn is a CaptionDestinationType enum value
 	CaptionDestinationTypeBurnIn = "BURN_IN"
@@ -15597,6 +15969,9 @@ const (
 
 	// CaptionSourceTypeNullSource is a CaptionSourceType enum value
 	CaptionSourceTypeNullSource = "NULL_SOURCE"
+
+	// CaptionSourceTypeImsc is a CaptionSourceType enum value
+	CaptionSourceTypeImsc = "IMSC"
 )
 
 // When set to ENABLED, sets #EXT-X-ALLOW-CACHE:no tag, which prevents client
@@ -15773,8 +16148,7 @@ const (
 	ColorSpaceUsageFallback = "FALLBACK"
 )
 
-// The length of time that you commit to when you set up a pricing plan contract
-// for a reserved queue.
+// The length of the term of your reserved queue pricing plan commitment.
 const (
 	// CommitmentOneYear is a Commitment enum value
 	CommitmentOneYear = "ONE_YEAR"
@@ -16257,6 +16631,20 @@ const (
 	FileSourceConvert608To708Disabled = "DISABLED"
 )
 
+// Provide the font script, using an ISO 15924 script code, if the LanguageCode
+// is not sufficient for determining the script type. Where LanguageCode or
+// CustomLanguageCode is sufficient, use "AUTOMATIC" or leave unset.
+const (
+	// FontScriptAutomatic is a FontScript enum value
+	FontScriptAutomatic = "AUTOMATIC"
+
+	// FontScriptHans is a FontScript enum value
+	FontScriptHans = "HANS"
+
+	// FontScriptHant is a FontScript enum value
+	FontScriptHant = "HANT"
+)
+
 // Adaptive quantization. Allows intra-frame quantizers to vary to improve visual
 // quality.
 const (
@@ -16279,7 +16667,8 @@ const (
 	H264AdaptiveQuantizationMax = "MAX"
 )
 
-// H.264 Level.
+// Specify an H.264 level that is consistent with your output video settings.
+// If you aren't sure what level to specify, choose Auto (AUTO).
 const (
 	// H264CodecLevelAuto is a H264CodecLevel enum value
 	H264CodecLevelAuto = "AUTO"
@@ -16395,17 +16784,17 @@ const (
 	H264FlickerAdaptiveQuantizationEnabled = "ENABLED"
 )
 
-// If you are using the console, use the Framerate setting to specify the framerate
-// for this output. If you want to keep the same framerate as the input video,
-// choose Follow source. If you want to do framerate conversion, choose a framerate
-// from the dropdown list or choose Custom. The framerates shown in the dropdown
-// list are decimal approximations of fractions. If you choose Custom, specify
-// your framerate as a fraction. If you are creating your transcoding job specification
-// as a JSON file without the console, use FramerateControl to specify which
-// value the service uses for the framerate for this output. Choose INITIALIZE_FROM_SOURCE
-// if you want the service to use the framerate from the input. Choose SPECIFIED
-// if you want the service to use the framerate you specify in the settings
-// FramerateNumerator and FramerateDenominator.
+// If you are using the console, use the Framerate setting to specify the frame
+// rate for this output. If you want to keep the same frame rate as the input
+// video, choose Follow source. If you want to do frame rate conversion, choose
+// a frame rate from the dropdown list or choose Custom. The framerates shown
+// in the dropdown list are decimal approximations of fractions. If you choose
+// Custom, specify your frame rate as a fraction. If you are creating your transcoding
+// job specification as a JSON file without the console, use FramerateControl
+// to specify which value the service uses for the frame rate for this output.
+// Choose INITIALIZE_FROM_SOURCE if you want the service to use the frame rate
+// from the input. Choose SPECIFIED if you want the service to use the frame
+// rate you specify in the settings FramerateNumerator and FramerateDenominator.
 const (
 	// H264FramerateControlInitializeFromSource is a H264FramerateControl enum value
 	H264FramerateControlInitializeFromSource = "INITIALIZE_FROM_SOURCE"
@@ -16414,7 +16803,7 @@ const (
 	H264FramerateControlSpecified = "SPECIFIED"
 )
 
-// When set to INTERPOLATE, produces smoother motion during framerate conversion.
+// When set to INTERPOLATE, produces smoother motion during frame rate conversion.
 const (
 	// H264FramerateConversionAlgorithmDuplicateDrop is a H264FramerateConversionAlgorithm enum value
 	H264FramerateConversionAlgorithmDuplicateDrop = "DUPLICATE_DROP"
@@ -16721,17 +17110,17 @@ const (
 	H265FlickerAdaptiveQuantizationEnabled = "ENABLED"
 )
 
-// If you are using the console, use the Framerate setting to specify the framerate
-// for this output. If you want to keep the same framerate as the input video,
-// choose Follow source. If you want to do framerate conversion, choose a framerate
-// from the dropdown list or choose Custom. The framerates shown in the dropdown
-// list are decimal approximations of fractions. If you choose Custom, specify
-// your framerate as a fraction. If you are creating your transcoding job sepecification
-// as a JSON file without the console, use FramerateControl to specify which
-// value the service uses for the framerate for this output. Choose INITIALIZE_FROM_SOURCE
-// if you want the service to use the framerate from the input. Choose SPECIFIED
-// if you want the service to use the framerate you specify in the settings
-// FramerateNumerator and FramerateDenominator.
+// If you are using the console, use the Framerate setting to specify the frame
+// rate for this output. If you want to keep the same frame rate as the input
+// video, choose Follow source. If you want to do frame rate conversion, choose
+// a frame rate from the dropdown list or choose Custom. The framerates shown
+// in the dropdown list are decimal approximations of fractions. If you choose
+// Custom, specify your frame rate as a fraction. If you are creating your transcoding
+// job sepecification as a JSON file without the console, use FramerateControl
+// to specify which value the service uses for the frame rate for this output.
+// Choose INITIALIZE_FROM_SOURCE if you want the service to use the frame rate
+// from the input. Choose SPECIFIED if you want the service to use the frame
+// rate you specify in the settings FramerateNumerator and FramerateDenominator.
 const (
 	// H265FramerateControlInitializeFromSource is a H265FramerateControl enum value
 	H265FramerateControlInitializeFromSource = "INITIALIZE_FROM_SOURCE"
@@ -16740,7 +17129,7 @@ const (
 	H265FramerateControlSpecified = "SPECIFIED"
 )
 
-// When set to INTERPOLATE, produces smoother motion during framerate conversion.
+// When set to INTERPOLATE, produces smoother motion during frame rate conversion.
 const (
 	// H265FramerateConversionAlgorithmDuplicateDrop is a H265FramerateConversionAlgorithm enum value
 	H265FramerateConversionAlgorithmDuplicateDrop = "DUPLICATE_DROP"
@@ -17879,6 +18268,17 @@ const (
 	M2tsEsRateInPesExclude = "EXCLUDE"
 )
 
+// Keep the default value (DEFAULT) unless you know that your audio EBP markers
+// are incorrectly appearing before your video EBP markers. Set this value to
+// Force (FORCE) to correct this problem.
+const (
+	// M2tsForceTsVideoEbpOrderForce is a M2tsForceTsVideoEbpOrder enum value
+	M2tsForceTsVideoEbpOrderForce = "FORCE"
+
+	// M2tsForceTsVideoEbpOrderDefault is a M2tsForceTsVideoEbpOrder enum value
+	M2tsForceTsVideoEbpOrderDefault = "DEFAULT"
+)
+
 // If INSERT, Nielsen inaudible tones for media tracking will be detected in
 // the input audio and an equivalent ID3 tag will be inserted in the output.
 const (
@@ -18060,9 +18460,7 @@ const (
 	MovPaddingControlNone = "NONE"
 )
 
-// A value of 'external' creates separate media files and the wrapper file (.mov)
-// contains references to these media files. A value of 'self_contained' creates
-// only a wrapper (.mov) file and this file contains all of the media.
+// Always keep the default value (SELF_CONTAINED) for this setting.
 const (
 	// MovReferenceSelfContained is a MovReference enum value
 	MovReferenceSelfContained = "SELF_CONTAINED"
@@ -18159,17 +18557,17 @@ const (
 	Mpeg2DynamicSubGopStatic = "STATIC"
 )
 
-// If you are using the console, use the Framerate setting to specify the framerate
-// for this output. If you want to keep the same framerate as the input video,
-// choose Follow source. If you want to do framerate conversion, choose a framerate
-// from the dropdown list or choose Custom. The framerates shown in the dropdown
-// list are decimal approximations of fractions. If you choose Custom, specify
-// your framerate as a fraction. If you are creating your transcoding job sepecification
-// as a JSON file without the console, use FramerateControl to specify which
-// value the service uses for the framerate for this output. Choose INITIALIZE_FROM_SOURCE
-// if you want the service to use the framerate from the input. Choose SPECIFIED
-// if you want the service to use the framerate you specify in the settings
-// FramerateNumerator and FramerateDenominator.
+// If you are using the console, use the Framerate setting to specify the frame
+// rate for this output. If you want to keep the same frame rate as the input
+// video, choose Follow source. If you want to do frame rate conversion, choose
+// a frame rate from the dropdown list or choose Custom. The framerates shown
+// in the dropdown list are decimal approximations of fractions. If you choose
+// Custom, specify your frame rate as a fraction. If you are creating your transcoding
+// job sepecification as a JSON file without the console, use FramerateControl
+// to specify which value the service uses for the frame rate for this output.
+// Choose INITIALIZE_FROM_SOURCE if you want the service to use the frame rate
+// from the input. Choose SPECIFIED if you want the service to use the frame
+// rate you specify in the settings FramerateNumerator and FramerateDenominator.
 const (
 	// Mpeg2FramerateControlInitializeFromSource is a Mpeg2FramerateControl enum value
 	Mpeg2FramerateControlInitializeFromSource = "INITIALIZE_FROM_SOURCE"
@@ -18178,7 +18576,7 @@ const (
 	Mpeg2FramerateControlSpecified = "SPECIFIED"
 )
 
-// When set to INTERPOLATE, produces smoother motion during framerate conversion.
+// When set to INTERPOLATE, produces smoother motion during frame rate conversion.
 const (
 	// Mpeg2FramerateConversionAlgorithmDuplicateDrop is a Mpeg2FramerateConversionAlgorithm enum value
 	Mpeg2FramerateConversionAlgorithmDuplicateDrop = "DUPLICATE_DROP"
@@ -18452,11 +18850,11 @@ const (
 	PresetListBySystem = "SYSTEM"
 )
 
-// Specifies whether the pricing plan for the queue is On-demand or Reserved.
-// The pricing plan for the queue determines whether you pay On-demand or Reserved
-// pricing for the transcoding jobs that you run through the queue. For Reserved
-// queue pricing, you must set up a contract. You can create a Reserved queue
-// contract through the AWS Elemental MediaConvert console.
+// Specifies whether the pricing plan for the queue is on-demand or reserved.
+// For on-demand, you pay per minute, billed in increments of .01 minute. For
+// reserved, you pay for the transcoding capacity of the entire queue, regardless
+// of how much or how little you use it. Reserved pricing requires a 12-month
+// commitment.
 const (
 	// PricingPlanOnDemand is a PricingPlan enum value
 	PricingPlanOnDemand = "ON_DEMAND"
@@ -18481,17 +18879,17 @@ const (
 	ProresCodecProfileAppleProres422Proxy = "APPLE_PRORES_422_PROXY"
 )
 
-// If you are using the console, use the Framerate setting to specify the framerate
-// for this output. If you want to keep the same framerate as the input video,
-// choose Follow source. If you want to do framerate conversion, choose a framerate
-// from the dropdown list or choose Custom. The framerates shown in the dropdown
-// list are decimal approximations of fractions. If you choose Custom, specify
-// your framerate as a fraction. If you are creating your transcoding job sepecification
-// as a JSON file without the console, use FramerateControl to specify which
-// value the service uses for the framerate for this output. Choose INITIALIZE_FROM_SOURCE
-// if you want the service to use the framerate from the input. Choose SPECIFIED
-// if you want the service to use the framerate you specify in the settings
-// FramerateNumerator and FramerateDenominator.
+// If you are using the console, use the Framerate setting to specify the frame
+// rate for this output. If you want to keep the same frame rate as the input
+// video, choose Follow source. If you want to do frame rate conversion, choose
+// a frame rate from the dropdown list or choose Custom. The framerates shown
+// in the dropdown list are decimal approximations of fractions. If you choose
+// Custom, specify your frame rate as a fraction. If you are creating your transcoding
+// job sepecification as a JSON file without the console, use FramerateControl
+// to specify which value the service uses for the frame rate for this output.
+// Choose INITIALIZE_FROM_SOURCE if you want the service to use the frame rate
+// from the input. Choose SPECIFIED if you want the service to use the frame
+// rate you specify in the settings FramerateNumerator and FramerateDenominator.
 const (
 	// ProresFramerateControlInitializeFromSource is a ProresFramerateControl enum value
 	ProresFramerateControlInitializeFromSource = "INITIALIZE_FROM_SOURCE"
@@ -18500,7 +18898,7 @@ const (
 	ProresFramerateControlSpecified = "SPECIFIED"
 )
 
-// When set to INTERPOLATE, produces smoother motion during framerate conversion.
+// When set to INTERPOLATE, produces smoother motion during frame rate conversion.
 const (
 	// ProresFramerateConversionAlgorithmDuplicateDrop is a ProresFramerateConversionAlgorithm enum value
 	ProresFramerateConversionAlgorithmDuplicateDrop = "DUPLICATE_DROP"
@@ -18594,8 +18992,8 @@ const (
 	QueueStatusPaused = "PAUSED"
 )
 
-// Specifies whether the pricing plan contract for your reserved queue automatically
-// renews (AUTO_RENEW) or expires (EXPIRE) at the end of the contract period.
+// Specifies whether the term of your reserved queue pricing plan is automatically
+// extended (AUTO_RENEW) or expires (EXPIRE) at the end of the term.
 const (
 	// RenewalTypeAutoRenew is a RenewalType enum value
 	RenewalTypeAutoRenew = "AUTO_RENEW"
@@ -18633,10 +19031,10 @@ const (
 )
 
 // Applies only if your input aspect ratio is different from your output aspect
-// ratio. Enable Stretch to output (StretchToOutput) to have the service stretch
-// your video image to fit. Leave this setting disabled to allow the service
-// to letterbox your video instead. This setting overrides any positioning value
-// you specify elsewhere in the job.
+// ratio. Choose "Stretch to output" to have the service stretch your video
+// image to fit. Keep the setting "Default" to allow the service to letterbox
+// your video instead. This setting overrides any positioning value you specify
+// elsewhere in the job.
 const (
 	// ScalingBehaviorDefault is a ScalingBehavior enum value
 	ScalingBehaviorDefault = "DEFAULT"
@@ -18646,10 +19044,11 @@ const (
 )
 
 // Set Framerate (SccDestinationFramerate) to make sure that the captions and
-// the video are synchronized in the output. Specify a framerate that matches
-// the framerate of the associated video. If the video framerate is 29.97, choose
-// 29.97 dropframe (FRAMERATE_29_97_DROPFRAME) only if the video has video_insertion=true
-// and drop_frame_timecode=true; otherwise, choose 29.97 non-dropframe (FRAMERATE_29_97_NON_DROPFRAME).
+// the video are synchronized in the output. Specify a frame rate that matches
+// the frame rate of the associated video. If the video frame rate is 29.97,
+// choose 29.97 dropframe (FRAMERATE_29_97_DROPFRAME) only if the video has
+// video_insertion=true and drop_frame_timecode=true; otherwise, choose 29.97
+// non-dropframe (FRAMERATE_29_97_NON_DROPFRAME).
 const (
 	// SccDestinationFramerateFramerate2397 is a SccDestinationFramerate enum value
 	SccDestinationFramerateFramerate2397 = "FRAMERATE_23_97"
@@ -18764,7 +19163,7 @@ const (
 )
 
 // Applies only to H.264, H.265, MPEG2, and ProRes outputs. Only enable Timecode
-// insertion when the input framerate is identical to the output framerate.
+// insertion when the input frame rate is identical to the output frame rate.
 // To include timecodes in this output, set Timecode insertion (VideoTimecodeInsertion)
 // to PIC_TIMING_SEI. To leave them out, set it to DISABLED. Default is DISABLED.
 // When the service inserts timecodes in an output, by default, it uses any

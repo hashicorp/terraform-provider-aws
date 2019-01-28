@@ -9,6 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/aws/aws-sdk-go/aws/request"
+	"github.com/aws/aws-sdk-go/private/protocol"
+	"github.com/aws/aws-sdk-go/private/protocol/jsonrpc"
 )
 
 const opBatchDeleteBuilds = "BatchDeleteBuilds"
@@ -473,6 +475,7 @@ func (c *CodeBuild) DeleteProjectRequest(input *DeleteProjectInput) (req *reques
 
 	output = &DeleteProjectOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -508,6 +511,88 @@ func (c *CodeBuild) DeleteProject(input *DeleteProjectInput) (*DeleteProjectOutp
 // for more information on using Contexts.
 func (c *CodeBuild) DeleteProjectWithContext(ctx aws.Context, input *DeleteProjectInput, opts ...request.Option) (*DeleteProjectOutput, error) {
 	req, out := c.DeleteProjectRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteSourceCredentials = "DeleteSourceCredentials"
+
+// DeleteSourceCredentialsRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteSourceCredentials operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteSourceCredentials for more information on using the DeleteSourceCredentials
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteSourceCredentialsRequest method.
+//    req, resp := client.DeleteSourceCredentialsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/DeleteSourceCredentials
+func (c *CodeBuild) DeleteSourceCredentialsRequest(input *DeleteSourceCredentialsInput) (req *request.Request, output *DeleteSourceCredentialsOutput) {
+	op := &request.Operation{
+		Name:       opDeleteSourceCredentials,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteSourceCredentialsInput{}
+	}
+
+	output = &DeleteSourceCredentialsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeleteSourceCredentials API operation for AWS CodeBuild.
+//
+// Deletes a set of GitHub, GitHub Enterprise, or Bitbucket source credentials.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS CodeBuild's
+// API operation DeleteSourceCredentials for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   The input value that was provided is not valid.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The specified AWS resource cannot be found.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/DeleteSourceCredentials
+func (c *CodeBuild) DeleteSourceCredentials(input *DeleteSourceCredentialsInput) (*DeleteSourceCredentialsOutput, error) {
+	req, out := c.DeleteSourceCredentialsRequest(input)
+	return out, req.Send()
+}
+
+// DeleteSourceCredentialsWithContext is the same as DeleteSourceCredentials with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteSourceCredentials for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CodeBuild) DeleteSourceCredentialsWithContext(ctx aws.Context, input *DeleteSourceCredentialsInput, opts ...request.Option) (*DeleteSourceCredentialsOutput, error) {
+	req, out := c.DeleteSourceCredentialsRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -552,6 +637,7 @@ func (c *CodeBuild) DeleteWebhookRequest(input *DeleteWebhookInput) (req *reques
 
 	output = &DeleteWebhookOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -600,6 +686,89 @@ func (c *CodeBuild) DeleteWebhookWithContext(ctx aws.Context, input *DeleteWebho
 	return out, req.Send()
 }
 
+const opImportSourceCredentials = "ImportSourceCredentials"
+
+// ImportSourceCredentialsRequest generates a "aws/request.Request" representing the
+// client's request for the ImportSourceCredentials operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ImportSourceCredentials for more information on using the ImportSourceCredentials
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ImportSourceCredentialsRequest method.
+//    req, resp := client.ImportSourceCredentialsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/ImportSourceCredentials
+func (c *CodeBuild) ImportSourceCredentialsRequest(input *ImportSourceCredentialsInput) (req *request.Request, output *ImportSourceCredentialsOutput) {
+	op := &request.Operation{
+		Name:       opImportSourceCredentials,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ImportSourceCredentialsInput{}
+	}
+
+	output = &ImportSourceCredentialsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ImportSourceCredentials API operation for AWS CodeBuild.
+//
+// Imports the source repository credentials for an AWS CodeBuild project that
+// has its source code stored in a GitHub, GitHub Enterprise, or Bitbucket repository.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS CodeBuild's
+// API operation ImportSourceCredentials for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   The input value that was provided is not valid.
+//
+//   * ErrCodeAccountLimitExceededException "AccountLimitExceededException"
+//   An AWS service limit was exceeded for the calling AWS account.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/ImportSourceCredentials
+func (c *CodeBuild) ImportSourceCredentials(input *ImportSourceCredentialsInput) (*ImportSourceCredentialsOutput, error) {
+	req, out := c.ImportSourceCredentialsRequest(input)
+	return out, req.Send()
+}
+
+// ImportSourceCredentialsWithContext is the same as ImportSourceCredentials with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ImportSourceCredentials for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CodeBuild) ImportSourceCredentialsWithContext(ctx aws.Context, input *ImportSourceCredentialsInput, opts ...request.Option) (*ImportSourceCredentialsOutput, error) {
+	req, out := c.ImportSourceCredentialsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opInvalidateProjectCache = "InvalidateProjectCache"
 
 // InvalidateProjectCacheRequest generates a "aws/request.Request" representing the
@@ -639,6 +808,7 @@ func (c *CodeBuild) InvalidateProjectCacheRequest(input *InvalidateProjectCacheI
 
 	output = &InvalidateProjectCacheOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -993,6 +1163,80 @@ func (c *CodeBuild) ListProjects(input *ListProjectsInput) (*ListProjectsOutput,
 // for more information on using Contexts.
 func (c *CodeBuild) ListProjectsWithContext(ctx aws.Context, input *ListProjectsInput, opts ...request.Option) (*ListProjectsOutput, error) {
 	req, out := c.ListProjectsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opListSourceCredentials = "ListSourceCredentials"
+
+// ListSourceCredentialsRequest generates a "aws/request.Request" representing the
+// client's request for the ListSourceCredentials operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListSourceCredentials for more information on using the ListSourceCredentials
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListSourceCredentialsRequest method.
+//    req, resp := client.ListSourceCredentialsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/ListSourceCredentials
+func (c *CodeBuild) ListSourceCredentialsRequest(input *ListSourceCredentialsInput) (req *request.Request, output *ListSourceCredentialsOutput) {
+	op := &request.Operation{
+		Name:       opListSourceCredentials,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ListSourceCredentialsInput{}
+	}
+
+	output = &ListSourceCredentialsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListSourceCredentials API operation for AWS CodeBuild.
+//
+// Returns a list of SourceCredentialsInfo objects.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS CodeBuild's
+// API operation ListSourceCredentials for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/ListSourceCredentials
+func (c *CodeBuild) ListSourceCredentials(input *ListSourceCredentialsInput) (*ListSourceCredentialsOutput, error) {
+	req, out := c.ListSourceCredentialsRequest(input)
+	return out, req.Send()
+}
+
+// ListSourceCredentialsWithContext is the same as ListSourceCredentials with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListSourceCredentials for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CodeBuild) ListSourceCredentialsWithContext(ctx aws.Context, input *ListSourceCredentialsInput, opts ...request.Option) (*ListSourceCredentialsOutput, error) {
+	req, out := c.ListSourceCredentialsRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -2586,6 +2830,70 @@ func (s DeleteProjectOutput) GoString() string {
 	return s.String()
 }
 
+type DeleteSourceCredentialsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the token.
+	//
+	// Arn is a required field
+	Arn *string `locationName:"arn" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteSourceCredentialsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteSourceCredentialsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteSourceCredentialsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteSourceCredentialsInput"}
+	if s.Arn == nil {
+		invalidParams.Add(request.NewErrParamRequired("Arn"))
+	}
+	if s.Arn != nil && len(*s.Arn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Arn", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetArn sets the Arn field's value.
+func (s *DeleteSourceCredentialsInput) SetArn(v string) *DeleteSourceCredentialsInput {
+	s.Arn = &v
+	return s
+}
+
+type DeleteSourceCredentialsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the token.
+	Arn *string `locationName:"arn" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s DeleteSourceCredentialsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteSourceCredentialsOutput) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *DeleteSourceCredentialsOutput) SetArn(v string) *DeleteSourceCredentialsOutput {
+	s.Arn = &v
+	return s
+}
+
 type DeleteWebhookInput struct {
 	_ struct{} `type:"structure"`
 
@@ -2823,6 +3131,114 @@ func (s *EnvironmentVariable) SetType(v string) *EnvironmentVariable {
 // SetValue sets the Value field's value.
 func (s *EnvironmentVariable) SetValue(v string) *EnvironmentVariable {
 	s.Value = &v
+	return s
+}
+
+type ImportSourceCredentialsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The type of authentication used to connect to a GitHub, GitHub Enterprise,
+	// or Bitbucket repository. An OAUTH connection is not supported by the API
+	// and must be created using the AWS CodeBuild console.
+	//
+	// AuthType is a required field
+	AuthType *string `locationName:"authType" type:"string" required:"true" enum:"AuthType"`
+
+	// The source provider used for this project.
+	//
+	// ServerType is a required field
+	ServerType *string `locationName:"serverType" type:"string" required:"true" enum:"ServerType"`
+
+	// For GitHub or GitHub Enterprise, this is the personal access token. For Bitbucket,
+	// this is the app password.
+	//
+	// Token is a required field
+	Token *string `locationName:"token" min:"1" type:"string" required:"true" sensitive:"true"`
+
+	// The Bitbucket username when the authType is BASIC_AUTH. This parameter is
+	// not valid for other types of source providers or connections.
+	Username *string `locationName:"username" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ImportSourceCredentialsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ImportSourceCredentialsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ImportSourceCredentialsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ImportSourceCredentialsInput"}
+	if s.AuthType == nil {
+		invalidParams.Add(request.NewErrParamRequired("AuthType"))
+	}
+	if s.ServerType == nil {
+		invalidParams.Add(request.NewErrParamRequired("ServerType"))
+	}
+	if s.Token == nil {
+		invalidParams.Add(request.NewErrParamRequired("Token"))
+	}
+	if s.Token != nil && len(*s.Token) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Token", 1))
+	}
+	if s.Username != nil && len(*s.Username) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Username", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAuthType sets the AuthType field's value.
+func (s *ImportSourceCredentialsInput) SetAuthType(v string) *ImportSourceCredentialsInput {
+	s.AuthType = &v
+	return s
+}
+
+// SetServerType sets the ServerType field's value.
+func (s *ImportSourceCredentialsInput) SetServerType(v string) *ImportSourceCredentialsInput {
+	s.ServerType = &v
+	return s
+}
+
+// SetToken sets the Token field's value.
+func (s *ImportSourceCredentialsInput) SetToken(v string) *ImportSourceCredentialsInput {
+	s.Token = &v
+	return s
+}
+
+// SetUsername sets the Username field's value.
+func (s *ImportSourceCredentialsInput) SetUsername(v string) *ImportSourceCredentialsInput {
+	s.Username = &v
+	return s
+}
+
+type ImportSourceCredentialsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the token.
+	Arn *string `locationName:"arn" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ImportSourceCredentialsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ImportSourceCredentialsOutput) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *ImportSourceCredentialsOutput) SetArn(v string) *ImportSourceCredentialsOutput {
+	s.Arn = &v
 	return s
 }
 
@@ -3207,6 +3623,45 @@ func (s *ListProjectsOutput) SetNextToken(v string) *ListProjectsOutput {
 // SetProjects sets the Projects field's value.
 func (s *ListProjectsOutput) SetProjects(v []*string) *ListProjectsOutput {
 	s.Projects = v
+	return s
+}
+
+type ListSourceCredentialsInput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s ListSourceCredentialsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListSourceCredentialsInput) GoString() string {
+	return s.String()
+}
+
+type ListSourceCredentialsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A list of SourceCredentialsInfo objects. Each SourceCredentialsInfo object
+	// includes the authentication type, token ARN, and type of source provider
+	// for one set of credentials.
+	SourceCredentialsInfos []*SourceCredentialsInfo `locationName:"sourceCredentialsInfos" type:"list"`
+}
+
+// String returns the string representation
+func (s ListSourceCredentialsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListSourceCredentialsOutput) GoString() string {
+	return s.String()
+}
+
+// SetSourceCredentialsInfos sets the SourceCredentialsInfos field's value.
+func (s *ListSourceCredentialsOutput) SetSourceCredentialsInfos(v []*SourceCredentialsInfo) *ListSourceCredentialsOutput {
+	s.SourceCredentialsInfos = v
 	return s
 }
 
@@ -3935,10 +4390,33 @@ type ProjectEnvironment struct {
 	// project.
 	EnvironmentVariables []*EnvironmentVariable `locationName:"environmentVariables" type:"list"`
 
-	// The ID of the Docker image to use for this build project.
+	// The image tag or image digest that identifies the Docker image to use for
+	// this build project. Use the following formats:
+	//
+	//    * For an image tag: registry/repository:tag. For example, to specify an
+	//    image with the tag "latest," use registry/repository:latest.
+	//
+	//    * For an image digest: registry/repository@digest. For example, to specify
+	//    an image with the digest "sha256:cbbf2f9a99b47fc460d422812b6a5adff7dfee951d8fa2e4a98caa0382cfbdbf,"
+	//    use registry/repository@sha256:cbbf2f9a99b47fc460d422812b6a5adff7dfee951d8fa2e4a98caa0382cfbdbf.
 	//
 	// Image is a required field
 	Image *string `locationName:"image" min:"1" type:"string" required:"true"`
+
+	// The type of credentials AWS CodeBuild uses to pull images in your build.
+	// There are two valid values:
+	//
+	//    * CODEBUILD specifies that AWS CodeBuild uses its own credentials. This
+	//    requires that you modify your ECR repository policy to trust AWS CodeBuild's
+	//    service principal.
+	//
+	//    * SERVICE_ROLE specifies that AWS CodeBuild uses your build project's
+	//    service role.
+	//
+	// When you use a cross-account or private registry image, you must use SERVICE_ROLE
+	// credentials. When you use an AWS CodeBuild curated image, you must use CODEBUILD
+	// credentials.
+	ImagePullCredentialsType *string `locationName:"imagePullCredentialsType" type:"string" enum:"ImagePullCredentialsType"`
 
 	// Enables running the Docker daemon inside a Docker container. Set to true
 	// only if the build project is be used to build Docker images, and the specified
@@ -3963,6 +4441,9 @@ type ProjectEnvironment struct {
 	// --storage-driver=overlay& - timeout 15 -t sh -c "until docker info; do echo
 	// .; sleep 1; done"
 	PrivilegedMode *bool `locationName:"privilegedMode" type:"boolean"`
+
+	// The credentials for access to a private registry.
+	RegistryCredential *RegistryCredential `locationName:"registryCredential" type:"structure"`
 
 	// The type of build environment to use for related builds.
 	//
@@ -4005,6 +4486,11 @@ func (s *ProjectEnvironment) Validate() error {
 			}
 		}
 	}
+	if s.RegistryCredential != nil {
+		if err := s.RegistryCredential.Validate(); err != nil {
+			invalidParams.AddNested("RegistryCredential", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -4036,9 +4522,21 @@ func (s *ProjectEnvironment) SetImage(v string) *ProjectEnvironment {
 	return s
 }
 
+// SetImagePullCredentialsType sets the ImagePullCredentialsType field's value.
+func (s *ProjectEnvironment) SetImagePullCredentialsType(v string) *ProjectEnvironment {
+	s.ImagePullCredentialsType = &v
+	return s
+}
+
 // SetPrivilegedMode sets the PrivilegedMode field's value.
 func (s *ProjectEnvironment) SetPrivilegedMode(v bool) *ProjectEnvironment {
 	s.PrivilegedMode = &v
+	return s
+}
+
+// SetRegistryCredential sets the RegistryCredential field's value.
+func (s *ProjectEnvironment) SetRegistryCredential(v *RegistryCredential) *ProjectEnvironment {
+	s.RegistryCredential = v
 	return s
 }
 
@@ -4056,8 +4554,7 @@ type ProjectSource struct {
 	// the source code to be built.
 	//
 	// This information is for the AWS CodeBuild console's use only. Your code should
-	// not get or set this information directly (unless the build project's source
-	// type value is BITBUCKET or GITHUB).
+	// not get or set this information directly.
 	Auth *SourceAuth `locationName:"auth" type:"structure"`
 
 	// The build spec declaration to use for the builds in this build project.
@@ -4295,6 +4792,75 @@ func (s *ProjectSourceVersion) SetSourceVersion(v string) *ProjectSourceVersion 
 	return s
 }
 
+// Information about credentials that provide access to a private Docker registry.
+// When this is set:
+//
+//    * imagePullCredentialsType must be set to SERVICE_ROLE.
+//
+//    *  images cannot be curated or an Amazon ECR image.
+//
+// For more information, see Private Registry with AWS Secrets Manager Samle
+// for AWS CodeBuild (http://docs.aws.amazon.com/codebuild/latest/userguide/sample-private-registry.html).
+type RegistryCredential struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) or name of credentials created using AWS Secrets
+	// Manager.
+	//
+	// The credential can use the name of the credentials only if they exist in
+	// your current region.
+	//
+	// Credential is a required field
+	Credential *string `locationName:"credential" min:"1" type:"string" required:"true"`
+
+	// The service that created the credentials to access a private Docker registry.
+	// The valid value, SECRETS_MANAGER, is for AWS Secrets Manager.
+	//
+	// CredentialProvider is a required field
+	CredentialProvider *string `locationName:"credentialProvider" type:"string" required:"true" enum:"CredentialProviderType"`
+}
+
+// String returns the string representation
+func (s RegistryCredential) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RegistryCredential) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *RegistryCredential) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "RegistryCredential"}
+	if s.Credential == nil {
+		invalidParams.Add(request.NewErrParamRequired("Credential"))
+	}
+	if s.Credential != nil && len(*s.Credential) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Credential", 1))
+	}
+	if s.CredentialProvider == nil {
+		invalidParams.Add(request.NewErrParamRequired("CredentialProvider"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCredential sets the Credential field's value.
+func (s *RegistryCredential) SetCredential(v string) *RegistryCredential {
+	s.Credential = &v
+	return s
+}
+
+// SetCredentialProvider sets the CredentialProvider field's value.
+func (s *RegistryCredential) SetCredentialProvider(v string) *RegistryCredential {
+	s.CredentialProvider = &v
+	return s
+}
+
 // Information about S3 logs for a build project.
 type S3LogsConfig struct {
 	_ struct{} `type:"structure"`
@@ -4353,14 +4919,15 @@ func (s *S3LogsConfig) SetStatus(v string) *S3LogsConfig {
 // the source code to be built.
 //
 // This information is for the AWS CodeBuild console's use only. Your code should
-// not get or set this information directly (unless the build project's source
-// type value is BITBUCKET or GITHUB).
+// not get or set this information directly.
 type SourceAuth struct {
 	_ struct{} `type:"structure"`
 
 	// The resource value that applies to the specified authorization type.
 	Resource *string `locationName:"resource" type:"string"`
 
+	// This data type is deprecated and is no longer accurate or used.
+	//
 	// The authorization type to use. The only valid value is OAUTH, which represents
 	// the OAuth authorization type.
 	//
@@ -4400,6 +4967,51 @@ func (s *SourceAuth) SetResource(v string) *SourceAuth {
 // SetType sets the Type field's value.
 func (s *SourceAuth) SetType(v string) *SourceAuth {
 	s.Type = &v
+	return s
+}
+
+// Information about the credentials for a GitHub, GitHub Enterprise, or Bitbucket
+// repository.
+type SourceCredentialsInfo struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the token.
+	Arn *string `locationName:"arn" min:"1" type:"string"`
+
+	// The type of authentication used by the credentials. Valid options are OAUTH,
+	// BASIC_AUTH, or PERSONAL_ACCESS_TOKEN.
+	AuthType *string `locationName:"authType" type:"string" enum:"AuthType"`
+
+	// The type of source provider. The valid options are GITHUB, GITHUB_ENTERPRISE,
+	// or BITBUCKET.
+	ServerType *string `locationName:"serverType" type:"string" enum:"ServerType"`
+}
+
+// String returns the string representation
+func (s SourceCredentialsInfo) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SourceCredentialsInfo) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *SourceCredentialsInfo) SetArn(v string) *SourceCredentialsInfo {
+	s.Arn = &v
+	return s
+}
+
+// SetAuthType sets the AuthType field's value.
+func (s *SourceCredentialsInfo) SetAuthType(v string) *SourceCredentialsInfo {
+	s.AuthType = &v
+	return s
+}
+
+// SetServerType sets the ServerType field's value.
+func (s *SourceCredentialsInfo) SetServerType(v string) *SourceCredentialsInfo {
+	s.ServerType = &v
 	return s
 }
 
@@ -4449,6 +5061,21 @@ type StartBuildInput struct {
 	// build project.
 	ImageOverride *string `locationName:"imageOverride" min:"1" type:"string"`
 
+	// The type of credentials AWS CodeBuild uses to pull images in your build.
+	// There are two valid values:
+	//
+	//    * CODEBUILD specifies that AWS CodeBuild uses its own credentials. This
+	//    requires that you modify your ECR repository policy to trust AWS CodeBuild's
+	//    service principal.
+	//
+	//    * SERVICE_ROLE specifies that AWS CodeBuild uses your build project's
+	//    service role.
+	//
+	// When using a cross-account or private registry image, you must use SERVICE_ROLE
+	// credentials. When using an AWS CodeBuild curated image, you must use CODEBUILD
+	// credentials.
+	ImagePullCredentialsTypeOverride *string `locationName:"imagePullCredentialsTypeOverride" type:"string" enum:"ImagePullCredentialsType"`
+
 	// Enable this flag to override the insecure SSL setting that is specified in
 	// the build project. The insecure SSL setting determines whether to ignore
 	// SSL warnings while connecting to the project source code. This override applies
@@ -4469,6 +5096,9 @@ type StartBuildInput struct {
 
 	// The number of minutes a build is allowed to be queued before it times out.
 	QueuedTimeoutInMinutesOverride *int64 `locationName:"queuedTimeoutInMinutesOverride" min:"5" type:"integer"`
+
+	// The credentials for access to a private registry.
+	RegistryCredentialOverride *RegistryCredential `locationName:"registryCredentialOverride" type:"structure"`
 
 	// Set to true to report to your source provider the status of a build's start
 	// and completion. If you use this option with a source provider other than
@@ -4584,6 +5214,11 @@ func (s *StartBuildInput) Validate() error {
 			invalidParams.AddNested("LogsConfigOverride", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.RegistryCredentialOverride != nil {
+		if err := s.RegistryCredentialOverride.Validate(); err != nil {
+			invalidParams.AddNested("RegistryCredentialOverride", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.SecondaryArtifactsOverride != nil {
 		for i, v := range s.SecondaryArtifactsOverride {
 			if v == nil {
@@ -4686,6 +5321,12 @@ func (s *StartBuildInput) SetImageOverride(v string) *StartBuildInput {
 	return s
 }
 
+// SetImagePullCredentialsTypeOverride sets the ImagePullCredentialsTypeOverride field's value.
+func (s *StartBuildInput) SetImagePullCredentialsTypeOverride(v string) *StartBuildInput {
+	s.ImagePullCredentialsTypeOverride = &v
+	return s
+}
+
 // SetInsecureSslOverride sets the InsecureSslOverride field's value.
 func (s *StartBuildInput) SetInsecureSslOverride(v bool) *StartBuildInput {
 	s.InsecureSslOverride = &v
@@ -4713,6 +5354,12 @@ func (s *StartBuildInput) SetProjectName(v string) *StartBuildInput {
 // SetQueuedTimeoutInMinutesOverride sets the QueuedTimeoutInMinutesOverride field's value.
 func (s *StartBuildInput) SetQueuedTimeoutInMinutesOverride(v int64) *StartBuildInput {
 	s.QueuedTimeoutInMinutesOverride = &v
+	return s
+}
+
+// SetRegistryCredentialOverride sets the RegistryCredentialOverride field's value.
+func (s *StartBuildInput) SetRegistryCredentialOverride(v *RegistryCredential) *StartBuildInput {
+	s.RegistryCredentialOverride = v
 	return s
 }
 
@@ -5440,6 +6087,17 @@ const (
 )
 
 const (
+	// AuthTypeOauth is a AuthType enum value
+	AuthTypeOauth = "OAUTH"
+
+	// AuthTypeBasicAuth is a AuthType enum value
+	AuthTypeBasicAuth = "BASIC_AUTH"
+
+	// AuthTypePersonalAccessToken is a AuthType enum value
+	AuthTypePersonalAccessToken = "PERSONAL_ACCESS_TOKEN"
+)
+
+const (
 	// BuildPhaseTypeSubmitted is a BuildPhaseType enum value
 	BuildPhaseTypeSubmitted = "SUBMITTED"
 
@@ -5494,6 +6152,11 @@ const (
 )
 
 const (
+	// CredentialProviderTypeSecretsManager is a CredentialProviderType enum value
+	CredentialProviderTypeSecretsManager = "SECRETS_MANAGER"
+)
+
+const (
 	// EnvironmentTypeWindowsContainer is a EnvironmentType enum value
 	EnvironmentTypeWindowsContainer = "WINDOWS_CONTAINER"
 
@@ -5507,6 +6170,14 @@ const (
 
 	// EnvironmentVariableTypeParameterStore is a EnvironmentVariableType enum value
 	EnvironmentVariableTypeParameterStore = "PARAMETER_STORE"
+)
+
+const (
+	// ImagePullCredentialsTypeCodebuild is a ImagePullCredentialsType enum value
+	ImagePullCredentialsTypeCodebuild = "CODEBUILD"
+
+	// ImagePullCredentialsTypeServiceRole is a ImagePullCredentialsType enum value
+	ImagePullCredentialsTypeServiceRole = "SERVICE_ROLE"
 )
 
 const (
@@ -5572,6 +6243,17 @@ const (
 
 	// ProjectSortByTypeLastModifiedTime is a ProjectSortByType enum value
 	ProjectSortByTypeLastModifiedTime = "LAST_MODIFIED_TIME"
+)
+
+const (
+	// ServerTypeGithub is a ServerType enum value
+	ServerTypeGithub = "GITHUB"
+
+	// ServerTypeBitbucket is a ServerType enum value
+	ServerTypeBitbucket = "BITBUCKET"
+
+	// ServerTypeGithubEnterprise is a ServerType enum value
+	ServerTypeGithubEnterprise = "GITHUB_ENTERPRISE"
 )
 
 const (

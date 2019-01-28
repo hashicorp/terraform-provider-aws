@@ -55,6 +55,24 @@ func TestAccAWSAutoscalingPolicy_basic(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      "aws_autoscaling_policy.foobar_simple",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSAutoscalingPolicyImportStateIdFunc("aws_autoscaling_policy.foobar_simple"),
+				ImportStateVerify: true,
+			},
+			{
+				ResourceName:      "aws_autoscaling_policy.foobar_step",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSAutoscalingPolicyImportStateIdFunc("aws_autoscaling_policy.foobar_step"),
+				ImportStateVerify: true,
+			},
+			{
+				ResourceName:      "aws_autoscaling_policy.foobar_target_tracking",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSAutoscalingPolicyImportStateIdFunc("aws_autoscaling_policy.foobar_target_tracking"),
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccAWSAutoscalingPolicyConfig_basicUpdate(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScalingPolicyExists("aws_autoscaling_policy.foobar_simple", &policy),
@@ -186,6 +204,12 @@ func TestAccAWSAutoscalingPolicy_SimpleScalingStepAdjustment(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_simple", "scaling_adjustment", "0"),
 				),
 			},
+			{
+				ResourceName:      "aws_autoscaling_policy.foobar_simple",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSAutoscalingPolicyImportStateIdFunc("aws_autoscaling_policy.foobar_simple"),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -206,6 +230,12 @@ func TestAccAWSAutoscalingPolicy_TargetTrack_Predefined(t *testing.T) {
 					testAccCheckScalingPolicyExists("aws_autoscaling_policy.test", &policy),
 				),
 			},
+			{
+				ResourceName:      "aws_autoscaling_policy.test",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSAutoscalingPolicyImportStateIdFunc("aws_autoscaling_policy.test"),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -225,6 +255,12 @@ func TestAccAWSAutoscalingPolicy_TargetTrack_Custom(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScalingPolicyExists("aws_autoscaling_policy.test", &policy),
 				),
+			},
+			{
+				ResourceName:      "aws_autoscaling_policy.test",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSAutoscalingPolicyImportStateIdFunc("aws_autoscaling_policy.test"),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -249,6 +285,18 @@ func TestAccAWSAutoscalingPolicy_zerovalue(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_step", "min_adjustment_magnitude", "1"),
 					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_step", "estimated_instance_warmup", "0"),
 				),
+			},
+			{
+				ResourceName:      "aws_autoscaling_policy.foobar_simple",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSAutoscalingPolicyImportStateIdFunc("aws_autoscaling_policy.foobar_simple"),
+				ImportStateVerify: true,
+			},
+			{
+				ResourceName:      "aws_autoscaling_policy.foobar_step",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSAutoscalingPolicyImportStateIdFunc("aws_autoscaling_policy.foobar_step"),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -306,6 +354,17 @@ func testAccCheckAWSAutoscalingPolicyDestroy(s *terraform.State) error {
 	return nil
 }
 
+func testAccAWSAutoscalingPolicyImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.Attributes["name"]), nil
+	}
+}
+
 func testAccAWSAutoscalingPolicyConfig_base(name string) string {
 	return fmt.Sprintf(`
 data "aws_ami" "amzn" {
@@ -314,7 +373,7 @@ data "aws_ami" "amzn" {
 
   filter {
     name   = "name"
-    values = ["amzn2-ami-hvm-*"]
+    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
   }
 }
 
@@ -327,7 +386,7 @@ resource "aws_launch_configuration" "test" {
 }
 
 resource "aws_autoscaling_group" "test" {
-  availability_zones   = ["${data.aws_availability_zones.available.names}"]
+  availability_zones   = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}"]
   name                 = "%s"
   max_size             = 0
   min_size             = 0

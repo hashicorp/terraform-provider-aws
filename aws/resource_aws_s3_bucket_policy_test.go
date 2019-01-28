@@ -143,7 +143,7 @@ func testAccAWSS3BucketPolicyConfig(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
 	bucket = "%s"
-	tags {
+	tags = {
 		TestName = "TestAccAWSS3BucketPolicy_basic"
 	}
 }
@@ -179,7 +179,7 @@ func testAccAWSS3BucketPolicyConfig_updated(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
 	bucket = "%s"
-	tags {
+	tags = {
 		TestName = "TestAccAWSS3BucketPolicy_basic"
 	}
 }
