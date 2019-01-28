@@ -154,35 +154,6 @@ func testAccCheckAWSIotRoleAliasExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckAWSIotRoleAliasDoesNotExist(n string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
-
-		conn := testAccProvider.Meta().(*AWSClient).iotconn
-		alias := rs.Primary.Attributes["alias"]
-		role_arn := rs.Primary.Attributes["role_arn"]
-
-		roleAliasDescription, err := getIotRoleAliasDescription(conn, alias)
-
-		if err != nil {
-			return fmt.Errorf("Error: Failed to get role alias %s for role %s (%s): %s", alias, role_arn, n, err)
-		}
-
-		if roleAliasDescription != nil {
-			return fmt.Errorf("Error: Role alias %s is attached to role (%s)", alias, role_arn)
-		}
-
-		return nil
-	}
-}
-
 func testAccAWSIotRoleAliasConfig(alias string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "role" {
