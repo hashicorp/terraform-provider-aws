@@ -43,11 +43,13 @@ func testSweepAcmpcaCertificateAuthorities(region string) error {
 	for _, certificateAuthority := range certificateAuthorities {
 		arn := aws.StringValue(certificateAuthority.Arn)
 		log.Printf("[INFO] Deleting ACMPCA Certificate Authority: %s", arn)
-		input := &acmpca.DeleteCertificateAuthorityInput{
-			CertificateAuthorityArn: aws.String(arn),
-		}
+		//input := &acmpca.DeleteCertificateAuthorityInput{
+		//CertificateAuthorityArn: aws.String(arn),
+		//}
 
-		_, err := conn.DeleteCertificateAuthority(input)
+		_, err := conn.DeleteCertificateAuthority(&acmpca.DeleteCertificateAuthorityInput{
+			PermanentDeletionTimeInDays: aws.Int64(int64(7)),
+		})
 		if err != nil {
 			if isAWSErr(err, acmpca.ErrCodeResourceNotFoundException, "") {
 				continue
@@ -478,11 +480,12 @@ resource "aws_acmpca_certificate_authority" "test" {
   certificate_authority_configuration {
     key_algorithm     = "RSA_4096"
     signing_algorithm = "SHA512WITHRSA"
-
+		
     subject {
       common_name = "terraformtesting.com"
     }
-  }
+	}
+	permanent_deletion_time_in_days = 7
 }
 `, enabled)
 }
@@ -496,7 +499,8 @@ resource "aws_acmpca_certificate_authority" "test" {
     subject {
       common_name = "terraformtesting.com"
     }
-  }
+	}
+	permanent_deletion_time_in_days = 7
 }
 `
 
@@ -511,7 +515,8 @@ resource "aws_acmpca_certificate_authority" "test" {
 
     subject {
       common_name = "terraformtesting.com"
-    }
+		}
+		permanent_deletion_time_in_days = 7
   }
 
   revocation_configuration {
@@ -539,9 +544,9 @@ resource "aws_acmpca_certificate_authority" "test" {
 
     subject {
       common_name = "terraformtesting.com"
-    }
+		}
   }
-
+	permanent_deletion_time_in_days = 7
   revocation_configuration {
     crl_configuration {
       enabled            = %t
@@ -564,7 +569,8 @@ resource "aws_acmpca_certificate_authority" "test" {
 
     subject {
       common_name = "terraformtesting.com"
-    }
+		}
+		permanent_deletion_time_in_days = 7
   }
 
   revocation_configuration {
@@ -623,7 +629,7 @@ resource "aws_acmpca_certificate_authority" "test" {
       common_name = "terraformtesting.com"
     }
   }
-
+	permanent_deletion_time_in_days = 7
   tags = {
     tag1 = "tag1value"
   }
@@ -640,7 +646,7 @@ resource "aws_acmpca_certificate_authority" "test" {
       common_name = "terraformtesting.com"
     }
   }
-
+	permanent_deletion_time_in_days = 7
   tags = {
     tag1 = "tag1value-updated"
   }
@@ -657,7 +663,7 @@ resource "aws_acmpca_certificate_authority" "test" {
       common_name = "terraformtesting.com"
     }
   }
-
+	permanent_deletion_time_in_days = 7
   tags = {
     tag1 = "tag1value"
     tag2 = "tag2value"
