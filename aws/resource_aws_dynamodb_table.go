@@ -405,6 +405,8 @@ func resourceAwsDynamoDbTableUpdate(d *schema.ResourceData, meta interface{}) er
 			return err
 		}
 
+		req.ProvisionedThroughput = expandDynamoDbProvisionedThroughput(capacityMap, billingMode)
+
 		_, err := conn.UpdateTable(req)
 		if err != nil {
 			return fmt.Errorf("Error updating DynamoDB Table (%s) billing mode: %s", d.Id(), err)
