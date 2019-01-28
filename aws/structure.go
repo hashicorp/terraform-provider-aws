@@ -2781,6 +2781,20 @@ func expandCognitoUserPoolPasswordPolicy(config map[string]interface{}) *cognito
 	return configs
 }
 
+func flattenCognitoUserPoolUserPoolAddOns(s *cognitoidentityprovider.UserPoolAddOnsType) []map[string]interface{} {
+	config := make(map[string]interface{})
+
+	if s == nil {
+		return nil
+	}
+
+	if s.AdvancedSecurityMode != nil {
+		config["advanced_security_mode"] = *s.AdvancedSecurityMode
+	}
+
+	return []map[string]interface{}{config}
+}
+
 func flattenIoTRuleCloudWatchAlarmActions(actions []*iot.Action) []map[string]interface{} {
 	results := make([]map[string]interface{}, 0)
 

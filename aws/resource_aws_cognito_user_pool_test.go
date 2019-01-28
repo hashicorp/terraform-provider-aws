@@ -153,6 +153,31 @@ func TestAccAWSCognitoUserPool_withAdminCreateUserConfiguration(t *testing.T) {
 	})
 }
 
+func TestAccAWSCognitoUserPool_withAdvancedSecurityMode(t *testing.T) {
+	name := acctest.RandString(5)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCognitoUserPoolDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCognitoUserPoolConfig_withAdvancedSecurityMode(name),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolExists("aws_cognito_user_pool.pool"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "user_pool_add_ons.0.advanced_security_mode", "OFF"),
+				),
+			},
+			{
+				Config: testAccAWSCognitoUserPoolConfig_withAdvancedSecurityModeUpdated(name),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "user_pool_add_ons.0.advanced_security_mode", "ENFORCED"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSCognitoUserPool_withDeviceConfiguration(t *testing.T) {
 	name := acctest.RandString(5)
 
@@ -732,6 +757,28 @@ resource "aws_cognito_user_pool" "pool" {
       email_subject = "Foo{####}BaBaz"
       sms_message   = "Your username is {username} and constant password is {####}."
     }
+  }
+}`, name)
+}
+
+func testAccAWSCognitoUserPoolConfig_withAdvancedSecurityMode(name string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "pool" {
+  name = "terraform-test-pool-%s"
+
+  user_pool_add_ons {
+    advanced_security_mode = "OFF"
+  }
+}`, name)
+}
+
+func testAccAWSCognitoUserPoolConfig_withAdvancedSecurityModeUpdated(name string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "pool" {
+  name = "terraform-test-pool-%s"
+
+  user_pool_add_ons {
+    advanced_security_mode = "ENFORCED"
   }
 }`, name)
 }
