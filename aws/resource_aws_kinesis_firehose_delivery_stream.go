@@ -1500,7 +1500,7 @@ func updateExtendedS3Config(d *schema.ResourceData) *firehose.ExtendedS3Destinat
 }
 
 func expandFirehoseDataFormatConversionConfiguration(l []interface{}) *firehose.DataFormatConversionConfiguration {
-	if len(l) == 0 {
+	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
@@ -1515,7 +1515,7 @@ func expandFirehoseDataFormatConversionConfiguration(l []interface{}) *firehose.
 }
 
 func expandFirehoseInputFormatConfiguration(l []interface{}) *firehose.InputFormatConfiguration {
-	if len(l) == 0 {
+	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
@@ -1527,7 +1527,7 @@ func expandFirehoseInputFormatConfiguration(l []interface{}) *firehose.InputForm
 }
 
 func expandFirehoseDeserializer(l []interface{}) *firehose.Deserializer {
-	if len(l) == 0 {
+	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
@@ -1574,7 +1574,7 @@ func expandFirehoseOpenXJsonSerDe(l []interface{}) *firehose.OpenXJsonSerDe {
 }
 
 func expandFirehoseOutputFormatConfiguration(l []interface{}) *firehose.OutputFormatConfiguration {
-	if len(l) == 0 {
+	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
@@ -1586,7 +1586,7 @@ func expandFirehoseOutputFormatConfiguration(l []interface{}) *firehose.OutputFo
 }
 
 func expandFirehoseSerializer(l []interface{}) *firehose.Serializer {
-	if len(l) == 0 {
+	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
@@ -1650,7 +1650,7 @@ func expandFirehoseParquetSerDe(l []interface{}) *firehose.ParquetSerDe {
 }
 
 func expandFirehoseSchemaConfiguration(l []interface{}) *firehose.SchemaConfiguration {
-	if len(l) == 0 {
+	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
