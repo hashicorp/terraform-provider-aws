@@ -166,7 +166,7 @@ func addNotificationConfigToGroupsWithTopic(conn *autoscaling.AutoScaling, group
 		_, err := conn.PutNotificationConfiguration(opts)
 		if err != nil {
 			if awsErr, ok := err.(awserr.Error); ok {
-				return fmt.Errorf("[WARN] Error creating Autoscaling Group Notification for Group %s, error: \"%s\", code: \"%s\"", *a, awsErr.Message(), awsErr.Code())
+				return fmt.Errorf("Error creating Autoscaling Group Notification for Group %s, error: \"%s\", code: \"%s\"", *a, awsErr.Message(), awsErr.Code())
 			}
 			return err
 		}
@@ -183,7 +183,7 @@ func removeNotificationConfigToGroupsWithTopic(conn *autoscaling.AutoScaling, gr
 
 		_, err := conn.DeleteNotificationConfiguration(opts)
 		if err != nil {
-			return fmt.Errorf("[WARN] Error deleting notification configuration for ASG \"%s\", Topic ARN \"%s\"", *r, topic)
+			return fmt.Errorf("Error deleting notification configuration for ASG \"%s\", Topic ARN \"%s\"", *r, topic)
 		}
 	}
 	return nil
@@ -194,11 +194,8 @@ func resourceAwsAutoscalingNotificationDelete(d *schema.ResourceData, meta inter
 	gl := convertSetToList(d.Get("group_names").(*schema.Set))
 
 	topic := d.Get("topic_arn").(string)
-	if err := removeNotificationConfigToGroupsWithTopic(conn, gl, topic); err != nil {
-		return err
-	}
-
-	return nil
+	err := removeNotificationConfigToGroupsWithTopic(conn, gl, topic)
+	return err
 }
 
 func convertSetToList(s *schema.Set) (nl []*string) {

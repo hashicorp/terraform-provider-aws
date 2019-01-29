@@ -24,22 +24,19 @@ resource "aws_kinesis_firehose_delivery_stream" "extended_s3_stream" {
   extended_s3_configuration {
     role_arn   = "${aws_iam_role.firehose_role.arn}"
     bucket_arn = "${aws_s3_bucket.bucket.arn}"
-    processing_configuration = [
-      {
-        enabled = "true"
-        processors = [
-          {
-            type = "Lambda"
-            parameters = [
-              {
-                parameter_name = "LambdaArn"
-                parameter_value = "${aws_lambda_function.lambda_processor.arn}:$LATEST"
-              }
-            ]
-          }
-        ]
+
+    processing_configuration {
+      enabled = "true"
+
+      processors {
+        type = "Lambda"
+
+        parameters {
+          parameter_name  = "LambdaArn"
+          parameter_value = "${aws_lambda_function.lambda_processor.arn}:$LATEST"
+        }
       }
-    ]
+    }
   }
 }
 
@@ -70,6 +67,7 @@ EOF
 
 resource "aws_iam_role" "lambda_iam" {
   name = "lambda_iam"
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -88,11 +86,11 @@ EOF
 }
 
 resource "aws_lambda_function" "lambda_processor" {
-  filename = "lambda.zip"
+  filename      = "lambda.zip"
   function_name = "firehose_lambda_processor"
-  role = "${aws_iam_role.lambda_iam.arn}"
-  handler = "exports.handler"
-  runtime = "nodejs8.10"
+  role          = "${aws_iam_role.lambda_iam.arn}"
+  handler       = "exports.handler"
+  runtime       = "nodejs8.10"
 }
 ```
 
@@ -168,6 +166,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
     copy_options       = "delimiter '|'" # the default delimiter
     data_table_columns = "test-col"
     s3_backup_mode     = "Enabled"
+
     s3_backup_configuration {
       role_arn           = "${aws_iam_role.firehose_role.arn}"
       bucket_arn         = "${aws_s3_bucket.bucket.arn}"
@@ -204,22 +203,18 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
     index_name = "test"
     type_name  = "test"
 
-    processing_configuration = [
-      {
-        enabled = "true"
-        processors = [
-          {
-            type = "Lambda"
-            parameters = [
-              {
-                parameter_name = "LambdaArn"
-                parameter_value = "${aws_lambda_function.lambda_processor.arn}:$LATEST"
-              }
-            ]
-          }
-        ]
+    processing_configuration {
+      enabled = "true"
+
+      processors {
+        type = "Lambda"
+
+        parameters {
+          parameter_name  = "LambdaArn"
+          parameter_value = "${aws_lambda_function.lambda_processor.arn}:$LATEST"
+        }
       }
-    ]
+    }
   }
 }
 ```
@@ -256,6 +251,7 @@ The following arguments are supported:
 
 * `name` - (Required) A name to identify the stream. This is unique to the
 AWS account and region the Stream is created in.
+* `tags` - (Optional) A mapping of tags to assign to the resource.
 * `kinesis_source_configuration` - (Optional) Allows the ability to specify the kinesis stream that is used as the source of the firehose delivery stream.
 * `destination` – (Required) This is the destination to where the data is delivered. The only options are `s3` (Deprecated, use `extended_s3` instead), `extended_s3`, `redshift`, `elasticsearch`, and `splunk`.
 * `s3_configuration` - (Optional, Deprecated, see/use `extended_s3_configuration` unless `destination` is `redshift`) Configuration options for the s3 destination (or the intermediate bucket if the destination
@@ -265,7 +261,7 @@ is redshift). More details are given below.
 Using `redshift_configuration` requires the user to also specify a
 `s3_configuration` block. More details are given below.
 
-The `kinesis_source_configuration` object supports the following: 
+The `kinesis_source_configuration` object supports the following:
 
 * `kinesis_stream_arn` (Required) The kinesis stream used as the source of the firehose delivery stream.
 * `role_arn` (Required) The ARN of the role that provides access to the source Kinesis stream.
@@ -286,6 +282,7 @@ be used.
 The `extended_s3_configuration` object supports the same fields from `s3_configuration` as well as the following:
 
 * `data_format_conversion_configuration` - (Optional) Nested argument for the serializer, deserializer, and schema for converting data from the JSON format to the Parquet or ORC format before writing it to Amazon S3. More details given below.
+* `error_output_prefix` - (Optional) Prefix added to failed records before writing them to S3. This prefix appears immediately following the bucket name.
 * `processing_configuration` - (Optional) The data processing configuration.  More details are given below.
 * `s3_backup_mode` - (Optional) The Amazon S3 backup mode.  Valid values are `Disabled` and `Enabled`.  Default value is `Disabled`.
 * `s3_backup_configuration` - (Optional) The configuration for backup in Amazon S3. Required if `s3_backup_mode` is `Enabled`. Supports the same fields as `s3_configuration` object.
@@ -361,6 +358,7 @@ resource "aws_kinesis_firehose_delivery_stream" "example" {
   extended_s3_configuration {
     # Must be at least 64
     buffer_size = 128
+
     # ... other configuration ...
     data_format_conversion_configuration {
       input_format_configuration {

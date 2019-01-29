@@ -28,7 +28,7 @@ func resourceAwsAppautoscalingPolicy() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				// https://github.com/boto/botocore/blob/9f322b1/botocore/data/autoscaling/2011-01-01/service-2.json#L1862-L1873
-				ValidateFunc: validateMaxLength(255),
+				ValidateFunc: validation.StringLenBetween(0, 255),
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -80,14 +80,12 @@ func resourceAwsAppautoscalingPolicy() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"metric_interval_lower_bound": {
-										Type:     schema.TypeFloat,
+										Type:     schema.TypeString,
 										Optional: true,
-										Default:  -1,
 									},
 									"metric_interval_upper_bound": {
-										Type:     schema.TypeFloat,
+										Type:     schema.TypeString,
 										Optional: true,
-										Default:  -1,
 									},
 									"scaling_adjustment": {
 										Type:     schema.TypeInt,
@@ -217,7 +215,7 @@ func resourceAwsAppautoscalingPolicy() *schema.Resource {
 									"resource_label": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validateMaxLength(1023),
+										ValidateFunc: validation.StringLenBetween(0, 1023),
 									},
 								},
 							},
@@ -402,10 +400,6 @@ func expandAppautoscalingStepAdjustments(configured []interface{}) ([]*applicati
 		if data["metric_interval_lower_bound"] != "" {
 			bound := data["metric_interval_lower_bound"]
 			switch bound := bound.(type) {
-			case float64:
-				if bound >= 0 {
-					a.MetricIntervalLowerBound = aws.Float64(bound)
-				}
 			case string:
 				f, err := strconv.ParseFloat(bound, 64)
 				if err != nil {
@@ -421,10 +415,6 @@ func expandAppautoscalingStepAdjustments(configured []interface{}) ([]*applicati
 		if data["metric_interval_upper_bound"] != "" {
 			bound := data["metric_interval_upper_bound"]
 			switch bound := bound.(type) {
-			case float64:
-				if bound >= 0 {
-					a.MetricIntervalUpperBound = aws.Float64(bound)
-				}
 			case string:
 				f, err := strconv.ParseFloat(bound, 64)
 				if err != nil {
@@ -465,7 +455,7 @@ func expandAppautoscalingCustomizedMetricSpecification(configured []interface{})
 		}
 
 		if s, ok := data["dimensions"].(*schema.Set); ok && s.Len() > 0 {
-			dimensions := make([]*applicationautoscaling.MetricDimension, s.Len(), s.Len())
+			dimensions := make([]*applicationautoscaling.MetricDimension, s.Len())
 			for i, d := range s.List() {
 				dimension := d.(map[string]interface{})
 				dimensions[i] = &applicationautoscaling.MetricDimension{
@@ -645,7 +635,7 @@ func flattenStepScalingPolicyConfiguration(cfg *applicationautoscaling.StepScali
 		return []interface{}{}
 	}
 
-	m := make(map[string]interface{}, 0)
+	m := make(map[string]interface{})
 
 	if cfg.AdjustmentType != nil {
 		m["adjustment_type"] = *cfg.AdjustmentType
@@ -667,10 +657,10 @@ func flattenStepScalingPolicyConfiguration(cfg *applicationautoscaling.StepScali
 }
 
 func flattenAppautoscalingStepAdjustments(adjs []*applicationautoscaling.StepAdjustment) []interface{} {
-	out := make([]interface{}, len(adjs), len(adjs))
+	out := make([]interface{}, len(adjs))
 
 	for i, adj := range adjs {
-		m := make(map[string]interface{}, 0)
+		m := make(map[string]interface{})
 
 		m["scaling_adjustment"] = *adj.ScalingAdjustment
 
@@ -692,7 +682,7 @@ func flattenTargetTrackingScalingPolicyConfiguration(cfg *applicationautoscaling
 		return []interface{}{}
 	}
 
-	m := make(map[string]interface{}, 0)
+	m := make(map[string]interface{})
 	m["target_value"] = *cfg.TargetValue
 
 	if cfg.DisableScaleIn != nil {
@@ -736,7 +726,7 @@ func flattenCustomizedMetricSpecification(cfg *applicationautoscaling.Customized
 }
 
 func flattenMetricDimensions(ds []*applicationautoscaling.MetricDimension) []interface{} {
-	l := make([]interface{}, len(ds), len(ds))
+	l := make([]interface{}, len(ds))
 	for i, d := range ds {
 		l[i] = map[string]interface{}{
 			"name":  *d.Name,

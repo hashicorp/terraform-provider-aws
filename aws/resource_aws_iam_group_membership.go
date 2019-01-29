@@ -88,7 +88,7 @@ func resourceAwsIamGroupMembershipRead(d *schema.ResourceData, meta interface{})
 	}
 
 	if err := d.Set("users", ul); err != nil {
-		return fmt.Errorf("[WARN] Error setting user list from IAM Group Membership (%s), error: %s", group, err)
+		return fmt.Errorf("Error setting user list from IAM Group Membership (%s), error: %s", group, err)
 	}
 
 	return nil
@@ -130,11 +130,8 @@ func resourceAwsIamGroupMembershipDelete(d *schema.ResourceData, meta interface{
 	userList := expandStringList(d.Get("users").(*schema.Set).List())
 	group := d.Get("group").(string)
 
-	if err := removeUsersFromGroup(conn, userList, group); err != nil {
-		return err
-	}
-
-	return nil
+	err := removeUsersFromGroup(conn, userList, group)
+	return err
 }
 
 func removeUsersFromGroup(conn *iam.IAM, users []*string, group string) error {

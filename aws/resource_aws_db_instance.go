@@ -57,6 +57,11 @@ func resourceAwsDbInstance() *schema.Resource {
 				Sensitive: true,
 			},
 
+			"deletion_protection": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+
 			"engine": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -403,6 +408,8 @@ func resourceAwsDbInstance() *schema.Resource {
 						"listener",
 						"slowquery",
 						"trace",
+						"postgresql",
+						"upgrade",
 					}, false),
 				},
 			},
@@ -466,6 +473,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 		opts := rds.CreateDBInstanceReadReplicaInput{
 			AutoMinorVersionUpgrade:    aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
 			CopyTagsToSnapshot:         aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
+			DeletionProtection:         aws.Bool(d.Get("deletion_protection").(bool)),
 			DBInstanceClass:            aws.String(d.Get("instance_class").(string)),
 			DBInstanceIdentifier:       aws.String(identifier),
 			PubliclyAccessible:         aws.Bool(d.Get("publicly_accessible").(bool)),
@@ -593,6 +601,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			DBName:                  aws.String(d.Get("name").(string)),
 			DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
 			DBInstanceIdentifier:    aws.String(d.Get("identifier").(string)),
+			DeletionProtection:      aws.Bool(d.Get("deletion_protection").(bool)),
 			Engine:                  aws.String(d.Get("engine").(string)),
 			EngineVersion:           aws.String(d.Get("engine_version").(string)),
 			S3BucketName:            aws.String(s3_bucket["bucket_name"].(string)),
@@ -749,6 +758,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
 			DBInstanceIdentifier:    aws.String(d.Get("identifier").(string)),
 			DBSnapshotIdentifier:    aws.String(d.Get("snapshot_identifier").(string)),
+			DeletionProtection:      aws.Bool(d.Get("deletion_protection").(bool)),
 			PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
 			Tags:                    tags,
 		}
@@ -773,7 +783,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			opts.AvailabilityZone = aws.String(attr.(string))
 		}
 
-		if attr, ok := d.GetOk("backup_retention_period"); ok {
+		if attr, ok := d.GetOkExists("backup_retention_period"); ok {
 			modifyDbInstanceInput.BackupRetentionPeriod = aws.Int64(int64(attr.(int)))
 			requiresModifyDbInstance = true
 		}
@@ -850,9 +860,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		if attr, ok := d.GetOk("parameter_group_name"); ok {
-			modifyDbInstanceInput.DBParameterGroupName = aws.String(attr.(string))
-			requiresModifyDbInstance = true
-			requiresRebootDbInstance = true
+			opts.DBParameterGroupName = aws.String(attr.(string))
 		}
 
 		if attr, ok := d.GetOk("password"); ok {
@@ -921,6 +929,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			DBName:                  aws.String(d.Get("name").(string)),
 			DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
 			DBInstanceIdentifier:    aws.String(d.Get("identifier").(string)),
+			DeletionProtection:      aws.Bool(d.Get("deletion_protection").(bool)),
 			MasterUsername:          aws.String(d.Get("username").(string)),
 			MasterUserPassword:      aws.String(d.Get("password").(string)),
 			Engine:                  aws.String(d.Get("engine").(string)),
@@ -1119,6 +1128,7 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("identifier", v.DBInstanceIdentifier)
 	d.Set("resource_id", v.DbiResourceId)
 	d.Set("username", v.MasterUsername)
+	d.Set("deletion_protection", v.DeletionProtection)
 	d.Set("engine", v.Engine)
 	d.Set("engine_version", v.EngineVersion)
 	d.Set("allocated_storage", v.AllocatedStorage)
@@ -1230,7 +1240,7 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		replicas = append(replicas, *v)
 	}
 	if err := d.Set("replicas", replicas); err != nil {
-		return fmt.Errorf("[DEBUG] Error setting replicas attribute: %#v, error: %#v", replicas, err)
+		return fmt.Errorf("Error setting replicas attribute: %#v, error: %#v", replicas, err)
 	}
 
 	d.Set("replicate_source_db", v.ReadReplicaSourceDBInstanceIdentifier)
@@ -1250,7 +1260,7 @@ func resourceAwsDbInstanceDelete(d *schema.ResourceData, meta interface{}) error
 	skipFinalSnapshot := d.Get("skip_final_snapshot").(bool)
 	opts.SkipFinalSnapshot = aws.Bool(skipFinalSnapshot)
 
-	if skipFinalSnapshot == false {
+	if !skipFinalSnapshot {
 		if name, present := d.GetOk("final_snapshot_identifier"); present {
 			opts.FinalDBSnapshotIdentifier = aws.String(name.(string))
 		} else {
@@ -1333,6 +1343,11 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 	if d.HasChange("copy_tags_to_snapshot") {
 		d.SetPartial("copy_tags_to_snapshot")
 		req.CopyTagsToSnapshot = aws.Bool(d.Get("copy_tags_to_snapshot").(bool))
+		requestUpdate = true
+	}
+	if d.HasChange("deletion_protection") {
+		d.SetPartial("deletion_protection")
+		req.DeletionProtection = aws.Bool(d.Get("deletion_protection").(bool))
 		requestUpdate = true
 	}
 	if d.HasChange("instance_class") {
@@ -1599,6 +1614,7 @@ func diffCloudwatchLogsExportConfiguration(old, new []interface{}) ([]interface{
 var resourceAwsDbInstanceCreatePendingStates = []string{
 	"backing-up",
 	"configuring-enhanced-monitoring",
+	"configuring-iam-database-auth",
 	"configuring-log-exports",
 	"creating",
 	"maintenance",
@@ -1629,6 +1645,7 @@ var resourceAwsDbInstanceDeletePendingStates = []string{
 var resourceAwsDbInstanceUpdatePendingStates = []string{
 	"backing-up",
 	"configuring-enhanced-monitoring",
+	"configuring-iam-database-auth",
 	"configuring-log-exports",
 	"creating",
 	"maintenance",

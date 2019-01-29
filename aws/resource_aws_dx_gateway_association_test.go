@@ -2,7 +2,9 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
@@ -11,8 +13,96 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func init() {
+	resource.AddTestSweepers("aws_dx_gateway_association", &resource.Sweeper{
+		Name: "aws_dx_gateway_association",
+		F:    testSweepDirectConnectGatewayAssociations,
+	})
+}
+
+func testSweepDirectConnectGatewayAssociations(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).dxconn
+	gatewayInput := &directconnect.DescribeDirectConnectGatewaysInput{}
+
+	for {
+		gatewayOutput, err := conn.DescribeDirectConnectGateways(gatewayInput)
+
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping Direct Connect Gateway sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error retrieving Direct Connect Gateways: %s", err)
+		}
+
+		for _, gateway := range gatewayOutput.DirectConnectGateways {
+			directConnectGatewayID := aws.StringValue(gateway.DirectConnectGatewayId)
+
+			associationInput := &directconnect.DescribeDirectConnectGatewayAssociationsInput{
+				DirectConnectGatewayId: gateway.DirectConnectGatewayId,
+			}
+
+			for {
+				associationOutput, err := conn.DescribeDirectConnectGatewayAssociations(associationInput)
+
+				if err != nil {
+					return fmt.Errorf("error retrieving Direct Connect Gateway (%s) Associations: %s", directConnectGatewayID, err)
+				}
+
+				for _, association := range associationOutput.DirectConnectGatewayAssociations {
+					virtualGatewayID := aws.StringValue(association.VirtualGatewayId)
+
+					if aws.StringValue(association.AssociationState) != directconnect.GatewayAssociationStateAssociated {
+						log.Printf("[INFO] Skipping Direct Connect Gateway (%s) Association in non-available (%s) state: %s", directConnectGatewayID, aws.StringValue(association.AssociationState), virtualGatewayID)
+						continue
+					}
+
+					input := &directconnect.DeleteDirectConnectGatewayAssociationInput{
+						DirectConnectGatewayId: gateway.DirectConnectGatewayId,
+						VirtualGatewayId:       association.VirtualGatewayId,
+					}
+
+					log.Printf("[INFO] Deleting Direct Connect Gateway (%s) Association: %s", directConnectGatewayID, virtualGatewayID)
+					_, err := conn.DeleteDirectConnectGatewayAssociation(input)
+
+					if isAWSErr(err, directconnect.ErrCodeClientException, "No association exists") {
+						continue
+					}
+
+					if err != nil {
+						return fmt.Errorf("error deleting Direct Connect Gateway (%s) Association (%s): %s", directConnectGatewayID, virtualGatewayID, err)
+					}
+
+					if err := waitForDirectConnectGatewayAssociationDeletion(conn, directConnectGatewayID, virtualGatewayID, 20*time.Minute); err != nil {
+						return fmt.Errorf("error waiting for Direct Connect Gateway (%s) Association (%s) to be deleted: %s", directConnectGatewayID, virtualGatewayID, err)
+					}
+				}
+
+				if aws.StringValue(associationOutput.NextToken) == "" {
+					break
+				}
+
+				associationInput.NextToken = associationOutput.NextToken
+			}
+		}
+
+		if aws.StringValue(gatewayOutput.NextToken) == "" {
+			break
+		}
+
+		gatewayInput.NextToken = gatewayOutput.NextToken
+	}
+
+	return nil
+}
+
 func TestAccAwsDxGatewayAssociation_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDxGatewayAssociationDestroy,
@@ -28,7 +118,7 @@ func TestAccAwsDxGatewayAssociation_basic(t *testing.T) {
 }
 
 func TestAccAwsDxGatewayAssociation_multiVgws(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDxGatewayAssociationDestroy,
@@ -84,13 +174,13 @@ resource "aws_dx_gateway" "test" {
 
 resource "aws_vpc" "test" {
   cidr_block = "10.255.255.0/28"
-  tags {
+  tags = {
     Name = "terraform-testacc-dxgwassoc-%s"
   }
 }
 
 resource "aws_vpn_gateway" "test" {
-  tags {
+  tags = {
     Name = "terraform-testacc-dxgwassoc-%s"
   }
 }
@@ -116,13 +206,13 @@ resource "aws_dx_gateway" "test" {
 
 resource "aws_vpc" "test1" {
   cidr_block = "10.255.255.16/28"
-  tags {
+  tags = {
     Name = "terraform-testacc-dxgwassoc-%s-1"
   }
 }
 
 resource "aws_vpn_gateway" "test1" {
-  tags {
+  tags = {
     Name = "terraform-testacc-dxgwassoc-%s-1"
   }
 }
@@ -139,13 +229,13 @@ resource "aws_dx_gateway_association" "test1" {
 
 resource "aws_vpc" "test2" {
   cidr_block = "10.255.255.32/28"
-  tags {
+  tags = {
     Name = "terraform-testacc-dxgwassoc-%s-2"
   }
 }
 
 resource "aws_vpn_gateway" "test2" {
-  tags {
+  tags = {
     Name = "terraform-testacc-dxgwassoc-%s-2"
   }
 }

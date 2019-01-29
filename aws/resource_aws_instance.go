@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsInstance() *schema.Resource {
@@ -142,7 +143,7 @@ func resourceAwsInstance() *schema.Resource {
 						return ""
 					}
 				},
-				ValidateFunc: validateMaxLength(16384),
+				ValidateFunc: validation.StringLenBetween(0, 16384),
 			},
 
 			"user_data_base64": {
@@ -286,7 +287,12 @@ func resourceAwsInstance() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-
+			"host_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
 			"cpu_core_count": {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -478,7 +484,21 @@ func resourceAwsInstance() *schema.Resource {
 						"cpu_credits": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  "standard",
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								// Only work with existing instances
+								if d.Id() == "" {
+									return false
+								}
+								// Only work with missing configurations
+								if new != "" {
+									return false
+								}
+								// Only work when already set in Terraform state
+								if old == "" {
+									return false
+								}
+								return true
+							},
 						},
 					},
 				},
@@ -692,6 +712,9 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	if instance.Placement.Tenancy != nil {
 		d.Set("tenancy", instance.Placement.Tenancy)
+	}
+	if instance.Placement.HostId != nil {
+		d.Set("host_id", instance.Placement.HostId)
 	}
 
 	if instance.CpuOptions != nil {
@@ -1158,7 +1181,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 			})
 		}
 		if mErr != nil {
-			return fmt.Errorf("[WARN] Error updating Instance monitoring: %s", mErr)
+			return fmt.Errorf("Error updating Instance monitoring: %s", mErr)
 		}
 	}
 
@@ -1175,7 +1198,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 				},
 			})
 			if err != nil {
-				return fmt.Errorf("[WARN] Error updating Instance credit specification: %s", err)
+				return fmt.Errorf("Error updating Instance credit specification: %s", err)
 			}
 		}
 	}
@@ -1191,11 +1214,8 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	if err := awsTerminateInstance(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return err
-	}
-
-	return nil
+	err := awsTerminateInstance(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
+	return err
 }
 
 // InstanceStateRefreshFunc returns a resource.StateRefreshFunc that is used to watch
@@ -1397,7 +1417,7 @@ func fetchRootDeviceName(ami string, conn *ec2.EC2) (*string, error) {
 	}
 
 	if rootDeviceName == nil {
-		return nil, fmt.Errorf("[WARN] Error finding Root Device Name for AMI (%s)", ami)
+		return nil, fmt.Errorf("Error finding Root Device Name for AMI (%s)", ami)
 	}
 
 	return rootDeviceName, nil
@@ -1747,15 +1767,22 @@ func buildAwsInstanceOpts(
 		InstanceType:          aws.String(instanceType),
 	}
 
+	// Set default cpu_credits as Unlimited for T3 instance type
+	if strings.HasPrefix(instanceType, "t3") {
+		opts.CreditSpecification = &ec2.CreditSpecificationRequest{
+			CpuCredits: aws.String("unlimited"),
+		}
+	}
+
 	if v, ok := d.GetOk("credit_specification"); ok {
-		// Only T2 instances support T2 Unlimited
-		if strings.HasPrefix(instanceType, "t2") {
+		// Only T2 and T3 are burstable performance instance types and supports Unlimited
+		if strings.HasPrefix(instanceType, "t2") || strings.HasPrefix(instanceType, "t3") {
 			cs := v.([]interface{})[0].(map[string]interface{})
 			opts.CreditSpecification = &ec2.CreditSpecificationRequest{
 				CpuCredits: aws.String(cs["cpu_credits"].(string)),
 			}
 		} else {
-			log.Print("[WARN] credit_specification is defined but instance type is not T2. Ignoring...")
+			log.Print("[WARN] credit_specification is defined but instance type is not T2/T3. Ignoring...")
 		}
 	}
 
@@ -1798,6 +1825,9 @@ func buildAwsInstanceOpts(
 
 	if v := d.Get("tenancy").(string); v != "" {
 		opts.Placement.Tenancy = aws.String(v)
+	}
+	if v := d.Get("host_id").(string); v != "" {
+		opts.Placement.HostId = aws.String(v)
 	}
 
 	if v := d.Get("cpu_core_count").(int); v > 0 {
@@ -1892,9 +1922,16 @@ func awsTerminateInstance(conn *ec2.EC2, id string, timeout time.Duration) error
 		InstanceIds: []*string{aws.String(id)},
 	}
 	if _, err := conn.TerminateInstances(req); err != nil {
+		if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "InvalidInstanceID.NotFound" {
+			return nil
+		}
 		return fmt.Errorf("Error terminating instance: %s", err)
 	}
 
+	return waitForInstanceDeletion(conn, id, timeout)
+}
+
+func waitForInstanceDeletion(conn *ec2.EC2, id string, timeout time.Duration) error {
 	log.Printf("[DEBUG] Waiting for instance (%s) to become terminated", id)
 
 	stateConf := &resource.StateChangeConf{

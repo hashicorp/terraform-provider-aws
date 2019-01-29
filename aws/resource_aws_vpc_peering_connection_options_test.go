@@ -8,8 +8,29 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 )
 
+func TestAccAWSVpcPeeringConnectionOptions_importBasic(t *testing.T) {
+	resourceName := "aws_vpc_peering_connection_options.foo"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSVpcPeeringConnectionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpcPeeringConnectionOptionsConfig,
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSVpcPeeringConnectionOptions_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSVpcPeeringConnectionDestroy,
@@ -69,7 +90,7 @@ func TestAccAWSVpcPeeringConnectionOptions_basic(t *testing.T) {
 const testAccVpcPeeringConnectionOptionsConfig = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.0.0.0/16"
-  tags {
+  tags = {
     Name = "terraform-testacc-vpc-peering-conn-options-foo"
   }
 }
@@ -77,7 +98,7 @@ resource "aws_vpc" "foo" {
 resource "aws_vpc" "bar" {
   cidr_block = "10.1.0.0/16"
   enable_dns_hostnames = true
-  tags {
+  tags = {
     Name = "terraform-testacc-vpc-peering-conn-options-bar"
   }
 }

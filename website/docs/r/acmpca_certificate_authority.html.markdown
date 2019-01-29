@@ -77,7 +77,7 @@ resource "aws_acmpca_certificate_authority" "example" {
       custom_cname       = "crl.example.com"
       enabled            = true
       expiration_in_days = 7
-      s3_bucket_name     = "${aws_s3_bucket.example.name}"
+      s3_bucket_name     = "${aws_s3_bucket.example.id}"
     }
   }
 

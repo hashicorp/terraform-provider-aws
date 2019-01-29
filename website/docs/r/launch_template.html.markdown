@@ -18,9 +18,14 @@ resource "aws_launch_template" "foo" {
 
   block_device_mappings {
     device_name = "/dev/sda1"
+
     ebs {
       volume_size = 20
     }
+  }
+
+  capacity_reservation_specification {
+    capacity_reservation_preference = "open"
   }
 
   credit_specification {
@@ -53,6 +58,10 @@ resource "aws_launch_template" "foo" {
 
   key_name = "test"
 
+  license_specification {
+    license_configuration_arn = "arn:aws:license-manager:eu-west-1:123456789012:license-configuration:lic-0123456789abcdef0123456789abcdef"
+  }
+
   monitoring {
     enabled = true
   }
@@ -71,11 +80,12 @@ resource "aws_launch_template" "foo" {
 
   tag_specifications {
     resource_type = "instance"
-    tags {
+
+  tags = {
       Name = "test"
     }
   }
-  
+
   user_data = "${base64encode(...)}"
 }
 ```
@@ -89,7 +99,8 @@ The following arguments are supported:
 * `description` - Description of the launch template.
 * `block_device_mappings` - Specify volumes to attach to the instance besides the volumes specified by the AMI.
   See [Block Devices](#block-devices) below for details.
-* `credit_specification` - Customize the credit specification of the instance. See [Credit 
+* `capacity_reservation_specification` - Targeting for EC2 capacity reservations. See [Capacity Reservation Specification](#capacity-reservation-specification) below for more details.
+* `credit_specification` - Customize the credit specification of the instance. See [Credit
   Specification](#credit-specification) below for more details.
 * `disable_api_termination` - If `true`, enables [EC2 Instance
   Termination Protection](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/terminating-instances.html#Using_ChangingDisableAPITermination)
@@ -106,15 +117,16 @@ The following arguments are supported:
 * `instance_type` - The type of the instance.
 * `kernel_id` - The kernel ID.
 * `key_name` - The key name to use for the instance.
+* `license_specification` - A list of license specifications to associate with. See [License Specification](#license-specification) below for more details.
 * `monitoring` - The monitoring option for the instance. See [Monitoring](#monitoring) below for more details.
-* `network_interfaces` - Customize network interfaces to be attached at instance boot time. See [Network 
+* `network_interfaces` - Customize network interfaces to be attached at instance boot time. See [Network
   Interfaces](#network-interfaces) below for more details.
 * `placement` - The placement of the instance. See [Placement](#placement) below for more details.
 * `ram_disk_id` - The ID of the RAM disk.
 * `security_group_names` - A list of security group names to associate with. If you are creating Instances in a VPC, use
   `vpc_security_group_ids` instead.
 * `vpc_security_group_ids` - A list of security group IDs to associate with.
-* `tag_specifications` - The tags to apply to the resources during launch. See [Tags](#tags) below for more details.
+* `tag_specifications` - The tags to apply to the resources during launch. See [Tag Specifications](#tag-specifications) below for more details.
 * `tags` - (Optional) A mapping of tags to assign to the launch template.
 * `user_data` - The Base64-encoded user data to provide when launching the instance.
 
@@ -149,13 +161,24 @@ The `ebs` block supports the following:
 * `volume_size` - The size of the volume in gigabytes.
 * `volume_type` - The type of volume. Can be `"standard"`, `"gp2"`, or `"io1"`. (Default: `"standard"`).
 
+### Capacity Reservation Specification
+
+The `capacity_reservation_specification` block supports the following:
+
+* `capacity_reservation_preference` - Indicates the instance's Capacity Reservation preferences. Can be `open` or `none`. (Default `none`).
+* `capacity_reservation_target` - Used to target a specific Capacity Reservation:
+
+The `capacity_reservation_target` block supports the following:
+
+* `capacity_reservation_id` - The ID of the Capacity Reservation to target.
+
 ### Credit Specification
 
 Credit specification can be applied/modified to the EC2 Instance at any time.
 
 The `credit_specification` block supports the following:
 
-* `cpu_credits` - The credit option for CPU usage. Can be `"standard"` or `"unlimited"`. (Default: `"standard"`).
+* `cpu_credits` - The credit option for CPU usage. Can be `"standard"` or `"unlimited"`. T3 instances are launched as unlimited by default. T2 instances are launched as standard by default.
 
 ### Elastic GPU
 
@@ -175,6 +198,14 @@ The `iam_instance_profile` block supports the following:
 * `arn` - The Amazon Resource Name (ARN) of the instance profile.
 * `name` - The name of the instance profile.
 
+### License Specification
+
+Associate one of more license configurations.
+
+The `license_specification` block supports the following:
+
+* `license_configuration_arn` - (Required) ARN of the license configuration.
+
 ### Market Options
 
 The market (purchasing) option for the instances.
@@ -187,7 +218,7 @@ The `instance_market_options` block supports the following:
 The `spot_options` block supports the following:
 
 * `block_duration_minutes` - The required duration in minutes. This value must be a multiple of 60.
-* `instance_interruption_behavior` - The behavior when a Spot Instance is interrupted. Can be `hibernate`, 
+* `instance_interruption_behavior` - The behavior when a Spot Instance is interrupted. Can be `hibernate`,
   `stop`, or `terminate`. (Default: `terminate`).
 * `max_price` - The maximum hourly price you're willing to pay for the Spot Instances.
 * `spot_instance_type` - The Spot Instance request type. Can be `one-time`, or `persistent`.
@@ -233,7 +264,7 @@ The `placement` block supports the following:
 * `spread_domain` - Reserved for future use.
 * `tenancy` - The tenancy of the instance (if the instance is running in a VPC). Can be `default`, `dedicated`, or `host`.
 
-### Tags
+### Tag Specifications
 
 The tags to apply to the resources during launch. You can tag instances and volumes. More information can be found in the [EC2 API documentation](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_LaunchTemplateTagSpecificationRequest.html).
 

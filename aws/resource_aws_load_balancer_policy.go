@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -100,11 +101,20 @@ func resourceAwsLoadBalancerPolicyRead(d *schema.ResourceData, meta interface{})
 	}
 
 	getResp, err := elbconn.DescribeLoadBalancerPolicies(request)
+
+	if isAWSErr(err, "LoadBalancerNotFound", "") {
+		log.Printf("[WARN] Load Balancer Policy (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if isAWSErr(err, elb.ErrCodePolicyNotFoundException, "") {
+		log.Printf("[WARN] Load Balancer Policy (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "PolicyNotFound" {
-			d.SetId("")
-			return nil
-		}
 		return fmt.Errorf("Error retrieving policy: %s", err)
 	}
 

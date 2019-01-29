@@ -42,6 +42,7 @@ EOF
 resource "aws_iam_role_policy" "codepipeline_policy" {
   name = "codepipeline_policy"
   role = "${aws_iam_role.codepipeline_role.id}"
+
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -82,6 +83,7 @@ resource "aws_codepipeline" "foo" {
   artifact_store {
     location = "${aws_s3_bucket.foo.bucket}"
     type     = "S3"
+
     encryption_key {
       id   = "${data.aws_kms_alias.s3kmskey.arn}"
       type = "KMS"
@@ -99,10 +101,10 @@ resource "aws_codepipeline" "foo" {
       version          = "1"
       output_artifacts = ["test"]
 
-      configuration {
-        Owner      = "my-organization"
-        Repo       = "test"
-        Branch     = "master"
+      configuration = {
+        Owner  = "my-organization"
+        Repo   = "test"
+        Branch = "master"
       }
     }
   }
@@ -118,7 +120,7 @@ resource "aws_codepipeline" "foo" {
       input_artifacts = ["test"]
       version         = "1"
 
-      configuration {
+      configuration = {
         ProjectName = "test"
       }
     }
@@ -142,7 +144,7 @@ An `artifact_store` block supports the following arguments:
 * `type` - (Required) The type of the artifact store, such as Amazon S3
 * `encryption_key` - (Optional) The encryption key block AWS CodePipeline uses to encrypt the data in the artifact store, such as an AWS Key Management Service (AWS KMS) key. If you don't specify a key, AWS CodePipeline uses the default key for Amazon Simple Storage Service (Amazon S3). An `encryption_key` block is documented below.
 
-A `encryption_key` block supports the following arguments:
+An `encryption_key` block supports the following arguments:
 
 * `id` - (Required) The KMS key ARN or ID
 * `type` - (Required) The type of key; currently only `KMS` is supported

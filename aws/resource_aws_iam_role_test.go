@@ -2,10 +2,10 @@ package aws
 
 import (
 	"fmt"
+	"log"
+	"regexp"
 	"strings"
 	"testing"
-
-	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -15,11 +15,139 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func init() {
+	resource.AddTestSweepers("aws_iam_role", &resource.Sweeper{
+		Name: "aws_iam_role",
+		Dependencies: []string{
+			"aws_batch_compute_environment",
+			"aws_cognito_user_pool",
+			"aws_config_configuration_aggregator",
+			"aws_config_configuration_recorder",
+			"aws_datasync_location_s3",
+			"aws_dax_cluster",
+			"aws_db_instance",
+			"aws_db_option_group",
+			"aws_eks_cluster",
+			"aws_elastic_beanstalk_application",
+			"aws_elastic_beanstalk_environment",
+			"aws_elasticsearch_domain",
+			"aws_glue_crawler",
+			"aws_glue_job",
+			"aws_instance",
+			"aws_lambda_function",
+			"aws_launch_configuration",
+			"aws_redshift_cluster",
+			"aws_spot_fleet_request",
+		},
+		F: testSweepIamRoles,
+	})
+}
+
+func testSweepIamRoles(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).iamconn
+	prefixes := []string{
+		"ecs_instance_role",
+		"ecs_tf",
+		"EMR_AutoScaling_DefaultRole",
+		"iam_emr",
+		"terraform-",
+		"test_role",
+		"tf",
+	}
+	roles := make([]*iam.Role, 0)
+
+	err = conn.ListRolesPages(&iam.ListRolesInput{}, func(page *iam.ListRolesOutput, lastPage bool) bool {
+		for _, role := range page.Roles {
+			for _, prefix := range prefixes {
+				if strings.HasPrefix(aws.StringValue(role.RoleName), prefix) {
+					roles = append(roles, role)
+					break
+				}
+			}
+		}
+
+		return !lastPage
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping IAM Role sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("Error retrieving IAM Roles: %s", err)
+	}
+
+	if len(roles) == 0 {
+		log.Print("[DEBUG] No IAM Roles to sweep")
+		return nil
+	}
+
+	for _, role := range roles {
+		rolename := aws.StringValue(role.RoleName)
+		log.Printf("[DEBUG] Deleting IAM Role: %s", rolename)
+
+		if err := deleteAwsIamRoleInstanceProfiles(conn, rolename); err != nil {
+			return fmt.Errorf("error deleting IAM Role (%s) instance profiles: %s", rolename, err)
+		}
+
+		if err := deleteAwsIamRolePolicyAttachments(conn, rolename); err != nil {
+			return fmt.Errorf("error deleting IAM Role (%s) policy attachments: %s", rolename, err)
+		}
+
+		if err := deleteAwsIamRolePolicies(conn, rolename); err != nil {
+			return fmt.Errorf("error deleting IAM Role (%s) policies: %s", rolename, err)
+		}
+
+		input := &iam.DeleteRoleInput{
+			RoleName: aws.String(rolename),
+		}
+
+		_, err := conn.DeleteRole(input)
+
+		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+			continue
+		}
+
+		if err != nil {
+			return fmt.Errorf("Error deleting IAM Role (%s): %s", rolename, err)
+		}
+	}
+
+	return nil
+}
+
+func TestAccAWSIAMRole_importBasic(t *testing.T) {
+	resourceName := "aws_iam_role.role"
+	rName := acctest.RandString(10)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRoleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSIAMRoleConfig(rName),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSIAMRole_basic(t *testing.T) {
 	var conf iam.GetRoleOutput
 	rName := acctest.RandString(10)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRoleDestroy,
@@ -40,7 +168,7 @@ func TestAccAWSIAMRole_basicWithDescription(t *testing.T) {
 	var conf iam.GetRoleOutput
 	rName := acctest.RandString(10)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRoleDestroy,
@@ -77,7 +205,7 @@ func TestAccAWSIAMRole_namePrefix(t *testing.T) {
 	var conf iam.GetRoleOutput
 	rName := acctest.RandString(10)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
 		IDRefreshName:   "aws_iam_role.role",
 		IDRefreshIgnore: []string{"name_prefix"},
@@ -100,7 +228,7 @@ func TestAccAWSIAMRole_testNameChange(t *testing.T) {
 	var conf iam.GetRoleOutput
 	rName := acctest.RandString(10)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRoleDestroy,
@@ -125,7 +253,7 @@ func TestAccAWSIAMRole_testNameChange(t *testing.T) {
 func TestAccAWSIAMRole_badJSON(t *testing.T) {
 	rName := acctest.RandString(10)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRoleDestroy,
@@ -144,7 +272,7 @@ func TestAccAWSIAMRole_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_iam_role.role"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRoleDestroy,
@@ -165,7 +293,7 @@ func TestAccAWSIAMRole_force_detach_policies(t *testing.T) {
 	var conf iam.GetRoleOutput
 	rName := acctest.RandString(10)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRoleDestroy,
@@ -186,7 +314,7 @@ func TestAccAWSIAMRole_MaxSessionDuration(t *testing.T) {
 	rName := acctest.RandString(10)
 	resourceName := "aws_iam_role.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRoleDestroy,
@@ -231,7 +359,7 @@ func TestAccAWSIAMRole_PermissionsBoundary(t *testing.T) {
 	permissionsBoundary1 := fmt.Sprintf("arn:%s:iam::aws:policy/AdministratorAccess", testAccGetPartition())
 	permissionsBoundary2 := fmt.Sprintf("arn:%s:iam::aws:policy/ReadOnlyAccess", testAccGetPartition())
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserDestroy,
@@ -286,6 +414,37 @@ func TestAccAWSIAMRole_PermissionsBoundary(t *testing.T) {
 					testAccCheckAWSRoleExists(resourceName, &role),
 					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", ""),
 					testAccCheckAWSRolePermissionsBoundary(&role, ""),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSIAMRole_tags(t *testing.T) {
+	var role iam.GetRoleOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_iam_role.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSUserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSIAMRoleConfig_tags(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRoleExists(resourceName, &role),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.tag1", "test-value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.tag2", "test-value2"),
+				),
+			},
+			{
+				Config: testAccAWSIAMRoleConfig_tagsUpdate(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRoleExists(resourceName, &role),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.tag2", "test-value"),
 				),
 			},
 		},
@@ -686,4 +845,60 @@ resource "aws_iam_role" "test" {
 EOF
 }
 `, rName, rName, rName)
+}
+
+func testAccAWSIAMRoleConfig_tags(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name = %q
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+
+  tags = {
+    tag1 = "test-value1"
+    tag2 = "test-value2"
+  }
+}
+
+`, rName)
+}
+
+func testAccAWSIAMRoleConfig_tagsUpdate(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name = %q
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+
+  tags = {
+    tag2 = "test-value"
+  }
+}
+`, rName)
 }

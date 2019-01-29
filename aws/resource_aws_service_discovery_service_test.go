@@ -13,7 +13,7 @@ import (
 
 func TestAccAWSServiceDiscoveryService_private(t *testing.T) {
 	rName := acctest.RandString(5)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceDiscoveryServiceDestroy,
@@ -48,7 +48,7 @@ func TestAccAWSServiceDiscoveryService_private(t *testing.T) {
 
 func TestAccAWSServiceDiscoveryService_public(t *testing.T) {
 	rName := acctest.RandString(5)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceDiscoveryServiceDestroy,
@@ -81,7 +81,7 @@ func TestAccAWSServiceDiscoveryService_public(t *testing.T) {
 func TestAccAWSServiceDiscoveryService_import(t *testing.T) {
 	resourceName := "aws_service_discovery_service.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceDiscoveryServiceDestroy,
@@ -136,11 +136,7 @@ func testAccCheckAwsServiceDiscoveryServiceExists(name string) resource.TestChec
 		}
 
 		_, err := conn.GetService(input)
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -148,7 +144,7 @@ func testAccServiceDiscoveryServiceConfig_private(rName string, th int) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-  tags {
+  tags = {
     Name = "terraform-testacc-service-discovery-service-private"
   }
 }
@@ -179,7 +175,7 @@ func testAccServiceDiscoveryServiceConfig_private_update(rName string, th int) s
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-  tags {
+  tags = {
     Name = "terraform-testacc-service-discovery-service-private"
   }
 }

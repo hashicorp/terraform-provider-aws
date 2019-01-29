@@ -14,9 +14,10 @@ Provides a Batch Job Definition resource.
 
 ```hcl
 resource "aws_batch_job_definition" "test" {
-	name = "tf_test_batch_job_definition"
-	type = "container"
-	container_properties = <<CONTAINER_PROPERTIES
+  name = "tf_test_batch_job_definition"
+  type = "container"
+
+  container_properties = <<CONTAINER_PROPERTIES
 {
 	"command": ["ls", "-la"],
 	"image": "busybox",

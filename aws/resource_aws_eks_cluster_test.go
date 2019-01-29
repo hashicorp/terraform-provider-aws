@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"regexp"
@@ -33,6 +34,10 @@ func testSweepEksClusters(region string) error {
 	for {
 		out, err := conn.ListClusters(input)
 		if err != nil {
+			if testSweepSkipSweepError(err) {
+				log.Printf("[WARN] Skipping EKS Clusters sweep for %s: %s", region, err)
+				return nil
+			}
 			return fmt.Errorf("Error retrieving EKS Clusters: %s", err)
 		}
 
@@ -77,7 +82,7 @@ func TestAccAWSEksCluster_basic(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 	resourceName := "aws_eks_cluster.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEksClusterDestroy,
@@ -110,12 +115,12 @@ func TestAccAWSEksCluster_basic(t *testing.T) {
 }
 
 func TestAccAWSEksCluster_Version(t *testing.T) {
-	var cluster eks.Cluster
+	var cluster1, cluster2 eks.Cluster
 
 	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 	resourceName := "aws_eks_cluster.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEksClusterDestroy,
@@ -123,7 +128,7 @@ func TestAccAWSEksCluster_Version(t *testing.T) {
 			{
 				Config: testAccAWSEksClusterConfig_Version(rName, "1.10"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksClusterExists(resourceName, &cluster),
+					testAccCheckAWSEksClusterExists(resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "version", "1.10"),
 				),
 			},
@@ -131,6 +136,14 @@ func TestAccAWSEksCluster_Version(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSEksClusterConfig_Version(rName, "1.11"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEksClusterExists(resourceName, &cluster2),
+					testAccCheckAWSEksClusterNotRecreated(&cluster1, &cluster2),
+					resource.TestCheckResourceAttr(resourceName, "version", "1.11"),
+				),
 			},
 		},
 	})
@@ -142,7 +155,7 @@ func TestAccAWSEksCluster_VpcConfig_SecurityGroupIds(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 	resourceName := "aws_eks_cluster.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEksClusterDestroy,
@@ -231,6 +244,16 @@ func testAccCheckAWSEksClusterDestroy(s *terraform.State) error {
 	return nil
 }
 
+func testAccCheckAWSEksClusterNotRecreated(i, j *eks.Cluster) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if aws.TimeValue(i.CreatedAt) != aws.TimeValue(j.CreatedAt) {
+			return errors.New("EKS Cluster was recreated")
+		}
+
+		return nil
+	}
+}
+
 func testAccAWSEksClusterConfig_Base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {}
@@ -267,7 +290,7 @@ resource "aws_iam_role_policy_attachment" "test-AmazonEKSServicePolicy" {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name                       = "terraform-testacc-eks-cluster-base"
     "kubernetes.io/cluster/%s" = "shared"
   }
@@ -280,7 +303,7 @@ resource "aws_subnet" "test" {
   cidr_block        = "10.0.${count.index}.0/24"
   vpc_id            = "${aws_vpc.test.id}"
 
-  tags {
+  tags = {
     Name                       = "terraform-testacc-eks-cluster-base"
     "kubernetes.io/cluster/%s" = "shared"
   }
@@ -297,7 +320,7 @@ resource "aws_eks_cluster" "test" {
   role_arn = "${aws_iam_role.test.arn}"
 
   vpc_config {
-    subnet_ids = ["${aws_subnet.test.*.id}"]
+    subnet_ids = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
   }
 
   depends_on = ["aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy", "aws_iam_role_policy_attachment.test-AmazonEKSServicePolicy"]
@@ -315,7 +338,7 @@ resource "aws_eks_cluster" "test" {
   version  = "%s"
 
   vpc_config {
-    subnet_ids = ["${aws_subnet.test.*.id}"]
+    subnet_ids = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
   }
 
   depends_on = ["aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy", "aws_iam_role_policy_attachment.test-AmazonEKSServicePolicy"]
@@ -330,7 +353,7 @@ func testAccAWSEksClusterConfig_VpcConfig_SecurityGroupIds(rName string) string 
 resource "aws_security_group" "test" {
   vpc_id = "${aws_vpc.test.id}"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-eks-cluster-sg"
   }
 }
@@ -341,7 +364,7 @@ resource "aws_eks_cluster" "test" {
 
   vpc_config {
     security_group_ids = ["${aws_security_group.test.id}"]
-    subnet_ids         = ["${aws_subnet.test.*.id}"]
+    subnet_ids         = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
   }
 
   depends_on = ["aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy", "aws_iam_role_policy_attachment.test-AmazonEKSServicePolicy"]

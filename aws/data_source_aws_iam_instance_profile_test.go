@@ -13,7 +13,7 @@ func TestAccAWSDataSourceIAMInstanceProfile_basic(t *testing.T) {
 	roleName := fmt.Sprintf("tf-acc-ds-instance-profile-role-%d", acctest.RandInt())
 	profileName := fmt.Sprintf("tf-acc-ds-instance-profile-%d", acctest.RandInt())
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{

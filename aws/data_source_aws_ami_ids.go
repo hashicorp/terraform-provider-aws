@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"sort"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -41,6 +43,11 @@ func dataSourceAwsAmiIds() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"sort_ascending": {
+				Type:     schema.TypeBool,
+				Default:  false,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -52,8 +59,9 @@ func dataSourceAwsAmiIdsRead(d *schema.ResourceData, meta interface{}) error {
 	filters, filtersOk := d.GetOk("filter")
 	nameRegex, nameRegexOk := d.GetOk("name_regex")
 	owners, ownersOk := d.GetOk("owners")
+	sortAscending := d.Get("sort_ascending").(bool)
 
-	if executableUsersOk == false && filtersOk == false && nameRegexOk == false && ownersOk == false {
+	if !executableUsersOk && !filtersOk && !nameRegexOk && !ownersOk {
 		return fmt.Errorf("One of executable_users, filters, name_regex, or owners must be assigned")
 	}
 
@@ -123,7 +131,15 @@ func dataSourceAwsAmiIdsRead(d *schema.ResourceData, meta interface{}) error {
 		filteredImages = resp.Images[:]
 	}
 
-	for _, image := range sortImages(filteredImages) {
+	sort.Slice(filteredImages, func(i, j int) bool {
+		itime, _ := time.Parse(time.RFC3339, aws.StringValue(filteredImages[i].CreationDate))
+		jtime, _ := time.Parse(time.RFC3339, aws.StringValue(filteredImages[j].CreationDate))
+		if sortAscending {
+			return itime.Unix() < jtime.Unix()
+		}
+		return itime.Unix() > jtime.Unix()
+	})
+	for _, image := range filteredImages {
 		imageIds = append(imageIds, *image.ImageId)
 	}
 

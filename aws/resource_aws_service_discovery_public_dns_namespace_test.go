@@ -15,7 +15,7 @@ func TestAccAWSServiceDiscoveryPublicDnsNamespace_basic(t *testing.T) {
 	resourceName := "aws_service_discovery_public_dns_namespace.test"
 	rName := acctest.RandStringFromCharSet(5, acctest.CharSetAlpha) + ".terraformtesting.com"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceDiscoveryPublicDnsNamespaceDestroy,
@@ -41,7 +41,7 @@ func TestAccAWSServiceDiscoveryPublicDnsNamespace_longname(t *testing.T) {
 	resourceName := "aws_service_discovery_public_dns_namespace.test"
 	rName := acctest.RandStringFromCharSet(64-len("terraformtesting.com"), acctest.CharSetAlpha) + ".terraformtesting.com"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceDiscoveryPublicDnsNamespaceDestroy,
@@ -100,11 +100,7 @@ func testAccCheckAwsServiceDiscoveryPublicDnsNamespaceExists(name string) resour
 		}
 
 		_, err := conn.GetNamespace(input)
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

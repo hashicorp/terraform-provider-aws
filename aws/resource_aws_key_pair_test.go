@@ -17,7 +17,12 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_key_pair", &resource.Sweeper{
 		Name: "aws_key_pair",
-		F:    testSweepKeyPairs,
+		Dependencies: []string{
+			"aws_elastic_beanstalk_environment",
+			"aws_instance",
+			"aws_spot_fleet_request",
+		},
+		F: testSweepKeyPairs,
 	})
 }
 
@@ -33,8 +38,12 @@ func testSweepKeyPairs(region string) error {
 	resp, err := ec2conn.DescribeKeyPairs(&ec2.DescribeKeyPairsInput{
 		Filters: []*ec2.Filter{
 			{
-				Name:   aws.String("key-name"),
-				Values: []*string{aws.String("tmp-key*")},
+				Name: aws.String("key-name"),
+				Values: []*string{
+					aws.String("tf-acctest*"),
+					aws.String("tf_acc*"),
+					aws.String("tmp-key*"),
+				},
 			},
 		},
 	})
@@ -64,7 +73,7 @@ func TestAccAWSKeyPair_basic(t *testing.T) {
 	fingerprint := "d7:ff:a6:63:18:64:9c:57:a1:ee:ca:a4:ad:c2:81:62"
 	resourceName := "aws_key_pair.a_key_pair"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSKeyPairDestroy,
@@ -92,7 +101,7 @@ func TestAccAWSKeyPair_generatedName(t *testing.T) {
 	var keyPair ec2.KeyPairInfo
 	resourceName := "aws_key_pair.a_key_pair"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSKeyPairDestroy,
@@ -119,7 +128,7 @@ func TestAccAWSKeyPair_namePrefix(t *testing.T) {
 	var keyPair ec2.KeyPairInfo
 	resourceName := "aws_key_pair.a_key_pair"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
 		IDRefreshName:   "aws_key_pair.a_key_pair",
 		IDRefreshIgnore: []string{"key_name_prefix"},

@@ -42,6 +42,7 @@ Upgrade topics:
 - [Resource: aws_network_acl](#resource-aws_network_acl)
 - [Resource: aws_redshift_cluster](#resource-aws_redshift_cluster)
 - [Resource: aws_route_table](#resource-aws_route_table)
+- [Resource: aws_route53_zone](#resource-aws_route53_zone)
 - [Resource: aws_wafregional_byte_match_set](#resource-aws_wafregional_byte_match_set)
 
 <!-- /TOC -->
@@ -618,6 +619,34 @@ resource "aws_redshift_cluster" "example" {
 Previously, importing this resource resulted in an `aws_route` resource for each route, in
 addition to the `aws_route_table`, in the Terraform state. Support for importing `aws_route` resources has been added and importing this resource only adds the `aws_route_table` 
 resource, with in-line routes, to the state.
+
+## Resource: aws_route53_zone
+
+### vpc_id and vpc_region Argument Removal
+
+Switch your Terraform configuration to `vpc` configuration block(s) instead.
+
+For example, given this previous configuration:
+
+```hcl
+resource "aws_route53_zone" "example" {
+  # ... other configuration ...
+
+  vpc_id = "..."
+}
+```
+
+An updated configuration:
+
+```hcl
+resource "aws_route53_zone" "example" {
+  # ... other configuration ...
+
+  vpc {
+    vpc_id = "..."
+  }
+}
+```
 
 ## Resource: aws_wafregional_byte_match_set
 

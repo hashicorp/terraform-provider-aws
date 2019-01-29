@@ -21,7 +21,7 @@ func TestAccAWSCloudWatchEventTarget_basic(t *testing.T) {
 	targetID1 := fmt.Sprintf("tf-acc-cw-target-%s", rName1)
 	targetID2 := fmt.Sprintf("tf-acc-cw-target-%s", rName2)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchEventTargetDestroy,
@@ -56,7 +56,7 @@ func TestAccAWSCloudWatchEventTarget_missingTargetId(t *testing.T) {
 	ruleName := fmt.Sprintf("tf-acc-cw-event-rule-missing-target-id-%s", rName)
 	snsTopicName := fmt.Sprintf("tf-acc-%s", rName)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchEventTargetDestroy,
@@ -81,7 +81,7 @@ func TestAccAWSCloudWatchEventTarget_full(t *testing.T) {
 	ssmDocumentName := acctest.RandomWithPrefix("tf_ssm_Document")
 	targetID := fmt.Sprintf("tf-acc-cw-target-full-%s", rName)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchEventTargetDestroy,
@@ -106,7 +106,7 @@ func TestAccAWSCloudWatchEventTarget_ssmDocument(t *testing.T) {
 	var target events.Target
 	rName := acctest.RandomWithPrefix("tf_ssm_Document")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchEventTargetDestroy,
@@ -125,7 +125,7 @@ func TestAccAWSCloudWatchEventTarget_ecs(t *testing.T) {
 	var target events.Target
 	rName := acctest.RandomWithPrefix("tf_ecs_target")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchEventTargetDestroy,
@@ -144,7 +144,7 @@ func TestAccAWSCloudWatchEventTarget_batch(t *testing.T) {
 	var target events.Target
 	rName := acctest.RandomWithPrefix("tf_batch_target")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchEventTargetDestroy,
@@ -163,7 +163,7 @@ func TestAccAWSCloudWatchEventTarget_kinesis(t *testing.T) {
 	var target events.Target
 	rName := acctest.RandomWithPrefix("tf_kinesis_target")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchEventTargetDestroy,
@@ -182,7 +182,7 @@ func TestAccAWSCloudWatchEventTarget_sqs(t *testing.T) {
 	var target events.Target
 	rName := acctest.RandomWithPrefix("tf_sqs_target")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchEventTargetDestroy,
@@ -201,7 +201,7 @@ func TestAccAWSCloudWatchEventTarget_input_transformer(t *testing.T) {
 	var target events.Target
 	rName := acctest.RandomWithPrefix("tf_input_transformer")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchEventTargetDestroy,
@@ -458,6 +458,15 @@ resource "aws_cloudwatch_event_rule" "schedule" {
 	schedule_expression = "rate(5 minutes)"
 }
 
+resource "aws_vpc" "vpc" {
+  cidr_block = "10.1.0.0/16"
+}
+
+resource "aws_subnet" "subnet" {
+  vpc_id = "${aws_vpc.vpc.id}"
+  cidr_block = "10.1.1.0/24"
+}
+
 resource "aws_cloudwatch_event_target" "test" {
 	arn = "${aws_ecs_cluster.test.id}"
   rule = "${aws_cloudwatch_event_rule.schedule.id}"
@@ -466,6 +475,10 @@ resource "aws_cloudwatch_event_target" "test" {
   ecs_target {
     task_count = 1
     task_definition_arn = "${aws_ecs_task_definition.task.arn}"
+    launch_type = "FARGATE"
+    network_configuration {
+      subnets = ["${aws_subnet.subnet.id}"]
+    }
   }
 }
 
@@ -517,6 +530,11 @@ resource "aws_ecs_cluster" "test" {
 
 resource "aws_ecs_task_definition" "task" {
   family                = "%s"
+  cpu = 256
+  memory = 512
+  requires_compatibilities = ["FARGATE"]
+  network_mode = "awsvpc"
+
   container_definitions = <<EOF
 [
   {
@@ -780,7 +798,7 @@ resource "aws_lambda_function" "lambda" {
   source_code_hash = "${base64sha256(file("test-fixtures/lambdatest.zip"))}"
   role = "${aws_iam_role.iam_for_lambda.arn}"
   handler = "exports.example"
-	runtime = "nodejs4.3"
+	runtime = "nodejs8.10"
 }
 
 resource "aws_cloudwatch_event_rule" "schedule" {

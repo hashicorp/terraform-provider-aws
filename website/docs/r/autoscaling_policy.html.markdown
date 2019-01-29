@@ -62,12 +62,13 @@ group scaling. These have the following structure:
 
 ```hcl
 step_adjustment {
-  scaling_adjustment = -1
+  scaling_adjustment          = -1
   metric_interval_lower_bound = 1.0
   metric_interval_upper_bound = 2.0
 }
+
 step_adjustment {
-  scaling_adjustment = 1
+  scaling_adjustment          = 1
   metric_interval_lower_bound = 2.0
   metric_interval_upper_bound = 3.0
 }
@@ -95,18 +96,22 @@ target_tracking_configuration {
   predefined_metric_specification {
     predefined_metric_type = "ASGAverageCPUUtilization"
   }
+
   target_value = 40.0
 }
+
 target_tracking_configuration {
   customized_metric_specification {
     metric_dimension {
-      name = "fuga"
+      name  = "fuga"
       value = "fuga"
     }
+
     metric_name = "hoge"
-    namespace = "hoge"
-    statistic = "Average"
+    namespace   = "hoge"
+    statistic   = "Average"
   }
+
   target_value = 40.0
 }
 ```
@@ -152,3 +157,11 @@ The following arguments are supported for backwards compatibility but should not
 * `autoscaling_group_name` - The scaling policy's assigned autoscaling group.
 * `adjustment_type` - The scaling policy's adjustment type.
 * `policy_type` - The scaling policy's type.
+
+## Import
+
+AutoScaling scaling policy can be imported using the role autoscaling_group_name and name separated by `/`.
+
+```
+$ terraform import aws_autoscaling_policy.test-policy asg-name/policy-name
+```

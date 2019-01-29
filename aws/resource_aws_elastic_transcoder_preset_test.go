@@ -11,6 +11,27 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestAccAWSElasticTranscoderPreset_import(t *testing.T) {
+	resourceName := "aws_elastictranscoder_preset.bar"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckElasticTranscoderPresetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: awsElasticTranscoderPresetConfig,
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSElasticTranscoderPreset_basic(t *testing.T) {
 	preset := &elastictranscoder.Preset{}
 	name := "aws_elastictranscoder_preset.bar"
@@ -53,7 +74,7 @@ func TestAccAWSElasticTranscoderPreset_basic(t *testing.T) {
 		}
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckElasticTranscoderPresetDestroy,
@@ -65,16 +86,31 @@ func TestAccAWSElasticTranscoderPreset_basic(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      name,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: awsElasticTranscoderPresetConfig2,
 				Check: resource.ComposeTestCheckFunc(
 					checkExists(true),
 				),
 			},
 			{
+				ResourceName:      name,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: awsElasticTranscoderPresetConfig3,
 				Check: resource.ComposeTestCheckFunc(
 					checkExists(true),
 				),
+			},
+			{
+				ResourceName:      name,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -158,10 +194,12 @@ resource "aws_elastictranscoder_preset" "bar" {
     sizing_policy        = "Fit"
   }
 
-  video_codec_options {
-    Profile            = "main"
-    Level              = "4.1"
-    MaxReferenceFrames = 4
+  video_codec_options = {
+    Profile                  = "main"
+    Level                    = "4.1"
+    MaxReferenceFrames       = 4
+    InterlacedMode           = "Auto"
+    ColorSpaceConversionMode = "None"
   }
 
   thumbnails {
@@ -207,11 +245,11 @@ resource "aws_elastictranscoder_preset" "bar" {
     sizing_policy        = "Fit"
   }
 
-  video_codec_options {
+  video_codec_options = {
     Profile                  = "main"
     Level                    = "2.2"
     MaxReferenceFrames       = 3
-    InterlaceMode            = "Progressive"
+    InterlacedMode           = "Progressive"
     ColorSpaceConversionMode = "None"
   }
 

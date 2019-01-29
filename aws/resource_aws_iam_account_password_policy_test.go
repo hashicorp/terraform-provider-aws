@@ -10,10 +10,31 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestAccAWSIAMAccountPasswordPolicy_importBasic(t *testing.T) {
+	resourceName := "aws_iam_account_password_policy.default"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSIAMAccountPasswordPolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSIAMAccountPasswordPolicy,
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSIAMAccountPasswordPolicy_basic(t *testing.T) {
 	var policy iam.GetAccountPasswordPolicyOutput
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIAMAccountPasswordPolicyDestroy,

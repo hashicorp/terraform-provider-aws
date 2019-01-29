@@ -3,7 +3,6 @@ package aws
 import (
 	"errors"
 	"fmt"
-	"strconv"
 	"testing"
 	"time"
 
@@ -61,7 +60,7 @@ func TestAccAWSUserLoginProfile_basic(t *testing.T) {
 
 	username := fmt.Sprintf("test-user-%d", acctest.RandInt())
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserLoginProfileDestroy,
@@ -82,7 +81,7 @@ func TestAccAWSUserLoginProfile_keybase(t *testing.T) {
 
 	username := fmt.Sprintf("test-user-%d", acctest.RandInt())
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserLoginProfileDestroy,
@@ -102,7 +101,7 @@ func TestAccAWSUserLoginProfile_keybase(t *testing.T) {
 func TestAccAWSUserLoginProfile_keybaseDoesntExist(t *testing.T) {
 	username := fmt.Sprintf("test-user-%d", acctest.RandInt())
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserLoginProfileDestroy,
@@ -119,7 +118,7 @@ func TestAccAWSUserLoginProfile_keybaseDoesntExist(t *testing.T) {
 func TestAccAWSUserLoginProfile_notAKey(t *testing.T) {
 	username := fmt.Sprintf("test-user-%d", acctest.RandInt())
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserLoginProfileDestroy,
@@ -136,19 +135,18 @@ func TestAccAWSUserLoginProfile_notAKey(t *testing.T) {
 func TestAccAWSUserLoginProfile_PasswordLength(t *testing.T) {
 	var conf iam.GetLoginProfileOutput
 
-	passwordLength := acctest.RandIntRange(4, 128)
 	username := fmt.Sprintf("test-user-%d", acctest.RandInt())
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserLoginProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSUserLoginProfileConfig_PasswordLength(username, "/", testPubKey1, passwordLength),
+				Config: testAccAWSUserLoginProfileConfig_PasswordLength(username, "/", testPubKey1, 128),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSUserLoginProfileExists("aws_iam_user_login_profile.user", &conf),
-					resource.TestCheckResourceAttr("aws_iam_user_login_profile.user", "password_length", strconv.Itoa(passwordLength)),
+					resource.TestCheckResourceAttr("aws_iam_user_login_profile.user", "password_length", "128"),
 				),
 			},
 		},
@@ -312,7 +310,8 @@ resource "aws_iam_user_login_profile" "user" {
   user            = "${aws_iam_user.user.name}"
   password_length = %d
   pgp_key         = <<EOF
-%sEOF
+%s
+EOF
 }
 `, testAccAWSUserLoginProfileConfig_base(rName, path), passwordLength, pgpKey)
 }
@@ -324,7 +323,8 @@ func testAccAWSUserLoginProfileConfig_Required(rName, path, pgpKey string) strin
 resource "aws_iam_user_login_profile" "user" {
   user    = "${aws_iam_user.user.name}"
   pgp_key = <<EOF
-%sEOF
+%s
+EOF
 }
 `, testAccAWSUserLoginProfileConfig_base(rName, path), pgpKey)
 }

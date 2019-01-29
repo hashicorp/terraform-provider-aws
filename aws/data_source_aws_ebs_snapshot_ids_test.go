@@ -9,7 +9,7 @@ import (
 )
 
 func TestAccDataSourceAwsEbsSnapshotIds_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -26,7 +26,7 @@ func TestAccDataSourceAwsEbsSnapshotIds_basic(t *testing.T) {
 func TestAccDataSourceAwsEbsSnapshotIds_sorted(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -55,7 +55,7 @@ func TestAccDataSourceAwsEbsSnapshotIds_sorted(t *testing.T) {
 }
 
 func TestAccDataSourceAwsEbsSnapshotIds_empty(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{

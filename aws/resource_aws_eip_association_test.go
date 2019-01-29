@@ -15,7 +15,7 @@ import (
 func TestAccAWSEIPAssociation_importInstance(t *testing.T) {
 	resourceName := "aws_eip_association.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEIPAssociationDestroy,
@@ -35,7 +35,7 @@ func TestAccAWSEIPAssociation_importInstance(t *testing.T) {
 func TestAccAWSEIPAssociation_importNetworkInterface(t *testing.T) {
 	resourceName := "aws_eip_association.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEIPAssociationDestroy,
@@ -55,7 +55,7 @@ func TestAccAWSEIPAssociation_importNetworkInterface(t *testing.T) {
 func TestAccAWSEIPAssociation_basic(t *testing.T) {
 	var a ec2.Address
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEIPAssociationDestroy,
@@ -88,7 +88,7 @@ func TestAccAWSEIPAssociation_ec2Classic(t *testing.T) {
 	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
 	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEIPAssociationDestroy,
@@ -111,7 +111,7 @@ func TestAccAWSEIPAssociation_spotInstance(t *testing.T) {
 	var a ec2.Address
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEIPAssociationDestroy,
@@ -132,7 +132,7 @@ func TestAccAWSEIPAssociation_spotInstance(t *testing.T) {
 func TestAccAWSEIPAssociation_disappears(t *testing.T) {
 	var a ec2.Address
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEIPAssociationDestroy,
@@ -158,10 +158,8 @@ func testAccCheckEIPAssociationDisappears(address *ec2.Address) resource.TestChe
 		opts := &ec2.DisassociateAddressInput{
 			AssociationId: address.AssociationId,
 		}
-		if _, err := conn.DisassociateAddress(opts); err != nil {
-			return err
-		}
-		return nil
+		_, err := conn.DisassociateAddress(opts)
+		return err
 	}
 }
 
@@ -252,7 +250,7 @@ func testAccCheckAWSEIPAssociationDestroy(s *terraform.State) error {
 const testAccAWSEIPAssociationConfig = `
 resource "aws_vpc" "main" {
 	cidr_block = "192.168.0.0/24"
-	tags {
+	tags = {
 		Name = "terraform-testacc-eip-association"
 	}
 }
@@ -260,7 +258,7 @@ resource "aws_subnet" "sub" {
 	vpc_id = "${aws_vpc.main.id}"
 	cidr_block = "192.168.0.0/25"
 	availability_zone = "us-west-2a"
-	tags {
+	tags = {
 		Name = "tf-acc-eip-association"
 	}
 }
@@ -307,7 +305,7 @@ resource "aws_network_interface" "baz" {
 const testAccAWSEIPAssociationConfigDisappears = `
 resource "aws_vpc" "main" {
 	cidr_block = "192.168.0.0/24"
-	tags {
+	tags = {
 		Name = "terraform-testacc-eip-association-disappears"
 	}
 }
@@ -315,7 +313,7 @@ resource "aws_subnet" "sub" {
 	vpc_id = "${aws_vpc.main.id}"
 	cidr_block = "192.168.0.0/25"
 	availability_zone = "us-west-2a"
-	tags {
+	tags = {
 		Name = "tf-acc-eip-association-disappears"
 	}
 }

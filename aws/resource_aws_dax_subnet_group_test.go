@@ -13,7 +13,9 @@ import (
 
 func TestAccAwsDaxSubnetGroup_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resource.Test(t, resource.TestCase{
+	resourceName := "aws_dax_subnet_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDaxSubnetGroupDestroy,
@@ -35,22 +37,6 @@ func TestAccAwsDaxSubnetGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_dax_subnet_group.test", "vpc_id"),
 				),
 			},
-		},
-	})
-}
-
-func TestAccAwsDaxSubnetGroup_import(t *testing.T) {
-	resourceName := "aws_dax_subnet_group.test"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsDaxSubnetGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDaxSubnetGroupConfig(acctest.RandString(5)),
-			},
-
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -93,11 +79,8 @@ func testAccCheckAwsDaxSubnetGroupExists(name string) resource.TestCheckFunc {
 		_, err := conn.DescribeSubnetGroups(&dax.DescribeSubnetGroupsInput{
 			SubnetGroupNames: []*string{aws.String(rs.Primary.ID)},
 		})
-		if err != nil {
-			return err
-		}
 
-		return nil
+		return err
 	}
 }
 

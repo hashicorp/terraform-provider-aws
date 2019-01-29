@@ -304,7 +304,7 @@ func resourceAwsElbCreate(d *schema.ResourceData, meta interface{}) error {
 				// Check for IAM SSL Cert error, eventual consistancy issue
 				if awsErr.Code() == "CertificateNotFound" {
 					return resource.RetryableError(
-						fmt.Errorf("[WARN] Error creating ELB Listener with SSL Cert, retrying: %s", err))
+						fmt.Errorf("Error creating ELB Listener with SSL Cert, retrying: %s", err))
 				}
 			}
 			return resource.NonRetryableError(err)
@@ -407,7 +407,7 @@ func flattenAwsELbResource(d *schema.ResourceData, ec2conn *ec2.EC2, elbconn *el
 			elbVpc = *lb.VPCId
 			sgId, err := sourceSGIdByName(ec2conn, *lb.SourceSecurityGroup.GroupName, elbVpc)
 			if err != nil {
-				return fmt.Errorf("[WARN] Error looking up ELB Security Group ID: %s", err)
+				return fmt.Errorf("Error looking up ELB Security Group ID: %s", err)
 			} else {
 				d.Set("source_security_group_id", sgId)
 			}
@@ -944,7 +944,7 @@ func validateHeathCheckTarget(v interface{}, k string) (ws []string, errors []er
 				"%q cannot contain a path in the Health Check target: %s",
 				k, value))
 		}
-		break
+
 	case "http", "https":
 		// Check if value is in the form <PROTOCOL>:<PORT>/<PATH> for HTTP and/or HTTPS.
 		if matches[3] == "" {
@@ -959,7 +959,7 @@ func validateHeathCheckTarget(v interface{}, k string) (ws []string, errors []er
 				"than 1024 characters in the Health Check target: %s",
 				k, value))
 		}
-		break
+
 	}
 
 	return
@@ -1029,11 +1029,7 @@ func cleanupELBNetworkInterfaces(conn *ec2.EC2, name string) error {
 	}
 
 	err = deleteNetworkInterfaces(conn, out.NetworkInterfaces)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func detachNetworkInterfaces(conn *ec2.EC2, nis []*ec2.NetworkInterface) error {

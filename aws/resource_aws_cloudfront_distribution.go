@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
-	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
@@ -779,9 +778,9 @@ func resourceAwsCloudFrontDistributionRead(d *schema.ResourceData, meta interfac
 	})
 
 	if err != nil {
-		return errwrap.Wrapf(fmt.Sprintf(
-			"Error retrieving EC2 tags for CloudFront Distribution %q (ARN: %q): {{err}}",
-			d.Id(), d.Get("arn").(string)), err)
+		return fmt.Errorf(
+			"Error retrieving EC2 tags for CloudFront Distribution %q (ARN: %q): %s",
+			d.Id(), d.Get("arn").(string), err)
 	}
 
 	if err := d.Set("tags", tagsToMapCloudFront(tagResp.Tags)); err != nil {

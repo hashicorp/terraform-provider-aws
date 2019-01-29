@@ -14,7 +14,7 @@ func TestAccAWSCognitoIdentityProvider_basic(t *testing.T) {
 	var identityProvider cognitoidentityprovider.IdentityProviderType
 	resourceName := "aws_cognito_identity_provider.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoIdentityProviderDestroy,
@@ -123,7 +123,7 @@ resource "aws_cognito_identity_provider" "test" {
   provider_name = "Google"
   provider_type = "Google"
 
-  provider_details {
+  provider_details = {
     attributes_url                = "https://people.googleapis.com/v1/people/me?personFields="
     attributes_url_add_attributes = "true"
     authorize_scopes              = "email"
@@ -135,7 +135,7 @@ resource "aws_cognito_identity_provider" "test" {
     token_url                     = "https://www.googleapis.com/oauth2/v4/token"
   }
 
-  attribute_mapping {
+  attribute_mapping = {
     email    = "email"
     username = "sub"
   }

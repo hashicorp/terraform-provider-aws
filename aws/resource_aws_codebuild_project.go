@@ -28,6 +28,10 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"artifacts": {
 				Type:     schema.TypeSet,
 				Required: true,
@@ -108,7 +112,7 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validateMaxLength(255),
+				ValidateFunc: validation.StringLenBetween(0, 255),
 			},
 			"encryption_key": {
 				Type:     schema.TypeString,
@@ -173,6 +177,11 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
+						"certificate": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringMatch(regexp.MustCompile(`\.(pem|zip)$`), "must end in .pem or .zip"),
+						},
 					},
 				},
 				Set: resourceAwsCodeBuildProjectEnvironmentHash,
@@ -182,6 +191,123 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validateAwsCodeBuildProjectName,
+			},
+			"secondary_artifacts": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Set:      resourceAwsCodeBuildProjectArtifactsHash,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"encryption_disabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"location": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"namespace_type": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								codebuild.ArtifactNamespaceNone,
+								codebuild.ArtifactNamespaceBuildId,
+							}, false),
+						},
+						"packaging": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"path": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"artifact_identifier": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"type": {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								codebuild.ArtifactsTypeCodepipeline,
+								codebuild.ArtifactsTypeS3,
+								codebuild.ArtifactsTypeNoArtifacts,
+							}, false),
+						},
+					},
+				},
+			},
+			"secondary_sources": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"auth": {
+							Type: schema.TypeSet,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"resource": {
+										Type:      schema.TypeString,
+										Sensitive: true,
+										Optional:  true,
+									},
+									"type": {
+										Type:     schema.TypeString,
+										Required: true,
+										ValidateFunc: validation.StringInSlice([]string{
+											codebuild.SourceAuthTypeOauth,
+										}, false),
+									},
+								},
+							},
+							Optional: true,
+							Set:      resourceAwsCodeBuildProjectSourceAuthHash,
+						},
+						"buildspec": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"location": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"type": {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								codebuild.SourceTypeCodecommit,
+								codebuild.SourceTypeCodepipeline,
+								codebuild.SourceTypeGithub,
+								codebuild.SourceTypeS3,
+								codebuild.SourceTypeBitbucket,
+								codebuild.SourceTypeGithubEnterprise,
+							}, false),
+						},
+						"git_clone_depth": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntAtLeast(0),
+						},
+						"insecure_ssl": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"report_build_status": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"source_identifier": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
 			},
 			"service_role": {
 				Type:     schema.TypeString,
@@ -230,6 +356,7 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 								codebuild.SourceTypeS3,
 								codebuild.SourceTypeBitbucket,
 								codebuild.SourceTypeGithubEnterprise,
+								codebuild.SourceTypeNoSource,
 							}, false),
 						},
 						"git_clone_depth": {
@@ -324,12 +451,26 @@ func resourceAwsCodeBuildProjectCreate(d *schema.ResourceData, meta interface{})
 	projectEnv := expandProjectEnvironment(d)
 	projectSource := expandProjectSource(d)
 	projectArtifacts := expandProjectArtifacts(d)
+	projectSecondaryArtifacts := expandProjectSecondaryArtifacts(d)
+	projectSecondarySources := expandProjectSecondarySources(d)
+
+	if aws.StringValue(projectSource.Type) == codebuild.SourceTypeNoSource {
+		if aws.StringValue(projectSource.Buildspec) == "" {
+			return fmt.Errorf("`build_spec` must be set when source's `type` is `NO_SOURCE`")
+		}
+
+		if aws.StringValue(projectSource.Location) != "" {
+			return fmt.Errorf("`location` must be empty when source's `type` is `NO_SOURCE`")
+		}
+	}
 
 	params := &codebuild.CreateProjectInput{
-		Environment: projectEnv,
-		Name:        aws.String(d.Get("name").(string)),
-		Source:      &projectSource,
-		Artifacts:   &projectArtifacts,
+		Environment:        projectEnv,
+		Name:               aws.String(d.Get("name").(string)),
+		Source:             &projectSource,
+		Artifacts:          &projectArtifacts,
+		SecondaryArtifacts: projectSecondaryArtifacts,
+		SecondarySources:   projectSecondarySources,
 	}
 
 	if v, ok := d.GetOk("cache"); ok {
@@ -385,7 +526,7 @@ func resourceAwsCodeBuildProjectCreate(d *schema.ResourceData, meta interface{})
 	})
 
 	if err != nil {
-		return fmt.Errorf("[ERROR] Error creating CodeBuild project: %s", err)
+		return fmt.Errorf("Error creating CodeBuild project: %s", err)
 	}
 
 	d.SetId(*resp.Project.Arn)
@@ -393,10 +534,31 @@ func resourceAwsCodeBuildProjectCreate(d *schema.ResourceData, meta interface{})
 	return resourceAwsCodeBuildProjectRead(d, meta)
 }
 
+func expandProjectSecondaryArtifacts(d *schema.ResourceData) []*codebuild.ProjectArtifacts {
+	artifacts := make([]*codebuild.ProjectArtifacts, 0)
+
+	configsList := d.Get("secondary_artifacts").(*schema.Set).List()
+
+	if len(configsList) == 0 {
+		return nil
+	}
+
+	for _, config := range configsList {
+		art := expandProjectArtifactData(config.(map[string]interface{}))
+		artifacts = append(artifacts, &art)
+	}
+
+	return artifacts
+}
+
 func expandProjectArtifacts(d *schema.ResourceData) codebuild.ProjectArtifacts {
 	configs := d.Get("artifacts").(*schema.Set).List()
 	data := configs[0].(map[string]interface{})
 
+	return expandProjectArtifactData(data)
+}
+
+func expandProjectArtifactData(data map[string]interface{}) codebuild.ProjectArtifacts {
 	artifactType := data["type"].(string)
 
 	projectArtifacts := codebuild.ProjectArtifacts{
@@ -407,6 +569,10 @@ func expandProjectArtifacts(d *schema.ResourceData) codebuild.ProjectArtifacts {
 	// InvalidInputException: Invalid artifacts: artifact type NO_ARTIFACTS should have null encryptionDisabled
 	if artifactType == codebuild.ArtifactsTypeS3 || artifactType == codebuild.ArtifactsTypeCodepipeline {
 		projectArtifacts.EncryptionDisabled = aws.Bool(data["encryption_disabled"].(bool))
+	}
+
+	if data["artifact_identifier"] != nil && data["artifact_identifier"].(string) != "" {
+		projectArtifacts.ArtifactIdentifier = aws.String(data["artifact_identifier"].(string))
 	}
 
 	if data["location"].(string) != "" {
@@ -469,6 +635,10 @@ func expandProjectEnvironment(d *schema.ResourceData) *codebuild.ProjectEnvironm
 		projectEnv.Type = aws.String(v.(string))
 	}
 
+	if v, ok := envConfig["certificate"]; ok && v.(string) != "" {
+		projectEnv.Certificate = aws.String(v.(string))
+	}
+
 	if v := envConfig["environment_variable"]; v != nil {
 		envVariables := v.([]interface{})
 		if len(envVariables) > 0 {
@@ -515,37 +685,61 @@ func expandCodeBuildVpcConfig(rawVpcConfig []interface{}) *codebuild.VpcConfig {
 	return &vpcConfig
 }
 
+func expandProjectSecondarySources(d *schema.ResourceData) []*codebuild.ProjectSource {
+	configs := d.Get("secondary_sources").(*schema.Set).List()
+
+	if len(configs) == 0 {
+		return nil
+	}
+
+	sources := make([]*codebuild.ProjectSource, 0)
+
+	for _, config := range configs {
+		source := expandProjectSourceData(config.(map[string]interface{}))
+		sources = append(sources, &source)
+	}
+
+	return sources
+}
+
 func expandProjectSource(d *schema.ResourceData) codebuild.ProjectSource {
 	configs := d.Get("source").(*schema.Set).List()
-	projectSource := codebuild.ProjectSource{}
 
-	for _, configRaw := range configs {
-		data := configRaw.(map[string]interface{})
+	data := configs[0].(map[string]interface{})
+	return expandProjectSourceData(data)
+}
 
-		sourceType := data["type"].(string)
+func expandProjectSourceData(data map[string]interface{}) codebuild.ProjectSource {
+	sourceType := data["type"].(string)
 
-		projectSource = codebuild.ProjectSource{
-			Buildspec:     aws.String(data["buildspec"].(string)),
-			GitCloneDepth: aws.Int64(int64(data["git_clone_depth"].(int))),
-			InsecureSsl:   aws.Bool(data["insecure_ssl"].(bool)),
-			Location:      aws.String(data["location"].(string)),
-			Type:          aws.String(sourceType),
-		}
+	projectSource := codebuild.ProjectSource{
+		Buildspec:     aws.String(data["buildspec"].(string)),
+		GitCloneDepth: aws.Int64(int64(data["git_clone_depth"].(int))),
+		InsecureSsl:   aws.Bool(data["insecure_ssl"].(bool)),
+		Type:          aws.String(sourceType),
+	}
 
-		// Only valid for GITHUB source type, e.g.
-		// InvalidInputException: Source type GITHUB_ENTERPRISE does not support ReportBuildStatus
-		if sourceType == codebuild.SourceTypeGithub {
-			projectSource.ReportBuildStatus = aws.Bool(data["report_build_status"].(bool))
-		}
+	if data["source_identifier"] != nil {
+		projectSource.SourceIdentifier = aws.String(data["source_identifier"].(string))
+	}
 
-		if v, ok := data["auth"]; ok {
-			if len(v.(*schema.Set).List()) > 0 {
-				auth := v.(*schema.Set).List()[0].(map[string]interface{})
+	if data["location"].(string) != "" {
+		projectSource.Location = aws.String(data["location"].(string))
+	}
 
-				projectSource.Auth = &codebuild.SourceAuth{
-					Type:     aws.String(auth["type"].(string)),
-					Resource: aws.String(auth["resource"].(string)),
-				}
+	// Only valid for BITBUCKET, GITHUB, and GITHUB_ENTERPRISE source types, e.g.
+	// InvalidInputException: Source type NO_SOURCE does not support ReportBuildStatus
+	if sourceType == codebuild.SourceTypeBitbucket || sourceType == codebuild.SourceTypeGithub || sourceType == codebuild.SourceTypeGithubEnterprise {
+		projectSource.ReportBuildStatus = aws.Bool(data["report_build_status"].(bool))
+	}
+
+	if v, ok := data["auth"]; ok {
+		if len(v.(*schema.Set).List()) > 0 {
+			auth := v.(*schema.Set).List()[0].(map[string]interface{})
+
+			projectSource.Auth = &codebuild.SourceAuth{
+				Type:     aws.String(auth["type"].(string)),
+				Resource: aws.String(auth["resource"].(string)),
 			}
 		}
 	}
@@ -563,7 +757,7 @@ func resourceAwsCodeBuildProjectRead(d *schema.ResourceData, meta interface{}) e
 	})
 
 	if err != nil {
-		return fmt.Errorf("[ERROR] Error retreiving Projects: %q", err)
+		return fmt.Errorf("Error retreiving Projects: %q", err)
 	}
 
 	// if nothing was found, then return no state
@@ -587,6 +781,14 @@ func resourceAwsCodeBuildProjectRead(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
+	if err := d.Set("secondary_artifacts", flattenAwsCodeBuildProjectSecondaryArtifacts(project.SecondaryArtifacts)); err != nil {
+		return err
+	}
+
+	if err := d.Set("secondary_sources", flattenAwsCodeBuildProjectSecondarySources(project.SecondarySources)); err != nil {
+		return err
+	}
+
 	if err := d.Set("source", flattenAwsCodeBuildProjectSource(project.Source)); err != nil {
 		return err
 	}
@@ -595,6 +797,7 @@ func resourceAwsCodeBuildProjectRead(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
+	d.Set("arn", project.Arn)
 	d.Set("description", project.Description)
 	d.Set("encryption_key", project.EncryptionKey)
 	d.Set("name", project.Name)
@@ -635,6 +838,16 @@ func resourceAwsCodeBuildProjectUpdate(d *schema.ResourceData, meta interface{})
 	if d.HasChange("artifacts") {
 		projectArtifacts := expandProjectArtifacts(d)
 		params.Artifacts = &projectArtifacts
+	}
+
+	if d.HasChange("secondary_sources") {
+		projectSecondarySources := expandProjectSecondarySources(d)
+		params.SecondarySources = projectSecondarySources
+	}
+
+	if d.HasChange("secondary_artifacts") {
+		projectSecondaryArtifacts := expandProjectSecondaryArtifacts(d)
+		params.SecondaryArtifacts = projectSecondaryArtifacts
 	}
 
 	if d.HasChange("vpc_config") {
@@ -709,12 +922,18 @@ func resourceAwsCodeBuildProjectDelete(d *schema.ResourceData, meta interface{})
 	_, err := conn.DeleteProject(&codebuild.DeleteProjectInput{
 		Name: aws.String(d.Id()),
 	})
+	return err
+}
 
-	if err != nil {
-		return err
+func flattenAwsCodeBuildProjectSecondaryArtifacts(artifactsList []*codebuild.ProjectArtifacts) *schema.Set {
+	artifactSet := schema.Set{
+		F: resourceAwsCodeBuildProjectArtifactsHash,
 	}
 
-	return nil
+	for _, artifacts := range artifactsList {
+		artifactSet.Add(flattenAwsCodeBuildProjectArtifactsData(*artifacts))
+	}
+	return &artifactSet
 }
 
 func flattenAwsCodeBuildProjectArtifacts(artifacts *codebuild.ProjectArtifacts) *schema.Set {
@@ -723,9 +942,21 @@ func flattenAwsCodeBuildProjectArtifacts(artifacts *codebuild.ProjectArtifacts) 
 		F: resourceAwsCodeBuildProjectArtifactsHash,
 	}
 
+	values := flattenAwsCodeBuildProjectArtifactsData(*artifacts)
+
+	artifactSet.Add(values)
+
+	return &artifactSet
+}
+
+func flattenAwsCodeBuildProjectArtifactsData(artifacts codebuild.ProjectArtifacts) map[string]interface{} {
 	values := map[string]interface{}{}
 
 	values["type"] = *artifacts.Type
+
+	if artifacts.ArtifactIdentifier != nil {
+		values["artifact_identifier"] = *artifacts.ArtifactIdentifier
+	}
 
 	if artifacts.EncryptionDisabled != nil {
 		values["encryption_disabled"] = *artifacts.EncryptionDisabled
@@ -749,10 +980,7 @@ func flattenAwsCodeBuildProjectArtifacts(artifacts *codebuild.ProjectArtifacts) 
 	if artifacts.Path != nil {
 		values["path"] = *artifacts.Path
 	}
-
-	artifactSet.Add(values)
-
-	return &artifactSet
+	return values
 }
 
 func flattenAwsCodebuildProjectCache(cache *codebuild.ProjectCache) []interface{} {
@@ -774,6 +1002,7 @@ func flattenAwsCodeBuildProjectEnvironment(environment *codebuild.ProjectEnviron
 	envConfig["type"] = *environment.Type
 	envConfig["compute_type"] = *environment.ComputeType
 	envConfig["image"] = *environment.Image
+	envConfig["certificate"] = aws.StringValue(environment.Certificate)
 	envConfig["privileged_mode"] = *environment.PrivilegedMode
 
 	if environment.EnvironmentVariables != nil {
@@ -784,8 +1013,25 @@ func flattenAwsCodeBuildProjectEnvironment(environment *codebuild.ProjectEnviron
 
 }
 
+func flattenAwsCodeBuildProjectSecondarySources(sourceList []*codebuild.ProjectSource) []interface{} {
+	l := make([]interface{}, 0)
+
+	for _, source := range sourceList {
+		l = append(l, flattenAwsCodeBuildProjectSourceData(source))
+	}
+
+	return l
+}
+
 func flattenAwsCodeBuildProjectSource(source *codebuild.ProjectSource) []interface{} {
 	l := make([]interface{}, 1)
+
+	l[0] = flattenAwsCodeBuildProjectSourceData(source)
+
+	return l
+}
+
+func flattenAwsCodeBuildProjectSourceData(source *codebuild.ProjectSource) interface{} {
 	m := map[string]interface{}{
 		"buildspec":           aws.StringValue(source.Buildspec),
 		"location":            aws.StringValue(source.Location),
@@ -799,9 +1045,11 @@ func flattenAwsCodeBuildProjectSource(source *codebuild.ProjectSource) []interfa
 		m["auth"] = schema.NewSet(resourceAwsCodeBuildProjectSourceAuthHash, []interface{}{sourceAuthToMap(source.Auth)})
 	}
 
-	l[0] = m
+	if source.SourceIdentifier != nil {
+		m["source_identifier"] = aws.StringValue(source.SourceIdentifier)
+	}
 
-	return l
+	return m
 }
 
 func flattenAwsCodeBuildVpcConfig(vpcConfig *codebuild.VpcConfig) []interface{} {
@@ -823,6 +1071,9 @@ func resourceAwsCodeBuildProjectArtifactsHash(v interface{}) int {
 
 	buf.WriteString(fmt.Sprintf("%s-", m["type"].(string)))
 
+	if v, ok := m["artifact_identifier"]; ok {
+		buf.WriteString(fmt.Sprintf("%s:", v.(string)))
+	}
 	return hashcode.String(buf.String())
 }
 
@@ -839,6 +1090,9 @@ func resourceAwsCodeBuildProjectEnvironmentHash(v interface{}) int {
 	buf.WriteString(fmt.Sprintf("%s-", computeType))
 	buf.WriteString(fmt.Sprintf("%s-", image))
 	buf.WriteString(fmt.Sprintf("%t-", privilegedMode))
+	if v, ok := m["certificate"]; ok && v.(string) != "" {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
 	for _, e := range environmentVariables {
 		if e != nil { // Old statefiles might have nil values in them
 			ev := e.(map[string]interface{})
@@ -859,6 +1113,9 @@ func resourceAwsCodeBuildProjectSourceHash(v interface{}) int {
 	m := v.(map[string]interface{})
 
 	buf.WriteString(fmt.Sprintf("%s-", m["type"].(string)))
+	if v, ok := m["source_identifier"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", strconv.Itoa(v.(int))))
+	}
 	if v, ok := m["buildspec"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}

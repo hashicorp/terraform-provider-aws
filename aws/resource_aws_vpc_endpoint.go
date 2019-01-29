@@ -8,7 +8,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/structure"
@@ -149,7 +148,7 @@ func resourceAwsVpcEndpointCreate(d *schema.ResourceData, meta interface{}) erro
 	if v, ok := d.GetOk("policy"); ok {
 		policy, err := structure.NormalizeJsonString(v)
 		if err != nil {
-			return errwrap.Wrapf("policy contains an invalid JSON: {{err}}", err)
+			return fmt.Errorf("policy contains an invalid JSON: %s", err)
 		}
 		req.PolicyDocument = aws.String(policy)
 	}
@@ -220,7 +219,7 @@ func resourceAwsVpcEndpointUpdate(d *schema.ResourceData, meta interface{}) erro
 	if d.HasChange("policy") {
 		policy, err := structure.NormalizeJsonString(d.Get("policy"))
 		if err != nil {
-			return errwrap.Wrapf("policy contains an invalid JSON: {{err}}", err)
+			return fmt.Errorf("policy contains an invalid JSON: %s", err)
 		}
 
 		if policy == "" {
@@ -265,16 +264,8 @@ func resourceAwsVpcEndpointDelete(d *schema.ResourceData, meta interface{}) erro
 		}
 	}
 
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"available", "pending", "deleting"},
-		Target:     []string{"deleted"},
-		Refresh:    vpcEndpointStateRefresh(conn, d.Id()),
-		Timeout:    d.Timeout(schema.TimeoutDelete),
-		Delay:      5 * time.Second,
-		MinTimeout: 5 * time.Second,
-	}
-	if _, err = stateConf.WaitForState(); err != nil {
-		return fmt.Errorf("Error waiting for VPC Endpoint (%s) to delete: %s", d.Id(), err)
+	if err := vpcEndpointWaitUntilDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return fmt.Errorf("error waiting for VPC Endpoint (%s) to delete: %s", d.Id(), err)
 	}
 
 	return nil
@@ -360,6 +351,21 @@ func vpcEndpointWaitUntilAvailable(conn *ec2.EC2, vpceId string, timeout time.Du
 	return nil
 }
 
+func vpcEndpointWaitUntilDeleted(conn *ec2.EC2, vpceId string, timeout time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"available", "pending", "deleting"},
+		Target:     []string{"deleted"},
+		Refresh:    vpcEndpointStateRefresh(conn, vpceId),
+		Timeout:    timeout,
+		Delay:      5 * time.Second,
+		MinTimeout: 5 * time.Second,
+	}
+
+	_, err := stateConf.WaitForState()
+
+	return err
+}
+
 func vpcEndpointAttributes(d *schema.ResourceData, vpce *ec2.VpcEndpoint, conn *ec2.EC2) error {
 	d.Set("state", vpce.State)
 	d.Set("vpc_id", vpce.VpcId)
@@ -375,7 +381,7 @@ func vpcEndpointAttributes(d *schema.ResourceData, vpce *ec2.VpcEndpoint, conn *
 
 	policy, err := structure.NormalizeJsonString(aws.StringValue(vpce.PolicyDocument))
 	if err != nil {
-		return errwrap.Wrapf("policy contains an invalid JSON: {{err}}", err)
+		return fmt.Errorf("policy contains an invalid JSON: %s", err)
 	}
 	d.Set("policy", policy)
 

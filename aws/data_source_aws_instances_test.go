@@ -9,7 +9,7 @@ import (
 )
 
 func TestAccAWSInstancesDataSource_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -18,7 +18,8 @@ func TestAccAWSInstancesDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_instances.test", "ids.#", "3"),
 					resource.TestCheckResourceAttr("data.aws_instances.test", "private_ips.#", "3"),
-					resource.TestCheckResourceAttr("data.aws_instances.test", "public_ips.#", "3"),
+					// Public IP values are flakey for new EC2 instances due to eventual consistency
+					resource.TestCheckResourceAttrSet("data.aws_instances.test", "public_ips.#"),
 				),
 			},
 		},
@@ -27,16 +28,14 @@ func TestAccAWSInstancesDataSource_basic(t *testing.T) {
 
 func TestAccAWSInstancesDataSource_tags(t *testing.T) {
 	rInt := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstancesDataSourceConfig_tags(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_instances.test", "ids.#", "5"),
-					resource.TestCheckResourceAttr("data.aws_instances.test", "private_ips.#", "5"),
-					resource.TestCheckResourceAttr("data.aws_instances.test", "public_ips.#", "5"),
+					resource.TestCheckResourceAttr("data.aws_instances.test", "ids.#", "2"),
 				),
 			},
 		},
@@ -45,7 +44,7 @@ func TestAccAWSInstancesDataSource_tags(t *testing.T) {
 
 func TestAccAWSInstancesDataSource_instance_state_names(t *testing.T) {
 	rInt := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -80,7 +79,7 @@ resource "aws_instance" "test" {
   count = 3
   ami = "${data.aws_ami.ubuntu.id}"
   instance_type = "t2.micro"
-  tags {
+  tags = {
     Name = "TfAccTest"
   }
 }
@@ -88,7 +87,11 @@ resource "aws_instance" "test" {
 data "aws_instances" "test" {
   filter {
     name = "instance-id"
-    values = ["${aws_instance.test.*.id}"]
+    values = [
+      "${aws_instance.test.*.id[0]}",
+      "${aws_instance.test.*.id[1]}",
+      "${aws_instance.test.*.id[2]}",
+    ]
   }
 }
 `
@@ -112,22 +115,22 @@ data "aws_ami" "ubuntu" {
 }
 
 resource "aws_instance" "test" {
-  count = 5
+  count = 2
   ami = "${data.aws_ami.ubuntu.id}"
   instance_type = "t2.micro"
-  tags {
-    Name = "TfAccTest-HelloWorld"
-    TestSeed = "%[1]d"
+  tags = {
+    Name      = "tf-acc-test-ec2-instance-data-source-%d"
+    SecondTag = "tf-acc-test-ec2-instance-data-source-%d"
   }
 }
 
 data "aws_instances" "test" {
-  instance_tags {
-    Name = "${aws_instance.test.0.tags["Name"]}"
-    TestSeed = "%[1]d"
+  instance_tags = {
+    Name      = "${aws_instance.test.0.tags["Name"]}"
+    SecondTag = "${aws_instance.test.1.tags["Name"]}"
   }
 }
-`, rInt)
+`, rInt, rInt)
 }
 
 func testAccInstancesDataSourceConfig_instance_state_names(rInt int) string {
@@ -152,14 +155,13 @@ resource "aws_instance" "test" {
   count = 2
   ami = "${data.aws_ami.ubuntu.id}"
   instance_type = "t2.micro"
-  tags {
-    Name = "TfAccTest-HelloWorld"
-    TestSeed = "%[1]d"
+  tags = {
+    Name = "tf-acc-test-ec2-instance-data-source-%d"
   }
 }
 
 data "aws_instances" "test" {
-  instance_tags {
+  instance_tags = {
     Name = "${aws_instance.test.0.tags["Name"]}"
   }
   
