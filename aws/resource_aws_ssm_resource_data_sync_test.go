@@ -11,7 +11,7 @@ import (
 )
 
 func TestAccAWSSsmResourceDataSync_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSsmResourceDataSyncDestroy,
@@ -29,16 +29,16 @@ func TestAccAWSSsmResourceDataSync_basic(t *testing.T) {
 func TestAccAWSSsmResourceDataSync_import(t *testing.T) {
 	resourceName := "aws_ssm_resource_data_sync.foo"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSsmResourceDataSyncDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccSsmResourceDataSyncConfig(acctest.RandInt(), acctest.RandString(5)),
 			},
 
-			resource.TestStep{
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -120,7 +120,7 @@ func testAccSsmResourceDataSyncConfig(rInt int, rName string) string {
 
     resource "aws_ssm_resource_data_sync" "foo" {
       name = "tf-test-ssm-%s"
-      s3_destination = {
+      s3_destination {
         bucket_name = "${aws_s3_bucket.hoge.bucket}"
         region = "${aws_s3_bucket.hoge.region}"
       }

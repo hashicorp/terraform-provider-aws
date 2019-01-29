@@ -17,8 +17,8 @@ const opBatchGetRepositories = "BatchGetRepositories"
 
 // BatchGetRepositoriesRequest generates a "aws/request.Request" representing the
 // client's request for the BatchGetRepositories operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -128,8 +128,8 @@ const opCreateBranch = "CreateBranch"
 
 // CreateBranchRequest generates a "aws/request.Request" representing the
 // client's request for the CreateBranch operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -163,8 +163,7 @@ func (c *CodeCommit) CreateBranchRequest(input *CreateBranchInput) (req *request
 
 	output = &CreateBranchOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(jsonrpc.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -256,8 +255,8 @@ const opCreatePullRequest = "CreatePullRequest"
 
 // CreatePullRequestRequest generates a "aws/request.Request" representing the
 // client's request for the CreatePullRequest operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -433,8 +432,8 @@ const opCreateRepository = "CreateRepository"
 
 // CreateRepositoryRequest generates a "aws/request.Request" representing the
 // client's request for the CreateRepository operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -543,8 +542,8 @@ const opDeleteBranch = "DeleteBranch"
 
 // DeleteBranchRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteBranch operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -659,8 +658,8 @@ const opDeleteCommentContent = "DeleteCommentContent"
 
 // DeleteCommentContentRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteCommentContent operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -746,12 +745,174 @@ func (c *CodeCommit) DeleteCommentContentWithContext(ctx aws.Context, input *Del
 	return out, req.Send()
 }
 
+const opDeleteFile = "DeleteFile"
+
+// DeleteFileRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteFile operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteFile for more information on using the DeleteFile
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteFileRequest method.
+//    req, resp := client.DeleteFileRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/DeleteFile
+func (c *CodeCommit) DeleteFileRequest(input *DeleteFileInput) (req *request.Request, output *DeleteFileOutput) {
+	op := &request.Operation{
+		Name:       opDeleteFile,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteFileInput{}
+	}
+
+	output = &DeleteFileOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeleteFile API operation for AWS CodeCommit.
+//
+// Deletes a specified file from a specified branch. A commit is created on
+// the branch that contains the revision. The file will still exist in the commits
+// prior to the commit that contains the deletion.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS CodeCommit's
+// API operation DeleteFile for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
+//   A repository name is required but was not specified.
+//
+//   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
+//   At least one specified repository name is not valid.
+//
+//   This exception only occurs when a specified repository name is not valid.
+//   Other exceptions occur when a required repository parameter is missing, or
+//   when a specified repository does not exist.
+//
+//   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
+//   The specified repository does not exist.
+//
+//   * ErrCodeParentCommitIdRequiredException "ParentCommitIdRequiredException"
+//   A parent commit ID is required. To view the full commit ID of a branch in
+//   a repository, use GetBranch or a Git command (for example, git pull or git
+//   log).
+//
+//   * ErrCodeInvalidParentCommitIdException "InvalidParentCommitIdException"
+//   The parent commit ID is not valid. The commit ID cannot be empty, and must
+//   match the head commit ID for the branch of the repository where you want
+//   to add or update a file.
+//
+//   * ErrCodeParentCommitDoesNotExistException "ParentCommitDoesNotExistException"
+//   The parent commit ID is not valid because it does not exist. The specified
+//   parent commit ID does not exist in the specified branch of the repository.
+//
+//   * ErrCodeParentCommitIdOutdatedException "ParentCommitIdOutdatedException"
+//   The file could not be added because the provided parent commit ID is not
+//   the current tip of the specified branch. To view the full commit ID of the
+//   current head of the branch, use GetBranch.
+//
+//   * ErrCodePathRequiredException "PathRequiredException"
+//   The folderPath for a location cannot be null.
+//
+//   * ErrCodeInvalidPathException "InvalidPathException"
+//   The specified path is not valid.
+//
+//   * ErrCodeFileDoesNotExistException "FileDoesNotExistException"
+//   The specified file does not exist. Verify that you have provided the correct
+//   name of the file, including its full path and extension.
+//
+//   * ErrCodeBranchNameRequiredException "BranchNameRequiredException"
+//   A branch name is required but was not specified.
+//
+//   * ErrCodeInvalidBranchNameException "InvalidBranchNameException"
+//   The specified reference name is not valid.
+//
+//   * ErrCodeBranchDoesNotExistException "BranchDoesNotExistException"
+//   The specified branch does not exist.
+//
+//   * ErrCodeBranchNameIsTagNameException "BranchNameIsTagNameException"
+//   The specified branch name is not valid because it is a tag name. Type the
+//   name of a current branch in the repository. For a list of valid branch names,
+//   use ListBranches.
+//
+//   * ErrCodeNameLengthExceededException "NameLengthExceededException"
+//   The user name is not valid because it has exceeded the character limit for
+//   file names. File names, including the path to the file, cannot exceed the
+//   character limit.
+//
+//   * ErrCodeInvalidEmailException "InvalidEmailException"
+//   The specified email address either contains one or more characters that are
+//   not allowed, or it exceeds the maximum number of characters allowed for an
+//   email address.
+//
+//   * ErrCodeCommitMessageLengthExceededException "CommitMessageLengthExceededException"
+//   The commit message is too long. Provide a shorter string.
+//
+//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   An encryption integrity check failed.
+//
+//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   An encryption key could not be accessed.
+//
+//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   The encryption key is disabled.
+//
+//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   No encryption key was found.
+//
+//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   The encryption key is not available.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/DeleteFile
+func (c *CodeCommit) DeleteFile(input *DeleteFileInput) (*DeleteFileOutput, error) {
+	req, out := c.DeleteFileRequest(input)
+	return out, req.Send()
+}
+
+// DeleteFileWithContext is the same as DeleteFile with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteFile for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CodeCommit) DeleteFileWithContext(ctx aws.Context, input *DeleteFileInput, opts ...request.Option) (*DeleteFileOutput, error) {
+	req, out := c.DeleteFileRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDeleteRepository = "DeleteRepository"
 
 // DeleteRepositoryRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteRepository operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -856,8 +1017,8 @@ const opDescribePullRequestEvents = "DescribePullRequestEvents"
 
 // DescribePullRequestEventsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribePullRequestEvents operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1032,8 +1193,8 @@ const opGetBlob = "GetBlob"
 
 // GetBlobRequest generates a "aws/request.Request" representing the
 // client's request for the GetBlob operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1150,8 +1311,8 @@ const opGetBranch = "GetBranch"
 
 // GetBranchRequest generates a "aws/request.Request" representing the
 // client's request for the GetBranch operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1264,8 +1425,8 @@ const opGetComment = "GetComment"
 
 // GetCommentRequest generates a "aws/request.Request" representing the
 // client's request for the GetComment operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1355,8 +1516,8 @@ const opGetCommentsForComparedCommit = "GetCommentsForComparedCommit"
 
 // GetCommentsForComparedCommitRequest generates a "aws/request.Request" representing the
 // client's request for the GetCommentsForComparedCommit operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1531,8 +1692,8 @@ const opGetCommentsForPullRequest = "GetCommentsForPullRequest"
 
 // GetCommentsForPullRequestRequest generates a "aws/request.Request" representing the
 // client's request for the GetCommentsForPullRequest operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1724,8 +1885,8 @@ const opGetCommit = "GetCommit"
 
 // GetCommitRequest generates a "aws/request.Request" representing the
 // client's request for the GetCommit operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1838,8 +1999,8 @@ const opGetDifferences = "GetDifferences"
 
 // GetDifferencesRequest generates a "aws/request.Request" representing the
 // client's request for the GetDifferences operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2021,12 +2182,259 @@ func (c *CodeCommit) GetDifferencesPagesWithContext(ctx aws.Context, input *GetD
 	return p.Err()
 }
 
+const opGetFile = "GetFile"
+
+// GetFileRequest generates a "aws/request.Request" representing the
+// client's request for the GetFile operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetFile for more information on using the GetFile
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetFileRequest method.
+//    req, resp := client.GetFileRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/GetFile
+func (c *CodeCommit) GetFileRequest(input *GetFileInput) (req *request.Request, output *GetFileOutput) {
+	op := &request.Operation{
+		Name:       opGetFile,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetFileInput{}
+	}
+
+	output = &GetFileOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetFile API operation for AWS CodeCommit.
+//
+// Returns the base-64 encoded contents of a specified file and its metadata.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS CodeCommit's
+// API operation GetFile for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
+//   A repository name is required but was not specified.
+//
+//   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
+//   At least one specified repository name is not valid.
+//
+//   This exception only occurs when a specified repository name is not valid.
+//   Other exceptions occur when a required repository parameter is missing, or
+//   when a specified repository does not exist.
+//
+//   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
+//   The specified repository does not exist.
+//
+//   * ErrCodeInvalidCommitException "InvalidCommitException"
+//   The specified commit is not valid.
+//
+//   * ErrCodeCommitDoesNotExistException "CommitDoesNotExistException"
+//   The specified commit does not exist or no commit was specified, and the specified
+//   repository has no default branch.
+//
+//   * ErrCodePathRequiredException "PathRequiredException"
+//   The folderPath for a location cannot be null.
+//
+//   * ErrCodeInvalidPathException "InvalidPathException"
+//   The specified path is not valid.
+//
+//   * ErrCodeFileDoesNotExistException "FileDoesNotExistException"
+//   The specified file does not exist. Verify that you have provided the correct
+//   name of the file, including its full path and extension.
+//
+//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   An encryption integrity check failed.
+//
+//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   An encryption key could not be accessed.
+//
+//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   The encryption key is disabled.
+//
+//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   No encryption key was found.
+//
+//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   The encryption key is not available.
+//
+//   * ErrCodeFileTooLargeException "FileTooLargeException"
+//   The specified file exceeds the file size limit for AWS CodeCommit. For more
+//   information about limits in AWS CodeCommit, see AWS CodeCommit User Guide
+//   (http://docs.aws.amazon.com/codecommit/latest/userguide/limits.html).
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/GetFile
+func (c *CodeCommit) GetFile(input *GetFileInput) (*GetFileOutput, error) {
+	req, out := c.GetFileRequest(input)
+	return out, req.Send()
+}
+
+// GetFileWithContext is the same as GetFile with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetFile for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CodeCommit) GetFileWithContext(ctx aws.Context, input *GetFileInput, opts ...request.Option) (*GetFileOutput, error) {
+	req, out := c.GetFileRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetFolder = "GetFolder"
+
+// GetFolderRequest generates a "aws/request.Request" representing the
+// client's request for the GetFolder operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetFolder for more information on using the GetFolder
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetFolderRequest method.
+//    req, resp := client.GetFolderRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/GetFolder
+func (c *CodeCommit) GetFolderRequest(input *GetFolderInput) (req *request.Request, output *GetFolderOutput) {
+	op := &request.Operation{
+		Name:       opGetFolder,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetFolderInput{}
+	}
+
+	output = &GetFolderOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetFolder API operation for AWS CodeCommit.
+//
+// Returns the contents of a specified folder in a repository.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS CodeCommit's
+// API operation GetFolder for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
+//   A repository name is required but was not specified.
+//
+//   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
+//   At least one specified repository name is not valid.
+//
+//   This exception only occurs when a specified repository name is not valid.
+//   Other exceptions occur when a required repository parameter is missing, or
+//   when a specified repository does not exist.
+//
+//   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
+//   The specified repository does not exist.
+//
+//   * ErrCodeInvalidCommitException "InvalidCommitException"
+//   The specified commit is not valid.
+//
+//   * ErrCodeCommitDoesNotExistException "CommitDoesNotExistException"
+//   The specified commit does not exist or no commit was specified, and the specified
+//   repository has no default branch.
+//
+//   * ErrCodePathRequiredException "PathRequiredException"
+//   The folderPath for a location cannot be null.
+//
+//   * ErrCodeInvalidPathException "InvalidPathException"
+//   The specified path is not valid.
+//
+//   * ErrCodeFolderDoesNotExistException "FolderDoesNotExistException"
+//   The specified folder does not exist. Either the folder name is not correct,
+//   or you did not provide the full path to the folder.
+//
+//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   An encryption integrity check failed.
+//
+//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   An encryption key could not be accessed.
+//
+//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   The encryption key is disabled.
+//
+//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   No encryption key was found.
+//
+//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   The encryption key is not available.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/GetFolder
+func (c *CodeCommit) GetFolder(input *GetFolderInput) (*GetFolderOutput, error) {
+	req, out := c.GetFolderRequest(input)
+	return out, req.Send()
+}
+
+// GetFolderWithContext is the same as GetFolder with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetFolder for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CodeCommit) GetFolderWithContext(ctx aws.Context, input *GetFolderInput, opts ...request.Option) (*GetFolderOutput, error) {
+	req, out := c.GetFolderRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opGetMergeConflicts = "GetMergeConflicts"
 
 // GetMergeConflictsRequest generates a "aws/request.Request" representing the
 // client's request for the GetMergeConflicts operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2159,8 +2567,8 @@ const opGetPullRequest = "GetPullRequest"
 
 // GetPullRequestRequest generates a "aws/request.Request" representing the
 // client's request for the GetPullRequest operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2262,8 +2670,8 @@ const opGetRepository = "GetRepository"
 
 // GetRepositoryRequest generates a "aws/request.Request" representing the
 // client's request for the GetRepository operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2372,8 +2780,8 @@ const opGetRepositoryTriggers = "GetRepositoryTriggers"
 
 // GetRepositoryTriggersRequest generates a "aws/request.Request" representing the
 // client's request for the GetRepositoryTriggers operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2476,8 +2884,8 @@ const opListBranches = "ListBranches"
 
 // ListBranchesRequest generates a "aws/request.Request" representing the
 // client's request for the ListBranches operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2639,8 +3047,8 @@ const opListPullRequests = "ListPullRequests"
 
 // ListPullRequestsRequest generates a "aws/request.Request" representing the
 // client's request for the ListPullRequests operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2817,8 +3225,8 @@ const opListRepositories = "ListRepositories"
 
 // ListRepositoriesRequest generates a "aws/request.Request" representing the
 // client's request for the ListRepositories operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2958,8 +3366,8 @@ const opMergePullRequestByFastForward = "MergePullRequestByFastForward"
 
 // MergePullRequestByFastForwardRequest generates a "aws/request.Request" representing the
 // client's request for the MergePullRequestByFastForward operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3094,8 +3502,8 @@ const opPostCommentForComparedCommit = "PostCommentForComparedCommit"
 
 // PostCommentForComparedCommitRequest generates a "aws/request.Request" representing the
 // client's request for the PostCommentForComparedCommit operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3187,7 +3595,7 @@ func (c *CodeCommit) PostCommentForComparedCommitRequest(input *PostCommentForCo
 //   is not valid in respect to the current file version.
 //
 //   * ErrCodePathRequiredException "PathRequiredException"
-//   The filePath for a location cannot be empty or null.
+//   The folderPath for a location cannot be null.
 //
 //   * ErrCodeInvalidFilePositionException "InvalidFilePositionException"
 //   The position is not valid. Make sure that the line number exists in the version
@@ -3254,8 +3662,8 @@ const opPostCommentForPullRequest = "PostCommentForPullRequest"
 
 // PostCommentForPullRequestRequest generates a "aws/request.Request" representing the
 // client's request for the PostCommentForPullRequest operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3364,7 +3772,7 @@ func (c *CodeCommit) PostCommentForPullRequestRequest(input *PostCommentForPullR
 //   is not valid in respect to the current file version.
 //
 //   * ErrCodePathRequiredException "PathRequiredException"
-//   The filePath for a location cannot be empty or null.
+//   The folderPath for a location cannot be null.
 //
 //   * ErrCodeInvalidFilePositionException "InvalidFilePositionException"
 //   The position is not valid. Make sure that the line number exists in the version
@@ -3402,7 +3810,7 @@ func (c *CodeCommit) PostCommentForPullRequestRequest(input *PostCommentForPullR
 //   The specified path does not exist.
 //
 //   * ErrCodePathRequiredException "PathRequiredException"
-//   The filePath for a location cannot be empty or null.
+//   The folderPath for a location cannot be null.
 //
 //   * ErrCodeBeforeCommitIdAndAfterCommitIdAreSameException "BeforeCommitIdAndAfterCommitIdAreSameException"
 //   The before commit ID and the after commit ID are the same, which is not valid.
@@ -3434,8 +3842,8 @@ const opPostCommentReply = "PostCommentReply"
 
 // PostCommentReplyRequest generates a "aws/request.Request" representing the
 // client's request for the PostCommentReply operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3539,12 +3947,202 @@ func (c *CodeCommit) PostCommentReplyWithContext(ctx aws.Context, input *PostCom
 	return out, req.Send()
 }
 
+const opPutFile = "PutFile"
+
+// PutFileRequest generates a "aws/request.Request" representing the
+// client's request for the PutFile operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See PutFile for more information on using the PutFile
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the PutFileRequest method.
+//    req, resp := client.PutFileRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/PutFile
+func (c *CodeCommit) PutFileRequest(input *PutFileInput) (req *request.Request, output *PutFileOutput) {
+	op := &request.Operation{
+		Name:       opPutFile,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &PutFileInput{}
+	}
+
+	output = &PutFileOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// PutFile API operation for AWS CodeCommit.
+//
+// Adds or updates a file in a branch in an AWS CodeCommit repository, and generates
+// a commit for the addition in the specified branch.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS CodeCommit's
+// API operation PutFile for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
+//   A repository name is required but was not specified.
+//
+//   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
+//   At least one specified repository name is not valid.
+//
+//   This exception only occurs when a specified repository name is not valid.
+//   Other exceptions occur when a required repository parameter is missing, or
+//   when a specified repository does not exist.
+//
+//   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
+//   The specified repository does not exist.
+//
+//   * ErrCodeParentCommitIdRequiredException "ParentCommitIdRequiredException"
+//   A parent commit ID is required. To view the full commit ID of a branch in
+//   a repository, use GetBranch or a Git command (for example, git pull or git
+//   log).
+//
+//   * ErrCodeInvalidParentCommitIdException "InvalidParentCommitIdException"
+//   The parent commit ID is not valid. The commit ID cannot be empty, and must
+//   match the head commit ID for the branch of the repository where you want
+//   to add or update a file.
+//
+//   * ErrCodeParentCommitDoesNotExistException "ParentCommitDoesNotExistException"
+//   The parent commit ID is not valid because it does not exist. The specified
+//   parent commit ID does not exist in the specified branch of the repository.
+//
+//   * ErrCodeParentCommitIdOutdatedException "ParentCommitIdOutdatedException"
+//   The file could not be added because the provided parent commit ID is not
+//   the current tip of the specified branch. To view the full commit ID of the
+//   current head of the branch, use GetBranch.
+//
+//   * ErrCodeFileContentRequiredException "FileContentRequiredException"
+//   The file cannot be added because it is empty. Empty files cannot be added
+//   to the repository with this API.
+//
+//   * ErrCodeFileContentSizeLimitExceededException "FileContentSizeLimitExceededException"
+//   The file cannot be added because it is too large. The maximum file size that
+//   can be added using PutFile is 6 MB. For files larger than 6 MB but smaller
+//   than 2 GB, add them using a Git client.
+//
+//   * ErrCodePathRequiredException "PathRequiredException"
+//   The folderPath for a location cannot be null.
+//
+//   * ErrCodeInvalidPathException "InvalidPathException"
+//   The specified path is not valid.
+//
+//   * ErrCodeBranchNameRequiredException "BranchNameRequiredException"
+//   A branch name is required but was not specified.
+//
+//   * ErrCodeInvalidBranchNameException "InvalidBranchNameException"
+//   The specified reference name is not valid.
+//
+//   * ErrCodeBranchDoesNotExistException "BranchDoesNotExistException"
+//   The specified branch does not exist.
+//
+//   * ErrCodeBranchNameIsTagNameException "BranchNameIsTagNameException"
+//   The specified branch name is not valid because it is a tag name. Type the
+//   name of a current branch in the repository. For a list of valid branch names,
+//   use ListBranches.
+//
+//   * ErrCodeInvalidFileModeException "InvalidFileModeException"
+//   The specified file mode permission is not valid. For a list of valid file
+//   mode permissions, see PutFile.
+//
+//   * ErrCodeNameLengthExceededException "NameLengthExceededException"
+//   The user name is not valid because it has exceeded the character limit for
+//   file names. File names, including the path to the file, cannot exceed the
+//   character limit.
+//
+//   * ErrCodeInvalidEmailException "InvalidEmailException"
+//   The specified email address either contains one or more characters that are
+//   not allowed, or it exceeds the maximum number of characters allowed for an
+//   email address.
+//
+//   * ErrCodeCommitMessageLengthExceededException "CommitMessageLengthExceededException"
+//   The commit message is too long. Provide a shorter string.
+//
+//   * ErrCodeInvalidDeletionParameterException "InvalidDeletionParameterException"
+//   The specified deletion parameter is not valid.
+//
+//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   An encryption integrity check failed.
+//
+//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   An encryption key could not be accessed.
+//
+//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   The encryption key is disabled.
+//
+//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   No encryption key was found.
+//
+//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   The encryption key is not available.
+//
+//   * ErrCodeSameFileContentException "SameFileContentException"
+//   The file was not added or updated because the content of the file is exactly
+//   the same as the content of that file in the repository and branch that you
+//   specified.
+//
+//   * ErrCodeFileNameConflictsWithDirectoryNameException "FileNameConflictsWithDirectoryNameException"
+//   A file cannot be added to the repository because the specified file name
+//   has the same name as a directory in this repository. Either provide another
+//   name for the file, or add the file in a directory that does not match the
+//   file name.
+//
+//   * ErrCodeDirectoryNameConflictsWithFileNameException "DirectoryNameConflictsWithFileNameException"
+//   A file cannot be added to the repository because the specified path name
+//   has the same name as a file that already exists in this repository. Either
+//   provide a different name for the file, or specify a different path for the
+//   file.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/PutFile
+func (c *CodeCommit) PutFile(input *PutFileInput) (*PutFileOutput, error) {
+	req, out := c.PutFileRequest(input)
+	return out, req.Send()
+}
+
+// PutFileWithContext is the same as PutFile with the addition of
+// the ability to pass a context and additional request options.
+//
+// See PutFile for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CodeCommit) PutFileWithContext(ctx aws.Context, input *PutFileInput, opts ...request.Option) (*PutFileOutput, error) {
+	req, out := c.PutFileRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opPutRepositoryTriggers = "PutRepositoryTriggers"
 
 // PutRepositoryTriggersRequest generates a "aws/request.Request" representing the
 // client's request for the PutRepositoryTriggers operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3693,8 +4291,8 @@ const opTestRepositoryTriggers = "TestRepositoryTriggers"
 
 // TestRepositoryTriggersRequest generates a "aws/request.Request" representing the
 // client's request for the TestRepositoryTriggers operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3845,8 +4443,8 @@ const opUpdateComment = "UpdateComment"
 
 // UpdateCommentRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateComment operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3947,8 +4545,8 @@ const opUpdateDefaultBranch = "UpdateDefaultBranch"
 
 // UpdateDefaultBranchRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateDefaultBranch operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3982,8 +4580,7 @@ func (c *CodeCommit) UpdateDefaultBranchRequest(input *UpdateDefaultBranchInput)
 
 	output = &UpdateDefaultBranchOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(jsonrpc.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -4066,8 +4663,8 @@ const opUpdatePullRequestDescription = "UpdatePullRequestDescription"
 
 // UpdatePullRequestDescriptionRequest generates a "aws/request.Request" representing the
 // client's request for the UpdatePullRequestDescription operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4161,8 +4758,8 @@ const opUpdatePullRequestStatus = "UpdatePullRequestStatus"
 
 // UpdatePullRequestStatusRequest generates a "aws/request.Request" representing the
 // client's request for the UpdatePullRequestStatus operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4275,8 +4872,8 @@ const opUpdatePullRequestTitle = "UpdatePullRequestTitle"
 
 // UpdatePullRequestTitleRequest generates a "aws/request.Request" representing the
 // client's request for the UpdatePullRequestTitle operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4373,8 +4970,8 @@ const opUpdateRepositoryDescription = "UpdateRepositoryDescription"
 
 // UpdateRepositoryDescriptionRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateRepositoryDescription operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4408,8 +5005,7 @@ func (c *CodeCommit) UpdateRepositoryDescriptionRequest(input *UpdateRepositoryD
 
 	output = &UpdateRepositoryDescriptionOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(jsonrpc.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -4488,8 +5084,8 @@ const opUpdateRepositoryName = "UpdateRepositoryName"
 
 // UpdateRepositoryNameRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateRepositoryName operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4523,8 +5119,7 @@ func (c *CodeCommit) UpdateRepositoryNameRequest(input *UpdateRepositoryNameInpu
 
 	output = &UpdateRepositoryNameOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(jsonrpc.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -4758,7 +5353,7 @@ type Comment struct {
 	Content *string `locationName:"content" type:"string"`
 
 	// The date and time the comment was created, in timestamp format.
-	CreationDate *time.Time `locationName:"creationDate" type:"timestamp" timestampFormat:"unix"`
+	CreationDate *time.Time `locationName:"creationDate" type:"timestamp"`
 
 	// A Boolean value indicating whether the comment has been deleted.
 	Deleted *bool `locationName:"deleted" type:"boolean"`
@@ -4767,7 +5362,7 @@ type Comment struct {
 	InReplyTo *string `locationName:"inReplyTo" type:"string"`
 
 	// The date and time the comment was most recently modified, in timestamp format.
-	LastModifiedDate *time.Time `locationName:"lastModifiedDate" type:"timestamp" timestampFormat:"unix"`
+	LastModifiedDate *time.Time `locationName:"lastModifiedDate" type:"timestamp"`
 }
 
 // String returns the string representation
@@ -5032,7 +5627,8 @@ type Commit struct {
 	// The commit message associated with the specified commit.
 	Message *string `locationName:"message" type:"string"`
 
-	// The parent list for the specified commit.
+	// A list of parent commits for the specified commit. Each parent commit ID
+	// is the full commit ID.
 	Parents []*string `locationName:"parents" type:"list"`
 
 	// Tree information for the specified commit.
@@ -5526,6 +6122,203 @@ func (s *DeleteCommentContentOutput) SetComment(v *Comment) *DeleteCommentConten
 	return s
 }
 
+type DeleteFileInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the branch where the commit will be made deleting the file.
+	//
+	// BranchName is a required field
+	BranchName *string `locationName:"branchName" min:"1" type:"string" required:"true"`
+
+	// The commit message you want to include as part of deleting the file. Commit
+	// messages are limited to 256 KB. If no message is specified, a default message
+	// will be used.
+	CommitMessage *string `locationName:"commitMessage" type:"string"`
+
+	// The email address for the commit that deletes the file. If no email address
+	// is specified, the email address will be left blank.
+	Email *string `locationName:"email" type:"string"`
+
+	// The fully-qualified path to the file that will be deleted, including the
+	// full name and extension of that file. For example, /examples/file.md is a
+	// fully qualified path to a file named file.md in a folder named examples.
+	//
+	// FilePath is a required field
+	FilePath *string `locationName:"filePath" type:"string" required:"true"`
+
+	// Specifies whether to delete the folder or directory that contains the file
+	// you want to delete if that file is the only object in the folder or directory.
+	// By default, empty folders will be deleted. This includes empty folders that
+	// are part of the directory structure. For example, if the path to a file is
+	// dir1/dir2/dir3/dir4, and dir2 and dir3 are empty, deleting the last file
+	// in dir4 will also delete the empty folders dir4, dir3, and dir2.
+	KeepEmptyFolders *bool `locationName:"keepEmptyFolders" type:"boolean"`
+
+	// The name of the author of the commit that deletes the file. If no name is
+	// specified, the user's ARN will be used as the author name and committer name.
+	Name *string `locationName:"name" type:"string"`
+
+	// The ID of the commit that is the tip of the branch where you want to create
+	// the commit that will delete the file. This must be the HEAD commit for the
+	// branch. The commit that deletes the file will be created from this commit
+	// ID.
+	//
+	// ParentCommitId is a required field
+	ParentCommitId *string `locationName:"parentCommitId" type:"string" required:"true"`
+
+	// The name of the repository that contains the file to delete.
+	//
+	// RepositoryName is a required field
+	RepositoryName *string `locationName:"repositoryName" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteFileInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteFileInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteFileInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteFileInput"}
+	if s.BranchName == nil {
+		invalidParams.Add(request.NewErrParamRequired("BranchName"))
+	}
+	if s.BranchName != nil && len(*s.BranchName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("BranchName", 1))
+	}
+	if s.FilePath == nil {
+		invalidParams.Add(request.NewErrParamRequired("FilePath"))
+	}
+	if s.ParentCommitId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ParentCommitId"))
+	}
+	if s.RepositoryName == nil {
+		invalidParams.Add(request.NewErrParamRequired("RepositoryName"))
+	}
+	if s.RepositoryName != nil && len(*s.RepositoryName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RepositoryName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetBranchName sets the BranchName field's value.
+func (s *DeleteFileInput) SetBranchName(v string) *DeleteFileInput {
+	s.BranchName = &v
+	return s
+}
+
+// SetCommitMessage sets the CommitMessage field's value.
+func (s *DeleteFileInput) SetCommitMessage(v string) *DeleteFileInput {
+	s.CommitMessage = &v
+	return s
+}
+
+// SetEmail sets the Email field's value.
+func (s *DeleteFileInput) SetEmail(v string) *DeleteFileInput {
+	s.Email = &v
+	return s
+}
+
+// SetFilePath sets the FilePath field's value.
+func (s *DeleteFileInput) SetFilePath(v string) *DeleteFileInput {
+	s.FilePath = &v
+	return s
+}
+
+// SetKeepEmptyFolders sets the KeepEmptyFolders field's value.
+func (s *DeleteFileInput) SetKeepEmptyFolders(v bool) *DeleteFileInput {
+	s.KeepEmptyFolders = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *DeleteFileInput) SetName(v string) *DeleteFileInput {
+	s.Name = &v
+	return s
+}
+
+// SetParentCommitId sets the ParentCommitId field's value.
+func (s *DeleteFileInput) SetParentCommitId(v string) *DeleteFileInput {
+	s.ParentCommitId = &v
+	return s
+}
+
+// SetRepositoryName sets the RepositoryName field's value.
+func (s *DeleteFileInput) SetRepositoryName(v string) *DeleteFileInput {
+	s.RepositoryName = &v
+	return s
+}
+
+type DeleteFileOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The blob ID removed from the tree as part of deleting the file.
+	//
+	// BlobId is a required field
+	BlobId *string `locationName:"blobId" type:"string" required:"true"`
+
+	// The full commit ID of the commit that contains the change that deletes the
+	// file.
+	//
+	// CommitId is a required field
+	CommitId *string `locationName:"commitId" type:"string" required:"true"`
+
+	// The fully-qualified path to the file that will be deleted, including the
+	// full name and extension of that file.
+	//
+	// FilePath is a required field
+	FilePath *string `locationName:"filePath" type:"string" required:"true"`
+
+	// The full SHA-1 pointer of the tree information for the commit that contains
+	// the delete file change.
+	//
+	// TreeId is a required field
+	TreeId *string `locationName:"treeId" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteFileOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteFileOutput) GoString() string {
+	return s.String()
+}
+
+// SetBlobId sets the BlobId field's value.
+func (s *DeleteFileOutput) SetBlobId(v string) *DeleteFileOutput {
+	s.BlobId = &v
+	return s
+}
+
+// SetCommitId sets the CommitId field's value.
+func (s *DeleteFileOutput) SetCommitId(v string) *DeleteFileOutput {
+	s.CommitId = &v
+	return s
+}
+
+// SetFilePath sets the FilePath field's value.
+func (s *DeleteFileOutput) SetFilePath(v string) *DeleteFileOutput {
+	s.FilePath = &v
+	return s
+}
+
+// SetTreeId sets the TreeId field's value.
+func (s *DeleteFileOutput) SetTreeId(v string) *DeleteFileOutput {
+	s.TreeId = &v
+	return s
+}
+
 // Represents the input of a delete repository operation.
 type DeleteRepositoryInput struct {
 	_ struct{} `type:"structure"`
@@ -5748,6 +6541,102 @@ func (s *Difference) SetBeforeBlob(v *BlobMetadata) *Difference {
 // SetChangeType sets the ChangeType field's value.
 func (s *Difference) SetChangeType(v string) *Difference {
 	s.ChangeType = &v
+	return s
+}
+
+// Returns information about a file in a repository.
+type File struct {
+	_ struct{} `type:"structure"`
+
+	// The fully-qualified path to the file in the repository.
+	AbsolutePath *string `locationName:"absolutePath" type:"string"`
+
+	// The blob ID that contains the file information.
+	BlobId *string `locationName:"blobId" type:"string"`
+
+	// The extrapolated file mode permissions for the file. Valid values include
+	// EXECUTABLE and NORMAL.
+	FileMode *string `locationName:"fileMode" type:"string" enum:"FileModeTypeEnum"`
+
+	// The relative path of the file from the folder where the query originated.
+	RelativePath *string `locationName:"relativePath" type:"string"`
+}
+
+// String returns the string representation
+func (s File) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s File) GoString() string {
+	return s.String()
+}
+
+// SetAbsolutePath sets the AbsolutePath field's value.
+func (s *File) SetAbsolutePath(v string) *File {
+	s.AbsolutePath = &v
+	return s
+}
+
+// SetBlobId sets the BlobId field's value.
+func (s *File) SetBlobId(v string) *File {
+	s.BlobId = &v
+	return s
+}
+
+// SetFileMode sets the FileMode field's value.
+func (s *File) SetFileMode(v string) *File {
+	s.FileMode = &v
+	return s
+}
+
+// SetRelativePath sets the RelativePath field's value.
+func (s *File) SetRelativePath(v string) *File {
+	s.RelativePath = &v
+	return s
+}
+
+// Returns information about a folder in a repository.
+type Folder struct {
+	_ struct{} `type:"structure"`
+
+	// The fully-qualified path of the folder in the repository.
+	AbsolutePath *string `locationName:"absolutePath" type:"string"`
+
+	// The relative path of the specified folder from the folder where the query
+	// originated.
+	RelativePath *string `locationName:"relativePath" type:"string"`
+
+	// The full SHA-1 pointer of the tree information for the commit that contains
+	// the folder.
+	TreeId *string `locationName:"treeId" type:"string"`
+}
+
+// String returns the string representation
+func (s Folder) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Folder) GoString() string {
+	return s.String()
+}
+
+// SetAbsolutePath sets the AbsolutePath field's value.
+func (s *Folder) SetAbsolutePath(v string) *Folder {
+	s.AbsolutePath = &v
+	return s
+}
+
+// SetRelativePath sets the RelativePath field's value.
+func (s *Folder) SetRelativePath(v string) *Folder {
+	s.RelativePath = &v
+	return s
+}
+
+// SetTreeId sets the TreeId field's value.
+func (s *Folder) SetTreeId(v string) *Folder {
+	s.TreeId = &v
 	return s
 }
 
@@ -6438,6 +7327,317 @@ func (s *GetDifferencesOutput) SetDifferences(v []*Difference) *GetDifferencesOu
 // SetNextToken sets the NextToken field's value.
 func (s *GetDifferencesOutput) SetNextToken(v string) *GetDifferencesOutput {
 	s.NextToken = &v
+	return s
+}
+
+type GetFileInput struct {
+	_ struct{} `type:"structure"`
+
+	// The fully-quaified reference that identifies the commit that contains the
+	// file. For example, you could specify a full commit ID, a tag, a branch name,
+	// or a reference such as refs/heads/master. If none is provided, then the head
+	// commit will be used.
+	CommitSpecifier *string `locationName:"commitSpecifier" type:"string"`
+
+	// The fully-qualified path to the file, including the full name and extension
+	// of the file. For example, /examples/file.md is the fully-qualified path to
+	// a file named file.md in a folder named examples.
+	//
+	// FilePath is a required field
+	FilePath *string `locationName:"filePath" type:"string" required:"true"`
+
+	// The name of the repository that contains the file.
+	//
+	// RepositoryName is a required field
+	RepositoryName *string `locationName:"repositoryName" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetFileInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetFileInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetFileInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetFileInput"}
+	if s.FilePath == nil {
+		invalidParams.Add(request.NewErrParamRequired("FilePath"))
+	}
+	if s.RepositoryName == nil {
+		invalidParams.Add(request.NewErrParamRequired("RepositoryName"))
+	}
+	if s.RepositoryName != nil && len(*s.RepositoryName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RepositoryName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCommitSpecifier sets the CommitSpecifier field's value.
+func (s *GetFileInput) SetCommitSpecifier(v string) *GetFileInput {
+	s.CommitSpecifier = &v
+	return s
+}
+
+// SetFilePath sets the FilePath field's value.
+func (s *GetFileInput) SetFilePath(v string) *GetFileInput {
+	s.FilePath = &v
+	return s
+}
+
+// SetRepositoryName sets the RepositoryName field's value.
+func (s *GetFileInput) SetRepositoryName(v string) *GetFileInput {
+	s.RepositoryName = &v
+	return s
+}
+
+type GetFileOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The blob ID of the object that represents the file content.
+	//
+	// BlobId is a required field
+	BlobId *string `locationName:"blobId" type:"string" required:"true"`
+
+	// The full commit ID of the commit that contains the content returned by GetFile.
+	//
+	// CommitId is a required field
+	CommitId *string `locationName:"commitId" type:"string" required:"true"`
+
+	// The base-64 encoded binary data object that represents the content of the
+	// file.
+	//
+	// FileContent is automatically base64 encoded/decoded by the SDK.
+	//
+	// FileContent is a required field
+	FileContent []byte `locationName:"fileContent" type:"blob" required:"true"`
+
+	// The extrapolated file mode permissions of the blob. Valid values include
+	// strings such as EXECUTABLE and not numeric values.
+	//
+	// The file mode permissions returned by this API are not the standard file
+	// mode permission values, such as 100644, but rather extrapolated values. See
+	// below for a full list of supported return values.
+	//
+	// FileMode is a required field
+	FileMode *string `locationName:"fileMode" type:"string" required:"true" enum:"FileModeTypeEnum"`
+
+	// The fully qualified path to the specified file. This returns the name and
+	// extension of the file.
+	//
+	// FilePath is a required field
+	FilePath *string `locationName:"filePath" type:"string" required:"true"`
+
+	// The size of the contents of the file, in bytes.
+	//
+	// FileSize is a required field
+	FileSize *int64 `locationName:"fileSize" type:"long" required:"true"`
+}
+
+// String returns the string representation
+func (s GetFileOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetFileOutput) GoString() string {
+	return s.String()
+}
+
+// SetBlobId sets the BlobId field's value.
+func (s *GetFileOutput) SetBlobId(v string) *GetFileOutput {
+	s.BlobId = &v
+	return s
+}
+
+// SetCommitId sets the CommitId field's value.
+func (s *GetFileOutput) SetCommitId(v string) *GetFileOutput {
+	s.CommitId = &v
+	return s
+}
+
+// SetFileContent sets the FileContent field's value.
+func (s *GetFileOutput) SetFileContent(v []byte) *GetFileOutput {
+	s.FileContent = v
+	return s
+}
+
+// SetFileMode sets the FileMode field's value.
+func (s *GetFileOutput) SetFileMode(v string) *GetFileOutput {
+	s.FileMode = &v
+	return s
+}
+
+// SetFilePath sets the FilePath field's value.
+func (s *GetFileOutput) SetFilePath(v string) *GetFileOutput {
+	s.FilePath = &v
+	return s
+}
+
+// SetFileSize sets the FileSize field's value.
+func (s *GetFileOutput) SetFileSize(v int64) *GetFileOutput {
+	s.FileSize = &v
+	return s
+}
+
+type GetFolderInput struct {
+	_ struct{} `type:"structure"`
+
+	// A fully-qualified reference used to identify a commit that contains the version
+	// of the folder's content to return. A fully-qualified reference can be a commit
+	// ID, branch name, tag, or reference such as HEAD. If no specifier is provided,
+	// the folder content will be returned as it exists in the HEAD commit.
+	CommitSpecifier *string `locationName:"commitSpecifier" type:"string"`
+
+	// The fully-qualified path to the folder whose contents will be returned, including
+	// the folder name. For example, /examples is a fully-qualified path to a folder
+	// named examples that was created off of the root directory (/) of a repository.
+	//
+	// FolderPath is a required field
+	FolderPath *string `locationName:"folderPath" type:"string" required:"true"`
+
+	// The name of the repository.
+	//
+	// RepositoryName is a required field
+	RepositoryName *string `locationName:"repositoryName" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetFolderInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetFolderInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetFolderInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetFolderInput"}
+	if s.FolderPath == nil {
+		invalidParams.Add(request.NewErrParamRequired("FolderPath"))
+	}
+	if s.RepositoryName == nil {
+		invalidParams.Add(request.NewErrParamRequired("RepositoryName"))
+	}
+	if s.RepositoryName != nil && len(*s.RepositoryName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RepositoryName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCommitSpecifier sets the CommitSpecifier field's value.
+func (s *GetFolderInput) SetCommitSpecifier(v string) *GetFolderInput {
+	s.CommitSpecifier = &v
+	return s
+}
+
+// SetFolderPath sets the FolderPath field's value.
+func (s *GetFolderInput) SetFolderPath(v string) *GetFolderInput {
+	s.FolderPath = &v
+	return s
+}
+
+// SetRepositoryName sets the RepositoryName field's value.
+func (s *GetFolderInput) SetRepositoryName(v string) *GetFolderInput {
+	s.RepositoryName = &v
+	return s
+}
+
+type GetFolderOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The full commit ID used as a reference for which version of the folder content
+	// is returned.
+	//
+	// CommitId is a required field
+	CommitId *string `locationName:"commitId" type:"string" required:"true"`
+
+	// The list of files that exist in the specified folder, if any.
+	Files []*File `locationName:"files" type:"list"`
+
+	// The fully-qualified path of the folder whose contents are returned.
+	//
+	// FolderPath is a required field
+	FolderPath *string `locationName:"folderPath" type:"string" required:"true"`
+
+	// The list of folders that exist beneath the specified folder, if any.
+	SubFolders []*Folder `locationName:"subFolders" type:"list"`
+
+	// The list of submodules that exist in the specified folder, if any.
+	SubModules []*SubModule `locationName:"subModules" type:"list"`
+
+	// The list of symbolic links to other files and folders that exist in the specified
+	// folder, if any.
+	SymbolicLinks []*SymbolicLink `locationName:"symbolicLinks" type:"list"`
+
+	// The full SHA-1 pointer of the tree information for the commit that contains
+	// the folder.
+	TreeId *string `locationName:"treeId" type:"string"`
+}
+
+// String returns the string representation
+func (s GetFolderOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetFolderOutput) GoString() string {
+	return s.String()
+}
+
+// SetCommitId sets the CommitId field's value.
+func (s *GetFolderOutput) SetCommitId(v string) *GetFolderOutput {
+	s.CommitId = &v
+	return s
+}
+
+// SetFiles sets the Files field's value.
+func (s *GetFolderOutput) SetFiles(v []*File) *GetFolderOutput {
+	s.Files = v
+	return s
+}
+
+// SetFolderPath sets the FolderPath field's value.
+func (s *GetFolderOutput) SetFolderPath(v string) *GetFolderOutput {
+	s.FolderPath = &v
+	return s
+}
+
+// SetSubFolders sets the SubFolders field's value.
+func (s *GetFolderOutput) SetSubFolders(v []*Folder) *GetFolderOutput {
+	s.SubFolders = v
+	return s
+}
+
+// SetSubModules sets the SubModules field's value.
+func (s *GetFolderOutput) SetSubModules(v []*SubModule) *GetFolderOutput {
+	s.SubModules = v
+	return s
+}
+
+// SetSymbolicLinks sets the SymbolicLinks field's value.
+func (s *GetFolderOutput) SetSymbolicLinks(v []*SymbolicLink) *GetFolderOutput {
+	s.SymbolicLinks = v
+	return s
+}
+
+// SetTreeId sets the TreeId field's value.
+func (s *GetFolderOutput) SetTreeId(v string) *GetFolderOutput {
+	s.TreeId = &v
 	return s
 }
 
@@ -7725,7 +8925,7 @@ type PullRequest struct {
 	ClientRequestToken *string `locationName:"clientRequestToken" type:"string"`
 
 	// The date and time the pull request was originally created, in timestamp format.
-	CreationDate *time.Time `locationName:"creationDate" type:"timestamp" timestampFormat:"unix"`
+	CreationDate *time.Time `locationName:"creationDate" type:"timestamp"`
 
 	// The user-defined description of the pull request. This description can be
 	// used to clarify what should be reviewed and other details of the request.
@@ -7733,7 +8933,7 @@ type PullRequest struct {
 
 	// The day and time of the last user or system activity on the pull request,
 	// in timestamp format.
-	LastActivityDate *time.Time `locationName:"lastActivityDate" type:"timestamp" timestampFormat:"unix"`
+	LastActivityDate *time.Time `locationName:"lastActivityDate" type:"timestamp"`
 
 	// The system-generated ID of the pull request.
 	PullRequestId *string `locationName:"pullRequestId" type:"string"`
@@ -7815,6 +9015,60 @@ func (s *PullRequest) SetTitle(v string) *PullRequest {
 	return s
 }
 
+// Metadata about the pull request that is used when comparing the pull request
+// source with its destination.
+type PullRequestCreatedEventMetadata struct {
+	_ struct{} `type:"structure"`
+
+	// The commit ID of the tip of the branch specified as the destination branch
+	// when the pull request was created.
+	DestinationCommitId *string `locationName:"destinationCommitId" type:"string"`
+
+	// The commit ID of the most recent commit that the source branch and the destination
+	// branch have in common.
+	MergeBase *string `locationName:"mergeBase" type:"string"`
+
+	// The name of the repository where the pull request was created.
+	RepositoryName *string `locationName:"repositoryName" min:"1" type:"string"`
+
+	// The commit ID on the source branch used when the pull request was created.
+	SourceCommitId *string `locationName:"sourceCommitId" type:"string"`
+}
+
+// String returns the string representation
+func (s PullRequestCreatedEventMetadata) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PullRequestCreatedEventMetadata) GoString() string {
+	return s.String()
+}
+
+// SetDestinationCommitId sets the DestinationCommitId field's value.
+func (s *PullRequestCreatedEventMetadata) SetDestinationCommitId(v string) *PullRequestCreatedEventMetadata {
+	s.DestinationCommitId = &v
+	return s
+}
+
+// SetMergeBase sets the MergeBase field's value.
+func (s *PullRequestCreatedEventMetadata) SetMergeBase(v string) *PullRequestCreatedEventMetadata {
+	s.MergeBase = &v
+	return s
+}
+
+// SetRepositoryName sets the RepositoryName field's value.
+func (s *PullRequestCreatedEventMetadata) SetRepositoryName(v string) *PullRequestCreatedEventMetadata {
+	s.RepositoryName = &v
+	return s
+}
+
+// SetSourceCommitId sets the SourceCommitId field's value.
+func (s *PullRequestCreatedEventMetadata) SetSourceCommitId(v string) *PullRequestCreatedEventMetadata {
+	s.SourceCommitId = &v
+	return s
+}
+
 // Returns information about a pull request event.
 type PullRequestEvent struct {
 	_ struct{} `type:"structure"`
@@ -7825,7 +9079,10 @@ type PullRequestEvent struct {
 	ActorArn *string `locationName:"actorArn" type:"string"`
 
 	// The day and time of the pull request event, in timestamp format.
-	EventDate *time.Time `locationName:"eventDate" type:"timestamp" timestampFormat:"unix"`
+	EventDate *time.Time `locationName:"eventDate" type:"timestamp"`
+
+	// Information about the source and destination branches for the pull request.
+	PullRequestCreatedEventMetadata *PullRequestCreatedEventMetadata `locationName:"pullRequestCreatedEventMetadata" type:"structure"`
 
 	// The type of the pull request event, for example a status change event (PULL_REQUEST_STATUS_CHANGED)
 	// or update event (PULL_REQUEST_SOURCE_REFERENCE_UPDATED).
@@ -7863,6 +9120,12 @@ func (s *PullRequestEvent) SetActorArn(v string) *PullRequestEvent {
 // SetEventDate sets the EventDate field's value.
 func (s *PullRequestEvent) SetEventDate(v time.Time) *PullRequestEvent {
 	s.EventDate = &v
+	return s
+}
+
+// SetPullRequestCreatedEventMetadata sets the PullRequestCreatedEventMetadata field's value.
+func (s *PullRequestEvent) SetPullRequestCreatedEventMetadata(v *PullRequestCreatedEventMetadata) *PullRequestEvent {
+	s.PullRequestCreatedEventMetadata = v
 	return s
 }
 
@@ -7951,6 +9214,10 @@ type PullRequestSourceReferenceUpdatedEventMetadata struct {
 	// of the branch at the time the pull request was updated.
 	BeforeCommitId *string `locationName:"beforeCommitId" type:"string"`
 
+	// The commit ID of the most recent commit that the source branch and the destination
+	// branch have in common.
+	MergeBase *string `locationName:"mergeBase" type:"string"`
+
 	// The name of the repository where the pull request was updated.
 	RepositoryName *string `locationName:"repositoryName" min:"1" type:"string"`
 }
@@ -7974,6 +9241,12 @@ func (s *PullRequestSourceReferenceUpdatedEventMetadata) SetAfterCommitId(v stri
 // SetBeforeCommitId sets the BeforeCommitId field's value.
 func (s *PullRequestSourceReferenceUpdatedEventMetadata) SetBeforeCommitId(v string) *PullRequestSourceReferenceUpdatedEventMetadata {
 	s.BeforeCommitId = &v
+	return s
+}
+
+// SetMergeBase sets the MergeBase field's value.
+func (s *PullRequestSourceReferenceUpdatedEventMetadata) SetMergeBase(v string) *PullRequestSourceReferenceUpdatedEventMetadata {
+	s.MergeBase = &v
 	return s
 }
 
@@ -8019,6 +9292,10 @@ type PullRequestTarget struct {
 	// into. Also known as the destination branch.
 	DestinationReference *string `locationName:"destinationReference" type:"string"`
 
+	// The commit ID of the most recent commit that the source branch and the destination
+	// branch have in common.
+	MergeBase *string `locationName:"mergeBase" type:"string"`
+
 	// Returns metadata about the state of the merge, including whether the merge
 	// has been made.
 	MergeMetadata *MergeMetadata `locationName:"mergeMetadata" type:"structure"`
@@ -8059,6 +9336,12 @@ func (s *PullRequestTarget) SetDestinationReference(v string) *PullRequestTarget
 	return s
 }
 
+// SetMergeBase sets the MergeBase field's value.
+func (s *PullRequestTarget) SetMergeBase(v string) *PullRequestTarget {
+	s.MergeBase = &v
+	return s
+}
+
 // SetMergeMetadata sets the MergeMetadata field's value.
 func (s *PullRequestTarget) SetMergeMetadata(v *MergeMetadata) *PullRequestTarget {
 	s.MergeMetadata = v
@@ -8080,6 +9363,202 @@ func (s *PullRequestTarget) SetSourceCommit(v string) *PullRequestTarget {
 // SetSourceReference sets the SourceReference field's value.
 func (s *PullRequestTarget) SetSourceReference(v string) *PullRequestTarget {
 	s.SourceReference = &v
+	return s
+}
+
+type PutFileInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the branch where you want to add or update the file. If this
+	// is an empty repository, this branch will be created.
+	//
+	// BranchName is a required field
+	BranchName *string `locationName:"branchName" min:"1" type:"string" required:"true"`
+
+	// A message about why this file was added or updated. While optional, adding
+	// a message is strongly encouraged in order to provide a more useful commit
+	// history for your repository.
+	CommitMessage *string `locationName:"commitMessage" type:"string"`
+
+	// An email address for the person adding or updating the file.
+	Email *string `locationName:"email" type:"string"`
+
+	// The content of the file, in binary object format.
+	//
+	// FileContent is automatically base64 encoded/decoded by the SDK.
+	//
+	// FileContent is a required field
+	FileContent []byte `locationName:"fileContent" type:"blob" required:"true"`
+
+	// The file mode permissions of the blob. Valid file mode permissions are listed
+	// below.
+	FileMode *string `locationName:"fileMode" type:"string" enum:"FileModeTypeEnum"`
+
+	// The name of the file you want to add or update, including the relative path
+	// to the file in the repository.
+	//
+	// If the path does not currently exist in the repository, the path will be
+	// created as part of adding the file.
+	//
+	// FilePath is a required field
+	FilePath *string `locationName:"filePath" type:"string" required:"true"`
+
+	// The name of the person adding or updating the file. While optional, adding
+	// a name is strongly encouraged in order to provide a more useful commit history
+	// for your repository.
+	Name *string `locationName:"name" type:"string"`
+
+	// The full commit ID of the head commit in the branch where you want to add
+	// or update the file. If this is an empty repository, no commit ID is required.
+	// If this is not an empty repository, a commit ID is required.
+	//
+	// The commit ID must match the ID of the head commit at the time of the operation,
+	// or an error will occur, and the file will not be added or updated.
+	ParentCommitId *string `locationName:"parentCommitId" type:"string"`
+
+	// The name of the repository where you want to add or update the file.
+	//
+	// RepositoryName is a required field
+	RepositoryName *string `locationName:"repositoryName" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s PutFileInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PutFileInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *PutFileInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "PutFileInput"}
+	if s.BranchName == nil {
+		invalidParams.Add(request.NewErrParamRequired("BranchName"))
+	}
+	if s.BranchName != nil && len(*s.BranchName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("BranchName", 1))
+	}
+	if s.FileContent == nil {
+		invalidParams.Add(request.NewErrParamRequired("FileContent"))
+	}
+	if s.FilePath == nil {
+		invalidParams.Add(request.NewErrParamRequired("FilePath"))
+	}
+	if s.RepositoryName == nil {
+		invalidParams.Add(request.NewErrParamRequired("RepositoryName"))
+	}
+	if s.RepositoryName != nil && len(*s.RepositoryName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RepositoryName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetBranchName sets the BranchName field's value.
+func (s *PutFileInput) SetBranchName(v string) *PutFileInput {
+	s.BranchName = &v
+	return s
+}
+
+// SetCommitMessage sets the CommitMessage field's value.
+func (s *PutFileInput) SetCommitMessage(v string) *PutFileInput {
+	s.CommitMessage = &v
+	return s
+}
+
+// SetEmail sets the Email field's value.
+func (s *PutFileInput) SetEmail(v string) *PutFileInput {
+	s.Email = &v
+	return s
+}
+
+// SetFileContent sets the FileContent field's value.
+func (s *PutFileInput) SetFileContent(v []byte) *PutFileInput {
+	s.FileContent = v
+	return s
+}
+
+// SetFileMode sets the FileMode field's value.
+func (s *PutFileInput) SetFileMode(v string) *PutFileInput {
+	s.FileMode = &v
+	return s
+}
+
+// SetFilePath sets the FilePath field's value.
+func (s *PutFileInput) SetFilePath(v string) *PutFileInput {
+	s.FilePath = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *PutFileInput) SetName(v string) *PutFileInput {
+	s.Name = &v
+	return s
+}
+
+// SetParentCommitId sets the ParentCommitId field's value.
+func (s *PutFileInput) SetParentCommitId(v string) *PutFileInput {
+	s.ParentCommitId = &v
+	return s
+}
+
+// SetRepositoryName sets the RepositoryName field's value.
+func (s *PutFileInput) SetRepositoryName(v string) *PutFileInput {
+	s.RepositoryName = &v
+	return s
+}
+
+type PutFileOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the blob, which is its SHA-1 pointer.
+	//
+	// BlobId is a required field
+	BlobId *string `locationName:"blobId" type:"string" required:"true"`
+
+	// The full SHA of the commit that contains this file change.
+	//
+	// CommitId is a required field
+	CommitId *string `locationName:"commitId" type:"string" required:"true"`
+
+	// The full SHA-1 pointer of the tree information for the commit that contains
+	// this file change.
+	//
+	// TreeId is a required field
+	TreeId *string `locationName:"treeId" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s PutFileOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PutFileOutput) GoString() string {
+	return s.String()
+}
+
+// SetBlobId sets the BlobId field's value.
+func (s *PutFileOutput) SetBlobId(v string) *PutFileOutput {
+	s.BlobId = &v
+	return s
+}
+
+// SetCommitId sets the CommitId field's value.
+func (s *PutFileOutput) SetCommitId(v string) *PutFileOutput {
+	s.CommitId = &v
+	return s
+}
+
+// SetTreeId sets the TreeId field's value.
+func (s *PutFileOutput) SetTreeId(v string) *PutFileOutput {
+	s.TreeId = &v
 	return s
 }
 
@@ -8190,13 +9669,13 @@ type RepositoryMetadata struct {
 	CloneUrlSsh *string `locationName:"cloneUrlSsh" type:"string"`
 
 	// The date and time the repository was created, in timestamp format.
-	CreationDate *time.Time `locationName:"creationDate" type:"timestamp" timestampFormat:"unix"`
+	CreationDate *time.Time `locationName:"creationDate" type:"timestamp"`
 
 	// The repository's default branch name.
 	DefaultBranch *string `locationName:"defaultBranch" min:"1" type:"string"`
 
 	// The date and time the repository was last modified, in timestamp format.
-	LastModifiedDate *time.Time `locationName:"lastModifiedDate" type:"timestamp" timestampFormat:"unix"`
+	LastModifiedDate *time.Time `locationName:"lastModifiedDate" type:"timestamp"`
 
 	// A comment or description about the repository.
 	RepositoryDescription *string `locationName:"repositoryDescription" type:"string"`
@@ -8435,6 +9914,101 @@ func (s *RepositoryTriggerExecutionFailure) SetFailureMessage(v string) *Reposit
 // SetTrigger sets the Trigger field's value.
 func (s *RepositoryTriggerExecutionFailure) SetTrigger(v string) *RepositoryTriggerExecutionFailure {
 	s.Trigger = &v
+	return s
+}
+
+// Returns information about a submodule reference in a repository folder.
+type SubModule struct {
+	_ struct{} `type:"structure"`
+
+	// The fully qualified path to the folder that contains the reference to the
+	// submodule.
+	AbsolutePath *string `locationName:"absolutePath" type:"string"`
+
+	// The commit ID that contains the reference to the submodule.
+	CommitId *string `locationName:"commitId" type:"string"`
+
+	// The relative path of the submodule from the folder where the query originated.
+	RelativePath *string `locationName:"relativePath" type:"string"`
+}
+
+// String returns the string representation
+func (s SubModule) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SubModule) GoString() string {
+	return s.String()
+}
+
+// SetAbsolutePath sets the AbsolutePath field's value.
+func (s *SubModule) SetAbsolutePath(v string) *SubModule {
+	s.AbsolutePath = &v
+	return s
+}
+
+// SetCommitId sets the CommitId field's value.
+func (s *SubModule) SetCommitId(v string) *SubModule {
+	s.CommitId = &v
+	return s
+}
+
+// SetRelativePath sets the RelativePath field's value.
+func (s *SubModule) SetRelativePath(v string) *SubModule {
+	s.RelativePath = &v
+	return s
+}
+
+// Returns information about a symbolic link in a repository folder.
+type SymbolicLink struct {
+	_ struct{} `type:"structure"`
+
+	// The fully-qualified path to the folder that contains the symbolic link.
+	AbsolutePath *string `locationName:"absolutePath" type:"string"`
+
+	// The blob ID that contains the information about the symbolic link.
+	BlobId *string `locationName:"blobId" type:"string"`
+
+	// The file mode permissions of the blob that cotains information about the
+	// symbolic link.
+	FileMode *string `locationName:"fileMode" type:"string" enum:"FileModeTypeEnum"`
+
+	// The relative path of the symbolic link from the folder where the query originated.
+	RelativePath *string `locationName:"relativePath" type:"string"`
+}
+
+// String returns the string representation
+func (s SymbolicLink) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SymbolicLink) GoString() string {
+	return s.String()
+}
+
+// SetAbsolutePath sets the AbsolutePath field's value.
+func (s *SymbolicLink) SetAbsolutePath(v string) *SymbolicLink {
+	s.AbsolutePath = &v
+	return s
+}
+
+// SetBlobId sets the BlobId field's value.
+func (s *SymbolicLink) SetBlobId(v string) *SymbolicLink {
+	s.BlobId = &v
+	return s
+}
+
+// SetFileMode sets the FileMode field's value.
+func (s *SymbolicLink) SetFileMode(v string) *SymbolicLink {
+	s.FileMode = &v
+	return s
+}
+
+// SetRelativePath sets the RelativePath field's value.
+func (s *SymbolicLink) SetRelativePath(v string) *SymbolicLink {
+	s.RelativePath = &v
 	return s
 }
 
@@ -9132,7 +10706,8 @@ func (s UpdateRepositoryNameOutput) GoString() string {
 type UserInfo struct {
 	_ struct{} `type:"structure"`
 
-	// The date when the specified commit was pushed to the repository.
+	// The date when the specified commit was commited, in timestamp format with
+	// GMT offset.
 	Date *string `locationName:"date" type:"string"`
 
 	// The email address associated with the user who made the commit, if any.
@@ -9179,6 +10754,17 @@ const (
 
 	// ChangeTypeEnumD is a ChangeTypeEnum enum value
 	ChangeTypeEnumD = "D"
+)
+
+const (
+	// FileModeTypeEnumExecutable is a FileModeTypeEnum enum value
+	FileModeTypeEnumExecutable = "EXECUTABLE"
+
+	// FileModeTypeEnumNormal is a FileModeTypeEnum enum value
+	FileModeTypeEnumNormal = "NORMAL"
+
+	// FileModeTypeEnumSymlink is a FileModeTypeEnum enum value
+	FileModeTypeEnumSymlink = "SYMLINK"
 )
 
 const (

@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -13,14 +14,51 @@ import (
 )
 
 func TestAccAWSSSMAssociation_basic(t *testing.T) {
-	name := acctest.RandString(10)
-	resource.Test(t, resource.TestCase{
+	name := fmt.Sprintf("tf-acc-ssm-association-%s", acctest.RandString(10))
+
+	deleteSsmAssociaton := func() {
+		ec2conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		ssmconn := testAccProvider.Meta().(*AWSClient).ssmconn
+
+		ins, err := ec2conn.DescribeInstances(&ec2.DescribeInstancesInput{
+			Filters: []*ec2.Filter{
+				{
+					Name:   aws.String("tag:Name"),
+					Values: []*string{aws.String(name)},
+				},
+			},
+		})
+		if err != nil {
+			t.Fatalf("Error getting instance with tag:Name %s: %s", name, err)
+		}
+		if len(ins.Reservations) == 0 || len(ins.Reservations[0].Instances) == 0 {
+			t.Fatalf("No instance exists with tag:Name %s", name)
+		}
+		instanceId := ins.Reservations[0].Instances[0].InstanceId
+
+		_, err = ssmconn.DeleteAssociation(&ssm.DeleteAssociationInput{
+			Name:       aws.String(name),
+			InstanceId: instanceId,
+		})
+		if err != nil {
+			t.Fatalf("Error deleting ssm association %s/%s: %s", name, aws.StringValue(instanceId), err)
+		}
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSSMAssociationBasicConfig(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMAssociationExists("aws_ssm_association.foo"),
+				),
+			},
+			{
+				PreConfig: deleteSsmAssociaton,
+				Config:    testAccAWSSSMAssociationBasicConfig(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMAssociationExists("aws_ssm_association.foo"),
 				),
@@ -45,7 +83,7 @@ func TestAccAWSSSMAssociation_withTargets(t *testing.T) {
     key = "tag:ExtraName"
     values = ["acceptanceTest"]
   }`
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMAssociationDestroy,
@@ -96,7 +134,7 @@ func TestAccAWSSSMAssociation_withTargets(t *testing.T) {
 
 func TestAccAWSSSMAssociation_withParameters(t *testing.T) {
 	name := acctest.RandString(10)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMAssociationDestroy,
@@ -125,7 +163,7 @@ func TestAccAWSSSMAssociation_withAssociationName(t *testing.T) {
 	assocName1 := acctest.RandString(10)
 	assocName2 := acctest.RandString(10)
 	rName := acctest.RandString(5)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMAssociationDestroy,
@@ -150,9 +188,41 @@ func TestAccAWSSSMAssociation_withAssociationName(t *testing.T) {
 	})
 }
 
+func TestAccAWSSSMAssociation_withAssociationNameAndScheduleExpression(t *testing.T) {
+	assocName := acctest.RandString(10)
+	rName := acctest.RandString(5)
+	resourceName := "aws_ssm_association.test"
+	scheduleExpression1 := "cron(0 16 ? * TUE *)"
+	scheduleExpression2 := "cron(0 16 ? * WED *)"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMAssociationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMAssociationConfigWithAssociationNameAndScheduleExpression(rName, assocName, scheduleExpression1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMAssociationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "association_name", assocName),
+					resource.TestCheckResourceAttr(resourceName, "schedule_expression", scheduleExpression1),
+				),
+			},
+			{
+				Config: testAccAWSSSMAssociationConfigWithAssociationNameAndScheduleExpression(rName, assocName, scheduleExpression2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMAssociationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "association_name", assocName),
+					resource.TestCheckResourceAttr(resourceName, "schedule_expression", scheduleExpression2),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSSSMAssociation_withDocumentVersion(t *testing.T) {
 	name := acctest.RandString(10)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMAssociationDestroy,
@@ -171,7 +241,7 @@ func TestAccAWSSSMAssociation_withDocumentVersion(t *testing.T) {
 
 func TestAccAWSSSMAssociation_withOutputLocation(t *testing.T) {
 	name := acctest.RandString(10)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMAssociationDestroy,
@@ -212,7 +282,7 @@ func TestAccAWSSSMAssociation_withOutputLocation(t *testing.T) {
 
 func TestAccAWSSSMAssociation_withScheduleExpression(t *testing.T) {
 	name := acctest.RandString(10)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMAssociationDestroy,
@@ -295,7 +365,7 @@ func testAccCheckAWSSSMAssociationDestroy(s *terraform.State) error {
 func testAccAWSSSMAssociationBasicConfigWithParameters(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_document" "foo_document" {
-  name = "test_document_association-%s",
+  name = "test_document_association-%s"
   document_type = "Command"
   content = <<-DOC
   {
@@ -324,8 +394,8 @@ resource "aws_ssm_document" "foo_document" {
 }
 
 resource "aws_ssm_association" "foo" {
-  name = "${aws_ssm_document.foo_document.name}",
-  parameters {
+  name = "${aws_ssm_document.foo_document.name}"
+  parameters = {
   	Directory = "myWorkSpace"
   }
   targets {
@@ -338,7 +408,7 @@ resource "aws_ssm_association" "foo" {
 func testAccAWSSSMAssociationBasicConfigWithParametersUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_document" "foo_document" {
-  name = "test_document_association-%s",
+  name = "test_document_association-%s"
   document_type = "Command"
   content = <<-DOC
   {
@@ -367,8 +437,8 @@ resource "aws_ssm_document" "foo_document" {
 }
 
 resource "aws_ssm_association" "foo" {
-  name = "${aws_ssm_document.foo_document.name}",
-  parameters {
+  name = "${aws_ssm_document.foo_document.name}"
+  parameters = {
   	Directory = "myWorkSpaceUpdated"
   }
   targets {
@@ -412,9 +482,37 @@ resource "aws_ssm_association" "foo" {
 
 func testAccAWSSSMAssociationBasicConfig(rName string) string {
 	return fmt.Sprintf(`
+variable "name" { default = "%s" }
+
+data "aws_availability_zones" "available" {}
+
+data "aws_ami" "amzn" {
+  most_recent      = true
+  owners     = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
+resource "aws_vpc" "main" {
+  cidr_block = "10.0.0.0/16"
+  tags = {
+    Name = "${var.name}"
+  }
+}
+
+resource "aws_subnet" "first" {
+  vpc_id = "${aws_vpc.main.id}"
+  cidr_block = "10.0.0.0/24"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+}
+
 resource "aws_security_group" "tf_test_foo" {
-  name = "tf_test_foo-%s"
+  name = "${var.name}"
   description = "foo"
+  vpc_id = "${aws_vpc.main.id}"
   ingress {
     protocol = "icmp"
     from_port = -1
@@ -424,14 +522,18 @@ resource "aws_security_group" "tf_test_foo" {
 }
 
 resource "aws_instance" "foo" {
-  ami = "ami-4fccb37f"
-  availability_zone = "us-west-2a"
-  instance_type = "m1.small"
-  security_groups = ["${aws_security_group.tf_test_foo.name}"]
+  ami = "${data.aws_ami.amzn.image_id}"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  instance_type = "t2.micro"
+  vpc_security_group_ids = ["${aws_security_group.tf_test_foo.id}"]
+  subnet_id = "${aws_subnet.first.id}"
+  tags = {
+    Name = "${var.name}"
+  }
 }
 
 resource "aws_ssm_document" "foo_document" {
-  name    = "test_document_association-%s",
+  name    = "${var.name}"
 	document_type = "Command"
   content = <<DOC
   {
@@ -455,27 +557,16 @@ DOC
 }
 
 resource "aws_ssm_association" "foo" {
-  name        = "test_document_association-%s",
+  name        = "${var.name}"
   instance_id = "${aws_instance.foo.id}"
 }
-`, rName, rName, rName)
+`, rName)
 }
 
 func testAccAWSSSMAssociationBasicConfigWithDocumentVersion(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_security_group" "tf_test_foo" {
-  name = "tf_test_foo-%s"
-  description = "foo"
-  ingress {
-    protocol = "icmp"
-    from_port = -1
-    to_port = -1
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-
 resource "aws_ssm_document" "foo_document" {
-  name    = "test_document_association-%s",
+  name    = "test_document_association-%s"
 	document_type = "Command"
   content = <<DOC
   {
@@ -499,20 +590,20 @@ DOC
 }
 
 resource "aws_ssm_association" "foo" {
-  name        = "test_document_association-%s",
+  name        = "test_document_association-%s"
   document_version = "${aws_ssm_document.foo_document.latest_version}"
   targets {
     key = "tag:Name"
     values = ["acceptanceTest"]
   }
 }
-`, rName, rName, rName)
+`, rName, rName)
 }
 
 func testAccAWSSSMAssociationBasicConfigWithScheduleExpression(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_document" "foo_document" {
-  name = "test_document_association-%s",
+  name = "test_document_association-%s"
   document_type = "Command"
   content = <<DOC
   {
@@ -536,7 +627,7 @@ DOC
 }
 
 resource "aws_ssm_association" "foo" {
-  name = "${aws_ssm_document.foo_document.name}",
+  name = "${aws_ssm_document.foo_document.name}"
   schedule_expression = "cron(0 16 ? * TUE *)"
   targets {
     key = "tag:Name"
@@ -548,7 +639,7 @@ resource "aws_ssm_association" "foo" {
 func testAccAWSSSMAssociationBasicConfigWithScheduleExpressionUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_document" "foo_document" {
-  name = "test_document_association-%s",
+  name = "test_document_association-%s"
   document_type = "Command"
   content = <<DOC
   {
@@ -572,7 +663,7 @@ DOC
 }
 
 resource "aws_ssm_association" "foo" {
-  name = "${aws_ssm_document.foo_document.name}",
+  name = "${aws_ssm_document.foo_document.name}"
   schedule_expression = "cron(0 16 ? * WED *)"
   targets {
     key = "tag:Name"
@@ -589,7 +680,7 @@ resource "aws_s3_bucket" "output_location" {
 }
 
 resource "aws_ssm_document" "foo_document" {
-  name = "test_document_association-%s",
+  name = "test_document_association-%s"
   document_type = "Command"
   content = <<DOC
   {
@@ -613,7 +704,7 @@ DOC
 }
 
 resource "aws_ssm_association" "foo" {
-  name = "${aws_ssm_document.foo_document.name}",
+  name = "${aws_ssm_document.foo_document.name}"
   targets {
     key = "tag:Name"
     values = ["acceptanceTest"]
@@ -638,7 +729,7 @@ resource "aws_s3_bucket" "output_location_updated" {
 }
 
 resource "aws_ssm_document" "foo_document" {
-  name = "test_document_association-%s",
+  name = "test_document_association-%s"
   document_type = "Command"
   content = <<DOC
   {
@@ -662,7 +753,7 @@ DOC
 }
 
 resource "aws_ssm_association" "foo" {
-  name = "${aws_ssm_document.foo_document.name}",
+  name = "${aws_ssm_document.foo_document.name}"
   targets {
     key = "tag:Name"
     values = ["acceptanceTest"]
@@ -687,7 +778,7 @@ resource "aws_s3_bucket" "output_location_updated" {
 }
 
 resource "aws_ssm_document" "foo_document" {
-  name = "test_document_association-%s",
+  name = "test_document_association-%s"
   document_type = "Command"
   content = <<DOC
   {
@@ -711,7 +802,7 @@ DOC
 }
 
 resource "aws_ssm_association" "foo" {
-  name = "${aws_ssm_document.foo_document.name}",
+  name = "${aws_ssm_document.foo_document.name}"
   targets {
     key = "tag:Name"
     values = ["acceptanceTest"]
@@ -726,7 +817,7 @@ resource "aws_ssm_association" "foo" {
 func testAccAWSSSMAssociationBasicConfigWithAssociationName(rName, assocName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_document" "foo_document" {
-  name = "test_document_association-%s",
+  name = "test_document_association-%s"
   document_type = "Command"
   content = <<DOC
   {
@@ -749,7 +840,7 @@ DOC
 }
 
 resource "aws_ssm_association" "foo" {
-  name = "${aws_ssm_document.foo_document.name}",
+  name = "${aws_ssm_document.foo_document.name}"
   association_name = "%s"
   targets {
     key = "tag:Name"
@@ -757,4 +848,42 @@ resource "aws_ssm_association" "foo" {
   }
 }
 `, rName, assocName)
+}
+
+func testAccAWSSSMAssociationConfigWithAssociationNameAndScheduleExpression(rName, associationName, scheduleExpression string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_document" "test" {
+  name = "test_document_association-%s"
+  document_type = "Command"
+  content = <<DOC
+  {
+    "schemaVersion": "1.2",
+    "description": "Check ip configuration of a Linux instance.",
+    "parameters": {
+    },
+    "runtimeConfig": {
+      "aws:runShellScript": {
+        "properties": [
+          {
+            "id": "0.aws:runShellScript",
+            "runCommand": ["ifconfig"]
+          }
+        ]
+      }
+    }
+  }
+DOC
+}
+
+resource "aws_ssm_association" "test" {
+  association_name    = %q
+  name                = "${aws_ssm_document.test.name}"
+  schedule_expression = %q
+
+  targets {
+    key = "tag:Name"
+    values = ["acceptanceTest"]
+  }
+}
+`, rName, associationName, scheduleExpression)
 }

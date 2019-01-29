@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAwsSESDomainMailFrom_basic(t *testing.T) {
+func TestAccAWSSESDomainMailFrom_basic(t *testing.T) {
 	domain := fmt.Sprintf(
 		"%s.terraformtesting.com",
 		acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
@@ -19,7 +19,7 @@ func TestAccAwsSESDomainMailFrom_basic(t *testing.T) {
 	mailFromDomain2 := fmt.Sprintf("bounce2.%s", domain)
 	resourceName := "aws_ses_domain_mail_from.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSESDomainMailFromDestroy,
@@ -51,13 +51,13 @@ func TestAccAwsSESDomainMailFrom_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsSESDomainMailFrom_behaviorOnMxFailure(t *testing.T) {
+func TestAccAWSSESDomainMailFrom_behaviorOnMxFailure(t *testing.T) {
 	domain := fmt.Sprintf(
 		"%s.terraformtesting.com",
 		acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 	resourceName := "aws_ses_domain_mail_from.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSESDomainMailFromDestroy,

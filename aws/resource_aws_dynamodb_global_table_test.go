@@ -12,11 +12,11 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAwsDynamoDbGlobalTable_basic(t *testing.T) {
+func TestAccAWSDynamoDbGlobalTable_basic(t *testing.T) {
 	resourceName := "aws_dynamodb_global_table.test"
 	tableName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDynamoDbGlobalTableDestroy,
@@ -47,11 +47,11 @@ func TestAccAwsDynamoDbGlobalTable_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsDynamoDbGlobalTable_multipleRegions(t *testing.T) {
+func TestAccAWSDynamoDbGlobalTable_multipleRegions(t *testing.T) {
 	resourceName := "aws_dynamodb_global_table.test"
 	tableName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDynamoDbGlobalTableDestroy,
@@ -89,20 +89,20 @@ func TestAccAwsDynamoDbGlobalTable_multipleRegions(t *testing.T) {
 	})
 }
 
-func TestAccAwsDynamoDbGlobalTable_import(t *testing.T) {
+func TestAccAWSDynamoDbGlobalTable_import(t *testing.T) {
 	resourceName := "aws_dynamodb_global_table.test"
 	tableName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSesTemplateDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDynamoDbGlobalTableConfig_basic(tableName),
 			},
 
-			resource.TestStep{
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,

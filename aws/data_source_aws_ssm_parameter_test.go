@@ -8,11 +8,11 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 )
 
-func TestAccAwsSsmParameterDataSource_basic(t *testing.T) {
+func TestAccAWSSsmParameterDataSource_basic(t *testing.T) {
 	resourceName := "data.aws_ssm_parameter.test"
 	name := "test.parameter"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 		},
@@ -44,11 +44,11 @@ func TestAccAwsSsmParameterDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsSsmParameterDataSource_fullPath(t *testing.T) {
+func TestAccAWSSsmParameterDataSource_fullPath(t *testing.T) {
 	resourceName := "data.aws_ssm_parameter.test"
 	name := "/path/parameter"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 		},

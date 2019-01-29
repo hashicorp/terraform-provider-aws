@@ -2,7 +2,9 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
@@ -13,7 +15,7 @@ import (
 
 func TestAccAWSSSMActivation_basic(t *testing.T) {
 	name := acctest.RandString(10)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMActivationDestroy,
@@ -23,6 +25,32 @@ func TestAccAWSSSMActivation_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMActivationExists("aws_ssm_activation.foo"),
 					resource.TestCheckResourceAttrSet("aws_ssm_activation.foo", "activation_code"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSSMActivation_expirationDate(t *testing.T) {
+	rName := acctest.RandString(10)
+	expirationTime := time.Now().Add(48 * time.Hour)
+	expirationDateS := expirationTime.Format(time.RFC3339)
+	resourceName := "aws_ssm_activation.foo"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMActivationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSSSMActivationConfig_expirationDate(rName, "2018-03-01"),
+				ExpectError: regexp.MustCompile(`invalid RFC3339 timestamp`),
+			},
+			{
+				Config: testAccAWSSSMActivationConfig_expirationDate(rName, expirationDateS),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMActivationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "expiration_date", expirationDateS),
 				),
 			},
 		},
@@ -122,11 +150,47 @@ resource "aws_iam_role_policy_attachment" "test_attach" {
 }
 
 resource "aws_ssm_activation" "foo" {
-  name               = "test_ssm_activation-%s",
+  name               = "test_ssm_activation-%s"
   description        = "Test"
   iam_role           = "${aws_iam_role.test_role.name}"
   registration_limit = "5"
   depends_on         = ["aws_iam_role_policy_attachment.test_attach"]
 }
 `, rName, rName)
+}
+
+func testAccAWSSSMActivationConfig_expirationDate(rName, expirationDate string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test_role" {
+  name = "test_role-%[1]s"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "ssm.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "test_attach" {
+  role = "${aws_iam_role.test_role.name}"
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM"
+}
+
+resource "aws_ssm_activation" "foo" {
+  name               = "test_ssm_activation-%[1]s"
+  description        = "Test"
+  expiration_date    = "%[2]s"
+  iam_role           = "${aws_iam_role.test_role.name}"
+  registration_limit = "5"
+  depends_on         = ["aws_iam_role_policy_attachment.test_attach"]
+}
+`, rName, expirationDate)
 }

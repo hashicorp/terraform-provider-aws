@@ -12,11 +12,11 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAwsDmsCertificateBasic(t *testing.T) {
+func TestAccAWSDmsCertificateBasic(t *testing.T) {
 	resourceName := "aws_dms_certificate.dms_certificate"
 	randId := acctest.RandString(8)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: dmsCertificateDestroy,

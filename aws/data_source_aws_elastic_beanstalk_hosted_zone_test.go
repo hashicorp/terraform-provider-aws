@@ -8,8 +8,8 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 )
 
-func TestAccAwsDataSourceElasticBeanstalkHostedZone(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+func TestAccAWSDataSourceElasticBeanstalkHostedZone(t *testing.T) {
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{

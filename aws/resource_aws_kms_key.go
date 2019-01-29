@@ -8,10 +8,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/kms"
-	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/structure"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsKmsKey() *schema.Resource {
@@ -45,20 +45,16 @@ func resourceAwsKmsKey() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, es []error) {
-					value := v.(string)
-					if !(value == "ENCRYPT_DECRYPT" || value == "") {
-						es = append(es, fmt.Errorf(
-							"%q must be ENCRYPT_DECRYPT or not specified", k))
-					}
-					return
-				},
+				ValidateFunc: validation.StringInSlice([]string{
+					"",
+					kms.KeyUsageTypeEncryptDecrypt,
+				}, false),
 			},
 			"policy": {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
-				ValidateFunc:     validateJsonString,
+				ValidateFunc:     validation.ValidateJsonString,
 				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
 			},
 			"is_enabled": {
@@ -72,16 +68,9 @@ func resourceAwsKmsKey() *schema.Resource {
 				Default:  false,
 			},
 			"deletion_window_in_days": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, es []error) {
-					value := v.(int)
-					if value > 30 || value < 7 {
-						es = append(es, fmt.Errorf(
-							"%q must be between 7 and 30 days inclusive", k))
-					}
-					return
-				},
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.IntBetween(7, 30),
 			},
 			"tags": tagsSchema(),
 		},
@@ -179,7 +168,7 @@ func resourceAwsKmsKeyRead(d *schema.ResourceData, meta interface{}) error {
 	p := pOut.(*kms.GetKeyPolicyOutput)
 	policy, err := structure.NormalizeJsonString(*p.Policy)
 	if err != nil {
-		return errwrap.Wrapf("policy contains an invalid JSON: {{err}}", err)
+		return fmt.Errorf("policy contains an invalid JSON: %s", err)
 	}
 	d.Set("policy", policy)
 
@@ -270,7 +259,7 @@ func resourceAwsKmsKeyDescriptionUpdate(conn *kms.KMS, d *schema.ResourceData) e
 func resourceAwsKmsKeyPolicyUpdate(conn *kms.KMS, d *schema.ResourceData) error {
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 	if err != nil {
-		return errwrap.Wrapf("policy contains an invalid JSON: {{err}}", err)
+		return fmt.Errorf("policy contains an invalid JSON: %s", err)
 	}
 	keyId := d.Get("key_id").(string)
 
@@ -483,6 +472,6 @@ func resourceAwsKmsKeyDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] KMS Key %s deactivated.", keyId)
-	d.SetId("")
+
 	return nil
 }
