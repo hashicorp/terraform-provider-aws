@@ -460,7 +460,7 @@ resource "aws_elastictranscoder_pipeline" "baz" {
     storage_class = "Standard"
   }
 
-  content_config_permissions = {
+  content_config_permissions {
     grantee_type = "Group"
     grantee      = "AuthenticatedUsers"
     access       = ["FullControl"]
@@ -471,7 +471,7 @@ resource "aws_elastictranscoder_pipeline" "baz" {
     storage_class = "Standard"
   }
 
-  thumbnail_config_permissions = {
+  thumbnail_config_permissions {
     grantee_type = "Group"
     grantee      = "AuthenticatedUsers"
     access       = ["FullControl"]
