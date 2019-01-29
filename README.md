@@ -34,6 +34,8 @@ Using the provider
 ----------------------
 If you're building the provider, follow the instructions to [install it as a plugin.](https://www.terraform.io/docs/plugins/basics.html#installing-a-plugin) After placing it into your plugins directory,  run `terraform init` to initialize it. Documentation about the provider specific configuration options can be found on the [provider's website](https://www.terraform.io/docs/providers/aws/index.html).
 
+*Note:* You will need to remove the previously downloaded and cached version of the plugin from the `./terraform/plugins/` if you previouslt used the standard version of plugin on your project.
+
 Developing the Provider
 ---------------------------
 
