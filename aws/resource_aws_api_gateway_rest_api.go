@@ -60,6 +60,13 @@ func resourceAwsApiGatewayRestApi() *schema.Resource {
 				Optional: true,
 			},
 
+			"body_base_path": {
+				Type:         schema.TypeString,
+				Default:      "ignore",
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice([]string{"ignore", "prepend", "split"}, true),
+			},
+
 			"minimum_compression_size": {
 				Type:         schema.TypeInt,
 				Optional:     true,
@@ -153,12 +160,20 @@ func resourceAwsApiGatewayRestApiCreate(d *schema.ResourceData, meta interface{}
 
 	d.SetId(*gateway.Id)
 
+	bodyBasePathMode := d.Get("body_base_path").(string)
+
 	if body, ok := d.GetOk("body"); ok {
 		log.Printf("[DEBUG] Initializing API Gateway from OpenAPI spec %s", d.Id())
 		_, err := conn.PutRestApi(&apigateway.PutRestApiInput{
 			RestApiId: gateway.Id,
 			Mode:      aws.String(apigateway.PutModeOverwrite),
 			Body:      []byte(body.(string)),
+			Parameters: map[string]*string{
+				// See https://docs.aws.amazon.com/cli/latest/reference/apigateway/import-rest-api.html
+				// At the moment of writing, according to aws support, the docs are incorrect
+				// and the parameter should be called 'basepath' and not 'basePath'
+				"basepath": &bodyBasePathMode,
+			},
 		})
 		if err != nil {
 			return fmt.Errorf("error creating API Gateway specification: %s", err)
@@ -344,12 +359,17 @@ func resourceAwsApiGatewayRestApiUpdate(d *schema.ResourceData, meta interface{}
 	log.Printf("[DEBUG] Updating API Gateway %s", d.Id())
 
 	if d.HasChange("body") {
+		bodyBasePathMode := d.Get("body_base_path").(string)
+
 		if body, ok := d.GetOk("body"); ok {
 			log.Printf("[DEBUG] Updating API Gateway from OpenAPI spec: %s", d.Id())
 			_, err := conn.PutRestApi(&apigateway.PutRestApiInput{
 				RestApiId: aws.String(d.Id()),
 				Mode:      aws.String(apigateway.PutModeOverwrite),
 				Body:      []byte(body.(string)),
+				Parameters: map[string]*string{
+					"basepath": &bodyBasePathMode,
+				},
 			})
 			if err != nil {
 				return fmt.Errorf("error updating API Gateway specification: %s", err)
