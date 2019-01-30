@@ -1553,9 +1553,7 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  count = 2
-
-  cidr_block = "10.0.${count.index}.0/24"
+  cidr_block = "10.0.0.0/24"
   vpc_id     = "${aws_vpc.test.id}"
 
   tags = {
@@ -1588,7 +1586,7 @@ resource "aws_codebuild_project" "test" {
 
   vpc_config {
     security_group_ids = ["${aws_security_group.test.id}"]
-    subnets            = ["${aws_subnet.test.*.id[0]}"]
+    subnets            = ["${aws_subnet.test.id}"]
     vpc_id             = "${aws_vpc.test.id}"
   }
 }
