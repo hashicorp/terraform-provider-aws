@@ -320,7 +320,7 @@ resource "aws_sagemaker_notebook_instance" "foo" {
 	name = "%s"
 	role_arn = "${aws_iam_role.foo.arn}"
 	instance_type = "ml.t2.medium"
-	tags {
+	tags = {
 		foo = "bar"
 	}
 }
@@ -349,7 +349,7 @@ resource "aws_sagemaker_notebook_instance" "foo" {
 	name = "%s"
 	role_arn = "${aws_iam_role.foo.arn}"
 	instance_type = "ml.t2.medium"
-	tags {
+	tags = {
 		bar = "baz"
 	}
 }

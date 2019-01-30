@@ -97,13 +97,8 @@ resource "aws_internet_gateway" "gw" {
   }
 }
 
-variable "private_subnet_cidrs" {
-  default = "10.0.0.0/24"
-}
-
 resource "aws_nat_gateway" "nat" {
-  count         = "${length(split(",", var.private_subnet_cidrs))}"
-  allocation_id = "${element(aws_eip.nat.*.id, count.index)}"
+  allocation_id = "${aws_eip.nat.id}"
   subnet_id     = "${aws_subnet.tf_test_subnet.id}"
 
   tags = {
@@ -112,7 +107,6 @@ resource "aws_nat_gateway" "nat" {
 }
 
 resource "aws_route_table" "mod" {
-  count  = "${length(split(",", var.private_subnet_cidrs))}"
   vpc_id = "${aws_vpc.default.id}"
 
   tags = {
@@ -125,7 +119,7 @@ resource "aws_route_table" "mod" {
 resource "aws_route" "mod-1" {
   route_table_id         = "${aws_route_table.mod.id}"
   destination_cidr_block = "0.0.0.0/0"
-  nat_gateway_id         = "${element(aws_nat_gateway.nat.*.id, count.index)}"
+  nat_gateway_id         = "${aws_nat_gateway.nat.id}"
 }
 
 resource "aws_route" "mod" {
@@ -137,7 +131,7 @@ resource "aws_route" "mod" {
 resource "aws_vpc_endpoint" "s3" {
   vpc_id          = "${aws_vpc.default.id}"
   service_name    = "com.amazonaws.us-west-2.s3"
-  route_table_ids = ["${aws_route_table.mod.*.id}"]
+  route_table_ids = ["${aws_route_table.mod.id}"]
 }
 
 ### vpc bar
