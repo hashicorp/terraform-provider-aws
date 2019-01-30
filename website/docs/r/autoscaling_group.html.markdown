@@ -245,7 +245,7 @@ The top-level `launch_template` block supports the following:
 ### mixed_instances_policy
 
 * `instances_distribution` - (Optional) Nested argument containing settings on how to mix on-demand and Spot instances in the Auto Scaling group. Defined below.
-* `launch_template` - (Optional) Nested argument containing launch template settings along with the overrides to specify multiple instance types. Defined below.
+* `launch_template` - (Required) Nested argument containing launch template settings along with the overrides to specify multiple instance types. Defined below.
 
 #### mixed_instances_policy instances_distribution
 
@@ -262,8 +262,8 @@ This configuration block supports the following:
 
 This configuration block supports the following:
 
-* `launch_template_specification` - (Optional) Nested argument defines the Launch Template. Defined below.
-* `overrides` - (Optional) List of nested arguments provides the ability to specify multiple instance types. This will override the same parameter in the launch template. For on-demand instances, Auto Scaling considers the order of preference of instance types to launch based on the order specified in the overrides list. Defined below.
+* `launch_template_specification` - (Required) Nested argument defines the Launch Template. Defined below.
+* `override` - (Optional) List of nested arguments provides the ability to specify multiple instance types. This will override the same parameter in the launch template. For on-demand instances, Auto Scaling considers the order of preference of instance types to launch based on the order specified in the overrides list. Defined below.
 
 ##### mixed_instances_policy launch_template launch_template_specification
 
@@ -275,7 +275,7 @@ This configuration block supports the following:
 * `launch_template_name` - (Optional) The name of the launch template. Conflicts with `launch_template_id`.
 * `version` - (Optional) Template version. Can be version number, `$Latest`, or `$Default`. (Default: `$Default`).
 
-##### mixed_instances_policy launch_template overrides
+##### mixed_instances_policy launch_template override
 
 This configuration block supports the following:
 
