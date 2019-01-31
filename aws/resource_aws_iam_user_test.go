@@ -104,6 +104,29 @@ func testSweepIamUsers(region string) error {
 		username := aws.StringValue(user.UserName)
 		log.Printf("[DEBUG] Deleting IAM User: %s", username)
 
+		listAttachedUserPoliciesInput := &iam.ListAttachedUserPoliciesInput{
+			UserName: user.UserName,
+		}
+		listAttachedUserPoliciesOutput, err := conn.ListAttachedUserPolicies(listAttachedUserPoliciesInput)
+
+		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+			continue
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing IAM User (%s) attached policies: %s", username, err)
+		}
+
+		for _, attachedPolicy := range listAttachedUserPoliciesOutput.AttachedPolicies {
+			policyARN := aws.StringValue(attachedPolicy.PolicyArn)
+
+			log.Printf("[DEBUG] Detaching IAM User (%s) attached policy: %s", username, policyARN)
+
+			if err := detachPolicyFromUser(conn, username, policyARN); err != nil {
+				return fmt.Errorf("error detaching IAM User (%s) attached policy (%s): %s", username, policyARN, err)
+			}
+		}
+
 		if err := deleteAwsIamUserGroupMemberships(conn, username); err != nil {
 			return fmt.Errorf("error removing IAM User (%s) group memberships: %s", username, err)
 		}
@@ -128,7 +151,7 @@ func testSweepIamUsers(region string) error {
 			UserName: aws.String(username),
 		}
 
-		_, err := conn.DeleteUser(input)
+		_, err = conn.DeleteUser(input)
 
 		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
 			continue
