@@ -307,6 +307,9 @@ func resourceAwsEfsFileSystemDelete(d *schema.ResourceData, meta interface{}) er
 	_, err := conn.DeleteFileSystem(&efs.DeleteFileSystemInput{
 		FileSystemId: aws.String(d.Id()),
 	})
+	if err != nil {
+		return fmt.Errorf("Error delete file system: %s with err %s", d.Id(), err.Error())
+	}
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"available", "deleting"},
 		Target:  []string{},
