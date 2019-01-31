@@ -2292,20 +2292,10 @@ func resourceAwsKinesisFirehoseDeliveryStreamDelete(d *schema.ResourceData, meta
 	})
 
 	if err != nil {
-		return err
+		return fmt.Errorf("error deleting Kinesis Firehose Delivery Stream (%s): %s", sn, err)
 	}
 
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"DELETING"},
-		Target:     []string{"DESTROYED"},
-		Refresh:    firehoseStreamStateRefreshFunc(conn, sn),
-		Timeout:    20 * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-
-	_, err = stateConf.WaitForState()
-	if err != nil {
+	if err := waitForKinesisFirehoseDeliveryStreamDeletion(conn, sn); err != nil {
 		return fmt.Errorf(
 			"Error waiting for Delivery Stream (%s) to be destroyed: %s",
 			sn, err)
@@ -2329,4 +2319,19 @@ func firehoseStreamStateRefreshFunc(conn *firehose.Firehose, sn string) resource
 
 		return resp.DeliveryStreamDescription, *resp.DeliveryStreamDescription.DeliveryStreamStatus, nil
 	}
+}
+
+func waitForKinesisFirehoseDeliveryStreamDeletion(conn *firehose.Firehose, deliveryStreamName string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"DELETING"},
+		Target:     []string{"DESTROYED"},
+		Refresh:    firehoseStreamStateRefreshFunc(conn, deliveryStreamName),
+		Timeout:    20 * time.Minute,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	_, err := stateConf.WaitForState()
+
+	return err
 }

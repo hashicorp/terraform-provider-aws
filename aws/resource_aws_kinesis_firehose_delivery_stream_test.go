@@ -15,6 +15,69 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func init() {
+	resource.AddTestSweepers("aws_kinesis_firehose_delivery_stream", &resource.Sweeper{
+		Name: "aws_kinesis_firehose_delivery_stream",
+		F:    testSweepKinesisFirehoseDeliveryStreams,
+	})
+}
+
+func testSweepKinesisFirehoseDeliveryStreams(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+
+	conn := client.(*AWSClient).firehoseconn
+	input := &firehose.ListDeliveryStreamsInput{}
+
+	for {
+		output, err := conn.ListDeliveryStreams(input)
+
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping Kinesis Firehose Delivery Streams sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing Kinesis Firehose Delivery Streams: %s", err)
+		}
+
+		if len(output.DeliveryStreamNames) == 0 {
+			log.Print("[DEBUG] No Kinesis Firehose Delivery Streams to sweep")
+			return nil
+		}
+
+		for _, deliveryStreamNamePtr := range output.DeliveryStreamNames {
+			input := &firehose.DeleteDeliveryStreamInput{
+				DeliveryStreamName: deliveryStreamNamePtr,
+			}
+			name := aws.StringValue(deliveryStreamNamePtr)
+
+			log.Printf("[INFO] Deleting Kinesis Firehose Delivery Stream: %s", name)
+			_, err := conn.DeleteDeliveryStream(input)
+
+			if isAWSErr(err, firehose.ErrCodeResourceNotFoundException, "") {
+				continue
+			}
+
+			if err != nil {
+				return fmt.Errorf("error deleting Kinesis Firehose Delivery Stream (%s): %s", name, err)
+			}
+
+			if err := waitForKinesisFirehoseDeliveryStreamDeletion(conn, name); err != nil {
+				return fmt.Errorf("error waiting for Kinesis Firehose Delivery Stream (%s) deletion: %s", name, err)
+			}
+		}
+
+		if !aws.BoolValue(output.HasMoreDeliveryStreams) {
+			break
+		}
+	}
+
+	return nil
+}
+
 func TestAccAWSKinesisFirehoseDeliveryStream_importBasic(t *testing.T) {
 	resName := "aws_kinesis_firehose_delivery_stream.test_stream"
 	rInt := acctest.RandInt()
