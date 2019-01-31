@@ -61,6 +61,7 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 						"vpc_security_group_ids": {
 							Type:     schema.TypeSet,
 							Optional: true,
+							ForceNew: true,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							Set:      schema.HashString,
@@ -68,11 +69,13 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 						"associate_public_ip_address": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							ForceNew: true,
 							Default:  false,
 						},
 						"ebs_block_device": {
 							Type:     schema.TypeSet,
 							Optional: true,
+							ForceNew: true,
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -131,10 +134,12 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 									"device_name": {
 										Type:     schema.TypeString,
 										Required: true,
+										ForceNew: true,
 									},
 									"virtual_name": {
 										Type:     schema.TypeString,
 										Required: true,
+										ForceNew: true,
 									},
 								},
 							},
@@ -148,6 +153,7 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Computed: true,
+							ForceNew: true,
 							Elem: &schema.Resource{
 								// "You can only modify the volume size, volume type, and Delete on
 								// Termination flag on the block device mapping entry for the root
@@ -185,6 +191,7 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  false,
+							ForceNew: true,
 						},
 						"iam_instance_profile": {
 							Type:     schema.TypeString,
