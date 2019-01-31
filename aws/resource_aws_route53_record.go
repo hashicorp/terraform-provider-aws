@@ -110,7 +110,7 @@ func resourceAwsRoute53Record() *schema.Resource {
 							Required:  true,
 							StateFunc: normalizeAwsAliasName,
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								return strings.ToLower(old) == strings.ToLower(new)
+								return strings.EqualFold(old, new)
 							},
 						},
 
