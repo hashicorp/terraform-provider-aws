@@ -85,6 +85,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/licensemanager"
 	"github.com/aws/aws-sdk-go/service/lightsail"
 	"github.com/aws/aws-sdk-go/service/macie"
+	"github.com/aws/aws-sdk-go/service/mediaconnect"
 	"github.com/aws/aws-sdk-go/service/mediaconvert"
 	"github.com/aws/aws-sdk-go/service/medialive"
 	"github.com/aws/aws-sdk-go/service/mediapackage"
@@ -257,6 +258,7 @@ type AWSClient struct {
 	licensemanagerconn                  *licensemanager.LicenseManager
 	lightsailconn                       *lightsail.Lightsail
 	macieconn                           *macie.Macie
+	mediaconnectconn                    *mediaconnect.MediaConnect
 	mediaconvertconn                    *mediaconvert.MediaConvert
 	medialiveconn                       *medialive.MediaLive
 	mediapackageconn                    *mediapackage.MediaPackage
@@ -615,6 +617,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.licensemanagerconn = licensemanager.New(sess)
 	client.lightsailconn = lightsail.New(sess)
 	client.macieconn = macie.New(sess)
+	client.mediaconnectconn = mediaconnect.New(sess)
 	client.mediaconvertconn = mediaconvert.New(sess)
 	client.medialiveconn = medialive.New(sess)
 	client.mediapackageconn = mediapackage.New(sess)
