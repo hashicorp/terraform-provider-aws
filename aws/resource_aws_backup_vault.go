@@ -55,7 +55,7 @@ func resourceAwsBackupVaultCreate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if v, ok := d.GetOk("tags"); ok {
-		input.BackupVaultTags = v.(map[string]*string)
+		input.BackupVaultTags = remapTags(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("kms_key_arn"); ok {
@@ -107,4 +107,14 @@ func resourceAwsBackupVaultDelete(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	return nil
+}
+
+func remapTags(m map[string]interface{}) map[string]*string {
+	n := map[string]*string{}
+
+	for k, v := range m {
+		n[k] = aws.String(v.(string))
+	}
+
+	return n
 }
