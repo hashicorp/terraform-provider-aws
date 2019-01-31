@@ -12,6 +12,8 @@ Provides a Lambda Layer Version resource. Lambda Layers allow you to reuse share
 
 For information about Lambda Layers and how to use them, see [AWS Lambda Layers][1]
 
+~> **NOTE:** The attribute values for `arn` and `layer_arn` will be swapped in version 2.0.0 of the Terraform AWS Provider.
+
 ## Example Usage
 
 ```hcl
