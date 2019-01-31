@@ -86,7 +86,8 @@ func testAccCheckAwsDbEventCategoriesBuild(attrs map[string]string) ([]string, e
 
 	var eventCategories []string
 	for k, v := range attrs {
-		matched, _ := regexp.MatchString("event_categories.[0-9]+", k)
+		r, _ := regexp.Compile("event_categories.[0-9]+")
+		matched := r.MatchString(k)
 		if matched {
 			eventCategories = append(eventCategories, v)
 		}
