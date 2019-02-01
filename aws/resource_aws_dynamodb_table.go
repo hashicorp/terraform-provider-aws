@@ -597,34 +597,14 @@ func resourceAwsDynamoDbTableDelete(d *schema.ResourceData, meta interface{}) er
 		if isAWSErr(err, dynamodb.ErrCodeResourceNotFoundException, "Requested resource not found: Table: ") {
 			return nil
 		}
-		return err
+		return fmt.Errorf("error deleting DynamoDB Table (%s): %s", d.Id(), err)
 	}
 
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			dynamodb.TableStatusActive,
-			dynamodb.TableStatusDeleting,
-		},
-		Target:  []string{},
-		Timeout: d.Timeout(schema.TimeoutDelete),
-		Refresh: func() (interface{}, string, error) {
-			out, err := conn.DescribeTable(&dynamodb.DescribeTableInput{
-				TableName: aws.String(d.Id()),
-			})
-			if err != nil {
-				if isAWSErr(err, dynamodb.ErrCodeResourceNotFoundException, "") {
-					return nil, "", nil
-				}
-
-				return 42, "", err
-			}
-			table := out.Table
-
-			return table, *table.TableStatus, nil
-		},
+	if err := waitForDynamodbTableDeletion(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return fmt.Errorf("error waiting for DynamoDB Table (%s) deletion: %s", d.Id(), err)
 	}
-	_, err = stateConf.WaitForState()
-	return err
+
+	return nil
 }
 
 func deleteAwsDynamoDbTable(tableName string, conn *dynamodb.DynamoDB) error {
@@ -654,6 +634,42 @@ func deleteAwsDynamoDbTable(tableName string, conn *dynamodb.DynamoDB) error {
 		}
 		return nil
 	})
+}
+
+func waitForDynamodbTableDeletion(conn *dynamodb.DynamoDB, tableName string, timeout time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			dynamodb.TableStatusActive,
+			dynamodb.TableStatusDeleting,
+		},
+		Target:  []string{},
+		Timeout: timeout,
+		Refresh: func() (interface{}, string, error) {
+			input := &dynamodb.DescribeTableInput{
+				TableName: aws.String(tableName),
+			}
+
+			output, err := conn.DescribeTable(input)
+
+			if isAWSErr(err, dynamodb.ErrCodeResourceNotFoundException, "") {
+				return nil, "", nil
+			}
+
+			if err != nil {
+				return 42, "", err
+			}
+
+			if output == nil {
+				return nil, "", nil
+			}
+
+			return output.Table, aws.StringValue(output.Table.TableStatus), nil
+		},
+	}
+
+	_, err := stateConf.WaitForState()
+
+	return err
 }
 
 func updateDynamoDbTimeToLive(d *schema.ResourceData, conn *dynamodb.DynamoDB) error {
