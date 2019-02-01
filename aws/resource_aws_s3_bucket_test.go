@@ -78,7 +78,7 @@ func testSweepS3Buckets(region string) error {
 				return nil
 			}
 
-			if isAWSErr(err, "BucketRegionError", "") {
+			if isAWSErr(err, "AuthorizationHeaderMalformed", "region") || isAWSErr(err, "BucketRegionError", "") {
 				log.Printf("[INFO] Skipping S3 Bucket (%s): %s", name, err)
 				return nil
 			}
