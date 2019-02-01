@@ -1360,7 +1360,9 @@ func resourceAwsS3BucketGrantsUpdate(s3conn *s3.S3, d *schema.ResourceData) erro
 
 	if len(rawGrants) == 0 {
 		log.Printf("[DEBUG] S3 bucket: %s, Grants fallback to canned ACL", bucket)
-		resourceAwsS3BucketAclUpdate(s3conn, d)
+		if err := resourceAwsS3BucketAclUpdate(s3conn, d); err != nil {
+			return fmt.Errorf("Error fallback to canned ACL, %s", err)
+		}
 	} else {
 		apResponse, err := retryOnAwsCode("NoSuchBucket", func() (interface{}, error) {
 			return s3conn.GetBucketAcl(&s3.GetBucketAclInput{
