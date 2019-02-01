@@ -426,8 +426,8 @@ func testAccAWSEmrInstanceGroupConfig_ebsBasic(r int) string {
     instance_type  = "c4.large"
     ebs_optimized = true
     ebs_config {
-      "size" = 10,
-      "type" = "gp2",
+      size = 10
+      type = "gp2"
     }
   }
 	`, r, r, r, r, r, r)
