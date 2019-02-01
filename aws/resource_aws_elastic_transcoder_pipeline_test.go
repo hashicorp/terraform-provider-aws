@@ -241,12 +241,12 @@ func awsElasticTranscoderPipelineConfigBasic(rName string) string {
 resource "aws_elastictranscoder_pipeline" "bar" {
   input_bucket  = "${aws_s3_bucket.test_bucket.bucket}"
   output_bucket = "${aws_s3_bucket.test_bucket.bucket}"
-  name          = %q
+  name          = %[1]q
   role          = "${aws_iam_role.test_role.arn}"
 }
 
 resource "aws_iam_role" "test_role" {
-  name = %q
+  name = %[1]q
 
   assume_role_policy = <<EOF
 {
@@ -266,10 +266,10 @@ EOF
 }
 
 resource "aws_s3_bucket" "test_bucket" {
-  bucket = %q
+  bucket = %[1]q
   acl    = "private"
 }
-`, rName, rName, rName)
+`, rName)
 }
 
 const awsElasticTranscoderPipelineConfigKmsKey = `
