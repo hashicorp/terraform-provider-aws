@@ -2,13 +2,13 @@ package aws
 
 import (
 	"fmt"
-	"log"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/schema"
+	"log"
+	"strings"
 )
 
 func resourceAwsVpcEndpointRouteTableAssociation() *schema.Resource {
@@ -17,7 +17,7 @@ func resourceAwsVpcEndpointRouteTableAssociation() *schema.Resource {
 		Read:   resourceAwsVpcEndpointRouteTableAssociationRead,
 		Delete: resourceAwsVpcEndpointRouteTableAssociationDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: resourceAwsVpcEndpointRouteTableAssociationImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -33,6 +33,26 @@ func resourceAwsVpcEndpointRouteTableAssociation() *schema.Resource {
 			},
 		},
 	}
+}
+
+func resourceAwsVpcEndpointRouteTableAssociationImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	idData := strings.Split(d.Id(), "/")
+	if len(idData) != 2 {
+		return nil, fmt.Errorf("ID needs to be in the form of <route-table-id>/<vpc-endpoint-id>")
+	}
+
+	endpointId := idData[1]
+	rtId := idData[0]
+
+	if err := d.Set("vpc_endpoint_id", endpointId); err != nil {
+		return nil, err
+	}
+	if err := d.Set("route_table_id", rtId); err != nil {
+		return nil, err
+	}
+
+	d.SetId(vpcEndpointIdRouteTableIdHash(endpointId, rtId))
+	return []*schema.ResourceData{d}, nil
 }
 
 func resourceAwsVpcEndpointRouteTableAssociationCreate(d *schema.ResourceData, meta interface{}) error {

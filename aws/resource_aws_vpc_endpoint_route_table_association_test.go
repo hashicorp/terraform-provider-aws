@@ -14,6 +14,10 @@ import (
 func TestAccAWSVpcEndpointRouteTableAssociation_basic(t *testing.T) {
 	var vpce ec2.VpcEndpoint
 
+	resourceName := "aws_vpc_endpoint_route_table_association.a"
+	targetEndpoint := "aws_vpc_endpoint.s3"
+	targetRouteTable := "aws_route_table.rt"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -26,8 +30,29 @@ func TestAccAWSVpcEndpointRouteTableAssociation_basic(t *testing.T) {
 						"aws_vpc_endpoint_route_table_association.a", &vpce),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccAWSVpcEndpointRouteTableAssociationImportIdFunc(targetRouteTable, targetEndpoint),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
+}
+
+func testAccAWSVpcEndpointRouteTableAssociationImportIdFunc(table, endpoint string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		tr, ok := s.RootModule().Resources[table]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", table)
+		}
+		te, ok := s.RootModule().Resources[endpoint]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", endpoint)
+		}
+
+		return tr.Primary.Attributes["id"] + "/" + te.Primary.Attributes["id"], nil
+	}
 }
 
 func testAccCheckVpcEndpointRouteTableAssociationDestroy(s *terraform.State) error {
