@@ -46,28 +46,6 @@ func TestAccAwsBackupVault_withKmsKey(t *testing.T) {
 	})
 }
 
-<<<<<<< HEAD
-func testAccCheckAwsBackupVaultDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).backupconn
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_backup_vault" {
-			continue
-		}
-
-		input := &backup.DescribeBackupVaultInput{
-			BackupVaultName: aws.String(rs.Primary.ID),
-		}
-
-		resp, err := conn.DescribeBackupVault(input)
-
-		if err == nil {
-			if *resp.BackupVaultName == rs.Primary.ID {
-				return fmt.Errorf("Vault '%s' was not deleted properly", rs.Primary.ID)
-			}
-		}
-	}
-
-=======
 func TestAccAwsBackupVault_withTags(t *testing.T) {
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
@@ -108,7 +86,6 @@ func testAccCheckAwsBackupVaultDestroy(s *terraform.State) error {
 		}
 	}
 
->>>>>>> resource-aws-backup-vault
 	return nil
 }
 
