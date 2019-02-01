@@ -419,56 +419,13 @@ func resourceAwsS3BucketObjectUpdate(d *schema.ResourceData, meta interface{}) e
 func resourceAwsS3BucketObjectDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).s3conn
 
-	bucket := d.Get("bucket").(string)
+	bucketName := d.Get("bucket").(string)
 	key := d.Get("key").(string)
 	// We are effectively ignoring any leading '/' in the key name as aws.Config.DisableRestProtocolURICleaning is false
 	key = strings.TrimPrefix(key, "/")
 
-	respList, err := conn.ListObjectVersions(&s3.ListObjectVersionsInput{
-		Bucket: aws.String(bucket),
-		Prefix: aws.String(key),
-	})
-	if err != nil {
-		return fmt.Errorf("error listing S3 object versions: %s", err)
-	}
-
-	force := d.Get("force_delete").(bool)
-	for _, v := range respList.Versions {
-		if aws.StringValue(v.Key) != key {
-			continue
-		}
-
-		if force {
-			respHead, err := conn.HeadObject(&s3.HeadObjectInput{
-				Bucket:    aws.String(bucket),
-				Key:       v.Key,
-				VersionId: v.VersionId,
-			})
-			if err != nil {
-				return fmt.Errorf("error getting S3 object metadata: %s", err)
-			}
-
-			// Remove any legal hold.
-			if aws.StringValue(respHead.ObjectLockLegalHoldStatus) == s3.ObjectLockLegalHoldStatusOn {
-				_, err := conn.PutObjectLegalHold(&s3.PutObjectLegalHoldInput{
-					Bucket:    aws.String(bucket),
-					Key:       v.Key,
-					LegalHold: &s3.ObjectLockLegalHold{Status: aws.String(s3.ObjectLockLegalHoldStatusOff)},
-				})
-				if err != nil {
-					return fmt.Errorf("error putting S3 object lock legal hold: %s", err)
-				}
-			}
-		}
-
-		_, err := conn.DeleteObject(&s3.DeleteObjectInput{
-			Bucket:    aws.String(bucket),
-			Key:       v.Key,
-			VersionId: v.VersionId,
-		})
-		if err != nil {
-			return fmt.Errorf("error deleting S3 bucket object: %s  Bucket: %q Object:\n %s", err, bucket, v)
-		}
+	if err := deleteAllS3ObjectVersions(conn, bucketName, key, d.Get("force_delete").(bool)); err != nil {
+		return fmt.Errorf("error deleting S3 Bucket (%s) Object (%s): %s", bucketName, key, err)
 	}
 
 	return nil
@@ -477,6 +434,83 @@ func resourceAwsS3BucketObjectDelete(d *schema.ResourceData, meta interface{}) e
 func resourceAwsS3BucketObjectCustomizeDiff(d *schema.ResourceDiff, meta interface{}) error {
 	if d.HasChange("etag") {
 		d.SetNewComputed("version_id")
+	}
+
+	return nil
+}
+
+// deleteAllS3ObjectVersions deletes all versions of a specified key from an S3 bucket.
+// If key is empty then all versions of all objects are deleted.
+// Set force to true to override any S3 object lock protections.
+func deleteAllS3ObjectVersions(conn *s3.S3, bucketName, key string, force bool) error {
+	input := &s3.ListObjectVersionsInput{
+		Bucket: aws.String(bucketName),
+	}
+	if key != "" {
+		input.Prefix = aws.String(key)
+	}
+
+	err := conn.ListObjectVersionsPages(input, func(page *s3.ListObjectVersionsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, objectVersion := range page.Versions {
+			if key != "" && aws.StringValue(objectVersion.Key) != key {
+				continue
+			}
+
+			objectKey := aws.StringValue(objectVersion.Key)
+			objectVersionID := aws.StringValue(objectVersion.VersionId)
+
+			if force {
+				respHead, err := conn.HeadObject(&s3.HeadObjectInput{
+					Bucket:    aws.String(bucketName),
+					Key:       objectVersion.Key,
+					VersionId: objectVersion.VersionId,
+				})
+				if err != nil {
+					log.Printf("[ERROR] Error getting S3 Bucket (%s) Object (%s) Version (%s) metadata: %s", bucketName, objectKey, objectVersionID, err)
+					continue
+				}
+
+				// Remove any legal hold.
+				if aws.StringValue(respHead.ObjectLockLegalHoldStatus) == s3.ObjectLockLegalHoldStatusOn {
+					_, err := conn.PutObjectLegalHold(&s3.PutObjectLegalHoldInput{
+						Bucket:    aws.String(bucketName),
+						Key:       objectVersion.Key,
+						VersionId: objectVersion.VersionId,
+						LegalHold: &s3.ObjectLockLegalHold{Status: aws.String(s3.ObjectLockLegalHoldStatusOff)},
+					})
+					if err != nil {
+						log.Printf("[ERROR] Error putting S3 Bucket (%s) Object (%s) Version(%s) legal hold: %s", bucketName, objectKey, objectVersionID, err)
+						continue
+					}
+				}
+			}
+
+			input := &s3.DeleteObjectInput{
+				Bucket:    aws.String(bucketName),
+				Key:       objectVersion.Key,
+				VersionId: objectVersion.VersionId,
+			}
+
+			log.Printf("[INFO] Deleting S3 Bucket (%s) Object (%s) Version: %s", bucketName, objectKey, objectVersionID)
+			_, err := conn.DeleteObject(input)
+
+			if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") || isAWSErr(err, s3.ErrCodeNoSuchKey, "") {
+				continue
+			}
+
+			if err != nil {
+				log.Printf("[ERROR] Error deleting S3 Bucket (%s) Object (%s) Version (%s): %s", bucketName, objectKey, objectVersionID, err)
+			}
+		}
+
+		return !lastPage
+	})
+	if err != nil {
+		return err
 	}
 
 	return nil

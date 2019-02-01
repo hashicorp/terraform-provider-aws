@@ -68,38 +68,7 @@ func testSweepS3BucketObjects(region string) error {
 			continue
 		}
 
-		input := &s3.ListObjectVersionsInput{
-			Bucket: bucket.Name,
-		}
-
-		err := conn.ListObjectVersionsPages(input, func(page *s3.ListObjectVersionsOutput, lastPage bool) bool {
-			if page == nil {
-				return !lastPage
-			}
-
-			for _, objectVersion := range page.Versions {
-				input := &s3.DeleteObjectInput{
-					Bucket:    bucket.Name,
-					Key:       objectVersion.Key,
-					VersionId: objectVersion.VersionId,
-				}
-				objectKey := aws.StringValue(objectVersion.Key)
-				objectVersionID := aws.StringValue(objectVersion.VersionId)
-
-				log.Printf("[INFO] Deleting S3 Bucket (%s) Object (%s) Version: %s", bucketName, objectKey, objectVersionID)
-				_, err := conn.DeleteObject(input)
-
-				if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") || isAWSErr(err, s3.ErrCodeNoSuchKey, "") {
-					continue
-				}
-
-				if err != nil {
-					log.Printf("[ERROR] Error deleting S3 Bucket (%s) Object (%s) Version (%s): %s", bucketName, objectKey, objectVersionID, err)
-				}
-			}
-
-			return !lastPage
-		})
+		err := deleteAllS3ObjectVersions(conn, bucketName, "", true)
 
 		if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") {
 			continue
@@ -112,6 +81,10 @@ func testSweepS3BucketObjects(region string) error {
 
 		if err != nil {
 			return fmt.Errorf("error listing S3 Bucket (%s) Objects: %s", bucketName, err)
+		}
+
+		input := &s3.ListObjectVersionsInput{
+			Bucket: bucket.Name,
 		}
 
 		err = conn.ListObjectVersionsPages(input, func(page *s3.ListObjectVersionsOutput, lastPage bool) bool {
