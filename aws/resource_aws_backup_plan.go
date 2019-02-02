@@ -155,18 +155,14 @@ func resourceAwsBackupPlanRead(d *schema.ResourceData, meta interface{}) error {
 		if r.RecoveryPointTags != nil {
 			m["recovery_point_tags"] = r.RecoveryPointTags
 		}
-		if r.RuleName != nil {
-			m["rule_name"] = *r.RuleName
-		}
+		m["rule_name"] = *r.RuleName
 		if r.ScheduleExpression != nil {
 			m["schedule"] = *r.ScheduleExpression
 		}
 		if r.StartWindowMinutes != nil {
 			m["start_window"] = *r.StartWindowMinutes
 		}
-		if r.TargetBackupVaultName != nil {
-			m["target_vault_name"] = *r.TargetBackupVaultName
-		}
+		m["target_vault_name"] = *r.TargetBackupVaultName
 
 		rule.Add(m)
 	}

@@ -3394,7 +3394,7 @@ resource "aws_lb_target_group" "green" {
 resource "aws_lb" "test" {
   internal = true
   name     = %q
-  subnets  = ["${aws_subnet.test.*.id}"]
+  subnets  = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
 }
 
 resource "aws_lb_listener" "test" {
@@ -3459,7 +3459,7 @@ resource "aws_ecs_service" "test" {
   network_configuration {
     assign_public_ip = true
     security_groups  = ["${aws_security_group.test.id}"]
-    subnets          = ["${aws_subnet.test.*.id}"]
+    subnets          = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
   }
 }
 

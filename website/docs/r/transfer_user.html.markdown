@@ -15,7 +15,7 @@ Provides a AWS Transfer User resource. Managing SSH keys can be accomplished wit
 resource "aws_transfer_server" "foo" {
 	identity_provider_type = "SERVICE_MANAGED"
 
-	tags {
+	tags = {
 		NAME     = "tf-acc-test-transfer-server"
 	}
 }

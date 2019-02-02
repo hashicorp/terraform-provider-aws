@@ -39,6 +39,27 @@ func TestAccAwsBackupVault_withKmsKey(t *testing.T) {
 				Config: testAccBackupVaultWithKmsKey(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBackupVaultExists("aws_backup_vault.test"),
+					resource.TestCheckResourceAttrSet("aws_backup_vault.test", "kms_key_arn"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAwsBackupVault_withTags(t *testing.T) {
+	rInt := acctest.RandInt()
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsBackupVaultDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBackupVaultWithTags(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsBackupVaultExists("aws_backup_vault.test"),
+					resource.TestCheckResourceAttr("aws_backup_vault.test", "tags.%", "2"),
+					resource.TestCheckResourceAttr("aws_backup_vault.test", "tags.up", "down"),
+					resource.TestCheckResourceAttr("aws_backup_vault.test", "tags.left", "right"),
 				),
 			},
 		},
@@ -95,7 +116,20 @@ resource "aws_kms_key" "test" {
 
 resource "aws_backup_vault" "test" {
 	name = "tf_acc_test_backup_vault_%d"
-	kms_key_arm = "${aws_backup_vault.test.arn}"
+	kms_key_arn = "${aws_kms_key.test.arn}"
+}
+`, randInt)
+}
+
+func testAccBackupVaultWithTags(randInt int) string {
+	return fmt.Sprintf(`
+resource "aws_backup_vault" "test" {
+	name = "tf_acc_test_backup_vault_%d"
+	
+	tags {
+		up 		= "down"
+		left 	= "right" 
+	}
 }
 `, randInt)
 }
