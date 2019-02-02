@@ -174,7 +174,6 @@ func resourceAwsCurReportDefinitionRead(d *schema.ResourceData, meta interface{}
 		d.Set("additional_artifacts", aws.StringValueSlice(matchingReportDefinition.AdditionalArtifacts))
 		return nil
 	}
-	return nil
 }
 
 func resourceAwsCurReportDefinitionDelete(d *schema.ResourceData, meta interface{}) error {
