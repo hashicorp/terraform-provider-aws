@@ -624,7 +624,7 @@ func flattenSubnetsFromAvailabilityZones(availabilityZones []*elbv2.Availability
 	return result
 }
 
-func flattenSubnetMappingsFromAvailabilityZones(availabilityZones []*elbv2.AvailabilityZone) []map[string]interface{} {
+func flattenSubnetMappingsFromAvailabilityZones(d *schema.ResourceData, availabilityZones []*elbv2.AvailabilityZone) []map[string]interface{} {
 	l := make([]map[string]interface{}, 0)
 	for _, availabilityZone := range availabilityZones {
 		for _, loadBalancerAddress := range availabilityZone.LoadBalancerAddresses {
@@ -636,6 +636,17 @@ func flattenSubnetMappingsFromAvailabilityZones(availabilityZones []*elbv2.Avail
 			}
 
 			l = append(l, m)
+		}
+	}
+
+	if v, ok := d.GetOk("subnet_mapping"); ok {
+		mapLength := len(v.(*schema.Set).List())
+		if mapLength > 0 && len(l) == 0 {
+			for _, availabilityZone := range availabilityZones {
+				m := make(map[string]interface{})
+				m["subnet_id"] = aws.StringValue(availabilityZone.SubnetId)
+				l = append(l, m)
+			}
 		}
 	}
 	return l
@@ -674,7 +685,7 @@ func flattenAwsLbResource(d *schema.ResourceData, meta interface{}, lb *elbv2.Lo
 		return fmt.Errorf("error setting subnets: %s", err)
 	}
 
-	if err := d.Set("subnet_mapping", flattenSubnetMappingsFromAvailabilityZones(lb.AvailabilityZones)); err != nil {
+	if err := d.Set("subnet_mapping", flattenSubnetMappingsFromAvailabilityZones(d, lb.AvailabilityZones)); err != nil {
 		return fmt.Errorf("error setting subnet_mapping: %s", err)
 	}
 
