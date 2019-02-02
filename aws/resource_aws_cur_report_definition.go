@@ -1,0 +1,190 @@
+package aws
+
+import (
+	"fmt"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/costandusagereportservice"
+	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
+	"log"
+)
+
+func resourceAwsCurReportDefinition() *schema.Resource {
+	return &schema.Resource{
+		Create: resourceAwsCurReportDefinitionCreate,
+		Read:   resourceAwsCurReportDefinitionRead,
+		Delete: resourceAwsCurReportDefinitionDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
+
+		Schema: map[string]*schema.Schema{
+			"report_name": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 256),
+			},
+			"time_unit": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					costandusagereportservice.TimeUnitDaily,
+					costandusagereportservice.TimeUnitHourly,
+				}, false),
+			},
+			"format": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					costandusagereportservice.ReportFormatTextOrcsv}, false),
+			},
+			"compression": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					costandusagereportservice.CompressionFormatGzip,
+					costandusagereportservice.CompressionFormatZip,
+				}, false),
+			},
+			"additional_schema_elements": {
+				Type: schema.TypeSet,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+					ValidateFunc: validation.StringInSlice([]string{
+						costandusagereportservice.SchemaElementResources,
+					}, false),
+				},
+				Set:      schema.HashString,
+				Required: true,
+				ForceNew: true,
+			},
+			"s3_bucket": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"s3_prefix": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(0, 256),
+			},
+			"s3_region": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"additional_artifacts": {
+				Type: schema.TypeSet,
+				Elem: &schema.Schema{Type: schema.TypeString,
+					ValidateFunc: validation.StringInSlice([]string{
+						costandusagereportservice.AdditionalArtifactQuicksight,
+						costandusagereportservice.AdditionalArtifactRedshift,
+					}, false),
+				},
+				Set:      schema.HashString,
+				Optional: true,
+				ForceNew: true,
+			},
+		},
+	}
+}
+
+func resourceAwsCurReportDefinitionCreate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).costandusagereportconn
+
+	reportName := *aws.String(d.Get("report_name").(string))
+
+	reportDefinition := &costandusagereportservice.ReportDefinition{
+		ReportName:  &reportName,
+		TimeUnit:    aws.String(d.Get("time_unit").(string)),
+		Format:      aws.String(d.Get("format").(string)),
+		Compression: aws.String(d.Get("compression").(string)),
+		S3Bucket:    aws.String(d.Get("s3_bucket").(string)),
+		S3Prefix:    aws.String(d.Get("s3_prefix").(string)),
+		S3Region:    aws.String(d.Get("s3_region").(string)),
+	}
+
+	additionalSchemaElementsSet := d.Get("additional_schema_elements").(*schema.Set)
+	for _, additionalSchemaElement := range additionalSchemaElementsSet.List() {
+		reportDefinition.AdditionalSchemaElements = append(reportDefinition.AdditionalSchemaElements,
+			aws.String(additionalSchemaElement.(string)))
+	}
+
+	additionalArtifactsSet := d.Get("additional_artifacts").(*schema.Set)
+	for _, additionalArtifact := range additionalArtifactsSet.List() {
+		reportDefinition.AdditionalArtifacts = append(reportDefinition.AdditionalArtifacts,
+			aws.String(additionalArtifact.(string)))
+	}
+
+	reportDefinitionInput := &costandusagereportservice.PutReportDefinitionInput{
+		ReportDefinition: reportDefinition,
+	}
+	log.Printf("[DEBUG] Creating AWS Cost and Usage Report Definition : %v", reportDefinitionInput)
+
+	_, err := conn.PutReportDefinition(reportDefinitionInput)
+	if err != nil {
+		return fmt.Errorf("Error creating AWS Cost And Usage Report Definition: %s", err)
+	}
+	d.SetId(reportName)
+	return resourceAwsCurReportDefinitionRead(d, meta)
+}
+
+func resourceAwsCurReportDefinitionRead(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).costandusagereportconn
+
+	reportName := *aws.String(d.Id())
+
+	params := &costandusagereportservice.DescribeReportDefinitionsInput{}
+
+	log.Printf("[DEBUG] Reading CurReportDefinition: %s", reportName)
+
+	var matchingReportDefinition *costandusagereportservice.ReportDefinition
+	err := conn.DescribeReportDefinitionsPages(params, func(resp *costandusagereportservice.DescribeReportDefinitionsOutput, isLast bool) bool {
+		for _, reportDefinition := range resp.ReportDefinitions {
+			if *reportDefinition.ReportName == reportName {
+				matchingReportDefinition = reportDefinition
+				return false
+			}
+		}
+		return !isLast
+	})
+	if err != nil {
+		return err
+	}
+	if matchingReportDefinition == nil {
+		log.Printf("[WARN] Report definition (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	} else {
+		d.SetId(*matchingReportDefinition.ReportName)
+		d.Set("report_name", matchingReportDefinition.ReportName)
+		d.Set("time_unit", matchingReportDefinition.TimeUnit)
+		d.Set("format", matchingReportDefinition.Format)
+		d.Set("compression", matchingReportDefinition.Compression)
+		d.Set("additional_schema_elements", aws.StringValueSlice(matchingReportDefinition.AdditionalSchemaElements))
+		d.Set("s3_bucket", *matchingReportDefinition.S3Bucket)
+		d.Set("s3_prefix", *matchingReportDefinition.S3Prefix)
+		d.Set("s3_region", *matchingReportDefinition.S3Region)
+		d.Set("additional_artifacts", aws.StringValueSlice(matchingReportDefinition.AdditionalArtifacts))
+		return nil
+	}
+	return nil
+}
+
+func resourceAwsCurReportDefinitionDelete(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).costandusagereportconn
+	log.Printf("[DEBUG] Deleting AWS Cost and Usage Report Definition : %s", d.Id())
+	_, err := conn.DeleteReportDefinition(&costandusagereportservice.DeleteReportDefinitionInput{
+		ReportName: aws.String(d.Id()),
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
