@@ -19,9 +19,45 @@ func TestAccAwsBackupSelection_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAwsBackupSelectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBackupSelectionConfig(rInt),
+				Config: testAccBackupSelectionConfigBasic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBackupSelectionExists("aws_backup_selection.test"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAwsBackupSelection_withTags(t *testing.T) {
+	rInt := acctest.RandInt()
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsBackupSelectionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBackupSelectionConfigWithTags(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsBackupSelectionExists("aws_backup_selection.test"),
+					resource.TestCheckResourceAttr("aws_backup_selection.test", "tag.#", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAwsBackupSelection_withResources(t *testing.T) {
+	rInt := acctest.RandInt()
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsBackupSelectionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBackupSelectionConfigWithResources(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsBackupSelectionExists("aws_backup_selection.test"),
+					resource.TestCheckResourceAttr("aws_backup_selection.test", "resources.#", "2"),
 				),
 			},
 		},
@@ -62,7 +98,7 @@ func testAccCheckAwsBackupSelectionExists(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccBackupSelectionConfig(randInt int) string {
+func testAccBackupSelectionConfigBase(rInt int) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
@@ -79,7 +115,11 @@ resource "aws_backup_plan" "test" {
 		schedule			= "cron(0 12 * * ? *)"
 	}
 }
+`, rInt, rInt, rInt)
+}
 
+func testAccBackupSelectionConfigBasic(rInt int) string {
+	return testAccBackupSelectionConfigBase(rInt) + fmt.Sprintf(`
 resource "aws_backup_selection" "test" {
 	plan_id 	= "${aws_backup_plan.test.id}"
 
@@ -96,5 +136,54 @@ resource "aws_backup_selection" "test" {
 		"arn:aws:ec2:us-east-1:${data.aws_caller_identity.current.account_id}:volume/"
 	]
 }
-`, randInt, randInt, randInt, randInt)
+`, rInt)
+}
+
+func testAccBackupSelectionConfigWithTags(rInt int) string {
+	return testAccBackupSelectionConfigBase(rInt) + fmt.Sprintf(`
+resource "aws_backup_selection" "test" {
+	plan_id 	= "${aws_backup_plan.test.id}"
+
+	name 		= "tf_acc_test_backup_selection_%d"
+	iam_role 	= "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/service-role/AWSBackupDefaultServiceRole"
+
+	tag {
+		type = "STRINGEQUALS"
+		key = "foo"
+		value = "bar"
+	}
+
+	tag {
+		type = "STRINGEQUALS"
+		key = "boo"
+		value = "far"
+	}
+
+	resources = [
+		"arn:aws:ec2:us-east-1:${data.aws_caller_identity.current.account_id}:volume/"
+	]
+}
+`, rInt)
+}
+
+func testAccBackupSelectionConfigWithResources(rInt int) string {
+	return testAccBackupSelectionConfigBase(rInt) + fmt.Sprintf(`
+resource "aws_backup_selection" "test" {
+	plan_id 	= "${aws_backup_plan.test.id}"
+
+	name 		= "tf_acc_test_backup_selection_%d"
+	iam_role 	= "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/service-role/AWSBackupDefaultServiceRole"
+
+	tag {
+		type = "STRINGEQUALS"
+		key = "foo"
+		value = "bar"
+	}
+
+	resources = [
+		"arn:aws:ec2:us-east-1:${data.aws_caller_identity.current.account_id}:volume/",
+		"arn:aws:elasticfilesystem:us-east-1:${data.aws_caller_identity.current.account_id}:file-system/"
+	]
+}
+`, rInt)
 }

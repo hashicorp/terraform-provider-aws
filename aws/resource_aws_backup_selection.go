@@ -103,11 +103,9 @@ func resourceAwsBackupSelectionRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	d.Set("plan_id", resp.BackupPlanId)
+	d.Set("name", resp.BackupSelection.SelectionName)
+	d.Set("iam_role", resp.BackupSelection.IamRoleArn)
 
-	s := make(map[string]interface{})
-
-	s["name"] = *resp.BackupSelection.SelectionName
-	s["iam_role"] = *resp.BackupSelection.IamRoleArn
 	if resp.BackupSelection.ListOfTags != nil {
 		tag := &schema.Set{F: resourceAwsConditionTagHash}
 
@@ -121,13 +119,11 @@ func resourceAwsBackupSelectionRead(d *schema.ResourceData, meta interface{}) er
 			tag.Add(m)
 		}
 
-		s["tag"] = tag
+		d.Set("tag", tag)
 	}
 	if resp.BackupSelection.Resources != nil {
-		s["resources"] = resp.BackupSelection.Resources
+		d.Set("resources", resp.BackupSelection.Resources)
 	}
-
-	d.Set("selection", s)
 
 	return nil
 }
