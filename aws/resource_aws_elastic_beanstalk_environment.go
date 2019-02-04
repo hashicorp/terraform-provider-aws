@@ -924,7 +924,7 @@ func dropGeneratedSecurityGroup(settingValue string, meta interface{}) string {
 	ec2Classic := true
 	beanstalkSGRegexp := regexp.MustCompile("sg-[0-9a-fA-F]{8}")
 	for _, g := range groups {
-		if ok := beanstalkSGRegexp.MatchString(g); ok {
+		if beanstalkSGRegexp.MatchString(g) {
 			ec2Classic = false
 			break
 		}
