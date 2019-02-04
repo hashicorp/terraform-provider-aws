@@ -4854,6 +4854,34 @@ func expandAppmeshVirtualNodeSpec(vSpec []interface{}) *appmesh.VirtualNodeSpec 
 
 			mListener := vListener.(map[string]interface{})
 
+			if vHealthCheck, ok := mListener["health_check"].([]interface{}); ok && len(vHealthCheck) > 0 && vHealthCheck[0] != nil {
+				mHealthCheck := vHealthCheck[0].(map[string]interface{})
+
+				listener.HealthCheck = &appmesh.HealthCheckPolicy{}
+
+				if vHealthyThreshold, ok := mHealthCheck["healthy_threshold"].(int); ok && vHealthyThreshold > 0 {
+					listener.HealthCheck.HealthyThreshold = aws.Int64(int64(vHealthyThreshold))
+				}
+				if vIntervalMillis, ok := mHealthCheck["interval_millis"].(int); ok && vIntervalMillis > 0 {
+					listener.HealthCheck.IntervalMillis = aws.Int64(int64(vIntervalMillis))
+				}
+				if vPath, ok := mHealthCheck["path"].(string); ok && vPath != "" {
+					listener.HealthCheck.Path = aws.String(vPath)
+				}
+				if vPort, ok := mHealthCheck["port"].(int); ok && vPort > 0 {
+					listener.HealthCheck.Port = aws.Int64(int64(vPort))
+				}
+				if vProtocol, ok := mHealthCheck["protocol"].(string); ok && vProtocol != "" {
+					listener.HealthCheck.Protocol = aws.String(vProtocol)
+				}
+				if vTimeoutMillis, ok := mHealthCheck["timeout_millis"].(int); ok && vTimeoutMillis > 0 {
+					listener.HealthCheck.TimeoutMillis = aws.Int64(int64(vTimeoutMillis))
+				}
+				if vUnhealthyThreshold, ok := mHealthCheck["unhealthy_threshold"].(int); ok && vUnhealthyThreshold > 0 {
+					listener.HealthCheck.UnhealthyThreshold = aws.Int64(int64(vUnhealthyThreshold))
+				}
+			}
+
 			if vPortMapping, ok := mListener["port_mapping"].([]interface{}); ok && len(vPortMapping) > 0 && vPortMapping[0] != nil {
 				mPortMapping := vPortMapping[0].(map[string]interface{})
 
@@ -4908,6 +4936,19 @@ func flattenAppmeshVirtualNodeSpec(spec *appmesh.VirtualNodeSpec) []interface{} 
 
 		for _, listener := range spec.Listeners {
 			mListener := map[string]interface{}{}
+
+			if listener.HealthCheck != nil {
+				mHealthCheck := map[string]interface{}{
+					"healthy_threshold":   int(aws.Int64Value(listener.HealthCheck.HealthyThreshold)),
+					"interval_millis":     int(aws.Int64Value(listener.HealthCheck.IntervalMillis)),
+					"path":                aws.StringValue(listener.HealthCheck.Path),
+					"port":                int(aws.Int64Value(listener.HealthCheck.Port)),
+					"protocol":            aws.StringValue(listener.HealthCheck.Protocol),
+					"timeout_millis":      int(aws.Int64Value(listener.HealthCheck.TimeoutMillis)),
+					"unhealthy_threshold": int(aws.Int64Value(listener.HealthCheck.UnhealthyThreshold)),
+				}
+				mListener["health_check"] = []interface{}{mHealthCheck}
+			}
 
 			if listener.PortMapping != nil {
 				mPortMapping := map[string]interface{}{

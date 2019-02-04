@@ -56,6 +56,61 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"health_check": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MinItems: 1,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"healthy_threshold": {
+													Type:         schema.TypeInt,
+													Required:     true,
+													ValidateFunc: validation.IntBetween(2, 10),
+												},
+
+												"interval_millis": {
+													Type:         schema.TypeInt,
+													Required:     true,
+													ValidateFunc: validation.IntBetween(5000, 300000),
+												},
+
+												"path": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+
+												"port": {
+													Type:         schema.TypeInt,
+													Optional:     true,
+													Computed:     true,
+													ValidateFunc: validation.IntBetween(1, 65535),
+												},
+
+												"protocol": {
+													Type:     schema.TypeString,
+													Required: true,
+													ValidateFunc: validation.StringInSlice([]string{
+														appmesh.PortProtocolHttp,
+														appmesh.PortProtocolTcp,
+													}, false),
+												},
+
+												"timeout_millis": {
+													Type:         schema.TypeInt,
+													Required:     true,
+													ValidateFunc: validation.IntBetween(2000, 60000),
+												},
+
+												"unhealthy_threshold": {
+													Type:         schema.TypeInt,
+													Required:     true,
+													ValidateFunc: validation.IntBetween(2, 10),
+												},
+											},
+										},
+									},
+
 									"port_mapping": {
 										Type:     schema.TypeList,
 										Required: true,
@@ -224,6 +279,29 @@ func resourceAwsAppmeshVirtualNodeDelete(d *schema.ResourceData, meta interface{
 func appmeshVirtualNodeListenerHash(vListener interface{}) int {
 	var buf bytes.Buffer
 	mListener := vListener.(map[string]interface{})
+	if vHealthCheck, ok := mListener["health_check"].([]interface{}); ok && len(vHealthCheck) > 0 && vHealthCheck[0] != nil {
+		vHealthCheck := vHealthCheck[0].(map[string]interface{})
+		if v, ok := vHealthCheck["healthy_threshold"].(int); ok {
+			buf.WriteString(fmt.Sprintf("%d-", v))
+		}
+		if v, ok := vHealthCheck["interval_millis"].(int); ok {
+			buf.WriteString(fmt.Sprintf("%d-", v))
+		}
+		if v, ok := vHealthCheck["path"].(string); ok {
+			buf.WriteString(fmt.Sprintf("%s-", v))
+		}
+		// Don't include "port" in the hash as it's Optional/Computed.
+		// If present it must match the "port_mapping.port" value, so changes will be detected.
+		if v, ok := vHealthCheck["protocol"].(string); ok {
+			buf.WriteString(fmt.Sprintf("%s-", v))
+		}
+		if v, ok := vHealthCheck["timeout_millis"].(int); ok {
+			buf.WriteString(fmt.Sprintf("%d-", v))
+		}
+		if v, ok := vHealthCheck["unhealthy_threshold"].(int); ok {
+			buf.WriteString(fmt.Sprintf("%d-", v))
+		}
+	}
 	if vPortMapping, ok := mListener["port_mapping"].([]interface{}); ok && len(vPortMapping) > 0 && vPortMapping[0] != nil {
 		mPortMapping := vPortMapping[0].(map[string]interface{})
 		if v, ok := mPortMapping["port"].(int); ok {
