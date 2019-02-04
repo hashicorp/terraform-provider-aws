@@ -319,7 +319,7 @@ func testAccAWSS3BucketPublicAccessBlockConfig(bucketName, blockPublicAcls, bloc
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
 	bucket = "%s"
-	tags {
+	tags = {
 		TestName = "TestACCAWSS3BucketPublicAccessBlock_basic"
 	}
 }

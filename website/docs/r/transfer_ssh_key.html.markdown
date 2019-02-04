@@ -15,7 +15,7 @@ Provides a AWS Transfer User SSH Key resource.
 resource "aws_transfer_server" "foo" {
 	identity_provider_type = "SERVICE_MANAGED"
 
-	tags {
+	tags = {
 		NAME     = "tf-acc-test-transfer-server"
 	}
 }
@@ -66,7 +66,7 @@ resource "aws_transfer_user" "foo" {
 	user_name      = "tftestuser"
 	role           = "${aws_iam_role.foo.arn}"
 
-	tags {
+	tags = {
 		NAME = "tftestuser"
 	}
 }

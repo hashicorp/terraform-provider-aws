@@ -24,6 +24,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/appsync"
 	"github.com/aws/aws-sdk-go/service/athena"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
+	"github.com/aws/aws-sdk-go/service/backup"
 	"github.com/aws/aws-sdk-go/service/batch"
 	"github.com/aws/aws-sdk-go/service/budgets"
 	"github.com/aws/aws-sdk-go/service/cloud9"
@@ -42,6 +43,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/configservice"
+	"github.com/aws/aws-sdk-go/service/costandusagereportservice"
 	"github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	"github.com/aws/aws-sdk-go/service/datapipeline"
 	"github.com/aws/aws-sdk-go/service/datasync"
@@ -84,6 +86,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/licensemanager"
 	"github.com/aws/aws-sdk-go/service/lightsail"
 	"github.com/aws/aws-sdk-go/service/macie"
+	"github.com/aws/aws-sdk-go/service/mediaconnect"
 	"github.com/aws/aws-sdk-go/service/mediaconvert"
 	"github.com/aws/aws-sdk-go/service/medialive"
 	"github.com/aws/aws-sdk-go/service/mediapackage"
@@ -121,6 +124,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
+	"github.com/aws/aws-sdk-go/service/worklink"
 	"github.com/aws/aws-sdk-go/service/workspaces"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/hashicorp/go-cleanhttp"
@@ -194,6 +198,7 @@ type AWSClient struct {
 	appsyncconn                         *appsync.AppSync
 	athenaconn                          *athena.Athena
 	autoscalingconn                     *autoscaling.AutoScaling
+	backupconn                          *backup.Backup
 	batchconn                           *batch.Batch
 	budgetconn                          *budgets.Budgets
 	cfconn                              *cloudformation.CloudFormation
@@ -212,6 +217,7 @@ type AWSClient struct {
 	cognitoconn                         *cognitoidentity.CognitoIdentity
 	cognitoidpconn                      *cognitoidentityprovider.CognitoIdentityProvider
 	configconn                          *configservice.ConfigService
+	costandusagereportconn              *costandusagereportservice.CostandUsageReportService
 	datapipelineconn                    *datapipeline.DataPipeline
 	datasyncconn                        *datasync.DataSync
 	daxconn                             *dax.DAX
@@ -254,6 +260,7 @@ type AWSClient struct {
 	licensemanagerconn                  *licensemanager.LicenseManager
 	lightsailconn                       *lightsail.Lightsail
 	macieconn                           *macie.Macie
+	mediaconnectconn                    *mediaconnect.MediaConnect
 	mediaconvertconn                    *mediaconvert.MediaConvert
 	medialiveconn                       *medialive.MediaLive
 	mediapackageconn                    *mediapackage.MediaPackage
@@ -294,6 +301,7 @@ type AWSClient struct {
 	transferconn                        *transfer.Transfer
 	wafconn                             *waf.WAF
 	wafregionalconn                     *wafregional.WAFRegional
+	worklinkconn                        *worklink.WorkLink
 	workspacesconn                      *workspaces.WorkSpaces
 }
 
@@ -553,6 +561,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.appsyncconn = appsync.New(sess)
 	client.athenaconn = athena.New(sess)
 	client.autoscalingconn = autoscaling.New(awsAutoscalingSess)
+	client.backupconn = backup.New(sess)
 	client.batchconn = batch.New(sess)
 	client.budgetconn = budgets.New(sess)
 	client.cfconn = cloudformation.New(awsCfSess)
@@ -571,6 +580,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.cognitoconn = cognitoidentity.New(sess)
 	client.cognitoidpconn = cognitoidentityprovider.New(sess)
 	client.configconn = configservice.New(sess)
+	client.costandusagereportconn = costandusagereportservice.New(sess)
 	client.datapipelineconn = datapipeline.New(sess)
 	client.datasyncconn = datasync.New(sess)
 	client.daxconn = dax.New(awsDynamoSess)
@@ -610,6 +620,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.licensemanagerconn = licensemanager.New(sess)
 	client.lightsailconn = lightsail.New(sess)
 	client.macieconn = macie.New(sess)
+	client.mediaconnectconn = mediaconnect.New(sess)
 	client.mediaconvertconn = mediaconvert.New(sess)
 	client.medialiveconn = medialive.New(sess)
 	client.mediapackageconn = mediapackage.New(sess)
@@ -647,6 +658,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.transferconn = transfer.New(sess)
 	client.wafconn = waf.New(sess)
 	client.wafregionalconn = wafregional.New(sess)
+	client.worklinkconn = worklink.New(sess)
 	client.workspacesconn = workspaces.New(sess)
 
 	// Workaround for https://github.com/aws/aws-sdk-go/issues/1376

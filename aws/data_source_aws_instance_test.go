@@ -336,7 +336,7 @@ resource "aws_instance" "web" {
 }
 
 data "aws_instance" "web-instance" {
-  instance_tags {
+  instance_tags = {
     Name = "${aws_instance.web.tags["Name"]}"
     TestSeed = "%d"
   }

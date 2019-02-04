@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"testing"
 
@@ -11,6 +12,56 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_appmesh_mesh", &resource.Sweeper{
+		Name: "aws_appmesh_mesh",
+		F:    testSweepAppmeshMeshes,
+		Dependencies: []string{
+			"aws_appmesh_virtual_router",
+		},
+	})
+}
+
+func testSweepAppmeshMeshes(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).appmeshconn
+
+	err = conn.ListMeshesPages(&appmesh.ListMeshesInput{}, func(page *appmesh.ListMeshesOutput, isLast bool) bool {
+		if page == nil {
+			return !isLast
+		}
+
+		for _, mesh := range page.Meshes {
+			name := aws.StringValue(mesh.MeshName)
+
+			input := &appmesh.DeleteMeshInput{
+				MeshName: aws.String(name),
+			}
+
+			log.Printf("[INFO] Deleting Appmesh Mesh: %s", name)
+			_, err := conn.DeleteMesh(input)
+
+			if err != nil {
+				log.Printf("[ERROR] Error deleting Appmesh Mesh (%s): %s", name, err)
+			}
+		}
+
+		return !isLast
+	})
+	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping Appmesh Mesh sweep for %s: %s", region, err)
+			return nil
+		}
+		return fmt.Errorf("error retrieving Appmesh Meshes: %s", err)
+	}
+
+	return nil
+}
 
 func testAccAwsAppmeshMesh_basic(t *testing.T) {
 	var mesh appmesh.MeshData

@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -421,6 +422,57 @@ func TestAccAWSDynamoDbTable_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAWSDynamoDbTable_disappears(t *testing.T) {
+	var table1 dynamodb.DescribeTableOutput
+	resourceName := "aws_dynamodb_table.basic-dynamodb-table"
+	rName := acctest.RandomWithPrefix("TerraformTestTable-")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDynamoDbConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &table1),
+					testAccCheckAWSDynamoDbTableDisappears(&table1),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSDynamoDbTable_disappears_PayPerRequestWithGSI(t *testing.T) {
+	var table1, table2 dynamodb.DescribeTableOutput
+	resourceName := "aws_dynamodb_table.basic-dynamodb-table"
+	rName := acctest.RandomWithPrefix("TerraformTestTable-")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDynamoDbBilling_PayPerRequestWithGSI(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &table1),
+					testAccCheckAWSDynamoDbTableDisappears(&table1),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				Config: testAccAWSDynamoDbBilling_PayPerRequestWithGSI(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &table2),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSDynamoDbTable_extended(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 
@@ -1198,6 +1250,29 @@ func testAccCheckDynamoDbTableWasUpdated(n string) resource.TestCheckFunc {
 		}
 		if attrmap["ReplacementGSIRangeKey"] != "N" {
 			return fmt.Errorf("Test table replacement GSI range key was of type %s instead of N!", attrmap["ReplacementGSIRangeKey"])
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckAWSDynamoDbTableDisappears(table *dynamodb.DescribeTableOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).dynamodbconn
+		tableName := aws.StringValue(table.Table.TableName)
+
+		input := &dynamodb.DeleteTableInput{
+			TableName: table.Table.TableName,
+		}
+
+		_, err := conn.DeleteTable(input)
+
+		if err != nil {
+			return fmt.Errorf("error deleting DynamoDB Table (%s): %s", tableName, err)
+		}
+
+		if err := waitForDynamodbTableDeletion(conn, tableName, 10*time.Minute); err != nil {
+			return fmt.Errorf("error waiting for DynamoDB Table (%s) deletion: %s", tableName, err)
 		}
 
 		return nil

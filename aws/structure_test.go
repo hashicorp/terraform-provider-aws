@@ -807,7 +807,7 @@ func TestFlattenStepAdjustments(t *testing.T) {
 	expanded := []*autoscaling.StepAdjustment{
 		{
 			MetricIntervalLowerBound: aws.Float64(1.0),
-			MetricIntervalUpperBound: aws.Float64(2.0),
+			MetricIntervalUpperBound: aws.Float64(2.5),
 			ScalingAdjustment:        aws.Int64(int64(1)),
 		},
 	}
@@ -816,11 +816,11 @@ func TestFlattenStepAdjustments(t *testing.T) {
 	if result == nil {
 		t.Fatal("expected result to have value, but got nil")
 	}
-	if result["metric_interval_lower_bound"] != float64(1.0) {
-		t.Fatalf("expected metric_interval_lower_bound to be 1.0, but got %d", result["metric_interval_lower_bound"])
+	if result["metric_interval_lower_bound"] != "1" {
+		t.Fatalf("expected metric_interval_lower_bound to be 1, but got %s", result["metric_interval_lower_bound"])
 	}
-	if result["metric_interval_upper_bound"] != float64(2.0) {
-		t.Fatalf("expected metric_interval_upper_bound to be 1.0, but got %d", result["metric_interval_upper_bound"])
+	if result["metric_interval_upper_bound"] != "2.5" {
+		t.Fatalf("expected metric_interval_upper_bound to be 2.5, but got %s", result["metric_interval_upper_bound"])
 	}
 	if result["scaling_adjustment"] != int64(1) {
 		t.Fatalf("expected scaling_adjustment to be 1, but got %d", result["scaling_adjustment"])

@@ -226,7 +226,7 @@ func resourceAwsEcsService() *schema.Resource {
 							ForceNew: true,
 							Optional: true,
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								return strings.ToLower(old) == strings.ToLower(new)
+								return strings.EqualFold(old, new)
 							},
 						},
 					},
@@ -271,7 +271,7 @@ func resourceAwsEcsService() *schema.Resource {
 								return value
 							},
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								return strings.ToLower(old) == strings.ToLower(new)
+								return strings.EqualFold(old, new)
 							},
 						},
 					},

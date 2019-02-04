@@ -1848,10 +1848,7 @@ resource "aws_rds_cluster" "default" {
 
 func testAccAWSClusterConfig_EngineVersion(rInt int, engine, engineVersion string) string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {}
-
 resource "aws_rds_cluster" "test" {
-  availability_zones              = ["${data.aws_availability_zones.available.names}"]
   cluster_identifier              = "tf-acc-test-%d"
   database_name                   = "mydb"
   db_cluster_parameter_group_name = "default.aurora-postgresql9.6"
@@ -1866,11 +1863,7 @@ resource "aws_rds_cluster" "test" {
 
 func testAccAWSClusterConfig_EngineVersionWithPrimaryInstance(rInt int, engine, engineVersion string) string {
 	return fmt.Sprintf(`
-
-data "aws_availability_zones" "available" {}
-
 resource "aws_rds_cluster" "test" {
-  availability_zones              = ["${data.aws_availability_zones.available.names}"]
   cluster_identifier              = "tf-acc-test-%d"
   database_name                   = "mydb"
   db_cluster_parameter_group_name = "default.aurora-postgresql9.6"
@@ -1892,10 +1885,7 @@ resource "aws_rds_cluster_instance" "test" {
 
 func testAccAWSClusterConfig_Port(rInt, port int) string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {}
-
 resource "aws_rds_cluster" "test" {
-  availability_zones              = ["${data.aws_availability_zones.available.names}"]
   cluster_identifier              = "tf-acc-test-%d"
   database_name                   = "mydb"
   db_cluster_parameter_group_name = "default.aurora-postgresql9.6"
@@ -2144,10 +2134,6 @@ data "aws_availability_zones" "us-east-1" {
   provider = "aws.useast1"
 }
 
-data "aws_availability_zones" "us-west-2" {
-  provider = "aws.uswest2"
-}
-
 resource "aws_rds_cluster_instance" "test_instance" {
   provider = "aws.uswest2"
   identifier = "tf-aurora-instance-%[1]d"
@@ -2171,7 +2157,6 @@ resource "aws_rds_cluster_parameter_group" "default" {
 resource "aws_rds_cluster" "test_primary" {
   provider = "aws.uswest2"
   cluster_identifier = "tf-test-primary-%[1]d"
-  availability_zones = ["${slice(data.aws_availability_zones.us-west-2.names, 0, 3)}"]
   db_cluster_parameter_group_name = "${aws_rds_cluster_parameter_group.default.name}"
   database_name = "mydb"
   master_username = "foo"
@@ -2226,7 +2211,7 @@ resource "aws_subnet" "db" {
 resource "aws_db_subnet_group" "replica" {
   provider   = "aws.useast1"
   name       = "test_replica-subnet-%[1]d"
-  subnet_ids = ["${aws_subnet.db.*.id}"]
+  subnet_ids = ["${aws_subnet.db.*.id[0]}", "${aws_subnet.db.*.id[1]}", "${aws_subnet.db.*.id[2]}"]
 }
 
 resource "aws_rds_cluster" "test_replica" {

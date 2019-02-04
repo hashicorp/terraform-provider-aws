@@ -792,7 +792,7 @@ func testAccESDomainConfig_ClusterUpdate(randInt, instanceInt, snapshotInt int) 
 resource "aws_elasticsearch_domain" "example" {
   domain_name = "tf-test-%d"
 
-  advanced_options {
+  advanced_options = {
     "indices.fielddata.cache.size" = 80
   }
 
@@ -822,7 +822,7 @@ resource "aws_elasticsearch_domain" "example" {
 
 	elasticsearch_version = "6.0"
 
-  advanced_options {
+  advanced_options = {
     "indices.fielddata.cache.size" = 80
   }
 
@@ -868,7 +868,7 @@ resource "aws_elasticsearch_domain" "example" {
 
 	elasticsearch_version = "6.0"
 
-  advanced_options {
+  advanced_options = {
     "indices.fielddata.cache.size" = 80
   }
 
@@ -1026,7 +1026,7 @@ func testAccESDomainConfig_complex(randInt int) string {
 resource "aws_elasticsearch_domain" "example" {
   domain_name = "tf-test-%d"
 
-  advanced_options {
+  advanced_options = {
     "indices.fielddata.cache.size" = 80
   }
 

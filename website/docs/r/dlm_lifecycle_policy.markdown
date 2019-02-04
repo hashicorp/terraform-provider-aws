@@ -83,14 +83,14 @@ resource "aws_dlm_lifecycle_policy" "example" {
         count = 14
       }
 
-      tags_to_add {
+      tags_to_add = {
         SnapshotCreator = "DLM"
       }
 
       copy_tags = false
     }
 
-    target_tags {
+    target_tags = {
       Snapshot = "true"
     }
   }

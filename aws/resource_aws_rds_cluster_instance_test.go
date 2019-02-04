@@ -441,7 +441,7 @@ data "aws_availability_zones" "available" {}
 
 resource "aws_rds_cluster" "default" {
   cluster_identifier = "tf-aurora-cluster-test-%d"
-  availability_zones = ["${data.aws_availability_zones.available.names}"]
+  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
   database_name      = "mydb"
   master_username    = "foo"
   master_password    = "mustbeeightcharaters"

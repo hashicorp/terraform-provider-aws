@@ -83,6 +83,10 @@ func (c *ACMPCA) CreateCertificateAuthorityRequest(input *CreateCertificateAutho
 //   The S3 bucket policy is not valid. The policy must give ACM PCA rights to
 //   read from and write to the bucket and find the bucket location.
 //
+//   * ErrCodeInvalidTagException "InvalidTagException"
+//   The tag associated with the CA is not valid. The invalid argument is contained
+//   in the message field.
+//
 //   * ErrCodeLimitExceededException "LimitExceededException"
 //   An ACM PCA limit has been exceeded. See the exception message returned to
 //   determine the limit that was exceeded.
@@ -1417,6 +1421,10 @@ func (c *ACMPCA) RevokeCertificateRequest(input *RevokeCertificateInput) (req *r
 //   The private CA is in a state during which a report or certificate cannot
 //   be generated.
 //
+//   * ErrCodeLimitExceededException "LimitExceededException"
+//   An ACM PCA limit has been exceeded. See the exception message returned to
+//   determine the limit that was exceeded.
+//
 //   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
 //   A resource such as a private CA, S3 bucket, certificate, or audit report
 //   cannot be found.
@@ -2253,6 +2261,10 @@ type CreateCertificateAuthorityInput struct {
 	// your bucket in the CRL Distribution Points extension of your CA certificate.
 	// For more information, see the CrlConfiguration structure.
 	RevocationConfiguration *RevocationConfiguration `type:"structure"`
+
+	// Key-value pairs that will be attached to the new private CA. You can associate
+	// up to 50 tags with a private CA.
+	Tags []*Tag `min:"1" type:"list"`
 }
 
 // String returns the string representation
@@ -2277,6 +2289,9 @@ func (s *CreateCertificateAuthorityInput) Validate() error {
 	if s.IdempotencyToken != nil && len(*s.IdempotencyToken) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("IdempotencyToken", 1))
 	}
+	if s.Tags != nil && len(s.Tags) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Tags", 1))
+	}
 	if s.CertificateAuthorityConfiguration != nil {
 		if err := s.CertificateAuthorityConfiguration.Validate(); err != nil {
 			invalidParams.AddNested("CertificateAuthorityConfiguration", err.(request.ErrInvalidParams))
@@ -2285,6 +2300,16 @@ func (s *CreateCertificateAuthorityInput) Validate() error {
 	if s.RevocationConfiguration != nil {
 		if err := s.RevocationConfiguration.Validate(); err != nil {
 			invalidParams.AddNested("RevocationConfiguration", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
 		}
 	}
 
@@ -2315,6 +2340,12 @@ func (s *CreateCertificateAuthorityInput) SetIdempotencyToken(v string) *CreateC
 // SetRevocationConfiguration sets the RevocationConfiguration field's value.
 func (s *CreateCertificateAuthorityInput) SetRevocationConfiguration(v *RevocationConfiguration) *CreateCertificateAuthorityInput {
 	s.RevocationConfiguration = v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateCertificateAuthorityInput) SetTags(v []*Tag) *CreateCertificateAuthorityInput {
+	s.Tags = v
 	return s
 }
 

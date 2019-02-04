@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 )
 
 func TestAccAWSSsmDocumentDataSource_basic(t *testing.T) {
 	resourceName := "data.aws_ssm_document.test"
-	name := "test_document"
+	name := fmt.Sprintf("test_document-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
