@@ -1,19 +1,12 @@
 package aws
 
 import (
-	"encoding/base64"
 	"fmt"
-	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/service/sts"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
-)
-
-const (
-	clusterIDHeader = "x-k8s-aws-id"
-	v1Prefix        = "k8s-aws-v1."
+	"github.com/kubernetes-sigs/aws-iam-authenticator/pkg/token"
 )
 
 func dataSourceAwsEksClusterAuth() *schema.Resource {
@@ -28,12 +21,6 @@ func dataSourceAwsEksClusterAuth() *schema.Resource {
 				ValidateFunc: validation.NoZeroValues,
 			},
 
-			"duration": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  60,
-			},
-
 			"token": {
 				Type:      schema.TypeString,
 				Computed:  true,
@@ -46,22 +33,17 @@ func dataSourceAwsEksClusterAuth() *schema.Resource {
 func dataSourceAwsEksClusterAuthRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).stsconn
 	name := d.Get("name").(string)
-	duration := d.Get("duration").(int)
-
-	request, _ := conn.GetCallerIdentityRequest(&sts.GetCallerIdentityInput{})
-	request.HTTPRequest.Header.Add(clusterIDHeader, name)
-
-	url, err := request.Presign(time.Duration(duration) * time.Second)
+	generator, err := token.NewGenerator(false)
 	if err != nil {
-		return fmt.Errorf("error presigning request: %v", err)
+		return fmt.Errorf("error getting token generator: %v", err)
+	}
+	token, err := generator.GetWithSTS(name, conn)
+	if err != nil {
+		return fmt.Errorf("error getting token: %v", err)
 	}
 
-	log.Printf("[DEBUG] Generated request: %s", url)
-
-	token := v1Prefix + base64.RawURLEncoding.EncodeToString([]byte(url))
-
 	d.SetId(time.Now().UTC().String())
-	d.Set("token", token)
+	d.Set("token", token.Token)
 
 	return nil
 }

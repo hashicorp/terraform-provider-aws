@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+	"github.com/kubernetes-sigs/aws-iam-authenticator/pkg/token"
 )
 
 func TestAccAWSEksClusterAuthDataSource_basic(t *testing.T) {
@@ -33,7 +34,7 @@ func testAccCheckAwsEksClusterAuthToken(n string) resource.TestCheckFunc {
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("EKS Cluster Auth resource ID not set.")
+			return fmt.Errorf("EKS Cluster Auth resource ID not set")
 		}
 
 		name := rs.Primary.Attributes["name"]
@@ -41,8 +42,18 @@ func testAccCheckAwsEksClusterAuthToken(n string) resource.TestCheckFunc {
 			return fmt.Errorf("Incorrect EKS cluster name: expected %q, got %q", expected, name)
 		}
 
-		if rs.Primary.Attributes["token"] == "" {
+		tok := rs.Primary.Attributes["token"]
+		if tok == "" {
 			return fmt.Errorf("Token expected to not be nil")
+		}
+
+		verifier := token.NewVerifier(name)
+		identity, err := verifier.Verify(tok)
+		if err != nil {
+			return fmt.Errorf("Error verifying token for cluster %q: %v", name, err)
+		}
+		if identity.ARN == "" {
+			return fmt.Errorf("Received unexpected blank ARN for token identity")
 		}
 
 		return nil
