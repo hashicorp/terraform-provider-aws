@@ -4,18 +4,146 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"reflect"
 	"sort"
+	"strings"
 	"testing"
-
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_s3_bucket_object", &resource.Sweeper{
+		Name: "aws_s3_bucket_object",
+		F:    testSweepS3BucketObjects,
+	})
+}
+
+func testSweepS3BucketObjects(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+
+	conn := client.(*AWSClient).s3conn
+	input := &s3.ListBucketsInput{}
+
+	output, err := conn.ListBuckets(input)
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping S3 Bucket Objects sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing S3 Bucket Objects: %s", err)
+	}
+
+	if len(output.Buckets) == 0 {
+		log.Print("[DEBUG] No S3 Bucket Objects to sweep")
+		return nil
+	}
+
+	for _, bucket := range output.Buckets {
+		bucketName := aws.StringValue(bucket.Name)
+
+		if !strings.HasPrefix(bucketName, "tf-acc") && !strings.HasPrefix(bucketName, "tf-object-test") && !strings.HasPrefix(bucketName, "tf-test") {
+			log.Printf("[INFO] Skipping S3 Bucket: %s", bucketName)
+			continue
+		}
+
+		input := &s3.ListObjectVersionsInput{
+			Bucket: bucket.Name,
+		}
+
+		err := conn.ListObjectVersionsPages(input, func(page *s3.ListObjectVersionsOutput, lastPage bool) bool {
+			if page == nil {
+				return !lastPage
+			}
+
+			for _, objectVersion := range page.Versions {
+				input := &s3.DeleteObjectInput{
+					Bucket:    bucket.Name,
+					Key:       objectVersion.Key,
+					VersionId: objectVersion.VersionId,
+				}
+				objectKey := aws.StringValue(objectVersion.Key)
+				objectVersionID := aws.StringValue(objectVersion.VersionId)
+
+				log.Printf("[INFO] Deleting S3 Bucket (%s) Object (%s) Version: %s", bucketName, objectKey, objectVersionID)
+				_, err := conn.DeleteObject(input)
+
+				if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") || isAWSErr(err, s3.ErrCodeNoSuchKey, "") {
+					continue
+				}
+
+				if err != nil {
+					log.Printf("[ERROR] Error deleting S3 Bucket (%s) Object (%s) Version (%s): %s", bucketName, objectKey, objectVersionID, err)
+				}
+			}
+
+			return !lastPage
+		})
+
+		if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") {
+			continue
+		}
+
+		if isAWSErr(err, "AuthorizationHeaderMalformed", "region") || isAWSErr(err, "BucketRegionError", "") {
+			log.Printf("[INFO] Skipping S3 Bucket (%s) Objects: %s", bucketName, err)
+			continue
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing S3 Bucket (%s) Objects: %s", bucketName, err)
+		}
+
+		err = conn.ListObjectVersionsPages(input, func(page *s3.ListObjectVersionsOutput, lastPage bool) bool {
+			if page == nil {
+				return !lastPage
+			}
+
+			for _, deleteMarker := range page.DeleteMarkers {
+				input := &s3.DeleteObjectInput{
+					Bucket:    bucket.Name,
+					Key:       deleteMarker.Key,
+					VersionId: deleteMarker.VersionId,
+				}
+				deleteMarkerKey := aws.StringValue(deleteMarker.Key)
+				deleteMarkerVersionID := aws.StringValue(deleteMarker.VersionId)
+
+				log.Printf("[INFO] Deleting S3 Bucket (%s) Object (%s) Delete Marker: %s", bucketName, deleteMarkerKey, deleteMarkerVersionID)
+				_, err := conn.DeleteObject(input)
+
+				if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") || isAWSErr(err, s3.ErrCodeNoSuchKey, "") {
+					continue
+				}
+
+				if err != nil {
+					log.Printf("[ERROR] Error deleting S3 Bucket (%s) Object (%s) Version (%s): %s", bucketName, deleteMarkerKey, deleteMarkerVersionID, err)
+				}
+			}
+
+			return !lastPage
+		})
+
+		if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") {
+			continue
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing S3 Bucket (%s) Objects: %s", bucketName, err)
+		}
+	}
+
+	return nil
+}
 
 func TestAccAWSS3BucketObject_source(t *testing.T) {
 	var obj s3.GetObjectOutput
