@@ -1,4 +1,9 @@
 ## 1.58.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_ec2_client_vpn_endpoint` [GH-7009]
+
 ## 1.57.0 (January 26, 2019)
 
 NOTES:
