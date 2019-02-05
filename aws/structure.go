@@ -3732,19 +3732,13 @@ func flattenWorkLinkNetworkConfigResponse(c *worklink.DescribeCompanyNetworkConf
 		return nil
 	}
 
-	var emptyVpc bool
-	if c.VpcId == nil || *c.VpcId == "" {
-		emptyVpc = true
-	}
-	if len(c.SubnetIds) == 0 && len(c.SecurityGroupIds) == 0 && emptyVpc {
+	if len(c.SubnetIds) == 0 && len(c.SecurityGroupIds) == 0 && aws.StringValue(c.VpcId) == "" {
 		return nil
 	}
 
 	config["subnet_ids"] = schema.NewSet(schema.HashString, flattenStringList(c.SubnetIds))
 	config["security_group_ids"] = schema.NewSet(schema.HashString, flattenStringList(c.SecurityGroupIds))
-	if c.VpcId != nil {
-		config["vpc_id"] = aws.StringValue(c.VpcId)
-	}
+	config["vpc_id"] = aws.StringValue(c.VpcId)
 
 	return []map[string]interface{}{config}
 }
