@@ -120,7 +120,7 @@ func testAccSsmResourceDataSyncConfig(rInt int, rName string) string {
 
     resource "aws_ssm_resource_data_sync" "foo" {
       name = "tf-test-ssm-%s"
-      s3_destination = {
+      s3_destination {
         bucket_name = "${aws_s3_bucket.hoge.bucket}"
         region = "${aws_s3_bucket.hoge.region}"
       }

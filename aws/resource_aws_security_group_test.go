@@ -23,7 +23,10 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_security_group", &resource.Sweeper{
 		Name: "aws_security_group",
-		F:    testSweepSecurityGroups,
+		Dependencies: []string{
+			"aws_subnet",
+		},
+		F: testSweepSecurityGroups,
 	})
 }
 

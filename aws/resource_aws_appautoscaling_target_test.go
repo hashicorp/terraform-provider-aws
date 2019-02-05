@@ -354,7 +354,7 @@ resource "aws_security_group" "allow_all" {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    self        = true
   }
 
   egress {
@@ -585,7 +585,7 @@ data "aws_iam_policy_document" "emr-autoscaling-role-policy" {
     effect  = "Allow"
     actions = ["sts:AssumeRole"]
 
-    principals = {
+    principals {
       type        = "Service"
       identifiers = ["elasticmapreduce.amazonaws.com","application-autoscaling.amazonaws.com"]
     }

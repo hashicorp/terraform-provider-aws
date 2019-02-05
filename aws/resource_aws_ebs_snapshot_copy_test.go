@@ -86,7 +86,7 @@ func TestAccAWSEbsSnapshotCopy_withKms(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEbsSnapshotCopyExists("aws_ebs_snapshot_copy.kms_test", &v),
 					resource.TestMatchResourceAttr("aws_ebs_snapshot_copy.kms_test", "kms_key_id",
-						regexp.MustCompile("^arn:aws:kms:[a-z]{2}-[a-z]+-\\d{1}:[0-9]{12}:key/[a-z0-9-]{36}$")),
+						regexp.MustCompile(`^arn:aws:kms:[a-z]{2}-[a-z]+-\d{1}:[0-9]{12}:key/[a-z0-9-]{36}$`)),
 				),
 			},
 		},

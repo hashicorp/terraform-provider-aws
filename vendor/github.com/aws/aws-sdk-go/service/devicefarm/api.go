@@ -6630,6 +6630,8 @@ type Artifact struct {
 	//
 	//    * MESSAGE_LOG: The message log type.
 	//
+	//    * VIDEO_LOG: The video log type.
+	//
 	//    * RESULT_LOG: The result log type.
 	//
 	//    * SERVICE_LOG: The service log type.
@@ -6668,6 +6670,14 @@ type Artifact struct {
 	//    * APPLICATION_CRASH_REPORT: The application crash report output type.
 	//
 	//    * XCTEST_LOG: The XCode test output type.
+	//
+	//    * VIDEO: The Video output type.
+	//
+	//    * CUSTOMER_ARTIFACT:The Customer Artifact output type.
+	//
+	//    * CUSTOMER_ARTIFACT_LOG: The Customer Artifact Log output type.
+	//
+	//    * TESTSPEC_OUTPUT: The Test Spec Output type.
 	Type *string `locationName:"type" type:"string" enum:"ArtifactType"`
 
 	// The pre-signed Amazon S3 URL that can be used with a corresponding GET request
@@ -7569,13 +7579,24 @@ type CreateUploadInput struct {
 	//
 	//    * APPIUM_PYTHON_TEST_PACKAGE: An Appium Python test package upload.
 	//
+	//    * APPIUM_NODE_TEST_PACKAGE: An Appium Node.js test package upload.
+	//
+	//    * APPIUM_RUBY_TEST_PACKAGE: An Appium Ruby test package upload.
+	//
 	//    * APPIUM_WEB_JAVA_JUNIT_TEST_PACKAGE: An Appium Java JUnit test package
-	//    upload.
+	//    upload for a web app.
 	//
 	//    * APPIUM_WEB_JAVA_TESTNG_TEST_PACKAGE: An Appium Java TestNG test package
-	//    upload.
+	//    upload for a web app.
 	//
-	//    * APPIUM_WEB_PYTHON_TEST_PACKAGE: An Appium Python test package upload.
+	//    * APPIUM_WEB_PYTHON_TEST_PACKAGE: An Appium Python test package upload
+	//    for a web app.
+	//
+	//    * APPIUM_WEB_NODE_TEST_PACKAGE: An Appium Node.js test package upload
+	//    for a web app.
+	//
+	//    * APPIUM_WEB_RUBY_TEST_PACKAGE: An Appium Ruby test package upload for
+	//    a web app.
 	//
 	//    * CALABASH_TEST_PACKAGE: A Calabash test package upload.
 	//
@@ -7595,11 +7616,24 @@ type CreateUploadInput struct {
 	//
 	//    * APPIUM_PYTHON_TEST_SPEC: An Appium Python test spec upload.
 	//
-	//    * APPIUM_WEB_JAVA_JUNIT_TEST_SPEC: An Appium Java JUnit test spec upload.
+	//    * APPIUM_NODE_TEST_SPEC: An Appium Node.js test spec upload.
 	//
-	//    * APPIUM_WEB_JAVA_TESTNG_TEST_SPEC: An Appium Java TestNG test spec upload.
+	//    * APPIUM_RUBY_TEST_SPEC: An Appium Ruby test spec upload.
 	//
-	//    * APPIUM_WEB_PYTHON_TEST_SPEC: An Appium Python test spec upload.
+	//    * APPIUM_WEB_JAVA_JUNIT_TEST_SPEC: An Appium Java JUnit test spec upload
+	//    for a web app.
+	//
+	//    * APPIUM_WEB_JAVA_TESTNG_TEST_SPEC: An Appium Java TestNG test spec upload
+	//    for a web app.
+	//
+	//    * APPIUM_WEB_PYTHON_TEST_SPEC: An Appium Python test spec upload for a
+	//    web app.
+	//
+	//    * APPIUM_WEB_NODE_TEST_SPEC: An Appium Node.js test spec upload for a
+	//    web app.
+	//
+	//    * APPIUM_WEB_RUBY_TEST_SPEC: An Appium Ruby test spec upload for a web
+	//    app.
 	//
 	//    * INSTRUMENTATION_TEST_SPEC: An instrumentation test spec upload.
 	//
@@ -8307,7 +8341,8 @@ type Device struct {
 	// The device's ARN.
 	Arn *string `locationName:"arn" min:"32" type:"string"`
 
-	// Reflects how likely a device will be available for a test run.
+	// Reflects how likely a device will be available for a test run. It is currently
+	// available in the ListDevices and GetDevice API methods.
 	Availability *string `locationName:"availability" type:"string" enum:"DeviceAvailability"`
 
 	// The device's carrier.
@@ -8518,11 +8553,11 @@ func (s *Device) SetResolution(v *Resolution) *Device {
 }
 
 // Represents a device filter used to select a set of devices to be included
-// in a test run. This data structure is passed in as the "deviceSelectionConfiguration"
+// in a test run. This data structure is passed in as the deviceSelectionConfiguration
 // parameter to ScheduleRun. For an example of the JSON request syntax, see
 // ScheduleRun.
 //
-// It is also passed in as the "filters" parameter to ListDevices. For an example
+// It is also passed in as the filters parameter to ListDevices. For an example
 // of the JSON request syntax, see ListDevices.
 type DeviceFilter struct {
 	_ struct{} `type:"structure"`
@@ -8548,8 +8583,10 @@ type DeviceFilter struct {
 	//    * MANUFACTURER: The device manufacturer. For example, "Apple".
 	//
 	//    * REMOTE_ACCESS_ENABLED: Whether the device is enabled for remote access.
+	//    Valid values are "TRUE" or "FALSE".
 	//
 	//    * REMOTE_DEBUG_ENABLED: Whether the device is enabled for remote debugging.
+	//    Valid values are "TRUE" or "FALSE".
 	//
 	//    * INSTANCE_ARN: The Amazon Resource Name (ARN) of the device instance.
 	//
@@ -8576,7 +8613,7 @@ type DeviceFilter struct {
 	//
 	// Operator Values
 	//
-	//    * The IN and NOT operators can take a values array that has more than
+	//    * The IN and NOT_IN operators can take a values array that has more than
 	//    one element.
 	//
 	//    * The other operators require an array with a single element.
@@ -8855,8 +8892,10 @@ type DeviceSelectionConfiguration struct {
 	// Used to dynamically select a set of devices for a test run. A filter is made
 	// up of an attribute, an operator, and one or more values.
 	//
-	//    * Attribute: The aspect of a device such as platform or model used as
-	//    the selection criteria in a device filter.
+	//    * Attribute
+	//
+	// The aspect of a device such as platform or model used as the selection criteria
+	//    in a device filter.
 	//
 	// Allowed values include:
 	//
@@ -8875,9 +8914,11 @@ type DeviceSelectionConfiguration struct {
 	//
 	// MANUFACTURER: The device manufacturer. For example, "Apple".
 	//
-	// REMOTE_ACCESS_ENABLED: Whether the device is enabled for remote access.
+	// REMOTE_ACCESS_ENABLED: Whether the device is enabled for remote access. Valid
+	//    values are "TRUE" or "FALSE".
 	//
 	// REMOTE_DEBUG_ENABLED: Whether the device is enabled for remote debugging.
+	//    Valid values are "TRUE" or "FALSE".
 	//
 	// INSTANCE_ARN: The Amazon Resource Name (ARN) of the device instance.
 	//
@@ -8885,7 +8926,9 @@ type DeviceSelectionConfiguration struct {
 	//
 	// FLEET_TYPE: The fleet type. Valid values are "PUBLIC" or "PRIVATE".
 	//
-	//    * Operator: The filter operator.
+	//    * Operator
+	//
+	// The filter operator.
 	//
 	// The EQUALS operator is available for every attribute except INSTANCE_LABELS.
 	//
@@ -8897,14 +8940,27 @@ type DeviceSelectionConfiguration struct {
 	// The LESS_THAN, GREATER_THAN, LESS_THAN_OR_EQUALS, and GREATER_THAN_OR_EQUALS
 	//    operators are also available for the OS_VERSION attribute.
 	//
-	//    * Values: An array of one or more filter values.
+	//    * Values
 	//
-	// The IN and NOT operators can take a values array that has more than one element.
+	// An array of one or more filter values.
+	//
+	// Operator Values
+	//
+	// The IN and NOT_IN operators can take a values array that has more than one
+	//    element.
 	//
 	// The other operators require an array with a single element.
 	//
-	// In a request, the AVAILABILITY attribute takes "AVAILABLE", "HIGHLY_AVAILABLE",
-	//    "BUSY", or "TEMPORARY_NOT_AVAILABLE" as values.
+	// Attribute Values
+	//
+	// The PLATFORM attribute can be set to "ANDROID" or "IOS".
+	//
+	// The AVAILABILITY attribute can be set to "AVAILABLE", "HIGHLY_AVAILABLE",
+	//    "BUSY", or "TEMPORARY_NOT_AVAILABLE".
+	//
+	// The FORM_FACTOR attribute can be set to "PHONE" or "TABLET".
+	//
+	// The FLEET_TYPE attribute can be set to "PUBLIC" or "PRIVATE".
 	//
 	// Filters is a required field
 	Filters []*DeviceFilter `locationName:"filters" type:"list" required:"true"`
@@ -9273,11 +9329,19 @@ type GetDevicePoolCompatibilityInput struct {
 	//
 	//    * APPIUM_PYTHON: The Appium Python type.
 	//
-	//    * APPIUM_WEB_JAVA_JUNIT: The Appium Java JUnit type for Web apps.
+	//    * APPIUM_NODE: The Appium Node.js type.
 	//
-	//    * APPIUM_WEB_JAVA_TESTNG: The Appium Java TestNG type for Web apps.
+	//    * APPIUM_RUBY: The Appium Ruby type.
 	//
-	//    * APPIUM_WEB_PYTHON: The Appium Python type for Web apps.
+	//    * APPIUM_WEB_JAVA_JUNIT: The Appium Java JUnit type for web apps.
+	//
+	//    * APPIUM_WEB_JAVA_TESTNG: The Appium Java TestNG type for web apps.
+	//
+	//    * APPIUM_WEB_PYTHON: The Appium Python type for web apps.
+	//
+	//    * APPIUM_WEB_NODE: The Appium Node.js type for web apps.
+	//
+	//    * APPIUM_WEB_RUBY: The Appium Ruby type for web apps.
 	//
 	//    * CALABASH: The Calabash type.
 	//
@@ -10502,11 +10566,19 @@ type Job struct {
 	//
 	//    * APPIUM_PYTHON: The Appium Python type.
 	//
-	//    * APPIUM_WEB_JAVA_JUNIT: The Appium Java JUnit type for Web apps.
+	//    * APPIUM_NODE: The Appium Node.js type.
 	//
-	//    * APPIUM_WEB_JAVA_TESTNG: The Appium Java TestNG type for Web apps.
+	//    * APPIUM_RUBY: The Appium Ruby type.
 	//
-	//    * APPIUM_WEB_PYTHON: The Appium Python type for Web apps.
+	//    * APPIUM_WEB_JAVA_JUNIT: The Appium Java JUnit type for web apps.
+	//
+	//    * APPIUM_WEB_JAVA_TESTNG: The Appium Java TestNG type for web apps.
+	//
+	//    * APPIUM_WEB_PYTHON: The Appium Python type for web apps.
+	//
+	//    * APPIUM_WEB_NODE: The Appium Node.js type for web apps.
+	//
+	//    * APPIUM_WEB_RUBY: The Appium Ruby test type for web apps.
 	//
 	//    * CALABASH: The Calabash type.
 	//
@@ -10957,9 +11029,11 @@ type ListDevicesInput struct {
 	//
 	// MANUFACTURER: The device manufacturer. For example, "Apple".
 	//
-	// REMOTE_ACCESS_ENABLED: Whether the device is enabled for remote access.
+	// REMOTE_ACCESS_ENABLED: Whether the device is enabled for remote access. Valid
+	//    values are "TRUE" or "FALSE".
 	//
 	// REMOTE_DEBUG_ENABLED: Whether the device is enabled for remote debugging.
+	//    Valid values are "TRUE" or "FALSE".
 	//
 	// INSTANCE_ARN: The Amazon Resource Name (ARN) of the device instance.
 	//
@@ -10981,7 +11055,7 @@ type ListDevicesInput struct {
 	//
 	//    * Values: An array of one or more filter values.
 	//
-	// The IN and NOT operators can take a values array that has more than one element.
+	// The IN and NOT_IN operators take a values array that has one or more elements.
 	//
 	// The other operators require an array with a single element.
 	//
@@ -12235,13 +12309,24 @@ type ListUploadsInput struct {
 	//
 	//    * APPIUM_PYTHON_TEST_PACKAGE: An Appium Python test package upload.
 	//
+	//    * APPIUM_NODE_TEST_PACKAGE: An Appium Node.js test package upload.
+	//
+	//    * APPIUM_RUBY_TEST_PACKAGE: An Appium Ruby test package upload.
+	//
 	//    * APPIUM_WEB_JAVA_JUNIT_TEST_PACKAGE: An Appium Java JUnit test package
-	//    upload.
+	//    upload for a web app.
 	//
 	//    * APPIUM_WEB_JAVA_TESTNG_TEST_PACKAGE: An Appium Java TestNG test package
-	//    upload.
+	//    upload for a web app.
 	//
-	//    * APPIUM_WEB_PYTHON_TEST_PACKAGE: An Appium Python test package upload.
+	//    * APPIUM_WEB_PYTHON_TEST_PACKAGE: An Appium Python test package upload
+	//    for a web app.
+	//
+	//    * APPIUM_WEB_NODE_TEST_PACKAGE: An Appium Node.js test package upload
+	//    for a web app.
+	//
+	//    * APPIUM_WEB_RUBY_TEST_PACKAGE: An Appium Ruby test package upload for
+	//    a web app.
 	//
 	//    * CALABASH_TEST_PACKAGE: A Calabash test package upload.
 	//
@@ -12261,11 +12346,24 @@ type ListUploadsInput struct {
 	//
 	//    * APPIUM_PYTHON_TEST_SPEC: An Appium Python test spec upload.
 	//
-	//    * APPIUM_WEB_JAVA_JUNIT_TEST_SPEC: An Appium Java JUnit test spec upload.
+	//    * APPIUM_NODE_TEST_SPEC: An Appium Node.js test spec upload.
 	//
-	//    * APPIUM_WEB_JAVA_TESTNG_TEST_SPEC: An Appium Java TestNG test spec upload.
+	//    *  APPIUM_RUBY_TEST_SPEC: An Appium Ruby test spec upload.
 	//
-	//    * APPIUM_WEB_PYTHON_TEST_SPEC: An Appium Python test spec upload.
+	//    * APPIUM_WEB_JAVA_JUNIT_TEST_SPEC: An Appium Java JUnit test spec upload
+	//    for a web app.
+	//
+	//    * APPIUM_WEB_JAVA_TESTNG_TEST_SPEC: An Appium Java TestNG test spec upload
+	//    for a web app.
+	//
+	//    * APPIUM_WEB_PYTHON_TEST_SPEC: An Appium Python test spec upload for a
+	//    web app.
+	//
+	//    * APPIUM_WEB_NODE_TEST_SPEC: An Appium Node.js test spec upload for a
+	//    web app.
+	//
+	//    * APPIUM_WEB_RUBY_TEST_SPEC: An Appium Ruby test spec upload for a web
+	//    app.
 	//
 	//    * INSTRUMENTATION_TEST_SPEC: An instrumentation test spec upload.
 	//
@@ -13588,8 +13686,10 @@ type Rule struct {
 	//    * MANUFACTURER: The device manufacturer. For example, "Apple".
 	//
 	//    * REMOTE_ACCESS_ENABLED: Whether the device is enabled for remote access.
+	//    Valid values are "TRUE" or "FALSE".
 	//
 	//    * REMOTE_DEBUG_ENABLED: Whether the device is enabled for remote debugging.
+	//    Valid values are "TRUE" or "FALSE".
 	//
 	//    * APPIUM_VERSION: The Appium version for the test.
 	//
@@ -13815,11 +13915,19 @@ type Run struct {
 	//
 	//    * APPIUM_PYTHON: The Appium Python type.
 	//
-	//    * APPIUM_WEB_JAVA_JUNIT: The Appium Java JUnit type for Web apps.
+	//    * APPIUM_NODE: The Appium Node.js type.
 	//
-	//    * APPIUM_WEB_JAVA_TESTNG: The Appium Java TestNG type for Web apps.
+	//    * APPIUM_RUBY: The Appium Ruby type.
 	//
-	//    * APPIUM_WEB_PYTHON: The Appium Python type for Web apps.
+	//    * APPIUM_WEB_JAVA_JUNIT: The Appium Java JUnit type for web apps.
+	//
+	//    * APPIUM_WEB_JAVA_TESTNG: The Appium Java TestNG type for web apps.
+	//
+	//    * APPIUM_WEB_PYTHON: The Appium Python type for web apps.
+	//
+	//    * APPIUM_WEB_NODE: The Appium Node.js type for web apps.
+	//
+	//    * APPIUM_WEB_RUBY: The Appium Ruby type for web apps.
 	//
 	//    * CALABASH: The Calabash type.
 	//
@@ -14251,13 +14359,13 @@ type ScheduleRunInput struct {
 
 	// The ARN of the device pool for the run to be scheduled.
 	//
-	// Either devicePoolArn or deviceSelectionConfiguration are required in a request.
+	// Either devicePoolArn or deviceSelectionConfiguration is required in a request.
 	DevicePoolArn *string `locationName:"devicePoolArn" min:"32" type:"string"`
 
 	// The filter criteria used to dynamically select a set of devices for a test
 	// run, as well as the maximum number of devices to be included in the run.
 	//
-	// Either devicePoolArn or deviceSelectionConfiguration are required in a request.
+	// Either devicePoolArn or deviceSelectionConfiguration is required in a request.
 	DeviceSelectionConfiguration *DeviceSelectionConfiguration `locationName:"deviceSelectionConfiguration" type:"structure"`
 
 	// Specifies configuration information about a test run, such as the execution
@@ -14400,9 +14508,8 @@ func (s *ScheduleRunOutput) SetRun(v *Run) *ScheduleRunOutput {
 	return s
 }
 
-// Represents test settings. This data structure is passed in as the "test"
-// parameter to ScheduleRun. For an example of the JSON request syntax, see
-// ScheduleRun.
+// Represents test settings. This data structure is passed in as the test parameter
+// to ScheduleRun. For an example of the JSON request syntax, see ScheduleRun.
 type ScheduleRunTest struct {
 	_ struct{} `type:"structure"`
 
@@ -14426,10 +14533,10 @@ type ScheduleRunTest struct {
 	//
 	// For Appium tests (all types):
 	//
-	//    * appium_version: The Appium version. Currently supported values are "1.7.2",
-	//    "1.7.1", "1.6.5", "latest", and "default".
+	//    * appium_version: The Appium version. Currently supported values are "1.6.5"
+	//    (and higher), "latest", and "default".
 	//
-	// “latest” will run the latest Appium version supported by Device Farm (1.7.2).
+	// “latest” will run the latest Appium version supported by Device Farm (1.9.1).
 	//
 	// For “default”, Device Farm will choose a compatible version of Appium for
 	//    the device. The current behavior is to run 1.7.2 on Android devices and
@@ -14511,11 +14618,19 @@ type ScheduleRunTest struct {
 	//
 	//    * APPIUM_PYTHON: The Appium Python type.
 	//
-	//    * APPIUM_WEB_JAVA_JUNIT: The Appium Java JUnit type for Web apps.
+	//    * APPIUM_NODE: The Appium Node.js type.
 	//
-	//    * APPIUM_WEB_JAVA_TESTNG: The Appium Java TestNG type for Web apps.
+	//    * APPIUM_RUBY: The Appium Ruby type.
 	//
-	//    * APPIUM_WEB_PYTHON: The Appium Python type for Web apps.
+	//    * APPIUM_WEB_JAVA_JUNIT: The Appium Java JUnit type for web apps.
+	//
+	//    * APPIUM_WEB_JAVA_TESTNG: The Appium Java TestNG type for web apps.
+	//
+	//    * APPIUM_WEB_PYTHON: The Appium Python type for web apps.
+	//
+	//    * APPIUM_WEB_NODE: The Appium Node.js type for web apps.
+	//
+	//    * APPIUM_WEB_RUBY: The Appium Ruby type for web apps.
 	//
 	//    * CALABASH: The Calabash type.
 	//
@@ -14878,11 +14993,19 @@ type Suite struct {
 	//
 	//    * APPIUM_PYTHON: The Appium Python type.
 	//
-	//    * APPIUM_WEB_JAVA_JUNIT: The Appium Java JUnit type for Web apps.
+	//    * APPIUM_NODE: The Appium Node.js type.
 	//
-	//    * APPIUM_WEB_JAVA_TESTNG: The Appium Java TestNG type for Web apps.
+	//    * APPIUM_RUBY: The Appium Ruby type.
 	//
-	//    * APPIUM_WEB_PYTHON: The Appium Python type for Web apps.
+	//    * APPIUM_WEB_JAVA_JUNIT: The Appium Java JUnit type for web apps.
+	//
+	//    * APPIUM_WEB_JAVA_TESTNG: The Appium Java TestNG type for web apps.
+	//
+	//    * APPIUM_WEB_PYTHON: The Appium Python type for web apps.
+	//
+	//    * APPIUM_WEB_NODE: The Appium Node.js type for web apps.
+	//
+	//    * APPIUM_WEB_RUBY: The Appium Ruby type for web apps.
 	//
 	//    * CALABASH: The Calabash type.
 	//
@@ -15060,11 +15183,19 @@ type Test struct {
 	//
 	//    * APPIUM_PYTHON: The Appium Python type.
 	//
-	//    * APPIUM_WEB_JAVA_JUNIT: The Appium Java JUnit type for Web apps.
+	//    * APPIUM_NODE: The Appium Node.js type.
 	//
-	//    * APPIUM_WEB_JAVA_TESTNG: The Appium Java TestNG type for Web apps.
+	//    * APPIUM_RUBY: The Appium Ruby type.
 	//
-	//    * APPIUM_WEB_PYTHON: The Appium Python type for Web apps.
+	//    * APPIUM_WEB_JAVA_JUNIT: The Appium Java JUnit type for web apps.
+	//
+	//    * APPIUM_WEB_JAVA_TESTNG: The Appium Java TestNG type for web apps.
+	//
+	//    * APPIUM_WEB_PYTHON: The Appium Python type for web apps.
+	//
+	//    * APPIUM_WEB_NODE: The Appium Node.js type for web apps.
+	//
+	//    * APPIUM_WEB_RUBY: The Appium Ruby type for web apps.
 	//
 	//    * CALABASH: The Calabash type.
 	//
@@ -16032,13 +16163,24 @@ type Upload struct {
 	//
 	//    * APPIUM_PYTHON_TEST_PACKAGE: An Appium Python test package upload.
 	//
+	//    * APPIUM_NODE_TEST_PACKAGE: An Appium Node.js test package upload.
+	//
+	//    * APPIUM_RUBY_TEST_PACKAGE: An Appium Ruby test package upload.
+	//
 	//    * APPIUM_WEB_JAVA_JUNIT_TEST_PACKAGE: An Appium Java JUnit test package
-	//    upload.
+	//    upload for web apps.
 	//
 	//    * APPIUM_WEB_JAVA_TESTNG_TEST_PACKAGE: An Appium Java TestNG test package
-	//    upload.
+	//    upload for web apps.
 	//
-	//    * APPIUM_WEB_PYTHON_TEST_PACKAGE: An Appium Python test package upload.
+	//    * APPIUM_WEB_PYTHON_TEST_PACKAGE: An Appium Python test package upload
+	//    for web apps.
+	//
+	//    * APPIUM_WEB_NODE_TEST_PACKAGE: An Appium Node.js test package upload
+	//    for web apps.
+	//
+	//    * APPIUM_WEB_RUBY_TEST_PACKAGE: An Appium Ruby test package upload for
+	//    web apps.
 	//
 	//    * CALABASH_TEST_PACKAGE: A Calabash test package upload.
 	//
@@ -16058,11 +16200,24 @@ type Upload struct {
 	//
 	//    * APPIUM_PYTHON_TEST_SPEC: An Appium Python test spec upload.
 	//
-	//    * APPIUM_WEB_JAVA_JUNIT_TEST_SPEC: An Appium Java JUnit test spec upload.
+	//    * APPIUM_NODE_TEST_SPEC: An Appium Node.js test spec upload.
 	//
-	//    * APPIUM_WEB_JAVA_TESTNG_TEST_SPEC: An Appium Java TestNG test spec upload.
+	//    * APPIUM_RUBY_TEST_SPEC: An Appium Ruby test spec upload.
 	//
-	//    * APPIUM_WEB_PYTHON_TEST_SPEC: An Appium Python test spec upload.
+	//    * APPIUM_WEB_JAVA_JUNIT_TEST_SPEC: An Appium Java JUnit test spec upload
+	//    for a web app.
+	//
+	//    * APPIUM_WEB_JAVA_TESTNG_TEST_SPEC: An Appium Java TestNG test spec upload
+	//    for a web app.
+	//
+	//    * APPIUM_WEB_PYTHON_TEST_SPEC: An Appium Python test spec upload for a
+	//    web app.
+	//
+	//    * APPIUM_WEB_NODE_TEST_SPEC: An Appium Node.js test spec upload for a
+	//    web app.
+	//
+	//    * APPIUM_WEB_RUBY_TEST_SPEC: An Appium Ruby test spec upload for a web
+	//    app.
 	//
 	//    * INSTRUMENTATION_TEST_SPEC: An instrumentation test spec upload.
 	//
@@ -16657,6 +16812,12 @@ const (
 	// TestTypeAppiumPython is a TestType enum value
 	TestTypeAppiumPython = "APPIUM_PYTHON"
 
+	// TestTypeAppiumNode is a TestType enum value
+	TestTypeAppiumNode = "APPIUM_NODE"
+
+	// TestTypeAppiumRuby is a TestType enum value
+	TestTypeAppiumRuby = "APPIUM_RUBY"
+
 	// TestTypeAppiumWebJavaJunit is a TestType enum value
 	TestTypeAppiumWebJavaJunit = "APPIUM_WEB_JAVA_JUNIT"
 
@@ -16665,6 +16826,12 @@ const (
 
 	// TestTypeAppiumWebPython is a TestType enum value
 	TestTypeAppiumWebPython = "APPIUM_WEB_PYTHON"
+
+	// TestTypeAppiumWebNode is a TestType enum value
+	TestTypeAppiumWebNode = "APPIUM_WEB_NODE"
+
+	// TestTypeAppiumWebRuby is a TestType enum value
+	TestTypeAppiumWebRuby = "APPIUM_WEB_RUBY"
 
 	// TestTypeCalabash is a TestType enum value
 	TestTypeCalabash = "CALABASH"
@@ -16735,6 +16902,12 @@ const (
 	// UploadTypeAppiumPythonTestPackage is a UploadType enum value
 	UploadTypeAppiumPythonTestPackage = "APPIUM_PYTHON_TEST_PACKAGE"
 
+	// UploadTypeAppiumNodeTestPackage is a UploadType enum value
+	UploadTypeAppiumNodeTestPackage = "APPIUM_NODE_TEST_PACKAGE"
+
+	// UploadTypeAppiumRubyTestPackage is a UploadType enum value
+	UploadTypeAppiumRubyTestPackage = "APPIUM_RUBY_TEST_PACKAGE"
+
 	// UploadTypeAppiumWebJavaJunitTestPackage is a UploadType enum value
 	UploadTypeAppiumWebJavaJunitTestPackage = "APPIUM_WEB_JAVA_JUNIT_TEST_PACKAGE"
 
@@ -16743,6 +16916,12 @@ const (
 
 	// UploadTypeAppiumWebPythonTestPackage is a UploadType enum value
 	UploadTypeAppiumWebPythonTestPackage = "APPIUM_WEB_PYTHON_TEST_PACKAGE"
+
+	// UploadTypeAppiumWebNodeTestPackage is a UploadType enum value
+	UploadTypeAppiumWebNodeTestPackage = "APPIUM_WEB_NODE_TEST_PACKAGE"
+
+	// UploadTypeAppiumWebRubyTestPackage is a UploadType enum value
+	UploadTypeAppiumWebRubyTestPackage = "APPIUM_WEB_RUBY_TEST_PACKAGE"
 
 	// UploadTypeCalabashTestPackage is a UploadType enum value
 	UploadTypeCalabashTestPackage = "CALABASH_TEST_PACKAGE"
@@ -16771,6 +16950,12 @@ const (
 	// UploadTypeAppiumPythonTestSpec is a UploadType enum value
 	UploadTypeAppiumPythonTestSpec = "APPIUM_PYTHON_TEST_SPEC"
 
+	// UploadTypeAppiumNodeTestSpec is a UploadType enum value
+	UploadTypeAppiumNodeTestSpec = "APPIUM_NODE_TEST_SPEC"
+
+	// UploadTypeAppiumRubyTestSpec is a UploadType enum value
+	UploadTypeAppiumRubyTestSpec = "APPIUM_RUBY_TEST_SPEC"
+
 	// UploadTypeAppiumWebJavaJunitTestSpec is a UploadType enum value
 	UploadTypeAppiumWebJavaJunitTestSpec = "APPIUM_WEB_JAVA_JUNIT_TEST_SPEC"
 
@@ -16779,6 +16964,12 @@ const (
 
 	// UploadTypeAppiumWebPythonTestSpec is a UploadType enum value
 	UploadTypeAppiumWebPythonTestSpec = "APPIUM_WEB_PYTHON_TEST_SPEC"
+
+	// UploadTypeAppiumWebNodeTestSpec is a UploadType enum value
+	UploadTypeAppiumWebNodeTestSpec = "APPIUM_WEB_NODE_TEST_SPEC"
+
+	// UploadTypeAppiumWebRubyTestSpec is a UploadType enum value
+	UploadTypeAppiumWebRubyTestSpec = "APPIUM_WEB_RUBY_TEST_SPEC"
 
 	// UploadTypeInstrumentationTestSpec is a UploadType enum value
 	UploadTypeInstrumentationTestSpec = "INSTRUMENTATION_TEST_SPEC"

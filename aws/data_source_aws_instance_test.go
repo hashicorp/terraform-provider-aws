@@ -336,7 +336,7 @@ resource "aws_instance" "web" {
 }
 
 data "aws_instance" "web-instance" {
-  instance_tags {
+  instance_tags = {
     Name = "${aws_instance.web.tags["Name"]}"
     TestSeed = "%d"
   }
@@ -576,7 +576,7 @@ resource "aws_security_group" "tf_test_foo" {
     protocol = "icmp"
     from_port = -1
     to_port = -1
-    cidr_blocks = ["0.0.0.0/0"]
+    self = true
   }
 }
 
@@ -618,7 +618,7 @@ resource "aws_security_group" "tf_test_foo" {
     protocol = "icmp"
     from_port = -1
     to_port = -1
-    cidr_blocks = ["0.0.0.0/0"]
+    self = true
   }
 }
 

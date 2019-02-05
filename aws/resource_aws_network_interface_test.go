@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -10,6 +11,61 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_network_interface", &resource.Sweeper{
+		Name: "aws_network_interface",
+		F:    testSweepEc2NetworkInterfaces,
+		Dependencies: []string{
+			"aws_instance",
+		},
+	})
+}
+
+func testSweepEc2NetworkInterfaces(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).ec2conn
+
+	err = conn.DescribeNetworkInterfacesPages(&ec2.DescribeNetworkInterfacesInput{}, func(page *ec2.DescribeNetworkInterfacesOutput, isLast bool) bool {
+		if page == nil {
+			return !isLast
+		}
+
+		for _, networkInterface := range page.NetworkInterfaces {
+			id := aws.StringValue(networkInterface.NetworkInterfaceId)
+
+			if aws.StringValue(networkInterface.Status) != ec2.NetworkInterfaceStatusAvailable {
+				log.Printf("[INFO] Skipping EC2 Network Interface in unavailable (%s) status: %s", aws.StringValue(networkInterface.Status), id)
+				continue
+			}
+
+			input := &ec2.DeleteNetworkInterfaceInput{
+				NetworkInterfaceId: aws.String(id),
+			}
+
+			log.Printf("[INFO] Deleting EC2 Network Interface: %s", id)
+			_, err := conn.DeleteNetworkInterface(input)
+
+			if err != nil {
+				log.Printf("[ERROR] Error deleting EC2 Network Interface (%s): %s", id, err)
+			}
+		}
+
+		return !isLast
+	})
+	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping EC2 Network Interface sweep for %s: %s", region, err)
+			return nil
+		}
+		return fmt.Errorf("error retrieving EC2 Network Interfaces: %s", err)
+	}
+
+	return nil
+}
 
 func TestAccAWSENI_importBasic(t *testing.T) {
 	resourceName := "aws_network_interface.bar"
@@ -253,7 +309,7 @@ func testAccCheckAWSENIAttributes(conf *ec2.NetworkInterface) resource.TestCheck
 			return fmt.Errorf("expected private dns name to be ip-172-16-10-100.us-west-2.compute.internal, but was %s", *conf.PrivateDnsName)
 		}
 
-		if *conf.SourceDestCheck != true {
+		if !*conf.SourceDestCheck {
 			return fmt.Errorf("expected source_dest_check to be true, but was %t", *conf.SourceDestCheck)
 		}
 

@@ -1,4 +1,106 @@
-## 1.55.0 (Unreleased)
+## 1.58.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_ec2_client_vpn_endpoint` [GH-7009]
+
+BUG FIXES:
+
+* resource/aws_dynamodb_table: Prevent error when updating `billing_mode` from `PAY_PER_REQUEST` to `PROVISIONED` [GH-7363]
+
+## 1.57.0 (January 26, 2019)
+
+NOTES:
+
+* provider: Fairly light release this week due to Terraform 0.12 upgrade and Terraform AWS Provider 2.0 related activities happening behind the scenes, which will continue through at least next week. For additional tracking information about those efforts, see the v2.0.0 milestone in GitHub.
+
+ENHANCEMENTS
+
+* data-source/aws_mq_broker: Add `tags` attribute ([#7193](https://github.com/terraform-providers/terraform-provider-aws/issues/7193))
+* provider: Switch codebase dependency management from `govendor` to Go modules ([#7165](https://github.com/terraform-providers/terraform-provider-aws/issues/7165))
+* resource/aws_autoscaling_policy: Support resource import ([#7195](https://github.com/terraform-providers/terraform-provider-aws/issues/7195))
+* resource/aws_lb_listener: Add `TLS` to `protocol` argument validation ([#7338](https://github.com/terraform-providers/terraform-provider-aws/issues/7338))
+* resource/aws_lb_target_group: Add `TLS` to `protocol` argument validation ([#7338](https://github.com/terraform-providers/terraform-provider-aws/issues/7338))
+* resource/aws_mq_broker: Add `tags` argument ([#7193](https://github.com/terraform-providers/terraform-provider-aws/issues/7193))
+* resource/aws_mq_configuration: Add `tags` argument ([#7193](https://github.com/terraform-providers/terraform-provider-aws/issues/7193))
+
+BUG FIXES
+
+* resource/aws_autoscaling_policy: Properly read `step_adjustment` into Terraform state ([#7336](https://github.com/terraform-providers/terraform-provider-aws/issues/7336))
+* resource/aws_emr_cluster: Fix regression with `instance_group` differences when using `name` ([#7324](https://github.com/terraform-providers/terraform-provider-aws/issues/7324))
+* resource/aws_iot_topic_rule: Prevent panic with missing SQS UseBase64 attribute in API response ([#7337](https://github.com/terraform-providers/terraform-provider-aws/issues/7337))
+* resource/aws_lambda_permission: Retry for Lambda function eventual consistency on creation ([#7327](https://github.com/terraform-providers/terraform-provider-aws/issues/7327))
+* resource/aws_rds_cluster_parameter_group: Prevent missing DBClusterParameterGroupName error on creation with generated names and `name_prefix` ([#7326](https://github.com/terraform-providers/terraform-provider-aws/issues/7326))
+* resource/aws_s3_bucket_object: Delete S3 objects with leading '/' in the key name ([#7268](https://github.com/terraform-providers/terraform-provider-aws/issues/7268))
+
+## 1.56.0 (January 16, 2019)
+
+NOTES
+
+* resource/aws_db_option_group: The Terraform resource is now able to perform drift detection on and import the state of the `option` attribute. The caveat is that while RDS returns only modified options, it will return all option settings whether modified or not from their default values. To workaround this option settings issue, we pass in the options from the Terraform configuration and ignore default values that are not present in the configuration. Some Terraform configurations may require minor updates to match the expected values.
+
+FEATURES
+
+* **New Data Source:** `aws_elastic_beanstalk_application` ([#7144](https://github.com/terraform-providers/terraform-provider-aws/issues/7144))
+* **New Resource:** `aws_docdb_subnet_group` ([#7106](https://github.com/terraform-providers/terraform-provider-aws/issues/7106))
+* **New Resource:** `aws_globalaccelerator_accelerator` ([#7002](https://github.com/terraform-providers/terraform-provider-aws/issues/7002))
+* **New Resource:** `aws_lambda_layer_version` ([#6782](https://github.com/terraform-providers/terraform-provider-aws/issues/6782))
+* **New Resource:** `aws_ram_resource_share` ([#6528](https://github.com/terraform-providers/terraform-provider-aws/issues/6528))
+* **New Resource:** `aws_sagemaker_notebook_instance` ([#7139](https://github.com/terraform-providers/terraform-provider-aws/issues/7139))
+
+ENHANCEMENTS
+
+* data-source/aws_lambda_function: Add `layers` attribute ([#7126](https://github.com/terraform-providers/terraform-provider-aws/issues/7126))
+* resource/aws_emr_cluster: Support resource import ([#4488](https://github.com/terraform-providers/terraform-provider-aws/issues/4488)] / [[#6498](https://github.com/terraform-providers/terraform-provider-aws/issues/6498))
+* resource/aws_emr_cluster: Support `instance_group` `autoscaling_policy` updates ([#6498](https://github.com/terraform-providers/terraform-provider-aws/issues/6498))
+* resource/aws_inspector_assessment_target: Allow omitting resource_group_arn argument (support matching all EC2 instances) ([#7112](https://github.com/terraform-providers/terraform-provider-aws/issues/7112))
+* resource/aws_inspector_assessment_target: Support resource import ([#7112](https://github.com/terraform-providers/terraform-provider-aws/issues/7112))
+* resource/aws_lambda_function: Add `layers` argument ([#7126](https://github.com/terraform-providers/terraform-provider-aws/issues/7126))
+* resource/aws_s3_bucket: Add `object_lock_configuration` argument (support S3 Object Lock) ([#6964](https://github.com/terraform-providers/terraform-provider-aws/issues/6964))
+
+BUG FIXES
+
+* resource/aws_acm_certificate: Prevent crash with empty `SubjectAlternativeNames` (e.g. `IMPORTED` type certificates with IP address `CommonName`) ([#7127](https://github.com/terraform-providers/terraform-provider-aws/issues/7127))
+* resource/aws_api_gateway_method_settings: Prevent crash when using `cache_data_encrypted` ([#7133](https://github.com/terraform-providers/terraform-provider-aws/issues/7133))
+* resource/aws_db_option_group: Read `option` attribute into Terraform state for drift detection ([#7125](https://github.com/terraform-providers/terraform-provider-aws/issues/7125))
+* resource/aws_db_option_group: Skip erroneous `ModifyOptionGroup` error when no option updates are being performed ([#7125](https://github.com/terraform-providers/terraform-provider-aws/issues/7125))
+* resource/aws_ec2_transit_gateway_route: Prevent crash with externally removed attachment ([#7117](https://github.com/terraform-providers/terraform-provider-aws/issues/7117))
+* resource/aws_emr_cluster: Properly read `core_instance_count`, `master_instance_type`, and `termination_policies` into Terraform state ([#4488](https://github.com/terraform-providers/terraform-provider-aws/issues/4488)] / [[#6498](https://github.com/terraform-providers/terraform-provider-aws/issues/6498))
+* resource/aws_inspector_assessment_target: Properly read resource_group_arn attribute into Terraform state ([#7112](https://github.com/terraform-providers/terraform-provider-aws/issues/7112))
+* resource/aws_launch_template: Prevent crashes with empty configuration blocks for top-level attributes ([#7134](https://github.com/terraform-providers/terraform-provider-aws/issues/7134))
+* resource/aws_s3_bucket_object: Prevent creating new S3 object version when updating ACL or tags ([#7138](https://github.com/terraform-providers/terraform-provider-aws/issues/7138))
+* resource/aws_s3_bucket_object: Prevent `NoSuchKey` errors reading tags on resource creation ([#7138](https://github.com/terraform-providers/terraform-provider-aws/issues/7138))
+* service/applicationautoscaling: Use proper endpoint information in AWS GovCloud (US) ([#7142](https://github.com/terraform-providers/terraform-provider-aws/issues/7142))
+* service/servicediscovery: Return full error messaging for failed operations ([#7118](https://github.com/terraform-providers/terraform-provider-aws/issues/7118))
+
+## 1.55.0 (January 10, 2019)
+
+FEATURES
+
+* **New Resource:** `aws_docdb_cluster_parameter_group` ([#7090](https://github.com/terraform-providers/terraform-provider-aws/issues/7090))
+* **New Resource:** `aws_media_package_channel` ([#6957](https://github.com/terraform-providers/terraform-provider-aws/issues/6957))
+* **New Resource:** `aws_resourcegroups_group` ([#6217](https://github.com/terraform-providers/terraform-provider-aws/issues/6217))
+
+ENHANCEMENTS
+
+* resource/aws_app_cookie_stickiness_policy: Support resource import ([#7080](https://github.com/terraform-providers/terraform-provider-aws/issues/7080))
+* resource/aws_elasticsearch_domain: Support in-place updates of `elasticsearch_version` ([#6243](https://github.com/terraform-providers/terraform-provider-aws/issues/6243))
+* resource/aws_kinesis_firehose_delivery_stream: Add `extended_s3_configuration` `error_output_prefix` argument ([#7026](https://github.com/terraform-providers/terraform-provider-aws/issues/7026))
+* resource/aws_sfn_activity: Add `tags` argument ([#7024](https://github.com/terraform-providers/terraform-provider-aws/issues/7024))
+* resource/aws_sfn_state_machine: Add `tags` argument ([#7024](https://github.com/terraform-providers/terraform-provider-aws/issues/7024))
+* resource/aws_ssm_maintenance_window: Add `end_date`, `schedule_timezone`, and `start_date` arguments ([#7040](https://github.com/terraform-providers/terraform-provider-aws/issues/7040))
+
+BUG FIXES
+
+* resource/aws_batch_job_queue: Properly read `compute_environments` into Terraform state ([#7079](https://github.com/terraform-providers/terraform-provider-aws/issues/7079))
+* resource/aws_dynamodb_table: Prevent `BillingMode` `ValidationError` on table creation ([#7064](https://github.com/terraform-providers/terraform-provider-aws/issues/7064))
+* resource/aws_iam_group_policy: Skip `NoSuchEntity` errors on resource deletion without refresh ([#7071](https://github.com/terraform-providers/terraform-provider-aws/issues/7071))
+* resource/aws_iam_role_policy: Skip `NoSuchEntity` errors on resource deletion without refresh ([#7070](https://github.com/terraform-providers/terraform-provider-aws/issues/7070))
+* resource/aws_iam_policy: Present more human readable error message during resource deletion ([#7072](https://github.com/terraform-providers/terraform-provider-aws/issues/7072))
+* resource/aws_iam_user_policy: Skip `NoSuchEntity` errors on resource deletion without refresh ([#7069](https://github.com/terraform-providers/terraform-provider-aws/issues/7069))
+* resource/aws_instance: Skip `InvalidInstanceID.NotFound` error on resource deletion ([#6978](https://github.com/terraform-providers/terraform-provider-aws/issues/6978))
+* resource/aws_kinesis_analytics_application: Retry Lambda permission `InvalidArgumentException` errors for IAM eventual consistency ([#7039](https://github.com/terraform-providers/terraform-provider-aws/issues/7039))
+
 ## 1.54.0 (December 21, 2018)
 
 NOTES

@@ -277,10 +277,10 @@ func resourceAwsAcmCertificateUpdate(d *schema.ResourceData, meta interface{}) e
 
 func cleanUpSubjectAlternativeNames(cert *acm.CertificateDetail) []string {
 	sans := cert.SubjectAlternativeNames
-	vs := make([]string, 0, len(sans)-1)
+	vs := make([]string, 0)
 	for _, v := range sans {
-		if *v != *cert.DomainName {
-			vs = append(vs, *v)
+		if aws.StringValue(v) != aws.StringValue(cert.DomainName) {
+			vs = append(vs, aws.StringValue(v))
 		}
 	}
 	return vs

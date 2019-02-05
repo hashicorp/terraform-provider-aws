@@ -6,7 +6,7 @@ description: |-
   Provides an AWS App Mesh virtual node resource.
 ---
 
-# aws_appmesh_route
+# aws_appmesh_virtual_node
 
 Provides an AWS App Mesh virtual node resource.
 

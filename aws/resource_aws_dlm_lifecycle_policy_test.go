@@ -188,7 +188,7 @@ resource "aws_dlm_lifecycle_policy" "basic" {
       }
     }
 
-    target_tags {
+    target_tags = {
       tf-acc-test = "basic"
     }
   }
@@ -239,14 +239,14 @@ resource "aws_dlm_lifecycle_policy" "full" {
         count = 10
       }
 
-      tags_to_add {
+      tags_to_add = {
         tf-acc-test-added = "full"
       }
 
       copy_tags = false
     }
 
-    target_tags {
+    target_tags = {
       tf-acc-test = "full"
     }
   }
@@ -297,14 +297,14 @@ resource "aws_dlm_lifecycle_policy" "full" {
         count = 100
       }
 
-      tags_to_add {
+      tags_to_add = {
         tf-acc-test-added = "full-updated"
       }
 
       copy_tags = true
     }
 
-    target_tags {
+    target_tags = {
       tf-acc-test = "full-updated"
     }
   }

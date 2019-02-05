@@ -7896,6 +7896,10 @@ type H264Settings struct {
 	// variation of content complexity.
 	SpatialAq *string `locationName:"spatialAq" type:"string" enum:"H264SpatialAq"`
 
+	// If set to fixed, use gopNumBFrames B-frames per sub-GOP. If set to dynamic,
+	// optimize the number of B-frames used for each sub-GOP to improve visual quality.
+	SubgopLength *string `locationName:"subgopLength" type:"string" enum:"H264SubGopLength"`
+
 	// Produces a bitstream compliant with SMPTE RP-2027.
 	Syntax *string `locationName:"syntax" type:"string" enum:"H264Syntax"`
 
@@ -8142,6 +8146,12 @@ func (s *H264Settings) SetSoftness(v int64) *H264Settings {
 // SetSpatialAq sets the SpatialAq field's value.
 func (s *H264Settings) SetSpatialAq(v string) *H264Settings {
 	s.SpatialAq = &v
+	return s
+}
+
+// SetSubgopLength sets the SubgopLength field's value.
+func (s *H264Settings) SetSubgopLength(v string) *H264Settings {
+	s.SubgopLength = &v
 	return s
 }
 
@@ -8482,8 +8492,8 @@ type HlsGroupSettings struct {
 	// segment length may be longer.
 	SegmentLength *int64 `locationName:"segmentLength" min:"1" type:"integer"`
 
-	// When set to useInputSegmentation, the output segment or fragment points are
-	// set by the RAI markers from the input streams.
+	// useInputSegmentation has been deprecated. The configured segment size is
+	// always used.
 	SegmentationMode *string `locationName:"segmentationMode" type:"string" enum:"HlsSegmentationMode"`
 
 	// Number of segments to write to a subdirectory before starting a new one.
@@ -9012,6 +9022,45 @@ func (s *HlsSettings) SetAudioOnlyHlsSettings(v *AudioOnlyHlsSettings) *HlsSetti
 // SetStandardHlsSettings sets the StandardHlsSettings field's value.
 func (s *HlsSettings) SetStandardHlsSettings(v *StandardHlsSettings) *HlsSettings {
 	s.StandardHlsSettings = v
+	return s
+}
+
+// Settings for the action to emit HLS metadata
+type HlsTimedMetadataScheduleActionSettings struct {
+	_ struct{} `type:"structure"`
+
+	// Base64 string formatted according to the ID3 specification: http://id3.org/id3v2.4.0-structure
+	//
+	// Id3 is a required field
+	Id3 *string `locationName:"id3" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s HlsTimedMetadataScheduleActionSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s HlsTimedMetadataScheduleActionSettings) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *HlsTimedMetadataScheduleActionSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "HlsTimedMetadataScheduleActionSettings"}
+	if s.Id3 == nil {
+		invalidParams.Add(request.NewErrParamRequired("Id3"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetId3 sets the Id3 field's value.
+func (s *HlsTimedMetadataScheduleActionSettings) SetId3(v string) *HlsTimedMetadataScheduleActionSettings {
+	s.Id3 = &v
 	return s
 }
 
@@ -11304,8 +11353,8 @@ type MsSmoothGroupSettings struct {
 	// to exhausting the numRetries on one segment, or exceeding filecacheDuration.
 	RestartDelay *int64 `locationName:"restartDelay" type:"integer"`
 
-	// When set to useInputSegmentation, the output segment or fragment points are
-	// set by the RAI markers from the input streams.
+	// useInputSegmentation has been deprecated. The configured segment size is
+	// always used.
 	SegmentationMode *string `locationName:"segmentationMode" type:"string" enum:"SmoothGroupSegmentationMode"`
 
 	// Number of milliseconds to delay the output from the second pipeline.
@@ -12780,6 +12829,9 @@ func (s *ScheduleAction) SetScheduleActionStartSettings(v *ScheduleActionStartSe
 type ScheduleActionSettings struct {
 	_ struct{} `type:"structure"`
 
+	// Settings to emit HLS metadata
+	HlsTimedMetadataSettings *HlsTimedMetadataScheduleActionSettings `locationName:"hlsTimedMetadataSettings" type:"structure"`
+
 	// Settings to switch an input
 	InputSwitchSettings *InputSwitchScheduleActionSettings `locationName:"inputSwitchSettings" type:"structure"`
 
@@ -12812,6 +12864,11 @@ func (s ScheduleActionSettings) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *ScheduleActionSettings) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "ScheduleActionSettings"}
+	if s.HlsTimedMetadataSettings != nil {
+		if err := s.HlsTimedMetadataSettings.Validate(); err != nil {
+			invalidParams.AddNested("HlsTimedMetadataSettings", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.InputSwitchSettings != nil {
 		if err := s.InputSwitchSettings.Validate(); err != nil {
 			invalidParams.AddNested("InputSwitchSettings", err.(request.ErrInvalidParams))
@@ -12842,6 +12899,12 @@ func (s *ScheduleActionSettings) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetHlsTimedMetadataSettings sets the HlsTimedMetadataSettings field's value.
+func (s *ScheduleActionSettings) SetHlsTimedMetadataSettings(v *HlsTimedMetadataScheduleActionSettings) *ScheduleActionSettings {
+	s.HlsTimedMetadataSettings = v
+	return s
 }
 
 // SetInputSwitchSettings sets the InputSwitchSettings field's value.
@@ -16054,6 +16117,14 @@ const (
 
 	// H264SpatialAqEnabled is a H264SpatialAq enum value
 	H264SpatialAqEnabled = "ENABLED"
+)
+
+const (
+	// H264SubGopLengthDynamic is a H264SubGopLength enum value
+	H264SubGopLengthDynamic = "DYNAMIC"
+
+	// H264SubGopLengthFixed is a H264SubGopLength enum value
+	H264SubGopLengthFixed = "FIXED"
 )
 
 const (

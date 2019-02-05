@@ -16,7 +16,7 @@ Creates and manages an AWS IoT Thing.
 resource "aws_iot_thing" "example" {
   name = "example"
 
-  attributes {
+  attributes = {
     First = "examplevalue"
   }
 }
