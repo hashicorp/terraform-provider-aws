@@ -263,7 +263,6 @@ func resourceAwsWorkLinkFleetUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	log.Printf("HasChange: %t", d.HasChange("identity_provider"))
 	if d.HasChange("identity_provider") {
 		if err := updateIdentityProviderConfiguration(conn, d); err != nil {
 			return err
@@ -332,6 +331,8 @@ func updateAuditStreamConfiguration(conn *worklink.WorkLink, d *schema.ResourceD
 	} else if d.IsNewResource() {
 		return nil
 	}
+
+	log.Printf("[DEBUG] Update audit stream configuration option: %#v", input)
 	if _, err := conn.UpdateAuditStreamConfiguration(input); err != nil {
 		if isAWSErr(err, worklink.ErrCodeResourceNotFoundException, "") {
 			log.Printf("[WARN] Worklink Fleet (%s) not found, removing from state", d.Id())
@@ -359,6 +360,7 @@ func updateCompanyNetworkConfiguration(conn *worklink.WorkLink, d *schema.Resour
 			SubnetIds:        expandStringSet(config["subnet_ids"].(*schema.Set)),
 			VpcId:            aws.String(config["vpc_id"].(string)),
 		}
+		log.Printf("[DEBUG] Update company network configuration option: %#v", input)
 		if _, err := conn.UpdateCompanyNetworkConfiguration(input); err != nil {
 			if isAWSErr(err, worklink.ErrCodeResourceNotFoundException, "") {
 				log.Printf("[WARN] Worklink Fleet (%s) not found, removing from state", d.Id())
@@ -380,6 +382,8 @@ func updateDevicePolicyConfiguration(conn *worklink.WorkLink, d *schema.Resource
 	} else if d.IsNewResource() {
 		return nil
 	}
+
+	log.Printf("[DEBUG] Update device policy configuration option: %#v", input)
 	if _, err := conn.UpdateDevicePolicyConfiguration(input); err != nil {
 		if isAWSErr(err, worklink.ErrCodeResourceNotFoundException, "") {
 			log.Printf("[WARN] Worklink Fleet (%s) not found, removing from state", d.Id())
@@ -406,6 +410,7 @@ func updateIdentityProviderConfiguration(conn *worklink.WorkLink, d *schema.Reso
 			IdentityProviderType:         aws.String(config["type"].(string)),
 			IdentityProviderSamlMetadata: aws.String(config["saml_metadata"].(string)),
 		}
+		log.Printf("[DEBUG] Update identity provider configuration option: %#v", input)
 		if _, err := conn.UpdateIdentityProviderConfiguration(input); err != nil {
 			if isAWSErr(err, worklink.ErrCodeResourceNotFoundException, "") {
 				log.Printf("[WARN] Worklink Fleet (%s) not found, removing from state", d.Id())
