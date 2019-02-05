@@ -198,7 +198,9 @@ func resourceAwsWorkLinkFleetRead(d *schema.ResourceData, meta interface{}) erro
 	if err != nil {
 		return fmt.Errorf("Error describe worklink company network configuration: %s", err)
 	}
-	d.Set("network", flattenWorkLinkNetworkConfigResponse(companyNetworkConfigurationResp))
+	if err := d.Set("network", flattenWorkLinkNetworkConfigResponse(companyNetworkConfigurationResp)); err != nil {
+		return fmt.Errorf("Error setting network: %s", err)
+	}
 
 	identityProviderConfigurationResp, err := conn.DescribeIdentityProviderConfiguration(&worklink.DescribeIdentityProviderConfigurationInput{
 		FleetArn: aws.String(d.Id()),
@@ -206,7 +208,10 @@ func resourceAwsWorkLinkFleetRead(d *schema.ResourceData, meta interface{}) erro
 	if err != nil {
 		return fmt.Errorf("Error describe worklink company network configuration: %s", err)
 	}
-	d.Set("identity_provider", flattenWorkLinkIdentityProviderConfigResponse(identityProviderConfigurationResp))
+
+	if err := d.Set("identity_provider", flattenWorkLinkIdentityProviderConfigResponse(identityProviderConfigurationResp)); err != nil {
+		return fmt.Errorf("Error setting identity_provider: %s", err)
+	}
 
 	devicePolicyConfigurationResp, err := conn.DescribeDevicePolicyConfiguration(&worklink.DescribeDevicePolicyConfigurationInput{
 		FleetArn: aws.String(d.Id()),
