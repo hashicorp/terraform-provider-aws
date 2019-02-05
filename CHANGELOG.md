@@ -4,6 +4,10 @@ FEATURES:
 
 * **New Resource:** `aws_ec2_client_vpn_endpoint` [GH-7009]
 
+BUG FIXES:
+
+* resource/aws_dynamodb_table: Prevent error when updating `billing_mode` from `PAY_PER_REQUEST` to `PROVISIONED` [GH-7363]
+
 ## 1.57.0 (January 26, 2019)
 
 NOTES:
