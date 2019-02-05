@@ -1,6 +1,8 @@
 package aws
 
 import (
+	"fmt"
+	"log"
 	"regexp"
 
 	"github.com/hashicorp/terraform/helper/validation"
@@ -14,7 +16,6 @@ func resourceAwsBackupVault() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsBackupVaultCreate,
 		Read:   resourceAwsBackupVaultRead,
-		Update: resourceAwsBackupVaultUpdate,
 		Delete: resourceAwsBackupVaultDelete,
 
 		Schema: map[string]*schema.Schema{
@@ -33,6 +34,8 @@ func resourceAwsBackupVault() *schema.Resource {
 			"kms_key_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
 				ValidateFunc: validateArn,
 			},
 			"arn": {
@@ -55,7 +58,7 @@ func resourceAwsBackupVaultCreate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if v, ok := d.GetOk("tags"); ok {
-		input.BackupVaultTags = remapTags(v.(map[string]interface{}))
+		input.BackupVaultTags = tagsFromMapGeneric(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("kms_key_arn"); ok {
@@ -64,7 +67,7 @@ func resourceAwsBackupVaultCreate(d *schema.ResourceData, meta interface{}) erro
 
 	_, err := conn.CreateBackupVault(input)
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating Backup Vault (%s): %s", d.Id(), err)
 	}
 
 	d.SetId(d.Get("name").(string))
@@ -81,17 +84,28 @@ func resourceAwsBackupVaultRead(d *schema.ResourceData, meta interface{}) error 
 
 	resp, err := conn.DescribeBackupVault(input)
 	if err != nil {
-		return err
+		return fmt.Errorf("error reading Backup Vault (%s): %s", d.Id(), err)
 	}
 
+	d.Set("kms_key_arn", resp.EncryptionKeyArn)
 	d.Set("arn", resp.BackupVaultArn)
 	d.Set("recovery_points", resp.NumberOfRecoveryPoints)
 
-	return nil
-}
+	tresp, err := conn.ListTags(&backup.ListTagsInput{
+		ResourceArn: aws.String(*resp.BackupVaultArn),
+	})
 
-func resourceAwsBackupVaultUpdate(d *schema.ResourceData, meta interface{}) error {
-	return resourceAwsBackupVaultRead(d, meta)
+	if err != nil {
+		log.Printf("[DEBUG] Error retrieving tags for ARN: %s", aws.StringValue(resp.BackupVaultArn))
+	}
+
+	var tags map[string]*string
+	if len(tresp.Tags) > 0 {
+		tags = tresp.Tags
+	}
+	d.Set("tags", tags)
+
+	return nil
 }
 
 func resourceAwsBackupVaultDelete(d *schema.ResourceData, meta interface{}) error {
@@ -103,18 +117,8 @@ func resourceAwsBackupVaultDelete(d *schema.ResourceData, meta interface{}) erro
 
 	_, err := conn.DeleteBackupVault(input)
 	if err != nil {
-		return err
+		return fmt.Errorf("error deleting Backup Vault (%s): %s", d.Id(), err)
 	}
 
 	return nil
-}
-
-func remapTags(m map[string]interface{}) map[string]*string {
-	n := map[string]*string{}
-
-	for k, v := range m {
-		n[k] = aws.String(v.(string))
-	}
-
-	return n
 }

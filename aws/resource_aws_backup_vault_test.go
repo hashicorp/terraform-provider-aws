@@ -39,7 +39,7 @@ func TestAccAwsBackupVault_withKmsKey(t *testing.T) {
 				Config: testAccBackupVaultWithKmsKey(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBackupVaultExists("aws_backup_vault.test"),
-					resource.TestCheckResourceAttrSet("aws_backup_vault.test", "kms_key_arn"),
+					resource.TestCheckResourceAttrPair("aws_backup_vault.test", "kms_key_arn", "aws_kms_key.test", "arn"),
 				),
 			},
 		},
@@ -127,8 +127,8 @@ resource "aws_backup_vault" "test" {
 	name = "tf_acc_test_backup_vault_%d"
 	
 	tags {
-		up 		= "down"
-		left 	= "right" 
+		up		= "down"
+		left	= "right"
 	}
 }
 `, randInt)
