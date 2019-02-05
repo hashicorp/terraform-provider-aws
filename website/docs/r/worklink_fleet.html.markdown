@@ -51,12 +51,12 @@ resource "aws_worklink_fleet" "test" {
 The following arguments are supported:
 
 * `name` - (Required) A region-unique name for the AMI.
-* `display_name` - (Optional) The name of the fleet.
-* `optimize_for_end_user_location` - (Optional) The option to optimize for better performance by routing traffic through the closest AWS Region to users, which may be outside of your home Region. Defaults to `true`.
 * `audit_stream_arn` - (Optional) The ARN of the Amazon Kinesis data stream that receives the audit events.
-* `network` - (Optional) Provide this to allow manage the company network configuration for the fleet. Fields documented below.
 * `device_ca_certificate` - (Optional) The certificate chain, including intermediate certificates and the root certificate authority certificate used to issue device certificates.
 * `identity_provider` - (Optional) Provide this to allow manage the identity provider configuration for the fleet. Fields documented below.
+* `display_name` - (Optional) The name of the fleet.
+* `network` - (Optional) Provide this to allow manage the company network configuration for the fleet. Fields documented below.
+* `optimize_for_end_user_location` - (Optional) The option to optimize for better performance by routing traffic through the closest AWS Region to users, which may be outside of your home Region. Defaults to `true`.
 
 **network** requires the following:
 
