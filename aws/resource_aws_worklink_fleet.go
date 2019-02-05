@@ -186,9 +186,7 @@ func resourceAwsWorkLinkFleetRead(d *schema.ResourceData, meta interface{}) erro
 		FleetArn: aws.String(d.Id()),
 	})
 	if err != nil {
-		if !isAWSErr(err, worklink.ErrCodeResourceNotFoundException, "") {
-			return fmt.Errorf("Error describe worklink audit stream configuration: %s", err)
-		}
+		return fmt.Errorf("Error describe worklink audit stream configuration: %s", err)
 	}
 	d.Set("audit_stream_arn", auditStreamConfigurationResp.AuditStreamArn)
 
@@ -217,9 +215,7 @@ func resourceAwsWorkLinkFleetRead(d *schema.ResourceData, meta interface{}) erro
 		FleetArn: aws.String(d.Id()),
 	})
 	if err != nil {
-		if !isAWSErr(err, worklink.ErrCodeResourceNotFoundException, "") {
-			return fmt.Errorf("Error describe worklink device policy configuration: %s", err)
-		}
+		return fmt.Errorf("Error describe worklink device policy configuration: %s", err)
 	}
 	d.Set("device_ca_certificate", strings.TrimSpace(aws.StringValue(devicePolicyConfigurationResp.DeviceCaCertificate)))
 
