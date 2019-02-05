@@ -138,7 +138,24 @@ func resourceAwsWorkLinkFleetCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	d.SetId(aws.StringValue(resp.FleetArn))
-	return resourceAwsWorkLinkFleetUpdate(d, meta)
+
+	if err := updateAuditStreamConfiguration(conn, d); err != nil {
+		return err
+	}
+
+	if err := updateCompanyNetworkConfiguration(conn, d); err != nil {
+		return err
+	}
+
+	if err := updateDevicePolicyConfiguration(conn, d); err != nil {
+		return err
+	}
+
+	if err := updateIdentityProviderConfiguration(conn, d); err != nil {
+		return err
+	}
+
+	return resourceAwsWorkLinkFleetRead(d, meta)
 }
 
 func resourceAwsWorkLinkFleetRead(d *schema.ResourceData, meta interface{}) error {
@@ -312,6 +329,8 @@ func updateAuditStreamConfiguration(conn *worklink.WorkLink, d *schema.ResourceD
 	}
 	if v, ok := d.GetOk("audit_stream_arn"); ok {
 		input.AuditStreamArn = aws.String(v.(string))
+	} else if d.IsNewResource() {
+		return nil
 	}
 	if _, err := conn.UpdateAuditStreamConfiguration(input); err != nil {
 		if isAWSErr(err, worklink.ErrCodeResourceNotFoundException, "") {
@@ -358,6 +377,8 @@ func updateDevicePolicyConfiguration(conn *worklink.WorkLink, d *schema.Resource
 	}
 	if v, ok := d.GetOk("device_ca_certificate"); ok {
 		input.DeviceCaCertificate = aws.String(v.(string))
+	} else if d.IsNewResource() {
+		return nil
 	}
 	if _, err := conn.UpdateDevicePolicyConfiguration(input); err != nil {
 		if isAWSErr(err, worklink.ErrCodeResourceNotFoundException, "") {
