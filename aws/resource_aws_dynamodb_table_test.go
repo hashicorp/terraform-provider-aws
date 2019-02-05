@@ -565,6 +565,30 @@ func TestAccAWSDynamoDbTable_BillingMode(t *testing.T) {
 	})
 }
 
+func TestAccAWSDynamoDbTable_BillingModeUpdate(t *testing.T) {
+	rName := acctest.RandomWithPrefix("TerraformTestTable-")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDynamoDbBilling_PayPerRequest(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDynamoDbTableHasBilling_PayPerRequest("aws_dynamodb_table.basic-dynamodb-table"),
+				),
+			},
+			{
+				Config: testAccAWSDynamoDbBilling_Provisioned(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDynamoDbTableHasBilling_Provisioned("aws_dynamodb_table.basic-dynamodb-table"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSDynamoDbTable_streamSpecification(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 
@@ -1191,6 +1215,39 @@ func testAccCheckDynamoDbTableHasBilling_PayPerRequest(n string) resource.TestCh
 	}
 }
 
+func testAccCheckDynamoDbTableHasBilling_Provisioned(n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No DynamoDB table name specified!")
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).dynamodbconn
+		params := &dynamodb.DescribeTableInput{
+			TableName: aws.String(rs.Primary.ID),
+		}
+		resp, err := conn.DescribeTable(params)
+
+		if err != nil {
+			return err
+		}
+		table := resp.Table
+
+		if table.BillingModeSummary == nil {
+			return fmt.Errorf("Billing Mode summary was empty, expected summary to exist and contain billing mode %s", dynamodb.BillingModeProvisioned)
+		} else if aws.StringValue(table.BillingModeSummary.BillingMode) != dynamodb.BillingModeProvisioned {
+			return fmt.Errorf("Billing Mode was %s, not %s!", aws.StringValue(table.BillingModeSummary.BillingMode), dynamodb.BillingModeProvisioned)
+
+		}
+
+		return nil
+	}
+}
+
 func testAccCheckDynamoDbTableWasUpdated(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -1340,6 +1397,24 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
   name = "%s"
   billing_mode = "PAY_PER_REQUEST"
   hash_key = "TestTableHashKey"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+}
+`, rName)
+}
+
+func testAccAWSDynamoDbBilling_Provisioned(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "basic-dynamodb-table" {
+  name = "%s"
+  billing_mode = "PROVISIONED"
+  hash_key = "TestTableHashKey"
+
+  read_capacity = 5
+  write_capacity = 5
 
   attribute {
     name = "TestTableHashKey"
