@@ -357,7 +357,7 @@ func flattenContainer(container *sagemaker.ContainerDefinition) []interface{} {
 		return []interface{}{}
 	}
 
-	cfg := make(map[string]interface{}, 0)
+	cfg := make(map[string]interface{})
 
 	cfg["image"] = *container.Image
 
