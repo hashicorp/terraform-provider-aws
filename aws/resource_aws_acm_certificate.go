@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"crypto/md5"
 	"errors"
 	"fmt"
 	"log"
@@ -168,6 +169,16 @@ func resourceAwsAcmCertificateCreateRequested(d *schema.ResourceData, meta inter
 
 	caARN, ok := d.GetOk("certificate_authority_arn")
 	if ok {
+		// For some reason, when you request certificates with different PCA ARN,
+		// AWS considers them as same request, this is a workaround. In case Amazon
+		// think it's a bug and decide to fix it, this workaround should still work,
+		// we can simplely remove it once it's fixed
+		hash := md5.New()
+		_, err := hash.Write([]byte(caARN.(string)))
+		if err != nil {
+			return fmt.Errorf("Error generating hash: %s", err)
+		}
+		params.IdempotencyToken = aws.String(fmt.Sprintf("%x", hash.Sum(nil)))
 		params.CertificateAuthorityArn = aws.String(caARN.(string))
 	} else {
 		params.ValidationMethod = aws.String(d.Get("validation_method").(string))
