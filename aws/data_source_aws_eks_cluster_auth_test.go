@@ -12,13 +12,15 @@ import (
 func TestAccAWSEksClusterAuthDataSource_basic(t *testing.T) {
 	dataSourceResourceName := "data.aws_eks_cluster_auth.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsEksClusterAuthConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceResourceName, "name", "foobar"),
+					resource.TestCheckResourceAttrSet(dataSourceResourceName, "token"),
 					testAccCheckAwsEksClusterAuthToken(dataSourceResourceName),
 				),
 			},
@@ -37,16 +39,7 @@ func testAccCheckAwsEksClusterAuthToken(n string) resource.TestCheckFunc {
 			return fmt.Errorf("EKS Cluster Auth resource ID not set")
 		}
 
-		name := rs.Primary.Attributes["name"]
-		if expected := "foobar"; name != expected {
-			return fmt.Errorf("Incorrect EKS cluster name: expected %q, got %q", expected, name)
-		}
-
 		tok := rs.Primary.Attributes["token"]
-		if tok == "" {
-			return fmt.Errorf("Token expected to not be nil")
-		}
-
 		verifier := token.NewVerifier(name)
 		identity, err := verifier.Verify(tok)
 		if err != nil {
