@@ -1002,14 +1002,17 @@ func testAccAWSCodeBuildProjectConfig_basic(rName string) string {
 resource "aws_codebuild_project" "test" {
   name         = "%s"
   service_role = "${aws_iam_role.test.arn}"
+
   artifacts {
     type = "NO_ARTIFACTS"
   }
+
   environment {
     compute_type = "BUILD_GENERAL1_SMALL"
     image        = "2"
     type         = "LINUX_CONTAINER"
   }
+
   source {
     location = "%s"
     type     = "GITHUB"
@@ -1024,14 +1027,17 @@ resource "aws_codebuild_project" "test" {
   badge_enabled = %t
   name          = "%s"
   service_role  = "${aws_iam_role.test.arn}"
+
   artifacts {
     type = "NO_ARTIFACTS"
   }
+
   environment {
     compute_type = "BUILD_GENERAL1_SMALL"
     image        = "2"
     type         = "LINUX_CONTAINER"
   }
+
   source {
     type     = "GITHUB"
     location = "https://github.com/hashicorp/packer.git"
@@ -1046,14 +1052,17 @@ resource "aws_codebuild_project" "test" {
   build_timeout = %d
   name          = "%s"
   service_role  = "${aws_iam_role.test.arn}"
+
   artifacts {
     type = "NO_ARTIFACTS"
   }
+
   environment {
     compute_type = "BUILD_GENERAL1_SMALL"
     image        = "2"
     type         = "LINUX_CONTAINER"
   }
+
   source {
     type     = "GITHUB"
     location = "https://github.com/hashicorp/packer.git"
@@ -1067,18 +1076,22 @@ func testAccAWSCodeBuildProjectConfig_Cache(rName, cacheLocation, cacheType stri
 resource "aws_codebuild_project" "test" {
   name         = "%s"
   service_role = "${aws_iam_role.test.arn}"
+
   artifacts {
     type = "NO_ARTIFACTS"
   }
+
   cache {
     location = "%s"
     type     = "%s"
   }
+
   environment {
     compute_type = "BUILD_GENERAL1_SMALL"
     image        = "2"
     type         = "LINUX_CONTAINER"
   }
+
   source {
     type     = "GITHUB"
     location = "https://github.com/hashicorp/packer.git"
@@ -1093,14 +1106,17 @@ resource "aws_codebuild_project" "test" {
   description  = "%s"
   name         = "%s"
   service_role = "${aws_iam_role.test.arn}"
+
   artifacts {
     type = "NO_ARTIFACTS"
   }
+
   environment {
     compute_type = "BUILD_GENERAL1_SMALL"
     image        = "2"
     type         = "LINUX_CONTAINER"
   }
+
   source {
     type     = "GITHUB"
     location = "https://github.com/hashicorp/packer.git"
@@ -1115,18 +1131,22 @@ resource "aws_kms_key" "test" {
   description = "Terraform acc test"
   deletion_window_in_days = 7
 }
+
 resource "aws_codebuild_project" "test" {
   encryption_key = "${aws_kms_key.test.arn}"
   name           = "%s"
   service_role   = "${aws_iam_role.test.arn}"
+
   artifacts {
     type = "NO_ARTIFACTS"
   }
+
   environment {
     compute_type = "BUILD_GENERAL1_SMALL"
     image        = "2"
     type         = "LINUX_CONTAINER"
   }
+
   source {
     type     = "GITHUB"
     location = "https://github.com/hashicorp/packer.git"
@@ -1140,23 +1160,28 @@ func testAccAWSCodeBuildProjectConfig_Environment_EnvironmentVariable_Type(rName
 resource "aws_codebuild_project" "test" {
   name         = "%s"
   service_role = "${aws_iam_role.test.arn}"
+
   artifacts {
     type = "NO_ARTIFACTS"
   }
+
   environment {
     compute_type = "BUILD_GENERAL1_SMALL"
     image        = "2"
     type         = "LINUX_CONTAINER"
+
     environment_variable {
       name  = "SOME_KEY"
       value = "SOME_VALUE"
     }
+
     environment_variable {
       name  = "SOME_KEY2"
       value = "SOME_VALUE2"
       type  = "%s"
     }
   }
+
   source {
     type     = "GITHUB"
     location = "https://github.com/hashicorp/packer.git"
@@ -1172,18 +1197,22 @@ resource "aws_s3_bucket_object" "test" {
   key     = "%s"
   content = "foo"
 }
+
 resource "aws_codebuild_project" "test" {
   name         = "%s"
   service_role = "${aws_iam_role.test.arn}"
+
   artifacts {
     type = "NO_ARTIFACTS"
   }
+
   environment {
     compute_type = "BUILD_GENERAL1_SMALL"
     image        = "2"
     type         = "LINUX_CONTAINER"
     certificate  = "${aws_s3_bucket.test.bucket}/${aws_s3_bucket_object.test.key}"
   }
+
   source {
     type     = "GITHUB"
     location = "https://github.com/hashicorp/packer.git"
@@ -1197,17 +1226,21 @@ func testAccAWSCodeBuildProjectConfig_Source_Auth(rName, authResource, authType 
 resource "aws_codebuild_project" "test" {
   name         = "%s"
   service_role = "${aws_iam_role.test.arn}"
+
   artifacts {
     type = "NO_ARTIFACTS"
   }
+
   environment {
     compute_type = "BUILD_GENERAL1_SMALL"
     image        = "2"
     type         = "LINUX_CONTAINER"
   }
+
   source {
     type            = "GITHUB"
     location        = "https://github.com/hashicorp/packer.git"
+
     auth {
       resource = "%s"
       type     = "%s"
@@ -1222,14 +1255,17 @@ func testAccAWSCodeBuildProjectConfig_Source_GitCloneDepth(rName string, gitClon
 resource "aws_codebuild_project" "test" {
   name         = "%s"
   service_role = "${aws_iam_role.test.arn}"
+
   artifacts {
     type = "NO_ARTIFACTS"
   }
+
   environment {
     compute_type = "BUILD_GENERAL1_SMALL"
     image        = "2"
     type         = "LINUX_CONTAINER"
   }
+
   source {
     git_clone_depth = %d
     location        = "https://github.com/hashicorp/packer.git"
@@ -1244,14 +1280,17 @@ func testAccAWSCodeBuildProjectConfig_Source_InsecureSSL(rName string, insecureS
 resource "aws_codebuild_project" "test" {
   name         = "%s"
   service_role = "${aws_iam_role.test.arn}"
+
   artifacts {
     type = "NO_ARTIFACTS"
   }
+
   environment {
     compute_type = "BUILD_GENERAL1_SMALL"
     image        = "2"
     type         = "LINUX_CONTAINER"
   }
+
   source {
     insecure_ssl = %t
     location     = "https://github.com/hashicorp/packer.git"
@@ -1266,14 +1305,17 @@ func testAccAWSCodeBuildProjectConfig_Source_ReportBuildStatus_Bitbucket(rName s
 resource "aws_codebuild_project" "test" {
   name         = %q
   service_role = "${aws_iam_role.test.arn}"
+
   artifacts {
     type = "NO_ARTIFACTS"
   }
+
   environment {
     compute_type = "BUILD_GENERAL1_SMALL"
     image        = "2"
     type         = "LINUX_CONTAINER"
   }
+
   source {
     location            = "https://terraform@bitbucket.org/terraform/aws-test.git"
     report_build_status = %t
@@ -1288,14 +1330,17 @@ func testAccAWSCodeBuildProjectConfig_Source_ReportBuildStatus_GitHub(rName stri
 resource "aws_codebuild_project" "test" {
   name         = %q
   service_role = "${aws_iam_role.test.arn}"
+
   artifacts {
     type = "NO_ARTIFACTS"
   }
+
   environment {
     compute_type = "BUILD_GENERAL1_SMALL"
     image        = "2"
     type         = "LINUX_CONTAINER"
   }
+
   source {
     location            = "https://github.com/hashicorp/packer.git"
     report_build_status = %t
@@ -1310,14 +1355,17 @@ func testAccAWSCodeBuildProjectConfig_Source_ReportBuildStatus_GitHubEnterprise(
 resource "aws_codebuild_project" "test" {
   name         = %q
   service_role = "${aws_iam_role.test.arn}"
+
   artifacts {
     type = "NO_ARTIFACTS"
   }
+
   environment {
     compute_type = "BUILD_GENERAL1_SMALL"
     image        = "2"
     type         = "LINUX_CONTAINER"
   }
+
   source {
     location            = "https://example.com/organization/repository.git"
     report_build_status = %t
@@ -1332,14 +1380,17 @@ func testAccAWSCodeBuildProjectConfig_Source_Type_Bitbucket(rName string) string
 resource "aws_codebuild_project" "test" {
   name         = %q
   service_role = "${aws_iam_role.test.arn}"
+
   artifacts {
     type = "NO_ARTIFACTS"
   }
+
   environment {
     compute_type = "BUILD_GENERAL1_SMALL"
     image        = "2"
     type         = "LINUX_CONTAINER"
   }
+
   source {
     location = %q
     type     = "BITBUCKET"
@@ -1353,14 +1404,17 @@ func testAccAWSCodeBuildProjectConfig_Source_Type_CodeCommit(rName string) strin
 resource "aws_codebuild_project" "test" {
   name         = %q
   service_role = "${aws_iam_role.test.arn}"
+
   artifacts {
     type = "NO_ARTIFACTS"
   }
+
   environment {
     compute_type = "BUILD_GENERAL1_SMALL"
     image        = "2"
     type         = "LINUX_CONTAINER"
   }
+
   source {
     location = "https://git-codecommit.region-id.amazonaws.com/v1/repos/repo-name"
     type     = "CODECOMMIT"
@@ -1374,14 +1428,17 @@ func testAccAWSCodeBuildProjectConfig_Source_Type_CodePipeline(rName string) str
 resource "aws_codebuild_project" "test" {
   name         = %q
   service_role = "${aws_iam_role.test.arn}"
+
   artifacts {
     type = "CODEPIPELINE"
   }
+
   environment {
     compute_type = "BUILD_GENERAL1_SMALL"
     image        = "2"
     type         = "LINUX_CONTAINER"
   }
+
   source {
     type = "CODEPIPELINE"
   }
@@ -1394,14 +1451,17 @@ func testAccAWSCodeBuildProjectConfig_Source_Type_GitHubEnterprise(rName string)
 resource "aws_codebuild_project" "test" {
   name         = %q
   service_role = "${aws_iam_role.test.arn}"
+
   artifacts {
     type = "NO_ARTIFACTS"
   }
+
   environment {
     compute_type = "BUILD_GENERAL1_SMALL"
     image        = "2"
     type         = "LINUX_CONTAINER"
   }
+
   source {
     location = "https://example.com/organization/repository.git"
     type     = "GITHUB_ENTERPRISE"
@@ -1415,14 +1475,17 @@ func testAccAWSCodeBuildProjectConfig_Source_Type_S3(rName string) string {
 resource "aws_codebuild_project" "test" {
   name         = %q
   service_role = "${aws_iam_role.test.arn}"
+
   artifacts {
     type = "NO_ARTIFACTS"
   }
+
   environment {
     compute_type = "BUILD_GENERAL1_SMALL"
     image        = "2"
     type         = "LINUX_CONTAINER"
   }
+
   source {
     location = "bucket-name/object-name.zip"
     type     = "S3"
@@ -1436,14 +1499,17 @@ func testAccAWSCodeBuildProjectConfig_Source_Type_NoSource(rName string, rLocati
 resource "aws_codebuild_project" "test" {
   name         = %q
   service_role = "${aws_iam_role.test.arn}"
+
   artifacts {
     type = "NO_ARTIFACTS"
   }
+
   environment {
     compute_type = "BUILD_GENERAL1_SMALL"
     image        = "2"
     type         = "LINUX_CONTAINER"
   }
+
   source {
     type      = "NO_SOURCE"
     location  = "%s"
@@ -1458,18 +1524,22 @@ func testAccAWSCodeBuildProjectConfig_Tags(rName, tagKey, tagValue string) strin
 resource "aws_codebuild_project" "test" {
   name         = "%s"
   service_role = "${aws_iam_role.test.arn}"
+
   artifacts {
     type = "NO_ARTIFACTS"
   }
+
   environment {
     compute_type = "BUILD_GENERAL1_SMALL"
     image        = "2"
     type         = "LINUX_CONTAINER"
   }
+
   source {
     location = "https://github.com/hashicorp/packer.git"
     type     = "GITHUB"
   }
+
   tags = {
     tag1 = "tag1value"
     %s = "%s"
@@ -1483,31 +1553,39 @@ func testAccAWSCodeBuildProjectConfig_VpcConfig1(rName string) string {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 }
+
 resource "aws_subnet" "test" {
   cidr_block = "10.0.0.0/24"
   vpc_id     = "${aws_vpc.test.id}"
+
   tags = {
     Name = "tf-acc-codebuild-project"
   }
 }
+
 resource "aws_security_group" "test" {
   vpc_id = "${aws_vpc.test.id}"
 }
+
 resource "aws_codebuild_project" "test" {
   name         = "%s"
   service_role = "${aws_iam_role.test.arn}"
+
   artifacts {
     type = "NO_ARTIFACTS"
   }
+
   environment {
     compute_type = "BUILD_GENERAL1_SMALL"
     image        = "2"
     type         = "LINUX_CONTAINER"
   }
+
   source {
     location = "https://github.com/hashicorp/packer.git"
     type     = "GITHUB"
   }
+
   vpc_config {
     security_group_ids = ["${aws_security_group.test.id}"]
     subnets            = ["${aws_subnet.test.id}"]
@@ -1522,32 +1600,41 @@ func testAccAWSCodeBuildProjectConfig_VpcConfig2(rName string) string {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 }
+
 resource "aws_subnet" "test" {
   count = 2
+
   cidr_block = "10.0.${count.index}.0/24"
   vpc_id     = "${aws_vpc.test.id}"
+
   tags = {
     Name = "tf-acc-codebuild-project"
   }
 }
+
 resource "aws_security_group" "test" {
   vpc_id = "${aws_vpc.test.id}"
 }
+
 resource "aws_codebuild_project" "test" {
   name         = "%s"
   service_role = "${aws_iam_role.test.arn}"
+
   artifacts {
     type = "NO_ARTIFACTS"
   }
+
   environment {
     compute_type = "BUILD_GENERAL1_SMALL"
     image        = "2"
     type         = "LINUX_CONTAINER"
   }
+
   source {
     location = "https://github.com/hashicorp/packer.git"
     type     = "GITHUB"
   }
+
   vpc_config {
     security_group_ids = ["${aws_security_group.test.id}"]
     subnets            = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
@@ -1562,14 +1649,17 @@ func testAccAWSCodeBuildProjectConfig_WindowsContainer(rName string) string {
 resource "aws_codebuild_project" "test" {
   name         = "%s"
   service_role = "${aws_iam_role.test.arn}"
+
   artifacts {
     type = "NO_ARTIFACTS"
   }
+
   environment {
     compute_type = "BUILD_GENERAL1_MEDIUM"
     image        = "2"
     type         = "WINDOWS_CONTAINER"
   }
+
   source {
     location = "%s"
     type     = "GITHUB"
@@ -1583,16 +1673,19 @@ func testAccAWSCodebuildProjectConfig_Artifacts_EncryptionDisabled(rName string,
 resource "aws_codebuild_project" "test" {
   name          = "%s"
   service_role  = "${aws_iam_role.test.arn}"
+
   artifacts {
     encryption_disabled = %t
     location            = "${aws_s3_bucket.test.bucket}"
     type                = "S3"
   }
+
   environment {
     compute_type = "BUILD_GENERAL1_SMALL"
     image        = "2"
     type         = "LINUX_CONTAINER"
   }
+
   source {
     type     = "GITHUB"
     location = "https://github.com/hashicorp/packer.git"
@@ -1606,25 +1699,30 @@ func testAccAWSCodebuildProjectConfig_SecondaryArtifacts(rName string, bName str
 resource "aws_codebuild_project" "test" {
   name          = "%s"
   service_role  = "${aws_iam_role.test.arn}"
+
   artifacts {
     location            = "${aws_s3_bucket.test.bucket}"
     type                = "S3"
   }
+
   secondary_artifacts {
     artifact_identifier = "secondaryArtifact1"
     location            = "${aws_s3_bucket.test.bucket}"
     type                = "S3"
   }
+
   secondary_artifacts {
     artifact_identifier = "secondaryArtifact2"
     location            = "${aws_s3_bucket.test.bucket}"
     type                = "S3"
   }
+
   environment {
     compute_type = "BUILD_GENERAL1_SMALL"
     image        = "2"
     type         = "LINUX_CONTAINER"
   }
+
   source {
     type     = "GITHUB"
     location = "https://github.com/hashicorp/packer.git"
@@ -1638,23 +1736,28 @@ func testAccAWSCodeBuildProjectConfig_SecondarySources_CodeCommit(rName string) 
 resource "aws_codebuild_project" "test" {
   name         = %q
   service_role = "${aws_iam_role.test.arn}"
+
   artifacts {
     type = "NO_ARTIFACTS"
   }
+
   environment {
     compute_type = "BUILD_GENERAL1_SMALL"
     image        = "2"
     type         = "LINUX_CONTAINER"
   }
+
   source {
     location = "https://git-codecommit.region-id.amazonaws.com/v1/repos/repo-name"
     type     = "CODECOMMIT"
   }
+
   secondary_sources {
     location = "https://git-codecommit.region-id.amazonaws.com/v1/repos/second-repo-name"
     type     = "CODECOMMIT"
     source_identifier = "secondarySource1"
   }
+
   secondary_sources {
     location = "https://git-codecommit.region-id.amazonaws.com/v1/repos/third-repo-name"
     type     = "CODECOMMIT"
@@ -1662,4 +1765,4 @@ resource "aws_codebuild_project" "test" {
   }
 }
 `, rName)
-}}
+}
