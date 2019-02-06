@@ -636,7 +636,7 @@ func testAccCheckAWSUserCreatesMFADevice(getUserOutput *iam.GetUserOutput) resou
 		}
 
 		secret := string(createVirtualMFADeviceOutput.VirtualMFADevice.Base32StringSeed)
-		authenticationCode1, err := totp.GenerateCode(secret, time.Now().Add(time.Duration(-30*time.Second)))
+		authenticationCode1, err := totp.GenerateCode(secret, time.Now().Add(-30*time.Second))
 		if err != nil {
 			return fmt.Errorf("error generating Virtual MFA Device authentication code 1: %s", err)
 		}
