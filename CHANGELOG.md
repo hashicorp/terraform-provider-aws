@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_eks_cluster_auth` [GH-7438]
 * **New Resource:** `aws_backup_vault` [GH-7207]
 * **New Resource:** `aws_ec2_client_vpn_endpoint` [GH-7009]
 
