@@ -32,13 +32,14 @@ func testAccCheckAwsEksClusterAuthToken(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Can't find EKS Cluster Auth resource: %s", n)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("EKS Cluster Auth resource ID not set")
+			return fmt.Errorf("No resource ID is set")
 		}
 
+		name := rs.Primary.Attributes["name"]
 		tok := rs.Primary.Attributes["token"]
 		verifier := token.NewVerifier(name)
 		identity, err := verifier.Verify(tok)
@@ -46,7 +47,7 @@ func testAccCheckAwsEksClusterAuthToken(n string) resource.TestCheckFunc {
 			return fmt.Errorf("Error verifying token for cluster %q: %v", name, err)
 		}
 		if identity.ARN == "" {
-			return fmt.Errorf("Received unexpected blank ARN for token identity")
+			return fmt.Errorf("Unexpected blank ARN for token identity")
 		}
 
 		return nil
