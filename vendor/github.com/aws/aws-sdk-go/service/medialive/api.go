@@ -2845,9 +2845,7 @@ func (s *ArchiveContainerSettings) SetM2tsSettings(v *M2tsSettings) *ArchiveCont
 type ArchiveGroupSettings struct {
 	_ struct{} `type:"structure"`
 
-	// A directory and base filename where archive files should be written. If the
-	// base filename portion of the URI is left blank, the base filename of the
-	// first input will be automatically inserted.
+	// A directory and base filename where archive files should be written.
 	//
 	// Destination is a required field
 	Destination *OutputLocationRef `locationName:"destination" type:"structure" required:"true"`
@@ -7657,6 +7655,119 @@ func (s *FollowModeScheduleActionStartSettings) SetReferenceActionName(v string)
 	return s
 }
 
+// Frame Capture Group Settings
+type FrameCaptureGroupSettings struct {
+	_ struct{} `type:"structure"`
+
+	// The destination for the frame capture files. Either the URI for an Amazon
+	// S3 bucket and object, plus a file name prefix (for example, s3ssl://sportsDelivery/highlights/20180820/curling_)
+	// or the URI for a MediaStore container, plus a file name prefix (for example,
+	// mediastoressl://sportsDelivery/20180820/curling_). The final file names consist
+	// of the prefix from the destination field (for example, "curling_") + name
+	// modifier + the counter (5 digits, starting from 00001) + extension (which
+	// is always .jpg). For example, curlingLow.00001.jpg
+	//
+	// Destination is a required field
+	Destination *OutputLocationRef `locationName:"destination" type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s FrameCaptureGroupSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s FrameCaptureGroupSettings) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *FrameCaptureGroupSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "FrameCaptureGroupSettings"}
+	if s.Destination == nil {
+		invalidParams.Add(request.NewErrParamRequired("Destination"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDestination sets the Destination field's value.
+func (s *FrameCaptureGroupSettings) SetDestination(v *OutputLocationRef) *FrameCaptureGroupSettings {
+	s.Destination = v
+	return s
+}
+
+// Frame Capture Output Settings
+type FrameCaptureOutputSettings struct {
+	_ struct{} `type:"structure"`
+
+	// Required if the output group contains more than one output. This modifier
+	// forms part of the output file name.
+	NameModifier *string `locationName:"nameModifier" type:"string"`
+}
+
+// String returns the string representation
+func (s FrameCaptureOutputSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s FrameCaptureOutputSettings) GoString() string {
+	return s.String()
+}
+
+// SetNameModifier sets the NameModifier field's value.
+func (s *FrameCaptureOutputSettings) SetNameModifier(v string) *FrameCaptureOutputSettings {
+	s.NameModifier = &v
+	return s
+}
+
+// Frame Capture Settings
+type FrameCaptureSettings struct {
+	_ struct{} `type:"structure"`
+
+	// The frequency, in seconds, for capturing frames for inclusion in the output.
+	// For example, "10" means capture a frame every 10 seconds.
+	//
+	// CaptureInterval is a required field
+	CaptureInterval *int64 `locationName:"captureInterval" min:"1" type:"integer" required:"true"`
+}
+
+// String returns the string representation
+func (s FrameCaptureSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s FrameCaptureSettings) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *FrameCaptureSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "FrameCaptureSettings"}
+	if s.CaptureInterval == nil {
+		invalidParams.Add(request.NewErrParamRequired("CaptureInterval"))
+	}
+	if s.CaptureInterval != nil && *s.CaptureInterval < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("CaptureInterval", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCaptureInterval sets the CaptureInterval field's value.
+func (s *FrameCaptureSettings) SetCaptureInterval(v int64) *FrameCaptureSettings {
+	s.CaptureInterval = &v
+	return s
+}
+
 type GlobalConfiguration struct {
 	_ struct{} `type:"structure"`
 
@@ -7791,11 +7902,11 @@ type H264Settings struct {
 	FramerateControl *string `locationName:"framerateControl" type:"string" enum:"H264FramerateControl"`
 
 	// Framerate denominator.
-	FramerateDenominator *int64 `locationName:"framerateDenominator" type:"integer"`
+	FramerateDenominator *int64 `locationName:"framerateDenominator" min:"1" type:"integer"`
 
 	// Framerate numerator - framerate is a fraction, e.g. 24000 / 1001 = 23.976
 	// fps.
-	FramerateNumerator *int64 `locationName:"framerateNumerator" type:"integer"`
+	FramerateNumerator *int64 `locationName:"framerateNumerator" min:"1" type:"integer"`
 
 	// If enabled, use reference B frames for GOP structures that have B frames
 	// > 1.
@@ -7928,6 +8039,12 @@ func (s *H264Settings) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "H264Settings"}
 	if s.Bitrate != nil && *s.Bitrate < 1000 {
 		invalidParams.Add(request.NewErrParamMinValue("Bitrate", 1000))
+	}
+	if s.FramerateDenominator != nil && *s.FramerateDenominator < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("FramerateDenominator", 1))
+	}
+	if s.FramerateNumerator != nil && *s.FramerateNumerator < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("FramerateNumerator", 1))
 	}
 	if s.MaxBitrate != nil && *s.MaxBitrate < 1000 {
 		invalidParams.Add(request.NewErrParamMinValue("MaxBitrate", 1000))
@@ -8414,6 +8531,9 @@ type HlsGroupSettings struct {
 	// Parameters that control interactions with the CDN.
 	HlsCdnSettings *HlsCdnSettings `locationName:"hlsCdnSettings" type:"structure"`
 
+	// If enabled, writes out I-Frame only playlists in addition to media playlists.
+	IFrameOnlyPlaylists *string `locationName:"iFrameOnlyPlaylists" type:"string" enum:"IFrameOnlyPlaylistType"`
+
 	// If mode is "live", the number of segments to retain in the manifest (.m3u8)
 	// file. This number must be less than or equal to keepSegments. If mode is
 	// "vod", this parameter has no effect.
@@ -8642,6 +8762,12 @@ func (s *HlsGroupSettings) SetEncryptionType(v string) *HlsGroupSettings {
 // SetHlsCdnSettings sets the HlsCdnSettings field's value.
 func (s *HlsGroupSettings) SetHlsCdnSettings(v *HlsCdnSettings) *HlsGroupSettings {
 	s.HlsCdnSettings = v
+	return s
+}
+
+// SetIFrameOnlyPlaylists sets the IFrameOnlyPlaylists field's value.
+func (s *HlsGroupSettings) SetIFrameOnlyPlaylists(v string) *HlsGroupSettings {
+	s.IFrameOnlyPlaylists = &v
 	return s
 }
 
@@ -11943,6 +12069,9 @@ type OutputGroupSettings struct {
 
 	ArchiveGroupSettings *ArchiveGroupSettings `locationName:"archiveGroupSettings" type:"structure"`
 
+	// Frame Capture Group Settings
+	FrameCaptureGroupSettings *FrameCaptureGroupSettings `locationName:"frameCaptureGroupSettings" type:"structure"`
+
 	HlsGroupSettings *HlsGroupSettings `locationName:"hlsGroupSettings" type:"structure"`
 
 	MsSmoothGroupSettings *MsSmoothGroupSettings `locationName:"msSmoothGroupSettings" type:"structure"`
@@ -11970,6 +12099,11 @@ func (s *OutputGroupSettings) Validate() error {
 			invalidParams.AddNested("ArchiveGroupSettings", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.FrameCaptureGroupSettings != nil {
+		if err := s.FrameCaptureGroupSettings.Validate(); err != nil {
+			invalidParams.AddNested("FrameCaptureGroupSettings", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.HlsGroupSettings != nil {
 		if err := s.HlsGroupSettings.Validate(); err != nil {
 			invalidParams.AddNested("HlsGroupSettings", err.(request.ErrInvalidParams))
@@ -11995,6 +12129,12 @@ func (s *OutputGroupSettings) Validate() error {
 // SetArchiveGroupSettings sets the ArchiveGroupSettings field's value.
 func (s *OutputGroupSettings) SetArchiveGroupSettings(v *ArchiveGroupSettings) *OutputGroupSettings {
 	s.ArchiveGroupSettings = v
+	return s
+}
+
+// SetFrameCaptureGroupSettings sets the FrameCaptureGroupSettings field's value.
+func (s *OutputGroupSettings) SetFrameCaptureGroupSettings(v *FrameCaptureGroupSettings) *OutputGroupSettings {
+	s.FrameCaptureGroupSettings = v
 	return s
 }
 
@@ -12050,6 +12190,9 @@ type OutputSettings struct {
 
 	ArchiveOutputSettings *ArchiveOutputSettings `locationName:"archiveOutputSettings" type:"structure"`
 
+	// Frame Capture Output Settings
+	FrameCaptureOutputSettings *FrameCaptureOutputSettings `locationName:"frameCaptureOutputSettings" type:"structure"`
+
 	HlsOutputSettings *HlsOutputSettings `locationName:"hlsOutputSettings" type:"structure"`
 
 	MsSmoothOutputSettings *MsSmoothOutputSettings `locationName:"msSmoothOutputSettings" type:"structure"`
@@ -12102,6 +12245,12 @@ func (s *OutputSettings) Validate() error {
 // SetArchiveOutputSettings sets the ArchiveOutputSettings field's value.
 func (s *OutputSettings) SetArchiveOutputSettings(v *ArchiveOutputSettings) *OutputSettings {
 	s.ArchiveOutputSettings = v
+	return s
+}
+
+// SetFrameCaptureOutputSettings sets the FrameCaptureOutputSettings field's value.
+func (s *OutputSettings) SetFrameCaptureOutputSettings(v *FrameCaptureOutputSettings) *OutputSettings {
+	s.FrameCaptureOutputSettings = v
 	return s
 }
 
@@ -14935,6 +15084,9 @@ func (s *ValidationError) SetErrorMessage(v string) *ValidationError {
 type VideoCodecSettings struct {
 	_ struct{} `type:"structure"`
 
+	// Frame Capture Settings
+	FrameCaptureSettings *FrameCaptureSettings `locationName:"frameCaptureSettings" type:"structure"`
+
 	H264Settings *H264Settings `locationName:"h264Settings" type:"structure"`
 }
 
@@ -14951,6 +15103,11 @@ func (s VideoCodecSettings) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *VideoCodecSettings) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "VideoCodecSettings"}
+	if s.FrameCaptureSettings != nil {
+		if err := s.FrameCaptureSettings.Validate(); err != nil {
+			invalidParams.AddNested("FrameCaptureSettings", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.H264Settings != nil {
 		if err := s.H264Settings.Validate(); err != nil {
 			invalidParams.AddNested("H264Settings", err.(request.ErrInvalidParams))
@@ -14961,6 +15118,12 @@ func (s *VideoCodecSettings) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetFrameCaptureSettings sets the FrameCaptureSettings field's value.
+func (s *VideoCodecSettings) SetFrameCaptureSettings(v *FrameCaptureSettings) *VideoCodecSettings {
+	s.FrameCaptureSettings = v
+	return s
 }
 
 // SetH264Settings sets the H264Settings field's value.
@@ -14976,8 +15139,10 @@ type VideoDescription struct {
 	// Video codec settings.
 	CodecSettings *VideoCodecSettings `locationName:"codecSettings" type:"structure"`
 
-	// Output video height (in pixels). Leave blank to use source video height.
-	// If left blank, width must also be unspecified.
+	// Output video height, in pixels. Must be an even number. For most codecs,
+	// you can leave this field and width blank in order to use the height and width
+	// (resolution) from the source. Note, however, that leaving blank is not recommended.
+	// For the Frame Capture codec, height and width are required.
 	Height *int64 `locationName:"height" type:"integer"`
 
 	// The name of this VideoDescription. Outputs will use this name to uniquely
@@ -14987,24 +15152,30 @@ type VideoDescription struct {
 	// Name is a required field
 	Name *string `locationName:"name" type:"string" required:"true"`
 
-	// Indicates how to respond to the AFD values in the input stream. Setting to
-	// "respond" causes input video to be clipped, depending on AFD value, input
-	// display aspect ratio and output display aspect ratio.
+	// Indicates how to respond to the AFD values in the input stream. RESPOND causes
+	// input video to be clipped, depending on the AFD value, input display aspect
+	// ratio, and output display aspect ratio, and (except for FRAMECAPTURE codec)
+	// includes the values in the output. PASSTHROUGH (does not apply to FRAMECAPTURE
+	// codec) ignores the AFD values and includes the values in the output, so input
+	// video is not clipped. NONE ignores the AFD values and does not include the
+	// values through to the output, so input video is not clipped.
 	RespondToAfd *string `locationName:"respondToAfd" type:"string" enum:"VideoDescriptionRespondToAfd"`
 
-	// When set to "stretchToOutput", automatically configures the output position
-	// to stretch the video to the specified output resolution. This option will
-	// override any position value.
+	// STRETCHTOOUTPUT configures the output position to stretch the video to the
+	// specified output resolution (height and width). This option will override
+	// any position value. DEFAULT may insert black boxes (pillar boxes or letter
+	// boxes) around the video to provide the specified output resolution.
 	ScalingBehavior *string `locationName:"scalingBehavior" type:"string" enum:"VideoDescriptionScalingBehavior"`
 
-	// Changes the width of the anti-alias filter kernel used for scaling. Only
-	// applies if scaling is being performed and antiAlias is set to true. 0 is
-	// the softest setting, 100 the sharpest, and 50 recommended for most content.
+	// Changes the strength of the anti-alias filter used for scaling. 0 is the
+	// softest setting, 100 is the sharpest. A setting of 50 is recommended for
+	// most content.
 	Sharpness *int64 `locationName:"sharpness" type:"integer"`
 
-	// Output video width (in pixels). Leave out to use source video width. If left
-	// out, height must also be left out. Display aspect ratio is always preserved
-	// by letterboxing or pillarboxing when necessary.
+	// Output video width, in pixels. Must be an even number. For most codecs, you
+	// can leave this field and height blank in order to use the height and width
+	// (resolution) from the source. Note, however, that leaving blank is not recommended.
+	// For the Frame Capture codec, height and width are required.
 	Width *int64 `locationName:"width" type:"integer"`
 }
 
@@ -16323,6 +16494,17 @@ const (
 
 	// HlsWebdavHttpTransferModeNonChunked is a HlsWebdavHttpTransferMode enum value
 	HlsWebdavHttpTransferModeNonChunked = "NON_CHUNKED"
+)
+
+// When set to "standard", an I-Frame only playlist will be written out for
+// each video output in the output group. This I-Frame only playlist will contain
+// byte range offsets pointing to the I-frame(s) in each segment.
+const (
+	// IFrameOnlyPlaylistTypeDisabled is a IFrameOnlyPlaylistType enum value
+	IFrameOnlyPlaylistTypeDisabled = "DISABLED"
+
+	// IFrameOnlyPlaylistTypeStandard is a IFrameOnlyPlaylistType enum value
+	IFrameOnlyPlaylistTypeStandard = "STANDARD"
 )
 
 // codec in increasing order of complexity
