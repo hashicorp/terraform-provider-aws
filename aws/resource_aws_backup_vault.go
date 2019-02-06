@@ -22,7 +22,7 @@ func resourceAwsBackupVault() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`[a-z0-9\-]+`), "must contain alphanumeric characters or underscores"),
+				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9\-\_\.]{1,50}$`), "must consist of lowercase letters, numbers, and hyphens."),
 			},
 			"tags": {
 				Type:     schema.TypeMap,
