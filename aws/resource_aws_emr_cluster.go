@@ -1631,7 +1631,7 @@ func resourceAwsEMRClusterStateRefreshFunc(d *schema.ResourceData, meta interfac
 
 		if err != nil {
 			if awsErr, ok := err.(awserr.Error); ok {
-				if "ClusterNotFound" == awsErr.Code() {
+				if awsErr.Code() == "ClusterNotFound" {
 					return 42, "destroyed", nil
 				}
 			}
