@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"log"
 	"regexp"
 
 	"github.com/hashicorp/terraform/helper/validation"
@@ -96,14 +95,12 @@ func resourceAwsBackupVaultRead(d *schema.ResourceData, meta interface{}) error 
 	})
 
 	if err != nil {
-		log.Printf("[DEBUG] Error retrieving tags for ARN: %s", aws.StringValue(resp.BackupVaultArn))
+		return fmt.Errorf("error retrieving Backup Vault (%s) tags: %s", aws.StringValue(resp.BackupVaultArn), err)
 	}
 
-	var tags map[string]*string
-	if len(tresp.Tags) > 0 {
-		tags = tresp.Tags
+	if err := d.Set("tags", tagsToMapGeneric(tresp.Tags)); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
-	d.Set("tags", tags)
 
 	return nil
 }

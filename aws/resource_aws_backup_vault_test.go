@@ -144,7 +144,7 @@ func testAccBackupVaultWithTags(randInt int) string {
 resource "aws_backup_vault" "test" {
 	name = "tf_acc_test_backup_vault_%d"
 	
-	tags {
+	tags = {
 		up		= "down"
 		left	= "right"
 	}
