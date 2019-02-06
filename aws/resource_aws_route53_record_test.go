@@ -554,7 +554,7 @@ func TestAccAWSRoute53Record_TypeChange(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53Record_SetIdentiferChange(t *testing.T) {
+func TestAccAWSRoute53Record_SetIdentifierChange(t *testing.T) {
 	var record1, record2 route53.ResourceRecordSet
 
 	resource.ParallelTest(t, resource.TestCase{
