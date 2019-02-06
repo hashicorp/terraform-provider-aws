@@ -256,6 +256,26 @@ func TestAccAWSSNSTopic_encryption(t *testing.T) {
 	})
 }
 
+func TestAccAWSSNSTopic_safeDelete(t *testing.T) {
+	attributes := make(map[string]string)
+
+	rName := acctest.RandString(10)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_sns_topic.test_topic",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSSNSTopicNotDestroyed,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSNSTopicConfig_withSubscriptions(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSNSTopicExists("aws_sns_topic.test_topic", attributes),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSNSTopicHasPolicy(n string, expectedPolicyText string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -368,6 +388,30 @@ func testAccCheckAWSSNSTopicDestroy(s *terraform.State) error {
 		return fmt.Errorf("Topic exists when it should be destroyed!")
 	}
 
+	return nil
+}
+
+func testAccCheckAWSSNSTopicNotDestroyed(s *terraform.State) error {
+	conn := testAccProvider.Meta().(*AWSClient).snsconn
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_sns_topic" {
+			continue
+		}
+
+		// Check if the topic exists by fetching its attributes
+		_, err := conn.GetTopicAttributes(&sns.GetTopicAttributesInput{
+			TopicArn: aws.String(rs.Primary.ID),
+		})
+
+		if err != nil {
+			if isAWSErr(err, sns.ErrCodeNotFoundException, "") {
+				return fmt.Errorf("Topic does not exist when it should!")
+			}
+			return err
+		}
+		return nil
+	}
 	return nil
 }
 
@@ -630,4 +674,23 @@ resource "aws_sns_topic" "test_topic" {
 	kms_master_key_id = "alias/aws/sns"
 }
 `, r)
+}
+
+func testAccAWSSNSTopicConfig_withSubscriptions(r string) string {
+	return fmt.Sprintf(`
+resource "aws_sns_topic" "test_topic" {
+	name        = "terraform-test-topic-%s"
+	safe_delete = true
+}
+
+resource "aws_sqs_queue" "test_queue" {
+  name = "terraform-test-queue-%s"
+}
+
+resource "aws_sns_topic_subscription" {
+  topic_arn              = "${aws_sns_topic.test_topic.arn}"
+  protocol               = "sqs"
+  endpoint               = "${aws_sqs_queue.test_queue.arn}"
+}
+`, r, r)
 }

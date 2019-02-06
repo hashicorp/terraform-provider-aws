@@ -140,6 +140,10 @@ func resourceAwsSnsTopic() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"safe_delete": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -236,6 +240,24 @@ func resourceAwsSnsTopicRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAwsSnsTopicDelete(d *schema.ResourceData, meta interface{}) error {
 	snsconn := meta.(*AWSClient).snsconn
+
+	if v, ok := d.GetOk("safe_delete"); ok {
+		safe_delete := v.(bool)
+
+		if safe_delete {
+			resp, err := snsconn.ListSubscriptionsByTopic(&sns.ListSubscriptionsByTopicInput{
+				TopicArn: aws.String(d.Id()),
+			})
+			if err != nil {
+				return err
+			}
+
+			if len(resp.Subscriptions) > 0 {
+				return fmt.Errorf("cannot delete SNS topic because subscriptions exist")
+			}
+			log.Printf("[DEBUG] sns_topic has no subscriptions")
+		}
+	}
 
 	log.Printf("[DEBUG] SNS Delete Topic: %s", d.Id())
 	_, err := snsconn.DeleteTopic(&sns.DeleteTopicInput{
