@@ -243,6 +243,7 @@ func resourceAwsS3Bucket() *schema.Resource {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Set:      expirationHash,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"date": {
@@ -264,6 +265,7 @@ func resourceAwsS3Bucket() *schema.Resource {
 						},
 						"noncurrent_version_expiration": {
 							Type:     schema.TypeSet,
+							MaxItems: 1,
 							Optional: true,
 							Set:      expirationHash,
 							Elem: &schema.Resource{
