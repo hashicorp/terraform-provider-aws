@@ -32,7 +32,7 @@ websitefmtcheck:
 
 lint:
 	@echo "==> Checking source code against linters..."
-	@gometalinter ./$(PKG_NAME)
+	@GO111MODULE=off GOFLAGS=-mod=vendor gometalinter ./$(PKG_NAME)
 
 tools:
 	GO111MODULE=off go get -u github.com/alecthomas/gometalinter
