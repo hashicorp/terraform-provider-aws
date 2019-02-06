@@ -174,7 +174,8 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 						},
 						"image_pull_credentials_type": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
+							Default:  codebuild.ImagePullCredentialsTypeCodebuild,
 							ValidateFunc: validation.StringInSlice([]string{
 								codebuild.ImagePullCredentialsTypeCodebuild,
 								codebuild.ImagePullCredentialsTypeServiceRole,
