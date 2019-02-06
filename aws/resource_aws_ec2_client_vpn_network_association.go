@@ -3,9 +3,9 @@ package aws
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -62,8 +62,8 @@ func resourceAwsEc2ClientVpnNetworkAssociationCreate(d *schema.ResourceData, met
 	d.SetId(*resp.AssociationId)
 
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"associating"},
-		Target:  []string{"associated"},
+		Pending: []string{ec2.AssociationStatusCodeAssociating},
+		Target:  []string{ec2.AssociationStatusCodeAssociated},
 		Refresh: clientVpnNetworkAssociationRefreshFunc(conn, d.Id(), d.Get("client_vpn_endpoint_id").(string)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
@@ -114,8 +114,8 @@ func resourceAwsEc2ClientVpnNetworkAssociationDelete(d *schema.ResourceData, met
 	}
 
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"disassociating"},
-		Target:  []string{"disassociated"},
+		Pending: []string{ec2.AssociationStatusCodeDisassociating},
+		Target:  []string{ec2.AssociationStatusCodeDisassociated},
 		Refresh: clientVpnNetworkAssociationRefreshFunc(conn, d.Id(), d.Get("client_vpn_endpoint_id").(string)),
 		Timeout: d.Timeout(schema.TimeoutDelete),
 	}
@@ -123,7 +123,9 @@ func resourceAwsEc2ClientVpnNetworkAssociationDelete(d *schema.ResourceData, met
 	log.Printf("[DEBUG] Waiting for Client VPN endpoint to disassociate with target network: %s", d.Id())
 	_, err = stateConf.WaitForState()
 	if err != nil {
-		return fmt.Errorf("Error waiting for Client VPN endpoint to disassociate with target network: %s", err)
+		if strings.Contains(err.Error(), "couldn't find resource") != true {
+			return fmt.Errorf("Error waiting for Client VPN endpoint to disassociate with target network: %s", err)
+		}
 	}
 
 	return nil
@@ -137,14 +139,10 @@ func clientVpnNetworkAssociationRefreshFunc(conn *ec2.EC2, cvnaID string, cvepID
 		})
 
 		if resp == nil || len(resp.ClientVpnTargetNetworks) == 0 {
-			return nil, "disassociated", nil
+			return nil, ec2.AssociationStatusCodeDisassociated, nil
 		}
 
 		if err != nil {
-			ec2Err, ok := err.(awserr.Error)
-			if ok && ec2Err.Code() == "ResourceNotFoundException" {
-				return nil, "disassociated", nil
-			}
 			return nil, "", err
 		}
 
