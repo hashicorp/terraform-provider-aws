@@ -93,6 +93,7 @@ func TestAccAWSCodeBuildProject_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "environment.1974383098.image", "2"),
 					resource.TestCheckResourceAttr(resourceName, "environment.1974383098.privileged_mode", "false"),
 					resource.TestCheckResourceAttr(resourceName, "environment.1974383098.type", "LINUX_CONTAINER"),
+					resource.TestCheckResourceAttr(resourceName, "environment.1974383098.image_pull_credentials_type", "CODEBUILD"),
 					resource.TestMatchResourceAttr(resourceName, "service_role", regexp.MustCompile(`^arn:[^:]+:iam::[^:]+:role/tf-acc-test-[0-9]+$`)),
 					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source.1441597390.auth.#", "0"),
@@ -738,6 +739,7 @@ func TestAccAWSCodeBuildProject_WindowsContainer(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "environment.3935046469.environment_variable.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "environment.3935046469.image", "2"),
 					resource.TestCheckResourceAttr(resourceName, "environment.3935046469.privileged_mode", "false"),
+					resource.TestCheckResourceAttr(resourceName, "environment.3935046469.image_pull_credentials_type", "CODEBUILD"),
 					resource.TestCheckResourceAttr(resourceName, "environment.3935046469.type", "WINDOWS_CONTAINER"),
 				),
 			},
@@ -1006,9 +1008,10 @@ resource "aws_codebuild_project" "test" {
   }
 
   environment {
-    compute_type = "BUILD_GENERAL1_SMALL"
-    image        = "2"
-    type         = "LINUX_CONTAINER"
+    compute_type 				= "BUILD_GENERAL1_SMALL"
+    image        				= "2"
+    type         				= "LINUX_CONTAINER"
+    image_pull_credentials_type = "CODEBUILD"
   }
 
   source {
@@ -1031,9 +1034,10 @@ resource "aws_codebuild_project" "test" {
   }
 
   environment {
-    compute_type = "BUILD_GENERAL1_SMALL"
-    image        = "2"
-    type         = "LINUX_CONTAINER"
+    compute_type 				= "BUILD_GENERAL1_SMALL"
+    image        				= "2"
+    type         				= "LINUX_CONTAINER"
+    image_pull_credentials_type = "CODEBUILD"
   }
 
   source {
@@ -1056,9 +1060,10 @@ resource "aws_codebuild_project" "test" {
   }
 
   environment {
-    compute_type = "BUILD_GENERAL1_SMALL"
-    image        = "2"
-    type         = "LINUX_CONTAINER"
+    compute_type                = "BUILD_GENERAL1_SMALL"
+    image                       = "2"
+    type                        = "LINUX_CONTAINER"
+    image_pull_credentials_type = "CODEBUILD"
   }
 
   source {
@@ -1085,9 +1090,10 @@ resource "aws_codebuild_project" "test" {
   }
 
   environment {
-    compute_type = "BUILD_GENERAL1_SMALL"
-    image        = "2"
-    type         = "LINUX_CONTAINER"
+    compute_type                = "BUILD_GENERAL1_SMALL"
+    image                       = "2"
+    type                        = "LINUX_CONTAINER"
+    image_pull_credentials_type = "CODEBUILD"
   }
 
   source {
@@ -1110,9 +1116,10 @@ resource "aws_codebuild_project" "test" {
   }
 
   environment {
-    compute_type = "BUILD_GENERAL1_SMALL"
-    image        = "2"
-    type         = "LINUX_CONTAINER"
+    compute_type                = "BUILD_GENERAL1_SMALL"
+    image                       = "2"
+    type                        = "LINUX_CONTAINER"
+    image_pull_credentials_type = "CODEBUILD"
   }
 
   source {
@@ -1140,9 +1147,10 @@ resource "aws_codebuild_project" "test" {
   }
 
   environment {
-    compute_type = "BUILD_GENERAL1_SMALL"
-    image        = "2"
-    type         = "LINUX_CONTAINER"
+    compute_type                = "BUILD_GENERAL1_SMALL"
+    image                       = "2"
+    type                        = "LINUX_CONTAINER"
+    image_pull_credentials_type = "CODEBUILD"
   }
 
   source {
@@ -1164,9 +1172,10 @@ resource "aws_codebuild_project" "test" {
   }
 
   environment {
-    compute_type = "BUILD_GENERAL1_SMALL"
-    image        = "2"
-    type         = "LINUX_CONTAINER"
+    compute_type                = "BUILD_GENERAL1_SMALL"
+    image                       = "2"
+    type                        = "LINUX_CONTAINER"
+    image_pull_credentials_type = "CODEBUILD"
 
     environment_variable {
       name  = "SOME_KEY"
@@ -1205,10 +1214,11 @@ resource "aws_codebuild_project" "test" {
   }
 
   environment {
-    compute_type = "BUILD_GENERAL1_SMALL"
-    image        = "2"
-    type         = "LINUX_CONTAINER"
-    certificate  = "${aws_s3_bucket.test.bucket}/${aws_s3_bucket_object.test.key}"
+    compute_type                = "BUILD_GENERAL1_SMALL"
+    image                       = "2"
+    type                        = "LINUX_CONTAINER"
+    image_pull_credentials_type = "CODEBUILD"
+    certificate  				= "${aws_s3_bucket.test.bucket}/${aws_s3_bucket_object.test.key}"
   }
 
   source {
@@ -1230,9 +1240,10 @@ resource "aws_codebuild_project" "test" {
   }
 
   environment {
-    compute_type = "BUILD_GENERAL1_SMALL"
-    image        = "2"
-    type         = "LINUX_CONTAINER"
+    compute_type                = "BUILD_GENERAL1_SMALL"
+    image                       = "2"
+    type                        = "LINUX_CONTAINER"
+    image_pull_credentials_type = "CODEBUILD"
   }
 
   source {
@@ -1259,9 +1270,10 @@ resource "aws_codebuild_project" "test" {
   }
 
   environment {
-    compute_type = "BUILD_GENERAL1_SMALL"
-    image        = "2"
-    type         = "LINUX_CONTAINER"
+    compute_type                = "BUILD_GENERAL1_SMALL"
+    image                       = "2"
+    type                        = "LINUX_CONTAINER"
+    image_pull_credentials_type = "CODEBUILD"
   }
 
   source {
@@ -1284,9 +1296,10 @@ resource "aws_codebuild_project" "test" {
   }
 
   environment {
-    compute_type = "BUILD_GENERAL1_SMALL"
-    image        = "2"
-    type         = "LINUX_CONTAINER"
+    compute_type                = "BUILD_GENERAL1_SMALL"
+    image                       = "2"
+    type                        = "LINUX_CONTAINER"
+    image_pull_credentials_type = "CODEBUILD"
   }
 
   source {
@@ -1309,9 +1322,10 @@ resource "aws_codebuild_project" "test" {
   }
 
   environment {
-    compute_type = "BUILD_GENERAL1_SMALL"
-    image        = "2"
-    type         = "LINUX_CONTAINER"
+    compute_type                = "BUILD_GENERAL1_SMALL"
+    image                       = "2"
+    type                        = "LINUX_CONTAINER"
+    image_pull_credentials_type = "CODEBUILD"
   }
 
   source {
@@ -1334,9 +1348,10 @@ resource "aws_codebuild_project" "test" {
   }
 
   environment {
-    compute_type = "BUILD_GENERAL1_SMALL"
-    image        = "2"
-    type         = "LINUX_CONTAINER"
+    compute_type                = "BUILD_GENERAL1_SMALL"
+    image                       = "2"
+    type                        = "LINUX_CONTAINER"
+    image_pull_credentials_type = "CODEBUILD"
   }
 
   source {
@@ -1359,9 +1374,10 @@ resource "aws_codebuild_project" "test" {
   }
 
   environment {
-    compute_type = "BUILD_GENERAL1_SMALL"
-    image        = "2"
-    type         = "LINUX_CONTAINER"
+    compute_type                = "BUILD_GENERAL1_SMALL"
+    image                       = "2"
+    type                        = "LINUX_CONTAINER"
+    image_pull_credentials_type = "CODEBUILD"
   }
 
   source {
@@ -1384,9 +1400,10 @@ resource "aws_codebuild_project" "test" {
   }
 
   environment {
-    compute_type = "BUILD_GENERAL1_SMALL"
-    image        = "2"
-    type         = "LINUX_CONTAINER"
+    compute_type                = "BUILD_GENERAL1_SMALL"
+    image                       = "2"
+    type                        = "LINUX_CONTAINER"
+    image_pull_credentials_type = "CODEBUILD"
   }
 
   source {
@@ -1408,9 +1425,10 @@ resource "aws_codebuild_project" "test" {
   }
 
   environment {
-    compute_type = "BUILD_GENERAL1_SMALL"
-    image        = "2"
-    type         = "LINUX_CONTAINER"
+    compute_type                = "BUILD_GENERAL1_SMALL"
+    image                       = "2"
+    type                        = "LINUX_CONTAINER"
+    image_pull_credentials_type = "CODEBUILD"
   }
 
   source {
@@ -1432,9 +1450,10 @@ resource "aws_codebuild_project" "test" {
   }
 
   environment {
-    compute_type = "BUILD_GENERAL1_SMALL"
-    image        = "2"
-    type         = "LINUX_CONTAINER"
+    compute_type                = "BUILD_GENERAL1_SMALL"
+    image                       = "2"
+    type                        = "LINUX_CONTAINER"
+    image_pull_credentials_type = "CODEBUILD"
   }
 
   source {
@@ -1455,9 +1474,10 @@ resource "aws_codebuild_project" "test" {
   }
 
   environment {
-    compute_type = "BUILD_GENERAL1_SMALL"
-    image        = "2"
-    type         = "LINUX_CONTAINER"
+    compute_type                = "BUILD_GENERAL1_SMALL"
+    image                       = "2"
+    type                        = "LINUX_CONTAINER"
+    image_pull_credentials_type = "CODEBUILD"
   }
 
   source {
@@ -1479,9 +1499,10 @@ resource "aws_codebuild_project" "test" {
   }
 
   environment {
-    compute_type = "BUILD_GENERAL1_SMALL"
-    image        = "2"
-    type         = "LINUX_CONTAINER"
+    compute_type                = "BUILD_GENERAL1_SMALL"
+    image                       = "2"
+    type                        = "LINUX_CONTAINER"
+    image_pull_credentials_type = "CODEBUILD"
   }
 
   source {
@@ -1503,9 +1524,10 @@ resource "aws_codebuild_project" "test" {
   }
 
   environment {
-    compute_type = "BUILD_GENERAL1_SMALL"
-    image        = "2"
-    type         = "LINUX_CONTAINER"
+    compute_type                = "BUILD_GENERAL1_SMALL"
+    image                       = "2"
+    type                        = "LINUX_CONTAINER"
+    image_pull_credentials_type = "CODEBUILD"
   }
 
   source {
@@ -1528,9 +1550,10 @@ resource "aws_codebuild_project" "test" {
   }
 
   environment {
-    compute_type = "BUILD_GENERAL1_SMALL"
-    image        = "2"
-    type         = "LINUX_CONTAINER"
+    compute_type                = "BUILD_GENERAL1_SMALL"
+    image                       = "2"
+    type                        = "LINUX_CONTAINER"
+    image_pull_credentials_type = "CODEBUILD"
   }
 
   source {
@@ -1574,9 +1597,10 @@ resource "aws_codebuild_project" "test" {
   }
 
   environment {
-    compute_type = "BUILD_GENERAL1_SMALL"
-    image        = "2"
-    type         = "LINUX_CONTAINER"
+    compute_type                = "BUILD_GENERAL1_SMALL"
+    image                       = "2"
+    type                        = "LINUX_CONTAINER"
+    image_pull_credentials_type = "CODEBUILD"
   }
 
   source {
@@ -1623,9 +1647,10 @@ resource "aws_codebuild_project" "test" {
   }
 
   environment {
-    compute_type = "BUILD_GENERAL1_SMALL"
-    image        = "2"
-    type         = "LINUX_CONTAINER"
+    compute_type                = "BUILD_GENERAL1_SMALL"
+    image                       = "2"
+    type                        = "LINUX_CONTAINER"
+    image_pull_credentials_type = "CODEBUILD"
   }
 
   source {
@@ -1653,9 +1678,10 @@ resource "aws_codebuild_project" "test" {
   }
 
   environment {
-    compute_type = "BUILD_GENERAL1_MEDIUM"
-    image        = "2"
-    type         = "WINDOWS_CONTAINER"
+    compute_type                = "BUILD_GENERAL1_MEDIUM"
+    image                       = "2"
+    type                        = "WINDOWS_CONTAINER"
+    image_pull_credentials_type = "CODEBUILD"
   }
 
   source {
@@ -1679,9 +1705,10 @@ resource "aws_codebuild_project" "test" {
   }
 
   environment {
-    compute_type = "BUILD_GENERAL1_SMALL"
-    image        = "2"
-    type         = "LINUX_CONTAINER"
+    compute_type                = "BUILD_GENERAL1_SMALL"
+    image                       = "2"
+    type                        = "LINUX_CONTAINER"
+    image_pull_credentials_type = "CODEBUILD"
   }
 
   source {
@@ -1716,9 +1743,10 @@ resource "aws_codebuild_project" "test" {
   }
 
   environment {
-    compute_type = "BUILD_GENERAL1_SMALL"
-    image        = "2"
-    type         = "LINUX_CONTAINER"
+    compute_type                = "BUILD_GENERAL1_SMALL"
+    image                       = "2"
+    type                        = "LINUX_CONTAINER"
+    image_pull_credentials_type = "CODEBUILD"
   }
 
   source {
@@ -1740,9 +1768,10 @@ resource "aws_codebuild_project" "test" {
   }
 
   environment {
-    compute_type = "BUILD_GENERAL1_SMALL"
-    image        = "2"
-    type         = "LINUX_CONTAINER"
+    compute_type                = "BUILD_GENERAL1_SMALL"
+    image                       = "2"
+    type                        = "LINUX_CONTAINER"
+    image_pull_credentials_type = "CODEBUILD"
   }
 
   source {
