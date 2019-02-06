@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New Resource:** `aws_backup_vault` [GH-7207]
 * **New Resource:** `aws_ec2_client_vpn_endpoint` [GH-7009]
 
 ENHANCEMENTS:
