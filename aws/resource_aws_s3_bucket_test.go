@@ -2082,7 +2082,10 @@ resource "aws_s3_bucket" "bucket6" {
 }
 `))
 	var doc bytes.Buffer
-	t.Execute(&doc, struct{ GUID int }{GUID: randInt})
+	// TODO: Convert to fmt.Sprintf() (https://github.com/terraform-providers/terraform-provider-aws/issues/7456)
+	if err := t.Execute(&doc, struct{ GUID int }{GUID: randInt}); err != nil {
+		panic(fmt.Sprintf("error executing template: %s", err))
+	}
 	return doc.String()
 }
 

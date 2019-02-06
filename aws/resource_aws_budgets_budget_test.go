@@ -328,7 +328,10 @@ resource "aws_budgets_budget" "foo" {
 }
 `))
 	var doc bytes.Buffer
-	t.Execute(&doc, budgetConfig)
+	// TODO: Convert to fmt.Sprintf() (https://github.com/terraform-providers/terraform-provider-aws/issues/7456)
+	if err := t.Execute(&doc, budgetConfig); err != nil {
+		panic(fmt.Sprintf("error executing template: %s", err))
+	}
 	return doc.String()
 }
 
@@ -348,7 +351,10 @@ resource "aws_budgets_budget" "foo" {
 }
 `))
 	var doc bytes.Buffer
-	t.Execute(&doc, budgetConfig)
+	// TODO: Convert to fmt.Sprintf() (https://github.com/terraform-providers/terraform-provider-aws/issues/7456)
+	if err := t.Execute(&doc, budgetConfig); err != nil {
+		panic(fmt.Sprintf("error executing template: %s", err))
+	}
 	return doc.String()
 }
 
@@ -374,7 +380,10 @@ resource "aws_budgets_budget" "foo" {
 }
 `))
 	var doc bytes.Buffer
-	t.Execute(&doc, budgetConfig)
+	// TODO: Convert to fmt.Sprintf() (https://github.com/terraform-providers/terraform-provider-aws/issues/7456)
+	if err := t.Execute(&doc, budgetConfig); err != nil {
+		panic(fmt.Sprintf("error executing template: %s", err))
+	}
 	return doc.String()
 }
 
@@ -394,7 +403,10 @@ resource "aws_budgets_budget" "foo" {
 }
 `))
 	var doc bytes.Buffer
-	t.Execute(&doc, budgetConfig)
+	// TODO: Convert to fmt.Sprintf() (https://github.com/terraform-providers/terraform-provider-aws/issues/7456)
+	if err := t.Execute(&doc, budgetConfig); err != nil {
+		panic(fmt.Sprintf("error executing template: %s", err))
+	}
 	return doc.String()
 }
 
@@ -420,6 +432,9 @@ resource "aws_budgets_budget" "foo" {
 }
 `))
 	var doc bytes.Buffer
-	t.Execute(&doc, budgetConfig)
+	// TODO: Convert to fmt.Sprintf() (https://github.com/terraform-providers/terraform-provider-aws/issues/7456)
+	if err := t.Execute(&doc, budgetConfig); err != nil {
+		panic(fmt.Sprintf("error executing template: %s", err))
+	}
 	return doc.String()
 }

@@ -262,7 +262,7 @@ func resourceAwsRoute53RecordUpdate(d *schema.ResourceData, meta interface{}) er
 
 	if !d.HasChange("type") && !d.HasChange("set_identifier") {
 		// If neither type nor set_identifier changed we use UPSERT,
-		// for resouce update here we simply fall through to
+		// for resource update here we simply fall through to
 		// our resource create function.
 		return resourceAwsRoute53RecordCreate(d, meta)
 	}

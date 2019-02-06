@@ -1260,7 +1260,7 @@ func TestAccAWSRDSCluster_SnapshotIdentifier_VpcSecurityGroupIds(t *testing.T) {
 }
 
 // Regression reference: https://github.com/terraform-providers/terraform-provider-aws/issues/5450
-// This acceptance test explicitly tests when snapshot_identifer is set,
+// This acceptance test explicitly tests when snapshot_identifier is set,
 // vpc_security_group_ids is set (which triggered the resource update function),
 // and tags is set which was missing its ARN used for tagging
 func TestAccAWSRDSCluster_SnapshotIdentifier_VpcSecurityGroupIds_Tags(t *testing.T) {

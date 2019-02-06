@@ -469,7 +469,9 @@ func TestAccAWSLambdaFunction_versionedUpdate(t *testing.T) {
 			},
 			{
 				PreConfig: func() {
-					testAccCreateZipFromFiles(map[string]string{"test-fixtures/lambda_func_modified.js": "lambda.js"}, zipFile)
+					if err := testAccCreateZipFromFiles(map[string]string{"test-fixtures/lambda_func_modified.js": "lambda.js"}, zipFile); err != nil {
+						t.Fatalf("error creating zip from files: %s", err)
+					}
 					timeBeforeUpdate = time.Now()
 				},
 				Config: testAccAWSLambdaConfigVersioned(path, funcName, policyName, roleName, sgName),
@@ -914,7 +916,9 @@ func TestAccAWSLambdaFunction_localUpdate(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					testAccCreateZipFromFiles(map[string]string{"test-fixtures/lambda_func.js": "lambda.js"}, zipFile)
+					if err := testAccCreateZipFromFiles(map[string]string{"test-fixtures/lambda_func.js": "lambda.js"}, zipFile); err != nil {
+						t.Fatalf("error creating zip from files: %s", err)
+					}
 				},
 				Config: genAWSLambdaFunctionConfig_local(path, roleName, funcName),
 				Check: resource.ComposeTestCheckFunc(
@@ -926,7 +930,9 @@ func TestAccAWSLambdaFunction_localUpdate(t *testing.T) {
 			},
 			{
 				PreConfig: func() {
-					testAccCreateZipFromFiles(map[string]string{"test-fixtures/lambda_func_modified.js": "lambda.js"}, zipFile)
+					if err := testAccCreateZipFromFiles(map[string]string{"test-fixtures/lambda_func_modified.js": "lambda.js"}, zipFile); err != nil {
+						t.Fatalf("error creating zip from files: %s", err)
+					}
 					timeBeforeUpdate = time.Now()
 				},
 				Config: genAWSLambdaFunctionConfig_local(path, roleName, funcName),
@@ -970,7 +976,9 @@ func TestAccAWSLambdaFunction_localUpdate_nameOnly(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					testAccCreateZipFromFiles(map[string]string{"test-fixtures/lambda_func.js": "lambda.js"}, zipFile)
+					if err := testAccCreateZipFromFiles(map[string]string{"test-fixtures/lambda_func.js": "lambda.js"}, zipFile); err != nil {
+						t.Fatalf("error creating zip from files: %s", err)
+					}
 				},
 				Config: genAWSLambdaFunctionConfig_local_name_only(path, roleName, funcName),
 				Check: resource.ComposeTestCheckFunc(
@@ -982,7 +990,9 @@ func TestAccAWSLambdaFunction_localUpdate_nameOnly(t *testing.T) {
 			},
 			{
 				PreConfig: func() {
-					testAccCreateZipFromFiles(map[string]string{"test-fixtures/lambda_func_modified.js": "lambda.js"}, updatedZipFile)
+					if err := testAccCreateZipFromFiles(map[string]string{"test-fixtures/lambda_func_modified.js": "lambda.js"}, updatedZipFile); err != nil {
+						t.Fatalf("error creating zip from files: %s", err)
+					}
 				},
 				Config: genAWSLambdaFunctionConfig_local_name_only(updatedPath, roleName, funcName),
 				Check: resource.ComposeTestCheckFunc(
@@ -1020,7 +1030,9 @@ func TestAccAWSLambdaFunction_s3Update_basic(t *testing.T) {
 			{
 				PreConfig: func() {
 					// Upload 1st version
-					testAccCreateZipFromFiles(map[string]string{"test-fixtures/lambda_func.js": "lambda.js"}, zipFile)
+					if err := testAccCreateZipFromFiles(map[string]string{"test-fixtures/lambda_func.js": "lambda.js"}, zipFile); err != nil {
+						t.Fatalf("error creating zip from files: %s", err)
+					}
 				},
 				Config: genAWSLambdaFunctionConfig_s3(bucketName, key, path, roleName, funcName),
 				Check: resource.ComposeTestCheckFunc(
@@ -1033,7 +1045,9 @@ func TestAccAWSLambdaFunction_s3Update_basic(t *testing.T) {
 			{
 				PreConfig: func() {
 					// Upload 2nd version
-					testAccCreateZipFromFiles(map[string]string{"test-fixtures/lambda_func_modified.js": "lambda.js"}, zipFile)
+					if err := testAccCreateZipFromFiles(map[string]string{"test-fixtures/lambda_func_modified.js": "lambda.js"}, zipFile); err != nil {
+						t.Fatalf("error creating zip from files: %s", err)
+					}
 				},
 				Config: genAWSLambdaFunctionConfig_s3(bucketName, key, path, roleName, funcName),
 				Check: resource.ComposeTestCheckFunc(
@@ -1072,7 +1086,9 @@ func TestAccAWSLambdaFunction_s3Update_unversioned(t *testing.T) {
 			{
 				PreConfig: func() {
 					// Upload 1st version
-					testAccCreateZipFromFiles(map[string]string{"test-fixtures/lambda_func.js": "lambda.js"}, zipFile)
+					if err := testAccCreateZipFromFiles(map[string]string{"test-fixtures/lambda_func.js": "lambda.js"}, zipFile); err != nil {
+						t.Fatalf("error creating zip from files: %s", err)
+					}
 				},
 				Config: testAccAWSLambdaFunctionConfig_s3_unversioned_tpl(bucketName, roleName, funcName, key, path),
 				Check: resource.ComposeTestCheckFunc(
@@ -1085,7 +1101,9 @@ func TestAccAWSLambdaFunction_s3Update_unversioned(t *testing.T) {
 			{
 				PreConfig: func() {
 					// Upload 2nd version
-					testAccCreateZipFromFiles(map[string]string{"test-fixtures/lambda_func_modified.js": "lambda.js"}, zipFile)
+					if err := testAccCreateZipFromFiles(map[string]string{"test-fixtures/lambda_func_modified.js": "lambda.js"}, zipFile); err != nil {
+						t.Fatalf("error creating zip from files: %s", err)
+					}
 				},
 				Config: testAccAWSLambdaFunctionConfig_s3_unversioned_tpl(bucketName, roleName, funcName, key2, path),
 				Check: resource.ComposeTestCheckFunc(
@@ -1485,8 +1503,12 @@ func testAccCheckAttributeIsDateAfter(s *terraform.State, name string, key strin
 }
 
 func testAccCreateZipFromFiles(files map[string]string, zipFile *os.File) error {
-	zipFile.Truncate(0)
-	zipFile.Seek(0, 0)
+	if err := zipFile.Truncate(0); err != nil {
+		return err
+	}
+	if _, err := zipFile.Seek(0, 0); err != nil {
+		return err
+	}
 
 	w := zip.NewWriter(zipFile)
 
