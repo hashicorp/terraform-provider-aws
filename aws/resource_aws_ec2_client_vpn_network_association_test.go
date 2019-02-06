@@ -15,7 +15,7 @@ func TestAccAwsEc2ClientVpnNetworkAssociation_basic(t *testing.T) {
 	var assoc1 ec2.TargetNetwork
 	rStr := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProvidersWithTLS,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnNetworkAssociationDestroy,

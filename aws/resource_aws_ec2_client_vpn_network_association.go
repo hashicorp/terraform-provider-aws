@@ -3,9 +3,9 @@ package aws
 import (
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -16,9 +16,6 @@ func resourceAwsEc2ClientVpnNetworkAssociation() *schema.Resource {
 		Create: resourceAwsEc2ClientVpnNetworkAssociationCreate,
 		Read:   resourceAwsEc2ClientVpnNetworkAssociationRead,
 		Delete: resourceAwsEc2ClientVpnNetworkAssociationDelete,
-		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
-		},
 
 		Schema: map[string]*schema.Schema{
 			"client_vpn_endpoint_id": {
@@ -44,11 +41,6 @@ func resourceAwsEc2ClientVpnNetworkAssociation() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-		},
-
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(10 * time.Minute),
-			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 	}
 }
@@ -99,10 +91,13 @@ func resourceAwsEc2ClientVpnNetworkAssociationRead(d *schema.ResourceData, meta 
 	}
 
 	d.Set("client_vpn_endpoint_id", result.ClientVpnTargetNetworks[0].ClientVpnEndpointId)
-	d.Set("security_groups", result.ClientVpnTargetNetworks[0].SecurityGroups)
 	d.Set("status", result.ClientVpnTargetNetworks[0].Status)
 	d.Set("subnet_id", result.ClientVpnTargetNetworks[0].TargetNetworkId)
 	d.Set("vpc_id", result.ClientVpnTargetNetworks[0].VpcId)
+
+	if err := d.Set("security_groups", aws.StringValueSlice(result.ClientVpnTargetNetworks[0].SecurityGroups)); err != nil {
+		return fmt.Errorf("error setting security_groups: %s", err)
+	}
 
 	return nil
 }
@@ -118,6 +113,19 @@ func resourceAwsEc2ClientVpnNetworkAssociationDelete(d *schema.ResourceData, met
 		return fmt.Errorf("Error deleting Client VPN network association: %s", err)
 	}
 
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"disassociating"},
+		Target:  []string{"disassociated"},
+		Refresh: clientVpnNetworkAssociationRefreshFunc(conn, d.Id(), d.Get("client_vpn_endpoint_id").(string)),
+		Timeout: d.Timeout(schema.TimeoutDelete),
+	}
+
+	log.Printf("[DEBUG] Waiting for Client VPN endpoint to disassociate with target network: %s", d.Id())
+	_, err = stateConf.WaitForState()
+	if err != nil {
+		return fmt.Errorf("Error waiting for Client VPN endpoint to disassociate with target network: %s", err)
+	}
+
 	return nil
 }
 
@@ -127,7 +135,16 @@ func clientVpnNetworkAssociationRefreshFunc(conn *ec2.EC2, cvnaID string, cvepID
 			ClientVpnEndpointId: aws.String(cvepID),
 			AssociationIds:      []*string{aws.String(cvnaID)},
 		})
+
+		if resp == nil || len(resp.ClientVpnTargetNetworks) == 0 {
+			return nil, "disassociated", nil
+		}
+
 		if err != nil {
+			ec2Err, ok := err.(awserr.Error)
+			if ok && ec2Err.Code() == "ResourceNotFoundException" {
+				return nil, "disassociated", nil
+			}
 			return nil, "", err
 		}
 
