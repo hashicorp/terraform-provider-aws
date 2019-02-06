@@ -4,6 +4,10 @@ FEATURES:
 
 * **New Resource:** `aws_ec2_client_vpn_endpoint` [GH-7009]
 
+ENHANCEMENTS:
+
+* resource/aws_s3_bucket: Limit no of `expiration` & `noncurrent_version_expiration` blocks to 1 [GH-7462]
+
 BUG FIXES:
 
 * resource/aws_dynamodb_table: Prevent error when updating `billing_mode` from `PAY_PER_REQUEST` to `PROVISIONED` [GH-7363]
