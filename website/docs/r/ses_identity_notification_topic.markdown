@@ -43,5 +43,5 @@ In this example, `example.com` is the SES Identity and `Bounce` is the Notificat
 To import the ID above, it would look as follows:
 
 ```
-$ import aws_ses_identity_notification_topic.test example.com|Bounce
+$ terraform import aws_ses_identity_notification_topic.test 'example.com|Bounce'
 ```
