@@ -17,7 +17,7 @@ resource "aws_worklink_fleet" "example" {
 
 resource "aws_worklink_website_certificate_authority_association" "test" {
 	fleet_arn	= "${aws_worklink_fleet.test.arn}"
-	certificate = "${file("test-fixtures/worklink-website-certificate-authority-association.pem")}"
+	certificate = "${file("certificate.pem")}"
 }
 ```
 
