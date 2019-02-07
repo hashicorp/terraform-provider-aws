@@ -49,10 +49,7 @@ func resourceAwsEcsService() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if d.Get("scheduling_strategy").(string) == ecs.SchedulingStrategyDaemon {
-						return true
-					}
-					return false
+					return d.Get("scheduling_strategy").(string) == ecs.SchedulingStrategyDaemon
 				},
 			},
 
@@ -229,10 +226,7 @@ func resourceAwsEcsService() *schema.Resource {
 							ForceNew: true,
 							Optional: true,
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								if strings.ToLower(old) == strings.ToLower(new) {
-									return true
-								}
-								return false
+								return strings.EqualFold(old, new)
 							},
 						},
 					},
@@ -277,10 +271,7 @@ func resourceAwsEcsService() *schema.Resource {
 								return value
 							},
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								if strings.ToLower(old) == strings.ToLower(new) {
-									return true
-								}
-								return false
+								return strings.EqualFold(old, new)
 							},
 						},
 					},

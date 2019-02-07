@@ -42,11 +42,7 @@ func testAccCheckAWSRedshiftSnapshotCopyGrantDestroy(s *terraform.State) error {
 		}
 
 		err := waitForAwsRedshiftSnapshotCopyGrantToBeDeleted(conn, rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 
 	return nil

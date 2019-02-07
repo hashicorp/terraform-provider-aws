@@ -1035,7 +1035,7 @@ func testAccAWSLBConfig_basic(lbName string) string {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id}"]
+  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
   idle_timeout = 30
   enable_deletion_protection = false
@@ -1102,7 +1102,7 @@ func testAccAWSLBConfig_enableHttp2(lbName string, http2 bool) string {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id}"]
+  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
   
   idle_timeout = 30
   enable_deletion_protection = false
@@ -1171,7 +1171,7 @@ func testAccAWSLBConfig_enableDeletionProtection(lbName string, deletion_protect
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id}"]
+  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
   
   idle_timeout = 30
   enable_deletion_protection = %t
@@ -1399,7 +1399,7 @@ func testAccAWSLBConfigBackwardsCompatibility(lbName string) string {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id}"]
+  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
   idle_timeout = 30
   enable_deletion_protection = false
@@ -1466,7 +1466,7 @@ func testAccAWSLBConfig_updateSubnets(lbName string) string {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id}"]
+  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
   idle_timeout = 30
   enable_deletion_protection = false
@@ -1533,7 +1533,7 @@ func testAccAWSLBConfig_generatedName() string {
 resource "aws_lb" "lb_test" {
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id}"]
+  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
   idle_timeout = 30
   enable_deletion_protection = false
@@ -1609,7 +1609,7 @@ resource "aws_lb" "lb_test" {
   name            = ""
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id}"]
+  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
   idle_timeout = 30
   enable_deletion_protection = false
@@ -1690,7 +1690,7 @@ resource "aws_lb" "lb_test" {
   name_prefix     = "tf-lb-"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id}"]
+  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
   idle_timeout = 30
   enable_deletion_protection = false
@@ -1756,7 +1756,7 @@ func testAccAWSLBConfig_updatedTags(lbName string) string {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id}"]
+  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
   idle_timeout = 30
   enable_deletion_protection = false
@@ -1824,7 +1824,7 @@ func testAccAWSLBConfig_accessLogs(enabled bool, lbName, bucketName, bucketPrefi
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id}"]
+  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
   idle_timeout = 50
   enable_deletion_protection = false
@@ -1873,7 +1873,7 @@ data "aws_iam_policy_document" "logs_bucket" {
     effect    = "Allow"
     resources = ["arn:${data.aws_partition.current.partition}:s3:::${var.bucket_name}/${var.bucket_prefix}${var.bucket_prefix == "" ? "" : "/"}AWSLogs/${data.aws_caller_identity.current.account_id}/*"]
 
-    principals = {
+    principals {
       type        = "AWS"
       identifiers = ["${data.aws_elb_service_account.current.arn}"]
     }
@@ -1936,7 +1936,7 @@ func testAccAWSLBConfig_nosg(lbName string) string {
 	return fmt.Sprintf(`resource "aws_lb" "lb_test" {
   name            = "%s"
   internal        = true
-  subnets         = ["${aws_subnet.alb_test.*.id}"]
+  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
   idle_timeout = 30
   enable_deletion_protection = false
@@ -1979,7 +1979,7 @@ func testAccAWSLBConfig_updateSecurityGroups(lbName string) string {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}", "${aws_security_group.alb_test_2.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id}"]
+  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
   idle_timeout = 30
   enable_deletion_protection = false

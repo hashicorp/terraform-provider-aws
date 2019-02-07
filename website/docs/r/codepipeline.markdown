@@ -101,7 +101,7 @@ resource "aws_codepipeline" "foo" {
       version          = "1"
       output_artifacts = ["test"]
 
-      configuration {
+      configuration = {
         Owner  = "my-organization"
         Repo   = "test"
         Branch = "master"
@@ -120,7 +120,7 @@ resource "aws_codepipeline" "foo" {
       input_artifacts = ["test"]
       version         = "1"
 
-      configuration {
+      configuration = {
         ProjectName = "test"
       }
     }

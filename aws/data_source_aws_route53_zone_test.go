@@ -99,7 +99,7 @@ func testAccDataSourceAwsRoute53ZoneConfig(rInt int) string {
 	data "aws_route53_zone" "by_tag" {
 	 name = "${aws_route53_zone.test_private.name}"
 	 private_zone = true
-	 tags {
+	 tags = {
 		 Environment = "dev-%d"
 	 }
 	}

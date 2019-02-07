@@ -1436,7 +1436,7 @@ resource "aws_subnet" "test" {
 
 resource "aws_elasticache_subnet_group" "test" {
   name       = "%[1]s"
-  subnet_ids = ["${aws_subnet.test.*.id}"]
+  subnet_ids = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
 }
 
 resource "aws_elasticache_replication_group" "test" {
