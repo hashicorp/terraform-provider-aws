@@ -123,7 +123,7 @@ func resourceAwsEc2ClientVpnNetworkAssociationDelete(d *schema.ResourceData, met
 	log.Printf("[DEBUG] Waiting for Client VPN endpoint to disassociate with target network: %s", d.Id())
 	_, err = stateConf.WaitForState()
 	if err != nil {
-		if strings.Contains(err.Error(), "couldn't find resource") != true {
+		if !strings.Contains(err.Error(), "couldn't find resource") {
 			return fmt.Errorf("Error waiting for Client VPN endpoint to disassociate with target network: %s", err)
 		}
 	}
