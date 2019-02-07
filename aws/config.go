@@ -150,36 +150,35 @@ type Config struct {
 	AllowedAccountIds   []interface{}
 	ForbiddenAccountIds []interface{}
 
-	AcmEndpoint                string
-	ApigatewayEndpoint         string
-	CloudFormationEndpoint     string
-	CloudWatchEndpoint         string
-	CloudWatchEventsEndpoint   string
-	CloudWatchLogsEndpoint     string
-	DynamoDBEndpoint           string
-	DeviceFarmEndpoint         string
-	Ec2Endpoint                string
-	EcsEndpoint                string
-	AutoscalingEndpoint        string
-	EcrEndpoint                string
-	EfsEndpoint                string
-	EsEndpoint                 string
-	ElbEndpoint                string
-	IamEndpoint                string
-	KinesisEndpoint            string
-	KinesisAnalyticsEndpoint   string
-	KinesisAnalyticsV2Endpoint string
-	KmsEndpoint                string
-	LambdaEndpoint             string
-	RdsEndpoint                string
-	R53Endpoint                string
-	S3Endpoint                 string
-	S3ControlEndpoint          string
-	SnsEndpoint                string
-	SqsEndpoint                string
-	StsEndpoint                string
-	SsmEndpoint                string
-	Insecure                   bool
+	AcmEndpoint              string
+	ApigatewayEndpoint       string
+	CloudFormationEndpoint   string
+	CloudWatchEndpoint       string
+	CloudWatchEventsEndpoint string
+	CloudWatchLogsEndpoint   string
+	DynamoDBEndpoint         string
+	DeviceFarmEndpoint       string
+	Ec2Endpoint              string
+	EcsEndpoint              string
+	AutoscalingEndpoint      string
+	EcrEndpoint              string
+	EfsEndpoint              string
+	EsEndpoint               string
+	ElbEndpoint              string
+	IamEndpoint              string
+	KinesisEndpoint          string
+	KinesisAnalyticsEndpoint string
+	KmsEndpoint              string
+	LambdaEndpoint           string
+	RdsEndpoint              string
+	R53Endpoint              string
+	S3Endpoint               string
+	S3ControlEndpoint        string
+	SnsEndpoint              string
+	SqsEndpoint              string
+	StsEndpoint              string
+	SsmEndpoint              string
+	Insecure                 bool
 
 	SkipCredsValidation     bool
 	SkipGetEC2Platforms     bool
@@ -478,7 +477,7 @@ func (c *Config) Client() (interface{}, error) {
 	awsLambdaSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.LambdaEndpoint)})
 	awsKinesisSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.KinesisEndpoint)})
 	awsKinesisAnalyticsSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.KinesisAnalyticsEndpoint)})
-	awsKinesisAnalyticsV2Sess := sess.Copy(&aws.Config{Endpoint: aws.String(c.KinesisAnalyticsV2Endpoint)})
+	awsKinesisAnalyticsV2Sess := sess.Copy(&aws.Config{Endpoint: aws.String(c.KinesisAnalyticsEndpoint)})
 	awsKmsSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.KmsEndpoint)})
 	awsRdsSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.RdsEndpoint)})
 	awsS3Sess := sess.Copy(&aws.Config{Endpoint: aws.String(c.S3Endpoint)})
