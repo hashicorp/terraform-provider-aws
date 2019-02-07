@@ -944,6 +944,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		config.IamEndpoint = endpoints["iam"].(string)
 		config.KinesisEndpoint = endpoints["kinesis"].(string)
 		config.KinesisAnalyticsEndpoint = endpoints["kinesis_analytics"].(string)
+		config.KinesisAnalyticsV2Endpoint = endpoints["kinesis_analytics_v2"].(string)
 		config.KmsEndpoint = endpoints["kms"].(string)
 		config.LambdaEndpoint = endpoints["lambda"].(string)
 		config.R53Endpoint = endpoints["r53"].(string)
