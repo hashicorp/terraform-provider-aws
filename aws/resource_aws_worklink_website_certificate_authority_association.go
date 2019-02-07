@@ -148,10 +148,11 @@ func worklinkWebsiteCertificateAuthorityAssociationStateRefresh(conn *worklink.W
 			FleetArn:    aws.String(arn),
 			WebsiteCaId: aws.String(websiteCaID),
 		})
+		if isAWSErr(err, worklink.ErrCodeResourceNotFoundException, "") {
+			return emptyResp, "DELETED", nil
+		}
 		if err != nil {
-			if isAWSErr(err, worklink.ErrCodeResourceNotFoundException, "") {
-				return emptyResp, "DELETED", nil
-			}
+			return nil, "", err
 		}
 
 		return resp, "", nil
