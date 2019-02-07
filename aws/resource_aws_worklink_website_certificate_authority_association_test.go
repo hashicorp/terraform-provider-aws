@@ -133,7 +133,7 @@ func testAccCheckAWSWorkLinkWebsiteCertificateAuthorityAssociationDisappears(res
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).worklinkconn
-		websiteCaID, fleetArn, err := decodeWorkLinkWebsiteCertificateAuthorityAssociationResourceID(rs.Primary.ID)
+		fleetArn, websiteCaID, err := decodeWorkLinkWebsiteCertificateAuthorityAssociationResourceID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -179,7 +179,7 @@ func testAccCheckAWSWorkLinkWebsiteCertificateAuthorityAssociationExists(n strin
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).worklinkconn
-		websiteCaID, fleetArn, err := decodeWorkLinkWebsiteCertificateAuthorityAssociationResourceID(rs.Primary.ID)
+		fleetArn, websiteCaID, err := decodeWorkLinkWebsiteCertificateAuthorityAssociationResourceID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}

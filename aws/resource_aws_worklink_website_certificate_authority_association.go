@@ -65,7 +65,7 @@ func resourceAwsWorkLinkWebsiteCertificateAuthorityAssociationCreate(d *schema.R
 		return fmt.Errorf("Error creating WorkLink Website Certificate Authority Association: %s", err)
 	}
 
-	d.SetId(fmt.Sprintf("%s/%s", aws.StringValue(resp.WebsiteCaId), d.Get("fleet_arn").(string)))
+	d.SetId(fmt.Sprintf("%s,%s", d.Get("fleet_arn").(string), aws.StringValue(resp.WebsiteCaId)))
 
 	return resourceAwsWorkLinkWebsiteCertificateAuthorityAssociationRead(d, meta)
 }
@@ -73,7 +73,7 @@ func resourceAwsWorkLinkWebsiteCertificateAuthorityAssociationCreate(d *schema.R
 func resourceAwsWorkLinkWebsiteCertificateAuthorityAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).worklinkconn
 
-	websiteCaID, fleetArn, err := decodeWorkLinkWebsiteCertificateAuthorityAssociationResourceID(d.Id())
+	fleetArn, websiteCaID, err := decodeWorkLinkWebsiteCertificateAuthorityAssociationResourceID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -104,7 +104,7 @@ func resourceAwsWorkLinkWebsiteCertificateAuthorityAssociationRead(d *schema.Res
 func resourceAwsWorkLinkWebsiteCertificateAuthorityAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).worklinkconn
 
-	websiteCaID, fleetArn, err := decodeWorkLinkWebsiteCertificateAuthorityAssociationResourceID(d.Id())
+	fleetArn, websiteCaID, err := decodeWorkLinkWebsiteCertificateAuthorityAssociationResourceID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -159,12 +159,12 @@ func worklinkWebsiteCertificateAuthorityAssociationStateRefresh(conn *worklink.W
 }
 
 func decodeWorkLinkWebsiteCertificateAuthorityAssociationResourceID(id string) (string, string, error) {
-	parts := strings.SplitN(id, "/", 2)
+	parts := strings.SplitN(id, ",", 2)
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
 		return "", "", fmt.Errorf("Unexpected format of ID(%s), expected WebsiteCaId/FleetArn", id)
 	}
-	websiteCaID := parts[0]
-	fleetArn := parts[1]
+	fleetArn := parts[0]
+	websiteCaID := parts[1]
 
-	return websiteCaID, fleetArn, nil
+	return fleetArn, websiteCaID, nil
 }
