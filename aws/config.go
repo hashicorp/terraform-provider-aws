@@ -604,10 +604,6 @@ func (c *Config) Client() (interface{}, error) {
 	client.firehoseconn = firehose.New(sess)
 	client.fmsconn = fms.New(sess)
 	client.fsxconn = fsx.New(sess)
-<<<<<<< HEAD
-	client.inspectorconn = inspector.New(sess)
-=======
->>>>>>> master
 	client.gameliftconn = gamelift.New(sess)
 	client.glacierconn = glacier.New(sess)
 	client.globalacceleratorconn = globalaccelerator.New(sess)
