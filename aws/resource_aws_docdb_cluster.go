@@ -158,16 +158,16 @@ func resourceAwsDocDBCluster() *schema.Resource {
 
 			"snapshot_identifier": {
 				Type:     schema.TypeString,
-				Computed: false,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 
 			"port": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      27017,
+				ForceNew:     true,
+				ValidateFunc: validation.IntBetween(1150, 65535),
 			},
 
 			"apply_immediately": {
@@ -232,9 +232,6 @@ func resourceAwsDocDBCluster() *schema.Resource {
 					Type: schema.TypeString,
 					ValidateFunc: validation.StringInSlice([]string{
 						"audit",
-						"error",
-						"general",
-						"slowquery",
 					}, false),
 				},
 			},
@@ -295,6 +292,11 @@ func resourceAwsDocDBClusterCreate(d *schema.ResourceData, meta interface{}) err
 
 		if attr, ok := d.GetOk("db_subnet_group_name"); ok {
 			opts.DBSubnetGroupName = aws.String(attr.(string))
+		}
+
+		if attr, ok := d.GetOk("db_cluster_parameter_group_name"); ok {
+			modifyDbClusterInput.DBClusterParameterGroupName = aws.String(attr.(string))
+			requiresModifyDbCluster = true
 		}
 
 		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && len(attr.([]interface{})) > 0 {
@@ -622,13 +624,14 @@ func resourceAwsDocDBClusterUpdate(d *schema.ResourceData, meta interface{}) err
 					return resource.RetryableError(err)
 				}
 
-				if isAWSErr(err, docdb.ErrCodeInvalidDBClusterStateFault, "Cannot modify engine version without a primary instance in DB cluster") {
-					return resource.NonRetryableError(err)
-				}
-
-				if isAWSErr(err, docdb.ErrCodeInvalidDBClusterStateFault, "") {
+				if isAWSErr(err, docdb.ErrCodeInvalidDBClusterStateFault, "is not currently in the available state") {
 					return resource.RetryableError(err)
 				}
+
+				if isAWSErr(err, docdb.ErrCodeInvalidDBClusterStateFault, "DB cluster is not available for modification") {
+					return resource.RetryableError(err)
+				}
+
 				return resource.NonRetryableError(err)
 			}
 			return nil
@@ -647,9 +650,9 @@ func resourceAwsDocDBClusterUpdate(d *schema.ResourceData, meta interface{}) err
 	if d.HasChange("tags") {
 		if err := setTagsDocDB(conn, d); err != nil {
 			return err
-		} else {
-			d.SetPartial("tags")
 		}
+
+		d.SetPartial("tags")
 	}
 
 	return resourceAwsDocDBClusterRead(d, meta)
@@ -666,7 +669,7 @@ func resourceAwsDocDBClusterDelete(d *schema.ResourceData, meta interface{}) err
 	skipFinalSnapshot := d.Get("skip_final_snapshot").(bool)
 	deleteOpts.SkipFinalSnapshot = aws.Bool(skipFinalSnapshot)
 
-	if skipFinalSnapshot == false {
+	if !skipFinalSnapshot {
 		if name, present := d.GetOk("final_snapshot_identifier"); present {
 			deleteOpts.FinalDBSnapshotIdentifier = aws.String(name.(string))
 		} else {
