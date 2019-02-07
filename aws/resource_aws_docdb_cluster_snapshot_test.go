@@ -27,7 +27,7 @@ func TestAccAWSDocDBClusterSnapshot_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocDBClusterSnapshotExists(resourceName, &dbClusterSnapshot),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zones.#"),
-					resource.TestMatchResourceAttr(resourceName, "db_cluster_snapshot_arn", regexp.MustCompile(`^arn:[^:]+:(rds|docdb):[^:]+:\d{12}:cluster-snapshot:.+`)),
+					testAccMatchResourceAttrRegionalARN(resourceName, "db_cluster_snapshot_arn", "rds", regexp.MustCompile(`cluster-snapshot:.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "engine"),
 					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
@@ -36,7 +36,7 @@ func TestAccAWSDocDBClusterSnapshot_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "source_db_cluster_snapshot_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "status", "available"),
 					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
-					resource.TestMatchResourceAttr(resourceName, "vpc_id", regexp.MustCompile(`^vpc-.+`)),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "aws_vpc.test", "id"),
 				),
 			},
 			{
