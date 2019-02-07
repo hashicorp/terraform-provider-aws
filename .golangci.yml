@@ -25,3 +25,4 @@ linters-settings:
 run:
   deadline: 5m
   modules-download-mode: vendor
+  deadline: 5m
