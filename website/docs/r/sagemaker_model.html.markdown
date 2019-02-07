@@ -1,12 +1,12 @@
 ---
 layout: "aws"
-page_title: "AWS: sagemaker_model"
+page_title: "AWS: aws_sagemaker_model"
 sidebar_current: "docs-aws-resource-sagemaker-model"
 description: |-
   Provides a SageMaker model resource.
 ---
 
-# aws\_sagemaker\_model
+# aws_sagemaker_model
 
 Provides a SageMaker model resource.
 

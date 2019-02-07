@@ -176,7 +176,7 @@ func TestAccAWSSagemakerModel_primaryContainerHostname(t *testing.T) {
 func TestAccAWSSagemakerModel_primaryContainerEnvironment(t *testing.T) {
 	rName := acctest.RandString(10)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSagemakerModelDestroy,
@@ -203,7 +203,7 @@ func TestAccAWSSagemakerModel_primaryContainerEnvironment(t *testing.T) {
 func TestAccAWSSagemakerModel_containers(t *testing.T) {
 	rName := acctest.RandString(10)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSagemakerModelDestroy,
@@ -373,7 +373,7 @@ resource "aws_sagemaker_model" "foo" {
 		image = "%s"
 	}
 
-	tags {
+	tags = {
 		foo = "bar"
 	}
 }
@@ -406,7 +406,7 @@ resource "aws_sagemaker_model" "foo" {
 		image = "%s"
 	}
 
-	tags {
+	tags = {
 		bar = "baz"
 	}
 }
@@ -550,7 +550,7 @@ resource "aws_sagemaker_model" "foo" {
 	primary_container {
 		image = "%s"
 
-		environment {
+		environment = {
 			foo = "bar"
 		}
 	}
