@@ -124,11 +124,11 @@ func resourceAwsIotTopicRule() *schema.Resource {
 						},
 						"range_key_field": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
 						},
 						"range_key_value": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
 						},
 						"range_key_type": {
 							Type:     schema.TypeString,
