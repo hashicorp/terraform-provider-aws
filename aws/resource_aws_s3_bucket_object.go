@@ -424,7 +424,7 @@ func resourceAwsS3BucketObjectDelete(d *schema.ResourceData, meta interface{}) e
 	// We are effectively ignoring any leading '/' in the key name as aws.Config.DisableRestProtocolURICleaning is false
 	key = strings.TrimPrefix(key, "/")
 
-	if err := deleteAllS3ObjectVersions(conn, bucketName, key, d.Get("force_destroy").(bool)); err != nil {
+	if err := deleteAllS3ObjectVersions(conn, bucketName, key, d.Get("force_destroy").(bool), false); err != nil {
 		return fmt.Errorf("error deleting S3 Bucket (%s) Object (%s): %s", bucketName, key, err)
 	}
 
@@ -442,7 +442,7 @@ func resourceAwsS3BucketObjectCustomizeDiff(d *schema.ResourceDiff, meta interfa
 // deleteAllS3ObjectVersions deletes all versions of a specified key from an S3 bucket.
 // If key is empty then all versions of all objects are deleted.
 // Set force to true to override any S3 object lock protections.
-func deleteAllS3ObjectVersions(conn *s3.S3, bucketName, key string, force bool) error {
+func deleteAllS3ObjectVersions(conn *s3.S3, bucketName, key string, force, ignoreObjectErrors bool) error {
 	input := &s3.ListObjectVersionsInput{
 		Bucket: aws.String(bucketName),
 	}
@@ -450,6 +450,7 @@ func deleteAllS3ObjectVersions(conn *s3.S3, bucketName, key string, force bool) 
 		input.Prefix = aws.String(key)
 	}
 
+	var objectError error
 	err := conn.ListObjectVersionsPages(input, func(page *s3.ListObjectVersionsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
@@ -471,6 +472,10 @@ func deleteAllS3ObjectVersions(conn *s3.S3, bucketName, key string, force bool) 
 				})
 				if err != nil {
 					log.Printf("[ERROR] Error getting S3 Bucket (%s) Object (%s) Version (%s) metadata: %s", bucketName, objectKey, objectVersionID, err)
+					if !ignoreObjectErrors {
+						objectError = err
+						return false
+					}
 					continue
 				}
 
@@ -484,6 +489,10 @@ func deleteAllS3ObjectVersions(conn *s3.S3, bucketName, key string, force bool) 
 					})
 					if err != nil {
 						log.Printf("[ERROR] Error putting S3 Bucket (%s) Object (%s) Version(%s) legal hold: %s", bucketName, objectKey, objectVersionID, err)
+						if !ignoreObjectErrors {
+							objectError = err
+							return false
+						}
 						continue
 					}
 				}
@@ -504,11 +513,57 @@ func deleteAllS3ObjectVersions(conn *s3.S3, bucketName, key string, force bool) 
 
 			if err != nil {
 				log.Printf("[ERROR] Error deleting S3 Bucket (%s) Object (%s) Version (%s): %s", bucketName, objectKey, objectVersionID, err)
+				if !ignoreObjectErrors {
+					objectError = err
+					return false
+				}
 			}
 		}
 
 		return !lastPage
 	})
+	if err == nil {
+		err = objectError
+	}
+	if err != nil {
+		return err
+	}
+
+	err = conn.ListObjectVersionsPages(input, func(page *s3.ListObjectVersionsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, deleteMarker := range page.DeleteMarkers {
+			input := &s3.DeleteObjectInput{
+				Bucket:    aws.String(bucketName),
+				Key:       deleteMarker.Key,
+				VersionId: deleteMarker.VersionId,
+			}
+			deleteMarkerKey := aws.StringValue(deleteMarker.Key)
+			deleteMarkerVersionID := aws.StringValue(deleteMarker.VersionId)
+
+			log.Printf("[INFO] Deleting S3 Bucket (%s) Object (%s) Delete Marker: %s", bucketName, deleteMarkerKey, deleteMarkerVersionID)
+			_, err := conn.DeleteObject(input)
+
+			if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") || isAWSErr(err, s3.ErrCodeNoSuchKey, "") {
+				continue
+			}
+
+			if err != nil {
+				log.Printf("[ERROR] Error deleting S3 Bucket (%s) Object (%s) Version (%s): %s", bucketName, deleteMarkerKey, deleteMarkerVersionID, err)
+				if !ignoreObjectErrors {
+					objectError = err
+					return false
+				}
+			}
+		}
+
+		return !lastPage
+	})
+	if err == nil {
+		err = objectError
+	}
 	if err != nil {
 		return err
 	}

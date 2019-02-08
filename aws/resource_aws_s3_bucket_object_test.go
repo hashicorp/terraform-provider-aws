@@ -68,7 +68,8 @@ func testSweepS3BucketObjects(region string) error {
 			continue
 		}
 
-		err := deleteAllS3ObjectVersions(conn, bucketName, "", true)
+		// Delete everything including locked objects. Ignore any object errors.
+		err := deleteAllS3ObjectVersions(conn, bucketName, "", true, true)
 
 		if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") {
 			continue
@@ -76,47 +77,6 @@ func testSweepS3BucketObjects(region string) error {
 
 		if isAWSErr(err, "AuthorizationHeaderMalformed", "region") || isAWSErr(err, "BucketRegionError", "") {
 			log.Printf("[INFO] Skipping S3 Bucket (%s) Objects: %s", bucketName, err)
-			continue
-		}
-
-		if err != nil {
-			return fmt.Errorf("error listing S3 Bucket (%s) Objects: %s", bucketName, err)
-		}
-
-		input := &s3.ListObjectVersionsInput{
-			Bucket: bucket.Name,
-		}
-
-		err = conn.ListObjectVersionsPages(input, func(page *s3.ListObjectVersionsOutput, lastPage bool) bool {
-			if page == nil {
-				return !lastPage
-			}
-
-			for _, deleteMarker := range page.DeleteMarkers {
-				input := &s3.DeleteObjectInput{
-					Bucket:    bucket.Name,
-					Key:       deleteMarker.Key,
-					VersionId: deleteMarker.VersionId,
-				}
-				deleteMarkerKey := aws.StringValue(deleteMarker.Key)
-				deleteMarkerVersionID := aws.StringValue(deleteMarker.VersionId)
-
-				log.Printf("[INFO] Deleting S3 Bucket (%s) Object (%s) Delete Marker: %s", bucketName, deleteMarkerKey, deleteMarkerVersionID)
-				_, err := conn.DeleteObject(input)
-
-				if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") || isAWSErr(err, s3.ErrCodeNoSuchKey, "") {
-					continue
-				}
-
-				if err != nil {
-					log.Printf("[ERROR] Error deleting S3 Bucket (%s) Object (%s) Version (%s): %s", bucketName, deleteMarkerKey, deleteMarkerVersionID, err)
-				}
-			}
-
-			return !lastPage
-		})
-
-		if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") {
 			continue
 		}
 
@@ -221,7 +181,7 @@ func TestAccAWSS3BucketObject_withContentCharacteristics(t *testing.T) {
 }
 
 func TestAccAWSS3BucketObject_updates(t *testing.T) {
-	var originalObj, modifiedObj s3.GetObjectOutput
+	var obj1, obj2 s3.GetObjectOutput
 	resourceName := "aws_s3_bucket_object.object"
 	rInt := acctest.RandInt()
 
@@ -238,16 +198,16 @@ func TestAccAWSS3BucketObject_updates(t *testing.T) {
 			{
 				Config: testAccAWSS3BucketObjectConfig_updateable(rInt, false, sourceInitial),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketObjectExists(resourceName, &originalObj),
-					testAccCheckAWSS3BucketObjectBody(&originalObj, "initial object state"),
+					testAccCheckAWSS3BucketObjectExists(resourceName, &obj1),
+					testAccCheckAWSS3BucketObjectBody(&obj1, "initial object state"),
 					resource.TestCheckResourceAttr(resourceName, "etag", "647d1d58e1011c743ec67d5e8af87b53"),
 				),
 			},
 			{
 				Config: testAccAWSS3BucketObjectConfig_updateable(rInt, false, sourceModified),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketObjectExists(resourceName, &modifiedObj),
-					testAccCheckAWSS3BucketObjectBody(&modifiedObj, "modified object"),
+					testAccCheckAWSS3BucketObjectExists(resourceName, &obj2),
+					testAccCheckAWSS3BucketObjectBody(&obj2, "modified object"),
 					resource.TestCheckResourceAttr(resourceName, "etag", "1c7fd13df1515c2a13ad9eb068931f09"),
 				),
 			},
@@ -256,7 +216,7 @@ func TestAccAWSS3BucketObject_updates(t *testing.T) {
 }
 
 func TestAccAWSS3BucketObject_updatesWithVersioning(t *testing.T) {
-	var originalObj, modifiedObj s3.GetObjectOutput
+	var obj1, obj2, obj3 s3.GetObjectOutput
 	resourceName := "aws_s3_bucket_object.object"
 	rInt := acctest.RandInt()
 
@@ -273,18 +233,29 @@ func TestAccAWSS3BucketObject_updatesWithVersioning(t *testing.T) {
 			{
 				Config: testAccAWSS3BucketObjectConfig_updateable(rInt, true, sourceInitial),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketObjectExists(resourceName, &originalObj),
-					testAccCheckAWSS3BucketObjectBody(&originalObj, "initial versioned object state"),
+					testAccCheckAWSS3BucketObjectExists(resourceName, &obj1),
+					testAccCheckAWSS3BucketObjectBody(&obj1, "initial versioned object state"),
 					resource.TestCheckResourceAttr(resourceName, "etag", "cee4407fa91906284e2a5e5e03e86b1b"),
 				),
 			},
 			{
 				Config: testAccAWSS3BucketObjectConfig_updateable(rInt, true, sourceModified),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketObjectExists(resourceName, &modifiedObj),
-					testAccCheckAWSS3BucketObjectBody(&modifiedObj, "modified versioned object"),
+					testAccCheckAWSS3BucketObjectExists(resourceName, &obj2),
+					testAccCheckAWSS3BucketObjectBody(&obj2, "modified versioned object"),
 					resource.TestCheckResourceAttr(resourceName, "etag", "00b8c73b1b50e7cc932362c7225b8e29"),
-					testAccCheckAWSS3BucketObjectVersionIdDiffers(&modifiedObj, &originalObj),
+					testAccCheckAWSS3BucketObjectVersionIdDiffers(&obj2, &obj1),
+					// Delete the latest version to leave a delete marker.
+					testAccCheckAWSS3BucketObjectDeleteLatestVersion(resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				Config: testAccAWSS3BucketObjectConfig_updateable(rInt, true, sourceModified),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketObjectExists(resourceName, &obj3),
+					testAccCheckAWSS3BucketObjectBody(&obj3, "modified versioned object"),
+					testAccCheckAWSS3BucketObjectVersionIdDiffers(&obj3, &obj2),
 				),
 			},
 		},
@@ -825,6 +796,24 @@ func testAccCheckAWSS3BucketObjectSSE(n, expectedSSE string) resource.TestCheckF
 		if sse != expectedSSE {
 			return fmt.Errorf("Expected Server Side Encryption %v, got %v.",
 				expectedSSE, sse)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckAWSS3BucketObjectDeleteLatestVersion(n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs := s.RootModule().Resources[n]
+		s3conn := testAccProvider.Meta().(*AWSClient).s3conn
+
+		_, err := s3conn.DeleteObject(&s3.DeleteObjectInput{
+			Bucket: aws.String(rs.Primary.Attributes["bucket"]),
+			Key:    aws.String(rs.Primary.Attributes["key"]),
+		})
+
+		if err != nil {
+			return fmt.Errorf("DeleteObject error: %v", err)
 		}
 
 		return nil
