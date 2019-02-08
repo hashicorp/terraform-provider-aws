@@ -17,30 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/docdb"
 )
 
-func TestAccAWSDocDBCluster_importBasic(t *testing.T) {
-	resourceName := "aws_docdb_cluster.default"
-	ri := acctest.RandInt()
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckDocDBClusterDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDocDBClusterConfig(ri),
-			},
-
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"master_password", "skip_final_snapshot"},
-			},
-		},
-	})
-}
-
 func TestAccAWSDocDBCluster_basic(t *testing.T) {
 	var dbCluster docdb.DBCluster
 	rInt := acctest.RandInt()
@@ -55,7 +31,7 @@ func TestAccAWSDocDBCluster_basic(t *testing.T) {
 				Config: testAccDocDBClusterConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocDBClusterExists(resourceName, &dbCluster),
-					resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(`^arn:[^:]+:(rds|docdb):[^:]+:\d{12}:cluster:.+`)),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(`cluster:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
 					resource.TestCheckResourceAttr(resourceName, "db_cluster_parameter_group_name", "default.docdb3.6"),
 					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint"),
@@ -66,6 +42,17 @@ func TestAccAWSDocDBCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName,
 						"enabled_cloudwatch_logs_exports.0", "audit"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_identifier_prefix",
+					"final_snapshot_identifier",
+					"master_password",
+					"skip_final_snapshot",
+				},
 			},
 		},
 	})
@@ -87,6 +74,17 @@ func TestAccAWSDocDBCluster_namePrefix(t *testing.T) {
 						"aws_docdb_cluster.test", "cluster_identifier", regexp.MustCompile("^tf-test-")),
 				),
 			},
+			{
+				ResourceName:      "aws_docdb_cluster.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_identifier_prefix",
+					"final_snapshot_identifier",
+					"master_password",
+					"skip_final_snapshot",
+				},
+			},
 		},
 	})
 }
@@ -107,6 +105,17 @@ func TestAccAWSDocDBCluster_generatedName(t *testing.T) {
 						"aws_docdb_cluster.test", "cluster_identifier", regexp.MustCompile("^tf-")),
 				),
 			},
+			{
+				ResourceName:      "aws_docdb_cluster.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_identifier_prefix",
+					"final_snapshot_identifier",
+					"master_password",
+					"skip_final_snapshot",
+				},
+			},
 		},
 	})
 }
@@ -125,6 +134,17 @@ func TestAccAWSDocDBCluster_takeFinalSnapshot(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocDBClusterExists("aws_docdb_cluster.default", &v),
 				),
+			},
+			{
+				ResourceName:      "aws_docdb_cluster.default",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_identifier_prefix",
+					"final_snapshot_identifier",
+					"master_password",
+					"skip_final_snapshot",
+				},
 			},
 		},
 	})
@@ -164,6 +184,17 @@ func TestAccAWSDocDBCluster_updateTags(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      "aws_docdb_cluster.default",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_identifier_prefix",
+					"final_snapshot_identifier",
+					"master_password",
+					"skip_final_snapshot",
+				},
+			},
+			{
 				Config: testAccDocDBClusterConfigUpdatedTags(ri),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocDBClusterExists("aws_docdb_cluster.default", &v),
@@ -191,6 +222,17 @@ func TestAccAWSDocDBCluster_updateCloudwatchLogsExports(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      "aws_docdb_cluster.default",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_identifier_prefix",
+					"final_snapshot_identifier",
+					"master_password",
+					"skip_final_snapshot",
+				},
+			},
+			{
 				Config: testAccDocDBClusterConfig(ri),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocDBClusterExists("aws_docdb_cluster.default", &v),
@@ -204,7 +246,6 @@ func TestAccAWSDocDBCluster_updateCloudwatchLogsExports(t *testing.T) {
 
 func TestAccAWSDocDBCluster_kmsKey(t *testing.T) {
 	var v docdb.DBCluster
-	keyRegex := regexp.MustCompile("^arn:aws:kms:")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -215,9 +256,19 @@ func TestAccAWSDocDBCluster_kmsKey(t *testing.T) {
 				Config: testAccDocDBClusterConfig_kmsKey(acctest.RandInt()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocDBClusterExists("aws_docdb_cluster.default", &v),
-					resource.TestMatchResourceAttr(
-						"aws_docdb_cluster.default", "kms_key_id", keyRegex),
+					resource.TestCheckResourceAttrPair("aws_docdb_cluster.default", "kms_key_id", "aws_kms_key.foo", "arn"),
 				),
+			},
+			{
+				ResourceName:      "aws_docdb_cluster.default",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_identifier_prefix",
+					"final_snapshot_identifier",
+					"master_password",
+					"skip_final_snapshot",
+				},
 			},
 		},
 	})
@@ -240,6 +291,17 @@ func TestAccAWSDocDBCluster_encrypted(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_docdb_cluster.default", "db_cluster_parameter_group_name", "default.docdb3.6"),
 				),
+			},
+			{
+				ResourceName:      "aws_docdb_cluster.default",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_identifier_prefix",
+					"final_snapshot_identifier",
+					"master_password",
+					"skip_final_snapshot",
+				},
 			},
 		},
 	})
@@ -266,7 +328,17 @@ func TestAccAWSDocDBCluster_backupsUpdate(t *testing.T) {
 						"aws_docdb_cluster.default", "preferred_maintenance_window", "tue:04:00-tue:04:30"),
 				),
 			},
-
+			{
+				ResourceName:      "aws_docdb_cluster.default",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_identifier_prefix",
+					"final_snapshot_identifier",
+					"master_password",
+					"skip_final_snapshot",
+				},
+			},
 			{
 				Config: testAccDocDBClusterConfig_backupsUpdate(ri),
 				Check: resource.ComposeTestCheckFunc(
@@ -299,6 +371,17 @@ func TestAccAWSDocDBCluster_Port(t *testing.T) {
 					testAccCheckDocDBClusterExists(resourceName, &dbCluster1),
 					resource.TestCheckResourceAttr(resourceName, "port", "5432"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_identifier_prefix",
+					"final_snapshot_identifier",
+					"master_password",
+					"skip_final_snapshot",
+				},
 			},
 			{
 				Config: testAccDocDBClusterConfig_Port(rInt, 2345),
