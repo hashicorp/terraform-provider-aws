@@ -435,7 +435,6 @@ resource "aws_iot_topic_rule" "rule" {
 `, rName)
 }
 
-
 func testAccAWSIoTTopicRule_elasticsearch(rName string) string {
 	return fmt.Sprintf(testAccAWSIoTTopicRuleRole+`
 data "aws_region" "current" {
