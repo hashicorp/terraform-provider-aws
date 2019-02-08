@@ -410,6 +410,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_dms_replication_subnet_group":                 resourceAwsDmsReplicationSubnetGroup(),
 			"aws_dms_replication_task":                         resourceAwsDmsReplicationTask(),
 			"aws_docdb_cluster_parameter_group":                resourceAwsDocDBClusterParameterGroup(),
+			"aws_docdb_cluster_snapshot":                       resourceAwsDocDBClusterSnapshot(),
 			"aws_docdb_subnet_group":                           resourceAwsDocDBSubnetGroup(),
 			"aws_docdb_cluster":                                resourceAwsDocDBCluster(),
 			"aws_dx_bgp_peer":                                  resourceAwsDxBgpPeer(),
