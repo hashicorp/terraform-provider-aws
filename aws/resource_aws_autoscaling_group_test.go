@@ -355,7 +355,7 @@ func TestAccAWSAutoScalingGroup_VpcUpdates(t *testing.T) {
 				Config: testAccAWSAutoScalingGroupConfigWithVPCIdent,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAutoScalingGroupExists("aws_autoscaling_group.bar", &group),
-					testAccCheckAWSAutoScalingGroupAttributesVPCZoneIdentifer(&group),
+					testAccCheckAWSAutoScalingGroupAttributesVPCZoneIdentifier(&group),
 					resource.TestCheckResourceAttr(
 						"aws_autoscaling_group.bar", "availability_zones.#", "1"),
 					resource.TestCheckResourceAttr(
@@ -830,7 +830,7 @@ func testAccCheckAWSAutoScalingGroupHealthyCapacity(
 	}
 }
 
-func testAccCheckAWSAutoScalingGroupAttributesVPCZoneIdentifer(group *autoscaling.Group) resource.TestCheckFunc {
+func testAccCheckAWSAutoScalingGroupAttributesVPCZoneIdentifier(group *autoscaling.Group) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// Grab Subnet Ids
 		var subnets []string

@@ -14,6 +14,8 @@ For information about Lambda and how to use it, see [What is AWS Lambda?][1]
 
 ## Example Usage
 
+### Basic Example
+
 ```hcl
 resource "aws_iam_role" "iam_for_lambda" {
   name = "iam_for_lambda"
@@ -48,6 +50,21 @@ resource "aws_lambda_function" "test_lambda" {
       foo = "bar"
     }
   }
+}
+```
+
+### Lambda Layers
+
+~> **NOTE:** The `aws_lambda_layer_version` attribute values for `arn` and `layer_arn` will be swapped in version 2.0.0 of the Terraform AWS Provider. For version 1.x, use `layer_arn` references. For version 2.x, use `arn` references.
+
+```hcl
+resource "aws_lambda_layer_version" "example" {
+  # ... other configuration ...
+}
+
+resource "aws_lambda_function" "example" {
+  # ... other configuration ...
+  layers = ["${aws_lambda_layer_version.example.layer_arn}"]
 }
 ```
 

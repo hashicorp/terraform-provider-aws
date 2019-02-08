@@ -12,6 +12,8 @@ import (
 )
 
 func TestAccAwsBackupVault_basic(t *testing.T) {
+	var vault backup.DescribeBackupVaultOutput
+
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -21,7 +23,7 @@ func TestAccAwsBackupVault_basic(t *testing.T) {
 			{
 				Config: testAccBackupVaultConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsBackupVaultExists("aws_backup_vault.test"),
+					testAccCheckAwsBackupVaultExists("aws_backup_vault.test", &vault),
 				),
 			},
 		},
@@ -29,6 +31,8 @@ func TestAccAwsBackupVault_basic(t *testing.T) {
 }
 
 func TestAccAwsBackupVault_withKmsKey(t *testing.T) {
+	var vault backup.DescribeBackupVaultOutput
+
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -38,8 +42,8 @@ func TestAccAwsBackupVault_withKmsKey(t *testing.T) {
 			{
 				Config: testAccBackupVaultWithKmsKey(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsBackupVaultExists("aws_backup_vault.test"),
-					resource.TestCheckResourceAttrSet("aws_backup_vault.test", "kms_key_arn"),
+					testAccCheckAwsBackupVaultExists("aws_backup_vault.test", &vault),
+					resource.TestCheckResourceAttrPair("aws_backup_vault.test", "kms_key_arn", "aws_kms_key.test", "arn"),
 				),
 			},
 		},
@@ -47,6 +51,8 @@ func TestAccAwsBackupVault_withKmsKey(t *testing.T) {
 }
 
 func TestAccAwsBackupVault_withTags(t *testing.T) {
+	var vault backup.DescribeBackupVaultOutput
+
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -56,7 +62,7 @@ func TestAccAwsBackupVault_withTags(t *testing.T) {
 			{
 				Config: testAccBackupVaultWithTags(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsBackupVaultExists("aws_backup_vault.test"),
+					testAccCheckAwsBackupVaultExists("aws_backup_vault.test", &vault),
 					resource.TestCheckResourceAttr("aws_backup_vault.test", "tags.%", "2"),
 					resource.TestCheckResourceAttr("aws_backup_vault.test", "tags.up", "down"),
 					resource.TestCheckResourceAttr("aws_backup_vault.test", "tags.left", "right"),
@@ -89,12 +95,24 @@ func testAccCheckAwsBackupVaultDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAwsBackupVaultExists(name string) resource.TestCheckFunc {
+func testAccCheckAwsBackupVaultExists(name string, vault *backup.DescribeBackupVaultOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		_, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[name]
 		if !ok {
-			return fmt.Errorf("not found: %s, %v", name, s.RootModule().Resources)
+			return fmt.Errorf("Not found: %s", name)
 		}
+
+		conn := testAccProvider.Meta().(*AWSClient).backupconn
+		params := &backup.DescribeBackupVaultInput{
+			BackupVaultName: aws.String(rs.Primary.ID),
+		}
+		resp, err := conn.DescribeBackupVault(params)
+		if err != nil {
+			return err
+		}
+
+		*vault = *resp
+
 		return nil
 	}
 }
@@ -126,9 +144,9 @@ func testAccBackupVaultWithTags(randInt int) string {
 resource "aws_backup_vault" "test" {
 	name = "tf_acc_test_backup_vault_%d"
 	
-	tags {
-		up 		= "down"
-		left 	= "right" 
+	tags = {
+		up		= "down"
+		left	= "right"
 	}
 }
 `, randInt)

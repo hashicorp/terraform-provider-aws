@@ -43,6 +43,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/configservice"
+	"github.com/aws/aws-sdk-go/service/costandusagereportservice"
 	"github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	"github.com/aws/aws-sdk-go/service/datapipeline"
 	"github.com/aws/aws-sdk-go/service/datasync"
@@ -85,6 +86,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/licensemanager"
 	"github.com/aws/aws-sdk-go/service/lightsail"
 	"github.com/aws/aws-sdk-go/service/macie"
+	"github.com/aws/aws-sdk-go/service/mediaconnect"
 	"github.com/aws/aws-sdk-go/service/mediaconvert"
 	"github.com/aws/aws-sdk-go/service/medialive"
 	"github.com/aws/aws-sdk-go/service/mediapackage"
@@ -125,7 +127,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/worklink"
 	"github.com/aws/aws-sdk-go/service/workspaces"
 	"github.com/davecgh/go-spew/spew"
-	"github.com/hashicorp/go-cleanhttp"
+	cleanhttp "github.com/hashicorp/go-cleanhttp"
 	"github.com/hashicorp/terraform/helper/logging"
 	"github.com/hashicorp/terraform/terraform"
 )
@@ -215,6 +217,7 @@ type AWSClient struct {
 	cognitoconn                         *cognitoidentity.CognitoIdentity
 	cognitoidpconn                      *cognitoidentityprovider.CognitoIdentityProvider
 	configconn                          *configservice.ConfigService
+	costandusagereportconn              *costandusagereportservice.CostandUsageReportService
 	datapipelineconn                    *datapipeline.DataPipeline
 	datasyncconn                        *datasync.DataSync
 	daxconn                             *dax.DAX
@@ -257,6 +260,7 @@ type AWSClient struct {
 	licensemanagerconn                  *licensemanager.LicenseManager
 	lightsailconn                       *lightsail.Lightsail
 	macieconn                           *macie.Macie
+	mediaconnectconn                    *mediaconnect.MediaConnect
 	mediaconvertconn                    *mediaconvert.MediaConvert
 	medialiveconn                       *medialive.MediaLive
 	mediapackageconn                    *mediapackage.MediaPackage
@@ -576,6 +580,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.cognitoconn = cognitoidentity.New(sess)
 	client.cognitoidpconn = cognitoidentityprovider.New(sess)
 	client.configconn = configservice.New(sess)
+	client.costandusagereportconn = costandusagereportservice.New(sess)
 	client.datapipelineconn = datapipeline.New(sess)
 	client.datasyncconn = datasync.New(sess)
 	client.daxconn = dax.New(awsDynamoSess)
@@ -615,6 +620,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.licensemanagerconn = licensemanager.New(sess)
 	client.lightsailconn = lightsail.New(sess)
 	client.macieconn = macie.New(sess)
+	client.mediaconnectconn = mediaconnect.New(sess)
 	client.mediaconvertconn = mediaconvert.New(sess)
 	client.medialiveconn = medialive.New(sess)
 	client.mediapackageconn = mediapackage.New(sess)

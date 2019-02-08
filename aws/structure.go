@@ -42,6 +42,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/aws/aws-sdk-go/service/waf"
+	"github.com/aws/aws-sdk-go/service/worklink"
 	"github.com/beevik/etree"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/structure"
@@ -3722,6 +3723,41 @@ func flattenWafWebAclRules(ts []*waf.ActivatedRule) []map[string]interface{} {
 		out[i] = m
 	}
 	return out
+}
+
+func flattenWorkLinkNetworkConfigResponse(c *worklink.DescribeCompanyNetworkConfigurationOutput) []map[string]interface{} {
+	config := make(map[string]interface{})
+
+	if c == nil {
+		return nil
+	}
+
+	if len(c.SubnetIds) == 0 && len(c.SecurityGroupIds) == 0 && aws.StringValue(c.VpcId) == "" {
+		return nil
+	}
+
+	config["subnet_ids"] = schema.NewSet(schema.HashString, flattenStringList(c.SubnetIds))
+	config["security_group_ids"] = schema.NewSet(schema.HashString, flattenStringList(c.SecurityGroupIds))
+	config["vpc_id"] = aws.StringValue(c.VpcId)
+
+	return []map[string]interface{}{config}
+}
+
+func flattenWorkLinkIdentityProviderConfigResponse(c *worklink.DescribeIdentityProviderConfigurationOutput) []map[string]interface{} {
+	config := make(map[string]interface{})
+
+	if c.IdentityProviderType == nil && c.IdentityProviderSamlMetadata == nil {
+		return nil
+	}
+
+	if c.IdentityProviderType != nil {
+		config["type"] = aws.StringValue(c.IdentityProviderType)
+	}
+	if c.IdentityProviderSamlMetadata != nil {
+		config["saml_metadata"] = aws.StringValue(c.IdentityProviderSamlMetadata)
+	}
+
+	return []map[string]interface{}{config}
 }
 
 // escapeJsonPointer escapes string per RFC 6901

@@ -1027,7 +1027,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 				if ec2err, ok := err.(awserr.Error); ok {
 					// Tolerate InvalidParameterCombination error in Classic, otherwise
 					// return the error
-					if "InvalidParameterCombination" != ec2err.Code() {
+					if ec2err.Code() != "InvalidParameterCombination" {
 						return err
 					}
 					log.Printf("[WARN] Attempted to modify SourceDestCheck on non VPC instance: %s", ec2err.Message())

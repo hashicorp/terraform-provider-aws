@@ -3088,7 +3088,7 @@ data "aws_subnet" "test" {
 resource "aws_launch_configuration" "foo_lc" {
   image_id = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
   instance_type = "t2.micro"
-  "name_prefix" = "foo-lc-"
+  name_prefix = "foo-lc-"
 
   lifecycle {
     create_before_destroy = true
@@ -3164,7 +3164,7 @@ data "aws_subnet" "test" {
 resource "aws_launch_configuration" "foo_lc" {
   image_id = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
   instance_type = "t2.micro"
-  "name_prefix" = "foo-lc-"
+  name_prefix = "foo-lc-"
 
   lifecycle {
     create_before_destroy = true

@@ -39,6 +39,7 @@ Upgrade topics:
 - [Resource: aws_efs_file_system](#resource-aws_efs_file_system)
 - [Resource: aws_elasticache_cluster](#resource-aws_elasticache_cluster)
 - [Resource: aws_instance](#resource-aws_instance)
+- [Resource: aws_lambda_layer_version](#resource-aws_lambda_layer_version)
 - [Resource: aws_network_acl](#resource-aws_network_acl)
 - [Resource: aws_redshift_cluster](#resource-aws_redshift_cluster)
 - [Resource: aws_route_table](#resource-aws_route_table)
@@ -549,6 +550,12 @@ resource "aws_elasticache_cluster" "example" {
 ### network_interface_id Attribute Removal
 
 Switch your attribute references to the `primary_network_interface_id` attribute instead.
+
+## Resource: aws_lambda_layer_version
+
+### arn and layer_arn Attribute Value Swap
+
+Switch your `arn` attribute references to the `layer_arn` attribute instead and vice-versa.
 
 ## Resource: aws_network_acl
 
