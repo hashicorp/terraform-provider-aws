@@ -254,35 +254,21 @@ func resourceAwsCloudWatchMetricAlarmRead(d *schema.ResourceData, meta interface
 	if a.Metrics != nil && len(a.Metrics) > 0 {
 		metricQueries := make([]interface{}, len(a.Metrics))
 		for i, mq := range a.Metrics {
-			metricQuery := make(map[string]interface{})
-			metricQuery["id"] = *mq.Id
-			if mq.Expression != nil {
-				metricQuery["expression"] = *mq.Expression
-			}
-			if mq.Label != nil {
-				metricQuery["label"] = *mq.Label
-			}
-			if mq.ReturnData != nil {
-				metricQuery["return_data"] = *mq.ReturnData
+			metricQuery := map[string]interface{}{
+				"expression":  aws.StringValue(mq.Expression),
+				"id":          aws.StringValue(mq.Id),
+				"label":       aws.StringValue(mq.Label),
+				"return_data": aws.BoolValue(mq.ReturnData),
 			}
 			if mq.MetricStat != nil {
-				metric := make(map[string]interface{})
-				if mq.MetricStat.Metric.MetricName != nil {
-					metric["metric_name"] = *mq.MetricStat.Metric.MetricName
+				metric := map[string]interface{}{
+					"metric_name": aws.StringValue(mq.MetricStat.Metric.MetricName),
+					"namespace":   aws.StringValue(mq.MetricStat.Metric.Namespace),
+					"period":      int(aws.Int64Value(mq.MetricStat.Period)),
+					"stat":        aws.StringValue(mq.MetricStat.Stat),
+					"unit":        aws.StringValue(mq.MetricStat.Unit),
+					"dimensions":  flattenDimensions(mq.MetricStat.Metric.Dimensions),
 				}
-				if mq.MetricStat.Metric.Namespace != nil {
-					metric["namespace"] = *mq.MetricStat.Metric.Namespace
-				}
-				if mq.MetricStat.Period != nil {
-					metric["period"] = int(*mq.MetricStat.Period)
-				}
-				if mq.MetricStat.Stat != nil {
-					metric["stat"] = *mq.MetricStat.Stat
-				}
-				if mq.MetricStat.Unit != nil {
-					metric["unit"] = *mq.MetricStat.Unit
-				}
-				metric["dimensions"] = flattenDimensions(mq.MetricStat.Metric.Dimensions)
 				metricQuery["metric"] = []interface{}{metric}
 			}
 			metricQueries[i] = metricQuery
