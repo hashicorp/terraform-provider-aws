@@ -232,7 +232,7 @@ func resourceAwsDocDBClusterInstanceCreate(d *schema.ResourceData, meta interfac
 	// Wait, catching any errors
 	_, err = stateConf.WaitForState()
 	if err != nil {
-		return err
+		return fmt.Errorf("error waiting for DocDB Instance (%s) to become available: %s", d.Id(), err)
 	}
 
 	return resourceAwsDocDBClusterInstanceRead(d, meta)
@@ -271,7 +271,7 @@ func resourceAwsDocDBClusterInstanceRead(d *schema.ResourceData, meta interface{
 
 	for _, m := range dbc.DBClusterMembers {
 		if *db.DBInstanceIdentifier == *m.DBInstanceIdentifier {
-			if *m.IsClusterWriter == true {
+			if *m.IsClusterWriter {
 				d.Set("writer", true)
 			} else {
 				d.Set("writer", false)
@@ -305,7 +305,7 @@ func resourceAwsDocDBClusterInstanceRead(d *schema.ResourceData, meta interface{
 	d.Set("storage_encrypted", db.StorageEncrypted)
 
 	if err := saveTagsDocDB(conn, d, aws.StringValue(db.DBInstanceArn)); err != nil {
-		log.Printf("[WARN] Failed to save tags for DocDB Cluster Instance (%s): %s", *db.DBClusterIdentifier, err)
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	return nil
@@ -373,7 +373,7 @@ func resourceAwsDocDBClusterInstanceUpdate(d *schema.ResourceData, meta interfac
 		// Wait, catching any errors
 		_, err = stateConf.WaitForState()
 		if err != nil {
-			return err
+			return fmt.Errorf("error waiting for DocDB Instance (%s) update: %s", d.Id(), err)
 		}
 
 	}
@@ -394,7 +394,7 @@ func resourceAwsDocDBClusterInstanceDelete(d *schema.ResourceData, meta interfac
 
 	log.Printf("[DEBUG] DocDB Cluster Instance destroy configuration: %s", opts)
 	if _, err := conn.DeleteDBInstance(&opts); err != nil {
-		return err
+		return fmt.Errorf("error deleting DocDB Instance (%s): %s", d.Id(), err)
 	}
 
 	// re-uses db_instance refresh func
@@ -409,7 +409,7 @@ func resourceAwsDocDBClusterInstanceDelete(d *schema.ResourceData, meta interfac
 	}
 
 	if _, err := stateConf.WaitForState(); err != nil {
-		return err
+		return fmt.Errorf("error waiting for DocDB Instance (%s) deletion: %s", d.Id(), err)
 	}
 
 	return nil

@@ -16,7 +16,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/docdb"
 )
 
-func TestAccAWSDocDBClusterInstance_importBasic(t *testing.T) {
+func TestAccAWSDocDBClusterInstance_basic(t *testing.T) {
+	var v docdb.DBInstance
 	resourceName := "aws_docdb_cluster_instance.cluster_instances"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -26,6 +27,26 @@ func TestAccAWSDocDBClusterInstance_importBasic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSDocDBClusterInstanceConfig(acctest.RandInt()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDocDBClusterInstanceExists(resourceName, &v),
+					testAccCheckAWSDocDBClusterInstanceAttributes(&v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(`db:.+`)),
+					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
+					resource.TestCheckResourceAttrSet(resourceName, "preferred_maintenance_window"),
+					resource.TestCheckResourceAttrSet(resourceName, "preferred_backup_window"),
+					resource.TestCheckResourceAttrSet(resourceName, "dbi_resource_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
+					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
+					resource.TestCheckResourceAttr(resourceName, "engine", "docdb"),
+				),
+			},
+			{
+				Config: testAccAWSDocDBClusterInstanceConfigModified(acctest.RandInt()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDocDBClusterInstanceExists(resourceName, &v),
+					testAccCheckAWSDocDBClusterInstanceAttributes(&v),
+					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
+				),
 			},
 
 			{
@@ -37,43 +58,9 @@ func TestAccAWSDocDBClusterInstance_importBasic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDocDBClusterInstance_basic(t *testing.T) {
-	var v docdb.DBInstance
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckDocDBClusterDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSDocDBClusterInstanceConfig(acctest.RandInt()),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDocDBClusterInstanceExists("aws_docdb_cluster_instance.cluster_instances", &v),
-					testAccCheckAWSDocDBClusterInstanceAttributes(&v),
-					resource.TestMatchResourceAttr("aws_docdb_cluster_instance.cluster_instances", "arn", regexp.MustCompile(`^arn:[^:]+:rds:[^:]+:[^:]+:db:.+`)),
-					resource.TestCheckResourceAttr("aws_docdb_cluster_instance.cluster_instances", "auto_minor_version_upgrade", "true"),
-					resource.TestCheckResourceAttrSet("aws_docdb_cluster_instance.cluster_instances", "preferred_maintenance_window"),
-					resource.TestCheckResourceAttrSet("aws_docdb_cluster_instance.cluster_instances", "preferred_backup_window"),
-					resource.TestCheckResourceAttrSet("aws_docdb_cluster_instance.cluster_instances", "dbi_resource_id"),
-					resource.TestCheckResourceAttrSet("aws_docdb_cluster_instance.cluster_instances", "availability_zone"),
-					resource.TestCheckResourceAttrSet("aws_docdb_cluster_instance.cluster_instances", "engine_version"),
-					resource.TestCheckResourceAttr("aws_docdb_cluster_instance.cluster_instances", "engine", "docdb"),
-				),
-			},
-			{
-				Config: testAccAWSDocDBClusterInstanceConfigModified(acctest.RandInt()),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDocDBClusterInstanceExists("aws_docdb_cluster_instance.cluster_instances", &v),
-					testAccCheckAWSDocDBClusterInstanceAttributes(&v),
-					resource.TestCheckResourceAttr("aws_docdb_cluster_instance.cluster_instances", "auto_minor_version_upgrade", "false"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccAWSDocDBClusterInstance_az(t *testing.T) {
 	var v docdb.DBInstance
+	resourceName := "aws_docdb_cluster_instance.cluster_instances"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -83,10 +70,16 @@ func TestAccAWSDocDBClusterInstance_az(t *testing.T) {
 			{
 				Config: testAccAWSDocDBClusterInstanceConfig_az(acctest.RandInt()),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDocDBClusterInstanceExists("aws_docdb_cluster_instance.cluster_instances", &v),
+					testAccCheckAWSDocDBClusterInstanceExists(resourceName, &v),
 					testAccCheckAWSDocDBClusterInstanceAttributes(&v),
-					resource.TestMatchResourceAttr("aws_docdb_cluster_instance.cluster_instances", "availability_zone", regexp.MustCompile("^us-west-2[a-z]{1}$")),
+					resource.TestMatchResourceAttr(resourceName, "availability_zone", regexp.MustCompile("^us-west-2[a-z]{1}$")),
 				),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -94,6 +87,7 @@ func TestAccAWSDocDBClusterInstance_az(t *testing.T) {
 
 func TestAccAWSDocDBClusterInstance_namePrefix(t *testing.T) {
 	var v docdb.DBInstance
+	resourceName := "aws_docdb_cluster_instance.test"
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -104,13 +98,17 @@ func TestAccAWSDocDBClusterInstance_namePrefix(t *testing.T) {
 			{
 				Config: testAccAWSDocDBClusterInstanceConfig_namePrefix(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDocDBClusterInstanceExists("aws_docdb_cluster_instance.test", &v),
+					testAccCheckAWSDocDBClusterInstanceExists(resourceName, &v),
 					testAccCheckAWSDocDBClusterInstanceAttributes(&v),
-					resource.TestCheckResourceAttr(
-						"aws_docdb_cluster_instance.test", "db_subnet_group_name", fmt.Sprintf("tf-test-%d", rInt)),
-					resource.TestMatchResourceAttr(
-						"aws_docdb_cluster_instance.test", "identifier", regexp.MustCompile("^tf-cluster-instance-")),
+					resource.TestCheckResourceAttr(resourceName, "db_subnet_group_name", fmt.Sprintf("tf-test-%d", rInt)),
+					resource.TestMatchResourceAttr(resourceName, "identifier", regexp.MustCompile("^tf-cluster-instance-")),
 				),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -118,6 +116,7 @@ func TestAccAWSDocDBClusterInstance_namePrefix(t *testing.T) {
 
 func TestAccAWSDocDBClusterInstance_generatedName(t *testing.T) {
 	var v docdb.DBInstance
+	resourceName := "aws_docdb_cluster_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -127,11 +126,16 @@ func TestAccAWSDocDBClusterInstance_generatedName(t *testing.T) {
 			{
 				Config: testAccAWSDocDBClusterInstanceConfig_generatedName(acctest.RandInt()),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDocDBClusterInstanceExists("aws_docdb_cluster_instance.test", &v),
+					testAccCheckAWSDocDBClusterInstanceExists(resourceName, &v),
 					testAccCheckAWSDocDBClusterInstanceAttributes(&v),
-					resource.TestMatchResourceAttr(
-						"aws_docdb_cluster_instance.test", "identifier", regexp.MustCompile("^tf-")),
+					resource.TestMatchResourceAttr(resourceName, "identifier", regexp.MustCompile("^tf-")),
 				),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -139,7 +143,7 @@ func TestAccAWSDocDBClusterInstance_generatedName(t *testing.T) {
 
 func TestAccAWSDocDBClusterInstance_kmsKey(t *testing.T) {
 	var v docdb.DBInstance
-	keyRegex := regexp.MustCompile("^arn:aws:kms:")
+	resourceName := "aws_docdb_cluster_instance.cluster_instances"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -149,10 +153,15 @@ func TestAccAWSDocDBClusterInstance_kmsKey(t *testing.T) {
 			{
 				Config: testAccAWSDocDBClusterInstanceConfigKmsKey(acctest.RandInt()),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDocDBClusterInstanceExists("aws_docdb_cluster_instance.cluster_instances", &v),
-					resource.TestMatchResourceAttr(
-						"aws_docdb_cluster_instance.cluster_instances", "kms_key_id", keyRegex),
+					testAccCheckAWSDocDBClusterInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", "aws_kms_key.foo", "key_id"),
 				),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -161,6 +170,7 @@ func TestAccAWSDocDBClusterInstance_kmsKey(t *testing.T) {
 // https://github.com/hashicorp/terraform/issues/5350
 func TestAccAWSDocDBClusterInstance_disappears(t *testing.T) {
 	var v docdb.DBInstance
+	resourceName := "aws_docdb_cluster_instance.cluster_instances"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -170,11 +180,17 @@ func TestAccAWSDocDBClusterInstance_disappears(t *testing.T) {
 			{
 				Config: testAccAWSDocDBClusterInstanceConfig(acctest.RandInt()),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDocDBClusterInstanceExists("aws_docdb_cluster_instance.cluster_instances", &v),
+					testAccCheckAWSDocDBClusterInstanceExists(resourceName, &v),
 					testAccAWSDocDBClusterInstanceDisappears(&v),
 				),
 				// A non-empty plan is what we want. A crash is what we don't want. :)
 				ExpectNonEmptyPlan: true,
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
