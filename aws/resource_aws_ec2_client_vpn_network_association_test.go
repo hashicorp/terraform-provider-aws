@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -30,6 +31,27 @@ func TestAccAwsEc2ClientVpnNetworkAssociation_basic(t *testing.T) {
 	})
 }
 
+func TestAccAwsEc2ClientVpnNetworkAssociation_disappears(t *testing.T) {
+	var assoc1 ec2.TargetNetwork
+	rStr := acctest.RandString(5)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProvidersWithTLS,
+		CheckDestroy: testAccCheckAwsEc2ClientVpnNetworkAssociationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEc2ClientVpnNetworkAssociationConfig(rStr),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsEc2ClientVpnNetworkAssociationExists("aws_ec2_client_vpn_network_association.test", &assoc1),
+					testAccCheckAwsEc2ClientVpnNetworkAssociationDisappears(&assoc1),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAwsEc2ClientVpnNetworkAssociationDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).ec2conn
 
@@ -51,6 +73,32 @@ func testAccCheckAwsEc2ClientVpnNetworkAssociationDestroy(s *terraform.State) er
 	}
 
 	return nil
+}
+
+func testAccCheckAwsEc2ClientVpnNetworkAssociationDisappears(targetNetwork *ec2.TargetNetwork) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+
+		_, err := conn.DisassociateClientVpnTargetNetwork(&ec2.DisassociateClientVpnTargetNetworkInput{
+			AssociationId:       targetNetwork.AssociationId,
+			ClientVpnEndpointId: targetNetwork.ClientVpnEndpointId,
+		})
+
+		if err != nil {
+			return err
+		}
+
+		stateConf := &resource.StateChangeConf{
+			Pending: []string{ec2.AssociationStatusCodeDisassociating},
+			Target:  []string{ec2.AssociationStatusCodeDisassociated},
+			Refresh: clientVpnNetworkAssociationRefreshFunc(conn, aws.StringValue(targetNetwork.AssociationId), aws.StringValue(targetNetwork.ClientVpnEndpointId)),
+			Timeout: 10 * time.Minute,
+		}
+
+		_, err = stateConf.WaitForState()
+
+		return err
+	}
 }
 
 func testAccCheckAwsEc2ClientVpnNetworkAssociationExists(name string, assoc *ec2.TargetNetwork) resource.TestCheckFunc {
