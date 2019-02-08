@@ -31,9 +31,7 @@ func testSweepSagemakerModels(region string) error {
 	}
 	conn := client.(*AWSClient).sagemakerconn
 
-	req := &sagemaker.ListModelsInput{
-		NameContains: aws.String("terraform-testacc-sagemaker-model"),
-	}
+	req := &sagemaker.ListModelsInput{}
 	resp, err := conn.ListModels(req)
 	if err != nil {
 		return fmt.Errorf("error listing models: %s", err)

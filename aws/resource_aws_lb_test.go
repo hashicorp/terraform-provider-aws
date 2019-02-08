@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -29,14 +28,6 @@ func testSweepLBs(region string) error {
 	}
 	conn := client.(*AWSClient).elbv2conn
 
-	prefixes := []string{
-		"tf-",
-		"tf-test-",
-		"tf-acc-test-",
-		"test-",
-		"testacc",
-	}
-
 	err = conn.DescribeLoadBalancersPages(&elbv2.DescribeLoadBalancersInput{}, func(page *elbv2.DescribeLoadBalancersOutput, isLast bool) bool {
 		if page == nil || len(page.LoadBalancers) == 0 {
 			log.Print("[DEBUG] No LBs to sweep")
@@ -45,17 +36,7 @@ func testSweepLBs(region string) error {
 
 		for _, loadBalancer := range page.LoadBalancers {
 			name := aws.StringValue(loadBalancer.LoadBalancerName)
-			skip := true
-			for _, prefix := range prefixes {
-				if strings.HasPrefix(name, prefix) {
-					skip = false
-					break
-				}
-			}
-			if skip {
-				log.Printf("[INFO] Skipping LB: %s", name)
-				continue
-			}
+
 			log.Printf("[INFO] Deleting LB: %s", name)
 			_, err := conn.DeleteLoadBalancer(&elbv2.DeleteLoadBalancerInput{
 				LoadBalancerArn: loadBalancer.LoadBalancerArn,

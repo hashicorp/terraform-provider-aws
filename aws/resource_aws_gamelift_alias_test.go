@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -39,10 +38,6 @@ func testSweepGameliftAliases(region string) error {
 		log.Printf("[INFO] Found %d Gamelift Aliases", len(resp.Aliases))
 
 		for _, alias := range resp.Aliases {
-			if !strings.HasPrefix(*alias.Name, "tf_acc_alias_") {
-				continue
-			}
-
 			log.Printf("[INFO] Deleting Gamelift Alias %q", *alias.AliasId)
 			_, err := conn.DeleteAlias(&gamelift.DeleteAliasInput{
 				AliasId: alias.AliasId,

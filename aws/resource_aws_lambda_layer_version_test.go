@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"strconv"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -43,10 +42,6 @@ func testSweepLambdaLayerVersions(region string) error {
 	}
 
 	for _, l := range resp.Layers {
-		if !strings.HasPrefix(*l.LayerName, "tf_acc_") {
-			continue
-		}
-
 		versionResp, err := lambdaconn.ListLayerVersions(&lambda.ListLayerVersionsInput{
 			LayerName: l.LayerName,
 		})

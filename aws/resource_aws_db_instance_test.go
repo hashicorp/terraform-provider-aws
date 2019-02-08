@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 	"regexp"
-	"strings"
 	"testing"
 	"time"
 
@@ -31,25 +30,8 @@ func testSweepDbInstances(region string) error {
 	}
 	conn := client.(*AWSClient).rdsconn
 
-	prefixes := []string{
-		"foobarbaz-test-terraform-",
-		"foobarbaz-enhanced-monitoring-",
-		"mydb-rds-",
-		"terraform-",
-		"tf-",
-	}
-
 	err = conn.DescribeDBInstancesPages(&rds.DescribeDBInstancesInput{}, func(out *rds.DescribeDBInstancesOutput, lastPage bool) bool {
 		for _, dbi := range out.DBInstances {
-			hasPrefix := false
-			for _, prefix := range prefixes {
-				if strings.HasPrefix(*dbi.DBInstanceIdentifier, prefix) {
-					hasPrefix = true
-				}
-			}
-			if !hasPrefix {
-				continue
-			}
 			log.Printf("[INFO] Deleting DB instance: %s", *dbi.DBInstanceIdentifier)
 
 			_, err := conn.DeleteDBInstance(&rds.DeleteDBInstanceInput{

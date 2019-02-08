@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strings"
 	"testing"
 	"time"
 
@@ -30,20 +29,8 @@ func testSweepDynamoDbTables(region string) error {
 	}
 	conn := client.(*AWSClient).dynamodbconn
 
-	prefixes := []string{
-		"TerraformTest",
-		"tf-acc-test-",
-		"tf-autoscaled-table-",
-	}
-
 	err = conn.ListTablesPages(&dynamodb.ListTablesInput{}, func(out *dynamodb.ListTablesOutput, lastPage bool) bool {
 		for _, tableName := range out.TableNames {
-			for _, prefix := range prefixes {
-				if !strings.HasPrefix(*tableName, prefix) {
-					log.Printf("[INFO] Skipping DynamoDB Table: %s", *tableName)
-					continue
-				}
-			}
 			log.Printf("[INFO] Deleting DynamoDB Table: %s", *tableName)
 
 			err := deleteAwsDynamoDbTable(*tableName, conn)

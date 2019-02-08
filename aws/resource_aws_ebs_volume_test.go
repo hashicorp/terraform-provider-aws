@@ -3,10 +3,8 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
-	"testing"
-
 	"regexp"
+	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -34,23 +32,10 @@ func testSweepEbsVolumes(region string) error {
 
 	err = conn.DescribeVolumesPages(&ec2.DescribeVolumesInput{}, func(page *ec2.DescribeVolumesOutput, lastPage bool) bool {
 		for _, volume := range page.Volumes {
-			var nameTag string
 			id := aws.StringValue(volume.VolumeId)
 
 			if aws.StringValue(volume.State) != ec2.VolumeStateAvailable {
 				log.Printf("[INFO] Skipping unavailable EC2 EBS Volume: %s", id)
-				continue
-			}
-
-			for _, volumeTag := range volume.Tags {
-				if aws.StringValue(volumeTag.Key) == "Name" {
-					nameTag = aws.StringValue(volumeTag.Value)
-					break
-				}
-			}
-
-			if !strings.HasPrefix(nameTag, "tf-acc-test-") {
-				log.Printf("[INFO] Skipping EC2 EBS Volume: %s", id)
 				continue
 			}
 

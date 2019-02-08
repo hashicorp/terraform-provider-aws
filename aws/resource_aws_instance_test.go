@@ -6,7 +6,6 @@ import (
 	"os"
 	"reflect"
 	"regexp"
-	"strings"
 	"testing"
 	"time"
 
@@ -43,23 +42,10 @@ func testSweepInstances(region string) error {
 
 		for _, reservation := range page.Reservations {
 			for _, instance := range reservation.Instances {
-				var nameTag string
 				id := aws.StringValue(instance.InstanceId)
 
 				if instance.State != nil && aws.StringValue(instance.State.Name) == ec2.InstanceStateNameTerminated {
 					log.Printf("[INFO] Skipping terminated EC2 Instance: %s", id)
-					continue
-				}
-
-				for _, instanceTag := range instance.Tags {
-					if aws.StringValue(instanceTag.Key) == "Name" {
-						nameTag = aws.StringValue(instanceTag.Value)
-						break
-					}
-				}
-
-				if !strings.HasPrefix(nameTag, "tf-acc-test-") {
-					log.Printf("[INFO] Skipping EC2 Instance: %s", id)
 					continue
 				}
 

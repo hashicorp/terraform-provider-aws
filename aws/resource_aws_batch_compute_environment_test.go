@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strings"
 	"testing"
 	"time"
 
@@ -32,10 +31,6 @@ func testSweepBatchComputeEnvironments(region string) error {
 	}
 	conn := client.(*AWSClient).batchconn
 
-	prefixes := []string{
-		"tf_acc",
-	}
-
 	out, err := conn.DescribeComputeEnvironments(&batch.DescribeComputeEnvironmentsInput{})
 	if err != nil {
 		if testSweepSkipSweepError(err) {
@@ -46,17 +41,6 @@ func testSweepBatchComputeEnvironments(region string) error {
 	}
 	for _, computeEnvironment := range out.ComputeEnvironments {
 		name := computeEnvironment.ComputeEnvironmentName
-		skip := true
-		for _, prefix := range prefixes {
-			if strings.HasPrefix(*name, prefix) {
-				skip = false
-				break
-			}
-		}
-		if skip {
-			log.Printf("[INFO] Skipping Batch Compute Environment: %s", *name)
-			continue
-		}
 
 		log.Printf("[INFO] Disabling Batch Compute Environment: %s", *name)
 		err := disableBatchComputeEnvironment(*name, 20*time.Minute, conn)

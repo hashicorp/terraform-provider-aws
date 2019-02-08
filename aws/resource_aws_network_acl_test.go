@@ -27,16 +27,7 @@ func testSweepNetworkAcls(region string) error {
 	}
 	conn := client.(*AWSClient).ec2conn
 
-	req := &ec2.DescribeNetworkAclsInput{
-		Filters: []*ec2.Filter{
-			{
-				Name: aws.String("tag-value"),
-				Values: []*string{
-					aws.String("tf-acc-*"),
-				},
-			},
-		},
-	}
+	req := &ec2.DescribeNetworkAclsInput{}
 	resp, err := conn.DescribeNetworkAcls(req)
 	if err != nil {
 		if testSweepSkipSweepError(err) {
@@ -54,8 +45,8 @@ func testSweepNetworkAcls(region string) error {
 	for _, nacl := range resp.NetworkAcls {
 		// Delete rules first
 		for _, entry := range nacl.Entries {
-			// This is a magic number for "ALL traffic" rule which can't be deleted
-			if *entry.RuleNumber == 32767 {
+			// These are the rule numbers for IPv4 and IPv6 "ALL traffic" rules which cannot be deleted
+			if aws.Int64Value(entry.RuleNumber) == 32767 || aws.Int64Value(entry.RuleNumber) == 32768 {
 				log.Printf("[DEBUG] Skipping Network ACL rule: %q / %d", *nacl.NetworkAclId, *entry.RuleNumber)
 				continue
 			}
