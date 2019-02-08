@@ -259,6 +259,11 @@ func TestAccAWSCloudWatchMetricAlarm_expression(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_cloudwatch_metric_alarm.foobar", "metric_query.#", "3"),
 				),
 			},
+			{
+				ResourceName:      "aws_cloudwatch_metric_alarm.foobar",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
