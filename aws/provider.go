@@ -411,6 +411,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_dms_replication_task":                         resourceAwsDmsReplicationTask(),
 			"aws_docdb_cluster_parameter_group":                resourceAwsDocDBClusterParameterGroup(),
 			"aws_docdb_subnet_group":                           resourceAwsDocDBSubnetGroup(),
+			"aws_docdb_cluster":                                resourceAwsDocDBCluster(),
 			"aws_dx_bgp_peer":                                  resourceAwsDxBgpPeer(),
 			"aws_dx_connection":                                resourceAwsDxConnection(),
 			"aws_dx_connection_association":                    resourceAwsDxConnectionAssociation(),
