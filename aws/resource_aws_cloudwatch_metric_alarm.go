@@ -59,15 +59,13 @@ func resourceAwsCloudWatchMetricAlarm() *schema.Resource {
 							Required: true,
 						},
 						"expression": {
-							Type:          schema.TypeString,
-							ConflictsWith: []string{"metric_query.metric"},
-							Optional:      true,
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 						"metric": {
-							Type:          schema.TypeList,
-							MaxItems:      1,
-							Optional:      true,
-							ConflictsWith: []string{"metric_query.expression"},
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"dimensions": {
