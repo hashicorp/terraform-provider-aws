@@ -592,7 +592,7 @@ func TestAccAWSS3BucketObject_legalHoldStartWithNone(t *testing.T) {
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: true,
 			},
-			// Remove legal hold but create a new object version to test force_delete
+			// Remove legal hold but create a new object version to test force_destroy
 			{
 				Config: testAccAWSS3BucketObjectConfig_noLegalHold(rInt, "changed stuff"),
 				Check: resource.ComposeTestCheckFunc(
@@ -1075,7 +1075,7 @@ resource "aws_s3_bucket_object" "object" {
   bucket = "${aws_s3_bucket.object_bucket.bucket}"
   key = "test-key"
   content = "%s"
-  force_delete = true
+  force_destroy = true
 }
 `, randInt, content)
 }
@@ -1099,7 +1099,7 @@ resource "aws_s3_bucket_object" "object" {
   legal_hold {
     status = "%s"
   }
-  force_delete = true
+  force_destroy = true
 }
 `, randInt, content, legalHoldStatus)
 }

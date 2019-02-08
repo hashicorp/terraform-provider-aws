@@ -108,7 +108,7 @@ This value is a fully qualified **ARN** of the KMS Key. If using `aws_kms_key`,
 use the exported `arn` attribute:
       `kms_key_id = "${aws_kms_key.foo.arn}"`
 * `tags` - (Optional) A mapping of tags to assign to the object.
-* `force_delete` - (Optional) Allow the object to be deleted by removing any legal hold on any object version.
+* `force_destroy` - (Optional) Allow the object to be deleted by removing any legal hold on any object version.
 Default is `false`.
 * `legal_hold` - (Optional) A configuration of [object lock legal holds](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.html#object-lock-legal-holds) (documented below).
 

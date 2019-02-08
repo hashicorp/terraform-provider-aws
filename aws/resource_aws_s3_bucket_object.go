@@ -154,7 +154,7 @@ func resourceAwsS3BucketObject() *schema.Resource {
 				Optional: true,
 			},
 
-			"force_delete": {
+			"force_destroy": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -424,7 +424,7 @@ func resourceAwsS3BucketObjectDelete(d *schema.ResourceData, meta interface{}) e
 	// We are effectively ignoring any leading '/' in the key name as aws.Config.DisableRestProtocolURICleaning is false
 	key = strings.TrimPrefix(key, "/")
 
-	if err := deleteAllS3ObjectVersions(conn, bucketName, key, d.Get("force_delete").(bool)); err != nil {
+	if err := deleteAllS3ObjectVersions(conn, bucketName, key, d.Get("force_destroy").(bool)); err != nil {
 		return fmt.Errorf("error deleting S3 Bucket (%s) Object (%s): %s", bucketName, key, err)
 	}
 
