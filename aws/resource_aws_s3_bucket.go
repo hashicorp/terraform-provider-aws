@@ -641,8 +641,7 @@ func resourceAwsS3BucketCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// S3 Object Lock can only be enabled on bucket creation.
-	objectLockConfiguration := expandS3ObjectLockConfiguration(d.Get("object_lock_configuration").([]interface{}))
-	if objectLockConfiguration != nil && aws.StringValue(objectLockConfiguration.ObjectLockEnabled) == s3.ObjectLockEnabledEnabled {
+	if isS3ObjectLockEnabled(d.Get("object_lock_configuration").([]interface{})) {
 		req.ObjectLockEnabledForBucket = aws.Bool(true)
 	}
 
@@ -1253,49 +1252,56 @@ func resourceAwsS3BucketDelete(d *schema.ResourceData, meta interface{}) error {
 			// bucket may have things delete them
 			log.Printf("[DEBUG] S3 Bucket attempting to forceDestroy %+v", err)
 
-			bucket := d.Get("bucket").(string)
-			resp, err := s3conn.ListObjectVersions(
-				&s3.ListObjectVersionsInput{
-					Bucket: aws.String(bucket),
-				},
-			)
+			// If the bucket has object locking enabled then do a more thorough scan.
+			vObjectLockConf, err := readS3ObjectLockConfiguration(s3conn, d.Id())
 
 			if err != nil {
-				return fmt.Errorf("Error S3 Bucket list Object Versions err: %s", err)
+				return fmt.Errorf("error getting S3 Bucket Object Lock configuration: %s", err)
 			}
 
-			objectsToDelete := make([]*s3.ObjectIdentifier, 0)
+			if isS3ObjectLockEnabled(vObjectLockConf) {
+				// Delete everything including locked objects.
+				// Don't ignore any object errors or we could recurse infinitely.
+				err := deleteAllS3ObjectVersions(s3conn, d.Id(), "", true, false)
 
-			if len(resp.DeleteMarkers) != 0 {
+				if err != nil {
+					return fmt.Errorf("error deleting S3 bucket objects: %s", err)
+				}
+			} else {
+				resp, err := s3conn.ListObjectVersions(
+					&s3.ListObjectVersionsInput{
+						Bucket: aws.String(d.Id()),
+					},
+				)
 
+				if err != nil {
+					return fmt.Errorf("Error S3 Bucket list Object Versions err: %s", err)
+				}
+
+				var objectsToDelete []*s3.ObjectIdentifier
 				for _, v := range resp.DeleteMarkers {
 					objectsToDelete = append(objectsToDelete, &s3.ObjectIdentifier{
 						Key:       v.Key,
 						VersionId: v.VersionId,
 					})
 				}
-			}
-
-			if len(resp.Versions) != 0 {
 				for _, v := range resp.Versions {
 					objectsToDelete = append(objectsToDelete, &s3.ObjectIdentifier{
 						Key:       v.Key,
 						VersionId: v.VersionId,
 					})
 				}
-			}
 
-			params := &s3.DeleteObjectsInput{
-				Bucket: aws.String(bucket),
-				Delete: &s3.Delete{
-					Objects: objectsToDelete,
-				},
-			}
+				_, err = s3conn.DeleteObjects(&s3.DeleteObjectsInput{
+					Bucket: aws.String(d.Id()),
+					Delete: &s3.Delete{
+						Objects: objectsToDelete,
+					},
+				})
 
-			_, err = s3conn.DeleteObjects(params)
-
-			if err != nil {
-				return fmt.Errorf("Error S3 Bucket force_destroy error deleting: %s", err)
+				if err != nil {
+					return fmt.Errorf("Error S3 Bucket force_destroy error deleting: %s", err)
+				}
 			}
 
 			// this line recurses until all objects are deleted or an error is returned
@@ -2473,7 +2479,7 @@ type S3Website struct {
 // S3 Object Lock functions.
 //
 
-func readS3ObjectLockConfiguration(conn *s3.S3, bucket string) (interface{}, error) {
+func readS3ObjectLockConfiguration(conn *s3.S3, bucket string) ([]interface{}, error) {
 	resp, err := retryOnAwsCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
 		return conn.GetObjectLockConfiguration(&s3.GetObjectLockConfigurationInput{
 			Bucket: aws.String(bucket),
@@ -2525,6 +2531,14 @@ func expandS3ObjectLockConfiguration(vConf []interface{}) *s3.ObjectLockConfigur
 	}
 
 	return conf
+}
+
+func isS3ObjectLockEnabled(vConf []interface{}) bool {
+	objectLockConfiguration := expandS3ObjectLockConfiguration(vConf)
+	if objectLockConfiguration != nil && aws.StringValue(objectLockConfiguration.ObjectLockEnabled) == s3.ObjectLockEnabledEnabled {
+		return true
+	}
+	return false
 }
 
 func flattenS3ObjectLockConfiguration(conf *s3.ObjectLockConfiguration) []interface{} {

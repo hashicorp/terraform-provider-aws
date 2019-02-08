@@ -311,7 +311,7 @@ CONTENT
   legal_hold {
     status = "ON"
   }
-  force_delete = true
+  force_destroy = true
 }
 `, randInt, randInt)
 

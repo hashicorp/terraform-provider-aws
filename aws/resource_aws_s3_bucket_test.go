@@ -1507,6 +1507,48 @@ func TestAccAWSS3Bucket_objectLock(t *testing.T) {
 	})
 }
 
+func TestAccAWSS3Bucket_forceDestroy(t *testing.T) {
+	resourceName := "aws_s3_bucket.bucket"
+	rInt := acctest.RandInt()
+	bucketName := fmt.Sprintf("tf-test-bucket-%d", rInt)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketConfig_forceDestroy(bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketExists(resourceName),
+					testAccCheckAWSS3BucketAddObjects(resourceName, "data.txt", "prefix/more_data.txt"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSS3Bucket_forceDestroyWithObjectLockEnabled(t *testing.T) {
+	resourceName := "aws_s3_bucket.bucket"
+	rInt := acctest.RandInt()
+	bucketName := fmt.Sprintf("tf-test-bucket-%d", rInt)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketConfig_forceDestroyWithObjectLockEnabled(bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketExists(resourceName),
+					testAccCheckAWSS3BucketAddObjectsWithLegalHold(resourceName, "data.txt", "prefix/more_data.txt"),
+				),
+			},
+		},
+	})
+}
+
 func TestAWSS3BucketName(t *testing.T) {
 	validDnsNames := []string{
 		"foobar",
@@ -1717,6 +1759,47 @@ func testAccCheckAWSS3DestroyBucket(n string) resource.TestCheckFunc {
 		if err != nil {
 			return fmt.Errorf("Error destroying Bucket (%s) in testAccCheckAWSS3DestroyBucket: %s", rs.Primary.ID, err)
 		}
+		return nil
+	}
+}
+
+func testAccCheckAWSS3BucketAddObjects(n string, keys ...string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs := s.RootModule().Resources[n]
+		conn := testAccProvider.Meta().(*AWSClient).s3conn
+
+		for _, key := range keys {
+			_, err := conn.PutObject(&s3.PutObjectInput{
+				Bucket: aws.String(rs.Primary.ID),
+				Key:    aws.String(key),
+			})
+
+			if err != nil {
+				return fmt.Errorf("PutObject error: %v", err)
+			}
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckAWSS3BucketAddObjectsWithLegalHold(n string, keys ...string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs := s.RootModule().Resources[n]
+		conn := testAccProvider.Meta().(*AWSClient).s3conn
+
+		for _, key := range keys {
+			_, err := conn.PutObject(&s3.PutObjectInput{
+				Bucket:                    aws.String(rs.Primary.ID),
+				Key:                       aws.String(key),
+				ObjectLockLegalHoldStatus: aws.String(s3.ObjectLockLegalHoldStatusOn),
+			})
+
+			if err != nil {
+				return fmt.Errorf("PutObject error: %v", err)
+			}
+		}
+
 		return nil
 	}
 }
@@ -3179,6 +3262,34 @@ resource "aws_s3_bucket" "arbitrary" {
   }
 }
 `, randInt)
+}
+
+func testAccAWSS3BucketConfig_forceDestroy(bucketName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "bucket" {
+  bucket = "%s"
+  acl = "private"
+  force_destroy = true
+}
+`, bucketName)
+}
+
+func testAccAWSS3BucketConfig_forceDestroyWithObjectLockEnabled(bucketName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "bucket" {
+  bucket = "%s"
+  acl = "private"
+  force_destroy = true
+
+  versioning {
+    enabled = true
+  }
+
+  object_lock_configuration {
+    object_lock_enabled = "Enabled"
+  }
+}
+`, bucketName)
 }
 
 const testAccAWSS3BucketConfigBucketEmptyString = `
