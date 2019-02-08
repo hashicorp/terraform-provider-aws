@@ -2834,8 +2834,6 @@ func flattenIoTRuleDynamoDbActions(actions []*iot.Action) []map[string]interface
 		if v != nil {
 			result["hash_key_field"] = *v.HashKeyField
 			result["hash_key_value"] = *v.HashKeyValue
-			result["range_key_field"] = *v.RangeKeyField
-			result["range_key_value"] = *v.RangeKeyValue
 			result["role_arn"] = *v.RoleArn
 			result["table_name"] = *v.TableName
 
@@ -2847,8 +2845,16 @@ func flattenIoTRuleDynamoDbActions(actions []*iot.Action) []map[string]interface
 				result["payload_field"] = *v.PayloadField
 			}
 
+			if v.RangeKeyField != nil {
+				result["range_key_field"] = *v.RangeKeyField
+			}
+
 			if v.RangeKeyType != nil {
 				result["range_key_type"] = *v.RangeKeyType
+			}
+
+			if v.RangeKeyValue != nil {
+				result["range_key_value"] = *v.RangeKeyValue
 			}
 
 			results = append(results, result)
