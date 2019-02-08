@@ -246,6 +246,10 @@ func TestAccAWSCloudWatchMetricAlarm_expression(t *testing.T) {
 		CheckDestroy: testAccCheckAWSCloudWatchMetricAlarmDestroy,
 		Steps: []resource.TestStep{
 			{
+				Config:      testAccAWSCloudWatchMetricAlarmConfigWithBadExpression(rInt),
+				ExpectError: regexp.MustCompile("No metric_query may have both `expression` and a `metric` specified"),
+			},
+			{
 				Config: testAccAWSCloudWatchMetricAlarmConfigWithExpression(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchMetricAlarmExists("aws_cloudwatch_metric_alarm.foobar", &alarm),
@@ -559,6 +563,33 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
 	}
 	metric_query {
 		id = "m1"
+		metric {
+			metric_name = "CPUUtilization"
+			namespace   = "AWS/EC2"
+			period      = "120"
+			stat        = "Average"
+			unit        = "Count"
+			dimensions {
+				InstanceId = "i-abc123"
+			}
+		}
+	}
+}`, rInt)
+}
+
+func testAccAWSCloudWatchMetricAlarmConfigWithBadExpression(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_metric_alarm" "foobar" {
+  alarm_name                = "terraform-test-foobar%d"
+  comparison_operator       = "GreaterThanOrEqualToThreshold"
+  evaluation_periods        = "2"
+	threshold                 = "80"
+  alarm_description         = "This metric monitors ec2 cpu utilization"
+  insufficient_data_actions = []
+	metric_query {
+		id = "e1"
+		expression = "m1"
+		label = "cat"
 		metric {
 			metric_name = "CPUUtilization"
 			namespace   = "AWS/EC2"

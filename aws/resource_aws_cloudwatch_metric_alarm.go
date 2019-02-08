@@ -194,9 +194,7 @@ func resourceAwsCloudWatchMetricAlarm() *schema.Resource {
 	}
 }
 
-func resourceAwsCloudWatchMetricAlarmCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatchconn
-
+func validateResourceAwsCloudWatchMetricAlarm(d *schema.ResourceData) error {
 	_, metricNameOk := d.GetOk("metric_name")
 	_, statisticOk := d.GetOk("statistic")
 	_, extendedStatisticOk := d.GetOk("extended_statistic")
@@ -205,10 +203,33 @@ func resourceAwsCloudWatchMetricAlarmCreate(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("One of `statistic` or `extended_statistic` must be set for a cloudwatch metric alarm")
 	}
 
+	if v := d.Get("metric_query"); v != nil {
+		for _, v := range v.(*schema.Set).List() {
+			metricQueryResource := v.(map[string]interface{})
+			if v, ok := metricQueryResource["expression"]; ok && v.(string) != "" {
+				if v := metricQueryResource["metric"]; v != nil {
+					if len(v.([]interface{})) > 0 {
+						return fmt.Errorf("No metric_query may have both `expression` and a `metric` specified")
+					}
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
+func resourceAwsCloudWatchMetricAlarmCreate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).cloudwatchconn
+
+	err := validateResourceAwsCloudWatchMetricAlarm(d)
+	if err != nil {
+		return err
+	}
 	params := getAwsCloudWatchPutMetricAlarmInput(d)
 
 	log.Printf("[DEBUG] Creating CloudWatch Metric Alarm: %#v", params)
-	_, err := conn.PutMetricAlarm(&params)
+	_, err = conn.PutMetricAlarm(&params)
 	if err != nil {
 		return fmt.Errorf("Creating metric alarm failed: %s", err)
 	}
