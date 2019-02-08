@@ -1,22 +1,22 @@
-## 1.58.0 (Unreleased)
+## 1.58.0 (February 08, 2019)
 
 FEATURES:
 
-* **New Data Source:** `aws_eks_cluster_auth` [GH-7438]
-* **New Resource:** `aws_backup_vault` [GH-7207]
-* **New Resource:** `aws_docdb_cluster` [GH-7122]
-* **New Resource:** `aws_docdb_cluster_snapshot` [GH-7123]
-* **New Resource:** `aws_ec2_client_vpn_endpoint` [GH-7009]
-* **New Resource:** `aws_ec2_client_vpn_network_association` [GH-7030]
-* **New Resource:** `aws_sagemaker_model` [GH-2478]
+* **New Data Source:** `aws_eks_cluster_auth` ([#7438](https://github.com/terraform-providers/terraform-provider-aws/issues/7438))
+* **New Resource:** `aws_backup_vault` ([#7207](https://github.com/terraform-providers/terraform-provider-aws/issues/7207))
+* **New Resource:** `aws_docdb_cluster` ([#7122](https://github.com/terraform-providers/terraform-provider-aws/issues/7122))
+* **New Resource:** `aws_docdb_cluster_snapshot` ([#7123](https://github.com/terraform-providers/terraform-provider-aws/issues/7123))
+* **New Resource:** `aws_ec2_client_vpn_endpoint` ([#7009](https://github.com/terraform-providers/terraform-provider-aws/issues/7009))
+* **New Resource:** `aws_ec2_client_vpn_network_association` ([#7030](https://github.com/terraform-providers/terraform-provider-aws/issues/7030))
+* **New Resource:** `aws_sagemaker_model` ([#2478](https://github.com/terraform-providers/terraform-provider-aws/issues/2478))
 
 ENHANCEMENTS:
 
-* resource/aws_s3_bucket: Limit no of `expiration` & `noncurrent_version_expiration` blocks to 1 [GH-7462]
+* resource/aws_s3_bucket: Limit no of `expiration` & `noncurrent_version_expiration` blocks to 1 ([#7462](https://github.com/terraform-providers/terraform-provider-aws/issues/7462))
 
 BUG FIXES:
 
-* resource/aws_dynamodb_table: Prevent error when updating `billing_mode` from `PAY_PER_REQUEST` to `PROVISIONED` [GH-7363]
+* resource/aws_dynamodb_table: Prevent error when updating `billing_mode` from `PAY_PER_REQUEST` to `PROVISIONED` ([#7363](https://github.com/terraform-providers/terraform-provider-aws/issues/7363))
 
 ## 1.57.0 (January 26, 2019)
 
