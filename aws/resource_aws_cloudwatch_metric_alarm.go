@@ -290,7 +290,7 @@ func resourceAwsCloudWatchMetricAlarmRead(d *schema.ResourceData, meta interface
 			metricQueries[i] = metricQuery
 		}
 		if err := d.Set("metric_query", metricQueries); err != nil {
-			return err
+			return fmt.Errorf("error setting metric_query: %s", err)
 		}
 	}
 
