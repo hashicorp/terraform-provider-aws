@@ -53,6 +53,9 @@ func TestAccAWSDocDBClusterInstance_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"identifier_prefix",
+				},
 			},
 		},
 	})
@@ -80,6 +83,9 @@ func TestAccAWSDocDBClusterInstance_az(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"identifier_prefix",
+				},
 			},
 		},
 	})
@@ -109,6 +115,9 @@ func TestAccAWSDocDBClusterInstance_namePrefix(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"identifier_prefix",
+				},
 			},
 		},
 	})
@@ -136,6 +145,9 @@ func TestAccAWSDocDBClusterInstance_generatedName(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"identifier_prefix",
+				},
 			},
 		},
 	})
@@ -154,7 +166,7 @@ func TestAccAWSDocDBClusterInstance_kmsKey(t *testing.T) {
 				Config: testAccAWSDocDBClusterInstanceConfigKmsKey(acctest.RandInt()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDocDBClusterInstanceExists(resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", "aws_kms_key.foo", "key_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", "aws_kms_key.foo", "arn"),
 				),
 			},
 
@@ -162,6 +174,9 @@ func TestAccAWSDocDBClusterInstance_kmsKey(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"identifier_prefix",
+				},
 			},
 		},
 	})
@@ -185,12 +200,6 @@ func TestAccAWSDocDBClusterInstance_disappears(t *testing.T) {
 				),
 				// A non-empty plan is what we want. A crash is what we don't want. :)
 				ExpectNonEmptyPlan: true,
-			},
-
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
