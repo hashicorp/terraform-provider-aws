@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
 	"testing"
 	"time"
 
@@ -34,10 +33,6 @@ func testSweepRoute53ResolverEndpoints(region string) error {
 		}
 
 		for _, resolverEndpoint := range page.ResolverEndpoints {
-			if !strings.HasPrefix(aws.StringValue(resolverEndpoint.Name), "terraform-testacc-") {
-				continue
-			}
-
 			id := aws.StringValue(resolverEndpoint.Id)
 
 			log.Printf("[INFO] Deleting Route53 Resolver endpoint: %s", id)
