@@ -151,6 +151,9 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/d
 
 * `enabled` - (Required) Whether to enable encryption at rest. If the `server_side_encryption` block is not provided then this defaults to `false`.
 
+~> **Note:** If `enabled` is `false` (or not specified) then server-side encryption is set to AWS owned CMK (shown as `DEFAULT` in the AWS console).
+If `enabled` is `true` then server-side encryption is set to AWS managed CMK (shown as `KMS` in the AWS console).
+
 #### `point_in_time_recovery`
 
 * `enabled` - (Required) Whether to enable point-in-time recovery - note that it can take up to 10 minutes to enable for new tables. If the `point_in_time_recovery` block is not provided then this defaults to `false`.
