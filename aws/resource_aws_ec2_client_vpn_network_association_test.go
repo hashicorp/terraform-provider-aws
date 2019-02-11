@@ -224,73 +224,73 @@ resource "aws_ec2_client_vpn_network_association" "test" {
 func testAccEc2ClientVpnNetworkAssociationSecurityGroups(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
-	cidr_block = "10.1.0.0/16"
-	tags = {
-		Name = "terraform-testacc-subnet-%s"
-	}
+  cidr_block = "10.1.0.0/16"
+  tags = {
+    Name = "terraform-testacc-subnet-%s"
+  }
 }
 
 resource "aws_subnet" "test" {
-	cidr_block = "10.1.1.0/24"
-	vpc_id = "${aws_vpc.test.id}"
-	map_public_ip_on_launch = true
-	tags = {
-		Name = "tf-acc-subnet-%s"
-	}
+  cidr_block = "10.1.1.0/24"
+  vpc_id = "${aws_vpc.test.id}"
+  map_public_ip_on_launch = true
+  tags = {
+    Name = "tf-acc-subnet-%s"
+  }
 }
 
 resource "aws_security_group" "test1" {
-	name = "terraform_acceptance_test_example_1"
-	description = "Used in the terraform acceptance tests"
-	vpc_id = "${aws_vpc.test.id}"
+  name = "terraform_acceptance_test_example_1"
+  description = "Used in the terraform acceptance tests"
+  vpc_id = "${aws_vpc.test.id}"
 
-	ingress {
-		protocol = "tcp"
-		from_port = 22
-		to_port = 22
-		cidr_blocks = ["10.1.1.0/24"]
-	}
+  ingress {
+    protocol = "tcp"
+	from_port = 22
+	to_port = 22
+	cidr_blocks = ["10.1.1.0/24"]
+  }
 
-	ingress {
-		protocol = "tcp"
-		from_port = 80
-		to_port = 80
-		cidr_blocks = ["10.1.1.0/24"]
-	}
+  ingress {
+    protocol = "tcp"
+    from_port = 80
+    to_port = 80
+    cidr_blocks = ["10.1.1.0/24"]
+  }
 
-	egress {
-		protocol = "-1"
-		from_port = 0
-		to_port = 0
-		cidr_blocks = ["10.1.0.0/16"]
-	}
+  egress {
+    protocol = "-1"
+    from_port = 0
+    to_port = 0
+    cidr_blocks = ["10.1.0.0/16"]
+  }
 }
 
 resource "aws_security_group" "test2" {
-	name = "terraform_acceptance_test_example_2"
-	description = "Used in the terraform acceptance tests"
-	vpc_id = "${aws_vpc.test.id}"
+  name = "terraform_acceptance_test_example_2"
+  description = "Used in the terraform acceptance tests"
+  vpc_id = "${aws_vpc.test.id}"
 
-	ingress {
-		protocol = "tcp"
-		from_port = 22
-		to_port = 22
-		cidr_blocks = ["10.1.2.0/24"]
-	}
+  ingress {
+    protocol = "tcp"
+    from_port = 22
+    to_port = 22
+    cidr_blocks = ["10.1.2.0/24"]
+  }
 
-	ingress {
-		protocol = "tcp"
-		from_port = 80
-		to_port = 80
-		cidr_blocks = ["10.1.2.0/24"]
-	}
+  ingress {
+    protocol = "tcp"
+    from_port = 80
+    to_port = 80
+    cidr_blocks = ["10.1.2.0/24"]
+  }
 
-	egress {
-		protocol = "-1"
-		from_port = 0
-		to_port = 0
-		cidr_blocks = ["10.1.0.0/16"]
-	}
+  egress {
+    protocol = "-1"
+    from_port = 0
+    to_port = 0
+    cidr_blocks = ["10.1.0.0/16"]
+  }
 }
 
 resource "tls_private_key" "example" {
