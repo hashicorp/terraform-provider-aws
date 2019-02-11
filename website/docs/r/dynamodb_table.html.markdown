@@ -98,7 +98,7 @@ The following arguments are supported:
 * `local_secondary_index` - (Optional, Forces new resource) Describe an LSI on the table;
   these can only be allocated *at creation* so you cannot change this
 definition after you have created the resource.
-* `global_secondary_index` - (Optional) Describe a GSO for the table;
+* `global_secondary_index` - (Optional) Describe a GSI for the table;
   subject to the normal limits on the number of GSIs, projected
 attributes, etc.
 * `stream_enabled` - (Optional) Indicates whether Streams are to be enabled (true) or disabled (false).
