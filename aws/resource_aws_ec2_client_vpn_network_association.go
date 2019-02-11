@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"errors"
 	"fmt"
 	"log"
 
@@ -29,14 +30,19 @@ func resourceAwsEc2ClientVpnNetworkAssociation() *schema.Resource {
 			},
 			"security_groups": {
 				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-			},
-			"status": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Set:      schema.HashString,
 			},
 			"vpc_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -71,6 +77,24 @@ func resourceAwsEc2ClientVpnNetworkAssociationCreate(d *schema.ResourceData, met
 	_, err = stateConf.WaitForState()
 	if err != nil {
 		return fmt.Errorf("Error waiting for Client VPN endpoint to associate with target network: %s", err)
+	}
+
+	sgIDs, okSgIDs := d.GetOk("security_groups")
+	vpcID, okVpcID := d.GetOk("vpc_id")
+	if okSgIDs && okVpcID {
+		sgReq := &ec2.ApplySecurityGroupsToClientVpnTargetNetworkInput{
+			ClientVpnEndpointId: aws.String(d.Get("client_vpn_endpoint_id").(string)),
+			VpcId:               aws.String(vpcID.(string)),
+			SecurityGroupIds:    expandStringList(sgIDs.(*schema.Set).List()),
+		}
+
+		_, err := conn.ApplySecurityGroupsToClientVpnTargetNetwork(sgReq)
+		if err != nil {
+			return fmt.Errorf("Error applying security groups to Client VPN network association: %s", err)
+		}
+	}
+	if (okSgIDs && !okVpcID) || (!okSgIDs && okVpcID) {
+		return errors.New("both vpc_id and security_groups must be set in order to attach additional security groups to this target network")
 	}
 
 	return resourceAwsEc2ClientVpnNetworkAssociationRead(d, meta)

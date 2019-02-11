@@ -52,6 +52,26 @@ func TestAccAwsEc2ClientVpnNetworkAssociation_disappears(t *testing.T) {
 	})
 }
 
+func TestAccAwsEc2ClientVpnNetworkAssociation_securityGroups(t *testing.T) {
+	var assoc1 ec2.TargetNetwork
+	rStr := acctest.RandString(5)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProvidersWithTLS,
+		CheckDestroy: testAccCheckAwsEc2ClientVpnNetworkAssociationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEc2ClientVpnNetworkAssociationSecurityGroups(rStr),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsEc2ClientVpnNetworkAssociationExists("aws_ec2_client_vpn_network_association.test", &assoc1),
+					resource.TestCheckResourceAttr("aws_ec2_client_vpn_network_association.test", "security_groups.#", "2"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAwsEc2ClientVpnNetworkAssociationDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).ec2conn
 
@@ -197,6 +217,129 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
 resource "aws_ec2_client_vpn_network_association" "test" {
   client_vpn_endpoint_id = "${aws_ec2_client_vpn_endpoint.test.id}"
   subnet_id = "${aws_subnet.test.id}"
+}
+`, rName, rName, rName)
+}
+
+func testAccEc2ClientVpnNetworkAssociationSecurityGroups(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+	cidr_block = "10.1.0.0/16"
+	tags = {
+		Name = "terraform-testacc-subnet-%s"
+	}
+}
+
+resource "aws_subnet" "test" {
+	cidr_block = "10.1.1.0/24"
+	vpc_id = "${aws_vpc.test.id}"
+	map_public_ip_on_launch = true
+	tags = {
+		Name = "tf-acc-subnet-%s"
+	}
+}
+
+resource "aws_security_group" "test1" {
+	name = "terraform_acceptance_test_example_1"
+	description = "Used in the terraform acceptance tests"
+	vpc_id = "${aws_vpc.test.id}"
+
+	ingress {
+		protocol = "tcp"
+		from_port = 22
+		to_port = 22
+		cidr_blocks = ["10.1.1.0/24"]
+	}
+
+	ingress {
+		protocol = "tcp"
+		from_port = 80
+		to_port = 80
+		cidr_blocks = ["10.1.1.0/24"]
+	}
+
+	egress {
+		protocol = "-1"
+		from_port = 0
+		to_port = 0
+		cidr_blocks = ["10.1.0.0/16"]
+	}
+}
+
+resource "aws_security_group" "test2" {
+	name = "terraform_acceptance_test_example_2"
+	description = "Used in the terraform acceptance tests"
+	vpc_id = "${aws_vpc.test.id}"
+
+	ingress {
+		protocol = "tcp"
+		from_port = 22
+		to_port = 22
+		cidr_blocks = ["10.1.2.0/24"]
+	}
+
+	ingress {
+		protocol = "tcp"
+		from_port = 80
+		to_port = 80
+		cidr_blocks = ["10.1.2.0/24"]
+	}
+
+	egress {
+		protocol = "-1"
+		from_port = 0
+		to_port = 0
+		cidr_blocks = ["10.1.0.0/16"]
+	}
+}
+
+resource "tls_private_key" "example" {
+  algorithm = "RSA"
+}
+
+resource "tls_self_signed_cert" "example" {
+  key_algorithm   = "RSA"
+  private_key_pem = "${tls_private_key.example.private_key_pem}"
+
+  subject {
+    common_name  = "example.com"
+    organization = "ACME Examples, Inc"
+  }
+
+  validity_period_hours = 12
+
+  allowed_uses = [
+    "key_encipherment",
+    "digital_signature",
+    "server_auth",
+  ]
+}
+
+resource "aws_acm_certificate" "cert" {
+  private_key      = "${tls_private_key.example.private_key_pem}"
+  certificate_body = "${tls_self_signed_cert.example.cert_pem}"
+}
+
+resource "aws_ec2_client_vpn_endpoint" "test" {
+  description = "terraform-testacc-clientvpn-%s"
+  server_certificate_arn = "${aws_acm_certificate.cert.arn}"
+  client_cidr_block = "10.0.0.0/16"
+
+  authentication_options {
+    type = "certificate-authentication"
+    root_certificate_chain_arn = "${aws_acm_certificate.cert.arn}"
+  }
+
+  connection_log_options {
+    enabled = false
+  }
+}
+
+resource "aws_ec2_client_vpn_network_association" "test" {
+  client_vpn_endpoint_id = "${aws_ec2_client_vpn_endpoint.test.id}"
+  subnet_id 			 = "${aws_subnet.test.id}"
+  security_groups 		 = ["${aws_security_group.test1.id}", "${aws_security_group.test2.id}"]
+  vpc_id 				 = "${aws_vpc.test.id}"
 }
 `, rName, rName, rName)
 }
