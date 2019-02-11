@@ -1477,8 +1477,8 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
   }
 
   global_secondary_index {
-	name 			= "TestTableGSI"
-	hash_key        = "TestTableGSIKey"
+    name            = "TestTableGSI"
+    hash_key        = "TestTableGSIKey"
     projection_type = "KEYS_ONLY"
   }
 }
