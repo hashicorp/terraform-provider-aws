@@ -1,5 +1,9 @@
 ## 1.59.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_docdb_cluster_instance` [GH-7143]
+
 ENHANCEMENTS:
 
 * resource/aws_cloudwatch_metric_alarm: Add `metric_query` argument (support math expressions) [GH-6833]
