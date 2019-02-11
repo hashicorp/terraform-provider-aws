@@ -3,7 +3,12 @@
 ENHANCEMENTS:
 
 * resource/aws_cloudwatch_metric_alarm: Add `metric_query` argument (support math expressions) [GH-6833]
+* resource/aws_dynamodb_table: Use `update` customizable timeout for individual Global Secondary Index updates and increase default `update` timeout from 10 minutes to 60 minutes [GH-7453]
 * resource/aws_wafregional_web_acl: Add `arn` attribute and `logging_configuration` argument [GH-7480]
+
+BUG FIXES:
+
+* resource/aws_dynamodb_table: Prevent error when updating `billing_mode` from `PAY_PER_REQUEST` to `PROVISIONED` for Tables with Global Secondary Indexes [GH-7453]
 
 ## 1.58.0 (February 08, 2019)
 
