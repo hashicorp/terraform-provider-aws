@@ -1,4 +1,9 @@
 ## 1.59.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_wafregional_web_acl: Add `arn` attribute and `logging_configuration` argument [GH-7480]
+
 ## 1.58.0 (February 08, 2019)
 
 FEATURES:
