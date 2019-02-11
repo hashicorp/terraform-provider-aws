@@ -14,23 +14,6 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestCleanPrefix(t *testing.T) {
-	cases := []struct {
-		Input, Prefix, Output string
-	}{
-		{"/hostedzone/foo", "/hostedzone/", "foo"},
-		{"/change/foo", "/change/", "foo"},
-		{"/bar", "/test", "/bar"},
-	}
-
-	for _, tc := range cases {
-		actual := cleanPrefix(tc.Input, tc.Prefix)
-		if actual != tc.Output {
-			t.Fatalf("input: %s\noutput: %s", tc.Input, actual)
-		}
-	}
-}
-
 func TestCleanZoneID(t *testing.T) {
 	cases := []struct {
 		Input, Output string
