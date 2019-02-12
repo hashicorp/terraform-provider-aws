@@ -18,22 +18,22 @@ func TestAccDataSourceAwsCurReportDefinition_basic(t *testing.T) {
 	bucketRegion := "us-east-1"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsCurReportDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsCurReportDefinitionConfig_basic(reportName, bucketName, bucketRegion),
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsCurReportDefinitionCheckExists(datasourceName, resourceName),
-					resource.TestCheckResourceAttr(datasourceName, "report_name", reportName),
-					resource.TestCheckResourceAttr(datasourceName, "time_unit", "DAILY"),
-					resource.TestCheckResourceAttr(datasourceName, "compression", "GZIP"),
-					resource.TestCheckResourceAttr(datasourceName, "additional_schema_elements.#", "1"),
-					resource.TestCheckResourceAttr(datasourceName, "s3_bucket", bucketName),
-					resource.TestCheckResourceAttr(datasourceName, "s3_prefix", ""),
-					resource.TestCheckResourceAttr(datasourceName, "s3_region", bucketRegion),
-					resource.TestCheckResourceAttr(datasourceName, "additional_artifacts.#", "2"),
+					resource.TestCheckResourceAttrPair(datasourceName, "report_name", resourceName, "report_name"),
+					resource.TestCheckResourceAttrPair(datasourceName, "time_unit", resourceName, "time_unit"),
+					resource.TestCheckResourceAttrPair(datasourceName, "compression", resourceName, "compression"),
+					resource.TestCheckResourceAttrPair(datasourceName, "additional_schema_elements.#", resourceName, "additional_schema_elements.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "s3_bucket", resourceName, "s3_bucket"),
+					resource.TestCheckResourceAttrPair(datasourceName, "s3_prefix", resourceName, "s3_prefix"),
+					resource.TestCheckResourceAttrPair(datasourceName, "s3_region", resourceName, "s3_region"),
+					resource.TestCheckResourceAttrPair(datasourceName, "additional_artifacts.#", resourceName, "additional_artifacts.#"),
 				),
 			},
 		},
@@ -60,6 +60,8 @@ func testAccDataSourceAwsCurReportDefinitionConfig_basic(reportName string, buck
 provider "aws" {
   region = "us-east-1"
 }
+
+data "aws_billing_service_account" "test" {}
 
 resource "aws_s3_bucket" "test" {
 	bucket = "%[2]s"
