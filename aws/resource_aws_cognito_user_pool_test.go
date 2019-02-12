@@ -162,16 +162,22 @@ func TestAccAWSCognitoUserPool_withAdvancedSecurityMode(t *testing.T) {
 		CheckDestroy: testAccCheckAWSCognitoUserPoolDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCognitoUserPoolConfig_withAdvancedSecurityMode(name),
+				Config: testAccAWSCognitoUserPoolConfig_withAdvancedSecurityMode(name, "OFF"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoUserPoolExists("aws_cognito_user_pool.pool"),
 					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "user_pool_add_ons.0.advanced_security_mode", "OFF"),
 				),
 			},
 			{
-				Config: testAccAWSCognitoUserPoolConfig_withAdvancedSecurityModeUpdated(name),
+				Config: testAccAWSCognitoUserPoolConfig_withAdvancedSecurityMode(name, "ENFORCED"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "user_pool_add_ons.0.advanced_security_mode", "ENFORCED"),
+				),
+			},
+			{
+				Config: testAccAWSCognitoUserPoolConfig_basic(name),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "user_pool_add_ons.#", "0"),
 				),
 			},
 		},
@@ -761,26 +767,15 @@ resource "aws_cognito_user_pool" "pool" {
 }`, name)
 }
 
-func testAccAWSCognitoUserPoolConfig_withAdvancedSecurityMode(name string) string {
+func testAccAWSCognitoUserPoolConfig_withAdvancedSecurityMode(name string, mode string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "pool" {
   name = "terraform-test-pool-%s"
 
   user_pool_add_ons {
-    advanced_security_mode = "OFF"
+    advanced_security_mode = "%s"
   }
-}`, name)
-}
-
-func testAccAWSCognitoUserPoolConfig_withAdvancedSecurityModeUpdated(name string) string {
-	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "pool" {
-  name = "terraform-test-pool-%s"
-
-  user_pool_add_ons {
-    advanced_security_mode = "ENFORCED"
-  }
-}`, name)
+}`, name, mode)
 }
 
 func testAccAWSCognitoUserPoolConfig_withDeviceConfiguration(name string) string {
