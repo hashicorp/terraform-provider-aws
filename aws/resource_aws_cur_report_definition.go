@@ -129,20 +129,7 @@ func resourceAwsCurReportDefinitionRead(d *schema.ResourceData, meta interface{}
 
 	reportName := *aws.String(d.Id())
 
-	params := &costandusagereportservice.DescribeReportDefinitionsInput{}
-
-	log.Printf("[DEBUG] Reading CurReportDefinition: %s", reportName)
-
-	var matchingReportDefinition *costandusagereportservice.ReportDefinition
-	err := conn.DescribeReportDefinitionsPages(params, func(resp *costandusagereportservice.DescribeReportDefinitionsOutput, isLast bool) bool {
-		for _, reportDefinition := range resp.ReportDefinitions {
-			if *reportDefinition.ReportName == reportName {
-				matchingReportDefinition = reportDefinition
-				return false
-			}
-		}
-		return !isLast
-	})
+	matchingReportDefinition, err := describeCurReportDefinition(conn, reportName)
 	if err != nil {
 		return err
 	}
@@ -174,4 +161,25 @@ func resourceAwsCurReportDefinitionDelete(d *schema.ResourceData, meta interface
 		return err
 	}
 	return nil
+}
+
+func describeCurReportDefinition(conn *costandusagereportservice.CostandUsageReportService, reportName string) (*costandusagereportservice.ReportDefinition, error) {
+	params := &costandusagereportservice.DescribeReportDefinitionsInput{}
+
+	log.Printf("[DEBUG] Reading CurReportDefinition: %s", reportName)
+
+	var matchingReportDefinition *costandusagereportservice.ReportDefinition
+	err := conn.DescribeReportDefinitionsPages(params, func(resp *costandusagereportservice.DescribeReportDefinitionsOutput, isLast bool) bool {
+		for _, reportDefinition := range resp.ReportDefinitions {
+			if aws.StringValue(reportDefinition.ReportName) == reportName {
+				matchingReportDefinition = reportDefinition
+				return false
+			}
+		}
+		return !isLast
+	})
+	if err != nil {
+		return nil, err
+	}
+	return matchingReportDefinition, nil
 }

@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"github.com/aws/aws-sdk-go/service/costandusagereportservice"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/acctest"
@@ -48,17 +47,7 @@ func testAccCheckAwsCurReportDefinitionDestroy(s *terraform.State) error {
 			continue
 		}
 		reportName := rs.Primary.ID
-		params := &costandusagereportservice.DescribeReportDefinitionsInput{}
-		var matchingReportDefinition *costandusagereportservice.ReportDefinition
-		err := conn.DescribeReportDefinitionsPages(params, func(resp *costandusagereportservice.DescribeReportDefinitionsOutput, isLast bool) bool {
-			for _, reportDefinition := range resp.ReportDefinitions {
-				if *reportDefinition.ReportName == reportName {
-					matchingReportDefinition = reportDefinition
-					break
-				}
-			}
-			return !isLast
-		})
+		matchingReportDefinition, err := describeCurReportDefinition(conn, reportName)
 		if err != nil {
 			return err
 		}
@@ -79,17 +68,7 @@ func testAccCheckAwsCurReportDefinitionExists(resourceName string) resource.Test
 			return fmt.Errorf("Resource not found: %s", resourceName)
 		}
 		reportName := rs.Primary.ID
-		params := &costandusagereportservice.DescribeReportDefinitionsInput{}
-		var matchingReportDefinition *costandusagereportservice.ReportDefinition
-		err := conn.DescribeReportDefinitionsPages(params, func(resp *costandusagereportservice.DescribeReportDefinitionsOutput, isLast bool) bool {
-			for _, reportDefinition := range resp.ReportDefinitions {
-				if *reportDefinition.ReportName == reportName {
-					matchingReportDefinition = reportDefinition
-					break
-				}
-			}
-			return !isLast
-		})
+		matchingReportDefinition, err := describeCurReportDefinition(conn, reportName)
 		if err != nil {
 			return err
 		}
