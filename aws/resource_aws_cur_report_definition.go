@@ -100,25 +100,15 @@ func resourceAwsCurReportDefinitionCreate(d *schema.ResourceData, meta interface
 	reportName := d.Get("report_name").(string)
 
 	reportDefinition := &costandusagereportservice.ReportDefinition{
-		ReportName:  aws.String(reportName),
-		TimeUnit:    aws.String(d.Get("time_unit").(string)),
-		Format:      aws.String(d.Get("format").(string)),
-		Compression: aws.String(d.Get("compression").(string)),
-		S3Bucket:    aws.String(d.Get("s3_bucket").(string)),
-		S3Prefix:    aws.String(d.Get("s3_prefix").(string)),
-		S3Region:    aws.String(d.Get("s3_region").(string)),
-	}
-
-	additionalSchemaElementsSet := d.Get("additional_schema_elements").(*schema.Set)
-	for _, additionalSchemaElement := range additionalSchemaElementsSet.List() {
-		reportDefinition.AdditionalSchemaElements = append(reportDefinition.AdditionalSchemaElements,
-			aws.String(additionalSchemaElement.(string)))
-	}
-
-	additionalArtifactsSet := d.Get("additional_artifacts").(*schema.Set)
-	for _, additionalArtifact := range additionalArtifactsSet.List() {
-		reportDefinition.AdditionalArtifacts = append(reportDefinition.AdditionalArtifacts,
-			aws.String(additionalArtifact.(string)))
+		ReportName:               aws.String(reportName),
+		TimeUnit:                 aws.String(d.Get("time_unit").(string)),
+		Format:                   aws.String(d.Get("format").(string)),
+		Compression:              aws.String(d.Get("compression").(string)),
+		AdditionalSchemaElements: expandStringSet(d.Get("additional_schema_elements").(*schema.Set)),
+		S3Bucket:                 aws.String(d.Get("s3_bucket").(string)),
+		S3Prefix:                 aws.String(d.Get("s3_prefix").(string)),
+		S3Region:                 aws.String(d.Get("s3_region").(string)),
+		AdditionalArtifacts:      expandStringSet(d.Get("additional_artifacts").(*schema.Set)),
 	}
 
 	reportDefinitionInput := &costandusagereportservice.PutReportDefinitionInput{
