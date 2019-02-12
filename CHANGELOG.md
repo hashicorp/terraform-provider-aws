@@ -6,6 +6,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_dynamodb_table: Add `billing_mode` and `point_in_time_recovery` attributes [GH-7497]
 * resource/aws_cloudwatch_metric_alarm: Add `metric_query` argument (support math expressions) [GH-6833]
 * resource/aws_directory_service_directory: Set `security_group_id` attribute when type is `ADConnector` [GH-7487]
 * resource/aws_dynamodb_table: Use `update` customizable timeout for individual Global Secondary Index updates and increase default `update` timeout from 10 minutes to 60 minutes [GH-7453]
