@@ -419,9 +419,13 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"advanced_security_mode": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validateCognitoUserPoolAdvancedSecurityMode,
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								cognitoidentityprovider.AdvancedSecurityModeTypeAudit,
+								cognitoidentityprovider.AdvancedSecurityModeTypeEnforced,
+								cognitoidentityprovider.AdvancedSecurityModeTypeOff,
+							}, false),
 						},
 					},
 				},

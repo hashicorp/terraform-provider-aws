@@ -2163,33 +2163,6 @@ func TestValidateCognitoIdentityProvidersProviderName(t *testing.T) {
 	}
 }
 
-func TestValidateCognitoUserPoolAdvancedSecurityMode(t *testing.T) {
-	validValues := []string{
-		"OFF",
-		"AUDIT",
-		"ENFORCED",
-	}
-
-	for _, s := range validValues {
-		_, errors := validateCognitoUserPoolAdvancedSecurityMode(s, "advanced_security_mode")
-		if len(errors) > 0 {
-			t.Fatalf("%q should be a valid Cognito User Pool advanced security mode: %v", s, errors)
-		}
-	}
-
-	invalidValues := []string{
-		"Foo",
-		"Bar",
-	}
-
-	for _, s := range invalidValues {
-		_, errors := validateCognitoUserPoolAdvancedSecurityMode(s, "advanced_security_mode")
-		if len(errors) == 0 {
-			t.Fatalf("%q should not be a valid Cognito User Pool advanced security mode: %v", s, errors)
-		}
-	}
-}
-
 func TestValidateCognitoUserPoolEmailVerificationMessage(t *testing.T) {
 	validValues := []string{
 		"{####}",

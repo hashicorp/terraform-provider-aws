@@ -1544,18 +1544,6 @@ func validateCognitoUserPoolTemplateSmsMessage(v interface{}, k string) (ws []st
 	return
 }
 
-func validateCognitoUserPoolAdvancedSecurityMode(v interface{}, s string) ([]string, []error) {
-	switch v.(string) {
-	case
-		"OFF",
-		"AUDIT",
-		"ENFORCED":
-		return nil, nil
-	}
-
-	return nil, []error{fmt.Errorf("Mode must be one of OFF, AUDIT, or ENFORCED")}
-}
-
 func validateCognitoUserPoolInviteTemplateEmailMessage(v interface{}, k string) (ws []string, es []error) {
 	value := v.(string)
 	if len(value) < 6 {
