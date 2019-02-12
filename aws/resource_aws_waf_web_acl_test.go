@@ -178,7 +178,7 @@ func TestAccAWSWafWebAcl_LoggingConfiguration(t *testing.T) {
 					testAccCheckAWSWafWebAclExists(resourceName, &webACL),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.redacted_fields.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.redacted_fields.0.field_to_match.#", "4"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.redacted_fields.0.field_to_match.#", "2"),
 				),
 			},
 			// Test resource import
@@ -463,7 +463,7 @@ resource "aws_waf_web_acl" "test" {
 
 func testAccAWSWafWebAclConfig_Logging(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_waf_web_acl" "waf_acl" {
+resource "aws_waf_web_acl" "test" {
   name        = %[1]q
   metric_name = %[1]q
 
@@ -473,12 +473,14 @@ resource "aws_waf_web_acl" "waf_acl" {
 
   logging_configuration {
 
-    log_destination = "${aws_kinesis_firehose_delivery_stream.test_stream.arn}"
+    log_destination = "${aws_kinesis_firehose_delivery_stream.test.arn}"
 
     redacted_fields {
+
       field_to_match {
         type = "URI"
       }
+
       field_to_match {
         data = "referer"
         type = "HEADER"
@@ -536,15 +538,16 @@ resource "aws_waf_web_acl" "test" {
   }
 
   logging_configuration {
-    log_destination = "${aws_kinesis_firehose_delivery_stream.test_stream.arn}"
+    log_destination = "${aws_kinesis_firehose_delivery_stream.test.arn}"
   }
 }
-resource "aws_s3_bucket" "bucket" {
+
+resource "aws_s3_bucket" "test" {
   bucket = %q
   acl    = "private"
 }
 
-resource "aws_iam_role" "firehose_role" {
+resource "aws_iam_role" "test" {
   name = %q
 
   assume_role_policy = <<EOF
@@ -564,14 +567,14 @@ resource "aws_iam_role" "firehose_role" {
 EOF
 }
 
-resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
+resource "aws_kinesis_firehose_delivery_stream" "test" {
   # the name must begin with aws-waf-logs-
   name        = "aws-waf-logs-%s"
   destination = "s3"
 
   s3_configuration {
-    role_arn   = "${aws_iam_role.firehose_role.arn}"
-    bucket_arn = "${aws_s3_bucket.bucket.arn}"
+    role_arn   = "${aws_iam_role.test.arn}"
+    bucket_arn = "${aws_s3_bucket.test.arn}"
   }
 }
 
