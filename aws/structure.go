@@ -2826,42 +2826,42 @@ func flattenIoTRuleCloudWatchMetricActions(actions []*iot.Action) []map[string]i
 }
 
 func flattenIoTRuleDynamoDbActions(actions []*iot.Action) []map[string]interface{} {
-	results := make([]map[string]interface{}, 0)
+	items := make([]map[string]interface{}, 0, len(actions))
 
 	for _, a := range actions {
-		result := make(map[string]interface{})
+		m := make(map[string]interface{})
 		v := a.DynamoDB
 		if v != nil {
-			result["hash_key_field"] = *v.HashKeyField
-			result["hash_key_value"] = *v.HashKeyValue
-			result["role_arn"] = *v.RoleArn
-			result["table_name"] = *v.TableName
+			m["hash_key_field"] = aws.StringValue(v.HashKeyField)
+			m["hash_key_value"] = aws.StringValue(v.HashKeyValue)
+			m["role_arn"] = aws.StringValue(v.RoleArn)
+			m["table_name"] = aws.StringValue(v.TableName)
 
 			if v.HashKeyType != nil {
-				result["hash_key_type"] = *v.HashKeyType
+				m["hash_key_type"] = aws.StringValue(v.HashKeyType)
 			}
 
 			if v.PayloadField != nil {
-				result["payload_field"] = *v.PayloadField
+				m["payload_field"] = aws.StringValue(v.PayloadField)
 			}
 
 			if v.RangeKeyField != nil {
-				result["range_key_field"] = *v.RangeKeyField
+				m["range_key_field"] = aws.StringValue(v.RangeKeyField)
 			}
 
 			if v.RangeKeyType != nil {
-				result["range_key_type"] = *v.RangeKeyType
+				m["range_key_type"] = aws.StringValue(v.RangeKeyType)
 			}
 
 			if v.RangeKeyValue != nil {
-				result["range_key_value"] = *v.RangeKeyValue
+				m["range_key_value"] = aws.StringValue(v.RangeKeyValue)
 			}
 
-			results = append(results, result)
+			items = append(items, m)
 		}
 	}
 
-	return results
+	return items
 }
 
 func flattenIoTRuleElasticSearchActions(actions []*iot.Action) []map[string]interface{} {
