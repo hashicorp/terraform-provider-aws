@@ -27,8 +27,7 @@ The following arguments are supported:
 
 * `client_vpn_endpoint_id` - (Required) The ID of the Client VPN endpoint.
 * `subnet_id` - (Required) The ID of the subnet to associate with the Client VPN endpoint.
-* `security_groups` - (Optional) A list of up to five security groups to apply to the target network.
-* `vpc_id` - (Optional) The ID of the VPC in which the target network is locatated.  This is a required argument for assigning security groups to a network association.
+* `security_groups` - (Optional) A list of up to five custom security groups to apply to the target network. Not populating this parameter will result in the subnet inheriting the default VPC security group.
 
 ## Attributes Reference
 

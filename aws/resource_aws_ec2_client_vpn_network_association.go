@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"errors"
 	"fmt"
 	"log"
 
@@ -15,6 +14,7 @@ func resourceAwsEc2ClientVpnNetworkAssociation() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsEc2ClientVpnNetworkAssociationCreate,
 		Read:   resourceAwsEc2ClientVpnNetworkAssociationRead,
+		Update: resourceAwsEc2ClientVpnNetworkAssociationUpdate,
 		Delete: resourceAwsEc2ClientVpnNetworkAssociationDelete,
 
 		Schema: map[string]*schema.Schema{
@@ -30,17 +30,12 @@ func resourceAwsEc2ClientVpnNetworkAssociation() *schema.Resource {
 			},
 			"security_groups": {
 				Type:     schema.TypeSet,
+				MinItems: 1,
+				MaxItems: 5,
 				Optional: true,
 				Computed: true,
-				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
-			},
-			"vpc_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
 			},
 			"status": {
 				Type:     schema.TypeString,
@@ -74,27 +69,24 @@ func resourceAwsEc2ClientVpnNetworkAssociationCreate(d *schema.ResourceData, met
 	}
 
 	log.Printf("[DEBUG] Waiting for Client VPN endpoint to associate with target network: %s", d.Id())
-	_, err = stateConf.WaitForState()
+	targetNetworkRaw, err := stateConf.WaitForState()
 	if err != nil {
 		return fmt.Errorf("Error waiting for Client VPN endpoint to associate with target network: %s", err)
 	}
 
-	sgIDs, okSgIDs := d.GetOk("security_groups")
-	vpcID, okVpcID := d.GetOk("vpc_id")
-	if okSgIDs && okVpcID {
+	targetNetwork := targetNetworkRaw.(*ec2.TargetNetwork)
+
+	if v, ok := d.GetOk("security_groups"); ok {
 		sgReq := &ec2.ApplySecurityGroupsToClientVpnTargetNetworkInput{
 			ClientVpnEndpointId: aws.String(d.Get("client_vpn_endpoint_id").(string)),
-			VpcId:               aws.String(vpcID.(string)),
-			SecurityGroupIds:    expandStringList(sgIDs.(*schema.Set).List()),
+			VpcId:               targetNetwork.VpcId,
+			SecurityGroupIds:    expandStringSet(v.(*schema.Set)),
 		}
 
 		_, err := conn.ApplySecurityGroupsToClientVpnTargetNetwork(sgReq)
 		if err != nil {
 			return fmt.Errorf("Error applying security groups to Client VPN network association: %s", err)
 		}
-	}
-	if (okSgIDs && !okVpcID) || (!okSgIDs && okVpcID) {
-		return errors.New("both vpc_id and security_groups must be set in order to attach additional security groups to this target network")
 	}
 
 	return resourceAwsEc2ClientVpnNetworkAssociationRead(d, meta)
@@ -141,6 +133,24 @@ func resourceAwsEc2ClientVpnNetworkAssociationRead(d *schema.ResourceData, meta 
 	}
 
 	return nil
+}
+
+func resourceAwsEc2ClientVpnNetworkAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).ec2conn
+
+	if d.HasChange("security_groups") {
+		input := &ec2.ApplySecurityGroupsToClientVpnTargetNetworkInput{
+			ClientVpnEndpointId: aws.String(d.Get("client_vpn_endpoint_id").(string)),
+			SecurityGroupIds:    expandStringSet(d.Get("security_groups").(*schema.Set)),
+			VpcId:               aws.String(d.Get("vpc_id").(string)),
+		}
+
+		if _, err := conn.ApplySecurityGroupsToClientVpnTargetNetwork(input); err != nil {
+			return fmt.Errorf("error applying security groups to Client VPN Target Network: %s", err)
+		}
+	}
+
+	return resourceAwsEc2ClientVpnNetworkAssociationRead(d, meta)
 }
 
 func resourceAwsEc2ClientVpnNetworkAssociationDelete(d *schema.ResourceData, meta interface{}) error {

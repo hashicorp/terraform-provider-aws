@@ -231,8 +231,8 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  cidr_block = "10.1.1.0/24"
-  vpc_id = "${aws_vpc.test.id}"
+  cidr_block              = "10.1.1.0/24"
+  vpc_id                  = "${aws_vpc.test.id}"
   map_public_ip_on_launch = true
   tags = {
     Name = "tf-acc-subnet-%s"
@@ -240,15 +240,15 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_security_group" "test1" {
-  name = "terraform_acceptance_test_example_1"
+  name        = "terraform_acceptance_test_example_1"
   description = "Used in the terraform acceptance tests"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id      = "${aws_vpc.test.id}"
 
   ingress {
-    protocol = "tcp"
-	from_port = 22
-	to_port = 22
-	cidr_blocks = ["10.1.1.0/24"]
+		protocol = "tcp"
+    from_port = 22
+    to_port = 22
+    cidr_blocks = ["10.1.1.0/24"]
   }
 
   ingress {
@@ -267,28 +267,28 @@ resource "aws_security_group" "test1" {
 }
 
 resource "aws_security_group" "test2" {
-  name = "terraform_acceptance_test_example_2"
+  name        = "terraform_acceptance_test_example_2"
   description = "Used in the terraform acceptance tests"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id      = "${aws_vpc.test.id}"
 
   ingress {
-    protocol = "tcp"
-    from_port = 22
-    to_port = 22
+    protocol    = "tcp"
+    from_port   = 22
+    to_port     = 22
     cidr_blocks = ["10.1.2.0/24"]
   }
 
   ingress {
-    protocol = "tcp"
-    from_port = 80
-    to_port = 80
+    protocol    = "tcp"
+    from_port   = 80
+    to_port     = 80
     cidr_blocks = ["10.1.2.0/24"]
   }
 
   egress {
-    protocol = "-1"
-    from_port = 0
-    to_port = 0
+    protocol    = "-1"
+    from_port   = 0
+    to_port     = 0
     cidr_blocks = ["10.1.0.0/16"]
   }
 }
@@ -321,12 +321,12 @@ resource "aws_acm_certificate" "cert" {
 }
 
 resource "aws_ec2_client_vpn_endpoint" "test" {
-  description = "terraform-testacc-clientvpn-%s"
+  description            = "terraform-testacc-clientvpn-%s"
   server_certificate_arn = "${aws_acm_certificate.cert.arn}"
-  client_cidr_block = "10.0.0.0/16"
+  client_cidr_block      = "10.0.0.0/16"
 
   authentication_options {
-    type = "certificate-authentication"
+    type                       = "certificate-authentication"
     root_certificate_chain_arn = "${aws_acm_certificate.cert.arn}"
   }
 
@@ -337,9 +337,8 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
 
 resource "aws_ec2_client_vpn_network_association" "test" {
   client_vpn_endpoint_id = "${aws_ec2_client_vpn_endpoint.test.id}"
-  subnet_id 			 = "${aws_subnet.test.id}"
-  security_groups 		 = ["${aws_security_group.test1.id}", "${aws_security_group.test2.id}"]
-  vpc_id 				 = "${aws_vpc.test.id}"
+  subnet_id              = "${aws_subnet.test.id}"
+  security_groups        = ["${aws_security_group.test1.id}", "${aws_security_group.test2.id}"]
 }
 `, rName, rName, rName)
 }
