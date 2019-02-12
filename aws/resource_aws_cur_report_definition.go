@@ -160,19 +160,18 @@ func resourceAwsCurReportDefinitionRead(d *schema.ResourceData, meta interface{}
 		log.Printf("[WARN] Report definition (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
-	} else {
-		d.SetId(*matchingReportDefinition.ReportName)
-		d.Set("report_name", matchingReportDefinition.ReportName)
-		d.Set("time_unit", matchingReportDefinition.TimeUnit)
-		d.Set("format", matchingReportDefinition.Format)
-		d.Set("compression", matchingReportDefinition.Compression)
-		d.Set("additional_schema_elements", aws.StringValueSlice(matchingReportDefinition.AdditionalSchemaElements))
-		d.Set("s3_bucket", *matchingReportDefinition.S3Bucket)
-		d.Set("s3_prefix", *matchingReportDefinition.S3Prefix)
-		d.Set("s3_region", *matchingReportDefinition.S3Region)
-		d.Set("additional_artifacts", aws.StringValueSlice(matchingReportDefinition.AdditionalArtifacts))
-		return nil
 	}
+	d.SetId(aws.StringValue(matchingReportDefinition.ReportName))
+	d.Set("report_name", matchingReportDefinition.ReportName)
+	d.Set("time_unit", matchingReportDefinition.TimeUnit)
+	d.Set("format", matchingReportDefinition.Format)
+	d.Set("compression", matchingReportDefinition.Compression)
+	d.Set("additional_schema_elements", aws.StringValueSlice(matchingReportDefinition.AdditionalSchemaElements))
+	d.Set("s3_bucket", aws.StringValue(matchingReportDefinition.S3Bucket))
+	d.Set("s3_prefix", aws.StringValue(matchingReportDefinition.S3Prefix))
+	d.Set("s3_region", aws.StringValue(matchingReportDefinition.S3Region))
+	d.Set("additional_artifacts", aws.StringValueSlice(matchingReportDefinition.AdditionalArtifacts))
+	return nil
 }
 
 func resourceAwsCurReportDefinitionDelete(d *schema.ResourceData, meta interface{}) error {
