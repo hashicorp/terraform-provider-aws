@@ -41,7 +41,6 @@ The following arguments are supported:
 ## Import
 
 Report Definitions can be imported using the `report_name`, e.g.
-SQS Queues can be imported using the `queue url`, e.g.
 
 ```
 $ terraform import aws_cur_report_definition.example_cur_report_definition example-cur-report-definition
