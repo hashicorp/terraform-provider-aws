@@ -98,10 +98,10 @@ func resourceAwsCurReportDefinition() *schema.Resource {
 func resourceAwsCurReportDefinitionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).costandusagereportconn
 
-	reportName := *aws.String(d.Get("report_name").(string))
+	reportName := d.Get("report_name").(string)
 
 	reportDefinition := &costandusagereportservice.ReportDefinition{
-		ReportName:  &reportName,
+		ReportName:  aws.String(reportName),
 		TimeUnit:    aws.String(d.Get("time_unit").(string)),
 		Format:      aws.String(d.Get("format").(string)),
 		Compression: aws.String(d.Get("compression").(string)),
