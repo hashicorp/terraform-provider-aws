@@ -22,7 +22,6 @@ func resourceAwsCurReportDefinition() *schema.Resource {
 			"report_name": {
 				Type:         schema.TypeString,
 				Required:     true,
-				Computed:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 256),
 			},
