@@ -70,7 +70,7 @@ func resourceAwsCurReportDefinition() *schema.Resource {
 			},
 			"s3_prefix": {
 				Type:         schema.TypeString,
-				Required:     true,
+				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
 			},

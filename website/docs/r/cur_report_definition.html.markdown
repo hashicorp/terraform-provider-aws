@@ -18,7 +18,6 @@ resource "aws_cur_report_definition" "example_cur_report_definition" {
     compression = "GZIP"
     additional_schema_elements = ["RESOURCES"]
     s3_bucket = "example-bucket-name"
-    s3_prefix = ""
     s3_region = "us-east-1"
     additional_artifacts = ["REDSHIFT", "QUICKSIGHT"]
 }
@@ -34,7 +33,7 @@ The following arguments are supported:
 * `compression` - (Required) Compression format for report. Valid values are: GZIP, ZIP.
 * `additional_schema_elements` - (Required) A list of schema elements. Valid values are: RESOURCES.
 * `s3_bucket` - (Required) Name of the existing S3 bucket to hold generated reports.
-* `s3_prefix` - (Required) Report path prefix. Limited to 256 characters.
+* `s3_prefix` - (Optional) Report path prefix. Limited to 256 characters.
 * `s3_region` - (Required) Region of the existing S3 bucket to hold generated reports.
 * `additional_artifacts` - (Required)  A list of additional artifacts. Valid values are: REDSHIFT, QUICKSIGHT.
 
