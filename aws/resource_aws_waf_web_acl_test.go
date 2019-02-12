@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -163,6 +164,10 @@ func TestAccAWSWafWebAcl_Rules(t *testing.T) {
 }
 
 func TestAccAWSWafWebAcl_LoggingConfiguration(t *testing.T) {
+	oldvar := os.Getenv("AWS_DEFAULT_REGION")
+	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
+	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
+
 	var webACL waf.WebACL
 	rName := fmt.Sprintf("wafacl%s", acctest.RandString(5))
 	resourceName := "aws_waf_web_acl.test"
@@ -530,8 +535,8 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 func testAccAWSWafWebAclConfig_LoggingUpdate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_web_acl" "test" {
-  metric_name = %q
-  name        = %q
+  metric_name = %[1]q
+  name        = %[1]q
 
   default_action {
     type = "ALLOW"
@@ -543,12 +548,12 @@ resource "aws_waf_web_acl" "test" {
 }
 
 resource "aws_s3_bucket" "test" {
-  bucket = %q
+  bucket = %[1]q
   acl    = "private"
 }
 
 resource "aws_iam_role" "test" {
-  name = %q
+  name = %[1]q
 
   assume_role_policy = <<EOF
 {
@@ -569,7 +574,7 @@ EOF
 
 resource "aws_kinesis_firehose_delivery_stream" "test" {
   # the name must begin with aws-waf-logs-
-  name        = "aws-waf-logs-%s"
+  name        = "aws-waf-logs-%[1]s"
   destination = "s3"
 
   s3_configuration {
@@ -578,5 +583,5 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   }
 }
 
-`, rName, rName, rName, rName, rName)
+`, rName)
 }
