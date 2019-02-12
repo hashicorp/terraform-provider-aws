@@ -41,7 +41,7 @@ The following arguments are supported:
 * `sms_verification_message` - (Optional) A string representing the SMS verification message.
 * `tags` - (Optional) A mapping of tags to assign to the User Pool.
 * `username_attributes` - (Optional) Specifies whether email addresses or phone numbers can be specified as usernames when a user signs up. Conflicts with `alias_attributes`.
-* `user_pool_add_ons` - (Optional) The configuration for [user pool add-ons](#user-pool-add-ons).
+* `user_pool_add_ons` - (Optional) Configuration block for [user pool add-ons](#user-pool-add-ons) to enable user pool advanced security mode features.
 * `verification_message_template` (Optional) - The [verification message templates](#verification-message-template) configuration.
 
 #### Admin Create User Config
