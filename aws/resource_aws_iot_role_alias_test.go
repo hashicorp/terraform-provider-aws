@@ -16,7 +16,7 @@ func TestAccAWSIotRoleAlias_basic(t *testing.T) {
 	alias := acctest.RandomWithPrefix("RoleAlias-")
 	alias2 := acctest.RandomWithPrefix("RoleAlias2-")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIotRoleAliasDestroy,
@@ -65,6 +65,11 @@ func TestAccAWSIotRoleAlias_basic(t *testing.T) {
 						"aws_iot_role_alias.ra2", "role_arn", regexp.MustCompile(".+?bogus")),
 				),
 			},
+			{
+				ResourceName:      "aws_iot_role_alias.ra",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 
@@ -95,32 +100,13 @@ func testAccCheckAWSIotRoleAliasDestroy(s *terraform.State) error {
 			continue
 		}
 
-		alias := rs.Primary.Attributes["alias"]
+		_, err := getIotRoleAliasDescription(conn, rs.Primary.ID)
 
-		input := &iot.ListRoleAliasesInput{
-			PageSize: aws.Int64(250),
-		}
-
-		var roleAlias string
-		err := listIotRoleAliasPages(conn, input, func(out *iot.ListRoleAliasesOutput, lastPage bool) bool {
-			for _, ra := range out.RoleAliases {
-				if alias == aws.StringValue(ra) {
-					roleAlias = alias
-					return false
-				}
-			}
-			return true
-		})
-
-		if err != nil {
-			return fmt.Errorf("error listing role aliases for alias %s: %s", alias, err)
-		}
-
-		if roleAlias == "" {
+		if isAWSErr(err, iot.ErrCodeResourceNotFoundException, "") {
 			continue
 		}
 
-		return fmt.Errorf("IoT Role Alias (%s) still exists", rs.Primary.Attributes["id"])
+		return fmt.Errorf("IoT Role Alias (%s) still exists", rs.Primary.ID)
 	}
 	return nil
 }
@@ -137,17 +123,16 @@ func testAccCheckAWSIotRoleAliasExists(n string) resource.TestCheckFunc {
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).iotconn
-		alias := rs.Primary.Attributes["alias"]
 		role_arn := rs.Primary.Attributes["role_arn"]
 
-		roleAliasDescription, err := getIotRoleAliasDescription(conn, alias)
+		roleAliasDescription, err := getIotRoleAliasDescription(conn, rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("Error: Failed to get role alias %s for role %s (%s): %s", alias, role_arn, n, err)
+			return fmt.Errorf("Error: Failed to get role alias %s for role %s (%s): %s", rs.Primary.ID, role_arn, n, err)
 		}
 
 		if roleAliasDescription == nil {
-			return fmt.Errorf("Error: Role alias %s is not attached to role (%s)", alias, role_arn)
+			return fmt.Errorf("Error: Role alias %s is not attached to role (%s)", rs.Primary.ID, role_arn)
 		}
 
 		return nil
