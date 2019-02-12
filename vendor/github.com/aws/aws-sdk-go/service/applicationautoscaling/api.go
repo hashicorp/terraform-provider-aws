@@ -690,7 +690,7 @@ func (c *ApplicationAutoScaling) DescribeScalingPoliciesRequest(input *DescribeS
 //   when Application Auto Scaling is unable to retrieve the alarms associated
 //   with a scaling policy due to a client error, for example, if the role ARN
 //   specified for a scalable target does not have permission to call the CloudWatch
-//   DescribeAlarms (http://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_DescribeAlarms.html)
+//   DescribeAlarms (https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_DescribeAlarms.html)
 //   on your behalf.
 //
 //   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
@@ -919,8 +919,8 @@ func (c *ApplicationAutoScaling) PutScalingPolicyRequest(input *PutScalingPolicy
 //
 // Each scalable target is identified by a service namespace, resource ID, and
 // scalable dimension. A scaling policy applies to the scalable target identified
-// by those three attributes. You cannot create a scaling policy until you register
-// the scalable target using RegisterScalableTarget.
+// by those three attributes. You cannot create a scaling policy until you have
+// registered the resource as a scalable target using RegisterScalableTarget.
 //
 // To update a policy, specify its policy name and the parameters that you want
 // to change. Any parameters that you don't specify are not changed by this
@@ -943,7 +943,7 @@ func (c *ApplicationAutoScaling) PutScalingPolicyRequest(input *PutScalingPolicy
 //
 //   * ErrCodeLimitExceededException "LimitExceededException"
 //   A per-account resource limit is exceeded. For more information, see Application
-//   Auto Scaling Limits (http://docs.aws.amazon.com/ApplicationAutoScaling/latest/userguide/application-auto-scaling-limits.html).
+//   Auto Scaling Limits (https://docs.aws.amazon.com/ApplicationAutoScaling/latest/userguide/application-auto-scaling-limits.html).
 //
 //   * ErrCodeObjectNotFoundException "ObjectNotFoundException"
 //   The specified object could not be found. For any operation that depends on
@@ -961,7 +961,7 @@ func (c *ApplicationAutoScaling) PutScalingPolicyRequest(input *PutScalingPolicy
 //   when Application Auto Scaling is unable to retrieve the alarms associated
 //   with a scaling policy due to a client error, for example, if the role ARN
 //   specified for a scalable target does not have permission to call the CloudWatch
-//   DescribeAlarms (http://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_DescribeAlarms.html)
+//   DescribeAlarms (https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_DescribeAlarms.html)
 //   on your behalf.
 //
 //   * ErrCodeInternalServiceException "InternalServiceException"
@@ -1040,7 +1040,7 @@ func (c *ApplicationAutoScaling) PutScheduledActionRequest(input *PutScheduledAc
 // Each scalable target is identified by a service namespace, resource ID, and
 // scalable dimension. A scheduled action applies to the scalable target identified
 // by those three attributes. You cannot create a scheduled action until you
-// register the scalable target using RegisterScalableTarget.
+// have registered the resource as a scalable target using RegisterScalableTarget.
 //
 // To update an action, specify its name and the parameters that you want to
 // change. If you don't specify start and end times, the old values are deleted.
@@ -1064,7 +1064,7 @@ func (c *ApplicationAutoScaling) PutScheduledActionRequest(input *PutScheduledAc
 //
 //   * ErrCodeLimitExceededException "LimitExceededException"
 //   A per-account resource limit is exceeded. For more information, see Application
-//   Auto Scaling Limits (http://docs.aws.amazon.com/ApplicationAutoScaling/latest/userguide/application-auto-scaling-limits.html).
+//   Auto Scaling Limits (https://docs.aws.amazon.com/ApplicationAutoScaling/latest/userguide/application-auto-scaling-limits.html).
 //
 //   * ErrCodeObjectNotFoundException "ObjectNotFoundException"
 //   The specified object could not be found. For any operation that depends on
@@ -1148,14 +1148,16 @@ func (c *ApplicationAutoScaling) RegisterScalableTargetRequest(input *RegisterSc
 // RegisterScalableTarget API operation for Application Auto Scaling.
 //
 // Registers or updates a scalable target. A scalable target is a resource that
-// Application Auto Scaling can scale out or scale in. After you have registered
-// a scalable target, you can use this operation to update the minimum and maximum
-// values for its scalable dimension.
+// Application Auto Scaling can scale in and scale out. Each scalable target
+// has a resource ID, scalable dimension, and namespace, as well as values for
+// minimum and maximum capacity.
 //
-// After you register a scalable target, you can create and apply scaling policies
-// using PutScalingPolicy. You can view the scaling policies for a service namespace
-// using DescribeScalableTargets. If you no longer need a scalable target, you
-// can deregister it using DeregisterScalableTarget.
+// After you register a scalable target, you do not need to register it again
+// to use other Application Auto Scaling operations. To see which resources
+// have been registered, use DescribeScalableTargets. You can also view the
+// scaling policies for a service namespace using DescribeScalableTargets.
+//
+// If you no longer need a scalable target, you can deregister it using DeregisterScalableTarget.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1171,7 +1173,7 @@ func (c *ApplicationAutoScaling) RegisterScalableTargetRequest(input *RegisterSc
 //
 //   * ErrCodeLimitExceededException "LimitExceededException"
 //   A per-account resource limit is exceeded. For more information, see Application
-//   Auto Scaling Limits (http://docs.aws.amazon.com/ApplicationAutoScaling/latest/userguide/application-auto-scaling-limits.html).
+//   Auto Scaling Limits (https://docs.aws.amazon.com/ApplicationAutoScaling/latest/userguide/application-auto-scaling-limits.html).
 //
 //   * ErrCodeConcurrentUpdateException "ConcurrentUpdateException"
 //   Concurrent updates caused an exception, for example, if you request an update
@@ -1239,7 +1241,10 @@ func (s *Alarm) SetAlarmName(v string) *Alarm {
 	return s
 }
 
-// Configures a customized metric for a target tracking policy.
+// Configures a customized metric for a target tracking policy to use with Application
+// Auto Scaling.
+//
+// For information about terminology, see Amazon CloudWatch Concepts (https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/cloudwatch_concepts.html).
 type CustomizedMetricSpecification struct {
 	_ struct{} `type:"structure"`
 
@@ -1372,7 +1377,7 @@ type DeleteScalingPolicyInput struct {
 	//    * Custom resources are not supported with a resource type. This parameter
 	//    must specify the OutputValue from the CloudFormation template stack used
 	//    to access the resources. The unique identifier is defined by the service
-	//    provider.
+	//    provider. More information is available in our GitHub repository (https://github.com/aws/aws-auto-scaling-custom-resource).
 	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
@@ -1404,7 +1409,8 @@ type DeleteScalingPolicyInput struct {
 	//    a DynamoDB global secondary index.
 	//
 	//    * rds:cluster:ReadReplicaCount - The count of Aurora Replicas in an Aurora
-	//    DB cluster. Available for Aurora MySQL-compatible edition.
+	//    DB cluster. Available for Aurora MySQL-compatible edition and Aurora PostgreSQL-compatible
+	//    edition.
 	//
 	//    * sagemaker:variant:DesiredInstanceCount - The number of EC2 instances
 	//    for an Amazon SageMaker model endpoint variant.
@@ -1533,7 +1539,7 @@ type DeleteScheduledActionInput struct {
 	//    * Custom resources are not supported with a resource type. This parameter
 	//    must specify the OutputValue from the CloudFormation template stack used
 	//    to access the resources. The unique identifier is defined by the service
-	//    provider.
+	//    provider. More information is available in our GitHub repository (https://github.com/aws/aws-auto-scaling-custom-resource).
 	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
@@ -1565,7 +1571,8 @@ type DeleteScheduledActionInput struct {
 	//    a DynamoDB global secondary index.
 	//
 	//    * rds:cluster:ReadReplicaCount - The count of Aurora Replicas in an Aurora
-	//    DB cluster. Available for Aurora MySQL-compatible edition.
+	//    DB cluster. Available for Aurora MySQL-compatible edition and Aurora PostgreSQL-compatible
+	//    edition.
 	//
 	//    * sagemaker:variant:DesiredInstanceCount - The number of EC2 instances
 	//    for an Amazon SageMaker model endpoint variant.
@@ -1694,7 +1701,7 @@ type DeregisterScalableTargetInput struct {
 	//    * Custom resources are not supported with a resource type. This parameter
 	//    must specify the OutputValue from the CloudFormation template stack used
 	//    to access the resources. The unique identifier is defined by the service
-	//    provider.
+	//    provider. More information is available in our GitHub repository (https://github.com/aws/aws-auto-scaling-custom-resource).
 	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
@@ -1726,7 +1733,8 @@ type DeregisterScalableTargetInput struct {
 	//    a DynamoDB global secondary index.
 	//
 	//    * rds:cluster:ReadReplicaCount - The count of Aurora Replicas in an Aurora
-	//    DB cluster. Available for Aurora MySQL-compatible edition.
+	//    DB cluster. Available for Aurora MySQL-compatible edition and Aurora PostgreSQL-compatible
+	//    edition.
 	//
 	//    * sagemaker:variant:DesiredInstanceCount - The number of EC2 instances
 	//    for an Amazon SageMaker model endpoint variant.
@@ -1856,7 +1864,7 @@ type DescribeScalableTargetsInput struct {
 	//    * Custom resources are not supported with a resource type. This parameter
 	//    must specify the OutputValue from the CloudFormation template stack used
 	//    to access the resources. The unique identifier is defined by the service
-	//    provider.
+	//    provider. More information is available in our GitHub repository (https://github.com/aws/aws-auto-scaling-custom-resource).
 	ResourceIds []*string `type:"list"`
 
 	// The scalable dimension associated with the scalable target. This string consists
@@ -1887,7 +1895,8 @@ type DescribeScalableTargetsInput struct {
 	//    a DynamoDB global secondary index.
 	//
 	//    * rds:cluster:ReadReplicaCount - The count of Aurora Replicas in an Aurora
-	//    DB cluster. Available for Aurora MySQL-compatible edition.
+	//    DB cluster. Available for Aurora MySQL-compatible edition and Aurora PostgreSQL-compatible
+	//    edition.
 	//
 	//    * sagemaker:variant:DesiredInstanceCount - The number of EC2 instances
 	//    for an Amazon SageMaker model endpoint variant.
@@ -2037,7 +2046,7 @@ type DescribeScalingActivitiesInput struct {
 	//    * Custom resources are not supported with a resource type. This parameter
 	//    must specify the OutputValue from the CloudFormation template stack used
 	//    to access the resources. The unique identifier is defined by the service
-	//    provider.
+	//    provider. More information is available in our GitHub repository (https://github.com/aws/aws-auto-scaling-custom-resource).
 	ResourceId *string `min:"1" type:"string"`
 
 	// The scalable dimension. This string consists of the service namespace, resource
@@ -2068,7 +2077,8 @@ type DescribeScalingActivitiesInput struct {
 	//    a DynamoDB global secondary index.
 	//
 	//    * rds:cluster:ReadReplicaCount - The count of Aurora Replicas in an Aurora
-	//    DB cluster. Available for Aurora MySQL-compatible edition.
+	//    DB cluster. Available for Aurora MySQL-compatible edition and Aurora PostgreSQL-compatible
+	//    edition.
 	//
 	//    * sagemaker:variant:DesiredInstanceCount - The number of EC2 instances
 	//    for an Amazon SageMaker model endpoint variant.
@@ -2224,7 +2234,7 @@ type DescribeScalingPoliciesInput struct {
 	//    * Custom resources are not supported with a resource type. This parameter
 	//    must specify the OutputValue from the CloudFormation template stack used
 	//    to access the resources. The unique identifier is defined by the service
-	//    provider.
+	//    provider. More information is available in our GitHub repository (https://github.com/aws/aws-auto-scaling-custom-resource).
 	ResourceId *string `min:"1" type:"string"`
 
 	// The scalable dimension. This string consists of the service namespace, resource
@@ -2255,7 +2265,8 @@ type DescribeScalingPoliciesInput struct {
 	//    a DynamoDB global secondary index.
 	//
 	//    * rds:cluster:ReadReplicaCount - The count of Aurora Replicas in an Aurora
-	//    DB cluster. Available for Aurora MySQL-compatible edition.
+	//    DB cluster. Available for Aurora MySQL-compatible edition and Aurora PostgreSQL-compatible
+	//    edition.
 	//
 	//    * sagemaker:variant:DesiredInstanceCount - The number of EC2 instances
 	//    for an Amazon SageMaker model endpoint variant.
@@ -2414,7 +2425,7 @@ type DescribeScheduledActionsInput struct {
 	//    * Custom resources are not supported with a resource type. This parameter
 	//    must specify the OutputValue from the CloudFormation template stack used
 	//    to access the resources. The unique identifier is defined by the service
-	//    provider.
+	//    provider. More information is available in our GitHub repository (https://github.com/aws/aws-auto-scaling-custom-resource).
 	ResourceId *string `min:"1" type:"string"`
 
 	// The scalable dimension. This string consists of the service namespace, resource
@@ -2445,7 +2456,8 @@ type DescribeScheduledActionsInput struct {
 	//    a DynamoDB global secondary index.
 	//
 	//    * rds:cluster:ReadReplicaCount - The count of Aurora Replicas in an Aurora
-	//    DB cluster. Available for Aurora MySQL-compatible edition.
+	//    DB cluster. Available for Aurora MySQL-compatible edition and Aurora PostgreSQL-compatible
+	//    edition.
 	//
 	//    * sagemaker:variant:DesiredInstanceCount - The number of EC2 instances
 	//    for an Amazon SageMaker model endpoint variant.
@@ -2614,7 +2626,8 @@ func (s *MetricDimension) SetValue(v string) *MetricDimension {
 	return s
 }
 
-// Configures a predefined metric for a target tracking policy.
+// Configures a predefined metric for a target tracking policy to use with Application
+// Auto Scaling.
 type PredefinedMetricSpecification struct {
 	_ struct{} `type:"structure"`
 
@@ -2685,11 +2698,13 @@ type PutScalingPolicyInput struct {
 	// PolicyName is a required field
 	PolicyName *string `min:"1" type:"string" required:"true"`
 
-	// The policy type. This parameter is required if you are creating a policy.
+	// The policy type. This parameter is required if you are creating a scaling
+	// policy.
 	//
-	// For DynamoDB, only TargetTrackingScaling is supported. For Amazon ECS, Spot
-	// Fleet, and Amazon RDS, both StepScaling and TargetTrackingScaling are supported.
-	// For any other service, only StepScaling is supported.
+	// For information on which services do not support StepScaling or TargetTrackingScaling,
+	// see Step Scaling Policies for Application Auto Scaling (https://docs.aws.amazon.com/autoscaling/application/userguide/application-auto-scaling-step-scaling-policies.html)
+	// and Target Tracking Scaling Policies for Application Auto Scaling (https://docs.aws.amazon.com/autoscaling/application/userguide/application-auto-scaling-target-tracking.html)
+	// in the Application Auto Scaling User Guide.
 	PolicyType *string `type:"string" enum:"PolicyType"`
 
 	// The identifier of the resource associated with the scaling policy. This string
@@ -2722,7 +2737,7 @@ type PutScalingPolicyInput struct {
 	//    * Custom resources are not supported with a resource type. This parameter
 	//    must specify the OutputValue from the CloudFormation template stack used
 	//    to access the resources. The unique identifier is defined by the service
-	//    provider.
+	//    provider. More information is available in our GitHub repository (https://github.com/aws/aws-auto-scaling-custom-resource).
 	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
@@ -2754,7 +2769,8 @@ type PutScalingPolicyInput struct {
 	//    a DynamoDB global secondary index.
 	//
 	//    * rds:cluster:ReadReplicaCount - The count of Aurora Replicas in an Aurora
-	//    DB cluster. Available for Aurora MySQL-compatible edition.
+	//    DB cluster. Available for Aurora MySQL-compatible edition and Aurora PostgreSQL-compatible
+	//    edition.
 	//
 	//    * sagemaker:variant:DesiredInstanceCount - The number of EC2 instances
 	//    for an Amazon SageMaker model endpoint variant.
@@ -2946,7 +2962,7 @@ type PutScheduledActionInput struct {
 	//    * Custom resources are not supported with a resource type. This parameter
 	//    must specify the OutputValue from the CloudFormation template stack used
 	//    to access the resources. The unique identifier is defined by the service
-	//    provider.
+	//    provider. More information is available in our GitHub repository (https://github.com/aws/aws-auto-scaling-custom-resource).
 	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
@@ -2979,7 +2995,8 @@ type PutScheduledActionInput struct {
 	//    a DynamoDB global secondary index.
 	//
 	//    * rds:cluster:ReadReplicaCount - The count of Aurora Replicas in an Aurora
-	//    DB cluster. Available for Aurora MySQL-compatible edition.
+	//    DB cluster. Available for Aurora MySQL-compatible edition and Aurora PostgreSQL-compatible
+	//    edition.
 	//
 	//    * sagemaker:variant:DesiredInstanceCount - The number of EC2 instances
 	//    for an Amazon SageMaker model endpoint variant.
@@ -2997,18 +3014,18 @@ type PutScheduledActionInput struct {
 
 	// The schedule for this action. The following formats are supported:
 	//
-	//    * At expressions - at(yyyy-mm-ddThh:mm:ss)
+	//    * At expressions - "at(yyyy-mm-ddThh:mm:ss)"
 	//
-	//    * Rate expressions - rate(valueunit)
+	//    * Rate expressions - "rate(valueunit)"
 	//
-	//    * Cron expressions - cron(fields)
+	//    * Cron expressions - "cron(fields)"
 	//
 	// At expressions are useful for one-time schedules. Specify the time, in UTC.
 	//
 	// For rate expressions, value is a positive integer and unit is minute | minutes
 	// | hour | hours | day | days.
 	//
-	// For more information about cron expressions, see Cron Expressions (http://docs.aws.amazon.com/AmazonCloudWatch/latest/events/ScheduledEvents.html#CronExpressions)
+	// For more information about cron expressions, see Cron Expressions (https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/ScheduledEvents.html#CronExpressions)
 	// in the Amazon CloudWatch Events User Guide.
 	Schedule *string `min:"1" type:"string"`
 
@@ -3133,11 +3150,11 @@ type RegisterScalableTargetInput struct {
 	_ struct{} `type:"structure"`
 
 	// The maximum value to scale to in response to a scale out event. This parameter
-	// is required if you are registering a scalable target.
+	// is required to register a scalable target.
 	MaxCapacity *int64 `type:"integer"`
 
 	// The minimum value to scale to in response to a scale in event. This parameter
-	// is required if you are registering a scalable target.
+	// is required to register a scalable target.
 	MinCapacity *int64 `type:"integer"`
 
 	// The identifier of the resource associated with the scalable target. This
@@ -3170,14 +3187,14 @@ type RegisterScalableTargetInput struct {
 	//    * Custom resources are not supported with a resource type. This parameter
 	//    must specify the OutputValue from the CloudFormation template stack used
 	//    to access the resources. The unique identifier is defined by the service
-	//    provider.
+	//    provider. More information is available in our GitHub repository (https://github.com/aws/aws-auto-scaling-custom-resource).
 	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
 
 	// Application Auto Scaling creates a service-linked role that grants it permissions
 	// to modify the scalable target on your behalf. For more information, see Service-Linked
-	// Roles for Application Auto Scaling (http://docs.aws.amazon.com/autoscaling/application/userguide/application-autoscaling-service-linked-roles.html).
+	// Roles for Application Auto Scaling (https://docs.aws.amazon.com/autoscaling/application/userguide/application-auto-scaling-service-linked-roles.html).
 	//
 	// For resources that are not supported using a service-linked role, this parameter
 	// is required and must specify the ARN of an IAM role that allows Application
@@ -3211,7 +3228,8 @@ type RegisterScalableTargetInput struct {
 	//    a DynamoDB global secondary index.
 	//
 	//    * rds:cluster:ReadReplicaCount - The count of Aurora Replicas in an Aurora
-	//    DB cluster. Available for Aurora MySQL-compatible edition.
+	//    DB cluster. Available for Aurora MySQL-compatible edition and Aurora PostgreSQL-compatible
+	//    edition.
 	//
 	//    * sagemaker:variant:DesiredInstanceCount - The number of EC2 instances
 	//    for an Amazon SageMaker model endpoint variant.
@@ -3365,7 +3383,7 @@ type ScalableTarget struct {
 	//    * Custom resources are not supported with a resource type. This parameter
 	//    must specify the OutputValue from the CloudFormation template stack used
 	//    to access the resources. The unique identifier is defined by the service
-	//    provider.
+	//    provider. More information is available in our GitHub repository (https://github.com/aws/aws-auto-scaling-custom-resource).
 	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
@@ -3403,7 +3421,8 @@ type ScalableTarget struct {
 	//    a DynamoDB global secondary index.
 	//
 	//    * rds:cluster:ReadReplicaCount - The count of Aurora Replicas in an Aurora
-	//    DB cluster. Available for Aurora MySQL-compatible edition.
+	//    DB cluster. Available for Aurora MySQL-compatible edition and Aurora PostgreSQL-compatible
+	//    edition.
 	//
 	//    * sagemaker:variant:DesiredInstanceCount - The number of EC2 instances
 	//    for an Amazon SageMaker model endpoint variant.
@@ -3563,7 +3582,7 @@ type ScalingActivity struct {
 	//    * Custom resources are not supported with a resource type. This parameter
 	//    must specify the OutputValue from the CloudFormation template stack used
 	//    to access the resources. The unique identifier is defined by the service
-	//    provider.
+	//    provider. More information is available in our GitHub repository (https://github.com/aws/aws-auto-scaling-custom-resource).
 	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
@@ -3595,7 +3614,8 @@ type ScalingActivity struct {
 	//    a DynamoDB global secondary index.
 	//
 	//    * rds:cluster:ReadReplicaCount - The count of Aurora Replicas in an Aurora
-	//    DB cluster. Available for Aurora MySQL-compatible edition.
+	//    DB cluster. Available for Aurora MySQL-compatible edition and Aurora PostgreSQL-compatible
+	//    edition.
 	//
 	//    * sagemaker:variant:DesiredInstanceCount - The number of EC2 instances
 	//    for an Amazon SageMaker model endpoint variant.
@@ -3704,7 +3724,7 @@ func (s *ScalingActivity) SetStatusMessage(v string) *ScalingActivity {
 	return s
 }
 
-// Represents a scaling policy.
+// Represents a scaling policy to use with Application Auto Scaling.
 type ScalingPolicy struct {
 	_ struct{} `type:"structure"`
 
@@ -3761,7 +3781,7 @@ type ScalingPolicy struct {
 	//    * Custom resources are not supported with a resource type. This parameter
 	//    must specify the OutputValue from the CloudFormation template stack used
 	//    to access the resources. The unique identifier is defined by the service
-	//    provider.
+	//    provider. More information is available in our GitHub repository (https://github.com/aws/aws-auto-scaling-custom-resource).
 	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
@@ -3793,7 +3813,8 @@ type ScalingPolicy struct {
 	//    a DynamoDB global secondary index.
 	//
 	//    * rds:cluster:ReadReplicaCount - The count of Aurora Replicas in an Aurora
-	//    DB cluster. Available for Aurora MySQL-compatible edition.
+	//    DB cluster. Available for Aurora MySQL-compatible edition and Aurora PostgreSQL-compatible
+	//    edition.
 	//
 	//    * sagemaker:variant:DesiredInstanceCount - The number of EC2 instances
 	//    for an Amazon SageMaker model endpoint variant.
@@ -3931,7 +3952,7 @@ type ScheduledAction struct {
 	//    * Custom resources are not supported with a resource type. This parameter
 	//    must specify the OutputValue from the CloudFormation template stack used
 	//    to access the resources. The unique identifier is defined by the service
-	//    provider.
+	//    provider. More information is available in our GitHub repository (https://github.com/aws/aws-auto-scaling-custom-resource).
 	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
@@ -3963,7 +3984,8 @@ type ScheduledAction struct {
 	//    a DynamoDB global secondary index.
 	//
 	//    * rds:cluster:ReadReplicaCount - The count of Aurora Replicas in an Aurora
-	//    DB cluster. Available for Aurora MySQL-compatible edition.
+	//    DB cluster. Available for Aurora MySQL-compatible edition and Aurora PostgreSQL-compatible
+	//    edition.
 	//
 	//    * sagemaker:variant:DesiredInstanceCount - The number of EC2 instances
 	//    for an Amazon SageMaker model endpoint variant.
@@ -3981,18 +4003,18 @@ type ScheduledAction struct {
 
 	// The schedule for this action. The following formats are supported:
 	//
-	//    * At expressions - at(yyyy-mm-ddThh:mm:ss)
+	//    * At expressions - "at(yyyy-mm-ddThh:mm:ss)"
 	//
-	//    * Rate expressions - rate(valueunit)
+	//    * Rate expressions - "rate(valueunit)"
 	//
-	//    * Cron expressions - cron(fields)
+	//    * Cron expressions - "cron(fields)"
 	//
 	// At expressions are useful for one-time schedules. Specify the time, in UTC.
 	//
 	// For rate expressions, value is a positive integer and unit is minute | minutes
 	// | hour | hours | day | days.
 	//
-	// For more information about cron expressions, see Cron Expressions (http://docs.aws.amazon.com/AmazonCloudWatch/latest/events/ScheduledEvents.html#CronExpressions)
+	// For more information about cron expressions, see Cron Expressions (https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/ScheduledEvents.html#CronExpressions)
 	// in the Amazon CloudWatch Events User Guide.
 	//
 	// Schedule is a required field
@@ -4187,7 +4209,8 @@ func (s *StepAdjustment) SetScalingAdjustment(v int64) *StepAdjustment {
 	return s
 }
 
-// Represents a step scaling policy configuration.
+// Represents a step scaling policy configuration to use with Application Auto
+// Scaling.
 type StepScalingPolicyConfiguration struct {
 	_ struct{} `type:"structure"`
 
@@ -4292,7 +4315,8 @@ func (s *StepScalingPolicyConfiguration) SetStepAdjustments(v []*StepAdjustment)
 	return s
 }
 
-// Represents a target tracking scaling policy configuration.
+// Represents a target tracking scaling policy configuration to use with Application
+// Auto Scaling.
 type TargetTrackingScalingPolicyConfiguration struct {
 	_ struct{} `type:"structure"`
 
