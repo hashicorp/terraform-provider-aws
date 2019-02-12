@@ -2785,7 +2785,7 @@ func flattenCognitoUserPoolUserPoolAddOns(s *cognitoidentityprovider.UserPoolAdd
 	config := make(map[string]interface{})
 
 	if s == nil {
-		return nil
+		return []map[string]interface{}{}
 	}
 
 	if s.AdvancedSecurityMode != nil {

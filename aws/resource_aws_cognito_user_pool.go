@@ -603,7 +603,7 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 		configs := v.([]interface{})
 		config, ok := configs[0].(map[string]interface{})
 
-		if ok && config != nil {
+		if ok {
 			userPoolAddons := &cognitoidentityprovider.UserPoolAddOnsType{}
 
 			if v, ok := config["advanced_security_mode"]; ok && v.(string) != "" {
@@ -743,10 +743,8 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 		d.Set("username_attributes", flattenStringList(resp.UserPool.UsernameAttributes))
 	}
 
-	if resp.UserPool.UserPoolAddOns != nil && resp.UserPool.UserPoolAddOns.AdvancedSecurityMode != nil {
-		if err := d.Set("user_pool_add_ons", flattenCognitoUserPoolUserPoolAddOns(resp.UserPool.UserPoolAddOns)); err != nil {
-			return fmt.Errorf("Failed setting user_pool_add_ons: %s", err)
-		}
+	if err := d.Set("user_pool_add_ons", flattenCognitoUserPoolUserPoolAddOns(resp.UserPool.UserPoolAddOns)); err != nil {
+		return fmt.Errorf("Failed setting user_pool_add_ons: %s", err)
 	}
 
 	if err := d.Set("verification_message_template", flattenCognitoUserPoolVerificationMessageTemplate(resp.UserPool.VerificationMessageTemplate)); err != nil {
