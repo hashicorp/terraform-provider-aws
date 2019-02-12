@@ -55,6 +55,28 @@ resource "aws_waf_web_acl" "waf_acl" {
 }
 ```
 
+### Logging
+
+~> *NOTE:* The Kinesis Firehose Delivery Stream name must begin with `aws-waf-logs-`. See the [AWS WAF Developer Guide](https://docs.aws.amazon.com/waf/latest/developerguide/logging.html) for more information about enabling WAF logging.
+
+```hcl
+resource "aws_waf_web_acl" "example" {
+  # ... other configuration ...
+  logging_configuration {
+    log_destination = "${aws_kinesis_firehose_delivery_stream.example.arn}"
+    redacted_fields {
+      field_to_match {
+        type = "URI"
+      }
+      field_to_match {
+        data = "referer"
+        type = "HEADER"
+      }
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
