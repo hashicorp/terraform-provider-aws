@@ -126,6 +126,10 @@ func resourceAwsIamUserLoginProfileCreate(d *schema.ResourceData, meta interface
 		UserName: aws.String(username),
 	})
 	if err != nil {
+		// Catch AccessDenid errors (e.g. because we have no iam:GetLoginProfile permissions)
+		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "AccessDenied" {
+			return err
+		}
 		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() != "NoSuchEntity" {
 			// If there is already a login profile, bring it under management (to prevent
 			// resource creation diffs) - we will never modify it, but obviously cannot
