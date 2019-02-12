@@ -7,6 +7,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * resource/aws_cloudwatch_metric_alarm: Add `metric_query` argument (support math expressions) [GH-6833]
+* resource/aws_directory_service_directory: Set `security_group_id` attribute when type is `ADConnector` [GH-7487]
 * resource/aws_dynamodb_table: Use `update` customizable timeout for individual Global Secondary Index updates and increase default `update` timeout from 10 minutes to 60 minutes [GH-7453]
 * resource/aws_dms_endpoint: Add `docdb` for `engine_name` validation [GH-7491]
 * resource/aws_wafregional_web_acl: Add `arn` attribute and `logging_configuration` argument [GH-7480]
