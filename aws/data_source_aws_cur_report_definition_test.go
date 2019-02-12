@@ -84,7 +84,7 @@ resource "aws_s3_bucket_policy" "test" {
                 "s3:GetBucketAcl",
                 "s3:GetBucketPolicy"
             ],
-            "Resource": "arn:aws:s3:::${aws_s3_bucket.test.id}"
+            "Resource": "${aws_s3_bucket.test.arn}"
         },
         {
             "Sid": "AllowCURPutObject",
