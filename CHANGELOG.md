@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New Resource:** `aws_docdb_cluster_instance` [GH-7143]
+* **New Resource:** `aws_ram_resource_association` [GH-7449]
 
 ENHANCEMENTS:
 
