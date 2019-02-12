@@ -98,7 +98,7 @@ The following arguments are supported:
 * `local_secondary_index` - (Optional, Forces new resource) Describe an LSI on the table;
   these can only be allocated *at creation* so you cannot change this
 definition after you have created the resource.
-* `global_secondary_index` - (Optional) Describe a GSO for the table;
+* `global_secondary_index` - (Optional) Describe a GSI for the table;
   subject to the normal limits on the number of GSIs, projected
 attributes, etc.
 * `stream_enabled` - (Optional) Indicates whether Streams are to be enabled (true) or disabled (false).
@@ -112,7 +112,7 @@ attributes, etc.
 The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/resources.html#timeouts) for certain actions:
 
 * `create` - (Defaults to 10 mins) Used when creating the table
-* `update` - (Defaults to 10 mins) Used when updating the table
+* `update` - (Defaults to 60 mins) Used when updating the table configuration and reset for each individual Global Secondary Index update
 * `delete` - (Defaults to 10 mins) Used when deleting the table
 
 ### Nested fields

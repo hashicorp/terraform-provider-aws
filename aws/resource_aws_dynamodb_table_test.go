@@ -529,43 +529,7 @@ func TestAccAWSDynamoDbTable_enablePitr(t *testing.T) {
 	})
 }
 
-func TestAccAWSDynamoDbTable_BillingMode(t *testing.T) {
-	var conf dynamodb.DescribeTableOutput
-
-	rName := acctest.RandomWithPrefix("TerraformTestTable-")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSDynamoDbConfigInitialState(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInitialAWSDynamoDbTableExists("aws_dynamodb_table.basic-dynamodb-table", &conf),
-					testAccCheckInitialAWSDynamoDbTableConf("aws_dynamodb_table.basic-dynamodb-table"),
-				),
-			},
-			{
-				Config: testAccAWSDynamoDbBilling_PayPerRequest(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDynamoDbTableHasBilling_PayPerRequest("aws_dynamodb_table.basic-dynamodb-table"),
-				),
-			},
-			{
-				Config: testAccAWSDynamoDbBilling_PayPerRequestWithGSI(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDynamoDbTableHasBilling_PayPerRequest("aws_dynamodb_table.basic-dynamodb-table"),
-					resource.TestCheckResourceAttr("aws_dynamodb_table.basic-dynamodb-table", "global_secondary_index.#", "1"),
-					resource.TestCheckResourceAttr(
-						"aws_dynamodb_table.basic-dynamodb-table", "global_secondary_index.427641302.name", "TestTableGSI"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSDynamoDbTable_BillingModeUpdate(t *testing.T) {
+func TestAccAWSDynamoDbTable_BillingMode_PayPerRequestToProvisioned(t *testing.T) {
 	rName := acctest.RandomWithPrefix("TerraformTestTable-")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -583,6 +547,78 @@ func TestAccAWSDynamoDbTable_BillingModeUpdate(t *testing.T) {
 				Config: testAccAWSDynamoDbBilling_Provisioned(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDynamoDbTableHasBilling_Provisioned("aws_dynamodb_table.basic-dynamodb-table"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDynamoDbTable_BillingMode_ProvisionedToPayPerRequest(t *testing.T) {
+	rName := acctest.RandomWithPrefix("TerraformTestTable-")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDynamoDbBilling_Provisioned(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDynamoDbTableHasBilling_Provisioned("aws_dynamodb_table.basic-dynamodb-table"),
+				),
+			},
+			{
+				Config: testAccAWSDynamoDbBilling_PayPerRequest(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDynamoDbTableHasBilling_PayPerRequest("aws_dynamodb_table.basic-dynamodb-table"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDynamoDbTable_BillingMode_GSI_PayPerRequestToProvisioned(t *testing.T) {
+	rName := acctest.RandomWithPrefix("TerraformTestTable-")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDynamoDbBilling_PayPerRequestWithGSI(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDynamoDbTableHasBilling_PayPerRequest("aws_dynamodb_table.basic-dynamodb-table"),
+				),
+			},
+			{
+				Config: testAccAWSDynamoDbBilling_ProvisionedWithGSI(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDynamoDbTableHasBilling_Provisioned("aws_dynamodb_table.basic-dynamodb-table"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDynamoDbTable_BillingMode_GSI_ProvisionedToPayPerRequest(t *testing.T) {
+	rName := acctest.RandomWithPrefix("TerraformTestTable-")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDynamoDbBilling_ProvisionedWithGSI(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDynamoDbTableHasBilling_Provisioned("aws_dynamodb_table.basic-dynamodb-table"),
+				),
+			},
+			{
+				Config: testAccAWSDynamoDbBilling_PayPerRequestWithGSI(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDynamoDbTableHasBilling_PayPerRequest("aws_dynamodb_table.basic-dynamodb-table"),
 				),
 			},
 		},
@@ -1237,9 +1273,8 @@ func testAccCheckDynamoDbTableHasBilling_Provisioned(n string) resource.TestChec
 		}
 		table := resp.Table
 
-		if table.BillingModeSummary == nil {
-			return fmt.Errorf("Billing Mode summary was empty, expected summary to exist and contain billing mode %s", dynamodb.BillingModeProvisioned)
-		} else if aws.StringValue(table.BillingModeSummary.BillingMode) != dynamodb.BillingModeProvisioned {
+		// DynamoDB can omit BillingModeSummary for tables created as PROVISIONED
+		if table.BillingModeSummary != nil && aws.StringValue(table.BillingModeSummary.BillingMode) != dynamodb.BillingModeProvisioned {
 			return fmt.Errorf("Billing Mode was %s, not %s!", aws.StringValue(table.BillingModeSummary.BillingMode), dynamodb.BillingModeProvisioned)
 
 		}
@@ -1442,9 +1477,39 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
   }
 
   global_secondary_index {
-	name 			= "TestTableGSI"
-	hash_key        = "TestTableGSIKey"
+    name            = "TestTableGSI"
+    hash_key        = "TestTableGSIKey"
     projection_type = "KEYS_ONLY"
+  }
+}
+`, rName)
+}
+
+func testAccAWSDynamoDbBilling_ProvisionedWithGSI(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "basic-dynamodb-table" {
+  billing_mode   = "PROVISIONED"
+  hash_key       = "TestTableHashKey"
+  name           = %q
+  read_capacity  = 1
+  write_capacity = 1
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  attribute {
+    name = "TestTableGSIKey"
+    type = "S"
+  }
+
+  global_secondary_index {
+    hash_key        = "TestTableGSIKey"
+    name            = "TestTableGSI"
+    projection_type = "KEYS_ONLY"
+    read_capacity   = 1
+    write_capacity  = 1
   }
 }
 `, rName)

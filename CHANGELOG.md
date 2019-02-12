@@ -1,4 +1,26 @@
 ## 1.59.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_docdb_cluster_instance` [GH-7143]
+
+ENHANCEMENTS:
+
+* data-source/aws_dynamodb_table: Add `billing_mode` and `point_in_time_recovery` attributes [GH-7497]
+* resource/aws_appmesh_virtual_node: Add support for listener health checks [GH-7446]
+* resource/aws_cloudwatch_metric_alarm: Add `metric_query` argument (support math expressions) [GH-6833]
+* resource/aws_directory_service_directory: Set `security_group_id` attribute when type is `ADConnector` [GH-7487]
+* resource/aws_dynamodb_table: Use `update` customizable timeout for individual Global Secondary Index updates and increase default `update` timeout from 10 minutes to 60 minutes [GH-7453]
+* resource/aws_dms_endpoint: Add `docdb` for `engine_name` validation [GH-7491]
+* resource/aws_ses_identity_notification_topic: Support resource import [GH-7343]
+* resource/aws_wafregional_web_acl: Add `arn` attribute and `logging_configuration` argument [GH-7480]
+
+BUG FIXES:
+
+* resource/aws_dynamodb_table: Prevent error when updating `billing_mode` from `PAY_PER_REQUEST` to `PROVISIONED` for Tables with Global Secondary Indexes [GH-7453]
+* resource/aws_ec2_transit_gateway_vpc_attachment: Allow `pendingAcceptance` as available state during resource creation (support shared Transit Gateways with manual acceptance) [GH-7489]
+* resource/aws_ssm_resource_data_sync: Properly trigger resource recreation for argument updates under the `s3_destination` configuration block [GH-7490]
+
 ## 1.58.0 (February 08, 2019)
 
 FEATURES:

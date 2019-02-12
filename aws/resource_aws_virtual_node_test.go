@@ -81,11 +81,27 @@ func testAccAwsAppmeshVirtualNode_allAttributes(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, "spec.0.listener.#", "1"),
 					resource.TestCheckResourceAttr(
-						resourceName, "spec.0.listener.2279702354.port_mapping.#", "1"),
+						resourceName, "spec.0.listener.433446196.health_check.#", "1"),
 					resource.TestCheckResourceAttr(
-						resourceName, "spec.0.listener.2279702354.port_mapping.0.port", "8080"),
+						resourceName, "spec.0.listener.433446196.health_check.0.healthy_threshold", "3"),
 					resource.TestCheckResourceAttr(
-						resourceName, "spec.0.listener.2279702354.port_mapping.0.protocol", "http"),
+						resourceName, "spec.0.listener.433446196.health_check.0.interval_millis", "5000"),
+					resource.TestCheckResourceAttr(
+						resourceName, "spec.0.listener.433446196.health_check.0.path", "/ping"),
+					resource.TestCheckResourceAttr(
+						resourceName, "spec.0.listener.433446196.health_check.0.port", "8080"),
+					resource.TestCheckResourceAttr(
+						resourceName, "spec.0.listener.433446196.health_check.0.protocol", "http"),
+					resource.TestCheckResourceAttr(
+						resourceName, "spec.0.listener.433446196.health_check.0.timeout_millis", "2000"),
+					resource.TestCheckResourceAttr(
+						resourceName, "spec.0.listener.433446196.health_check.0.unhealthy_threshold", "5"),
+					resource.TestCheckResourceAttr(
+						resourceName, "spec.0.listener.433446196.port_mapping.#", "1"),
+					resource.TestCheckResourceAttr(
+						resourceName, "spec.0.listener.433446196.port_mapping.0.port", "8080"),
+					resource.TestCheckResourceAttr(
+						resourceName, "spec.0.listener.433446196.port_mapping.0.protocol", "http"),
 					resource.TestCheckResourceAttr(
 						resourceName, "spec.0.service_discovery.#", "1"),
 					resource.TestCheckResourceAttr(
@@ -120,11 +136,25 @@ func testAccAwsAppmeshVirtualNode_allAttributes(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, "spec.0.listener.#", "1"),
 					resource.TestCheckResourceAttr(
-						resourceName, "spec.0.listener.563508454.port_mapping.#", "1"),
+						resourceName, "spec.0.listener.3446683576.health_check.#", "1"),
 					resource.TestCheckResourceAttr(
-						resourceName, "spec.0.listener.563508454.port_mapping.0.port", "8081"),
+						resourceName, "spec.0.listener.3446683576.health_check.0.healthy_threshold", "4"),
 					resource.TestCheckResourceAttr(
-						resourceName, "spec.0.listener.563508454.port_mapping.0.protocol", "http"),
+						resourceName, "spec.0.listener.3446683576.health_check.0.interval_millis", "7000"),
+					resource.TestCheckResourceAttr(
+						resourceName, "spec.0.listener.3446683576.health_check.0.port", "8081"),
+					resource.TestCheckResourceAttr(
+						resourceName, "spec.0.listener.3446683576.health_check.0.protocol", "tcp"),
+					resource.TestCheckResourceAttr(
+						resourceName, "spec.0.listener.3446683576.health_check.0.timeout_millis", "3000"),
+					resource.TestCheckResourceAttr(
+						resourceName, "spec.0.listener.3446683576.health_check.0.unhealthy_threshold", "9"),
+					resource.TestCheckResourceAttr(
+						resourceName, "spec.0.listener.3446683576.port_mapping.#", "1"),
+					resource.TestCheckResourceAttr(
+						resourceName, "spec.0.listener.3446683576.port_mapping.0.port", "8081"),
+					resource.TestCheckResourceAttr(
+						resourceName, "spec.0.listener.3446683576.port_mapping.0.protocol", "http"),
 					resource.TestCheckResourceAttr(
 						resourceName, "spec.0.service_discovery.#", "1"),
 					resource.TestCheckResourceAttr(
@@ -226,6 +256,15 @@ resource "aws_appmesh_virtual_node" "foo" {
         port     = 8080
         protocol = "http"
       }
+
+      health_check {
+        protocol            = "http"
+        path                = "/ping"
+        healthy_threshold   = 3
+        unhealthy_threshold = 5
+        timeout_millis      = 2000
+        interval_millis     = 5000
+      }
     }
 
     service_discovery {
@@ -255,6 +294,15 @@ resource "aws_appmesh_virtual_node" "foo" {
       port_mapping {
         port     = 8081
         protocol = "http"
+      }
+
+      health_check {
+        protocol            = "tcp"
+        port                = 8081
+        healthy_threshold   = 4
+        unhealthy_threshold = 9
+        timeout_millis      = 3000
+        interval_millis     = 7000
       }
     }
 
