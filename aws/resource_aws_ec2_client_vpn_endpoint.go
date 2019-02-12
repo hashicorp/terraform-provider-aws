@@ -1,12 +1,14 @@
 package aws
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
@@ -96,6 +98,32 @@ func resourceAwsEc2ClientVpnEndpoint() *schema.Resource {
 						"enabled": {
 							Type:     schema.TypeBool,
 							Required: true,
+						},
+					},
+				},
+			},
+			"authorization_rule": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Set:      resourceAwsAuthRuleHash,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"description": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"target_network_cidr": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"access_group_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"authorize_all_groups": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
 						},
 					},
 				},
@@ -191,6 +219,17 @@ func resourceAwsEc2ClientVpnEndpointCreate(d *schema.ResourceData, meta interfac
 
 	d.SetId(*resp.ClientVpnEndpointId)
 
+	if _, ok := d.GetOk("authorization_rule"); ok {
+		rules := addAuthorizationRules(d.Get("authorization_rule").(*schema.Set).List())
+
+		for _, r := range rules {
+			_, err := conn.AuthorizeClientVpnIngress(r)
+			if err != nil {
+				return fmt.Errorf("Failure adding new Client VPN authorization rules: %s", err)
+			}
+		}
+	}
+
 	return resourceAwsEc2ClientVpnEndpointRead(d, meta)
 }
 
@@ -234,6 +273,15 @@ func resourceAwsEc2ClientVpnEndpointRead(d *schema.ResourceData, meta interface{
 	if err != nil {
 		return err
 	}
+
+	authRuleResult, err := conn.DescribeClientVpnAuthorizationRules(&ec2.DescribeClientVpnAuthorizationRulesInput{
+		ClientVpnEndpointId: aws.String(d.Id()),
+	})
+	if err != nil {
+		return err
+	}
+
+	d.Set("authorization_rule", flattenAuthRules(authRuleResult.AuthorizationRules))
 
 	return nil
 }
@@ -309,6 +357,35 @@ func resourceAwsEc2ClientVpnEndpointUpdate(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("Error modifying Client VPN endpoint: %s", err)
 	}
 
+	if d.HasChange("authorization_rule") {
+		o, n := d.GetChange("authorization_rule")
+		os := o.(*schema.Set)
+		ns := n.(*schema.Set)
+
+		remove := removeAuthorizationRules(os.Difference(ns).List())
+		add := addAuthorizationRules(ns.Difference(os).List())
+
+		if len(remove) > 0 {
+			for _, r := range remove {
+				log.Printf("[DEBUG] Client VPN authorization rule opts: %s", r)
+				_, err := conn.RevokeClientVpnIngress(r)
+				if err != nil {
+					return fmt.Errorf("Failure removing outdated Client VPN authorization rules: %s", err)
+				}
+			}
+		}
+
+		if len(add) > 0 {
+			for _, r := range add {
+				log.Printf("[DEBUG] Client VPN authorization rule opts: %s", r)
+				_, err := conn.AuthorizeClientVpnIngress(r)
+				if err != nil {
+					return fmt.Errorf("Failure adding new Client VPN authorization rules: %s", err)
+				}
+			}
+		}
+	}
+
 	return resourceAwsEc2ClientVpnEndpointRead(d, meta)
 }
 
@@ -334,4 +411,93 @@ func flattenAuthOptsConfig(aopts []*ec2.ClientVpnAuthentication) []map[string]in
 	}
 	m["type"] = *aopts[0].Type
 	return []map[string]interface{}{m}
+}
+
+func flattenAuthRules(list []*ec2.AuthorizationRule) []map[string]interface{} {
+	result := make([]map[string]interface{}, 0, len(list))
+	for _, i := range list {
+		l := map[string]interface{}{
+			"target_network_cidr": *i.DestinationCidr,
+		}
+
+		if i.Description != nil {
+			l["description"] = aws.String(*i.Description)
+		}
+		if i.GroupId != nil {
+			l["access_group_id"] = aws.String(*i.GroupId)
+		}
+		if i.AccessAll != nil {
+			l["authorize_all_groups"] = aws.Bool(*i.AccessAll)
+		}
+
+		result = append(result, l)
+	}
+	return result
+}
+
+func addAuthorizationRules(configured []interface{}) []*ec2.AuthorizeClientVpnIngressInput {
+	rules := make([]*ec2.AuthorizeClientVpnIngressInput, 0, len(configured))
+
+	for _, i := range configured {
+		item := i.(map[string]interface{})
+		rule := &ec2.AuthorizeClientVpnIngressInput{}
+
+		rule.ClientVpnEndpointId = aws.String(item["id"].(string))
+		rule.TargetNetworkCidr = aws.String(item["target_network_cidr"].(string))
+
+		if item["description"].(string) != "" {
+			rule.Description = aws.String(item["description"].(string))
+		}
+
+		if item["access_group_id"].(string) != "" {
+			rule.AccessGroupId = aws.String(item["access_group_id"].(string))
+		}
+
+		if item["authorize_all_groups"] != nil {
+			rule.AuthorizeAllGroups = aws.Bool(item["authorize_all_groups"].(bool))
+		}
+
+		rules = append(rules, rule)
+	}
+
+	return rules
+}
+
+func removeAuthorizationRules(configured []interface{}) []*ec2.RevokeClientVpnIngressInput {
+	rules := make([]*ec2.RevokeClientVpnIngressInput, 0, len(configured))
+
+	for _, i := range configured {
+		item := i.(map[string]interface{})
+		rule := &ec2.RevokeClientVpnIngressInput{}
+
+		rule.ClientVpnEndpointId = aws.String(item["id"].(string))
+		rule.TargetNetworkCidr = aws.String(item["target_network_cidr"].(string))
+
+		rules = append(rules, rule)
+	}
+
+	return rules
+}
+
+func resourceAwsAuthRuleHash(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.(map[string]interface{})
+
+	if v, ok := m["description"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+
+	if v, ok := m["target_network_cidr"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+
+	if v, ok := m["access_group_id"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+
+	if v, ok := m["authorize_all_groups"]; ok {
+		buf.WriteString(fmt.Sprintf("%v-", v.(bool)))
+	}
+
+	return hashcode.String(buf.String())
 }
