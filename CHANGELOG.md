@@ -24,6 +24,7 @@ BUG FIXES:
 
 * resource/aws_dynamodb_table: Prevent error when updating `billing_mode` from `PAY_PER_REQUEST` to `PROVISIONED` for Tables with Global Secondary Indexes [GH-7453]
 * resource/aws_ec2_transit_gateway_vpc_attachment: Allow `pendingAcceptance` as available state during resource creation (support shared Transit Gateways with manual acceptance) [GH-7489]
+* resource/aws_iot_topic_rule: Allow optional `range_key_field` and `range_key_value` arguments [GH-7471]
 * resource/aws_kinesis_analytics_application: Correctly manage multiple outputs [GH-7535]
 * resource/aws_ssm_resource_data_sync: Properly trigger resource recreation for argument updates under the `s3_destination` configuration block [GH-7490]
 
