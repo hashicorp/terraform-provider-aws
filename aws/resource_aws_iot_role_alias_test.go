@@ -5,7 +5,6 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -66,31 +65,13 @@ func TestAccAWSIotRoleAlias_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      "aws_iot_role_alias.ra",
+				ResourceName:      "aws_iot_role_alias.ra2",
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 		},
 	})
 
-}
-
-func listIotRoleAliasPages(conn *iot.IoT, input *iot.ListRoleAliasesInput,
-	fn func(out *iot.ListRoleAliasesOutput, lastPage bool) bool) error {
-	for {
-		page, err := conn.ListRoleAliases(input)
-		if err != nil {
-			return err
-		}
-		lastPage := page.NextMarker == nil
-
-		shouldContinue := fn(page, lastPage)
-		if !shouldContinue || lastPage {
-			break
-		}
-		input.Marker = page.NextMarker
-	}
-	return nil
 }
 
 func testAccCheckAWSIotRoleAliasDestroy(s *terraform.State) error {

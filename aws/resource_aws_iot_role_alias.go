@@ -94,6 +94,7 @@ func resourceAwsIotRoleAliasRead(d *schema.ResourceData, meta interface{}) error
 		return nil
 	}
 
+	d.Set("alias", roleAliasDescription.RoleAlias)
 	d.Set("role_arn", roleAliasDescription.RoleArn)
 	d.Set("credential_duration", roleAliasDescription.CredentialDurationSeconds)
 
