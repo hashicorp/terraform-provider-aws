@@ -31,7 +31,7 @@ func resourceAwsEc2ClientVpnNetworkAssociation() *schema.Resource {
 			"security_groups": {
 				Type:     schema.TypeSet,
 				MaxItems: 5,
-				Required: true,
+				Optional: true,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
