@@ -103,7 +103,7 @@ definition after you have created the resource.
 attributes, etc.
 * `stream_enabled` - (Optional) Indicates whether Streams are to be enabled (true) or disabled (false).
 * `stream_view_type` - (Optional) When an item in the table is modified, StreamViewType determines what information is written to the table's stream. Valid values are `KEYS_ONLY`, `NEW_IMAGE`, `OLD_IMAGE`, `NEW_AND_OLD_IMAGES`.
-* `server_side_encryption` - (Optional) Encrypt at rest options.
+* `server_side_encryption` - (Optional) Encryption at rest options. AWS DynamoDB tables are automatically encrypted at rest with an AWS owned Customer Master Key if this argument isn't specified.
 * `tags` - (Optional) A map of tags to populate on the created table.
 * `point_in_time_recovery` - (Optional) Point-in-time recovery options.
 
@@ -149,7 +149,10 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/d
 
 #### `server_side_encryption`
 
-* `enabled` - (Required) Whether to enable encryption at rest. If the `server_side_encryption` block is not provided then this defaults to `false`.
+* `enabled` - (Required) Whether or not to enable encryption at rest using an AWS managed Customer Master Key.
+If `enabled` is `false` then server-side encryption is set to AWS owned CMK (shown as `DEFAULT` in the AWS console).
+If `enabled` is `true` then server-side encryption is set to AWS managed CMK (shown as `KMS` in the AWS console).
+The [AWS KMS documentation](https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html) explains the difference between AWS owned and AWS managed CMKs.
 
 #### `point_in_time_recovery`
 
