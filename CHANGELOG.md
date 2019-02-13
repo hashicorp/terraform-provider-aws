@@ -2,6 +2,8 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_cur_report_definition` [GH-7432]
+* **New Resource:** `aws_cur_report_definition` [GH-7432]
 * **New Resource:** `aws_docdb_cluster_instance` [GH-7143]
 * **New Resource:** `aws_ram_resource_association` [GH-7449]
 
