@@ -6,6 +6,7 @@ import (
 	"log"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -220,6 +221,95 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 					},
 				},
 				Set: resourceAwsCodeBuildProjectEnvironmentHash,
+			},
+			"logs_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"cloudwatch_logs": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"status": {
+										Type:     schema.TypeString,
+										Required: true,
+										ValidateFunc: validation.StringInSlice([]string{
+											codebuild.LogsConfigStatusTypeDisabled,
+											codebuild.LogsConfigStatusTypeEnabled,
+										}, false),
+										DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+											if old == codebuild.LogsConfigStatusTypeEnabled && new == "" {
+												return true
+											}
+											return false
+										},
+									},
+									"group_name": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"stream_name": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								if old == "1" && new == "0" {
+									return true
+								}
+								return false
+							},
+						},
+						"s3_logs": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"status": {
+										Type:     schema.TypeString,
+										Required: true,
+										ValidateFunc: validation.StringInSlice([]string{
+											codebuild.LogsConfigStatusTypeDisabled,
+											codebuild.LogsConfigStatusTypeEnabled,
+										}, false),
+										DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+											if old == codebuild.LogsConfigStatusTypeDisabled && new == "" {
+												return true
+											}
+											return false
+										},
+									},
+									"location": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validateAwsCodeBuildProjectS3LogsLocation,
+										DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+											return strings.TrimPrefix(new, "arn:aws:s3:::") == old
+										},
+									},
+								},
+							},
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								if old == "1" && new == "0" {
+									return true
+								}
+								return false
+							},
+						},
+					},
+				},
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == "1" && new == "0" {
+						return true
+					}
+					return false
+				},
 			},
 			"name": {
 				Type:         schema.TypeString,
@@ -482,6 +572,7 @@ func resourceAwsCodeBuildProjectCreate(d *schema.ResourceData, meta interface{})
 	projectArtifacts := expandProjectArtifacts(d)
 	projectSecondaryArtifacts := expandProjectSecondaryArtifacts(d)
 	projectSecondarySources := expandProjectSecondarySources(d)
+	projectLogsConfig := expandProjectLogsConfig(d)
 
 	if aws.StringValue(projectSource.Type) == codebuild.SourceTypeNoSource {
 		if aws.StringValue(projectSource.Buildspec) == "" {
@@ -500,6 +591,7 @@ func resourceAwsCodeBuildProjectCreate(d *schema.ResourceData, meta interface{})
 		Artifacts:          &projectArtifacts,
 		SecondaryArtifacts: projectSecondaryArtifacts,
 		SecondarySources:   projectSecondarySources,
+		LogsConfig:         projectLogsConfig,
 	}
 
 	if v, ok := d.GetOk("cache"); ok {
@@ -727,6 +819,82 @@ func expandProjectEnvironment(d *schema.ResourceData) *codebuild.ProjectEnvironm
 	return projectEnv
 }
 
+func expandProjectLogsConfig(d *schema.ResourceData) *codebuild.LogsConfig {
+	logsConfig := &codebuild.LogsConfig{}
+
+	if v, ok := d.GetOk("logs_config"); ok {
+		configList := v.([]interface{})
+		data := configList[0].(map[string]interface{})
+
+		if v, ok := data["cloudwatch_logs"]; ok {
+			logsConfig.CloudWatchLogs = expandCodeBuildCloudWatchLogsConfig(v.([]interface{}))
+		}
+
+		if v, ok := data["s3_logs"]; ok {
+			logsConfig.S3Logs = expandCodeBuildS3LogsConfig(v.([]interface{}))
+		}
+	}
+
+	if logsConfig.CloudWatchLogs == nil {
+		logsConfig.CloudWatchLogs = &codebuild.CloudWatchLogsConfig{
+			Status: aws.String(codebuild.LogsConfigStatusTypeEnabled),
+		}
+	}
+
+	if logsConfig.S3Logs == nil {
+		logsConfig.S3Logs = &codebuild.S3LogsConfig{
+			Status: aws.String(codebuild.LogsConfigStatusTypeDisabled),
+		}
+	}
+
+	return logsConfig
+}
+
+func expandCodeBuildCloudWatchLogsConfig(configList []interface{}) *codebuild.CloudWatchLogsConfig {
+	data := configList[0].(map[string]interface{})
+
+	status := data["status"].(string)
+
+	cloudWatchLogsConfig := &codebuild.CloudWatchLogsConfig{
+		Status: aws.String(status),
+	}
+
+	if v, ok := data["group_name"]; ok {
+		groupName := v.(string)
+		if len(groupName) > 0 {
+			cloudWatchLogsConfig.GroupName = aws.String(groupName)
+		}
+	}
+
+	if v, ok := data["stream_name"]; ok {
+		streamName := v.(string)
+		if len(streamName) > 0 {
+			cloudWatchLogsConfig.StreamName = aws.String(streamName)
+		}
+	}
+
+	return cloudWatchLogsConfig
+}
+
+func expandCodeBuildS3LogsConfig(configList []interface{}) *codebuild.S3LogsConfig {
+	data := configList[0].(map[string]interface{})
+
+	status := data["status"].(string)
+
+	s3LogsConfig := &codebuild.S3LogsConfig{
+		Status: aws.String(status),
+	}
+
+	if v, ok := data["location"]; ok {
+		location := strings.TrimPrefix(v.(string), "arn:aws:s3:::")
+		if len(location) > 0 {
+			s3LogsConfig.Location = aws.String(location)
+		}
+	}
+
+	return s3LogsConfig
+}
+
 func expandCodeBuildVpcConfig(rawVpcConfig []interface{}) *codebuild.VpcConfig {
 	vpcConfig := codebuild.VpcConfig{}
 	if len(rawVpcConfig) == 0 || rawVpcConfig[0] == nil {
@@ -837,6 +1005,10 @@ func resourceAwsCodeBuildProjectRead(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
+	if err := d.Set("logs_config", flattenAwsCodeBuildLogsConfig(project.LogsConfig)); err != nil {
+		return err
+	}
+
 	if err := d.Set("secondary_artifacts", flattenAwsCodeBuildProjectSecondaryArtifacts(project.SecondaryArtifacts)); err != nil {
 		return err
 	}
@@ -910,6 +1082,11 @@ func resourceAwsCodeBuildProjectUpdate(d *schema.ResourceData, meta interface{})
 		params.VpcConfig = expandCodeBuildVpcConfig(d.Get("vpc_config").([]interface{}))
 	}
 
+	if d.HasChange("logs_config") {
+		logsConfig := expandProjectLogsConfig(d)
+		params.LogsConfig = logsConfig
+	}
+
 	if d.HasChange("cache") {
 		if v, ok := d.GetOk("cache"); ok {
 			params.Cache = expandProjectCache(v.([]interface{}))
@@ -979,6 +1156,51 @@ func resourceAwsCodeBuildProjectDelete(d *schema.ResourceData, meta interface{})
 		Name: aws.String(d.Id()),
 	})
 	return err
+}
+
+func flattenAwsCodeBuildLogsConfig(logsConfig *codebuild.LogsConfig) []interface{} {
+	if logsConfig == nil {
+		return []interface{}{}
+	}
+
+	values := map[string]interface{}{}
+
+	if v := logsConfig.CloudWatchLogs; v != nil {
+		values["cloudwatch_logs"] = flattenAwsCodeBuildCloudWatchLogs(v)
+	}
+
+	if v := logsConfig.S3Logs; v != nil {
+		values["s3_logs"] = flattenAwsCodeBuildS3Logs(v)
+	}
+
+	return []interface{}{values}
+}
+
+func flattenAwsCodeBuildCloudWatchLogs(cloudWatchLogsConfig *codebuild.CloudWatchLogsConfig) []interface{} {
+	if cloudWatchLogsConfig == nil {
+		return []interface{}{}
+	}
+
+	values := map[string]interface{}{
+		"status":      aws.StringValue(cloudWatchLogsConfig.Status),
+		"group_name":  aws.StringValue(cloudWatchLogsConfig.GroupName),
+		"stream_name": aws.StringValue(cloudWatchLogsConfig.StreamName),
+	}
+
+	return []interface{}{values}
+}
+
+func flattenAwsCodeBuildS3Logs(s3LogsConfig *codebuild.S3LogsConfig) []interface{} {
+	if s3LogsConfig == nil {
+		return []interface{}{}
+	}
+
+	values := map[string]interface{}{
+		"status":   aws.StringValue(s3LogsConfig.Status),
+		"location": aws.StringValue(s3LogsConfig.Location),
+	}
+
+	return []interface{}{values}
 }
 
 func flattenAwsCodeBuildProjectSecondaryArtifacts(artifactsList []*codebuild.ProjectArtifacts) *schema.Set {
@@ -1278,6 +1500,24 @@ func validateAwsCodeBuildProjectName(v interface{}, k string) (ws []string, erro
 	if len(value) > 255 {
 		errors = append(errors, fmt.Errorf(
 			"%q cannot be greater than 255 characters", value))
+	}
+
+	return
+}
+
+func validateAwsCodeBuildProjectS3LogsLocation(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+
+	if _, errs := validateArn(v, k); len(errs) == 0 {
+		errors = append(errors, errs...)
+		return
+	}
+
+	simplePattern := `^[a-z0-9][^/]*\/(.+)$`
+	if !regexp.MustCompile(simplePattern).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q does not match pattern (%q): %q",
+			k, simplePattern, value))
 	}
 
 	return

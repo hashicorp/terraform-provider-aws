@@ -381,6 +381,32 @@ func TestAccAWSCodeBuildProject_Environment_Certificate(t *testing.T) {
 	})
 }
 
+func TestAccAWSCodeBuildProject_LogsConfig(t *testing.T) {
+	var project codebuild.Project
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	bName := acctest.RandomWithPrefix("tf-acc-test-bucket")
+	resourceName := "aws_codebuild_project.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodeBuildProjectConfig_LogsConfig(rName, bName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "logs_config.0.cloudwatch_logs.0.status", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, "logs_config.0.cloudwatch_logs.0.group_name", "build-log"),
+					resource.TestCheckResourceAttr(resourceName, "logs_config.0.cloudwatch_logs.0.stream_name", "build-log"),
+					resource.TestCheckResourceAttr(resourceName, "logs_config.0.s3_logs.0.status", "ENABLED"),
+					resource.TestMatchResourceAttr(resourceName, "logs_config.0.s3_logs.0.location", regexp.MustCompile(`tf-acc-test-bucket-[0-9]+/build-log$`)),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSCodeBuildProject_Source_Auth(t *testing.T) {
 	var project codebuild.Project
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -1506,6 +1532,42 @@ resource "aws_secretsmanager_secret" "test" {
 resource "aws_secretsmanager_secret_version" "test" {
   secret_id     = "${aws_secretsmanager_secret.test.id}"
   secret_string = "${jsonencode(map("username", "user", "password", "pass"))}"
+}
+`, rName)
+}
+
+func testAccAWSCodeBuildProjectConfig_LogsConfig(rName, bName string) string {
+	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + testAccAWSCodeBuildProjectConfig_Base_Bucket(bName) + fmt.Sprintf(`
+resource "aws_codebuild_project" "test" {
+  name         = "%s"
+  service_role = "${aws_iam_role.test.arn}"
+
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
+
+  source {
+    location = "https://github.com/hashicorp/packer.git"
+    type     = "GITHUB"
+  }
+  
+  logs_config {
+    cloudwatch_logs {
+      status = "ENABLED"
+      group_name = "build-log"
+      stream_name = "build-log"
+    }
+    s3_logs {
+      status = "ENABLED"
+      location = "${aws_s3_bucket.test.arn}/build-log"
+    }
+  }
 }
 `, rName)
 }
