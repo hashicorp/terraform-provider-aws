@@ -81,7 +81,7 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
 			period      = "120"
 			stat        = "Sum"
 			unit        = "Count"
-			dimensions {
+			dimensions = {
 				LoadBalancer = "app/web"
 			}
 		}
@@ -94,7 +94,7 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
 			period      = "120"
 			stat        = "Sum"
 			unit        = "Count"
-			dimensions {
+			dimensions = {
 				LoadBalancer = "app/web"
 			}
 		}
