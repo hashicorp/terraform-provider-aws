@@ -2,22 +2,29 @@ package aws
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/costandusagereportservice"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccAwsCurReportDefinition_basic(t *testing.T) {
+	oldvar := os.Getenv("AWS_DEFAULT_REGION")
+	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
+	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
+
 	resourceName := "aws_cur_report_definition.test"
 
 	reportName := acctest.RandomWithPrefix("tf_acc_test")
 	bucketName := fmt.Sprintf("tf-test-bucket-%d", acctest.RandInt())
 	bucketRegion := "us-east-1"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCur(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsCurReportDefinitionDestroy,
 		Steps: []resource.TestStep{
@@ -76,6 +83,24 @@ func testAccCheckAwsCurReportDefinitionExists(resourceName string) resource.Test
 			return fmt.Errorf("Report Definition does not exist: %q", rs.Primary.ID)
 		}
 		return nil
+	}
+}
+
+func testAccPreCheckAWSCur(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).costandusagereportconn
+
+	input := &costandusagereportservice.DescribeReportDefinitionsInput{
+		MaxResults: aws.Int64(5),
+	}
+
+	_, err := conn.DescribeReportDefinitions(input)
+
+	if testAccPreCheckSkipError(err) || isAWSErr(err, "AccessDeniedException", "linked account is not allowed to modify report preference") {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
 
