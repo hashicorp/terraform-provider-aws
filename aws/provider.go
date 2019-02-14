@@ -599,6 +599,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_organizations_policy_attachment":              resourceAwsOrganizationsPolicyAttachment(),
 			"aws_placement_group":                              resourceAwsPlacementGroup(),
 			"aws_proxy_protocol_policy":                        resourceAwsProxyProtocolPolicy(),
+			"aws_ram_principal_association":                    resourceAwsRamPrincipalAssociation(),
 			"aws_ram_resource_association":                     resourceAwsRamResourceAssociation(),
 			"aws_ram_resource_share":                           resourceAwsRamResourceShare(),
 			"aws_rds_cluster":                                  resourceAwsRDSCluster(),
