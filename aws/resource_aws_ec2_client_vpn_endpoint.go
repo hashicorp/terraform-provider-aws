@@ -626,6 +626,55 @@ func flattenNetAssoc(list []*ec2.TargetNetwork) []map[string]interface{} {
 	return result
 }
 
+func addNetworkAssociation(eid string, configured []interface{}) ([]*ec2.AssociateClientVpnTargetNetworkInput, [][]*string) {
+	networks := make([]*ec2.AssociateClientVpnTargetNetworkInput, 0, len(configured))
+	securityGroups := make([][]*string, 0, len(configured))
+
+	for _, i := range configured {
+		item := i.(map[string]interface{})
+		network := &ec2.AssociateClientVpnTargetNetworkInput{}
+
+		network.ClientVpnEndpointId = aws.String(eid)
+		network.SubnetId = aws.String(item["subnet_id"].(string))
+
+		networks = append(networks, network)
+		securityGroups = append(securityGroups, expandStringSet(item["security_groups"].(*schema.Set)))
+	}
+
+	return networks, securityGroups
+}
+
+func removeNetworkAssociation(eid string, configured []interface{}) []*ec2.DisassociateClientVpnTargetNetworkInput {
+	networks := make([]*ec2.DisassociateClientVpnTargetNetworkInput, 0, len(configured))
+
+	for _, i := range configured {
+		item := i.(map[string]interface{})
+		network := &ec2.DisassociateClientVpnTargetNetworkInput{}
+
+		network.ClientVpnEndpointId = aws.String(eid)
+		network.AssociationId = aws.String(item["association_id"].(string))
+
+		networks = append(networks, network)
+	}
+
+	return networks
+}
+
+func resourceAwsNetAssocHash(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.(map[string]interface{})
+
+	if v, ok := m["subnet_id"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+
+	if v, ok := m["security_groups"]; ok {
+		buf.WriteString(fmt.Sprintf("%v-", v.(*schema.Set).List()))
+	}
+
+	return hashcode.String(buf.String())
+}
+
 func flattenAuthRules(list []*ec2.AuthorizationRule) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, len(list))
 	for _, i := range list {
@@ -707,55 +756,6 @@ func resourceAwsAuthRuleHash(v interface{}) int {
 
 	if v, ok := m["authorize_all_groups"]; ok {
 		buf.WriteString(fmt.Sprintf("%v-", v.(bool)))
-	}
-
-	return hashcode.String(buf.String())
-}
-
-func addNetworkAssociation(eid string, configured []interface{}) ([]*ec2.AssociateClientVpnTargetNetworkInput, [][]*string) {
-	networks := make([]*ec2.AssociateClientVpnTargetNetworkInput, 0, len(configured))
-	securityGroups := make([][]*string, 0, len(configured))
-
-	for _, i := range configured {
-		item := i.(map[string]interface{})
-		network := &ec2.AssociateClientVpnTargetNetworkInput{}
-
-		network.ClientVpnEndpointId = aws.String(eid)
-		network.SubnetId = aws.String(item["subnet_id"].(string))
-
-		networks = append(networks, network)
-		securityGroups = append(securityGroups, expandStringSet(item["security_groups"].(*schema.Set)))
-	}
-
-	return networks, securityGroups
-}
-
-func removeNetworkAssociation(eid string, configured []interface{}) []*ec2.DisassociateClientVpnTargetNetworkInput {
-	networks := make([]*ec2.DisassociateClientVpnTargetNetworkInput, 0, len(configured))
-
-	for _, i := range configured {
-		item := i.(map[string]interface{})
-		network := &ec2.DisassociateClientVpnTargetNetworkInput{}
-
-		network.ClientVpnEndpointId = aws.String(eid)
-		network.AssociationId = aws.String(item["association_id"].(string))
-
-		networks = append(networks, network)
-	}
-
-	return networks
-}
-
-func resourceAwsNetAssocHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-
-	if v, ok := m["subnet_id"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	}
-
-	if v, ok := m["security_groups"]; ok {
-		buf.WriteString(fmt.Sprintf("%v-", v.(*schema.Set).List()))
 	}
 
 	return hashcode.String(buf.String())
