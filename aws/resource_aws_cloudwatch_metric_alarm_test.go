@@ -533,7 +533,7 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
 			period      = "120"
 			stat        = "Average"
 			unit        = "Count"
-			dimensions {
+			dimensions = {
 				InstanceId = "i-abc123"
 			}
 		}
@@ -569,7 +569,7 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
 			period      = "120"
 			stat        = "Average"
 			unit        = "Count"
-			dimensions {
+			dimensions = {
 				InstanceId = "i-abc123"
 			}
 		}
@@ -596,7 +596,7 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
 			period      = "120"
 			stat        = "Average"
 			unit        = "Count"
-			dimensions {
+			dimensions = {
 				InstanceId = "i-abc123"
 			}
 		}
