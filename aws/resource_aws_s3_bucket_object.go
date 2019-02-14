@@ -194,7 +194,9 @@ func resourceAwsS3BucketObjectPut(d *schema.ResourceData, meta interface{}) erro
 		}
 		body = bytes.NewReader(contentRaw)
 	} else {
-		return fmt.Errorf("Must specify \"source\", \"content\", or \"content_base64\" field")
+		// S3 allows the creation of zero-byte objects
+		content := ""
+		body = bytes.NewReader([]byte(content))
 	}
 
 	bucket := d.Get("bucket").(string)
