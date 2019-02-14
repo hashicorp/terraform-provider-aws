@@ -29,6 +29,7 @@ BUG FIXES:
 * resource/aws_iam_user_login_profile: Properly return all errors during resource creation [GH-7519]
 * resource/aws_iot_topic_rule: Allow optional `range_key_field` and `range_key_value` arguments [GH-7471]
 * resource/aws_kinesis_analytics_application: Correctly manage multiple outputs [GH-7535]
+* resource/aws_ssm_maintenance_window_task: Prevent erroneous `name` and `description` validation errors on resource creation [GH-7186]
 * resource/aws_ssm_resource_data_sync: Properly trigger resource recreation for argument updates under the `s3_destination` configuration block [GH-7490]
 
 ## 1.58.0 (February 08, 2019)
