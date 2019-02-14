@@ -41,7 +41,7 @@ resource "aws_ram_principal_association" "example" {
 
 The following arguments are supported:
 
-* `principal` - (Required) The principal to associate with the resource share. Possible values are the an AWS account ID, an AWS Organizations Organization ID, or an AWS Organizations Organization Unit ID.
+* `principal` - (Required) The principal to associate with the resource share. Possible values are an AWS account ID, an AWS Organizations Organization ID, or an AWS Organizations Organization Unit ID.
 * `resource_share_arn` - (Required) The Amazon Resource Name (ARN) of the resource share.
 
 ## Attributes Reference
