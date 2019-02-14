@@ -689,24 +689,24 @@ resource "aws_kinesis_analytics_application" "test" {
   name = "testAcc-%d"
   code = "testCode\n"
 
-  outputs = {
+  outputs {
     name = "test_name1"
-    kinesis_stream = {
+    kinesis_stream {
       resource_arn = "${aws_kinesis_stream.test1.arn}"
       role_arn = "${aws_iam_role.test.arn}"
     }
-    schema = {
+    schema {
       record_format_type = "JSON"
     }
   }
 
-  outputs = {
+  outputs {
     name = "test_name2"
-    kinesis_stream = {
+    kinesis_stream {
       resource_arn = "${aws_kinesis_stream.test2.arn}"
       role_arn = "${aws_iam_role.test.arn}"
     }
-    schema = {
+    schema {
       record_format_type = "JSON"
     }
   }
