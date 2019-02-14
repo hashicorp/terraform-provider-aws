@@ -122,19 +122,24 @@ func resourceAwsIamUserLoginProfileCreate(d *schema.ResourceData, meta interface
 	passwordResetRequired := d.Get("password_reset_required").(bool)
 	passwordLength := d.Get("password_length").(int)
 
+	// DEPRECATED: Automatic import will be removed in a future major version update
+	// https://github.com/terraform-providers/terraform-provider-aws/issues/7536
 	_, err = iamconn.GetLoginProfile(&iam.GetLoginProfileInput{
 		UserName: aws.String(username),
 	})
-	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() != "NoSuchEntity" {
-			// If there is already a login profile, bring it under management (to prevent
-			// resource creation diffs) - we will never modify it, but obviously cannot
-			// set the password.
-			d.SetId(username)
-			d.Set("key_fingerprint", "")
-			d.Set("encrypted_password", "")
-			return nil
-		}
+
+	// If there is already a login profile, bring it under management (to prevent
+	// resource creation diffs) - we will never modify it, but obviously cannot
+	// set the password.
+	if err == nil {
+		d.SetId(username)
+		d.Set("key_fingerprint", "")
+		d.Set("encrypted_password", "")
+		return nil
+	}
+
+	if !isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+		return fmt.Errorf("Error checking for existing IAM User Login Profile: %s", err)
 	}
 
 	initialPassword := generateIAMPassword(passwordLength)
