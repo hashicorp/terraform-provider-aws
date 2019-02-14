@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	Route53ResolverEndpointStatusDeleted = "DELETED"
+	route53ResolverEndpointStatusDeleted = "DELETED"
 )
 
 func resourceAwsRoute53ResolverEndpoint() *schema.Resource {
@@ -143,7 +143,7 @@ func resourceAwsRoute53ResolverEndpointRead(d *schema.ResourceData, meta interfa
 	if err != nil {
 		return fmt.Errorf("error getting Route53 Resolver endpoint (%s): %s", d.Id(), err)
 	}
-	if state == Route53ResolverEndpointStatusDeleted {
+	if state == route53ResolverEndpointStatusDeleted {
 		log.Printf("[WARN] Route53 Resolver endpoint (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -283,7 +283,7 @@ func resourceAwsRoute53ResolverEndpointDelete(d *schema.ResourceData, meta inter
 
 	err = route53ResolverEndpointWaitUntilTargetState(conn, d.Id(), d.Timeout(schema.TimeoutDelete),
 		[]string{route53resolver.ResolverEndpointStatusDeleting},
-		[]string{Route53ResolverEndpointStatusDeleted})
+		[]string{route53ResolverEndpointStatusDeleted})
 	if err != nil {
 		return err
 	}
@@ -298,7 +298,7 @@ func route53ResolverEndpointRefresh(conn *route53resolver.Route53Resolver, epId 
 		})
 		if err != nil {
 			if isAWSErr(err, route53resolver.ErrCodeResourceNotFoundException, "") {
-				return &route53resolver.ResolverEndpoint{}, Route53ResolverEndpointStatusDeleted, nil
+				return &route53resolver.ResolverEndpoint{}, route53ResolverEndpointStatusDeleted, nil
 			}
 
 			return nil, "", err

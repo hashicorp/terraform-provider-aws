@@ -50,7 +50,7 @@ func testSweepRoute53ResolverEndpoints(region string) error {
 
 			err = route53ResolverEndpointWaitUntilTargetState(conn, id, 10*time.Minute,
 				[]string{route53resolver.ResolverEndpointStatusDeleting},
-				[]string{Route53ResolverEndpointStatusDeleted})
+				[]string{route53ResolverEndpointStatusDeleted})
 			if err != nil {
 				log.Printf("[ERROR] %s", err)
 			}
