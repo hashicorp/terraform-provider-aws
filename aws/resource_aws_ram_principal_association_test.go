@@ -13,22 +13,19 @@ import (
 )
 
 func TestAccAwsRamPrincipalAssociation_basic(t *testing.T) {
-	var association ram.ResourceShareAssociation
-	resourceName := "aws_ram_principal_association.example"
-	shareName := fmt.Sprintf("tf-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
-	principal := "111111111111"
+	var resourceShareAssociation1 ram.ResourceShareAssociation
+	resourceName := "aws_ram_principal_association.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSClusterDestroy,
+		CheckDestroy: testAccCheckAwsRamPrincipalAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsRamPrincipalAssociationConfig_basic(shareName),
+				Config: testAccAwsRamPrincipalAssociationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsRamPrincipalAssociationExists(resourceName, &association),
-					resource.TestCheckResourceAttr(resourceName, "name", shareName),
-					resource.TestCheckResourceAttr(resourceName, "allow_external_principals", "true"),
+					testAccCheckAwsRamPrincipalAssociationExists(resourceName, &resourceShareAssociation1),
 				),
 			},
 			{
@@ -38,6 +35,46 @@ func TestAccAwsRamPrincipalAssociation_basic(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAccAwsRamPrincipalAssociation_disappears(t *testing.T) {
+	var resourceShareAssociation1 ram.ResourceShareAssociation
+	resourceName := "aws_ram_principal_association.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsRamResourceAssociationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsRamPrincipalAssociationConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsRamPrincipalAssociationExists(resourceName, &resourceShareAssociation1),
+					testAccCheckAwsRamPrincipalAssociationDisappears(&resourceShareAssociation1),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccCheckAwsRamPrincipalAssociationDisappears(resourceShareAssociation *ram.ResourceShareAssociation) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).ramconn
+
+		input := &ram.DisassociateResourceShareInput{
+			Principals:       []*string{resourceShareAssociation.AssociatedEntity},
+			ResourceShareArn: resourceShareAssociation.ResourceShareArn,
+		}
+
+		_, err := conn.DisassociateResourceShare(input)
+		if err != nil {
+			return err
+		}
+
+		return waitForRamResourceSharePrincipalDisassociation(conn, aws.StringValue(resourceShareAssociation.ResourceShareArn), aws.StringValue(resourceShareAssociation.AssociatedEntity))
+	}
 }
 
 func testAccCheckAwsRamPrincipalAssociationExists(resourceName string, resourceShare *ram.ResourceShareAssociation) resource.TestCheckFunc {
@@ -53,25 +90,27 @@ func testAccCheckAwsRamPrincipalAssociationExists(resourceName string, resourceS
 			return fmt.Errorf("No ID is set")
 		}
 
-		request := &ram.GetResourceShareAssociationsInput{
-			ResourceShareArns: []*string{aws.String(rs.Primary.ID)},
-			ResourceOwner:     aws.String(ram.ResourceOwnerSelf),
-		}
+		resourceShareARN, principal, err := resourceAwsRamPrincipalAssociationParseId(rs.Primary.ID)
 
-		output, err := conn.GetResourceShareAssociations(request)
 		if err != nil {
 			return err
 		}
 
-		if len(output.ResourceShareAssociations) == 0 {
-			return fmt.Errorf("No RAM resource share found")
+		resourceShareAssociation, err := getRamResourceSharePrincipalAssociation(conn, resourceShareARN, principal)
+
+		if err != nil {
+			return fmt.Errorf("error reading RAM Resource Share (%s) Principal Association (%s): %s", resourceShareARN, principal, err)
 		}
 
-		resourceShare = output.ResourceShareAssociations[0]
-
-		if aws.StringValue(resourceShare.Status) != ram.ResourceShareAssociationStatusActive {
-			return fmt.Errorf("RAM resource share (%s) delet(ing|ed)", rs.Primary.ID)
+		if resourceShareAssociation == nil {
+			return fmt.Errorf("RAM Resource Share (%s) Principal Association (%s) not found", resourceShareARN, principal)
 		}
+
+		if aws.StringValue(resourceShareAssociation.Status) != ram.ResourceShareAssociationStatusAssociated && aws.StringValue(resourceShareAssociation.Status) != ram.ResourceShareAssociationStatusAssociating {
+			return fmt.Errorf("RAM Resource Share (%s) Principal Association (%s) not associating or associated: %s", resourceShareARN, principal, aws.StringValue(resourceShareAssociation.Status))
+		}
+
+		*resourceShare = *resourceShareAssociation
 
 		return nil
 	}
@@ -81,46 +120,40 @@ func testAccCheckAwsRamPrincipalAssociationDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).ramconn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_ram_resource_share" {
+		if rs.Type != "aws_ram_principal_association" {
 			continue
 		}
 
-		request := &ram.GetResourceShareAssociationsInput{
-			ResourceShareArns: []*string{aws.String(rs.Primary.ID)},
-			ResourceOwner:     aws.String(ram.ResourceOwnerSelf),
-		}
+		resourceShareARN, principal, err := decodeRamResourceAssociationID(rs.Primary.ID)
 
-		output, err := conn.GetResourceShareAssociations(request)
 		if err != nil {
 			return err
 		}
 
-		if len(output.ResourceShareAssociations) > 0 {
-			resourceShare := output.ResourceShareAssociations[0]
-			if aws.StringValue(resourceShare.Status) != ram.ResourceShareAssociationStatusDeleted {
-				return fmt.Errorf("RAM resource share (%s) still exists", rs.Primary.ID)
-			}
-			return fmt.Errorf("No RAM resource share found")
+		resourceShareAssociation, err := getRamResourceSharePrincipalAssociation(conn, resourceShareARN, principal)
+
+		if err != nil {
+			return err
+		}
+
+		if resourceShareAssociation != nil && aws.StringValue(resourceShareAssociation.Status) != ram.ResourceShareAssociationStatusDisassociated {
+			return fmt.Errorf("RAM Resource Share (%s) Principal Association (%s) not disassociated: %s", resourceShareARN, principal, aws.StringValue(resourceShareAssociation.Status))
 		}
 	}
 
 	return nil
 }
 
-func testAccAwsRamPrincipalAssociationConfig_basic(shareName, principal string) string {
+func testAccAwsRamPrincipalAssociationConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_ram_resource_share" "example" {
-  name                      = "%s"
+resource "aws_ram_resource_share" "test" {
   allow_external_principals = true
-
-  tags {
-    Environment = "Production"
-  }
+  name                      = %[1]q
 }
 
-resource "aws_ram_principal_association" "example" {
-  resource_share_arn = "${aws_ram_resource_share.example.id}"
-  principal          = "%s"
+resource "aws_ram_principal_association" "test" {
+  principal          = "111111111111"
+  resource_share_arn = "${aws_ram_resource_share.test.id}"
 }
-`, shareName)
+`, rName)
 }
