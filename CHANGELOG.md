@@ -23,6 +23,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_api_gateway_rest_api: Prevent timeout errors with large amounts of concurrent resource deletions [GH-7554]
 * resource/aws_dynamodb_table: Prevent error when updating `billing_mode` from `PAY_PER_REQUEST` to `PROVISIONED` for Tables with Global Secondary Indexes [GH-7453]
 * resource/aws_ec2_transit_gateway_vpc_attachment: Allow `pendingAcceptance` as available state during resource creation (support shared Transit Gateways with manual acceptance) [GH-7489]
 * resource/aws_iam_user_login_profile: Properly return all errors during resource creation [GH-7519]
