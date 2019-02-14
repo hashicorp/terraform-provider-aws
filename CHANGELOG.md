@@ -1,36 +1,36 @@
-## 1.59.0 (Unreleased)
+## 1.59.0 (February 14, 2019)
 
 FEATURES:
 
-* **New Data Source:** `aws_cur_report_definition` [GH-7432]
-* **New Resource:** `aws_cur_report_definition` [GH-7432]
-* **New Resource:** `aws_docdb_cluster_instance` [GH-7143]
-* **New Resource:** `aws_ram_principal_association` [GH-7219] / [GH-7563]
-* **New Resource:** `aws_ram_resource_association` [GH-7449]
+* **New Data Source:** `aws_cur_report_definition` ([#7432](https://github.com/terraform-providers/terraform-provider-aws/issues/7432))
+* **New Resource:** `aws_cur_report_definition` ([#7432](https://github.com/terraform-providers/terraform-provider-aws/issues/7432))
+* **New Resource:** `aws_docdb_cluster_instance` ([#7143](https://github.com/terraform-providers/terraform-provider-aws/issues/7143))
+* **New Resource:** `aws_ram_principal_association` ([#7219](https://github.com/terraform-providers/terraform-provider-aws/issues/7219)] / [[#7563](https://github.com/terraform-providers/terraform-provider-aws/issues/7563))
+* **New Resource:** `aws_ram_resource_association` ([#7449](https://github.com/terraform-providers/terraform-provider-aws/issues/7449))
 
 ENHANCEMENTS:
 
-* data-source/aws_dynamodb_table: Add `billing_mode` and `point_in_time_recovery` attributes [GH-7497]
-* resource/aws_appmesh_virtual_node: Add support for listener health checks [GH-7446]
-* resource/aws_cloudwatch_metric_alarm: Add `metric_query` argument (support math expressions) [GH-6833]
-* resource/aws_cognito_user_pool: Add `user_pool_add_ons` argument (support advanced security mode) [GH-7361]
-* resource/aws_directory_service_directory: Set `security_group_id` attribute when type is `ADConnector` [GH-7487]
-* resource/aws_dynamodb_table: Use `update` customizable timeout for individual Global Secondary Index updates and increase default `update` timeout from 10 minutes to 60 minutes [GH-7453]
-* resource/aws_dms_endpoint: Add `docdb` for `engine_name` validation [GH-7491]
-* resource/aws_ses_identity_notification_topic: Support resource import [GH-7343]
-* resource/aws_waf_web_acl: Add `arn` attribute and `logging_configuration` argument [GH-6059]
-* resource/aws_wafregional_web_acl: Add `arn` attribute and `logging_configuration` argument [GH-7480]
+* data-source/aws_dynamodb_table: Add `billing_mode` and `point_in_time_recovery` attributes ([#7497](https://github.com/terraform-providers/terraform-provider-aws/issues/7497))
+* resource/aws_appmesh_virtual_node: Add support for listener health checks ([#7446](https://github.com/terraform-providers/terraform-provider-aws/issues/7446))
+* resource/aws_cloudwatch_metric_alarm: Add `metric_query` argument (support math expressions) ([#6833](https://github.com/terraform-providers/terraform-provider-aws/issues/6833))
+* resource/aws_cognito_user_pool: Add `user_pool_add_ons` argument (support advanced security mode) ([#7361](https://github.com/terraform-providers/terraform-provider-aws/issues/7361))
+* resource/aws_directory_service_directory: Set `security_group_id` attribute when type is `ADConnector` ([#7487](https://github.com/terraform-providers/terraform-provider-aws/issues/7487))
+* resource/aws_dynamodb_table: Use `update` customizable timeout for individual Global Secondary Index updates and increase default `update` timeout from 10 minutes to 60 minutes ([#7453](https://github.com/terraform-providers/terraform-provider-aws/issues/7453))
+* resource/aws_dms_endpoint: Add `docdb` for `engine_name` validation ([#7491](https://github.com/terraform-providers/terraform-provider-aws/issues/7491))
+* resource/aws_ses_identity_notification_topic: Support resource import ([#7343](https://github.com/terraform-providers/terraform-provider-aws/issues/7343))
+* resource/aws_waf_web_acl: Add `arn` attribute and `logging_configuration` argument ([#6059](https://github.com/terraform-providers/terraform-provider-aws/issues/6059))
+* resource/aws_wafregional_web_acl: Add `arn` attribute and `logging_configuration` argument ([#7480](https://github.com/terraform-providers/terraform-provider-aws/issues/7480))
 
 BUG FIXES:
 
-* resource/aws_api_gateway_rest_api: Prevent timeout errors with large amounts of concurrent resource deletions [GH-7554]
-* resource/aws_dynamodb_table: Prevent error when updating `billing_mode` from `PAY_PER_REQUEST` to `PROVISIONED` for Tables with Global Secondary Indexes [GH-7453]
-* resource/aws_ec2_transit_gateway_vpc_attachment: Allow `pendingAcceptance` as available state during resource creation (support shared Transit Gateways with manual acceptance) [GH-7489]
-* resource/aws_iam_user_login_profile: Properly return all errors during resource creation [GH-7519]
-* resource/aws_iot_topic_rule: Allow optional `range_key_field` and `range_key_value` arguments [GH-7471]
-* resource/aws_kinesis_analytics_application: Correctly manage multiple outputs [GH-7535]
-* resource/aws_ssm_maintenance_window_task: Prevent erroneous `name` and `description` validation errors on resource creation [GH-7186]
-* resource/aws_ssm_resource_data_sync: Properly trigger resource recreation for argument updates under the `s3_destination` configuration block [GH-7490]
+* resource/aws_api_gateway_rest_api: Prevent timeout errors with large amounts of concurrent resource deletions ([#7554](https://github.com/terraform-providers/terraform-provider-aws/issues/7554))
+* resource/aws_dynamodb_table: Prevent error when updating `billing_mode` from `PAY_PER_REQUEST` to `PROVISIONED` for Tables with Global Secondary Indexes ([#7453](https://github.com/terraform-providers/terraform-provider-aws/issues/7453))
+* resource/aws_ec2_transit_gateway_vpc_attachment: Allow `pendingAcceptance` as available state during resource creation (support shared Transit Gateways with manual acceptance) ([#7489](https://github.com/terraform-providers/terraform-provider-aws/issues/7489))
+* resource/aws_iam_user_login_profile: Properly return all errors during resource creation ([#7519](https://github.com/terraform-providers/terraform-provider-aws/issues/7519))
+* resource/aws_iot_topic_rule: Allow optional `range_key_field` and `range_key_value` arguments ([#7471](https://github.com/terraform-providers/terraform-provider-aws/issues/7471))
+* resource/aws_kinesis_analytics_application: Correctly manage multiple outputs ([#7535](https://github.com/terraform-providers/terraform-provider-aws/issues/7535))
+* resource/aws_ssm_maintenance_window_task: Prevent erroneous `name` and `description` validation errors on resource creation ([#7186](https://github.com/terraform-providers/terraform-provider-aws/issues/7186))
+* resource/aws_ssm_resource_data_sync: Properly trigger resource recreation for argument updates under the `s3_destination` configuration block ([#7490](https://github.com/terraform-providers/terraform-provider-aws/issues/7490))
 
 ## 1.58.0 (February 08, 2019)
 
