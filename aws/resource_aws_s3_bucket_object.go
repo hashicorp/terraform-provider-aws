@@ -193,10 +193,6 @@ func resourceAwsS3BucketObjectPut(d *schema.ResourceData, meta interface{}) erro
 			return fmt.Errorf("error decoding content_base64: %s", err)
 		}
 		body = bytes.NewReader(contentRaw)
-	} else {
-		// S3 allows the creation of zero-byte objects
-		content := ""
-		body = bytes.NewReader([]byte(content))
 	}
 
 	bucket := d.Get("bucket").(string)
