@@ -102,6 +102,29 @@ func resourceAwsEc2ClientVpnEndpoint() *schema.Resource {
 					},
 				},
 			},
+			"network_association": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Set:      resourceAwsNetAssocHash,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"subnet_id": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"association_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"security_groups": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+					},
+				},
+			},
 			"authorization_rule": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -123,7 +146,7 @@ func resourceAwsEc2ClientVpnEndpoint() *schema.Resource {
 						"authorize_all_groups": {
 							Type:     schema.TypeBool,
 							Optional: true,
-							Default:  false,
+							Default:  true,
 						},
 					},
 				},
@@ -219,8 +242,47 @@ func resourceAwsEc2ClientVpnEndpointCreate(d *schema.ResourceData, meta interfac
 
 	d.SetId(*resp.ClientVpnEndpointId)
 
+	if _, ok := d.GetOk("network_association"); ok {
+		networks, securityGroups := addNetworkAssociation(d.Id(), d.Get("network_association").(*schema.Set).List())
+
+		for i, n := range networks {
+			netResp, err := conn.AssociateClientVpnTargetNetwork(n)
+			if err != nil {
+				return fmt.Errorf("Failure adding new Client VPN authorization rules: %s", err)
+			}
+
+			stateConf := &resource.StateChangeConf{
+				Pending: []string{ec2.AssociationStatusCodeAssociating},
+				Target:  []string{ec2.AssociationStatusCodeAssociated},
+				Refresh: clientVpnNetworkAssociationRefreshFunc(conn, aws.StringValue(netResp.AssociationId), d.Id()),
+				Timeout: d.Timeout(schema.TimeoutCreate),
+			}
+
+			log.Printf("[DEBUG] Waiting for Client VPN endpoint to associate with target network: %s", aws.StringValue(netResp.AssociationId))
+			targetNetworkRaw, err := stateConf.WaitForState()
+			if err != nil {
+				return fmt.Errorf("Error waiting for Client VPN endpoint to associate with target network: %s", err)
+			}
+
+			targetNetwork := targetNetworkRaw.(*ec2.TargetNetwork)
+
+			if len(securityGroups[i]) > 0 {
+				sgReq := &ec2.ApplySecurityGroupsToClientVpnTargetNetworkInput{
+					ClientVpnEndpointId: aws.String(d.Id()),
+					VpcId:               targetNetwork.VpcId,
+					SecurityGroupIds:    securityGroups[i],
+				}
+
+				_, err := conn.ApplySecurityGroupsToClientVpnTargetNetwork(sgReq)
+				if err != nil {
+					return fmt.Errorf("Error applying security groups to Client VPN network association: %s", err)
+				}
+			}
+		}
+	}
+
 	if _, ok := d.GetOk("authorization_rule"); ok {
-		rules := addAuthorizationRules(d.Get("authorization_rule").(*schema.Set).List())
+		rules := addAuthorizationRules(d.Id(), d.Get("authorization_rule").(*schema.Set).List())
 
 		for _, r := range rules {
 			_, err := conn.AuthorizeClientVpnIngress(r)
@@ -274,6 +336,15 @@ func resourceAwsEc2ClientVpnEndpointRead(d *schema.ResourceData, meta interface{
 		return err
 	}
 
+	netAssocResult, err := conn.DescribeClientVpnTargetNetworks(&ec2.DescribeClientVpnTargetNetworksInput{
+		ClientVpnEndpointId: aws.String(d.Id()),
+	})
+	if err != nil {
+		return err
+	}
+
+	d.Set("network_association", flattenNetAssoc(netAssocResult.ClientVpnTargetNetworks))
+
 	authRuleResult, err := conn.DescribeClientVpnAuthorizationRules(&ec2.DescribeClientVpnAuthorizationRulesInput{
 		ClientVpnEndpointId: aws.String(d.Id()),
 	})
@@ -289,7 +360,40 @@ func resourceAwsEc2ClientVpnEndpointRead(d *schema.ResourceData, meta interface{
 func resourceAwsEc2ClientVpnEndpointDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	_, err := conn.DeleteClientVpnEndpoint(&ec2.DeleteClientVpnEndpointInput{
+	netAssocResult, err := conn.DescribeClientVpnTargetNetworks(&ec2.DescribeClientVpnTargetNetworksInput{
+		ClientVpnEndpointId: aws.String(d.Id()),
+	})
+	if err != nil {
+		return err
+	}
+
+	for _, n := range netAssocResult.ClientVpnTargetNetworks {
+		network := &ec2.DisassociateClientVpnTargetNetworkInput{}
+
+		network.ClientVpnEndpointId = aws.String(d.Id())
+		network.AssociationId = aws.String(*n.AssociationId)
+
+		log.Printf("[DEBUG] Client VPN network association opts: %s", n)
+		_, err := conn.DisassociateClientVpnTargetNetwork(network)
+		if err != nil {
+			return fmt.Errorf("D Failure removing Client VPN network associations: %s \n %s", err, n)
+		}
+
+		stateConf := &resource.StateChangeConf{
+			Pending: []string{ec2.AssociationStatusCodeDisassociating},
+			Target:  []string{ec2.AssociationStatusCodeDisassociated},
+			Refresh: clientVpnNetworkAssociationRefreshFunc(conn, aws.StringValue(n.AssociationId), d.Id()),
+			Timeout: d.Timeout(schema.TimeoutDelete),
+		}
+
+		log.Printf("[DEBUG] Waiting for Client VPN endpoint to disassociate with target network: %s", aws.StringValue(n.AssociationId))
+		_, err = stateConf.WaitForState()
+		if err != nil {
+			return fmt.Errorf("Error waiting for Client VPN endpoint to disassociate with target network: %s", err)
+		}
+	}
+
+	_, err = conn.DeleteClientVpnEndpoint(&ec2.DeleteClientVpnEndpointInput{
 		ClientVpnEndpointId: aws.String(d.Id()),
 	})
 	if err != nil {
@@ -357,20 +461,90 @@ func resourceAwsEc2ClientVpnEndpointUpdate(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("Error modifying Client VPN endpoint: %s", err)
 	}
 
+	if d.HasChange("network_association") {
+		o, n := d.GetChange("network_association")
+		os := o.(*schema.Set)
+		ns := n.(*schema.Set)
+
+		removeNets := removeNetworkAssociation(d.Id(), os.Difference(ns).List())
+		addNets, addSGs := addNetworkAssociation(d.Id(), ns.Difference(os).List())
+
+		if len(removeNets) > 0 {
+			for _, r := range removeNets {
+				log.Printf("[DEBUG] Client VPN network authorization opts: %s", r)
+				_, err := conn.DisassociateClientVpnTargetNetwork(r)
+				if err != nil {
+					return fmt.Errorf("Failure removing outdated Client VPN network authorizations: %s", err)
+				}
+
+				stateConf := &resource.StateChangeConf{
+					Pending: []string{ec2.AssociationStatusCodeDisassociating},
+					Target:  []string{ec2.AssociationStatusCodeDisassociated},
+					Refresh: clientVpnNetworkAssociationRefreshFunc(conn, aws.StringValue(r.AssociationId), d.Id()),
+					Timeout: d.Timeout(schema.TimeoutDelete),
+				}
+
+				log.Printf("[DEBUG] Waiting for Client VPN endpoint to disassociate with target network: %s", aws.StringValue(r.AssociationId))
+				_, err = stateConf.WaitForState()
+				if err != nil {
+					return fmt.Errorf("Error waiting for Client VPN endpoint to disassociate with target network: %s", err)
+				}
+			}
+		}
+
+		if len(addNets) > 0 {
+			for i, a := range addNets {
+				log.Printf("[DEBUG] Client VPN network authorization opts: %s", a)
+				addResp, err := conn.AssociateClientVpnTargetNetwork(a)
+				if err != nil {
+					return fmt.Errorf("U Failure adding new Client VPN network authorizations: %s", err)
+				}
+
+				stateConf := &resource.StateChangeConf{
+					Pending: []string{ec2.AssociationStatusCodeAssociating},
+					Target:  []string{ec2.AssociationStatusCodeAssociated},
+					Refresh: clientVpnNetworkAssociationRefreshFunc(conn, aws.StringValue(addResp.AssociationId), d.Id()),
+					Timeout: d.Timeout(schema.TimeoutCreate),
+				}
+
+				log.Printf("[DEBUG] Waiting for Client VPN endpoint to associate with target network: %s", aws.StringValue(addResp.AssociationId))
+				targetNetworkRaw, err := stateConf.WaitForState()
+				if err != nil {
+					return fmt.Errorf("Error waiting for Client VPN endpoint to associate with target network: %s", err)
+				}
+
+				targetNetwork := targetNetworkRaw.(*ec2.TargetNetwork)
+
+				if len(addSGs[i]) > 0 {
+					sgReq := &ec2.ApplySecurityGroupsToClientVpnTargetNetworkInput{
+						ClientVpnEndpointId: aws.String(d.Id()),
+						VpcId:               targetNetwork.VpcId,
+						SecurityGroupIds:    addSGs[i],
+					}
+
+					_, err := conn.ApplySecurityGroupsToClientVpnTargetNetwork(sgReq)
+					if err != nil {
+						return fmt.Errorf("Error applying security groups to Client VPN network association: %s", err)
+					}
+				}
+			}
+		}
+	}
+
 	if d.HasChange("authorization_rule") {
 		o, n := d.GetChange("authorization_rule")
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
 
-		remove := removeAuthorizationRules(os.Difference(ns).List())
-		add := addAuthorizationRules(ns.Difference(os).List())
+		remove := removeAuthorizationRules(d.Id(), os.Difference(ns).List())
+		add := addAuthorizationRules(d.Id(), ns.Difference(os).List())
 
 		if len(remove) > 0 {
 			for _, r := range remove {
 				log.Printf("[DEBUG] Client VPN authorization rule opts: %s", r)
 				_, err := conn.RevokeClientVpnIngress(r)
 				if err != nil {
-					return fmt.Errorf("Failure removing outdated Client VPN authorization rules: %s", err)
+					return fmt.Errorf("U Failure removing outdated Client VPN authorization rules: %s", err)
 				}
 			}
 		}
@@ -380,13 +554,36 @@ func resourceAwsEc2ClientVpnEndpointUpdate(d *schema.ResourceData, meta interfac
 				log.Printf("[DEBUG] Client VPN authorization rule opts: %s", r)
 				_, err := conn.AuthorizeClientVpnIngress(r)
 				if err != nil {
-					return fmt.Errorf("Failure adding new Client VPN authorization rules: %s", err)
+					return fmt.Errorf("U Failure adding new Client VPN authorization rules: %s", err)
 				}
 			}
 		}
 	}
 
 	return resourceAwsEc2ClientVpnEndpointRead(d, meta)
+}
+
+func clientVpnNetworkAssociationRefreshFunc(conn *ec2.EC2, cvnaID string, cvepID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		resp, err := conn.DescribeClientVpnTargetNetworks(&ec2.DescribeClientVpnTargetNetworksInput{
+			ClientVpnEndpointId: aws.String(cvepID),
+			AssociationIds:      []*string{aws.String(cvnaID)},
+		})
+
+		if isAWSErr(err, "InvalidClientVpnAssociationId.NotFound", "") || isAWSErr(err, "InvalidClientVpnEndpointId.NotFound", "") {
+			return 42, ec2.AssociationStatusCodeDisassociated, nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if resp == nil || len(resp.ClientVpnTargetNetworks) == 0 || resp.ClientVpnTargetNetworks[0] == nil {
+			return 42, ec2.AssociationStatusCodeDisassociated, nil
+		}
+
+		return resp.ClientVpnTargetNetworks[0], aws.StringValue(resp.ClientVpnTargetNetworks[0].Status.Code), nil
+	}
 }
 
 func flattenConnLoggingConfig(lopts *ec2.ConnectionLogResponseOptions) []map[string]interface{} {
@@ -413,6 +610,22 @@ func flattenAuthOptsConfig(aopts []*ec2.ClientVpnAuthentication) []map[string]in
 	return []map[string]interface{}{m}
 }
 
+func flattenNetAssoc(list []*ec2.TargetNetwork) []map[string]interface{} {
+	result := make([]map[string]interface{}, 0, len(list))
+	for _, i := range list {
+		l := map[string]interface{}{
+			"association_id": *i.AssociationId,
+		}
+
+		if i.SecurityGroups != nil {
+			l["security_groups"] = i.SecurityGroups
+		}
+
+		result = append(result, l)
+	}
+	return result
+}
+
 func flattenAuthRules(list []*ec2.AuthorizationRule) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, len(list))
 	for _, i := range list {
@@ -435,15 +648,16 @@ func flattenAuthRules(list []*ec2.AuthorizationRule) []map[string]interface{} {
 	return result
 }
 
-func addAuthorizationRules(configured []interface{}) []*ec2.AuthorizeClientVpnIngressInput {
+func addAuthorizationRules(eid string, configured []interface{}) []*ec2.AuthorizeClientVpnIngressInput {
 	rules := make([]*ec2.AuthorizeClientVpnIngressInput, 0, len(configured))
 
 	for _, i := range configured {
 		item := i.(map[string]interface{})
 		rule := &ec2.AuthorizeClientVpnIngressInput{}
 
-		rule.ClientVpnEndpointId = aws.String(item["id"].(string))
+		rule.ClientVpnEndpointId = aws.String(eid)
 		rule.TargetNetworkCidr = aws.String(item["target_network_cidr"].(string))
+		rule.AuthorizeAllGroups = aws.Bool(item["authorize_all_groups"].(bool))
 
 		if item["description"].(string) != "" {
 			rule.Description = aws.String(item["description"].(string))
@@ -453,24 +667,20 @@ func addAuthorizationRules(configured []interface{}) []*ec2.AuthorizeClientVpnIn
 			rule.AccessGroupId = aws.String(item["access_group_id"].(string))
 		}
 
-		if item["authorize_all_groups"] != nil {
-			rule.AuthorizeAllGroups = aws.Bool(item["authorize_all_groups"].(bool))
-		}
-
 		rules = append(rules, rule)
 	}
 
 	return rules
 }
 
-func removeAuthorizationRules(configured []interface{}) []*ec2.RevokeClientVpnIngressInput {
+func removeAuthorizationRules(eid string, configured []interface{}) []*ec2.RevokeClientVpnIngressInput {
 	rules := make([]*ec2.RevokeClientVpnIngressInput, 0, len(configured))
 
 	for _, i := range configured {
 		item := i.(map[string]interface{})
 		rule := &ec2.RevokeClientVpnIngressInput{}
 
-		rule.ClientVpnEndpointId = aws.String(item["id"].(string))
+		rule.ClientVpnEndpointId = aws.String(eid)
 		rule.TargetNetworkCidr = aws.String(item["target_network_cidr"].(string))
 
 		rules = append(rules, rule)
@@ -497,6 +707,55 @@ func resourceAwsAuthRuleHash(v interface{}) int {
 
 	if v, ok := m["authorize_all_groups"]; ok {
 		buf.WriteString(fmt.Sprintf("%v-", v.(bool)))
+	}
+
+	return hashcode.String(buf.String())
+}
+
+func addNetworkAssociation(eid string, configured []interface{}) ([]*ec2.AssociateClientVpnTargetNetworkInput, [][]*string) {
+	networks := make([]*ec2.AssociateClientVpnTargetNetworkInput, 0, len(configured))
+	securityGroups := make([][]*string, 0, len(configured))
+
+	for _, i := range configured {
+		item := i.(map[string]interface{})
+		network := &ec2.AssociateClientVpnTargetNetworkInput{}
+
+		network.ClientVpnEndpointId = aws.String(eid)
+		network.SubnetId = aws.String(item["subnet_id"].(string))
+
+		networks = append(networks, network)
+		securityGroups = append(securityGroups, expandStringSet(item["security_groups"].(*schema.Set)))
+	}
+
+	return networks, securityGroups
+}
+
+func removeNetworkAssociation(eid string, configured []interface{}) []*ec2.DisassociateClientVpnTargetNetworkInput {
+	networks := make([]*ec2.DisassociateClientVpnTargetNetworkInput, 0, len(configured))
+
+	for _, i := range configured {
+		item := i.(map[string]interface{})
+		network := &ec2.DisassociateClientVpnTargetNetworkInput{}
+
+		network.ClientVpnEndpointId = aws.String(eid)
+		network.AssociationId = aws.String(item["association_id"].(string))
+
+		networks = append(networks, network)
+	}
+
+	return networks
+}
+
+func resourceAwsNetAssocHash(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.(map[string]interface{})
+
+	if v, ok := m["subnet_id"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+
+	if v, ok := m["security_groups"]; ok {
+		buf.WriteString(fmt.Sprintf("%v-", v.(*schema.Set).List()))
 	}
 
 	return hashcode.String(buf.String())
