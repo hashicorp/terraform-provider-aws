@@ -673,7 +673,7 @@ data "aws_iam_policy_document" "assume_role" {
 
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-sagemaker-model-%s"
 	}
 }
@@ -682,7 +682,7 @@ resource "aws_subnet" "foo" {
 	cidr_block = "10.1.1.0/24"
 	availability_zone = "us-west-2a"
 	vpc_id = "${aws_vpc.foo.id}"
-	tags {
+	tags = {
 		Name = "terraform-testacc-sagemaker-model-foo-%s"
 	}
 }
@@ -691,7 +691,7 @@ resource "aws_subnet" "bar" {
 	cidr_block = "10.1.2.0/24"
 	availability_zone = "us-west-2b"
 	vpc_id = "${aws_vpc.foo.id}"
-	tags {
+	tags = {
 		Name = "terraform-testacc-sagemaker-model-bar-%s"
 	}
 }

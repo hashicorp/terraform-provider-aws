@@ -896,7 +896,7 @@ resource "aws_mq_broker" "test" {
     password = "TestTest1234"
 	}
 
-  tags {
+  tags = {
     env = "test"
   }
 }`, sgName, brokerName)
@@ -920,7 +920,7 @@ resource "aws_mq_broker" "test" {
     password = "TestTest1234"
 	}
 
-  tags {
+  tags = {
 		env = "test2"
 		role = "test-role"
   }
@@ -945,7 +945,7 @@ resource "aws_mq_broker" "test" {
     password = "TestTest1234"
 	}
 
-  tags {
+  tags = {
 		role = "test-role"
   }
 }`, sgName, brokerName)
