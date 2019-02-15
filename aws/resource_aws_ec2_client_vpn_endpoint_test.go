@@ -207,8 +207,9 @@ func testAccCheckAwsEc2ClientVpnEndpointExists(name string) resource.TestCheckFu
 	}
 }
 
-func testAccEc2ClientVpnEndpointConfig(rName string) string {
-	return fmt.Sprintf(`
+const testAccEc2ClientVpnEndpointBaseConfig = `
+data "aws_availability_zones" "available" {}
+
 resource "tls_private_key" "example" {
   algorithm = "RSA"
 }
@@ -235,14 +236,17 @@ resource "aws_acm_certificate" "cert" {
   private_key      = "${tls_private_key.example.private_key_pem}"
   certificate_body = "${tls_self_signed_cert.example.cert_pem}"
 }
+`
 
+func testAccEc2ClientVpnEndpointConfig(rName string) string {
+	return testAccEc2ClientVpnEndpointBaseConfig + fmt.Sprintf(`
 resource "aws_ec2_client_vpn_endpoint" "test" {
-  description = "terraform-testacc-clientvpn-%s"
+  description            = "terraform-testacc-clientvpn-%s"
   server_certificate_arn = "${aws_acm_certificate.cert.arn}"
-  client_cidr_block = "10.0.0.0/16"
+  client_cidr_block      = "10.0.0.0/16"
 
   authentication_options {
-    type = "certificate-authentication"
+    type                       = "certificate-authentication"
     root_certificate_chain_arn = "${aws_acm_certificate.cert.arn}"
   }
 
@@ -254,34 +258,7 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
 }
 
 func testAccEc2ClientVpnEndpointConfigWithLogGroup(rName string) string {
-	return fmt.Sprintf(`
-resource "tls_private_key" "example" {
-  algorithm = "RSA"
-}
-
-resource "tls_self_signed_cert" "example" {
-  key_algorithm   = "RSA"
-  private_key_pem = "${tls_private_key.example.private_key_pem}"
-
-  subject {
-    common_name  = "example.com"
-    organization = "ACME Examples, Inc"
-  }
-
-  validity_period_hours = 12
-
-  allowed_uses = [
-    "key_encipherment",
-    "digital_signature",
-    "server_auth",
-  ]
-}
-
-resource "aws_acm_certificate" "cert" {
-  private_key      = "${tls_private_key.example.private_key_pem}"
-  certificate_body = "${tls_self_signed_cert.example.cert_pem}"
-}
-
+	return testAccEc2ClientVpnEndpointBaseConfig + fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "lg" {
   name = "terraform-testacc-clientvpn-loggroup-%s"
 }
@@ -292,18 +269,18 @@ resource "aws_cloudwatch_log_stream" "ls" {
 }
 
 resource "aws_ec2_client_vpn_endpoint" "test" {
-  description = "terraform-testacc-clientvpn-%s"
+  description            = "terraform-testacc-clientvpn-%s"
   server_certificate_arn = "${aws_acm_certificate.cert.arn}"
-  client_cidr_block = "10.0.0.0/16"
+  client_cidr_block      = "10.0.0.0/16"
 
   authentication_options {
-    type = "certificate-authentication"
+    type                       = "certificate-authentication"
     root_certificate_chain_arn = "${aws_acm_certificate.cert.arn}"
   }
 
   connection_log_options {
-    enabled = true
-    cloudwatch_log_group = "${aws_cloudwatch_log_group.lg.name}"
+    enabled               = true
+    cloudwatch_log_group  = "${aws_cloudwatch_log_group.lg.name}"
     cloudwatch_log_stream = "${aws_cloudwatch_log_stream.ls.name}"
   }
 }
@@ -311,43 +288,16 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
 }
 
 func testAccEc2ClientVpnEndpointConfigWithDNSServers(rName string) string {
-	return fmt.Sprintf(`
-resource "tls_private_key" "example" {
-  algorithm = "RSA"
-}
-
-resource "tls_self_signed_cert" "example" {
-  key_algorithm   = "RSA"
-  private_key_pem = "${tls_private_key.example.private_key_pem}"
-
-  subject {
-    common_name  = "example.com"
-    organization = "ACME Examples, Inc"
-  }
-
-  validity_period_hours = 12
-
-  allowed_uses = [
-    "key_encipherment",
-    "digital_signature",
-    "server_auth",
-  ]
-}
-
-resource "aws_acm_certificate" "cert" {
-  private_key      = "${tls_private_key.example.private_key_pem}"
-  certificate_body = "${tls_self_signed_cert.example.cert_pem}"
-}
-
+	return testAccEc2ClientVpnEndpointBaseConfig + fmt.Sprintf(`
 resource "aws_ec2_client_vpn_endpoint" "test" {
-  description = "terraform-testacc-clientvpn-%s"
+  description            = "terraform-testacc-clientvpn-%s"
   server_certificate_arn = "${aws_acm_certificate.cert.arn}"
-  client_cidr_block = "10.0.0.0/16"
+  client_cidr_block      = "10.0.0.0/16"
 
   dns_servers = ["8.8.8.8", "8.8.4.4"]
 
   authentication_options {
-    type = "certificate-authentication"
+    type                       = "certificate-authentication"
     root_certificate_chain_arn = "${aws_acm_certificate.cert.arn}"
   }
 
@@ -359,9 +309,7 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
 }
 
 func testAccEc2ClientVpnEndpointConfigWithMicrosoftAD(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {}
-
+	return testAccEc2ClientVpnEndpointBaseConfig + fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block  = "10.0.0.0/16"
 }
@@ -379,49 +327,22 @@ resource "aws_subnet" "test2" {
 }
 
 resource "aws_directory_service_directory" "test" {
-  name = "corp.notexample.com"
+  name     = "corp.notexample.com"
   password = "SuperSecretPassw0rd"
-  type = "MicrosoftAD"
+  type     = "MicrosoftAD"
   vpc_settings {
     vpc_id = "${aws_vpc.test.id}"
     subnet_ids = ["${aws_subnet.test1.id}", "${aws_subnet.test2.id}"]
   }
 }
 
-resource "tls_private_key" "example" {
-  algorithm = "RSA"
-}
-
-resource "tls_self_signed_cert" "example" {
-  key_algorithm   = "RSA"
-  private_key_pem = "${tls_private_key.example.private_key_pem}"
-
-  subject {
-    common_name  = "example.com"
-    organization = "ACME Examples, Inc"
-  }
-
-  validity_period_hours = 12
-
-  allowed_uses = [
-    "key_encipherment",
-    "digital_signature",
-    "server_auth",
-  ]
-}
-
-resource "aws_acm_certificate" "cert" {
-  private_key      = "${tls_private_key.example.private_key_pem}"
-  certificate_body = "${tls_self_signed_cert.example.cert_pem}"
-}
-
 resource "aws_ec2_client_vpn_endpoint" "test" {
-  description = "terraform-testacc-clientvpn-%s"
+  description            = "terraform-testacc-clientvpn-%s"
   server_certificate_arn = "${aws_acm_certificate.cert.arn}"
-  client_cidr_block = "10.0.0.0/16"
+  client_cidr_block      = "10.0.0.0/16"
 
   authentication_options {
-    type = "directory-service-authentication"
+    type                = "directory-service-authentication"
     active_directory_id = "${aws_directory_service_directory.test.id}"
   }
 
@@ -433,7 +354,7 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
 }
 
 func testAccEc2ClientVpnEndpointConfigWithNetworkAssociation(rName string) string {
-	return fmt.Sprintf(`
+	return testAccEc2ClientVpnEndpointBaseConfig + fmt.Sprintf(`
 resource "aws_vpc" "test" {
 	cidr_block = "10.1.0.0/16"
 	tags = {
@@ -441,48 +362,21 @@ resource "aws_vpc" "test" {
 	}
 }
 resource "aws_subnet" "test" {
-	cidr_block = "10.1.1.0/24"
-	vpc_id = "${aws_vpc.test.id}"
-	map_public_ip_on_launch = true
+	cidr_block         = "10.1.1.0/24"
+	vpc_id             = "${aws_vpc.test.id}"
+	availability_zone  = "${data.aws_availability_zones.available.names[0]}"
 	tags = {
 		Name = "tf-acc-subnet-%s"
 	}
 }
 
-resource "tls_private_key" "example" {
-  algorithm = "RSA"
-}
-
-resource "tls_self_signed_cert" "example" {
-  key_algorithm   = "RSA"
-  private_key_pem = "${tls_private_key.example.private_key_pem}"
-
-  subject {
-    common_name  = "example.com"
-    organization = "ACME Examples, Inc"
-  }
-
-  validity_period_hours = 12
-
-  allowed_uses = [
-    "key_encipherment",
-    "digital_signature",
-    "server_auth",
-  ]
-}
-
-resource "aws_acm_certificate" "cert" {
-  private_key      = "${tls_private_key.example.private_key_pem}"
-  certificate_body = "${tls_self_signed_cert.example.cert_pem}"
-}
-
 resource "aws_ec2_client_vpn_endpoint" "test" {
-  description = "terraform-testacc-clientvpn-%s"
+  description            = "terraform-testacc-clientvpn-%s"
   server_certificate_arn = "${aws_acm_certificate.cert.arn}"
-  client_cidr_block = "10.0.0.0/16"
+  client_cidr_block      = "10.0.0.0/16"
 
   authentication_options {
-    type = "certificate-authentication"
+    type                       = "certificate-authentication"
     root_certificate_chain_arn = "${aws_acm_certificate.cert.arn}"
   }
 
@@ -498,7 +392,7 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
 }
 
 func testAccEc2ClientVpnEndpointConfigWithAuthorizationRules(rName string) string {
-	return fmt.Sprintf(`
+	return testAccEc2ClientVpnEndpointBaseConfig + fmt.Sprintf(`
 resource "aws_vpc" "test" {
 	cidr_block = "10.1.0.0/16"
 	tags = {
@@ -506,48 +400,21 @@ resource "aws_vpc" "test" {
 	}
 }
 resource "aws_subnet" "test" {
-	cidr_block = "10.1.1.0/24"
-	vpc_id = "${aws_vpc.test.id}"
-	map_public_ip_on_launch = true
+	cidr_block        = "10.1.1.0/24"
+	vpc_id            = "${aws_vpc.test.id}"
+	availability_zone = "${data.aws_availability_zones.available.names[0]}"
 	tags = {
 		Name = "tf-acc-subnet-%s"
 	}
 }
 
-resource "tls_private_key" "example" {
-  algorithm = "RSA"
-}
-
-resource "tls_self_signed_cert" "example" {
-  key_algorithm   = "RSA"
-  private_key_pem = "${tls_private_key.example.private_key_pem}"
-
-  subject {
-    common_name  = "example.com"
-    organization = "ACME Examples, Inc"
-  }
-
-  validity_period_hours = 12
-
-  allowed_uses = [
-    "key_encipherment",
-    "digital_signature",
-    "server_auth",
-  ]
-}
-
-resource "aws_acm_certificate" "cert" {
-  private_key      = "${tls_private_key.example.private_key_pem}"
-  certificate_body = "${tls_self_signed_cert.example.cert_pem}"
-}
-
 resource "aws_ec2_client_vpn_endpoint" "test" {
-  description = "terraform-testacc-clientvpn-%s"
+  description            = "terraform-testacc-clientvpn-%s"
   server_certificate_arn = "${aws_acm_certificate.cert.arn}"
-  client_cidr_block = "10.0.0.0/16"
+  client_cidr_block      = "10.0.0.0/16"
 
   authentication_options {
-    type = "certificate-authentication"
+    type                       = "certificate-authentication"
     root_certificate_chain_arn = "${aws_acm_certificate.cert.arn}"
   }
 

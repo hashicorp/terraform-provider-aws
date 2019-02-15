@@ -497,7 +497,7 @@ func resourceAwsEc2ClientVpnEndpointUpdate(d *schema.ResourceData, meta interfac
 				log.Printf("[DEBUG] Client VPN network authorization opts: %s", a)
 				addResp, err := conn.AssociateClientVpnTargetNetwork(a)
 				if err != nil {
-					return fmt.Errorf("U Failure adding new Client VPN network authorizations: %s", err)
+					return fmt.Errorf("Failure adding new Client VPN network authorizations: %s", err)
 				}
 
 				stateConf := &resource.StateChangeConf{
@@ -544,7 +544,7 @@ func resourceAwsEc2ClientVpnEndpointUpdate(d *schema.ResourceData, meta interfac
 				log.Printf("[DEBUG] Client VPN authorization rule opts: %s", r)
 				_, err := conn.RevokeClientVpnIngress(r)
 				if err != nil {
-					return fmt.Errorf("U Failure removing outdated Client VPN authorization rules: %s", err)
+					return fmt.Errorf("Failure removing outdated Client VPN authorization rules: %s", err)
 				}
 			}
 		}
@@ -554,7 +554,7 @@ func resourceAwsEc2ClientVpnEndpointUpdate(d *schema.ResourceData, meta interfac
 				log.Printf("[DEBUG] Client VPN authorization rule opts: %s", r)
 				_, err := conn.AuthorizeClientVpnIngress(r)
 				if err != nil {
-					return fmt.Errorf("U Failure adding new Client VPN authorization rules: %s", err)
+					return fmt.Errorf("Failure adding new Client VPN authorization rules: %s", err)
 				}
 			}
 		}
