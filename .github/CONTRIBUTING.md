@@ -37,6 +37,7 @@ ability to merge PRs and respond to issues.
         - [Running an Acceptance Test](#running-an-acceptance-test)
         - [Writing an Acceptance Test](#writing-an-acceptance-test)
         - [Writing and running Cross-Account Acceptance Tests](#writing-and-running-cross-account-acceptance-tests)
+        - [Writing and running Cross-Region Acceptance Tests](#writing-and-running-cross-region-acceptance-tests)
 
 <!-- /TOC -->
 
@@ -340,7 +341,7 @@ The following Go language resources provide common coding preferences that may b
 
 #### Resource Contribution Guidelines
 
-The following resource checks need to be addressed before your contribution can be merged. The exclusion of any applicable check may result in a delayed time to merge. 
+The following resource checks need to be addressed before your contribution can be merged. The exclusion of any applicable check may result in a delayed time to merge.
 
 - [ ] __Passes Testing__: All code and documentation changes must pass unit testing, code linting, and website link testing. Resource code changes must pass all acceptance testing for the resource.
 - [ ] __Avoids API Calls Across Account, Region, and Service Boundaries__: Resources should not implement cross-account, cross-region, or cross-service API calls.
@@ -747,6 +748,128 @@ export AWS_ALTERNATE_PROFILE=...
 export AWS_ALTERNATE_ACCESS_KEY_ID=...
 export AWS_ALTERNATE_SECRET_ACCESS_KEY=...
 ```
+
+#### Writing and running Cross-Region Acceptance Tests
+
+When testing requires AWS infrastructure in a second AWS region, the below changes to the normal setup will allow the management or reference of resources and data sources across regions:
+
+- In the `PreCheck` function, include `testAccMultipleRegionsPreCheck(t)` and `testAccAlternateRegionPreCheck(t)` to ensure a standardized set of information is required for cross-region testing configuration. If the infrastructure in the second AWS region is also in a second AWS account also include `testAccAlternateAccountPreCheck(t)`
+- Declare a `providers` variable at the top of the test function: `var providers []*schema.Provider`
+- Switch usage of `Providers: testAccProviders` to `ProviderFactories: testAccProviderFactories(&providers)`
+- Add `testAccAlternateRegionProviderConfig()` to the test configuration and use `provider = "aws.alternate"` for cross-region resources. The resource that is the focus of the acceptance test should _not_ use the provider alias to simplify the testing setup. If the infrastructure in the second AWS region is also in a second AWS account use `testAccAlternateAccountAlternateRegionProviderConfig()` instead
+- For any `TestStep` that includes `ImportState: true`, add the `Config` that matches the previous `TestStep` `Config`
+
+An example acceptance test implementation can be seen below:
+
+```go
+func TestAccAwsExample_basic(t *testing.T) {
+  var providers []*schema.Provider
+  resourceName := "aws_example.test"
+
+  resource.ParallelTest(t, resource.TestCase{
+    PreCheck: func() {
+      testAccPreCheck(t)
+      testAccMultipleRegionsPreCheck(t)
+      testAccAlternateRegionPreCheck(t)
+    },
+    ProviderFactories: testAccProviderFactories(&providers),
+    CheckDestroy:      testAccCheckAwsExampleDestroy,
+    Steps: []resource.TestStep{
+      {
+        Config: testAccAwsExampleConfig(),
+        Check: resource.ComposeTestCheckFunc(
+          testAccCheckAwsExampleExists(resourceName),
+          // ... additional checks ...
+        ),
+      },
+      {
+        Config:            testAccAwsExampleConfig(),
+        ResourceName:      resourceName,
+        ImportState:       true,
+        ImportStateVerify: true,
+      },
+    },
+  })
+}
+
+func testAccAwsExampleConfig() string {
+  return testAccAlternateRegionProviderConfig() + fmt.Sprintf(`
+# Cross region resources should be handled by the cross region provider.
+# The standardized provider alias is aws.alternate as seen below.
+resource "aws_cross_region_example" "test" {
+  provider = "aws.alternate"
+
+  # ... configuration ...
+}
+
+# The resource that is the focus of the testing should be handled by the default provider,
+# which is automatically done by not specifying the provider configuration in the resource.
+resource "aws_example" "test" {
+  # ... configuration ...
+}
+`)
+}
+```
+
+Searching for usage of `testAccAlternateRegionPreCheck` in the codebase will yield real world examples of this setup in action.
+
+Running these acceptance tests is the same as before, except if an AWS region other than the default alternate region - `us-east-1` - is required,
+in which case the following additional configuration information is required:
+
+```sh
+export AWS_ALTERNATE_REGION=...
+```
+
+#### Acceptance Testing Guidelines
+
+The Terraform AWS Provider follows common practices to ensure consistent and reliable testing across all resources in the project. While there may be older testing present that predates these guidelines, new submissions are generally expected to adhere to these items to maintain Terraform Provider quality. For any guidelines listed, contributors are encouraged to ask any questions and community reviewers are encouraged to provide review suggestions based on these guidelines to speed up the review and merge process.
+
+The below are required items that will be noted during submission review and prevent immediate merging:
+
+- [ ] __Implements CheckDestroy__: Resource testing should include a `CheckDestroy` function (typically named `testAccCheckAws{SERVICE}{RESOURCE}Destroy`) that calls the API to verify that the Terraform resource has been deleted or disassociated as appropriate. More information about `CheckDestroy` functions can be found in the [Extending Terraform TestCase documentation](https://www.terraform.io/docs/extend/testing/acceptance-tests/testcase.html#checkdestroy).
+- [ ] __Implements Exists Check Function__: Resource testing should include a `TestCheckFunc` function (typically named `testAccCheckAws{SERVICE}{RESOURCE}Exists`) that calls the API to verify that the Terraform resource has been created or associated as appropriate. Preferably, this function will also accept a pointer to an API object representing the Terraform resource from the API response that can be set for potential usage in later `TestCheckFunc`. More information about these functions can be found in the [Extending Terraform Custom Check Functions documentation](https://www.terraform.io/docs/extend/testing/acceptance-tests/testcase.html#checkdestroy).
+- [ ] __Excludes Provider Declarations__: Test configurations should not include `provider "aws" {...}` declarations. If necessary, only the provider declarations in `provider_test.go` should be used for multiple account/region or otherwise specialized testing.
+- [ ] __Passes in us-west-2 Region__: Tests default to running in `us-west-2` and at a minimum should pass in that region or include necessary `PreCheck` functions to skip the test when ran outside an expected environment.
+- [ ] __Uses resource.ParallelTest__: Tests should utilize [`resource.ParallelTest()`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#ParallelTest) instead of [`resource.Test()`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#Test) except where serialized testing is absolutely required.
+- [ ] __Uses fmt.Sprintf()__: Test configurations preferably should to be separated into their own functions (typically named `testAccAws{SERVICE}{RESOURCE}Config{PURPOSE}`) that call [`fmt.Sprintf()`](https://golang.org/pkg/fmt/#Sprintf) for variable injection or a string `const` for completely static configurations. Test configurations should avoid `var` or other variable injection functionality such as [`text/template`](https://golang.org/pkg/text/template/).
+- [ ] __Uses Randomized Infrastructure Naming__: Test configurations that utilize resources where a unique name is required should generate a random name. Typically this is created via `rName := acctest.RandomWithPrefix("tf-acc-test")` in the acceptance test function before generating the configuration.
+
+For resources that support import, the additional item below is required that will be noted during submission review and prevent immediate merging:
+
+- [ ] __Implements ImportState Testing__: Tests should include an additional `TestStep` configuration that verifies resource import via `ImportState: true` and `ImportStateVerify: true`. This `TestStep` should be added to all possible tests for the resource to ensure that all infrastructure configurations are properly imported into Terraform.
+
+The below are style-based items that _may_ be noted during review and are recommended for simplicity, consistency, and quality assurance:
+
+- [ ] __Uses Builtin Check Functions__: Tests should utilize already available check functions, e.g. `resource.TestCheckResourceAttr()`, to verify values in the Terraform state over creating custom `TestCheckFunc`. More information about these functions can be found in the [Extending Terraform Builtin Check Functions documentation](https://www.terraform.io/docs/extend/testing/acceptance-tests/teststep.html#builtin-check-functions).
+- [ ] __Uses TestCheckResoureAttrPair() for Data Sources__: Tests should utilize [`resource.TestCheckResourceAttrPair()`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#TestCheckResourceAttrPair) to verify values in the Terraform state for data sources attributes to compare them with their expected resource attributes.
+- [ ] __Excludes Timeouts Configurations__: Test configurations should not include `timeouts {...}` configuration blocks except for explicit testing of customizable timeouts (typically very short timeouts with `ExpectError`).
+- [ ] __Implements Default and Zero Value Validation__: The basic test for a resource (typically named `TestAccAws{SERVICE}{RESOURCE}_basic`) should utilize available check functions, e.g. `resource.TestCheckResourceAttr()`, to verify default and zero values in the Terraform state for all attributes. Empty/missing configuration blocks can be verified with `resource.TestCheckResourceAttr(resourceName, "{ATTRIBUTE}.#", "0")` and empty maps with `resource.TestCheckResourceAttr(resourceName, "{ATTRIBUTE}.%", "0")`
+
+The below are location-based items that _may_ be noted during review and are recommended for consistency with testing flexibility. Resource testing is expected to pass across multiple AWS environments supported by the Terraform AWS Provider (e.g. AWS Standard and AWS GovCloud (US)). Contributors are not expected or required to perform testing outside of AWS Standard, e.g. running only in the `us-west-2` region is perfectly acceptable, however these are provided for reference:
+
+- [ ] __Uses aws_ami Data Source__: Any hardcoded AMI ID configuration, e.g. `ami-12345678`, should be replaced with the [`aws_ami` data source](https://www.terraform.io/docs/providers/aws/d/ami.html) pointing to an Amazon Linux image. A common pattern is a configuration like the below, which will likely be moved into a common configuration function in the future:
+
+  ```hcl
+  data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
+    most_recent = true
+    owners      = ["amazon"]
+
+    filter {
+      name = "name"
+      values = ["amzn-ami-minimal-hvm-*"]
+    }
+    filter {
+      name = "root-device-type"
+      values = ["ebs"]
+    }
+  }
+  ```
+
+- [ ] __Uses aws_availability_zones Data Source__: Any hardcoded AWS Availability Zone configuration, e.g. `us-west-2a`, should be replaced with the [`aws_availability_zones` data source](https://www.terraform.io/docs/providers/aws/d/availability_zones.html). A common pattern is declaring `data "aws_availability_zones" "current" {}` and referencing it via `data.aws_availability_zones.current.names[0]` or `data.aws_availability_zones.current.names[count.index]` in resources utilizing `count`.
+- [ ] __Uses aws_region Data Source__: Any hardcoded AWS Region configuration, e.g. `us-west-2`, should be replaced with the [`aws_region` data source](https://www.terraform.io/docs/providers/aws/d/region.html). A common pattern is declaring `data "aws_region" "cname}` and referencing it via `data.aws_region.current.name`
+- [ ] __Uses aws_partition Data Source__: Any hardcoded AWS Partition configuration, e.g. the `aws` in a `arn:aws:SERVICE:REGION:ACCOUNT:RESOURCE` ARN, should be replaced with the [`aws_partition` data source](https://www.terraform.io/docs/providers/aws/d/partition.html). A common pattern is declaring `data "aws_partition" "current" {}` and referencing it via `data.aws_partition.current.partition`
+- [ ] __Uses Builtin ARN Check Functions__: Tests should utilize available ARN check functions, e.g. `testAccMatchResourceAttrRegionalARN()`, to validate ARN attribute values in the Terraform state over `resource.TestCheckResourceAttrSet()` and `resource.TestMatchResourceAttr()`
+- [ ] __Uses testAccCheckResourceAttrAccountID()__: Tests should utilize the available AWS Account ID check function, `testAccCheckResourceAttrAccountID()` to validate account ID attribute values in the Terraform state over `resource.TestCheckResourceAttrSet()` and `resource.TestMatchResourceAttr()`
 
 [website]: https://github.com/terraform-providers/terraform-provider-aws/tree/master/website
 [acctests]: https://github.com/hashicorp/terraform#acceptance-tests

@@ -24,6 +24,7 @@ var testAccProvidersWithTLS map[string]terraform.ResourceProvider
 var testAccProviderFactories func(providers *[]*schema.Provider) map[string]terraform.ResourceProviderFactory
 var testAccProvider *schema.Provider
 var testAccTemplateProvider *schema.Provider
+var testAccProviderFunc func() *schema.Provider
 
 func init() {
 	testAccProvider = Provider().(*schema.Provider)
@@ -53,6 +54,8 @@ func init() {
 	for k, v := range testAccProviders {
 		testAccProvidersWithTLS[k] = v
 	}
+
+	testAccProviderFunc = func() *schema.Provider { return testAccProvider }
 }
 
 func TestProvider(t *testing.T) {
@@ -191,6 +194,14 @@ func testAccGetRegion() string {
 	return v
 }
 
+func testAccGetAlternateRegion() string {
+	v := os.Getenv("AWS_ALTERNATE_REGION")
+	if v == "" {
+		return "us-east-1"
+	}
+	return v
+}
+
 func testAccGetPartition() string {
 	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), testAccGetRegion()); ok {
 		return partition.ID()
@@ -205,6 +216,12 @@ func testAccAlternateAccountPreCheck(t *testing.T) {
 
 	if os.Getenv("AWS_ALTERNATE_ACCESS_KEY_ID") != "" && os.Getenv("AWS_ALTERNATE_SECRET_ACCESS_KEY") == "" {
 		t.Fatal("AWS_ALTERNATE_SECRET_ACCESS_KEY must be set for acceptance tests")
+	}
+}
+
+func testAccAlternateRegionPreCheck(t *testing.T) {
+	if testAccGetRegion() == testAccGetAlternateRegion() {
+		t.Fatal("AWS_DEFAULT_REGION and AWS_ALTERNATE_REGION must be set to different values for acceptance tests")
 	}
 }
 
@@ -256,6 +273,27 @@ provider "aws" {
   secret_key = %[3]q
 }
 `, os.Getenv("AWS_ALTERNATE_ACCESS_KEY_ID"), os.Getenv("AWS_ALTERNATE_PROFILE"), os.Getenv("AWS_ALTERNATE_SECRET_ACCESS_KEY"))
+}
+
+func testAccAlternateAccountAlternateRegionProviderConfig() string {
+	return fmt.Sprintf(`
+provider "aws" {
+  access_key = %[1]q
+  alias      = "alternate"
+  profile    = %[2]q
+  region     = %[3]q
+  secret_key = %[4]q
+}
+`, os.Getenv("AWS_ALTERNATE_ACCESS_KEY_ID"), os.Getenv("AWS_ALTERNATE_PROFILE"), testAccGetAlternateRegion(), os.Getenv("AWS_ALTERNATE_SECRET_ACCESS_KEY"))
+}
+
+func testAccAlternateRegionProviderConfig() string {
+	return fmt.Sprintf(`
+provider "aws" {
+  alias  = "alternate"
+  region = %[1]q
+}
+`, testAccGetAlternateRegion())
 }
 
 // Provider configuration hardcoded for us-east-1.
