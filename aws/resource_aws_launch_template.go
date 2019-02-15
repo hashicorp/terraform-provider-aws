@@ -47,6 +47,7 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				Default:      "Managed by Terraform",
 				ValidateFunc: validation.StringLenBetween(0, 255),
 			},
 
@@ -517,6 +518,7 @@ func resourceAwsLaunchTemplateCreate(d *schema.ResourceData, meta interface{}) e
 		ClientToken:        aws.String(resource.UniqueId()),
 		LaunchTemplateName: aws.String(ltName),
 		LaunchTemplateData: launchTemplateData,
+		VersionDescription: aws.String(d.Get("description").(string)),
 	}
 
 	resp, err := conn.CreateLaunchTemplate(launchTemplateOpts)
@@ -596,6 +598,8 @@ func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	log.Printf("[DEBUG] Received launch template version %q (version %d)", d.Id(), *lt.LatestVersionNumber)
+
+	d.Set("description", dltv.LaunchTemplateVersions[0].VersionDescription)
 
 	ltData := dltv.LaunchTemplateVersions[0].LaunchTemplateData
 
@@ -677,6 +681,7 @@ func resourceAwsLaunchTemplateUpdate(d *schema.ResourceData, meta interface{}) e
 			ClientToken:        aws.String(resource.UniqueId()),
 			LaunchTemplateId:   aws.String(d.Id()),
 			LaunchTemplateData: launchTemplateData,
+			VersionDescription: aws.String(d.Get("description").(string)),
 		}
 
 		_, createErr := conn.CreateLaunchTemplateVersion(launchTemplateVersionOpts)
