@@ -88,6 +88,10 @@ resource "aws_elasticache_replication_group" "baz" {
 }
 ```
 
+~> **Note:** While parameter_group_name is optional not setting it will result in creation of a cluster with ClusterMode off.
+This then results in forced recreation of the resource as AWS will return ClusterEnabled false while Terraform has it set to enabled 
+in the terraform state.
+
 ~> **Note:** We currently do not support passing a `primary_cluster_id` in order to create the Replication Group.
 
 ~> **Note:** Automatic Failover is unavailable for Redis versions earlier than 2.8.6,
