@@ -145,6 +145,8 @@ Default is `false`. This value should be set to `true` only if the bucket has S3
 
 If no content is provided through `source`, `content` or `content_base64`, then the object will be empty.
 
+-> **Note:** Terraform ignores all leading `/`s in the object's `key` and treats multiple `/`s in the rest of the object's `key` as a single `/`, so values of `/index.html` and `index.html` correspond to the same S3 object as do `first//second///third//` and `first/second/third/`.
+
 ## Attributes Reference
 
 The following attributes are exported
