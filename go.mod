@@ -28,11 +28,11 @@ require (
 	github.com/hashicorp/go-version v1.0.0
 	github.com/hashicorp/hcl v0.0.0-20170504190234-a4b07c25de5f // indirect
 	github.com/hashicorp/hcl2 v0.0.0-20171003232734-44bad6dbf549 // indirect
-	github.com/hashicorp/hil v0.0.0-20170512213305-fac2259da677 // indirect
+	github.com/hashicorp/hil v0.0.0-20190212132231-97b3a9cdfa93 // indirect
 	github.com/hashicorp/logutils v1.0.0 // indirect
 	github.com/hashicorp/terraform v0.11.9-beta1
 	github.com/hashicorp/vault v0.10.4
-	github.com/hashicorp/yamux v0.0.0-20160720233140-d1caa6c97c9f // indirect
+	github.com/hashicorp/yamux v0.0.0-20181012175058-2f1d1f20f75d // indirect
 	github.com/jen20/awspolicyequivalence v1.0.0
 	github.com/json-iterator/go v1.1.5 // indirect
 	github.com/keybase/go-crypto v0.0.0-20161004153544-93f5b35093ba // indirect

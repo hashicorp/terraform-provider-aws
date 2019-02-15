@@ -57,6 +57,8 @@ github.com/hashicorp/hcl2 v0.0.0-20171003232734-44bad6dbf549 h1:SbdiQMe+oiRwEjCc
 github.com/hashicorp/hcl2 v0.0.0-20171003232734-44bad6dbf549/go.mod h1:xp1eMAxqhQKBxz+yQUTsig9bBMRRWRWw+rK3FJmHf/A=
 github.com/hashicorp/hil v0.0.0-20170512213305-fac2259da677 h1:Yj0RcrbLT/5z2k1UdRW+2r0nDUgrKjUNLQiXzMU4a5k=
 github.com/hashicorp/hil v0.0.0-20170512213305-fac2259da677/go.mod h1:KHvg/R2/dPtaePb16oW4qIyzkMxXOL38xjRN64adsts=
+github.com/hashicorp/hil v0.0.0-20190212132231-97b3a9cdfa93 h1:T1Q6ag9tCwun16AW+XK3tAql24P4uTGUMIn1/92WsQQ=
+github.com/hashicorp/hil v0.0.0-20190212132231-97b3a9cdfa93/go.mod h1:n2TSygSNwsLJ76m8qFXTSc7beTb+auJxYdqrnoqwZWE=
 github.com/hashicorp/logutils v1.0.0 h1:dLEQVugN8vlakKOUE3ihGLTZJRB4j+M2cdTm/ORI65Y=
 github.com/hashicorp/logutils v1.0.0/go.mod h1:QIAnNjmIWmVIIkWDTG1z5v++HQmx9WQRO+LraFDTW64=
 github.com/hashicorp/terraform v0.11.9-beta1 h1:LIGWX0BoPCruLMLddpG1u8cKWx0DdvsHHWN/oOjZf8w=
@@ -65,6 +67,8 @@ github.com/hashicorp/vault v0.10.4 h1:4x0lHxui/ZRp/B3E0Auv1QNBJpzETqHR2kQD3mHSBJ
 github.com/hashicorp/vault v0.10.4/go.mod h1:KfSyffbKxoVyspOdlaGVjIuwLobi07qD1bAbosPMpP0=
 github.com/hashicorp/yamux v0.0.0-20160720233140-d1caa6c97c9f h1:K4RDeor/qhbs5ETM85SN8xekXkk+KkOBclNXXM8+UR0=
 github.com/hashicorp/yamux v0.0.0-20160720233140-d1caa6c97c9f/go.mod h1:+NfK9FKeTrX5uv1uIXGdwYDTeHna2qgaIlx54MXqjAM=
+github.com/hashicorp/yamux v0.0.0-20181012175058-2f1d1f20f75d h1:kJCB4vdITiW1eC1vq2e6IsrXKrZit1bv/TDYFGMp4BQ=
+github.com/hashicorp/yamux v0.0.0-20181012175058-2f1d1f20f75d/go.mod h1:+NfK9FKeTrX5uv1uIXGdwYDTeHna2qgaIlx54MXqjAM=
 github.com/jen20/awspolicyequivalence v1.0.0 h1:jLRh4GRf0IfIpMm9/m+krLnjAda4NpI9+2o5Kb/Q+G4=
 github.com/jen20/awspolicyequivalence v1.0.0/go.mod h1:PV1fS2xyHhCLp83vbgSMFr2drM4GzG61wkz+k4pOG3E=
 github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af h1:pmfjZENx5imkbgOkpRUYLnmbU7UEFbjtDA2hxJ1ichM=
@@ -93,6 +97,8 @@ github.com/mitchellh/hashstructure v1.0.0 h1:ZkRJX1CyOoTkar7p/mLS5TZU4nJ1Rn/F8u9
 github.com/mitchellh/hashstructure v1.0.0/go.mod h1:QjSHrPWS+BGUVBYkbTZWEnOh3G1DutKwClXU/ABz6AQ=
 github.com/mitchellh/mapstructure v1.0.0 h1:vVpGvMXJPqSDh2VYHF7gsfQj8Ncx+Xw5Y1KHeTRY+7I=
 github.com/mitchellh/mapstructure v1.0.0/go.mod h1:FVVH3fgwuzCH5S8UJGiWEs2h04kUh9fWfEaFds41c1Y=
+github.com/mitchellh/mapstructure v1.1.2 h1:fmNYVwqnSfB9mZU6OS2O6GsXM+wcskZDuKQzvN1EDeE=
+github.com/mitchellh/mapstructure v1.1.2/go.mod h1:FVVH3fgwuzCH5S8UJGiWEs2h04kUh9fWfEaFds41c1Y=
 github.com/mitchellh/reflectwalk v1.0.0 h1:9D+8oIskB4VJBN5SFlmc27fSlIBZaov1Wpk/IfikLNY=
 github.com/mitchellh/reflectwalk v1.0.0/go.mod h1:mSTlrgnPZtwu0c4WaC2kGObEpuNDbx0jmZXqmk4esnw=
 github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd h1:TRLaZ9cD/w8PVh93nsPXa1VrQ6jlwL5oN8l14QlcNfg=
