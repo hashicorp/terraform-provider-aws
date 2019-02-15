@@ -840,16 +840,10 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 		if attr.UserData != nil && attr.UserData.Value != nil {
-			// Since user_data and user_data_base64 conflict with each other,
-			// we'll only set one or the other here to avoid a perma-diff.
-			// Since user_data_base64 was added later, we'll prefer to set
-			// user_data.
-			_, b64 := d.GetOk("user_data_base64")
-			if b64 {
-				d.Set("user_data_base64", attr.UserData.Value)
-			} else {
-				d.Set("user_data", userDataHashSum(*attr.UserData.Value))
-			}
+			// Always use `user_data_base64`. Otherwise we will always
+			// register drift as we will be comparing a hash (.tfstate)
+			// to a hash of the hast (.tf.json).
+			d.Set("user_data_base64", attr.UserData.Value)
 		}
 	}
 	{
