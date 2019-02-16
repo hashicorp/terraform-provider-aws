@@ -36,12 +36,6 @@ func testSweepElasticacheClusters(region string) error {
 	}
 	conn := client.(*AWSClient).elasticacheconn
 
-	prefixes := []string{
-		"tf-",
-		"tf-test-",
-		"tf-acc-test-",
-	}
-
 	err = conn.DescribeCacheClustersPages(&elasticache.DescribeCacheClustersInput{}, func(page *elasticache.DescribeCacheClustersOutput, isLast bool) bool {
 		if len(page.CacheClusters) == 0 {
 			log.Print("[DEBUG] No Elasticache Replicaton Groups to sweep")
@@ -50,17 +44,7 @@ func testSweepElasticacheClusters(region string) error {
 
 		for _, cluster := range page.CacheClusters {
 			id := aws.StringValue(cluster.CacheClusterId)
-			skip := true
-			for _, prefix := range prefixes {
-				if strings.HasPrefix(id, prefix) {
-					skip = false
-					break
-				}
-			}
-			if skip {
-				log.Printf("[INFO] Skipping Elasticache Cluster: %s", id)
-				continue
-			}
+
 			log.Printf("[INFO] Deleting Elasticache Cluster: %s", id)
 			err := deleteElasticacheCacheCluster(conn, id)
 			if err != nil {

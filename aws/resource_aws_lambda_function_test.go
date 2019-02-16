@@ -49,17 +49,6 @@ func testSweepLambdaFunctions(region string) error {
 	}
 
 	for _, f := range resp.Functions {
-		var testOptGroup bool
-		for _, testName := range []string{"tf_test", "tf_acc_"} {
-			if strings.HasPrefix(*f.FunctionName, testName) {
-				testOptGroup = true
-			}
-		}
-
-		if !testOptGroup {
-			continue
-		}
-
 		_, err := lambdaconn.DeleteFunction(
 			&lambda.DeleteFunctionInput{
 				FunctionName: f.FunctionName,

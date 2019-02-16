@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -45,10 +44,6 @@ func testSweepConfigConfigurationAggregators(region string) error {
 	log.Printf("[INFO] Found %d config configuration aggregators", len(resp.ConfigurationAggregators))
 
 	for _, agg := range resp.ConfigurationAggregators {
-		if !strings.HasPrefix(*agg.ConfigurationAggregatorName, "tf-") {
-			continue
-		}
-
 		log.Printf("[INFO] Deleting config configuration aggregator %s", *agg.ConfigurationAggregatorName)
 		_, err := conn.DeleteConfigurationAggregator(&configservice.DeleteConfigurationAggregatorInput{
 			ConfigurationAggregatorName: agg.ConfigurationAggregatorName,

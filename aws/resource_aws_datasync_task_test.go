@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -49,10 +48,7 @@ func testSweepDataSyncTasks(region string) error {
 
 		for _, task := range output.Tasks {
 			name := aws.StringValue(task.Name)
-			if !strings.HasPrefix(name, "tf-acc-test") {
-				log.Printf("[INFO] Skipping DataSync Task: %s", name)
-				continue
-			}
+
 			log.Printf("[INFO] Deleting DataSync Task: %s", name)
 			input := &datasync.DeleteTaskInput{
 				TaskArn: task.TaskArn,

@@ -49,18 +49,6 @@ func testSweepAutoscalingGroups(region string) error {
 	}
 
 	for _, asg := range resp.AutoScalingGroups {
-		var testOptGroup bool
-		for _, testName := range []string{"foobar", "terraform-", "tf-test", "tf-asg-"} {
-			if strings.HasPrefix(*asg.AutoScalingGroupName, testName) {
-				testOptGroup = true
-				break
-			}
-		}
-
-		if !testOptGroup {
-			continue
-		}
-
 		deleteopts := autoscaling.DeleteAutoScalingGroupInput{
 			AutoScalingGroupName: asg.AutoScalingGroupName,
 			ForceDelete:          aws.Bool(true),

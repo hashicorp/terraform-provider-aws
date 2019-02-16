@@ -44,25 +44,8 @@ func testSweepLaunchConfigurations(region string) error {
 		return nil
 	}
 
-	prefixes := []string{
-		"foobar",
-		"terraform-",
-		"tf-acc-",
-		"TestAcc",
-	}
 	for _, lc := range resp.LaunchConfigurations {
 		name := *lc.LaunchConfigurationName
-		skip := true
-		for _, prefix := range prefixes {
-			if strings.HasPrefix(name, prefix) {
-				skip = false
-			}
-		}
-
-		if skip {
-			log.Printf("[INFO] Skipping Launch Configuration: %s", name)
-			continue
-		}
 
 		log.Printf("[INFO] Deleting Launch Configuration: %s", name)
 		_, err := autoscalingconn.DeleteLaunchConfiguration(

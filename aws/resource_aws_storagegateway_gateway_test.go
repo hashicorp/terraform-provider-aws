@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -36,10 +35,7 @@ func testSweepStorageGatewayGateways(region string) error {
 
 		for _, gateway := range page.Gateways {
 			name := aws.StringValue(gateway.GatewayName)
-			if !strings.HasPrefix(name, "tf-acc-test-") {
-				log.Printf("[INFO] Skipping Storage Gateway Gateway: %s", name)
-				continue
-			}
+
 			log.Printf("[INFO] Deleting Storage Gateway Gateway: %s", name)
 			input := &storagegateway.DeleteGatewayInput{
 				GatewayARN: gateway.GatewayARN,

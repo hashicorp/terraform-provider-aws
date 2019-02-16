@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -37,10 +36,7 @@ func testSweepRedshiftClusters(region string) error {
 		}
 
 		for _, c := range resp.Clusters {
-			id := *c.ClusterIdentifier
-			if !strings.HasPrefix(id, "tf-redshift-cluster-") {
-				continue
-			}
+			id := aws.StringValue(c.ClusterIdentifier)
 
 			input := &redshift.DeleteClusterInput{
 				ClusterIdentifier:        c.ClusterIdentifier,
@@ -48,8 +44,7 @@ func testSweepRedshiftClusters(region string) error {
 			}
 			_, err := conn.DeleteCluster(input)
 			if err != nil {
-				log.Printf("[ERROR] Failed deleting Redshift cluster (%s): %s",
-					*c.ClusterIdentifier, err)
+				log.Printf("[ERROR] Failed deleting Redshift cluster (%s): %s", id, err)
 			}
 		}
 		return !isLast

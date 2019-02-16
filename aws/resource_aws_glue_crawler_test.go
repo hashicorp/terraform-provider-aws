@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"strconv"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -38,10 +37,6 @@ func testSweepGlueCrawlers(region string) error {
 		}
 		for _, crawler := range page.Crawlers {
 			name := aws.StringValue(crawler.Name)
-			if !strings.HasPrefix(name, "tf-acc-test-") {
-				log.Printf("[INFO] Skipping Glue Crawler: %s", name)
-				continue
-			}
 
 			log.Printf("[INFO] Deleting Glue Crawler: %s", name)
 			_, err := conn.DeleteCrawler(&glue.DeleteCrawlerInput{
