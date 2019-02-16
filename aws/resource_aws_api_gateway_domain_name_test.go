@@ -104,6 +104,38 @@ func TestAccAWSAPIGatewayDomainName_CertificateName(t *testing.T) {
 	})
 }
 
+func TestAccAWSAPIGatewayDomainName_verifyDomainName(t *testing.T) {
+	var conf apigateway.DomainName
+
+	rString := acctest.RandString(8)
+	name := fmt.Sprintf("tf-acc-%s.terraformtest.com.", rString)
+	commonName := "*.terraformtest.com"
+	certRe := regexp.MustCompile("^-----BEGIN CERTIFICATE-----\n")
+	keyRe := regexp.MustCompile("^-----BEGIN RSA PRIVATE KEY-----\n")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProvidersWithTLS,
+		CheckDestroy: testAccCheckAWSAPIGatewayDomainNameDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayDomainNameConfig_CertificateName(name, commonName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayDomainNameExists("aws_api_gateway_domain_name.test", &conf),
+					resource.TestMatchResourceAttr("aws_api_gateway_domain_name.test", "certificate_body", certRe),
+					resource.TestMatchResourceAttr("aws_api_gateway_domain_name.test", "certificate_chain", certRe),
+					resource.TestCheckResourceAttr("aws_api_gateway_domain_name.test", "certificate_name", "tf-acc-apigateway-domain-name"),
+					resource.TestMatchResourceAttr("aws_api_gateway_domain_name.test", "certificate_private_key", keyRe),
+					resource.TestCheckResourceAttrSet("aws_api_gateway_domain_name.test", "cloudfront_domain_name"),
+					resource.TestCheckResourceAttr("aws_api_gateway_domain_name.test", "cloudfront_zone_id", "Z2FDTNDATAQYW2"),
+					resource.TestCheckResourceAttr("aws_api_gateway_domain_name.test", "domain_name", name),
+					resource.TestCheckResourceAttrSet("aws_api_gateway_domain_name.test", "certificate_upload_date"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSAPIGatewayDomainName_RegionalCertificateArn(t *testing.T) {
 	// For now, use an environment variable to limit running this test
 	regionalCertificateArn := os.Getenv("AWS_API_GATEWAY_DOMAIN_NAME_REGIONAL_CERTIFICATE_ARN")
