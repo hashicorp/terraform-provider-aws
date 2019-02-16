@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -138,8 +139,11 @@ func resourceAwsApiGatewayDomainNameCreate(d *schema.ResourceData, meta interfac
 	conn := meta.(*AWSClient).apigateway
 	log.Printf("[DEBUG] Creating API Gateway Domain Name")
 
+	name := d.Get("domain_name").(string)
+	v := strings.TrimSuffix(name, ".")
+
 	params := &apigateway.CreateDomainNameInput{
-		DomainName: aws.String(d.Get("domain_name").(string)),
+		DomainName: aws.String(v),
 	}
 
 	if v, ok := d.GetOk("certificate_arn"); ok {

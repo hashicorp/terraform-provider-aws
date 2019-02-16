@@ -108,7 +108,7 @@ func TestAccAWSAPIGatewayDomainName_verifyDomainName(t *testing.T) {
 	var conf apigateway.DomainName
 
 	rString := acctest.RandString(8)
-	name := fmt.Sprintf("tf-acc-%s.terraformtest.com.", rString)
+	name := fmt.Sprintf("tf-acc-%s.terraformtest.com", rString)
 	commonName := "*.terraformtest.com"
 	certRe := regexp.MustCompile("^-----BEGIN CERTIFICATE-----\n")
 	keyRe := regexp.MustCompile("^-----BEGIN RSA PRIVATE KEY-----\n")
@@ -119,7 +119,7 @@ func TestAccAWSAPIGatewayDomainName_verifyDomainName(t *testing.T) {
 		CheckDestroy: testAccCheckAWSAPIGatewayDomainNameDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayDomainNameConfig_CertificateName(name, commonName),
+				Config: testAccAWSAPIGatewayDomainNameConfig_CertificateName(fmt.Sprintf("%s.", name), commonName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayDomainNameExists("aws_api_gateway_domain_name.test", &conf),
 					resource.TestMatchResourceAttr("aws_api_gateway_domain_name.test", "certificate_body", certRe),
@@ -131,6 +131,7 @@ func TestAccAWSAPIGatewayDomainName_verifyDomainName(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_api_gateway_domain_name.test", "domain_name", name),
 					resource.TestCheckResourceAttrSet("aws_api_gateway_domain_name.test", "certificate_upload_date"),
 				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
