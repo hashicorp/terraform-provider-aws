@@ -112,15 +112,15 @@ func resourceAwsEc2ClientVpnEndpoint() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"association_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
 						"security_groups": {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"association_id": {
+							Type:     schema.TypeString,
+							Computed: true,
 						},
 					},
 				},
@@ -152,10 +152,6 @@ func resourceAwsEc2ClientVpnEndpoint() *schema.Resource {
 				},
 			},
 			"dns_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -324,7 +320,6 @@ func resourceAwsEc2ClientVpnEndpointRead(d *schema.ResourceData, meta interface{
 	d.Set("server_certificate_arn", result.ClientVpnEndpoints[0].ServerCertificateArn)
 	d.Set("transport_protocol", result.ClientVpnEndpoints[0].TransportProtocol)
 	d.Set("dns_name", result.ClientVpnEndpoints[0].DnsName)
-	d.Set("status", result.ClientVpnEndpoints[0].Status)
 
 	err = d.Set("authentication_options", flattenAuthOptsConfig(result.ClientVpnEndpoints[0].AuthenticationOptions))
 	if err != nil {

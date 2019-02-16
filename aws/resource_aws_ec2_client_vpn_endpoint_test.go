@@ -13,6 +13,7 @@ import (
 
 func TestAccAwsEc2ClientVpnEndpoint_basic(t *testing.T) {
 	rStr := acctest.RandString(5)
+	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -22,14 +23,21 @@ func TestAccAwsEc2ClientVpnEndpoint_basic(t *testing.T) {
 			{
 				Config: testAccEc2ClientVpnEndpointConfig(rStr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsEc2ClientVpnEndpointExists("aws_ec2_client_vpn_endpoint.test"),
-					resource.TestCheckResourceAttr("aws_ec2_client_vpn_endpoint.test", "authentication_options.#", "1"),
-					resource.TestCheckResourceAttr("aws_ec2_client_vpn_endpoint.test", "authentication_options.0.type", "certificate-authentication"),
+					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "description"),
+					resource.TestCheckResourceAttrSet(resourceName, "server_certificate_arn"),
+					resource.TestCheckResourceAttr(resourceName, "client_cidr_block", "10.0.0.0/16"),
+					resource.TestCheckResourceAttr(resourceName, "transport_protocol", "udp"),
+					resource.TestCheckResourceAttr(resourceName, "authentication_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "authentication_options.0.type", "certificate-authentication"),
+					resource.TestCheckResourceAttr(resourceName, "connection_log_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "connection_log_options.0.enabled", "false"),
+					resource.TestCheckResourceAttrSet(resourceName, "dns_name"),
 				),
 			},
 
 			{
-				ResourceName:      "aws_ec2_client_vpn_endpoint.test",
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -39,6 +47,7 @@ func TestAccAwsEc2ClientVpnEndpoint_basic(t *testing.T) {
 
 func TestAccAwsEc2ClientVpnEndpoint_msAD(t *testing.T) {
 	rStr := acctest.RandString(5)
+	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -48,14 +57,14 @@ func TestAccAwsEc2ClientVpnEndpoint_msAD(t *testing.T) {
 			{
 				Config: testAccEc2ClientVpnEndpointConfigWithMicrosoftAD(rStr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsEc2ClientVpnEndpointExists("aws_ec2_client_vpn_endpoint.test"),
-					resource.TestCheckResourceAttr("aws_ec2_client_vpn_endpoint.test", "authentication_options.#", "1"),
-					resource.TestCheckResourceAttr("aws_ec2_client_vpn_endpoint.test", "authentication_options.0.type", "directory-service-authentication"),
+					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "authentication_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "authentication_options.0.type", "directory-service-authentication"),
 				),
 			},
 
 			{
-				ResourceName:      "aws_ec2_client_vpn_endpoint.test",
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -65,6 +74,7 @@ func TestAccAwsEc2ClientVpnEndpoint_msAD(t *testing.T) {
 
 func TestAccAwsEc2ClientVpnEndpoint_withLogGroup(t *testing.T) {
 	rStr := acctest.RandString(5)
+	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -74,19 +84,23 @@ func TestAccAwsEc2ClientVpnEndpoint_withLogGroup(t *testing.T) {
 			{
 				Config: testAccEc2ClientVpnEndpointConfig(rStr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsEc2ClientVpnEndpointExists("aws_ec2_client_vpn_endpoint.test"),
+					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName),
 				),
 			},
 
 			{
 				Config: testAccEc2ClientVpnEndpointConfigWithLogGroup(rStr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsEc2ClientVpnEndpointExists("aws_ec2_client_vpn_endpoint.test"),
+					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "connection_log_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "connection_log_options.0.enabled", "true"),
+					resource.TestCheckResourceAttrSet(resourceName, "connection_log_options.0.cloudwatch_log_group"),
+					resource.TestCheckResourceAttrSet(resourceName, "connection_log_options.0.cloudwatch_log_stream"),
 				),
 			},
 
 			{
-				ResourceName:      "aws_ec2_client_vpn_endpoint.test",
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -96,6 +110,7 @@ func TestAccAwsEc2ClientVpnEndpoint_withLogGroup(t *testing.T) {
 
 func TestAccAwsEc2ClientVpnEndpoint_withDNSServers(t *testing.T) {
 	rStr := acctest.RandString(5)
+	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -105,22 +120,15 @@ func TestAccAwsEc2ClientVpnEndpoint_withDNSServers(t *testing.T) {
 			{
 				Config: testAccEc2ClientVpnEndpointConfig(rStr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsEc2ClientVpnEndpointExists("aws_ec2_client_vpn_endpoint.test"),
+					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName),
 				),
 			},
 
 			{
 				Config: testAccEc2ClientVpnEndpointConfigWithDNSServers(rStr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsEc2ClientVpnEndpointExists("aws_ec2_client_vpn_endpoint.test"),
+					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName),
 				),
-			},
-
-			{
-				ResourceName:            "aws_ec2_client_vpn_endpoint.test",
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"dns_servers"},
 			},
 		},
 	})
@@ -128,6 +136,7 @@ func TestAccAwsEc2ClientVpnEndpoint_withDNSServers(t *testing.T) {
 
 func TestAccAwsEc2ClientVpnEndpoint_withNetworkAssociation(t *testing.T) {
 	rStr := acctest.RandString(5)
+	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -137,13 +146,14 @@ func TestAccAwsEc2ClientVpnEndpoint_withNetworkAssociation(t *testing.T) {
 			{
 				Config: testAccEc2ClientVpnEndpointConfig(rStr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsEc2ClientVpnEndpointExists("aws_ec2_client_vpn_endpoint.test"),
+					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName),
 				),
 			},
 			{
 				Config: testAccEc2ClientVpnEndpointConfigWithNetworkAssociation(rStr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsEc2ClientVpnEndpointExists("aws_ec2_client_vpn_endpoint.test"),
+					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "network_association.#", "1"),
 				),
 			},
 		},
@@ -152,6 +162,7 @@ func TestAccAwsEc2ClientVpnEndpoint_withNetworkAssociation(t *testing.T) {
 
 func TestAccAwsEc2ClientVpnEndpoint_withAuthorizationRules(t *testing.T) {
 	rStr := acctest.RandString(5)
+	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -161,13 +172,16 @@ func TestAccAwsEc2ClientVpnEndpoint_withAuthorizationRules(t *testing.T) {
 			{
 				Config: testAccEc2ClientVpnEndpointConfig(rStr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsEc2ClientVpnEndpointExists("aws_ec2_client_vpn_endpoint.test"),
+					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName),
 				),
 			},
 			{
 				Config: testAccEc2ClientVpnEndpointConfigWithAuthorizationRules(rStr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsEc2ClientVpnEndpointExists("aws_ec2_client_vpn_endpoint.test"),
+					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "authorization_rule.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "authorization_rule.2707333359.description"),
+					resource.TestCheckResourceAttrSet(resourceName, "authorization_rule.2707333359.target_network_cidr"),
 				),
 			},
 		},
