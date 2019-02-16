@@ -227,8 +227,12 @@ func expandAwsCodePipelineArtifactStore(d *schema.ResourceData) *codepipeline.Ar
 
 func flattenAwsCodePipelineArtifactStore(artifactStore *codepipeline.ArtifactStore) []interface{} {
 	values := map[string]interface{}{}
-	values["type"] = *artifactStore.Type
-	values["location"] = *artifactStore.Location
+	if artifactStore.Type != nil {
+		values["type"] = aws.StringValue(artifactStore.Type)
+	}
+	if artifactStore.Location != nil {
+		values["location"] = aws.StringValue(artifactStore.Location)
+	}
 	if artifactStore.EncryptionKey != nil {
 		as := map[string]interface{}{
 			"id":   *artifactStore.EncryptionKey.Id,
