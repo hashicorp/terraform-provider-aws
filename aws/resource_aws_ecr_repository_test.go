@@ -122,7 +122,7 @@ func testAccCheckAWSEcrRepositoryRegistryID(resourceName string) resource.TestCh
 
 func testAccCheckAWSEcrRepositoryRepositoryURL(resourceName, repositoryName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		attributeValue := fmt.Sprintf("%s.dkr.%s/%s", testAccGetAccountID(), testAccGetServiceEndpoint("ecr"), repositoryName)
+		attributeValue := fmt.Sprintf("%s.dkr.ecr.%s.amazonaws.com/%s", testAccGetAccountID(), testAccGetRegion(), repositoryName)
 		return resource.TestCheckResourceAttr(resourceName, "repository_url", attributeValue)(s)
 	}
 }

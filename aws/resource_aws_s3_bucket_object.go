@@ -390,6 +390,9 @@ func resourceAwsS3BucketObjectDelete(d *schema.ResourceData, meta interface{}) e
 
 	bucket := d.Get("bucket").(string)
 	key := d.Get("key").(string)
+	// We are effectively ignoring any leading '/' in the key name as aws.Config.DisableRestProtocolURICleaning is false
+	key = strings.TrimPrefix(key, "/")
+
 	delete_versions := d.Get("remove_all_on_delete").(bool)
 
 	if _, ok := d.GetOk("version_id"); ok && delete_versions {

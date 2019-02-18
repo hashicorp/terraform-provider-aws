@@ -2870,7 +2870,7 @@ resource "aws_instance" "foo" {
 		virtual_name = "ephemeral0"
 	}
 
-	volume_tags {
+	volume_tags = {
 		Name = "acceptance-test-volume-tag"
 	}
 }
@@ -2908,7 +2908,7 @@ resource "aws_instance" "foo" {
 		virtual_name = "ephemeral0"
 	}
 
-	volume_tags {
+	volume_tags = {
 		Name = "acceptance-test-volume-tag"
 		Environment = "dev"
 	}

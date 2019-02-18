@@ -300,7 +300,7 @@ resource "aws_transfer_server" "foo" {
   identity_provider_type = "SERVICE_MANAGED"
   logging_role = "${aws_iam_role.foo.arn}"
 
-  tags {
+  tags = {
 	NAME   = "tf-acc-test-transfer-server"
 	ENV    = "test"
   }
@@ -412,7 +412,7 @@ resource "aws_transfer_server" "foo" {
 	invocation_role 	   	= "${aws_iam_role.foo.arn}"
 	logging_role 		   	= "${aws_iam_role.foo.arn}"
 
-	tags {
+	tags = {
 	  NAME     = "tf-acc-test-transfer-server"
 	  TYPE	   = "apigateway"
 	}

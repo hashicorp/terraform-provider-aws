@@ -25,13 +25,13 @@ resource "aws_opsworks_application" "foo-app" {
     "sub.example.com",
   ]
 
-  environment = {
+  environment {
     key    = "key"
     value  = "value"
     secure = false
   }
 
-  app_source = {
+  app_source {
     type     = "git"
     revision = "master"
     url      = "https://github.com/example.git"
@@ -39,7 +39,7 @@ resource "aws_opsworks_application" "foo-app" {
 
   enable_ssl = true
 
-  ssl_configuration = {
+  ssl_configuration {
     private_key = "${file("./foobar.key")}"
     certificate = "${file("./foobar.crt")}"
   }

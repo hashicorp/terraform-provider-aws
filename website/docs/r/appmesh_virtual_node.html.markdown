@@ -12,6 +12,8 @@ Provides an AWS App Mesh virtual node resource.
 
 ## Example Usage
 
+### Basic
+
 ```hcl
 resource "aws_appmesh_virtual_node" "serviceb1" {
   name                = "serviceBv1"
@@ -24,6 +26,41 @@ resource "aws_appmesh_virtual_node" "serviceb1" {
       port_mapping {
         port     = 8080
         protocol = "http"
+      }
+    }
+
+    service_discovery {
+      dns {
+        service_name = "serviceb.simpleapp.local"
+      }
+    }
+  }
+}
+```
+
+### Listener Health Check
+
+```hcl
+resource "aws_appmesh_virtual_node" "serviceb1" {
+  name                = "serviceBv1"
+  mesh_name           = "simpleapp"
+
+  spec {
+    backends = ["servicea.simpleapp.local"]
+
+    listener {
+      port_mapping {
+        port     = 8080
+        protocol = "http"
+      }
+
+      health_check {
+        protocol            = "http"
+        path                = "/ping"
+        healthy_threshold   = 2
+        unhealthy_threshold = 2
+        timeout_millis      = 2000
+        interval_millis     = 5000
       }
     }
 
@@ -53,6 +90,7 @@ The `spec` object supports the following:
 The `listener` object supports the following:
 
 * `port_mapping` - (Required) The port mapping information for the listener.
+* `health_check` - (Optional) The health check information for the listener.
 
 The `service_discovery` object supports the following:
 
@@ -66,6 +104,16 @@ The `port_mapping` object supports the following:
 
 * `port` - (Required) The port used for the port mapping.
 * `protocol` - (Required) The protocol used for the port mapping. Valid values are `http` and `tcp`.
+
+The `health_check` object supports the following:
+
+* `healthy_threshold` - (Required) The number of consecutive successful health checks that must occur before declaring listener healthy.
+* `interval_millis`- (Required) The time period in milliseconds between each health check execution.
+* `protocol` - (Required) The protocol for the health check request. Valid values are `http` and `tcp`.
+* `timeout_millis` - (Required) The amount of time to wait when receiving a response from the health check, in milliseconds.
+* `unhealthy_threshold` - (Required) The number of consecutive failed health checks that must occur before declaring a virtual node unhealthy.
+* `path` - (Optional) The destination path for the health check request. This is only required if the specified protocol is `http`.
+* `port` - (Optional) The destination port for the health check request. This port must match the port defined in the `port_mapping` for the listener.
 
 ## Attributes Reference
 

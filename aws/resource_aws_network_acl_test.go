@@ -690,7 +690,7 @@ resource "aws_subnet" "blob" {
 
 resource "aws_network_acl" "foos" {
   vpc_id = "${aws_vpc.foo.id}"
-  ingress = {
+  ingress {
     protocol = "tcp"
     rule_no = 1
     action = "allow"
@@ -707,10 +707,6 @@ resource "aws_network_acl" "foos" {
 `
 
 const testAccAWSNetworkAclIpv6VpcConfig = `
-provider "aws" {
-  region = "us-east-2"
-}
-
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
   assign_generated_ipv6_cidr_block = true
@@ -722,7 +718,7 @@ resource "aws_vpc" "foo" {
 
 resource "aws_network_acl" "foos" {
   vpc_id = "${aws_vpc.foo.id}"
-  ingress = {
+  ingress {
     protocol = "tcp"
     rule_no = 1
     action = "allow"
@@ -755,7 +751,7 @@ resource "aws_subnet" "blob" {
 
 resource "aws_network_acl" "foos" {
   vpc_id = "${aws_vpc.foo.id}"
-  ingress = {
+  ingress {
     protocol = "tcp"
     rule_no = 1
     action = "deny"
@@ -763,7 +759,7 @@ resource "aws_network_acl" "foos" {
     from_port = 0
     to_port = 22
   }
-  ingress = {
+  ingress {
     protocol = "tcp"
     rule_no = 2
     action = "deny"
@@ -798,7 +794,7 @@ resource "aws_subnet" "blob" {
 
 resource "aws_network_acl" "foos" {
   vpc_id = "${aws_vpc.foo.id}"
-  ingress = {
+  ingress {
     protocol = "tcp"
     rule_no = 1
     action = "Allow"
@@ -832,7 +828,7 @@ resource "aws_subnet" "blob" {
 
 resource "aws_network_acl" "foos" {
   vpc_id = "${aws_vpc.foo.id}"
-  ingress = {
+  ingress {
     protocol = "tcp"
     rule_no = 1
     action = "deny"
@@ -866,7 +862,7 @@ resource "aws_subnet" "blob" {
 
 resource "aws_network_acl" "bond" {
   vpc_id = "${aws_vpc.foo.id}"
-  egress = {
+  egress {
     protocol = "tcp"
     rule_no = 2
     action = "allow"
@@ -875,7 +871,7 @@ resource "aws_network_acl" "bond" {
     to_port = 443
   }
 
-  egress = {
+  egress {
     protocol = "-1"
     rule_no = 4
     action = "allow"
@@ -884,7 +880,7 @@ resource "aws_network_acl" "bond" {
     to_port = 0
   }
 
-  egress = {
+  egress {
     protocol = "tcp"
     rule_no = 1
     action = "allow"
@@ -893,7 +889,7 @@ resource "aws_network_acl" "bond" {
     to_port = 80
   }
 
-  egress = {
+  egress {
     protocol = "tcp"
     rule_no = 3
     action = "allow"
@@ -928,7 +924,7 @@ resource "aws_subnet" "blob" {
 
 resource "aws_network_acl" "bar" {
   vpc_id = "${aws_vpc.foo.id}"
-  egress = {
+  egress {
     protocol = "tcp"
     rule_no = 2
     action = "allow"
@@ -937,7 +933,7 @@ resource "aws_network_acl" "bar" {
     to_port = 443
   }
 
-  ingress = {
+  ingress {
     protocol = "tcp"
     rule_no = 1
     action = "allow"

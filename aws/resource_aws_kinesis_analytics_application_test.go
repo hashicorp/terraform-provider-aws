@@ -261,6 +261,29 @@ func TestAccAWSKinesisAnalyticsApplication_outputsKinesisStream(t *testing.T) {
 	})
 }
 
+func TestAccAWSKinesisAnalyticsApplication_outputsMultiple(t *testing.T) {
+	var application kinesisanalytics.ApplicationDetail
+	resName := "aws_kinesis_analytics_application.test"
+	rInt1 := acctest.RandInt()
+	rInt2 := acctest.RandInt()
+	step := testAccKinesisAnalyticsApplication_prereq(rInt1) + testAccKinesisAnalyticsApplication_outputsMultiple(rInt1, rInt2)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: step,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resName, &application),
+					resource.TestCheckResourceAttr(resName, "outputs.#", "2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSKinesisAnalyticsApplication_outputsAdd(t *testing.T) {
 	var before, after kinesisanalytics.ApplicationDetail
 	resName := "aws_kinesis_analytics_application.test"
@@ -648,6 +671,47 @@ resource "aws_kinesis_analytics_application" "test" {
   }
 }
 `, rInt, rInt)
+}
+
+func testAccKinesisAnalyticsApplication_outputsMultiple(rInt1, rInt2 int) string {
+	return fmt.Sprintf(`
+resource "aws_kinesis_stream" "test1" {
+  name = "testAcc-%d"
+  shard_count = 1
+}
+
+resource "aws_kinesis_stream" "test2" {
+  name = "testAcc-%d"
+  shard_count = 1
+}
+
+resource "aws_kinesis_analytics_application" "test" {
+  name = "testAcc-%d"
+  code = "testCode\n"
+
+  outputs {
+    name = "test_name1"
+    kinesis_stream {
+      resource_arn = "${aws_kinesis_stream.test1.arn}"
+      role_arn = "${aws_iam_role.test.arn}"
+    }
+    schema {
+      record_format_type = "JSON"
+    }
+  }
+
+  outputs {
+    name = "test_name2"
+    kinesis_stream {
+      resource_arn = "${aws_kinesis_stream.test2.arn}"
+      role_arn = "${aws_iam_role.test.arn}"
+    }
+    schema {
+      record_format_type = "JSON"
+    }
+  }
+}
+`, rInt1, rInt2, rInt1)
 }
 
 func testAccKinesisAnalyticsApplicationConfigOutputsLambda(rInt int) string {

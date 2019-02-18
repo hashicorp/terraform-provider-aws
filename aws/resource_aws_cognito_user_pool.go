@@ -412,6 +412,25 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 				ConflictsWith: []string{"alias_attributes"},
 			},
 
+			"user_pool_add_ons": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"advanced_security_mode": {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								cognitoidentityprovider.AdvancedSecurityModeTypeAudit,
+								cognitoidentityprovider.AdvancedSecurityModeTypeEnforced,
+								cognitoidentityprovider.AdvancedSecurityModeTypeOff,
+							}, false),
+						},
+					},
+				},
+			},
+
 			"verification_message_template": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -580,6 +599,20 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 		params.UsernameAttributes = expandStringList(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("user_pool_add_ons"); ok {
+		configs := v.([]interface{})
+		config, ok := configs[0].(map[string]interface{})
+
+		if ok {
+			userPoolAddons := &cognitoidentityprovider.UserPoolAddOnsType{}
+
+			if v, ok := config["advanced_security_mode"]; ok && v.(string) != "" {
+				userPoolAddons.AdvancedSecurityMode = aws.String(v.(string))
+			}
+			params.UserPoolAddOns = userPoolAddons
+		}
+	}
+
 	if v, ok := d.GetOk("verification_message_template"); ok {
 		configs := v.([]interface{})
 		config, ok := configs[0].(map[string]interface{})
@@ -710,6 +743,10 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 		d.Set("username_attributes", flattenStringList(resp.UserPool.UsernameAttributes))
 	}
 
+	if err := d.Set("user_pool_add_ons", flattenCognitoUserPoolUserPoolAddOns(resp.UserPool.UserPoolAddOns)); err != nil {
+		return fmt.Errorf("Failed setting user_pool_add_ons: %s", err)
+	}
+
 	if err := d.Set("verification_message_template", flattenCognitoUserPoolVerificationMessageTemplate(resp.UserPool.VerificationMessageTemplate)); err != nil {
 		return fmt.Errorf("Failed setting verification_message_template: %s", err)
 	}
@@ -812,6 +849,20 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 
 		if ok && config != nil {
 			params.SmsConfiguration = expandCognitoUserPoolSmsConfiguration(config)
+		}
+	}
+
+	if v, ok := d.GetOk("user_pool_add_ons"); ok {
+		configs := v.([]interface{})
+		config, ok := configs[0].(map[string]interface{})
+
+		if ok && config != nil {
+			userPoolAddons := &cognitoidentityprovider.UserPoolAddOnsType{}
+
+			if v, ok := config["advanced_security_mode"]; ok && v.(string) != "" {
+				userPoolAddons.AdvancedSecurityMode = aws.String(v.(string))
+			}
+			params.UserPoolAddOns = userPoolAddons
 		}
 	}
 
