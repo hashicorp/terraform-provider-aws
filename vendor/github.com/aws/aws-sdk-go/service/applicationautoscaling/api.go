@@ -929,6 +929,20 @@ func (c *ApplicationAutoScaling) PutScalingPolicyRequest(input *PutScalingPolicy
 // You can view the scaling policies for a service namespace using DescribeScalingPolicies.
 // If you are no longer using a scaling policy, you can delete it using DeleteScalingPolicy.
 //
+// Multiple scaling policies can be in force at the same time for the same scalable
+// target. You can have one or more target tracking scaling policies, one or
+// more step scaling policies, or both. However, there is a chance that multiple
+// policies could conflict, instructing the scalable target to scale out or
+// in at the same time. Application Auto Scaling gives precedence to the policy
+// that provides the largest capacity for both scale in and scale out. For example,
+// if one policy increases capacity by 3, another policy increases capacity
+// by 200 percent, and the current capacity is 10, Application Auto Scaling
+// uses the policy with the highest calculated capacity (200% of 10 = 20) and
+// scales out to 30.
+//
+// Learn more about how to work with scaling policies in the Application Auto
+// Scaling User Guide (https://docs.aws.amazon.com/autoscaling/application/userguide/what-is-application-auto-scaling.html).
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -1050,6 +1064,9 @@ func (c *ApplicationAutoScaling) PutScheduledActionRequest(input *PutScheduledAc
 // You can view the scheduled actions using DescribeScheduledActions. If you
 // are no longer using a scheduled action, you can delete it using DeleteScheduledAction.
 //
+// Learn more about how to work with scheduled actions in the Application Auto
+// Scaling User Guide (https://docs.aws.amazon.com/autoscaling/application/userguide/what-is-application-auto-scaling.html).
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -1148,7 +1165,7 @@ func (c *ApplicationAutoScaling) RegisterScalableTargetRequest(input *RegisterSc
 // RegisterScalableTarget API operation for Application Auto Scaling.
 //
 // Registers or updates a scalable target. A scalable target is a resource that
-// Application Auto Scaling can scale in and scale out. Each scalable target
+// Application Auto Scaling can scale out and scale in. Each scalable target
 // has a resource ID, scalable dimension, and namespace, as well as values for
 // minimum and maximum capacity.
 //
@@ -1241,14 +1258,30 @@ func (s *Alarm) SetAlarmName(v string) *Alarm {
 	return s
 }
 
-// Configures a customized metric for a target tracking policy to use with Application
-// Auto Scaling.
+// Represents a CloudWatch metric of your choosing for a target tracking scaling
+// policy to use with Application Auto Scaling.
 //
-// For information about terminology, see Amazon CloudWatch Concepts (https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/cloudwatch_concepts.html).
+// To create your customized metric specification:
+//
+//    * Add values for each required parameter from CloudWatch. You can use
+//    an existing metric, or a new metric that you create. To use your own metric,
+//    you must first publish the metric to CloudWatch. For more information,
+//    see Publish Custom Metrics (https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/publishingMetrics.html)
+//    in the Amazon CloudWatch User Guide.
+//
+//    * Choose a metric that changes proportionally with capacity. The value
+//    of the metric should increase or decrease in inverse proportion to the
+//    number of capacity units. That is, the value of the metric should decrease
+//    when capacity increases.
+//
+// For more information about CloudWatch, see Amazon CloudWatch Concepts (https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/cloudwatch_concepts.html).
 type CustomizedMetricSpecification struct {
 	_ struct{} `type:"structure"`
 
 	// The dimensions of the metric.
+	//
+	// Conditional: If you published your metric with dimensions, you must specify
+	// the same dimensions in your scaling policy.
 	Dimensions []*MetricDimension `type:"list"`
 
 	// The name of the metric.
@@ -1579,7 +1612,9 @@ type DeleteScheduledActionInput struct {
 	//
 	//    * custom-resource:ResourceType:Property - The scalable dimension for a
 	//    custom resource provided by your own application or service.
-	ScalableDimension *string `type:"string" enum:"ScalableDimension"`
+	//
+	// ScalableDimension is a required field
+	ScalableDimension *string `type:"string" required:"true" enum:"ScalableDimension"`
 
 	// The name of the scheduled action.
 	//
@@ -1613,6 +1648,9 @@ func (s *DeleteScheduledActionInput) Validate() error {
 	}
 	if s.ResourceId != nil && len(*s.ResourceId) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("ResourceId", 1))
+	}
+	if s.ScalableDimension == nil {
+		invalidParams.Add(request.NewErrParamRequired("ScalableDimension"))
 	}
 	if s.ScheduledActionName == nil {
 		invalidParams.Add(request.NewErrParamRequired("ScheduledActionName"))
@@ -2573,7 +2611,7 @@ func (s *DescribeScheduledActionsOutput) SetScheduledActions(v []*ScheduledActio
 	return s
 }
 
-// Describes the dimension of a metric.
+// Describes the dimension names and values associated with a metric.
 type MetricDimension struct {
 	_ struct{} `type:"structure"`
 
@@ -2626,8 +2664,8 @@ func (s *MetricDimension) SetValue(v string) *MetricDimension {
 	return s
 }
 
-// Configures a predefined metric for a target tracking policy to use with Application
-// Auto Scaling.
+// Represents a predefined metric for a target tracking scaling policy to use
+// with Application Auto Scaling.
 type PredefinedMetricSpecification struct {
 	_ struct{} `type:"structure"`
 
@@ -2795,7 +2833,8 @@ type PutScalingPolicyInput struct {
 	// is StepScaling.
 	StepScalingPolicyConfiguration *StepScalingPolicyConfiguration `type:"structure"`
 
-	// A target tracking policy.
+	// A target tracking scaling policy. Includes support for predefined or customized
+	// metrics.
 	//
 	// This parameter is required if you are creating a policy and the policy type
 	// is TargetTrackingScaling.
@@ -2895,7 +2934,7 @@ func (s *PutScalingPolicyInput) SetTargetTrackingScalingPolicyConfiguration(v *T
 type PutScalingPolicyOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The CloudWatch alarms created for the target tracking policy.
+	// The CloudWatch alarms created for the target tracking scaling policy.
 	Alarms []*Alarm `type:"list"`
 
 	// The Amazon Resource Name (ARN) of the resulting scaling policy.
@@ -2967,8 +3006,7 @@ type PutScheduledActionInput struct {
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
 
-	// The scalable dimension. This parameter is required if you are creating a
-	// scheduled action. This string consists of the service namespace, resource
+	// The scalable dimension. This string consists of the service namespace, resource
 	// type, and scaling property.
 	//
 	//    * ecs:service:DesiredCount - The desired task count of an ECS service.
@@ -3003,7 +3041,9 @@ type PutScheduledActionInput struct {
 	//
 	//    * custom-resource:ResourceType:Property - The scalable dimension for a
 	//    custom resource provided by your own application or service.
-	ScalableDimension *string `type:"string" enum:"ScalableDimension"`
+	//
+	// ScalableDimension is a required field
+	ScalableDimension *string `type:"string" required:"true" enum:"ScalableDimension"`
 
 	// The new minimum and maximum capacity. You can set both values or just one.
 	// During the scheduled time, if the current capacity is below the minimum capacity,
@@ -3064,6 +3104,9 @@ func (s *PutScheduledActionInput) Validate() error {
 	}
 	if s.ResourceId != nil && len(*s.ResourceId) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("ResourceId", 1))
+	}
+	if s.ScalableDimension == nil {
+		invalidParams.Add(request.NewErrParamRequired("ScalableDimension"))
 	}
 	if s.Schedule != nil && len(*s.Schedule) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Schedule", 1))
@@ -3149,11 +3192,11 @@ func (s PutScheduledActionOutput) GoString() string {
 type RegisterScalableTargetInput struct {
 	_ struct{} `type:"structure"`
 
-	// The maximum value to scale to in response to a scale out event. This parameter
+	// The maximum value to scale to in response to a scale-out event. This parameter
 	// is required to register a scalable target.
 	MaxCapacity *int64 `type:"integer"`
 
-	// The minimum value to scale to in response to a scale in event. This parameter
+	// The minimum value to scale to in response to a scale-in event. This parameter
 	// is required to register a scalable target.
 	MinCapacity *int64 `type:"integer"`
 
@@ -3343,12 +3386,12 @@ type ScalableTarget struct {
 	// CreationTime is a required field
 	CreationTime *time.Time `type:"timestamp" required:"true"`
 
-	// The maximum value to scale to in response to a scale out event.
+	// The maximum value to scale to in response to a scale-out event.
 	//
 	// MaxCapacity is a required field
 	MaxCapacity *int64 `type:"integer" required:"true"`
 
-	// The minimum value to scale to in response to a scale in event.
+	// The minimum value to scale to in response to a scale-in event.
 	//
 	// MinCapacity is a required field
 	MinCapacity *int64 `type:"integer" required:"true"`
@@ -3836,7 +3879,7 @@ type ScalingPolicy struct {
 	// A step scaling policy.
 	StepScalingPolicyConfiguration *StepScalingPolicyConfiguration `type:"structure"`
 
-	// A target tracking policy.
+	// A target tracking scaling policy.
 	TargetTrackingScalingPolicyConfiguration *TargetTrackingScalingPolicyConfiguration `type:"structure"`
 }
 
@@ -4222,32 +4265,39 @@ type StepScalingPolicyConfiguration struct {
 	// previous trigger-related scaling activities can influence future scaling
 	// events.
 	//
-	// For scale out policies, while the cooldown period is in effect, the capacity
-	// that has been added by the previous scale out event that initiated the cooldown
+	// For scale-out policies, while the cooldown period is in effect, the capacity
+	// that has been added by the previous scale-out event that initiated the cooldown
 	// is calculated as part of the desired capacity for the next scale out. The
 	// intention is to continuously (but not excessively) scale out. For example,
 	// an alarm triggers a step scaling policy to scale out an Amazon ECS service
 	// by 2 tasks, the scaling activity completes successfully, and a cooldown period
-	// of 5 minutes starts. During the Cooldown period, if the alarm triggers the
+	// of 5 minutes starts. During the cooldown period, if the alarm triggers the
 	// same policy again but at a more aggressive step adjustment to scale out the
-	// service by 3 tasks, the 2 tasks that were added in the previous scale out
+	// service by 3 tasks, the 2 tasks that were added in the previous scale-out
 	// event are considered part of that capacity and only 1 additional task is
 	// added to the desired count.
 	//
-	// For scale in policies, the cooldown period is used to block subsequent scale
-	// in requests until it has expired. The intention is to scale in conservatively
+	// For scale-in policies, the cooldown period is used to block subsequent scale-in
+	// requests until it has expired. The intention is to scale in conservatively
 	// to protect your application's availability. However, if another alarm triggers
-	// a scale out policy during the cooldown period after a scale-in, Application
+	// a scale-out policy during the cooldown period after a scale-in, Application
 	// Auto Scaling scales out your scalable target immediately.
 	Cooldown *int64 `type:"integer"`
 
 	// The aggregation type for the CloudWatch metrics. Valid values are Minimum,
-	// Maximum, and Average.
+	// Maximum, and Average. If the aggregation type is null, the value is treated
+	// as Average.
 	MetricAggregationType *string `type:"string" enum:"MetricAggregationType"`
 
 	// The minimum number to adjust your scalable dimension as a result of a scaling
 	// activity. If the adjustment type is PercentChangeInCapacity, the scaling
 	// policy changes the scalable dimension of the scalable target by this amount.
+	//
+	// For example, suppose that you create a step scaling policy to scale out an
+	// Amazon ECS service by 25 percent and you specify a MinAdjustmentMagnitude
+	// of 2. If the service has 4 tasks and the scaling policy is performed, 25
+	// percent of 4 is 1. However, because you specified a MinAdjustmentMagnitude
+	// of 2, Application Auto Scaling scales out the service by 2 tasks.
 	MinAdjustmentMagnitude *int64 `type:"integer"`
 
 	// A set of adjustments that enable you to scale based on the size of the alarm
@@ -4320,34 +4370,36 @@ func (s *StepScalingPolicyConfiguration) SetStepAdjustments(v []*StepAdjustment)
 type TargetTrackingScalingPolicyConfiguration struct {
 	_ struct{} `type:"structure"`
 
-	// A customized metric.
+	// A customized metric. You can specify either a predefined metric or a customized
+	// metric.
 	CustomizedMetricSpecification *CustomizedMetricSpecification `type:"structure"`
 
-	// Indicates whether scale in by the target tracking policy is disabled. If
-	// the value is true, scale in is disabled and the target tracking policy won't
-	// remove capacity from the scalable resource. Otherwise, scale in is enabled
-	// and the target tracking policy can remove capacity from the scalable resource.
-	// The default value is false.
+	// Indicates whether scale in by the target tracking scaling policy is disabled.
+	// If the value is true, scale in is disabled and the target tracking scaling
+	// policy won't remove capacity from the scalable resource. Otherwise, scale
+	// in is enabled and the target tracking scaling policy can remove capacity
+	// from the scalable resource. The default value is false.
 	DisableScaleIn *bool `type:"boolean"`
 
-	// A predefined metric.
+	// A predefined metric. You can specify either a predefined metric or a customized
+	// metric.
 	PredefinedMetricSpecification *PredefinedMetricSpecification `type:"structure"`
 
-	// The amount of time, in seconds, after a scale in activity completes before
+	// The amount of time, in seconds, after a scale-in activity completes before
 	// another scale in activity can start.
 	//
-	// The cooldown period is used to block subsequent scale in requests until it
+	// The cooldown period is used to block subsequent scale-in requests until it
 	// has expired. The intention is to scale in conservatively to protect your
-	// application's availability. However, if another alarm triggers a scale out
+	// application's availability. However, if another alarm triggers a scale-out
 	// policy during the cooldown period after a scale-in, Application Auto Scaling
 	// scales out your scalable target immediately.
 	ScaleInCooldown *int64 `type:"integer"`
 
-	// The amount of time, in seconds, after a scale out activity completes before
-	// another scale out activity can start.
+	// The amount of time, in seconds, after a scale-out activity completes before
+	// another scale-out activity can start.
 	//
 	// While the cooldown period is in effect, the capacity that has been added
-	// by the previous scale out event that initiated the cooldown is calculated
+	// by the previous scale-out event that initiated the cooldown is calculated
 	// as part of the desired capacity for the next scale out. The intention is
 	// to continuously (but not excessively) scale out.
 	ScaleOutCooldown *int64 `type:"integer"`

@@ -2530,7 +2530,7 @@ func (c *IoT) CreateThingRequest(input *CreateThingInput) (req *request.Request,
 //
 // Creates a thing record in the registry.
 //
-// This is a control plane operation. See Authorization (http://docs.aws.amazon.com/iot/latest/developerguide/authorization.html)
+// This is a control plane operation. See Authorization (https://docs.aws.amazon.com/iot/latest/developerguide/authorization.html)
 // for information about authorizing control plane actions.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -2627,7 +2627,7 @@ func (c *IoT) CreateThingGroupRequest(input *CreateThingGroupInput) (req *reques
 //
 // Create a thing group.
 //
-// This is a control plane operation. See Authorization (http://docs.aws.amazon.com/iot/latest/developerguide/authorization.html)
+// This is a control plane operation. See Authorization (https://docs.aws.amazon.com/iot/latest/developerguide/authorization.html)
 // for information about authorizing control plane actions.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -9725,7 +9725,7 @@ func (c *IoT) ListPrincipalPoliciesRequest(input *ListPrincipalPoliciesInput) (r
 // ListPrincipalPolicies API operation for AWS IoT.
 //
 // Lists the policies attached to the specified principal. If you use an Cognito
-// identity, the ID must be in AmazonCognito Identity format (http://docs.aws.amazon.com/cognitoidentity/latest/APIReference/API_GetCredentialsForIdentity.html#API_GetCredentialsForIdentity_RequestSyntax).
+// identity, the ID must be in AmazonCognito Identity format (https://docs.aws.amazon.com/cognitoidentity/latest/APIReference/API_GetCredentialsForIdentity.html#API_GetCredentialsForIdentity_RequestSyntax).
 //
 // Note: This API is deprecated. Please use ListAttachedPolicies instead.
 //
@@ -16882,10 +16882,11 @@ func (s *Behavior) SetName(v string) *Behavior {
 type BehaviorCriteria struct {
 	_ struct{} `type:"structure"`
 
-	// The operator that relates the thing measured (metric) to the criteria (value).
+	// The operator that relates the thing measured (metric) to the criteria (containing
+	// a value.
 	ComparisonOperator *string `locationName:"comparisonOperator" type:"string" enum:"ComparisonOperator"`
 
-	// Use this to specify the period of time over which the behavior is evaluated,
+	// Use this to specify the time duration over which the behavior is evaluated,
 	// for those criteria which have a time dimension (for example, NUM_MESSAGES_SENT).
 	DurationSeconds *int64 `locationName:"durationSeconds" type:"integer"`
 
@@ -17823,10 +17824,10 @@ type CloudwatchMetricAction struct {
 	// MetricNamespace is a required field
 	MetricNamespace *string `locationName:"metricNamespace" type:"string" required:"true"`
 
-	// An optional Unix timestamp (http://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/cloudwatch_concepts.html#about_timestamp).
+	// An optional Unix timestamp (https://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/cloudwatch_concepts.html#about_timestamp).
 	MetricTimestamp *string `locationName:"metricTimestamp" type:"string"`
 
-	// The metric unit (http://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/cloudwatch_concepts.html#Unit)
+	// The metric unit (https://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/cloudwatch_concepts.html#Unit)
 	// supported by CloudWatch.
 	//
 	// MetricUnit is a required field
@@ -18387,7 +18388,7 @@ type CreateDynamicThingGroupInput struct {
 
 	// The dynamic thing group search query string.
 	//
-	// See Query Syntax (http://docs.aws.amazon.com/iot/latest/developerguide/query-syntax.html)
+	// See Query Syntax (https://docs.aws.amazon.com/iot/latest/developerguide/query-syntax.html)
 	// for information about query string syntax.
 	//
 	// QueryString is a required field
@@ -19406,6 +19407,9 @@ type CreateScheduledAuditInput struct {
 	// ScheduledAuditName is a required field
 	ScheduledAuditName *string `location:"uri" locationName:"scheduledAuditName" min:"1" type:"string" required:"true"`
 
+	// Metadata which can be used to manage the scheduled audit.
+	Tags []*Tag `locationName:"tags" type:"list"`
+
 	// Which checks are performed during the scheduled audit. Checks must be enabled
 	// for your account. (Use DescribeAccountAuditConfiguration to see the list
 	// of all checks including those that are enabled or UpdateAccountAuditConfiguration
@@ -19468,6 +19472,12 @@ func (s *CreateScheduledAuditInput) SetFrequency(v string) *CreateScheduledAudit
 // SetScheduledAuditName sets the ScheduledAuditName field's value.
 func (s *CreateScheduledAuditInput) SetScheduledAuditName(v string) *CreateScheduledAuditInput {
 	s.ScheduledAuditName = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateScheduledAuditInput) SetTags(v []*Tag) *CreateScheduledAuditInput {
+	s.Tags = v
 	return s
 }
 
@@ -25439,10 +25449,10 @@ type Job struct {
 	// If the job was updated, describes the reason for the update.
 	Comment *string `locationName:"comment" type:"string"`
 
-	// The time, in milliseconds since the epoch, when the job was completed.
+	// The time, in seconds since the epoch, when the job was completed.
 	CompletedAt *time.Time `locationName:"completedAt" type:"timestamp"`
 
-	// The time, in milliseconds since the epoch, when the job was created.
+	// The time, in seconds since the epoch, when the job was created.
 	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp"`
 
 	// A short text description of the job.
@@ -25464,7 +25474,7 @@ type Job struct {
 	// Details about the job process.
 	JobProcessDetails *JobProcessDetails `locationName:"jobProcessDetails" type:"structure"`
 
-	// The time, in milliseconds since the epoch, when the job was last updated.
+	// The time, in seconds since the epoch, when the job was last updated.
 	LastUpdatedAt *time.Time `locationName:"lastUpdatedAt" type:"timestamp"`
 
 	// Configuration for pre-signed S3 URLs.
@@ -25631,14 +25641,13 @@ type JobExecution struct {
 	// The unique identifier you assigned to the job when it was created.
 	JobId *string `locationName:"jobId" min:"1" type:"string"`
 
-	// The time, in milliseconds since the epoch, when the job execution was last
-	// updated.
+	// The time, in seconds since the epoch, when the job execution was last updated.
 	LastUpdatedAt *time.Time `locationName:"lastUpdatedAt" type:"timestamp"`
 
-	// The time, in milliseconds since the epoch, when the job execution was queued.
+	// The time, in seconds since the epoch, when the job execution was queued.
 	QueuedAt *time.Time `locationName:"queuedAt" type:"timestamp"`
 
-	// The time, in milliseconds since the epoch, when the job execution started.
+	// The time, in seconds since the epoch, when the job execution started.
 	StartedAt *time.Time `locationName:"startedAt" type:"timestamp"`
 
 	// The status of the job execution (IN_PROGRESS, QUEUED, FAILED, SUCCEEDED,
@@ -25765,14 +25774,13 @@ type JobExecutionSummary struct {
 	// in commands which return or update job execution information.
 	ExecutionNumber *int64 `locationName:"executionNumber" type:"long"`
 
-	// The time, in milliseconds since the epoch, when the job execution was last
-	// updated.
+	// The time, in seconds since the epoch, when the job execution was last updated.
 	LastUpdatedAt *time.Time `locationName:"lastUpdatedAt" type:"timestamp"`
 
-	// The time, in milliseconds since the epoch, when the job execution was queued.
+	// The time, in seconds since the epoch, when the job execution was queued.
 	QueuedAt *time.Time `locationName:"queuedAt" type:"timestamp"`
 
-	// The time, in milliseconds since the epoch, when the job execution started.
+	// The time, in seconds since the epoch, when the job execution started.
 	StartedAt *time.Time `locationName:"startedAt" type:"timestamp"`
 
 	// The status of the job execution.
@@ -26042,10 +26050,10 @@ func (s *JobProcessDetails) SetProcessingTargets(v []*string) *JobProcessDetails
 type JobSummary struct {
 	_ struct{} `type:"structure"`
 
-	// The time, in milliseconds since the epoch, when the job completed.
+	// The time, in seconds since the epoch, when the job completed.
 	CompletedAt *time.Time `locationName:"completedAt" type:"timestamp"`
 
-	// The time, in milliseconds since the epoch, when the job was created.
+	// The time, in seconds since the epoch, when the job was created.
 	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp"`
 
 	// The job ARN.
@@ -26054,7 +26062,7 @@ type JobSummary struct {
 	// The unique identifier you assigned to this job when it was created.
 	JobId *string `locationName:"jobId" min:"1" type:"string"`
 
-	// The time, in milliseconds since the epoch, when the job was last updated.
+	// The time, in seconds since the epoch, when the job was last updated.
 	LastUpdatedAt *time.Time `locationName:"lastUpdatedAt" type:"timestamp"`
 
 	// The job summary status.
@@ -31202,11 +31210,11 @@ func (s *RegisterCertificateOutput) SetCertificateId(v string) *RegisterCertific
 type RegisterThingInput struct {
 	_ struct{} `type:"structure"`
 
-	// The parameters for provisioning a thing. See Programmatic Provisioning (http://docs.aws.amazon.com/iot/latest/developerguide/programmatic-provisioning.html)
+	// The parameters for provisioning a thing. See Programmatic Provisioning (https://docs.aws.amazon.com/iot/latest/developerguide/programmatic-provisioning.html)
 	// for more information.
 	Parameters map[string]*string `locationName:"parameters" type:"map"`
 
-	// The provisioning template. See Programmatic Provisioning (http://docs.aws.amazon.com/iot/latest/developerguide/programmatic-provisioning.html)
+	// The provisioning template. See Programmatic Provisioning (https://docs.aws.amazon.com/iot/latest/developerguide/programmatic-provisioning.html)
 	// for more information.
 	//
 	// TemplateBody is a required field
@@ -31903,7 +31911,7 @@ type S3Action struct {
 	BucketName *string `locationName:"bucketName" type:"string" required:"true"`
 
 	// The Amazon S3 canned ACL that controls access to the object identified by
-	// the object key. For more information, see S3 canned ACLs (http://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#canned-acl).
+	// the object key. For more information, see S3 canned ACLs (https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#canned-acl).
 	CannedAcl *string `locationName:"cannedAcl" type:"string" enum:"CannedAccessControlList"`
 
 	// The object key.
@@ -32798,7 +32806,7 @@ type SnsAction struct {
 	// are "JSON" and "RAW". The default value of the attribute is "RAW". SNS uses
 	// this setting to determine if the payload should be parsed and relevant platform-specific
 	// bits of the payload should be extracted. To read more about SNS message formats,
-	// see http://docs.aws.amazon.com/sns/latest/dg/json-formats.html (http://docs.aws.amazon.com/sns/latest/dg/json-formats.html)
+	// see https://docs.aws.amazon.com/sns/latest/dg/json-formats.html (https://docs.aws.amazon.com/sns/latest/dg/json-formats.html)
 	// refer to their official documentation.
 	MessageFormat *string `locationName:"messageFormat" type:"string" enum:"MessageFormat"`
 
@@ -34675,7 +34683,7 @@ type TopicRulePayload struct {
 	RuleDisabled *bool `locationName:"ruleDisabled" type:"boolean"`
 
 	// The SQL statement used to query the topic. For more information, see AWS
-	// IoT SQL Reference (http://docs.aws.amazon.com/iot/latest/developerguide/iot-rules.html#aws-iot-sql-reference)
+	// IoT SQL Reference (https://docs.aws.amazon.com/iot/latest/developerguide/iot-rules.html#aws-iot-sql-reference)
 	// in the AWS IoT Developer Guide.
 	//
 	// Sql is a required field
