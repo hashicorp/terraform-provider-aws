@@ -32476,7 +32476,9 @@ type ClientVpnEndpoint struct {
 
 	// Information about the associated target networks. A target network is a subnet
 	// in a VPC.
-	AssociatedTargetNetworks []*AssociatedTargetNetwork `locationName:"associatedTargetNetwork" locationNameList:"item" type:"list"`
+	//
+	// Deprecated: This property is deprecated. To view the target networks associated with a Client VPN endpoint, call DescribeClientVpnTargetNetworks and inspect the clientVpnTargetNetworks response element.
+	AssociatedTargetNetworks []*AssociatedTargetNetwork `locationName:"associatedTargetNetwork" locationNameList:"item" deprecated:"true" type:"list"`
 
 	// Information about the authentication method used by the Client VPN endpoint.
 	AuthenticationOptions []*ClientVpnAuthentication `locationName:"authenticationOptions" locationNameList:"item" type:"list"`
@@ -32495,16 +32497,17 @@ type ClientVpnEndpoint struct {
 	// The date and time the Client VPN endpoint was created.
 	CreationTime *string `locationName:"creationTime" type:"string"`
 
-	// The date and time the Client VPN endpoint was deleted, if applicable. Information
-	// about deleted Client VPN endpoints is retained for 24 hours, unless a new
-	// Client VPN is created with the same name.
+	// The date and time the Client VPN endpoint was deleted, if applicable.
 	DeletionTime *string `locationName:"deletionTime" type:"string"`
 
 	// A brief description of the endpoint.
 	Description *string `locationName:"description" type:"string"`
 
-	// The DNS name to be used by clients when establishing a connection.
+	// The DNS name to be used by clients when connecting to the Client VPN endpoint.
 	DnsName *string `locationName:"dnsName" type:"string"`
+
+	// Information about the DNS servers to be used for DNS resolution.
+	DnsServers []*string `locationName:"dnsServer" locationNameList:"item" type:"list"`
 
 	// The ARN of the server certificate.
 	ServerCertificateArn *string `locationName:"serverCertificateArn" type:"string"`
@@ -32514,6 +32517,9 @@ type ClientVpnEndpoint struct {
 
 	// The current state of the Client VPN endpoint.
 	Status *ClientVpnEndpointStatus `locationName:"status" type:"structure"`
+
+	// Any tags assigned to the Client VPN endpoint.
+	Tags []*Tag `locationName:"tagSet" locationNameList:"item" type:"list"`
 
 	// The transport protocol used by the Client VPN endpoint.
 	TransportProtocol *string `locationName:"transportProtocol" type:"string" enum:"TransportProtocol"`
@@ -32586,6 +32592,12 @@ func (s *ClientVpnEndpoint) SetDnsName(v string) *ClientVpnEndpoint {
 	return s
 }
 
+// SetDnsServers sets the DnsServers field's value.
+func (s *ClientVpnEndpoint) SetDnsServers(v []*string) *ClientVpnEndpoint {
+	s.DnsServers = v
+	return s
+}
+
 // SetServerCertificateArn sets the ServerCertificateArn field's value.
 func (s *ClientVpnEndpoint) SetServerCertificateArn(v string) *ClientVpnEndpoint {
 	s.ServerCertificateArn = &v
@@ -32601,6 +32613,12 @@ func (s *ClientVpnEndpoint) SetSplitTunnel(v bool) *ClientVpnEndpoint {
 // SetStatus sets the Status field's value.
 func (s *ClientVpnEndpoint) SetStatus(v *ClientVpnEndpointStatus) *ClientVpnEndpoint {
 	s.Status = v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *ClientVpnEndpoint) SetTags(v []*Tag) *ClientVpnEndpoint {
+	s.Tags = v
 	return s
 }
 
@@ -33957,6 +33975,9 @@ type CreateClientVpnEndpointInput struct {
 	// ServerCertificateArn is a required field
 	ServerCertificateArn *string `type:"string" required:"true"`
 
+	// The tags to apply to the Client VPN endpoint during creation.
+	TagSpecifications []*TagSpecification `locationName:"TagSpecification" locationNameList:"item" type:"list"`
+
 	// The transport protocol to be used by the VPN session.
 	//
 	// Default value: udp
@@ -34040,6 +34061,12 @@ func (s *CreateClientVpnEndpointInput) SetDryRun(v bool) *CreateClientVpnEndpoin
 // SetServerCertificateArn sets the ServerCertificateArn field's value.
 func (s *CreateClientVpnEndpointInput) SetServerCertificateArn(v string) *CreateClientVpnEndpointInput {
 	s.ServerCertificateArn = &v
+	return s
+}
+
+// SetTagSpecifications sets the TagSpecifications field's value.
+func (s *CreateClientVpnEndpointInput) SetTagSpecifications(v []*TagSpecification) *CreateClientVpnEndpointInput {
+	s.TagSpecifications = v
 	return s
 }
 
@@ -35624,6 +35651,8 @@ type CreateLaunchTemplateInput struct {
 
 	// Unique, case-sensitive identifier you provide to ensure the idempotency of
 	// the request. For more information, see Ensuring Idempotency (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
+	//
+	// Constraint: Maximum 128 ASCII characters.
 	ClientToken *string `type:"string"`
 
 	// Checks whether you have the required permissions for the action, without
@@ -35738,6 +35767,8 @@ type CreateLaunchTemplateVersionInput struct {
 
 	// Unique, case-sensitive identifier you provide to ensure the idempotency of
 	// the request. For more information, see Ensuring Idempotency (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
+	//
+	// Constraint: Maximum 128 ASCII characters.
 	ClientToken *string `type:"string"`
 
 	// Checks whether you have the required permissions for the action, without
@@ -45530,6 +45561,9 @@ type DescribeImagesInput struct {
 	//
 	//    * block-device-mapping.volume-type - The volume type of the EBS volume
 	//    (gp2 | io1 | st1 | sc1 | standard).
+	//
+	//    * block-device-mapping.encrypted - A Boolean that indicates whether the
+	//    EBS volume is encrypted.
 	//
 	//    * description - The description of the image (provided during image creation).
 	//
@@ -59709,7 +59743,16 @@ type ImportImageInput struct {
 	// see Prerequisites (https://docs.aws.amazon.com/vm-import/latest/userguide/vmimport-image-import.html#prerequisites-image)
 	// in the VM Import/Export User Guide.
 	//
-	// Valid values: AWS | BYOL
+	// Valid values include:
+	//
+	//    * Auto - Detects the source-system operating system (OS) and applies the
+	//    appropriate license.
+	//
+	//    * AWS - Replaces the source-system license with an AWS license, if appropriate.
+	//
+	//    * BYOL - Retains the source-system license, if appropriate.
+	//
+	// Default value: Auto
 	LicenseType *string `type:"string"`
 
 	// The operating system of the virtual machine.
@@ -66369,6 +66412,8 @@ type ModifyLaunchTemplateInput struct {
 
 	// Unique, case-sensitive identifier you provide to ensure the idempotency of
 	// the request. For more information, see Ensuring Idempotency (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
+	//
+	// Constraint: Maximum 128 ASCII characters.
 	ClientToken *string `type:"string"`
 
 	// The version number of the launch template to set as the default version.
@@ -75383,6 +75428,9 @@ type RunInstancesInput struct {
 	// You cannot specify this option and the option to assign specific IPv6 addresses
 	// in the same request. You can specify this option if you've specified a minimum
 	// number of instances to launch.
+	//
+	// You cannot specify this option and the network interfaces option in the same
+	// request.
 	Ipv6AddressCount *int64 `type:"integer"`
 
 	// [EC2-VPC] Specify one or more IPv6 addresses from the range of the subnet
@@ -75390,6 +75438,9 @@ type RunInstancesInput struct {
 	// option and the option to assign a number of IPv6 addresses in the same request.
 	// You cannot specify this option if you've specified a minimum number of instances
 	// to launch.
+	//
+	// You cannot specify this option and the network interfaces option in the same
+	// request.
 	Ipv6Addresses []*InstanceIpv6Address `locationName:"Ipv6Address" locationNameList:"item" type:"list"`
 
 	// The ID of the kernel.
@@ -75442,6 +75493,9 @@ type RunInstancesInput struct {
 	Monitoring *RunInstancesMonitoringEnabled `type:"structure"`
 
 	// One or more network interfaces.
+	//
+	// You cannot specify this option and the network interfaces option in the same
+	// request.
 	NetworkInterfaces []*InstanceNetworkInterfaceSpecification `locationName:"networkInterface" locationNameList:"item" type:"list"`
 
 	// The placement for the instance.
@@ -75454,6 +75508,9 @@ type RunInstancesInput struct {
 	// this option if you've specified the option to designate a private IP address
 	// as the primary IP address in a network interface specification. You cannot
 	// specify this option if you're launching more than one instance in the request.
+	//
+	// You cannot specify this option and the network interfaces option in the same
+	// request.
 	PrivateIpAddress *string `locationName:"privateIpAddress" type:"string"`
 
 	// The ID of the RAM disk.
@@ -75466,15 +75523,24 @@ type RunInstancesInput struct {
 	// One or more security group IDs. You can create a security group using CreateSecurityGroup.
 	//
 	// Default: Amazon EC2 uses the default security group.
+	//
+	// You cannot specify this option and the network interfaces option in the same
+	// request.
 	SecurityGroupIds []*string `locationName:"SecurityGroupId" locationNameList:"SecurityGroupId" type:"list"`
 
 	// [EC2-Classic, default VPC] One or more security group names. For a nondefault
 	// VPC, you must use security group IDs instead.
 	//
+	// You cannot specify this option and the network interfaces option in the same
+	// request.
+	//
 	// Default: Amazon EC2 uses the default security group.
 	SecurityGroups []*string `locationName:"SecurityGroup" locationNameList:"SecurityGroup" type:"list"`
 
 	// [EC2-VPC] The ID of the subnet to launch the instance into.
+	//
+	// You cannot specify this option and the network interfaces option in the same
+	// request.
 	SubnetId *string `type:"string"`
 
 	// The tags to apply to the resources during launch. You can only tag instances
@@ -85536,6 +85602,9 @@ const (
 	// InstanceTypeM524xlarge is a InstanceType enum value
 	InstanceTypeM524xlarge = "m5.24xlarge"
 
+	// InstanceTypeM5Metal is a InstanceType enum value
+	InstanceTypeM5Metal = "m5.metal"
+
 	// InstanceTypeM5aLarge is a InstanceType enum value
 	InstanceTypeM5aLarge = "m5a.large"
 
@@ -85572,6 +85641,9 @@ const (
 	// InstanceTypeM5d24xlarge is a InstanceType enum value
 	InstanceTypeM5d24xlarge = "m5d.24xlarge"
 
+	// InstanceTypeM5dMetal is a InstanceType enum value
+	InstanceTypeM5dMetal = "m5d.metal"
+
 	// InstanceTypeH12xlarge is a InstanceType enum value
 	InstanceTypeH12xlarge = "h1.2xlarge"
 
@@ -85601,6 +85673,9 @@ const (
 
 	// InstanceTypeZ1d12xlarge is a InstanceType enum value
 	InstanceTypeZ1d12xlarge = "z1d.12xlarge"
+
+	// InstanceTypeZ1dMetal is a InstanceType enum value
+	InstanceTypeZ1dMetal = "z1d.metal"
 
 	// InstanceTypeU6tb1Metal is a InstanceType enum value
 	InstanceTypeU6tb1Metal = "u-6tb1.metal"
@@ -86009,6 +86084,9 @@ const (
 )
 
 const (
+	// ResourceTypeClientVpnEndpoint is a ResourceType enum value
+	ResourceTypeClientVpnEndpoint = "client-vpn-endpoint"
+
 	// ResourceTypeCustomerGateway is a ResourceType enum value
 	ResourceTypeCustomerGateway = "customer-gateway"
 
