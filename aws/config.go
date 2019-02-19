@@ -115,6 +115,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
 	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/aws/aws-sdk-go/service/sfn"
+	"github.com/aws/aws-sdk-go/service/shield"
 	"github.com/aws/aws-sdk-go/service/simpledb"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/aws/aws-sdk-go/service/sqs"
@@ -292,6 +293,7 @@ type AWSClient struct {
 	serverlessapplicationrepositoryconn *serverlessapplicationrepository.ServerlessApplicationRepository
 	sesConn                             *ses.SES
 	sfnconn                             *sfn.SFN
+	shieldconn                          *shield.Shield
 	simpledbconn                        *simpledb.SimpleDB
 	snsconn                             *sns.SNS
 	sqsconn                             *sqs.SQS
@@ -653,6 +655,7 @@ func (c *Config) Client() (interface{}, error) {
 	client.serverlessapplicationrepositoryconn = serverlessapplicationrepository.New(sess)
 	client.sesConn = ses.New(sess)
 	client.sfnconn = sfn.New(sess)
+	client.shieldconn = shield.New(sess)
 	client.simpledbconn = simpledb.New(sess)
 	client.snsconn = sns.New(awsSnsSess)
 	client.sqsconn = sqs.New(awsSqsSess)
