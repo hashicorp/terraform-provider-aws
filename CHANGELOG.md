@@ -1,4 +1,9 @@
 ## 1.60.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_flow_log: Prevent crash on unsuccessful flow log creation [GH-7528]
+
 ## 1.59.0 (February 14, 2019)
 
 FEATURES:
