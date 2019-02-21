@@ -50,6 +50,7 @@ func resourceAwsVpcEndpoint() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validation.ValidateJsonString,
+				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
