@@ -26,6 +26,7 @@ The following arguments are supported:
 
 * `name` - (Required) The name of the placement group.
 * `strategy` - (Required) The placement strategy.
+* `partition_count` - (Optional) The number of partitions. Valid only when Strategy is set to partition.
 
 ## Attributes Reference
 
