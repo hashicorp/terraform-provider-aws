@@ -2,9 +2,11 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -14,6 +16,70 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_vpc_endpoint", &resource.Sweeper{
+		Name: "aws_vpc_endpoint",
+		F:    testSweepEc2VpcEndpoints,
+	})
+}
+
+func testSweepEc2VpcEndpoints(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).ec2conn
+	input := &ec2.DescribeVpcEndpointsInput{}
+
+	for {
+		output, err := conn.DescribeVpcEndpoints(input)
+
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping EC2 VPC Endpoint sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error retrieving EC2 VPC Endpoints: %s", err)
+		}
+
+		for _, vpcEndpoint := range output.VpcEndpoints {
+			if aws.StringValue(vpcEndpoint.State) != "available" {
+				continue
+			}
+
+			id := aws.StringValue(vpcEndpoint.VpcEndpointId)
+
+			input := &ec2.DeleteVpcEndpointsInput{
+				VpcEndpointIds: []*string{aws.String(id)},
+			}
+
+			log.Printf("[INFO] Deleting EC2 VPC Endpoint: %s", id)
+			_, err := conn.DeleteVpcEndpoints(input)
+
+			if isAWSErr(err, "InvalidVpcEndpointId.NotFound", "") {
+				continue
+			}
+
+			if err != nil {
+				return fmt.Errorf("error deleting EC2 VPC Endpoint (%s): %s", id, err)
+			}
+
+			if err := vpcEndpointWaitUntilDeleted(conn, id, 10*time.Minute); err != nil {
+				return fmt.Errorf("error waiting for VPC Endpoint (%s) to delete: %s", id, err)
+			}
+		}
+
+		if aws.StringValue(output.NextToken) == "" {
+			break
+		}
+
+		input.NextToken = output.NextToken
+	}
+
+	return nil
+}
 
 func TestAccAWSVpcEndpoint_importBasic(t *testing.T) {
 	resourceName := "aws_vpc_endpoint.s3"

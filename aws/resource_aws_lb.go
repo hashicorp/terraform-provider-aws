@@ -263,7 +263,7 @@ func resourceAwsLbCreate(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := elbconn.CreateLoadBalancer(elbOpts)
 	if err != nil {
-		return fmt.Errorf("Error creating Application Load Balancer: %s", err)
+		return fmt.Errorf("Error creating %s Load Balancer: %s", d.Get("load_balancer_type").(string), err)
 	}
 
 	if len(resp.LoadBalancers) != 1 {
@@ -557,11 +557,8 @@ func cleanupLBNetworkInterfaces(conn *ec2.EC2, lbArn string) error {
 	}
 
 	err = deleteNetworkInterfaces(conn, out.NetworkInterfaces)
-	if err != nil {
-		return err
-	}
 
-	return nil
+	return err
 }
 
 func waitForNLBNetworkInterfacesToDetach(conn *ec2.EC2, lbArn string) error {
@@ -631,7 +628,7 @@ func flattenSubnetMappingsFromAvailabilityZones(availabilityZones []*elbv2.Avail
 	l := make([]map[string]interface{}, 0)
 	for _, availabilityZone := range availabilityZones {
 		for _, loadBalancerAddress := range availabilityZone.LoadBalancerAddresses {
-			m := make(map[string]interface{}, 0)
+			m := make(map[string]interface{})
 			m["subnet_id"] = aws.StringValue(availabilityZone.SubnetId)
 
 			if loadBalancerAddress.AllocationId != nil {
@@ -760,12 +757,11 @@ func customizeDiffNLBSubnets(diff *schema.ResourceDiff, v interface{}) error {
 	// Application Load Balancers, so the logic below is simple individual checks.
 	// If other differences arise we'll want to refactor to check other
 	// conditions in combinations, but for now all we handle is subnets
-	lbType := diff.Get("load_balancer_type").(string)
-	if "network" != lbType {
+	if lbType := diff.Get("load_balancer_type").(string); lbType != "network" {
 		return nil
 	}
 
-	if "" == diff.Id() {
+	if diff.Id() == "" {
 		return nil
 	}
 
@@ -780,8 +776,7 @@ func customizeDiffNLBSubnets(diff *schema.ResourceDiff, v interface{}) error {
 	ns := n.(*schema.Set)
 	remove := os.Difference(ns).List()
 	add := ns.Difference(os).List()
-	delta := len(remove) > 0 || len(add) > 0
-	if delta {
+	if len(remove) > 0 || len(add) > 0 {
 		if err := diff.SetNew("subnets", n); err != nil {
 			return err
 		}

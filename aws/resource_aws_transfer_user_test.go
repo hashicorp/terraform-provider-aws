@@ -207,7 +207,7 @@ func testAccAWSTransferUserConfig_basic(rName string) string {
 resource "aws_transfer_server" "foo" {
 	identity_provider_type = "SERVICE_MANAGED"
 
-	tags {
+	tags = {
 		NAME     = "tf-acc-test-transfer-server"
 	}
 }
@@ -265,7 +265,7 @@ func testAccAWSTransferUserConfig_options(rName string) string {
 resource "aws_transfer_server" "foo" {
 	identity_provider_type = "SERVICE_MANAGED"
 	
-	tags {
+	tags = {
 		NAME     = "tf-acc-test-transfer-server"
 	}
 }
@@ -359,7 +359,7 @@ resource "aws_transfer_user" "foo" {
 	policy         = "${data.aws_iam_policy_document.foo.json}"
 	home_directory = "/home/tftestuser"
 
-	tags {
+	tags = {
 		NAME  = "tftestuser"
 		ENV   = "test"
 		ADMIN = "test"
@@ -375,7 +375,7 @@ func testAccAWSTransferUserConfig_modify(rName string) string {
 resource "aws_transfer_server" "foo" {
 	identity_provider_type = "SERVICE_MANAGED"
 	
-	tags {
+	tags = {
 		NAME     = "tf-acc-test-transfer-server"
 	}
 }
@@ -467,7 +467,7 @@ resource "aws_transfer_user" "foo" {
 	policy         = "${data.aws_iam_policy_document.foo.json}"
 	home_directory = "/test"
 
-	tags {
+	tags = {
 		NAME  = "tf-test-user"
 		TEST   = "test2"
 	}
@@ -482,7 +482,7 @@ func testAccAWSTransferUserConfig_forceNew(rName string) string {
 resource "aws_transfer_server" "foo" {
 	identity_provider_type = "SERVICE_MANAGED"
 	
-	tags {
+	tags = {
 		NAME     = "tf-acc-test-transfer-server"
 	}
 }
@@ -576,7 +576,7 @@ resource "aws_transfer_user" "foo" {
 	role           = "${aws_iam_role.foo.arn}"
 	policy         = "${data.aws_iam_policy_document.foo.json}"
 	home_directory = "/home/tftestuser2"
-	tags {
+	tags = {
 		NAME  = "tf-test-user"
 		TEST   = "test2"
 	}

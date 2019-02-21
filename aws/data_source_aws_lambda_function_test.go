@@ -95,6 +95,29 @@ func TestAccDataSourceAWSLambdaFunction_alias(t *testing.T) {
 	})
 }
 
+func TestAccDataSourceAWSLambdaFunction_layers(t *testing.T) {
+	rString := acctest.RandString(7)
+	roleName := fmt.Sprintf("tf-acctest-d-lambda-function-layer-role-%s", rString)
+	policyName := fmt.Sprintf("tf-acctest-d-lambda-function-layer-policy-%s", rString)
+	sgName := fmt.Sprintf("tf-acctest-d-lambda-function-layer-sg-%s", rString)
+	funcName := fmt.Sprintf("tf-acctest-d-lambda-function-layer-func-%s", rString)
+	layerName := fmt.Sprintf("tf-acctest-d-lambda-function-layer-layer-%s", rString)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceAWSLambdaFunctionConfigLayers(roleName, policyName, sgName, funcName, layerName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.aws_lambda_function.acctest", "arn"),
+					resource.TestCheckResourceAttr("data.aws_lambda_function.acctest", "layers.#", "1"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccDataSourceAWSLambdaFunction_vpc(t *testing.T) {
 	rString := acctest.RandString(7)
 	roleName := fmt.Sprintf("tf-acctest-d-lambda-function-vpc-role-%s", rString)
@@ -219,7 +242,7 @@ resource "aws_security_group" "lambda" {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    self        = true
   }
 
   egress {
@@ -293,6 +316,30 @@ data "aws_lambda_function" "acctest" {
 `, funcName, funcName)
 }
 
+func testAccDataSourceAWSLambdaFunctionConfigLayers(roleName, policyName, sgName, funcName, layerName string) string {
+	return fmt.Sprintf(testAccDataSourceAWSLambdaFunctionConfigBase(roleName, policyName, sgName)+`
+resource "aws_lambda_layer_version" "acctest_create" {
+  filename = "test-fixtures/lambdatest.zip"
+  layer_name = "%s"
+  compatible_runtimes = ["nodejs8.10"]
+}
+
+resource "aws_lambda_function" "acctest_create" {
+  function_name = "%s"
+  description = "%s"
+  filename = "test-fixtures/lambdatest.zip"
+  role = "${aws_iam_role.lambda.arn}"
+  handler = "exports.example"
+  runtime = "nodejs8.10"
+  layers = ["${aws_lambda_layer_version.acctest_create.layer_arn}"]
+}
+
+data "aws_lambda_function" "acctest" {
+  function_name = "${aws_lambda_function.acctest_create.function_name}"
+}
+`, layerName, funcName, funcName)
+}
+
 func testAccDataSourceAWSLambdaFunctionConfigVPC(roleName, policyName, sgName, funcName string) string {
 	return fmt.Sprintf(testAccDataSourceAWSLambdaFunctionConfigBase(roleName, policyName, sgName)+`
 resource "aws_lambda_function" "acctest_create" {
@@ -303,7 +350,7 @@ resource "aws_lambda_function" "acctest_create" {
   handler = "exports.example"
   runtime = "nodejs8.10"
 
-  vpc_config = {
+  vpc_config {
     subnet_ids = ["${aws_subnet.lambda.id}"]
     security_group_ids = ["${aws_security_group.lambda.id}"]
   }

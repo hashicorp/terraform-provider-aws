@@ -157,3 +157,11 @@ The following arguments are supported for backwards compatibility but should not
 * `autoscaling_group_name` - The scaling policy's assigned autoscaling group.
 * `adjustment_type` - The scaling policy's adjustment type.
 * `policy_type` - The scaling policy's type.
+
+## Import
+
+AutoScaling scaling policy can be imported using the role autoscaling_group_name and name separated by `/`.
+
+```
+$ terraform import aws_autoscaling_policy.test-policy asg-name/policy-name
+```

@@ -129,8 +129,8 @@ func resourceAwsRoute53ZoneCreate(d *schema.ResourceData, meta interface{}) erro
 
 	// Private Route53 Hosted Zones can only be created with their first VPC association,
 	// however we need to associate the remaining after creation.
-	var vpcs []*route53.VPC
-	vpcs = expandRoute53VPCs(d.Get("vpc").(*schema.Set).List(), region)
+
+	var vpcs []*route53.VPC = expandRoute53VPCs(d.Get("vpc").(*schema.Set).List(), region)
 
 	// Backwards compatibility
 	if vpcID, ok := d.GetOk("vpc_id"); ok {
@@ -455,20 +455,12 @@ func resourceAwsGoRoute53Wait(r53 *route53.Route53, ref *route53.GetChangeInput)
 
 // cleanChangeID is used to remove the leading /change/
 func cleanChangeID(ID string) string {
-	return cleanPrefix(ID, "/change/")
+	return strings.TrimPrefix(ID, "/change/")
 }
 
 // cleanZoneID is used to remove the leading /hostedzone/
 func cleanZoneID(ID string) string {
-	return cleanPrefix(ID, "/hostedzone/")
-}
-
-// cleanPrefix removes a string prefix from an ID
-func cleanPrefix(ID, prefix string) string {
-	if strings.HasPrefix(ID, prefix) {
-		ID = strings.TrimPrefix(ID, prefix)
-	}
-	return ID
+	return strings.TrimPrefix(ID, "/hostedzone/")
 }
 
 func getNameServers(zoneId string, zoneName string, r53 *route53.Route53) ([]string, error) {

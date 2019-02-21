@@ -49,18 +49,6 @@ func testSweepAutoscalingGroups(region string) error {
 	}
 
 	for _, asg := range resp.AutoScalingGroups {
-		var testOptGroup bool
-		for _, testName := range []string{"foobar", "terraform-", "tf-test", "tf-asg-"} {
-			if strings.HasPrefix(*asg.AutoScalingGroupName, testName) {
-				testOptGroup = true
-				break
-			}
-		}
-
-		if !testOptGroup {
-			continue
-		}
-
 		deleteopts := autoscaling.DeleteAutoScalingGroupInput{
 			AutoScalingGroupName: asg.AutoScalingGroupName,
 			ForceDelete:          aws.Bool(true),
@@ -355,7 +343,7 @@ func TestAccAWSAutoScalingGroup_VpcUpdates(t *testing.T) {
 				Config: testAccAWSAutoScalingGroupConfigWithVPCIdent,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAutoScalingGroupExists("aws_autoscaling_group.bar", &group),
-					testAccCheckAWSAutoScalingGroupAttributesVPCZoneIdentifer(&group),
+					testAccCheckAWSAutoScalingGroupAttributesVPCZoneIdentifier(&group),
 					resource.TestCheckResourceAttr(
 						"aws_autoscaling_group.bar", "availability_zones.#", "1"),
 					resource.TestCheckResourceAttr(
@@ -830,7 +818,7 @@ func testAccCheckAWSAutoScalingGroupHealthyCapacity(
 	}
 }
 
-func testAccCheckAWSAutoScalingGroupAttributesVPCZoneIdentifer(group *autoscaling.Group) resource.TestCheckFunc {
+func testAccCheckAWSAutoScalingGroupAttributesVPCZoneIdentifier(group *autoscaling.Group) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// Grab Subnet Ids
 		var subnets []string
@@ -2789,7 +2777,7 @@ resource "aws_autoscaling_group" "bar" {
   desired_capacity = 0
   max_size = 0
   min_size = 0
-  launch_template = {
+  launch_template {
     id = "${aws_launch_template.foobar.id}"
     version = "${aws_launch_template.foobar.default_version}"
   }
@@ -2872,7 +2860,7 @@ resource "aws_autoscaling_group" "bar" {
   desired_capacity = 0
   max_size = 0
   min_size = 0
-  launch_template = {
+  launch_template {
     name = "foobar2"
   }
 }
@@ -2917,7 +2905,7 @@ resource "aws_autoscaling_group" "bar" {
   desired_capacity = 0
   max_size = 0
   min_size = 0
-  launch_template = {
+  launch_template {
     id = "${aws_launch_template.foobar.id}"
     version = "$$Latest"
   }

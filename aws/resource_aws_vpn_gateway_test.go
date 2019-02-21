@@ -18,6 +18,9 @@ func init() {
 	resource.AddTestSweepers("aws_vpn_gateway", &resource.Sweeper{
 		Name: "aws_vpn_gateway",
 		F:    testSweepVPNGateways,
+		Dependencies: []string{
+			"aws_dx_gateway_association",
+		},
 	})
 }
 

@@ -46,7 +46,11 @@ func TestGetSupportedEC2Platforms(t *testing.T) {
 func getMockedAwsApiSession(svcName string, endpoints []*awsMockEndpoint) (func(), *session.Session, error) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		buf := new(bytes.Buffer)
-		buf.ReadFrom(r.Body)
+		if _, err := buf.ReadFrom(r.Body); err != nil {
+			w.WriteHeader(500)
+			fmt.Fprintf(w, "Error reading from HTTP Request Body: %s", err)
+			return
+		}
 		requestBody := buf.String()
 
 		log.Printf("[DEBUG] Received %s API %q request to %q: %s",
@@ -68,7 +72,6 @@ func getMockedAwsApiSession(svcName string, endpoints []*awsMockEndpoint) (func(
 		}
 
 		w.WriteHeader(400)
-		return
 	}))
 
 	sc := awsCredentials.NewStaticCredentials("accessKey", "secretKey", "")

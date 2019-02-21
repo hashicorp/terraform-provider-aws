@@ -25,24 +25,18 @@ resource "aws_kinesis_firehose_delivery_stream" "extended_s3_stream" {
     role_arn   = "${aws_iam_role.firehose_role.arn}"
     bucket_arn = "${aws_s3_bucket.bucket.arn}"
 
-    processing_configuration = [
-      {
-        enabled = "true"
+    processing_configuration {
+      enabled = "true"
 
-        processors = [
-          {
-            type = "Lambda"
+      processors {
+        type = "Lambda"
 
-            parameters = [
-              {
-                parameter_name  = "LambdaArn"
-                parameter_value = "${aws_lambda_function.lambda_processor.arn}:$LATEST"
-              },
-            ]
-          },
-        ]
-      },
-    ]
+        parameters {
+          parameter_name  = "LambdaArn"
+          parameter_value = "${aws_lambda_function.lambda_processor.arn}:$LATEST"
+        }
+      }
+    }
   }
 }
 
@@ -209,24 +203,18 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
     index_name = "test"
     type_name  = "test"
 
-    processing_configuration = [
-      {
-        enabled = "true"
+    processing_configuration {
+      enabled = "true"
 
-        processors = [
-          {
-            type = "Lambda"
+      processors {
+        type = "Lambda"
 
-            parameters = [
-              {
-                parameter_name  = "LambdaArn"
-                parameter_value = "${aws_lambda_function.lambda_processor.arn}:$LATEST"
-              },
-            ]
-          },
-        ]
-      },
-    ]
+        parameters {
+          parameter_name  = "LambdaArn"
+          parameter_value = "${aws_lambda_function.lambda_processor.arn}:$LATEST"
+        }
+      }
+    }
   }
 }
 ```
@@ -294,6 +282,7 @@ be used.
 The `extended_s3_configuration` object supports the same fields from `s3_configuration` as well as the following:
 
 * `data_format_conversion_configuration` - (Optional) Nested argument for the serializer, deserializer, and schema for converting data from the JSON format to the Parquet or ORC format before writing it to Amazon S3. More details given below.
+* `error_output_prefix` - (Optional) Prefix added to failed records before writing them to S3. This prefix appears immediately following the bucket name.
 * `processing_configuration` - (Optional) The data processing configuration.  More details are given below.
 * `s3_backup_mode` - (Optional) The Amazon S3 backup mode.  Valid values are `Disabled` and `Enabled`.  Default value is `Disabled`.
 * `s3_backup_configuration` - (Optional) The configuration for backup in Amazon S3. Required if `s3_backup_mode` is `Enabled`. Supports the same fields as `s3_configuration` object.

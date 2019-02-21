@@ -236,6 +236,42 @@ func TestAccAWSCloudWatchMetricAlarm_extendedStatistic(t *testing.T) {
 	})
 }
 
+func TestAccAWSCloudWatchMetricAlarm_expression(t *testing.T) {
+	var alarm cloudwatch.MetricAlarm
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCloudWatchMetricAlarmDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSCloudWatchMetricAlarmConfigWithBadExpression(rInt),
+				ExpectError: regexp.MustCompile("No metric_query may have both `expression` and a `metric` specified"),
+			},
+			{
+				Config: testAccAWSCloudWatchMetricAlarmConfigWithExpression(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchMetricAlarmExists("aws_cloudwatch_metric_alarm.foobar", &alarm),
+					resource.TestCheckResourceAttr("aws_cloudwatch_metric_alarm.foobar", "metric_query.#", "2"),
+				),
+			},
+			{
+				Config: testAccAWSCloudWatchMetricAlarmConfigWithExpressionUpdated(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchMetricAlarmExists("aws_cloudwatch_metric_alarm.foobar", &alarm),
+					resource.TestCheckResourceAttr("aws_cloudwatch_metric_alarm.foobar", "metric_query.#", "3"),
+				),
+			},
+			{
+				ResourceName:      "aws_cloudwatch_metric_alarm.foobar",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSCloudWatchMetricAlarm_missingStatistic(t *testing.T) {
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
@@ -331,7 +367,7 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
   threshold                 = "80"
   alarm_description         = "This metric monitors ec2 cpu utilization"
   insufficient_data_actions = []
-  dimensions {
+  dimensions = {
     InstanceId = "i-abc123"
   }
 }`, rInt)
@@ -351,7 +387,7 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
   threshold                 = "80"
   alarm_description         = "This metric monitors ec2 cpu utilization"
   insufficient_data_actions = []
-  dimensions {
+  dimensions = {
     InstanceId = "i-abc123"
   }
 }`, rInt)
@@ -371,7 +407,7 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
   alarm_description         = "This metric monitors ec2 cpu utilization"
   treat_missing_data        = "missing"
   insufficient_data_actions = []
-  dimensions {
+  dimensions = {
     InstanceId = "i-abc123"
   }
 }`, rInt)
@@ -391,7 +427,7 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
   alarm_description         = "This metric monitors ec2 cpu utilization"
   treat_missing_data        = "breaching"
   insufficient_data_actions = []
-  dimensions {
+  dimensions = {
     InstanceId = "i-abc123"
   }
 }`, rInt)
@@ -411,7 +447,7 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
   alarm_description         = "This metric monitors ec2 cpu utilization"
   evaluate_low_sample_count_percentiles = "evaluate"
   insufficient_data_actions = []
-  dimensions {
+  dimensions = {
     InstanceId = "i-abc123"
   }
 }`, rInt)
@@ -431,7 +467,7 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
   alarm_description         = "This metric monitors ec2 cpu utilization"
   evaluate_low_sample_count_percentiles = "ignore"
   insufficient_data_actions = []
-  dimensions {
+  dimensions = {
     InstanceId = "i-abc123"
   }
 }`, rInt)
@@ -450,7 +486,7 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
   threshold                 = "80"
   alarm_description         = "This metric monitors ec2 cpu utilization"
   insufficient_data_actions = []
-  dimensions {
+  dimensions = {
     InstanceId = "i-abc123"
   }
 }`, rInt)
@@ -468,9 +504,103 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
   threshold                 = "80"
   alarm_description         = "This metric monitors ec2 cpu utilization"
   insufficient_data_actions = []
-  dimensions {
+  dimensions = {
     InstanceId = "i-abc123"
   }
+}`, rInt)
+}
+
+func testAccAWSCloudWatchMetricAlarmConfigWithExpression(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_metric_alarm" "foobar" {
+  alarm_name                = "terraform-test-foobar%d"
+  comparison_operator       = "GreaterThanOrEqualToThreshold"
+  evaluation_periods        = "2"
+	threshold                 = "80"
+  alarm_description         = "This metric monitors ec2 cpu utilization"
+  insufficient_data_actions = []
+	metric_query {
+		id = "e1"
+		expression = "m1"
+		label = "cat"
+		return_data = "true"
+	}
+	metric_query {
+		id = "m1"
+		metric {
+			metric_name = "CPUUtilization"
+			namespace   = "AWS/EC2"
+			period      = "120"
+			stat        = "Average"
+			unit        = "Count"
+			dimensions = {
+				InstanceId = "i-abc123"
+			}
+		}
+	}
+}`, rInt)
+}
+
+func testAccAWSCloudWatchMetricAlarmConfigWithExpressionUpdated(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_metric_alarm" "foobar" {
+  alarm_name                = "terraform-test-foobar%d"
+  comparison_operator       = "GreaterThanOrEqualToThreshold"
+  evaluation_periods        = "2"
+	threshold                 = "80"
+  alarm_description         = "This metric monitors ec2 cpu utilization"
+  insufficient_data_actions = []
+	metric_query {
+		id = "e1"
+		expression = "m1"
+		label = "cat"
+	}
+	metric_query {
+		id = "e2"
+		expression = "e1"
+		label = "bug"
+		return_data = "true"
+	}
+	metric_query {
+		id = "m1"
+		metric {
+			metric_name = "CPUUtilization"
+			namespace   = "AWS/EC2"
+			period      = "120"
+			stat        = "Average"
+			unit        = "Count"
+			dimensions = {
+				InstanceId = "i-abc123"
+			}
+		}
+	}
+}`, rInt)
+}
+
+func testAccAWSCloudWatchMetricAlarmConfigWithBadExpression(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_metric_alarm" "foobar" {
+  alarm_name                = "terraform-test-foobar%d"
+  comparison_operator       = "GreaterThanOrEqualToThreshold"
+  evaluation_periods        = "2"
+	threshold                 = "80"
+  alarm_description         = "This metric monitors ec2 cpu utilization"
+  insufficient_data_actions = []
+	metric_query {
+		id = "e1"
+		expression = "m1"
+		label = "cat"
+		metric {
+			metric_name = "CPUUtilization"
+			namespace   = "AWS/EC2"
+			period      = "120"
+			stat        = "Average"
+			unit        = "Count"
+			dimensions = {
+				InstanceId = "i-abc123"
+			}
+		}
+	}
 }`, rInt)
 }
 
@@ -536,7 +666,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
   threshold           = "0"
   unit                = "Count"
 
-  dimensions {
+  dimensions = {
     InstanceId = "${aws_instance.test.id}"
   }
 }
@@ -562,7 +692,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
   threshold           = "0"
   unit                = "Count"
 
-  dimensions {
+  dimensions = {
     InstanceId = "i-abc123"
   }
 }
@@ -590,7 +720,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
   threshold           = "0"
   unit                = "Count"
 
-  dimensions {
+  dimensions = {
     InstanceId = "i-abc123"
   }
 }

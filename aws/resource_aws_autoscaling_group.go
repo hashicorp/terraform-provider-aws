@@ -512,7 +512,7 @@ func resourceAwsAutoscalingGroupCreate(d *schema.ResourceData, meta interface{})
 		}
 	}
 
-	// Availability Zones are optional if VPC Zone Identifer(s) are specified
+	// Availability Zones are optional if VPC Zone Identifier(s) are specified
 	if v, ok := d.GetOk("availability_zones"); ok && v.(*schema.Set).Len() > 0 {
 		createOpts.AvailabilityZones = expandStringList(v.(*schema.Set).List())
 	}

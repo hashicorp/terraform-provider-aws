@@ -55,6 +55,12 @@ const (
 	// A generic error indicating a server-side failure.
 	ErrCodeInternalServerError = "InternalServerError"
 
+	// ErrCodeInvalidExportPath for service response error code
+	// "InvalidExportPath".
+	//
+	// The path provided for data repository export isn't valid.
+	ErrCodeInvalidExportPath = "InvalidExportPath"
+
 	// ErrCodeInvalidImportPath for service response error code
 	// "InvalidImportPath".
 	//

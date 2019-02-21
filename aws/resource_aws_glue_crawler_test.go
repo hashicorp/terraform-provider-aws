@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"strconv"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -38,10 +37,6 @@ func testSweepGlueCrawlers(region string) error {
 		}
 		for _, crawler := range page.Crawlers {
 			name := aws.StringValue(crawler.Name)
-			if !strings.HasPrefix(name, "tf-acc-test-") {
-				log.Printf("[INFO] Skipping Glue Crawler: %s", name)
-				continue
-			}
 
 			log.Printf("[INFO] Deleting Glue Crawler: %s", name)
 			_, err := conn.DeleteCrawler(&glue.DeleteCrawlerInput{
@@ -201,7 +196,7 @@ func TestAccAWSGlueCrawler_JdbcTarget_Exclusions(t *testing.T) {
 		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlueCrawlerConfig_JdbcTarget_Exclusions(rName, "exclusion1", "exclusion2"),
+				Config: testAccGlueCrawlerConfig_JdbcTarget_Exclusions2(rName, "exclusion1", "exclusion2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "jdbc_target.#", "1"),
@@ -211,7 +206,7 @@ func TestAccAWSGlueCrawler_JdbcTarget_Exclusions(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccGlueCrawlerConfig_JdbcTarget_Exclusions(rName, "exclusion1", ""),
+				Config: testAccGlueCrawlerConfig_JdbcTarget_Exclusions1(rName, "exclusion1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "jdbc_target.#", "1"),
@@ -357,7 +352,7 @@ func TestAccAWSGlueCrawler_S3Target_Exclusions(t *testing.T) {
 		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlueCrawlerConfig_S3Target_Exclusions(rName, "exclusion1", "exclusion2"),
+				Config: testAccGlueCrawlerConfig_S3Target_Exclusions2(rName, "exclusion1", "exclusion2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "s3_target.#", "1"),
@@ -367,7 +362,7 @@ func TestAccAWSGlueCrawler_S3Target_Exclusions(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccGlueCrawlerConfig_S3Target_Exclusions(rName, "exclusion1", ""),
+				Config: testAccGlueCrawlerConfig_S3Target_Exclusions1(rName, "exclusion1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "s3_target.#", "1"),
@@ -1053,7 +1048,7 @@ resource "aws_glue_catalog_database" "test" {
 resource "aws_glue_connection" "test" {
   name = %q
 
-  connection_properties {
+  connection_properties = {
     JDBC_CONNECTION_URL = "jdbc:mysql://terraformacctesting.com/testdatabase"
     PASSWORD            = "testpassword"
     USERNAME            = "testusername"
@@ -1075,7 +1070,7 @@ resource "aws_glue_crawler" "test" {
 `, rName, rName, rName, path)
 }
 
-func testAccGlueCrawlerConfig_JdbcTarget_Exclusions(rName, exclusion1, exclusion2 string) string {
+func testAccGlueCrawlerConfig_JdbcTarget_Exclusions1(rName, exclusion1 string) string {
 	return testAccGlueCrawlerConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %q
@@ -1084,7 +1079,7 @@ resource "aws_glue_catalog_database" "test" {
 resource "aws_glue_connection" "test" {
   name = %q
 
-  connection_properties {
+  connection_properties = {
     JDBC_CONNECTION_URL = "jdbc:mysql://terraformacctesting.com/testdatabase"
     PASSWORD            = "testpassword"
     USERNAME            = "testusername"
@@ -1100,7 +1095,39 @@ resource "aws_glue_crawler" "test" {
 
   jdbc_target {
     connection_name = "${aws_glue_connection.test.name}"
-    exclusions      = ["${compact(list(%q, %q))}"]
+    exclusions      = [%q]
+    path            = "database-name/table1"
+  }
+}
+`, rName, rName, rName, exclusion1)
+}
+
+func testAccGlueCrawlerConfig_JdbcTarget_Exclusions2(rName, exclusion1, exclusion2 string) string {
+	return testAccGlueCrawlerConfig_Base(rName) + fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name = %q
+}
+
+resource "aws_glue_connection" "test" {
+  name = %q
+
+  connection_properties = {
+    JDBC_CONNECTION_URL = "jdbc:mysql://terraformacctesting.com/testdatabase"
+    PASSWORD            = "testpassword"
+    USERNAME            = "testusername"
+  }
+}
+
+resource "aws_glue_crawler" "test" {
+  depends_on = ["aws_iam_role_policy_attachment.test-AWSGlueServiceRole"]
+
+  database_name = "${aws_glue_catalog_database.test.name}"
+  name          = %q
+  role          = "${aws_iam_role.test.name}"
+
+  jdbc_target {
+    connection_name = "${aws_glue_connection.test.name}"
+    exclusions      = [%q, %q]
     path            = "database-name/table1"
   }
 }
@@ -1116,7 +1143,7 @@ resource "aws_glue_catalog_database" "test" {
 resource "aws_glue_connection" "test" {
   name = %q
 
-  connection_properties {
+  connection_properties = {
     JDBC_CONNECTION_URL = "jdbc:mysql://terraformacctesting.com/testdatabase"
     PASSWORD            = "testpassword"
     USERNAME            = "testusername"
@@ -1275,7 +1302,7 @@ resource "aws_glue_crawler" "test" {
 `, rName, rName, path)
 }
 
-func testAccGlueCrawlerConfig_S3Target_Exclusions(rName, exclusion1, exclusion2 string) string {
+func testAccGlueCrawlerConfig_S3Target_Exclusions1(rName, exclusion1 string) string {
 	return testAccGlueCrawlerConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %q
@@ -1289,7 +1316,28 @@ resource "aws_glue_crawler" "test" {
   role          = "${aws_iam_role.test.name}"
 
   s3_target {
-    exclusions = ["${compact(list(%q, %q))}"]
+    exclusions = [%q]
+    path       = "s3://bucket1"
+  }
+}
+`, rName, rName, exclusion1)
+}
+
+func testAccGlueCrawlerConfig_S3Target_Exclusions2(rName, exclusion1, exclusion2 string) string {
+	return testAccGlueCrawlerConfig_Base(rName) + fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name = %q
+}
+
+resource "aws_glue_crawler" "test" {
+  depends_on = ["aws_iam_role_policy_attachment.test-AWSGlueServiceRole"]
+
+  database_name = "${aws_glue_catalog_database.test.name}"
+  name          = %q
+  role          = "${aws_iam_role.test.name}"
+
+  s3_target {
+    exclusions = [%q, %q]
     path       = "s3://bucket1"
   }
 }
