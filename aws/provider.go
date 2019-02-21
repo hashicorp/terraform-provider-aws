@@ -644,6 +644,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_s3_bucket_policy":                             resourceAwsS3BucketPolicy(),
 			"aws_s3_bucket_public_access_block":                resourceAwsS3BucketPublicAccessBlock(),
 			"aws_s3_bucket_object":                             resourceAwsS3BucketObject(),
+			"aws_s3_bucket_directory":                          resourceAwsS3BucketDirectory(),
 			"aws_s3_bucket_notification":                       resourceAwsS3BucketNotification(),
 			"aws_s3_bucket_metric":                             resourceAwsS3BucketMetric(),
 			"aws_s3_bucket_inventory":                          resourceAwsS3BucketInventory(),
