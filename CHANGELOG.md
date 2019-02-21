@@ -1,5 +1,9 @@
 ## 1.60.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_route53_record: Add validation for alias `name` and `zone_id` arguments [GH-7606]
+
 BUG FIXES:
 
 * resource/aws_flow_log: Prevent crash on unsuccessful flow log creation [GH-7528]
