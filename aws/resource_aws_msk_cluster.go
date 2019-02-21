@@ -50,7 +50,7 @@ func resourceAwsMskCluster() *schema.Resource {
 			},
 			"broker_security_groups": {
 				Type:     schema.TypeList,
-				Optional: true,
+				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				ForceNew: true,
 			},

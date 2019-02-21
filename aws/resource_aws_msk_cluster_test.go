@@ -139,12 +139,6 @@ resource "aws_subnet" "test_subnet_c" {
 	availability_zone = "us-east-1c"
 }
 
-`, rInt)
-}
-
-func testMskClusterConfig(rInt int) string {
-	return testMskClusterCommonConfig(rInt) + fmt.Sprintf(`
-
 resource "aws_security_group" "test_sg_a" {
 	name        = "allow_all"
 	description = "Allow all inbound traffic"
@@ -157,6 +151,12 @@ resource "aws_security_group" "test_sg_a" {
 		cidr_blocks = ["0.0.0.0/0"]
 	}
 }  
+
+`, rInt)
+}
+
+func testMskClusterConfig(rInt int) string {
+	return testMskClusterCommonConfig(rInt) + fmt.Sprintf(`
 
 resource "aws_msk_cluster" "test_cluster" {
 	name = "terraform-msk-test-%d"
@@ -182,6 +182,7 @@ resource "aws_msk_cluster" "test_cluster" {
 	broker_count = 3
 	broker_instance_type = "kafka.m5.large"
 	broker_volume_size = 10
+	broker_security_groups =["${aws_security_group.test_sg_a.id}"]
 	kafka_version = "1.1.1"
 	client_subnets = ["${aws_subnet.test_subnet_a.id}", "${aws_subnet.test_subnet_b.id}", "${aws_subnet.test_subnet_c.id}"]
 	encrypt_rest_arn = "${aws_kms_key.test_key.arn}"
@@ -195,6 +196,7 @@ resource "aws_msk_cluster" "test_cluster" {
 	name = "terraform-msk-test-%d"
 	broker_count = 3
 	broker_instance_type = "kafka.m5.large"
+	broker_security_groups =["${aws_security_group.test_sg_a.id}"]
 	broker_volume_size = 10
 	kafka_version = "1.1.1"
 	client_subnets = ["${aws_subnet.test_subnet_a.id}", "${aws_subnet.test_subnet_b.id}", "${aws_subnet.test_subnet_c.id}"]
