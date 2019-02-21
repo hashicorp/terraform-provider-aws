@@ -229,6 +229,8 @@ func resourceAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "UnsupportedOperation" {
 			log.Printf("[WARN] VPC Classic Link is not supported in this region")
+		} else if isAWSErr(err, "InvalidVpcID.NotFound", "") {
+			log.Printf("[WARN] InvalidVpcID.NotFound on DescribeVpcClassicLink")
 		} else {
 			return err
 		}
@@ -254,6 +256,8 @@ func resourceAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
 		if isAWSErr(err, "UnsupportedOperation", "The functionality you requested is not available in this region") ||
 			isAWSErr(err, "AuthFailure", "This request has been administratively disabled") {
 			log.Printf("[WARN] VPC Classic Link DNS Support is not supported in this region")
+		} else if isAWSErr(err, "InvalidVpcID.NotFound", "") {
+			log.Printf("[WARN] InvalidVpcID.NotFound on DescribeVpcClassicLinkDnsSupport")
 		} else {
 			return err
 		}
