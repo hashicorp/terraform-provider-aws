@@ -101,8 +101,9 @@ func resourceAwsRoute53Record() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"zone_id": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringLenBetween(1, 32),
 						},
 
 						"name": {
@@ -112,6 +113,7 @@ func resourceAwsRoute53Record() *schema.Resource {
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 								return strings.EqualFold(old, new)
 							},
+							ValidateFunc: validation.StringLenBetween(1, 1024),
 						},
 
 						"evaluate_target_health": {
