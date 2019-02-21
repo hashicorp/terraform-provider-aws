@@ -396,16 +396,19 @@ EOF
   service_role = "${aws_iam_role.iam_emr_service_role.arn}"
 }
 
-resource "aws_security_group" "allow_all" {
-  name        = "allow_all"
-  description = "Allow all inbound traffic"
+resource "aws_security_group" "allow_access" {
+  name        = "allow_access"
+  description = "Allow inbound traffic"
   vpc_id      = "${aws_vpc.main.id}"
 
   ingress {
+    # these ports should be locked down
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+
+    # we do not recommend opening your cluster to 0.0.0.0/0
+    cidr_blocks = # add your IP address here
   }
 
   egress {
