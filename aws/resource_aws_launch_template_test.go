@@ -263,6 +263,34 @@ func TestAccAWSLaunchTemplate_data(t *testing.T) {
 	})
 }
 
+func TestAccAWSLaunchTemplate_description(t *testing.T) {
+	var template ec2.LaunchTemplate
+	resName := "aws_launch_template.foo"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLaunchTemplateConfig_description(rName, "Test Description 1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resName, &template),
+					resource.TestCheckResourceAttr(resName, "description", "Test Description 1"),
+				),
+			},
+			{
+				Config: testAccAWSLaunchTemplateConfig_description(rName, "Test Description 2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resName, &template),
+					resource.TestCheckResourceAttr(resName, "description", "Test Description 2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSLaunchTemplate_update(t *testing.T) {
 	var template ec2.LaunchTemplate
 	resName := "aws_launch_template.foo"
@@ -927,6 +955,15 @@ resource "aws_launch_template" "example" {
 	}
 }
 `, rInt)
+}
+
+func testAccAWSLaunchTemplateConfig_description(rName, description string) string {
+	return fmt.Sprintf(`
+resource "aws_launch_template" "foo" {
+	name 				= "%s"
+	description = "%s"
+}
+`, rName, description)
 }
 
 const testAccAWSLaunchTemplateConfig_networkInterface = `
