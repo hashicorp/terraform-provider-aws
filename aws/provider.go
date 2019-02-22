@@ -691,6 +691,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_sns_topic_subscription":                       resourceAwsSnsTopicSubscription(),
 			"aws_sfn_activity":                                 resourceAwsSfnActivity(),
 			"aws_sfn_state_machine":                            resourceAwsSfnStateMachine(),
+			"aws_shield_protection":                            resourceAwsShieldProtection(),
 			"aws_default_subnet":                               resourceAwsDefaultSubnet(),
 			"aws_subnet":                                       resourceAwsSubnet(),
 			"aws_swf_domain":                                   resourceAwsSwfDomain(),
