@@ -7,6 +7,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_flow_log: Prevent crash on unsuccessful flow log creation [GH-7528]
+* resource/aws_kinesis_analytics_application: Retry input Kinesis Firehose Delivery Stream `InvalidArgumentException` permission errors for IAM eventual consistency during creation [GH-7578]
 * resource/aws_launch_template: Properly read and write `description` [GH-7569]
 * resource/aws_vpc_endpoint: Suppress equivalent `policy` differences [GH-7645]
 
