@@ -1,17 +1,17 @@
-## 1.60.0 (Unreleased)
+## 1.60.0 (February 22, 2019)
 
 ENHANCEMENTS:
 
-* resource/aws_route53_record: Add validation for alias `name` and `zone_id` arguments [GH-7606]
+* resource/aws_route53_record: Add validation for alias `name` and `zone_id` arguments ([#7606](https://github.com/terraform-providers/terraform-provider-aws/issues/7606))
 
 BUG FIXES:
 
-* resource/aws_db_instance: Prevent snapshot restore error with `allocated_storage` and io1 `storage_type` [GH-5800] / [GH-7426]
-* resource/aws_flow_log: Prevent crash on unsuccessful flow log creation [GH-7528]
-* resource/aws_kinesis_analytics_application: Retry input Kinesis Firehose Delivery Stream `InvalidArgumentException` permission errors for IAM eventual consistency during creation [GH-7578]
-* resource/aws_launch_template: Properly read and write `description` [GH-7569]
-* resource/aws_rds_cluster: Remove requirement for `master_password` and `master_username` when creating via `global_cluster_identifier` [GH-7213]
-* resource/aws_vpc_endpoint: Suppress equivalent `policy` differences [GH-7645]
+* resource/aws_db_instance: Prevent snapshot restore error with `allocated_storage` and io1 `storage_type` ([#5800](https://github.com/terraform-providers/terraform-provider-aws/issues/5800)] / [[#7426](https://github.com/terraform-providers/terraform-provider-aws/issues/7426))
+* resource/aws_flow_log: Prevent crash on unsuccessful flow log creation ([#7528](https://github.com/terraform-providers/terraform-provider-aws/issues/7528))
+* resource/aws_kinesis_analytics_application: Retry input Kinesis Firehose Delivery Stream `InvalidArgumentException` permission errors for IAM eventual consistency during creation ([#7578](https://github.com/terraform-providers/terraform-provider-aws/issues/7578))
+* resource/aws_launch_template: Properly read and write `description` ([#7569](https://github.com/terraform-providers/terraform-provider-aws/issues/7569))
+* resource/aws_rds_cluster: Remove requirement for `master_password` and `master_username` when creating via `global_cluster_identifier` ([#7213](https://github.com/terraform-providers/terraform-provider-aws/issues/7213))
+* resource/aws_vpc_endpoint: Suppress equivalent `policy` differences ([#7645](https://github.com/terraform-providers/terraform-provider-aws/issues/7645))
 
 ## 1.59.0 (February 14, 2019)
 
