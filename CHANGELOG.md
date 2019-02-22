@@ -1,4 +1,10 @@
 ## 2.0.0 (Unreleased)
+
+BREAKING CHANGES:
+
+* data-source/aws_ami: Require `owners` argument [GH-5576]
+* data-source/aws_ami_ids: Require `owners` argument [GH-5576]
+
 ## 1.60.0 (February 22, 2019)
 
 ENHANCEMENTS:
