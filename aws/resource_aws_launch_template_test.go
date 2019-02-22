@@ -73,7 +73,6 @@ func TestAccAWSLaunchTemplate_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resName, "latest_version", "1"),
 					resource.TestCheckResourceAttrSet(resName, "arn"),
 					resource.TestCheckResourceAttr(resName, "ebs_optimized", ""),
-					resource.TestCheckResourceAttr(resName, "description", "Managed by Terraform"),
 				),
 			},
 		},
