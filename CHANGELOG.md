@@ -10,6 +10,7 @@ BUG FIXES:
 * resource/aws_flow_log: Prevent crash on unsuccessful flow log creation [GH-7528]
 * resource/aws_kinesis_analytics_application: Retry input Kinesis Firehose Delivery Stream `InvalidArgumentException` permission errors for IAM eventual consistency during creation [GH-7578]
 * resource/aws_launch_template: Properly read and write `description` [GH-7569]
+* resource/aws_rds_cluster: Remove requirement for `master_password` and `master_username` when creating via `global_cluster_identifier` [GH-7213]
 * resource/aws_vpc_endpoint: Suppress equivalent `policy` differences [GH-7645]
 
 ## 1.59.0 (February 14, 2019)
