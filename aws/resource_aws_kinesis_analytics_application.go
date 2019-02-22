@@ -582,7 +582,12 @@ func resourceAwsKinesisAnalyticsApplicationCreate(d *schema.ResourceData, meta i
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		output, err := conn.CreateApplication(createOpts)
 		if err != nil {
+			// Kinesis Stream: https://github.com/terraform-providers/terraform-provider-aws/issues/7032
 			if isAWSErr(err, kinesisanalytics.ErrCodeInvalidArgumentException, "Kinesis Analytics service doesn't have sufficient privileges") {
+				return resource.RetryableError(err)
+			}
+			// Kinesis Firehose: https://github.com/terraform-providers/terraform-provider-aws/issues/7394
+			if isAWSErr(err, kinesisanalytics.ErrCodeInvalidArgumentException, "Kinesis Analytics doesn't have sufficient privileges") {
 				return resource.RetryableError(err)
 			}
 			// InvalidArgumentException: Given IAM role arn : arn:aws:iam::123456789012:role/xxx does not provide Invoke permissions on the Lambda resource : arn:aws:lambda:us-west-2:123456789012:function:yyy
