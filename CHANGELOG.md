@@ -6,6 +6,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_db_instance: Prevent snapshot restore error with `allocated_storage` and io1 `storage_type` [GH-5800] / [GH-7426]
 * resource/aws_flow_log: Prevent crash on unsuccessful flow log creation [GH-7528]
 * resource/aws_kinesis_analytics_application: Retry input Kinesis Firehose Delivery Stream `InvalidArgumentException` permission errors for IAM eventual consistency during creation [GH-7578]
 * resource/aws_launch_template: Properly read and write `description` [GH-7569]
