@@ -720,8 +720,9 @@ data "aws_ami" "test" {
 data "aws_availability_zones" "available" {}
 
 resource "aws_launch_template" "test" {
-  image_id = "${data.aws_ami.test.id}"
-  name     = %q
+  image_id      = "${data.aws_ami.test.id}"
+  instance_type = "t2.micro"
+  name          = %q
 
   block_device_mappings {
     device_name = "/dev/sda1"
@@ -769,8 +770,9 @@ data "aws_ami" "test" {
 data "aws_availability_zones" "available" {}
 
 resource "aws_launch_template" "test" {
-  image_id = "${data.aws_ami.test.id}"
-  name     = %q
+  image_id      = "${data.aws_ami.test.id}"
+  instance_type = "t2.micro"
+  name          = %q
 
   block_device_mappings {
     device_name = "/dev/sda1"
@@ -1021,6 +1023,7 @@ data "aws_ami" "test_ami" {
 resource "aws_launch_template" "foo" {
   name_prefix = "foobar"
   image_id = "${data.aws_ami.test_ami.id}"
+  instance_type = "t2.micro"
 }
 
 data "aws_availability_zones" "available" {}
@@ -1090,6 +1093,7 @@ data "aws_ami" "test" {
 resource "aws_launch_template" "test" {
   name_prefix = "instance_market_options"
   image_id = "${data.aws_ami.test.id}"
+  instance_type = "t2.micro"
 
   instance_market_options {
     market_type = "spot"
@@ -1137,6 +1141,7 @@ resource "aws_launch_template" "test" {
   instance_market_options {
     market_type = "spot"
     spot_options {
+      max_price          = "0.5"
       spot_instance_type = "one-time"
     }
   }
