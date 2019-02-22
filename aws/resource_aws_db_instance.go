@@ -818,7 +818,8 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		if attr, ok := d.GetOk("iops"); ok {
-			opts.Iops = aws.Int64(int64(attr.(int)))
+			modifyDbInstanceInput.Iops = aws.Int64(int64(attr.(int)))
+			requiresModifyDbInstance = true
 		}
 
 		if attr, ok := d.GetOk("license_model"); ok {
@@ -878,7 +879,8 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		if attr, ok := d.GetOk("storage_type"); ok {
-			opts.StorageType = aws.String(attr.(string))
+			modifyDbInstanceInput.StorageType = aws.String(attr.(string))
+			requiresModifyDbInstance = true
 		}
 
 		if attr, ok := d.GetOk("tde_credential_arn"); ok {
