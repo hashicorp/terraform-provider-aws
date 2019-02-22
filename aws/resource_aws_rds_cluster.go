@@ -715,11 +715,11 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 
 		if _, ok := d.GetOk("global_cluster_identifier"); !ok {
 			if _, ok := d.GetOk("master_password"); !ok {
-				return fmt.Errorf(`provider.aws: aws_db_instance: %s: "master_password": required field is not set`, d.Get("name").(string))
+				return fmt.Errorf(`provider.aws: aws_db_instance: %s: "master_password": required field is not set`, d.Get("database_name").(string))
 			}
 
 			if _, ok := d.GetOk("master_username"); !ok {
-				return fmt.Errorf(`provider.aws: aws_db_instance: %s: "master_username": required field is not set`, d.Get("name").(string))
+				return fmt.Errorf(`provider.aws: aws_db_instance: %s: "master_username": required field is not set`, d.Get("database_name").(string))
 			}
 		}
 
