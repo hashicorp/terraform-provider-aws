@@ -18,6 +18,7 @@ require (
 	github.com/golang/protobuf v0.0.0-20171113180720-1e59b77b52bf // indirect
 	github.com/golang/snappy v0.0.0-20180518054509-2e65f85255db // indirect
 	github.com/google/gofuzz v0.0.0-20170612174753-24818f796faf // indirect
+	github.com/hashicorp/aws-sdk-go-base v0.2.0
 	github.com/hashicorp/go-cleanhttp v0.5.0
 	github.com/hashicorp/go-getter v0.0.0-20180327010114-90bb99a48d86 // indirect
 	github.com/hashicorp/go-hclog v0.0.0-20171005151751-ca137eb4b438 // indirect
@@ -50,16 +51,13 @@ require (
 	github.com/posener/complete v0.0.0-20170730193024-f4461a52b632 // indirect
 	github.com/pquerna/otp v0.0.0-20180813144649-be78767b3e39
 	github.com/spf13/pflag v1.0.3 // indirect
-	github.com/stretchr/testify v1.3.0 // indirect
 	github.com/terraform-providers/terraform-provider-template v0.1.1
 	github.com/terraform-providers/terraform-provider-tls v0.1.0
 	github.com/ulikunitz/xz v0.5.4 // indirect
 	github.com/zclconf/go-cty v0.0.0-20180106055834-709e4033eeb0 // indirect
 	golang.org/x/crypto v0.0.0-20180110145155-b3c9a1d25cfb // indirect
-	golang.org/x/net v0.0.0-20171024115130-4b14673ba32b // indirect
 	golang.org/x/sync v0.0.0-20181221193216-37e7f081c4d4 // indirect
 	golang.org/x/sys v0.0.0-20170803140359-d8f5ea21b929 // indirect
-	golang.org/x/text v0.0.0-20171024115504-6eab0e8f74e8 // indirect
 	google.golang.org/genproto v0.0.0-20171002232614-f676e0f3ac63 // indirect
 	google.golang.org/grpc v0.0.0-20171025225919-b5eab4ccac6d // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
