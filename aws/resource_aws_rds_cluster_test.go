@@ -701,7 +701,7 @@ func TestAccAWSRDSCluster_GlobalClusterIdentifier_Add(t *testing.T) {
 		CheckDestroy: testAccCheckAWSClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRDSClusterConfig_EngineMode(rName, "global"),
+				Config: testAccAWSRDSClusterConfig_GlobalEngineMode(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterExists(resourceName, &dbCluster1),
 					resource.TestCheckResourceAttr(resourceName, "global_cluster_identifier", ""),
@@ -735,7 +735,7 @@ func TestAccAWSRDSCluster_GlobalClusterIdentifier_Remove(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSRDSClusterConfig_EngineMode(rName, "global"),
+				Config: testAccAWSRDSClusterConfig_GlobalEngineMode(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterExists(resourceName, &dbCluster1),
 					resource.TestCheckResourceAttr(resourceName, "global_cluster_identifier", ""),
@@ -2245,6 +2245,22 @@ resource "aws_rds_cluster" "test" {
 `, rName, deletionProtection)
 }
 
+func testAccAWSRDSClusterConfig_GlobalEngineMode(rName string) string {
+	return fmt.Sprintf(`
+%s
+
+resource "aws_rds_cluster" "test" {
+  depends_on		   = ["aws_db_subnet_group.dbsubnet"]
+  cluster_identifier   = %q
+  engine_mode          = "global"
+  db_subnet_group_name = %q
+  master_password      = "barbarbarbar"
+  master_username      = "foo"
+  skip_final_snapshot  = true
+}
+`, testAccAWSRDSClusterConfig_GlobalNetwork(rName), rName, rName)
+}
+
 func testAccAWSRDSClusterConfig_EngineMode(rName, engineMode string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
@@ -2257,25 +2273,59 @@ resource "aws_rds_cluster" "test" {
 `, rName, engineMode)
 }
 
+func testAccAWSRDSClusterConfig_GlobalNetwork(rName string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "azs" { }
+
+resource "aws_vpc" "vpc" {
+  cidr_block = "10.0.0.0/16"
+  tags = {
+  	Name = "terraform-acctest-rds-cluster-global-cross-region"
+  }
+}
+
+resource "aws_subnet" "subnets" {
+  count             = 2
+  vpc_id            = "${aws_vpc.vpc.id}"
+  availability_zone = "${data.aws_availability_zones.azs.names[count.index]}"
+  cidr_block        = "10.0.${count.index}.0/24"
+  tags = {
+    Name = "tf-acc-rds-cluster-global-cross-region-replica-${count.index}"
+  }
+}
+
+resource "aws_db_subnet_group" "dbsubnet" {
+  name       = %q
+  subnet_ids = ["${aws_subnet.subnets.*.id}"]
+}`, rName)
+
+}
+
 func testAccAWSRDSClusterConfig_GlobalClusterIdentifier(rName string) string {
 	return fmt.Sprintf(`
+%s
+
 resource "aws_rds_global_cluster" "test" {
   global_cluster_identifier = %q
 }
 
 resource "aws_rds_cluster" "test" {
+  depends_on				= ["aws_db_subnet_group.dbsubnet"]
   cluster_identifier        = %q
   global_cluster_identifier = "${aws_rds_global_cluster.test.id}"
   engine_mode               = "global"
   master_password           = "barbarbarbar"
   master_username           = "foo"
   skip_final_snapshot       = true
+  db_subnet_group_name      = "${aws_db_subnet_group.dbsubnet.name}"
 }
-`, rName, rName)
+`, testAccAWSRDSClusterConfig_GlobalNetwork(rName), rName, rName)
 }
 
 func testAccAWSRDSClusterConfig_GlobalClusterIdentifier_Update(rName, globalClusterIdentifierResourceName string) string {
 	return fmt.Sprintf(`
+%s
+
 resource "aws_rds_global_cluster" "test" {
   count = 2
 
@@ -2283,14 +2333,16 @@ resource "aws_rds_global_cluster" "test" {
 }
 
 resource "aws_rds_cluster" "test" {
+  depends_on				= ["aws_db_subnet_group.dbsubnet"]
   cluster_identifier        = %q
   global_cluster_identifier = "${%s.id}"
   engine_mode               = "global"
   master_password           = "barbarbarbar"
   master_username           = "foo"
   skip_final_snapshot       = true
+  db_subnet_group_name      = %q
 }
-`, rName, rName, globalClusterIdentifierResourceName)
+`, testAccAWSRDSClusterConfig_GlobalNetwork(rName), rName, rName, globalClusterIdentifierResourceName, rName)
 }
 
 func testAccAWSRDSClusterConfig_ScalingConfiguration(rName string, autoPause bool, maxCapacity, minCapacity, secondsUntilAutoPause int) string {
