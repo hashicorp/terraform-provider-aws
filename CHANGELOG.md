@@ -7,6 +7,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_flow_log: Prevent crash on unsuccessful flow log creation [GH-7528]
+* resource/aws_launch_template: Properly read and write `description` [GH-7569]
 * resource/aws_vpc_endpoint: Suppress equivalent `policy` differences [GH-7645]
 
 ## 1.59.0 (February 14, 2019)
