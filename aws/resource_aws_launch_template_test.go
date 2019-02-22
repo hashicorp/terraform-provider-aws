@@ -263,6 +263,34 @@ func TestAccAWSLaunchTemplate_data(t *testing.T) {
 	})
 }
 
+func TestAccAWSLaunchTemplate_description(t *testing.T) {
+	var template ec2.LaunchTemplate
+	resName := "aws_launch_template.foo"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLaunchTemplateConfig_description(rName, "Test Description 1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resName, &template),
+					resource.TestCheckResourceAttr(resName, "description", "Test Description 1"),
+				),
+			},
+			{
+				Config: testAccAWSLaunchTemplateConfig_description(rName, "Test Description 2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resName, &template),
+					resource.TestCheckResourceAttr(resName, "description", "Test Description 2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSLaunchTemplate_update(t *testing.T) {
 	var template ec2.LaunchTemplate
 	resName := "aws_launch_template.foo"
@@ -692,8 +720,9 @@ data "aws_ami" "test" {
 data "aws_availability_zones" "available" {}
 
 resource "aws_launch_template" "test" {
-  image_id = "${data.aws_ami.test.id}"
-  name     = %q
+  image_id      = "${data.aws_ami.test.id}"
+  instance_type = "t2.micro"
+  name          = %q
 
   block_device_mappings {
     device_name = "/dev/sda1"
@@ -741,8 +770,9 @@ data "aws_ami" "test" {
 data "aws_availability_zones" "available" {}
 
 resource "aws_launch_template" "test" {
-  image_id = "${data.aws_ami.test.id}"
-  name     = %q
+  image_id      = "${data.aws_ami.test.id}"
+  instance_type = "t2.micro"
+  name          = %q
 
   block_device_mappings {
     device_name = "/dev/sda1"
@@ -929,6 +959,15 @@ resource "aws_launch_template" "example" {
 `, rInt)
 }
 
+func testAccAWSLaunchTemplateConfig_description(rName, description string) string {
+	return fmt.Sprintf(`
+resource "aws_launch_template" "foo" {
+	name 				= "%s"
+	description = "%s"
+}
+`, rName, description)
+}
+
 const testAccAWSLaunchTemplateConfig_networkInterface = `
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -984,6 +1023,7 @@ data "aws_ami" "test_ami" {
 resource "aws_launch_template" "foo" {
   name_prefix = "foobar"
   image_id = "${data.aws_ami.test_ami.id}"
+  instance_type = "t2.micro"
 }
 
 data "aws_availability_zones" "available" {}
@@ -1053,6 +1093,7 @@ data "aws_ami" "test" {
 resource "aws_launch_template" "test" {
   name_prefix = "instance_market_options"
   image_id = "${data.aws_ami.test.id}"
+  instance_type = "t2.micro"
 
   instance_market_options {
     market_type = "spot"
@@ -1100,6 +1141,7 @@ resource "aws_launch_template" "test" {
   instance_market_options {
     market_type = "spot"
     spot_options {
+      max_price          = "0.5"
       spot_instance_type = "one-time"
     }
   }
