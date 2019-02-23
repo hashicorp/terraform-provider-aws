@@ -12,8 +12,6 @@ Provides a Lambda Layer Version resource. Lambda Layers allow you to reuse share
 
 For information about Lambda Layers and how to use them, see [AWS Lambda Layers][1]
 
-~> **NOTE:** The attribute values for `arn` and `layer_arn` will be swapped in version 2.0.0 of the Terraform AWS Provider.
-
 ## Example Usage
 
 ```hcl
@@ -51,8 +49,8 @@ large files efficiently.
 
 ## Attributes Reference
 
-* `arn` - The Amazon Resource Name (ARN) identifying your Lambda Layer.
-* `layer_arn` - The Amazon Resource Name (ARN) identifying your specific Lambda Layer version.
+* `arn` - The Amazon Resource Name (ARN) of the Lambda Layer with version.
+* `layer_arn` - The Amazon Resource Name (ARN) of the Lambda Layer without version.
 * `created_date` - The date this resource was created.
 * `source_code_size` - The size in bytes of the function .zip file.
 * `version` - This Lamba Layer version.
