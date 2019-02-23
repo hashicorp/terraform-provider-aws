@@ -2381,3 +2381,18 @@ func validateWorklinkFleetName(v interface{}, k string) (ws []string, errors []e
 
 	return
 }
+
+func validateRdsSnapshotIdentifier(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !regexp.MustCompile(`^[0-9A-Za-z-]+$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only alphanumeric characters and hyphens allowed in %q", k))
+	}
+	if regexp.MustCompile(`--`).MatchString(value) {
+		errors = append(errors, fmt.Errorf("%q cannot contain two consecutive hyphens", k))
+	}
+	if regexp.MustCompile(`-$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf("%q cannot end in a hyphen", k))
+	}
+	return
+}

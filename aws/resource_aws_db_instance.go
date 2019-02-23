@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
@@ -205,22 +204,17 @@ func resourceAwsDbInstance() *schema.Resource {
 			},
 
 			"final_snapshot_identifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, es []error) {
-					value := v.(string)
-					if !regexp.MustCompile(`^[0-9A-Za-z-]+$`).MatchString(value) {
-						es = append(es, fmt.Errorf(
-							"only alphanumeric characters and hyphens allowed in %q", k))
-					}
-					if regexp.MustCompile(`--`).MatchString(value) {
-						es = append(es, fmt.Errorf("%q cannot contain two consecutive hyphens", k))
-					}
-					if regexp.MustCompile(`-$`).MatchString(value) {
-						es = append(es, fmt.Errorf("%q cannot end in a hyphen", k))
-					}
-					return
-				},
+				Type:          schema.TypeString,
+				Optional:      true,
+				ValidateFunc:  validateRdsSnapshotIdentifier,
+				ConflictsWith: []string{"final_snapshot_identifier_prefix"},
+			},
+
+			"final_snapshot_identifier_prefix": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ValidateFunc:  validateRdsSnapshotIdentifier,
+				ConflictsWith: []string{"final_snapshot_identifier"},
 			},
 
 			"s3_import": {
@@ -1265,6 +1259,8 @@ func resourceAwsDbInstanceDelete(d *schema.ResourceData, meta interface{}) error
 	if !skipFinalSnapshot {
 		if name, present := d.GetOk("final_snapshot_identifier"); present {
 			opts.FinalDBSnapshotIdentifier = aws.String(name.(string))
+		} else if name, present := d.GetOk("final_snapshot_identifier_prefix"); present {
+			opts.FinalDBSnapshotIdentifier = aws.String(resource.PrefixedUniqueId(name.(string)))
 		} else {
 			return fmt.Errorf("DB Instance FinalSnapshotIdentifier is required when a final snapshot is required")
 		}
