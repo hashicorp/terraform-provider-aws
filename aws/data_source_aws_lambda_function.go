@@ -16,7 +16,6 @@ func dataSourceAwsLambdaFunction() *schema.Resource {
 			"qualifier": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "$LATEST",
 			},
 			"description": {
 				Type:     schema.TypeString,
