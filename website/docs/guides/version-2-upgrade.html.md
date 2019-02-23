@@ -39,6 +39,7 @@ Upgrade topics:
 - [Resource: aws_efs_file_system](#resource-aws_efs_file_system)
 - [Resource: aws_elasticache_cluster](#resource-aws_elasticache_cluster)
 - [Resource: aws_instance](#resource-aws_instance)
+- [Resource: aws_lambda_function](#resource-aws_lambda_function)
 - [Resource: aws_lambda_layer_version](#resource-aws_lambda_layer_version)
 - [Resource: aws_network_acl](#resource-aws_network_acl)
 - [Resource: aws_redshift_cluster](#resource-aws_redshift_cluster)
@@ -550,6 +551,16 @@ resource "aws_elasticache_cluster" "example" {
 ### network_interface_id Attribute Removal
 
 Switch your attribute references to the `primary_network_interface_id` attribute instead.
+
+## Resource: aws_lambda_function
+
+### reserved_concurrent_executions Argument Behavior Change
+
+Setting `reserved_concurrent_executions` to `0` will now disable Lambda Function invocations, causing downtime for the Lambda Function.
+
+Previously `reserved_concurrent_executions` accepted `0` and below for unreserved concurrency, which means it was not previously possible to disable invocations. The argument now differentiates between a new value for unreserved concurrency (`-1`) and disabling Lambda invocations (`0`). If previously configuring this value to `0` for unreserved concurrency, update the configured value to `-1` or the resource will disable Lambda Function invocations on update. If previously unconfigured, the argument does not require any changes.
+
+See the [Lambda User Guide](https://docs.aws.amazon.com/lambda/latest/dg/concurrent-executions.html) for more information about concurrency.
 
 ## Resource: aws_lambda_layer_version
 
