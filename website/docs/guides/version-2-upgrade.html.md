@@ -184,6 +184,12 @@ resource "aws_rds_cluster" "example" {
 }
 ```
 
+## Data Source: aws_lambda_function
+
+### arn and qualified_arn Attribute Behavior Changes
+
+The `arn` attribute now always returns the unqualified (no `:QUALIFIER` or `:VERSION` suffix) Amazon Resource Name (ARN) value and the `qualified_arn` attribute now always returns the qualified (includes `:QUALIFIER` or `:VERSION` suffix) ARN value. Previously by default, the `arn` attribute included `:$LATEST` suffix when not setting the optional `qualifier` argument, which was not compatible with many other resources. To restore the previous default behavior, set the `qualifier` argument to `$LATEST` and reference the `qualified_arn` attribute.
+
 ## Data Source: aws_region
 
 ### current Argument Removal
