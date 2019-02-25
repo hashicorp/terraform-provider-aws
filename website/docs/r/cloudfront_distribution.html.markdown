@@ -154,12 +154,6 @@ of several sub-resources - these resources are laid out below.
   * `aliases` (Optional) - Extra CNAMEs (alternate domain names), if any, for
     this distribution.
 
-  * `cache_behavior` (Optional) - **Deprecated**, use `ordered_cache_behavior` instead.
-
-  * `ordered_cache_behavior` (Optional) - An ordered list of [cache behaviors](#cache-behavior-arguments)
-    resource for this distribution. List from top to bottom
-+    in order of precedence. The topmost cache behavior will have precedence 0.
-
   * `comment` (Optional) - Any comments you want to include about the
     distribution.
 
@@ -183,6 +177,10 @@ of several sub-resources - these resources are laid out below.
   * `logging_config` (Optional) - The [logging
     configuration](#logging-config-arguments) that controls how logs are written
     to your distribution (maximum one).
+
+  * `ordered_cache_behavior` (Optional) - An ordered list of [cache behaviors](#cache-behavior-arguments)
+    resource for this distribution. List from top to bottom
+    in order of precedence. The topmost cache behavior will have precedence 0.
 
   * `origin` (Required) - One or more [origins](#origin-arguments) for this
     distribution (multiples allowed).
@@ -477,7 +475,6 @@ In addition to all arguments above, the following attributes are exported:
      route an [Alias Resource Record Set][7] to. This attribute is simply an
      alias for the zone ID `Z2FDTNDATAQYW2`.
 
-
 [1]: http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Introduction.html
 [2]: https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_CreateDistribution.html
 [3]: http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-restricting-access-to-s3.html
@@ -485,7 +482,6 @@ In addition to all arguments above, the following attributes are exported:
 [5]: /docs/providers/aws/r/cloudfront_origin_access_identity.html
 [6]: https://aws.amazon.com/certificate-manager/
 [7]: http://docs.aws.amazon.com/Route53/latest/APIReference/CreateAliasRRSAPI.html
-
 
 ## Import
 

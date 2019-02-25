@@ -207,9 +207,9 @@ func TestAccAWSCloudFrontDistribution_multiOrigin(t *testing.T) {
 				Config: testAccAWSCloudFrontDistributionMultiOriginConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontDistributionExistence(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "cache_behavior.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "cache_behavior.2106187217.default_ttl", "50"),
-					resource.TestCheckResourceAttr(resourceName, "cache_behavior.2106187217.path_pattern", "images1/*.jpg"),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.default_ttl", "50"),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.path_pattern", "images1/*.jpg"),
 				),
 			},
 		},
@@ -763,7 +763,7 @@ resource "aws_cloudfront_distribution" "multi_origin_distribution" {
 		max_ttl = 100
 		viewer_protocol_policy = "allow-all"
 	}
-	cache_behavior {
+	ordered_cache_behavior {
 		allowed_methods = [ "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT" ]
 		cached_methods = [ "GET", "HEAD" ]
 		target_origin_id = "myS3Origin"
@@ -779,7 +779,7 @@ resource "aws_cloudfront_distribution" "multi_origin_distribution" {
 		viewer_protocol_policy = "allow-all"
 		path_pattern = "images1/*.jpg"
 	}
-	cache_behavior {
+	ordered_cache_behavior {
 		allowed_methods = [ "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT" ]
 		cached_methods = [ "GET", "HEAD" ]
 		target_origin_id = "myCustomOrigin"
