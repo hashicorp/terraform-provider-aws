@@ -729,6 +729,7 @@ func TestAccElastiCacheReplicationGroup_multiAzInVPC(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_window", "02:00-03:00"),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_retention_limit", "7"),
+					resource.TestCheckResourceAttrSet(resourceName, "configuration_endpoint_address"),
 					resource.TestCheckResourceAttrSet(resourceName, "primary_endpoint_address"),
 					func(s *terraform.State) error {
 						return resource.TestMatchResourceAttr(resourceName, "primary_endpoint_address", regexp.MustCompile(fmt.Sprintf("%s\\..+\\.%s", aws.StringValue(rg.ReplicationGroupId), acctest.PartitionDNSSuffix())))(s)
@@ -773,6 +774,7 @@ func TestAccElastiCacheReplicationGroup_deprecatedAvailabilityZones_multiAzInVPC
 					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_window", "02:00-03:00"),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_retention_limit", "7"),
+					resource.TestCheckResourceAttrSet(resourceName, "configuration_endpoint_address"),
 					resource.TestCheckResourceAttrSet(resourceName, "primary_endpoint_address"),
 					func(s *terraform.State) error {
 						return resource.TestMatchResourceAttr(resourceName, "primary_endpoint_address", regexp.MustCompile(fmt.Sprintf("%s\\..+\\.%s", aws.StringValue(rg.ReplicationGroupId), acctest.PartitionDNSSuffix())))(s)
@@ -836,6 +838,7 @@ func TestAccElastiCacheReplicationGroup_ClusterMode_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cluster_mode.0.replicas_per_node_group", "1"),
 					resource.TestCheckResourceAttr(resourceName, "port", "6379"),
 					resource.TestCheckResourceAttrSet(resourceName, "configuration_endpoint_address"),
+					resource.TestCheckResourceAttrSet(resourceName, "primary_endpoint_address"),
 					resource.TestCheckResourceAttr(resourceName, "multi_az_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "4"),
