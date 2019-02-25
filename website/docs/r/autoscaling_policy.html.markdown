@@ -147,11 +147,8 @@ The following arguments are supported:
 * `name` - (Required) The name of the dimension.
 * `value` - (Required) The value of the dimension.
 
-The following arguments are supported for backwards compatibility but should not be used:
-
-* `min_adjustment_step` - (Optional) Use `min_adjustment_magnitude` instead.
-
 ## Attribute Reference
+
 * `arn` - The ARN assigned by AWS to the scaling policy.
 * `name` - The scaling policy's name.
 * `autoscaling_group_name` - The scaling policy's assigned autoscaling group.
