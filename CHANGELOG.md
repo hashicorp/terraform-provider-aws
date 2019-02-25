@@ -1,5 +1,9 @@
 ## 2.0.0 (Unreleased)
 
+NOTES:
+
+* Full documentation about this update, including Terraform provider version pinning and configuration examples, can be found in the [Terraform AWS Provider Version 2 Upgrade Guide](https://www.terraform.io/docs/providers/aws/guides/version-2-upgrade.html)
+
 BREAKING CHANGES:
 
 * data-source/aws_ami: Require `owners` argument [GH-5576]
