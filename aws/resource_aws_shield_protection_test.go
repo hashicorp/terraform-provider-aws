@@ -163,7 +163,7 @@ func testAccCheckAWSShieldProtectionDestroy(s *terraform.State) error {
 		resp, err := shieldconn.DescribeProtection(input)
 		if err == nil {
 			if len(*resp.Protection.Id) > 0 && *resp.Protection.Id == rs.Primary.ID {
-				fmt.Errorf("The Shield protection with ID %v still exists", rs.Primary.ID)
+				return fmt.Errorf("The Shield protection with ID %v still exists", rs.Primary.ID)
 			}
 		}
 	}
