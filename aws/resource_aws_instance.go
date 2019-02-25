@@ -187,7 +187,7 @@ func resourceAwsInstance() *schema.Resource {
 			"network_interface_id": {
 				Type:     schema.TypeString,
 				Computed: true,
-				Removed:  "Use `primary_network_interface_id` instead",
+				Removed:  "Use `primary_network_interface_id` attribute instead",
 			},
 
 			"primary_network_interface_id": {
