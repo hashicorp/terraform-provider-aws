@@ -11,6 +11,7 @@ BREAKING CHANGES:
 
 ENHANCEMENTS:
 
+* backend/swift: Added support for workspaces and locking [GH-20211]
 * data-source/aws_lambda_function: Add `tags` attribute [GH-7663]
 * resource/aws_lambda_function: Disable Lambda Function invocations by setting `reserved_concurrent_executions` to `0` [GH-3806]
 
