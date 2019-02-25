@@ -42,6 +42,7 @@ func (p StringPtrSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 // Used by the aws_cloudfront_distribution Create and Update functions.
 func expandDistributionConfig(d *schema.ResourceData) *cloudfront.DistributionConfig {
 	distributionConfig := &cloudfront.DistributionConfig{
+		CacheBehaviors:       expandCacheBehaviors(d.Get("ordered_cache_behavior").([]interface{})),
 		CustomErrorResponses: expandCustomErrorResponses(d.Get("custom_error_response").(*schema.Set)),
 		DefaultCacheBehavior: expandDefaultCacheBehavior(d.Get("default_cache_behavior").(*schema.Set).List()[0].(map[string]interface{})),
 		Enabled:              aws.Bool(d.Get("enabled").(bool)),
@@ -50,11 +51,7 @@ func expandDistributionConfig(d *schema.ResourceData) *cloudfront.DistributionCo
 		Origins:              expandOrigins(d.Get("origin").(*schema.Set)),
 		PriceClass:           aws.String(d.Get("price_class").(string)),
 	}
-	if v, ok := d.GetOk("ordered_cache_behavior"); ok {
-		distributionConfig.CacheBehaviors = expandCacheBehaviors(v.([]interface{}))
-	} else {
-		distributionConfig.CacheBehaviors = expandCacheBehaviorsDeprecated(d.Get("cache_behavior").(*schema.Set))
-	}
+
 	// This sets CallerReference if it's still pending computation (ie: new resource)
 	if v, ok := d.GetOk("caller_reference"); !ok {
 		distributionConfig.CallerReference = aws.String(time.Now().Format(time.RFC3339Nano))
@@ -144,13 +141,7 @@ func flattenDistributionConfig(d *schema.ResourceData, distributionConfig *cloud
 		}
 	}
 	if distributionConfig.CacheBehaviors != nil {
-		if _, ok := d.GetOk("cache_behavior"); ok {
-			err = d.Set("cache_behavior", flattenCacheBehaviorsDeprecated(distributionConfig.CacheBehaviors))
-		} else {
-			err = d.Set("ordered_cache_behavior", flattenCacheBehaviors(distributionConfig.CacheBehaviors))
-		}
-
-		if err != nil {
+		if err := d.Set("ordered_cache_behavior", flattenCacheBehaviors(distributionConfig.CacheBehaviors)); err != nil {
 			return err
 		}
 	}
@@ -252,27 +243,6 @@ func defaultCacheBehaviorHash(v interface{}) int {
 		}
 	}
 	return hashcode.String(buf.String())
-}
-
-func expandCacheBehaviorsDeprecated(s *schema.Set) *cloudfront.CacheBehaviors {
-	var qty int64
-	var items []*cloudfront.CacheBehavior
-	for _, v := range s.List() {
-		items = append(items, expandCacheBehaviorDeprecated(v.(map[string]interface{})))
-		qty++
-	}
-	return &cloudfront.CacheBehaviors{
-		Quantity: aws.Int64(qty),
-		Items:    items,
-	}
-}
-
-func flattenCacheBehaviorsDeprecated(cbs *cloudfront.CacheBehaviors) *schema.Set {
-	s := []interface{}{}
-	for _, v := range cbs.Items {
-		s = append(s, flattenCacheBehaviorDeprecated(v))
-	}
-	return schema.NewSet(cacheBehaviorHash, s)
 }
 
 func expandCacheBehaviors(lst []interface{}) *cloudfront.CacheBehaviors {
@@ -443,61 +413,6 @@ func flattenCacheBehavior(cb *cloudfront.CacheBehavior) map[string]interface{} {
 		m["path_pattern"] = *cb.PathPattern
 	}
 	return m
-}
-
-// Assemble the hash for the aws_cloudfront_distribution cache_behavior
-// TypeSet attribute.
-func cacheBehaviorHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	buf.WriteString(fmt.Sprintf("%t-", m["compress"].(bool)))
-	buf.WriteString(fmt.Sprintf("%s-", m["viewer_protocol_policy"].(string)))
-	buf.WriteString(fmt.Sprintf("%s-", m["target_origin_id"].(string)))
-	buf.WriteString(fmt.Sprintf("%d-", forwardedValuesHash(m["forwarded_values"].(*schema.Set).List()[0].(map[string]interface{}))))
-	buf.WriteString(fmt.Sprintf("%d-", m["min_ttl"].(int)))
-	if d, ok := m["field_level_encryption_id"]; ok && d.(string) != "" {
-		buf.WriteString(fmt.Sprintf("%s-", d.(string)))
-	}
-	if d, ok := m["trusted_signers"]; ok {
-		for _, e := range sortInterfaceSlice(d.([]interface{})) {
-			buf.WriteString(fmt.Sprintf("%s-", e.(string)))
-		}
-	}
-	if d, ok := m["max_ttl"]; ok {
-		buf.WriteString(fmt.Sprintf("%d-", d.(int)))
-	}
-	if d, ok := m["smooth_streaming"]; ok {
-		buf.WriteString(fmt.Sprintf("%t-", d.(bool)))
-	}
-	if d, ok := m["default_ttl"]; ok {
-		buf.WriteString(fmt.Sprintf("%d-", d.(int)))
-	}
-	if d, ok := m["allowed_methods"]; ok {
-		for _, e := range sortInterfaceSlice(d.([]interface{})) {
-			buf.WriteString(fmt.Sprintf("%s-", e.(string)))
-		}
-	}
-	if d, ok := m["cached_methods"]; ok {
-		for _, e := range sortInterfaceSlice(d.([]interface{})) {
-			buf.WriteString(fmt.Sprintf("%s-", e.(string)))
-		}
-	}
-	if d, ok := m["path_pattern"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", d))
-	}
-	if d, ok := m["lambda_function_association"]; ok {
-		var associations []interface{}
-		switch d.(type) {
-		case *schema.Set:
-			associations = d.(*schema.Set).List()
-		default:
-			associations = d.([]interface{})
-		}
-		for _, lfa := range associations {
-			buf.WriteString(fmt.Sprintf("%d-", lambdaFunctionAssociationHash(lfa.(map[string]interface{}))))
-		}
-	}
-	return hashcode.String(buf.String())
 }
 
 func expandTrustedSigners(s []interface{}) *cloudfront.TrustedSigners {

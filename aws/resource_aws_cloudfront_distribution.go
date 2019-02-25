@@ -35,11 +35,9 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 				Set:      aliasesHash,
 			},
 			"cache_behavior": {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				Set:           cacheBehaviorHash,
-				ConflictsWith: []string{"ordered_cache_behavior"},
-				Deprecated:    "Use `ordered_cache_behavior` instead",
+				Type:     schema.TypeSet,
+				Optional: true,
+				Removed:  "Use `ordered_cache_behavior` configuration block(s) instead",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"allowed_methods": {
@@ -167,9 +165,8 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 				},
 			},
 			"ordered_cache_behavior": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				ConflictsWith: []string{"cache_behavior"},
+				Type:     schema.TypeList,
+				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"allowed_methods": {
