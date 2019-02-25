@@ -1191,7 +1191,7 @@ resource "aws_ecs_service" "mongo" {
   cluster = "${aws_ecs_cluster.default.id}"
   task_definition = "${aws_ecs_task_definition.mongo.arn}"
   desired_count = 1
-  placement_strategy {
+  ordered_placement_strategy {
     field = "host"
     type = "spread"
   }
