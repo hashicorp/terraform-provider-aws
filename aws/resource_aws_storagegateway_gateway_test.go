@@ -464,11 +464,7 @@ func testAccAWSStorageGateway_FileGatewayBase(rName string) string {
 	return testAccAWSStorageGateway_VPCBase(rName) + fmt.Sprintf(`
 data "aws_ami" "aws-thinstaller" {
   most_recent = true
-
-  filter {
-    name   = "owner-alias"
-    values = ["amazon"]
-  }
+  owners      = ["amazon"]
 
   filter {
     name   = "name"
@@ -499,11 +495,7 @@ func testAccAWSStorageGateway_TapeAndVolumeGatewayBase(rName string) string {
 	return testAccAWSStorageGateway_VPCBase(rName) + fmt.Sprintf(`
 data "aws_ami" "aws-storage-gateway-2" {
   most_recent = true
-
-  filter {
-    name   = "owner-alias"
-    values = ["amazon"]
-  }
+  owners      = ["amazon"]
 
   filter {
     name   = "name"
@@ -688,11 +680,7 @@ resource "aws_vpc_dhcp_options_association" "test" {
 
 data "aws_ami" "aws-thinstaller" {
   most_recent = true
-
-  filter {
-    name   = "owner-alias"
-    values = ["amazon"]
-  }
+  owners      = ["amazon"]
 
   filter {
     name   = "name"

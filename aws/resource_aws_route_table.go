@@ -21,7 +21,7 @@ func resourceAwsRouteTable() *schema.Resource {
 		Update: resourceAwsRouteTableUpdate,
 		Delete: resourceAwsRouteTableDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsRouteTableImportState,
+			State: schema.ImportStatePassthrough,
 		},
 
 		Schema: map[string]*schema.Schema{
