@@ -83,12 +83,6 @@ func resourceAwsRoute53Record() *schema.Resource {
 				ConflictsWith: []string{"alias"},
 			},
 
-			"weight": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Removed:  "Now implemented as weighted_routing_policy; Please see https://www.terraform.io/docs/providers/aws/r/route53_record.html",
-			},
-
 			"set_identifier": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -123,12 +117,6 @@ func resourceAwsRoute53Record() *schema.Resource {
 					},
 				},
 				Set: resourceAwsRoute53AliasRecordHash,
-			},
-
-			"failover": { // PRIMARY | SECONDARY
-				Type:     schema.TypeString,
-				Optional: true,
-				Removed:  "Now implemented as failover_routing_policy; see docs",
 			},
 
 			"failover_routing_policy": {
