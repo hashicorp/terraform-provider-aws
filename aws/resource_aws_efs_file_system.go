@@ -43,7 +43,7 @@ func resourceAwsEfsFileSystem() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
-				Removed:  "Use `creation_token' argument instead",
+				Removed:  "Use `creation_token` argument instead",
 			},
 
 			"performance_mode": {
