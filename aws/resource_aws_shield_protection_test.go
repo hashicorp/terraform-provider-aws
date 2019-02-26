@@ -32,6 +32,7 @@ func TestAccAWSShieldProtectionGlobalAccelerate(t *testing.T) {
 		},
 	})
 }
+
 func TestAccAWSShieldProtectionElasticIPAddress(t *testing.T) {
 	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	elasticIPAddressConfig := fmt.Sprintf(testAccShieldProtectionElasticIPAddressConfig, rName)
@@ -69,6 +70,7 @@ func TestAccAWSShieldProtectionAlb(t *testing.T) {
 		},
 	})
 }
+
 func TestAccAWSShieldProtectionElb(t *testing.T) {
 	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	elbConfig := fmt.Sprintf(testAccShieldProtectionElbConfig, rName)
