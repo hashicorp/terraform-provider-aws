@@ -235,9 +235,10 @@ func resourceAwsRoute53Record() *schema.Resource {
 			},
 
 			"allow_overwrite": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
+				Type:       schema.TypeBool,
+				Optional:   true,
+				Computed:   true,
+				Deprecated: "The next major version of the Terraform AWS Provider will require importing existing records",
 			},
 		},
 	}
