@@ -637,10 +637,6 @@ func TestAccAWSElasticacheCluster_ReplicationGroupID_InvalidAttributes(t *testin
 		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAWSElasticacheClusterConfig_ReplicationGroupID_InvalidAttribute(rName, "availability_zones", "${list(\"us-east-1a\", \"us-east-1c\")}"),
-				ExpectError: regexp.MustCompile(`"replication_group_id": conflicts with availability_zones`),
-			},
-			{
 				Config:      testAccAWSElasticacheClusterConfig_ReplicationGroupID_InvalidAttribute(rName, "az_mode", "single-az"),
 				ExpectError: regexp.MustCompile(`"replication_group_id": conflicts with az_mode`),
 			},
