@@ -24,6 +24,7 @@ Upgrade topics:
 - [Data Source: aws_ami_ids](#data-source-aws_ami_ids)
 - [Data Source: aws_iam_role](#data-source-aws_iam_role)
 - [Data Source: aws_kms_secret](#data-source-aws_kms_secret)
+- [Data Source: aws_lambda_function](#data-source-aws_lambda_function)
 - [Data Source: aws_region](#data-source-aws_region)
 - [Resource: aws_api_gateway_api_key](#resource-aws_api_gateway_api_key)
 - [Resource: aws_api_gateway_integration](#resource-aws_api_gateway_integration)
@@ -44,6 +45,7 @@ Upgrade topics:
 - [Resource: aws_network_acl](#resource-aws_network_acl)
 - [Resource: aws_redshift_cluster](#resource-aws_redshift_cluster)
 - [Resource: aws_route_table](#resource-aws_route_table)
+- [Resource: aws_route53_record](#resource-aws_route53_record)
 - [Resource: aws_route53_zone](#resource-aws_route53_zone)
 - [Resource: aws_wafregional_byte_match_set](#resource-aws_wafregional_byte_match_set)
 
@@ -643,6 +645,31 @@ resource "aws_redshift_cluster" "example" {
 Previously, importing this resource resulted in an `aws_route` resource for each route, in
 addition to the `aws_route_table`, in the Terraform state. Support for importing `aws_route` resources has been added and importing this resource only adds the `aws_route_table` 
 resource, with in-line routes, to the state.
+
+## Resource: aws_route53_record
+
+### allow_overwrite Default Value Change
+
+The resource now requires existing Route 53 Records to be imported into the Terraform state for management unless the `allow_overwrite` argument is enabled. The `allow_overwrite` flag is considered deprecated for removal in the next major version of the Terraform AWS Provider (version 3.0.0).
+
+For example, if the `www.example.com` Route 53 Record in the `example.com` Route 53 Hosted Zone existed previously and this new Terraform configuration was introduced:
+
+```hcl
+resource "aws_route53_record" "www" {
+  # ... other configuration ...
+  name = "www.example.com"
+}
+```
+
+During resource creation in version 1.X and prior, it would silently perform an `UPSERT` changeset to the existing Route 53 Record and not report back an error. In version 2.0.0 of the Terraform AWS Provider, the resource now performs a `CREATE` changeset, which will error for existing Route 53 Records.
+
+The `allow_overwrite` argument provides a temporary workaround to keep the old behavior, but existing workflows should be updated to perform a `terraform import` command like the following instead:
+
+```console
+$ terraform import aws_route53_record.www ZONEID_www.example.com_TYPE
+```
+
+More information can be found in the [`aws_route53_record` resource documentation](https://www.terraform.io/docs/providers/aws/r/route53_record.html#import).
 
 ## Resource: aws_route53_zone
 
