@@ -18,6 +18,7 @@ BREAKING CHANGES:
 * resource/aws_lambda_function: Setting `reserved_concurrent_executions` to `0` will now disable Lambda Function invocations, causing downtime for the Lambda Function. Previously `reserved_concurrent_executions` accepted `0` and below for unreserved concurrency, which means it was not previously possible to disable invocations. The argument now differentiates between a new value for unreserved concurrency (`-1`) and disabling Lambda invocations (`0`). If previously configuring this value to `0` for unreserved concurrency, update the configured value to `-1` or the resource will disable Lambda Function invocations on update. If previously unconfigured, the argument does not require any changes. See the [Lambda User Guide](https://docs.aws.amazon.com/lambda/latest/dg/concurrent-executions.html) for more information about concurrency.
 * resource/aws_route_table: Resource import no longer imports `aws_route`, `aws_route_table_association`, and `aws_main_route_table_association` resources into the Terraform state [GH-5657]
 * resource/aws_s3_bucket_object: Remove hardcoded AWS China prevention of tagging [GH-7654]
+* resource/aws_wafregional_byte_match_set: Remove deprecated `byte_match_tuple` configuration block (replaced with `byte_match_tuples` configuration block) [GH-7718]
 
 ENHANCEMENTS:
 
