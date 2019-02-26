@@ -12,6 +12,7 @@ BREAKING CHANGES:
 * data-source/aws_lambda_function: Returns unqualified (no `:QUALIFIER` or `:VERSION` suffix) value in `arn` attribute by default and qualified (includes `:QUALIFIER` or `:VERSION` suffix) value in `qualified_arn` attribute. Previously the `arn` attribute included `:$LATEST` suffix by default which was not compatible with many other resources. To restore the previous default behavior, set the `qualifier` argument to `$LATEST` and reference the `qualified_arn` attribute. [GH-7663]
 * resource/aws_batch_compute_environment: Remove deprecated `ecc_cluster_arn` attribute (replaced with `ecs_cluster_arn` attribute) [GH-7708]
 * resource/aws_cloudfront_distribution: Remove deprecated `cache_behaviors` configuration block (replaced with `ordered_cache_behaviors` configuration block) [GH-7710]
+* resource/aws_efs_file_system: Remove deprecated `reference_name` argument (replaced with `creation_token` argument) [GH-7713]
 * resource/aws_elasticache_cluster: Remove deprecated `availability_zones` argument (replaced with `preferred_availability_zones` argument) [GH-7714]
 * resource/aws_instance: Remove deprecated top-level `network_interface_id` attribute [GH-1193] / [GH-7715]
 * resource/aws_instance: Remove hardcoded AWS China prevention of tagging on creation [GH-7654]
