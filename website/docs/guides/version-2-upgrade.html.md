@@ -650,7 +650,7 @@ resource, with in-line routes, to the state.
 
 ### allow_overwrite Default Value Change
 
-The resource now requires existing Route 53 Records to be imported into the Terraform state for management unless the `allow_overwrite` argument is enabled. The `allow_overwrite` flag is considered deprecated for removal in the next major version of the Terraform AWS Provider (version 3.0.0).
+The resource now requires existing Route 53 Records to be imported into the Terraform state for management unless the `allow_overwrite` argument is enabled. The `allow_overwrite` flag is considered deprecated for removal in a future major version of the Terraform AWS Provider.
 
 For example, if the `www.example.com` Route 53 Record in the `example.com` Route 53 Hosted Zone existed previously and this new Terraform configuration was introduced:
 
