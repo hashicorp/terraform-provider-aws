@@ -25,6 +25,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * data-source/aws_lambda_function: Properly return error for missing function [GH-7663]
+* resource/aws_vpn_connection: Remove configurability of read-only `customer_gateway_configuration`, `routes`, and `vgw_telemetry` attributes [GH-7636]
 
 ## 1.60.0 (February 22, 2019)
 
