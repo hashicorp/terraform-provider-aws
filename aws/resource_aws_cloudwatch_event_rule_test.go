@@ -17,6 +17,9 @@ func init() {
 	resource.AddTestSweepers("aws_cloudwatch_event_rule", &resource.Sweeper{
 		Name: "aws_cloudwatch_event_rule",
 		F:    testSweepCloudWatchEventRules,
+		Dependencies: []string{
+			"aws_cloudwatch_event_target",
+		},
 	})
 }
 
