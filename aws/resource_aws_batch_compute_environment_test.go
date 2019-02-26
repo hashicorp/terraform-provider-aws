@@ -40,19 +40,23 @@ func testSweepBatchComputeEnvironments(region string) error {
 		return fmt.Errorf("Error retrieving Batch Compute Environments: %s", err)
 	}
 	for _, computeEnvironment := range out.ComputeEnvironments {
-		name := computeEnvironment.ComputeEnvironmentName
+		name := aws.StringValue(computeEnvironment.ComputeEnvironmentName)
 
-		log.Printf("[INFO] Disabling Batch Compute Environment: %s", *name)
-		err := disableBatchComputeEnvironment(*name, 20*time.Minute, conn)
-		if err != nil {
-			log.Printf("[ERROR] Failed to disable Batch Compute Environment %s: %s", *name, err)
-			continue
+		if aws.StringValue(computeEnvironment.State) == batch.CEStateEnabled {
+			log.Printf("[INFO] Disabling Batch Compute Environment: %s", name)
+			err := disableBatchComputeEnvironment(name, 20*time.Minute, conn)
+
+			if err != nil {
+				log.Printf("[ERROR] Failed to disable Batch Compute Environment %s: %s", name, err)
+				continue
+			}
 		}
 
-		log.Printf("[INFO] Deleting Batch Compute Environment: %s", *name)
-		err = deleteBatchComputeEnvironment(*name, 20*time.Minute, conn)
+		log.Printf("[INFO] Deleting Batch Compute Environment: %s", name)
+		err := deleteBatchComputeEnvironment(name, 20*time.Minute, conn)
+
 		if err != nil {
-			log.Printf("[ERROR] Failed to delete Batch Compute Environment %s: %s", *name, err)
+			log.Printf("[ERROR] Failed to delete Batch Compute Environment %s: %s", name, err)
 		}
 	}
 
