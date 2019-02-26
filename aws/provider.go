@@ -91,22 +91,6 @@ func Provider() terraform.ResourceProvider {
 				Set:           schema.HashString,
 			},
 
-			"dynamodb_endpoint": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "",
-				Description: descriptions["dynamodb_endpoint"],
-				Removed:     "Use `dynamodb` inside `endpoints` block instead",
-			},
-
-			"kinesis_endpoint": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "",
-				Description: descriptions["kinesis_endpoint"],
-				Removed:     "Use `kinesis` inside `endpoints` block instead",
-			},
-
 			"endpoints": endpointsSchema(),
 
 			"insecure": {
