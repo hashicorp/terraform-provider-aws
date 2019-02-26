@@ -24,10 +24,9 @@ func resourceAwsWafRegionalByteMatchSet() *schema.Resource {
 				ForceNew: true,
 			},
 			"byte_match_tuple": {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				ConflictsWith: []string{"byte_match_tuples"},
-				Deprecated:    "use `byte_match_tuples` instead",
+				Type:     schema.TypeSet,
+				Optional: true,
+				Removed:  "use `byte_match_tuples` configuration block(s) instead",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"field_to_match": {
@@ -155,15 +154,10 @@ func resourceAwsWafRegionalByteMatchSetRead(d *schema.ResourceData, meta interfa
 		return nil
 	}
 
-	if _, ok := d.GetOk("byte_match_tuple"); ok {
-		if err := d.Set("byte_match_tuple", flattenWafByteMatchTuplesWR(resp.ByteMatchSet.ByteMatchTuples)); err != nil {
-			return fmt.Errorf("error setting byte_match_tuple: %s", err)
-		}
-	} else {
-		if err := d.Set("byte_match_tuples", flattenWafByteMatchTuplesWR(resp.ByteMatchSet.ByteMatchTuples)); err != nil {
-			return fmt.Errorf("error setting byte_match_tuples: %s", err)
-		}
+	if err := d.Set("byte_match_tuples", flattenWafByteMatchTuplesWR(resp.ByteMatchSet.ByteMatchTuples)); err != nil {
+		return fmt.Errorf("error setting byte_match_tuples: %s", err)
 	}
+
 	d.Set("name", resp.ByteMatchSet.Name)
 
 	return nil
@@ -195,15 +189,7 @@ func resourceAwsWafRegionalByteMatchSetUpdate(d *schema.ResourceData, meta inter
 	region := meta.(*AWSClient).region
 	log.Printf("[INFO] Updating ByteMatchSet: %s", d.Get("name").(string))
 
-	if d.HasChange("byte_match_tuple") {
-		o, n := d.GetChange("byte_match_tuple")
-		oldT, newT := o.(*schema.Set).List(), n.(*schema.Set).List()
-
-		err := updateByteMatchSetResourceWR(d, oldT, newT, conn, region)
-		if err != nil {
-			return fmt.Errorf("Error updating ByteMatchSet: %s", err)
-		}
-	} else if d.HasChange("byte_match_tuples") {
+	if d.HasChange("byte_match_tuples") {
 		o, n := d.GetChange("byte_match_tuples")
 		oldT, newT := o.(*schema.Set).List(), n.(*schema.Set).List()
 
@@ -221,12 +207,7 @@ func resourceAwsWafRegionalByteMatchSetDelete(d *schema.ResourceData, meta inter
 
 	log.Printf("[INFO] Deleting ByteMatchSet: %s", d.Get("name").(string))
 
-	var oldT []interface{}
-	if _, ok := d.GetOk("byte_match_tuple"); ok {
-		oldT = d.Get("byte_match_tuple").(*schema.Set).List()
-	} else {
-		oldT = d.Get("byte_match_tuples").(*schema.Set).List()
-	}
+	oldT := d.Get("byte_match_tuples").(*schema.Set).List()
 
 	if len(oldT) > 0 {
 		var newT []interface{}
