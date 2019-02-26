@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -11,7 +10,6 @@ import (
 	"strconv"
 	"strings"
 	"testing"
-	"text/template"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -2021,74 +2019,68 @@ resource "aws_s3_bucket" "bucket" {
 }
 
 func testAccAWSS3MultiBucketConfigWithTags(randInt int) string {
-	t := template.Must(template.New("t1").
-		Parse(`
+	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket1" {
-	bucket = "tf-test-bucket-1-{{.GUID}}"
+	bucket = "tf-test-bucket-1-%[1]d"
 	acl = "private"
 	force_destroy = true
 	tags = {
-		Name = "tf-test-bucket-1-{{.GUID}}"
-		Environment = "{{.GUID}}"
+		Name = "tf-test-bucket-1-%[1]d"
+		Environment = "%[1]d"
 	}
 }
 
 resource "aws_s3_bucket" "bucket2" {
-	bucket = "tf-test-bucket-2-{{.GUID}}"
+	bucket = "tf-test-bucket-2-%[1]d"
 	acl = "private"
 	force_destroy = true
 	tags = {
-		Name = "tf-test-bucket-2-{{.GUID}}"
-		Environment = "{{.GUID}}"
+		Name = "tf-test-bucket-2-%[1]d"
+		Environment = "%[1]d"
 	}
 }
 
 resource "aws_s3_bucket" "bucket3" {
-	bucket = "tf-test-bucket-3-{{.GUID}}"
+	bucket = "tf-test-bucket-3-%[1]d"
 	acl = "private"
 	force_destroy = true
 	tags = {
-		Name = "tf-test-bucket-3-{{.GUID}}"
-		Environment = "{{.GUID}}"
+		Name = "tf-test-bucket-3-%[1]d"
+		Environment = "%[1]d"
 	}
 }
 
 resource "aws_s3_bucket" "bucket4" {
-	bucket = "tf-test-bucket-4-{{.GUID}}"
+	bucket = "tf-test-bucket-4-%[1]d"
 	acl = "private"
 	force_destroy = true
 	tags = {
-		Name = "tf-test-bucket-4-{{.GUID}}"
-		Environment = "{{.GUID}}"
+		Name = "tf-test-bucket-4-%[1]d"
+		Environment = "%[1]d"
 	}
 }
 
 resource "aws_s3_bucket" "bucket5" {
-	bucket = "tf-test-bucket-5-{{.GUID}}"
+	bucket = "tf-test-bucket-5-%[1]d"
 	acl = "private"
 	force_destroy = true
 	tags = {
-		Name = "tf-test-bucket-5-{{.GUID}}"
-		Environment = "{{.GUID}}"
+		Name = "tf-test-bucket-5-%[1]d"
+		Environment = "%[1]d"
 	}
 }
 
 resource "aws_s3_bucket" "bucket6" {
-	bucket = "tf-test-bucket-6-{{.GUID}}"
+	bucket = "tf-test-bucket-6-%[1]d"
 	acl = "private"
 	force_destroy = true
 	tags = {
-		Name = "tf-test-bucket-6-{{.GUID}}"
-		Environment = "{{.GUID}}"
+		Name = "tf-test-bucket-6-%[1]d"
+		Environment = "%[1]d"
 	}
 }
-`))
-	var doc bytes.Buffer
-	// TODO: Convert to fmt.Sprintf() (https://github.com/terraform-providers/terraform-provider-aws/issues/7456)
-	if err := t.Execute(&doc, struct{ GUID int }{GUID: randInt}); err != nil {
-		panic(fmt.Sprintf("error executing template: %s", err))
-	}
-	return doc.String()
+
+`, randInt)
 }
 
 func testAccAWSS3BucketConfigWithRegion(bucketName, region string) string {
