@@ -951,11 +951,15 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 	}
 
 	if v, ok := d.GetOk("allowed_account_ids"); ok {
-		config.AllowedAccountIds = v.(*schema.Set).List()
+		for _, accountIDRaw := range v.(*schema.Set).List() {
+			config.AllowedAccountIds = append(config.AllowedAccountIds, accountIDRaw.(string))
+		}
 	}
 
 	if v, ok := d.GetOk("forbidden_account_ids"); ok {
-		config.ForbiddenAccountIds = v.(*schema.Set).List()
+		for _, accountIDRaw := range v.(*schema.Set).List() {
+			config.ForbiddenAccountIds = append(config.ForbiddenAccountIds, accountIDRaw.(string))
+		}
 	}
 
 	return config.Client()

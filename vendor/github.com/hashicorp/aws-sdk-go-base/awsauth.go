@@ -1,4 +1,4 @@
-package aws
+package awsbase
 
 import (
 	"errors"
@@ -82,14 +82,11 @@ func GetAccountIDAndPartitionFromIAMGetUser(iamconn *iam.IAM) (string, string, e
 	if err != nil {
 		// AccessDenied and ValidationError can be raised
 		// if credentials belong to federated profile, so we ignore these
-		if isAWSErr(err, "AccessDenied", "") {
-			return "", "", nil
-		}
-		if isAWSErr(err, "InvalidClientTokenId", "") {
-			return "", "", nil
-		}
-		if isAWSErr(err, "ValidationError", "") {
-			return "", "", nil
+		if awsErr, ok := err.(awserr.Error); ok {
+			switch awsErr.Code() {
+			case "AccessDenied", "InvalidClientTokenId", "ValidationError":
+				return "", "", nil
+			}
 		}
 		err = fmt.Errorf("failed getting account information via iam:GetUser: %s", err)
 		log.Printf("[DEBUG] %s", err)
@@ -206,7 +203,13 @@ func GetCredentials(c *Config) (*awsCredentials.Credentials, error) {
 		// Real AWS should reply to a simple metadata request.
 		// We check it actually does to ensure something else didn't just
 		// happen to be listening on the same IP:Port
-		metadataClient := ec2metadata.New(session.New(cfg))
+		ec2Session, err := session.NewSession(cfg)
+
+		if err != nil {
+			return nil, fmt.Errorf("error creating EC2 Metadata session: %s", err)
+		}
+
+		metadataClient := ec2metadata.New(ec2Session)
 		if metadataClient.Available() {
 			providers = append(providers, &ec2rolecreds.EC2RoleProvider{
 				Client: metadataClient,
@@ -247,14 +250,19 @@ func GetCredentials(c *Config) (*awsCredentials.Credentials, error) {
 	log.Printf("[INFO] AWS Auth provider used: %q", cp.ProviderName)
 
 	awsConfig := &aws.Config{
-		Credentials:      creds,
-		Region:           aws.String(c.Region),
-		MaxRetries:       aws.Int(c.MaxRetries),
-		HTTPClient:       cleanhttp.DefaultClient(),
-		S3ForcePathStyle: aws.Bool(c.S3ForcePathStyle),
+		Credentials: creds,
+		Region:      aws.String(c.Region),
+		MaxRetries:  aws.Int(c.MaxRetries),
+		HTTPClient:  cleanhttp.DefaultClient(),
 	}
 
-	stsclient := sts.New(session.New(awsConfig))
+	assumeRoleSession, err := session.NewSession(awsConfig)
+
+	if err != nil {
+		return nil, fmt.Errorf("error creating assume role session: %s", err)
+	}
+
+	stsclient := sts.New(assumeRoleSession)
 	assumeRoleProvider := &stscreds.AssumeRoleProvider{
 		Client:  stsclient,
 		RoleARN: c.AssumeRoleARN,

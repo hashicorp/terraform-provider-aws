@@ -2,15 +2,10 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// +build !go1.9
+// +build go1.10
 
-package http2
+package bidirule
 
-import (
-	"net/http"
-)
-
-func configureServer19(s *http.Server, conf *Server) error {
-	// not supported prior to go1.9
-	return nil
+func (t *Transformer) isFinal() bool {
+	return t.state == ruleLTRFinal || t.state == ruleRTLFinal || t.state == ruleInitial
 }
