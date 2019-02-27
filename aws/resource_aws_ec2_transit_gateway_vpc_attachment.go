@@ -146,19 +146,6 @@ func resourceAwsEc2TransitGatewayVpcAttachmentCreate(d *schema.ResourceData, met
 func resourceAwsEc2TransitGatewayVpcAttachmentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	resp, err := conn.DescribeVpcs(&ec2.DescribeVpcsInput{
-		VpcIds: []*string{aws.String(d.Get("vpc_id").(string))},
-	})
-
-	if err != nil {
-		return err
-	}
-
-	if resp.Vpcs == nil || len(resp.Vpcs) == 0 {
-		return fmt.Errorf("VPC not found.")
-	}
-	vpcOwnerID := *resp.Vpcs[0].OwnerId
-
 	transitGatewayVpcAttachment, err := ec2DescribeTransitGatewayVpcAttachment(conn, d.Id())
 
 	if isAWSErr(err, "InvalidTransitGatewayAttachmentID.NotFound", "") {
@@ -182,6 +169,19 @@ func resourceAwsEc2TransitGatewayVpcAttachmentRead(d *schema.ResourceData, meta 
 		d.SetId("")
 		return nil
 	}
+
+	resp, err := conn.DescribeVpcs(&ec2.DescribeVpcsInput{
+		VpcIds: []*string{transitGatewayVpcAttachment.VpcId},
+	})
+
+	if err != nil {
+		return err
+	}
+
+	if resp.Vpcs == nil || len(resp.Vpcs) == 0 {
+		return fmt.Errorf("VPC not found.")
+	}
+	vpcOwnerID := *resp.Vpcs[0].OwnerId
 
 	transitGatewayID := aws.StringValue(transitGatewayVpcAttachment.TransitGatewayId)
 	transitGateway, err := ec2DescribeTransitGateway(conn, transitGatewayID)
