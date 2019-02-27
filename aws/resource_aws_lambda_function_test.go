@@ -1982,7 +1982,7 @@ resource "aws_lambda_function" "lambda_function_test" {
     role = "${aws_iam_role.iam_for_lambda.arn}"
     handler = "exports.example"
     runtime = "nodejs8.10"
-    layers = ["${aws_lambda_layer_version.lambda_function_test.layer_arn}"]
+    layers = ["${aws_lambda_layer_version.lambda_function_test.arn}"]
 }
 `, layerName, funcName)
 }
@@ -2008,8 +2008,8 @@ resource "aws_lambda_function" "lambda_function_test" {
     handler = "exports.example"
     runtime = "nodejs8.10"
     layers = [
-        "${aws_lambda_layer_version.lambda_function_test.layer_arn}",
-        "${aws_lambda_layer_version.lambda_function_test_2.layer_arn}",
+        "${aws_lambda_layer_version.lambda_function_test.arn}",
+        "${aws_lambda_layer_version.lambda_function_test_2.arn}",
     ]
 }
 `, layerName, layer2Name, funcName)

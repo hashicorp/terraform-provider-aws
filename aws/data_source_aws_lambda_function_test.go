@@ -284,7 +284,7 @@ resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = %[1]q
   handler       = "exports.example"
-  layers        = ["${aws_lambda_layer_version.test.layer_arn}"]
+  layers        = ["${aws_lambda_layer_version.test.arn}"]
   role          = "${aws_iam_role.lambda.arn}"
   runtime       = "nodejs8.10"
 }

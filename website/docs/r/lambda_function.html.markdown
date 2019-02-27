@@ -55,7 +55,7 @@ resource "aws_lambda_function" "test_lambda" {
 
 ### Lambda Layers
 
-~> **NOTE:** The `aws_lambda_layer_version` attribute values for `arn` and `layer_arn` will be swapped in version 2.0.0 of the Terraform AWS Provider. For version 1.x, use `layer_arn` references. For version 2.x, use `arn` references.
+~> **NOTE:** The `aws_lambda_layer_version` attribute values for `arn` and `layer_arn` were swapped in version 2.0.0 of the Terraform AWS Provider. For version 1.x, use `layer_arn` references. For version 2.x, use `arn` references.
 
 ```hcl
 resource "aws_lambda_layer_version" "example" {
@@ -64,7 +64,7 @@ resource "aws_lambda_layer_version" "example" {
 
 resource "aws_lambda_function" "example" {
   # ... other configuration ...
-  layers = ["${aws_lambda_layer_version.example.layer_arn}"]
+  layers = ["${aws_lambda_layer_version.example.arn}"]
 }
 ```
 
