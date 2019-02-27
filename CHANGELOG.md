@@ -6,6 +6,7 @@ NOTES:
 
 BREAKING CHANGES:
 
+* provider: Return error on AWS Account ID lookup failure during initialization (unlesss `skip_requesting_account_id = true`) [GH-7737]
 * data-source/aws_ami: Require `owners` argument [GH-5576]
 * data-source/aws_ami_ids: Require `owners` argument [GH-5576]
 * data-source/aws_iam_role: Remove deprecated attributes [GH-7696]
