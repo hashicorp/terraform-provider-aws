@@ -34,6 +34,7 @@ BREAKING CHANGES:
 * resource/aws_lambda_function: Setting `reserved_concurrent_executions` to `0` will now disable Lambda Function invocations, causing downtime for the Lambda Function. Previously `reserved_concurrent_executions` accepted `0` and below for unreserved concurrency, which means it was not previously possible to disable invocations. The argument now differentiates between a new value for unreserved concurrency (`-1`) and disabling Lambda invocations (`0`). If previously configuring this value to `0` for unreserved concurrency, update the configured value to `-1` or the resource will disable Lambda Function invocations on update. If previously unconfigured, the argument does not require any changes. See the [Lambda User Guide](https://docs.aws.amazon.com/lambda/latest/dg/concurrent-executions.html) for more information about concurrency.
 * resource/aws_lambda_layer_version: Swap `arn` and `layer_arn` attribute values [GH-7664]
 * resource/aws_network_acl: Remove deprecated `subnet_id` argument (replaced with `subnet_ids` argument) [GH-7716]
+* resource/aws_redshift_cluster: Remove deprecated `bucket_name`, `enable_logging`, and `s3_key_prefix` arguments (replaced with `logging` configuration block) [GH-7717]
 * resource/aws_route_table: Resource import no longer imports `aws_route`, `aws_route_table_association`, and `aws_main_route_table_association` resources into the Terraform state [GH-5657]
 * resource/aws_route53_record: Require import for existing records (use deprecated `allow_overwrite` argument to temporarily reinstate the old behavior) [GH-7734]
 * resource/aws_route53_zone: Remove deprecated `vpc_id` and `vpc_region` arguments (replaced with `vpc` configuration block) [GH-7695]
@@ -50,6 +51,7 @@ BUG FIXES:
 
 * data-source/aws_lambda_function: Properly return error for missing function [GH-7663]
 * resource/aws_appautoscaling_policy: Properly read `step_scaling_policy_configuration` into Terraform state [GH-7706]
+* resource/aws_redshift_cluster: Properly read logging into Terraform state [GH-7717]
 * resource/aws_route53_record: Existing Route 53 Records are no longer silently overwritten during resource creation by default (use `terraform import` or deprecated `allow_overwrite` argument) [GH-7734]
 * resource/aws_vpn_connection: Remove configurability of read-only `customer_gateway_configuration`, `routes`, and `vgw_telemetry` attributes [GH-7636]
 
