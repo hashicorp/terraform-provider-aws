@@ -10,6 +10,7 @@ BREAKING CHANGES:
 * data-source/aws_ami_ids: Require `owners` argument [GH-5576]
 * data-source/aws_kms_secret: Remove data source (replaced with `aws_kms_secrets` data source) [GH-7657]
 * data-source/aws_lambda_function: Returns unqualified (no `:QUALIFIER` or `:VERSION` suffix) value in `arn` attribute by default and qualified (includes `:QUALIFIER` or `:VERSION` suffix) value in `qualified_arn` attribute. Previously the `arn` attribute included `:$LATEST` suffix by default which was not compatible with many other resources. To restore the previous default behavior, set the `qualifier` argument to `$LATEST` and reference the `qualified_arn` attribute. [GH-7663]
+* resource/aws_api_gateway_method_response: Remove deprecated `response_parameters_in_json` argument (replaced with `response_parameters` argument) [GH-7704]
 * resource/aws_appautoscaling_policy: Remove deprecated arguments (replaced with `step_scaling_policy_configuration` configuration block) [GH-7706]
 * resource/aws_autoscaling_policy: Remove deprecated `min_adjustment_step` argument (replaced with `min_adjustment_magnitude` argument) [GH-7707]
 * resource/aws_batch_compute_environment: Remove deprecated `ecc_cluster_arn` attribute (replaced with `ecs_cluster_arn` attribute) [GH-7708]
