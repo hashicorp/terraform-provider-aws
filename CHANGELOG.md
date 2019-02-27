@@ -8,6 +8,7 @@ BREAKING CHANGES:
 
 * data-source/aws_ami: Require `owners` argument [GH-5576]
 * data-source/aws_ami_ids: Require `owners` argument [GH-5576]
+* data-source/aws_iam_role: Remove deprecated attributes [GH-7696]
 * data-source/aws_kms_secret: Remove data source (replaced with `aws_kms_secrets` data source) [GH-7657]
 * data-source/aws_lambda_function: Returns unqualified (no `:QUALIFIER` or `:VERSION` suffix) value in `arn` attribute by default and qualified (includes `:QUALIFIER` or `:VERSION` suffix) value in `qualified_arn` attribute. Previously the `arn` attribute included `:$LATEST` suffix by default which was not compatible with many other resources. To restore the previous default behavior, set the `qualifier` argument to `$LATEST` and reference the `qualified_arn` attribute. [GH-7663]
 * data-source/aws_region: Remove deprecated `current` argument [GH-7697]
