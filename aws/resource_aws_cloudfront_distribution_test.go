@@ -75,29 +75,6 @@ func testSweepCloudFrontDistributions(region string) error {
 	return nil
 }
 
-func TestAccAWSCloudFrontDistribution_importBasic(t *testing.T) {
-	ri := acctest.RandInt()
-	testConfig := fmt.Sprintf(testAccAWSCloudFrontDistributionS3Config, ri, originBucket, logBucket, testAccAWSCloudFrontDistributionRetainConfig())
-
-	resourceName := "aws_cloudfront_distribution.s3_distribution"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testConfig,
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
 // TestAccAWSCloudFrontDistribution_S3Origin runs an
 // aws_cloudfront_distribution acceptance test with a single S3 origin.
 //
@@ -123,6 +100,12 @@ func TestAccAWSCloudFrontDistribution_S3Origin(t *testing.T) {
 						"Z2FDTNDATAQYW2",
 					),
 				),
+			},
+			{
+				ResourceName:            "aws_cloudfront_distribution.s3_distribution",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retain_on_delete"},
 			},
 		},
 	})
@@ -151,6 +134,12 @@ func TestAccAWSCloudFrontDistribution_S3OriginWithTags(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_cloudfront_distribution.s3_distribution", "tags.account", "main"),
 				),
+			},
+			{
+				ResourceName:            "aws_cloudfront_distribution.s3_distribution",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retain_on_delete"},
 			},
 			{
 				Config: postConfig,
@@ -187,6 +176,12 @@ func TestAccAWSCloudFrontDistribution_customOrigin(t *testing.T) {
 					),
 				),
 			},
+			{
+				ResourceName:            "aws_cloudfront_distribution.custom_distribution",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retain_on_delete"},
+			},
 		},
 	})
 }
@@ -211,6 +206,12 @@ func TestAccAWSCloudFrontDistribution_multiOrigin(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.default_ttl", "50"),
 					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.path_pattern", "images1/*.jpg"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retain_on_delete"},
 			},
 		},
 	})
@@ -241,9 +242,10 @@ func TestAccAWSCloudFrontDistribution_orderedCacheBehavior(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retain_on_delete"},
 			},
 		},
 	})
@@ -297,33 +299,24 @@ func TestAccAWSCloudFrontDistribution_noOptionalItemsConfig(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(`^arn:[^:]+:cloudfront::[^:]+:distribution/[A-Z0-9]+$`)),
 					resource.TestCheckResourceAttr(resourceName, "custom_error_response.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.2871742778.allowed_methods.#", "7"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.2871742778.allowed_methods.0", "HEAD"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.2871742778.allowed_methods.1", "DELETE"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.2871742778.allowed_methods.2", "POST"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.2871742778.allowed_methods.3", "GET"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.2871742778.allowed_methods.4", "OPTIONS"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.2871742778.allowed_methods.5", "PUT"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.2871742778.allowed_methods.6", "PATCH"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.2871742778.cached_methods.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.2871742778.cached_methods.0", "HEAD"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.2871742778.cached_methods.1", "GET"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.2871742778.compress", "false"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.2871742778.default_ttl", "86400"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.2871742778.forwarded_values.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.2871742778.forwarded_values.2510654351.cookies.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.2871742778.forwarded_values.2510654351.cookies.1870923232.forward", "all"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.2871742778.forwarded_values.2510654351.cookies.1870923232.whitelisted_names.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.2871742778.forwarded_values.2510654351.headers.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.2871742778.forwarded_values.2510654351.query_string", "false"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.2871742778.forwarded_values.2510654351.query_string_cache_keys.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.2871742778.lambda_function_association.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.2871742778.max_ttl", "31536000"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.2871742778.min_ttl", "0"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.2871742778.smooth_streaming", "false"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.2871742778.target_origin_id", "myCustomOrigin"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.2871742778.trusted_signers.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.2871742778.viewer_protocol_policy", "allow-all"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.allowed_methods.#", "7"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.cached_methods.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.compress", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.default_ttl", "86400"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.cookies.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.cookies.0.forward", "all"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.cookies.0.whitelisted_names.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.headers.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.query_string", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.query_string_cache_keys.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.lambda_function_association.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.max_ttl", "31536000"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.min_ttl", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.smooth_streaming", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.target_origin_id", "myCustomOrigin"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.trusted_signers.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.viewer_protocol_policy", "allow-all"),
 					resource.TestMatchResourceAttr(resourceName, "domain_name", regexp.MustCompile(`^[a-z0-9]+\.cloudfront\.net$`)),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 					resource.TestMatchResourceAttr(resourceName, "etag", regexp.MustCompile(`^[A-Z0-9]+$`)),
@@ -334,28 +327,28 @@ func TestAccAWSCloudFrontDistribution_noOptionalItemsConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "origin.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "origin.1857972443.custom_header.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "origin.1857972443.custom_origin_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "origin.1857972443.custom_origin_config.3832794885.http_port", "80"),
-					resource.TestCheckResourceAttr(resourceName, "origin.1857972443.custom_origin_config.3832794885.https_port", "443"),
-					resource.TestCheckResourceAttr(resourceName, "origin.1857972443.custom_origin_config.3832794885.origin_keepalive_timeout", "5"),
-					resource.TestCheckResourceAttr(resourceName, "origin.1857972443.custom_origin_config.3832794885.origin_protocol_policy", "http-only"),
-					resource.TestCheckResourceAttr(resourceName, "origin.1857972443.custom_origin_config.3832794885.origin_read_timeout", "30"),
-					resource.TestCheckResourceAttr(resourceName, "origin.1857972443.custom_origin_config.3832794885.origin_ssl_protocols.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "origin.1857972443.custom_origin_config.3832794885.origin_ssl_protocols.0", "SSLv3"),
-					resource.TestCheckResourceAttr(resourceName, "origin.1857972443.custom_origin_config.3832794885.origin_ssl_protocols.1", "TLSv1"),
+					resource.TestCheckResourceAttr(resourceName, "origin.1857972443.custom_origin_config.0.http_port", "80"),
+					resource.TestCheckResourceAttr(resourceName, "origin.1857972443.custom_origin_config.0.https_port", "443"),
+					resource.TestCheckResourceAttr(resourceName, "origin.1857972443.custom_origin_config.0.origin_keepalive_timeout", "5"),
+					resource.TestCheckResourceAttr(resourceName, "origin.1857972443.custom_origin_config.0.origin_protocol_policy", "http-only"),
+					resource.TestCheckResourceAttr(resourceName, "origin.1857972443.custom_origin_config.0.origin_read_timeout", "30"),
+					resource.TestCheckResourceAttr(resourceName, "origin.1857972443.custom_origin_config.0.origin_ssl_protocols.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "origin.1857972443.domain_name", "www.example.com"),
 					resource.TestCheckResourceAttr(resourceName, "price_class", "PriceClass_All"),
 					resource.TestCheckResourceAttr(resourceName, "restrictions.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "restrictions.811065190.geo_restriction.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "restrictions.811065190.geo_restriction.1303118592.locations.#", "4"),
-					resource.TestCheckResourceAttr(resourceName, "restrictions.811065190.geo_restriction.1303118592.locations.0", "CA"),
-					resource.TestCheckResourceAttr(resourceName, "restrictions.811065190.geo_restriction.1303118592.locations.1", "DE"),
-					resource.TestCheckResourceAttr(resourceName, "restrictions.811065190.geo_restriction.1303118592.locations.2", "GB"),
-					resource.TestCheckResourceAttr(resourceName, "restrictions.811065190.geo_restriction.1303118592.locations.3", "US"),
-					resource.TestCheckResourceAttr(resourceName, "restrictions.811065190.geo_restriction.1303118592.restriction_type", "whitelist"),
+					resource.TestCheckResourceAttr(resourceName, "restrictions.0.geo_restriction.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "restrictions.0.geo_restriction.0.locations.#", "4"),
+					resource.TestCheckResourceAttr(resourceName, "restrictions.0.geo_restriction.0.restriction_type", "whitelist"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "viewer_certificate.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "viewer_certificate.69840937.cloudfront_default_certificate", "true"),
+					resource.TestCheckResourceAttr(resourceName, "viewer_certificate.0.cloudfront_default_certificate", "true"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retain_on_delete"},
 			},
 		},
 	})
@@ -381,6 +374,12 @@ func TestAccAWSCloudFrontDistribution_HTTP11Config(t *testing.T) {
 					),
 				),
 			},
+			{
+				ResourceName:            "aws_cloudfront_distribution.http_1_1",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retain_on_delete"},
+			},
 		},
 	})
 }
@@ -401,6 +400,12 @@ func TestAccAWSCloudFrontDistribution_IsIPV6EnabledConfig(t *testing.T) {
 						"aws_cloudfront_distribution.is_ipv6_enabled", "is_ipv6_enabled", "true"),
 				),
 			},
+			{
+				ResourceName:            "aws_cloudfront_distribution.is_ipv6_enabled",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retain_on_delete"},
+			},
 		},
 	})
 }
@@ -418,6 +423,12 @@ func TestAccAWSCloudFrontDistribution_noCustomErrorResponseConfig(t *testing.T) 
 						"aws_cloudfront_distribution.no_custom_error_responses",
 					),
 				),
+			},
+			{
+				ResourceName:            "aws_cloudfront_distribution.no_custom_error_responses",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retain_on_delete"},
 			},
 		},
 	})
