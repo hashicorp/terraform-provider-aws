@@ -509,8 +509,17 @@ func resourceAwsOpsworksStackUpdate(d *schema.ResourceData, meta interface{}) er
 		Attributes:                make(map[string]*string),
 		CustomCookbooksSource:     resourceAwsOpsworksStackCustomCookbooksSource(d),
 	}
+
+	configurationManagerName := d.Get("configuration_manager_name").(string)
+	configurationManagerVersion := d.Get("configuration_manager_version").(string)
+
 	if v, ok := d.GetOk("agent_version"); ok {
-		req.AgentVersion = aws.String(v.(string))
+		// Workaround issue where AgentVersion is invalid in an UpdateStack request
+		// if the configuration manager is Chef 12.2.  Any other value than LATEST
+		// will still be included so the error alerts the user.
+		if configurationManagerName != "Chef" || configurationManagerVersion != "12.2" || v != "LATEST" {
+			req.AgentVersion = aws.String(v.(string))
+		}
 	}
 	if v, ok := d.GetOk("default_os"); ok {
 		req.DefaultOs = aws.String(v.(string))
@@ -546,8 +555,8 @@ func resourceAwsOpsworksStackUpdate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	req.ConfigurationManager = &opsworks.StackConfigurationManager{
-		Name:    aws.String(d.Get("configuration_manager_name").(string)),
-		Version: aws.String(d.Get("configuration_manager_version").(string)),
+		Name:    aws.String(configurationManagerName),
+		Version: aws.String(configurationManagerVersion),
 	}
 
 	log.Printf("[DEBUG] Updating OpsWorks stack: %s", req)
