@@ -34,8 +34,8 @@ github.com/golang/snappy v0.0.0-20180518054509-2e65f85255db h1:woRePGFeVFfLKN/pO
 github.com/golang/snappy v0.0.0-20180518054509-2e65f85255db/go.mod h1:/XxbfmMg8lxefKM7IXC3fBNl/7bRcc72aCRzEWrmP2Q=
 github.com/google/gofuzz v0.0.0-20170612174753-24818f796faf h1:+RRA9JqSOZFfKrOeqr2z77+8R2RKyh8PG66dcu1V0ck=
 github.com/google/gofuzz v0.0.0-20170612174753-24818f796faf/go.mod h1:HP5RmnzzSNb993RKQDq4+1A4ia9nllfqcQFTQJedwGI=
-github.com/hashicorp/aws-sdk-go-base v0.2.0 h1:5bjZnWCvQg9Im5CHZr9t90IaFC4uvVlMl2fTh23IoCk=
-github.com/hashicorp/aws-sdk-go-base v0.2.0/go.mod h1:ZIWACGGi0N7a4DZbf15yuE1JQORmWLtBcVM6F5SXNFU=
+github.com/hashicorp/aws-sdk-go-base v0.3.0 h1:CPWKWCuOwpIFNsy8FUI9IT2QI7mGwgVPc4hrXW9I4L4=
+github.com/hashicorp/aws-sdk-go-base v0.3.0/go.mod h1:ZIWACGGi0N7a4DZbf15yuE1JQORmWLtBcVM6F5SXNFU=
 github.com/hashicorp/errwrap v1.0.0 h1:hLrqtEDnRye3+sgx6z4qVLNuviH3MR5aQ0ykNJa/UYA=
 github.com/hashicorp/errwrap v1.0.0/go.mod h1:YH+1FKiLXxHSkmPseP+kNlulaMuP3n2brvKWEqk/Jc4=
 github.com/hashicorp/go-cleanhttp v0.5.0 h1:wvCrVc9TjDls6+YGAF2hAifE1E5U1+b4tH6KdvN3Gig=
