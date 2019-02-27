@@ -241,12 +241,10 @@ func resourceAwsRedshiftCluster() *schema.Resource {
 			},
 
 			"logging": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return old == "1" && new == "0"
-				},
+				Type:             schema.TypeList,
+				MaxItems:         1,
+				Optional:         true,
+				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"enable": {
