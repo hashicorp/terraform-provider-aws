@@ -33,6 +33,7 @@ Upgrade topics:
 - [Resource: aws_autoscaling_policy](#resource-aws_autoscaling_policy)
 - [Resource: aws_batch_compute_environment](#resource-aws_batch_compute_environment)
 - [Resource: aws_cloudfront_distribution](#resource-aws_cloudfront_distribution)
+- [Resource: aws_cognito_user_pool](#resource-aws_cognito_user_pool)
 - [Resource: aws_dx_lag](#resource-aws_dx_lag)
 - [Resource: aws_ecs_service](#resource-aws_ecs_service)
 - [Resource: aws_efs_file_system](#resource-aws_efs_file_system)
@@ -504,6 +505,20 @@ resource "aws_cloudfront_distribution" "example" {
   }
 }
 ```
+
+## Resource: aws_cognito_user_pool
+
+### email_verification_subject Argument Now Conflicts With verification_message_template Configuration Block email_subject Argument
+
+Choose one argument or the other. These arguments update the same underlying information in Cognito and the selection is indeterminate if differing values are provided.
+
+### email_verification_message Argument Now Conflicts With verification_message_template Configuration Block email_message Argument
+
+Choose one argument or the other. These arguments update the same underlying information in Cognito and the selection is indeterminate if differing values are provided.
+
+### sms_verification_message Argument Now Conflicts With verification_message_template Configuration Block sms_message Argument
+
+Choose one argument or the other. These arguments update the same underlying information in Cognito and the selection is indeterminate if differing values are provided.
 
 ## Resource: aws_dx_lag
 
