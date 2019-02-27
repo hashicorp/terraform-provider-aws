@@ -37,6 +37,7 @@ Upgrade topics:
 - [Resource: aws_ecs_service](#resource-aws_ecs_service)
 - [Resource: aws_efs_file_system](#resource-aws_efs_file_system)
 - [Resource: aws_elasticache_cluster](#resource-aws_elasticache_cluster)
+- [Resource: aws_iam_user_login_profile](#resource-aws_iam_user_login_profile)
 - [Resource: aws_instance](#resource-aws_instance)
 - [Resource: aws_lambda_function](#resource-aws_lambda_function)
 - [Resource: aws_lambda_layer_version](#resource-aws_lambda_layer_version)
@@ -635,6 +636,12 @@ resource "aws_elasticache_cluster" "example" {
   preferred_availability_zones = ["us-west-2a", "us-west-2b"]
 }
 ```
+
+## Resource: aws_iam_user_login_profile
+
+### Import Now Required For Existing Infrastructure
+
+When attempting to bring existing IAM User Login Profiles under Terraform management, `terraform import` is now required. See the [`aws_iam_user_login_profile` resource documentation](https://www.terraform.io/docs/providers/aws/r/iam_user_login_profile.html) for more information.
 
 ## Resource: aws_instance
 
