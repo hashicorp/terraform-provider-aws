@@ -31,6 +31,7 @@ BREAKING CHANGES:
 * resource/aws_network_acl: Remove deprecated `subnet_id` argument (replaced with `subnet_ids` argument) [GH-7716]
 * resource/aws_route_table: Resource import no longer imports `aws_route`, `aws_route_table_association`, and `aws_main_route_table_association` resources into the Terraform state [GH-5657]
 * resource/aws_route53_record: Require import for existing records (use deprecated `allow_overwrite` argument to temporarily reinstate the old behavior) [GH-7734]
+* resource/aws_route53_zone: Remove deprecated `vpc_id` and `vpc_region` arguments (replaced with `vpc` configuration block) [GH-7695]
 * resource/aws_s3_bucket_object: Remove hardcoded AWS China prevention of tagging [GH-7654]
 * resource/aws_wafregional_byte_match_set: Remove deprecated `byte_match_tuple` configuration block (replaced with `byte_match_tuples` configuration block) [GH-7718]
 
