@@ -51,6 +51,7 @@ BUG FIXES:
 
 * data-source/aws_lambda_function: Properly return error for missing function [GH-7663]
 * resource/aws_appautoscaling_policy: Properly read `step_scaling_policy_configuration` into Terraform state [GH-7706]
+* resource/aws_cloudfront_distribution: Adjust TypeSet and TypeList attributes for better difference handling [GH-7732]
 * resource/aws_redshift_cluster: Properly read logging into Terraform state [GH-7717]
 * resource/aws_route53_record: Existing Route 53 Records are no longer silently overwritten during resource creation by default (use `terraform import` or deprecated `allow_overwrite` argument) [GH-7734]
 * resource/aws_vpn_connection: Remove configurability of read-only `customer_gateway_configuration`, `routes`, and `vgw_telemetry` attributes [GH-7636]
