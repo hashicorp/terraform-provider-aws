@@ -217,18 +217,8 @@ func resourceAwsLambdaFunction() *schema.Resource {
 				Computed: true,
 			},
 			"environment": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeMap,
 				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"variables": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-					},
-				},
 			},
 			"tracing_config": {
 				Type:     schema.TypeList,
@@ -364,14 +354,8 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if v, ok := d.GetOk("environment"); ok {
-		environments := v.([]interface{})
-		environment, ok := environments[0].(map[string]interface{})
-		if !ok {
-			return errors.New("At least one field is expected inside environment")
-		}
-
-		if environmentVariables, ok := environment["variables"]; ok {
-			variables := readEnvironmentVariables(environmentVariables.(map[string]interface{}))
+		if environment, ok := v.(map[string]interface{}); ok {
+			variables := readEnvironmentVariables(environment)
 
 			params.Environment = &lambda.Environment{
 				Variables: aws.StringMap(variables),
@@ -731,14 +715,8 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 	}
 	if d.HasChange("environment") {
 		if v, ok := d.GetOk("environment"); ok {
-			environments := v.([]interface{})
-			environment, ok := environments[0].(map[string]interface{})
-			if !ok {
-				return errors.New("At least one field is expected inside environment")
-			}
-
-			if environmentVariables, ok := environment["variables"]; ok {
-				variables := readEnvironmentVariables(environmentVariables.(map[string]interface{}))
+			if environment, ok := v.(map[string]interface{}); ok {
+				variables := readEnvironmentVariables(environment)
 
 				configReq.Environment = &lambda.Environment{
 					Variables: aws.StringMap(variables),

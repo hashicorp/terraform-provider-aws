@@ -46,9 +46,7 @@ resource "aws_lambda_function" "test_lambda" {
   runtime          = "nodejs8.10"
 
   environment {
-    variables = {
-      foo = "bar"
-    }
+    foo = "bar"
   }
 }
 ```
@@ -140,7 +138,7 @@ large files efficiently.
 * `reserved_concurrent_executions` - (Optional) The amount of reserved concurrent executions for this lambda function. A value of `0` disables lambda from being triggered and `-1` removes any concurrency limitations. Defaults to Unreserved Concurrency Limits `-1`. See [Managing Concurrency][9]
 * `publish` - (Optional) Whether to publish creation/change as new Lambda Function Version. Defaults to `false`.
 * `vpc_config` - (Optional) Provide this to allow your function to access your VPC. Fields documented below. See [Lambda in VPC][7]
-* `environment` - (Optional) The Lambda environment's configuration settings. Fields documented below.
+* `environment` - (Optional) A mapping of environment variables to supply to the Lambda function.
 * `kms_key_arn` - (Optional) The ARN for the KMS encryption key.
 * `source_code_hash` - (Optional) Used to trigger updates. Must be set to a base64-encoded SHA256 hash of the package file specified with either `filename` or `s3_key`. The usual way to set this is `${base64sha256(file("file.zip"))}`, where "file.zip" is the local filename of the lambda function source archive.
 * `tags` - (Optional) A mapping of tags to assign to the object.
@@ -166,10 +164,6 @@ large files efficiently.
 * `security_group_ids` - (Required) A list of security group IDs associated with the Lambda function.
 
 ~> **NOTE:** if both `subnet_ids` and `security_group_ids` are empty then vpc_config is considered to be empty or unset.
-
-For **environment** the following attributes are supported:
-
-* `variables` - (Optional) A map that defines environment variables for the Lambda function.
 
 ## Attributes Reference
 
