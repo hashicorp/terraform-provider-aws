@@ -68,13 +68,25 @@ func resourceAwsResourceGroupsGroup() *schema.Resource {
 				Computed: true,
 			},
 
-			"tags": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				ForceNew: true,
-			},
+			"tags": tagsSchema(),
 		},
 	}
+}
+
+func diffTagsResourceGroups(oldTags map[string]interface{}, newTags map[string]interface{}) (map[string]*string, []*string) {
+	create := make(map[string]interface{})
+	for k, v := range newTags {
+		create[k] = &v.(string)
+	}
+
+	var remove []*string
+	for k, v := range oldTags {
+		if _, ok := create[k]; !ok {
+			remove = append(remove, &v)
+		}
+	}
+
+	return create, remove
 }
 
 func extractResourceGroupResourceQuery(resourceQueryList []interface{}) *resourcegroups.ResourceQuery {
@@ -132,9 +144,10 @@ func resourceAwsResourceGroupsGroupRead(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("error reading resource group (%s): %s", d.Id(), err)
 	}
 
+	arn := aws.StringValue(g.Group.GroupArn)
 	d.Set("name", aws.StringValue(g.Group.Name))
 	d.Set("description", aws.StringValue(g.Group.Description))
-	d.Set("arn", aws.StringValue(g.Group.GroupArn))
+	d.Set("arn", arn)
 
 	q, err := conn.GetGroupQuery(&resourcegroups.GetGroupQueryInput{
 		GroupName: aws.String(d.Id()),
@@ -148,6 +161,21 @@ func resourceAwsResourceGroupsGroupRead(d *schema.ResourceData, meta interface{}
 	resultQuery["query"] = aws.StringValue(q.GroupQuery.ResourceQuery.Query)
 	resultQuery["type"] = aws.StringValue(q.GroupQuery.ResourceQuery.Type)
 	d.Set("resource_query", []map[string]interface{}{resultQuery})
+
+	t, err := conn.GetTags(&resourcegroups.GetTagsInput{
+		Arn: arn,
+	})
+
+	if err != nil {
+		return fmt.Errorf("error reading tags for resource group (%s): %s", d.Id(), err)
+	}
+
+	var tags map[string]string
+	for k, v := range t {
+		tags[k] = aws.String(v)
+	}
+
+	d.Set("tags", tags)
 
 	return nil
 }
@@ -176,6 +204,30 @@ func resourceAwsResourceGroupsGroupUpdate(d *schema.ResourceData, meta interface
 		_, err := conn.UpdateGroupQuery(&input)
 		if err != nil {
 			return fmt.Errorf("error updating resource query for resource group (%s): %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("tags") {
+		arn := d.Get("arn")
+		old, new := d.GetChange("tags")
+		create, remove := diffTagsResourceGroups(old.(map[string]interface{}), new.(map[string]interface{}))
+
+		_, err := conn.Untag(&resourcegroups.UntagInput{
+			Arn:  &arn,
+			Keys: remove,
+		})
+
+		if err != nil {
+			return fmt.Errorf("error removing tags for resource group (%s): %s", d.Id(), err)
+		}
+
+		_, err := conn.Tag(&resourcegroups.TagInput{
+			Arn:  &arn,
+			Tags: create,
+		})
+
+		if err != nil {
+			return fmt.Errorf("error updating tags for resource group (%s): %s", d.Id(), err)
 		}
 	}
 
