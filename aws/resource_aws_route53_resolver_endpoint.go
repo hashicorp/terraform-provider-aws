@@ -103,7 +103,7 @@ func resourceAwsRoute53ResolverEndpoint() *schema.Resource {
 }
 
 func resourceAwsRoute53ResolverEndpointCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).r53resolverconn
+	conn := meta.(*AWSClient).route53resolverconn
 
 	req := &route53resolver.CreateResolverEndpointInput{
 		CreatorRequestId: aws.String(resource.PrefixedUniqueId("tf-r53-resolver-")),
@@ -137,7 +137,7 @@ func resourceAwsRoute53ResolverEndpointCreate(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsRoute53ResolverEndpointRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).r53resolverconn
+	conn := meta.(*AWSClient).route53resolverconn
 
 	epRaw, state, err := route53ResolverEndpointRefresh(conn, d.Id())()
 	if err != nil {
@@ -187,7 +187,7 @@ func resourceAwsRoute53ResolverEndpointRead(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsRoute53ResolverEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).r53resolverconn
+	conn := meta.(*AWSClient).route53resolverconn
 
 	d.Partial(true)
 	if d.HasChange("name") {
@@ -267,7 +267,7 @@ func resourceAwsRoute53ResolverEndpointUpdate(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsRoute53ResolverEndpointDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).r53resolverconn
+	conn := meta.(*AWSClient).route53resolverconn
 
 	log.Printf("[DEBUG] Deleting Route53 Resolver endpoint: %s", d.Id())
 	_, err := conn.DeleteResolverEndpoint(&route53resolver.DeleteResolverEndpointInput{

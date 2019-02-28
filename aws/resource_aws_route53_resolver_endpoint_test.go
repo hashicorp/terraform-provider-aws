@@ -25,7 +25,7 @@ func testSweepRoute53ResolverEndpoints(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).r53resolverconn
+	conn := client.(*AWSClient).route53resolverconn
 
 	err = conn.ListResolverEndpointsPages(&route53resolver.ListResolverEndpointsInput{}, func(page *route53resolver.ListResolverEndpointsOutput, isLast bool) bool {
 		if page == nil {
@@ -139,7 +139,7 @@ func TestAccAwsRoute53ResolverEndpoint_updateOutbound(t *testing.T) {
 }
 
 func testAccCheckRoute53ResolverEndpointDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).r53resolverconn
+	conn := testAccProvider.Meta().(*AWSClient).route53resolverconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53_resolver_endpoint" {
@@ -173,7 +173,7 @@ func testAccCheckRoute53ResolverEndpointExists(n string, ep *route53resolver.Res
 			return fmt.Errorf("No Route 53 Resolver Endpoint ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).r53resolverconn
+		conn := testAccProvider.Meta().(*AWSClient).route53resolverconn
 		resp, err := conn.GetResolverEndpoint(&route53resolver.GetResolverEndpointInput{
 			ResolverEndpointId: aws.String(rs.Primary.ID),
 		})

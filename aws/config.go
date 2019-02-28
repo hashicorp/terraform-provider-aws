@@ -269,7 +269,6 @@ type AWSClient struct {
 	pinpointconn                        *pinpoint.Pinpoint
 	pricingconn                         *pricing.Pricing
 	r53conn                             *route53.Route53
-	r53resolverconn                     *route53resolver.Route53Resolver
 	ramconn                             *ram.RAM
 	rdsconn                             *rds.RDS
 	redshiftconn                        *redshift.Redshift
