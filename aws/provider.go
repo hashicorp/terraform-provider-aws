@@ -91,22 +91,6 @@ func Provider() terraform.ResourceProvider {
 				Set:           schema.HashString,
 			},
 
-			"dynamodb_endpoint": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "",
-				Description: descriptions["dynamodb_endpoint"],
-				Removed:     "Use `dynamodb` inside `endpoints` block instead",
-			},
-
-			"kinesis_endpoint": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "",
-				Description: descriptions["kinesis_endpoint"],
-				Removed:     "Use `kinesis` inside `endpoints` block instead",
-			},
-
 			"endpoints": endpointsSchema(),
 
 			"insecure": {
@@ -968,11 +952,15 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 	}
 
 	if v, ok := d.GetOk("allowed_account_ids"); ok {
-		config.AllowedAccountIds = v.(*schema.Set).List()
+		for _, accountIDRaw := range v.(*schema.Set).List() {
+			config.AllowedAccountIds = append(config.AllowedAccountIds, accountIDRaw.(string))
+		}
 	}
 
 	if v, ok := d.GetOk("forbidden_account_ids"); ok {
-		config.ForbiddenAccountIds = v.(*schema.Set).List()
+		for _, accountIDRaw := range v.(*schema.Set).List() {
+			config.ForbiddenAccountIds = append(config.ForbiddenAccountIds, accountIDRaw.(string))
+		}
 	}
 
 	return config.Client()

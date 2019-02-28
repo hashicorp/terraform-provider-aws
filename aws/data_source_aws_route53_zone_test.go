@@ -85,8 +85,10 @@ func testAccDataSourceAwsRoute53ZoneConfig(rInt int) string {
 
 	resource "aws_route53_zone" "test_private" {
 		name = "test.acc-%d."
-		vpc_id = "${aws_vpc.test.id}"
-	tags = {
+		vpc {
+			vpc_id = "${aws_vpc.test.id}"
+		}
+		tags = {
 			Environment = "dev-%d"
 		}
 	}

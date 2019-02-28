@@ -378,12 +378,6 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 				MaxItems: 1,
 				Set:      resourceAwsCodeBuildProjectSourceHash,
 			},
-			"timeout": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(5, 480),
-				Removed:      "This field has been removed. Please use build_timeout instead",
-			},
 			"build_timeout": {
 				Type:         schema.TypeInt,
 				Optional:     true,

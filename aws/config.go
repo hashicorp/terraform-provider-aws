@@ -1,20 +1,13 @@
 package aws
 
 import (
-	"crypto/tls"
-	"errors"
 	"fmt"
 	"log"
-	"net/http"
-	"os"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/aws/request"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/aws/aws-sdk-go/service/apigateway"
@@ -128,8 +121,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/wafregional"
 	"github.com/aws/aws-sdk-go/service/worklink"
 	"github.com/aws/aws-sdk-go/service/workspaces"
-	"github.com/davecgh/go-spew/spew"
-	cleanhttp "github.com/hashicorp/go-cleanhttp"
+	awsbase "github.com/hashicorp/aws-sdk-go-base"
 	"github.com/hashicorp/terraform/helper/logging"
 	"github.com/hashicorp/terraform/terraform"
 )
@@ -148,8 +140,8 @@ type Config struct {
 	AssumeRoleSessionName string
 	AssumeRolePolicy      string
 
-	AllowedAccountIds   []interface{}
-	ForbiddenAccountIds []interface{}
+	AllowedAccountIds   []string
+	ForbiddenAccountIds []string
 
 	AcmEndpoint              string
 	ApigatewayEndpoint       string
@@ -309,364 +301,174 @@ type AWSClient struct {
 	workspacesconn                      *workspaces.WorkSpaces
 }
 
-func (c *AWSClient) S3() *s3.S3 {
-	return c.s3conn
-}
-
-func (c *AWSClient) DynamoDB() *dynamodb.DynamoDB {
-	return c.dynamodbconn
-}
-
-func (c *AWSClient) IsChinaCloud() bool {
-	_, isChinaCloud := endpoints.PartitionForRegion([]endpoints.Partition{endpoints.AwsCnPartition()}, c.region)
-	return isChinaCloud
-}
-
 // Client configures and returns a fully initialized AWSClient
 func (c *Config) Client() (interface{}, error) {
 	// Get the auth and region. This can fail if keys/regions were not
 	// specified and we're attempting to use the environment.
-	if c.SkipRegionValidation {
-		log.Println("[INFO] Skipping region validation")
-	} else {
-		log.Println("[INFO] Building AWS region structure")
-		err := c.ValidateRegion()
-		if err != nil {
+	if !c.SkipRegionValidation {
+		if err := awsbase.ValidateRegion(c.Region); err != nil {
 			return nil, err
 		}
 	}
 
-	var client AWSClient
-	// store AWS region in client struct, for region specific operations such as
-	// bucket storage in S3
-	client.region = c.Region
-
 	log.Println("[INFO] Building AWS auth structure")
-	creds, err := GetCredentials(c)
+	awsbaseConfig := &awsbase.Config{
+		AccessKey:               c.AccessKey,
+		AssumeRoleARN:           c.AssumeRoleARN,
+		AssumeRoleExternalID:    c.AssumeRoleExternalID,
+		AssumeRolePolicy:        c.AssumeRolePolicy,
+		AssumeRoleSessionName:   c.AssumeRoleSessionName,
+		CredsFilename:           c.CredsFilename,
+		DebugLogging:            logging.IsDebugOrHigher(),
+		IamEndpoint:             c.IamEndpoint,
+		Insecure:                c.Insecure,
+		MaxRetries:              c.MaxRetries,
+		Profile:                 c.Profile,
+		Region:                  c.Region,
+		SecretKey:               c.SecretKey,
+		SkipCredsValidation:     c.SkipCredsValidation,
+		SkipMetadataApiCheck:    c.SkipMetadataApiCheck,
+		SkipRequestingAccountId: c.SkipRequestingAccountId,
+		StsEndpoint:             c.StsEndpoint,
+		Token:                   c.Token,
+		UserAgentProducts: []*awsbase.UserAgentProduct{
+			{Name: "APN", Version: "1.0"},
+			{Name: "HashiCorp", Version: "1.0"},
+			{Name: "Terraform", Version: terraform.VersionString()},
+		},
+	}
+
+	sess, accountID, partition, err := awsbase.GetSessionWithAccountIDAndPartition(awsbaseConfig)
 	if err != nil {
 		return nil, err
 	}
 
-	// define the AWS Session options
-	// Credentials or Profile will be set in the Options below
-	// MaxRetries may be set once we validate credentials
-	var opt = session.Options{
-		Config: aws.Config{
-			Region:           aws.String(c.Region),
-			MaxRetries:       aws.Int(0),
-			HTTPClient:       cleanhttp.DefaultClient(),
-			S3ForcePathStyle: aws.Bool(c.S3ForcePathStyle),
-		},
-	}
-
-	// Call Get to check for credential provider. If nothing found, we'll get an
-	// error, and we can present it nicely to the user
-	cp, err := creds.Get()
-	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "NoCredentialProviders" {
-			// If a profile wasn't specified, the session may still be able to resolve credentials from shared config.
-			if c.Profile == "" {
-				sess, err := session.NewSession()
-				if err != nil {
-					return nil, errors.New(`No valid credential sources found for AWS Provider.
-	Please see https://terraform.io/docs/providers/aws/index.html for more information on
-	providing credentials for the AWS Provider`)
-				}
-				_, err = sess.Config.Credentials.Get()
-				if err != nil {
-					return nil, errors.New(`No valid credential sources found for AWS Provider.
-	Please see https://terraform.io/docs/providers/aws/index.html for more information on
-	providing credentials for the AWS Provider`)
-				}
-				log.Printf("[INFO] Using session-derived AWS Auth")
-				opt.Config.Credentials = sess.Config.Credentials
-			} else {
-				log.Printf("[INFO] AWS Auth using Profile: %q", c.Profile)
-				opt.Profile = c.Profile
-				opt.SharedConfigState = session.SharedConfigEnable
-			}
-		} else {
-			return nil, fmt.Errorf("Error loading credentials for AWS Provider: %s", err)
-		}
-	} else {
-		// add the validated credentials to the session options
-		log.Printf("[INFO] AWS Auth provider used: %q", cp.ProviderName)
-		opt.Config.Credentials = creds
-	}
-
-	if logging.IsDebugOrHigher() {
-		opt.Config.LogLevel = aws.LogLevel(aws.LogDebugWithHTTPBody | aws.LogDebugWithRequestRetries | aws.LogDebugWithRequestErrors)
-		opt.Config.Logger = awsLogger{}
-	}
-
-	if c.Insecure {
-		transport := opt.Config.HTTPClient.Transport.(*http.Transport)
-		transport.TLSClientConfig = &tls.Config{
-			InsecureSkipVerify: true,
-		}
-	}
-
-	// create base session with no retries. MaxRetries will be set later
-	sess, err := session.NewSessionWithOptions(opt)
-	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "NoCredentialProviders" {
-			return nil, errors.New(`No valid credential sources found for AWS Provider.
-  Please see https://terraform.io/docs/providers/aws/index.html for more information on
-  providing credentials for the AWS Provider`)
-		}
-		return nil, fmt.Errorf("Error creating AWS session: %s", err)
-	}
-
-	sess.Handlers.Build.PushBackNamed(addTerraformVersionToUserAgent)
-
-	if extraDebug := os.Getenv("TERRAFORM_AWS_AUTHFAILURE_DEBUG"); extraDebug != "" {
-		sess.Handlers.UnmarshalError.PushFrontNamed(debugAuthFailure)
-	}
-
-	// if the desired number of retries is non-zero, update the session
-	if c.MaxRetries > 0 {
-		sess = sess.Copy(&aws.Config{MaxRetries: aws.Int(c.MaxRetries)})
-	}
-
-	// Generally, we want to configure a lower retry theshold for networking issues
-	// as the session retry threshold is very high by default and can mask permanent
-	// networking failures, such as a non-existent service endpoint.
-	// MaxRetries will override this logic if it has a lower retry threshold.
-	// NOTE: This logic can be fooled by other request errors raising the retry count
-	//       before any networking error occurs
-	sess.Handlers.Retry.PushBack(func(r *request.Request) {
-		// We currently depend on the DefaultRetryer exponential backoff here.
-		// ~10 retries gives a fair backoff of a few seconds.
-		if r.RetryCount < 9 {
-			return
-		}
-		// RequestError: send request failed
-		// caused by: Post https://FQDN/: dial tcp: lookup FQDN: no such host
-		if IsAWSErrExtended(r.Error, "RequestError", "send request failed", "no such host") {
-			log.Printf("[WARN] Disabling retries after next request due to networking issue")
-			r.Retryable = aws.Bool(false)
-		}
-		// RequestError: send request failed
-		// caused by: Post https://FQDN/: dial tcp IPADDRESS:443: connect: connection refused
-		if IsAWSErrExtended(r.Error, "RequestError", "send request failed", "connection refused") {
-			log.Printf("[WARN] Disabling retries after next request due to networking issue")
-			r.Retryable = aws.Bool(false)
-		}
-	})
-
-	// This restriction should only be used for Route53 sessions.
-	// Other resources that have restrictions should allow the API to fail, rather
-	// than Terraform abstracting the region for the user. This can lead to breaking
-	// changes if that resource is ever opened up to more regions.
-	r53Sess := sess.Copy(&aws.Config{Region: aws.String("us-east-1"), Endpoint: aws.String(c.R53Endpoint)})
-
-	// Some services have user-configurable endpoints
-	awsAcmSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.AcmEndpoint)})
-	awsApigatewaySess := sess.Copy(&aws.Config{Endpoint: aws.String(c.ApigatewayEndpoint)})
-	awsCfSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.CloudFormationEndpoint)})
-	awsCwSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.CloudWatchEndpoint)})
-	awsCweSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.CloudWatchEventsEndpoint)})
-	awsCwlSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.CloudWatchLogsEndpoint)})
-	awsDynamoSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.DynamoDBEndpoint)})
-	awsEc2Sess := sess.Copy(&aws.Config{Endpoint: aws.String(c.Ec2Endpoint)})
-	awsAutoscalingSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.AutoscalingEndpoint)})
-	awsEcrSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.EcrEndpoint)})
-	awsEcsSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.EcsEndpoint)})
-	awsEfsSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.EfsEndpoint)})
-	awsElbSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.ElbEndpoint)})
-	awsEsSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.EsEndpoint)})
-	awsIamSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.IamEndpoint)})
-	awsLambdaSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.LambdaEndpoint)})
-	awsKinesisSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.KinesisEndpoint)})
-	awsKinesisAnalyticsSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.KinesisAnalyticsEndpoint)})
-	awsKinesisAnalyticsV2Sess := sess.Copy(&aws.Config{Endpoint: aws.String(c.KinesisAnalyticsEndpoint)})
-	awsKmsSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.KmsEndpoint)})
-	awsRdsSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.RdsEndpoint)})
-	awsS3Sess := sess.Copy(&aws.Config{Endpoint: aws.String(c.S3Endpoint)})
-	awsS3ControlSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.S3ControlEndpoint)})
-	awsSnsSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.SnsEndpoint)})
-	awsSqsSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.SqsEndpoint)})
-	awsStsSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.StsEndpoint)})
-	awsDeviceFarmSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.DeviceFarmEndpoint)})
-	awsSsmSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.SsmEndpoint)})
-
-	log.Println("[INFO] Initializing DeviceFarm SDK connection")
-	client.devicefarmconn = devicefarm.New(awsDeviceFarmSess)
-
-	// Beyond verifying credentials (if enabled), we use the next set of logic
-	// to determine two pieces of information required for manually assembling
-	// resource ARNs when they are not available in the service API:
-	//  * client.accountid
-	//  * client.partition
-	client.iamconn = iam.New(awsIamSess)
-	client.stsconn = sts.New(awsStsSess)
-
-	if c.AssumeRoleARN != "" {
-		client.accountid, client.partition, _ = parseAccountIDAndPartitionFromARN(c.AssumeRoleARN)
-	}
-
-	// Validate credentials early and fail before we do any graph walking.
-	if !c.SkipCredsValidation {
-		var err error
-		client.accountid, client.partition, err = GetAccountIDAndPartitionFromSTSGetCallerIdentity(client.stsconn)
-		if err != nil {
-			return nil, fmt.Errorf("error validating provider credentials: %s", err)
-		}
-	}
-
-	if client.accountid == "" && !c.SkipRequestingAccountId {
-		var err error
-		client.accountid, client.partition, err = GetAccountIDAndPartition(client.iamconn, client.stsconn, cp.ProviderName)
-		if err != nil {
-			// DEPRECATED: Next major version of the provider should return the error instead of logging
-			//             if skip_request_account_id is not enabled.
-			log.Printf("[WARN] %s", fmt.Sprintf(
-				"AWS account ID not previously found and failed retrieving via all available methods. "+
-					"This will return an error in the next major version of the AWS provider. "+
-					"See https://www.terraform.io/docs/providers/aws/index.html#skip_requesting_account_id for workaround and implications. "+
-					"Errors: %s", err))
-		}
-	}
-
-	if client.accountid == "" {
+	if accountID == "" {
 		log.Printf("[WARN] AWS account ID not found for provider. See https://www.terraform.io/docs/providers/aws/index.html#skip_requesting_account_id for implications.")
 	}
 
-	authErr := c.ValidateAccountId(client.accountid)
-	if authErr != nil {
-		return nil, authErr
+	if err := awsbase.ValidateAccountID(accountID, c.AllowedAccountIds, c.ForbiddenAccountIds); err != nil {
+		return nil, err
 	}
 
-	// Infer AWS partition from configured region if we still need it
-	if client.partition == "" {
-		if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), client.region); ok {
-			client.partition = partition.ID()
-		}
+	client := &AWSClient{
+		accountid:                           accountID,
+		acmconn:                             acm.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.AcmEndpoint)})),
+		acmpcaconn:                          acmpca.New(sess),
+		apigateway:                          apigateway.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.ApigatewayEndpoint)})),
+		apigatewayv2conn:                    apigatewayv2.New(sess),
+		appautoscalingconn:                  applicationautoscaling.New(sess),
+		appmeshconn:                         appmesh.New(sess),
+		appsyncconn:                         appsync.New(sess),
+		athenaconn:                          athena.New(sess),
+		autoscalingconn:                     autoscaling.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.AutoscalingEndpoint)})),
+		backupconn:                          backup.New(sess),
+		batchconn:                           batch.New(sess),
+		budgetconn:                          budgets.New(sess),
+		cfconn:                              cloudformation.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.CloudFormationEndpoint)})),
+		cloud9conn:                          cloud9.New(sess),
+		cloudfrontconn:                      cloudfront.New(sess),
+		cloudhsmv2conn:                      cloudhsmv2.New(sess),
+		cloudsearchconn:                     cloudsearch.New(sess),
+		cloudtrailconn:                      cloudtrail.New(sess),
+		cloudwatchconn:                      cloudwatch.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.CloudWatchEndpoint)})),
+		cloudwatcheventsconn:                cloudwatchevents.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.CloudWatchEventsEndpoint)})),
+		cloudwatchlogsconn:                  cloudwatchlogs.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.CloudWatchLogsEndpoint)})),
+		codebuildconn:                       codebuild.New(sess),
+		codecommitconn:                      codecommit.New(sess),
+		codedeployconn:                      codedeploy.New(sess),
+		codepipelineconn:                    codepipeline.New(sess),
+		cognitoconn:                         cognitoidentity.New(sess),
+		cognitoidpconn:                      cognitoidentityprovider.New(sess),
+		configconn:                          configservice.New(sess),
+		costandusagereportconn:              costandusagereportservice.New(sess),
+		datapipelineconn:                    datapipeline.New(sess),
+		datasyncconn:                        datasync.New(sess),
+		daxconn:                             dax.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.DynamoDBEndpoint)})),
+		devicefarmconn:                      devicefarm.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.DeviceFarmEndpoint)})),
+		dlmconn:                             dlm.New(sess),
+		dmsconn:                             databasemigrationservice.New(sess),
+		docdbconn:                           docdb.New(sess),
+		dsconn:                              directoryservice.New(sess),
+		dxconn:                              directconnect.New(sess),
+		dynamodbconn:                        dynamodb.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.DynamoDBEndpoint)})),
+		ec2conn:                             ec2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Ec2Endpoint)})),
+		ecrconn:                             ecr.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.EcrEndpoint)})),
+		ecsconn:                             ecs.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.EcsEndpoint)})),
+		efsconn:                             efs.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.EfsEndpoint)})),
+		eksconn:                             eks.New(sess),
+		elasticacheconn:                     elasticache.New(sess),
+		elasticbeanstalkconn:                elasticbeanstalk.New(sess),
+		elastictranscoderconn:               elastictranscoder.New(sess),
+		elbconn:                             elb.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.ElbEndpoint)})),
+		elbv2conn:                           elbv2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.ElbEndpoint)})),
+		emrconn:                             emr.New(sess),
+		esconn:                              elasticsearch.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.EsEndpoint)})),
+		firehoseconn:                        firehose.New(sess),
+		fmsconn:                             fms.New(sess),
+		fsxconn:                             fsx.New(sess),
+		gameliftconn:                        gamelift.New(sess),
+		glacierconn:                         glacier.New(sess),
+		globalacceleratorconn:               globalaccelerator.New(sess),
+		glueconn:                            glue.New(sess),
+		guarddutyconn:                       guardduty.New(sess),
+		iamconn:                             iam.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.IamEndpoint)})),
+		inspectorconn:                       inspector.New(sess),
+		iotconn:                             iot.New(sess),
+		kafkaconn:                           kafka.New(sess),
+		kinesisanalyticsconn:                kinesisanalytics.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.KinesisAnalyticsEndpoint)})),
+		kinesisanalyticsv2conn:              kinesisanalyticsv2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.KinesisAnalyticsEndpoint)})),
+		kinesisconn:                         kinesis.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.KinesisEndpoint)})),
+		kmsconn:                             kms.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.KmsEndpoint)})),
+		lambdaconn:                          lambda.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.LambdaEndpoint)})),
+		lexmodelconn:                        lexmodelbuildingservice.New(sess),
+		licensemanagerconn:                  licensemanager.New(sess),
+		lightsailconn:                       lightsail.New(sess),
+		macieconn:                           macie.New(sess),
+		mediaconnectconn:                    mediaconnect.New(sess),
+		mediaconvertconn:                    mediaconvert.New(sess),
+		medialiveconn:                       medialive.New(sess),
+		mediapackageconn:                    mediapackage.New(sess),
+		mediastoreconn:                      mediastore.New(sess),
+		mediastoredataconn:                  mediastoredata.New(sess),
+		mqconn:                              mq.New(sess),
+		neptuneconn:                         neptune.New(sess),
+		opsworksconn:                        opsworks.New(sess),
+		organizationsconn:                   organizations.New(sess),
+		partition:                           partition,
+		pinpointconn:                        pinpoint.New(sess),
+		pricingconn:                         pricing.New(sess),
+		r53conn:                             route53.New(sess.Copy(&aws.Config{Region: aws.String("us-east-1"), Endpoint: aws.String(c.R53Endpoint)})),
+		ramconn:                             ram.New(sess),
+		rdsconn:                             rds.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.RdsEndpoint)})),
+		redshiftconn:                        redshift.New(sess),
+		region:                              c.Region,
+		resourcegroupsconn:                  resourcegroups.New(sess),
+		route53resolverconn:                 route53resolver.New(sess),
+		s3conn:                              s3.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.S3Endpoint), S3ForcePathStyle: aws.Bool(c.S3ForcePathStyle)})),
+		s3controlconn:                       s3control.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.S3ControlEndpoint)})),
+		sagemakerconn:                       sagemaker.New(sess),
+		scconn:                              servicecatalog.New(sess),
+		sdconn:                              servicediscovery.New(sess),
+		secretsmanagerconn:                  secretsmanager.New(sess),
+		securityhubconn:                     securityhub.New(sess),
+		serverlessapplicationrepositoryconn: serverlessapplicationrepository.New(sess),
+		sesConn:                             ses.New(sess),
+		sfnconn:                             sfn.New(sess),
+		shieldconn:                          shield.New(sess),
+		simpledbconn:                        simpledb.New(sess),
+		snsconn:                             sns.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.SnsEndpoint)})),
+		sqsconn:                             sqs.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.SqsEndpoint)})),
+		ssmconn:                             ssm.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.SsmEndpoint)})),
+		storagegatewayconn:                  storagegateway.New(sess),
+		stsconn:                             sts.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.StsEndpoint)})),
+		swfconn:                             swf.New(sess),
+		transferconn:                        transfer.New(sess),
+		wafconn:                             waf.New(sess),
+		wafregionalconn:                     wafregional.New(sess),
+		worklinkconn:                        worklink.New(sess),
+		workspacesconn:                      workspaces.New(sess),
 	}
-
-	client.ec2conn = ec2.New(awsEc2Sess)
-
-	if !c.SkipGetEC2Platforms {
-		supportedPlatforms, err := GetSupportedEC2Platforms(client.ec2conn)
-		if err != nil {
-			// We intentionally fail *silently* because there's a chance
-			// user just doesn't have ec2:DescribeAccountAttributes permissions
-			log.Printf("[WARN] Unable to get supported EC2 platforms: %s", err)
-		} else {
-			client.supportedplatforms = supportedPlatforms
-		}
-	}
-
-	client.acmconn = acm.New(awsAcmSess)
-	client.acmpcaconn = acmpca.New(sess)
-	client.apigateway = apigateway.New(awsApigatewaySess)
-	client.apigatewayv2conn = apigatewayv2.New(sess)
-	client.appautoscalingconn = applicationautoscaling.New(sess)
-	client.appmeshconn = appmesh.New(sess)
-	client.appsyncconn = appsync.New(sess)
-	client.athenaconn = athena.New(sess)
-	client.autoscalingconn = autoscaling.New(awsAutoscalingSess)
-	client.backupconn = backup.New(sess)
-	client.batchconn = batch.New(sess)
-	client.budgetconn = budgets.New(sess)
-	client.cfconn = cloudformation.New(awsCfSess)
-	client.cloud9conn = cloud9.New(sess)
-	client.cloudfrontconn = cloudfront.New(sess)
-	client.cloudhsmv2conn = cloudhsmv2.New(sess)
-	client.cloudsearchconn = cloudsearch.New(sess)
-	client.cloudtrailconn = cloudtrail.New(sess)
-	client.cloudwatchconn = cloudwatch.New(awsCwSess)
-	client.cloudwatcheventsconn = cloudwatchevents.New(awsCweSess)
-	client.cloudwatchlogsconn = cloudwatchlogs.New(awsCwlSess)
-	client.codebuildconn = codebuild.New(sess)
-	client.codecommitconn = codecommit.New(sess)
-	client.codedeployconn = codedeploy.New(sess)
-	client.codepipelineconn = codepipeline.New(sess)
-	client.cognitoconn = cognitoidentity.New(sess)
-	client.cognitoidpconn = cognitoidentityprovider.New(sess)
-	client.configconn = configservice.New(sess)
-	client.costandusagereportconn = costandusagereportservice.New(sess)
-	client.datapipelineconn = datapipeline.New(sess)
-	client.datasyncconn = datasync.New(sess)
-	client.daxconn = dax.New(awsDynamoSess)
-	client.dlmconn = dlm.New(sess)
-	client.dmsconn = databasemigrationservice.New(sess)
-	client.docdbconn = docdb.New(sess)
-	client.dsconn = directoryservice.New(sess)
-	client.dxconn = directconnect.New(sess)
-	client.dynamodbconn = dynamodb.New(awsDynamoSess)
-	client.ecrconn = ecr.New(awsEcrSess)
-	client.ecsconn = ecs.New(awsEcsSess)
-	client.efsconn = efs.New(awsEfsSess)
-	client.eksconn = eks.New(sess)
-	client.elasticacheconn = elasticache.New(sess)
-	client.elasticbeanstalkconn = elasticbeanstalk.New(sess)
-	client.elastictranscoderconn = elastictranscoder.New(sess)
-	client.elbconn = elb.New(awsElbSess)
-	client.elbv2conn = elbv2.New(awsElbSess)
-	client.emrconn = emr.New(sess)
-	client.esconn = elasticsearch.New(awsEsSess)
-	client.firehoseconn = firehose.New(sess)
-	client.fmsconn = fms.New(sess)
-	client.fsxconn = fsx.New(sess)
-	client.gameliftconn = gamelift.New(sess)
-	client.glacierconn = glacier.New(sess)
-	client.globalacceleratorconn = globalaccelerator.New(sess)
-	client.glueconn = glue.New(sess)
-	client.guarddutyconn = guardduty.New(sess)
-	client.inspectorconn = inspector.New(sess)
-	client.iotconn = iot.New(sess)
-	client.kafkaconn = kafka.New(sess)
-	client.kinesisanalyticsconn = kinesisanalytics.New(awsKinesisAnalyticsSess)
-	client.kinesisanalyticsv2conn = kinesisanalyticsv2.New(awsKinesisAnalyticsV2Sess)
-	client.kinesisconn = kinesis.New(awsKinesisSess)
-	client.kmsconn = kms.New(awsKmsSess)
-	client.lambdaconn = lambda.New(awsLambdaSess)
-	client.lexmodelconn = lexmodelbuildingservice.New(sess)
-	client.licensemanagerconn = licensemanager.New(sess)
-	client.lightsailconn = lightsail.New(sess)
-	client.macieconn = macie.New(sess)
-	client.mediaconnectconn = mediaconnect.New(sess)
-	client.mediaconvertconn = mediaconvert.New(sess)
-	client.medialiveconn = medialive.New(sess)
-	client.mediapackageconn = mediapackage.New(sess)
-	client.mediastoreconn = mediastore.New(sess)
-	client.mediastoredataconn = mediastoredata.New(sess)
-	client.mqconn = mq.New(sess)
-	client.neptuneconn = neptune.New(sess)
-	client.neptuneconn = neptune.New(sess)
-	client.opsworksconn = opsworks.New(sess)
-	client.organizationsconn = organizations.New(sess)
-	client.pinpointconn = pinpoint.New(sess)
-	client.pricingconn = pricing.New(sess)
-	client.r53conn = route53.New(r53Sess)
-	client.ramconn = ram.New(sess)
-	client.rdsconn = rds.New(awsRdsSess)
-	client.redshiftconn = redshift.New(sess)
-	client.resourcegroupsconn = resourcegroups.New(sess)
-	client.route53resolverconn = route53resolver.New(sess)
-	client.s3conn = s3.New(awsS3Sess)
-	client.s3controlconn = s3control.New(awsS3ControlSess)
-	client.sagemakerconn = sagemaker.New(sess)
-	client.scconn = servicecatalog.New(sess)
-	client.sdconn = servicediscovery.New(sess)
-	client.secretsmanagerconn = secretsmanager.New(sess)
-	client.securityhubconn = securityhub.New(sess)
-	client.serverlessapplicationrepositoryconn = serverlessapplicationrepository.New(sess)
-	client.sesConn = ses.New(sess)
-	client.sfnconn = sfn.New(sess)
-	client.shieldconn = shield.New(sess)
-	client.simpledbconn = simpledb.New(sess)
-	client.snsconn = sns.New(awsSnsSess)
-	client.sqsconn = sqs.New(awsSqsSess)
-	client.ssmconn = ssm.New(awsSsmSess)
-	client.storagegatewayconn = storagegateway.New(sess)
-	client.swfconn = swf.New(sess)
-	client.transferconn = transfer.New(sess)
-	client.wafconn = waf.New(sess)
-	client.wafregionalconn = wafregional.New(sess)
-	client.worklinkconn = worklink.New(sess)
-	client.workspacesconn = workspaces.New(sess)
 
 	// Workaround for https://github.com/aws/aws-sdk-go/issues/1376
 	client.kinesisconn.Handlers.Retry.PushBack(func(r *request.Request) {
@@ -726,7 +528,18 @@ func (c *Config) Client() (interface{}, error) {
 		}
 	})
 
-	return &client, nil
+	if !c.SkipGetEC2Platforms {
+		supportedPlatforms, err := GetSupportedEC2Platforms(client.ec2conn)
+		if err != nil {
+			// We intentionally fail *silently* because there's a chance
+			// user just doesn't have ec2:DescribeAccountAttributes permissions
+			log.Printf("[WARN] Unable to get supported EC2 platforms: %s", err)
+		} else {
+			client.supportedplatforms = supportedPlatforms
+		}
+	}
+
+	return client, nil
 }
 
 func hasEc2Classic(platforms []string) bool {
@@ -736,49 +549,6 @@ func hasEc2Classic(platforms []string) bool {
 		}
 	}
 	return false
-}
-
-// ValidateRegion returns an error if the configured region is not a
-// valid aws region and nil otherwise.
-func (c *Config) ValidateRegion() error {
-	for _, partition := range endpoints.DefaultPartitions() {
-		for _, region := range partition.Regions() {
-			if c.Region == region.ID() {
-				return nil
-			}
-		}
-	}
-
-	return fmt.Errorf("Not a valid region: %s", c.Region)
-}
-
-// ValidateAccountId returns a context-specific error if the configured account
-// id is explicitly forbidden or not authorised; and nil if it is authorised.
-func (c *Config) ValidateAccountId(accountId string) error {
-	if c.AllowedAccountIds == nil && c.ForbiddenAccountIds == nil {
-		return nil
-	}
-
-	log.Println("[INFO] Validating account ID")
-
-	if c.ForbiddenAccountIds != nil {
-		for _, id := range c.ForbiddenAccountIds {
-			if id == accountId {
-				return fmt.Errorf("Forbidden account ID (%s)", id)
-			}
-		}
-	}
-
-	if c.AllowedAccountIds != nil {
-		for _, id := range c.AllowedAccountIds {
-			if id == accountId {
-				return nil
-			}
-		}
-		return fmt.Errorf("Account ID not allowed (%s)", accountId)
-	}
-
-	return nil
 }
 
 func GetSupportedEC2Platforms(conn *ec2.EC2) ([]string, error) {
@@ -807,35 +577,4 @@ func GetSupportedEC2Platforms(conn *ec2.EC2) ([]string, error) {
 	}
 
 	return platforms, nil
-}
-
-// addTerraformVersionToUserAgent is a named handler that will add Terraform's
-// version information to requests made by the AWS SDK.
-var addTerraformVersionToUserAgent = request.NamedHandler{
-	Name: "terraform.TerraformVersionUserAgentHandler",
-	Fn: request.MakeAddToUserAgentHandler(
-		"APN/1.0 HashiCorp/1.0 Terraform", terraform.VersionString()),
-}
-
-var debugAuthFailure = request.NamedHandler{
-	Name: "terraform.AuthFailureAdditionalDebugHandler",
-	Fn: func(req *request.Request) {
-		if isAWSErr(req.Error, "AuthFailure", "AWS was not able to validate the provided access credentials") {
-			log.Printf("[INFO] Additional AuthFailure Debugging Context")
-			log.Printf("[INFO] Current system UTC time: %s", time.Now().UTC())
-			log.Printf("[INFO] Request object: %s", spew.Sdump(req))
-		}
-	},
-}
-
-type awsLogger struct{}
-
-func (l awsLogger) Log(args ...interface{}) {
-	tokens := make([]string, 0, len(args))
-	for _, arg := range args {
-		if token, ok := arg.(string); ok {
-			tokens = append(tokens, token)
-		}
-	}
-	log.Printf("[DEBUG] [aws-sdk-go] %s", strings.Join(tokens, " "))
 }

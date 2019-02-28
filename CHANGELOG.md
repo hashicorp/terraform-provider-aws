@@ -1,21 +1,62 @@
-## 2.0.0 (Unreleased)
+## 2.1.0 (Unreleased)
+
+## 2.0.0 (February 27, 2019)
+
+NOTES:
+
+* Full documentation about this update, including Terraform provider version pinning and configuration examples, can be found in the [Terraform AWS Provider Version 2 Upgrade Guide](https://www.terraform.io/docs/providers/aws/guides/version-2-upgrade.html)
 
 BREAKING CHANGES:
 
-* data-source/aws_ami: Require `owners` argument [GH-5576]
-* data-source/aws_ami_ids: Require `owners` argument [GH-5576]
-* data-source/aws_lambda_function: Returns unqualified (no `:QUALIFIER` or `:VERSION` suffix) value in `arn` attribute by default and qualified (includes `:QUALIFIER` or `:VERSION` suffix) value in `qualified_arn` attribute. Previously the `arn` attribute included `:$LATEST` suffix by default which was not compatible with many other resources. To restore the previous default behavior, set the `qualifier` argument to `$LATEST` and reference the `qualified_arn` attribute. [GH-7663]
+* provider: Return error on AWS Account ID lookup failure during initialization (unlesss `skip_requesting_account_id = true`) ([#7737](https://github.com/terraform-providers/terraform-provider-aws/issues/7737))
+* data-source/aws_ami: Require `owners` argument ([#5576](https://github.com/terraform-providers/terraform-provider-aws/issues/5576))
+* data-source/aws_ami_ids: Require `owners` argument ([#5576](https://github.com/terraform-providers/terraform-provider-aws/issues/5576))
+* data-source/aws_iam_role: Remove deprecated attributes ([#7696](https://github.com/terraform-providers/terraform-provider-aws/issues/7696))
+* data-source/aws_kms_secret: Remove data source (replaced with `aws_kms_secrets` data source) ([#7657](https://github.com/terraform-providers/terraform-provider-aws/issues/7657))
+* data-source/aws_lambda_function: Returns unqualified (no `:QUALIFIER` or `:VERSION` suffix) value in `arn` attribute by default and qualified (includes `:QUALIFIER` or `:VERSION` suffix) value in `qualified_arn` attribute. Previously the `arn` attribute included `:$LATEST` suffix by default which was not compatible with many other resources. To restore the previous default behavior, set the `qualifier` argument to `$LATEST` and reference the `qualified_arn` attribute. ([#7663](https://github.com/terraform-providers/terraform-provider-aws/issues/7663))
+* data-source/aws_region: Remove deprecated `current` argument ([#7697](https://github.com/terraform-providers/terraform-provider-aws/issues/7697))
+* resource/aws_api_gateway_api_key: Remove deprecated `stage_key` configuration block ([#7698](https://github.com/terraform-providers/terraform-provider-aws/issues/7698))
+* resource/aws_api_gateway_integration: Remove deprecated `request_parameters_in_json` argument (replaced with `request_parameters` argument) ([#7699](https://github.com/terraform-providers/terraform-provider-aws/issues/7699))
+* resource/aws_api-gateway_integration_response: Remove deprecated `response_parameters_in_json` argument (replaced with `response_parameters` argument) ([#7700](https://github.com/terraform-providers/terraform-provider-aws/issues/7700))
+* resource/aws_api_gateway_method: Remove deprecated `request_parameters_in_json` argument (replaced with `request_parameters` argument) ([#7701](https://github.com/terraform-providers/terraform-provider-aws/issues/7701))
+* resource/aws_api_gateway_method_response: Remove deprecated `response_parameters_in_json` argument (replaced with `response_parameters` argument) ([#7704](https://github.com/terraform-providers/terraform-provider-aws/issues/7704))
+* resource/aws_appautoscaling_policy: Remove deprecated arguments (replaced with `step_scaling_policy_configuration` configuration block) ([#7706](https://github.com/terraform-providers/terraform-provider-aws/issues/7706))
+* resource/aws_autoscaling_policy: Remove deprecated `min_adjustment_step` argument (replaced with `min_adjustment_magnitude` argument) ([#7707](https://github.com/terraform-providers/terraform-provider-aws/issues/7707))
+* resource/aws_batch_compute_environment: Remove deprecated `ecc_cluster_arn` attribute (replaced with `ecs_cluster_arn` attribute) ([#7708](https://github.com/terraform-providers/terraform-provider-aws/issues/7708))
+* resource/aws_cloudfront_distribution: Remove deprecated `cache_behaviors` configuration block (replaced with `ordered_cache_behaviors` configuration block) ([#7710](https://github.com/terraform-providers/terraform-provider-aws/issues/7710))
+* resource/aws_cognito_user_pool: Ensure only `email_verification_message` argument or `verification_message_template` configuration block `email_message` argument is configured ([#2425](https://github.com/terraform-providers/terraform-provider-aws/issues/2425))
+* resource/aws_cognito_user_pool: Ensure only `email_verification_subject` argument or `verification_message_template` configuration block `email_subject` argument is configured ([#2425](https://github.com/terraform-providers/terraform-provider-aws/issues/2425))
+* resource/aws_cognito_user_pool: Ensure only `sms_verification_message` argument or `verification_message_template` configuration block `sms_message` argument is defined ([#2425](https://github.com/terraform-providers/terraform-provider-aws/issues/2425))
+* resource/aws_dx_lag: Remove deprecated `number_of_connections` argument and delete unmanaged connection during resource creation ([#7711](https://github.com/terraform-providers/terraform-provider-aws/issues/7711))
+* resource/aws_ecs_service: Remove deprecated `placement_strategy` configuration block (replaced with `ordered_placement_strategy` configuration block) ([#7712](https://github.com/terraform-providers/terraform-provider-aws/issues/7712))
+* resource/aws_efs_file_system: Remove deprecated `reference_name` argument (replaced with `creation_token` argument) ([#7713](https://github.com/terraform-providers/terraform-provider-aws/issues/7713))
+* resource/aws_elasticache_cluster: Remove deprecated `availability_zones` argument (replaced with `preferred_availability_zones` argument) ([#7714](https://github.com/terraform-providers/terraform-provider-aws/issues/7714))
+* resource/aws_instance: Remove deprecated top-level `network_interface_id` attribute ([#1193](https://github.com/terraform-providers/terraform-provider-aws/issues/1193)] / [[#7715](https://github.com/terraform-providers/terraform-provider-aws/issues/7715))
+* resource/aws_instance: Remove hardcoded AWS China prevention of tagging on creation ([#7654](https://github.com/terraform-providers/terraform-provider-aws/issues/7654))
 * resource/aws_lambda_function: Setting `reserved_concurrent_executions` to `0` will now disable Lambda Function invocations, causing downtime for the Lambda Function. Previously `reserved_concurrent_executions` accepted `0` and below for unreserved concurrency, which means it was not previously possible to disable invocations. The argument now differentiates between a new value for unreserved concurrency (`-1`) and disabling Lambda invocations (`0`). If previously configuring this value to `0` for unreserved concurrency, update the configured value to `-1` or the resource will disable Lambda Function invocations on update. If previously unconfigured, the argument does not require any changes. See the [Lambda User Guide](https://docs.aws.amazon.com/lambda/latest/dg/concurrent-executions.html) for more information about concurrency.
-* resource/aws_route_table: Resource import no longer imports `aws_route`, `aws_route_table_association`, and `aws_main_route_table_association` resources into the Terraform state [GH-5657]
+* resource/aws_lambda_layer_version: Swap `arn` and `layer_arn` attribute values ([#7664](https://github.com/terraform-providers/terraform-provider-aws/issues/7664))
+* resource/aws_network_acl: Remove deprecated `subnet_id` argument (replaced with `subnet_ids` argument) ([#7716](https://github.com/terraform-providers/terraform-provider-aws/issues/7716))
+* resource/aws_redshift_cluster: Remove deprecated `bucket_name`, `enable_logging`, and `s3_key_prefix` arguments (replaced with `logging` configuration block) ([#7717](https://github.com/terraform-providers/terraform-provider-aws/issues/7717))
+* resource/aws_route_table: Resource import no longer imports `aws_route`, `aws_route_table_association`, and `aws_main_route_table_association` resources into the Terraform state ([#5657](https://github.com/terraform-providers/terraform-provider-aws/issues/5657))
+* resource/aws_route53_record: Require import for existing records (use deprecated `allow_overwrite` argument to temporarily reinstate the old behavior) ([#7734](https://github.com/terraform-providers/terraform-provider-aws/issues/7734))
+* resource/aws_route53_zone: Remove deprecated `vpc_id` and `vpc_region` arguments (replaced with `vpc` configuration block) ([#7695](https://github.com/terraform-providers/terraform-provider-aws/issues/7695))
+* resource/aws_s3_bucket_object: Remove hardcoded AWS China prevention of tagging ([#7654](https://github.com/terraform-providers/terraform-provider-aws/issues/7654))
+* resource/aws_wafregional_byte_match_set: Remove deprecated `byte_match_tuple` configuration block (replaced with `byte_match_tuples` configuration block) ([#7718](https://github.com/terraform-providers/terraform-provider-aws/issues/7718))
 
 ENHANCEMENTS:
 
-* data-source/aws_lambda_function: Add `tags` attribute [GH-7663]
-* resource/aws_lambda_function: Disable Lambda Function invocations by setting `reserved_concurrent_executions` to `0` [GH-3806]
+* data-source/aws_lambda_function: Add `tags` attribute ([#7663](https://github.com/terraform-providers/terraform-provider-aws/issues/7663))
+* resource/aws_dx_lag: Delete unmanaged connection during resource creation ([#7711](https://github.com/terraform-providers/terraform-provider-aws/issues/7711))
+* resource/aws_lambda_function: Disable Lambda Function invocations by setting `reserved_concurrent_executions` to `0` ([#3806](https://github.com/terraform-providers/terraform-provider-aws/issues/3806))
 
 BUG FIXES:
 
-* data-source/aws_lambda_function: Properly return error for missing function [GH-7663]
+* data-source/aws_lambda_function: Properly return error for missing function ([#7663](https://github.com/terraform-providers/terraform-provider-aws/issues/7663))
+* resource/aws_appautoscaling_policy: Properly read `step_scaling_policy_configuration` into Terraform state ([#7706](https://github.com/terraform-providers/terraform-provider-aws/issues/7706))
+* resource/aws_cloudfront_distribution: Adjust TypeSet and TypeList attributes for better difference handling ([#7732](https://github.com/terraform-providers/terraform-provider-aws/issues/7732))
+* resource/aws_redshift_cluster: Properly read logging into Terraform state ([#7717](https://github.com/terraform-providers/terraform-provider-aws/issues/7717))
+* resource/aws_route53_record: Existing Route 53 Records are no longer silently overwritten during resource creation by default (use `terraform import` or deprecated `allow_overwrite` argument) ([#7734](https://github.com/terraform-providers/terraform-provider-aws/issues/7734))
+* resource/aws_vpn_connection: Remove configurability of read-only `customer_gateway_configuration`, `routes`, and `vgw_telemetry` attributes ([#7636](https://github.com/terraform-providers/terraform-provider-aws/issues/7636))
 
 ## 1.60.0 (February 22, 2019)
 

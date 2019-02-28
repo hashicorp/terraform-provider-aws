@@ -18,6 +18,9 @@ func init() {
 	resource.AddTestSweepers("aws_lb", &resource.Sweeper{
 		Name: "aws_lb",
 		F:    testSweepLBs,
+		Dependencies: []string{
+			"aws_api_gateway_vpc_link",
+		},
 	})
 }
 
