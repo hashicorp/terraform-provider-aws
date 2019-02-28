@@ -120,10 +120,7 @@ func TestFetchRootDevice(t *testing.T) {
 				data := r.Data.(*ec2.DescribeImagesOutput)
 				data.Images = tc.images
 			})
-			name, err := fetchRootDeviceName("ami-123", conn)
-			if err != nil {
-				t.Errorf("Error fetching device name: %s", err)
-			}
+			name, _ := fetchRootDeviceName("ami-123", conn)
 			if tc.name != aws.StringValue(name) {
 				t.Errorf("Expected name %s, got %s", tc.name, aws.StringValue(name))
 			}
