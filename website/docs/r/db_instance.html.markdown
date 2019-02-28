@@ -169,7 +169,7 @@ is ignored and you should instead declare `kms_key_id` with a valid ARN. The
 default is `false` if not specified.
 * `storage_type` - (Optional) One of "standard" (magnetic), "gp2" (general
 purpose SSD), or "io1" (provisioned IOPS SSD). The default is "io1" if `iops` is
-specified, "standard" if not. Note that this behaviour is different from the AWS
+specified, "standard" if not. Note that this behavior is different from the AWS
 web console, where the default is "gp2".
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 * `timezone` - (Optional) Time zone of the DB instance. `timezone` is currently

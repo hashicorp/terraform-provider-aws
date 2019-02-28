@@ -218,7 +218,7 @@ The `instance_market_options` block supports the following:
 The `spot_options` block supports the following:
 
 * `block_duration_minutes` - The required duration in minutes. This value must be a multiple of 60.
-* `instance_interruption_behavior` - The behavior when a Spot Instance is interrupted. Can be `hibernate`,
+* `instance_interruption_behavior` - The behavior when a Spot instance is interrupted. Can be `hibernate`,
   `stop`, or `terminate`. (Default: `terminate`).
 * `max_price` - The maximum hourly price you're willing to pay for the Spot Instances.
 * `spot_instance_type` - The Spot Instance request type. Can be `one-time`, or `persistent`.

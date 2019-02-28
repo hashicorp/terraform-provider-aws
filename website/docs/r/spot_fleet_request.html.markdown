@@ -45,7 +45,7 @@ resource "aws_spot_fleet_request" "cheap_compute" {
       volume_type = "gp2"
     }
 
-  tags = {
+    tags = {
       Name = "spot-fleet-example"
     }
   }
@@ -120,9 +120,8 @@ across different markets and instance types.
   request is decreased below the current size of the Spot fleet.
 * `terminate_instances_with_expiration` - Indicates whether running Spot
   instances should be terminated when the Spot fleet request expires.
-* `instance_interruption_behaviour` - (Optional) Indicates whether a Spot
-  instance stops or terminates when it is interrupted. Default is
-  `terminate`.
+* `instance_interruption_behavior` - (Optional) The behavior when a Spot instance is interrupted. Can be `hibernate`,
+  `stop`, or `terminate`. (Default: `terminate`).
 * `fleet_type` - (Optional) The type of fleet request. Indicates whether the Spot Fleet only requests the target
   capacity or also attempts to maintain it. Default is `maintain`.
 * `valid_until` - (Optional) The end date and time of the request, in UTC [RFC3339](https://tools.ietf.org/html/rfc3339#section-5.8) format(for example, YYYY-MM-DDTHH:MM:SSZ). At this point, no new Spot instance requests are placed or enabled to fulfill the request. Defaults to 24 hours.
