@@ -297,11 +297,21 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 				Default:  "Default",
 				ForceNew: false,
 			},
+			"instance_interruption_behavior": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  ec2.InstanceInterruptionBehaviorTerminate,
+				ValidateFunc: validation.StringInSlice([]string{
+					ec2.InstanceInterruptionBehaviorHibernate,
+					ec2.InstanceInterruptionBehaviorStop,
+					ec2.InstanceInterruptionBehaviorTerminate,
+				}, false),
+				ForceNew: true,
+			},
 			"instance_interruption_behaviour": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "terminate",
-				ForceNew: true,
+				Removed:  "Use `instance_interruption_behavior` instead.",
 			},
 			"spot_price": {
 				Type:     schema.TypeString,
@@ -615,7 +625,7 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 		ClientToken:                      aws.String(resource.UniqueId()),
 		TerminateInstancesWithExpiration: aws.Bool(d.Get("terminate_instances_with_expiration").(bool)),
 		ReplaceUnhealthyInstances:        aws.Bool(d.Get("replace_unhealthy_instances").(bool)),
-		InstanceInterruptionBehavior:     aws.String(d.Get("instance_interruption_behaviour").(string)),
+		InstanceInterruptionBehavior:     aws.String(d.Get("instance_interruption_behavior").(string)),
 		Type:                             aws.String(d.Get("fleet_type").(string)),
 	}
 
@@ -930,7 +940,7 @@ func resourceAwsSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	d.Set("replace_unhealthy_instances", config.ReplaceUnhealthyInstances)
-	d.Set("instance_interruption_behaviour", config.InstanceInterruptionBehavior)
+	d.Set("instance_interruption_behavior", config.InstanceInterruptionBehavior)
 	d.Set("fleet_type", config.Type)
 	d.Set("launch_specification", launchSpecsToSet(config.LaunchSpecifications, conn))
 

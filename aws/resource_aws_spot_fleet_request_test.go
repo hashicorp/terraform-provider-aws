@@ -101,7 +101,7 @@ func TestAccAWSSpotFleetRequest_instanceInterruptionBehavior(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_spot_fleet_request.foo", "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(
-						"aws_spot_fleet_request.foo", "instance_interruption_behaviour", "stop"),
+						"aws_spot_fleet_request.foo", "instance_interruption_behavior", "stop"),
 				),
 			},
 		},
@@ -872,7 +872,7 @@ resource "aws_spot_fleet_request" "foo" {
     target_capacity = 2
     valid_until = "2019-11-04T20:44:20Z"
     terminate_instances_with_expiration = true
-    instance_interruption_behaviour = "stop"
+    instance_interruption_behavior = "stop"
     wait_for_fulfillment = true
     launch_specification {
         instance_type = "m1.small"
@@ -1060,7 +1060,7 @@ resource "aws_spot_fleet_request" "foo" {
     target_capacity = 2
     valid_until = "2019-11-04T20:44:20Z"
     terminate_instances_with_expiration = true
-    instance_interruption_behaviour = "stop"
+    instance_interruption_behavior = "stop"
     wait_for_fulfillment = true
     launch_specification {
         instance_type = "m1.small"

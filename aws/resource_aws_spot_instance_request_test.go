@@ -34,7 +34,7 @@ func TestAccAWSSpotInstanceRequest_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_spot_instance_request.foo", "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(
-						"aws_spot_instance_request.foo", "instance_interruption_behaviour", "terminate"),
+						"aws_spot_instance_request.foo", "instance_interruption_behavior", "terminate"),
 				),
 			},
 		},
@@ -497,7 +497,7 @@ func TestAccAWSSpotInstanceRequestInterruptStop(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_spot_instance_request.foo", "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(
-						"aws_spot_instance_request.foo", "instance_interruption_behaviour", "stop"),
+						"aws_spot_instance_request.foo", "instance_interruption_behavior", "stop"),
 				),
 			},
 		},
@@ -522,7 +522,7 @@ func TestAccAWSSpotInstanceRequestInterruptHibernate(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_spot_instance_request.foo", "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(
-						"aws_spot_instance_request.foo", "instance_interruption_behaviour", "hibernate"),
+						"aws_spot_instance_request.foo", "instance_interruption_behavior", "hibernate"),
 				),
 			},
 		},
@@ -794,6 +794,6 @@ func testAccAWSSpotInstanceRequestInterruptConfig(interruption_behavior string) 
 		// and verify termination behavior
 		wait_for_fulfillment = true
 
-		instance_interruption_behaviour = "%s"
+		instance_interruption_behavior = "%s"
 	}`, interruption_behavior)
 }

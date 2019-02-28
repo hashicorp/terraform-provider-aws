@@ -271,6 +271,11 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 									"instance_interruption_behavior": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ValidateFunc: validation.StringInSlice([]string{
+											ec2.InstanceInterruptionBehaviorHibernate,
+											ec2.InstanceInterruptionBehaviorStop,
+											ec2.InstanceInterruptionBehaviorTerminate,
+										}, false),
 									},
 									"max_price": {
 										Type:     schema.TypeString,

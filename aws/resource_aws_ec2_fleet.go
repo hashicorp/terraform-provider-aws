@@ -175,11 +175,11 @@ func resourceAwsEc2Fleet() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
-							Default:  ec2.SpotInstanceInterruptionBehaviorTerminate,
+							Default:  ec2.InstanceInterruptionBehaviorTerminate,
 							ValidateFunc: validation.StringInSlice([]string{
-								ec2.SpotInstanceInterruptionBehaviorHibernate,
-								ec2.SpotInstanceInterruptionBehaviorStop,
-								ec2.SpotInstanceInterruptionBehaviorTerminate,
+								ec2.InstanceInterruptionBehaviorHibernate,
+								ec2.InstanceInterruptionBehaviorStop,
+								ec2.InstanceInterruptionBehaviorTerminate,
 							}, false),
 						},
 						"instance_pools_to_use_count": {
