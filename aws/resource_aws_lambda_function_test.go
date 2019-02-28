@@ -49,17 +49,6 @@ func testSweepLambdaFunctions(region string) error {
 	}
 
 	for _, f := range resp.Functions {
-		var testOptGroup bool
-		for _, testName := range []string{"tf_test", "tf_acc_"} {
-			if strings.HasPrefix(*f.FunctionName, testName) {
-				testOptGroup = true
-			}
-		}
-
-		if !testOptGroup {
-			continue
-		}
-
 		_, err := lambdaconn.DeleteFunction(
 			&lambda.DeleteFunctionInput{
 				FunctionName: f.FunctionName,
@@ -177,7 +166,7 @@ func TestAccAWSLambdaFunction_basic(t *testing.T) {
 					testAccCheckAwsLambdaFunctionName(&conf, funcName),
 					testAccCheckAwsLambdaFunctionArnHasSuffix(&conf, ":"+funcName),
 					resource.TestMatchResourceAttr(resourceName, "invoke_arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:apigateway:[^:]+:lambda:path/2015-03-31/functions/arn:[^:]+:lambda:[^:]+:[^:]+:function:%s/invocations$", funcName))),
-					resource.TestCheckResourceAttr(resourceName, "reserved_concurrent_executions", "0"),
+					resource.TestCheckResourceAttr(resourceName, "reserved_concurrent_executions", "-1"),
 				),
 			},
 		},
@@ -240,7 +229,7 @@ func TestAccAWSLambdaFunction_concurrencyCycle(t *testing.T) {
 					testAccCheckAwsLambdaFunctionExists("aws_lambda_function.lambda_function_test", funcName, &conf),
 					testAccCheckAwsLambdaFunctionName(&conf, funcName),
 					testAccCheckAwsLambdaFunctionArnHasSuffix(&conf, ":"+funcName),
-					resource.TestCheckResourceAttr("aws_lambda_function.lambda_function_test", "reserved_concurrent_executions", "0"),
+					resource.TestCheckResourceAttr("aws_lambda_function.lambda_function_test", "reserved_concurrent_executions", "-1"),
 				),
 			},
 			{
@@ -258,7 +247,7 @@ func TestAccAWSLambdaFunction_concurrencyCycle(t *testing.T) {
 					testAccCheckAwsLambdaFunctionExists("aws_lambda_function.lambda_function_test", funcName, &conf),
 					testAccCheckAwsLambdaFunctionName(&conf, funcName),
 					testAccCheckAwsLambdaFunctionArnHasSuffix(&conf, ":"+funcName),
-					resource.TestCheckResourceAttr("aws_lambda_function.lambda_function_test", "reserved_concurrent_executions", "0"),
+					resource.TestCheckResourceAttr("aws_lambda_function.lambda_function_test", "reserved_concurrent_executions", "-1"),
 				),
 			},
 		},
@@ -1993,7 +1982,7 @@ resource "aws_lambda_function" "lambda_function_test" {
     role = "${aws_iam_role.iam_for_lambda.arn}"
     handler = "exports.example"
     runtime = "nodejs8.10"
-    layers = ["${aws_lambda_layer_version.lambda_function_test.layer_arn}"]
+    layers = ["${aws_lambda_layer_version.lambda_function_test.arn}"]
 }
 `, layerName, funcName)
 }
@@ -2019,8 +2008,8 @@ resource "aws_lambda_function" "lambda_function_test" {
     handler = "exports.example"
     runtime = "nodejs8.10"
     layers = [
-        "${aws_lambda_layer_version.lambda_function_test.layer_arn}",
-        "${aws_lambda_layer_version.lambda_function_test_2.layer_arn}",
+        "${aws_lambda_layer_version.lambda_function_test.arn}",
+        "${aws_lambda_layer_version.lambda_function_test_2.arn}",
     ]
 }
 `, layerName, layer2Name, funcName)

@@ -51,7 +51,7 @@ resource "aws_default_network_acl" "default" {
     protocol   = -1
     rule_no    = 100
     action     = "allow"
-    cidr_block = "0.0.0.0/0"
+    cidr_block = # set a CIDR block here
     from_port  = 0
     to_port    = 0
   }
@@ -84,7 +84,7 @@ resource "aws_default_network_acl" "default" {
     protocol   = -1
     rule_no    = 100
     action     = "allow"
-    cidr_block = "0.0.0.0/0"
+    cidr_block = # set a CIDR block here
     from_port  = 0
     to_port    = 0
   }

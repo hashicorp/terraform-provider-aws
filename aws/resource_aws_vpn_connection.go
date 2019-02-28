@@ -144,7 +144,6 @@ func resourceAwsVpnConnection() *schema.Resource {
 			"customer_gateway_configuration": {
 				Type:     schema.TypeString,
 				Computed: true,
-				Optional: true,
 			},
 
 			"tunnel1_address": {
@@ -192,25 +191,21 @@ func resourceAwsVpnConnection() *schema.Resource {
 			"routes": {
 				Type:     schema.TypeSet,
 				Computed: true,
-				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"destination_cidr_block": {
 							Type:     schema.TypeString,
 							Computed: true,
-							Optional: true,
 						},
 
 						"source": {
 							Type:     schema.TypeString,
 							Computed: true,
-							Optional: true,
 						},
 
 						"state": {
 							Type:     schema.TypeString,
 							Computed: true,
-							Optional: true,
 						},
 					},
 				},
@@ -227,37 +222,31 @@ func resourceAwsVpnConnection() *schema.Resource {
 			"vgw_telemetry": {
 				Type:     schema.TypeSet,
 				Computed: true,
-				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"accepted_route_count": {
 							Type:     schema.TypeInt,
 							Computed: true,
-							Optional: true,
 						},
 
 						"last_status_change": {
 							Type:     schema.TypeString,
 							Computed: true,
-							Optional: true,
 						},
 
 						"outside_ip_address": {
 							Type:     schema.TypeString,
 							Computed: true,
-							Optional: true,
 						},
 
 						"status": {
 							Type:     schema.TypeString,
 							Computed: true,
-							Optional: true,
 						},
 
 						"status_message": {
 							Type:     schema.TypeString,
 							Computed: true,
-							Optional: true,
 						},
 					},
 				},

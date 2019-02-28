@@ -5067,7 +5067,9 @@ type ModifyClientPropertiesInput struct {
 	_ struct{} `type:"structure"`
 
 	// Information about the Amazon WorkSpaces client.
-	ClientProperties *ClientProperties `type:"structure"`
+	//
+	// ClientProperties is a required field
+	ClientProperties *ClientProperties `type:"structure" required:"true"`
 
 	// The resource identifiers, in the form of directory IDs.
 	//
@@ -5088,6 +5090,9 @@ func (s ModifyClientPropertiesInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *ModifyClientPropertiesInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "ModifyClientPropertiesInput"}
+	if s.ClientProperties == nil {
+		invalidParams.Add(request.NewErrParamRequired("ClientProperties"))
+	}
 	if s.ResourceId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ResourceId"))
 	}

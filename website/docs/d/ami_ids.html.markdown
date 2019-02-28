@@ -10,8 +10,6 @@ description: |-
 
 Use this data source to get a list of AMI IDs matching the specified criteria.
 
-~> **NOTE:** The `owners` argument will be **required** in the next major version.
-
 ## Example Usage
 
 ```hcl
@@ -27,6 +25,8 @@ data "aws_ami_ids" "ubuntu" {
 
 ## Argument Reference
 
+* `owners` - (Required) List of AMI owners to limit search. At least 1 value must be specified. Valid values: an AWS account ID, `self` (the current account), or an AWS owner alias (e.g. `amazon`, `aws-marketplace`, `microsoft`).
+
 * `executable_users` - (Optional) Limit search to users with *explicit* launch
 permission on  the image. Valid items are the numeric account ID or `self`.
 
@@ -34,17 +34,11 @@ permission on  the image. Valid items are the numeric account ID or `self`.
 are several valid keys, for a full reference, check out
 [describe-images in the AWS CLI reference][1].
 
-* `owners` - (Optional) Limit search to specific AMI owners. Valid items are
-the numeric account ID, `amazon`, or `self`.
-
 * `name_regex` - (Optional) A regex string to apply to the AMI list returned
 by AWS. This allows more advanced filtering not supported from the AWS API.
 This filtering is done locally on what AWS returns, and could have a performance
 impact if the result is large. It is recommended to combine this with other
 options to narrow down the list AWS returns.
-
-~> **NOTE:** At least one of `executable_users`, `filter`, `owners` or
-`name_regex` must be specified.
 
 * `sort_ascending`  - (Defaults to `false`) Used to sort AMIs by creation time.
 

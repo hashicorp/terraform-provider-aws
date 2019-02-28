@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"strconv"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -43,10 +42,6 @@ func testSweepLambdaLayerVersions(region string) error {
 	}
 
 	for _, l := range resp.Layers {
-		if !strings.HasPrefix(*l.LayerName, "tf_acc_") {
-			continue
-		}
-
 		versionResp, err := lambdaconn.ListLayerVersions(&lambda.ListLayerVersionsInput{
 			LayerName: l.LayerName,
 		})
@@ -79,7 +74,16 @@ func TestAccAWSLambdaLayerVersion_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLambdaLayerVersionBasic(layerName),
-				Check:  testAccCheckAwsLambdaLayerVersionExists(resourceName, layerName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaLayerVersionExists(resourceName, layerName),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("layer:%s:1", layerName)),
+					resource.TestCheckResourceAttr(resourceName, "compatible_runtimes.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "layer_name", layerName),
+					resource.TestCheckResourceAttr(resourceName, "license_info", ""),
+					testAccCheckResourceAttrRegionalARN(resourceName, "layer_arn", "lambda", fmt.Sprintf("layer:%s", layerName)),
+					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+				),
 			},
 
 			{

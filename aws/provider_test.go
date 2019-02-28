@@ -5,14 +5,11 @@ import (
 	"log"
 	"os"
 	"regexp"
-	"strings"
 	"testing"
-
-	"github.com/aws/aws-sdk-go/service/organizations"
 
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
-
+	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
@@ -193,14 +190,6 @@ func testAccGetPartition() string {
 		return partition.ID()
 	}
 	return "aws"
-}
-
-func testAccGetServiceEndpoint(service string) string {
-	endpoint, err := endpoints.DefaultResolver().EndpointFor(service, testAccGetRegion())
-	if err != nil {
-		return ""
-	}
-	return strings.TrimPrefix(endpoint.URL, "https://")
 }
 
 func testAccEC2ClassicPreCheck(t *testing.T) {

@@ -137,9 +137,7 @@ func testAccCheckAWSSfnStateMachineDestroy(s *terraform.State) error {
 
 func testAccAWSSfnStateMachineConfig(rName string, rMaxAttempts int) string {
 	return fmt.Sprintf(`
-data "aws_region" "current" {
-  current = true
-}
+data "aws_region" "current" {}
 
 resource "aws_iam_role_policy" "iam_policy_for_lambda" {
   name = "iam_policy_for_lambda_%s"
@@ -256,9 +254,7 @@ EOF
 
 func testAccAWSSfnStateMachineConfigTags1(rName string, tag1Key, tag1Value string) string {
 	return fmt.Sprintf(`
-data "aws_region" "current" {
-  current = true
-}
+data "aws_region" "current" {}
 
 resource "aws_iam_role_policy" "iam_policy_for_lambda" {
   name = "iam_policy_for_lambda_%s"
@@ -377,9 +373,7 @@ tags = {
 
 func testAccAWSSfnStateMachineConfigTags2(rName string, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return fmt.Sprintf(`
-data "aws_region" "current" {
-  current = true
-}
+data "aws_region" "current" {}
 
 resource "aws_iam_role_policy" "iam_policy_for_lambda" {
   name = "iam_policy_for_lambda_%s"

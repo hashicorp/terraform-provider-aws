@@ -1,12 +1,10 @@
 package aws
 
 import (
-	"fmt"
 	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccDataSourceAwsAcmpcaCertificateAuthority_Basic(t *testing.T) {
@@ -24,54 +22,23 @@ func TestAccDataSourceAwsAcmpcaCertificateAuthority_Basic(t *testing.T) {
 			{
 				Config: testAccDataSourceAwsAcmpcaCertificateAuthorityConfig_ARN,
 				Check: resource.ComposeTestCheckFunc(
-					testAccDataSourceAwsAcmpcaCertificateAuthorityCheck(datasourceName, resourceName),
+					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, "certificate", resourceName, "certificate"),
+					resource.TestCheckResourceAttrPair(datasourceName, "certificate_chain", resourceName, "certificate_chain"),
+					resource.TestCheckResourceAttrPair(datasourceName, "certificate_signing_request", resourceName, "certificate_signing_request"),
+					resource.TestCheckResourceAttrPair(datasourceName, "not_after", resourceName, "not_after"),
+					resource.TestCheckResourceAttrPair(datasourceName, "not_before", resourceName, "not_before"),
+					resource.TestCheckResourceAttrPair(datasourceName, "revocation_configuration.#", resourceName, "revocation_configuration.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "revocation_configuration.0.crl_configuration.#", resourceName, "revocation_configuration.0.crl_configuration.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "revocation_configuration.0.crl_configuration.0.enabled", resourceName, "revocation_configuration.0.crl_configuration.0.enabled"),
+					resource.TestCheckResourceAttrPair(datasourceName, "serial", resourceName, "serial"),
+					resource.TestCheckResourceAttrPair(datasourceName, "status", resourceName, "status"),
+					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(datasourceName, "type", resourceName, "type"),
 				),
 			},
 		},
 	})
-}
-
-func testAccDataSourceAwsAcmpcaCertificateAuthorityCheck(datasourceName, resourceName string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		resource, ok := s.RootModule().Resources[datasourceName]
-		if !ok {
-			return fmt.Errorf("root module has no resource called %s", datasourceName)
-		}
-
-		dataSource, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return fmt.Errorf("root module has no resource called %s", resourceName)
-		}
-
-		attrNames := []string{
-			"arn",
-			"certificate",
-			"certificate_chain",
-			"certificate_signing_request",
-			"not_after",
-			"not_before",
-			"revocation_configuration.#",
-			"revocation_configuration.0.crl_configuration.#",
-			"revocation_configuration.0.crl_configuration.0.enabled",
-			"serial",
-			"status",
-			"tags.%",
-			"type",
-		}
-
-		for _, attrName := range attrNames {
-			if resource.Primary.Attributes[attrName] != dataSource.Primary.Attributes[attrName] {
-				return fmt.Errorf(
-					"%s is %s; want %s",
-					attrName,
-					resource.Primary.Attributes[attrName],
-					dataSource.Primary.Attributes[attrName],
-				)
-			}
-		}
-
-		return nil
-	}
 }
 
 const testAccDataSourceAwsAcmpcaCertificateAuthorityConfig_ARN = `

@@ -38,17 +38,7 @@ func testSweepVPCs(region string) error {
 	}
 	conn := client.(*AWSClient).ec2conn
 
-	req := &ec2.DescribeVpcsInput{
-		Filters: []*ec2.Filter{
-			{
-				Name: aws.String("tag-value"),
-				Values: []*string{
-					aws.String("terraform-testacc-*"),
-					aws.String("tf-acc-test-*"),
-				},
-			},
-		},
-	}
+	req := &ec2.DescribeVpcsInput{}
 	resp, err := conn.DescribeVpcs(req)
 	if err != nil {
 		if testSweepSkipSweepError(err) {
@@ -64,6 +54,11 @@ func testSweepVPCs(region string) error {
 	}
 
 	for _, vpc := range resp.Vpcs {
+		if aws.BoolValue(vpc.IsDefault) {
+			log.Printf("[DEBUG] Skipping Default VPC: %s", aws.StringValue(vpc.VpcId))
+			continue
+		}
+
 		input := &ec2.DeleteVpcInput{
 			VpcId: vpc.VpcId,
 		}
