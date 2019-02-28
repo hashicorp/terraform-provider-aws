@@ -2451,11 +2451,30 @@ resource "aws_instance" "foo" {
 `
 
 const testAccInstanceConfigBlockDevices = `
+resource "aws_vpc" "foo" {
+  cidr_block = "10.1.0.0/16"
+
+  tags {
+    Name = "terraform-testacc-instance-source-dest-enable"
+  }
+}
+
+resource "aws_subnet" "foo" {
+  cidr_block        = "10.1.1.0/24"
+  vpc_id            = "${aws_vpc.foo.id}"
+  availability_zone = "us-west-2a"
+
+  tags {
+    Name = "tf-acc-instance-source-dest-enable"
+  }
+}
+
 resource "aws_kms_key" "foo" {}
 
 resource "aws_instance" "foo" {
 	# us-west-2
-	ami = "ami-55a7ea65"
+	ami       = "ami-55a7ea65"
+    subnet_id = "${aws_subnet.foo.id}"
 
 	# In order to attach an encrypted volume to an instance you need to have an
 	# m3.medium or larger. See "Supported Instance Types" in:

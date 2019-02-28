@@ -1573,7 +1573,10 @@ func readBlockDeviceMappingsFromConfig(
 			ebs := &ec2.EbsBlockDevice{
 				DeleteOnTermination: aws.Bool(bd["delete_on_termination"].(bool)),
 				Encrypted:           aws.Bool(bd["encrypted"].(bool)),
-				KmsKeyId:            aws.String(bd["kms_key_id"].(string)),
+			}
+
+			if v, ok := bd["kms_key_id"].(int); ok && v != 0 {
+				ebs.KmsKeyId = aws.String(bd["kms_key_id"].(string))
 			}
 
 			if v, ok := bd["volume_size"].(int); ok && v != 0 {
