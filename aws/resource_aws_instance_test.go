@@ -320,6 +320,30 @@ func TestAccAWSInstance_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSInstance_encryptedRootVolume(t *testing.T) {
+	var v ec2.Instance
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_instance.foo",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCheckInstanceEncryptedRootVolume,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(
+						"aws_instance.foo", &v),
+					resource.TestCheckResourceAttr(
+						"aws_instance.foo", "root_block_device.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_instance.foo", "root_block_device.0.encrypted", "true"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSInstance_userDataBase64(t *testing.T) {
 	var v ec2.Instance
 
@@ -2728,6 +2752,36 @@ resource "aws_instance" "foo" {
 	tags = {
 		foo = "bar"
 	}
+}
+`
+
+const testAccCheckInstanceEncryptedRootVolume = `
+resource "aws_vpc" "foo" {
+  cidr_block = "10.1.0.0/16"
+
+  tags {
+    Name = "terraform-testacc-instance-source-dest-enable"
+  }
+}
+
+resource "aws_subnet" "foo" {
+  cidr_block = "10.1.1.0/24"
+  vpc_id = "${aws_vpc.foo.id}"
+
+  tags {
+    Name = "tf-acc-instance-source-dest-enable"
+  }
+}
+
+resource "aws_instance" "foo" {
+  ami           = "ami-08692d171e3cf02d6"
+  instance_type = "t3.nano"
+  subnet_id     = "${aws_subnet.foo.id}"
+
+  root_block_device {
+    delete_on_termination = true
+    encrypted             = true
+  }
 }
 `
 
