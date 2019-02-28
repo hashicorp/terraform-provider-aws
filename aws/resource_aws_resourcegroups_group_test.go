@@ -57,14 +57,15 @@ func TestAccAWSResourceGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", desc1),
 					resource.TestCheckResourceAttr(resourceName, "resource_query.0.query", query1+"\n"),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Foo", "bar"),
 				),
 			},
-			// See comment in resource. We can't cleanly import resources as of 10/20/2018.
-			// {
-			// 	    ResourceName:      resourceName,
-			//	    ImportState:       true,
-			//	    ImportStateVerify: true,
-			// },
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 			{
 				Config: testAccAWSResourceGroupConfig_basic(n, desc2, query2),
 				Check: resource.ComposeTestCheckFunc(
@@ -93,11 +94,7 @@ func testAccCheckAWSResourceGroupExists(n string) resource.TestCheckFunc {
 			GroupName: aws.String(rs.Primary.ID),
 		})
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -139,6 +136,10 @@ resource "aws_resourcegroups_group" "test" {
     query = <<JSON
 %s
 JSON
+  }
+
+  tags {
+    Foo = "bar"
   }
 }
 `, rName, desc, query)

@@ -201,7 +201,10 @@ func TestSesSmtpPasswordFromSecretKey(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		actual := sesSmtpPasswordFromSecretKey(&tc.Input)
+		actual, err := sesSmtpPasswordFromSecretKey(&tc.Input)
+		if err != nil {
+			t.Fatalf("unexpected error: %s", err)
+		}
 		if actual != tc.Expected {
 			t.Fatalf("%q: expected %q, got %q", tc.Input, tc.Expected, actual)
 		}

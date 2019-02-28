@@ -142,11 +142,7 @@ func testAccCheckAWSKmsGrantDestroy(s *terraform.State) error {
 		}
 
 		err := waitForKmsGrantToBeRevoked(conn, rs.Primary.Attributes["key_id"], rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 
 	return nil
@@ -208,7 +204,7 @@ resource "aws_kms_grant" "%s" {
 	grantee_principal = "${aws_iam_role.tf-acc-test-role.arn}"
 	operations = [ "RetireGrant", "DescribeKey" ]
 	constraints {
-		%s {
+		%s = {
 			%s
 		}
 	}

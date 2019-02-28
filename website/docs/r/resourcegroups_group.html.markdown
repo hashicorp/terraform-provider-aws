@@ -1,7 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_resourcegroups_group"
-sidebar_current: "docs-aws-resource-resourcegroups_group"
+sidebar_current: "docs-aws-resource-resourcegroups-group"
 description: |-
   Provides a Resource Group.
 ---
@@ -13,7 +13,7 @@ Provides a Resource Group.
 ## Example Usage
 
 ```hcl
-resource "aws_resource_group" "test" {
+resource "aws_resourcegroups_group" "test" {
   name        = "test-group"
 
   resource_query {

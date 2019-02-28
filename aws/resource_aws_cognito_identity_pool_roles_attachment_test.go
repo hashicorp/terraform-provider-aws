@@ -15,8 +15,8 @@ import (
 )
 
 func TestAccAWSCognitoIdentityPoolRolesAttachment_basic(t *testing.T) {
-	name := fmt.Sprintf("%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
-	updatedName := fmt.Sprintf("%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	updatedName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -44,7 +44,7 @@ func TestAccAWSCognitoIdentityPoolRolesAttachment_basic(t *testing.T) {
 }
 
 func TestAccAWSCognitoIdentityPoolRolesAttachment_roleMappings(t *testing.T) {
-	name := fmt.Sprintf("%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -92,7 +92,7 @@ func TestAccAWSCognitoIdentityPoolRolesAttachment_roleMappings(t *testing.T) {
 }
 
 func TestAccAWSCognitoIdentityPoolRolesAttachment_roleMappingsWithAmbiguousRoleResolutionError(t *testing.T) {
-	name := fmt.Sprintf("%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -108,7 +108,7 @@ func TestAccAWSCognitoIdentityPoolRolesAttachment_roleMappingsWithAmbiguousRoleR
 }
 
 func TestAccAWSCognitoIdentityPoolRolesAttachment_roleMappingsWithRulesTypeError(t *testing.T) {
-	name := fmt.Sprintf("%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -124,7 +124,7 @@ func TestAccAWSCognitoIdentityPoolRolesAttachment_roleMappingsWithRulesTypeError
 }
 
 func TestAccAWSCognitoIdentityPoolRolesAttachment_roleMappingsWithTokenTypeError(t *testing.T) {
-	name := fmt.Sprintf("%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -156,11 +156,7 @@ func testAccCheckAWSCognitoIdentityPoolRolesAttachmentExists(n string) resource.
 			IdentityPoolId: aws.String(rs.Primary.Attributes["identity_pool_id"]),
 		})
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -193,7 +189,7 @@ resource "aws_cognito_identity_pool" "main" {
   identity_pool_name               = "identity pool %[1]s"
   allow_unauthenticated_identities = false
 
-  supported_login_providers {
+  supported_login_providers = {
     "graph.facebook.com" = "7346241598935555"
   }
 }
@@ -308,7 +304,7 @@ func testAccAWSCognitoIdentityPoolRolesAttachmentConfig_basic(name string) strin
 resource "aws_cognito_identity_pool_roles_attachment" "main" {
   identity_pool_id = "${aws_cognito_identity_pool.main.id}"
 
-  roles {
+  roles = {
     "authenticated" = "${aws_iam_role.authenticated.arn}"
   }
 }
@@ -333,7 +329,7 @@ resource "aws_cognito_identity_pool_roles_attachment" "main" {
     }
   }
 
-  roles {
+  roles = {
     "authenticated" = "${aws_iam_role.authenticated.arn}"
   }
 }
@@ -365,7 +361,7 @@ resource "aws_cognito_identity_pool_roles_attachment" "main" {
     }
   }
 
-  roles {
+  roles = {
     "authenticated" = "${aws_iam_role.authenticated.arn}"
   }
 }
@@ -389,7 +385,7 @@ resource "aws_cognito_identity_pool_roles_attachment" "main" {
     }
   }
 
-  roles {
+  roles = {
     "authenticated" = "${aws_iam_role.authenticated.arn}"
   }
 }
@@ -407,7 +403,7 @@ resource "aws_cognito_identity_pool_roles_attachment" "main" {
     type                      = "Rules"
   }
 
-  roles {
+  roles = {
     "authenticated" = "${aws_iam_role.authenticated.arn}"
   }
 }
@@ -432,7 +428,7 @@ resource "aws_cognito_identity_pool_roles_attachment" "main" {
     }
   }
 
-  roles {
+  roles = {
     "authenticated" = "${aws_iam_role.authenticated.arn}"
   }
 }

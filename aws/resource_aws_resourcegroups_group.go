@@ -17,15 +17,9 @@ func resourceAwsResourceGroupsGroup() *schema.Resource {
 		Update: resourceAwsResourceGroupsGroupUpdate,
 		Delete: resourceAwsResourceGroupsGroupDelete,
 
-		// As of 10/20/2018 it's not possible to import a complete resource because
-		// a resource group's tags are not returned by GetGroup nor ListGroups. This
-		// leads to dirty plans after an import, which breaks import tests.
-		//
-		// For now we ForceNew on the tags attribute and disable importing.
-		//
-		// Importer: &schema.ResourceImporter{
-		//		State: schema.ImportStatePassthrough,
-		// },
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -74,15 +68,17 @@ func resourceAwsResourceGroupsGroup() *schema.Resource {
 }
 
 func diffTagsResourceGroups(oldTags map[string]interface{}, newTags map[string]interface{}) (map[string]*string, []*string) {
-	create := make(map[string]interface{})
+	create := make(map[string]*string)
 	for k, v := range newTags {
-		create[k] = &v.(string)
+		x := v.(string)
+		create[k] = &x
 	}
 
 	var remove []*string
 	for k, v := range oldTags {
 		if _, ok := create[k]; !ok {
-			remove = append(remove, &v)
+			r := v.(string)
+			remove = append(remove, &r)
 		}
 	}
 
@@ -98,31 +94,34 @@ func extractResourceGroupResourceQuery(resourceQueryList []interface{}) *resourc
 	}
 }
 
-func extractResourceGroupTags(m map[string]interface{}) map[string]*string {
-	result := make(map[string]*string)
-	for k, v := range m {
-		result[k] = aws.String(v.(string))
-	}
-
-	return result
-}
-
 func resourceAwsResourceGroupsGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).resourcegroupsconn
 
+	name := d.Get("name").(string)
 	input := resourcegroups.CreateGroupInput{
 		Description:   aws.String(d.Get("description").(string)),
-		Name:          aws.String(d.Get("name").(string)),
+		Name:          aws.String(name),
 		ResourceQuery: extractResourceGroupResourceQuery(d.Get("resource_query").([]interface{})),
-		Tags:          extractResourceGroupTags(d.Get("tags").(map[string]interface{})),
 	}
 
-	res, err := conn.CreateGroup(&input)
+	if t, ok := d.GetOk("tags"); ok {
+		tags := make(map[string]*string)
+
+		for k, v := range t.(map[string]interface{}) {
+			tags[k] = aws.String(v.(string))
+		}
+
+		if len(tags) > 0 {
+			input.Tags = tags
+		}
+	}
+
+	_, err := conn.CreateGroup(&input)
 	if err != nil {
 		return fmt.Errorf("error creating resource group: %s", err)
 	}
 
-	d.SetId(aws.StringValue(res.Group.Name))
+	d.SetId(name)
 
 	return resourceAwsResourceGroupsGroupRead(d, meta)
 }
@@ -160,19 +159,22 @@ func resourceAwsResourceGroupsGroupRead(d *schema.ResourceData, meta interface{}
 	resultQuery := map[string]interface{}{}
 	resultQuery["query"] = aws.StringValue(q.GroupQuery.ResourceQuery.Query)
 	resultQuery["type"] = aws.StringValue(q.GroupQuery.ResourceQuery.Type)
-	d.Set("resource_query", []map[string]interface{}{resultQuery})
+	if err := d.Set("resource_query", []map[string]interface{}{resultQuery}); err != nil {
+		return fmt.Errorf("error setting resource_query: %s", err)
+	}
 
 	t, err := conn.GetTags(&resourcegroups.GetTagsInput{
-		Arn: arn,
+		Arn: aws.String(arn),
 	})
 
 	if err != nil {
 		return fmt.Errorf("error reading tags for resource group (%s): %s", d.Id(), err)
 	}
 
-	var tags map[string]string
-	for k, v := range t {
-		tags[k] = aws.String(v)
+	tags := make(map[string]*string)
+	for k, v := range t.Tags {
+		x := *v
+		tags[k] = aws.String(x)
 	}
 
 	d.Set("tags", tags)
@@ -213,7 +215,7 @@ func resourceAwsResourceGroupsGroupUpdate(d *schema.ResourceData, meta interface
 		create, remove := diffTagsResourceGroups(old.(map[string]interface{}), new.(map[string]interface{}))
 
 		_, err := conn.Untag(&resourcegroups.UntagInput{
-			Arn:  &arn,
+			Arn:  aws.String(arn.(string)),
 			Keys: remove,
 		})
 
@@ -221,8 +223,8 @@ func resourceAwsResourceGroupsGroupUpdate(d *schema.ResourceData, meta interface
 			return fmt.Errorf("error removing tags for resource group (%s): %s", d.Id(), err)
 		}
 
-		_, err := conn.Tag(&resourcegroups.TagInput{
-			Arn:  &arn,
+		_, err = conn.Tag(&resourcegroups.TagInput{
+			Arn:  aws.String(arn.(string)),
 			Tags: create,
 		})
 

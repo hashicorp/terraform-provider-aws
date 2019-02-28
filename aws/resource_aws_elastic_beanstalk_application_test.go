@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -45,22 +44,6 @@ func testSweepBeanstalkApplications(region string) error {
 	}
 
 	for _, bsa := range resp.Applications {
-		var testOptGroup bool
-		for _, testName := range []string{
-			"terraform-",
-			"tf-test-",
-			"tf_acc_",
-			"tf-acc-",
-		} {
-			if strings.HasPrefix(*bsa.ApplicationName, testName) {
-				testOptGroup = true
-			}
-		}
-
-		if !testOptGroup {
-			continue
-		}
-
 		_, err := beanstalkconn.DeleteApplication(
 			&elasticbeanstalk.DeleteApplicationInput{
 				ApplicationName: bsa.ApplicationName,

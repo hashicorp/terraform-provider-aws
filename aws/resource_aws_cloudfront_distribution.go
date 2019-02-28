@@ -35,11 +35,9 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 				Set:      aliasesHash,
 			},
 			"cache_behavior": {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				Set:           cacheBehaviorHash,
-				ConflictsWith: []string{"ordered_cache_behavior"},
-				Deprecated:    "Use `ordered_cache_behavior` instead",
+				Type:     schema.TypeSet,
+				Optional: true,
+				Removed:  "Use `ordered_cache_behavior` configuration block(s) instead",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"allowed_methods": {
@@ -69,14 +67,12 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 						"forwarded_values": {
 							Type:     schema.TypeSet,
 							Required: true,
-							Set:      forwardedValuesHash,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"cookies": {
 										Type:     schema.TypeSet,
 										Required: true,
-										Set:      cookiePreferenceHash,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
@@ -130,7 +126,6 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 									},
 								},
 							},
-							Set: lambdaFunctionAssociationHash,
 						},
 						"max_ttl": {
 							Type:     schema.TypeInt,
@@ -167,9 +162,8 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 				},
 			},
 			"ordered_cache_behavior": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				ConflictsWith: []string{"cache_behavior"},
+				Type:     schema.TypeList,
+				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"allowed_methods": {
@@ -197,16 +191,14 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 							Optional: true,
 						},
 						"forwarded_values": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Required: true,
-							Set:      forwardedValuesHash,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"cookies": {
-										Type:     schema.TypeSet,
+										Type:     schema.TypeList,
 										Required: true,
-										Set:      cookiePreferenceHash,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
@@ -326,19 +318,18 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 				},
 			},
 			"default_cache_behavior": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Required: true,
-				Set:      defaultCacheBehaviorHash,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"allowed_methods": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"cached_methods": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
@@ -357,16 +348,14 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 							Optional: true,
 						},
 						"forwarded_values": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Required: true,
-							Set:      forwardedValuesHash,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"cookies": {
-										Type:     schema.TypeSet,
+										Type:     schema.TypeList,
 										Required: true,
-										Set:      cookiePreferenceHash,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
@@ -467,9 +456,8 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 				ValidateFunc: validation.StringInSlice([]string{"http1.1", "http2"}, false),
 			},
 			"logging_config": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
-				Set:      loggingConfigHash,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -497,11 +485,9 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"custom_origin_config": {
-							Type:          schema.TypeSet,
-							Optional:      true,
-							ConflictsWith: []string{"origin.s3_origin_config"},
-							Set:           customOriginConfigHash,
-							MaxItems:      1,
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"http_port": {
@@ -527,7 +513,7 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 										Required: true,
 									},
 									"origin_ssl_protocols": {
-										Type:     schema.TypeList,
+										Type:     schema.TypeSet,
 										Required: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
@@ -566,11 +552,9 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 							Optional: true,
 						},
 						"s3_origin_config": {
-							Type:          schema.TypeSet,
-							Optional:      true,
-							ConflictsWith: []string{"origin.custom_origin_config"},
-							Set:           s3OriginConfigHash,
-							MaxItems:      1,
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"origin_access_identity": {
@@ -589,21 +573,19 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 				Default:  "PriceClass_All",
 			},
 			"restrictions": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Required: true,
-				Set:      restrictionsHash,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"geo_restriction": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Required: true,
-							Set:      geoRestrictionHash,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"locations": {
-										Type:     schema.TypeList,
+										Type:     schema.TypeSet,
 										Optional: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
@@ -618,26 +600,25 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 				},
 			},
 			"viewer_certificate": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Required: true,
-				Set:      viewerCertificateHash,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"acm_certificate_arn": {
 							Type:          schema.TypeString,
 							Optional:      true,
-							ConflictsWith: []string{"viewer_certificate.cloudfront_default_certificate", "viewer_certificate.iam_certificate_id"},
+							ConflictsWith: []string{"viewer_certificate.0.cloudfront_default_certificate", "viewer_certificate.0.iam_certificate_id"},
 						},
 						"cloudfront_default_certificate": {
 							Type:          schema.TypeBool,
 							Optional:      true,
-							ConflictsWith: []string{"viewer_certificate.acm_certificate_arn", "viewer_certificate.iam_certificate_id"},
+							ConflictsWith: []string{"viewer_certificate.0.acm_certificate_arn", "viewer_certificate.0.iam_certificate_id"},
 						},
 						"iam_certificate_id": {
 							Type:          schema.TypeString,
 							Optional:      true,
-							ConflictsWith: []string{"viewer_certificate.acm_certificate_arn", "viewer_certificate.cloudfront_default_certificate"},
+							ConflictsWith: []string{"viewer_certificate.0.acm_certificate_arn", "viewer_certificate.0.cloudfront_default_certificate"},
 						},
 						"minimum_protocol_version": {
 							Type:     schema.TypeString,

@@ -15,10 +15,10 @@ for more information.
 ## Example Usage
 
 ```hcl
-resource "aws_emr_cluster" "emr-test-cluster" {
-  name            = "emr-test-arn"
-  release_label   = "emr-4.6.0"
-  applications    = ["Spark"]
+resource "aws_emr_cluster" "cluster" {
+  name          = "emr-test-arn"
+  release_label = "emr-4.6.0"
+  applications  = ["Spark"]
   additional_info = <<EOF
 {
   "instanceAwsClientConfiguration": {
@@ -88,7 +88,7 @@ EOF
   core_instance_type   = "m5.xlarge"
   core_instance_count  = 1
 
-  tags {
+  tags = {
     role = "rolename"
     env  = "env"
   }
@@ -322,6 +322,8 @@ In addition to all arguments above, the following attributes are exported:
 * `visible_to_all_users` - Indicates whether the job flow is visible to all IAM users of the AWS account associated with the job flow.
 * `tags` - The list of tags associated with a cluster.
 
+For any instance_group the id is exported IN `aws_emr_cluster.instance_group.HASHCODE.id`  format, e.g. `aws_emr_cluster.example.instance_group.12345678.id`
+
 ## Example bootable config
 
 **NOTE:** This configuration demonstrates a minimal configuration needed to
@@ -333,7 +335,7 @@ provider "aws" {
   region = "us-west-2"
 }
 
-resource "aws_emr_cluster" "tf-test-cluster" {
+resource "aws_emr_cluster" "cluster" {
   name          = "emr-test-arn"
   release_label = "emr-4.6.0"
   applications  = ["Spark"]
@@ -349,7 +351,7 @@ resource "aws_emr_cluster" "tf-test-cluster" {
   core_instance_type   = "m5.xlarge"
   core_instance_count  = 1
 
-  tags {
+  tags = {
     role     = "rolename"
     dns_zone = "env_zone"
     env      = "env"
@@ -394,16 +396,19 @@ EOF
   service_role = "${aws_iam_role.iam_emr_service_role.arn}"
 }
 
-resource "aws_security_group" "allow_all" {
-  name        = "allow_all"
-  description = "Allow all inbound traffic"
+resource "aws_security_group" "allow_access" {
+  name        = "allow_access"
+  description = "Allow inbound traffic"
   vpc_id      = "${aws_vpc.main.id}"
 
   ingress {
+    # these ports should be locked down
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+
+    # we do not recommend opening your cluster to 0.0.0.0/0
+    cidr_blocks = # add your IP address here
   }
 
   egress {
@@ -419,7 +424,7 @@ resource "aws_security_group" "allow_all" {
     ignore_changes = ["ingress", "egress"]
   }
 
-  tags {
+  tags = {
     name = "emr_test"
   }
 }
@@ -428,7 +433,7 @@ resource "aws_vpc" "main" {
   cidr_block           = "168.31.0.0/16"
   enable_dns_hostnames = true
 
-  tags {
+  tags = {
     name = "emr_test"
   }
 }
@@ -437,7 +442,7 @@ resource "aws_subnet" "main" {
   vpc_id     = "${aws_vpc.main.id}"
   cidr_block = "168.31.0.0/20"
 
-  tags {
+  tags = {
     name = "emr_test"
   }
 }
@@ -621,4 +626,12 @@ resource "aws_iam_role_policy" "iam_emr_profile_policy" {
 }
 EOF
 }
+```
+
+## Import
+
+EMR clusters can be imported using the `id`, e.g.
+
+```
+$ terraform import aws_emr_cluster.cluster j-123456ABCDEF
 ```

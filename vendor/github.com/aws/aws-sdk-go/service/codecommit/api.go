@@ -163,8 +163,7 @@ func (c *CodeCommit) CreateBranchRequest(input *CreateBranchInput) (req *request
 
 	output = &CreateBranchOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(jsonrpc.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -3449,6 +3448,11 @@ func (c *CodeCommit) MergePullRequestByFastForwardRequest(input *MergePullReques
 //   * ErrCodeInvalidCommitIdException "InvalidCommitIdException"
 //   The specified commit ID is not valid.
 //
+//   * ErrCodeRepositoryNotAssociatedWithPullRequestException "RepositoryNotAssociatedWithPullRequestException"
+//   The repository does not contain any pull requests with that pull request
+//   ID. Check to make sure you have provided the correct repository name for
+//   the pull request.
+//
 //   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
 //   A repository name is required but was not specified.
 //
@@ -4044,6 +4048,13 @@ func (c *CodeCommit) PutFileRequest(input *PutFileInput) (req *request.Request, 
 //   can be added using PutFile is 6 MB. For files larger than 6 MB but smaller
 //   than 2 GB, add them using a Git client.
 //
+//   * ErrCodeFolderContentSizeLimitExceededException "FolderContentSizeLimitExceededException"
+//   The specified file is in a folder that exceeds the folder content size limit.
+//   Either save the file in a folder that has less content, or remove files or
+//   subfolders from the folder so it does not exceed the size limit. For more
+//   information about limits in AWS CodeCommit, see AWS CodeCommit User Guide
+//   (http://docs.aws.amazon.com/codecommit/latest/userguide/limits.html).
+//
 //   * ErrCodePathRequiredException "PathRequiredException"
 //   The folderPath for a location cannot be null.
 //
@@ -4115,6 +4126,11 @@ func (c *CodeCommit) PutFileRequest(input *PutFileInput) (req *request.Request, 
 //   has the same name as a file that already exists in this repository. Either
 //   provide a different name for the file, or specify a different path for the
 //   file.
+//
+//   * ErrCodeFilePathConflictsWithSubmodulePathException "FilePathConflictsWithSubmodulePathException"
+//   The specified file path or folder has the same path as a submodule in this
+//   repository. Either provide a different name for the file, or save the file
+//   in a directory that does not conflict with the submodule path.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/PutFile
 func (c *CodeCommit) PutFile(input *PutFileInput) (*PutFileOutput, error) {
@@ -4581,8 +4597,7 @@ func (c *CodeCommit) UpdateDefaultBranchRequest(input *UpdateDefaultBranchInput)
 
 	output = &UpdateDefaultBranchOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(jsonrpc.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -5007,8 +5022,7 @@ func (c *CodeCommit) UpdateRepositoryDescriptionRequest(input *UpdateRepositoryD
 
 	output = &UpdateRepositoryDescriptionOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(jsonrpc.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -5122,8 +5136,7 @@ func (c *CodeCommit) UpdateRepositoryNameRequest(input *UpdateRepositoryNameInpu
 
 	output = &UpdateRepositoryNameOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(jsonrpc.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 

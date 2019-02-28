@@ -81,7 +81,7 @@ resource "aws_autoscaling_group" "bar" {
   max_size           = 1
   min_size           = 1
 
-  launch_template = {
+  launch_template {
     id      = "${aws_launch_template.foobar.id}"
     version = "$$Latest"
   }
@@ -183,7 +183,7 @@ The following arguments are supported:
 * `default_cooldown` - (Optional) The amount of time, in seconds, after a scaling activity completes before another scaling activity can start.
 * `launch_configuration` - (Optional) The name of the launch configuration to use.
 * `launch_template` - (Optional) Nested argument with Launch template specification to use to launch instances. Defined below.
-* `mixed_instance_policy` (Optional) Configuration block containing settings to define launch targets for Auto Scaling groups. Defined below.
+* `mixed_instances_policy` (Optional) Configuration block containing settings to define launch targets for Auto Scaling groups. Defined below.
 * `initial_lifecycle_hook` - (Optional) One or more
   [Lifecycle Hooks](http://docs.aws.amazon.com/autoscaling/latest/userguide/lifecycle-hooks.html)
   to attach to the autoscaling group **before** instances are launched. The
@@ -242,30 +242,30 @@ The top-level `launch_template` block supports the following:
 * `name` - (Optional) The name of the launch template. Conflicts with `id`.
 * `version` - (Optional) Template version. Can be version number, `$Latest`, or `$Default`. (Default: `$Default`).
 
-### mixed_instance_policy
+### mixed_instances_policy
 
 * `instances_distribution` - (Optional) Nested argument containing settings on how to mix on-demand and Spot instances in the Auto Scaling group. Defined below.
-* `launch_template` - (Optional) Nested argument containing launch template settings along with the overrides to specify multiple instance types. Defined below.
+* `launch_template` - (Required) Nested argument containing launch template settings along with the overrides to specify multiple instance types. Defined below.
 
-#### mixed_instance_policy instances_distribution
+#### mixed_instances_policy instances_distribution
 
 This configuration block supports the following:
 
-* `on_demand_allocation_strategy` - (Optional) Strategy to use when launching on-demand instances. Valid values: `prioritized`. Default: `prioritzed`.
+* `on_demand_allocation_strategy` - (Optional) Strategy to use when launching on-demand instances. Valid values: `prioritized`. Default: `prioritized`.
 * `on_demand_base_capacity` - (Optional) Absolute minimum amount of desired capacity that must be fulfilled by on-demand instances. Default: `0`.
 * `on_demand_percentage_above_base_capacity` - (Optional) Percentage split between on-demand and Spot instances above the base on-demand capacity. Default: `100`.
 * `spot_allocation_strategy` - (Optional) How to allocate capacity across the Spot pools. Valid values: `lowest-price`. Default: `lowest-price`.
 * `spot_instance_pools` - (Optional) Number of Spot pools per availability zone to allocate capacity. EC2 Auto Scaling selects the cheapest Spot pools and evenly allocates Spot capacity across the number of Spot pools that you specify. Default: `1`.
 * `spot_max_price` - (Optional) Maximum price per unit hour that the user is willing to pay for the Spot instances. Default: on-demand price.
 
-#### mixed_instance_policy launch_template
+#### mixed_instances_policy launch_template
 
 This configuration block supports the following:
 
-* `launch_template_specification` - (Optional) Nested argument defines the Launch Template. Defined below.
-* `overrides` - (Optional) List of nested arguments provides the ability to specify multiple instance types. This will override the same parameter in the launch template. For on-demand instances, Auto Scaling considers the order of preference of instance types to launch based on the order specified in the overrides list. Defined below.
+* `launch_template_specification` - (Required) Nested argument defines the Launch Template. Defined below.
+* `override` - (Optional) List of nested arguments provides the ability to specify multiple instance types. This will override the same parameter in the launch template. For on-demand instances, Auto Scaling considers the order of preference of instance types to launch based on the order specified in the overrides list. Defined below.
 
-##### mixed_instance_policy launch_template launch_template_specification
+##### mixed_instances_policy launch_template launch_template_specification
 
 ~> **NOTE:** Either `launch_template_id` or `launch_template_name` must be specified.
 
@@ -275,7 +275,7 @@ This configuration block supports the following:
 * `launch_template_name` - (Optional) The name of the launch template. Conflicts with `launch_template_id`.
 * `version` - (Optional) Template version. Can be version number, `$Latest`, or `$Default`. (Default: `$Default`).
 
-##### mixed_instance_policy launch_template overrides
+##### mixed_instances_policy launch_template override
 
 This configuration block supports the following:
 

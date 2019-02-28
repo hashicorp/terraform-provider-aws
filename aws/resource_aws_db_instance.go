@@ -408,6 +408,8 @@ func resourceAwsDbInstance() *schema.Resource {
 						"listener",
 						"slowquery",
 						"trace",
+						"postgresql",
+						"upgrade",
 					}, false),
 				},
 			},
@@ -816,7 +818,8 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		if attr, ok := d.GetOk("iops"); ok {
-			opts.Iops = aws.Int64(int64(attr.(int)))
+			modifyDbInstanceInput.Iops = aws.Int64(int64(attr.(int)))
+			requiresModifyDbInstance = true
 		}
 
 		if attr, ok := d.GetOk("license_model"); ok {
@@ -876,7 +879,8 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		if attr, ok := d.GetOk("storage_type"); ok {
-			opts.StorageType = aws.String(attr.(string))
+			modifyDbInstanceInput.StorageType = aws.String(attr.(string))
+			requiresModifyDbInstance = true
 		}
 
 		if attr, ok := d.GetOk("tde_credential_arn"); ok {
@@ -1258,7 +1262,7 @@ func resourceAwsDbInstanceDelete(d *schema.ResourceData, meta interface{}) error
 	skipFinalSnapshot := d.Get("skip_final_snapshot").(bool)
 	opts.SkipFinalSnapshot = aws.Bool(skipFinalSnapshot)
 
-	if skipFinalSnapshot == false {
+	if !skipFinalSnapshot {
 		if name, present := d.GetOk("final_snapshot_identifier"); present {
 			opts.FinalDBSnapshotIdentifier = aws.String(name.(string))
 		} else {
@@ -1612,6 +1616,7 @@ func diffCloudwatchLogsExportConfiguration(old, new []interface{}) ([]interface{
 var resourceAwsDbInstanceCreatePendingStates = []string{
 	"backing-up",
 	"configuring-enhanced-monitoring",
+	"configuring-iam-database-auth",
 	"configuring-log-exports",
 	"creating",
 	"maintenance",
@@ -1642,6 +1647,7 @@ var resourceAwsDbInstanceDeletePendingStates = []string{
 var resourceAwsDbInstanceUpdatePendingStates = []string{
 	"backing-up",
 	"configuring-enhanced-monitoring",
+	"configuring-iam-database-auth",
 	"configuring-log-exports",
 	"creating",
 	"maintenance",

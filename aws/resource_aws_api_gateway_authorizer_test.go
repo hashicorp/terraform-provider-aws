@@ -404,7 +404,7 @@ resource "aws_lambda_function" "authorizer" {
   function_name = "%s"
   role = "${aws_iam_role.iam_for_lambda.arn}"
   handler = "exports.example"
-  runtime = "nodejs4.3"
+  runtime = "nodejs8.10"
 }
 `, apiGatewayName, apiGatewayName, apiGatewayName, lambdaName)
 }
@@ -447,7 +447,7 @@ resource "aws_api_gateway_authorizer" "acctest" {
   name = "%s-cognito"
   type = "COGNITO_USER_POOLS"
   rest_api_id = "${aws_api_gateway_rest_api.acctest.id}"
-  provider_arns = ["${aws_cognito_user_pool.acctest.*.arn}"]
+  provider_arns = ["${aws_cognito_user_pool.acctest.*.arn[0]}", "${aws_cognito_user_pool.acctest.*.arn[1]}"]
 }
 `, apiGatewayName, cognitoName, authorizerName)
 }
@@ -467,7 +467,7 @@ resource "aws_api_gateway_authorizer" "acctest" {
   name = "%s-cognito-update"
   type = "COGNITO_USER_POOLS"
   rest_api_id = "${aws_api_gateway_rest_api.acctest.id}"
-  provider_arns = ["${aws_cognito_user_pool.acctest_update.*.arn}"]
+  provider_arns = ["${aws_cognito_user_pool.acctest_update.*.arn[0]}", "${aws_cognito_user_pool.acctest_update.*.arn[1]}", "${aws_cognito_user_pool.acctest_update.*.arn[2]}"]
 }
 `, apiGatewayName, cognitoName, authorizerName)
 }

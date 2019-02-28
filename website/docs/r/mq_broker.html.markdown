@@ -67,6 +67,7 @@ The following arguments are supported:
 * `maintenance_window_start_time` - (Optional) Maintenance window start time. See below.
 * `logs` - (Optional) Logging configuration of the broker. See below.
 * `user` - (Optional) The list of all ActiveMQ usernames for the specified broker. See below.
+* `tags` - (Optional) A mapping of tags to assign to the resource.
 
 ### Nested Fields
 
@@ -80,6 +81,8 @@ The following arguments are supported:
 * `day_of_week` - (Required) The day of the week. e.g. `MONDAY`, `TUESDAY`, or `WEDNESDAY`
 * `time_of_day` - (Required) The time, in 24-hour format. e.g. `02:00`
 * `time_zone` - (Required) The time zone, UTC by default, in either the Country/City format, or the UTC offset format. e.g. `CET`
+
+~> **NOTE:** AWS currently does not support updating the maintenance window beyond resource creation.
 
 ### `logs`
 

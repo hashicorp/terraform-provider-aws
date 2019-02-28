@@ -2,11 +2,9 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"testing"
 	"time"
-
-	"log"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/gamelift"
@@ -49,10 +47,6 @@ func testSweepGameliftGameSessionQueue(region string) error {
 	log.Printf("[INFO] Found %d Gamelift Session Queue", len(out.GameSessionQueues))
 
 	for _, queue := range out.GameSessionQueues {
-		if !strings.HasPrefix(*queue.Name, testAccGameliftGameSessionQueuePrefix) {
-			continue
-		}
-
 		log.Printf("[INFO] Deleting Gamelift Session Queue %q", *queue.Name)
 		_, err := conn.DeleteGameSessionQueue(&gamelift.DeleteGameSessionQueueInput{
 			Name: aws.String(*queue.Name),

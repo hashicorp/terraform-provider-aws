@@ -38,17 +38,7 @@ func testSweepVPCs(region string) error {
 	}
 	conn := client.(*AWSClient).ec2conn
 
-	req := &ec2.DescribeVpcsInput{
-		Filters: []*ec2.Filter{
-			{
-				Name: aws.String("tag-value"),
-				Values: []*string{
-					aws.String("terraform-testacc-*"),
-					aws.String("tf-acc-test-*"),
-				},
-			},
-		},
-	}
+	req := &ec2.DescribeVpcsInput{}
 	resp, err := conn.DescribeVpcs(req)
 	if err != nil {
 		if testSweepSkipSweepError(err) {
@@ -64,6 +54,11 @@ func testSweepVPCs(region string) error {
 	}
 
 	for _, vpc := range resp.Vpcs {
+		if aws.BoolValue(vpc.IsDefault) {
+			log.Printf("[DEBUG] Skipping Default VPC: %s", aws.StringValue(vpc.VpcId))
+			continue
+		}
+
 		input := &ec2.DeleteVpcInput{
 			VpcId: vpc.VpcId,
 		}
@@ -112,6 +107,7 @@ func TestAccAWSVpc_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ipv6_association_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block", ""),
 					resource.TestMatchResourceAttr(resourceName, "main_route_table_id", regexp.MustCompile(`^rtb-.+`)),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 				),
 			},
 			{
@@ -478,7 +474,7 @@ func TestAccAWSVpc_classiclinkDnsSupportOptionSet(t *testing.T) {
 const testAccVpcConfig = `
 resource "aws_vpc" "test" {
 	cidr_block = "10.1.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-vpc"
 	}
 }
@@ -490,7 +486,7 @@ resource "aws_vpc" "test" {
   assign_generated_ipv6_cidr_block = %t
   cidr_block                       = "10.1.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-vpc-ipv6"
   }
 }
@@ -501,7 +497,7 @@ const testAccVpcConfigUpdate = `
 resource "aws_vpc" "test" {
 	cidr_block = "10.1.0.0/16"
 	enable_dns_hostnames = true
-	tags {
+	tags = {
 		Name = "terraform-testacc-vpc"
 	}
 }
@@ -511,7 +507,7 @@ const testAccVpcConfigTags = `
 resource "aws_vpc" "test" {
 	cidr_block = "10.1.0.0/16"
 
-	tags {
+	tags = {
 		foo = "bar"
 		Name = "terraform-testacc-vpc-tags"
 	}
@@ -522,7 +518,7 @@ const testAccVpcConfigTagsUpdate = `
 resource "aws_vpc" "test" {
 	cidr_block = "10.1.0.0/16"
 
-	tags {
+	tags = {
 		bar = "baz"
 		Name = "terraform-testacc-vpc-tags"
 	}
@@ -532,7 +528,7 @@ const testAccVpcDedicatedConfig = `
 resource "aws_vpc" "test" {
 	instance_tenancy = "dedicated"
 	cidr_block = "10.1.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-vpc-dedicated"
 	}
 }
@@ -543,7 +539,7 @@ resource "aws_vpc" "test" {
 	cidr_block = "10.2.0.0/16"
 	enable_dns_hostnames = true
 	enable_dns_support = true
-	tags {
+	tags = {
 		Name = "terraform-testacc-vpc-both-dns-opts"
 	}
 }
@@ -553,7 +549,7 @@ const testAccVpcConfig_DisabledDnsSupport = `
 resource "aws_vpc" "test" {
 	cidr_block = "10.2.0.0/16"
 	enable_dns_support = false
-	tags {
+	tags = {
 		Name = "terraform-testacc-vpc-disabled-dns-support"
 	}
 }
@@ -563,7 +559,7 @@ const testAccVpcConfig_ClassiclinkOption = `
 resource "aws_vpc" "test" {
 	cidr_block = "172.2.0.0/16"
 	enable_classiclink = true
-	tags {
+	tags = {
 		Name = "terraform-testacc-vpc-classic-link"
 	}
 }
@@ -574,7 +570,7 @@ resource "aws_vpc" "test" {
 	cidr_block = "172.2.0.0/16"
 	enable_classiclink = true
 	enable_classiclink_dns_support = true
-	tags {
+	tags = {
 		Name = "terraform-testacc-vpc-classic-link-support"
 	}
 }

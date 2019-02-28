@@ -98,8 +98,9 @@ func (c *EFS) CreateFileSystemRequest(input *CreateFileSystemInput) (req *reques
 // After the file system is fully created, Amazon EFS sets its lifecycle state
 // to available, at which point you can create one or more mount targets for
 // the file system in your VPC. For more information, see CreateMountTarget.
-// You mount your Amazon EFS file system on an EC2 instances in your VPC via
-// the mount target. For more information, see Amazon EFS: How it Works (http://docs.aws.amazon.com/efs/latest/ug/how-it-works.html).
+// You mount your Amazon EFS file system on an EC2 instances in your VPC by
+// using the mount target. For more information, see Amazon EFS: How it Works
+// (http://docs.aws.amazon.com/efs/latest/ug/how-it-works.html).
 //
 // This operation requires permissions for the elasticfilesystem:CreateFileSystem
 // action.
@@ -205,7 +206,7 @@ func (c *EFS) CreateMountTargetRequest(input *CreateMountTargetInput) (req *requ
 // CreateMountTarget API operation for Amazon Elastic File System.
 //
 // Creates a mount target for a file system. You can then mount the file system
-// on EC2 instances via the mount target.
+// on EC2 instances by using the mount target.
 //
 // You can create one mount target in each Availability Zone in your VPC. All
 // EC2 instances in a VPC within a given Availability Zone share a single mount
@@ -231,9 +232,9 @@ func (c *EFS) CreateMountTargetRequest(input *CreateMountTargetInput) (req *requ
 // a MountTargetId and an IpAddress. You use this IP address when mounting the
 // file system in an EC2 instance. You can also use the mount target's DNS name
 // when mounting the file system. The EC2 instance on which you mount the file
-// system via the mount target can resolve the mount target's DNS name to its
-// IP address. For more information, see How it Works: Implementation Overview
-// (http://docs.aws.amazon.com/efs/latest/ug/how-it-works.html#how-it-works-implementation).
+// system by using the mount target can resolve the mount target's DNS name
+// to its IP address. For more information, see How it Works: Implementation
+// Overview (http://docs.aws.amazon.com/efs/latest/ug/how-it-works.html#how-it-works-implementation).
 //
 // Note that you can create mount targets for a file system in only one VPC,
 // and there can be only one mount target per Availability Zone. That is, if
@@ -278,7 +279,7 @@ func (c *EFS) CreateMountTargetRequest(input *CreateMountTargetInput) (req *requ
 // target creation status by calling the DescribeMountTargets operation, which
 // among other things returns the mount target state.
 //
-// We recommend you create a mount target in each of the Availability Zones.
+// We recommend that you create a mount target in each of the Availability Zones.
 // There are cost considerations for using a file system in an Availability
 // Zone through a mount target created in another Availability Zone. For more
 // information, see Amazon EFS (http://aws.amazon.com/efs/). In addition, by
@@ -416,8 +417,7 @@ func (c *EFS) CreateTagsRequest(input *CreateTagsInput) (req *request.Request, o
 
 	output = &CreateTagsOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(restjson.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -511,8 +511,7 @@ func (c *EFS) DeleteFileSystemRequest(input *DeleteFileSystemInput) (req *reques
 
 	output = &DeleteFileSystemOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(restjson.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -618,8 +617,7 @@ func (c *EFS) DeleteMountTargetRequest(input *DeleteMountTargetInput) (req *requ
 
 	output = &DeleteMountTargetOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(restjson.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -627,14 +625,14 @@ func (c *EFS) DeleteMountTargetRequest(input *DeleteMountTargetInput) (req *requ
 //
 // Deletes the specified mount target.
 //
-// This operation forcibly breaks any mounts of the file system via the mount
-// target that is being deleted, which might disrupt instances or applications
+// This operation forcibly breaks any mounts of the file system by using the
+// mount target that is being deleted, which might disrupt instances or applications
 // using those mounts. To avoid applications getting cut off abruptly, you might
 // consider unmounting any mounts of the mount target, if feasible. The operation
-// also deletes the associated network interface. Uncommitted writes may be
+// also deletes the associated network interface. Uncommitted writes might be
 // lost, but breaking a mount target using this operation does not corrupt the
 // file system itself. The file system you created remains. You can mount an
-// EC2 instance in your VPC via another mount target.
+// EC2 instance in your VPC by using another mount target.
 //
 // This operation requires permissions for the following action on the file
 // system:
@@ -735,8 +733,7 @@ func (c *EFS) DeleteTagsRequest(input *DeleteTagsInput) (req *request.Request, o
 
 	output = &DeleteTagsOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(restjson.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -843,18 +840,16 @@ func (c *EFS) DescribeFileSystemsRequest(input *DescribeFileSystemsInput) (req *
 //
 // When retrieving all file system descriptions, you can optionally specify
 // the MaxItems parameter to limit the number of descriptions in a response.
-// If more file system descriptions remain, Amazon EFS returns a NextMarker,
-// an opaque token, in the response. In this case, you should send a subsequent
-// request with the Marker request parameter set to the value of NextMarker.
+// Currently, this number is automatically set to 10. If more file system descriptions
+// remain, Amazon EFS returns a NextMarker, an opaque token, in the response.
+// In this case, you should send a subsequent request with the Marker request
+// parameter set to the value of NextMarker.
 //
 // To retrieve a list of your file system descriptions, this operation is used
 // in an iterative process, where DescribeFileSystems is called first without
 // the Marker and then the operation continues to call it with the Marker parameter
 // set to the value of the NextMarker from the previous response until the response
 // has no NextMarker.
-//
-// The implementation may return fewer than MaxItems file system descriptions
-// while still including a NextMarker value.
 //
 // The order of file systems returned in the response of one DescribeFileSystems
 // call and the order of file systems returned across the responses of a multi-call
@@ -899,6 +894,100 @@ func (c *EFS) DescribeFileSystems(input *DescribeFileSystemsInput) (*DescribeFil
 // for more information on using Contexts.
 func (c *EFS) DescribeFileSystemsWithContext(ctx aws.Context, input *DescribeFileSystemsInput, opts ...request.Option) (*DescribeFileSystemsOutput, error) {
 	req, out := c.DescribeFileSystemsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeLifecycleConfiguration = "DescribeLifecycleConfiguration"
+
+// DescribeLifecycleConfigurationRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeLifecycleConfiguration operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeLifecycleConfiguration for more information on using the DescribeLifecycleConfiguration
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeLifecycleConfigurationRequest method.
+//    req, resp := client.DescribeLifecycleConfigurationRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticfilesystem-2015-02-01/DescribeLifecycleConfiguration
+func (c *EFS) DescribeLifecycleConfigurationRequest(input *DescribeLifecycleConfigurationInput) (req *request.Request, output *DescribeLifecycleConfigurationOutput) {
+	op := &request.Operation{
+		Name:       opDescribeLifecycleConfiguration,
+		HTTPMethod: "GET",
+		HTTPPath:   "/2015-02-01/file-systems/{FileSystemId}/lifecycle-configuration",
+	}
+
+	if input == nil {
+		input = &DescribeLifecycleConfigurationInput{}
+	}
+
+	output = &DescribeLifecycleConfigurationOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeLifecycleConfiguration API operation for Amazon Elastic File System.
+//
+// Returns the current LifecycleConfiguration object for the specified Amazon
+// EFS file system. EFS lifecycle management uses the LifecycleConfiguration
+// to identify which files to move to the EFS Infrequent Access (IA) storage
+// class. For a file system without a LifecycleConfiguration, the call returns
+// an empty array in the response.
+//
+// This operation requires permissions for the elasticfilesystem:DescribeLifecycleConfiguration
+// operation.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic File System's
+// API operation DescribeLifecycleConfiguration for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInternalServerError "InternalServerError"
+//   Returned if an error occurred on the server side.
+//
+//   * ErrCodeBadRequest "BadRequest"
+//   Returned if the request is malformed or contains an error such as an invalid
+//   parameter value or a missing required parameter.
+//
+//   * ErrCodeFileSystemNotFound "FileSystemNotFound"
+//   Returned if the specified FileSystemId value doesn't exist in the requester's
+//   AWS account.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticfilesystem-2015-02-01/DescribeLifecycleConfiguration
+func (c *EFS) DescribeLifecycleConfiguration(input *DescribeLifecycleConfigurationInput) (*DescribeLifecycleConfigurationOutput, error) {
+	req, out := c.DescribeLifecycleConfigurationRequest(input)
+	return out, req.Send()
+}
+
+// DescribeLifecycleConfigurationWithContext is the same as DescribeLifecycleConfiguration with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeLifecycleConfiguration for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EFS) DescribeLifecycleConfigurationWithContext(ctx aws.Context, input *DescribeLifecycleConfigurationInput, opts ...request.Option) (*DescribeLifecycleConfigurationOutput, error) {
+	req, out := c.DescribeLifecycleConfigurationRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -1232,8 +1321,7 @@ func (c *EFS) ModifyMountTargetSecurityGroupsRequest(input *ModifyMountTargetSec
 
 	output = &ModifyMountTargetSecurityGroupsOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(restjson.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -1303,6 +1391,125 @@ func (c *EFS) ModifyMountTargetSecurityGroups(input *ModifyMountTargetSecurityGr
 // for more information on using Contexts.
 func (c *EFS) ModifyMountTargetSecurityGroupsWithContext(ctx aws.Context, input *ModifyMountTargetSecurityGroupsInput, opts ...request.Option) (*ModifyMountTargetSecurityGroupsOutput, error) {
 	req, out := c.ModifyMountTargetSecurityGroupsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opPutLifecycleConfiguration = "PutLifecycleConfiguration"
+
+// PutLifecycleConfigurationRequest generates a "aws/request.Request" representing the
+// client's request for the PutLifecycleConfiguration operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See PutLifecycleConfiguration for more information on using the PutLifecycleConfiguration
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the PutLifecycleConfigurationRequest method.
+//    req, resp := client.PutLifecycleConfigurationRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticfilesystem-2015-02-01/PutLifecycleConfiguration
+func (c *EFS) PutLifecycleConfigurationRequest(input *PutLifecycleConfigurationInput) (req *request.Request, output *PutLifecycleConfigurationOutput) {
+	op := &request.Operation{
+		Name:       opPutLifecycleConfiguration,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/2015-02-01/file-systems/{FileSystemId}/lifecycle-configuration",
+	}
+
+	if input == nil {
+		input = &PutLifecycleConfigurationInput{}
+	}
+
+	output = &PutLifecycleConfigurationOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// PutLifecycleConfiguration API operation for Amazon Elastic File System.
+//
+// Enables lifecycle management by creating a new LifecycleConfiguration object.
+// A LifecycleConfiguration defines when files in an Amazon EFS file system
+// are automatically transitioned to the lower-cost EFS Infrequent Access (IA)
+// storage class. A LifecycleConfiguration applies to all files in a file system.
+//
+// Each Amazon EFS file system supports one lifecycle configuration, which applies
+// to all files in the file system. If a LifecycleConfiguration already exists
+// for the specified file system, a PutLifecycleConfiguration call modifies
+// the existing configuration. A PutLifecycleConfiguration call with an empty
+// LifecyclePolicies array in the request body deletes any existing LifecycleConfiguration
+// and disables lifecycle management.
+//
+// You can enable lifecycle management only for EFS file systems created after
+// the release of EFS infrequent access.
+//
+// In the request, specify the following:
+//
+//    * The ID for the file system for which you are creating a lifecycle management
+//    configuration.
+//
+//    * A LifecyclePolicies array of LifecyclePolicy objects that define when
+//    files are moved to the IA storage class. The array can contain only one
+//    "TransitionToIA": "AFTER_30_DAYS"LifecyclePolicy object.
+//
+// This operation requires permissions for the elasticfilesystem:PutLifecycleConfiguration
+// operation.
+//
+// To apply a LifecycleConfiguration object to an encrypted file system, you
+// need the same AWS Key Management Service (AWS KMS) permissions as when you
+// created the encrypted file system.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic File System's
+// API operation PutLifecycleConfiguration for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequest "BadRequest"
+//   Returned if the request is malformed or contains an error such as an invalid
+//   parameter value or a missing required parameter.
+//
+//   * ErrCodeInternalServerError "InternalServerError"
+//   Returned if an error occurred on the server side.
+//
+//   * ErrCodeFileSystemNotFound "FileSystemNotFound"
+//   Returned if the specified FileSystemId value doesn't exist in the requester's
+//   AWS account.
+//
+//   * ErrCodeIncorrectFileSystemLifeCycleState "IncorrectFileSystemLifeCycleState"
+//   Returned if the file system's lifecycle state is not "available".
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticfilesystem-2015-02-01/PutLifecycleConfiguration
+func (c *EFS) PutLifecycleConfiguration(input *PutLifecycleConfigurationInput) (*PutLifecycleConfigurationOutput, error) {
+	req, out := c.PutLifecycleConfigurationRequest(input)
+	return out, req.Send()
+}
+
+// PutLifecycleConfigurationWithContext is the same as PutLifecycleConfiguration with the addition of
+// the ability to pass a context and additional request options.
+//
+// See PutLifecycleConfiguration for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EFS) PutLifecycleConfigurationWithContext(ctx aws.Context, input *PutLifecycleConfigurationInput, opts ...request.Option) (*PutLifecycleConfigurationOutput, error) {
+	req, out := c.PutLifecycleConfigurationRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -1637,6 +1844,9 @@ func (s *CreateTagsInput) Validate() error {
 	if s.FileSystemId == nil {
 		invalidParams.Add(request.NewErrParamRequired("FileSystemId"))
 	}
+	if s.FileSystemId != nil && len(*s.FileSystemId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("FileSystemId", 1))
+	}
 	if s.Tags == nil {
 		invalidParams.Add(request.NewErrParamRequired("Tags"))
 	}
@@ -1708,6 +1918,9 @@ func (s *DeleteFileSystemInput) Validate() error {
 	if s.FileSystemId == nil {
 		invalidParams.Add(request.NewErrParamRequired("FileSystemId"))
 	}
+	if s.FileSystemId != nil && len(*s.FileSystemId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("FileSystemId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -1759,6 +1972,9 @@ func (s *DeleteMountTargetInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DeleteMountTargetInput"}
 	if s.MountTargetId == nil {
 		invalidParams.Add(request.NewErrParamRequired("MountTargetId"))
+	}
+	if s.MountTargetId != nil && len(*s.MountTargetId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("MountTargetId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -1817,6 +2033,9 @@ func (s *DeleteTagsInput) Validate() error {
 	if s.FileSystemId == nil {
 		invalidParams.Add(request.NewErrParamRequired("FileSystemId"))
 	}
+	if s.FileSystemId != nil && len(*s.FileSystemId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("FileSystemId", 1))
+	}
 	if s.TagKeys == nil {
 		invalidParams.Add(request.NewErrParamRequired("TagKeys"))
 	}
@@ -1870,10 +2089,7 @@ type DescribeFileSystemsInput struct {
 	Marker *string `location:"querystring" locationName:"Marker" type:"string"`
 
 	// (Optional) Specifies the maximum number of file systems to return in the
-	// response (integer). This parameter value must be greater than 0. The number
-	// of items that Amazon EFS returns is the minimum of the MaxItems parameter
-	// specified in the request and the service's internal maximum number of items
-	// per page.
+	// response (integer). Currently, this number is automatically set to 10.
 	MaxItems *int64 `location:"querystring" locationName:"MaxItems" min:"1" type:"integer"`
 }
 
@@ -1969,6 +2185,72 @@ func (s *DescribeFileSystemsOutput) SetNextMarker(v string) *DescribeFileSystems
 	return s
 }
 
+type DescribeLifecycleConfigurationInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the file system whose LifecycleConfiguration object you want to
+	// retrieve (String).
+	//
+	// FileSystemId is a required field
+	FileSystemId *string `location:"uri" locationName:"FileSystemId" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeLifecycleConfigurationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeLifecycleConfigurationInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeLifecycleConfigurationInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeLifecycleConfigurationInput"}
+	if s.FileSystemId == nil {
+		invalidParams.Add(request.NewErrParamRequired("FileSystemId"))
+	}
+	if s.FileSystemId != nil && len(*s.FileSystemId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("FileSystemId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetFileSystemId sets the FileSystemId field's value.
+func (s *DescribeLifecycleConfigurationInput) SetFileSystemId(v string) *DescribeLifecycleConfigurationInput {
+	s.FileSystemId = &v
+	return s
+}
+
+type DescribeLifecycleConfigurationOutput struct {
+	_ struct{} `type:"structure"`
+
+	// An array of lifecycle management policies. Currently, EFS supports a maximum
+	// of one policy per file system.
+	LifecyclePolicies []*LifecyclePolicy `type:"list"`
+}
+
+// String returns the string representation
+func (s DescribeLifecycleConfigurationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeLifecycleConfigurationOutput) GoString() string {
+	return s.String()
+}
+
+// SetLifecyclePolicies sets the LifecyclePolicies field's value.
+func (s *DescribeLifecycleConfigurationOutput) SetLifecyclePolicies(v []*LifecyclePolicy) *DescribeLifecycleConfigurationOutput {
+	s.LifecyclePolicies = v
+	return s
+}
+
 type DescribeMountTargetSecurityGroupsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -1993,6 +2275,9 @@ func (s *DescribeMountTargetSecurityGroupsInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DescribeMountTargetSecurityGroupsInput"}
 	if s.MountTargetId == nil {
 		invalidParams.Add(request.NewErrParamRequired("MountTargetId"))
+	}
+	if s.MountTargetId != nil && len(*s.MountTargetId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("MountTargetId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -2044,8 +2329,8 @@ type DescribeMountTargetsInput struct {
 	// the previous returning call left off.
 	Marker *string `location:"querystring" locationName:"Marker" type:"string"`
 
-	// (Optional) Maximum number of mount targets to return in the response. It
-	// must be an integer with a value greater than zero.
+	// (Optional) Maximum number of mount targets to return in the response. Currently,
+	// this number is automatically set to 10.
 	MaxItems *int64 `location:"querystring" locationName:"MaxItems" min:"1" type:"integer"`
 
 	// (Optional) ID of the mount target that you want to have described (String).
@@ -2159,7 +2444,7 @@ type DescribeTagsInput struct {
 	Marker *string `location:"querystring" locationName:"Marker" type:"string"`
 
 	// (Optional) Maximum number of file system tags to return in the response.
-	// It must be an integer with a value greater than zero.
+	// Currently, this number is automatically set to 10.
 	MaxItems *int64 `location:"querystring" locationName:"MaxItems" min:"1" type:"integer"`
 }
 
@@ -2178,6 +2463,9 @@ func (s *DescribeTagsInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DescribeTagsInput"}
 	if s.FileSystemId == nil {
 		invalidParams.Add(request.NewErrParamRequired("FileSystemId"))
+	}
+	if s.FileSystemId != nil && len(*s.FileSystemId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("FileSystemId", 1))
 	}
 	if s.MaxItems != nil && *s.MaxItems < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("MaxItems", 1))
@@ -2441,6 +2729,14 @@ type FileSystemSize struct {
 	//
 	// Value is a required field
 	Value *int64 `type:"long" required:"true"`
+
+	// The latest known metered size (in bytes) of data stored in the Infrequent
+	// Access storage class.
+	ValueInIA *int64 `type:"long"`
+
+	// The latest known metered size (in bytes) of data stored in the Standard storage
+	// class.
+	ValueInStandard *int64 `type:"long"`
 }
 
 // String returns the string representation
@@ -2462,6 +2758,49 @@ func (s *FileSystemSize) SetTimestamp(v time.Time) *FileSystemSize {
 // SetValue sets the Value field's value.
 func (s *FileSystemSize) SetValue(v int64) *FileSystemSize {
 	s.Value = &v
+	return s
+}
+
+// SetValueInIA sets the ValueInIA field's value.
+func (s *FileSystemSize) SetValueInIA(v int64) *FileSystemSize {
+	s.ValueInIA = &v
+	return s
+}
+
+// SetValueInStandard sets the ValueInStandard field's value.
+func (s *FileSystemSize) SetValueInStandard(v int64) *FileSystemSize {
+	s.ValueInStandard = &v
+	return s
+}
+
+// Describes a policy used by EFS lifecycle management to transition files to
+// the Infrequent Access (IA) storage class.
+type LifecyclePolicy struct {
+	_ struct{} `type:"structure"`
+
+	// A value that indicates how long it takes to transition to the IA storage
+	// class. Currently, the only possible value is AFTER_30_DAYS.
+	//
+	// AFTER_30_DAYS indicates files that have not been read from or written to
+	// for 30 days are transitioned from the Standard storage class to the IA storage
+	// class. Metadata operations such as listing the contents of a directory don't
+	// count as a file access event.
+	TransitionToIA *string `type:"string" enum:"TransitionToIARules"`
+}
+
+// String returns the string representation
+func (s LifecyclePolicy) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LifecyclePolicy) GoString() string {
+	return s.String()
+}
+
+// SetTransitionToIA sets the TransitionToIA field's value.
+func (s *LifecyclePolicy) SetTransitionToIA(v string) *LifecyclePolicy {
+	s.TransitionToIA = &v
 	return s
 }
 
@@ -2492,6 +2831,9 @@ func (s *ModifyMountTargetSecurityGroupsInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "ModifyMountTargetSecurityGroupsInput"}
 	if s.MountTargetId == nil {
 		invalidParams.Add(request.NewErrParamRequired("MountTargetId"))
+	}
+	if s.MountTargetId != nil && len(*s.MountTargetId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("MountTargetId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -2535,7 +2877,7 @@ type MountTargetDescription struct {
 	// FileSystemId is a required field
 	FileSystemId *string `type:"string" required:"true"`
 
-	// Address at which the file system may be mounted via the mount target.
+	// Address at which the file system can be mounted by using the mount target.
 	IpAddress *string `type:"string"`
 
 	// Lifecycle state of the mount target.
@@ -2613,8 +2955,92 @@ func (s *MountTargetDescription) SetSubnetId(v string) *MountTargetDescription {
 	return s
 }
 
-// A tag is a key-value pair. Allowed characters: letters, whitespace, and numbers,
-// representable in UTF-8, and the following characters: + - = . _ : /
+type PutLifecycleConfigurationInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the file system for which you are creating the LifecycleConfiguration
+	// object (String).
+	//
+	// FileSystemId is a required field
+	FileSystemId *string `location:"uri" locationName:"FileSystemId" type:"string" required:"true"`
+
+	// An array of LifecyclePolicy objects that define the file system's LifecycleConfiguration
+	// object. A LifecycleConfiguration object tells lifecycle management when to
+	// transition files from the Standard storage class to the Infrequent Access
+	// storage class.
+	//
+	// LifecyclePolicies is a required field
+	LifecyclePolicies []*LifecyclePolicy `type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s PutLifecycleConfigurationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PutLifecycleConfigurationInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *PutLifecycleConfigurationInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "PutLifecycleConfigurationInput"}
+	if s.FileSystemId == nil {
+		invalidParams.Add(request.NewErrParamRequired("FileSystemId"))
+	}
+	if s.FileSystemId != nil && len(*s.FileSystemId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("FileSystemId", 1))
+	}
+	if s.LifecyclePolicies == nil {
+		invalidParams.Add(request.NewErrParamRequired("LifecyclePolicies"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetFileSystemId sets the FileSystemId field's value.
+func (s *PutLifecycleConfigurationInput) SetFileSystemId(v string) *PutLifecycleConfigurationInput {
+	s.FileSystemId = &v
+	return s
+}
+
+// SetLifecyclePolicies sets the LifecyclePolicies field's value.
+func (s *PutLifecycleConfigurationInput) SetLifecyclePolicies(v []*LifecyclePolicy) *PutLifecycleConfigurationInput {
+	s.LifecyclePolicies = v
+	return s
+}
+
+type PutLifecycleConfigurationOutput struct {
+	_ struct{} `type:"structure"`
+
+	// An array of lifecycle management policies. Currently, EFS supports a maximum
+	// of one policy per file system.
+	LifecyclePolicies []*LifecyclePolicy `type:"list"`
+}
+
+// String returns the string representation
+func (s PutLifecycleConfigurationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PutLifecycleConfigurationOutput) GoString() string {
+	return s.String()
+}
+
+// SetLifecyclePolicies sets the LifecyclePolicies field's value.
+func (s *PutLifecycleConfigurationOutput) SetLifecyclePolicies(v []*LifecyclePolicy) *PutLifecycleConfigurationOutput {
+	s.LifecyclePolicies = v
+	return s
+}
+
+// A tag is a key-value pair. Allowed characters: letters, white space, and
+// numbers, representable in UTF-8, and the following characters: + - = . _
+// : /
 type Tag struct {
 	_ struct{} `type:"structure"`
 
@@ -2704,6 +3130,9 @@ func (s *UpdateFileSystemInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "UpdateFileSystemInput"}
 	if s.FileSystemId == nil {
 		invalidParams.Add(request.NewErrParamRequired("FileSystemId"))
+	}
+	if s.FileSystemId != nil && len(*s.FileSystemId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("FileSystemId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -2930,4 +3359,9 @@ const (
 
 	// ThroughputModeProvisioned is a ThroughputMode enum value
 	ThroughputModeProvisioned = "provisioned"
+)
+
+const (
+	// TransitionToIARulesAfter30Days is a TransitionToIARules enum value
+	TransitionToIARulesAfter30Days = "AFTER_30_DAYS"
 )

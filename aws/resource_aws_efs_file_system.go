@@ -40,11 +40,10 @@ func resourceAwsEfsFileSystem() *schema.Resource {
 			},
 
 			"reference_name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				Deprecated:   "Please use attribute `creation_token' instead. This attribute might be removed in future releases.",
-				ValidateFunc: validateReferenceName,
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				Removed:  "Use `creation_token` argument instead",
 			},
 
 			"performance_mode": {
@@ -105,12 +104,7 @@ func resourceAwsEfsFileSystemCreate(d *schema.ResourceData, meta interface{}) er
 	if v, ok := d.GetOk("creation_token"); ok {
 		creationToken = v.(string)
 	} else {
-		if v, ok := d.GetOk("reference_name"); ok {
-			creationToken = resource.PrefixedUniqueId(fmt.Sprintf("%s-", v.(string)))
-			log.Printf("[WARN] Using deprecated `reference_name' attribute.")
-		} else {
-			creationToken = resource.UniqueId()
-		}
+		creationToken = resource.UniqueId()
 	}
 	throughputMode := d.Get("throughput_mode").(string)
 
@@ -255,9 +249,7 @@ func resourceAwsEfsFileSystemRead(d *schema.ResourceData, meta interface{}) erro
 				d.Id(), err.Error())
 		}
 
-		for _, tag := range tagsResp.Tags {
-			tags = append(tags, tag)
-		}
+		tags = append(tags, tagsResp.Tags...)
 
 		if tagsResp.NextMarker != nil {
 			marker = *tagsResp.NextMarker
@@ -301,9 +293,8 @@ func resourceAwsEfsFileSystemRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("throughput_mode", fs.ThroughputMode)
 
 	region := meta.(*AWSClient).region
-	err = d.Set("dns_name", resourceAwsEfsDnsName(*fs.FileSystemId, region))
-	if err != nil {
-		return err
+	if err := d.Set("dns_name", resourceAwsEfsDnsName(aws.StringValue(fs.FileSystemId), region)); err != nil {
+		return fmt.Errorf("error setting dns_name: %s", err)
 	}
 
 	return nil
@@ -353,16 +344,6 @@ func resourceAwsEfsFileSystemDelete(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[DEBUG] EFS file system %q deleted.", d.Id())
 
 	return nil
-}
-
-func validateReferenceName(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	creationToken := resource.PrefixedUniqueId(fmt.Sprintf("%s-", value))
-	if len(creationToken) > 64 {
-		errors = append(errors, fmt.Errorf(
-			"%q cannot take the Creation Token over the limit of 64 characters: %q", k, value))
-	}
-	return
 }
 
 func hasEmptyFileSystems(fs *efs.DescribeFileSystemsOutput) bool {

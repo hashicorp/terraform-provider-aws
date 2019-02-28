@@ -8,6 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/aws/aws-sdk-go/aws/request"
+	"github.com/aws/aws-sdk-go/private/protocol"
+	"github.com/aws/aws-sdk-go/private/protocol/restjson"
 )
 
 const opCreateChannel = "CreateChannel"
@@ -225,6 +227,7 @@ func (c *MediaPackage) DeleteChannelRequest(input *DeleteChannelInput) (req *req
 
 	output = &DeleteChannelOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -313,6 +316,7 @@ func (c *MediaPackage) DeleteOriginEndpointRequest(input *DeleteOriginEndpointIn
 
 	output = &DeleteOriginEndpointOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -1861,6 +1865,12 @@ type DashPackage struct {
 	// A Dynamic Adaptive Streaming over HTTP (DASH) encryption configuration.
 	Encryption *DashEncryption `locationName:"encryption" type:"structure"`
 
+	// Determines the position of some tags in the Media Presentation Description
+	// (MPD). When set to FULL, elements like SegmentTemplate and ContentProtection
+	// are included in each Representation. When set to COMPACT, duplicate elements
+	// are combined and presented at the AdaptationSet level.
+	ManifestLayout *string `locationName:"manifestLayout" type:"string" enum:"ManifestLayout"`
+
 	// Time window (in seconds) contained in each manifest.
 	ManifestWindowSeconds *int64 `locationName:"manifestWindowSeconds" type:"integer"`
 
@@ -1886,6 +1896,12 @@ type DashPackage struct {
 	// Duration (in seconds) of each segment. Actual segments will berounded to
 	// the nearest multiple of the source segment duration.
 	SegmentDurationSeconds *int64 `locationName:"segmentDurationSeconds" type:"integer"`
+
+	// Determines the type of SegmentTimeline included in the Media Presentation
+	// Description (MPD). When set to NUMBER_WITH_TIMELINE, a full timeline is presented
+	// in each SegmentTemplate, with $Number$ media URLs. When set to TIME_WITH_TIMELINE,
+	// a full timeline is presented in each SegmentTemplate, with $Time$ media URLs.
+	SegmentTemplateFormat *string `locationName:"segmentTemplateFormat" type:"string" enum:"SegmentTemplateFormat"`
 
 	// A StreamSelection configuration.
 	StreamSelection *StreamSelection `locationName:"streamSelection" type:"structure"`
@@ -1925,6 +1941,12 @@ func (s *DashPackage) SetEncryption(v *DashEncryption) *DashPackage {
 	return s
 }
 
+// SetManifestLayout sets the ManifestLayout field's value.
+func (s *DashPackage) SetManifestLayout(v string) *DashPackage {
+	s.ManifestLayout = &v
+	return s
+}
+
 // SetManifestWindowSeconds sets the ManifestWindowSeconds field's value.
 func (s *DashPackage) SetManifestWindowSeconds(v int64) *DashPackage {
 	s.ManifestWindowSeconds = &v
@@ -1958,6 +1980,12 @@ func (s *DashPackage) SetProfile(v string) *DashPackage {
 // SetSegmentDurationSeconds sets the SegmentDurationSeconds field's value.
 func (s *DashPackage) SetSegmentDurationSeconds(v int64) *DashPackage {
 	s.SegmentDurationSeconds = &v
+	return s
+}
+
+// SetSegmentTemplateFormat sets the SegmentTemplateFormat field's value.
+func (s *DashPackage) SetSegmentTemplateFormat(v string) *DashPackage {
+	s.SegmentTemplateFormat = &v
 	return s
 }
 
@@ -1995,6 +2023,9 @@ func (s *DeleteChannelInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DeleteChannelInput"}
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
+	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -2046,6 +2077,9 @@ func (s *DeleteOriginEndpointInput) Validate() error {
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
 	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -2095,6 +2129,9 @@ func (s *DescribeChannelInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DescribeChannelInput"}
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
+	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -2178,6 +2215,9 @@ func (s *DescribeOriginEndpointInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DescribeOriginEndpointInput"}
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
+	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -3231,6 +3271,9 @@ func (s *RotateChannelCredentialsInput) Validate() error {
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
 	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -3318,8 +3361,14 @@ func (s *RotateIngestEndpointCredentialsInput) Validate() error {
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
 	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
+	}
 	if s.IngestEndpointId == nil {
 		invalidParams.Add(request.NewErrParamRequired("IngestEndpointId"))
+	}
+	if s.IngestEndpointId != nil && len(*s.IngestEndpointId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("IngestEndpointId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -3548,6 +3597,9 @@ func (s *UpdateChannelInput) Validate() error {
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
 	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -3658,6 +3710,9 @@ func (s *UpdateOriginEndpointInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "UpdateOriginEndpointInput"}
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
+	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
 	}
 	if s.CmafPackage != nil {
 		if err := s.CmafPackage.Validate(); err != nil {
@@ -3888,6 +3943,14 @@ const (
 )
 
 const (
+	// ManifestLayoutFull is a ManifestLayout enum value
+	ManifestLayoutFull = "FULL"
+
+	// ManifestLayoutCompact is a ManifestLayout enum value
+	ManifestLayoutCompact = "COMPACT"
+)
+
+const (
 	// PlaylistTypeNone is a PlaylistType enum value
 	PlaylistTypeNone = "NONE"
 
@@ -3904,6 +3967,14 @@ const (
 
 	// ProfileHbbtv15 is a Profile enum value
 	ProfileHbbtv15 = "HBBTV_1_5"
+)
+
+const (
+	// SegmentTemplateFormatNumberWithTimeline is a SegmentTemplateFormat enum value
+	SegmentTemplateFormatNumberWithTimeline = "NUMBER_WITH_TIMELINE"
+
+	// SegmentTemplateFormatTimeWithTimeline is a SegmentTemplateFormat enum value
+	SegmentTemplateFormatTimeWithTimeline = "TIME_WITH_TIMELINE"
 )
 
 const (

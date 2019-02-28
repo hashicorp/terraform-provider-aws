@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -19,6 +18,9 @@ func init() {
 	resource.AddTestSweepers("aws_lb", &resource.Sweeper{
 		Name: "aws_lb",
 		F:    testSweepLBs,
+		Dependencies: []string{
+			"aws_api_gateway_vpc_link",
+		},
 	})
 }
 
@@ -29,14 +31,6 @@ func testSweepLBs(region string) error {
 	}
 	conn := client.(*AWSClient).elbv2conn
 
-	prefixes := []string{
-		"tf-",
-		"tf-test-",
-		"tf-acc-test-",
-		"test-",
-		"testacc",
-	}
-
 	err = conn.DescribeLoadBalancersPages(&elbv2.DescribeLoadBalancersInput{}, func(page *elbv2.DescribeLoadBalancersOutput, isLast bool) bool {
 		if page == nil || len(page.LoadBalancers) == 0 {
 			log.Print("[DEBUG] No LBs to sweep")
@@ -45,17 +39,7 @@ func testSweepLBs(region string) error {
 
 		for _, loadBalancer := range page.LoadBalancers {
 			name := aws.StringValue(loadBalancer.LoadBalancerName)
-			skip := true
-			for _, prefix := range prefixes {
-				if strings.HasPrefix(name, prefix) {
-					skip = false
-					break
-				}
-			}
-			if skip {
-				log.Printf("[INFO] Skipping LB: %s", name)
-				continue
-			}
+
 			log.Printf("[INFO] Deleting LB: %s", name)
 			_, err := conn.DeleteLoadBalancer(&elbv2.DeleteLoadBalancerInput{
 				LoadBalancerArn: loadBalancer.LoadBalancerArn,
@@ -819,7 +803,7 @@ func testAccAWSLBConfigWithIpAddressTypeUpdated(lbName string) string {
   idle_timeout = 30
   enable_deletion_protection = false
 
-  tags {
+  tags = {
     Name = "TestAccAWSALB_basic"
   }
 }
@@ -868,7 +852,7 @@ resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
   assign_generated_ipv6_cidr_block = true
 
-  tags {
+  tags = {
     Name = "terraform-testacc-lb-with-ip-address-type-updated"
   }
 }
@@ -884,7 +868,7 @@ resource "aws_subnet" "alb_test_1" {
   availability_zone       = "us-west-2a"
   ipv6_cidr_block = "${cidrsubnet(aws_vpc.alb_test.ipv6_cidr_block, 8, 1)}"
 
-  tags {
+  tags = {
     Name = "tf-acc-lb-with-ip-address-type-updated-1"
   }
 }
@@ -896,7 +880,7 @@ resource "aws_subnet" "alb_test_2" {
   availability_zone       = "us-west-2b"
   ipv6_cidr_block = "${cidrsubnet(aws_vpc.alb_test.ipv6_cidr_block, 8, 2)}"
 
-  tags {
+  tags = {
     Name = "tf-acc-lb-with-ip-address-type-updated-2"
   }
 }
@@ -913,7 +897,7 @@ resource "aws_security_group" "alb_test" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags {
+  tags = {
     Name = "TestAccAWSALB_basic"
   }
 }`, lbName, lbName)
@@ -930,7 +914,7 @@ func testAccAWSLBConfigWithIpAddressType(lbName string) string {
   idle_timeout = 30
   enable_deletion_protection = false
 
-  tags {
+  tags = {
     Name = "TestAccAWSALB_basic"
   }
 }
@@ -979,7 +963,7 @@ resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
   assign_generated_ipv6_cidr_block = true
 
-  tags {
+  tags = {
     Name = "terraform-testacc-lb-with-ip-address-type"
   }
 }
@@ -995,7 +979,7 @@ resource "aws_subnet" "alb_test_1" {
   availability_zone       = "us-west-2a"
   ipv6_cidr_block = "${cidrsubnet(aws_vpc.alb_test.ipv6_cidr_block, 8, 1)}"
 
-  tags {
+  tags = {
     Name = "tf-acc-lb-with-ip-address-type-1"
   }
 }
@@ -1007,7 +991,7 @@ resource "aws_subnet" "alb_test_2" {
   availability_zone       = "us-west-2b"
   ipv6_cidr_block = "${cidrsubnet(aws_vpc.alb_test.ipv6_cidr_block, 8, 2)}"
 
-  tags {
+  tags = {
     Name = "tf-acc-lb-with-ip-address-type-2"
   }
 }
@@ -1024,7 +1008,7 @@ resource "aws_security_group" "alb_test" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags {
+  tags = {
     Name = "TestAccAWSALB_basic"
   }
 }`, lbName, lbName)
@@ -1035,12 +1019,12 @@ func testAccAWSLBConfig_basic(lbName string) string {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id}"]
+  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
   idle_timeout = 30
   enable_deletion_protection = false
 
-  tags {
+  tags = {
     Name = "TestAccAWSALB_basic"
   }
 }
@@ -1055,7 +1039,7 @@ data "aws_availability_zones" "available" {}
 resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-lb-basic"
   }
 }
@@ -1067,7 +1051,7 @@ resource "aws_subnet" "alb_test" {
   map_public_ip_on_launch = true
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
-  tags {
+  tags = {
     Name = "tf-acc-lb-basic"
   }
 }
@@ -1091,7 +1075,7 @@ resource "aws_security_group" "alb_test" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags {
+  tags = {
     Name = "TestAccAWSALB_basic"
   }
 }`, lbName)
@@ -1102,14 +1086,14 @@ func testAccAWSLBConfig_enableHttp2(lbName string, http2 bool) string {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id}"]
+  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
   
   idle_timeout = 30
   enable_deletion_protection = false
 
   enable_http2 = %t
 
-  tags {
+  tags = {
     Name = "TestAccAWSALB_basic"
   }
 }
@@ -1124,7 +1108,7 @@ data "aws_availability_zones" "available" {}
 resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-lb-basic"
   }
 }
@@ -1136,7 +1120,7 @@ resource "aws_subnet" "alb_test" {
   map_public_ip_on_launch = true
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
-  tags {
+  tags = {
     Name = "tf-acc-lb-basic-${count.index}"
   }
 }
@@ -1160,7 +1144,7 @@ resource "aws_security_group" "alb_test" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags {
+  tags = {
     Name = "TestAccAWSALB_basic"
   }
 }`, lbName, http2)
@@ -1171,12 +1155,12 @@ func testAccAWSLBConfig_enableDeletionProtection(lbName string, deletion_protect
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id}"]
+  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
   
   idle_timeout = 30
   enable_deletion_protection = %t
 
-  tags {
+  tags = {
     Name = "TestAccAWSALB_basic"
   }
 }
@@ -1191,7 +1175,7 @@ data "aws_availability_zones" "available" {}
 resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-lb-basic"
   }
 }
@@ -1203,7 +1187,7 @@ resource "aws_subnet" "alb_test" {
   map_public_ip_on_launch = true
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
-  tags {
+  tags = {
     Name = "tf-acc-lb-basic-${count.index}"
   }
 }
@@ -1227,7 +1211,7 @@ resource "aws_security_group" "alb_test" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags {
+  tags = {
     Name = "TestAccAWSALB_basic"
   }
 }`, lbName, deletion_protection)
@@ -1237,7 +1221,7 @@ func testAccAWSLBConfig_networkLoadbalancer_subnets(lbName string) string {
 	return fmt.Sprintf(`resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-lb-network-load-balancer-subnets"
   }
 }
@@ -1257,7 +1241,7 @@ resource "aws_lb" "lb_test" {
   enable_deletion_protection       = false
   enable_cross_zone_load_balancing = false
 
-  tags {
+  tags = {
     Name = "testAccAWSLBConfig_networkLoadbalancer_subnets"
   }
 }
@@ -1267,7 +1251,7 @@ resource "aws_subnet" "alb_test_1" {
   cidr_block        = "10.0.1.0/24"
   availability_zone = "us-west-2a"
 
-  tags {
+  tags = {
     Name = "tf-acc-lb-network-load-balancer-subnets-1"
   }
 }
@@ -1277,7 +1261,7 @@ resource "aws_subnet" "alb_test_2" {
   cidr_block        = "10.0.2.0/24"
   availability_zone = "us-west-2b"
 
-  tags {
+  tags = {
     Name = "tf-acc-lb-network-load-balancer-subnets-2"
   }
 }
@@ -1287,7 +1271,7 @@ resource "aws_subnet" "alb_test_3" {
   cidr_block        = "10.0.3.0/24"
   availability_zone = "us-west-2c"
 
-  tags {
+  tags = {
     Name = "tf-acc-lb-network-load-balancer-subnets-3"
   }
 }
@@ -1307,7 +1291,7 @@ func testAccAWSLBConfig_networkLoadbalancer(lbName string, cz bool) string {
   	subnet_id = "${aws_subnet.alb_test.id}"
   }
 
-  tags {
+  tags = {
     Name = "TestAccAWSALB_basic"
   }
 }
@@ -1315,7 +1299,7 @@ func testAccAWSLBConfig_networkLoadbalancer(lbName string, cz bool) string {
 resource "aws_vpc" "alb_test" {
   cidr_block = "10.10.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-network-load-balancer"
   }
 }
@@ -1326,7 +1310,7 @@ resource "aws_subnet" "alb_test" {
   map_public_ip_on_launch = true
   availability_zone       = "us-west-2a"
 
-  tags {
+  tags = {
     Name = "tf-acc-network-load-balancer"
   }
 }
@@ -1340,7 +1324,7 @@ data "aws_availability_zones" "available" {}
 
 resource "aws_vpc" "main" {
   cidr_block = "10.10.0.0/16"
-  tags {
+  tags = {
   	Name = "terraform-testacc-lb-network-load-balancer-eip"
   }
 }
@@ -1350,7 +1334,7 @@ resource "aws_subnet" "public" {
   availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
   cidr_block = "10.10.${count.index}.0/24"
   vpc_id = "${aws_vpc.main.id}"
-  tags {
+  tags = {
     Name = "tf-acc-lb-network-load-balancer-eip-${count.index}"
   }
 }
@@ -1399,12 +1383,12 @@ func testAccAWSLBConfigBackwardsCompatibility(lbName string) string {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id}"]
+  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
   idle_timeout = 30
   enable_deletion_protection = false
 
-  tags {
+  tags = {
     Name = "TestAccAWSALB_basic"
   }
 }
@@ -1419,7 +1403,7 @@ data "aws_availability_zones" "available" {}
 resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-lb-bc"
   }
 }
@@ -1431,7 +1415,7 @@ resource "aws_subnet" "alb_test" {
   map_public_ip_on_launch = true
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
-  tags {
+  tags = {
     Name = "tf-acc-lb-bc-${count.index}"
   }
 }
@@ -1455,7 +1439,7 @@ resource "aws_security_group" "alb_test" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags {
+  tags = {
     Name = "TestAccAWSALB_basic"
   }
 }`, lbName)
@@ -1466,12 +1450,12 @@ func testAccAWSLBConfig_updateSubnets(lbName string) string {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id}"]
+  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
   idle_timeout = 30
   enable_deletion_protection = false
 
-  tags {
+  tags = {
     Name = "TestAccAWSALB_basic"
   }
 }
@@ -1486,7 +1470,7 @@ data "aws_availability_zones" "available" {}
 resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-lb-update-subnets"
   }
 }
@@ -1498,7 +1482,7 @@ resource "aws_subnet" "alb_test" {
   map_public_ip_on_launch = true
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
-  tags {
+  tags = {
     Name = "tf-acc-lb-update-subnets-${count.index}"
   }
 }
@@ -1522,7 +1506,7 @@ resource "aws_security_group" "alb_test" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags {
+  tags = {
     Name = "TestAccAWSALB_basic"
   }
 }`, lbName)
@@ -1533,12 +1517,12 @@ func testAccAWSLBConfig_generatedName() string {
 resource "aws_lb" "lb_test" {
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id}"]
+  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
   idle_timeout = 30
   enable_deletion_protection = false
 
-  tags {
+  tags = {
     Name = "TestAccAWSALB_basic"
   }
 }
@@ -1553,7 +1537,7 @@ data "aws_availability_zones" "available" {}
 resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-lb-generated-name"
   }
 }
@@ -1561,7 +1545,7 @@ resource "aws_vpc" "alb_test" {
 resource "aws_internet_gateway" "gw" {
   vpc_id = "${aws_vpc.alb_test.id}"
 
-  tags {
+  tags = {
     Name = "TestAccAWSALB_basic"
   }
 }
@@ -1573,7 +1557,7 @@ resource "aws_subnet" "alb_test" {
   map_public_ip_on_launch = true
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
-  tags {
+  tags = {
     Name = "tf-acc-lb-generated-name-${count.index}"
   }
 }
@@ -1597,7 +1581,7 @@ resource "aws_security_group" "alb_test" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags {
+  tags = {
     Name = "TestAccAWSALB_basic"
   }
 }`)
@@ -1609,12 +1593,12 @@ resource "aws_lb" "lb_test" {
   name            = ""
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id}"]
+  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
   idle_timeout = 30
   enable_deletion_protection = false
 
-  tags {
+  tags = {
     Name = "TestAccAWSALB_basic"
   }
 }
@@ -1634,7 +1618,7 @@ data "aws_availability_zones" "available" {}
 resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-lb-zero-value-name"
   }
 }
@@ -1642,7 +1626,7 @@ resource "aws_vpc" "alb_test" {
 resource "aws_internet_gateway" "gw" {
   vpc_id = "${aws_vpc.alb_test.id}"
 
-  tags {
+  tags = {
     Name = "TestAccAWSALB_basic"
   }
 }
@@ -1654,7 +1638,7 @@ resource "aws_subnet" "alb_test" {
   map_public_ip_on_launch = true
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
-  tags {
+  tags = {
     Name = "tf-acc-lb-zero-value-name-${count.index}"
   }
 }
@@ -1678,7 +1662,7 @@ resource "aws_security_group" "alb_test" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags {
+  tags = {
     Name = "TestAccAWSALB_basic"
   }
 }`)
@@ -1690,12 +1674,12 @@ resource "aws_lb" "lb_test" {
   name_prefix     = "tf-lb-"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id}"]
+  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
   idle_timeout = 30
   enable_deletion_protection = false
 
-  tags {
+  tags = {
     Name = "TestAccAWSALB_basic"
   }
 }
@@ -1710,7 +1694,7 @@ data "aws_availability_zones" "available" {}
 resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-lb-name-prefix"
   }
 }
@@ -1722,7 +1706,7 @@ resource "aws_subnet" "alb_test" {
   map_public_ip_on_launch = true
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
-  tags {
+  tags = {
     Name = "tf-acc-lb-name-prefix-${count.index}"
   }
 }
@@ -1746,7 +1730,7 @@ resource "aws_security_group" "alb_test" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags {
+  tags = {
     Name = "TestAccAWSALB_basic"
   }
 }`)
@@ -1756,12 +1740,12 @@ func testAccAWSLBConfig_updatedTags(lbName string) string {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id}"]
+  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
   idle_timeout = 30
   enable_deletion_protection = false
 
-  tags {
+  tags = {
     Environment = "Production"
     Type = "Sample Type Tag"
   }
@@ -1777,7 +1761,7 @@ data "aws_availability_zones" "available" {}
 resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-lb-updated-tags"
   }
 }
@@ -1789,7 +1773,7 @@ resource "aws_subnet" "alb_test" {
   map_public_ip_on_launch = true
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
-  tags {
+  tags = {
     Name = "tf-acc-lb-updated-tags-${count.index}"
   }
 }
@@ -1813,7 +1797,7 @@ resource "aws_security_group" "alb_test" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags {
+  tags = {
     Name = "TestAccAWSALB_basic"
   }
 }`, lbName)
@@ -1824,7 +1808,7 @@ func testAccAWSLBConfig_accessLogs(enabled bool, lbName, bucketName, bucketPrefi
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id}"]
+  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
   idle_timeout = 50
   enable_deletion_protection = false
@@ -1835,7 +1819,7 @@ func testAccAWSLBConfig_accessLogs(enabled bool, lbName, bucketName, bucketPrefi
   	enabled = "%t"
   }
 
-  tags {
+  tags = {
     Name = "TestAccAWSALB_basic1"
   }
 }
@@ -1856,7 +1840,7 @@ resource "aws_s3_bucket" "logs" {
   # dangerous, only here for the test...
   force_destroy = true
 
-  tags {
+  tags = {
     Name = "ALB Logs Bucket Test"
   }
 }
@@ -1873,7 +1857,7 @@ data "aws_iam_policy_document" "logs_bucket" {
     effect    = "Allow"
     resources = ["arn:${data.aws_partition.current.partition}:s3:::${var.bucket_name}/${var.bucket_prefix}${var.bucket_prefix == "" ? "" : "/"}AWSLogs/${data.aws_caller_identity.current.account_id}/*"]
 
-    principals = {
+    principals {
       type        = "AWS"
       identifiers = ["${data.aws_elb_service_account.current.arn}"]
     }
@@ -1890,7 +1874,7 @@ data "aws_availability_zones" "available" {}
 resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-lb-access-logs"
   }
 }
@@ -1902,7 +1886,7 @@ resource "aws_subnet" "alb_test" {
   map_public_ip_on_launch = true
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
-  tags {
+  tags = {
     Name = "tf-acc-lb-access-logs-${count.index}"
   }
 }
@@ -1926,7 +1910,7 @@ resource "aws_security_group" "alb_test" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags {
+  tags = {
     Name = "TestAccAWSALB_basic"
   }
 }`, lbName, enabled, bucketName, bucketPrefix)
@@ -1936,12 +1920,12 @@ func testAccAWSLBConfig_nosg(lbName string) string {
 	return fmt.Sprintf(`resource "aws_lb" "lb_test" {
   name            = "%s"
   internal        = true
-  subnets         = ["${aws_subnet.alb_test.*.id}"]
+  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
   idle_timeout = 30
   enable_deletion_protection = false
 
-  tags {
+  tags = {
     Name = "TestAccAWSALB_basic"
   }
 }
@@ -1956,7 +1940,7 @@ data "aws_availability_zones" "available" {}
 resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-lb-no-sg"
   }
 }
@@ -1968,7 +1952,7 @@ resource "aws_subnet" "alb_test" {
   map_public_ip_on_launch = true
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
-  tags {
+  tags = {
     Name = "tf-acc-lb-no-sg-${count.index}"
   }
 }`, lbName)
@@ -1979,12 +1963,12 @@ func testAccAWSLBConfig_updateSecurityGroups(lbName string) string {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}", "${aws_security_group.alb_test_2.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id}"]
+  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
   idle_timeout = 30
   enable_deletion_protection = false
 
-  tags {
+  tags = {
     Name = "TestAccAWSALB_basic"
   }
 }
@@ -1999,7 +1983,7 @@ data "aws_availability_zones" "available" {}
 resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-lb-update-security-groups"
   }
 }
@@ -2011,7 +1995,7 @@ resource "aws_subnet" "alb_test" {
   map_public_ip_on_launch = true
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
-  tags {
+  tags = {
     Name = "tf-acc-lb-update-security-groups-${count.index}"
   }
 }
@@ -2028,7 +2012,7 @@ resource "aws_security_group" "alb_test_2" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags {
+  tags = {
     Name = "TestAccAWSALB_basic_2"
   }
 }
@@ -2052,7 +2036,7 @@ resource "aws_security_group" "alb_test" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags {
+  tags = {
     Name = "TestAccAWSALB_basic"
   }
 }`, lbName)

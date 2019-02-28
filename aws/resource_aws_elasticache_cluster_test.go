@@ -36,12 +36,6 @@ func testSweepElasticacheClusters(region string) error {
 	}
 	conn := client.(*AWSClient).elasticacheconn
 
-	prefixes := []string{
-		"tf-",
-		"tf-test-",
-		"tf-acc-test-",
-	}
-
 	err = conn.DescribeCacheClustersPages(&elasticache.DescribeCacheClustersInput{}, func(page *elasticache.DescribeCacheClustersOutput, isLast bool) bool {
 		if len(page.CacheClusters) == 0 {
 			log.Print("[DEBUG] No Elasticache Replicaton Groups to sweep")
@@ -50,17 +44,7 @@ func testSweepElasticacheClusters(region string) error {
 
 		for _, cluster := range page.CacheClusters {
 			id := aws.StringValue(cluster.CacheClusterId)
-			skip := true
-			for _, prefix := range prefixes {
-				if strings.HasPrefix(id, prefix) {
-					skip = false
-					break
-				}
-			}
-			if skip {
-				log.Printf("[INFO] Skipping Elasticache Cluster: %s", id)
-				continue
-			}
+
 			log.Printf("[INFO] Deleting Elasticache Cluster: %s", id)
 			err := deleteElasticacheCacheCluster(conn, id)
 			if err != nil {
@@ -653,10 +637,6 @@ func TestAccAWSElasticacheCluster_ReplicationGroupID_InvalidAttributes(t *testin
 		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAWSElasticacheClusterConfig_ReplicationGroupID_InvalidAttribute(rName, "availability_zones", "${list(\"us-east-1a\", \"us-east-1c\")}"),
-				ExpectError: regexp.MustCompile(`"replication_group_id": conflicts with availability_zones`),
-			},
-			{
 				Config:      testAccAWSElasticacheClusterConfig_ReplicationGroupID_InvalidAttribute(rName, "az_mode", "single-az"),
 				ExpectError: regexp.MustCompile(`"replication_group_id": conflicts with az_mode`),
 			},
@@ -982,7 +962,7 @@ resource "aws_security_group" "bar" {
         cidr_blocks = ["0.0.0.0/0"]
     }
 
-		tags {
+	tags = {
 			Name = "TestAccAWSElasticacheCluster_basic"
 		}
 }
@@ -1105,7 +1085,7 @@ resource "aws_elasticache_cluster" "bar" {
 var testAccAWSElasticacheClusterInVPCConfig = fmt.Sprintf(`
 resource "aws_vpc" "foo" {
     cidr_block = "192.168.0.0/16"
-    tags {
+  tags = {
         Name = "terraform-testacc-elasticache-cluster-in-vpc"
     }
 }
@@ -1114,7 +1094,7 @@ resource "aws_subnet" "foo" {
     vpc_id = "${aws_vpc.foo.id}"
     cidr_block = "192.168.0.0/20"
     availability_zone = "us-west-2a"
-    tags {
+  tags = {
         Name = "tf-acc-elasticache-cluster-in-vpc"
     }
 }
@@ -1162,7 +1142,7 @@ resource "aws_sns_topic" "topic_example" {
 var testAccAWSElasticacheClusterMultiAZInVPCConfig = fmt.Sprintf(`
 resource "aws_vpc" "foo" {
     cidr_block = "192.168.0.0/16"
-    tags {
+  tags = {
         Name = "terraform-testacc-elasticache-cluster-multi-az-in-vpc"
     }
 }
@@ -1171,7 +1151,7 @@ resource "aws_subnet" "foo" {
     vpc_id = "${aws_vpc.foo.id}"
     cidr_block = "192.168.0.0/20"
     availability_zone = "us-west-2a"
-    tags {
+  tags = {
         Name = "tf-acc-elasticache-cluster-multi-az-in-vpc-foo"
     }
 }
@@ -1180,7 +1160,7 @@ resource "aws_subnet" "bar" {
     vpc_id = "${aws_vpc.foo.id}"
     cidr_block = "192.168.16.0/20"
     availability_zone = "us-west-2b"
-    tags {
+  tags = {
         Name = "tf-acc-elasticache-cluster-multi-az-in-vpc-bar"
     }
 }

@@ -2,14 +2,91 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	events "github.com/aws/aws-sdk-go/service/cloudwatchevents"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_cloudwatch_event_target", &resource.Sweeper{
+		Name: "aws_cloudwatch_event_target",
+		F:    testSweepCloudWatchEventTargets,
+	})
+}
+
+func testSweepCloudWatchEventTargets(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("Error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).cloudwatcheventsconn
+
+	input := &events.ListRulesInput{}
+
+	for {
+		output, err := conn.ListRules(input)
+
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping CloudWatch Event Target sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("Error retrieving CloudWatch Event Targets: %s", err)
+		}
+
+		for _, rule := range output.Rules {
+			listTargetsByRuleInput := &events.ListTargetsByRuleInput{
+				Limit: aws.Int64(100), // Set limit to allowed maximum to prevent API throttling
+				Rule:  rule.Name,
+			}
+			ruleName := aws.StringValue(rule.Name)
+
+			for {
+				listTargetsByRuleOutput, err := conn.ListTargetsByRule(listTargetsByRuleInput)
+
+				if err != nil {
+					return fmt.Errorf("Error retrieving CloudWatch Event Targets: %s", err)
+				}
+
+				for _, target := range listTargetsByRuleOutput.Targets {
+					removeTargetsInput := &events.RemoveTargetsInput{
+						Ids:  []*string{target.Id},
+						Rule: rule.Name,
+					}
+					targetID := aws.StringValue(target.Id)
+
+					log.Printf("[INFO] Deleting CloudWatch Event Rule (%s) Target: %s", ruleName, targetID)
+					_, err := conn.RemoveTargets(removeTargetsInput)
+
+					if err != nil {
+						return fmt.Errorf("Error deleting CloudWatch Event Rule (%s) Target %s: %s", ruleName, targetID, err)
+					}
+				}
+
+				if aws.StringValue(listTargetsByRuleOutput.NextToken) == "" {
+					break
+				}
+
+				listTargetsByRuleInput.NextToken = listTargetsByRuleOutput.NextToken
+			}
+		}
+
+		if aws.StringValue(output.NextToken) == "" {
+			break
+		}
+
+		input.NextToken = output.NextToken
+	}
+
+	return nil
+}
 
 func TestAccAWSCloudWatchEventTarget_basic(t *testing.T) {
 	var target events.Target
@@ -798,7 +875,7 @@ resource "aws_lambda_function" "lambda" {
   source_code_hash = "${base64sha256(file("test-fixtures/lambdatest.zip"))}"
   role = "${aws_iam_role.iam_for_lambda.arn}"
   handler = "exports.example"
-	runtime = "nodejs4.3"
+	runtime = "nodejs8.10"
 }
 
 resource "aws_cloudwatch_event_rule" "schedule" {

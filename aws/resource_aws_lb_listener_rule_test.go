@@ -107,7 +107,7 @@ func TestAccAWSLBListenerRuleBackwardsCompatibility(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_alb_listener_rule.static", "listener_arn"),
 					resource.TestCheckResourceAttr("aws_alb_listener_rule.static", "priority", "100"),
 					resource.TestCheckResourceAttr("aws_alb_listener_rule.static", "action.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.order", "1"),
+					resource.TestCheckResourceAttr("aws_alb_listener_rule.static", "action.0.order", "1"),
 					resource.TestCheckResourceAttr("aws_alb_listener_rule.static", "action.0.type", "forward"),
 					resource.TestCheckResourceAttrSet("aws_alb_listener_rule.static", "action.0.target_group_arn"),
 					resource.TestCheckResourceAttr("aws_alb_listener_rule.static", "action.0.redirect.#", "0"),
@@ -329,8 +329,8 @@ func TestAccAWSLBListenerRule_priority(t *testing.T) {
 			{
 				Config: testAccAWSLBListenerRuleConfig_priority50000(lbName, targetGroupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSLBListenerRuleExists("aws_lb_listener_rule.50000", &rule),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.50000", "priority", "50000"),
+					testAccCheckAWSLBListenerRuleExists("aws_lb_listener_rule.priority50000", &rule),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.priority50000", "priority", "50000"),
 				),
 			},
 			{
@@ -608,12 +608,12 @@ resource "aws_lb" "alb_test" {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id}"]
+  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
   idle_timeout = 30
   enable_deletion_protection = false
 
-  tags {
+  tags = {
     Name = "TestAccAWSALB_basic"
   }
 }
@@ -646,7 +646,7 @@ data "aws_availability_zones" "available" {}
 resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-lb-listener-rule-multiple-conditions"
   }
 }
@@ -658,7 +658,7 @@ resource "aws_subnet" "alb_test" {
   map_public_ip_on_launch = true
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
-  tags {
+  tags = {
     Name = "tf-acc-lb-listener-rule-multiple-conditions-${count.index}"
   }
 }
@@ -682,7 +682,7 @@ resource "aws_security_group" "alb_test" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags {
+  tags = {
     Name = "TestAccAWSALB_basic"
   }
 }`, lbName, targetGroupName)
@@ -719,12 +719,12 @@ resource "aws_lb" "alb_test" {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id}"]
+  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
   idle_timeout = 30
   enable_deletion_protection = false
 
-  tags {
+  tags = {
     Name = "TestAccAWSALB_basic"
   }
 }
@@ -757,7 +757,7 @@ data "aws_availability_zones" "available" {}
 resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-lb-listener-rule-basic"
   }
 }
@@ -769,7 +769,7 @@ resource "aws_subnet" "alb_test" {
   map_public_ip_on_launch = true
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
-  tags {
+  tags = {
     Name = "tf-acc-lb-listener-rule-basic-${count.index}"
   }
 }
@@ -793,7 +793,7 @@ resource "aws_security_group" "alb_test" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags {
+  tags = {
     Name = "TestAccAWSALB_basic"
   }
 }`, lbName, targetGroupName)
@@ -830,12 +830,12 @@ resource "aws_alb" "alb_test" {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id}"]
+  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
   idle_timeout = 30
   enable_deletion_protection = false
 
-  tags {
+  tags = {
     Name = "TestAccAWSALB_basic"
   }
 }
@@ -868,7 +868,7 @@ data "aws_availability_zones" "available" {}
 resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-lb-listener-rule-bc"
   }
 }
@@ -880,7 +880,7 @@ resource "aws_subnet" "alb_test" {
   map_public_ip_on_launch = true
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
-  tags {
+  tags = {
     Name = "tf-acc-lb-listener-rule-bc-${count.index}"
   }
 }
@@ -904,7 +904,7 @@ resource "aws_security_group" "alb_test" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags {
+  tags = {
     Name = "TestAccAWSALB_basic"
   }
 }`, lbName, targetGroupName)
@@ -949,12 +949,12 @@ resource "aws_lb" "alb_test" {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id}"]
+  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
   idle_timeout = 30
   enable_deletion_protection = false
 
-  tags {
+  tags = {
     Name = "TestAccAWSALB_redirect"
   }
 }
@@ -969,7 +969,7 @@ data "aws_availability_zones" "available" {}
 resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-lb-listener-rule-redirect"
   }
 }
@@ -981,7 +981,7 @@ resource "aws_subnet" "alb_test" {
   map_public_ip_on_launch = true
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
-  tags {
+  tags = {
     Name = "tf-acc-lb-listener-rule-redirect-${count.index}"
   }
 }
@@ -1005,7 +1005,7 @@ resource "aws_security_group" "alb_test" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags {
+  tags = {
     Name = "TestAccAWSALB_redirect"
   }
 }`, lbName)
@@ -1050,12 +1050,12 @@ resource "aws_lb" "alb_test" {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id}"]
+  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
   idle_timeout = 30
   enable_deletion_protection = false
 
-  tags {
+  tags = {
     Name = "TestAccAWSALB_fixedResponse"
   }
 }
@@ -1070,7 +1070,7 @@ data "aws_availability_zones" "available" {}
 resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-lb-listener-rule-fixedresponse"
   }
 }
@@ -1082,7 +1082,7 @@ resource "aws_subnet" "alb_test" {
   map_public_ip_on_launch = true
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
-  tags {
+  tags = {
     Name = "tf-acc-lb-listener-rule-fixedresponse-${count.index}"
   }
 }
@@ -1106,7 +1106,7 @@ resource "aws_security_group" "alb_test" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags {
+  tags = {
     Name = "TestAccAWSALB_fixedresponse"
   }
 }`, lbName)
@@ -1144,12 +1144,12 @@ resource "aws_lb" "alb_test" {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id}"]
+  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
   idle_timeout = 30
   enable_deletion_protection = false
 
-  tags {
+  tags = {
     Name = "TestAccAWSALB_basic"
   }
 }
@@ -1182,7 +1182,7 @@ data "aws_availability_zones" "available" {}
 resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-lb-listener-rule-update-rule-priority"
   }
 }
@@ -1194,7 +1194,7 @@ resource "aws_subnet" "alb_test" {
   map_public_ip_on_launch = true
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
-  tags {
+  tags = {
     Name = "tf-acc-lb-listener-rule-update-rule-priority-${count.index}"
   }
 }
@@ -1218,7 +1218,7 @@ resource "aws_security_group" "alb_test" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags {
+  tags = {
     Name = "TestAccAWSALB_basic"
   }
 }`, lbName, targetGroupName)
@@ -1267,12 +1267,12 @@ resource "aws_lb" "alb_test" {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id}"]
+  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
   idle_timeout = 30
   enable_deletion_protection = false
 
-  tags {
+  tags = {
     Name = "TestAccAWSALB_basic"
   }
 }
@@ -1305,7 +1305,7 @@ data "aws_availability_zones" "available" {}
 resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-lb-listener-rule-change-rule-arn"
   }
 }
@@ -1317,7 +1317,7 @@ resource "aws_subnet" "alb_test" {
   map_public_ip_on_launch = true
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
-  tags {
+  tags = {
     Name = "tf-acc-lb-listener-rule-change-rule-arn-${count.index}"
   }
 }
@@ -1341,7 +1341,7 @@ resource "aws_security_group" "alb_test" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags {
+  tags = {
     Name = "TestAccAWSALB_basic"
   }
 }`, lbName, targetGroupName)
@@ -1364,12 +1364,12 @@ resource "aws_lb" "alb_test" {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id}"]
+  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
   idle_timeout = 30
   enable_deletion_protection = false
 
-  tags {
+  tags = {
     Name = "TestAccAWSALB_basic"
   }
 }
@@ -1402,7 +1402,7 @@ data "aws_availability_zones" "available" {}
 resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-lb-listener-rule-priority"
   }
 }
@@ -1414,7 +1414,7 @@ resource "aws_subnet" "alb_test" {
   map_public_ip_on_launch = true
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
-  tags {
+  tags = {
     Name = "tf-acc-lb-listener-rule-priority-${count.index}"
   }
 }
@@ -1438,7 +1438,7 @@ resource "aws_security_group" "alb_test" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags {
+  tags = {
     Name = "TestAccAWSALB_basic"
   }
 }`, lbName, targetGroupName)
@@ -1538,7 +1538,7 @@ resource "aws_lb_listener_rule" "parallelism" {
 
 func testAccAWSLBListenerRuleConfig_priority50000(lbName, targetGroupName string) string {
 	return testAccAWSLBListenerRuleConfig_priorityBase(lbName, targetGroupName) + fmt.Sprintf(`
-resource "aws_lb_listener_rule" "50000" {
+resource "aws_lb_listener_rule" "priority50000" {
   listener_arn = "${aws_lb_listener.front_end.arn}"
   priority     = 50000
 
@@ -1558,7 +1558,7 @@ resource "aws_lb_listener_rule" "50000" {
 // priority out of range (1, 50000)
 func testAccAWSLBListenerRuleConfig_priority50001(lbName, targetGroupName string) string {
 	return testAccAWSLBListenerRuleConfig_priority50000(lbName, targetGroupName) + fmt.Sprintf(`
-resource "aws_lb_listener_rule" "50001" {
+resource "aws_lb_listener_rule" "priority50001" {
   listener_arn = "${aws_lb_listener.front_end.arn}"
 
   action {
@@ -1576,7 +1576,7 @@ resource "aws_lb_listener_rule" "50001" {
 
 func testAccAWSLBListenerRuleConfig_priorityInUse(lbName, targetGroupName string) string {
 	return testAccAWSLBListenerRuleConfig_priority50000(lbName, targetGroupName) + fmt.Sprintf(`
-resource "aws_lb_listener_rule" "50000_in_use" {
+resource "aws_lb_listener_rule" "priority50000_in_use" {
   listener_arn = "${aws_lb_listener.front_end.arn}"
   priority     = 50000
 
@@ -1605,7 +1605,7 @@ func testAccAWSLBListenerRuleConfig_cognito(lbName string, targetGroupName strin
       user_pool_client_id = "${aws_cognito_user_pool_client.test.id}"
       user_pool_domain = "${aws_cognito_user_pool_domain.test.domain}"
 
-      authentication_request_extra_params {
+      authentication_request_extra_params = {
         param  = "test"
       }
     }
@@ -1654,7 +1654,7 @@ resource "aws_lb_listener" "front_end" {
    load_balancer_arn = "${aws_lb.alb_test.id}"
    protocol = "HTTPS"
    port = "443"
-   ssl_policy = "ELBSecurityPolicy-2015-05"
+   ssl_policy = "ELBSecurityPolicy-2016-08"
    certificate_arn = "${aws_iam_server_certificate.test.arn}"
 
    default_action {
@@ -1667,12 +1667,12 @@ resource "aws_lb" "alb_test" {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id}"]
+  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
   idle_timeout = 30
   enable_deletion_protection = false
 
-  tags {
+  tags = {
     Name = "TestAccAWSALB_cognito"
   }
 }
@@ -1705,7 +1705,7 @@ data "aws_availability_zones" "available" {}
 resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-lb-listener-rule-cognito"
   }
 }
@@ -1717,7 +1717,7 @@ resource "aws_subnet" "alb_test" {
   map_public_ip_on_launch = true
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
-  tags {
+  tags = {
     Name = "tf-acc-lb-listener-rule-cognito-${count.index}"
   }
 }
@@ -1741,7 +1741,7 @@ resource "aws_security_group" "alb_test" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags {
+  tags = {
     Name = "TestAccAWSALB_cognito"
   }
 }
@@ -1783,7 +1783,7 @@ func testAccAWSLBListenerRuleConfig_oidc(lbName string, targetGroupName string, 
       token_endpoint = "https://example.com/token_endpoint"
       user_info_endpoint = "https://example.com/user_info_endpoint"
 
-      authentication_request_extra_params {
+      authentication_request_extra_params = {
         param  = "test"
       }
     }
@@ -1832,7 +1832,7 @@ resource "aws_lb_listener" "front_end" {
    load_balancer_arn = "${aws_lb.alb_test.id}"
    protocol = "HTTPS"
    port = "443"
-   ssl_policy = "ELBSecurityPolicy-2015-05"
+   ssl_policy = "ELBSecurityPolicy-2016-08"
    certificate_arn = "${aws_iam_server_certificate.test.arn}"
 
    default_action {
@@ -1845,12 +1845,12 @@ resource "aws_lb" "alb_test" {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id}"]
+  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
   idle_timeout = 30
   enable_deletion_protection = false
 
-  tags {
+  tags = {
     Name = "TestAccAWSALB_cognito"
   }
 }
@@ -1883,7 +1883,7 @@ data "aws_availability_zones" "available" {}
 resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-lb-listener-rule-cognito"
   }
 }
@@ -1895,7 +1895,7 @@ resource "aws_subnet" "alb_test" {
   map_public_ip_on_launch = true
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
-  tags {
+  tags = {
     Name = "tf-acc-lb-listener-rule-cognito-${count.index}"
   }
 }
@@ -1919,7 +1919,7 @@ resource "aws_security_group" "alb_test" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags {
+  tags = {
     Name = "TestAccAWSALB_cognito"
   }
 }`, lbName, targetGroupName, certificateName)
@@ -1948,7 +1948,7 @@ resource "aws_lb_listener_rule" "test" {
       token_endpoint         = "https://example.com/token_endpoint"
       user_info_endpoint     = "https://example.com/user_info_endpoint"
 
-      authentication_request_extra_params {
+      authentication_request_extra_params = {
         param  = "test"
       }
     }
@@ -1997,7 +1997,7 @@ resource "aws_lb_listener" "test" {
   load_balancer_arn = "${aws_lb.test.id}"
   protocol          = "HTTPS"
   port              = "443"
-  ssl_policy        = "ELBSecurityPolicy-2015-05"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
   certificate_arn   = "${aws_iam_server_certificate.test.arn}"
 
   default_action {
@@ -2010,7 +2010,7 @@ resource "aws_lb" "test" {
   internal                   = true
   name                       = "${var.rName}"
   security_groups            = ["${aws_security_group.test.id}"]
-  subnets                    = ["${aws_subnet.test.*.id}"]
+  subnets                    = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
 }
 
 resource "aws_lb_target_group" "test" {
@@ -2034,7 +2034,7 @@ resource "aws_lb_target_group" "test" {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "${var.rName}"
   }
 }
@@ -2047,7 +2047,7 @@ resource "aws_subnet" "test" {
   map_public_ip_on_launch = true
   vpc_id                  = "${aws_vpc.test.id}"
 
-  tags {
+  tags = {
     Name = "${var.rName}"
   }
 }
@@ -2070,7 +2070,7 @@ resource "aws_security_group" "test" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags {
+  tags = {
     Name = "${var.rName}"
   }
 }`, rName)

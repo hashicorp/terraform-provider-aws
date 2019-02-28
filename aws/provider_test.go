@@ -5,14 +5,11 @@ import (
 	"log"
 	"os"
 	"regexp"
-	"strings"
 	"testing"
-
-	"github.com/aws/aws-sdk-go/service/organizations"
 
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
-
+	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
@@ -99,6 +96,13 @@ func testAccAwsProviderAccountID(provider *schema.Provider) string {
 	return client.accountid
 }
 
+// testAccCheckResourceAttrAccountID ensures the Terraform state exactly matches the account ID
+func testAccCheckResourceAttrAccountID(resourceName, attributeName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		return resource.TestCheckResourceAttr(resourceName, attributeName, testAccGetAccountID())(s)
+	}
+}
+
 // testAccCheckResourceAttrRegionalARN ensures the Terraform state exactly matches a formatted ARN with region
 func testAccCheckResourceAttrRegionalARN(resourceName, attributeName, arnService, arnResource string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -113,7 +117,7 @@ func testAccCheckResourceAttrRegionalARN(resourceName, attributeName, arnService
 	}
 }
 
-// testAccCheckResourceAttrRegionalARN ensures the Terraform state regexp matches a formatted ARN with region
+// testAccMatchResourceAttrRegionalARN ensures the Terraform state regexp matches a formatted ARN with region
 func testAccMatchResourceAttrRegionalARN(resourceName, attributeName, arnService string, arnResourceRegexp *regexp.Regexp) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		arnRegexp := arn.ARN{
@@ -147,6 +151,26 @@ func testAccCheckResourceAttrGlobalARN(resourceName, attributeName, arnService, 
 	}
 }
 
+// testAccMatchResourceAttrGlobalARN ensures the Terraform state regexp matches a formatted ARN without region
+func testAccMatchResourceAttrGlobalARN(resourceName, attributeName, arnService string, arnResourceRegexp *regexp.Regexp) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		arnRegexp := arn.ARN{
+			AccountID: testAccGetAccountID(),
+			Partition: testAccGetPartition(),
+			Resource:  arnResourceRegexp.String(),
+			Service:   arnService,
+		}.String()
+
+		attributeMatch, err := regexp.Compile(arnRegexp)
+
+		if err != nil {
+			return fmt.Errorf("Unable to compile ARN regexp (%s): %s", arnRegexp, err)
+		}
+
+		return resource.TestMatchResourceAttr(resourceName, attributeName, attributeMatch)(s)
+	}
+}
+
 // testAccGetAccountID returns the account ID of testAccProvider
 // Must be used returned within a resource.TestCheckFunc
 func testAccGetAccountID() string {
@@ -166,14 +190,6 @@ func testAccGetPartition() string {
 		return partition.ID()
 	}
 	return "aws"
-}
-
-func testAccGetServiceEndpoint(service string) string {
-	endpoint, err := endpoints.DefaultResolver().EndpointFor(service, testAccGetRegion())
-	if err != nil {
-		return ""
-	}
-	return strings.TrimPrefix(endpoint.URL, "https://")
 }
 
 func testAccEC2ClassicPreCheck(t *testing.T) {
@@ -271,6 +287,20 @@ func testAccCheckWithProviders(f func(*terraform.State, *schema.Provider) error,
 	}
 }
 
+// Check service API call error for reasons to skip acceptance testing
+// These include missing API endpoints and unsupported API calls
+func testAccPreCheckSkipError(err error) bool {
+	// Ignore missing API endpoints
+	if isAWSErr(err, "RequestError", "send request failed") {
+		return true
+	}
+	// Ignore unsupported API calls
+	if isAWSErr(err, "UnsupportedOperation", "") {
+		return true
+	}
+	return false
+}
+
 // Check sweeper API call error for reasons to skip sweeping
 // These include missing API endpoints and unsupported API calls
 func testSweepSkipSweepError(err error) bool {
@@ -285,6 +315,13 @@ func testSweepSkipSweepError(err error) bool {
 	// Ignore more unsupported API calls
 	// InvalidParameterValue: Use of cache security groups is not permitted in this API version for your account.
 	if isAWSErr(err, "InvalidParameterValue", "not permitted in this API version for your account") {
+		return true
+	}
+	// GovCloud has endpoints that respond with (no message provided):
+	// AccessDeniedException:
+	// Since acceptance test sweepers are best effort and this response is very common,
+	// we allow bypassing this error globally instead of individual test sweeper fixes.
+	if isAWSErr(err, "AccessDeniedException", "") {
 		return true
 	}
 	return false

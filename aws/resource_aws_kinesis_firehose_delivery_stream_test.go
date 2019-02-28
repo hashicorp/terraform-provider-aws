@@ -15,6 +15,69 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func init() {
+	resource.AddTestSweepers("aws_kinesis_firehose_delivery_stream", &resource.Sweeper{
+		Name: "aws_kinesis_firehose_delivery_stream",
+		F:    testSweepKinesisFirehoseDeliveryStreams,
+	})
+}
+
+func testSweepKinesisFirehoseDeliveryStreams(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+
+	conn := client.(*AWSClient).firehoseconn
+	input := &firehose.ListDeliveryStreamsInput{}
+
+	for {
+		output, err := conn.ListDeliveryStreams(input)
+
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping Kinesis Firehose Delivery Streams sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing Kinesis Firehose Delivery Streams: %s", err)
+		}
+
+		if len(output.DeliveryStreamNames) == 0 {
+			log.Print("[DEBUG] No Kinesis Firehose Delivery Streams to sweep")
+			return nil
+		}
+
+		for _, deliveryStreamNamePtr := range output.DeliveryStreamNames {
+			input := &firehose.DeleteDeliveryStreamInput{
+				DeliveryStreamName: deliveryStreamNamePtr,
+			}
+			name := aws.StringValue(deliveryStreamNamePtr)
+
+			log.Printf("[INFO] Deleting Kinesis Firehose Delivery Stream: %s", name)
+			_, err := conn.DeleteDeliveryStream(input)
+
+			if isAWSErr(err, firehose.ErrCodeResourceNotFoundException, "") {
+				continue
+			}
+
+			if err != nil {
+				return fmt.Errorf("error deleting Kinesis Firehose Delivery Stream (%s): %s", name, err)
+			}
+
+			if err := waitForKinesisFirehoseDeliveryStreamDeletion(conn, name); err != nil {
+				return fmt.Errorf("error waiting for Kinesis Firehose Delivery Stream (%s) deletion: %s", name, err)
+			}
+		}
+
+		if !aws.BoolValue(output.HasMoreDeliveryStreams) {
+			break
+		}
+	}
+
+	return nil
+}
+
 func TestAccAWSKinesisFirehoseDeliveryStream_importBasic(t *testing.T) {
 	resName := "aws_kinesis_firehose_delivery_stream.test_stream"
 	rInt := acctest.RandInt()
@@ -73,6 +136,48 @@ func TestAccAWSKinesisFirehoseDeliveryStream_s3basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists("aws_kinesis_firehose_delivery_stream.test_stream", &stream),
 					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSKinesisFirehoseDeliveryStream_s3basicWithTags(t *testing.T) {
+	var stream firehose.DeliveryStreamDescription
+	rInt := acctest.RandInt()
+	rName := fmt.Sprintf("terraform-kinesis-firehose-basictest-%d", rInt)
+	config := fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_s3basic,
+		rInt, rInt, rInt, rInt)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithTags(rName, rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisFirehoseDeliveryStreamExists("aws_kinesis_firehose_delivery_stream.test_stream", &stream),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
+					resource.TestCheckResourceAttr("aws_kinesis_firehose_delivery_stream.test_stream", "tags.%", "2"),
+					resource.TestCheckResourceAttr("aws_kinesis_firehose_delivery_stream.test_stream", "tags.Usage", "original"),
+				),
+			},
+			{
+				Config: testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithTagsChanged(rName, rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisFirehoseDeliveryStreamExists("aws_kinesis_firehose_delivery_stream.test_stream", &stream),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
+					resource.TestCheckResourceAttr("aws_kinesis_firehose_delivery_stream.test_stream", "tags.%", "1"),
+					resource.TestCheckResourceAttr("aws_kinesis_firehose_delivery_stream.test_stream", "tags.Usage", "changed"),
+				),
+			},
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisFirehoseDeliveryStreamExists("aws_kinesis_firehose_delivery_stream.test_stream", &stream),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
+					resource.TestCheckResourceAttr("aws_kinesis_firehose_delivery_stream.test_stream", "tags.%", "0"),
 				),
 			},
 		},
@@ -183,7 +288,14 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists("aws_kinesis_firehose_delivery_stream.test_stream", &stream),
 					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
+					resource.TestCheckResourceAttr("aws_kinesis_firehose_delivery_stream.test_stream", "extended_s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr("aws_kinesis_firehose_delivery_stream.test_stream", "extended_s3_configuration.0.error_output_prefix", ""),
 				),
+			},
+			{
+				ResourceName:      "aws_kinesis_firehose_delivery_stream.test_stream",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -419,6 +531,42 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3_DataFormatConversionConf
 					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.output_format_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.output_format_configuration.0.serializer.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.output_format_configuration.0.serializer.0.parquet_ser_de.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3_ErrorOutputPrefix(t *testing.T) {
+	var stream firehose.DeliveryStreamDescription
+	rInt := acctest.RandInt()
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_kinesis_firehose_delivery_stream.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy_ExtendedS3,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKinesisFirehoseDeliveryStreamConfig_ExtendedS3_ErrorOutputPrefix(rName, rInt, "prefix1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.error_output_prefix", "prefix1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccKinesisFirehoseDeliveryStreamConfig_ExtendedS3_ErrorOutputPrefix(rName, rInt, "prefix2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.error_output_prefix", "prefix2"),
 				),
 			},
 		},
@@ -1043,7 +1191,7 @@ resource "aws_lambda_function" "lambda_function_test" {
     function_name = "%s"
     role = "${aws_iam_role.iam_for_lambda.arn}"
     handler = "exports.example"
-    runtime = "nodejs4.3"
+    runtime = "nodejs8.10"
 }
 `, funcName)
 }
@@ -1283,6 +1431,41 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
   }
 }`
 
+func testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithTags(rName string, rInt int) string {
+	return fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamBaseConfig, rInt, rInt, rInt) +
+		fmt.Sprintf(`
+	resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
+		depends_on = ["aws_iam_role_policy.firehose"]
+		name = "%s"
+		destination = "s3"
+		s3_configuration {
+			role_arn = "${aws_iam_role.firehose.arn}"
+			bucket_arn = "${aws_s3_bucket.bucket.arn}"
+		}
+	tags = {
+			Environment = "production"
+			Usage = "original"
+		}
+	}`, rName)
+}
+
+func testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithTagsChanged(rName string, rInt int) string {
+	return fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamBaseConfig, rInt, rInt, rInt) +
+		fmt.Sprintf(`
+	resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
+		depends_on = ["aws_iam_role_policy.firehose"]
+		name = "%s"
+		destination = "s3"
+		s3_configuration {
+			role_arn = "${aws_iam_role.firehose.arn}"
+			bucket_arn = "${aws_s3_bucket.bucket.arn}"
+		}
+	tags = {
+			Usage = "changed"
+		}
+	}`, rName)
+}
+
 var testAccKinesisFirehoseDeliveryStreamConfig_s3KinesisStreamSource = testAccKinesisFirehoseDeliveryStreamBaseConfig + testAccFirehoseKinesisStreamSource + `
 resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
   depends_on = ["aws_iam_role_policy.firehose", "aws_iam_role_policy.kinesis_source"]
@@ -1320,16 +1503,16 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
   extended_s3_configuration {
     role_arn = "${aws_iam_role.firehose.arn}"
     bucket_arn = "${aws_s3_bucket.bucket.arn}"
-    processing_configuration = [{
-    	enabled = "false",
-    	processors = [{
-    		type = "Lambda"
-    		parameters = [{
-    			parameter_name = "LambdaArn"
-    			parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
-    		}]
-    	}]
-    }],
+    processing_configuration {
+      enabled = false
+      processors {
+        type = "Lambda"
+        parameters {
+          parameter_name = "LambdaArn"
+          parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
+        }
+      }
+    }
     s3_backup_mode = "Disabled"
   }
 }
@@ -1607,6 +1790,23 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 `, rName, rName, rName)
 }
 
+func testAccKinesisFirehoseDeliveryStreamConfig_ExtendedS3_ErrorOutputPrefix(rName string, rInt int, errorOutputPrefix string) string {
+	return fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamBaseConfig, rInt, rInt, rInt) + fmt.Sprintf(`
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  destination = "extended_s3"
+  name        = %q
+
+  extended_s3_configuration {
+    bucket_arn          = "${aws_s3_bucket.bucket.arn}"
+    error_output_prefix = %q
+    role_arn            = "${aws_iam_role.firehose.arn}"
+  }
+
+  depends_on = ["aws_iam_role_policy.firehose"]
+}
+`, rName, errorOutputPrefix)
+}
+
 var testAccKinesisFirehoseDeliveryStreamConfig_extendedS3KmsKeyArn = testAccKinesisFirehoseDeliveryStreamBaseConfig + `
 resource "aws_kms_key" "test" {
   description = "Terraform acc test %s"
@@ -1620,16 +1820,16 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
     role_arn = "${aws_iam_role.firehose.arn}"
     bucket_arn = "${aws_s3_bucket.bucket.arn}"
     kms_key_arn = "${aws_kms_key.test.arn}"
-    processing_configuration = [{
-    	enabled = "false",
-    	processors = [{
-    		type = "Lambda"
-    		parameters = [{
-    			parameter_name = "LambdaArn"
-    			parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
-    		}]
-    	}]
-    }]
+    processing_configuration {
+      enabled = false
+      processors {
+        type = "Lambda"
+        parameters {
+          parameter_name = "LambdaArn"
+          parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
+        }
+      }
+    }
   }
 }
 `
@@ -1642,16 +1842,16 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
   extended_s3_configuration {
     role_arn = "${aws_iam_role.firehose.arn}"
     bucket_arn = "${aws_s3_bucket.bucket.arn}"
-    processing_configuration = [{
-    	enabled = "false",
-    	processors = [{
-    		type = "NotLambda"
-    		parameters = [{
-    			parameter_name = "LambdaArn"
-    			parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
-    		}]
-    	}]
-    }]
+    processing_configuration {
+      enabled = false
+      processors {
+        type = "NotLambda"
+        parameters {
+          parameter_name = "LambdaArn"
+          parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
+        }
+      }
+    }
   }
 }
 `
@@ -1664,16 +1864,16 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
   extended_s3_configuration {
     role_arn = "${aws_iam_role.firehose.arn}"
     bucket_arn = "${aws_s3_bucket.bucket.arn}"
-    processing_configuration = [{
-    	enabled = "false",
-    	processors = [{
-    		type = "Lambda"
-    		parameters = [{
-    			parameter_name = "NotLambdaArn"
-    			parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
-    		}]
-    	}]
-    }]
+    processing_configuration {
+      enabled = false
+      processors {
+        type = "Lambda"
+        parameters {
+          parameter_name = "NotLambdaArn"
+          parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
+        }
+      }
+    }
   }
 }
 `
@@ -1686,16 +1886,16 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
   extended_s3_configuration {
     role_arn = "${aws_iam_role.firehose.arn}"
     bucket_arn = "${aws_s3_bucket.bucket.arn}"
-    processing_configuration = [{
-    	enabled = "false",
-    	processors = [{
-    		type = "Lambda"
-    		parameters = [{
-    			parameter_name = "LambdaArn"
-    			parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
-    		}]
-    	}]
-    }]
+    processing_configuration {
+      enabled = false
+      processors {
+        type = "Lambda"
+        parameters {
+          parameter_name = "LambdaArn"
+          parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
+        }
+      }
+    }
     buffer_size = 10
     buffer_interval = 400
     compression_format = "GZIP"
@@ -1762,16 +1962,16 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
     data_table_name = "test-table"
     copy_options = "GZIP"
     data_table_columns = "test-col"
-    processing_configuration = [{
-      enabled = false,
-      processors = [{
+    processing_configuration {
+      enabled = false
+      processors {
         type = "Lambda"
-        parameters = [{
+        parameters {
           parameter_name = "LambdaArn"
           parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
-        }]
-      }]
-    }]
+        }
+      }
+    }
   }
 }`
 
@@ -1808,34 +2008,29 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
     hec_acknowledgment_timeout = 600
     hec_endpoint_type = "Event"
     s3_backup_mode = "FailedEventsOnly"
-    processing_configuration = [
-      {
-        enabled = "true"
-        processors = [
-          {
-            type = "Lambda"
-            parameters = [
-              {
-                parameter_name = "LambdaArn"
-                parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
-              },
-              {
-                parameter_name = "RoleArn"
-                parameter_value = "${aws_iam_role.firehose.arn}"
-              },
-              {
-                parameter_name = "BufferSizeInMBs"
-                parameter_value = 1
-              },
-              {
-                parameter_name = "BufferIntervalInSeconds"
-                parameter_value = 120
-              }
-            ]
-          }
-        ]
+    processing_configuration {
+      enabled = true
+      processors {
+        type = "Lambda"
+
+        parameters {
+          parameter_name = "LambdaArn"
+          parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
+        }
+        parameters {
+          parameter_name = "RoleArn"
+          parameter_value = "${aws_iam_role.firehose.arn}"
+        }
+        parameters {
+          parameter_name = "BufferSizeInMBs"
+          parameter_value = 1
+        }
+        parameters {
+          parameter_name = "BufferIntervalInSeconds"
+          parameter_value = 120
+        }
       }
-    ]
+    }
   }
 }`
 
@@ -1904,16 +2099,16 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream_es" {
     index_name = "test"
     type_name = "test"
     buffering_interval = 500
-    processing_configuration = [{
-      enabled = "false",
-      processors = [{
+    processing_configuration {
+      enabled = false
+      processors {
         type = "Lambda"
-        parameters = [{
+        parameters {
           parameter_name = "LambdaArn"
           parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
-        }]
-      }]
-    }]
+        }
+      }
+    }
   }
 }`
 

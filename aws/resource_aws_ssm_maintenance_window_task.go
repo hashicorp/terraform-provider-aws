@@ -2,8 +2,9 @@ package aws
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform/helper/validation"
 	"log"
+
+	"github.com/hashicorp/terraform/helper/validation"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
@@ -85,7 +86,7 @@ func resourceAwsSsmMaintenanceWindowTask() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(3, 128),
+				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
 
 			"priority": {
@@ -206,9 +207,15 @@ func resourceAwsSsmMaintenanceWindowTaskCreate(d *schema.ResourceData, meta inte
 		TaskType:       aws.String(d.Get("task_type").(string)),
 		ServiceRoleArn: aws.String(d.Get("service_role_arn").(string)),
 		TaskArn:        aws.String(d.Get("task_arn").(string)),
-		Name:           aws.String(d.Get("name").(string)),
-		Description:    aws.String(d.Get("description").(string)),
 		Targets:        expandAwsSsmTargets(d.Get("targets").([]interface{})),
+	}
+
+	if v, ok := d.GetOk("name"); ok {
+		params.Name = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("description"); ok {
+		params.Description = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("priority"); ok {
@@ -299,7 +306,7 @@ func resourceAwsSsmMaintenanceWindowTaskDelete(d *schema.ResourceData, meta inte
 
 	_, err := ssmconn.DeregisterTaskFromMaintenanceWindow(params)
 	if err != nil {
-		return err
+		return fmt.Errorf("error deregistering SSM Maintenance Window Task (%s): %s", d.Id(), err)
 	}
 
 	return nil

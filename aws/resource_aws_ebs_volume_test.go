@@ -2,9 +2,9 @@ package aws
 
 import (
 	"fmt"
-	"testing"
-
+	"log"
 	"regexp"
+	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -12,6 +12,59 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_ebs_volume", &resource.Sweeper{
+		Name: "aws_ebs_volume",
+		Dependencies: []string{
+			"aws_instance",
+		},
+		F: testSweepEbsVolumes,
+	})
+}
+
+func testSweepEbsVolumes(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).ec2conn
+
+	err = conn.DescribeVolumesPages(&ec2.DescribeVolumesInput{}, func(page *ec2.DescribeVolumesOutput, lastPage bool) bool {
+		for _, volume := range page.Volumes {
+			id := aws.StringValue(volume.VolumeId)
+
+			if aws.StringValue(volume.State) != ec2.VolumeStateAvailable {
+				log.Printf("[INFO] Skipping unavailable EC2 EBS Volume: %s", id)
+				continue
+			}
+
+			input := &ec2.DeleteVolumeInput{
+				VolumeId: aws.String(id),
+			}
+
+			log.Printf("[INFO] Deleting EC2 EBS Volume: %s", id)
+			_, err := conn.DeleteVolume(input)
+
+			if err != nil {
+				log.Printf("[ERROR] Error deleting EC2 EBS Volume (%s): %s", id, err)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping EC2 EBS Volume sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("Error retrieving EC2 EBS Volumes: %s", err)
+	}
+
+	return nil
+}
 
 func TestAccAWSEBSVolume_basic(t *testing.T) {
 	var v ec2.Volume
@@ -326,7 +379,7 @@ resource "aws_instance" "test" {
     delete_on_termination = true
   }
 
-  tags {
+  tags = {
     Name    = "test-terraform"
   }
 }
@@ -385,7 +438,7 @@ resource "aws_instance" "test" {
     delete_on_termination = true
   }
 
-  tags {
+  tags = {
     Name    = "test-terraform"
   }
 }
@@ -412,7 +465,7 @@ resource "aws_ebs_volume" "test" {
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
   type = "gp2"
   size = 10
-  tags {
+  tags = {
     Name = "tf-acc-test-ebs-volume-test"
   }
 }
@@ -425,7 +478,7 @@ resource "aws_ebs_volume" "test" {
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
   type = "sc1"
   size = 500
-  tags {
+  tags = {
     Name = "tf-acc-test-ebs-volume-test"
   }
 }
@@ -439,7 +492,7 @@ resource "aws_ebs_volume" "test" {
   type = "io1"
   size = 4
   iops = 100
-  tags {
+  tags = {
     Name = "tf-acc-test-ebs-volume-test"
   }
 }
@@ -453,7 +506,7 @@ resource "aws_ebs_volume" "test" {
   type = "io1"
   size = 4
   iops = 200
-  tags {
+  tags = {
     Name = "tf-acc-test-ebs-volume-test"
   }
 }
@@ -497,7 +550,7 @@ data "aws_availability_zones" "available" {}
 resource "aws_ebs_volume" "test" {
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
   size = 1
-  tags {
+  tags = {
     Name = "TerraformTest"
   }
 }
@@ -511,7 +564,7 @@ resource "aws_ebs_volume" "test" {
   size = 10
   type = "gp2"
   iops = 0
-  tags {
+  tags = {
     Name = "TerraformTest"
   }
 }

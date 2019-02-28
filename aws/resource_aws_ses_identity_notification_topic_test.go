@@ -17,6 +17,7 @@ func TestAccAwsSESIdentityNotificationTopic_basic(t *testing.T) {
 		"%s.terraformtesting.com",
 		acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 	topicName := fmt.Sprintf("test-topic-%d", acctest.RandInt())
+	resourceName := "aws_ses_identity_notification_topic.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -28,14 +29,19 @@ func TestAccAwsSESIdentityNotificationTopic_basic(t *testing.T) {
 			{
 				Config: fmt.Sprintf(testAccAwsSESIdentityNotificationTopicConfig_basic, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSESIdentityNotificationTopicExists("aws_ses_identity_notification_topic.test"),
+					testAccCheckAwsSESIdentityNotificationTopicExists(resourceName),
 				),
 			},
 			{
 				Config: fmt.Sprintf(testAccAwsSESIdentityNotificationTopicConfig_update, domain, topicName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSESIdentityNotificationTopicExists("aws_ses_identity_notification_topic.test"),
+					testAccCheckAwsSESIdentityNotificationTopicExists(resourceName),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})

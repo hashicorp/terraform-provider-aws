@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 	"regexp"
-	"strings"
 	"testing"
 	"time"
 
@@ -31,25 +30,8 @@ func testSweepDbInstances(region string) error {
 	}
 	conn := client.(*AWSClient).rdsconn
 
-	prefixes := []string{
-		"foobarbaz-test-terraform-",
-		"foobarbaz-enhanced-monitoring-",
-		"mydb-rds-",
-		"terraform-",
-		"tf-",
-	}
-
 	err = conn.DescribeDBInstancesPages(&rds.DescribeDBInstancesInput{}, func(out *rds.DescribeDBInstancesOutput, lastPage bool) bool {
 		for _, dbi := range out.DBInstances {
-			hasPrefix := false
-			for _, prefix := range prefixes {
-				if strings.HasPrefix(*dbi.DBInstanceIdentifier, prefix) {
-					hasPrefix = true
-				}
-			}
-			if !hasPrefix {
-				continue
-			}
 			log.Printf("[INFO] Deleting DB instance: %s", *dbi.DBInstanceIdentifier)
 
 			_, err := conn.DeleteDBInstance(&rds.DeleteDBInstanceInput{
@@ -530,7 +512,7 @@ func TestAccAWSDBInstance_ReplicateSourceDb_BackupWindow(t *testing.T) {
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBInstanceConfig_ReplicateSourceDb_BackupWindow(rName, "00:00-08:00"),
+				Config: testAccAWSDBInstanceConfig_ReplicateSourceDb_BackupWindow(rName, "00:00-08:00", "sun:23:00-sun:23:30"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBInstanceExists(sourceResourceName, &sourceDbInstance),
 					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
@@ -627,12 +609,12 @@ func TestAccAWSDBInstance_ReplicateSourceDb_MaintenanceWindow(t *testing.T) {
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBInstanceConfig_ReplicateSourceDb_MaintenanceWindow(rName, "sun:01:00-sun:01:30"),
+				Config: testAccAWSDBInstanceConfig_ReplicateSourceDb_MaintenanceWindow(rName, "00:00-08:00", "sun:23:00-sun:23:30"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBInstanceExists(sourceResourceName, &sourceDbInstance),
 					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
 					testAccCheckAWSDBInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
-					resource.TestCheckResourceAttr(resourceName, "maintenance_window", "sun:01:00-sun:01:30"),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_window", "sun:23:00-sun:23:30"),
 				),
 			},
 		},
@@ -839,6 +821,33 @@ func TestAccAWSDBInstance_SnapshotIdentifier_AllocatedStorage(t *testing.T) {
 	})
 }
 
+func TestAccAWSDBInstance_SnapshotIdentifier_Io1Storage(t *testing.T) {
+	var dbInstance, sourceDbInstance rds.DBInstance
+	var dbSnapshot rds.DBSnapshot
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	sourceDbResourceName := "aws_db_instance.source"
+	snapshotResourceName := "aws_db_snapshot.test"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBInstanceConfig_SnapshotIdentifier_Io1Storage(rName, 1000),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(sourceDbResourceName, &sourceDbInstance),
+					testAccCheckDbSnapshotExists(snapshotResourceName, &dbSnapshot),
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "iops", "1000"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSDBInstance_SnapshotIdentifier_AutoMinorVersionUpgrade(t *testing.T) {
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
@@ -961,7 +970,7 @@ func TestAccAWSDBInstance_SnapshotIdentifier_BackupWindow(t *testing.T) {
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBInstanceConfig_SnapshotIdentifier_BackupWindow(rName, "00:00-08:00"),
+				Config: testAccAWSDBInstanceConfig_SnapshotIdentifier_BackupWindow(rName, "00:00-08:00", "sun:23:00-sun:23:30"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBInstanceExists(sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDbSnapshotExists(snapshotResourceName, &dbSnapshot),
@@ -1052,12 +1061,12 @@ func TestAccAWSDBInstance_SnapshotIdentifier_MaintenanceWindow(t *testing.T) {
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBInstanceConfig_SnapshotIdentifier_MaintenanceWindow(rName, "sun:01:00-sun:01:30"),
+				Config: testAccAWSDBInstanceConfig_SnapshotIdentifier_MaintenanceWindow(rName, "00:00-08:00", "sun:23:00-sun:23:30"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBInstanceExists(sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDbSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
-					resource.TestCheckResourceAttr(resourceName, "maintenance_window", "sun:01:00-sun:01:30"),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_window", "sun:23:00-sun:23:30"),
 				),
 			},
 		},
@@ -1286,7 +1295,7 @@ func TestAccAWSDBInstance_SnapshotIdentifier_VpcSecurityGroupIds(t *testing.T) {
 }
 
 // Regression reference: https://github.com/terraform-providers/terraform-provider-aws/issues/5360
-// This acceptance test explicitly tests when snapshot_identifer is set,
+// This acceptance test explicitly tests when snapshot_identifier is set,
 // vpc_security_group_ids is set (which triggered the resource update function),
 // and tags is set which was missing its ARN used for tagging
 func TestAccAWSDBInstance_SnapshotIdentifier_VpcSecurityGroupIds_Tags(t *testing.T) {
@@ -1450,7 +1459,7 @@ func TestAccAWSDBInstance_MSSQL_Domain(t *testing.T) {
 				Config: testAccAWSDBMSSQLDomain(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBInstanceExists("aws_db_instance.mssql", &vBefore),
-					testAccCheckAWSDBInstanceDomainAttributes("foo.somedomain.com", &vBefore),
+					testAccCheckAWSDBInstanceDomainAttributes("terraformtesting.com", &vBefore),
 					resource.TestCheckResourceAttrSet(
 						"aws_db_instance.mssql", "domain"),
 					resource.TestCheckResourceAttrSet(
@@ -1461,7 +1470,7 @@ func TestAccAWSDBInstance_MSSQL_Domain(t *testing.T) {
 				Config: testAccAWSDBMSSQLUpdateDomain(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBInstanceExists("aws_db_instance.mssql", &vAfter),
-					testAccCheckAWSDBInstanceDomainAttributes("bar.somedomain.com", &vAfter),
+					testAccCheckAWSDBInstanceDomainAttributes("corp.notexample.com", &vAfter),
 					resource.TestCheckResourceAttrSet(
 						"aws_db_instance.mssql", "domain"),
 					resource.TestCheckResourceAttrSet(
@@ -1486,7 +1495,7 @@ func TestAccAWSDBInstance_MSSQL_DomainSnapshotRestore(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBInstanceExists("aws_db_instance.mssql_restore", &vRestoredInstance),
 					testAccCheckAWSDBInstanceExists("aws_db_instance.mssql", &v),
-					testAccCheckAWSDBInstanceDomainAttributes("foo.somedomain.com", &vRestoredInstance),
+					testAccCheckAWSDBInstanceDomainAttributes("terraformtesting.com", &vRestoredInstance),
 					resource.TestCheckResourceAttrSet(
 						"aws_db_instance.mssql_restore", "domain"),
 					resource.TestCheckResourceAttrSet(
@@ -1657,6 +1666,34 @@ func TestAccAWSDBInstance_EnabledCloudwatchLogsExports_Oracle(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "3"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
+			},
+		},
+	})
+}
+
+func TestAccAWSDBInstance_EnabledCloudwatchLogsExports_Postgresql(t *testing.T) {
+	var dbInstance rds.DBInstance
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBInstanceConfig_EnabledCloudwatchLogsExports_Postgresql(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "2"),
 				),
 			},
 			{
@@ -2168,7 +2205,7 @@ resource "aws_iam_policy_attachment" "test-attach" {
 //  Make sure EVERYTHING required is here...
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-db-instance-with-subnet-group"
 	}
 }
@@ -2177,7 +2214,7 @@ resource "aws_subnet" "foo" {
 	cidr_block = "10.1.1.0/24"
 	availability_zone = "us-west-2a"
 	vpc_id = "${aws_vpc.foo.id}"
-	tags {
+	tags = {
 		Name = "tf-acc-db-instance-with-subnet-group-1"
 	}
 }
@@ -2186,7 +2223,7 @@ resource "aws_subnet" "bar" {
 	cidr_block = "10.1.2.0/24"
 	availability_zone = "us-west-2b"
 	vpc_id = "${aws_vpc.foo.id}"
-	tags {
+	tags = {
 		Name = "tf-acc-db-instance-with-subnet-group-2"
 	}
 }
@@ -2194,7 +2231,7 @@ resource "aws_subnet" "bar" {
 resource "aws_db_subnet_group" "foo" {
 	name = "%s-subnet-group"
 	subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
-	tags {
+	tags = {
 		Name = "tf-dbsubnet-group-test"
 	}
 }
@@ -2250,7 +2287,7 @@ resource "aws_db_instance" "snapshot" {
 
 	copy_tags_to_snapshot = true
 	final_snapshot_identifier = "foobarbaz-test-terraform-final-snapshot-%d"
-	tags {
+	tags = {
 		Name = "tf-tags-db"
 	}
 }
@@ -2408,7 +2445,7 @@ func testAccAWSDBInstanceConfigWithSubnetGroup(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-db-instance-with-subnet-group"
 	}
 }
@@ -2417,7 +2454,7 @@ resource "aws_subnet" "foo" {
 	cidr_block = "10.1.1.0/24"
 	availability_zone = "us-west-2a"
 	vpc_id = "${aws_vpc.foo.id}"
-	tags {
+	tags = {
 		Name = "tf-acc-db-instance-with-subnet-group-1"
 	}
 }
@@ -2426,7 +2463,7 @@ resource "aws_subnet" "bar" {
 	cidr_block = "10.1.2.0/24"
 	availability_zone = "us-west-2b"
 	vpc_id = "${aws_vpc.foo.id}"
-	tags {
+	tags = {
 		Name = "tf-acc-db-instance-with-subnet-group-2"
 	}
 }
@@ -2434,7 +2471,7 @@ resource "aws_subnet" "bar" {
 resource "aws_db_subnet_group" "foo" {
 	name = "foo-%s"
 	subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
-	tags {
+	tags = {
 		Name = "tf-dbsubnet-group-test"
 	}
 }
@@ -2462,14 +2499,14 @@ func testAccAWSDBInstanceConfigWithSubnetGroupUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-db-instance-with-subnet-group-updated-foo"
 	}
 }
 
 resource "aws_vpc" "bar" {
 	cidr_block = "10.10.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-db-instance-with-subnet-group-updated-bar"
 	}
 }
@@ -2478,7 +2515,7 @@ resource "aws_subnet" "foo" {
 	cidr_block = "10.1.1.0/24"
 	availability_zone = "us-west-2a"
 	vpc_id = "${aws_vpc.foo.id}"
-	tags {
+	tags = {
 		Name = "tf-acc-db-instance-with-subnet-group-1"
 	}
 }
@@ -2487,7 +2524,7 @@ resource "aws_subnet" "bar" {
 	cidr_block = "10.1.2.0/24"
 	availability_zone = "us-west-2b"
 	vpc_id = "${aws_vpc.foo.id}"
-	tags {
+	tags = {
 		Name = "tf-acc-db-instance-with-subnet-group-2"
 	}
 }
@@ -2496,7 +2533,7 @@ resource "aws_subnet" "test" {
 	cidr_block = "10.10.3.0/24"
 	availability_zone = "us-west-2b"
 	vpc_id = "${aws_vpc.bar.id}"
-	tags {
+	tags = {
 		Name = "tf-acc-db-instance-with-subnet-group-3"
 	}
 }
@@ -2505,7 +2542,7 @@ resource "aws_subnet" "another_test" {
 	cidr_block = "10.10.4.0/24"
 	availability_zone = "us-west-2a"
 	vpc_id = "${aws_vpc.bar.id}"
-	tags {
+	tags = {
 		Name = "tf-acc-db-instance-with-subnet-group-4"
 	}
 }
@@ -2513,7 +2550,7 @@ resource "aws_subnet" "another_test" {
 resource "aws_db_subnet_group" "foo" {
 	name = "foo-%s"
 	subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
-	tags {
+	tags = {
 		Name = "tf-dbsubnet-group-test"
 	}
 }
@@ -2521,7 +2558,7 @@ resource "aws_db_subnet_group" "foo" {
 resource "aws_db_subnet_group" "bar" {
 	name = "bar-%s"
 	subnet_ids = ["${aws_subnet.test.id}", "${aws_subnet.another_test.id}"]
-	tags {
+	tags = {
 		Name = "tf-dbsubnet-group-test-updated"
 	}
 }
@@ -2551,7 +2588,7 @@ func testAccAWSDBMSSQL_timezone(rInt int) string {
 resource "aws_vpc" "foo" {
   cidr_block           = "10.1.0.0/16"
   enable_dns_hostnames = true
-  tags {
+  tags = {
     Name = "terraform-testacc-db-instance-mssql-timezone"
   }
 }
@@ -2567,7 +2604,7 @@ resource "aws_subnet" "main" {
   vpc_id            = "${aws_vpc.foo.id}"
   availability_zone = "us-west-2a"
   cidr_block        = "10.1.1.0/24"
-  tags {
+  tags = {
     Name = "tf-acc-db-instance-mssql-timezone-main"
   }
 }
@@ -2576,7 +2613,7 @@ resource "aws_subnet" "other" {
   vpc_id            = "${aws_vpc.foo.id}"
   availability_zone = "us-west-2b"
   cidr_block        = "10.1.2.0/24"
-  tags {
+  tags = {
     Name = "tf-acc-db-instance-mssql-timezone-other"
   }
 }
@@ -2623,7 +2660,7 @@ func testAccAWSDBMSSQL_timezone_AKST(rInt int) string {
 resource "aws_vpc" "foo" {
   cidr_block           = "10.1.0.0/16"
   enable_dns_hostnames = true
-  tags {
+  tags = {
     Name = "terraform-testacc-db-instance-mssql-timezone-akst"
   }
 }
@@ -2639,7 +2676,7 @@ resource "aws_subnet" "main" {
   vpc_id            = "${aws_vpc.foo.id}"
   availability_zone = "us-west-2a"
   cidr_block        = "10.1.1.0/24"
-  tags {
+  tags = {
     Name = "tf-acc-db-instance-mssql-timezone-akst-main"
   }
 }
@@ -2648,7 +2685,7 @@ resource "aws_subnet" "other" {
   vpc_id            = "${aws_vpc.foo.id}"
   availability_zone = "us-west-2b"
   cidr_block        = "10.1.2.0/24"
-  tags {
+  tags = {
     Name = "tf-acc-db-instance-mssql-timezone-akst-other"
   }
 }
@@ -2696,7 +2733,7 @@ func testAccAWSDBMSSQLDomain(rInt int) string {
 resource "aws_vpc" "foo" {
   cidr_block           = "10.1.0.0/16"
   enable_dns_hostnames = true
-  tags {
+  tags = {
     Name = "terraform-testacc-db-instance-mssql-domain"
   }
 }
@@ -2712,7 +2749,7 @@ resource "aws_subnet" "main" {
   vpc_id            = "${aws_vpc.foo.id}"
   availability_zone = "us-west-2a"
   cidr_block        = "10.1.1.0/24"
-  tags {
+  tags = {
     Name = "tf-acc-db-instance-mssql-domain-main"
   }
 }
@@ -2721,7 +2758,7 @@ resource "aws_subnet" "other" {
   vpc_id            = "${aws_vpc.foo.id}"
   availability_zone = "us-west-2b"
   cidr_block        = "10.1.2.0/24"
-  tags {
+  tags = {
     Name = "tf-acc-db-instance-mssql-domain-other"
   }
 }
@@ -2763,7 +2800,7 @@ resource "aws_security_group_rule" "rds-mssql-1" {
 }
 
 resource "aws_directory_service_directory" "foo" {
-  name     = "foo.somedomain.com"
+  name     = "terraformtesting.com"
   password = "SuperSecretPassw0rd"
   type     = "MicrosoftAD"
   edition  = "Standard"
@@ -2775,7 +2812,7 @@ resource "aws_directory_service_directory" "foo" {
 }
 
 resource "aws_directory_service_directory" "bar" {
-  name     = "bar.somedomain.com"
+  name     = "corp.notexample.com"
   password = "SuperSecretPassw0rd"
   type     = "MicrosoftAD"
   edition  = "Standard"
@@ -2818,7 +2855,7 @@ func testAccAWSDBMSSQLUpdateDomain(rInt int) string {
 resource "aws_vpc" "foo" {
   cidr_block           = "10.1.0.0/16"
   enable_dns_hostnames = true
-  tags {
+  tags = {
     Name = "terraform-testacc-db-instance-mssql-domain"
   }
 }
@@ -2834,7 +2871,7 @@ resource "aws_subnet" "main" {
   vpc_id            = "${aws_vpc.foo.id}"
   availability_zone = "us-west-2a"
   cidr_block        = "10.1.1.0/24"
-  tags {
+  tags = {
     Name = "tf-acc-db-instance-mssql-domain-main"
   }
 }
@@ -2843,7 +2880,7 @@ resource "aws_subnet" "other" {
   vpc_id            = "${aws_vpc.foo.id}"
   availability_zone = "us-west-2b"
   cidr_block        = "10.1.2.0/24"
-  tags {
+  tags = {
     Name = "tf-acc-db-instance-mssql-domain-other"
   }
 }
@@ -2886,7 +2923,7 @@ resource "aws_security_group_rule" "rds-mssql-1" {
 }
 
 resource "aws_directory_service_directory" "foo" {
-  name     = "foo.somedomain.com"
+  name     = "terraformtesting.com"
   password = "SuperSecretPassw0rd"
   type     = "MicrosoftAD"
   edition  = "Standard"
@@ -2898,7 +2935,7 @@ resource "aws_directory_service_directory" "foo" {
 }
 
 resource "aws_directory_service_directory" "bar" {
-  name     = "bar.somedomain.com"
+  name     = "corp.notexample.com"
   password = "SuperSecretPassw0rd"
   type     = "MicrosoftAD"
   edition  = "Standard"
@@ -2941,7 +2978,7 @@ func testAccAWSDBMSSQLDomainSnapshotRestore(rInt int) string {
 resource "aws_vpc" "foo" {
   cidr_block           = "10.1.0.0/16"
   enable_dns_hostnames = true
-  tags {
+  tags = {
     Name = "terraform-testacc-db-instance-mssql-domain"
   }
 }
@@ -2957,7 +2994,7 @@ resource "aws_subnet" "main" {
   vpc_id            = "${aws_vpc.foo.id}"
   availability_zone = "us-west-2a"
   cidr_block        = "10.1.1.0/24"
-  tags {
+  tags = {
     Name = "tf-acc-db-instance-mssql-domain-main"
   }
 }
@@ -2966,7 +3003,7 @@ resource "aws_subnet" "other" {
   vpc_id            = "${aws_vpc.foo.id}"
   availability_zone = "us-west-2b"
   cidr_block        = "10.1.2.0/24"
-  tags {
+  tags = {
     Name = "tf-acc-db-instance-mssql-domain-other"
   }
 }
@@ -3025,7 +3062,7 @@ resource "aws_security_group_rule" "rds-mssql-1" {
 }
 
 resource "aws_directory_service_directory" "foo" {
-  name     = "foo.somedomain.com"
+  name     = "terraformtesting.com"
   password = "SuperSecretPassw0rd"
   type     = "MicrosoftAD"
   edition  = "Standard"
@@ -3083,7 +3120,7 @@ func testAccAWSDBInstanceConfigCloudwatchLogsExportConfiguration(rInt int) strin
 	resource "aws_vpc" "foo" {
 		cidr_block           = "10.1.0.0/16"
 		enable_dns_hostnames = true
-		tags {
+	tags = {
 		  Name = "terraform-testacc-db-instance-enable-cloudwatch"
 		}
 	  }
@@ -3099,7 +3136,7 @@ func testAccAWSDBInstanceConfigCloudwatchLogsExportConfiguration(rInt int) strin
 		vpc_id            = "${aws_vpc.foo.id}"
 		availability_zone = "us-west-2a"
 		cidr_block        = "10.1.1.0/24"
-		tags {
+	tags = {
 		  Name = "tf-acc-db-instance-enable-cloudwatch-main"
 		}
 	  }
@@ -3108,7 +3145,7 @@ func testAccAWSDBInstanceConfigCloudwatchLogsExportConfiguration(rInt int) strin
 		vpc_id            = "${aws_vpc.foo.id}"
 		availability_zone = "us-west-2b"
 		cidr_block        = "10.1.2.0/24"
-		tags {
+	tags = {
 		  Name = "tf-acc-db-instance-enable-cloudwatch-other"
 		}
 	  }
@@ -3140,7 +3177,7 @@ func testAccAWSDBInstanceConfigCloudwatchLogsExportConfigurationAdd(rInt int) st
 		resource "aws_vpc" "foo" {
 			cidr_block           = "10.1.0.0/16"
 			enable_dns_hostnames = true
-			tags {
+	tags = {
 			  Name = "terraform-testacc-db-instance-enable-cloudwatch"
 			}
 		  }
@@ -3156,7 +3193,7 @@ func testAccAWSDBInstanceConfigCloudwatchLogsExportConfigurationAdd(rInt int) st
 			vpc_id            = "${aws_vpc.foo.id}"
 			availability_zone = "us-west-2a"
 			cidr_block        = "10.1.1.0/24"
-			tags {
+	tags = {
 			  Name = "tf-acc-db-instance-enable-cloudwatch-main"
 			}
 		  }
@@ -3165,7 +3202,7 @@ func testAccAWSDBInstanceConfigCloudwatchLogsExportConfigurationAdd(rInt int) st
 			vpc_id            = "${aws_vpc.foo.id}"
 			availability_zone = "us-west-2b"
 			cidr_block        = "10.1.2.0/24"
-			tags {
+	tags = {
 			  Name = "tf-acc-db-instance-enable-cloudwatch-other"
 			}
 		  }
@@ -3200,7 +3237,7 @@ func testAccAWSDBInstanceConfigCloudwatchLogsExportConfigurationModify(rInt int)
 		resource "aws_vpc" "foo" {
 			cidr_block           = "10.1.0.0/16"
 			enable_dns_hostnames = true
-			tags {
+	tags = {
 			  Name = "terraform-testacc-db-instance-enable-cloudwatch"
 			}
 		  }
@@ -3216,7 +3253,7 @@ func testAccAWSDBInstanceConfigCloudwatchLogsExportConfigurationModify(rInt int)
 			vpc_id            = "${aws_vpc.foo.id}"
 			availability_zone = "us-west-2a"
 			cidr_block        = "10.1.1.0/24"
-			tags {
+	tags = {
 			  Name = "tf-acc-db-instance-enable-cloudwatch-main"
 			}
 		  }
@@ -3225,7 +3262,7 @@ func testAccAWSDBInstanceConfigCloudwatchLogsExportConfigurationModify(rInt int)
 			vpc_id            = "${aws_vpc.foo.id}"
 			availability_zone = "us-west-2b"
 			cidr_block        = "10.1.2.0/24"
-			tags {
+	tags = {
 			  Name = "tf-acc-db-instance-enable-cloudwatch-other"
 			}
 		  }
@@ -3260,7 +3297,7 @@ func testAccAWSDBInstanceConfigCloudwatchLogsExportConfigurationDelete(rInt int)
 		resource "aws_vpc" "foo" {
 			cidr_block           = "10.1.0.0/16"
 			enable_dns_hostnames = true
-			tags {
+	tags = {
 			  Name = "terraform-testacc-db-instance-enable-cloudwatch"
 			}
 		  }
@@ -3276,7 +3313,7 @@ func testAccAWSDBInstanceConfigCloudwatchLogsExportConfigurationDelete(rInt int)
 			vpc_id            = "${aws_vpc.foo.id}"
 			availability_zone = "us-west-2a"
 			cidr_block        = "10.1.1.0/24"
-			tags {
+	tags = {
 			  Name = "tf-acc-db-instance-enable-cloudwatch-main"
 			}
 		  }
@@ -3285,7 +3322,7 @@ func testAccAWSDBInstanceConfigCloudwatchLogsExportConfigurationDelete(rInt int)
 			vpc_id            = "${aws_vpc.foo.id}"
 			availability_zone = "us-west-2b"
 			cidr_block        = "10.1.2.0/24"
-			tags {
+	tags = {
 			  Name = "tf-acc-db-instance-enable-cloudwatch-other"
 			}
 		  }
@@ -3385,6 +3422,21 @@ resource "aws_db_instance" "test" {
   allocated_storage               = 10
   enabled_cloudwatch_logs_exports = ["alert", "listener", "trace"]
   engine                          = "oracle-se"
+  identifier                      = %q
+  instance_class                  = "db.t2.micro"
+  password                        = "avoid-plaintext-passwords"
+  username                        = "tfacctest"
+  skip_final_snapshot             = true
+}
+`, rName)
+}
+
+func testAccAWSDBInstanceConfig_EnabledCloudwatchLogsExports_Postgresql(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  allocated_storage               = 10
+  enabled_cloudwatch_logs_exports = ["postgresql", "upgrade"]
+  engine                          = "postgres"
   identifier                      = %q
   instance_class                  = "db.t2.micro"
   password                        = "avoid-plaintext-passwords"
@@ -3510,7 +3562,9 @@ resource "aws_db_instance" "test" {
 `, rName, backupRetentionPeriod, rName)
 }
 
-func testAccAWSDBInstanceConfig_ReplicateSourceDb_BackupWindow(rName, backupWindow string) string {
+// We provide maintenance_window to prevent the following error from a randomly selected window:
+// InvalidParameterValue: The backup window and maintenance window must not overlap.
+func testAccAWSDBInstanceConfig_ReplicateSourceDb_BackupWindow(rName, backupWindow, maintenanceWindow string) string {
 	return fmt.Sprintf(`
 resource "aws_db_instance" "source" {
   allocated_storage       = 5
@@ -3527,10 +3581,11 @@ resource "aws_db_instance" "test" {
   backup_window       = %q
   identifier          = %q
   instance_class      = "${aws_db_instance.source.instance_class}"
+  maintenance_window  = %q
   replicate_source_db = "${aws_db_instance.source.id}"
   skip_final_snapshot = true
 }
-`, rName, backupWindow, rName)
+`, rName, backupWindow, rName, maintenanceWindow)
 }
 
 func testAccAWSDBInstanceConfig_ReplicateSourceDb_DeletionProtection(rName string, deletionProtection bool) string {
@@ -3579,7 +3634,9 @@ resource "aws_db_instance" "test" {
 `, rName, iamDatabaseAuthenticationEnabled, rName)
 }
 
-func testAccAWSDBInstanceConfig_ReplicateSourceDb_MaintenanceWindow(rName, maintenanceWindow string) string {
+// We provide backup_window to prevent the following error from a randomly selected window:
+// InvalidParameterValue: The backup window and maintenance window must not overlap.
+func testAccAWSDBInstanceConfig_ReplicateSourceDb_MaintenanceWindow(rName, backupWindow, maintenanceWindow string) string {
 	return fmt.Sprintf(`
 resource "aws_db_instance" "source" {
   allocated_storage       = 5
@@ -3593,13 +3650,14 @@ resource "aws_db_instance" "source" {
 }
 
 resource "aws_db_instance" "test" {
+  backup_window       = %q
   identifier          = %q
   instance_class      = "${aws_db_instance.source.instance_class}"
   maintenance_window  = %q
   replicate_source_db = "${aws_db_instance.source.id}"
   skip_final_snapshot = true
 }
-`, rName, rName, maintenanceWindow)
+`, rName, backupWindow, rName, maintenanceWindow)
 }
 
 func testAccAWSDBInstanceConfig_ReplicateSourceDb_Monitoring(rName string, monitoringInterval int) string {
@@ -3817,6 +3875,35 @@ resource "aws_db_instance" "test" {
 `, rName, rName, allocatedStorage, rName)
 }
 
+func testAccAWSDBInstanceConfig_SnapshotIdentifier_Io1Storage(rName string, iops int) string {
+	return fmt.Sprintf(`
+resource "aws_db_instance" "source" {
+  allocated_storage   = 200
+  engine              = "mariadb"
+  identifier          = "%s-source"
+  instance_class      = "db.t2.micro"
+  password            = "avoid-plaintext-passwords"
+  username            = "tfacctest"
+  skip_final_snapshot = true
+}
+
+resource "aws_db_snapshot" "test" {
+  db_instance_identifier = "${aws_db_instance.source.id}"
+  db_snapshot_identifier = %q
+}
+
+resource "aws_db_instance" "test" {
+  identifier          = %q
+  instance_class      = "${aws_db_instance.source.instance_class}"
+  snapshot_identifier = "${aws_db_snapshot.test.id}"
+	skip_final_snapshot = true
+	allocated_storage   = 200
+  iops                = %d
+	storage_type        = "io1"
+}
+`, rName, rName, rName, iops)
+}
+
 func testAccAWSDBInstanceConfig_SnapshotIdentifier_AutoMinorVersionUpgrade(rName string, autoMinorVersionUpgrade bool) string {
 	return fmt.Sprintf(`
 resource "aws_db_instance" "source" {
@@ -3928,7 +4015,9 @@ resource "aws_db_instance" "test" {
 `, rName, rName, rName)
 }
 
-func testAccAWSDBInstanceConfig_SnapshotIdentifier_BackupWindow(rName, backupWindow string) string {
+// We provide maintenance_window to prevent the following error from a randomly selected window:
+// InvalidParameterValue: The backup window and maintenance window must not overlap.
+func testAccAWSDBInstanceConfig_SnapshotIdentifier_BackupWindow(rName, backupWindow, maintenanceWindow string) string {
 	return fmt.Sprintf(`
 resource "aws_db_instance" "source" {
   allocated_storage   = 5
@@ -3949,10 +4038,11 @@ resource "aws_db_instance" "test" {
   backup_window       = %q
   identifier          = %q
   instance_class      = "${aws_db_instance.source.instance_class}"
+  maintenance_window  = %q
   snapshot_identifier = "${aws_db_snapshot.test.id}"
   skip_final_snapshot = true
 }
-`, rName, rName, backupWindow, rName)
+`, rName, rName, backupWindow, rName, maintenanceWindow)
 }
 
 func testAccAWSDBInstanceConfig_SnapshotIdentifier_DeletionProtection(rName string, deletionProtection bool) string {
@@ -4009,7 +4099,9 @@ resource "aws_db_instance" "test" {
 `, rName, rName, iamDatabaseAuthenticationEnabled, rName)
 }
 
-func testAccAWSDBInstanceConfig_SnapshotIdentifier_MaintenanceWindow(rName, maintenanceWindow string) string {
+// We provide backup_window to prevent the following error from a randomly selected window:
+// InvalidParameterValue: The backup window and maintenance window must not overlap.
+func testAccAWSDBInstanceConfig_SnapshotIdentifier_MaintenanceWindow(rName, backupWindow, maintenanceWindow string) string {
 	return fmt.Sprintf(`
 resource "aws_db_instance" "source" {
   allocated_storage   = 5
@@ -4027,13 +4119,14 @@ resource "aws_db_snapshot" "test" {
 }
 
 resource "aws_db_instance" "test" {
+  backup_window       = %q
   identifier          = %q
   instance_class      = "${aws_db_instance.source.instance_class}"
   maintenance_window  = %q
   snapshot_identifier = "${aws_db_snapshot.test.id}"
   skip_final_snapshot = true
 }
-`, rName, rName, rName, maintenanceWindow)
+`, rName, rName, backupWindow, rName, maintenanceWindow)
 }
 
 func testAccAWSDBInstanceConfig_SnapshotIdentifier_Monitoring(rName string, monitoringInterval int) string {
@@ -4235,7 +4328,7 @@ resource "aws_db_instance" "test" {
   snapshot_identifier = "${aws_db_snapshot.test.id}"
   skip_final_snapshot = true
 
-  tags {
+  tags = {
     key1 = "value1"
   }
 }
@@ -4253,7 +4346,7 @@ resource "aws_db_instance" "source" {
   username            = "tfacctest"
   skip_final_snapshot = true
 
-  tags {
+  tags = {
     key1 = "value1"
   }
 }
@@ -4269,7 +4362,7 @@ resource "aws_db_instance" "test" {
   snapshot_identifier = "${aws_db_snapshot.test.id}"
   skip_final_snapshot = true
 
-  tags {}
+  tags = {}
 }
 `, rName, rName, rName)
 }
@@ -4343,7 +4436,7 @@ resource "aws_db_instance" "test" {
   skip_final_snapshot    = true
   vpc_security_group_ids = ["${aws_security_group.test.id}"]
 
-  tags {
+  tags = {
     key1 = "value1"
   }
 }
