@@ -767,6 +767,7 @@ func TestAccAWSInstance_vpc(t *testing.T) {
 func TestAccAWSInstance_placementGroup(t *testing.T) {
 	var v ec2.Instance
 	rStr := acctest.RandString(5)
+	rInt := acctest.RandIntRange(1, 3)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
@@ -776,7 +777,7 @@ func TestAccAWSInstance_placementGroup(t *testing.T) {
 		CheckDestroy:    testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfigPlacementGroup(rStr),
+				Config: testAccInstanceConfigPlacementGroup(rStr, rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(
 						"aws_instance.foo", &v),
@@ -784,6 +785,10 @@ func TestAccAWSInstance_placementGroup(t *testing.T) {
 						"aws_instance.foo",
 						"placement_group",
 						fmt.Sprintf("testAccInstanceConfigPlacementGroup_%s", rStr)),
+					resource.TestCheckResourceAttr(
+						"aws_instance.foo",
+						"placement_partition_number",
+						fmt.Sprintf("%d", rInt)),
 				),
 			},
 		},
@@ -2565,7 +2570,7 @@ resource "aws_instance" "foo" {
 }
 `
 
-func testAccInstanceConfigPlacementGroup(rStr string) string {
+func testAccInstanceConfigPlacementGroup(rStr string, rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
@@ -2584,7 +2589,8 @@ resource "aws_subnet" "foo" {
 
 resource "aws_placement_group" "foo" {
   name = "testAccInstanceConfigPlacementGroup_%s"
-  strategy = "cluster"
+	strategy = "partition"
+	partition_count = 3
 }
 
 # Limitations: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html#concepts-placement-groups
@@ -2594,11 +2600,12 @@ resource "aws_instance" "foo" {
   instance_type = "c3.large"
   subnet_id = "${aws_subnet.foo.id}"
   associate_public_ip_address = true
-  placement_group = "${aws_placement_group.foo.name}"
+	placement_group = "${aws_placement_group.foo.name}"
+	placement_partition_number = %d
   # pre-encoded base64 data
   user_data = "3dc39dda39be1205215e776bad998da361a5955d"
 }
-`, rStr)
+`, rStr, rInt)
 }
 
 const testAccInstanceConfigIpv6ErrorConfig = `
