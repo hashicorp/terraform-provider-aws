@@ -27,6 +27,10 @@ func dataSourceAwsS3Bucket() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"bucket_regional_domain_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"hosted_zone_id": {
 				Type:     schema.TypeString,
 				Computed: true,
