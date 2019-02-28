@@ -336,6 +336,12 @@ func resourceAwsInstance() *schema.Resource {
 							ForceNew: true,
 						},
 
+						"kms_key_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ForceNew: true,
+						},
+
 						"iops": {
 							Type:             schema.TypeInt,
 							Optional:         true,
@@ -436,6 +442,12 @@ func resourceAwsInstance() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Computed: true,
+							ForceNew: true,
+						},
+
+						"kms_key_id": {
+							Type:     schema.TypeString,
+							Optional: true,
 							ForceNew: true,
 						},
 
@@ -1331,6 +1343,9 @@ func readBlockDevicesFromInstance(instance *ec2.Instance, conn *ec2.EC2) (map[st
 		if vol.Encrypted != nil {
 			bd["encrypted"] = *vol.Encrypted
 		}
+		if vol.KmsKeyId != nil {
+			bd["kms_key_id"] = *vol.KmsKeyId
+		}
 
 		if blockDeviceIsRoot(instanceBd, instance) {
 			blockDevices["root"] = bd
@@ -1498,6 +1513,10 @@ func readBlockDeviceMappingsFromConfig(
 				ebs.Encrypted = aws.Bool(v)
 			}
 
+			if v, ok := bd["kms_key_id"].(string); ok && v != "" {
+				ebs.KmsKeyId = aws.String(v)
+			}
+
 			if v, ok := bd["volume_size"].(int); ok && v != 0 {
 				ebs.VolumeSize = aws.Int64(int64(v))
 			}
@@ -1554,6 +1573,7 @@ func readBlockDeviceMappingsFromConfig(
 			ebs := &ec2.EbsBlockDevice{
 				DeleteOnTermination: aws.Bool(bd["delete_on_termination"].(bool)),
 				Encrypted:           aws.Bool(bd["encrypted"].(bool)),
+				KmsKeyId:            aws.String(bd["kms_key_id"].(string)),
 			}
 
 			if v, ok := bd["volume_size"].(int); ok && v != 0 {

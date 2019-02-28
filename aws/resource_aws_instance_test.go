@@ -338,6 +338,8 @@ func TestAccAWSInstance_encryptedRootVolume(t *testing.T) {
 						"aws_instance.foo", "root_block_device.#", "1"),
 					resource.TestCheckResourceAttr(
 						"aws_instance.foo", "root_block_device.0.encrypted", "true"),
+					resource.TestCheckResourceAttrSet(
+						"aws_instance.foo", "root_block_device.0.kms_key_id"),
 				),
 			},
 		},
@@ -521,6 +523,8 @@ func TestAccAWSInstance_blockDevices(t *testing.T) {
 						"aws_instance.foo", "ebs_block_device.2634515331.device_name", "/dev/sdd"),
 					resource.TestCheckResourceAttr(
 						"aws_instance.foo", "ebs_block_device.2634515331.encrypted", "true"),
+					resource.TestCheckResourceAttrSet(
+						"aws_instance.foo", "ebs_block_device.2634515331.kms_key_id"),
 					resource.TestCheckResourceAttr(
 						"aws_instance.foo", "ebs_block_device.2634515331.volume_size", "12"),
 					resource.TestCheckResourceAttr(
@@ -2447,6 +2451,8 @@ resource "aws_instance" "foo" {
 `
 
 const testAccInstanceConfigBlockDevices = `
+resource "aws_kms_key" "foo" {}
+
 resource "aws_instance" "foo" {
 	# us-west-2
 	ami = "ami-55a7ea65"
@@ -2460,10 +2466,12 @@ resource "aws_instance" "foo" {
 		volume_type = "gp2"
 		volume_size = 11
 	}
+
 	ebs_block_device {
 		device_name = "/dev/sdb"
 		volume_size = 9
 	}
+
 	ebs_block_device {
 		device_name = "/dev/sdc"
 		volume_size = 10
@@ -2475,7 +2483,8 @@ resource "aws_instance" "foo" {
 	ebs_block_device {
 		device_name = "/dev/sdd"
 		volume_size = 12
-		encrypted = true
+		encrypted   = true
+        kms_key_id  = "${aws_kms_key.foo.arn}"
 	}
 
 	ephemeral_block_device {
@@ -2767,11 +2776,14 @@ resource "aws_vpc" "foo" {
 resource "aws_subnet" "foo" {
   cidr_block = "10.1.1.0/24"
   vpc_id = "${aws_vpc.foo.id}"
+  availability_zone = "us-west-2a"
 
   tags {
     Name = "tf-acc-instance-source-dest-enable"
   }
 }
+
+resource "aws_kms_key" "foo" {}
 
 resource "aws_instance" "foo" {
   ami           = "ami-08692d171e3cf02d6"
@@ -2781,6 +2793,7 @@ resource "aws_instance" "foo" {
   root_block_device {
     delete_on_termination = true
     encrypted             = true
+    kms_key_id            = "${aws_kms_key.foo.arn}"
   }
 }
 `
