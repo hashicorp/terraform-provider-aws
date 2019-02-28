@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsPlacementGroup() *schema.Resource {
@@ -31,6 +32,16 @@ func resourceAwsPlacementGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					"cluster",
+					"spread",
+					"partition",
+				}, false),
+			},
+			"partition_count": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				ForceNew: true,
 			},
 		},
 	}
@@ -44,6 +55,11 @@ func resourceAwsPlacementGroupCreate(d *schema.ResourceData, meta interface{}) e
 		GroupName: aws.String(name),
 		Strategy:  aws.String(d.Get("strategy").(string)),
 	}
+
+	if attr, ok := d.GetOk("partition_count"); ok && d.Get("strategy").(string) == "partition" {
+		input.PartitionCount = aws.Int64(int64(attr.(int)))
+	}
+
 	log.Printf("[DEBUG] Creating EC2 Placement group: %s", input)
 	_, err := conn.CreatePlacementGroup(&input)
 	if err != nil {
@@ -100,6 +116,7 @@ func resourceAwsPlacementGroupRead(d *schema.ResourceData, meta interface{}) err
 
 	d.Set("name", pg.GroupName)
 	d.Set("strategy", pg.Strategy)
+	d.Set("partition_count", pg.PartitionCount)
 
 	return nil
 }

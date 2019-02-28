@@ -38,6 +38,33 @@ func TestAccAWSPlacementGroup_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSPlacementGroup_partition(t *testing.T) {
+	resourceName := "aws_placement_group.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSPlacementGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSPlacementGroupConfigPartition(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSPlacementGroupExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "strategy", "partition"),
+					resource.TestCheckResourceAttr(resourceName, "partition_count", "4"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSPlacementGroupDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).ec2conn
 
@@ -91,6 +118,16 @@ func testAccAWSPlacementGroupConfig(rName string) string {
 resource "aws_placement_group" "test" {
   name     = %q
   strategy = "cluster"
+}
+`, rName)
+}
+
+func testAccAWSPlacementGroupConfigPartition(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_placement_group" "test" {
+  name     			= %q
+  strategy 			= "partition"
+  partition_count 	= 4
 }
 `, rName)
 }
