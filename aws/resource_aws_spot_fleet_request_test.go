@@ -1280,29 +1280,6 @@ func testAccCheckAWSSpotFleetRequest_PlacementAttributes(
 
 }
 
-func testAccCheckAWSSpotFleetRequest_IamInstanceProfileArn(
-	sfr *ec2.SpotFleetRequestConfig) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if len(sfr.SpotFleetRequestConfig.LaunchSpecifications) == 0 {
-			return errors.New("Missing launch specification")
-		}
-
-		spec := *sfr.SpotFleetRequestConfig.LaunchSpecifications[0]
-
-		profile := spec.IamInstanceProfile
-		if profile == nil {
-			return fmt.Errorf("Expected IamInstanceProfile to be set, got nil")
-		}
-		//Validate the string whether it is ARN
-		re := regexp.MustCompile(`arn:aws:iam::\d{12}:instance-profile/?[a-zA-Z0-9+=,.@-_].*`)
-		if !re.MatchString(*profile.Arn) {
-			return fmt.Errorf("Expected IamInstanceProfile input as ARN, got %s", *profile.Arn)
-		}
-
-		return nil
-	}
-}
-
 func testAccPreCheckAWSEc2SpotFleetRequest(t *testing.T) {
 	conn := testAccProvider.Meta().(*AWSClient).ec2conn
 
