@@ -73,7 +73,17 @@ func dataSourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("bucket_domain_name", bucketDomainName(bucket))
 
 	err = bucketLocation(d, bucket, conn)
-	return err
+	if err != nil {
+		return fmt.Errorf("error getting S3 Bucket location: %s", err)
+	}
+
+	regionalDomainName, err := BucketRegionalDomainName(bucket, d.Get("region").(string))
+	if err != nil {
+		return err
+	}
+	d.Set("bucket_regional_domain_name", regionalDomainName)
+
+	return nil
 }
 
 func bucketLocation(d *schema.ResourceData, bucket string, conn *s3.S3) error {
