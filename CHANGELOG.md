@@ -4,6 +4,10 @@ FEATURES:
 
 * **New Resource:** `aws_route53_resolver_endpoint` ([#6563](https://github.com/terraform-providers/terraform-provider-aws/issues/6563))
 
+ENHANCEMENTS:
+
+* resource/aws_ram_resource_share: Add `arn` attribute [GH-7634]
+
 ## 2.0.0 (February 27, 2019)
 
 NOTES:
