@@ -342,10 +342,8 @@ func findKmsGrantByIdWithRetry(conn *kms.KMS, keyId string, grantId string) (*km
 func waitForKmsGrantToBeRevoked(conn *kms.KMS, keyId string, grantId string) error {
 	err := resource.Retry(3*time.Minute, func() *resource.RetryError {
 		grant, err := findKmsGrantById(conn, keyId, grantId, nil)
-		if err != nil {
-			if _, ok := err.(KmsGrantMissingError); ok {
-				return nil
-			}
+		if _, ok := err.(KmsGrantMissingError); ok {
+			return nil
 		}
 
 		if grant != nil {
