@@ -35,6 +35,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `arn` - The Amazon Resource Name (ARN) of the resource share.
 * `id` - The Amazon Resource Name (ARN) of the resource share.
 
 ## Import
