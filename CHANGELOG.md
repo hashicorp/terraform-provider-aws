@@ -7,6 +7,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_redshift_service_account: Add us-gov-east-1 and us-gov-west-1 region mappings [GH-7635]
+* resource/aws_lb_target_group: Add `lambda_multi_value_headers_enabled` argument [GH-7648]
 * resource/aws_ram_resource_share: Add `arn` attribute [GH-7634]
 
 ## 2.0.0 (February 27, 2019)
