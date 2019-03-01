@@ -203,7 +203,15 @@ func resourceAwsRouteTableCreate(d *schema.ResourceData, meta interface{}) error
 			d.Id(), err)
 	}
 
-	return resourceAwsRouteTableUpdate(d, meta)
+	if err := resourceAwsRouteTableUpdate(d, meta); err != nil {
+		return fmt.Errorf("Error updating route table after creating it: %s", err)
+	}
+
+	if d.Id() == "" {
+		return fmt.Errorf("Route table not found after creating it: %s", err)
+	}
+
+	return nil
 }
 
 func resourceAwsRouteTableRead(d *schema.ResourceData, meta interface{}) error {
