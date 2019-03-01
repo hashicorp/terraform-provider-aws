@@ -767,7 +767,7 @@ func TestAccAWSInstance_vpc(t *testing.T) {
 func TestAccAWSInstance_placementGroup(t *testing.T) {
 	var v ec2.Instance
 	rStr := acctest.RandString(5)
-	rInt := acctest.RandIntRange(1, 3)
+	rInt := 3
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
@@ -2580,7 +2580,8 @@ resource "aws_vpc" "foo" {
 }
 
 resource "aws_subnet" "foo" {
-  cidr_block = "10.1.1.0/24"
+	cidr_block = "10.1.1.0/24"
+	availability_zone = "us-west-2a"
   vpc_id = "${aws_vpc.foo.id}"
   tags = {
   	Name = "tf-acc-instance-placement-group"
@@ -2596,8 +2597,8 @@ resource "aws_placement_group" "foo" {
 # Limitations: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html#concepts-placement-groups
 resource "aws_instance" "foo" {
   # us-west-2
-  ami = "ami-55a7ea65"
-  instance_type = "c3.large"
+  ami = "ami-01e24be29428c15b2"
+  instance_type = "t2.micro"
   subnet_id = "${aws_subnet.foo.id}"
   associate_public_ip_address = true
 	placement_group = "${aws_placement_group.foo.name}"
