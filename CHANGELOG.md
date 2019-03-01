@@ -1,5 +1,9 @@
 ## 2.1.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_route53_resolver_endpoint` ([#6563](https://github.com/terraform-providers/terraform-provider-aws/issues/6563))
+
 ## 2.0.0 (February 27, 2019)
 
 NOTES:
