@@ -296,11 +296,10 @@ func route53ResolverEndpointRefresh(conn *route53resolver.Route53Resolver, epId 
 		resp, err := conn.GetResolverEndpoint(&route53resolver.GetResolverEndpointInput{
 			ResolverEndpointId: aws.String(epId),
 		})
+		if isAWSErr(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+			return &route53resolver.ResolverEndpoint{}, route53ResolverEndpointStatusDeleted, nil
+		}
 		if err != nil {
-			if isAWSErr(err, route53resolver.ErrCodeResourceNotFoundException, "") {
-				return &route53resolver.ResolverEndpoint{}, route53ResolverEndpointStatusDeleted, nil
-			}
-
 			return nil, "", err
 		}
 
@@ -328,14 +327,5 @@ func route53ResolverHashIPAddress(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 	buf.WriteString(fmt.Sprintf("%s-", m["subnet_id"].(string)))
-	// TODO
-	// TODO * "ip" may be computed - Blank on input, set by API on output; How to handle?
-	// TODO * Multiple "ip_address" values per "subnet_id" are allowed in the API
-	// TODO   but a List (instead of a Set) won't work because of non-deterministic order
-	// TODO   on listing ip_address, plus how to determine diffs for update?
-	// TODO
-	// if v, ok := m["ip"]; ok {
-	// 	buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	// }
 	return hashcode.String(buf.String())
 }
