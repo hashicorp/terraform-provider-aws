@@ -64,7 +64,7 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
   alarm_name                = "terraform-test-foobar%d"
   comparison_operator       = "GreaterThanOrEqualToThreshold"
   evaluation_periods        = "2"
-	threshold                 = "0.1"
+	threshold                 = "10"
   alarm_description         = "Request error rate has exceeded 10%"
   insufficient_data_actions = []
 	metric_query {
