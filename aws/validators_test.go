@@ -3128,11 +3128,59 @@ func TestValidateRoute53ResolverEndpointName(t *testing.T) {
 			Value:    "A",
 			ErrCount: 0,
 		},
+		// Empty name not allowed.
+		{
+			Value:    "",
+			ErrCount: 1,
+		},
 	}
 	for _, tc := range cases {
 		_, errors := validateRoute53ResolverEndpointName(tc.Value, "aws_route53_resolver_endpoint")
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected the AWS Route 53 Resolver Endpoint Name to not trigger a validation error for %q", tc.Value)
+		}
+	}
+}
+
+func TestValidateRoute53ResolverRuleName(t *testing.T) {
+	cases := []struct {
+		Value    string
+		ErrCount int
+	}{
+		{
+			Value:    "testing123!",
+			ErrCount: 1,
+		},
+		{
+			Value:    "testing - 123__",
+			ErrCount: 0,
+		},
+		{
+			Value:    randomString(65),
+			ErrCount: 1,
+		},
+		{
+			Value:    "1",
+			ErrCount: 1,
+		},
+		{
+			Value:    "10",
+			ErrCount: 0,
+		},
+		{
+			Value:    "A",
+			ErrCount: 0,
+		},
+		// Empty name not allowed.
+		{
+			Value:    "",
+			ErrCount: 1,
+		},
+	}
+	for _, tc := range cases {
+		_, errors := validateRoute53ResolverRuleName(tc.Value, "aws_route53_resolver_rule")
+		if len(errors) != tc.ErrCount {
+			t.Fatalf("Expected the AWS Route 53 Resolver Rule Name to not trigger a validation error for %q", tc.Value)
 		}
 	}
 }

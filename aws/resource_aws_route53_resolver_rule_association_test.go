@@ -36,7 +36,7 @@ func TestAccAWSRoute53ResolverRuleAssociation_basic(t *testing.T) {
 }
 
 func testAccCheckRoute53ResolverRuleAssociationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).r53resolverconn
+	conn := testAccProvider.Meta().(*AWSClient).route53resolverconn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53_resolver_rule_association" {
 			continue
@@ -64,7 +64,7 @@ func testAccCheckRoute53ResolverRuleAssociationDestroy(s *terraform.State) error
 
 func testAccCheckRoute53ResolverRuleAssociationExists(n string, assn *route53resolver.ResolverRuleAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).r53resolverconn
+		conn := testAccProvider.Meta().(*AWSClient).route53resolverconn
 
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

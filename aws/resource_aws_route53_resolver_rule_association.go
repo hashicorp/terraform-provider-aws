@@ -57,7 +57,7 @@ func resourceAwsRoute53ResolverRuleAssociation() *schema.Resource {
 }
 
 func resourceAwsRoute53ResolverRuleAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).r53resolverconn
+	conn := meta.(*AWSClient).route53resolverconn
 
 	req := &route53resolver.AssociateResolverRuleInput{
 		ResolverRuleId: aws.String(d.Get("resolver_rule_id").(string)),
@@ -92,7 +92,7 @@ func resourceAwsRoute53ResolverRuleAssociationCreate(d *schema.ResourceData, met
 }
 
 func resourceAwsRoute53ResolverRuleAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).r53resolverconn
+	conn := meta.(*AWSClient).route53resolverconn
 
 	req := &route53resolver.GetResolverRuleAssociationInput{
 		ResolverRuleAssociationId: aws.String(d.Id()),
@@ -117,7 +117,7 @@ func resourceAwsRoute53ResolverRuleAssociationRead(d *schema.ResourceData, meta 
 }
 
 func resourceAwsRoute53ResolverRuleAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).r53resolverconn
+	conn := meta.(*AWSClient).route53resolverconn
 
 	req := &route53resolver.DisassociateResolverRuleInput{
 		ResolverRuleId: aws.String(d.Get("resolver_rule_id").(string)),
