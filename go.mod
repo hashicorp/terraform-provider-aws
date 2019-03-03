@@ -12,7 +12,6 @@ require (
 	github.com/bgentry/speakeasy v0.1.0 // indirect
 	github.com/blang/semver v3.5.1+incompatible // indirect
 	github.com/boombuler/barcode v0.0.0-20180809052337-34fff276c74e // indirect
-	github.com/davecgh/go-spew v1.1.1
 	github.com/gogo/protobuf v1.2.0 // indirect
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b // indirect
 	github.com/golang/protobuf v0.0.0-20171113180720-1e59b77b52bf // indirect
