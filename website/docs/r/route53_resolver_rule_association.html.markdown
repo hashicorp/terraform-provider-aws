@@ -23,9 +23,9 @@ resource "aws_route53_resolver_rule_association" "example" {
 
 The following arguments are supported:
 
-* `name` - (Optional) A name for the association that you're creating between a resolver rule and a VPC.
 * `resolver_rule_id` - (Required) The ID of the resolver rule that you want to associate with the VPC.
-* `vpc_id` - (Optional) The ID of the VPC that you want to associate the resolver rule with.
+* `vpc_id` - (Required) The ID of the VPC that you want to associate the resolver rule with.
+* `name` - (Optional) A name for the association that you're creating between a resolver rule and a VPC.
 
 ## Attributes Reference
 

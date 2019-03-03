@@ -79,7 +79,7 @@ func resourceAwsRoute53ResolverEndpoint() *schema.Resource {
 			"name": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateRoute53ResolverEndpointName,
+				ValidateFunc: validateRoute53ResolverName,
 			},
 
 			"tags": tagsSchema(),

@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -14,7 +15,7 @@ import (
 )
 
 const (
-	Route53ResolverRuleAssociationStatusDeleted = "DELETED"
+	route53ResolverRuleAssociationStatusDeleted = "DELETED"
 )
 
 func resourceAwsRoute53ResolverRuleAssociation() *schema.Resource {
@@ -32,13 +33,6 @@ func resourceAwsRoute53ResolverRuleAssociation() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 64),
-			},
-
 			"resolver_rule_id": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -52,6 +46,13 @@ func resourceAwsRoute53ResolverRuleAssociation() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 64),
 			},
+
+			"name": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validateRoute53ResolverName,
+			},
 		},
 	}
 }
@@ -63,29 +64,23 @@ func resourceAwsRoute53ResolverRuleAssociationCreate(d *schema.ResourceData, met
 		ResolverRuleId: aws.String(d.Get("resolver_rule_id").(string)),
 		VPCId:          aws.String(d.Get("vpc_id").(string)),
 	}
-
-	if v, ok := d.GetOk("name"); ok {
+	if v, ok := d.GetOk("name"); ok && v.(string) != "" {
 		req.Name = aws.String(v.(string))
 	}
 
 	log.Printf("[DEBUG] Creating Route 53 Resolver rule association: %s", req)
-
-	res, err := conn.AssociateResolverRule(req)
+	resp, err := conn.AssociateResolverRule(req)
 	if err != nil {
-		return fmt.Errorf("Error creating Route 53 Resolver rule association: %s", err)
+		return fmt.Errorf("error creating Route 53 Resolver rule association: %s", err)
 	}
 
-	d.SetId(*res.ResolverRuleAssociation.Id)
+	d.SetId(aws.StringValue(resp.ResolverRuleAssociation.Id))
 
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{route53resolver.ResolverRuleAssociationStatusCreating},
-		Target:  []string{route53resolver.ResolverRuleAssociationStatusComplete},
-		Refresh: resourceAwsRoute53ResolverRuleAssociationStateRefresh(conn, d.Id()),
-		Timeout: d.Timeout(schema.TimeoutDelete),
-	}
-	_, err = stateConf.WaitForState()
+	err = route53ResolverRuleAssociationWaitUntilTargetState(conn, d.Id(), d.Timeout(schema.TimeoutCreate),
+		[]string{route53resolver.ResolverRuleAssociationStatusCreating},
+		[]string{route53resolver.ResolverRuleAssociationStatusComplete})
 	if err != nil {
-		return fmt.Errorf("Error waiting for Route 53 Resolver rule association (%s) to be created: %s", d.Id(), err)
+		return err
 	}
 
 	return resourceAwsRoute53ResolverRuleAssociationRead(d, meta)
@@ -94,24 +89,21 @@ func resourceAwsRoute53ResolverRuleAssociationCreate(d *schema.ResourceData, met
 func resourceAwsRoute53ResolverRuleAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).route53resolverconn
 
-	req := &route53resolver.GetResolverRuleAssociationInput{
-		ResolverRuleAssociationId: aws.String(d.Id()),
-	}
-
-	res, err := conn.GetResolverRuleAssociation(req)
+	assocRaw, state, err := route53ResolverRuleAssociationRefresh(conn, d.Id())()
 	if err != nil {
-		if isAWSErr(err, route53resolver.ErrCodeResourceNotFoundException, "") {
-			log.Printf("[WARN] No Route 53 Resolver rule association by Id (%s) found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("Error reading Route 53 Resolver rule association %s: %s", d.Id(), err)
+		return fmt.Errorf("error getting Route53 Resolver rule association (%s): %s", d.Id(), err)
+	}
+	if state == route53ResolverRuleAssociationStatusDeleted {
+		log.Printf("[WARN] Route53 Resolver rule association (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
-	assn := res.ResolverRuleAssociation
+	assoc := assocRaw.(*route53resolver.ResolverRuleAssociation)
 
-	d.Set("resolver_rule_id", assn.ResolverRuleId)
-	d.Set("vpc_id", assn.VPCId)
+	d.Set("name", assoc.Name)
+	d.Set("resolver_rule_id", assoc.ResolverRuleId)
+	d.Set("vpc_id", assoc.VPCId)
 
 	return nil
 }
@@ -119,48 +111,60 @@ func resourceAwsRoute53ResolverRuleAssociationRead(d *schema.ResourceData, meta 
 func resourceAwsRoute53ResolverRuleAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).route53resolverconn
 
-	req := &route53resolver.DisassociateResolverRuleInput{
+	log.Printf("[DEBUG] Deleting Route53 Resolver rule association: %s", d.Id())
+	_, err := conn.DisassociateResolverRule(&route53resolver.DisassociateResolverRuleInput{
 		ResolverRuleId: aws.String(d.Get("resolver_rule_id").(string)),
 		VPCId:          aws.String(d.Get("vpc_id").(string)),
+	})
+	if isAWSErr(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("error deleting Route 53 Resolver rule association (%s): %s", d.Id(), err)
 	}
 
-	_, err := conn.DisassociateResolverRule(req)
+	err = route53ResolverRuleAssociationWaitUntilTargetState(conn, d.Id(), d.Timeout(schema.TimeoutDelete),
+		[]string{route53resolver.ResolverRuleAssociationStatusDeleting},
+		[]string{route53ResolverRuleAssociationStatusDeleted})
 	if err != nil {
-		if isAWSErr(err, route53resolver.ErrCodeResourceNotFoundException, "") {
-			return nil
-		}
-		return fmt.Errorf("Error deleting Route 53 Resolver rule association %s: %s", d.Id(), err)
-	}
-
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{route53resolver.ResolverRuleAssociationStatusDeleting},
-		Target:  []string{Route53ResolverRuleAssociationStatusDeleted},
-		Refresh: resourceAwsRoute53ResolverRuleAssociationStateRefresh(conn, d.Id()),
-		Timeout: d.Timeout(schema.TimeoutDelete),
-	}
-	_, err = stateConf.WaitForState()
-	if err != nil {
-		return fmt.Errorf("Error waiting for Route 53 Resolver rule association (%s) to be deleted: %s", d.Id(), err)
+		return err
 	}
 
 	return nil
 }
 
-func resourceAwsRoute53ResolverRuleAssociationStateRefresh(conn *route53resolver.Route53Resolver, id string) resource.StateRefreshFunc {
+func route53ResolverRuleAssociationRefresh(conn *route53resolver.Route53Resolver, assocId string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-
-		req := &route53resolver.GetResolverRuleAssociationInput{
-			ResolverRuleAssociationId: aws.String(id),
+		resp, err := conn.GetResolverRuleAssociation(&route53resolver.GetResolverRuleAssociationInput{
+			ResolverRuleAssociationId: aws.String(assocId),
+		})
+		if isAWSErr(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+			return "", route53ResolverRuleAssociationStatusDeleted, nil
 		}
-
-		res, err := conn.GetResolverRuleAssociation(req)
 		if err != nil {
-			if isAWSErr(err, route53resolver.ErrCodeResourceNotFoundException, "") {
-				return "", Route53ResolverRuleAssociationStatusDeleted, nil
-			}
 			return nil, "", err
 		}
 
-		return res.ResolverRuleAssociation, aws.StringValue(res.ResolverRuleAssociation.Status), nil
+		status := aws.StringValue(resp.ResolverRuleAssociation.Status)
+		if status == route53resolver.ResolverRuleAssociationStatusFailed {
+			return nil, status, errors.New(aws.StringValue(resp.ResolverRuleAssociation.StatusMessage))
+		}
+		return resp.ResolverRuleAssociation, status, nil
 	}
+}
+
+func route53ResolverRuleAssociationWaitUntilTargetState(conn *route53resolver.Route53Resolver, assocId string, timeout time.Duration, pending, target []string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending:    pending,
+		Target:     target,
+		Refresh:    route53ResolverRuleAssociationRefresh(conn, assocId),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 5 * time.Second,
+	}
+	if _, err := stateConf.WaitForState(); err != nil {
+		return fmt.Errorf("error waiting for Route53 Resolver rule association (%s) to reach target state: %s", assocId, err)
+	}
+
+	return nil
 }

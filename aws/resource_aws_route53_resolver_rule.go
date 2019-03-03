@@ -59,7 +59,7 @@ func resourceAwsRoute53ResolverRule() *schema.Resource {
 			"name": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateRoute53ResolverRuleName,
+				ValidateFunc: validateRoute53ResolverName,
 			},
 
 			"resolver_endpoint_id": {
@@ -91,6 +91,11 @@ func resourceAwsRoute53ResolverRule() *schema.Resource {
 			"tags": tagsSchema(),
 
 			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -159,6 +164,7 @@ func resourceAwsRoute53ResolverRuleRead(d *schema.ResourceData, meta interface{}
 	d.Set("arn", rule.Arn)
 	d.Set("domain_name", rule.DomainName)
 	d.Set("name", rule.Name)
+	d.Set("owner_id", rule.OwnerId)
 	d.Set("resolver_endpoint_id", rule.ResolverEndpointId)
 	d.Set("rule_type", rule.RuleType)
 	d.Set("share_status", rule.ShareStatus)

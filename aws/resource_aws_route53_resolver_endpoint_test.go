@@ -151,7 +151,7 @@ func testAccCheckRoute53ResolverEndpointDestroy(s *terraform.State) error {
 		})
 		// Verify the error is what we want
 		if isAWSErr(err, route53resolver.ErrCodeResourceNotFoundException, "") {
-			return nil
+			continue
 		}
 		if err != nil {
 			return err

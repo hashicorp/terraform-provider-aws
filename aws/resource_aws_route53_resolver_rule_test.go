@@ -28,6 +28,7 @@ func TestAccAwsRoute53ResolverRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com."),
 					resource.TestCheckResourceAttr(resourceName, "rule_type", "SYSTEM"),
 					resource.TestCheckResourceAttr(resourceName, "share_status", "NOT_SHARED"),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 				),
 			},
 			{
@@ -172,7 +173,7 @@ func testAccCheckRoute53ResolverRuleDestroy(s *terraform.State) error {
 		})
 		// Verify the error is what we want
 		if isAWSErr(err, route53resolver.ErrCodeResourceNotFoundException, "") {
-			return nil
+			continue
 		}
 		if err != nil {
 			return err
