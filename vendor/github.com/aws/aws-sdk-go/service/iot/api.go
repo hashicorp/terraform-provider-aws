@@ -721,7 +721,9 @@ func (c *IoT) AttachThingPrincipalRequest(input *AttachThingPrincipalInput) (req
 
 // AttachThingPrincipal API operation for AWS IoT.
 //
-// Attaches the specified principal to the specified thing.
+// Attaches the specified principal to the specified thing. A principal can
+// be X.509 certificates, IAM users, groups, and roles, Amazon Cognito identities
+// or federated identities.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -6975,7 +6977,9 @@ func (c *IoT) DetachThingPrincipalRequest(input *DetachThingPrincipalInput) (req
 
 // DetachThingPrincipal API operation for AWS IoT.
 //
-// Detaches the specified principal from the specified thing.
+// Detaches the specified principal from the specified thing. A principal can
+// be X.509 certificates, IAM users, groups, and roles, Amazon Cognito identities
+// or federated identities.
 //
 // This call is asynchronous. It might take several seconds for the detachment
 // to propagate.
@@ -9822,7 +9826,9 @@ func (c *IoT) ListPrincipalThingsRequest(input *ListPrincipalThingsInput) (req *
 
 // ListPrincipalThings API operation for AWS IoT.
 //
-// Lists the things associated with the specified principal.
+// Lists the things associated with the specified principal. A principal can
+// be X.509 certificates, IAM users, groups, and roles, Amazon Cognito identities
+// or federated identities.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -10769,7 +10775,9 @@ func (c *IoT) ListThingPrincipalsRequest(input *ListThingPrincipalsInput) (req *
 
 // ListThingPrincipals API operation for AWS IoT.
 //
-// Lists the principals associated with the specified thing.
+// Lists the principals associated with the specified thing. A principal can
+// be X.509 certificates, IAM users, groups, and roles, Amazon Cognito identities
+// or federated identities.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -16853,6 +16861,11 @@ func (s *Behavior) Validate() error {
 	if s.Name != nil && len(*s.Name) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
 	}
+	if s.Criteria != nil {
+		if err := s.Criteria.Validate(); err != nil {
+			invalidParams.AddNested("Criteria", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -16883,12 +16896,29 @@ type BehaviorCriteria struct {
 	_ struct{} `type:"structure"`
 
 	// The operator that relates the thing measured (metric) to the criteria (containing
-	// a value.
+	// a value or statisticalThreshold).
 	ComparisonOperator *string `locationName:"comparisonOperator" type:"string" enum:"ComparisonOperator"`
+
+	// If a device is in violation of the behavior for the specified number of consecutive
+	// datapoints, an alarm occurs. If not specified, the default is 1.
+	ConsecutiveDatapointsToAlarm *int64 `locationName:"consecutiveDatapointsToAlarm" min:"1" type:"integer"`
+
+	// If an alarm has occurred and the offending device is no longer in violation
+	// of the behavior for the specified number of consecutive datapoints, the alarm
+	// is cleared. If not specified, the default is 1.
+	ConsecutiveDatapointsToClear *int64 `locationName:"consecutiveDatapointsToClear" min:"1" type:"integer"`
 
 	// Use this to specify the time duration over which the behavior is evaluated,
 	// for those criteria which have a time dimension (for example, NUM_MESSAGES_SENT).
+	// For a statisticalThreshhold metric comparison, measurements from all devices
+	// are accumulated over this time duration before being used to calculate percentiles,
+	// and later, measurements from an individual device are also accumulated over
+	// this time duration before being given a percentile rank.
 	DurationSeconds *int64 `locationName:"durationSeconds" type:"integer"`
+
+	// A statistical ranking (percentile) which indicates a threshold value by which
+	// a behavior is determined to be in compliance or in violation of the behavior.
+	StatisticalThreshold *StatisticalThreshold `locationName:"statisticalThreshold" type:"structure"`
 
 	// The value to be compared with the metric.
 	Value *MetricValue `locationName:"value" type:"structure"`
@@ -16904,15 +16934,49 @@ func (s BehaviorCriteria) GoString() string {
 	return s.String()
 }
 
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *BehaviorCriteria) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "BehaviorCriteria"}
+	if s.ConsecutiveDatapointsToAlarm != nil && *s.ConsecutiveDatapointsToAlarm < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("ConsecutiveDatapointsToAlarm", 1))
+	}
+	if s.ConsecutiveDatapointsToClear != nil && *s.ConsecutiveDatapointsToClear < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("ConsecutiveDatapointsToClear", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
 // SetComparisonOperator sets the ComparisonOperator field's value.
 func (s *BehaviorCriteria) SetComparisonOperator(v string) *BehaviorCriteria {
 	s.ComparisonOperator = &v
 	return s
 }
 
+// SetConsecutiveDatapointsToAlarm sets the ConsecutiveDatapointsToAlarm field's value.
+func (s *BehaviorCriteria) SetConsecutiveDatapointsToAlarm(v int64) *BehaviorCriteria {
+	s.ConsecutiveDatapointsToAlarm = &v
+	return s
+}
+
+// SetConsecutiveDatapointsToClear sets the ConsecutiveDatapointsToClear field's value.
+func (s *BehaviorCriteria) SetConsecutiveDatapointsToClear(v int64) *BehaviorCriteria {
+	s.ConsecutiveDatapointsToClear = &v
+	return s
+}
+
 // SetDurationSeconds sets the DurationSeconds field's value.
 func (s *BehaviorCriteria) SetDurationSeconds(v int64) *BehaviorCriteria {
 	s.DurationSeconds = &v
+	return s
+}
+
+// SetStatisticalThreshold sets the StatisticalThreshold field's value.
+func (s *BehaviorCriteria) SetStatisticalThreshold(v *StatisticalThreshold) *BehaviorCriteria {
+	s.StatisticalThreshold = v
 	return s
 }
 
@@ -19513,15 +19577,18 @@ func (s *CreateScheduledAuditOutput) SetScheduledAuditArn(v string) *CreateSched
 type CreateSecurityProfileInput struct {
 	_ struct{} `type:"structure"`
 
+	// A list of metrics whose data is retained (stored). By default, data is retained
+	// for any metric used in the profile's behaviors but it is also retained for
+	// any metric specified here.
+	AdditionalMetricsToRetain []*string `locationName:"additionalMetricsToRetain" type:"list"`
+
 	// Specifies the destinations to which alerts are sent. (Alerts are always sent
 	// to the console.) Alerts are generated when a device (thing) violates a behavior.
 	AlertTargets map[string]*AlertTarget `locationName:"alertTargets" type:"map"`
 
 	// Specifies the behaviors that, when violated by a device (thing), cause an
 	// alert.
-	//
-	// Behaviors is a required field
-	Behaviors []*Behavior `locationName:"behaviors" type:"list" required:"true"`
+	Behaviors []*Behavior `locationName:"behaviors" type:"list"`
 
 	// A description of the security profile.
 	SecurityProfileDescription *string `locationName:"securityProfileDescription" type:"string"`
@@ -19548,9 +19615,6 @@ func (s CreateSecurityProfileInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *CreateSecurityProfileInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CreateSecurityProfileInput"}
-	if s.Behaviors == nil {
-		invalidParams.Add(request.NewErrParamRequired("Behaviors"))
-	}
 	if s.SecurityProfileName == nil {
 		invalidParams.Add(request.NewErrParamRequired("SecurityProfileName"))
 	}
@@ -19582,6 +19646,12 @@ func (s *CreateSecurityProfileInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetAdditionalMetricsToRetain sets the AdditionalMetricsToRetain field's value.
+func (s *CreateSecurityProfileInput) SetAdditionalMetricsToRetain(v []*string) *CreateSecurityProfileInput {
+	s.AdditionalMetricsToRetain = v
+	return s
 }
 
 // SetAlertTargets sets the AlertTargets field's value.
@@ -22789,6 +22859,11 @@ func (s *DescribeSecurityProfileInput) SetSecurityProfileName(v string) *Describ
 type DescribeSecurityProfileOutput struct {
 	_ struct{} `type:"structure"`
 
+	// A list of metrics whose data is retained (stored). By default, data is retained
+	// for any metric used in the profile's behaviors but it is also retained for
+	// any metric specified here.
+	AdditionalMetricsToRetain []*string `locationName:"additionalMetricsToRetain" type:"list"`
+
 	// Where the alerts are sent. (Alerts are always sent to the console.)
 	AlertTargets map[string]*AlertTarget `locationName:"alertTargets" type:"map"`
 
@@ -22825,6 +22900,12 @@ func (s DescribeSecurityProfileOutput) String() string {
 // GoString returns the string representation
 func (s DescribeSecurityProfileOutput) GoString() string {
 	return s.String()
+}
+
+// SetAdditionalMetricsToRetain sets the AdditionalMetricsToRetain field's value.
+func (s *DescribeSecurityProfileOutput) SetAdditionalMetricsToRetain(v []*string) *DescribeSecurityProfileOutput {
+	s.AdditionalMetricsToRetain = v
+	return s
 }
 
 // SetAlertTargets sets the AlertTargets field's value.
@@ -33162,6 +33243,38 @@ func (s *StartThingRegistrationTaskOutput) SetTaskId(v string) *StartThingRegist
 	return s
 }
 
+// A statistical ranking (percentile) which indicates a threshold value by which
+// a behavior is determined to be in compliance or in violation of the behavior.
+type StatisticalThreshold struct {
+	_ struct{} `type:"structure"`
+
+	// The percentile which resolves to a threshold value by which compliance with
+	// a behavior is determined. Metrics are collected over the specified period
+	// (durationSeconds) from all reporting devices in your account and statistical
+	// ranks are calculated. Then, the measurements from a device are collected
+	// over the same period. If the accumulated measurements from the device fall
+	// above or below (comparisonOperator) the value associated with the percentile
+	// specified, then the device is considered to be in compliance with the behavior,
+	// otherwise a violation occurs.
+	Statistic *string `locationName:"statistic" type:"string"`
+}
+
+// String returns the string representation
+func (s StatisticalThreshold) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StatisticalThreshold) GoString() string {
+	return s.String()
+}
+
+// SetStatistic sets the Statistic field's value.
+func (s *StatisticalThreshold) SetStatistic(v string) *StatisticalThreshold {
+	s.Statistic = &v
+	return s
+}
+
 // Starts execution of a Step Functions state machine.
 type StepFunctionsAction struct {
 	_ struct{} `type:"structure"`
@@ -36015,12 +36128,30 @@ func (s *UpdateScheduledAuditOutput) SetScheduledAuditArn(v string) *UpdateSched
 type UpdateSecurityProfileInput struct {
 	_ struct{} `type:"structure"`
 
+	// A list of metrics whose data is retained (stored). By default, data is retained
+	// for any metric used in the profile's behaviors but it is also retained for
+	// any metric specified here.
+	AdditionalMetricsToRetain []*string `locationName:"additionalMetricsToRetain" type:"list"`
+
 	// Where the alerts are sent. (Alerts are always sent to the console.)
 	AlertTargets map[string]*AlertTarget `locationName:"alertTargets" type:"map"`
 
 	// Specifies the behaviors that, when violated by a device (thing), cause an
 	// alert.
 	Behaviors []*Behavior `locationName:"behaviors" type:"list"`
+
+	// If true, delete all additionalMetricsToRetain defined for this security profile.
+	// If any additionalMetricsToRetain are defined in the current invocation an
+	// exception occurs.
+	DeleteAdditionalMetricsToRetain *bool `locationName:"deleteAdditionalMetricsToRetain" type:"boolean"`
+
+	// If true, delete all alertTargets defined for this security profile. If any
+	// alertTargets are defined in the current invocation an exception occurs.
+	DeleteAlertTargets *bool `locationName:"deleteAlertTargets" type:"boolean"`
+
+	// If true, delete all behaviors defined for this security profile. If any behaviors
+	// are defined in the current invocation an exception occurs.
+	DeleteBehaviors *bool `locationName:"deleteBehaviors" type:"boolean"`
 
 	// The expected version of the security profile. A new version is generated
 	// whenever the security profile is updated. If you specify a value that is
@@ -36082,6 +36213,12 @@ func (s *UpdateSecurityProfileInput) Validate() error {
 	return nil
 }
 
+// SetAdditionalMetricsToRetain sets the AdditionalMetricsToRetain field's value.
+func (s *UpdateSecurityProfileInput) SetAdditionalMetricsToRetain(v []*string) *UpdateSecurityProfileInput {
+	s.AdditionalMetricsToRetain = v
+	return s
+}
+
 // SetAlertTargets sets the AlertTargets field's value.
 func (s *UpdateSecurityProfileInput) SetAlertTargets(v map[string]*AlertTarget) *UpdateSecurityProfileInput {
 	s.AlertTargets = v
@@ -36091,6 +36228,24 @@ func (s *UpdateSecurityProfileInput) SetAlertTargets(v map[string]*AlertTarget) 
 // SetBehaviors sets the Behaviors field's value.
 func (s *UpdateSecurityProfileInput) SetBehaviors(v []*Behavior) *UpdateSecurityProfileInput {
 	s.Behaviors = v
+	return s
+}
+
+// SetDeleteAdditionalMetricsToRetain sets the DeleteAdditionalMetricsToRetain field's value.
+func (s *UpdateSecurityProfileInput) SetDeleteAdditionalMetricsToRetain(v bool) *UpdateSecurityProfileInput {
+	s.DeleteAdditionalMetricsToRetain = &v
+	return s
+}
+
+// SetDeleteAlertTargets sets the DeleteAlertTargets field's value.
+func (s *UpdateSecurityProfileInput) SetDeleteAlertTargets(v bool) *UpdateSecurityProfileInput {
+	s.DeleteAlertTargets = &v
+	return s
+}
+
+// SetDeleteBehaviors sets the DeleteBehaviors field's value.
+func (s *UpdateSecurityProfileInput) SetDeleteBehaviors(v bool) *UpdateSecurityProfileInput {
+	s.DeleteBehaviors = &v
 	return s
 }
 
@@ -36114,6 +36269,11 @@ func (s *UpdateSecurityProfileInput) SetSecurityProfileName(v string) *UpdateSec
 
 type UpdateSecurityProfileOutput struct {
 	_ struct{} `type:"structure"`
+
+	// A list of metrics whose data is retained (stored). By default, data is retained
+	// for any metric used in the security profile's behaviors but it is also retained
+	// for any metric specified here.
+	AdditionalMetricsToRetain []*string `locationName:"additionalMetricsToRetain" type:"list"`
 
 	// Where the alerts are sent. (Alerts are always sent to the console.)
 	AlertTargets map[string]*AlertTarget `locationName:"alertTargets" type:"map"`
@@ -36149,6 +36309,12 @@ func (s UpdateSecurityProfileOutput) String() string {
 // GoString returns the string representation
 func (s UpdateSecurityProfileOutput) GoString() string {
 	return s.String()
+}
+
+// SetAdditionalMetricsToRetain sets the AdditionalMetricsToRetain field's value.
+func (s *UpdateSecurityProfileOutput) SetAdditionalMetricsToRetain(v []*string) *UpdateSecurityProfileOutput {
+	s.AdditionalMetricsToRetain = v
+	return s
 }
 
 // SetAlertTargets sets the AlertTargets field's value.

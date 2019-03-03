@@ -5423,6 +5423,12 @@ type CreateInputInput struct {
 	Tags map[string]*string `locationName:"tags" type:"map"`
 
 	Type *string `locationName:"type" type:"string" enum:"InputType"`
+
+	// Settings for a private VPC Input.When this property is specified, the input
+	// destination addresses will be created in a VPC rather than with public Internet
+	// addresses.This property requires setting the roleArn property on Input creation.Not
+	// compatible with the inputSecurityGroups property.
+	Vpc *InputVpcRequest `locationName:"vpc" type:"structure"`
 }
 
 // String returns the string representation
@@ -5433,6 +5439,21 @@ func (s CreateInputInput) String() string {
 // GoString returns the string representation
 func (s CreateInputInput) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateInputInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateInputInput"}
+	if s.Vpc != nil {
+		if err := s.Vpc.Validate(); err != nil {
+			invalidParams.AddNested("Vpc", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetDestinations sets the Destinations field's value.
@@ -5486,6 +5507,12 @@ func (s *CreateInputInput) SetTags(v map[string]*string) *CreateInputInput {
 // SetType sets the Type field's value.
 func (s *CreateInputInput) SetType(v string) *CreateInputInput {
 	s.Type = &v
+	return s
+}
+
+// SetVpc sets the Vpc field's value.
+func (s *CreateInputInput) SetVpc(v *InputVpcRequest) *CreateInputInput {
+	s.Vpc = v
 	return s
 }
 
@@ -9723,7 +9750,7 @@ type Input struct {
 	// after creation.
 	RoleArn *string `locationName:"roleArn" type:"string"`
 
-	// A list of IDs for all the security groups attached to the input.
+	// A list of IDs for all the Input Security Groups attached to the input.
 	SecurityGroups []*string `locationName:"securityGroups" type:"list"`
 
 	// A list of the sources of the input (PULL-type).
@@ -9945,6 +9972,9 @@ type InputDestination struct {
 
 	// This represents the endpoint that the customer stream will bepushed to.
 	Url *string `locationName:"url" type:"string"`
+
+	// The properties for a VPC type input destination.
+	Vpc *InputDestinationVpc `locationName:"vpc" type:"structure"`
 }
 
 // String returns the string representation
@@ -9975,6 +10005,12 @@ func (s *InputDestination) SetUrl(v string) *InputDestination {
 	return s
 }
 
+// SetVpc sets the Vpc field's value.
+func (s *InputDestination) SetVpc(v *InputDestinationVpc) *InputDestination {
+	s.Vpc = v
+	return s
+}
+
 // Endpoint settings for a PUSH type input.
 type InputDestinationRequest struct {
 	_ struct{} `type:"structure"`
@@ -9996,6 +10032,39 @@ func (s InputDestinationRequest) GoString() string {
 // SetStreamName sets the StreamName field's value.
 func (s *InputDestinationRequest) SetStreamName(v string) *InputDestinationRequest {
 	s.StreamName = &v
+	return s
+}
+
+// The properties for a VPC type input destination.
+type InputDestinationVpc struct {
+	_ struct{} `type:"structure"`
+
+	// The availability zone of the Input destination.
+	AvailabilityZone *string `locationName:"availabilityZone" type:"string"`
+
+	// The network interface ID of the Input destination in the VPC.
+	NetworkInterfaceId *string `locationName:"networkInterfaceId" type:"string"`
+}
+
+// String returns the string representation
+func (s InputDestinationVpc) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InputDestinationVpc) GoString() string {
+	return s.String()
+}
+
+// SetAvailabilityZone sets the AvailabilityZone field's value.
+func (s *InputDestinationVpc) SetAvailabilityZone(v string) *InputDestinationVpc {
+	s.AvailabilityZone = &v
+	return s
+}
+
+// SetNetworkInterfaceId sets the NetworkInterfaceId field's value.
+func (s *InputDestinationVpc) SetNetworkInterfaceId(v string) *InputDestinationVpc {
+	s.NetworkInterfaceId = &v
 	return s
 }
 
@@ -10509,6 +10578,60 @@ func (s *InputSwitchScheduleActionSettings) Validate() error {
 // SetInputAttachmentNameReference sets the InputAttachmentNameReference field's value.
 func (s *InputSwitchScheduleActionSettings) SetInputAttachmentNameReference(v string) *InputSwitchScheduleActionSettings {
 	s.InputAttachmentNameReference = &v
+	return s
+}
+
+// Settings for a private VPC Input.When this property is specified, the input
+// destination addresses will be created in a VPC rather than with public Internet
+// addresses.This property requires setting the roleArn property on Input creation.Not
+// compatible with the inputSecurityGroups property.
+type InputVpcRequest struct {
+	_ struct{} `type:"structure"`
+
+	// A list of up to 5 EC2 VPC security group IDs to attach to the Input VPC network
+	// interfaces.Requires subnetIds. If none are specified then the VPC default
+	// security group will be used.
+	SecurityGroupIds []*string `locationName:"securityGroupIds" type:"list"`
+
+	// A list of 2 VPC subnet IDs from the same VPC.Subnet IDs must be mapped to
+	// two unique availability zones (AZ).
+	//
+	// SubnetIds is a required field
+	SubnetIds []*string `locationName:"subnetIds" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s InputVpcRequest) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InputVpcRequest) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *InputVpcRequest) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "InputVpcRequest"}
+	if s.SubnetIds == nil {
+		invalidParams.Add(request.NewErrParamRequired("SubnetIds"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetSecurityGroupIds sets the SecurityGroupIds field's value.
+func (s *InputVpcRequest) SetSecurityGroupIds(v []*string) *InputVpcRequest {
+	s.SecurityGroupIds = v
+	return s
+}
+
+// SetSubnetIds sets the SubnetIds field's value.
+func (s *InputVpcRequest) SetSubnetIds(v []*string) *InputVpcRequest {
+	s.SubnetIds = v
 	return s
 }
 
