@@ -11,6 +11,10 @@ ENHANCEMENTS:
 * resource/aws_lb_target_group: Add `lambda_multi_value_headers_enabled` argument [GH-7648]
 * resource/aws_ram_resource_share: Add `arn` attribute [GH-7634]
 
+BUG FIXES:
+
+* resource/aws_ecs_service: Ensure `placement_strategy` removal in version 2.0.0 does not force recreation [GH-7790]
+
 ## 2.0.0 (February 27, 2019)
 
 NOTES:
