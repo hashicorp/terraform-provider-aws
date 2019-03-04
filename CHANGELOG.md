@@ -16,6 +16,10 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_cloudfront_distribution: Remove problematic `viewer_certificate` configuration block argument `ConflictsWith` usage from version 2.0.0 [GH-7794]
+* resource/aws_cloudfront_distribution: Skip disabling distributions on deletion for previously disabled distributions [GH-7794]
+* resource/aws_cloudfront_distribution: Retry on `PreconditionFailed` error messages after disabling distribution on deletion [GH-7794]
+* resource/aws_cloudfront_distribution: Wait for creation and update deployments to complete [GH-7794]
 * resource/aws_db_instance: Properly set `engine_version` with `snapshot_identifier` [GH-7738]
 * resource/aws_ecs_service: Ensure `placement_strategy` removal in version 2.0.0 does not force recreation [GH-7790]
 * resource/aws_s3_bucket_notification: Prevent crash with empty filters configuration [GH-7791]
