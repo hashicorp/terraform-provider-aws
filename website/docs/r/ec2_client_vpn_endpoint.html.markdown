@@ -8,7 +8,7 @@ description: |-
 
 # aws_ec2_client_vpn_endpoint
 
-Provides an AWS Client VPN endpoint for OpenVPN clients. For more information on usage, please see the 
+Provides an AWS Client VPN endpoint for OpenVPN clients. For more information on usage, please see the
 [AWS Client VPN Administrator's Guide](https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/what-is.html).
 
 ## Example Usage
@@ -43,6 +43,7 @@ The following arguments are supported:
 * `transport_protocol` - (Optional) The transport protocol to be used by the VPN session. Default value is `udp`.
 * `authentication_options` - (Required) Information about the authentication method to be used to authenticate clients.
 * `connection_log_options` - (Required) Information about the client connection logging options.
+* `tags` - (Optional) A mapping of tags to assign to the resource.
 
 ### `authentication_options` Argument Reference
 
@@ -64,7 +65,7 @@ One of the following arguments must be supplied:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The ID of the Client VPN endpoint. 
+* `id` - The ID of the Client VPN endpoint.
 * `dns_name` - The DNS name to be used by clients when establishing their VPN session.
 * `status` - The current state of the Client VPN endpoint.
 
