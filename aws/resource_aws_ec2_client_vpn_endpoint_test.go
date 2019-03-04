@@ -14,7 +14,7 @@ import (
 func TestAccAwsEc2ClientVpnEndpoint_basic(t *testing.T) {
 	rStr := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProvidersWithTLS,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
@@ -40,7 +40,7 @@ func TestAccAwsEc2ClientVpnEndpoint_basic(t *testing.T) {
 func TestAccAwsEc2ClientVpnEndpoint_msAD(t *testing.T) {
 	rStr := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProvidersWithTLS,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
@@ -66,7 +66,7 @@ func TestAccAwsEc2ClientVpnEndpoint_msAD(t *testing.T) {
 func TestAccAwsEc2ClientVpnEndpoint_withLogGroup(t *testing.T) {
 	rStr := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProvidersWithTLS,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
@@ -97,7 +97,7 @@ func TestAccAwsEc2ClientVpnEndpoint_withLogGroup(t *testing.T) {
 func TestAccAwsEc2ClientVpnEndpoint_withDNSServers(t *testing.T) {
 	rStr := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProvidersWithTLS,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
@@ -121,6 +121,42 @@ func TestAccAwsEc2ClientVpnEndpoint_withDNSServers(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"dns_servers"},
+			},
+		},
+	})
+}
+
+func TestAccAwsEc2ClientVpnEndpoint_tags(t *testing.T) {
+	resourceName := "aws_ec2_client_vpn_endpoint.test"
+	rStr := acctest.RandString(5)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProvidersWithTLS,
+		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEc2ClientVpnEndpointConfig_tags(rStr),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Usage", "original"),
+				),
+			},
+			{
+				Config: testAccEc2ClientVpnEndpointConfig_tagsChanged(rStr),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Usage", "changed"),
+				),
+			},
+			{
+				Config: testAccEc2ClientVpnEndpointConfig(rStr),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
 			},
 		},
 	})
@@ -379,6 +415,107 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
 
   connection_log_options {
     enabled = false
+  }
+}
+`, rName)
+}
+
+func testAccEc2ClientVpnEndpointConfig_tags(rName string) string {
+	return fmt.Sprintf(`
+resource "tls_private_key" "example" {
+  algorithm = "RSA"
+}
+
+resource "tls_self_signed_cert" "example" {
+  key_algorithm   = "RSA"
+  private_key_pem = "${tls_private_key.example.private_key_pem}"
+
+  subject {
+    common_name  = "example.com"
+    organization = "ACME Examples, Inc"
+  }
+
+  validity_period_hours = 12
+
+  allowed_uses = [
+    "key_encipherment",
+    "digital_signature",
+    "server_auth",
+  ]
+}
+
+resource "aws_acm_certificate" "cert" {
+  private_key      = "${tls_private_key.example.private_key_pem}"
+  certificate_body = "${tls_self_signed_cert.example.cert_pem}"
+}
+
+resource "aws_ec2_client_vpn_endpoint" "test" {
+  description = "terraform-testacc-clientvpn-%s"
+  server_certificate_arn = "${aws_acm_certificate.cert.arn}"
+  client_cidr_block = "10.0.0.0/16"
+
+  authentication_options {
+    type = "certificate-authentication"
+    root_certificate_chain_arn = "${aws_acm_certificate.cert.arn}"
+  }
+
+  connection_log_options {
+    enabled = false
+  }
+
+  tags = {
+    Environment = "production"
+    Usage = "original"
+  }
+}
+`, rName)
+}
+
+func testAccEc2ClientVpnEndpointConfig_tagsChanged(rName string) string {
+	return fmt.Sprintf(`
+resource "tls_private_key" "example" {
+  algorithm = "RSA"
+}
+
+resource "tls_self_signed_cert" "example" {
+  key_algorithm   = "RSA"
+  private_key_pem = "${tls_private_key.example.private_key_pem}"
+
+  subject {
+    common_name  = "example.com"
+    organization = "ACME Examples, Inc"
+  }
+
+  validity_period_hours = 12
+
+  allowed_uses = [
+    "key_encipherment",
+    "digital_signature",
+    "server_auth",
+  ]
+}
+
+resource "aws_acm_certificate" "cert" {
+  private_key      = "${tls_private_key.example.private_key_pem}"
+  certificate_body = "${tls_self_signed_cert.example.cert_pem}"
+}
+
+resource "aws_ec2_client_vpn_endpoint" "test" {
+  description = "terraform-testacc-clientvpn-%s"
+  server_certificate_arn = "${aws_acm_certificate.cert.arn}"
+  client_cidr_block = "10.0.0.0/16"
+
+  authentication_options {
+    type = "certificate-authentication"
+    root_certificate_chain_arn = "${aws_acm_certificate.cert.arn}"
+  }
+
+  connection_log_options {
+    enabled = false
+  }
+
+  tags = {
+    Usage = "changed"
   }
 }
 `, rName)
