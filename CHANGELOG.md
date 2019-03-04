@@ -7,10 +7,10 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_redshift_service_account: Add us-gov-east-1 and us-gov-west-1 region mappings [GH-7635]
+* resource/aws_db_instance: Properly set `engine_version` with `snapshot_identifier` [GH-7738]
 * resource/aws_dlm_lifecycle_policy: Add validation support for 2, 3, 4, 6, and 8 in `policy_details` `schedule` `create_rule` `interval` argument (support shorter intervals) [GH-7751]
 * resource/aws_lb_target_group: Add `lambda_multi_value_headers_enabled` argument [GH-7648]
 * resource/aws_ram_resource_share: Add `arn` attribute [GH-7634]
-* resource/aws_db_instance: Properly set `engine_version` with `snapshot_identifier` [GH-7738]
 
 BUG FIXES:
 
