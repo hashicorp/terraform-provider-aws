@@ -343,6 +343,14 @@ func TestAccAWSEcsService_healthCheckGracePeriodSeconds(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "health_check_grace_period_seconds", "600"),
 				),
 			},
+			{
+				Config: testAccAWSEcsService_healthCheckGracePeriodSeconds(vpcNameTag, clusterName, tdName,
+					roleName, policyName, lbName, svcName, math.MaxInt32),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "health_check_grace_period_seconds", "2147483647"),
+				),
+			},
 		},
 	})
 }
