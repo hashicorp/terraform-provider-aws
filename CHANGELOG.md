@@ -11,6 +11,7 @@ ENHANCEMENTS:
 * resource/aws_dlm_lifecycle_policy: Add validation support for 2, 3, 4, 6, and 8 in `policy_details` `schedule` `create_rule` `interval` argument (support shorter intervals) [GH-7751]
 * resource/aws_lb_target_group: Add `lambda_multi_value_headers_enabled` argument [GH-7648]
 * resource/aws_ram_resource_share: Add `arn` attribute [GH-7634]
+* resource/aws_s3_bucket: Add plan time length validation for `bucket` and `bucket_prefix` arguments [GH-7778]
 
 BUG FIXES:
 
