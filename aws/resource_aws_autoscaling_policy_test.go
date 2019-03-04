@@ -2,14 +2,12 @@ package aws
 
 import (
 	"fmt"
-	"log"
 	"testing"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
@@ -126,7 +124,6 @@ func testAccCheckScalingPolicyDisappears(conf *autoscaling.ScalingPolicy) resour
 			PolicyName:           conf.PolicyName,
 		}
 
-		log.Printf("TEST %s", spew.Sdump(params))
 		_, err := conn.DeletePolicy(params)
 		if err != nil {
 			return err
