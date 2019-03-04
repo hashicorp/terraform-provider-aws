@@ -813,6 +813,11 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			opts.Engine = aws.String(attr.(string))
 		}
 
+		if attr, ok := d.GetOk("engine_version"); ok {
+			modifyDbInstanceInput.EngineVersion = aws.String(attr.(string))
+			requiresModifyDbInstance = true
+		}
+
 		if attr, ok := d.GetOk("iam_database_authentication_enabled"); ok {
 			opts.EnableIAMDatabaseAuthentication = aws.Bool(attr.(bool))
 		}

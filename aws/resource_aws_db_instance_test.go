@@ -1506,6 +1506,30 @@ func TestAccAWSDBInstance_MSSQL_DomainSnapshotRestore(t *testing.T) {
 	})
 }
 
+func TestAccAWSDBInstance_MySQL_SnapshotRestoreWithEngineVersion(t *testing.T) {
+	var v, vRestoredInstance rds.DBInstance
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBMySQLSnapshotRestoreWithEngineVersion(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists("aws_db_instance.mysql_restore", &vRestoredInstance),
+					testAccCheckAWSDBInstanceExists("aws_db_instance.mysql", &v),
+					resource.TestCheckResourceAttr(
+						"aws_db_instance.mysql", "engine_version", "5.6.35"),
+					resource.TestCheckResourceAttr(
+						"aws_db_instance.mysql_restore", "engine_version", "5.6.41"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSDBInstance_MinorVersion(t *testing.T) {
 	var v rds.DBInstance
 
@@ -3098,6 +3122,96 @@ resource "aws_iam_role_policy_attachment" "attatch-policy" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonRDSDirectoryServiceAccess"
 }
 `, rInt, rInt, rInt, rInt, rInt)
+}
+
+func testAccAWSDBMySQLSnapshotRestoreWithEngineVersion(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "foo" {
+  cidr_block           = "10.1.0.0/16"
+  enable_dns_hostnames = true
+  tags = {
+    Name = "terraform-testacc-db-instance-mysql-domain"
+  }
+}
+
+resource "aws_db_subnet_group" "rds_one" {
+  name        = "tf_acc_test_%[1]d"
+  description = "db subnets for rds_one"
+
+  subnet_ids = ["${aws_subnet.main.id}", "${aws_subnet.other.id}"]
+}
+
+resource "aws_subnet" "main" {
+  vpc_id            = "${aws_vpc.foo.id}"
+  availability_zone = "us-west-2a"
+  cidr_block        = "10.1.1.0/24"
+  tags = {
+    Name = "tf-acc-db-instance-mysql-domain-main"
+  }
+}
+
+resource "aws_subnet" "other" {
+  vpc_id            = "${aws_vpc.foo.id}"
+  availability_zone = "us-west-2b"
+  cidr_block        = "10.1.2.0/24"
+  tags = {
+    Name = "tf-acc-db-instance-mysql-domain-other"
+  }
+}
+
+resource "aws_db_instance" "mysql" {
+  allocated_storage   = 20
+	engine              = "MySQL"
+	engine_version			= "5.6.35"
+  identifier          = "tf-test-mysql-%[1]d"
+  instance_class      = "db.t2.micro"
+  password            = "password"
+  skip_final_snapshot = true
+  username            = "root"
+}
+
+resource "aws_db_snapshot" "mysql-snap" {
+  db_instance_identifier = "${aws_db_instance.mysql.id}"
+  db_snapshot_identifier = "mysql-snap"
+}
+
+resource "aws_db_instance" "mysql_restore" {
+  identifier              = "tf-test-mysql-%[1]d-restore"
+
+  db_subnet_group_name    = "${aws_db_subnet_group.rds_one.name}"
+
+  instance_class          = "db.t2.micro"
+  allocated_storage       = 20
+  username                = "root"
+  password                = "password"
+	engine                  = "MySQL"
+	engine_version					= "5.6.41"
+  backup_retention_period = 0
+  skip_final_snapshot     = true
+  snapshot_identifier 		= "${aws_db_snapshot.mysql-snap.id}"
+
+  apply_immediately = true
+  vpc_security_group_ids = ["${aws_security_group.rds-mysql.id}"]
+}
+
+resource "aws_security_group" "rds-mysql" {
+  name = "tf-rds-mysql-test-%[1]d"
+
+  description = "TF Testing"
+  vpc_id      = "${aws_vpc.foo.id}"
+}
+
+resource "aws_security_group_rule" "rds-mysql-1" {
+  type        = "egress"
+  from_port   = 0
+  to_port     = 0
+  protocol    = "-1"
+  cidr_blocks = ["0.0.0.0/0"]
+
+  security_group_id = "${aws_security_group.rds-mysql.id}"
+}
+
+`, rInt)
 }
 
 var testAccAWSDBInstanceConfigAutoMinorVersion = fmt.Sprintf(`
