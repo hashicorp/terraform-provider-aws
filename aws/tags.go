@@ -477,8 +477,8 @@ func tagsMapToRaw(m map[string]string) map[string]interface{} {
 	return raw
 }
 
-// tagSpecificationsFromMap returns the tag specifications for the given map of data and resource type.
-func tagSpecificationsFromMap(m map[string]interface{}, t string) []*ec2.TagSpecification {
+// ec2TagSpecificationsFromMap returns the tag specifications for the given map of data m and resource type t.
+func ec2TagSpecificationsFromMap(m map[string]interface{}, t string) []*ec2.TagSpecification {
 	if len(m) == 0 {
 		return nil
 	}

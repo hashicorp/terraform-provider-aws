@@ -120,7 +120,7 @@ func resourceAwsEc2ClientVpnEndpointCreate(d *schema.ResourceData, meta interfac
 		ClientCidrBlock:      aws.String(d.Get("client_cidr_block").(string)),
 		ServerCertificateArn: aws.String(d.Get("server_certificate_arn").(string)),
 		TransportProtocol:    aws.String(d.Get("transport_protocol").(string)),
-		TagSpecifications:    tagSpecificationsFromMap(d.Get("tags").(map[string]interface{}), ec2.ResourceTypeClientVpnEndpoint),
+		TagSpecifications:    ec2TagSpecificationsFromMap(d.Get("tags").(map[string]interface{}), ec2.ResourceTypeClientVpnEndpoint),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -229,17 +229,17 @@ func resourceAwsEc2ClientVpnEndpointRead(d *schema.ResourceData, meta interface{
 
 	err = d.Set("authentication_options", flattenAuthOptsConfig(result.ClientVpnEndpoints[0].AuthenticationOptions))
 	if err != nil {
-		return err
+		return fmt.Errorf("error setting authentication_options: %s", err)
 	}
 
 	err = d.Set("connection_log_options", flattenConnLoggingConfig(result.ClientVpnEndpoints[0].ConnectionLogOptions))
 	if err != nil {
-		return err
+		return fmt.Errorf("error setting connection_log_options: %s", err)
 	}
 
 	err = d.Set("tags", tagsToMap(result.ClientVpnEndpoints[0].Tags))
 	if err != nil {
-		return err
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	return nil
@@ -319,9 +319,8 @@ func resourceAwsEc2ClientVpnEndpointUpdate(d *schema.ResourceData, meta interfac
 
 	if err := setTags(conn, d); err != nil {
 		return err
-	} else {
-		d.SetPartial("tags")
 	}
+	d.SetPartial("tags")
 
 	d.Partial(false)
 	return resourceAwsEc2ClientVpnEndpointRead(d, meta)
