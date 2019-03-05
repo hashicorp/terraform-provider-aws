@@ -1209,7 +1209,9 @@ func hashRootBlockDevice(v interface{}) int {
 func hashLaunchSpecification(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
-	buf.WriteString(fmt.Sprintf("%s-", m["ami"].(string)))
+	if _, ok := m["ami"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", m["ami"].(string)))
+	}
 	if _, ok := m["availability_zone"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", m["availability_zone"].(string)))
 	}
