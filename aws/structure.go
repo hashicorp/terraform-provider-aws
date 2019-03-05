@@ -4190,19 +4190,21 @@ func stripCapacityAttributes(in map[string]interface{}) (map[string]interface{},
 
 // Expanders + flatteners
 
-func flattenDynamoDbTtl(ttlDesc *dynamodb.TimeToLiveDescription) []interface{} {
-	m := map[string]interface{}{}
-	if ttlDesc.AttributeName != nil {
-		m["attribute_name"] = *ttlDesc.AttributeName
-		if ttlDesc.TimeToLiveStatus != nil {
-			m["enabled"] = (*ttlDesc.TimeToLiveStatus == dynamodb.TimeToLiveStatusEnabled)
-		}
+func flattenDynamoDbTtl(ttlOutput *dynamodb.DescribeTimeToLiveOutput) []interface{} {
+	m := map[string]interface{}{
+		"enabled": false,
 	}
-	if len(m) > 0 {
+
+	if ttlOutput == nil || ttlOutput.TimeToLiveDescription == nil {
 		return []interface{}{m}
 	}
 
-	return []interface{}{}
+	ttlDesc := ttlOutput.TimeToLiveDescription
+
+	m["attribute_name"] = aws.StringValue(ttlDesc.AttributeName)
+	m["enabled"] = (aws.StringValue(ttlDesc.TimeToLiveStatus) == dynamodb.TimeToLiveStatusEnabled)
+
+	return []interface{}{m}
 }
 
 func flattenDynamoDbPitr(pitrDesc *dynamodb.DescribeContinuousBackupsOutput) []interface{} {

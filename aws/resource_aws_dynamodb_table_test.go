@@ -362,28 +362,6 @@ func TestAccAWSDynamoDbTable_importTags(t *testing.T) {
 	})
 }
 
-func TestAccAWSDynamoDbTable_importTimeToLive(t *testing.T) {
-	resourceName := "aws_dynamodb_table.basic-dynamodb-table"
-	rName := acctest.RandomWithPrefix("TerraformTestTable-")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSDynamoDbConfigAddTimeToLive(rName),
-			},
-
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
 func TestAccAWSDynamoDbTable_basic(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 
@@ -864,10 +842,12 @@ func TestAccAWSDynamoDbTable_gsiUpdateNonKeyAttributes(t *testing.T) {
 	})
 }
 
-func TestAccAWSDynamoDbTable_ttl(t *testing.T) {
-	var conf dynamodb.DescribeTableOutput
-
+// TTL tests must be split since it can only be updated once per hour
+// ValidationException: Time to live has been modified multiple times within a fixed interval
+func TestAccAWSDynamoDbTable_Ttl_Enabled(t *testing.T) {
+	var table dynamodb.DescribeTableOutput
 	rName := acctest.RandomWithPrefix("TerraformTestTable-")
+	resourceName := "aws_dynamodb_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -875,15 +855,53 @@ func TestAccAWSDynamoDbTable_ttl(t *testing.T) {
 		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDynamoDbConfigInitialState(rName),
+				Config: testAccAWSDynamoDbConfigTimeToLive(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInitialAWSDynamoDbTableExists("aws_dynamodb_table.basic-dynamodb-table", &conf),
+					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &table),
+					resource.TestCheckResourceAttr(resourceName, "ttl.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ttl.0.enabled", "true"),
 				),
 			},
 			{
-				Config: testAccAWSDynamoDbConfigAddTimeToLive(rName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+// TTL tests must be split since it can only be updated once per hour
+// ValidationException: Time to live has been modified multiple times within a fixed interval
+func TestAccAWSDynamoDbTable_Ttl_Disabled(t *testing.T) {
+	var table dynamodb.DescribeTableOutput
+	rName := acctest.RandomWithPrefix("TerraformTestTable-")
+	resourceName := "aws_dynamodb_table.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDynamoDbConfigTimeToLive(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDynamoDbTableTimeToLiveWasUpdated("aws_dynamodb_table.basic-dynamodb-table"),
+					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &table),
+					resource.TestCheckResourceAttr(resourceName, "ttl.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ttl.0.enabled", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSDynamoDbConfigTimeToLive(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &table),
+					resource.TestCheckResourceAttr(resourceName, "ttl.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ttl.0.enabled", "true"),
 				),
 			},
 		},
@@ -946,46 +964,6 @@ func TestAccAWSDynamoDbTable_attributeUpdateValidation(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccCheckDynamoDbTableTimeToLiveWasUpdated(n string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		log.Printf("[DEBUG] Trying to create initial table state!")
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No DynamoDB table name specified!")
-		}
-
-		conn := testAccProvider.Meta().(*AWSClient).dynamodbconn
-
-		params := &dynamodb.DescribeTimeToLiveInput{
-			TableName: aws.String(rs.Primary.ID),
-		}
-
-		resp, err := conn.DescribeTimeToLive(params)
-
-		if err != nil {
-			return fmt.Errorf("Problem describing time to live for table '%s': %s", rs.Primary.ID, err)
-		}
-
-		ttlDescription := resp.TimeToLiveDescription
-
-		log.Printf("[DEBUG] Checking on table %s", rs.Primary.ID)
-
-		if *ttlDescription.TimeToLiveStatus != dynamodb.TimeToLiveStatusEnabled {
-			return fmt.Errorf("TimeToLiveStatus %s, not ENABLED!", *ttlDescription.TimeToLiveStatus)
-		}
-
-		if *ttlDescription.AttributeName != "TestTTL" {
-			return fmt.Errorf("AttributeName was %s, not TestTTL!", *ttlDescription.AttributeName)
-		}
-
-		return nil
-	}
 }
 
 func TestAccAWSDynamoDbTable_encryption(t *testing.T) {
@@ -1940,56 +1918,25 @@ resource "aws_dynamodb_table" "test" {
 `, name)
 }
 
-func testAccAWSDynamoDbConfigAddTimeToLive(rName string) string {
+func testAccAWSDynamoDbConfigTimeToLive(rName string, ttlEnabled bool) string {
 	return fmt.Sprintf(`
-resource "aws_dynamodb_table" "basic-dynamodb-table" {
-  name = "%s"
-  read_capacity = 1
-  write_capacity = 2
-  hash_key = "TestTableHashKey"
-  range_key = "TestTableRangeKey"
+resource "aws_dynamodb_table" "test" {
+  hash_key       = "TestTableHashKey"
+  name           = %[1]q
+  read_capacity  = 1
+  write_capacity = 1
 
   attribute {
     name = "TestTableHashKey"
     type = "S"
   }
 
-  attribute {
-    name = "TestTableRangeKey"
-    type = "S"
-  }
-
-  attribute {
-    name = "TestLSIRangeKey"
-    type = "N"
-  }
-
-  attribute {
-    name = "TestGSIRangeKey"
-    type = "S"
-  }
-
-  local_secondary_index {
-    name = "TestTableLSI"
-    range_key = "TestLSIRangeKey"
-    projection_type = "ALL"
-  }
-
   ttl {
-    attribute_name = "TestTTL"
-    enabled = true
-  }
-
-  global_secondary_index {
-    name = "InitialTestTableGSI"
-    hash_key = "TestTableHashKey"
-    range_key = "TestGSIRangeKey"
-    write_capacity = 1
-    read_capacity = 1
-    projection_type = "KEYS_ONLY"
+    attribute_name = "${%[2]t ? "TestTTL" : ""}"
+    enabled        = %[2]t
   }
 }
-`, rName)
+`, rName, ttlEnabled)
 }
 
 func testAccAWSDynamoDbConfigOneAttribute(rName, hashKey, attrName, attrType string) string {
