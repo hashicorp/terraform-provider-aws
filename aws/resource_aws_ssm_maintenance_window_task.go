@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/hashicorp/terraform/helper/validation"
 
@@ -17,6 +18,9 @@ func resourceAwsSsmMaintenanceWindowTask() *schema.Resource {
 		Read:   resourceAwsSsmMaintenanceWindowTaskRead,
 		Update: resourceAwsSsmMaintenanceWindowTaskUpdate,
 		Delete: resourceAwsSsmMaintenanceWindowTaskDelete,
+		Importer: &schema.ResourceImporter{
+			State: resourceAwsSsmMaintenanceWindowTaskImport,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"window_id": {
@@ -342,4 +346,19 @@ func resourceAwsSsmMaintenanceWindowTaskDelete(d *schema.ResourceData, meta inte
 	}
 
 	return nil
+}
+
+func resourceAwsSsmMaintenanceWindowTaskImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	idParts := strings.SplitN(d.Id(), "/", 2)
+	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
+		return nil, fmt.Errorf("unexpected format of ID (%q), expected <window-id>/<window-task-id>", d.Id())
+	}
+
+	windowID := idParts[0]
+	windowTaskID := idParts[1]
+
+	d.Set("window_id", windowID)
+	d.SetId(windowTaskID)
+
+	return []*schema.ResourceData{d}, nil
 }

@@ -14,6 +14,7 @@ import (
 
 func TestAccAWSSSMMaintenanceWindowTask_basic(t *testing.T) {
 	var task ssm.MaintenanceWindowTask
+	resourceName := "aws_ssm_maintenance_window_task.target"
 
 	name := acctest.RandString(10)
 	resource.ParallelTest(t, resource.TestCase{
@@ -24,8 +25,14 @@ func TestAccAWSSSMMaintenanceWindowTask_basic(t *testing.T) {
 			{
 				Config: testAccAWSSSMMaintenanceWindowTaskBasicConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMMaintenanceWindowTaskExists("aws_ssm_maintenance_window_task.target", &task),
+					testAccCheckAWSSSMMaintenanceWindowTaskExists(resourceName, &task),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSSSMMaintenanceWindowTaskImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -34,6 +41,8 @@ func TestAccAWSSSMMaintenanceWindowTask_basic(t *testing.T) {
 func TestAccAWSSSMMaintenanceWindowTask_updateForcesNewResource(t *testing.T) {
 	var before, after ssm.MaintenanceWindowTask
 	name := acctest.RandString(10)
+	resourceName := "aws_ssm_maintenance_window_task.target"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -42,17 +51,23 @@ func TestAccAWSSSMMaintenanceWindowTask_updateForcesNewResource(t *testing.T) {
 			{
 				Config: testAccAWSSSMMaintenanceWindowTaskBasicConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMMaintenanceWindowTaskExists("aws_ssm_maintenance_window_task.target", &before),
+					testAccCheckAWSSSMMaintenanceWindowTaskExists(resourceName, &before),
 				),
 			},
 			{
 				Config: testAccAWSSSMMaintenanceWindowTaskBasicConfigUpdated(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMMaintenanceWindowTaskExists("aws_ssm_maintenance_window_task.target", &after),
-					resource.TestCheckResourceAttr("aws_ssm_maintenance_window_task.target", "name", "TestMaintenanceWindowTask"),
-					resource.TestCheckResourceAttr("aws_ssm_maintenance_window_task.target", "description", "This resource is for test purpose only"),
+					testAccCheckAWSSSMMaintenanceWindowTaskExists(resourceName, &after),
+					resource.TestCheckResourceAttr(resourceName, "name", "TestMaintenanceWindowTask"),
+					resource.TestCheckResourceAttr(resourceName, "description", "This resource is for test purpose only"),
 					testAccCheckAwsSsmWindowsTaskRecreated(t, &before, &after),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSSSMMaintenanceWindowTaskImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -127,6 +142,17 @@ func testAccCheckAWSSSMMaintenanceWindowTaskDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccAWSSSMMaintenanceWindowTaskImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["window_id"], rs.Primary.ID), nil
+	}
 }
 
 func testAccAWSSSMMaintenanceWindowTaskBasicConfig(rName string) string {
