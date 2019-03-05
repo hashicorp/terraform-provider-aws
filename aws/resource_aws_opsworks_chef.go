@@ -119,7 +119,6 @@ func resourceAwsOpsworksChef() *schema.Resource {
 
 			// TODO: document this role creation
 			// https://s3.amazonaws.com/opsworks-cm-us-east-1-prod-default-assets/misc/opsworks-cm-roles.yaml
-			// if it's optional, will they be computed? if so, is that something we can express here?
 			"service_role_arn": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -231,16 +230,20 @@ func resourceAwsOpsworksChefCreate(d *schema.ResourceData, meta interface{}) err
 		SubnetIds:                  aws.StringSlice(d.Get("subnet_ids").([]string)), // TODO: set?
 	}
 
-	// TODO: pivotal key and admin password attributes
-	// ChefPivotalKey:             aws.String(d.Get("chef_pivotal_key").(string)),
-	// ChefDeliveryAdminPassword:  aws.String(d.Get("chef_delivery_admin_password").(string)),
+	chefPivotalKeyAttribute := opsworkscm.EngineAttribute{
+		Name:  aws.String("CHEF_PIVOTAL_KEY"),
+		Value: aws.String(d.Get("chef_pivotal_key").(string)),
+	}
+
+	chefDeliveryAdminPassword := opsworkscm.EngineAttribute{
+		Name:  aws.String("CHEF_DELIVERY_ADMIN_PASSWORD"),
+		Value: aws.String(d.Get("chef_delivery_admin_password").(string)),
+	}
+
+	req.SetEngineAttributes([]*opsworkscm.EngineAttribute{&chefPivotalKeyAttribute, &chefDeliveryAdminPassword})
 
 	// TODO: possibly make these optional
-	// TODO: chef_pivotal_key, optional
-	// TODO: chef_delivery_admin_password, optional
-	// TODO: instance_profile_arn, optional
 	// TODO: security_group_ids, optional
-	// TODO: service_role_arn, optional
 	// TODO: subnet_ids, optional
 
 	if sshKeyPair, ok := d.GetOk("ssh_key_pair"); ok {
