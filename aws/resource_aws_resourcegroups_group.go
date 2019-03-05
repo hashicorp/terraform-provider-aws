@@ -56,7 +56,7 @@ func resourceAwsResourceGroupsGroup() *schema.Resource {
 					},
 				},
 			},
-
+			"tags": tagsSchema(),
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -81,6 +81,10 @@ func resourceAwsResourceGroupsGroupCreate(d *schema.ResourceData, meta interface
 		Description:   aws.String(d.Get("description").(string)),
 		Name:          aws.String(d.Get("name").(string)),
 		ResourceQuery: extractResourceGroupResourceQuery(d.Get("resource_query").([]interface{})),
+	}
+
+	if v, ok := d.GetOk("tags"); ok {
+		input.Tags = tagsToMapGenericRG(v.(map[string]*string))
 	}
 
 	res, err := conn.CreateGroup(&input)
@@ -114,6 +118,8 @@ func resourceAwsResourceGroupsGroupRead(d *schema.ResourceData, meta interface{}
 	d.Set("description", aws.StringValue(g.Group.Description))
 	d.Set("arn", aws.StringValue(g.Group.GroupArn))
 
+	arn := aws.StringValue(g.Group.GroupArn)
+
 	q, err := conn.GetGroupQuery(&resourcegroups.GetGroupQueryInput{
 		GroupName: aws.String(d.Id()),
 	})
@@ -129,6 +135,17 @@ func resourceAwsResourceGroupsGroupRead(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("error setting resource_query: %s", err)
 	}
 
+	v, err1 := conn.GetTags(&resourcegroups.GetTagsInput{
+		Arn: aws.String(arn),
+	})
+
+	if err1 != nil {
+		return fmt.Errorf("error getting resource tags :%s", err1)
+	}
+
+	tags := tagsToMapGenericRG(v.Tags)
+
+	d.Set("tags", tags)
 	return nil
 }
 
@@ -159,6 +176,37 @@ func resourceAwsResourceGroupsGroupUpdate(d *schema.ResourceData, meta interface
 		}
 	}
 
+	if d.HasChange("tags") {
+		arn := d.Get("arn")
+		oraw, nraw := d.GetChange("tags")
+		o := oraw.(map[string]interface{})
+		n := nraw.(map[string]interface{})
+		create, remove := diffTagsGenericRG(o, n)
+
+		// Set tags
+		if len(remove) > 0 {
+			log.Printf("[DEBUG] Removing tags: %#v", remove)
+			_, err := conn.Untag(&resourcegroups.UntagInput{
+				Arn:  aws.String(arn.(string)),
+				Keys: remove,
+			})
+			if err != nil {
+				return fmt.Errorf("error setting resource groups id (%s): %s", d.Id(), err)
+			}
+		}
+		if len(create) > 0 {
+			log.Printf("[DEBUG] Creating tags: %#v", create)
+
+			_, err := conn.Tag(&resourcegroups.TagInput{
+				Arn:  aws.String(arn.(string)),
+				Tags: create,
+			})
+			if err != nil {
+				return fmt.Errorf("error setting resource groups id (%s): %s", d.Id(), err)
+			}
+		}
+	}
+
 	return resourceAwsResourceGroupsGroupRead(d, meta)
 }
 
@@ -175,4 +223,31 @@ func resourceAwsResourceGroupsGroupDelete(d *schema.ResourceData, meta interface
 	}
 
 	return nil
+}
+
+func tagsToMapGenericRG(ts map[string]*string) map[string]*string {
+	result := make(map[string]*string)
+	for k, v := range ts {
+		if !tagIgnoredGeneric(k) {
+			result[k] = v
+		}
+	}
+
+	return result
+}
+
+func diffTagsGenericRG(oldTags, newTags map[string]interface{}) (map[string]*string, []*string) {
+	// First, we're creating everything we have
+	create := make(map[string]*string)
+	for k, v := range newTags {
+		create[k] = aws.String(v.(string))
+	}
+	// Remove the tags from the set
+	var remove = []*string{}
+	for _, v := range oldTags {
+		r := v.(string)
+		remove = append(remove, &r)
+	}
+
+	return create, remove
 }

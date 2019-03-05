@@ -46,7 +46,7 @@ An `resource_query` block supports the following arguments:
 
 * `query` - (Required) The resource query as a JSON string.
 * `type` - (Required) The type of the resource query. Defaults to `TAG_FILTERS_1_0`. 
-
+* `tags` - (Optional) Tag for the group itself, not to support tagging other resources via the group
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:

@@ -43,7 +43,6 @@ func TestAccAWSResourceGroup_basic(t *testing.T) {
   ]
 }
 `
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -57,6 +56,8 @@ func TestAccAWSResourceGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", desc1),
 					resource.TestCheckResourceAttr(resourceName, "resource_query.0.query", query1+"\n"),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr("resourceName", "tags.%", "1"),
+					resource.TestCheckResourceAttr("resourceName", "tags.Foo", "bar"),
 				),
 			},
 			{
@@ -130,6 +131,9 @@ resource "aws_resourcegroups_group" "test" {
   name        = "%s"
   description = "%s"
 
+	tags = {
+		Foo = "bar"
+	}
   resource_query {
     query = <<JSON
 %s
