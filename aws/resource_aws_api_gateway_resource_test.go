@@ -84,7 +84,7 @@ func TestAccAWSAPIGatewayResource_update(t *testing.T) {
 func testAccCheckAWSAPIGatewayResourceAttributes(conf *apigateway.Resource, path string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if *conf.Path != path {
-			return fmt.Errorf("Wrong Path: %q", conf.Path)
+			return fmt.Errorf("Wrong Path: %q", *conf.Path)
 		}
 
 		return nil
