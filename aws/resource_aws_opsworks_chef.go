@@ -51,15 +51,13 @@ func resourceAwsOpsworksChef() *schema.Resource {
 			// Also, since these are write-only and not returned by the API, we'll probably need a custom diff function that ignores them?
 			"chef_pivotal_key": {
 				Type:      schema.TypeString,
-				Optional:  true,
-				Default:   nil,
+				Required:  true,
 				Sensitive: true,
 			},
 
 			"chef_delivery_admin_password": {
 				Type:      schema.TypeString,
-				Optional:  true,
-				Default:   nil,
+				Required:  true,
 				Sensitive: true,
 			},
 
