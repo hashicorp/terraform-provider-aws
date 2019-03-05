@@ -312,6 +312,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_appmesh_route":                                resourceAwsAppmeshRoute(),
 			"aws_appmesh_virtual_node":                         resourceAwsAppmeshVirtualNode(),
 			"aws_appmesh_virtual_router":                       resourceAwsAppmeshVirtualRouter(),
+			"aws_appmesh_virtual_service":                      resourceAwsAppmeshVirtualService(),
 			"aws_appsync_api_key":                              resourceAwsAppsyncApiKey(),
 			"aws_appsync_datasource":                           resourceAwsAppsyncDatasource(),
 			"aws_appsync_graphql_api":                          resourceAwsAppsyncGraphqlApi(),

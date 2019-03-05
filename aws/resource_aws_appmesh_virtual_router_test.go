@@ -102,12 +102,6 @@ func testAccAwsAppmeshVirtualRouter_basic(t *testing.T) {
 						resourceName, "name", vrName),
 					resource.TestCheckResourceAttr(
 						resourceName, "mesh_name", meshName),
-					resource.TestCheckResourceAttr(
-						resourceName, "spec.#", "1"),
-					resource.TestCheckResourceAttr(
-						resourceName, "spec.0.service_names.#", "1"),
-					resource.TestCheckResourceAttr(
-						resourceName, "spec.0.service_names.423761483", "serviceb.simpleapp.local"),
 					resource.TestCheckResourceAttrSet(
 						resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(
@@ -117,23 +111,10 @@ func testAccAwsAppmeshVirtualRouter_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAppmeshVirtualRouterConfig_serviceNamesUpdated(meshName, vrName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualRouterExists(
-						resourceName, &vr),
-					resource.TestCheckResourceAttr(
-						resourceName, "name", vrName),
-					resource.TestCheckResourceAttr(
-						resourceName, "mesh_name", meshName),
-					resource.TestCheckResourceAttr(
-						resourceName, "spec.#", "1"),
-					resource.TestCheckResourceAttr(
-						resourceName, "spec.0.service_names.#", "2"),
-					resource.TestCheckResourceAttr(
-						resourceName, "spec.0.service_names.3826429429", "serviceb1.simpleapp.local"),
-					resource.TestCheckResourceAttr(
-						resourceName, "spec.0.service_names.3079206513", "serviceb2.simpleapp.local"),
-				),
+				ResourceName:      resourceName,
+				ImportStateId:     fmt.Sprintf("%s/%s", meshName, vrName),
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -151,10 +132,10 @@ func testAccCheckAppmeshVirtualRouterDestroy(s *terraform.State) error {
 			MeshName:          aws.String(rs.Primary.Attributes["mesh_name"]),
 			VirtualRouterName: aws.String(rs.Primary.Attributes["name"]),
 		})
+		if isAWSErr(err, appmesh.ErrCodeNotFoundException, "") {
+			continue
+		}
 		if err != nil {
-			if isAWSErr(err, appmesh.ErrCodeNotFoundException, "") {
-				return nil
-			}
 			return err
 		}
 		return fmt.Errorf("still exist.")
@@ -198,27 +179,6 @@ resource "aws_appmesh_mesh" "foo" {
 resource "aws_appmesh_virtual_router" "foo" {
   name      = "%s"
   mesh_name = "${aws_appmesh_mesh.foo.id}"
-
-  spec {
-    service_names = ["serviceb.simpleapp.local"]
-  }
-}
-`, meshName, vrName)
-}
-
-func testAccAppmeshVirtualRouterConfig_serviceNamesUpdated(meshName, vrName string) string {
-	return fmt.Sprintf(`
-resource "aws_appmesh_mesh" "foo" {
-  name = "%s"
-}
-
-resource "aws_appmesh_virtual_router" "foo" {
-  name      = "%s"
-  mesh_name = "${aws_appmesh_mesh.foo.id}"
-
-  spec {
-    service_names = ["serviceb1.simpleapp.local", "serviceb2.simpleapp.local"]
-  }
 }
 `, meshName, vrName)
 }
