@@ -140,7 +140,7 @@ func resourceAwsDynamoDbTable() *schema.Resource {
 						"enabled": {
 							Type:     schema.TypeBool,
 							Optional: true,
-							Default: false,
+							Default:  false,
 						},
 					},
 				},
