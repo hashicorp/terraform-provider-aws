@@ -15,6 +15,7 @@ func resourceAwsSsmMaintenanceWindowTask() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsSsmMaintenanceWindowTaskCreate,
 		Read:   resourceAwsSsmMaintenanceWindowTaskRead,
+		Update: resourceAwsSsmMaintenanceWindowTaskUpdate,
 		Delete: resourceAwsSsmMaintenanceWindowTaskDelete,
 
 		Schema: map[string]*schema.Schema{
@@ -27,13 +28,11 @@ func resourceAwsSsmMaintenanceWindowTask() *schema.Resource {
 			"max_concurrency": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 			},
 
 			"max_errors": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 			},
 
 			"task_type": {
@@ -45,30 +44,25 @@ func resourceAwsSsmMaintenanceWindowTask() *schema.Resource {
 			"task_arn": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 			},
 
 			"service_role_arn": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 			},
 
 			"targets": {
 				Type:     schema.TypeList,
 				Required: true,
-				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"key": {
 							Type:     schema.TypeString,
 							Required: true,
-							ForceNew: true,
 						},
 						"values": {
 							Type:     schema.TypeList,
 							Required: true,
-							ForceNew: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
@@ -78,28 +72,24 @@ func resourceAwsSsmMaintenanceWindowTask() *schema.Resource {
 			"name": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ForceNew:     true,
 				ValidateFunc: validateAwsSSMMaintenanceWindowTaskName,
 			},
 
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
 
 			"priority": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				ForceNew: true,
 			},
 
 			"logging_info": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Optional: true,
-				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"s3_bucket_name": {
@@ -121,18 +111,15 @@ func resourceAwsSsmMaintenanceWindowTask() *schema.Resource {
 			"task_parameters": {
 				Type:     schema.TypeList,
 				Optional: true,
-				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
 							Type:     schema.TypeString,
 							Required: true,
-							ForceNew: true,
 						},
 						"values": {
 							Type:     schema.TypeList,
 							Required: true,
-							ForceNew: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
@@ -287,6 +274,55 @@ func resourceAwsSsmMaintenanceWindowTaskRead(d *schema.ResourceData, meta interf
 	return nil
 }
 
+func resourceAwsSsmMaintenanceWindowTaskUpdate(d *schema.ResourceData, meta interface{}) error {
+	ssmconn := meta.(*AWSClient).ssmconn
+	windowID := d.Get("window_id").(string)
+
+	params := &ssm.UpdateMaintenanceWindowTaskInput{
+		WindowId:       aws.String(windowID),
+		WindowTaskId:   aws.String(d.Id()),
+		MaxConcurrency: aws.String(d.Get("max_concurrency").(string)),
+		MaxErrors:      aws.String(d.Get("max_errors").(string)),
+		ServiceRoleArn: aws.String(d.Get("service_role_arn").(string)),
+		TaskArn:        aws.String(d.Get("task_arn").(string)),
+		Targets:        expandAwsSsmTargets(d.Get("targets").([]interface{})),
+		Replace:        aws.Bool(true),
+	}
+
+	if v, ok := d.GetOk("name"); ok {
+		params.Name = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("description"); ok {
+		params.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("priority"); ok {
+		params.Priority = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("logging_info"); ok {
+		params.LoggingInfo = expandAwsSsmMaintenanceWindowLoggingInfo(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("task_parameters"); ok {
+		params.TaskParameters = expandAwsSsmTaskParameters(v.([]interface{}))
+	}
+
+	_, err := ssmconn.UpdateMaintenanceWindowTask(params)
+	if isAWSErr(err, ssm.ErrCodeDoesNotExistException, "") {
+		log.Printf("[WARN] Maintenance Window (%s) Task (%s) not found, removing from state", windowID, d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("Error updating Maintenance Window (%s) Task (%s): %s", windowID, d.Id(), err)
+	}
+
+	return resourceAwsSsmMaintenanceWindowTaskRead(d, meta)
+}
+
 func resourceAwsSsmMaintenanceWindowTaskDelete(d *schema.ResourceData, meta interface{}) error {
 	ssmconn := meta.(*AWSClient).ssmconn
 
@@ -298,6 +334,9 @@ func resourceAwsSsmMaintenanceWindowTaskDelete(d *schema.ResourceData, meta inte
 	}
 
 	_, err := ssmconn.DeregisterTaskFromMaintenanceWindow(params)
+	if isAWSErr(err, ssm.ErrCodeDoesNotExistException, "") {
+		return nil
+	}
 	if err != nil {
 		return fmt.Errorf("error deregistering SSM Maintenance Window Task (%s): %s", d.Id(), err)
 	}
