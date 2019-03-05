@@ -699,16 +699,25 @@ func resourceAwsCloudFrontDistributionCreate(d *schema.ResourceData, meta interf
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		var err error
 		resp, err = conn.CreateDistributionWithTags(params)
+
+		// ACM and IAM certificate eventual consistency
+		// InvalidViewerCertificate: The specified SSL certificate doesn't exist, isn't in us-east-1 region, isn't valid, or doesn't include a valid certificate chain.
+		if isAWSErr(err, cloudfront.ErrCodeInvalidViewerCertificate, "") {
+			return resource.RetryableError(err)
+		}
+
 		if err != nil {
-			// ACM and IAM certificate eventual consistency
-			// InvalidViewerCertificate: The specified SSL certificate doesn't exist, isn't in us-east-1 region, isn't valid, or doesn't include a valid certificate chain.
-			if isAWSErr(err, cloudfront.ErrCodeInvalidViewerCertificate, "") {
-				return resource.RetryableError(err)
-			}
 			return resource.NonRetryableError(err)
 		}
+
 		return nil
 	})
+
+	// Propagate AWS Go SDK retried error, if any
+	if isResourceTimeoutError(err) {
+		resp, err = conn.CreateDistributionWithTags(params)
+	}
+
 	if err != nil {
 		return fmt.Errorf("error creating CloudFront Distribution: %s", err)
 	}
@@ -785,16 +794,25 @@ func resourceAwsCloudFrontDistributionUpdate(d *schema.ResourceData, meta interf
 	// Handle eventual consistency issues
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		_, err := conn.UpdateDistribution(params)
+
+		// ACM and IAM certificate eventual consistency
+		// InvalidViewerCertificate: The specified SSL certificate doesn't exist, isn't in us-east-1 region, isn't valid, or doesn't include a valid certificate chain.
+		if isAWSErr(err, cloudfront.ErrCodeInvalidViewerCertificate, "") {
+			return resource.RetryableError(err)
+		}
+
 		if err != nil {
-			// ACM and IAM certificate eventual consistency
-			// InvalidViewerCertificate: The specified SSL certificate doesn't exist, isn't in us-east-1 region, isn't valid, or doesn't include a valid certificate chain.
-			if isAWSErr(err, cloudfront.ErrCodeInvalidViewerCertificate, "") {
-				return resource.RetryableError(err)
-			}
 			return resource.NonRetryableError(err)
 		}
+
 		return nil
 	})
+
+	// Propagate AWS Go SDK retried error, if any
+	if isResourceTimeoutError(err) {
+		_, err = conn.UpdateDistribution(params)
+	}
+
 	if err != nil {
 		return fmt.Errorf("error updating CloudFront Distribution (%s): %s", d.Id(), err)
 	}
