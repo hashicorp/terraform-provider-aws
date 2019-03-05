@@ -242,53 +242,46 @@ func resourceAwsSsmMaintenanceWindowTaskCreate(d *schema.ResourceData, meta inte
 
 func resourceAwsSsmMaintenanceWindowTaskRead(d *schema.ResourceData, meta interface{}) error {
 	ssmconn := meta.(*AWSClient).ssmconn
+	windowID := d.Get("window_id").(string)
 
-	params := &ssm.DescribeMaintenanceWindowTasksInput{
-		WindowId: aws.String(d.Get("window_id").(string)),
+	params := &ssm.GetMaintenanceWindowTaskInput{
+		WindowId:     aws.String(windowID),
+		WindowTaskId: aws.String(d.Id()),
 	}
-
-	resp, err := ssmconn.DescribeMaintenanceWindowTasks(params)
+	resp, err := ssmconn.GetMaintenanceWindowTask(params)
+	if isAWSErr(err, ssm.ErrCodeDoesNotExistException, "") {
+		log.Printf("[WARN] Maintenance Window (%s) Task (%s) not found, removing from state", windowID, d.Id())
+		d.SetId("")
+		return nil
+	}
 	if err != nil {
-		return err
+		return fmt.Errorf("Error getting Maintenance Window (%s) Task (%s): %s", windowID, d.Id(), err)
 	}
 
-	found := false
-	for _, t := range resp.Tasks {
-		if *t.WindowTaskId == d.Id() {
-			found = true
+	d.Set("window_id", resp.WindowId)
+	d.Set("max_concurrency", resp.MaxConcurrency)
+	d.Set("max_errors", resp.MaxErrors)
+	d.Set("task_type", resp.TaskType)
+	d.Set("service_role_arn", resp.ServiceRoleArn)
+	d.Set("task_arn", resp.TaskArn)
+	d.Set("priority", resp.Priority)
+	d.Set("name", resp.Name)
+	d.Set("description", resp.Description)
 
-			d.Set("window_id", t.WindowId)
-			d.Set("max_concurrency", t.MaxConcurrency)
-			d.Set("max_errors", t.MaxErrors)
-			d.Set("task_type", t.Type)
-			d.Set("service_role_arn", t.ServiceRoleArn)
-			d.Set("task_arn", t.TaskArn)
-			d.Set("priority", t.Priority)
-			d.Set("name", t.Name)
-			d.Set("description", t.Description)
-
-			if t.LoggingInfo != nil {
-				if err := d.Set("logging_info", flattenAwsSsmMaintenanceWindowLoggingInfo(t.LoggingInfo)); err != nil {
-					return fmt.Errorf("Error setting logging_info error: %#v", err)
-				}
-			}
-
-			if t.TaskParameters != nil {
-				if err := d.Set("task_parameters", flattenAwsSsmTaskParameters(t.TaskParameters)); err != nil {
-					return fmt.Errorf("Error setting task_parameters error: %#v", err)
-				}
-			}
-
-			if err := d.Set("targets", flattenAwsSsmTargets(t.Targets)); err != nil {
-				return fmt.Errorf("Error setting targets error: %#v", err)
-			}
+	if resp.LoggingInfo != nil {
+		if err := d.Set("logging_info", flattenAwsSsmMaintenanceWindowLoggingInfo(resp.LoggingInfo)); err != nil {
+			return fmt.Errorf("Error setting logging_info error: %#v", err)
 		}
 	}
 
-	if !found {
-		log.Printf("[INFO] Maintenance Window Target not found. Removing from state")
-		d.SetId("")
-		return nil
+	if resp.TaskParameters != nil {
+		if err := d.Set("task_parameters", flattenAwsSsmTaskParameters(resp.TaskParameters)); err != nil {
+			return fmt.Errorf("Error setting task_parameters error: %#v", err)
+		}
+	}
+
+	if err := d.Set("targets", flattenAwsSsmTargets(resp.Targets)); err != nil {
+		return fmt.Errorf("Error setting targets error: %#v", err)
 	}
 
 	return nil
