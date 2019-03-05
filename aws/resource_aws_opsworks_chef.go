@@ -185,7 +185,6 @@ func resourceAwsOpsworksChefRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	server := resp.Servers[0]
-
 	d.Set("associate_public_ip_address", server.AssociatePublicIpAddress)
 	d.Set("backup_retention_count", server.BackupRetentionCount)
 	d.Set("disable_automated_backup", server.DisableAutomatedBackup)
@@ -224,6 +223,7 @@ func resourceAwsOpsworksChefCreate(d *schema.ResourceData, meta interface{}) err
 		PreferredBackupWindow:      aws.String(d.Get("preferred_backup_window").(string)),
 		PreferredMaintenanceWindow: aws.String(d.Get("preferred_maintenance_window").(string)),
 		SecurityGroupIds:           aws.StringSlice(d.Get("security_group_ids").([]string)), // TODO: SecurityGroupIds, set?
+		ServerName:                 aws.String(d.Id().(string)),
 		ServiceRoleArn:             aws.String(d.Get("service_role_arn").(string)),
 		SubnetIds:                  aws.StringSlice(d.Get("subnet_ids").([]string)), // TODO: set?
 	}
