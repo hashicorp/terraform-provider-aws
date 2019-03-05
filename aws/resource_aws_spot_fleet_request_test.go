@@ -622,7 +622,7 @@ func testAccCheckAWSSpotFleetRequest_PlacementAttributes(
 			return fmt.Errorf("Expected placement to be set, got nil")
 		}
 		if *placement.Tenancy != "dedicated" {
-			return fmt.Errorf("Expected placement tenancy to be %q, got %q", "dedicated", placement.Tenancy)
+			return fmt.Errorf("Expected placement tenancy to be %q, got %q", "dedicated", *placement.Tenancy)
 		}
 
 		return nil
