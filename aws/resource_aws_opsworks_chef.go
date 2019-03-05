@@ -12,6 +12,9 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
+const EngineModel = "Single"
+const EngineVersion = "12"
+
 func resourceAwsOpsworksChef() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsOpsworksChefCreate,
@@ -23,6 +26,8 @@ func resourceAwsOpsworksChef() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			// TODO: do we want this? I think this is another "magic" thing that happens
+			// I think we can still associate a public IP later if we want? :shrug:
 			"associate_public_ip_address": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -41,17 +46,21 @@ func resourceAwsOpsworksChef() *schema.Resource {
 				Default:  false,
 			},
 
+			// TODO:
 			// I kinda want to make this required because how else are we going to get at that info?
+			// Also, since these are write-only and not returned by the API, we'll probably need a custom diff function that ignores them?
 			"chef_pivotal_key": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "",
+				Type:      schema.TypeString,
+				Optional:  true,
+				Default:   nil,
+				Sensitive: true,
 			},
 
 			"chef_delivery_admin_password": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "",
+				Type:      schema.TypeString,
+				Optional:  true,
+				Default:   nil,
+				Sensitive: true,
 			},
 
 			// TODO:
@@ -60,7 +69,7 @@ func resourceAwsOpsworksChef() *schema.Resource {
 			"engine_model": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "Single",
+				Default:  EngineModel,
 			},
 
 			// TODO:
@@ -69,7 +78,7 @@ func resourceAwsOpsworksChef() *schema.Resource {
 			"engine_version": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "12",
+				Default:  EngineVersion,
 			},
 
 			// TODO: document the instance role required
@@ -102,13 +111,15 @@ func resourceAwsOpsworksChef() *schema.Resource {
 			// TODO:
 			// if you don't specify this, it'll create one. I'm of the opinion that users should
 			// create it themselves. Or maybe some sort of wrapper module? I dunno.
+			// if it's optional, will they be computed? if so, is that something we can express here?
 			"security_group_ids": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeList, // TODO: should this be a schema.TypeSet instead so order doesn't matter? check ALB and aws_instance resources?
 				Required: true,
 			},
 
 			// TODO: document this role creation
 			// https://s3.amazonaws.com/opsworks-cm-us-east-1-prod-default-assets/misc/opsworks-cm-roles.yaml
+			// if it's optional, will they be computed? if so, is that something we can express here?
 			"service_role_arn": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -124,17 +135,36 @@ func resourceAwsOpsworksChef() *schema.Resource {
 			// your EC2 instances are created in a default subnet that is selected by Amazon
 			// EC2. If you specify subnet IDs, the VPC must have "Auto Assign Public IP"
 			// enabled.
-
+			// if it's optional, will they be computed? if so, is that something we can express here?
 			"subnet_ids": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeList, // TODO: schema.TypeSet? check ALB resources?
 				Required: true,
+			},
+
+			"endpoint": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 		},
 	}
 }
 
 func resourceAwsOpsworksChefValidate(d *schema.ResourceData) error {
-	// TODO: parameter validation function
+	// TODO: validation function
+	// preferredMaintenanceWindow := d.Get("preferred_maintenance_window")
+	// preferredBackupWindow := d.Get("preferred_backup_window")
+	// engineModel? // really depends if/how we're enforcing that there's only one actual valid value for these
+	// engineVersion?
+	// chefPivotalKey validate rsa? or is that too much?
+	// chefDeliveryAdminPassword validate the password meets the API's requirements or is that too much?
+	// backupRetentionCount validate that it's positive
+	//     but also maybe validate that it's in the valid range? or is that too much?
+	//     I also wonder if there are constants in the API connector that maybe we can leverage here
 	return nil
 }
 
@@ -158,7 +188,21 @@ func resourceAwsOpsworksChefRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	server := resp.Servers[0]
-	// TODO: figure / set attributes
+
+	d.Set("associate_public_ip_address", server.AssociatePublicIpAddress)
+	d.Set("backup_retention_count", server.BackupRetentionCount)
+	d.Set("disable_automated_backup", server.DisableAutomatedBackup)
+	d.Set("engine_model", server.EngineModel)     // TODO: possibly not bother with this
+	d.Set("engine_version", server.EngineVersion) // TODO: possibly not bother with this
+	d.Set("instance_profile_arn", server.InstanceProfileArn)
+	d.Set("instance_type", server.InstanceType)
+	if server.KeyPair != nil {
+		d.Set("ssh_key_pair", server.KeyPair)
+	}
+	d.Set("preferred_backup_window", server.PreferredBackupWindow)
+	d.Set("preferred_maintenance_window", server.PreferredMaintenanceWindow)
+	d.Set("security_group_ids", server.SecurityGroupIds)
+	d.Set("endpoint", server.Endpoint)
 	d.Set("arn", server.ServerArn)
 
 	return nil
@@ -173,10 +217,34 @@ func resourceAwsOpsworksChefCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	req := &opsworkscm.CreateServerInput{
-		// TODO: parameters
-		// "name":         d.Id(),
-		// "engine":       "Chef",
-		// "engine_model": "single", // required?
+		AssociatePublicIpAddress:   aws.Bool(d.Get("associate_public_ip_address").(bool)),
+		BackupRetentionCount:       aws.Int64(int64(d.Get("backup_retention_count").(int))),
+		DisableAutomatedBackup:     aws.Bool(d.Get("disable_automated_backup").(bool)),
+		EngineModel:                aws.String(d.Get("engine_model").(string)),
+		EngineVersion:              aws.String(d.Get("engine_version").(string)),
+		InstanceProfileArn:         aws.String(d.Get("instance_profile_arn").(string)),
+		InstanceType:               aws.String(d.Get("instance_type").(string)),
+		PreferredBackupWindow:      aws.String(d.Get("preferred_backup_window").(string)),
+		PreferredMaintenanceWindow: aws.String(d.Get("preferred_maintenance_window").(string)),
+		SecurityGroupIds:           aws.StringSlice(d.Get("security_group_ids").([]string)), // TODO: SecurityGroupIds, set?
+		ServiceRoleArn:             aws.String(d.Get("service_role_arn").(string)),
+		SubnetIds:                  aws.StringSlice(d.Get("subnet_ids").([]string)), // TODO: set?
+	}
+
+	// TODO: pivotal key and admin password attributes
+	// ChefPivotalKey:             aws.String(d.Get("chef_pivotal_key").(string)),
+	// ChefDeliveryAdminPassword:  aws.String(d.Get("chef_delivery_admin_password").(string)),
+
+	// TODO: possibly make these optional
+	// TODO: chef_pivotal_key, optional
+	// TODO: chef_delivery_admin_password, optional
+	// TODO: instance_profile_arn, optional
+	// TODO: security_group_ids, optional
+	// TODO: service_role_arn, optional
+	// TODO: subnet_ids, optional
+
+	if sshKeyPair, ok := d.GetOk("ssh_key_pair"); ok {
+		req.KeyPair = aws.String(sshKeyPair.(string))
 	}
 
 	log.Printf("[DEBUG] Creating OpsWorks Chef server: %s", req)
@@ -187,6 +255,7 @@ func resourceAwsOpsworksChefCreate(d *schema.ResourceData, meta interface{}) err
 		resp, cerr = client.CreateServer(req)
 		if cerr != nil {
 			if opserr, ok := cerr.(awserr.Error); ok {
+				// TODO: does this also happen with this resource?
 				// If Terraform is also managing the service IAM role,
 				// it may have just been created and not yet be
 				// propagated.
@@ -226,11 +295,14 @@ func resourceAwsOpsworksChefUpdate(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
+	// TODO: these are the only values that are allowed to be changed
+	// according to the API, is there a way to express this in the provider somehow?
 	req := &opsworkscm.UpdateServerInput{
-		// TODO: params
+		BackupRetentionCount:       aws.Int64(int64(d.Get("backup_retention_count").(int))),
+		DisableAutomatedBackup:     aws.Bool(d.Get("disable_automated_backup").(bool)),
+		PreferredBackupWindow:      aws.String(d.Get("preferred_backup_window").(string)),
+		PreferredMaintenanceWindow: aws.String(d.Get("preferred_maintenance_window").(string)),
 	}
-
-	// TODO: params? d.GetOk() stuff wat
 
 	log.Printf("[DEBUG] Updating OpsWorks Chef server: %s", req)
 
