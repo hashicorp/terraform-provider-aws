@@ -23,12 +23,112 @@ func resourceAwsOpsworksChef() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:     schema.TypeString,
-				Optional: false,
-				Computed: false,
+			"associate_public_ip_address": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
-			// TODO: these are the actual resource parameters
+
+			"backup_retention_count": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  1,
+			},
+
+			"disable_automated_backup": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+
+			// I kinda want to make this required because how else are we going to get at that info?
+			"chef_pivotal_key": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "",
+			},
+
+			"chef_delivery_admin_password": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "",
+			},
+
+			// TODO:
+			// default and only valid. I'll leave it configurable for future proofing but
+			// validation failure, maybe?
+			"engine_model": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "Single",
+			},
+
+			// TODO:
+			// default and only valid. I'll leave it configurable for future proofing but
+			// validation failure, maybe?
+			"engine_version": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "12",
+			},
+
+			// TODO: document the instance role required
+			// https://s3.amazonaws.com/opsworks-cm-us-east-1-prod-default-assets/misc/opsworks-cm-roles.yaml
+			"instance_profile_arn": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+
+			"instance_type": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+
+			"ssh_key_pair": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+
+			"preferred_backup_window": {
+				Type:     schema.TypeString,
+				Required: true, // TODO: ?
+			},
+
+			"preferred_maintenance_window": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+
+			// TODO:
+			// if you don't specify this, it'll create one. I'm of the opinion that users should
+			// create it themselves. Or maybe some sort of wrapper module? I dunno.
+			"security_group_ids": {
+				Type:     schema.TypeList,
+				Required: true,
+			},
+
+			// TODO: document this role creation
+			// https://s3.amazonaws.com/opsworks-cm-us-east-1-prod-default-assets/misc/opsworks-cm-roles.yaml
+			"service_role_arn": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+
+			// TODO: huh?
+			// The IDs of subnets in which to launch the server EC2 instance.
+			//
+			// Amazon EC2-Classic customers: This field is required. All servers must run
+			// within a VPC. The VPC must have "Auto Assign Public IP" enabled.
+			//
+			// EC2-VPC customers: This field is optional. If you do not specify subnet IDs,
+			// your EC2 instances are created in a default subnet that is selected by Amazon
+			// EC2. If you specify subnet IDs, the VPC must have "Auto Assign Public IP"
+			// enabled.
+
+			"subnet_ids": {
+				Type:     schema.TypeList,
+				Required: true,
+			},
 		},
 	}
 }
@@ -74,7 +174,9 @@ func resourceAwsOpsworksChefCreate(d *schema.ResourceData, meta interface{}) err
 
 	req := &opsworkscm.CreateServerInput{
 		// TODO: parameters
-
+		// "name":         d.Id(),
+		// "engine":       "Chef",
+		// "engine_model": "single", // required?
 	}
 
 	log.Printf("[DEBUG] Creating OpsWorks Chef server: %s", req)
