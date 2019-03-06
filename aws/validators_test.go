@@ -668,6 +668,35 @@ func TestValidateS3BucketLifecycleTimestamp(t *testing.T) {
 	}
 }
 
+func TestValidateSagemakerName(t *testing.T) {
+	validNames := []string{
+		"ValidSageMakerName",
+		"Valid-5a63Mak3r-Name",
+		"123-456-789",
+		"1234",
+		strings.Repeat("W", 63),
+	}
+	for _, v := range validNames {
+		_, errors := validateSagemakerName(v, "name")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid SageMaker name with maximum length 63 chars: %q", v, errors)
+		}
+	}
+
+	invalidNames := []string{
+		"Invalid name",          // blanks are not allowed
+		"1#{}nook",              // other non-alphanumeric chars
+		"-nook",                 // cannot start with hyphen
+		strings.Repeat("W", 64), // length > 63
+	}
+	for _, v := range invalidNames {
+		_, errors := validateSagemakerName(v, "name")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid SageMaker name", v)
+		}
+	}
+}
+
 func TestValidateIntegerInSlice(t *testing.T) {
 	cases := []struct {
 		val         interface{}
@@ -3066,6 +3095,44 @@ func TestValidateSecretManagerSecretNamePrefix(t *testing.T) {
 		_, errors := validateSecretManagerSecretNamePrefix(tc.Value, "aws_secretsmanager_secret")
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected the AWS Secretsmanager Secret Name to not trigger a validation error for %q", tc.Value)
+		}
+	}
+}
+
+func TestValidateRoute53ResolverEndpointName(t *testing.T) {
+	cases := []struct {
+		Value    string
+		ErrCount int
+	}{
+		{
+			Value:    "testing123!",
+			ErrCount: 1,
+		},
+		{
+			Value:    "testing - 123__",
+			ErrCount: 0,
+		},
+		{
+			Value:    randomString(65),
+			ErrCount: 1,
+		},
+		{
+			Value:    "1",
+			ErrCount: 1,
+		},
+		{
+			Value:    "10",
+			ErrCount: 0,
+		},
+		{
+			Value:    "A",
+			ErrCount: 0,
+		},
+	}
+	for _, tc := range cases {
+		_, errors := validateRoute53ResolverEndpointName(tc.Value, "aws_route53_resolver_endpoint")
+		if len(errors) != tc.ErrCount {
+			t.Fatalf("Expected the AWS Route 53 Resolver Endpoint Name to not trigger a validation error for %q", tc.Value)
 		}
 	}
 }

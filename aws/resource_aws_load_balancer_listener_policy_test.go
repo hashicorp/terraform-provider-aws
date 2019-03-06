@@ -16,8 +16,8 @@ import (
 
 func TestAccAWSLoadBalancerListenerPolicy_basic(t *testing.T) {
 	rChar := acctest.RandStringFromCharSet(6, acctest.CharSetAlpha)
-	lbName := fmt.Sprintf("%s", rChar)
-	mcName := fmt.Sprintf("%s", rChar)
+	lbName := rChar
+	mcName := rChar
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -168,7 +168,7 @@ resource "aws_load_balancer_policy" "magic-cookie-sticky" {
   load_balancer_name = "${aws_elb.test-lb.name}"
   policy_name = "%s"
   policy_type_name = "AppCookieStickinessPolicyType"
-  policy_attribute = {
+  policy_attribute {
     name = "CookieName"
     value = "magic_cookie"
   }
@@ -205,7 +205,7 @@ resource "aws_load_balancer_policy" "magic-cookie-sticky" {
   load_balancer_name = "${aws_elb.test-lb.name}"
   policy_name = "%s"
   policy_type_name = "AppCookieStickinessPolicyType"
-  policy_attribute = {
+  policy_attribute {
     name = "CookieName"
     value = "unicorn_cookie"
   }

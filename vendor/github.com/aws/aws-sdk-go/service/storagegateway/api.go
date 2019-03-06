@@ -148,7 +148,7 @@ func (c *StorageGateway) AddCacheRequest(input *AddCacheInput) (req *request.Req
 //
 // Configures one or more gateway local disks as cache for a gateway. This operation
 // is only supported in the cached volume, tape and file gateway type (see Storage
-// Gateway Concepts (http://docs.aws.amazon.com/storagegateway/latest/userguide/StorageGatewayConcepts.html)).
+// Gateway Concepts (https://docs.aws.amazon.com/storagegateway/latest/userguide/StorageGatewayConcepts.html)).
 //
 // In the request, you specify the gateway Amazon Resource Name (ARN) to which
 // you want to add cache, and one or more disk IDs that you want to configure
@@ -247,6 +247,8 @@ func (c *StorageGateway) AddTagsToResourceRequest(input *AddTagsToResourceInput)
 //    * Storage Volumes
 //
 //    * Virtual Tapes
+//
+//    * NFS and SMB File Shares
 //
 // You can create a maximum of 10 tags for each resource. Virtual tapes and
 // storage volumes that are recovered to a new gateway maintain their tags.
@@ -468,6 +470,94 @@ func (c *StorageGateway) AddWorkingStorage(input *AddWorkingStorageInput) (*AddW
 // for more information on using Contexts.
 func (c *StorageGateway) AddWorkingStorageWithContext(ctx aws.Context, input *AddWorkingStorageInput, opts ...request.Option) (*AddWorkingStorageOutput, error) {
 	req, out := c.AddWorkingStorageRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opAttachVolume = "AttachVolume"
+
+// AttachVolumeRequest generates a "aws/request.Request" representing the
+// client's request for the AttachVolume operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See AttachVolume for more information on using the AttachVolume
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the AttachVolumeRequest method.
+//    req, resp := client.AttachVolumeRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/storagegateway-2013-06-30/AttachVolume
+func (c *StorageGateway) AttachVolumeRequest(input *AttachVolumeInput) (req *request.Request, output *AttachVolumeOutput) {
+	op := &request.Operation{
+		Name:       opAttachVolume,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &AttachVolumeInput{}
+	}
+
+	output = &AttachVolumeOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// AttachVolume API operation for AWS Storage Gateway.
+//
+// Connects a volume to an iSCSI connection and then attaches the volume to
+// the specified gateway. Detaching and attaching a volume enables you to recover
+// your data from one gateway to a different gateway without creating a snapshot.
+// It also makes it easier to move your volumes from an on-premises gateway
+// to a gateway hosted on an Amazon EC2 instance.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Storage Gateway's
+// API operation AttachVolume for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+//   An exception occurred because an invalid gateway request was issued to the
+//   service. For more information, see the error and message fields.
+//
+//   * ErrCodeInternalServerError "InternalServerError"
+//   An internal server error has occurred during the request. For more information,
+//   see the error and message fields.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/storagegateway-2013-06-30/AttachVolume
+func (c *StorageGateway) AttachVolume(input *AttachVolumeInput) (*AttachVolumeOutput, error) {
+	req, out := c.AttachVolumeRequest(input)
+	return out, req.Send()
+}
+
+// AttachVolumeWithContext is the same as AttachVolume with the addition of
+// the ability to pass a context and additional request options.
+//
+// See AttachVolume for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *StorageGateway) AttachVolumeWithContext(ctx aws.Context, input *AttachVolumeInput, opts ...request.Option) (*AttachVolumeOutput, error) {
+	req, out := c.AttachVolumeRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -894,7 +984,7 @@ func (c *StorageGateway) CreateSMBFileShareRequest(input *CreateSMBFileShareInpu
 // to enable you to create a file share. Make sure that AWS STS is activated
 // in the AWS Region you are creating your file gateway in. If AWS STS is not
 // activated in this AWS Region, activate it. For information about how to activate
-// AWS STS, see Activating and Deactivating AWS STS in an AWS Region (http://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_enable-regions.html)
+// AWS STS, see Activating and Deactivating AWS STS in an AWS Region (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_enable-regions.html)
 // in the AWS Identity and Access Management User Guide.
 //
 // File gateways don't support creating hard or symbolic links on a file share.
@@ -988,7 +1078,7 @@ func (c *StorageGateway) CreateSnapshotRequest(input *CreateSnapshotInput) (req 
 // as well as import the data to an Amazon Elastic Block Store (EBS) volume
 // in Amazon Elastic Compute Cloud (EC2). You can take snapshots of your gateway
 // volume on a scheduled or ad-hoc basis. This API enables you to take ad-hoc
-// snapshot. For more information, see Editing a Snapshot Schedule (http://docs.aws.amazon.com/storagegateway/latest/userguide/managing-volumes.html#SchedulingSnapshot).
+// snapshot. For more information, see Editing a Snapshot Schedule (https://docs.aws.amazon.com/storagegateway/latest/userguide/managing-volumes.html#SchedulingSnapshot).
 //
 // In the CreateSnapshot request you identify the volume by providing its Amazon
 // Resource Name (ARN). You must also provide description for the snapshot.
@@ -1000,10 +1090,10 @@ func (c *StorageGateway) CreateSnapshotRequest(input *CreateSnapshotInput) (req 
 // cached volume gateway type.
 //
 // To list or delete a snapshot, you must use the Amazon EC2 API. For more information,
-// see DescribeSnapshots or DeleteSnapshot in the EC2 API reference (http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Operations.html).
+// see DescribeSnapshots or DeleteSnapshot in the EC2 API reference (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Operations.html).
 //
 // Volume and snapshot IDs are changing to a longer length ID format. For more
-// information, see the important note on the Welcome (http://docs.aws.amazon.com/storagegateway/latest/APIReference/Welcome.html)
+// information, see the important note on the Welcome (https://docs.aws.amazon.com/storagegateway/latest/APIReference/Welcome.html)
 // page.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -1832,7 +1922,7 @@ func (c *StorageGateway) DeleteSnapshotScheduleRequest(input *DeleteSnapshotSche
 //
 // You can take snapshots of your gateway volumes on a scheduled or ad hoc basis.
 // This API action enables you to delete a snapshot schedule for a volume. For
-// more information, see Working with Snapshots (http://docs.aws.amazon.com/storagegateway/latest/userguide/WorkingWithSnapshots.html).
+// more information, see Working with Snapshots (https://docs.aws.amazon.com/storagegateway/latest/userguide/WorkingWithSnapshots.html).
 // In the DeleteSnapshotSchedule request, you identify the volume by providing
 // its Amazon Resource Name (ARN). This operation is only supported in stored
 // and cached volume gateway types.
@@ -2102,7 +2192,7 @@ func (c *StorageGateway) DeleteVolumeRequest(input *DeleteVolumeInput) (req *req
 // volume you are deleting. You should also make sure there is no snapshot in
 // progress. You can use the Amazon Elastic Compute Cloud (Amazon EC2) API to
 // query snapshots on the volume you are deleting and check the snapshot status.
-// For more information, go to DescribeSnapshots (http://docs.aws.amazon.com/AWSEC2/latest/APIReference/ApiReference-query-DescribeSnapshots.html)
+// For more information, go to DescribeSnapshots (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/ApiReference-query-DescribeSnapshots.html)
 // in the Amazon Elastic Compute Cloud API Reference.
 //
 // In the request, you must provide the Amazon Resource Name (ARN) of the storage
@@ -3850,6 +3940,94 @@ func (c *StorageGateway) DescribeWorkingStorage(input *DescribeWorkingStorageInp
 // for more information on using Contexts.
 func (c *StorageGateway) DescribeWorkingStorageWithContext(ctx aws.Context, input *DescribeWorkingStorageInput, opts ...request.Option) (*DescribeWorkingStorageOutput, error) {
 	req, out := c.DescribeWorkingStorageRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDetachVolume = "DetachVolume"
+
+// DetachVolumeRequest generates a "aws/request.Request" representing the
+// client's request for the DetachVolume operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DetachVolume for more information on using the DetachVolume
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DetachVolumeRequest method.
+//    req, resp := client.DetachVolumeRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/storagegateway-2013-06-30/DetachVolume
+func (c *StorageGateway) DetachVolumeRequest(input *DetachVolumeInput) (req *request.Request, output *DetachVolumeOutput) {
+	op := &request.Operation{
+		Name:       opDetachVolume,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DetachVolumeInput{}
+	}
+
+	output = &DetachVolumeOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DetachVolume API operation for AWS Storage Gateway.
+//
+// Disconnects a volume from an iSCSI connection and then detaches the volume
+// from the specified gateway. Detaching and attaching a volume enables you
+// to recover your data from one gateway to a different gateway without creating
+// a snapshot. It also makes it easier to move your volumes from an on-premises
+// gateway to a gateway hosted on an Amazon EC2 instance.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Storage Gateway's
+// API operation DetachVolume for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+//   An exception occurred because an invalid gateway request was issued to the
+//   service. For more information, see the error and message fields.
+//
+//   * ErrCodeInternalServerError "InternalServerError"
+//   An internal server error has occurred during the request. For more information,
+//   see the error and message fields.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/storagegateway-2013-06-30/DetachVolume
+func (c *StorageGateway) DetachVolume(input *DetachVolumeInput) (*DetachVolumeOutput, error) {
+	req, out := c.DetachVolumeRequest(input)
+	return out, req.Send()
+}
+
+// DetachVolumeWithContext is the same as DetachVolume with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DetachVolume for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *StorageGateway) DetachVolumeWithContext(ctx aws.Context, input *DetachVolumeInput, opts ...request.Option) (*DetachVolumeOutput, error) {
+	req, out := c.DetachVolumeRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -6118,8 +6296,8 @@ func (c *StorageGateway) UpdateGatewaySoftwareNowRequest(input *UpdateGatewaySof
 // the chance of any disruption to your applications by increasing your iSCSI
 // Initiators' timeouts. For more information about increasing iSCSI Initiator
 // timeouts for Windows and Linux, see Customizing Your Windows iSCSI Settings
-// (http://docs.aws.amazon.com/storagegateway/latest/userguide/ConfiguringiSCSIClientInitiatorWindowsClient.html#CustomizeWindowsiSCSISettings)
-// and Customizing Your Linux iSCSI Settings (http://docs.aws.amazon.com/storagegateway/latest/userguide/ConfiguringiSCSIClientInitiatorRedHatClient.html#CustomizeLinuxiSCSISettings),
+// (https://docs.aws.amazon.com/storagegateway/latest/userguide/ConfiguringiSCSIClientInitiatorWindowsClient.html#CustomizeWindowsiSCSISettings)
+// and Customizing Your Linux iSCSI Settings (https://docs.aws.amazon.com/storagegateway/latest/userguide/ConfiguringiSCSIClientInitiatorRedHatClient.html#CustomizeLinuxiSCSISettings),
 // respectively.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -6402,7 +6580,7 @@ func (c *StorageGateway) UpdateSMBFileShareRequest(input *UpdateSMBFileShareInpu
 // to enable you to create a file share. Make sure that AWS STS is activated
 // in the AWS Region you are creating your file gateway in. If AWS STS is not
 // activated in this AWS Region, activate it. For information about how to activate
-// AWS STS, see Activating and Deactivating AWS STS in an AWS Region (http://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_enable-regions.html)
+// AWS STS, see Activating and Deactivating AWS STS in an AWS Region (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_enable-regions.html)
 // in the AWS Identity and Access Management User Guide.
 //
 // File gateways don't support creating hard or symbolic links on a file share.
@@ -6666,12 +6844,11 @@ type ActivateGatewayInput struct {
 	// A value that indicates the region where you want to store your data. The
 	// gateway region specified must be the same region as the region in your Host
 	// header in the request. For more information about available regions and endpoints
-	// for AWS Storage Gateway, see Regions and Endpoints (http://docs.aws.amazon.com/general/latest/gr/rande.html#sg_region)
+	// for AWS Storage Gateway, see Regions and Endpoints (https://docs.aws.amazon.com/general/latest/gr/rande.html#sg_region)
 	// in the Amazon Web Services Glossary.
 	//
-	// Valid Values: "us-east-1", "us-east-2", "us-west-1", "us-west-2", "ca-central-1",
-	// "eu-west-1", "eu-central-1", "eu-west-2", "eu-west-3", "ap-northeast-1",
-	// "ap-northeast-2", "ap-southeast-1", "ap-southeast-2", "ap-south-1", "sa-east-1"
+	// Valid Values: See AWS Storage Gateway Regions and Endpoints (https://docs.aws.amazon.com/general/latest/gr/rande.html#sg_region)
+	// in the AWS General Reference.
 	//
 	// GatewayRegion is a required field
 	GatewayRegion *string `min:"1" type:"string" required:"true"`
@@ -6697,6 +6874,15 @@ type ActivateGatewayInput struct {
 	//
 	// Valid Values: "STK-L700", "AWS-Gateway-VTL"
 	MediumChangerType *string `min:"2" type:"string"`
+
+	// A list of up to ten (10) tags assigned to the gateway may be specified. Every
+	// tag is a key-value pair.
+	//
+	// Valid characters for key and value are letters, spaces, and numbers representable
+	// in UTF-8 format, and the following special characters: + - = . _ : / @. The
+	// maximum length of a tag's key is 128 characters, and the maximum length for
+	// a tag's value is 256.
+	Tags []*Tag `type:"list"`
 
 	// The value that indicates the type of tape drive to use for tape gateway.
 	// This field is optional.
@@ -6751,6 +6937,16 @@ func (s *ActivateGatewayInput) Validate() error {
 	if s.TapeDriveType != nil && len(*s.TapeDriveType) < 2 {
 		invalidParams.Add(request.NewErrParamMinLen("TapeDriveType", 2))
 	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -6791,6 +6987,12 @@ func (s *ActivateGatewayInput) SetGatewayType(v string) *ActivateGatewayInput {
 // SetMediumChangerType sets the MediumChangerType field's value.
 func (s *ActivateGatewayInput) SetMediumChangerType(v string) *ActivateGatewayInput {
 	s.MediumChangerType = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *ActivateGatewayInput) SetTags(v []*Tag) *ActivateGatewayInput {
+	s.Tags = v
 	return s
 }
 
@@ -6835,6 +7037,10 @@ func (s *ActivateGatewayOutput) SetGatewayARN(v string) *ActivateGatewayOutput {
 type AddCacheInput struct {
 	_ struct{} `type:"structure"`
 
+	// An array of strings that identify disks that are to be configured as working
+	// storage. Each string have a minimum length of 1 and maximum length of 300.
+	// You can get the disk IDs from the ListLocalDisks API.
+	//
 	// DiskIds is a required field
 	DiskIds []*string `type:"list" required:"true"`
 
@@ -6923,7 +7129,9 @@ type AddTagsToResourceInput struct {
 	// The value can be an empty string.
 	//
 	// Valid characters for key and value are letters, spaces, and numbers representable
-	// in UTF-8 format, and the following special characters: + - = . _ : / @.
+	// in UTF-8 format, and the following special characters: + - = . _ : / @. The
+	// maximum length of a tag's key is 128 characters, and the maximum length for
+	// a tag's value is 256.
 	//
 	// Tags is a required field
 	Tags []*Tag `type:"list" required:"true"`
@@ -7007,6 +7215,10 @@ func (s *AddTagsToResourceOutput) SetResourceARN(v string) *AddTagsToResourceOut
 type AddUploadBufferInput struct {
 	_ struct{} `type:"structure"`
 
+	// An array of strings that identify disks that are to be configured as working
+	// storage. Each string have a minimum length of 1 and maximum length of 300.
+	// You can get the disk IDs from the ListLocalDisks API.
+	//
 	// DiskIds is a required field
 	DiskIds []*string `type:"list" required:"true"`
 
@@ -7169,6 +7381,150 @@ func (s *AddWorkingStorageOutput) SetGatewayARN(v string) *AddWorkingStorageOutp
 	return s
 }
 
+// AttachVolumeInput
+type AttachVolumeInput struct {
+	_ struct{} `type:"structure"`
+
+	// The unique device ID or other distinguishing data that identifies the local
+	// disk used to create the volume. This value is only required when you are
+	// attaching a stored volume.
+	DiskId *string `min:"1" type:"string"`
+
+	// The Amazon Resource Name (ARN) of the gateway that you want to attach the
+	// volume to.
+	//
+	// GatewayARN is a required field
+	GatewayARN *string `min:"50" type:"string" required:"true"`
+
+	// The network interface of the gateway on which to expose the iSCSI target.
+	// Only IPv4 addresses are accepted. Use DescribeGatewayInformation to get a
+	// list of the network interfaces available on a gateway.
+	//
+	// Valid Values: A valid IP address.
+	//
+	// NetworkInterfaceId is a required field
+	NetworkInterfaceId *string `type:"string" required:"true"`
+
+	// The name of the iSCSI target used by an initiator to connect to a volume
+	// and used as a suffix for the target ARN. For example, specifying TargetName
+	// as myvolume results in the target ARN of arn:aws:storagegateway:us-east-2:111122223333:gateway/sgw-12A3456B/target/iqn.1997-05.com.amazon:myvolume.
+	// The target name must be unique across all volumes on a gateway.
+	//
+	// If you don't specify a value, Storage Gateway uses the value that was previously
+	// used for this volume as the new target name.
+	TargetName *string `min:"1" type:"string"`
+
+	// The Amazon Resource Name (ARN) of the volume to attach to the specified gateway.
+	//
+	// VolumeARN is a required field
+	VolumeARN *string `min:"50" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s AttachVolumeInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AttachVolumeInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AttachVolumeInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AttachVolumeInput"}
+	if s.DiskId != nil && len(*s.DiskId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DiskId", 1))
+	}
+	if s.GatewayARN == nil {
+		invalidParams.Add(request.NewErrParamRequired("GatewayARN"))
+	}
+	if s.GatewayARN != nil && len(*s.GatewayARN) < 50 {
+		invalidParams.Add(request.NewErrParamMinLen("GatewayARN", 50))
+	}
+	if s.NetworkInterfaceId == nil {
+		invalidParams.Add(request.NewErrParamRequired("NetworkInterfaceId"))
+	}
+	if s.TargetName != nil && len(*s.TargetName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TargetName", 1))
+	}
+	if s.VolumeARN == nil {
+		invalidParams.Add(request.NewErrParamRequired("VolumeARN"))
+	}
+	if s.VolumeARN != nil && len(*s.VolumeARN) < 50 {
+		invalidParams.Add(request.NewErrParamMinLen("VolumeARN", 50))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDiskId sets the DiskId field's value.
+func (s *AttachVolumeInput) SetDiskId(v string) *AttachVolumeInput {
+	s.DiskId = &v
+	return s
+}
+
+// SetGatewayARN sets the GatewayARN field's value.
+func (s *AttachVolumeInput) SetGatewayARN(v string) *AttachVolumeInput {
+	s.GatewayARN = &v
+	return s
+}
+
+// SetNetworkInterfaceId sets the NetworkInterfaceId field's value.
+func (s *AttachVolumeInput) SetNetworkInterfaceId(v string) *AttachVolumeInput {
+	s.NetworkInterfaceId = &v
+	return s
+}
+
+// SetTargetName sets the TargetName field's value.
+func (s *AttachVolumeInput) SetTargetName(v string) *AttachVolumeInput {
+	s.TargetName = &v
+	return s
+}
+
+// SetVolumeARN sets the VolumeARN field's value.
+func (s *AttachVolumeInput) SetVolumeARN(v string) *AttachVolumeInput {
+	s.VolumeARN = &v
+	return s
+}
+
+// AttachVolumeOutput
+type AttachVolumeOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the volume target, which includes the iSCSI
+	// name for the initiator that was used to connect to the target.
+	TargetARN *string `min:"50" type:"string"`
+
+	// The Amazon Resource Name (ARN) of the volume that was attached to the gateway.
+	VolumeARN *string `min:"50" type:"string"`
+}
+
+// String returns the string representation
+func (s AttachVolumeOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AttachVolumeOutput) GoString() string {
+	return s.String()
+}
+
+// SetTargetARN sets the TargetARN field's value.
+func (s *AttachVolumeOutput) SetTargetARN(v string) *AttachVolumeOutput {
+	s.TargetARN = &v
+	return s
+}
+
+// SetVolumeARN sets the VolumeARN field's value.
+func (s *AttachVolumeOutput) SetVolumeARN(v string) *AttachVolumeOutput {
+	s.VolumeARN = &v
+	return s
+}
+
 // Describes an iSCSI cached volume.
 type CachediSCSIVolume struct {
 	_ struct{} `type:"structure"`
@@ -7179,14 +7535,28 @@ type CachediSCSIVolume struct {
 
 	// The Amazon Resource Name (ARN) of the AWS KMS key used for Amazon S3 server
 	// side encryption. This value can only be set when KMSEncrypted is true. Optional.
-	KMSKey *string `min:"20" type:"string"`
+	KMSKey *string `min:"7" type:"string"`
 
 	// If the cached volume was created from a snapshot, this field contains the
 	// snapshot ID used, e.g. snap-78e22663. Otherwise, this field is not included.
 	SourceSnapshotId *string `type:"string"`
 
+	// The name of the iSCSI target used by an initiator to connect to a volume
+	// and used as a suffix for the target ARN. For example, specifying TargetName
+	// as myvolume results in the target ARN of arn:aws:storagegateway:us-east-2:111122223333:gateway/sgw-12A3456B/target/iqn.1997-05.com.amazon:myvolume.
+	// The target name must be unique across all volumes on a gateway.
+	//
+	// If you don't specify a value, Storage Gateway uses the value that was previously
+	// used for this volume as the new target name.
+	TargetName *string `min:"1" type:"string"`
+
 	// The Amazon Resource Name (ARN) of the storage volume.
 	VolumeARN *string `min:"50" type:"string"`
+
+	// A value that indicates whether a storage volume is attached to or detached
+	// from a gateway. For more information, see Moving Your Volumes to a Different
+	// Gateway (https://docs.aws.amazon.com/storagegateway/latest/userguide/managing-volumes.html#attach-detach-volume).
+	VolumeAttachmentStatus *string `min:"3" type:"string"`
 
 	// The unique identifier of the volume, e.g. vol-AE4B946D.
 	VolumeId *string `min:"12" type:"string"`
@@ -7244,9 +7614,21 @@ func (s *CachediSCSIVolume) SetSourceSnapshotId(v string) *CachediSCSIVolume {
 	return s
 }
 
+// SetTargetName sets the TargetName field's value.
+func (s *CachediSCSIVolume) SetTargetName(v string) *CachediSCSIVolume {
+	s.TargetName = &v
+	return s
+}
+
 // SetVolumeARN sets the VolumeARN field's value.
 func (s *CachediSCSIVolume) SetVolumeARN(v string) *CachediSCSIVolume {
 	s.VolumeARN = &v
+	return s
+}
+
+// SetVolumeAttachmentStatus sets the VolumeAttachmentStatus field's value.
+func (s *CachediSCSIVolume) SetVolumeAttachmentStatus(v string) *CachediSCSIVolume {
+	s.VolumeAttachmentStatus = &v
 	return s
 }
 
@@ -7542,7 +7924,7 @@ type CreateCachediSCSIVolumeInput struct {
 
 	// The Amazon Resource Name (ARN) of the AWS KMS key used for Amazon S3 server
 	// side encryption. This value can only be set when KMSEncrypted is true. Optional.
-	KMSKey *string `min:"20" type:"string"`
+	KMSKey *string `min:"7" type:"string"`
 
 	// The network interface of the gateway on which to expose the iSCSI target.
 	// Only IPv4 addresses are accepted. Use DescribeGatewayInformation to get a
@@ -7556,7 +7938,7 @@ type CreateCachediSCSIVolumeInput struct {
 	// The snapshot ID (e.g. "snap-1122aabb") of the snapshot to restore as the
 	// new cached volume. Specify this field if you want to create the iSCSI storage
 	// volume from a snapshot otherwise do not include this field. To list snapshots
-	// for your account use DescribeSnapshots (http://docs.aws.amazon.com/AWSEC2/latest/APIReference/ApiReference-query-DescribeSnapshots.html)
+	// for your account use DescribeSnapshots (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/ApiReference-query-DescribeSnapshots.html)
 	// in the Amazon Elastic Compute Cloud API Reference.
 	SnapshotId *string `type:"string"`
 
@@ -7566,10 +7948,13 @@ type CreateCachediSCSIVolumeInput struct {
 	// than the size of the existing volume, in bytes.
 	SourceVolumeARN *string `min:"50" type:"string"`
 
-	// The name of the iSCSI target used by initiators to connect to the target
-	// and as a suffix for the target ARN. For example, specifying TargetName as
-	// myvolume results in the target ARN of arn:aws:storagegateway:us-east-2:111122223333:gateway/sgw-12A3456B/target/iqn.1997-05.com.amazon:myvolume.
-	// The target name must be unique across all volumes of a gateway.
+	// The name of the iSCSI target used by an initiator to connect to a volume
+	// and used as a suffix for the target ARN. For example, specifying TargetName
+	// as myvolume results in the target ARN of arn:aws:storagegateway:us-east-2:111122223333:gateway/sgw-12A3456B/target/iqn.1997-05.com.amazon:myvolume.
+	// The target name must be unique across all volumes on a gateway.
+	//
+	// If you don't specify a value, Storage Gateway uses the value that was previously
+	// used for this volume as the new target name.
 	//
 	// TargetName is a required field
 	TargetName *string `min:"1" type:"string" required:"true"`
@@ -7605,8 +7990,8 @@ func (s *CreateCachediSCSIVolumeInput) Validate() error {
 	if s.GatewayARN != nil && len(*s.GatewayARN) < 50 {
 		invalidParams.Add(request.NewErrParamMinLen("GatewayARN", 50))
 	}
-	if s.KMSKey != nil && len(*s.KMSKey) < 20 {
-		invalidParams.Add(request.NewErrParamMinLen("KMSKey", 20))
+	if s.KMSKey != nil && len(*s.KMSKey) < 7 {
+		invalidParams.Add(request.NewErrParamMinLen("KMSKey", 7))
 	}
 	if s.NetworkInterfaceId == nil {
 		invalidParams.Add(request.NewErrParamRequired("NetworkInterfaceId"))
@@ -7687,7 +8072,7 @@ func (s *CreateCachediSCSIVolumeInput) SetVolumeSizeInBytes(v int64) *CreateCach
 type CreateCachediSCSIVolumeOutput struct {
 	_ struct{} `type:"structure"`
 
-	// he Amazon Resource Name (ARN) of the volume target that includes the iSCSI
+	// The Amazon Resource Name (ARN) of the volume target, which includes the iSCSI
 	// name that initiators can use to connect to the target.
 	TargetARN *string `min:"50" type:"string"`
 
@@ -7753,7 +8138,7 @@ type CreateNFSFileShareInput struct {
 
 	// The Amazon Resource Name (ARN) AWS KMS key used for Amazon S3 server side
 	// encryption. This value can only be set when KMSEncrypted is true. Optional.
-	KMSKey *string `min:"20" type:"string"`
+	KMSKey *string `min:"7" type:"string"`
 
 	// The ARN of the backed storage used for storing file data.
 	//
@@ -7789,6 +8174,15 @@ type CreateNFSFileShareInput struct {
 	//
 	//    * AllSquash - Everyone is mapped to anonymous user.
 	Squash *string `min:"5" type:"string"`
+
+	// A list of up to ten (10) tags can be assigned to the NFS file share. Every
+	// tag is a key-value pair.
+	//
+	// Valid characters for key and value are letters, spaces, and numbers representable
+	// in UTF-8 format, and the following special characters: + - = . _ : / @. The
+	// maximum length of a tag's key is 128 characters, and the maximum length for
+	// a tag's value is 256.
+	Tags []*Tag `type:"list"`
 }
 
 // String returns the string representation
@@ -7822,8 +8216,8 @@ func (s *CreateNFSFileShareInput) Validate() error {
 	if s.GatewayARN != nil && len(*s.GatewayARN) < 50 {
 		invalidParams.Add(request.NewErrParamMinLen("GatewayARN", 50))
 	}
-	if s.KMSKey != nil && len(*s.KMSKey) < 20 {
-		invalidParams.Add(request.NewErrParamMinLen("KMSKey", 20))
+	if s.KMSKey != nil && len(*s.KMSKey) < 7 {
+		invalidParams.Add(request.NewErrParamMinLen("KMSKey", 7))
 	}
 	if s.LocationARN == nil {
 		invalidParams.Add(request.NewErrParamRequired("LocationARN"))
@@ -7843,6 +8237,16 @@ func (s *CreateNFSFileShareInput) Validate() error {
 	if s.NFSFileShareDefaults != nil {
 		if err := s.NFSFileShareDefaults.Validate(); err != nil {
 			invalidParams.AddNested("NFSFileShareDefaults", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
 		}
 	}
 
@@ -7936,6 +8340,12 @@ func (s *CreateNFSFileShareInput) SetSquash(v string) *CreateNFSFileShareInput {
 	return s
 }
 
+// SetTags sets the Tags field's value.
+func (s *CreateNFSFileShareInput) SetTags(v []*Tag) *CreateNFSFileShareInput {
+	s.Tags = v
+	return s
+}
+
 // CreateNFSFileShareOutput
 type CreateNFSFileShareOutput struct {
 	_ struct{} `type:"structure"`
@@ -8002,7 +8412,7 @@ type CreateSMBFileShareInput struct {
 
 	// The Amazon Resource Name (ARN) of the AWS KMS key used for Amazon S3 server
 	// side encryption. This value can only be set when KMSEncrypted is true. Optional.
-	KMSKey *string `min:"20" type:"string"`
+	KMSKey *string `min:"7" type:"string"`
 
 	// The ARN of the backed storage used for storing file data.
 	//
@@ -8026,6 +8436,15 @@ type CreateSMBFileShareInput struct {
 	//
 	// Role is a required field
 	Role *string `min:"20" type:"string" required:"true"`
+
+	// A list of up to ten (10) tags can be assigned to the NFS file share. Every
+	// tag is a key-value pair.
+	//
+	// Valid characters for key and value are letters, spaces, and numbers representable
+	// in UTF-8 format, and the following special characters: + - = . _ : / @. The
+	// maximum length of a tag's key is 128 characters, and the maximum length for
+	// a tag's value is 256.
+	Tags []*Tag `type:"list"`
 
 	// A list of users or groups in the Active Directory that are allowed to access
 	// the file share. A group must be prefixed with the @ character. For example
@@ -8064,8 +8483,8 @@ func (s *CreateSMBFileShareInput) Validate() error {
 	if s.GatewayARN != nil && len(*s.GatewayARN) < 50 {
 		invalidParams.Add(request.NewErrParamMinLen("GatewayARN", 50))
 	}
-	if s.KMSKey != nil && len(*s.KMSKey) < 20 {
-		invalidParams.Add(request.NewErrParamMinLen("KMSKey", 20))
+	if s.KMSKey != nil && len(*s.KMSKey) < 7 {
+		invalidParams.Add(request.NewErrParamMinLen("KMSKey", 7))
 	}
 	if s.LocationARN == nil {
 		invalidParams.Add(request.NewErrParamRequired("LocationARN"))
@@ -8078,6 +8497,16 @@ func (s *CreateSMBFileShareInput) Validate() error {
 	}
 	if s.Role != nil && len(*s.Role) < 20 {
 		invalidParams.Add(request.NewErrParamMinLen("Role", 20))
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
 	}
 
 	if invalidParams.Len() > 0 {
@@ -8164,6 +8593,12 @@ func (s *CreateSMBFileShareInput) SetRole(v string) *CreateSMBFileShareInput {
 	return s
 }
 
+// SetTags sets the Tags field's value.
+func (s *CreateSMBFileShareInput) SetTags(v []*Tag) *CreateSMBFileShareInput {
+	s.Tags = v
+	return s
+}
+
 // SetValidUserList sets the ValidUserList field's value.
 func (s *CreateSMBFileShareInput) SetValidUserList(v []*string) *CreateSMBFileShareInput {
 	s.ValidUserList = v
@@ -8197,9 +8632,16 @@ func (s *CreateSMBFileShareOutput) SetFileShareARN(v string) *CreateSMBFileShare
 type CreateSnapshotFromVolumeRecoveryPointInput struct {
 	_ struct{} `type:"structure"`
 
+	// Textual description of the snapshot that appears in the Amazon EC2 console,
+	// Elastic Block Store snapshots panel in the Description field, and in the
+	// AWS Storage Gateway snapshot Details pane, Description field
+	//
 	// SnapshotDescription is a required field
 	SnapshotDescription *string `min:"1" type:"string" required:"true"`
 
+	// The Amazon Resource Name (ARN) of the iSCSI volume target. Use the DescribeStorediSCSIVolumes
+	// operation to return to retrieve the TargetARN for specified VolumeARN.
+	//
 	// VolumeARN is a required field
 	VolumeARN *string `min:"50" type:"string" required:"true"`
 }
@@ -8251,10 +8693,14 @@ func (s *CreateSnapshotFromVolumeRecoveryPointInput) SetVolumeARN(v string) *Cre
 type CreateSnapshotFromVolumeRecoveryPointOutput struct {
 	_ struct{} `type:"structure"`
 
+	// The ID of the snapshot.
 	SnapshotId *string `type:"string"`
 
+	// The Amazon Resource Name (ARN) of the iSCSI volume target. Use the DescribeStorediSCSIVolumes
+	// operation to return to retrieve the TargetARN for specified VolumeARN.
 	VolumeARN *string `min:"50" type:"string"`
 
+	// The time the volume was created from the recovery point.
 	VolumeRecoveryPointTime *string `type:"string"`
 }
 
@@ -8402,7 +8848,7 @@ type CreateStorediSCSIVolumeInput struct {
 	_ struct{} `type:"structure"`
 
 	// The unique identifier for the gateway local disk that is configured as a
-	// stored volume. Use ListLocalDisks (http://docs.aws.amazon.com/storagegateway/latest/userguide/API_ListLocalDisks.html)
+	// stored volume. Use ListLocalDisks (https://docs.aws.amazon.com/storagegateway/latest/userguide/API_ListLocalDisks.html)
 	// to list disk IDs for a gateway.
 	//
 	// DiskId is a required field
@@ -8420,7 +8866,7 @@ type CreateStorediSCSIVolumeInput struct {
 
 	// The Amazon Resource Name (ARN) of the KMS key used for Amazon S3 server side
 	// encryption. This value can only be set when KMSEncrypted is true. Optional.
-	KMSKey *string `min:"20" type:"string"`
+	KMSKey *string `min:"7" type:"string"`
 
 	// The network interface of the gateway on which to expose the iSCSI target.
 	// Only IPv4 addresses are accepted. Use DescribeGatewayInformation to get a
@@ -8442,14 +8888,17 @@ type CreateStorediSCSIVolumeInput struct {
 	// The snapshot ID (e.g. "snap-1122aabb") of the snapshot to restore as the
 	// new stored volume. Specify this field if you want to create the iSCSI storage
 	// volume from a snapshot otherwise do not include this field. To list snapshots
-	// for your account use DescribeSnapshots (http://docs.aws.amazon.com/AWSEC2/latest/APIReference/ApiReference-query-DescribeSnapshots.html)
+	// for your account use DescribeSnapshots (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/ApiReference-query-DescribeSnapshots.html)
 	// in the Amazon Elastic Compute Cloud API Reference.
 	SnapshotId *string `type:"string"`
 
-	// The name of the iSCSI target used by initiators to connect to the target
-	// and as a suffix for the target ARN. For example, specifying TargetName as
-	// myvolume results in the target ARN of arn:aws:storagegateway:us-east-2:111122223333:gateway/sgw-12A3456B/target/iqn.1997-05.com.amazon:myvolume.
-	// The target name must be unique across all volumes of a gateway.
+	// The name of the iSCSI target used by an initiator to connect to a volume
+	// and used as a suffix for the target ARN. For example, specifying TargetName
+	// as myvolume results in the target ARN of arn:aws:storagegateway:us-east-2:111122223333:gateway/sgw-12A3456B/target/iqn.1997-05.com.amazon:myvolume.
+	// The target name must be unique across all volumes on a gateway.
+	//
+	// If you don't specify a value, Storage Gateway uses the value that was previously
+	// used for this volume as the new target name.
 	//
 	// TargetName is a required field
 	TargetName *string `min:"1" type:"string" required:"true"`
@@ -8480,8 +8929,8 @@ func (s *CreateStorediSCSIVolumeInput) Validate() error {
 	if s.GatewayARN != nil && len(*s.GatewayARN) < 50 {
 		invalidParams.Add(request.NewErrParamMinLen("GatewayARN", 50))
 	}
-	if s.KMSKey != nil && len(*s.KMSKey) < 20 {
-		invalidParams.Add(request.NewErrParamMinLen("KMSKey", 20))
+	if s.KMSKey != nil && len(*s.KMSKey) < 7 {
+		invalidParams.Add(request.NewErrParamMinLen("KMSKey", 7))
 	}
 	if s.NetworkInterfaceId == nil {
 		invalidParams.Add(request.NewErrParamRequired("NetworkInterfaceId"))
@@ -8554,7 +9003,7 @@ func (s *CreateStorediSCSIVolumeInput) SetTargetName(v string) *CreateStorediSCS
 type CreateStorediSCSIVolumeOutput struct {
 	_ struct{} `type:"structure"`
 
-	// he Amazon Resource Name (ARN) of the volume target that includes the iSCSI
+	// The Amazon Resource Name (ARN) of the volume target, which includes the iSCSI
 	// name that initiators can use to connect to the target.
 	TargetARN *string `min:"50" type:"string"`
 
@@ -8610,7 +9059,7 @@ type CreateTapeWithBarcodeInput struct {
 
 	// The Amazon Resource Name (ARN) of the AWS KMS Key used for Amazon S3 server
 	// side encryption. This value can only be set when KMSEncrypted is true. Optional.
-	KMSKey *string `min:"20" type:"string"`
+	KMSKey *string `min:"7" type:"string"`
 
 	// The barcode that you want to assign to the tape.
 	//
@@ -8647,8 +9096,8 @@ func (s *CreateTapeWithBarcodeInput) Validate() error {
 	if s.GatewayARN != nil && len(*s.GatewayARN) < 50 {
 		invalidParams.Add(request.NewErrParamMinLen("GatewayARN", 50))
 	}
-	if s.KMSKey != nil && len(*s.KMSKey) < 20 {
-		invalidParams.Add(request.NewErrParamMinLen("KMSKey", 20))
+	if s.KMSKey != nil && len(*s.KMSKey) < 7 {
+		invalidParams.Add(request.NewErrParamMinLen("KMSKey", 7))
 	}
 	if s.TapeBarcode == nil {
 		invalidParams.Add(request.NewErrParamRequired("TapeBarcode"))
@@ -8746,7 +9195,7 @@ type CreateTapesInput struct {
 
 	// The Amazon Resource Name (ARN) of the AWS KMS key used for Amazon S3 server
 	// side encryption. This value can only be set when KMSEncrypted is true. Optional.
-	KMSKey *string `min:"20" type:"string"`
+	KMSKey *string `min:"7" type:"string"`
 
 	// The number of virtual tapes that you want to create.
 	//
@@ -8795,8 +9244,8 @@ func (s *CreateTapesInput) Validate() error {
 	if s.GatewayARN != nil && len(*s.GatewayARN) < 50 {
 		invalidParams.Add(request.NewErrParamMinLen("GatewayARN", 50))
 	}
-	if s.KMSKey != nil && len(*s.KMSKey) < 20 {
-		invalidParams.Add(request.NewErrParamMinLen("KMSKey", 20))
+	if s.KMSKey != nil && len(*s.KMSKey) < 7 {
+		invalidParams.Add(request.NewErrParamMinLen("KMSKey", 7))
 	}
 	if s.NumTapesToCreate == nil {
 		invalidParams.Add(request.NewErrParamRequired("NumTapesToCreate"))
@@ -9224,6 +9673,8 @@ func (s *DeleteGatewayOutput) SetGatewayARN(v string) *DeleteGatewayOutput {
 type DeleteSnapshotScheduleInput struct {
 	_ struct{} `type:"structure"`
 
+	// The volume which snapshot schedule to delete.
+	//
 	// VolumeARN is a required field
 	VolumeARN *string `min:"50" type:"string" required:"true"`
 }
@@ -9263,6 +9714,7 @@ func (s *DeleteSnapshotScheduleInput) SetVolumeARN(v string) *DeleteSnapshotSche
 type DeleteSnapshotScheduleOutput struct {
 	_ struct{} `type:"structure"`
 
+	// The volume which snapshot schedule was deleted.
 	VolumeARN *string `min:"50" type:"string"`
 }
 
@@ -9636,16 +10088,28 @@ func (s *DescribeCacheInput) SetGatewayARN(v string) *DescribeCacheInput {
 type DescribeCacheOutput struct {
 	_ struct{} `type:"structure"`
 
+	// The amount of cache in bytes allocated to the a gateway.
 	CacheAllocatedInBytes *int64 `type:"long"`
 
+	// The file share's contribution to the overall percentage of the gateway's
+	// cache that has not been persisted to AWS. The sample is taken at the end
+	// of the reporting period.
 	CacheDirtyPercentage *float64 `type:"double"`
 
+	// Percent of application read operations from the file shares that are served
+	// from cache. The sample is taken at the end of the reporting period.
 	CacheHitPercentage *float64 `type:"double"`
 
 	CacheMissPercentage *float64 `type:"double"`
 
+	// Percent use of the gateway's cache storage. This metric applies only to the
+	// gateway-cached volume setup. The sample is taken at the end of the reporting
+	// period.
 	CacheUsedPercentage *float64 `type:"double"`
 
+	// An array of strings that identify disks that are to be configured as working
+	// storage. Each string have a minimum length of 1 and maximum length of 300.
+	// You can get the disk IDs from the ListLocalDisks API.
 	DiskIds []*string `type:"list"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
@@ -9708,6 +10172,10 @@ func (s *DescribeCacheOutput) SetGatewayARN(v string) *DescribeCacheOutput {
 type DescribeCachediSCSIVolumesInput struct {
 	_ struct{} `type:"structure"`
 
+	// An array of strings where each string represents the Amazon Resource Name
+	// (ARN) of a cached volume. All of the specified cached volumes must from the
+	// same gateway. Use ListVolumes to get volume ARNs for a gateway.
+	//
 	// VolumeARNs is a required field
 	VolumeARNs []*string `type:"list" required:"true"`
 }
@@ -9929,6 +10397,12 @@ type DescribeGatewayInformationOutput struct {
 	// the time zone of the gateway. If the gateway is not available for an update
 	// this field is not returned in the response.
 	NextUpdateAvailabilityDate *string `min:"1" type:"string"`
+
+	// A list of up to ten (10) tags assigned to the gateway are returned, sorted
+	// alphabetically by key name. Every tag is a key-value pair. For a gateway
+	// with more than 10 tags assigned, you can view all tags using the ListTagsForResource
+	// API.
+	Tags []*Tag `type:"list"`
 }
 
 // String returns the string representation
@@ -9992,6 +10466,12 @@ func (s *DescribeGatewayInformationOutput) SetLastSoftwareUpdate(v string) *Desc
 // SetNextUpdateAvailabilityDate sets the NextUpdateAvailabilityDate field's value.
 func (s *DescribeGatewayInformationOutput) SetNextUpdateAvailabilityDate(v string) *DescribeGatewayInformationOutput {
 	s.NextUpdateAvailabilityDate = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *DescribeGatewayInformationOutput) SetTags(v []*Tag) *DescribeGatewayInformationOutput {
+	s.Tags = v
 	return s
 }
 
@@ -10069,6 +10549,8 @@ type DescribeMaintenanceStartTimeOutput struct {
 	// the gateway.
 	MinuteOfHour *int64 `type:"integer"`
 
+	// A value that indicates the time zone that is set for the gateway. The start
+	// time and day of week specified should be in the time zone of the gateway.
 	Timezone *string `min:"3" type:"string"`
 }
 
@@ -10292,7 +10774,7 @@ type DescribeSMBSettingsOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The name of the domain that the gateway is joined to.
-	DomainName *string `type:"string"`
+	DomainName *string `min:"1" type:"string"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
 	// to return a list of gateways for your account and region.
@@ -10378,14 +10860,21 @@ func (s *DescribeSnapshotScheduleInput) SetVolumeARN(v string) *DescribeSnapshot
 type DescribeSnapshotScheduleOutput struct {
 	_ struct{} `type:"structure"`
 
+	// The snapshot description.
 	Description *string `min:"1" type:"string"`
 
+	// The number of hours between snapshots.
 	RecurrenceInHours *int64 `min:"1" type:"integer"`
 
+	// The hour of the day at which the snapshot schedule begins represented as
+	// hh, where hh is the hour (0 to 23). The hour of the day is in the time zone
+	// of the gateway.
 	StartAt *int64 `type:"integer"`
 
+	// A value that indicates the time zone of the gateway.
 	Timezone *string `min:"3" type:"string"`
 
+	// The Amazon Resource Name (ARN) of the volume that was specified in the request.
 	VolumeARN *string `min:"50" type:"string"`
 }
 
@@ -10473,6 +10962,53 @@ func (s *DescribeStorediSCSIVolumesInput) SetVolumeARNs(v []*string) *DescribeSt
 type DescribeStorediSCSIVolumesOutput struct {
 	_ struct{} `type:"structure"`
 
+	// Describes a single unit of output from DescribeStorediSCSIVolumes. The following
+	// fields are returned:
+	//
+	//    * ChapEnabled: Indicates whether mutual CHAP is enabled for the iSCSI
+	//    target.
+	//
+	//    * LunNumber: The logical disk number.
+	//
+	//    * NetworkInterfaceId: The network interface ID of the stored volume that
+	//    initiator use to map the stored volume as an iSCSI target.
+	//
+	//    * NetworkInterfacePort: The port used to communicate with iSCSI targets.
+	//
+	//    * PreservedExistingData: Indicates if when the stored volume was created,
+	//    existing data on the underlying local disk was preserved.
+	//
+	//    * SourceSnapshotId: If the stored volume was created from a snapshot,
+	//    this field contains the snapshot ID used, e.g. snap-1122aabb. Otherwise,
+	//    this field is not included.
+	//
+	//    * StorediSCSIVolumes: An array of StorediSCSIVolume objects where each
+	//    object contains metadata about one stored volume.
+	//
+	//    * TargetARN: The Amazon Resource Name (ARN) of the volume target.
+	//
+	//    * VolumeARN: The Amazon Resource Name (ARN) of the stored volume.
+	//
+	//    * VolumeDiskId: The disk ID of the local disk that was specified in the
+	//    CreateStorediSCSIVolume operation.
+	//
+	//    * VolumeId: The unique identifier of the storage volume, e.g. vol-1122AABB.
+	//
+	//    * VolumeiSCSIAttributes: An VolumeiSCSIAttributes object that represents
+	//    a collection of iSCSI attributes for one stored volume.
+	//
+	//    * VolumeProgress: Represents the percentage complete if the volume is
+	//    restoring or bootstrapping that represents the percent of data transferred.
+	//    This field does not appear in the response if the stored volume is not
+	//    restoring or bootstrapping.
+	//
+	//    * VolumeSizeInBytes: The size of the volume in bytes.
+	//
+	//    * VolumeStatus: One of the VolumeStatus values that indicates the state
+	//    of the volume.
+	//
+	//    * VolumeType: One of the enumeration values describing the type of the
+	//    volume. Currently, on STORED volumes are supported.
 	StorediSCSIVolumes []*StorediSCSIVolume `type:"list"`
 }
 
@@ -10877,14 +11413,20 @@ func (s *DescribeUploadBufferInput) SetGatewayARN(v string) *DescribeUploadBuffe
 type DescribeUploadBufferOutput struct {
 	_ struct{} `type:"structure"`
 
+	// An array of the gateway's local disk IDs that are configured as working storage.
+	// Each local disk ID is specified as a string (minimum length of 1 and maximum
+	// length of 300). If no local disks are configured as working storage, then
+	// the DiskIds array is empty.
 	DiskIds []*string `type:"list"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
 	// to return a list of gateways for your account and region.
 	GatewayARN *string `min:"50" type:"string"`
 
+	// The total number of bytes allocated in the gateway's as upload buffer.
 	UploadBufferAllocatedInBytes *int64 `type:"long"`
 
+	// The total number of bytes being used in the gateway's upload buffer.
 	UploadBufferUsedInBytes *int64 `type:"long"`
 }
 
@@ -11152,6 +11694,83 @@ func (s *DescribeWorkingStorageOutput) SetWorkingStorageUsedInBytes(v int64) *De
 	return s
 }
 
+// AttachVolumeInput
+type DetachVolumeInput struct {
+	_ struct{} `type:"structure"`
+
+	// Set to true to forcibly remove the iSCSI connection of the target volume
+	// and detach the volume. The default is false. If this value is set to false,
+	// you must manually disconnect the iSCSI connection from the target volume.
+	ForceDetach *bool `type:"boolean"`
+
+	// The Amazon Resource Name (ARN) of the volume to detach from the gateway.
+	//
+	// VolumeARN is a required field
+	VolumeARN *string `min:"50" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DetachVolumeInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DetachVolumeInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DetachVolumeInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DetachVolumeInput"}
+	if s.VolumeARN == nil {
+		invalidParams.Add(request.NewErrParamRequired("VolumeARN"))
+	}
+	if s.VolumeARN != nil && len(*s.VolumeARN) < 50 {
+		invalidParams.Add(request.NewErrParamMinLen("VolumeARN", 50))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetForceDetach sets the ForceDetach field's value.
+func (s *DetachVolumeInput) SetForceDetach(v bool) *DetachVolumeInput {
+	s.ForceDetach = &v
+	return s
+}
+
+// SetVolumeARN sets the VolumeARN field's value.
+func (s *DetachVolumeInput) SetVolumeARN(v string) *DetachVolumeInput {
+	s.VolumeARN = &v
+	return s
+}
+
+// AttachVolumeOutput
+type DetachVolumeOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the volume that was detached.
+	VolumeARN *string `min:"50" type:"string"`
+}
+
+// String returns the string representation
+func (s DetachVolumeOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DetachVolumeOutput) GoString() string {
+	return s.String()
+}
+
+// SetVolumeARN sets the VolumeARN field's value.
+func (s *DetachVolumeOutput) SetVolumeARN(v string) *DetachVolumeOutput {
+	s.VolumeARN = &v
+	return s
+}
+
 // Lists iSCSI information about a VTL device.
 type DeviceiSCSIAttributes struct {
 	_ struct{} `type:"structure"`
@@ -11275,13 +11894,13 @@ func (s *DisableGatewayOutput) SetGatewayARN(v string) *DisableGatewayOutput {
 type Disk struct {
 	_ struct{} `type:"structure"`
 
-	// The iSCSI Qualified Name (IQN) that is defined for a disk. This field is
+	// The iSCSI qualified name (IQN) that is defined for a disk. This field is
 	// not included in the response if the local disk is not defined as an iSCSI
 	// target. The format of this field is targetIqn::LUNNumber::region-volumeId.
 	DiskAllocationResource *string `type:"string"`
 
 	// One of the DiskAllocationType enumeration values that identifies how a local
-	// disk is used. Valid values: "UPLOAD_BUFFER", "CACHE_STORAGE".
+	// disk is used. Valid values: UPLOAD_BUFFER, CACHE_STORAGE
 	DiskAllocationType *string `min:"3" type:"string"`
 
 	// A list of values that represents attributes of a local disk.
@@ -11528,28 +12147,38 @@ func (s *GatewayInfo) SetGatewayType(v string) *GatewayInfo {
 type JoinDomainInput struct {
 	_ struct{} `type:"structure"`
 
+	// List of IPv4 addresses, NetBIOS names, or host names of your domain server.
+	// If you need to specify the port number include it after the colon (“:”).
+	// For example, mydc.mydomain.com:389.
+	DomainControllers []*string `type:"list"`
+
 	// The name of the domain that you want the gateway to join.
 	//
 	// DomainName is a required field
-	DomainName *string `type:"string" required:"true"`
+	DomainName *string `min:"1" type:"string" required:"true"`
 
-	// The unique Amazon Resource Name (ARN) of the file gateway you want to add
-	// to the Active Directory domain.
+	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
+	// to return a list of gateways for your account and region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
+
+	// The organizational unit (OU) is a container with an Active Directory that
+	// can hold users, groups, computers, and other OUs and this parameter specifies
+	// the OU that the gateway will join within the AD domain.
+	OrganizationalUnit *string `min:"1" type:"string"`
 
 	// Sets the password of the user who has permission to add the gateway to the
 	// Active Directory domain.
 	//
 	// Password is a required field
-	Password *string `type:"string" required:"true" sensitive:"true"`
+	Password *string `min:"1" type:"string" required:"true" sensitive:"true"`
 
 	// Sets the user name of user who has permission to add the gateway to the Active
 	// Directory domain.
 	//
 	// UserName is a required field
-	UserName *string `type:"string" required:"true"`
+	UserName *string `min:"1" type:"string" required:"true"`
 }
 
 // String returns the string representation
@@ -11568,23 +12197,41 @@ func (s *JoinDomainInput) Validate() error {
 	if s.DomainName == nil {
 		invalidParams.Add(request.NewErrParamRequired("DomainName"))
 	}
+	if s.DomainName != nil && len(*s.DomainName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DomainName", 1))
+	}
 	if s.GatewayARN == nil {
 		invalidParams.Add(request.NewErrParamRequired("GatewayARN"))
 	}
 	if s.GatewayARN != nil && len(*s.GatewayARN) < 50 {
 		invalidParams.Add(request.NewErrParamMinLen("GatewayARN", 50))
 	}
+	if s.OrganizationalUnit != nil && len(*s.OrganizationalUnit) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("OrganizationalUnit", 1))
+	}
 	if s.Password == nil {
 		invalidParams.Add(request.NewErrParamRequired("Password"))
 	}
+	if s.Password != nil && len(*s.Password) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Password", 1))
+	}
 	if s.UserName == nil {
 		invalidParams.Add(request.NewErrParamRequired("UserName"))
+	}
+	if s.UserName != nil && len(*s.UserName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("UserName", 1))
 	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetDomainControllers sets the DomainControllers field's value.
+func (s *JoinDomainInput) SetDomainControllers(v []*string) *JoinDomainInput {
+	s.DomainControllers = v
+	return s
 }
 
 // SetDomainName sets the DomainName field's value.
@@ -11596,6 +12243,12 @@ func (s *JoinDomainInput) SetDomainName(v string) *JoinDomainInput {
 // SetGatewayARN sets the GatewayARN field's value.
 func (s *JoinDomainInput) SetGatewayARN(v string) *JoinDomainInput {
 	s.GatewayARN = &v
+	return s
+}
+
+// SetOrganizationalUnit sets the OrganizationalUnit field's value.
+func (s *JoinDomainInput) SetOrganizationalUnit(v string) *JoinDomainInput {
+	s.OrganizationalUnit = &v
 	return s
 }
 
@@ -11803,8 +12456,12 @@ func (s *ListGatewaysInput) SetMarker(v string) *ListGatewaysInput {
 type ListGatewaysOutput struct {
 	_ struct{} `type:"structure"`
 
+	// An array of GatewayInfo objects.
 	Gateways []*GatewayInfo `type:"list"`
 
+	// Use the marker in your next request to fetch the next set of gateways in
+	// the list. If there are no more gateways to list, this field does not appear
+	// in the response.
 	Marker *string `min:"1" type:"string"`
 }
 
@@ -11876,6 +12533,9 @@ func (s *ListLocalDisksInput) SetGatewayARN(v string) *ListLocalDisksInput {
 type ListLocalDisksOutput struct {
 	_ struct{} `type:"structure"`
 
+	// A JSON object containing the following fields:
+	//
+	//    * ListLocalDisksOutput$Disks
 	Disks []*Disk `type:"list"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
@@ -12244,6 +12904,7 @@ type ListVolumeRecoveryPointsOutput struct {
 	// to return a list of gateways for your account and region.
 	GatewayARN *string `min:"50" type:"string"`
 
+	// An array of VolumeRecoveryPointInfo objects.
 	VolumeRecoveryPointInfos []*VolumeRecoveryPointInfo `type:"list"`
 }
 
@@ -12338,6 +12999,11 @@ func (s *ListVolumesInput) SetMarker(v string) *ListVolumesInput {
 	return s
 }
 
+// A JSON object containing the following fields:
+//
+//    * ListVolumesOutput$Marker
+//
+//    * ListVolumesOutput$VolumeInfos
 type ListVolumesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -12345,8 +13011,14 @@ type ListVolumesOutput struct {
 	// to return a list of gateways for your account and region.
 	GatewayARN *string `min:"50" type:"string"`
 
+	// Use the marker in your next request to continue pagination of iSCSI volumes.
+	// If there are no more volumes to list, this field does not appear in the response
+	// body.
 	Marker *string `min:"1" type:"string"`
 
+	// An array of VolumeInfo objects, where each object describes an iSCSI volume.
+	// If no volumes are defined for the gateway, then VolumeInfos is an empty array
+	// "[]".
 	VolumeInfos []*VolumeInfo `type:"list"`
 }
 
@@ -12495,7 +13167,7 @@ type NFSFileShareInfo struct {
 
 	// The Amazon Resource Name (ARN) of the AWS KMS key used for Amazon S3 server
 	// side encryption. This value can only be set when KMSEncrypted is true. Optional.
-	KMSKey *string `min:"20" type:"string"`
+	KMSKey *string `min:"7" type:"string"`
 
 	// The ARN of the backend storage used for storing file data.
 	LocationARN *string `min:"16" type:"string"`
@@ -12535,6 +13207,12 @@ type NFSFileShareInfo struct {
 	//
 	//    * AllSquash - Everyone is mapped to anonymous user.
 	Squash *string `min:"5" type:"string"`
+
+	// A list of up to ten (10) tags assigned to the NFS file share are returned,
+	// sorted alphabetically by key name. Every tag is a key-value pair. For a gateway
+	// with more than 10 tags assigned, you can view all tags using the ListTagsForResource
+	// API.
+	Tags []*Tag `type:"list"`
 }
 
 // String returns the string representation
@@ -12646,6 +13324,12 @@ func (s *NFSFileShareInfo) SetRole(v string) *NFSFileShareInfo {
 // SetSquash sets the Squash field's value.
 func (s *NFSFileShareInfo) SetSquash(v string) *NFSFileShareInfo {
 	s.Squash = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *NFSFileShareInfo) SetTags(v []*Tag) *NFSFileShareInfo {
+	s.Tags = v
 	return s
 }
 
@@ -12768,10 +13452,11 @@ func (s *NotifyWhenUploadedOutput) SetNotificationId(v string) *NotifyWhenUpload
 	return s
 }
 
+// RefreshCacheInput
 type RefreshCacheInput struct {
 	_ struct{} `type:"structure"`
 
-	// The Amazon Resource Name (ARN) of the file share.
+	// The Amazon Resource Name (ARN) of the file share you want to refresh.
 	//
 	// FileShareARN is a required field
 	FileShareARN *string `min:"50" type:"string" required:"true"`
@@ -13243,7 +13928,7 @@ type SMBFileShareInfo struct {
 
 	// The Amazon Resource Name (ARN) of the AWS KMS key used for Amazon S3 server
 	// side encryption. This value can only be set when KMSEncrypted is true. Optional.
-	KMSKey *string `min:"20" type:"string"`
+	KMSKey *string `min:"7" type:"string"`
 
 	// The ARN of the backend storage used for storing file data.
 	LocationARN *string `min:"16" type:"string"`
@@ -13266,6 +13951,12 @@ type SMBFileShareInfo struct {
 	// The ARN of the IAM role that file gateway assumes when it accesses the underlying
 	// storage.
 	Role *string `min:"20" type:"string"`
+
+	// A list of up to ten (10) tags assigned to the SMB file share are returned,
+	// sorted alphabetically by key name. Every tag is a key-value pair. For a gateway
+	// with more than 10 tags assigned, you can view all tags using the ListTagsForResource
+	// API.
+	Tags []*Tag `type:"list"`
 
 	// A list of users or groups in the Active Directory that are allowed to access
 	// the file share. A group must be prefixed with the @ character. For example
@@ -13376,6 +14067,12 @@ func (s *SMBFileShareInfo) SetRequesterPays(v bool) *SMBFileShareInfo {
 // SetRole sets the Role field's value.
 func (s *SMBFileShareInfo) SetRole(v string) *SMBFileShareInfo {
 	s.Role = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *SMBFileShareInfo) SetTags(v []*Tag) *SMBFileShareInfo {
+	s.Tags = v
 	return s
 }
 
@@ -13699,7 +14396,7 @@ type StorediSCSIVolume struct {
 
 	// The Amazon Resource Name (ARN) of the AWS KMS key used for Amazon S3 server
 	// side encryption. This value can only be set when KMSEncrypted is true. Optional.
-	KMSKey *string `min:"20" type:"string"`
+	KMSKey *string `min:"7" type:"string"`
 
 	// Indicates if when the stored volume was created, existing data on the underlying
 	// local disk was preserved.
@@ -13711,8 +14408,22 @@ type StorediSCSIVolume struct {
 	// snapshot ID used, e.g. snap-78e22663. Otherwise, this field is not included.
 	SourceSnapshotId *string `type:"string"`
 
+	// The name of the iSCSI target used by an initiator to connect to a volume
+	// and used as a suffix for the target ARN. For example, specifying TargetName
+	// as myvolume results in the target ARN of arn:aws:storagegateway:us-east-2:111122223333:gateway/sgw-12A3456B/target/iqn.1997-05.com.amazon:myvolume.
+	// The target name must be unique across all volumes on a gateway.
+	//
+	// If you don't specify a value, Storage Gateway uses the value that was previously
+	// used for this volume as the new target name.
+	TargetName *string `min:"1" type:"string"`
+
 	// The Amazon Resource Name (ARN) of the storage volume.
 	VolumeARN *string `min:"50" type:"string"`
+
+	// A value that indicates whether a storage volume is attached to, detached
+	// from, or is in the process of detaching from a gateway. For more information,
+	// see Moving Your Volumes to a Different Gateway (https://docs.aws.amazon.com/storagegateway/latest/userguide/managing-volumes.html#attach-detach-volume).
+	VolumeAttachmentStatus *string `min:"3" type:"string"`
 
 	// The ID of the local disk that was specified in the CreateStorediSCSIVolume
 	// operation.
@@ -13780,9 +14491,21 @@ func (s *StorediSCSIVolume) SetSourceSnapshotId(v string) *StorediSCSIVolume {
 	return s
 }
 
+// SetTargetName sets the TargetName field's value.
+func (s *StorediSCSIVolume) SetTargetName(v string) *StorediSCSIVolume {
+	s.TargetName = &v
+	return s
+}
+
 // SetVolumeARN sets the VolumeARN field's value.
 func (s *StorediSCSIVolume) SetVolumeARN(v string) *StorediSCSIVolume {
 	s.VolumeARN = &v
+	return s
+}
+
+// SetVolumeAttachmentStatus sets the VolumeAttachmentStatus field's value.
+func (s *StorediSCSIVolume) SetVolumeAttachmentStatus(v string) *StorediSCSIVolume {
+	s.VolumeAttachmentStatus = &v
 	return s
 }
 
@@ -13834,12 +14557,19 @@ func (s *StorediSCSIVolume) SetVolumeiSCSIAttributes(v *VolumeiSCSIAttributes) *
 	return s
 }
 
+// A key-value pair that helps you manage, filter, and search for your resource.
+// Allowed characters: letters, white space, and numbers, representable in UTF-8,
+// and the following characters: + - = . _ : /
 type Tag struct {
 	_ struct{} `type:"structure"`
 
+	// Tag key (String). The key can't start with aws:.
+	//
 	// Key is a required field
 	Key *string `min:"1" type:"string" required:"true"`
 
+	// Value of the tag key.
+	//
 	// Value is a required field
 	Value *string `type:"string" required:"true"`
 }
@@ -13891,7 +14621,7 @@ type Tape struct {
 
 	// The Amazon Resource Name (ARN) of the AWS KMS key used for Amazon S3 server
 	// side encryption. This value can only be set when KMSEncrypted is true. Optional.
-	KMSKey *string `min:"20" type:"string"`
+	KMSKey *string `min:"7" type:"string"`
 
 	// For archiving virtual tapes, indicates how much data remains to be uploaded
 	// before archiving is complete.
@@ -14000,7 +14730,7 @@ type TapeArchive struct {
 
 	// The Amazon Resource Name (ARN) of the AWS KMS key used for Amazon S3 server
 	// side encryption. This value can only be set when KMSEncrypted is true. Optional.
-	KMSKey *string `min:"20" type:"string"`
+	KMSKey *string `min:"7" type:"string"`
 
 	// The Amazon Resource Name (ARN) of the tape gateway that the virtual tape
 	// is being retrieved to.
@@ -14171,6 +14901,7 @@ type TapeRecoveryPointInfo struct {
 	// The size, in bytes, of the virtual tapes to recover.
 	TapeSizeInBytes *int64 `type:"long"`
 
+	// The status of the virtual tapes.
 	TapeStatus *string `type:"string"`
 }
 
@@ -14457,6 +15188,7 @@ type UpdateGatewayInformationInput struct {
 	// The name you configured for your gateway.
 	GatewayName *string `min:"2" type:"string"`
 
+	// A value that indicates the time zone of the gateway.
 	GatewayTimezone *string `min:"3" type:"string"`
 }
 
@@ -14518,6 +15250,7 @@ type UpdateGatewayInformationOutput struct {
 	// to return a list of gateways for your account and region.
 	GatewayARN *string `min:"50" type:"string"`
 
+	// The name you configured for your gateway.
 	GatewayName *string `type:"string"`
 }
 
@@ -14762,7 +15495,7 @@ type UpdateNFSFileShareInput struct {
 
 	// The Amazon Resource Name (ARN) of the AWS KMS key used for Amazon S3 server
 	// side encryption. This value can only be set when KMSEncrypted is true. Optional.
-	KMSKey *string `min:"20" type:"string"`
+	KMSKey *string `min:"7" type:"string"`
 
 	// The default values for the file share. Optional.
 	NFSFileShareDefaults *NFSFileShareDefaults `type:"structure"`
@@ -14814,8 +15547,8 @@ func (s *UpdateNFSFileShareInput) Validate() error {
 	if s.FileShareARN != nil && len(*s.FileShareARN) < 50 {
 		invalidParams.Add(request.NewErrParamMinLen("FileShareARN", 50))
 	}
-	if s.KMSKey != nil && len(*s.KMSKey) < 20 {
-		invalidParams.Add(request.NewErrParamMinLen("KMSKey", 20))
+	if s.KMSKey != nil && len(*s.KMSKey) < 7 {
+		invalidParams.Add(request.NewErrParamMinLen("KMSKey", 7))
 	}
 	if s.Squash != nil && len(*s.Squash) < 5 {
 		invalidParams.Add(request.NewErrParamMinLen("Squash", 5))
@@ -14952,7 +15685,7 @@ type UpdateSMBFileShareInput struct {
 
 	// The Amazon Resource Name (ARN) of the AWS KMS key used for Amazon S3 server
 	// side encryption. This value can only be set when KMSEncrypted is true. Optional.
-	KMSKey *string `min:"20" type:"string"`
+	KMSKey *string `min:"7" type:"string"`
 
 	// A value that sets the access control list permission for objects in the S3
 	// bucket that a file gateway puts objects into. The default value is "private".
@@ -14994,8 +15727,8 @@ func (s *UpdateSMBFileShareInput) Validate() error {
 	if s.FileShareARN != nil && len(*s.FileShareARN) < 50 {
 		invalidParams.Add(request.NewErrParamMinLen("FileShareARN", 50))
 	}
-	if s.KMSKey != nil && len(*s.KMSKey) < 20 {
-		invalidParams.Add(request.NewErrParamMinLen("KMSKey", 20))
+	if s.KMSKey != nil && len(*s.KMSKey) < 7 {
+		invalidParams.Add(request.NewErrParamMinLen("KMSKey", 7))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -15188,6 +15921,8 @@ func (s *UpdateSnapshotScheduleInput) SetVolumeARN(v string) *UpdateSnapshotSche
 type UpdateSnapshotScheduleOutput struct {
 	_ struct{} `type:"structure"`
 
+	// The Amazon Resource Name (ARN) of the volume. Use the ListVolumes operation
+	// to return a list of gateway volumes.
 	VolumeARN *string `min:"50" type:"string"`
 }
 
@@ -15302,10 +16037,13 @@ type VTLDevice struct {
 	// or media changer).
 	VTLDeviceARN *string `min:"50" type:"string"`
 
+	// Specifies the model number of device that the VTL device emulates.
 	VTLDeviceProductIdentifier *string `type:"string"`
 
+	// Specifies the type of device that the VTL device emulates.
 	VTLDeviceType *string `type:"string"`
 
+	// Specifies the vendor of the device that the VTL device object emulates.
 	VTLDeviceVendor *string `type:"string"`
 }
 
@@ -15374,6 +16112,9 @@ type VolumeInfo struct {
 	// (-).
 	VolumeARN *string `min:"50" type:"string"`
 
+	// One of the VolumeStatus values that indicates the state of the storage volume.
+	VolumeAttachmentStatus *string `min:"3" type:"string"`
+
 	// The unique identifier assigned to the volume. This ID becomes part of the
 	// volume Amazon Resource Name (ARN), which you use as input for other operations.
 	//
@@ -15387,6 +16128,7 @@ type VolumeInfo struct {
 	// (-).
 	VolumeSizeInBytes *int64 `type:"long"`
 
+	// One of the VolumeType enumeration values describing the type of the volume.
 	VolumeType *string `min:"3" type:"string"`
 }
 
@@ -15418,6 +16160,12 @@ func (s *VolumeInfo) SetVolumeARN(v string) *VolumeInfo {
 	return s
 }
 
+// SetVolumeAttachmentStatus sets the VolumeAttachmentStatus field's value.
+func (s *VolumeInfo) SetVolumeAttachmentStatus(v string) *VolumeInfo {
+	s.VolumeAttachmentStatus = &v
+	return s
+}
+
 // SetVolumeId sets the VolumeId field's value.
 func (s *VolumeInfo) SetVolumeId(v string) *VolumeInfo {
 	s.VolumeId = &v
@@ -15436,15 +16184,23 @@ func (s *VolumeInfo) SetVolumeType(v string) *VolumeInfo {
 	return s
 }
 
+// Describes a storage volume recovery point object.
 type VolumeRecoveryPointInfo struct {
 	_ struct{} `type:"structure"`
 
+	// The Amazon Resource Name (ARN) of the volume target.
 	VolumeARN *string `min:"50" type:"string"`
 
+	// The time the recovery point was taken.
 	VolumeRecoveryPointTime *string `type:"string"`
 
+	// The size of the volume in bytes.
 	VolumeSizeInBytes *int64 `type:"long"`
 
+	// The size of the data stored on the volume in bytes.
+	//
+	// This value is not available for volumes created prior to May 13, 2015, until
+	// you store data on the volume.
 	VolumeUsageInBytes *int64 `type:"long"`
 }
 

@@ -689,7 +689,7 @@ func TestAccAWSCodeBuildProject_VpcConfig(t *testing.T) {
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCodeBuildProjectConfig_VpcConfig(rName, 2),
+				Config: testAccAWSCodeBuildProjectConfig_VpcConfig2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
@@ -699,7 +699,7 @@ func TestAccAWSCodeBuildProject_VpcConfig(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSCodeBuildProjectConfig_VpcConfig(rName, 1),
+				Config: testAccAWSCodeBuildProjectConfig_VpcConfig1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
@@ -1546,14 +1546,61 @@ resource "aws_codebuild_project" "test" {
 `, rName, tagKey, tagValue)
 }
 
-func testAccAWSCodeBuildProjectConfig_VpcConfig(rName string, subnetCount int) string {
+func testAccAWSCodeBuildProjectConfig_VpcConfig1(rName string) string {
 	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 }
 
 resource "aws_subnet" "test" {
-  count = %d
+  cidr_block = "10.0.0.0/24"
+  vpc_id     = "${aws_vpc.test.id}"
+
+  tags = {
+    Name = "tf-acc-codebuild-project"
+  }
+}
+
+resource "aws_security_group" "test" {
+  vpc_id = "${aws_vpc.test.id}"
+}
+
+resource "aws_codebuild_project" "test" {
+  name         = "%s"
+  service_role = "${aws_iam_role.test.arn}"
+
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
+
+  source {
+    location = "https://github.com/hashicorp/packer.git"
+    type     = "GITHUB"
+  }
+
+  vpc_config {
+    security_group_ids = ["${aws_security_group.test.id}"]
+    subnets            = ["${aws_subnet.test.id}"]
+    vpc_id             = "${aws_vpc.test.id}"
+  }
+}
+`, rName)
+}
+
+func testAccAWSCodeBuildProjectConfig_VpcConfig2(rName string) string {
+	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+}
+
+resource "aws_subnet" "test" {
+  count = 2
 
   cidr_block = "10.0.${count.index}.0/24"
   vpc_id     = "${aws_vpc.test.id}"
@@ -1588,11 +1635,11 @@ resource "aws_codebuild_project" "test" {
 
   vpc_config {
     security_group_ids = ["${aws_security_group.test.id}"]
-    subnets            = ["${aws_subnet.test.*.id}"]
+    subnets            = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
     vpc_id             = "${aws_vpc.test.id}"
   }
 }
-`, subnetCount, rName)
+`, rName)
 }
 
 func testAccAWSCodeBuildProjectConfig_WindowsContainer(rName string) string {

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -51,10 +50,6 @@ func testSweepCognitoUserPools(region string) error {
 
 		for _, userPool := range output.UserPools {
 			name := aws.StringValue(userPool.Name)
-
-			if !strings.HasPrefix(name, "tf_acc_") {
-				continue
-			}
 
 			log.Printf("[INFO] Deleting Cognito User Pool %s", name)
 			_, err := conn.DeleteUserPool(&cognitoidentityprovider.DeleteUserPoolInput{
@@ -147,6 +142,37 @@ func TestAccAWSCognitoUserPool_withAdminCreateUserConfiguration(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "admin_create_user_config.0.invite_message_template.0.email_message", "Your username is {username} and constant password is {####}. "),
 					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "admin_create_user_config.0.invite_message_template.0.email_subject", "Foo{####}BaBaz"),
 					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "admin_create_user_config.0.invite_message_template.0.sms_message", "Your username is {username} and constant password is {####}."),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSCognitoUserPool_withAdvancedSecurityMode(t *testing.T) {
+	name := acctest.RandString(5)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCognitoUserPoolDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCognitoUserPoolConfig_withAdvancedSecurityMode(name, "OFF"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolExists("aws_cognito_user_pool.pool"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "user_pool_add_ons.0.advanced_security_mode", "OFF"),
+				),
+			},
+			{
+				Config: testAccAWSCognitoUserPoolConfig_withAdvancedSecurityMode(name, "ENFORCED"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "user_pool_add_ons.0.advanced_security_mode", "ENFORCED"),
+				),
+			},
+			{
+				Config: testAccAWSCognitoUserPoolConfig_basic(name),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "user_pool_add_ons.#", "0"),
 				),
 			},
 		},
@@ -736,6 +762,17 @@ resource "aws_cognito_user_pool" "pool" {
 }`, name)
 }
 
+func testAccAWSCognitoUserPoolConfig_withAdvancedSecurityMode(name string, mode string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "pool" {
+  name = "terraform-test-pool-%s"
+
+  user_pool_add_ons {
+    advanced_security_mode = "%s"
+  }
+}`, name, mode)
+}
+
 func testAccAWSCognitoUserPoolConfig_withDeviceConfiguration(name string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "pool" {
@@ -1118,11 +1155,8 @@ resource "aws_cognito_user_pool" "pool" {
   # attributes.
   verification_message_template {
     default_email_option  = "CONFIRM_WITH_LINK"
-    email_message         = "Foo {####} Bar"
     email_message_by_link = "{##foobar##}"
-    email_subject         = "FooBar {####}"
     email_subject_by_link = "foobar"
-    sms_message           = "{####} Baz"
   }
 }`, name)
 }

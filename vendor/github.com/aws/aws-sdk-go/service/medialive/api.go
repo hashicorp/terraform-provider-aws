@@ -372,6 +372,91 @@ func (c *MediaLive) CreateInputSecurityGroupWithContext(ctx aws.Context, input *
 	return out, req.Send()
 }
 
+const opCreateTags = "CreateTags"
+
+// CreateTagsRequest generates a "aws/request.Request" representing the
+// client's request for the CreateTags operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateTags for more information on using the CreateTags
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateTagsRequest method.
+//    req, resp := client.CreateTagsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/CreateTags
+func (c *MediaLive) CreateTagsRequest(input *CreateTagsInput) (req *request.Request, output *CreateTagsOutput) {
+	op := &request.Operation{
+		Name:       opCreateTags,
+		HTTPMethod: "POST",
+		HTTPPath:   "/prod/tags/{resource-arn}",
+	}
+
+	if input == nil {
+		input = &CreateTagsInput{}
+	}
+
+	output = &CreateTagsOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// CreateTags API operation for AWS Elemental MediaLive.
+//
+// Create tags for a resource
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaLive's
+// API operation CreateTags for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeNotFoundException "NotFoundException"
+//
+//   * ErrCodeBadRequestException "BadRequestException"
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/CreateTags
+func (c *MediaLive) CreateTags(input *CreateTagsInput) (*CreateTagsOutput, error) {
+	req, out := c.CreateTagsRequest(input)
+	return out, req.Send()
+}
+
+// CreateTagsWithContext is the same as CreateTags with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateTags for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaLive) CreateTagsWithContext(ctx aws.Context, input *CreateTagsInput, opts ...request.Option) (*CreateTagsOutput, error) {
+	req, out := c.CreateTagsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDeleteChannel = "DeleteChannel"
 
 // DeleteChannelRequest generates a "aws/request.Request" representing the
@@ -735,6 +820,91 @@ func (c *MediaLive) DeleteReservation(input *DeleteReservationInput) (*DeleteRes
 // for more information on using Contexts.
 func (c *MediaLive) DeleteReservationWithContext(ctx aws.Context, input *DeleteReservationInput, opts ...request.Option) (*DeleteReservationOutput, error) {
 	req, out := c.DeleteReservationRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteTags = "DeleteTags"
+
+// DeleteTagsRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteTags operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteTags for more information on using the DeleteTags
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteTagsRequest method.
+//    req, resp := client.DeleteTagsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DeleteTags
+func (c *MediaLive) DeleteTagsRequest(input *DeleteTagsInput) (req *request.Request, output *DeleteTagsOutput) {
+	op := &request.Operation{
+		Name:       opDeleteTags,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/prod/tags/{resource-arn}",
+	}
+
+	if input == nil {
+		input = &DeleteTagsInput{}
+	}
+
+	output = &DeleteTagsOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DeleteTags API operation for AWS Elemental MediaLive.
+//
+// Removes tags for a resource
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaLive's
+// API operation DeleteTags for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeNotFoundException "NotFoundException"
+//
+//   * ErrCodeBadRequestException "BadRequestException"
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DeleteTags
+func (c *MediaLive) DeleteTags(input *DeleteTagsInput) (*DeleteTagsOutput, error) {
+	req, out := c.DeleteTagsRequest(input)
+	return out, req.Send()
+}
+
+// DeleteTagsWithContext is the same as DeleteTags with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteTags for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaLive) DeleteTagsWithContext(ctx aws.Context, input *DeleteTagsInput, opts ...request.Option) (*DeleteTagsOutput, error) {
+	req, out := c.DeleteTagsRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -2056,6 +2226,90 @@ func (c *MediaLive) ListReservationsPagesWithContext(ctx aws.Context, input *Lis
 	return p.Err()
 }
 
+const opListTagsForResource = "ListTagsForResource"
+
+// ListTagsForResourceRequest generates a "aws/request.Request" representing the
+// client's request for the ListTagsForResource operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListTagsForResource for more information on using the ListTagsForResource
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListTagsForResourceRequest method.
+//    req, resp := client.ListTagsForResourceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/ListTagsForResource
+func (c *MediaLive) ListTagsForResourceRequest(input *ListTagsForResourceInput) (req *request.Request, output *ListTagsForResourceOutput) {
+	op := &request.Operation{
+		Name:       opListTagsForResource,
+		HTTPMethod: "GET",
+		HTTPPath:   "/prod/tags/{resource-arn}",
+	}
+
+	if input == nil {
+		input = &ListTagsForResourceInput{}
+	}
+
+	output = &ListTagsForResourceOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListTagsForResource API operation for AWS Elemental MediaLive.
+//
+// Produces list of tags that have been created for a resource
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaLive's
+// API operation ListTagsForResource for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeNotFoundException "NotFoundException"
+//
+//   * ErrCodeBadRequestException "BadRequestException"
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/ListTagsForResource
+func (c *MediaLive) ListTagsForResource(input *ListTagsForResourceInput) (*ListTagsForResourceOutput, error) {
+	req, out := c.ListTagsForResourceRequest(input)
+	return out, req.Send()
+}
+
+// ListTagsForResourceWithContext is the same as ListTagsForResource with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListTagsForResource for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaLive) ListTagsForResourceWithContext(ctx aws.Context, input *ListTagsForResourceInput, opts ...request.Option) (*ListTagsForResourceOutput, error) {
+	req, out := c.ListTagsForResourceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opPurchaseOffering = "PurchaseOffering"
 
 // PurchaseOfferingRequest generates a "aws/request.Request" representing the
@@ -2845,9 +3099,7 @@ func (s *ArchiveContainerSettings) SetM2tsSettings(v *M2tsSettings) *ArchiveCont
 type ArchiveGroupSettings struct {
 	_ struct{} `type:"structure"`
 
-	// A directory and base filename where archive files should be written. If the
-	// base filename portion of the URI is left blank, the base filename of the
-	// first input will be automatically inserted.
+	// A directory and base filename where archive files should be written.
 	//
 	// Destination is a required field
 	Destination *OutputLocationRef `locationName:"destination" type:"structure" required:"true"`
@@ -4780,6 +5032,9 @@ type Channel struct {
 	RoleArn *string `locationName:"roleArn" type:"string"`
 
 	State *string `locationName:"state" type:"string" enum:"ChannelState"`
+
+	// A collection of key-value pairs.
+	Tags map[string]*string `locationName:"tags" type:"map"`
 }
 
 // String returns the string representation
@@ -4864,6 +5119,12 @@ func (s *Channel) SetState(v string) *Channel {
 	return s
 }
 
+// SetTags sets the Tags field's value.
+func (s *Channel) SetTags(v map[string]*string) *Channel {
+	s.Tags = v
+	return s
+}
+
 type ChannelEgressEndpoint struct {
 	_ struct{} `type:"structure"`
 
@@ -4922,6 +5183,9 @@ type ChannelSummary struct {
 	RoleArn *string `locationName:"roleArn" type:"string"`
 
 	State *string `locationName:"state" type:"string" enum:"ChannelState"`
+
+	// A collection of key-value pairs.
+	Tags map[string]*string `locationName:"tags" type:"map"`
 }
 
 // String returns the string representation
@@ -5000,6 +5264,12 @@ func (s *ChannelSummary) SetState(v string) *ChannelSummary {
 	return s
 }
 
+// SetTags sets the Tags field's value.
+func (s *ChannelSummary) SetTags(v map[string]*string) *ChannelSummary {
+	s.Tags = v
+	return s
+}
+
 type CreateChannelInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5021,6 +5291,8 @@ type CreateChannelInput struct {
 	Reserved *string `locationName:"reserved" deprecated:"true" type:"string"`
 
 	RoleArn *string `locationName:"roleArn" type:"string"`
+
+	Tags map[string]*string `locationName:"tags" type:"map"`
 }
 
 // String returns the string representation
@@ -5112,6 +5384,12 @@ func (s *CreateChannelInput) SetRoleArn(v string) *CreateChannelInput {
 	return s
 }
 
+// SetTags sets the Tags field's value.
+func (s *CreateChannelInput) SetTags(v map[string]*string) *CreateChannelInput {
+	s.Tags = v
+	return s
+}
+
 type CreateChannelOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -5151,7 +5429,15 @@ type CreateInputInput struct {
 
 	Sources []*InputSourceRequest `locationName:"sources" type:"list"`
 
+	Tags map[string]*string `locationName:"tags" type:"map"`
+
 	Type *string `locationName:"type" type:"string" enum:"InputType"`
+
+	// Settings for a private VPC Input.When this property is specified, the input
+	// destination addresses will be created in a VPC rather than with public Internet
+	// addresses.This property requires setting the roleArn property on Input creation.Not
+	// compatible with the inputSecurityGroups property.
+	Vpc *InputVpcRequest `locationName:"vpc" type:"structure"`
 }
 
 // String returns the string representation
@@ -5162,6 +5448,21 @@ func (s CreateInputInput) String() string {
 // GoString returns the string representation
 func (s CreateInputInput) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateInputInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateInputInput"}
+	if s.Vpc != nil {
+		if err := s.Vpc.Validate(); err != nil {
+			invalidParams.AddNested("Vpc", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetDestinations sets the Destinations field's value.
@@ -5206,9 +5507,21 @@ func (s *CreateInputInput) SetSources(v []*InputSourceRequest) *CreateInputInput
 	return s
 }
 
+// SetTags sets the Tags field's value.
+func (s *CreateInputInput) SetTags(v map[string]*string) *CreateInputInput {
+	s.Tags = v
+	return s
+}
+
 // SetType sets the Type field's value.
 func (s *CreateInputInput) SetType(v string) *CreateInputInput {
 	s.Type = &v
+	return s
+}
+
+// SetVpc sets the Vpc field's value.
+func (s *CreateInputInput) SetVpc(v *InputVpcRequest) *CreateInputInput {
+	s.Vpc = v
 	return s
 }
 
@@ -5237,6 +5550,8 @@ func (s *CreateInputOutput) SetInput(v *Input) *CreateInputOutput {
 type CreateInputSecurityGroupInput struct {
 	_ struct{} `type:"structure"`
 
+	Tags map[string]*string `locationName:"tags" type:"map"`
+
 	WhitelistRules []*InputWhitelistRuleCidr `locationName:"whitelistRules" type:"list"`
 }
 
@@ -5248,6 +5563,12 @@ func (s CreateInputSecurityGroupInput) String() string {
 // GoString returns the string representation
 func (s CreateInputSecurityGroupInput) GoString() string {
 	return s.String()
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateInputSecurityGroupInput) SetTags(v map[string]*string) *CreateInputSecurityGroupInput {
+	s.Tags = v
+	return s
 }
 
 // SetWhitelistRules sets the WhitelistRules field's value.
@@ -5277,6 +5598,67 @@ func (s CreateInputSecurityGroupOutput) GoString() string {
 func (s *CreateInputSecurityGroupOutput) SetSecurityGroup(v *InputSecurityGroup) *CreateInputSecurityGroupOutput {
 	s.SecurityGroup = v
 	return s
+}
+
+type CreateTagsInput struct {
+	_ struct{} `type:"structure"`
+
+	// ResourceArn is a required field
+	ResourceArn *string `location:"uri" locationName:"resource-arn" type:"string" required:"true"`
+
+	Tags map[string]*string `locationName:"tags" type:"map"`
+}
+
+// String returns the string representation
+func (s CreateTagsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateTagsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateTagsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateTagsInput"}
+	if s.ResourceArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceArn"))
+	}
+	if s.ResourceArn != nil && len(*s.ResourceArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceArn", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetResourceArn sets the ResourceArn field's value.
+func (s *CreateTagsInput) SetResourceArn(v string) *CreateTagsInput {
+	s.ResourceArn = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateTagsInput) SetTags(v map[string]*string) *CreateTagsInput {
+	s.Tags = v
+	return s
+}
+
+type CreateTagsOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s CreateTagsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateTagsOutput) GoString() string {
+	return s.String()
 }
 
 type DeleteChannelInput struct {
@@ -5345,6 +5727,8 @@ type DeleteChannelOutput struct {
 	RoleArn *string `locationName:"roleArn" type:"string"`
 
 	State *string `locationName:"state" type:"string" enum:"ChannelState"`
+
+	Tags map[string]*string `locationName:"tags" type:"map"`
 }
 
 // String returns the string representation
@@ -5426,6 +5810,12 @@ func (s *DeleteChannelOutput) SetRoleArn(v string) *DeleteChannelOutput {
 // SetState sets the State field's value.
 func (s *DeleteChannelOutput) SetState(v string) *DeleteChannelOutput {
 	s.State = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *DeleteChannelOutput) SetTags(v map[string]*string) *DeleteChannelOutput {
+	s.Tags = v
 	return s
 }
 
@@ -5728,6 +6118,71 @@ func (s *DeleteReservationOutput) SetUsagePrice(v float64) *DeleteReservationOut
 	return s
 }
 
+type DeleteTagsInput struct {
+	_ struct{} `type:"structure"`
+
+	// ResourceArn is a required field
+	ResourceArn *string `location:"uri" locationName:"resource-arn" type:"string" required:"true"`
+
+	// TagKeys is a required field
+	TagKeys []*string `location:"querystring" locationName:"tagKeys" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteTagsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteTagsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteTagsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteTagsInput"}
+	if s.ResourceArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceArn"))
+	}
+	if s.ResourceArn != nil && len(*s.ResourceArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceArn", 1))
+	}
+	if s.TagKeys == nil {
+		invalidParams.Add(request.NewErrParamRequired("TagKeys"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetResourceArn sets the ResourceArn field's value.
+func (s *DeleteTagsInput) SetResourceArn(v string) *DeleteTagsInput {
+	s.ResourceArn = &v
+	return s
+}
+
+// SetTagKeys sets the TagKeys field's value.
+func (s *DeleteTagsInput) SetTagKeys(v []*string) *DeleteTagsInput {
+	s.TagKeys = v
+	return s
+}
+
+type DeleteTagsOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteTagsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteTagsOutput) GoString() string {
+	return s.String()
+}
+
 type DescribeChannelInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5794,6 +6249,8 @@ type DescribeChannelOutput struct {
 	RoleArn *string `locationName:"roleArn" type:"string"`
 
 	State *string `locationName:"state" type:"string" enum:"ChannelState"`
+
+	Tags map[string]*string `locationName:"tags" type:"map"`
 }
 
 // String returns the string representation
@@ -5878,6 +6335,12 @@ func (s *DescribeChannelOutput) SetState(v string) *DescribeChannelOutput {
 	return s
 }
 
+// SetTags sets the Tags field's value.
+func (s *DescribeChannelOutput) SetTags(v map[string]*string) *DescribeChannelOutput {
+	s.Tags = v
+	return s
+}
+
 type DescribeInputInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5939,6 +6402,8 @@ type DescribeInputOutput struct {
 	Sources []*InputSource `locationName:"sources" type:"list"`
 
 	State *string `locationName:"state" type:"string" enum:"InputState"`
+
+	Tags map[string]*string `locationName:"tags" type:"map"`
 
 	Type *string `locationName:"type" type:"string" enum:"InputType"`
 }
@@ -6013,6 +6478,12 @@ func (s *DescribeInputOutput) SetState(v string) *DescribeInputOutput {
 	return s
 }
 
+// SetTags sets the Tags field's value.
+func (s *DescribeInputOutput) SetTags(v map[string]*string) *DescribeInputOutput {
+	s.Tags = v
+	return s
+}
+
 // SetType sets the Type field's value.
 func (s *DescribeInputOutput) SetType(v string) *DescribeInputOutput {
 	s.Type = &v
@@ -6069,6 +6540,8 @@ type DescribeInputSecurityGroupOutput struct {
 
 	State *string `locationName:"state" type:"string" enum:"InputSecurityGroupState"`
 
+	Tags map[string]*string `locationName:"tags" type:"map"`
+
 	WhitelistRules []*InputWhitelistRule `locationName:"whitelistRules" type:"list"`
 }
 
@@ -6103,6 +6576,12 @@ func (s *DescribeInputSecurityGroupOutput) SetInputs(v []*string) *DescribeInput
 // SetState sets the State field's value.
 func (s *DescribeInputSecurityGroupOutput) SetState(v string) *DescribeInputSecurityGroupOutput {
 	s.State = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *DescribeInputSecurityGroupOutput) SetTags(v map[string]*string) *DescribeInputSecurityGroupOutput {
+	s.Tags = v
 	return s
 }
 
@@ -7657,6 +8136,119 @@ func (s *FollowModeScheduleActionStartSettings) SetReferenceActionName(v string)
 	return s
 }
 
+// Frame Capture Group Settings
+type FrameCaptureGroupSettings struct {
+	_ struct{} `type:"structure"`
+
+	// The destination for the frame capture files. Either the URI for an Amazon
+	// S3 bucket and object, plus a file name prefix (for example, s3ssl://sportsDelivery/highlights/20180820/curling_)
+	// or the URI for a MediaStore container, plus a file name prefix (for example,
+	// mediastoressl://sportsDelivery/20180820/curling_). The final file names consist
+	// of the prefix from the destination field (for example, "curling_") + name
+	// modifier + the counter (5 digits, starting from 00001) + extension (which
+	// is always .jpg). For example, curlingLow.00001.jpg
+	//
+	// Destination is a required field
+	Destination *OutputLocationRef `locationName:"destination" type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s FrameCaptureGroupSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s FrameCaptureGroupSettings) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *FrameCaptureGroupSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "FrameCaptureGroupSettings"}
+	if s.Destination == nil {
+		invalidParams.Add(request.NewErrParamRequired("Destination"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDestination sets the Destination field's value.
+func (s *FrameCaptureGroupSettings) SetDestination(v *OutputLocationRef) *FrameCaptureGroupSettings {
+	s.Destination = v
+	return s
+}
+
+// Frame Capture Output Settings
+type FrameCaptureOutputSettings struct {
+	_ struct{} `type:"structure"`
+
+	// Required if the output group contains more than one output. This modifier
+	// forms part of the output file name.
+	NameModifier *string `locationName:"nameModifier" type:"string"`
+}
+
+// String returns the string representation
+func (s FrameCaptureOutputSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s FrameCaptureOutputSettings) GoString() string {
+	return s.String()
+}
+
+// SetNameModifier sets the NameModifier field's value.
+func (s *FrameCaptureOutputSettings) SetNameModifier(v string) *FrameCaptureOutputSettings {
+	s.NameModifier = &v
+	return s
+}
+
+// Frame Capture Settings
+type FrameCaptureSettings struct {
+	_ struct{} `type:"structure"`
+
+	// The frequency, in seconds, for capturing frames for inclusion in the output.
+	// For example, "10" means capture a frame every 10 seconds.
+	//
+	// CaptureInterval is a required field
+	CaptureInterval *int64 `locationName:"captureInterval" min:"1" type:"integer" required:"true"`
+}
+
+// String returns the string representation
+func (s FrameCaptureSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s FrameCaptureSettings) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *FrameCaptureSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "FrameCaptureSettings"}
+	if s.CaptureInterval == nil {
+		invalidParams.Add(request.NewErrParamRequired("CaptureInterval"))
+	}
+	if s.CaptureInterval != nil && *s.CaptureInterval < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("CaptureInterval", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCaptureInterval sets the CaptureInterval field's value.
+func (s *FrameCaptureSettings) SetCaptureInterval(v int64) *FrameCaptureSettings {
+	s.CaptureInterval = &v
+	return s
+}
+
 type GlobalConfiguration struct {
 	_ struct{} `type:"structure"`
 
@@ -7791,11 +8383,11 @@ type H264Settings struct {
 	FramerateControl *string `locationName:"framerateControl" type:"string" enum:"H264FramerateControl"`
 
 	// Framerate denominator.
-	FramerateDenominator *int64 `locationName:"framerateDenominator" type:"integer"`
+	FramerateDenominator *int64 `locationName:"framerateDenominator" min:"1" type:"integer"`
 
 	// Framerate numerator - framerate is a fraction, e.g. 24000 / 1001 = 23.976
 	// fps.
-	FramerateNumerator *int64 `locationName:"framerateNumerator" type:"integer"`
+	FramerateNumerator *int64 `locationName:"framerateNumerator" min:"1" type:"integer"`
 
 	// If enabled, use reference B frames for GOP structures that have B frames
 	// > 1.
@@ -7928,6 +8520,12 @@ func (s *H264Settings) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "H264Settings"}
 	if s.Bitrate != nil && *s.Bitrate < 1000 {
 		invalidParams.Add(request.NewErrParamMinValue("Bitrate", 1000))
+	}
+	if s.FramerateDenominator != nil && *s.FramerateDenominator < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("FramerateDenominator", 1))
+	}
+	if s.FramerateNumerator != nil && *s.FramerateNumerator < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("FramerateNumerator", 1))
 	}
 	if s.MaxBitrate != nil && *s.MaxBitrate < 1000 {
 		invalidParams.Add(request.NewErrParamMinValue("MaxBitrate", 1000))
@@ -8414,9 +9012,19 @@ type HlsGroupSettings struct {
 	// Parameters that control interactions with the CDN.
 	HlsCdnSettings *HlsCdnSettings `locationName:"hlsCdnSettings" type:"structure"`
 
-	// If mode is "live", the number of segments to retain in the manifest (.m3u8)
-	// file. This number must be less than or equal to keepSegments. If mode is
-	// "vod", this parameter has no effect.
+	// DISABLED: Do not create an I-frame-only manifest, but do create the master
+	// and media manifests (according to the Output Selection field).STANDARD: Create
+	// an I-frame-only manifest for each output that contains video, as well as
+	// the other manifests (according to the Output Selection field). The I-frame
+	// manifest contains a #EXT-X-I-FRAMES-ONLY tag to indicate it is I-frame only,
+	// and one or more #EXT-X-BYTERANGE entries identifying the I-frame position.
+	// For example, #EXT-X-BYTERANGE:160364@1461888"
+	IFrameOnlyPlaylists *string `locationName:"iFrameOnlyPlaylists" type:"string" enum:"IFrameOnlyPlaylistType"`
+
+	// Applies only if Mode field is LIVE. Specifies the maximum number of segments
+	// in the media manifest file. After this maximum, older segments are removed
+	// from the media manifest. This number must be less than or equal to the Keep
+	// Segments field.
 	IndexNSegments *int64 `locationName:"indexNSegments" min:"3" type:"integer"`
 
 	// Parameter that control output group behavior on input loss.
@@ -8434,8 +9042,8 @@ type HlsGroupSettings struct {
 	// constantIv value.
 	IvSource *string `locationName:"ivSource" type:"string" enum:"HlsIvSource"`
 
-	// If mode is "live", the number of TS segments to retain in the destination
-	// directory. If mode is "vod", this parameter has no effect.
+	// Applies only if Mode field is LIVE. Specifies the number of media segments
+	// (.ts files) to retain in the destination directory.
 	KeepSegments *int64 `locationName:"keepSegments" min:"1" type:"integer"`
 
 	// The value specifies how the key is represented in the resource identified
@@ -8470,8 +9078,9 @@ type HlsGroupSettings struct {
 	// converting it to a "VOD" type manifest on completion of the stream.
 	Mode *string `locationName:"mode" type:"string" enum:"HlsMode"`
 
-	// Generates the .m3u8 playlist file for this HLS output group. The segmentsOnly
-	// option will output segments without the .m3u8 file.
+	// MANIFESTSANDSEGMENTS: Generates manifests (master manifest, if applicable,
+	// and media manifests) for this output group.SEGMENTSONLY: Does not generate
+	// any manifests for this output group.
 	OutputSelection *string `locationName:"outputSelection" type:"string" enum:"HlsOutputSelection"`
 
 	// Includes or excludes EXT-X-PROGRAM-DATE-TIME tag in .m3u8 manifest files.
@@ -8514,9 +9123,12 @@ type HlsGroupSettings struct {
 	// Provides an extra millisecond delta offset to fine tune the timestamps.
 	TimestampDeltaMilliseconds *int64 `locationName:"timestampDeltaMilliseconds" type:"integer"`
 
-	// When set to "singleFile", emits the program as a single media resource (.ts)
-	// file, and uses #EXT-X-BYTERANGE tags to index segment for playback. Playback
-	// of VOD mode content during event is not guaranteed due to HTTP server caching.
+	// SEGMENTEDFILES: Emit the program as segments - multiple .ts media files.SINGLEFILE:
+	// Applies only if Mode field is VOD. Emit the program as a single .ts media
+	// file. The media manifest includes #EXT-X-BYTERANGE tags to index segments
+	// for playback. A typical use for this value is when sending the output to
+	// AWS Elemental MediaConvert, which can accept only a single media file. Playback
+	// while the channel is running is not guaranteed due to HTTP server caching.
 	TsFileMode *string `locationName:"tsFileMode" type:"string" enum:"HlsTsFileMode"`
 }
 
@@ -8642,6 +9254,12 @@ func (s *HlsGroupSettings) SetEncryptionType(v string) *HlsGroupSettings {
 // SetHlsCdnSettings sets the HlsCdnSettings field's value.
 func (s *HlsGroupSettings) SetHlsCdnSettings(v *HlsCdnSettings) *HlsGroupSettings {
 	s.HlsCdnSettings = v
+	return s
+}
+
+// SetIFrameOnlyPlaylists sets the IFrameOnlyPlaylists field's value.
+func (s *HlsGroupSettings) SetIFrameOnlyPlaylists(v string) *HlsGroupSettings {
+	s.IFrameOnlyPlaylists = &v
 	return s
 }
 
@@ -9152,13 +9770,16 @@ type Input struct {
 	// after creation.
 	RoleArn *string `locationName:"roleArn" type:"string"`
 
-	// A list of IDs for all the security groups attached to the input.
+	// A list of IDs for all the Input Security Groups attached to the input.
 	SecurityGroups []*string `locationName:"securityGroups" type:"list"`
 
 	// A list of the sources of the input (PULL-type).
 	Sources []*InputSource `locationName:"sources" type:"list"`
 
 	State *string `locationName:"state" type:"string" enum:"InputState"`
+
+	// A collection of key-value pairs.
+	Tags map[string]*string `locationName:"tags" type:"map"`
 
 	Type *string `locationName:"type" type:"string" enum:"InputType"`
 }
@@ -9230,6 +9851,12 @@ func (s *Input) SetSources(v []*InputSource) *Input {
 // SetState sets the State field's value.
 func (s *Input) SetState(v string) *Input {
 	s.State = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *Input) SetTags(v map[string]*string) *Input {
+	s.Tags = v
 	return s
 }
 
@@ -9365,6 +9992,9 @@ type InputDestination struct {
 
 	// This represents the endpoint that the customer stream will bepushed to.
 	Url *string `locationName:"url" type:"string"`
+
+	// The properties for a VPC type input destination.
+	Vpc *InputDestinationVpc `locationName:"vpc" type:"structure"`
 }
 
 // String returns the string representation
@@ -9395,6 +10025,12 @@ func (s *InputDestination) SetUrl(v string) *InputDestination {
 	return s
 }
 
+// SetVpc sets the Vpc field's value.
+func (s *InputDestination) SetVpc(v *InputDestinationVpc) *InputDestination {
+	s.Vpc = v
+	return s
+}
+
 // Endpoint settings for a PUSH type input.
 type InputDestinationRequest struct {
 	_ struct{} `type:"structure"`
@@ -9416,6 +10052,39 @@ func (s InputDestinationRequest) GoString() string {
 // SetStreamName sets the StreamName field's value.
 func (s *InputDestinationRequest) SetStreamName(v string) *InputDestinationRequest {
 	s.StreamName = &v
+	return s
+}
+
+// The properties for a VPC type input destination.
+type InputDestinationVpc struct {
+	_ struct{} `type:"structure"`
+
+	// The availability zone of the Input destination.
+	AvailabilityZone *string `locationName:"availabilityZone" type:"string"`
+
+	// The network interface ID of the Input destination in the VPC.
+	NetworkInterfaceId *string `locationName:"networkInterfaceId" type:"string"`
+}
+
+// String returns the string representation
+func (s InputDestinationVpc) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InputDestinationVpc) GoString() string {
+	return s.String()
+}
+
+// SetAvailabilityZone sets the AvailabilityZone field's value.
+func (s *InputDestinationVpc) SetAvailabilityZone(v string) *InputDestinationVpc {
+	s.AvailabilityZone = &v
+	return s
+}
+
+// SetNetworkInterfaceId sets the NetworkInterfaceId field's value.
+func (s *InputDestinationVpc) SetNetworkInterfaceId(v string) *InputDestinationVpc {
+	s.NetworkInterfaceId = &v
 	return s
 }
 
@@ -9581,6 +10250,9 @@ type InputSecurityGroup struct {
 	// The current state of the Input Security Group.
 	State *string `locationName:"state" type:"string" enum:"InputSecurityGroupState"`
 
+	// A collection of key-value pairs.
+	Tags map[string]*string `locationName:"tags" type:"map"`
+
 	// Whitelist rules and their sync status
 	WhitelistRules []*InputWhitelistRule `locationName:"whitelistRules" type:"list"`
 }
@@ -9616,6 +10288,12 @@ func (s *InputSecurityGroup) SetInputs(v []*string) *InputSecurityGroup {
 // SetState sets the State field's value.
 func (s *InputSecurityGroup) SetState(v string) *InputSecurityGroup {
 	s.State = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *InputSecurityGroup) SetTags(v map[string]*string) *InputSecurityGroup {
+	s.Tags = v
 	return s
 }
 
@@ -9920,6 +10598,60 @@ func (s *InputSwitchScheduleActionSettings) Validate() error {
 // SetInputAttachmentNameReference sets the InputAttachmentNameReference field's value.
 func (s *InputSwitchScheduleActionSettings) SetInputAttachmentNameReference(v string) *InputSwitchScheduleActionSettings {
 	s.InputAttachmentNameReference = &v
+	return s
+}
+
+// Settings for a private VPC Input.When this property is specified, the input
+// destination addresses will be created in a VPC rather than with public Internet
+// addresses.This property requires setting the roleArn property on Input creation.Not
+// compatible with the inputSecurityGroups property.
+type InputVpcRequest struct {
+	_ struct{} `type:"structure"`
+
+	// A list of up to 5 EC2 VPC security group IDs to attach to the Input VPC network
+	// interfaces.Requires subnetIds. If none are specified then the VPC default
+	// security group will be used.
+	SecurityGroupIds []*string `locationName:"securityGroupIds" type:"list"`
+
+	// A list of 2 VPC subnet IDs from the same VPC.Subnet IDs must be mapped to
+	// two unique availability zones (AZ).
+	//
+	// SubnetIds is a required field
+	SubnetIds []*string `locationName:"subnetIds" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s InputVpcRequest) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InputVpcRequest) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *InputVpcRequest) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "InputVpcRequest"}
+	if s.SubnetIds == nil {
+		invalidParams.Add(request.NewErrParamRequired("SubnetIds"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetSecurityGroupIds sets the SecurityGroupIds field's value.
+func (s *InputVpcRequest) SetSecurityGroupIds(v []*string) *InputVpcRequest {
+	s.SecurityGroupIds = v
+	return s
+}
+
+// SetSubnetIds sets the SubnetIds field's value.
+func (s *InputVpcRequest) SetSubnetIds(v []*string) *InputVpcRequest {
+	s.SubnetIds = v
 	return s
 }
 
@@ -10490,6 +11222,67 @@ func (s *ListReservationsOutput) SetNextToken(v string) *ListReservationsOutput 
 // SetReservations sets the Reservations field's value.
 func (s *ListReservationsOutput) SetReservations(v []*Reservation) *ListReservationsOutput {
 	s.Reservations = v
+	return s
+}
+
+type ListTagsForResourceInput struct {
+	_ struct{} `type:"structure"`
+
+	// ResourceArn is a required field
+	ResourceArn *string `location:"uri" locationName:"resource-arn" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ListTagsForResourceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListTagsForResourceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListTagsForResourceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListTagsForResourceInput"}
+	if s.ResourceArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceArn"))
+	}
+	if s.ResourceArn != nil && len(*s.ResourceArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceArn", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetResourceArn sets the ResourceArn field's value.
+func (s *ListTagsForResourceInput) SetResourceArn(v string) *ListTagsForResourceInput {
+	s.ResourceArn = &v
+	return s
+}
+
+type ListTagsForResourceOutput struct {
+	_ struct{} `type:"structure"`
+
+	Tags map[string]*string `locationName:"tags" type:"map"`
+}
+
+// String returns the string representation
+func (s ListTagsForResourceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListTagsForResourceOutput) GoString() string {
+	return s.String()
+}
+
+// SetTags sets the Tags field's value.
+func (s *ListTagsForResourceOutput) SetTags(v map[string]*string) *ListTagsForResourceOutput {
+	s.Tags = v
 	return s
 }
 
@@ -11943,6 +12736,9 @@ type OutputGroupSettings struct {
 
 	ArchiveGroupSettings *ArchiveGroupSettings `locationName:"archiveGroupSettings" type:"structure"`
 
+	// Frame Capture Group Settings
+	FrameCaptureGroupSettings *FrameCaptureGroupSettings `locationName:"frameCaptureGroupSettings" type:"structure"`
+
 	HlsGroupSettings *HlsGroupSettings `locationName:"hlsGroupSettings" type:"structure"`
 
 	MsSmoothGroupSettings *MsSmoothGroupSettings `locationName:"msSmoothGroupSettings" type:"structure"`
@@ -11970,6 +12766,11 @@ func (s *OutputGroupSettings) Validate() error {
 			invalidParams.AddNested("ArchiveGroupSettings", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.FrameCaptureGroupSettings != nil {
+		if err := s.FrameCaptureGroupSettings.Validate(); err != nil {
+			invalidParams.AddNested("FrameCaptureGroupSettings", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.HlsGroupSettings != nil {
 		if err := s.HlsGroupSettings.Validate(); err != nil {
 			invalidParams.AddNested("HlsGroupSettings", err.(request.ErrInvalidParams))
@@ -11995,6 +12796,12 @@ func (s *OutputGroupSettings) Validate() error {
 // SetArchiveGroupSettings sets the ArchiveGroupSettings field's value.
 func (s *OutputGroupSettings) SetArchiveGroupSettings(v *ArchiveGroupSettings) *OutputGroupSettings {
 	s.ArchiveGroupSettings = v
+	return s
+}
+
+// SetFrameCaptureGroupSettings sets the FrameCaptureGroupSettings field's value.
+func (s *OutputGroupSettings) SetFrameCaptureGroupSettings(v *FrameCaptureGroupSettings) *OutputGroupSettings {
+	s.FrameCaptureGroupSettings = v
 	return s
 }
 
@@ -12049,6 +12856,9 @@ type OutputSettings struct {
 	_ struct{} `type:"structure"`
 
 	ArchiveOutputSettings *ArchiveOutputSettings `locationName:"archiveOutputSettings" type:"structure"`
+
+	// Frame Capture Output Settings
+	FrameCaptureOutputSettings *FrameCaptureOutputSettings `locationName:"frameCaptureOutputSettings" type:"structure"`
 
 	HlsOutputSettings *HlsOutputSettings `locationName:"hlsOutputSettings" type:"structure"`
 
@@ -12105,6 +12915,12 @@ func (s *OutputSettings) SetArchiveOutputSettings(v *ArchiveOutputSettings) *Out
 	return s
 }
 
+// SetFrameCaptureOutputSettings sets the FrameCaptureOutputSettings field's value.
+func (s *OutputSettings) SetFrameCaptureOutputSettings(v *FrameCaptureOutputSettings) *OutputSettings {
+	s.FrameCaptureOutputSettings = v
+	return s
+}
+
 // SetHlsOutputSettings sets the HlsOutputSettings field's value.
 func (s *OutputSettings) SetHlsOutputSettings(v *HlsOutputSettings) *OutputSettings {
 	s.HlsOutputSettings = v
@@ -12141,6 +12957,88 @@ func (s PassThroughSettings) String() string {
 // GoString returns the string representation
 func (s PassThroughSettings) GoString() string {
 	return s.String()
+}
+
+// Settings for the action to set pause state of a channel.
+type PauseStateScheduleActionSettings struct {
+	_ struct{} `type:"structure"`
+
+	Pipelines []*PipelinePauseStateSettings `locationName:"pipelines" type:"list"`
+}
+
+// String returns the string representation
+func (s PauseStateScheduleActionSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PauseStateScheduleActionSettings) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *PauseStateScheduleActionSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "PauseStateScheduleActionSettings"}
+	if s.Pipelines != nil {
+		for i, v := range s.Pipelines {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Pipelines", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetPipelines sets the Pipelines field's value.
+func (s *PauseStateScheduleActionSettings) SetPipelines(v []*PipelinePauseStateSettings) *PauseStateScheduleActionSettings {
+	s.Pipelines = v
+	return s
+}
+
+// Settings for pausing a pipeline.
+type PipelinePauseStateSettings struct {
+	_ struct{} `type:"structure"`
+
+	// Pipeline ID to pause ("PIPELINE_0" or "PIPELINE_1").
+	//
+	// PipelineId is a required field
+	PipelineId *string `locationName:"pipelineId" type:"string" required:"true" enum:"PipelineId"`
+}
+
+// String returns the string representation
+func (s PipelinePauseStateSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PipelinePauseStateSettings) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *PipelinePauseStateSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "PipelinePauseStateSettings"}
+	if s.PipelineId == nil {
+		invalidParams.Add(request.NewErrParamRequired("PipelineId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetPipelineId sets the PipelineId field's value.
+func (s *PipelinePauseStateSettings) SetPipelineId(v string) *PipelinePauseStateSettings {
+	s.PipelineId = &v
+	return s
 }
 
 type PurchaseOfferingInput struct {
@@ -12829,25 +13727,28 @@ func (s *ScheduleAction) SetScheduleActionStartSettings(v *ScheduleActionStartSe
 type ScheduleActionSettings struct {
 	_ struct{} `type:"structure"`
 
-	// Settings to emit HLS metadata
+	// Action to insert HLS metadata
 	HlsTimedMetadataSettings *HlsTimedMetadataScheduleActionSettings `locationName:"hlsTimedMetadataSettings" type:"structure"`
 
-	// Settings to switch an input
+	// Action to switch the input
 	InputSwitchSettings *InputSwitchScheduleActionSettings `locationName:"inputSwitchSettings" type:"structure"`
 
-	// Settings for SCTE-35 return_to_network message
+	// Action to pause or unpause one or both channel pipelines
+	PauseStateSettings *PauseStateScheduleActionSettings `locationName:"pauseStateSettings" type:"structure"`
+
+	// Action to insert SCTE-35 return_to_network message
 	Scte35ReturnToNetworkSettings *Scte35ReturnToNetworkScheduleActionSettings `locationName:"scte35ReturnToNetworkSettings" type:"structure"`
 
-	// Settings for SCTE-35 splice_insert message
+	// Action to insert SCTE-35 splice_insert message
 	Scte35SpliceInsertSettings *Scte35SpliceInsertScheduleActionSettings `locationName:"scte35SpliceInsertSettings" type:"structure"`
 
-	// Settings for SCTE-35 time_signal message
+	// Action to insert SCTE-35 time_signal message
 	Scte35TimeSignalSettings *Scte35TimeSignalScheduleActionSettings `locationName:"scte35TimeSignalSettings" type:"structure"`
 
-	// Settings to activate a static image overlay
+	// Action to activate a static image overlay
 	StaticImageActivateSettings *StaticImageActivateScheduleActionSettings `locationName:"staticImageActivateSettings" type:"structure"`
 
-	// Settings to deactivate a static image overlay
+	// Action to deactivate a static image overlay
 	StaticImageDeactivateSettings *StaticImageDeactivateScheduleActionSettings `locationName:"staticImageDeactivateSettings" type:"structure"`
 }
 
@@ -12872,6 +13773,11 @@ func (s *ScheduleActionSettings) Validate() error {
 	if s.InputSwitchSettings != nil {
 		if err := s.InputSwitchSettings.Validate(); err != nil {
 			invalidParams.AddNested("InputSwitchSettings", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.PauseStateSettings != nil {
+		if err := s.PauseStateSettings.Validate(); err != nil {
+			invalidParams.AddNested("PauseStateSettings", err.(request.ErrInvalidParams))
 		}
 	}
 	if s.Scte35ReturnToNetworkSettings != nil {
@@ -12910,6 +13816,12 @@ func (s *ScheduleActionSettings) SetHlsTimedMetadataSettings(v *HlsTimedMetadata
 // SetInputSwitchSettings sets the InputSwitchSettings field's value.
 func (s *ScheduleActionSettings) SetInputSwitchSettings(v *InputSwitchScheduleActionSettings) *ScheduleActionSettings {
 	s.InputSwitchSettings = v
+	return s
+}
+
+// SetPauseStateSettings sets the PauseStateSettings field's value.
+func (s *ScheduleActionSettings) SetPauseStateSettings(v *PauseStateScheduleActionSettings) *ScheduleActionSettings {
+	s.PauseStateSettings = v
 	return s
 }
 
@@ -13828,6 +14740,8 @@ type StartChannelOutput struct {
 	RoleArn *string `locationName:"roleArn" type:"string"`
 
 	State *string `locationName:"state" type:"string" enum:"ChannelState"`
+
+	Tags map[string]*string `locationName:"tags" type:"map"`
 }
 
 // String returns the string representation
@@ -13909,6 +14823,12 @@ func (s *StartChannelOutput) SetRoleArn(v string) *StartChannelOutput {
 // SetState sets the State field's value.
 func (s *StartChannelOutput) SetState(v string) *StartChannelOutput {
 	s.State = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *StartChannelOutput) SetTags(v map[string]*string) *StartChannelOutput {
+	s.Tags = v
 	return s
 }
 
@@ -14218,6 +15138,8 @@ type StopChannelOutput struct {
 	RoleArn *string `locationName:"roleArn" type:"string"`
 
 	State *string `locationName:"state" type:"string" enum:"ChannelState"`
+
+	Tags map[string]*string `locationName:"tags" type:"map"`
 }
 
 // String returns the string representation
@@ -14299,6 +15221,12 @@ func (s *StopChannelOutput) SetRoleArn(v string) *StopChannelOutput {
 // SetState sets the State field's value.
 func (s *StopChannelOutput) SetState(v string) *StopChannelOutput {
 	s.State = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *StopChannelOutput) SetTags(v map[string]*string) *StopChannelOutput {
+	s.Tags = v
 	return s
 }
 
@@ -14838,6 +15766,8 @@ type UpdateInputSecurityGroupInput struct {
 	// InputSecurityGroupId is a required field
 	InputSecurityGroupId *string `location:"uri" locationName:"inputSecurityGroupId" type:"string" required:"true"`
 
+	Tags map[string]*string `locationName:"tags" type:"map"`
+
 	WhitelistRules []*InputWhitelistRuleCidr `locationName:"whitelistRules" type:"list"`
 }
 
@@ -14870,6 +15800,12 @@ func (s *UpdateInputSecurityGroupInput) Validate() error {
 // SetInputSecurityGroupId sets the InputSecurityGroupId field's value.
 func (s *UpdateInputSecurityGroupInput) SetInputSecurityGroupId(v string) *UpdateInputSecurityGroupInput {
 	s.InputSecurityGroupId = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *UpdateInputSecurityGroupInput) SetTags(v map[string]*string) *UpdateInputSecurityGroupInput {
+	s.Tags = v
 	return s
 }
 
@@ -14935,6 +15871,9 @@ func (s *ValidationError) SetErrorMessage(v string) *ValidationError {
 type VideoCodecSettings struct {
 	_ struct{} `type:"structure"`
 
+	// Frame Capture Settings
+	FrameCaptureSettings *FrameCaptureSettings `locationName:"frameCaptureSettings" type:"structure"`
+
 	H264Settings *H264Settings `locationName:"h264Settings" type:"structure"`
 }
 
@@ -14951,6 +15890,11 @@ func (s VideoCodecSettings) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *VideoCodecSettings) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "VideoCodecSettings"}
+	if s.FrameCaptureSettings != nil {
+		if err := s.FrameCaptureSettings.Validate(); err != nil {
+			invalidParams.AddNested("FrameCaptureSettings", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.H264Settings != nil {
 		if err := s.H264Settings.Validate(); err != nil {
 			invalidParams.AddNested("H264Settings", err.(request.ErrInvalidParams))
@@ -14961,6 +15905,12 @@ func (s *VideoCodecSettings) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetFrameCaptureSettings sets the FrameCaptureSettings field's value.
+func (s *VideoCodecSettings) SetFrameCaptureSettings(v *FrameCaptureSettings) *VideoCodecSettings {
+	s.FrameCaptureSettings = v
+	return s
 }
 
 // SetH264Settings sets the H264Settings field's value.
@@ -14976,8 +15926,10 @@ type VideoDescription struct {
 	// Video codec settings.
 	CodecSettings *VideoCodecSettings `locationName:"codecSettings" type:"structure"`
 
-	// Output video height (in pixels). Leave blank to use source video height.
-	// If left blank, width must also be unspecified.
+	// Output video height, in pixels. Must be an even number. For most codecs,
+	// you can leave this field and width blank in order to use the height and width
+	// (resolution) from the source. Note, however, that leaving blank is not recommended.
+	// For the Frame Capture codec, height and width are required.
 	Height *int64 `locationName:"height" type:"integer"`
 
 	// The name of this VideoDescription. Outputs will use this name to uniquely
@@ -14987,24 +15939,30 @@ type VideoDescription struct {
 	// Name is a required field
 	Name *string `locationName:"name" type:"string" required:"true"`
 
-	// Indicates how to respond to the AFD values in the input stream. Setting to
-	// "respond" causes input video to be clipped, depending on AFD value, input
-	// display aspect ratio and output display aspect ratio.
+	// Indicates how to respond to the AFD values in the input stream. RESPOND causes
+	// input video to be clipped, depending on the AFD value, input display aspect
+	// ratio, and output display aspect ratio, and (except for FRAMECAPTURE codec)
+	// includes the values in the output. PASSTHROUGH (does not apply to FRAMECAPTURE
+	// codec) ignores the AFD values and includes the values in the output, so input
+	// video is not clipped. NONE ignores the AFD values and does not include the
+	// values through to the output, so input video is not clipped.
 	RespondToAfd *string `locationName:"respondToAfd" type:"string" enum:"VideoDescriptionRespondToAfd"`
 
-	// When set to "stretchToOutput", automatically configures the output position
-	// to stretch the video to the specified output resolution. This option will
-	// override any position value.
+	// STRETCHTOOUTPUT configures the output position to stretch the video to the
+	// specified output resolution (height and width). This option will override
+	// any position value. DEFAULT may insert black boxes (pillar boxes or letter
+	// boxes) around the video to provide the specified output resolution.
 	ScalingBehavior *string `locationName:"scalingBehavior" type:"string" enum:"VideoDescriptionScalingBehavior"`
 
-	// Changes the width of the anti-alias filter kernel used for scaling. Only
-	// applies if scaling is being performed and antiAlias is set to true. 0 is
-	// the softest setting, 100 the sharpest, and 50 recommended for most content.
+	// Changes the strength of the anti-alias filter used for scaling. 0 is the
+	// softest setting, 100 is the sharpest. A setting of 50 is recommended for
+	// most content.
 	Sharpness *int64 `locationName:"sharpness" type:"integer"`
 
-	// Output video width (in pixels). Leave out to use source video width. If left
-	// out, height must also be left out. Display aspect ratio is always preserved
-	// by letterboxing or pillarboxing when necessary.
+	// Output video width, in pixels. Must be an even number. For most codecs, you
+	// can leave this field and height blank in order to use the height and width
+	// (resolution) from the source. Note, however, that leaving blank is not recommended.
+	// For the Frame Capture codec, height and width are required.
 	Width *int64 `locationName:"width" type:"integer"`
 }
 
@@ -16325,6 +17283,17 @@ const (
 	HlsWebdavHttpTransferModeNonChunked = "NON_CHUNKED"
 )
 
+// When set to "standard", an I-Frame only playlist will be written out for
+// each video output in the output group. This I-Frame only playlist will contain
+// byte range offsets pointing to the I-frame(s) in each segment.
+const (
+	// IFrameOnlyPlaylistTypeDisabled is a IFrameOnlyPlaylistType enum value
+	IFrameOnlyPlaylistTypeDisabled = "DISABLED"
+
+	// IFrameOnlyPlaylistTypeStandard is a IFrameOnlyPlaylistType enum value
+	IFrameOnlyPlaylistTypeStandard = "STANDARD"
+)
+
 // codec in increasing order of complexity
 const (
 	// InputCodecMpeg2 is a InputCodec enum value
@@ -16719,6 +17688,15 @@ const (
 const (
 	// OfferingTypeNoUpfront is a OfferingType enum value
 	OfferingTypeNoUpfront = "NO_UPFRONT"
+)
+
+// Pipeline ID
+const (
+	// PipelineIdPipeline0 is a PipelineId enum value
+	PipelineIdPipeline0 = "PIPELINE_0"
+
+	// PipelineIdPipeline1 is a PipelineId enum value
+	PipelineIdPipeline1 = "PIPELINE_1"
 )
 
 // Codec, 'MPEG2', 'AVC', 'HEVC', or 'AUDIO'

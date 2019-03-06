@@ -2780,8 +2780,13 @@ type ListTagsForResourceInput struct {
 	// Arn is a required field
 	Arn *string `min:"20" type:"string" required:"true"`
 
+	// Specifies the number of tags to return as a response to the ListTagsForResource
+	// request.
 	MaxResults *int64 `min:"1" type:"integer"`
 
+	// When you request additional results from the ListTagsForResource call, a
+	// NextToken parameter is returned in the input. You can then pass in a subsequent
+	// command the NextToken parameter to continue listing additional tags.
 	NextToken *string `min:"1" type:"string"`
 }
 
@@ -2841,6 +2846,9 @@ type ListTagsForResourceOutput struct {
 	// This value is the ARN you specified to list the tags of.
 	Arn *string `min:"20" type:"string"`
 
+	// When you can get additional results from the ListTagsForResource call, a
+	// NextToken parameter is returned in the output. You can then pass in a subsequent
+	// command the NextToken parameter to continue listing additional tags.
 	NextToken *string `min:"1" type:"string"`
 
 	// Key-value pairs that are assigned to a resource, usually for the purpose
@@ -2883,7 +2891,7 @@ type ListUsersInput struct {
 	// Specifies the number of users to return as a response to the ListUsers request.
 	MaxResults *int64 `min:"1" type:"integer"`
 
-	// When you can get additional results from the ListUsersListUsers call, a NextToken
+	// When you can get additional results from the ListUsers call, a NextToken
 	// parameter is returned in the output. You can then pass in a subsequent command
 	// the NextToken parameter to continue listing additional users.
 	NextToken *string `min:"1" type:"string"`

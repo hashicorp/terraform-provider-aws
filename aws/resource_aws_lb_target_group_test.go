@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -32,13 +31,6 @@ func testSweepLBTargetGroups(region string) error {
 	}
 	conn := client.(*AWSClient).elbv2conn
 
-	prefixes := []string{
-		"tf-",
-		"tf-test-",
-		"tf-acc-test-",
-		"test",
-	}
-
 	err = conn.DescribeTargetGroupsPages(&elbv2.DescribeTargetGroupsInput{}, func(page *elbv2.DescribeTargetGroupsOutput, isLast bool) bool {
 		if page == nil || len(page.TargetGroups) == 0 {
 			log.Print("[DEBUG] No LB Target Groups to sweep")
@@ -47,17 +39,7 @@ func testSweepLBTargetGroups(region string) error {
 
 		for _, targetGroup := range page.TargetGroups {
 			name := aws.StringValue(targetGroup.TargetGroupName)
-			skip := true
-			for _, prefix := range prefixes {
-				if strings.HasPrefix(name, prefix) {
-					skip = false
-					break
-				}
-			}
-			if skip {
-				log.Printf("[INFO] Skipping LB Target Group: %s", name)
-				continue
-			}
+
 			log.Printf("[INFO] Deleting LB Target Group: %s", name)
 			_, err := conn.DeleteTargetGroup(&elbv2.DeleteTargetGroupInput{
 				TargetGroupArn: targetGroup.TargetGroupArn,
@@ -221,6 +203,27 @@ func TestAccAWSLBTargetGroup_networkLB_TargetGroup(t *testing.T) {
 
 				ExpectNonEmptyPlan: true,
 				ExpectError:        regexp.MustCompile("Health check interval cannot be updated"),
+			},
+		},
+	})
+}
+
+func TestAccAWSLBTargetGroup_Protocol_Tls(t *testing.T) {
+	var targetGroup1 elbv2.TargetGroup
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_lb_target_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLBTargetGroupConfig_Protocol_Tls(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBTargetGroupExists(resourceName, &targetGroup1),
+					resource.TestCheckResourceAttr(resourceName, "protocol", "TLS"),
+				),
 			},
 		},
 	})
@@ -1303,6 +1306,37 @@ resource "aws_vpc" "test" {
     TestName = "terraform-testacc-lb-target-group-update-health-check"
   }
 }`, targetGroupName)
+}
+
+func testAccAWSLBTargetGroupConfig_Protocol_Tls(targetGroupName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "tf-acc-test-lb-target-group-protocol-tls"
+  }
+}
+
+resource "aws_lb_target_group" "test" {
+  name     = %q
+  port     = 443
+  protocol = "TLS"
+  vpc_id   = "${aws_vpc.test.id}"
+
+  health_check {
+    interval            = 10
+    port                = "traffic-port"
+    protocol            = "TCP"
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+  }
+
+  tags = {
+    Name = "tf-acc-test-lb-target-group-protocol-tls"
+  }
+}
+`, targetGroupName)
 }
 
 func testAccAWSLBTargetGroupConfig_typeTCP(targetGroupName string) string {

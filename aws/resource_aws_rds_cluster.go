@@ -712,12 +712,15 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 		}
 
 	} else {
-		if _, ok := d.GetOk("master_password"); !ok {
-			return fmt.Errorf(`provider.aws: aws_rds_cluster: %s: "master_password": required field is not set`, d.Get("database_name").(string))
-		}
 
-		if _, ok := d.GetOk("master_username"); !ok {
-			return fmt.Errorf(`provider.aws: aws_rds_cluster: %s: "master_username": required field is not set`, d.Get("database_name").(string))
+		if _, ok := d.GetOk("global_cluster_identifier"); !ok {
+			if _, ok := d.GetOk("master_password"); !ok {
+				return fmt.Errorf(`provider.aws: aws_db_instance: %s: "master_password": required field is not set`, d.Get("database_name").(string))
+			}
+
+			if _, ok := d.GetOk("master_username"); !ok {
+				return fmt.Errorf(`provider.aws: aws_db_instance: %s: "master_username": required field is not set`, d.Get("database_name").(string))
+			}
 		}
 
 		createOpts := &rds.CreateDBClusterInput{
@@ -725,10 +728,16 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 			DeletionProtection:   aws.Bool(d.Get("deletion_protection").(bool)),
 			Engine:               aws.String(d.Get("engine").(string)),
 			EngineMode:           aws.String(d.Get("engine_mode").(string)),
-			MasterUserPassword:   aws.String(d.Get("master_password").(string)),
-			MasterUsername:       aws.String(d.Get("master_username").(string)),
 			ScalingConfiguration: expandRdsScalingConfiguration(d.Get("scaling_configuration").([]interface{})),
 			Tags:                 tags,
+		}
+
+		if v, ok := d.GetOk("master_password"); ok && v.(string) != "" {
+			createOpts.MasterUserPassword = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("master_username"); ok && v.(string) != "" {
+			createOpts.MasterUsername = aws.String(v.(string))
 		}
 
 		// Need to check value > 0 due to:
@@ -783,6 +792,10 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 
 		if attr, ok := d.GetOk("kms_key_id"); ok {
 			createOpts.KmsKeyId = aws.String(attr.(string))
+		}
+
+		if attr, ok := d.GetOk("source_region"); ok {
+			createOpts.SourceRegion = aws.String(attr.(string))
 		}
 
 		if attr, ok := d.GetOk("iam_database_authentication_enabled"); ok {
@@ -1201,7 +1214,7 @@ func resourceAwsRDSClusterDelete(d *schema.ResourceData, meta interface{}) error
 	skipFinalSnapshot := d.Get("skip_final_snapshot").(bool)
 	deleteOpts.SkipFinalSnapshot = aws.Bool(skipFinalSnapshot)
 
-	if skipFinalSnapshot == false {
+	if !skipFinalSnapshot {
 		if name, present := d.GetOk("final_snapshot_identifier"); present {
 			deleteOpts.FinalDBSnapshotIdentifier = aws.String(name.(string))
 		} else {
@@ -1286,11 +1299,7 @@ func setIamRoleToRdsCluster(clusterIdentifier string, roleArn string, conn *rds.
 		RoleArn:             aws.String(roleArn),
 	}
 	_, err := conn.AddRoleToDBCluster(params)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func removeIamRoleFromRdsCluster(clusterIdentifier string, roleArn string, conn *rds.RDS) error {
@@ -1299,11 +1308,7 @@ func removeIamRoleFromRdsCluster(clusterIdentifier string, roleArn string, conn 
 		RoleArn:             aws.String(roleArn),
 	}
 	_, err := conn.RemoveRoleFromDBCluster(params)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 var resourceAwsRdsClusterCreatePendingStates = []string{

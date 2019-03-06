@@ -50,8 +50,8 @@ func (c *S3Control) DeletePublicAccessBlockRequest(input *DeletePublicAccessBloc
 	output = &DeletePublicAccessBlockOutput{}
 	req = c.newRequest(op, input, output)
 	req.Handlers.Unmarshal.Swap(restxml.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
-	req.Handlers.Build.PushBackNamed(buildPrefixHostHandler("AccountID", aws.StringValue(input.AccountId)))
-	req.Handlers.Build.PushBackNamed(buildRemoveHeaderHandler("X-Amz-Account-Id"))
+	req.Handlers.Build.PushBackNamed(protocol.NewHostPrefixHandler("{AccountId}.", input.hostLabels))
+	req.Handlers.Build.PushBackNamed(protocol.ValidateEndpointHostHandler)
 	return
 }
 
@@ -127,8 +127,8 @@ func (c *S3Control) GetPublicAccessBlockRequest(input *GetPublicAccessBlockInput
 
 	output = &GetPublicAccessBlockOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Build.PushBackNamed(buildPrefixHostHandler("AccountID", aws.StringValue(input.AccountId)))
-	req.Handlers.Build.PushBackNamed(buildRemoveHeaderHandler("X-Amz-Account-Id"))
+	req.Handlers.Build.PushBackNamed(protocol.NewHostPrefixHandler("{AccountId}.", input.hostLabels))
+	req.Handlers.Build.PushBackNamed(protocol.ValidateEndpointHostHandler)
 	return
 }
 
@@ -211,8 +211,8 @@ func (c *S3Control) PutPublicAccessBlockRequest(input *PutPublicAccessBlockInput
 	output = &PutPublicAccessBlockOutput{}
 	req = c.newRequest(op, input, output)
 	req.Handlers.Unmarshal.Swap(restxml.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
-	req.Handlers.Build.PushBackNamed(buildPrefixHostHandler("AccountID", aws.StringValue(input.AccountId)))
-	req.Handlers.Build.PushBackNamed(buildRemoveHeaderHandler("X-Amz-Account-Id"))
+	req.Handlers.Build.PushBackNamed(protocol.NewHostPrefixHandler("{AccountId}.", input.hostLabels))
+	req.Handlers.Build.PushBackNamed(protocol.ValidateEndpointHostHandler)
 	return
 }
 
@@ -275,6 +275,9 @@ func (s *DeletePublicAccessBlockInput) Validate() error {
 	if s.AccountId == nil {
 		invalidParams.Add(request.NewErrParamRequired("AccountId"))
 	}
+	if s.AccountId != nil && len(*s.AccountId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AccountId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -286,6 +289,12 @@ func (s *DeletePublicAccessBlockInput) Validate() error {
 func (s *DeletePublicAccessBlockInput) SetAccountId(v string) *DeletePublicAccessBlockInput {
 	s.AccountId = &v
 	return s
+}
+
+func (s *DeletePublicAccessBlockInput) hostLabels() map[string]string {
+	return map[string]string{
+		"AccountId": aws.StringValue(s.AccountId),
+	}
 }
 
 type DeletePublicAccessBlockOutput struct {
@@ -328,6 +337,9 @@ func (s *GetPublicAccessBlockInput) Validate() error {
 	if s.AccountId == nil {
 		invalidParams.Add(request.NewErrParamRequired("AccountId"))
 	}
+	if s.AccountId != nil && len(*s.AccountId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AccountId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -339,6 +351,12 @@ func (s *GetPublicAccessBlockInput) Validate() error {
 func (s *GetPublicAccessBlockInput) SetAccountId(v string) *GetPublicAccessBlockInput {
 	s.AccountId = &v
 	return s
+}
+
+func (s *GetPublicAccessBlockInput) hostLabels() map[string]string {
+	return map[string]string{
+		"AccountId": aws.StringValue(s.AccountId),
+	}
 }
 
 type GetPublicAccessBlockOutput struct {
@@ -505,6 +523,9 @@ func (s *PutPublicAccessBlockInput) Validate() error {
 	if s.AccountId == nil {
 		invalidParams.Add(request.NewErrParamRequired("AccountId"))
 	}
+	if s.AccountId != nil && len(*s.AccountId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AccountId", 1))
+	}
 	if s.PublicAccessBlockConfiguration == nil {
 		invalidParams.Add(request.NewErrParamRequired("PublicAccessBlockConfiguration"))
 	}
@@ -525,6 +546,12 @@ func (s *PutPublicAccessBlockInput) SetAccountId(v string) *PutPublicAccessBlock
 func (s *PutPublicAccessBlockInput) SetPublicAccessBlockConfiguration(v *PublicAccessBlockConfiguration) *PutPublicAccessBlockInput {
 	s.PublicAccessBlockConfiguration = v
 	return s
+}
+
+func (s *PutPublicAccessBlockInput) hostLabels() map[string]string {
+	return map[string]string{
+		"AccountId": aws.StringValue(s.AccountId),
+	}
 }
 
 type PutPublicAccessBlockOutput struct {

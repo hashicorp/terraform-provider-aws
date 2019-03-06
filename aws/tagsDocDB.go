@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"fmt"
 	"log"
 	"regexp"
 
@@ -21,7 +22,7 @@ func setTagsDocDB(conn *docdb.DocDB, d *schema.ResourceData) error {
 		// Set tags
 		if len(remove) > 0 {
 			log.Printf("[DEBUG] Removing tags: %#v", remove)
-			k := make([]*string, len(remove), len(remove))
+			k := make([]*string, len(remove))
 			for i, t := range remove {
 				k[i] = t.Key
 			}
@@ -75,6 +76,23 @@ func diffTagsDocDB(oldTags, newTags []*docdb.Tag) ([]*docdb.Tag, []*docdb.Tag) {
 	return tagsFromMapDocDB(create), remove
 }
 
+func saveTagsDocDB(conn *docdb.DocDB, d *schema.ResourceData, arn string) error {
+	resp, err := conn.ListTagsForResource(&docdb.ListTagsForResourceInput{
+		ResourceName: aws.String(arn),
+	})
+
+	if err != nil {
+		return fmt.Errorf("Error retreiving tags for ARN: %s", arn)
+	}
+
+	var dt []*docdb.Tag
+	if len(resp.TagList) > 0 {
+		dt = resp.TagList
+	}
+
+	return d.Set("tags", tagsToMapDocDB(dt))
+}
+
 // tagsFromMap returns the tags for the given map of data.
 func tagsFromMapDocDB(m map[string]interface{}) []*docdb.Tag {
 	result := make([]*docdb.Tag, 0, len(m))
@@ -109,7 +127,8 @@ func tagIgnoredDocDB(t *docdb.Tag) bool {
 	filter := []string{"^aws:"}
 	for _, v := range filter {
 		log.Printf("[DEBUG] Matching %v with %v\n", v, aws.StringValue(t.Key))
-		if r, _ := regexp.MatchString(v, aws.StringValue(t.Key)); r == true {
+		r, _ := regexp.MatchString(v, aws.StringValue(t.Key))
+		if r {
 			log.Printf("[DEBUG] Found AWS specific tag %s (val: %s), ignoring.\n", aws.StringValue(t.Key), aws.StringValue(t.Value))
 			return true
 		}

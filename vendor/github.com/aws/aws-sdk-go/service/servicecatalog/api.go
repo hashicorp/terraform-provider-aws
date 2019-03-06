@@ -14773,7 +14773,7 @@ type ProvisionedProductAttribute struct {
 	//    * AVAILABLE - Stable state, ready to perform any operation. The most recent
 	//    operation succeeded and completed.
 	//
-	//    * UNDER_CHANGE - Transitive state, operations performed might not have
+	//    * UNDER_CHANGE - Transitive state. Operations performed might not have
 	//    valid results. Wait for an AVAILABLE status before performing operations.
 	//
 	//    * TAINTED - Stable state, ready to perform any operation. The stack has
@@ -14781,9 +14781,14 @@ type ProvisionedProductAttribute struct {
 	//    For example, a request to update to a new version failed and the stack
 	//    rolled back to the current version.
 	//
-	//    * ERROR - An unexpected error occurred, the provisioned product exists
+	//    * ERROR - An unexpected error occurred. The provisioned product exists
 	//    but the stack is not running. For example, CloudFormation received a parameter
 	//    value that was not valid and could not launch the stack.
+	//
+	//    * PLAN_IN_PROGRESS - Transitive state. The plan operations were performed
+	//    to provision a new product, but resources have not yet been created. After
+	//    reviewing the list of resources to be created, execute the plan. Wait
+	//    for an AVAILABLE status before performing operations.
 	Status *string `type:"string" enum:"ProvisionedProductStatus"`
 
 	// The current status message of the provisioned product.
@@ -14938,7 +14943,7 @@ type ProvisionedProductDetail struct {
 	//    * AVAILABLE - Stable state, ready to perform any operation. The most recent
 	//    operation succeeded and completed.
 	//
-	//    * UNDER_CHANGE - Transitive state, operations performed might not have
+	//    * UNDER_CHANGE - Transitive state. Operations performed might not have
 	//    valid results. Wait for an AVAILABLE status before performing operations.
 	//
 	//    * TAINTED - Stable state, ready to perform any operation. The stack has
@@ -14946,9 +14951,14 @@ type ProvisionedProductDetail struct {
 	//    For example, a request to update to a new version failed and the stack
 	//    rolled back to the current version.
 	//
-	//    * ERROR - An unexpected error occurred, the provisioned product exists
+	//    * ERROR - An unexpected error occurred. The provisioned product exists
 	//    but the stack is not running. For example, CloudFormation received a parameter
 	//    value that was not valid and could not launch the stack.
+	//
+	//    * PLAN_IN_PROGRESS - Transitive state. The plan operations were performed
+	//    to provision a new product, but resources have not yet been created. After
+	//    reviewing the list of resources to be created, execute the plan. Wait
+	//    for an AVAILABLE status before performing operations.
 	Status *string `type:"string" enum:"ProvisionedProductStatus"`
 
 	// The current status message of the provisioned product.

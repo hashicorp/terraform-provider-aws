@@ -493,7 +493,7 @@ resource "aws_api_gateway_method_response" "test" {
   http_method = "${aws_api_gateway_method.test.http_method}"
   status_code = "200"
 
-  response_parameters {
+  response_parameters = {
     "method.response.header.Access-Control-Allow-Origin" = true
   }
 }
@@ -514,7 +514,7 @@ resource "aws_api_gateway_integration_response" "test" {
   http_method = "${aws_api_gateway_method.test.http_method}"
   status_code = "${aws_api_gateway_method_response.test.status_code}"
 
-  response_parameters {
+  response_parameters = {
     "method.response.header.Access-Control-Allow-Origin" = "'*'"
   }
 }
@@ -617,7 +617,7 @@ resource "aws_api_gateway_method_response" "test" {
   http_method = "${aws_api_gateway_method.test.http_method}"
   status_code = "200"
 
-  response_parameters {
+  response_parameters = {
     "method.response.header.Access-Control-Allow-Origin" = true
   }
 }
@@ -638,7 +638,7 @@ resource "aws_api_gateway_integration_response" "test" {
   http_method = "${aws_api_gateway_method.test.http_method}"
   status_code = "${aws_api_gateway_method_response.test.status_code}"
 
-  response_parameters {
+  response_parameters = {
     "method.response.header.Access-Control-Allow-Origin" = "'*'"
   }
 }
@@ -762,7 +762,7 @@ resource "aws_lambda_function" "authorizer" {
   runtime          = "nodejs6.10"
 
   environment {
-    variables {
+    variables = {
         AUTH_USER="%s"
         AUTH_PASS="%s"
     }

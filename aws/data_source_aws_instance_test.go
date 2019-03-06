@@ -336,7 +336,7 @@ resource "aws_instance" "web" {
 }
 
 data "aws_instance" "web-instance" {
-  instance_tags {
+  instance_tags = {
     Name = "${aws_instance.web.tags["Name"]}"
     TestSeed = "%d"
   }
@@ -648,11 +648,7 @@ func testAccInstanceDataSourceConfig_getPasswordData(val bool, rInt int) string 
 	# Find latest Microsoft Windows Server 2016 Core image (Amazon deletes old ones)
 	data "aws_ami" "win2016core" {
 		most_recent = true
-
-		filter {
-			name = "owner-alias"
-			values = ["amazon"]
-		}
+		owners      = ["amazon"]
 
 		filter {
 			name = "name"

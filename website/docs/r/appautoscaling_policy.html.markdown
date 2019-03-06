@@ -191,7 +191,7 @@ resource "aws_appautoscaling_policy" "ecs_policy" {
 * `resource_label` - (Optional) Reserved for future use.
 
 ## Attribute Reference
-* `adjustment_type` - The scaling policy's adjustment type.
+
 * `arn` - The ARN assigned by AWS to the scaling policy.
 * `name` - The scaling policy's name.
 * `policy_type` - The scaling policy's type.

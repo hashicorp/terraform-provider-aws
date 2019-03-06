@@ -185,7 +185,7 @@ func resourceAwsIamPolicyAttachmentDelete(d *schema.ResourceData, meta interface
 }
 
 func composeErrors(desc string, uErr error, rErr error, gErr error) error {
-	errMsg := fmt.Sprintf(desc)
+	errMsg := fmt.Sprint(desc)
 	errs := []error{uErr, rErr, gErr}
 	for _, e := range errs {
 		if e != nil {

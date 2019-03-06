@@ -109,11 +109,7 @@ func testAccCheckAWSSfnActivityExists(n string) resource.TestCheckFunc {
 			ActivityArn: aws.String(rs.Primary.ID),
 		})
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -146,11 +142,7 @@ func testAccCheckAWSSfnActivityDestroy(s *terraform.State) error {
 			return resource.RetryableError(fmt.Errorf("Expected AWS Step Function Activity to be destroyed, but was still found, retrying"))
 		})
 
-		if retryErr != nil {
-			return retryErr
-		}
-
-		return nil
+		return retryErr
 	}
 
 	return fmt.Errorf("Default error in Step Function Test")

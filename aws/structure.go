@@ -40,8 +40,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/aws/aws-sdk-go/service/route53"
+	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/aws/aws-sdk-go/service/waf"
+	"github.com/aws/aws-sdk-go/service/worklink"
 	"github.com/beevik/etree"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/structure"
@@ -1078,13 +1080,13 @@ func flattenStepAdjustments(adjustments []*autoscaling.StepAdjustment) []map[str
 	result := make([]map[string]interface{}, 0, len(adjustments))
 	for _, raw := range adjustments {
 		a := map[string]interface{}{
-			"scaling_adjustment": *raw.ScalingAdjustment,
+			"scaling_adjustment": aws.Int64Value(raw.ScalingAdjustment),
 		}
 		if raw.MetricIntervalUpperBound != nil {
-			a["metric_interval_upper_bound"] = *raw.MetricIntervalUpperBound
+			a["metric_interval_upper_bound"] = fmt.Sprintf("%g", aws.Float64Value(raw.MetricIntervalUpperBound))
 		}
 		if raw.MetricIntervalLowerBound != nil {
-			a["metric_interval_lower_bound"] = *raw.MetricIntervalLowerBound
+			a["metric_interval_lower_bound"] = fmt.Sprintf("%g", aws.Float64Value(raw.MetricIntervalLowerBound))
 		}
 		result = append(result, a)
 	}
@@ -1487,6 +1489,14 @@ func flattenLambdaEnvironment(lambdaEnv *lambda.EnvironmentResponse) []interface
 	return []interface{}{envs}
 }
 
+func flattenLambdaLayers(layers []*lambda.Layer) []interface{} {
+	arns := make([]*string, len(layers))
+	for i, layer := range layers {
+		arns[i] = layer.Arn
+	}
+	return flattenStringList(arns)
+}
+
 func flattenLambdaVpcConfigResponse(s *lambda.VpcConfigResponse) []map[string]interface{} {
 	settings := make(map[string]interface{})
 
@@ -1632,36 +1642,6 @@ func flattenKinesisShardLevelMetrics(list []*kinesis.EnhancedMetrics) []string {
 		strs = append(strs, *s)
 	}
 	return strs
-}
-
-func flattenApiGatewayStageKeys(keys []*string) []map[string]interface{} {
-	stageKeys := make([]map[string]interface{}, 0, len(keys))
-	for _, o := range keys {
-		key := make(map[string]interface{})
-		parts := strings.Split(*o, "/")
-		key["stage_name"] = parts[1]
-		key["rest_api_id"] = parts[0]
-
-		stageKeys = append(stageKeys, key)
-	}
-	return stageKeys
-}
-
-func expandApiGatewayStageKeys(d *schema.ResourceData) []*apigateway.StageKey {
-	var stageKeys []*apigateway.StageKey
-
-	if stageKeyData, ok := d.GetOk("stage_key"); ok {
-		params := stageKeyData.(*schema.Set).List()
-		for k := range params {
-			data := params[k].(map[string]interface{})
-			stageKeys = append(stageKeys, &apigateway.StageKey{
-				RestApiId: aws.String(data["rest_api_id"].(string)),
-				StageName: aws.String(data["stage_name"].(string)),
-			})
-		}
-	}
-
-	return stageKeys
 }
 
 func expandApiGatewayRequestResponseModelOperations(d *schema.ResourceData, key string, prefix string) []*apigateway.PatchOperation {
@@ -1810,56 +1790,6 @@ func expandApiGatewayMethodParametersOperations(d *schema.ResourceData, key stri
 	}
 
 	return operations, nil
-}
-
-func expandApiGatewayStageKeyOperations(d *schema.ResourceData) []*apigateway.PatchOperation {
-	operations := make([]*apigateway.PatchOperation, 0)
-
-	prev, curr := d.GetChange("stage_key")
-	prevList := prev.(*schema.Set).List()
-	currList := curr.(*schema.Set).List()
-
-	for i := range prevList {
-		p := prevList[i].(map[string]interface{})
-		exists := false
-
-		for j := range currList {
-			c := currList[j].(map[string]interface{})
-			if c["rest_api_id"].(string) == p["rest_api_id"].(string) && c["stage_name"].(string) == p["stage_name"].(string) {
-				exists = true
-			}
-		}
-
-		if !exists {
-			operations = append(operations, &apigateway.PatchOperation{
-				Op:    aws.String("remove"),
-				Path:  aws.String("/stages"),
-				Value: aws.String(fmt.Sprintf("%s/%s", p["rest_api_id"].(string), p["stage_name"].(string))),
-			})
-		}
-	}
-
-	for i := range currList {
-		c := currList[i].(map[string]interface{})
-		exists := false
-
-		for j := range prevList {
-			p := prevList[j].(map[string]interface{})
-			if c["rest_api_id"].(string) == p["rest_api_id"].(string) && c["stage_name"].(string) == p["stage_name"].(string) {
-				exists = true
-			}
-		}
-
-		if !exists {
-			operations = append(operations, &apigateway.PatchOperation{
-				Op:    aws.String("add"),
-				Path:  aws.String("/stages"),
-				Value: aws.String(fmt.Sprintf("%s/%s", c["rest_api_id"].(string), c["stage_name"].(string))),
-			})
-		}
-	}
-
-	return operations
 }
 
 func expandCloudWatchLogMetricTransformations(m map[string]interface{}) []*cloudwatchlogs.MetricTransformation {
@@ -2788,6 +2718,20 @@ func expandCognitoUserPoolPasswordPolicy(config map[string]interface{}) *cognito
 	return configs
 }
 
+func flattenCognitoUserPoolUserPoolAddOns(s *cognitoidentityprovider.UserPoolAddOnsType) []map[string]interface{} {
+	config := make(map[string]interface{})
+
+	if s == nil {
+		return []map[string]interface{}{}
+	}
+
+	if s.AdvancedSecurityMode != nil {
+		config["advanced_security_mode"] = *s.AdvancedSecurityMode
+	}
+
+	return []map[string]interface{}{config}
+}
+
 func flattenIoTRuleCloudWatchAlarmActions(actions []*iot.Action) []map[string]interface{} {
 	results := make([]map[string]interface{}, 0)
 
@@ -2832,36 +2776,42 @@ func flattenIoTRuleCloudWatchMetricActions(actions []*iot.Action) []map[string]i
 }
 
 func flattenIoTRuleDynamoDbActions(actions []*iot.Action) []map[string]interface{} {
-	results := make([]map[string]interface{}, 0)
+	items := make([]map[string]interface{}, 0, len(actions))
 
 	for _, a := range actions {
-		result := make(map[string]interface{})
+		m := make(map[string]interface{})
 		v := a.DynamoDB
 		if v != nil {
-			result["hash_key_field"] = *v.HashKeyField
-			result["hash_key_value"] = *v.HashKeyValue
-			result["range_key_field"] = *v.RangeKeyField
-			result["range_key_value"] = *v.RangeKeyValue
-			result["role_arn"] = *v.RoleArn
-			result["table_name"] = *v.TableName
+			m["hash_key_field"] = aws.StringValue(v.HashKeyField)
+			m["hash_key_value"] = aws.StringValue(v.HashKeyValue)
+			m["role_arn"] = aws.StringValue(v.RoleArn)
+			m["table_name"] = aws.StringValue(v.TableName)
 
 			if v.HashKeyType != nil {
-				result["hash_key_type"] = *v.HashKeyType
+				m["hash_key_type"] = aws.StringValue(v.HashKeyType)
 			}
 
 			if v.PayloadField != nil {
-				result["payload_field"] = *v.PayloadField
+				m["payload_field"] = aws.StringValue(v.PayloadField)
+			}
+
+			if v.RangeKeyField != nil {
+				m["range_key_field"] = aws.StringValue(v.RangeKeyField)
 			}
 
 			if v.RangeKeyType != nil {
-				result["range_key_type"] = *v.RangeKeyType
+				m["range_key_type"] = aws.StringValue(v.RangeKeyType)
 			}
 
-			results = append(results, result)
+			if v.RangeKeyValue != nil {
+				m["range_key_value"] = aws.StringValue(v.RangeKeyValue)
+			}
+
+			items = append(items, m)
 		}
 	}
 
-	return results
+	return items
 }
 
 func flattenIoTRuleElasticSearchActions(actions []*iot.Action) []map[string]interface{} {
@@ -2999,9 +2949,9 @@ func flattenIoTRuleSqsActions(actions []*iot.Action) []map[string]interface{} {
 		result := make(map[string]interface{})
 		v := a.Sqs
 		if v != nil {
-			result["role_arn"] = *v.RoleArn
-			result["use_base64"] = *v.UseBase64
-			result["queue_url"] = *v.QueueUrl
+			result["role_arn"] = aws.StringValue(v.RoleArn)
+			result["use_base64"] = aws.BoolValue(v.UseBase64)
+			result["queue_url"] = aws.StringValue(v.QueueUrl)
 
 			results = append(results, result)
 		}
@@ -3731,6 +3681,41 @@ func flattenWafWebAclRules(ts []*waf.ActivatedRule) []map[string]interface{} {
 	return out
 }
 
+func flattenWorkLinkNetworkConfigResponse(c *worklink.DescribeCompanyNetworkConfigurationOutput) []map[string]interface{} {
+	config := make(map[string]interface{})
+
+	if c == nil {
+		return nil
+	}
+
+	if len(c.SubnetIds) == 0 && len(c.SecurityGroupIds) == 0 && aws.StringValue(c.VpcId) == "" {
+		return nil
+	}
+
+	config["subnet_ids"] = schema.NewSet(schema.HashString, flattenStringList(c.SubnetIds))
+	config["security_group_ids"] = schema.NewSet(schema.HashString, flattenStringList(c.SecurityGroupIds))
+	config["vpc_id"] = aws.StringValue(c.VpcId)
+
+	return []map[string]interface{}{config}
+}
+
+func flattenWorkLinkIdentityProviderConfigResponse(c *worklink.DescribeIdentityProviderConfigurationOutput) []map[string]interface{} {
+	config := make(map[string]interface{})
+
+	if c.IdentityProviderType == nil && c.IdentityProviderSamlMetadata == nil {
+		return nil
+	}
+
+	if c.IdentityProviderType != nil {
+		config["type"] = aws.StringValue(c.IdentityProviderType)
+	}
+	if c.IdentityProviderSamlMetadata != nil {
+		config["saml_metadata"] = aws.StringValue(c.IdentityProviderSamlMetadata)
+	}
+
+	return []map[string]interface{}{config}
+}
+
 // escapeJsonPointer escapes string per RFC 6901
 // so it can be used as path in JSON patch operations
 func escapeJsonPointer(path string) string {
@@ -3867,7 +3852,7 @@ func flattenRedshiftLogging(ls *redshift.LoggingStatus) []interface{} {
 	}
 
 	cfg := make(map[string]interface{})
-	cfg["enabled"] = *ls.LoggingEnabled
+	cfg["enable"] = aws.BoolValue(ls.LoggingEnabled)
 	if ls.BucketName != nil {
 		cfg["bucket_name"] = *ls.BucketName
 	}
@@ -4220,19 +4205,21 @@ func stripCapacityAttributes(in map[string]interface{}) (map[string]interface{},
 
 // Expanders + flatteners
 
-func flattenDynamoDbTtl(ttlDesc *dynamodb.TimeToLiveDescription) []interface{} {
-	m := map[string]interface{}{}
-	if ttlDesc.AttributeName != nil {
-		m["attribute_name"] = *ttlDesc.AttributeName
-		if ttlDesc.TimeToLiveStatus != nil {
-			m["enabled"] = (*ttlDesc.TimeToLiveStatus == dynamodb.TimeToLiveStatusEnabled)
-		}
+func flattenDynamoDbTtl(ttlOutput *dynamodb.DescribeTimeToLiveOutput) []interface{} {
+	m := map[string]interface{}{
+		"enabled": false,
 	}
-	if len(m) > 0 {
+
+	if ttlOutput == nil || ttlOutput.TimeToLiveDescription == nil {
 		return []interface{}{m}
 	}
 
-	return []interface{}{}
+	ttlDesc := ttlOutput.TimeToLiveDescription
+
+	m["attribute_name"] = aws.StringValue(ttlDesc.AttributeName)
+	m["enabled"] = (aws.StringValue(ttlDesc.TimeToLiveStatus) == dynamodb.TimeToLiveStatusEnabled)
+
+	return []interface{}{m}
 }
 
 func flattenDynamoDbPitr(pitrDesc *dynamodb.DescribeContinuousBackupsOutput) []interface{} {
@@ -4861,6 +4848,34 @@ func expandAppmeshVirtualNodeSpec(vSpec []interface{}) *appmesh.VirtualNodeSpec 
 
 			mListener := vListener.(map[string]interface{})
 
+			if vHealthCheck, ok := mListener["health_check"].([]interface{}); ok && len(vHealthCheck) > 0 && vHealthCheck[0] != nil {
+				mHealthCheck := vHealthCheck[0].(map[string]interface{})
+
+				listener.HealthCheck = &appmesh.HealthCheckPolicy{}
+
+				if vHealthyThreshold, ok := mHealthCheck["healthy_threshold"].(int); ok && vHealthyThreshold > 0 {
+					listener.HealthCheck.HealthyThreshold = aws.Int64(int64(vHealthyThreshold))
+				}
+				if vIntervalMillis, ok := mHealthCheck["interval_millis"].(int); ok && vIntervalMillis > 0 {
+					listener.HealthCheck.IntervalMillis = aws.Int64(int64(vIntervalMillis))
+				}
+				if vPath, ok := mHealthCheck["path"].(string); ok && vPath != "" {
+					listener.HealthCheck.Path = aws.String(vPath)
+				}
+				if vPort, ok := mHealthCheck["port"].(int); ok && vPort > 0 {
+					listener.HealthCheck.Port = aws.Int64(int64(vPort))
+				}
+				if vProtocol, ok := mHealthCheck["protocol"].(string); ok && vProtocol != "" {
+					listener.HealthCheck.Protocol = aws.String(vProtocol)
+				}
+				if vTimeoutMillis, ok := mHealthCheck["timeout_millis"].(int); ok && vTimeoutMillis > 0 {
+					listener.HealthCheck.TimeoutMillis = aws.Int64(int64(vTimeoutMillis))
+				}
+				if vUnhealthyThreshold, ok := mHealthCheck["unhealthy_threshold"].(int); ok && vUnhealthyThreshold > 0 {
+					listener.HealthCheck.UnhealthyThreshold = aws.Int64(int64(vUnhealthyThreshold))
+				}
+			}
+
 			if vPortMapping, ok := mListener["port_mapping"].([]interface{}); ok && len(vPortMapping) > 0 && vPortMapping[0] != nil {
 				mPortMapping := vPortMapping[0].(map[string]interface{})
 
@@ -4915,6 +4930,19 @@ func flattenAppmeshVirtualNodeSpec(spec *appmesh.VirtualNodeSpec) []interface{} 
 
 		for _, listener := range spec.Listeners {
 			mListener := map[string]interface{}{}
+
+			if listener.HealthCheck != nil {
+				mHealthCheck := map[string]interface{}{
+					"healthy_threshold":   int(aws.Int64Value(listener.HealthCheck.HealthyThreshold)),
+					"interval_millis":     int(aws.Int64Value(listener.HealthCheck.IntervalMillis)),
+					"path":                aws.StringValue(listener.HealthCheck.Path),
+					"port":                int(aws.Int64Value(listener.HealthCheck.Port)),
+					"protocol":            aws.StringValue(listener.HealthCheck.Protocol),
+					"timeout_millis":      int(aws.Int64Value(listener.HealthCheck.TimeoutMillis)),
+					"unhealthy_threshold": int(aws.Int64Value(listener.HealthCheck.UnhealthyThreshold)),
+				}
+				mListener["health_check"] = []interface{}{mHealthCheck}
+			}
 
 			if listener.PortMapping != nil {
 				mPortMapping := map[string]interface{}{
@@ -5043,4 +5071,63 @@ func flattenAppmeshRouteSpec(spec *appmesh.RouteSpec) []interface{} {
 	}
 
 	return []interface{}{mSpec}
+}
+
+func expandRoute53ResolverIpAddresses(vIpAddresses *schema.Set) []*route53resolver.IpAddressRequest {
+	ipAddressRequests := []*route53resolver.IpAddressRequest{}
+
+	for _, vIpAddress := range vIpAddresses.List() {
+		ipAddressRequest := &route53resolver.IpAddressRequest{}
+
+		mIpAddress := vIpAddress.(map[string]interface{})
+
+		if vSubnetId, ok := mIpAddress["subnet_id"].(string); ok && vSubnetId != "" {
+			ipAddressRequest.SubnetId = aws.String(vSubnetId)
+		}
+		if vIp, ok := mIpAddress["ip"].(string); ok && vIp != "" {
+			ipAddressRequest.Ip = aws.String(vIp)
+		}
+
+		ipAddressRequests = append(ipAddressRequests, ipAddressRequest)
+	}
+
+	return ipAddressRequests
+}
+
+func flattenRoute53ResolverIpAddresses(ipAddresses []*route53resolver.IpAddressResponse) []interface{} {
+	if ipAddresses == nil {
+		return []interface{}{}
+	}
+
+	vIpAddresses := []interface{}{}
+
+	for _, ipAddress := range ipAddresses {
+		mIpAddress := map[string]interface{}{}
+
+		mIpAddress["subnet_id"] = aws.StringValue(ipAddress.SubnetId)
+		mIpAddress["ip"] = aws.StringValue(ipAddress.Ip)
+		mIpAddress["ip_id"] = aws.StringValue(ipAddress.IpId)
+
+		vIpAddresses = append(vIpAddresses, mIpAddress)
+	}
+
+	return vIpAddresses
+}
+
+func expandRoute53ResolverIpAddressUpdate(vIpAddress interface{}) *route53resolver.IpAddressUpdate {
+	ipAddressUpdate := &route53resolver.IpAddressUpdate{}
+
+	mIpAddress := vIpAddress.(map[string]interface{})
+
+	if vSubnetId, ok := mIpAddress["subnet_id"].(string); ok && vSubnetId != "" {
+		ipAddressUpdate.SubnetId = aws.String(vSubnetId)
+	}
+	if vIp, ok := mIpAddress["ip"].(string); ok && vIp != "" {
+		ipAddressUpdate.Ip = aws.String(vIp)
+	}
+	if vIpId, ok := mIpAddress["ip_id"].(string); ok && vIpId != "" {
+		ipAddressUpdate.IpId = aws.String(vIpId)
+	}
+
+	return ipAddressUpdate
 }

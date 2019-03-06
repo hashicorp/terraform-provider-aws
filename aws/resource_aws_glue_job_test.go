@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -28,10 +27,6 @@ func testSweepGlueJobs(region string) error {
 	}
 	conn := client.(*AWSClient).glueconn
 
-	prefixes := []string{
-		"tf-acc-test-",
-	}
-
 	input := &glue.GetJobsInput{}
 	err = conn.GetJobsPages(input, func(page *glue.GetJobsOutput, lastPage bool) bool {
 		if len(page.Jobs) == 0 {
@@ -39,23 +34,12 @@ func testSweepGlueJobs(region string) error {
 			return false
 		}
 		for _, job := range page.Jobs {
-			skip := true
-			name := job.Name
-			for _, prefix := range prefixes {
-				if strings.HasPrefix(*name, prefix) {
-					skip = false
-					break
-				}
-			}
-			if skip {
-				log.Printf("[INFO] Skipping Glue Job: %s", *name)
-				continue
-			}
+			name := aws.StringValue(job.Name)
 
-			log.Printf("[INFO] Deleting Glue Job: %s", *name)
-			err := deleteGlueJob(conn, *name)
+			log.Printf("[INFO] Deleting Glue Job: %s", name)
+			err := deleteGlueJob(conn, name)
 			if err != nil {
-				log.Printf("[ERROR] Failed to delete Glue Job %s: %s", *name, err)
+				log.Printf("[ERROR] Failed to delete Glue Job %s: %s", name, err)
 			}
 		}
 		return !lastPage

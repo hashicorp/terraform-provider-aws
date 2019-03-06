@@ -150,7 +150,7 @@ resource "aws_iam_role_policy_attachment" "test_attach" {
 }
 
 resource "aws_ssm_activation" "foo" {
-  name               = "test_ssm_activation-%s",
+  name               = "test_ssm_activation-%s"
   description        = "Test"
   iam_role           = "${aws_iam_role.test_role.name}"
   registration_limit = "5"
@@ -185,7 +185,7 @@ resource "aws_iam_role_policy_attachment" "test_attach" {
 }
 
 resource "aws_ssm_activation" "foo" {
-  name               = "test_ssm_activation-%[1]s",
+  name               = "test_ssm_activation-%[1]s"
   description        = "Test"
   expiration_date    = "%[2]s"
   iam_role           = "${aws_iam_role.test_role.name}"

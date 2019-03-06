@@ -1,12 +1,10 @@
 package aws
 
 import (
-	"bytes"
 	"fmt"
 	"reflect"
 	"regexp"
 	"testing"
-	"text/template"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -312,114 +310,115 @@ func testAccAWSBudgetsBudgetConfigDefaults(name string) budgets.Budget {
 }
 
 func testAccAWSBudgetsBudgetConfig_WithAccountID(budgetConfig budgets.Budget, accountID, costFilterKey string) string {
-	t := template.Must(template.New("t1").
-		Parse(`
+	timePeriodStart := budgetConfig.TimePeriod.Start.Format("2006-01-02_15:04")
+	costFilterValue := *budgetConfig.CostFilters[costFilterKey][0]
+
+	return fmt.Sprintf(`
 resource "aws_budgets_budget" "foo" {
-	account_id = "` + accountID + `"
-	name_prefix = "{{.BudgetName}}"
-	budget_type = "{{.BudgetType}}"
- 	limit_amount = "{{.BudgetLimit.Amount}}"
- 	limit_unit = "{{.BudgetLimit.Unit}}"
-	time_period_start = "{{.TimePeriod.Start.Format "2006-01-02_15:04"}}" 
- 	time_unit = "{{.TimeUnit}}"
-	cost_filters {
-		"` + costFilterKey + `" = "` + *budgetConfig.CostFilters[costFilterKey][0] + `"
+	account_id = "%s"
+	name_prefix = "%s"
+	budget_type = "%s"
+	limit_amount = "%s"
+	limit_unit = "%s"
+	time_period_start = "%s" 
+	time_unit = "%s"
+	cost_filters = {
+		"%s" = "%s"
 	}
 }
-`))
-	var doc bytes.Buffer
-	t.Execute(&doc, budgetConfig)
-	return doc.String()
+
+	`, accountID, *budgetConfig.BudgetName, *budgetConfig.BudgetType, *budgetConfig.BudgetLimit.Amount, *budgetConfig.BudgetLimit.Unit, timePeriodStart, *budgetConfig.TimeUnit, costFilterKey, costFilterValue)
 }
 
 func testAccAWSBudgetsBudgetConfig_PrefixDefaults(budgetConfig budgets.Budget, costFilterKey string) string {
-	t := template.Must(template.New("t1").
-		Parse(`
+	timePeriodStart := budgetConfig.TimePeriod.Start.Format("2006-01-02_15:04")
+	costFilterValue := *budgetConfig.CostFilters[costFilterKey][0]
+
+	return fmt.Sprintf(`
 resource "aws_budgets_budget" "foo" {
-	name_prefix = "{{.BudgetName}}"
-	budget_type = "{{.BudgetType}}"
- 	limit_amount = "{{.BudgetLimit.Amount}}"
- 	limit_unit = "{{.BudgetLimit.Unit}}"
-	time_period_start = "{{.TimePeriod.Start.Format "2006-01-02_15:04"}}" 
- 	time_unit = "{{.TimeUnit}}"
-	cost_filters {
-		"` + costFilterKey + `" = "` + *budgetConfig.CostFilters[costFilterKey][0] + `"
+	name_prefix = "%s"
+	budget_type = "%s"
+	limit_amount = "%s"
+	limit_unit = "%s"
+	time_period_start = "%s" 
+	time_unit = "%s"
+	cost_filters = {
+		"%s" = "%s"
 	}
 }
-`))
-	var doc bytes.Buffer
-	t.Execute(&doc, budgetConfig)
-	return doc.String()
+
+	`, *budgetConfig.BudgetName, *budgetConfig.BudgetType, *budgetConfig.BudgetLimit.Amount, *budgetConfig.BudgetLimit.Unit, timePeriodStart, *budgetConfig.TimeUnit, costFilterKey, costFilterValue)
 }
 
 func testAccAWSBudgetsBudgetConfig_Prefix(budgetConfig budgets.Budget, costFilterKey string) string {
-	t := template.Must(template.New("t1").
-		Parse(`
+	timePeriodStart := budgetConfig.TimePeriod.Start.Format("2006-01-02_15:04")
+	timePeriodEnd := budgetConfig.TimePeriod.End.Format("2006-01-02_15:04")
+	costFilterValue := *budgetConfig.CostFilters[costFilterKey][0]
+
+	return fmt.Sprintf(`
 resource "aws_budgets_budget" "foo" {
-	name_prefix = "{{.BudgetName}}"
-	budget_type = "{{.BudgetType}}"
- 	limit_amount = "{{.BudgetLimit.Amount}}"
- 	limit_unit = "{{.BudgetLimit.Unit}}"
-	cost_types = {
-		include_tax = "{{.CostTypes.IncludeTax}}"
-		include_subscription = "{{.CostTypes.IncludeSubscription}}"
-		use_blended = "{{.CostTypes.UseBlended}}"
+	name_prefix = "%s"
+	budget_type = "%s"
+	limit_amount = "%s"
+	limit_unit = "%s"
+	cost_types {
+		include_tax = "%t"
+		include_subscription = "%t"
+		use_blended = "%t"
 	}
-	time_period_start = "{{.TimePeriod.Start.Format "2006-01-02_15:04"}}" 
-	time_period_end = "{{.TimePeriod.End.Format "2006-01-02_15:04"}}"
- 	time_unit = "{{.TimeUnit}}"
-	cost_filters {
-		"` + costFilterKey + `" = "` + *budgetConfig.CostFilters[costFilterKey][0] + `"
+	time_period_start = "%s" 
+	time_period_end = "%s"
+	time_unit = "%s"
+	cost_filters = {
+		"%s" = "%s"
 	}
-}
-`))
-	var doc bytes.Buffer
-	t.Execute(&doc, budgetConfig)
-	return doc.String()
 }
 
+	`, *budgetConfig.BudgetName, *budgetConfig.BudgetType, *budgetConfig.BudgetLimit.Amount, *budgetConfig.BudgetLimit.Unit, *budgetConfig.CostTypes.IncludeTax, *budgetConfig.CostTypes.IncludeSubscription, *budgetConfig.CostTypes.UseBlended, timePeriodStart, timePeriodEnd, *budgetConfig.TimeUnit, costFilterKey, costFilterValue)
+}
 func testAccAWSBudgetsBudgetConfig_BasicDefaults(budgetConfig budgets.Budget, costFilterKey string) string {
-	t := template.Must(template.New("t1").
-		Parse(`
+	timePeriodStart := budgetConfig.TimePeriod.Start.Format("2006-01-02_15:04")
+	costFilterValue := *budgetConfig.CostFilters[costFilterKey][0]
+
+	return fmt.Sprintf(`
 resource "aws_budgets_budget" "foo" {
-	name = "{{.BudgetName}}"
-	budget_type = "{{.BudgetType}}"
- 	limit_amount = "{{.BudgetLimit.Amount}}"
- 	limit_unit = "{{.BudgetLimit.Unit}}"
-	time_period_start = "{{.TimePeriod.Start.Format "2006-01-02_15:04"}}" 
- 	time_unit = "{{.TimeUnit}}"
-	cost_filters {
-		"` + costFilterKey + `" = "` + *budgetConfig.CostFilters[costFilterKey][0] + `"
+	name = "%s"
+	budget_type = "%s"
+	limit_amount = "%s"
+	limit_unit = "%s"
+	time_period_start = "%s" 
+	time_unit = "%s"
+	cost_filters = {
+		"%s" = "%s"
 	}
 }
-`))
-	var doc bytes.Buffer
-	t.Execute(&doc, budgetConfig)
-	return doc.String()
+
+	`, *budgetConfig.BudgetName, *budgetConfig.BudgetType, *budgetConfig.BudgetLimit.Amount, *budgetConfig.BudgetLimit.Unit, timePeriodStart, *budgetConfig.TimeUnit, costFilterKey, costFilterValue)
 }
 
 func testAccAWSBudgetsBudgetConfig_Basic(budgetConfig budgets.Budget, costFilterKey string) string {
-	t := template.Must(template.New("t1").
-		Parse(`
+	timePeriodStart := budgetConfig.TimePeriod.Start.Format("2006-01-02_15:04")
+	timePeriodEnd := budgetConfig.TimePeriod.End.Format("2006-01-02_15:04")
+	costFilterValue := *budgetConfig.CostFilters[costFilterKey][0]
+
+	return fmt.Sprintf(`
 resource "aws_budgets_budget" "foo" {
-	name = "{{.BudgetName}}"
-	budget_type = "{{.BudgetType}}"
- 	limit_amount = "{{.BudgetLimit.Amount}}"
- 	limit_unit = "{{.BudgetLimit.Unit}}"
-	cost_types = {
-		include_tax = "{{.CostTypes.IncludeTax}}"
-		include_subscription = "{{.CostTypes.IncludeSubscription}}"
-		use_blended = "{{.CostTypes.UseBlended}}"
+	name = "%s"
+	budget_type = "%s"
+	limit_amount = "%s"
+	limit_unit = "%s"
+	cost_types {
+		include_tax = "%t"
+		include_subscription = "%t"
+		use_blended = "%t"
 	}
-	time_period_start = "{{.TimePeriod.Start.Format "2006-01-02_15:04"}}" 
-	time_period_end = "{{.TimePeriod.End.Format "2006-01-02_15:04"}}"
- 	time_unit = "{{.TimeUnit}}"
-	cost_filters {
-		"` + costFilterKey + `" = "` + *budgetConfig.CostFilters[costFilterKey][0] + `"
+	time_period_start = "%s" 
+	time_period_end = "%s"
+	time_unit = "%s"
+	cost_filters = {
+		"%s" = "%s"
 	}
 }
-`))
-	var doc bytes.Buffer
-	t.Execute(&doc, budgetConfig)
-	return doc.String()
+
+	`, *budgetConfig.BudgetName, *budgetConfig.BudgetType, *budgetConfig.BudgetLimit.Amount, *budgetConfig.BudgetLimit.Unit, *budgetConfig.CostTypes.IncludeTax, *budgetConfig.CostTypes.IncludeSubscription, *budgetConfig.CostTypes.UseBlended, timePeriodStart, timePeriodEnd, *budgetConfig.TimeUnit, costFilterKey, costFilterValue)
 }

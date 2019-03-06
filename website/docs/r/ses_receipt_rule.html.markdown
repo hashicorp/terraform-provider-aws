@@ -24,10 +24,12 @@ resource "aws_ses_receipt_rule" "store" {
   add_header_action {
     header_name  = "Custom-Header"
     header_value = "Added by SES"
+    position     = 1
   }
 
   s3_action {
     bucket_name = "emails"
+    position    = 2
   }
 }
 ```

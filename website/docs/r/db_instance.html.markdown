@@ -112,7 +112,7 @@ accounts is enabled.
 * `identifier` - (Optional, Forces new resource) The name of the RDS instance,
 if omitted, Terraform will assign a random, unique identifier.
 * `identifier_prefix` - (Optional, Forces new resource) Creates a unique
-identifier beginning with the specified prefix. Conflicts with `identifer`.
+identifier beginning with the specified prefix. Conflicts with `identifier`.
 * `instance_class` - (Required) The instance type of the RDS instance.
 * `iops` - (Optional) The amount of provisioned IOPS. Setting this implies a
 storage_type of "io1".

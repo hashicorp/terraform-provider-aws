@@ -399,7 +399,7 @@ resource "aws_wafregional_ipset" "ipset" {
 
 resource "aws_wafregional_byte_match_set" "set" {
   name = "%s"
-  byte_match_tuple {
+  byte_match_tuples {
     text_transformation   = "NONE"
     target_string         = "badrefer1"
     positional_constraint = "CONTAINS"

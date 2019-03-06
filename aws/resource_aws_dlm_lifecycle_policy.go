@@ -66,6 +66,11 @@ func resourceAwsDlmLifecyclePolicy() *schema.Resource {
 													Type:     schema.TypeInt,
 													Required: true,
 													ValidateFunc: validateIntegerInSlice([]int{
+														2,
+														3,
+														4,
+														6,
+														8,
 														12,
 														24,
 													}),
@@ -250,7 +255,7 @@ func expandDlmPolicyDetails(cfg []interface{}) *dlm.PolicyDetails {
 }
 
 func flattenDlmPolicyDetails(policyDetails *dlm.PolicyDetails) []map[string]interface{} {
-	result := make(map[string]interface{}, 0)
+	result := make(map[string]interface{})
 	result["resource_types"] = flattenStringList(policyDetails.ResourceTypes)
 	result["schedule"] = flattenDlmSchedules(policyDetails.Schedules)
 	result["target_tags"] = flattenDlmTags(policyDetails.TargetTags)

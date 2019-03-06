@@ -302,10 +302,8 @@ func testAccCheckIAMUserPolicyDisappears(out *iam.GetUserPolicyOutput) resource.
 			UserName:   out.UserName,
 		}
 
-		if _, err := iamconn.DeleteUserPolicy(params); err != nil {
-			return err
-		}
-		return nil
+		_, err := iamconn.DeleteUserPolicy(params)
+		return err
 	}
 }
 
