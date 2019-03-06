@@ -6,6 +6,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_elastic_beanstalk_hosted_zone: Add eu-north-1 region support [GH-7829]
 * data-source/aws_redshift_service_account: Add us-gov-east-1 and us-gov-west-1 region mappings [GH-7635]
 * data-source/aws_s3_bucket: Add `bucket_regional_domain_name` attribute [GH-7765]
 * resource/aws_dlm_lifecycle_policy: Add validation support for 2, 3, 4, 6, and 8 in `policy_details` `schedule` `create_rule` `interval` argument (support shorter intervals) [GH-7751]
