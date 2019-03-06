@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/opsworkscm"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 const EngineModel = "Single"
@@ -38,6 +39,9 @@ func resourceAwsOpsworksChef() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Default:  1,
+				// https://docs.aws.amazon.com/opsworks/latest/userguide/opscm-chef-backup.html
+				// I could swear I found this 1-30 limitation elsewhere, but I can't seem to find it now other than there
+				ValidateFunc: validation.IntBetween(1, 30),
 			},
 
 			"disable_automated_backup": {
@@ -53,12 +57,16 @@ func resourceAwsOpsworksChef() *schema.Resource {
 				Type:      schema.TypeString,
 				Required:  true,
 				Sensitive: true,
+				// TODO: should we?
+				// ValidateFunc: validateRsaKey,
 			},
 
 			"chef_delivery_admin_password": {
 				Type:      schema.TypeString,
 				Required:  true,
 				Sensitive: true,
+				// TODO: should we?
+				// ValidateFunc: validatePasswordOk,
 			},
 
 			// TODO:
