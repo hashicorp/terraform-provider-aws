@@ -84,16 +84,19 @@ func resourceAwsOpsworksChef() *schema.Resource {
 			"instance_profile_arn": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 
 			"instance_type": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 
 			"ssh_key_pair": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ForceNew: true,
 			},
 
 			"preferred_backup_window": {
@@ -113,6 +116,7 @@ func resourceAwsOpsworksChef() *schema.Resource {
 			"security_group_ids": {
 				Type:     schema.TypeList, // TODO: should this be a schema.TypeSet instead so order doesn't matter? check ALB and aws_instance resources?
 				Required: true,
+				ForceNew: true,
 			},
 
 			// TODO: document this role creation
@@ -120,6 +124,7 @@ func resourceAwsOpsworksChef() *schema.Resource {
 			"service_role_arn": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 
 			// TODO: huh?
@@ -136,6 +141,7 @@ func resourceAwsOpsworksChef() *schema.Resource {
 			"subnet_ids": {
 				Type:     schema.TypeList, // TODO: schema.TypeSet? check ALB resources?
 				Required: true,
+				ForceNew: true,
 			},
 
 			"endpoint": {
