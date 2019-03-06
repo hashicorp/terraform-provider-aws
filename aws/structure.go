@@ -4583,6 +4583,10 @@ func expandLaunchTemplateSpecification(specs []interface{}) (*autoscaling.Launch
 }
 
 func flattenLaunchTemplateSpecification(lt *autoscaling.LaunchTemplateSpecification) []map[string]interface{} {
+	if lt == nil {
+		return []map[string]interface{}{}
+	}
+
 	attrs := map[string]interface{}{}
 	result := make([]map[string]interface{}, 0)
 
