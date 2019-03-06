@@ -5183,6 +5183,9 @@ type ChannelSummary struct {
 	RoleArn *string `locationName:"roleArn" type:"string"`
 
 	State *string `locationName:"state" type:"string" enum:"ChannelState"`
+
+	// A collection of key-value pairs.
+	Tags map[string]*string `locationName:"tags" type:"map"`
 }
 
 // String returns the string representation
@@ -5258,6 +5261,12 @@ func (s *ChannelSummary) SetRoleArn(v string) *ChannelSummary {
 // SetState sets the State field's value.
 func (s *ChannelSummary) SetState(v string) *ChannelSummary {
 	s.State = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *ChannelSummary) SetTags(v map[string]*string) *ChannelSummary {
+	s.Tags = v
 	return s
 }
 
@@ -9003,12 +9012,19 @@ type HlsGroupSettings struct {
 	// Parameters that control interactions with the CDN.
 	HlsCdnSettings *HlsCdnSettings `locationName:"hlsCdnSettings" type:"structure"`
 
-	// If enabled, writes out I-Frame only playlists in addition to media playlists.
+	// DISABLED: Do not create an I-frame-only manifest, but do create the master
+	// and media manifests (according to the Output Selection field).STANDARD: Create
+	// an I-frame-only manifest for each output that contains video, as well as
+	// the other manifests (according to the Output Selection field). The I-frame
+	// manifest contains a #EXT-X-I-FRAMES-ONLY tag to indicate it is I-frame only,
+	// and one or more #EXT-X-BYTERANGE entries identifying the I-frame position.
+	// For example, #EXT-X-BYTERANGE:160364@1461888"
 	IFrameOnlyPlaylists *string `locationName:"iFrameOnlyPlaylists" type:"string" enum:"IFrameOnlyPlaylistType"`
 
-	// If mode is "live", the number of segments to retain in the manifest (.m3u8)
-	// file. This number must be less than or equal to keepSegments. If mode is
-	// "vod", this parameter has no effect.
+	// Applies only if Mode field is LIVE. Specifies the maximum number of segments
+	// in the media manifest file. After this maximum, older segments are removed
+	// from the media manifest. This number must be less than or equal to the Keep
+	// Segments field.
 	IndexNSegments *int64 `locationName:"indexNSegments" min:"3" type:"integer"`
 
 	// Parameter that control output group behavior on input loss.
@@ -9026,8 +9042,8 @@ type HlsGroupSettings struct {
 	// constantIv value.
 	IvSource *string `locationName:"ivSource" type:"string" enum:"HlsIvSource"`
 
-	// If mode is "live", the number of TS segments to retain in the destination
-	// directory. If mode is "vod", this parameter has no effect.
+	// Applies only if Mode field is LIVE. Specifies the number of media segments
+	// (.ts files) to retain in the destination directory.
 	KeepSegments *int64 `locationName:"keepSegments" min:"1" type:"integer"`
 
 	// The value specifies how the key is represented in the resource identified
@@ -9062,8 +9078,9 @@ type HlsGroupSettings struct {
 	// converting it to a "VOD" type manifest on completion of the stream.
 	Mode *string `locationName:"mode" type:"string" enum:"HlsMode"`
 
-	// Generates the .m3u8 playlist file for this HLS output group. The segmentsOnly
-	// option will output segments without the .m3u8 file.
+	// MANIFESTSANDSEGMENTS: Generates manifests (master manifest, if applicable,
+	// and media manifests) for this output group.SEGMENTSONLY: Does not generate
+	// any manifests for this output group.
 	OutputSelection *string `locationName:"outputSelection" type:"string" enum:"HlsOutputSelection"`
 
 	// Includes or excludes EXT-X-PROGRAM-DATE-TIME tag in .m3u8 manifest files.
@@ -9106,9 +9123,12 @@ type HlsGroupSettings struct {
 	// Provides an extra millisecond delta offset to fine tune the timestamps.
 	TimestampDeltaMilliseconds *int64 `locationName:"timestampDeltaMilliseconds" type:"integer"`
 
-	// When set to "singleFile", emits the program as a single media resource (.ts)
-	// file, and uses #EXT-X-BYTERANGE tags to index segment for playback. Playback
-	// of VOD mode content during event is not guaranteed due to HTTP server caching.
+	// SEGMENTEDFILES: Emit the program as segments - multiple .ts media files.SINGLEFILE:
+	// Applies only if Mode field is VOD. Emit the program as a single .ts media
+	// file. The media manifest includes #EXT-X-BYTERANGE tags to index segments
+	// for playback. A typical use for this value is when sending the output to
+	// AWS Elemental MediaConvert, which can accept only a single media file. Playback
+	// while the channel is running is not guaranteed due to HTTP server caching.
 	TsFileMode *string `locationName:"tsFileMode" type:"string" enum:"HlsTsFileMode"`
 }
 
@@ -12939,6 +12959,88 @@ func (s PassThroughSettings) GoString() string {
 	return s.String()
 }
 
+// Settings for the action to set pause state of a channel.
+type PauseStateScheduleActionSettings struct {
+	_ struct{} `type:"structure"`
+
+	Pipelines []*PipelinePauseStateSettings `locationName:"pipelines" type:"list"`
+}
+
+// String returns the string representation
+func (s PauseStateScheduleActionSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PauseStateScheduleActionSettings) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *PauseStateScheduleActionSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "PauseStateScheduleActionSettings"}
+	if s.Pipelines != nil {
+		for i, v := range s.Pipelines {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Pipelines", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetPipelines sets the Pipelines field's value.
+func (s *PauseStateScheduleActionSettings) SetPipelines(v []*PipelinePauseStateSettings) *PauseStateScheduleActionSettings {
+	s.Pipelines = v
+	return s
+}
+
+// Settings for pausing a pipeline.
+type PipelinePauseStateSettings struct {
+	_ struct{} `type:"structure"`
+
+	// Pipeline ID to pause ("PIPELINE_0" or "PIPELINE_1").
+	//
+	// PipelineId is a required field
+	PipelineId *string `locationName:"pipelineId" type:"string" required:"true" enum:"PipelineId"`
+}
+
+// String returns the string representation
+func (s PipelinePauseStateSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PipelinePauseStateSettings) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *PipelinePauseStateSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "PipelinePauseStateSettings"}
+	if s.PipelineId == nil {
+		invalidParams.Add(request.NewErrParamRequired("PipelineId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetPipelineId sets the PipelineId field's value.
+func (s *PipelinePauseStateSettings) SetPipelineId(v string) *PipelinePauseStateSettings {
+	s.PipelineId = &v
+	return s
+}
+
 type PurchaseOfferingInput struct {
 	_ struct{} `type:"structure"`
 
@@ -13625,25 +13727,28 @@ func (s *ScheduleAction) SetScheduleActionStartSettings(v *ScheduleActionStartSe
 type ScheduleActionSettings struct {
 	_ struct{} `type:"structure"`
 
-	// Settings to emit HLS metadata
+	// Action to insert HLS metadata
 	HlsTimedMetadataSettings *HlsTimedMetadataScheduleActionSettings `locationName:"hlsTimedMetadataSettings" type:"structure"`
 
-	// Settings to switch an input
+	// Action to switch the input
 	InputSwitchSettings *InputSwitchScheduleActionSettings `locationName:"inputSwitchSettings" type:"structure"`
 
-	// Settings for SCTE-35 return_to_network message
+	// Action to pause or unpause one or both channel pipelines
+	PauseStateSettings *PauseStateScheduleActionSettings `locationName:"pauseStateSettings" type:"structure"`
+
+	// Action to insert SCTE-35 return_to_network message
 	Scte35ReturnToNetworkSettings *Scte35ReturnToNetworkScheduleActionSettings `locationName:"scte35ReturnToNetworkSettings" type:"structure"`
 
-	// Settings for SCTE-35 splice_insert message
+	// Action to insert SCTE-35 splice_insert message
 	Scte35SpliceInsertSettings *Scte35SpliceInsertScheduleActionSettings `locationName:"scte35SpliceInsertSettings" type:"structure"`
 
-	// Settings for SCTE-35 time_signal message
+	// Action to insert SCTE-35 time_signal message
 	Scte35TimeSignalSettings *Scte35TimeSignalScheduleActionSettings `locationName:"scte35TimeSignalSettings" type:"structure"`
 
-	// Settings to activate a static image overlay
+	// Action to activate a static image overlay
 	StaticImageActivateSettings *StaticImageActivateScheduleActionSettings `locationName:"staticImageActivateSettings" type:"structure"`
 
-	// Settings to deactivate a static image overlay
+	// Action to deactivate a static image overlay
 	StaticImageDeactivateSettings *StaticImageDeactivateScheduleActionSettings `locationName:"staticImageDeactivateSettings" type:"structure"`
 }
 
@@ -13668,6 +13773,11 @@ func (s *ScheduleActionSettings) Validate() error {
 	if s.InputSwitchSettings != nil {
 		if err := s.InputSwitchSettings.Validate(); err != nil {
 			invalidParams.AddNested("InputSwitchSettings", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.PauseStateSettings != nil {
+		if err := s.PauseStateSettings.Validate(); err != nil {
+			invalidParams.AddNested("PauseStateSettings", err.(request.ErrInvalidParams))
 		}
 	}
 	if s.Scte35ReturnToNetworkSettings != nil {
@@ -13706,6 +13816,12 @@ func (s *ScheduleActionSettings) SetHlsTimedMetadataSettings(v *HlsTimedMetadata
 // SetInputSwitchSettings sets the InputSwitchSettings field's value.
 func (s *ScheduleActionSettings) SetInputSwitchSettings(v *InputSwitchScheduleActionSettings) *ScheduleActionSettings {
 	s.InputSwitchSettings = v
+	return s
+}
+
+// SetPauseStateSettings sets the PauseStateSettings field's value.
+func (s *ScheduleActionSettings) SetPauseStateSettings(v *PauseStateScheduleActionSettings) *ScheduleActionSettings {
+	s.PauseStateSettings = v
 	return s
 }
 
@@ -17572,6 +17688,15 @@ const (
 const (
 	// OfferingTypeNoUpfront is a OfferingType enum value
 	OfferingTypeNoUpfront = "NO_UPFRONT"
+)
+
+// Pipeline ID
+const (
+	// PipelineIdPipeline0 is a PipelineId enum value
+	PipelineIdPipeline0 = "PIPELINE_0"
+
+	// PipelineIdPipeline1 is a PipelineId enum value
+	PipelineIdPipeline1 = "PIPELINE_1"
 )
 
 // Codec, 'MPEG2', 'AVC', 'HEVC', or 'AUDIO'
