@@ -63,8 +63,9 @@ The following arguments are supported:
 * `description` - (Optional) The description of the maintenance window task.
 * `targets` - (Required) The targets (either instances or window target ids). Instances are specified using Key=InstanceIds,Values=instanceid1,instanceid2. Window target ids are specified using Key=WindowTargetIds,Values=window target id1, window target id2.
 * `priority` - (Optional) The priority of the task in the Maintenance Window, the lower the number the higher the priority. Tasks in a Maintenance Window are scheduled in priority order with tasks that have the same priority scheduled in parallel.
-* `logging_info` - (Optional) A structure containing information about an Amazon S3 bucket to write instance-level logs to. Documented below.
-* `task_parameters` - (Optional) A structure containing information about parameters required by the particular `task_arn`. Documented below.
+* `logging_info` - (Optional,**Deprecated**) A structure containing information about an Amazon S3 bucket to write instance-level logs to. Documented below.
+* `task_parameters` - (Optional,**Deprecated**) A structure containing information about parameters required by the particular `task_arn`. Documented below.
+* `task_invocation_parameters` - (Optional) The parameters for task execution.
 
 `logging_info` supports the following:
 
@@ -76,6 +77,54 @@ The following arguments are supported:
 
 * `name` - (Required)
 * `values` - (Required)
+
+`task_invocation_parameters` supports the following:
+
+This argument is conflict with `task_parameters` and `logging_info`.
+
+* `automation_parameters` - (Optional) The parameters for an AUTOMATION task type. Documented below.
+* `lambda_parameters` - (Optional) The parameters for a LAMBDA task type. Documented below.
+* `run_command_parameters` - (Optional) The parameters for a RUN_COMMAND task type. Documented below.
+* `step_functions_parameters` - (Optional)
+
+`automation_parameters` supports the following:
+
+* `document_version` - (Optional) The version of an Automation document to use during task execution.
+* `parameters` - (Optional) The parameters for the RUN_COMMAND task execution. Documented below.
+
+`lambda_parameters` supports the following:
+
+* `client_context` - (Optional) Pass client-specific information to the Lambda function that you are invoking.
+* `payload` - (Optional) JSON to provide to your Lambda function as input.
+* `qualifier` - (Optional) Specify a Lambda function version or alias name.
+
+`run_command_parameters` supports the following:
+
+* `comment` - (Optional) Information about the command(s) to execute.
+* `document_hash` - (Optional) The SHA-256 or SHA-1 hash created by the system when the document was created. SHA-1 hashes have been deprecated.
+* `document_hash_type` - (Optional) SHA-256 or SHA-1. SHA-1 hashes have been deprecated.
+* `notification_config` - (Optional) Configurations for sending notifications about command status changes on a per-instance basis. Documented below.
+* `output_s3_bucket` - (Optional) The name of the Amazon S3 bucket.
+* `output_s3_key_prefix` - (Optional) The Amazon S3 bucket subfolder.
+* `parameters` - (Optional) The parameters for the RUN_COMMAND task execution. Documented below.
+* `service_role_arn` - (Optional) The IAM service role to assume during task execution.
+* `timeout_seconds` - (Optional) If this time is reached and the command has not already started executing, it doesn't run.
+
+`step_functions_parameters` supports the following:
+
+* `input` - (Optional) The inputs for the STEP_FUNCTION task.
+* `name` - (Optional) The name of the STEP_FUNCTION task.
+
+`notification_config` supports the following:
+
+* `notification_arn` - (Optional) An Amazon Resource Name (ARN) for a Simple Notification Service (SNS) topic. Run Command pushes notifications about command status changes to this topic.
+* `notification_events` - (Optional) The different events for which you can receive notifications.
+* `notification_type` - (Optional) Command: Receive notification when the status of a command changes. Invocation: For commands sent to multiple instances, receive notification on a per-instance basis when the status of a command changes.
+
+`parameters` supports the following:
+
+* `name` - (Required) The parameter name.
+* `values` - (Required) The array of strings.
 
 ## Attributes Reference
 
