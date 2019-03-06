@@ -229,7 +229,7 @@ func resourceAwsOpsworksChefCreate(d *schema.ResourceData, meta interface{}) err
 		PreferredBackupWindow:      aws.String(d.Get("preferred_backup_window").(string)),
 		PreferredMaintenanceWindow: aws.String(d.Get("preferred_maintenance_window").(string)),
 		SecurityGroupIds:           aws.StringSlice(d.Get("security_group_ids").([]string)), // TODO: SecurityGroupIds, set?
-		ServerName:                 aws.String(d.Id().(string)),
+		ServerName:                 aws.String(d.Id()),
 		ServiceRoleArn:             aws.String(d.Get("service_role_arn").(string)),
 		SubnetIds:                  aws.StringSlice(d.Get("subnet_ids").([]string)), // TODO: set?
 	}
