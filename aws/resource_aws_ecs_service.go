@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"log"
+	"math"
 	"strings"
 	"time"
 
@@ -62,7 +63,7 @@ func resourceAwsEcsService() *schema.Resource {
 			"health_check_grace_period_seconds": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				ValidateFunc: validation.IntBetween(0, 7200),
+				ValidateFunc: validation.IntBetween(0, math.MaxInt32),
 			},
 
 			"launch_type": {
