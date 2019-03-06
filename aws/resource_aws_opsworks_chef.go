@@ -134,6 +134,8 @@ func resourceAwsOpsworksChef() *schema.Resource {
 				Type:     schema.TypeList, // TODO: should this be a schema.TypeSet instead so order doesn't matter? check ALB and aws_instance resources?
 				Required: true,
 				ForceNew: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				MinItems: 1,
 			},
 
 			// TODO: document this role creation
@@ -160,6 +162,8 @@ func resourceAwsOpsworksChef() *schema.Resource {
 				Type:     schema.TypeList, // TODO: schema.TypeSet? check ALB resources?
 				Required: true,
 				ForceNew: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				MinItems: 1,
 			},
 
 			"endpoint": {
