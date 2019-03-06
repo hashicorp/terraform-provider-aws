@@ -15,6 +15,31 @@ Specifically, we have provided checklists below for each type of issue and pull
 request that can happen on the project. These checklists represent everything
 we need to be able to review and respond quickly.
 
+<!-- TOC depthFrom:2 -->
+
+- [HashiCorp vs. Community Providers](#hashicorp-vs-community-providers)
+- [Issues](#issues)
+    - [Issue Reporting Checklists](#issue-reporting-checklists)
+        - [Bug Reports](#bug-reports)
+        - [Feature Requests](#feature-requests)
+        - [Questions](#questions)
+    - [Issue Lifecycle](#issue-lifecycle)
+- [Pull Requests](#pull-requests)
+    - [Pull Request Lifecycle](#pull-request-lifecycle)
+    - [Checklists for Contribution](#checklists-for-contribution)
+        - [Documentation Update](#documentation-update)
+        - [Enhancement/Bugfix to a Resource](#enhancementbugfix-to-a-resource)
+        - [New Resource](#new-resource)
+        - [New Provider](#new-provider)
+        - [New Region](#new-region)
+        - [Terraform Schema and Code Idiosyncracies](#terraform-schema-and-code-idiosyncracies)
+    - [Writing Acceptance Tests](#writing-acceptance-tests)
+        - [Acceptance Tests Often Cost Money to Run](#acceptance-tests-often-cost-money-to-run)
+        - [Running an Acceptance Test](#running-an-acceptance-test)
+        - [Writing an Acceptance Test](#writing-an-acceptance-test)
+
+<!-- /TOC -->
+
 ## HashiCorp vs. Community Providers
 
 We separate providers out into what we call "HashiCorp Providers" and
@@ -212,6 +237,13 @@ existing resources, but you still get to implement something completely new.
    covering their behavior. See [Writing Acceptance
    Tests](#writing-acceptance-tests) below for a detailed guide on how to
    approach these.
+ - [ ] __Naming__: Resources should be named `aws_<service>_<name>` where 
+   `service` is the AWS short service name and `name` is a short, preferably
+   single word, description of the resource. Use `_` as a separator.
+   resources. We therefore encourage you to only submit **1 resource at a time**.
+ - [ ] __Arguments_and_Attributes__: The HCL for arguments and attributes should
+   mimic the types and structs presented by the AWS API. API arguments should be
+   converted from `CamelCase` to `camel_case`.
  - [ ] __Documentation__: Each resource gets a page in the Terraform
    documentation. The [Terraform website][website] source is in this
    repo and includes instructions for getting a local copy of the site up and
@@ -264,6 +296,7 @@ manually sourced values from documentation.
  - [ ] Check [CloudTrail Supported Regions docs](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-supported-regions.html) and add AWS Account ID if available to `aws/data_source_aws_cloudtrail_service_account.go`
  - [ ] Check [Elastic Load Balancing Access Logs docs](https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/enable-access-logs.html#attach-bucket-policy) and add Elastic Load Balancing Account ID if available to `aws/data_source_aws_elb_service_account.go`
  - [ ] Check [Redshift Database Audit Logging docs](https://docs.aws.amazon.com/redshift/latest/mgmt/db-auditing.html) and add AWS Account ID if available to `aws/data_source_aws_redshift_service_account.go`
+ - [ ] Check [Regions and Endpoints Elastic Beanstalk](https://docs.aws.amazon.com/general/latest/gr/rande.html#elasticbeanstalk_region) and add Route53 Hosted Zone ID if available to `aws/data_source_aws_elastic_beanstalk_hosted_zone.go`]
 
 #### Terraform Schema and Code Idiosyncracies
 
@@ -279,17 +312,17 @@ and style
  - [ ] __`Computed`__: The `Computed` attribute is generally used in isolation for
    any IDs or anything not defined in the config and returned by the API.
  - [ ] __`Computed` with `Optional`__: The `Computed` attribute is generally used
-   in conjunction with `Optional` when the API automatically sets unpredictable 
-   default value or when the value is generally not static and depends on other 
+   in conjunction with `Optional` when the API automatically sets unpredictable
+   default value or when the value is generally not static and depends on other
    attributes.
- - [ ] __Spelling__: When referencing reosources in the AWS API, use spelling which 
+ - [ ] __Spelling__: When referencing resources in the AWS API, use spelling which
    matches that of official AWS documentation. In all other cases, use American
    spelling for variables, functions, and constants.
  - [ ] __Removed Resources__:  If a resource is removed from AWS outside of
    Terraform (e.g. via different tool, API or web UI), make sure to catch this case.
    Print a `[WARN]` log message, and use `d.SetId("")` to remove the resource from
    state inside `Read()`.
- 
+
 
 ### Writing Acceptance Tests
 
@@ -363,7 +396,7 @@ ok  	github.com/terraform-providers/terraform-provider-aws/aws	55.619s
 
 Terraform has a framework for writing acceptance tests which minimises the
 amount of boilerplate code necessary to use common testing patterns. The entry
-point to the framework is the `resource.Test()` function.
+point to the framework is the `resource.ParallelTest()` function.
 
 Tests are divided into `TestStep`s. Each `TestStep` proceeds by applying some
 Terraform configuration using the provider under test, and then verifying that
@@ -377,14 +410,14 @@ to a single resource. Most tests follow a similar structure.
    to running acceptance tests. This is common to all tests exercising a single
    provider.
 
-Each `TestStep` is defined in the call to `resource.Test()`. Most assertion
+Each `TestStep` is defined in the call to `resource.ParallelTest()`. Most assertion
 functions are defined out of band with the tests. This keeps the tests
 readable, and allows reuse of assertion functions across different tests of the
 same type of resource. The definition of a complete test looks like this:
 
 ```go
 func TestAccAzureRMPublicIpStatic_update(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testCheckAzureRMPublicIpDestroy,

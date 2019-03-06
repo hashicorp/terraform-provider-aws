@@ -12,7 +12,7 @@ import (
 )
 
 func TestAccAWSAthenaNamedQuery_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAthenaNamedQueryDestroy,
@@ -22,6 +22,27 @@ func TestAccAWSAthenaNamedQuery_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAthenaNamedQueryExists("aws_athena_named_query.foo"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSAthenaNamedQuery_import(t *testing.T) {
+	resourceName := "aws_athena_named_query.foo"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAthenaNamedQueryDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAthenaNamedQueryConfig(acctest.RandInt(), acctest.RandString(5)),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -54,12 +75,19 @@ func testAccCheckAWSAthenaNamedQueryDestroy(s *terraform.State) error {
 
 func testAccCheckAWSAthenaNamedQueryExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		_, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		return nil
+		conn := testAccProvider.Meta().(*AWSClient).athenaconn
+
+		input := &athena.GetNamedQueryInput{
+			NamedQueryId: aws.String(rs.Primary.ID),
+		}
+
+		_, err := conn.GetNamedQuery(input)
+		return err
 	}
 }
 

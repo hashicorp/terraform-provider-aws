@@ -4,23 +4,32 @@ package servicediscovery
 
 const (
 
+	// ErrCodeCustomHealthNotFound for service response error code
+	// "CustomHealthNotFound".
+	//
+	// The health check for the instance that is specified by ServiceId and InstanceId
+	// is not a custom health check.
+	ErrCodeCustomHealthNotFound = "CustomHealthNotFound"
+
 	// ErrCodeDuplicateRequest for service response error code
 	// "DuplicateRequest".
 	//
-	// This request tried to create an object that already exists.
+	// The operation is already in progress.
 	ErrCodeDuplicateRequest = "DuplicateRequest"
 
 	// ErrCodeInstanceNotFound for service response error code
 	// "InstanceNotFound".
 	//
-	// No instance exists with the specified ID.
+	// No instance exists with the specified ID, or the instance was recently registered,
+	// and information about the instance hasn't propagated yet.
 	ErrCodeInstanceNotFound = "InstanceNotFound"
 
 	// ErrCodeInvalidInput for service response error code
 	// "InvalidInput".
 	//
-	// One or more specified values aren't valid. For example, when you're creating
-	// a namespace, the value of Name might not be a valid DNS name.
+	// One or more specified values aren't valid. For example, a required value
+	// might be missing, a numeric value might be outside the allowed range, or
+	// a string value might exceed length constraints.
 	ErrCodeInvalidInput = "InvalidInput"
 
 	// ErrCodeNamespaceAlreadyExists for service response error code

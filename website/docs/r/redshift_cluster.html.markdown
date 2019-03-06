@@ -2,6 +2,8 @@
 layout: "aws"
 page_title: "AWS: aws_redshift_cluster"
 sidebar_current: "docs-aws-resource-redshift-cluster"
+description: |-
+  Provides a Redshift Cluster resource.
 ---
 
 # aws_redshift_cluster
@@ -76,7 +78,7 @@ string.
 #### `logging`
 
 * `enable` - (Required) Enables logging information such as queries and connection attempts, for the specified Amazon Redshift cluster.
-* `bucket_name` - (Optional, required when `enable_logging` is `true`) The name of an existing S3 bucket where the log files are to be stored. Must be in the same region as the cluster and the cluster must have read bucket and put object permissions.
+* `bucket_name` - (Optional, required when `enable` is `true`) The name of an existing S3 bucket where the log files are to be stored. Must be in the same region as the cluster and the cluster must have read bucket and put object permissions.
 For more information on the permissions required for the bucket, please read the AWS [documentation](http://docs.aws.amazon.com/redshift/latest/mgmt/db-auditing.html#db-auditing-enable-logging)
 * `s3_key_prefix` - (Optional) The prefix applied to the log file names.
 
@@ -88,7 +90,7 @@ For more information on the permissions required for the bucket, please read the
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The Redshift Cluster ID.
 * `cluster_identifier` - The Cluster Identifier
@@ -102,6 +104,7 @@ The following attributes are exported:
 * `encrypted` - Whether the data in the cluster is encrypted
 * `cluster_security_groups` - The security groups associated with the cluster
 * `vpc_security_group_ids` - The VPC security group Ids associated with the cluster
+* `dns_name` - The DNS name of the cluster
 * `port` - The Port the cluster responds on
 * `cluster_version` - The version of Redshift engine software
 * `cluster_parameter_group_name` - The name of the parameter group to be associated with this cluster

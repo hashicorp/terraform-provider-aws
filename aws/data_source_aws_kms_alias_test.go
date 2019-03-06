@@ -12,21 +12,21 @@ import (
 )
 
 func TestAccDataSourceAwsKmsAlias_AwsService(t *testing.T) {
-	name := "alias/aws/redshift"
+	name := "alias/aws/s3"
 	resourceName := "data.aws_kms_alias.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDataSourceAwsKmsAlias_name(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsKmsAliasCheckExists(resourceName),
 					resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:kms:[^:]+:[^:]+:%s$", name))),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
-					resource.TestCheckNoResourceAttr(resourceName, "target_key_arn"),
-					resource.TestCheckNoResourceAttr(resourceName, "target_key_id"),
+					resource.TestMatchResourceAttr(resourceName, "target_key_arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:kms:[^:]+:[^:]+:key/[a-z0-9]{8}-([a-z0-9]{4}-){3}[a-z0-9]{12}$"))),
+					resource.TestMatchResourceAttr(resourceName, "target_key_id", regexp.MustCompile(fmt.Sprintf("^[a-z0-9]{8}-([a-z0-9]{4}-){3}[a-z0-9]{12}$"))),
 				),
 			},
 		},
@@ -38,11 +38,11 @@ func TestAccDataSourceAwsKmsAlias_CMK(t *testing.T) {
 	aliasResourceName := "aws_kms_alias.test"
 	datasourceAliasResourceName := "data.aws_kms_alias.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDataSourceAwsKmsAlias_CMK(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsKmsAliasCheckExists(datasourceAliasResourceName),

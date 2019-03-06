@@ -18,6 +18,7 @@ func resourceAwsVolumeAttachment() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsVolumeAttachmentCreate,
 		Read:   resourceAwsVolumeAttachmentRead,
+		Update: resourceAwsVolumeAttachmentUpdate,
 		Delete: resourceAwsVolumeAttachmentDelete,
 
 		Schema: map[string]*schema.Schema{
@@ -42,12 +43,10 @@ func resourceAwsVolumeAttachment() *schema.Resource {
 			"force_detach": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
 			},
 			"skip_destroy": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
 			},
 		},
 	}
@@ -64,11 +63,11 @@ func resourceAwsVolumeAttachmentCreate(d *schema.ResourceData, meta interface{})
 	request := &ec2.DescribeVolumesInput{
 		VolumeIds: []*string{aws.String(vID)},
 		Filters: []*ec2.Filter{
-			&ec2.Filter{
+			{
 				Name:   aws.String("attachment.instance-id"),
 				Values: []*string{aws.String(iID)},
 			},
-			&ec2.Filter{
+			{
 				Name:   aws.String("attachment.device"),
 				Values: []*string{aws.String(name)},
 			},
@@ -83,7 +82,7 @@ func resourceAwsVolumeAttachmentCreate(d *schema.ResourceData, meta interface{})
 		stateConf := &resource.StateChangeConf{
 			Pending:    []string{"pending", "stopping"},
 			Target:     []string{"running", "stopped"},
-			Refresh:    InstanceStateRefreshFunc(conn, iID, "terminated"),
+			Refresh:    InstanceStateRefreshFunc(conn, iID, []string{"terminated"}),
 			Timeout:    10 * time.Minute,
 			Delay:      10 * time.Second,
 			MinTimeout: 3 * time.Second,
@@ -107,7 +106,7 @@ func resourceAwsVolumeAttachmentCreate(d *schema.ResourceData, meta interface{})
 		_, err := conn.AttachVolume(opts)
 		if err != nil {
 			if awsErr, ok := err.(awserr.Error); ok {
-				return fmt.Errorf("[WARN] Error attaching volume (%s) to instance (%s), message: \"%s\", code: \"%s\"",
+				return fmt.Errorf("Error attaching volume (%s) to instance (%s), message: \"%s\", code: \"%s\"",
 					vID, iID, awsErr.Message(), awsErr.Code())
 			}
 			return err
@@ -139,11 +138,11 @@ func volumeAttachmentStateRefreshFunc(conn *ec2.EC2, name, volumeID, instanceID 
 		request := &ec2.DescribeVolumesInput{
 			VolumeIds: []*string{aws.String(volumeID)},
 			Filters: []*ec2.Filter{
-				&ec2.Filter{
+				{
 					Name:   aws.String("attachment.device"),
 					Values: []*string{aws.String(name)},
 				},
-				&ec2.Filter{
+				{
 					Name:   aws.String("attachment.instance-id"),
 					Values: []*string{aws.String(instanceID)},
 				},
@@ -177,11 +176,11 @@ func resourceAwsVolumeAttachmentRead(d *schema.ResourceData, meta interface{}) e
 	request := &ec2.DescribeVolumesInput{
 		VolumeIds: []*string{aws.String(d.Get("volume_id").(string))},
 		Filters: []*ec2.Filter{
-			&ec2.Filter{
+			{
 				Name:   aws.String("attachment.device"),
 				Values: []*string{aws.String(d.Get("device_name").(string))},
 			},
-			&ec2.Filter{
+			{
 				Name:   aws.String("attachment.instance-id"),
 				Values: []*string{aws.String(d.Get("instance_id").(string))},
 			},
@@ -205,12 +204,15 @@ func resourceAwsVolumeAttachmentRead(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
+func resourceAwsVolumeAttachmentUpdate(d *schema.ResourceData, meta interface{}) error {
+	log.Printf("[DEBUG] Attaching Volume (%s) is updating which does nothing but updates a few params in state", d.Id())
+	return nil
+}
+
 func resourceAwsVolumeAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
 	if _, ok := d.GetOk("skip_destroy"); ok {
-		log.Printf("[INFO] Found skip_destroy to be true, removing attachment %q from state", d.Id())
-		d.SetId("")
 		return nil
 	}
 
@@ -246,7 +248,7 @@ func resourceAwsVolumeAttachmentDelete(d *schema.ResourceData, meta interface{})
 			"Error waiting for Volume (%s) to detach from Instance: %s",
 			vID, iID)
 	}
-	d.SetId("")
+
 	return nil
 }
 

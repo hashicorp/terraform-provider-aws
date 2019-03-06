@@ -17,19 +17,19 @@ resource "aws_api_gateway_rest_api" "test" {
   name = "MyDemoAPI"
 }
 
-...
+# ...
 
 resource "aws_api_gateway_usage_plan" "myusageplan" {
   name = "my_usage_plan"
+
+  api_stages {
+    api_id = "${aws_api_gateway_rest_api.test.id}"
+    stage  = "${aws_api_gateway_deployment.foo.stage_name}"
+  }
 }
 
 resource "aws_api_gateway_api_key" "mykey" {
   name = "my_key"
-
-  stage_key {
-    rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-    stage_name  = "${aws_api_gateway_deployment.foo.stage_name}"
-  }
 }
 
 resource "aws_api_gateway_usage_plan_key" "main" {
@@ -49,7 +49,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The Id of a usage plan key.
 * `key_id` - The identifier of the API gateway key resource.

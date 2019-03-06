@@ -9,14 +9,16 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/aws/aws-sdk-go/aws/request"
+	"github.com/aws/aws-sdk-go/private/protocol"
+	"github.com/aws/aws-sdk-go/private/protocol/jsonrpc"
 )
 
 const opAcceptPortfolioShare = "AcceptPortfolioShare"
 
 // AcceptPortfolioShareRequest generates a "aws/request.Request" representing the
 // client's request for the AcceptPortfolioShare operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -50,6 +52,7 @@ func (c *ServiceCatalog) AcceptPortfolioShareRequest(input *AcceptPortfolioShare
 
 	output = &AcceptPortfolioShareOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -102,8 +105,8 @@ const opAssociatePrincipalWithPortfolio = "AssociatePrincipalWithPortfolio"
 
 // AssociatePrincipalWithPortfolioRequest generates a "aws/request.Request" representing the
 // client's request for the AssociatePrincipalWithPortfolio operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -137,6 +140,7 @@ func (c *ServiceCatalog) AssociatePrincipalWithPortfolioRequest(input *Associate
 
 	output = &AssociatePrincipalWithPortfolioOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -189,8 +193,8 @@ const opAssociateProductWithPortfolio = "AssociateProductWithPortfolio"
 
 // AssociateProductWithPortfolioRequest generates a "aws/request.Request" representing the
 // client's request for the AssociateProductWithPortfolio operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -224,6 +228,7 @@ func (c *ServiceCatalog) AssociateProductWithPortfolioRequest(input *AssociatePr
 
 	output = &AssociateProductWithPortfolioOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -272,12 +277,100 @@ func (c *ServiceCatalog) AssociateProductWithPortfolioWithContext(ctx aws.Contex
 	return out, req.Send()
 }
 
+const opAssociateServiceActionWithProvisioningArtifact = "AssociateServiceActionWithProvisioningArtifact"
+
+// AssociateServiceActionWithProvisioningArtifactRequest generates a "aws/request.Request" representing the
+// client's request for the AssociateServiceActionWithProvisioningArtifact operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See AssociateServiceActionWithProvisioningArtifact for more information on using the AssociateServiceActionWithProvisioningArtifact
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the AssociateServiceActionWithProvisioningArtifactRequest method.
+//    req, resp := client.AssociateServiceActionWithProvisioningArtifactRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/AssociateServiceActionWithProvisioningArtifact
+func (c *ServiceCatalog) AssociateServiceActionWithProvisioningArtifactRequest(input *AssociateServiceActionWithProvisioningArtifactInput) (req *request.Request, output *AssociateServiceActionWithProvisioningArtifactOutput) {
+	op := &request.Operation{
+		Name:       opAssociateServiceActionWithProvisioningArtifact,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &AssociateServiceActionWithProvisioningArtifactInput{}
+	}
+
+	output = &AssociateServiceActionWithProvisioningArtifactOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// AssociateServiceActionWithProvisioningArtifact API operation for AWS Service Catalog.
+//
+// Associates a self-service action with a provisioning artifact.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Service Catalog's
+// API operation AssociateServiceActionWithProvisioningArtifact for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The specified resource was not found.
+//
+//   * ErrCodeDuplicateResourceException "DuplicateResourceException"
+//   The specified resource is a duplicate.
+//
+//   * ErrCodeLimitExceededException "LimitExceededException"
+//   The current limits of the service would have been exceeded by this operation.
+//   Decrease your resource use or increase your service limits and retry the
+//   operation.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/AssociateServiceActionWithProvisioningArtifact
+func (c *ServiceCatalog) AssociateServiceActionWithProvisioningArtifact(input *AssociateServiceActionWithProvisioningArtifactInput) (*AssociateServiceActionWithProvisioningArtifactOutput, error) {
+	req, out := c.AssociateServiceActionWithProvisioningArtifactRequest(input)
+	return out, req.Send()
+}
+
+// AssociateServiceActionWithProvisioningArtifactWithContext is the same as AssociateServiceActionWithProvisioningArtifact with the addition of
+// the ability to pass a context and additional request options.
+//
+// See AssociateServiceActionWithProvisioningArtifact for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ServiceCatalog) AssociateServiceActionWithProvisioningArtifactWithContext(ctx aws.Context, input *AssociateServiceActionWithProvisioningArtifactInput, opts ...request.Option) (*AssociateServiceActionWithProvisioningArtifactOutput, error) {
+	req, out := c.AssociateServiceActionWithProvisioningArtifactRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opAssociateTagOptionWithResource = "AssociateTagOptionWithResource"
 
 // AssociateTagOptionWithResourceRequest generates a "aws/request.Request" representing the
 // client's request for the AssociateTagOptionWithResource operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -311,6 +404,7 @@ func (c *ServiceCatalog) AssociateTagOptionWithResourceRequest(input *AssociateT
 
 	output = &AssociateTagOptionWithResourceOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -372,12 +466,171 @@ func (c *ServiceCatalog) AssociateTagOptionWithResourceWithContext(ctx aws.Conte
 	return out, req.Send()
 }
 
+const opBatchAssociateServiceActionWithProvisioningArtifact = "BatchAssociateServiceActionWithProvisioningArtifact"
+
+// BatchAssociateServiceActionWithProvisioningArtifactRequest generates a "aws/request.Request" representing the
+// client's request for the BatchAssociateServiceActionWithProvisioningArtifact operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See BatchAssociateServiceActionWithProvisioningArtifact for more information on using the BatchAssociateServiceActionWithProvisioningArtifact
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the BatchAssociateServiceActionWithProvisioningArtifactRequest method.
+//    req, resp := client.BatchAssociateServiceActionWithProvisioningArtifactRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/BatchAssociateServiceActionWithProvisioningArtifact
+func (c *ServiceCatalog) BatchAssociateServiceActionWithProvisioningArtifactRequest(input *BatchAssociateServiceActionWithProvisioningArtifactInput) (req *request.Request, output *BatchAssociateServiceActionWithProvisioningArtifactOutput) {
+	op := &request.Operation{
+		Name:       opBatchAssociateServiceActionWithProvisioningArtifact,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &BatchAssociateServiceActionWithProvisioningArtifactInput{}
+	}
+
+	output = &BatchAssociateServiceActionWithProvisioningArtifactOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// BatchAssociateServiceActionWithProvisioningArtifact API operation for AWS Service Catalog.
+//
+// Associates multiple self-service actions with provisioning artifacts.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Service Catalog's
+// API operation BatchAssociateServiceActionWithProvisioningArtifact for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidParametersException "InvalidParametersException"
+//   One or more parameters provided to the operation are not valid.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/BatchAssociateServiceActionWithProvisioningArtifact
+func (c *ServiceCatalog) BatchAssociateServiceActionWithProvisioningArtifact(input *BatchAssociateServiceActionWithProvisioningArtifactInput) (*BatchAssociateServiceActionWithProvisioningArtifactOutput, error) {
+	req, out := c.BatchAssociateServiceActionWithProvisioningArtifactRequest(input)
+	return out, req.Send()
+}
+
+// BatchAssociateServiceActionWithProvisioningArtifactWithContext is the same as BatchAssociateServiceActionWithProvisioningArtifact with the addition of
+// the ability to pass a context and additional request options.
+//
+// See BatchAssociateServiceActionWithProvisioningArtifact for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ServiceCatalog) BatchAssociateServiceActionWithProvisioningArtifactWithContext(ctx aws.Context, input *BatchAssociateServiceActionWithProvisioningArtifactInput, opts ...request.Option) (*BatchAssociateServiceActionWithProvisioningArtifactOutput, error) {
+	req, out := c.BatchAssociateServiceActionWithProvisioningArtifactRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opBatchDisassociateServiceActionFromProvisioningArtifact = "BatchDisassociateServiceActionFromProvisioningArtifact"
+
+// BatchDisassociateServiceActionFromProvisioningArtifactRequest generates a "aws/request.Request" representing the
+// client's request for the BatchDisassociateServiceActionFromProvisioningArtifact operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See BatchDisassociateServiceActionFromProvisioningArtifact for more information on using the BatchDisassociateServiceActionFromProvisioningArtifact
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the BatchDisassociateServiceActionFromProvisioningArtifactRequest method.
+//    req, resp := client.BatchDisassociateServiceActionFromProvisioningArtifactRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/BatchDisassociateServiceActionFromProvisioningArtifact
+func (c *ServiceCatalog) BatchDisassociateServiceActionFromProvisioningArtifactRequest(input *BatchDisassociateServiceActionFromProvisioningArtifactInput) (req *request.Request, output *BatchDisassociateServiceActionFromProvisioningArtifactOutput) {
+	op := &request.Operation{
+		Name:       opBatchDisassociateServiceActionFromProvisioningArtifact,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &BatchDisassociateServiceActionFromProvisioningArtifactInput{}
+	}
+
+	output = &BatchDisassociateServiceActionFromProvisioningArtifactOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// BatchDisassociateServiceActionFromProvisioningArtifact API operation for AWS Service Catalog.
+//
+// Disassociates a batch of self-service actions from the specified provisioning
+// artifact.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Service Catalog's
+// API operation BatchDisassociateServiceActionFromProvisioningArtifact for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidParametersException "InvalidParametersException"
+//   One or more parameters provided to the operation are not valid.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/BatchDisassociateServiceActionFromProvisioningArtifact
+func (c *ServiceCatalog) BatchDisassociateServiceActionFromProvisioningArtifact(input *BatchDisassociateServiceActionFromProvisioningArtifactInput) (*BatchDisassociateServiceActionFromProvisioningArtifactOutput, error) {
+	req, out := c.BatchDisassociateServiceActionFromProvisioningArtifactRequest(input)
+	return out, req.Send()
+}
+
+// BatchDisassociateServiceActionFromProvisioningArtifactWithContext is the same as BatchDisassociateServiceActionFromProvisioningArtifact with the addition of
+// the ability to pass a context and additional request options.
+//
+// See BatchDisassociateServiceActionFromProvisioningArtifact for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ServiceCatalog) BatchDisassociateServiceActionFromProvisioningArtifactWithContext(ctx aws.Context, input *BatchDisassociateServiceActionFromProvisioningArtifactInput, opts ...request.Option) (*BatchDisassociateServiceActionFromProvisioningArtifactOutput, error) {
+	req, out := c.BatchDisassociateServiceActionFromProvisioningArtifactRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opCopyProduct = "CopyProduct"
 
 // CopyProductRequest generates a "aws/request.Request" representing the
 // client's request for the CopyProduct operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -465,8 +718,8 @@ const opCreateConstraint = "CreateConstraint"
 
 // CreateConstraintRequest generates a "aws/request.Request" representing the
 // client's request for the CreateConstraint operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -555,8 +808,8 @@ const opCreatePortfolio = "CreatePortfolio"
 
 // CreatePortfolioRequest generates a "aws/request.Request" representing the
 // client's request for the CreatePortfolio operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -644,8 +897,8 @@ const opCreatePortfolioShare = "CreatePortfolioShare"
 
 // CreatePortfolioShareRequest generates a "aws/request.Request" representing the
 // client's request for the CreatePortfolioShare operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -684,7 +937,10 @@ func (c *ServiceCatalog) CreatePortfolioShareRequest(input *CreatePortfolioShare
 
 // CreatePortfolioShare API operation for AWS Service Catalog.
 //
-// Shares the specified portfolio with the specified account.
+// Shares the specified portfolio with the specified account or organization
+// node. Shares to an organization node can only be created by the master account
+// of an Organization. AWSOrganizationsAccess must be enabled in order to create
+// a portfolio share to an organization node.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -704,6 +960,9 @@ func (c *ServiceCatalog) CreatePortfolioShareRequest(input *CreatePortfolioShare
 //
 //   * ErrCodeInvalidParametersException "InvalidParametersException"
 //   One or more parameters provided to the operation are not valid.
+//
+//   * ErrCodeOperationNotSupportedException "OperationNotSupportedException"
+//   The operation is not supported.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/CreatePortfolioShare
 func (c *ServiceCatalog) CreatePortfolioShare(input *CreatePortfolioShareInput) (*CreatePortfolioShareOutput, error) {
@@ -731,8 +990,8 @@ const opCreateProduct = "CreateProduct"
 
 // CreateProductRequest generates a "aws/request.Request" representing the
 // client's request for the CreateProduct operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -816,12 +1075,107 @@ func (c *ServiceCatalog) CreateProductWithContext(ctx aws.Context, input *Create
 	return out, req.Send()
 }
 
+const opCreateProvisionedProductPlan = "CreateProvisionedProductPlan"
+
+// CreateProvisionedProductPlanRequest generates a "aws/request.Request" representing the
+// client's request for the CreateProvisionedProductPlan operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateProvisionedProductPlan for more information on using the CreateProvisionedProductPlan
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateProvisionedProductPlanRequest method.
+//    req, resp := client.CreateProvisionedProductPlanRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/CreateProvisionedProductPlan
+func (c *ServiceCatalog) CreateProvisionedProductPlanRequest(input *CreateProvisionedProductPlanInput) (req *request.Request, output *CreateProvisionedProductPlanOutput) {
+	op := &request.Operation{
+		Name:       opCreateProvisionedProductPlan,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &CreateProvisionedProductPlanInput{}
+	}
+
+	output = &CreateProvisionedProductPlanOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateProvisionedProductPlan API operation for AWS Service Catalog.
+//
+// Creates a plan. A plan includes the list of resources to be created (when
+// provisioning a new product) or modified (when updating a provisioned product)
+// when the plan is executed.
+//
+// You can create one plan per provisioned product. To create a plan for an
+// existing provisioned product, the product status must be AVAILBLE or TAINTED.
+//
+// To view the resource changes in the change set, use DescribeProvisionedProductPlan.
+// To create or modify the provisioned product, use ExecuteProvisionedProductPlan.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Service Catalog's
+// API operation CreateProvisionedProductPlan for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidParametersException "InvalidParametersException"
+//   One or more parameters provided to the operation are not valid.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The specified resource was not found.
+//
+//   * ErrCodeInvalidStateException "InvalidStateException"
+//   An attempt was made to modify a resource that is in a state that is not valid.
+//   Check your resources to ensure that they are in valid states before retrying
+//   the operation.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/CreateProvisionedProductPlan
+func (c *ServiceCatalog) CreateProvisionedProductPlan(input *CreateProvisionedProductPlanInput) (*CreateProvisionedProductPlanOutput, error) {
+	req, out := c.CreateProvisionedProductPlanRequest(input)
+	return out, req.Send()
+}
+
+// CreateProvisionedProductPlanWithContext is the same as CreateProvisionedProductPlan with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateProvisionedProductPlan for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ServiceCatalog) CreateProvisionedProductPlanWithContext(ctx aws.Context, input *CreateProvisionedProductPlanInput, opts ...request.Option) (*CreateProvisionedProductPlanOutput, error) {
+	req, out := c.CreateProvisionedProductPlanRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opCreateProvisioningArtifact = "CreateProvisioningArtifact"
 
 // CreateProvisioningArtifactRequest generates a "aws/request.Request" representing the
 // client's request for the CreateProvisioningArtifact operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -907,12 +1261,96 @@ func (c *ServiceCatalog) CreateProvisioningArtifactWithContext(ctx aws.Context, 
 	return out, req.Send()
 }
 
+const opCreateServiceAction = "CreateServiceAction"
+
+// CreateServiceActionRequest generates a "aws/request.Request" representing the
+// client's request for the CreateServiceAction operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateServiceAction for more information on using the CreateServiceAction
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateServiceActionRequest method.
+//    req, resp := client.CreateServiceActionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/CreateServiceAction
+func (c *ServiceCatalog) CreateServiceActionRequest(input *CreateServiceActionInput) (req *request.Request, output *CreateServiceActionOutput) {
+	op := &request.Operation{
+		Name:       opCreateServiceAction,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &CreateServiceActionInput{}
+	}
+
+	output = &CreateServiceActionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateServiceAction API operation for AWS Service Catalog.
+//
+// Creates a self-service action.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Service Catalog's
+// API operation CreateServiceAction for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidParametersException "InvalidParametersException"
+//   One or more parameters provided to the operation are not valid.
+//
+//   * ErrCodeLimitExceededException "LimitExceededException"
+//   The current limits of the service would have been exceeded by this operation.
+//   Decrease your resource use or increase your service limits and retry the
+//   operation.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/CreateServiceAction
+func (c *ServiceCatalog) CreateServiceAction(input *CreateServiceActionInput) (*CreateServiceActionOutput, error) {
+	req, out := c.CreateServiceActionRequest(input)
+	return out, req.Send()
+}
+
+// CreateServiceActionWithContext is the same as CreateServiceAction with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateServiceAction for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ServiceCatalog) CreateServiceActionWithContext(ctx aws.Context, input *CreateServiceActionInput, opts ...request.Option) (*CreateServiceActionOutput, error) {
+	req, out := c.CreateServiceActionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opCreateTagOption = "CreateTagOption"
 
 // CreateTagOptionRequest generates a "aws/request.Request" representing the
 // client's request for the CreateTagOption operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1000,8 +1438,8 @@ const opDeleteConstraint = "DeleteConstraint"
 
 // DeleteConstraintRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteConstraint operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1035,6 +1473,7 @@ func (c *ServiceCatalog) DeleteConstraintRequest(input *DeleteConstraintInput) (
 
 	output = &DeleteConstraintOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -1082,8 +1521,8 @@ const opDeletePortfolio = "DeletePortfolio"
 
 // DeletePortfolioRequest generates a "aws/request.Request" representing the
 // client's request for the DeletePortfolio operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1117,6 +1556,7 @@ func (c *ServiceCatalog) DeletePortfolioRequest(input *DeletePortfolioInput) (re
 
 	output = &DeletePortfolioOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -1142,8 +1582,8 @@ func (c *ServiceCatalog) DeletePortfolioRequest(input *DeletePortfolioInput) (re
 //   One or more parameters provided to the operation are not valid.
 //
 //   * ErrCodeResourceInUseException "ResourceInUseException"
-//   A resource that is currently in use. Ensure the resource is not in use and
-//   retry the operation.
+//   A resource that is currently in use. Ensure that the resource is not in use
+//   and retry the operation.
 //
 //   * ErrCodeTagOptionNotMigratedException "TagOptionNotMigratedException"
 //   An operation requiring TagOptions failed because the TagOptions migration
@@ -1176,8 +1616,8 @@ const opDeletePortfolioShare = "DeletePortfolioShare"
 
 // DeletePortfolioShareRequest generates a "aws/request.Request" representing the
 // client's request for the DeletePortfolioShare operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1216,7 +1656,9 @@ func (c *ServiceCatalog) DeletePortfolioShareRequest(input *DeletePortfolioShare
 
 // DeletePortfolioShare API operation for AWS Service Catalog.
 //
-// Stops sharing the specified portfolio with the specified account.
+// Stops sharing the specified portfolio with the specified account or organization
+// node. Shares to an organization node can only be deleted by the master account
+// of an Organization.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1228,6 +1670,12 @@ func (c *ServiceCatalog) DeletePortfolioShareRequest(input *DeletePortfolioShare
 // Returned Error Codes:
 //   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
 //   The specified resource was not found.
+//
+//   * ErrCodeInvalidParametersException "InvalidParametersException"
+//   One or more parameters provided to the operation are not valid.
+//
+//   * ErrCodeOperationNotSupportedException "OperationNotSupportedException"
+//   The operation is not supported.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DeletePortfolioShare
 func (c *ServiceCatalog) DeletePortfolioShare(input *DeletePortfolioShareInput) (*DeletePortfolioShareOutput, error) {
@@ -1255,8 +1703,8 @@ const opDeleteProduct = "DeleteProduct"
 
 // DeleteProductRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteProduct operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1290,6 +1738,7 @@ func (c *ServiceCatalog) DeleteProductRequest(input *DeleteProductInput) (req *r
 
 	output = &DeleteProductOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -1312,8 +1761,8 @@ func (c *ServiceCatalog) DeleteProductRequest(input *DeleteProductInput) (req *r
 //   The specified resource was not found.
 //
 //   * ErrCodeResourceInUseException "ResourceInUseException"
-//   A resource that is currently in use. Ensure the resource is not in use and
-//   retry the operation.
+//   A resource that is currently in use. Ensure that the resource is not in use
+//   and retry the operation.
 //
 //   * ErrCodeInvalidParametersException "InvalidParametersException"
 //   One or more parameters provided to the operation are not valid.
@@ -1345,12 +1794,95 @@ func (c *ServiceCatalog) DeleteProductWithContext(ctx aws.Context, input *Delete
 	return out, req.Send()
 }
 
+const opDeleteProvisionedProductPlan = "DeleteProvisionedProductPlan"
+
+// DeleteProvisionedProductPlanRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteProvisionedProductPlan operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteProvisionedProductPlan for more information on using the DeleteProvisionedProductPlan
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteProvisionedProductPlanRequest method.
+//    req, resp := client.DeleteProvisionedProductPlanRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DeleteProvisionedProductPlan
+func (c *ServiceCatalog) DeleteProvisionedProductPlanRequest(input *DeleteProvisionedProductPlanInput) (req *request.Request, output *DeleteProvisionedProductPlanOutput) {
+	op := &request.Operation{
+		Name:       opDeleteProvisionedProductPlan,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteProvisionedProductPlanInput{}
+	}
+
+	output = &DeleteProvisionedProductPlanOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DeleteProvisionedProductPlan API operation for AWS Service Catalog.
+//
+// Deletes the specified plan.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Service Catalog's
+// API operation DeleteProvisionedProductPlan for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidParametersException "InvalidParametersException"
+//   One or more parameters provided to the operation are not valid.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The specified resource was not found.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DeleteProvisionedProductPlan
+func (c *ServiceCatalog) DeleteProvisionedProductPlan(input *DeleteProvisionedProductPlanInput) (*DeleteProvisionedProductPlanOutput, error) {
+	req, out := c.DeleteProvisionedProductPlanRequest(input)
+	return out, req.Send()
+}
+
+// DeleteProvisionedProductPlanWithContext is the same as DeleteProvisionedProductPlan with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteProvisionedProductPlan for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ServiceCatalog) DeleteProvisionedProductPlanWithContext(ctx aws.Context, input *DeleteProvisionedProductPlanInput, opts ...request.Option) (*DeleteProvisionedProductPlanOutput, error) {
+	req, out := c.DeleteProvisionedProductPlanRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDeleteProvisioningArtifact = "DeleteProvisioningArtifact"
 
 // DeleteProvisioningArtifactRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteProvisioningArtifact operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1384,6 +1916,7 @@ func (c *ServiceCatalog) DeleteProvisioningArtifactRequest(input *DeleteProvisio
 
 	output = &DeleteProvisioningArtifactOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -1408,8 +1941,8 @@ func (c *ServiceCatalog) DeleteProvisioningArtifactRequest(input *DeleteProvisio
 //   The specified resource was not found.
 //
 //   * ErrCodeResourceInUseException "ResourceInUseException"
-//   A resource that is currently in use. Ensure the resource is not in use and
-//   retry the operation.
+//   A resource that is currently in use. Ensure that the resource is not in use
+//   and retry the operation.
 //
 //   * ErrCodeInvalidParametersException "InvalidParametersException"
 //   One or more parameters provided to the operation are not valid.
@@ -1436,12 +1969,187 @@ func (c *ServiceCatalog) DeleteProvisioningArtifactWithContext(ctx aws.Context, 
 	return out, req.Send()
 }
 
+const opDeleteServiceAction = "DeleteServiceAction"
+
+// DeleteServiceActionRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteServiceAction operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteServiceAction for more information on using the DeleteServiceAction
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteServiceActionRequest method.
+//    req, resp := client.DeleteServiceActionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DeleteServiceAction
+func (c *ServiceCatalog) DeleteServiceActionRequest(input *DeleteServiceActionInput) (req *request.Request, output *DeleteServiceActionOutput) {
+	op := &request.Operation{
+		Name:       opDeleteServiceAction,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteServiceActionInput{}
+	}
+
+	output = &DeleteServiceActionOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DeleteServiceAction API operation for AWS Service Catalog.
+//
+// Deletes a self-service action.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Service Catalog's
+// API operation DeleteServiceAction for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The specified resource was not found.
+//
+//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   A resource that is currently in use. Ensure that the resource is not in use
+//   and retry the operation.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DeleteServiceAction
+func (c *ServiceCatalog) DeleteServiceAction(input *DeleteServiceActionInput) (*DeleteServiceActionOutput, error) {
+	req, out := c.DeleteServiceActionRequest(input)
+	return out, req.Send()
+}
+
+// DeleteServiceActionWithContext is the same as DeleteServiceAction with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteServiceAction for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ServiceCatalog) DeleteServiceActionWithContext(ctx aws.Context, input *DeleteServiceActionInput, opts ...request.Option) (*DeleteServiceActionOutput, error) {
+	req, out := c.DeleteServiceActionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteTagOption = "DeleteTagOption"
+
+// DeleteTagOptionRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteTagOption operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteTagOption for more information on using the DeleteTagOption
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteTagOptionRequest method.
+//    req, resp := client.DeleteTagOptionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DeleteTagOption
+func (c *ServiceCatalog) DeleteTagOptionRequest(input *DeleteTagOptionInput) (req *request.Request, output *DeleteTagOptionOutput) {
+	op := &request.Operation{
+		Name:       opDeleteTagOption,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteTagOptionInput{}
+	}
+
+	output = &DeleteTagOptionOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DeleteTagOption API operation for AWS Service Catalog.
+//
+// Deletes the specified TagOption.
+//
+// You cannot delete a TagOption if it is associated with a product or portfolio.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Service Catalog's
+// API operation DeleteTagOption for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeTagOptionNotMigratedException "TagOptionNotMigratedException"
+//   An operation requiring TagOptions failed because the TagOptions migration
+//   process has not been performed for this account. Please use the AWS console
+//   to perform the migration process before retrying the operation.
+//
+//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   A resource that is currently in use. Ensure that the resource is not in use
+//   and retry the operation.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The specified resource was not found.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DeleteTagOption
+func (c *ServiceCatalog) DeleteTagOption(input *DeleteTagOptionInput) (*DeleteTagOptionOutput, error) {
+	req, out := c.DeleteTagOptionRequest(input)
+	return out, req.Send()
+}
+
+// DeleteTagOptionWithContext is the same as DeleteTagOption with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteTagOption for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ServiceCatalog) DeleteTagOptionWithContext(ctx aws.Context, input *DeleteTagOptionInput, opts ...request.Option) (*DeleteTagOptionOutput, error) {
+	req, out := c.DeleteTagOptionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDescribeConstraint = "DescribeConstraint"
 
 // DescribeConstraintRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeConstraint operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1519,8 +2227,8 @@ const opDescribeCopyProductStatus = "DescribeCopyProductStatus"
 
 // DescribeCopyProductStatusRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeCopyProductStatus operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1598,8 +2306,8 @@ const opDescribePortfolio = "DescribePortfolio"
 
 // DescribePortfolioRequest generates a "aws/request.Request" representing the
 // client's request for the DescribePortfolio operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1673,12 +2381,98 @@ func (c *ServiceCatalog) DescribePortfolioWithContext(ctx aws.Context, input *De
 	return out, req.Send()
 }
 
+const opDescribePortfolioShareStatus = "DescribePortfolioShareStatus"
+
+// DescribePortfolioShareStatusRequest generates a "aws/request.Request" representing the
+// client's request for the DescribePortfolioShareStatus operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribePortfolioShareStatus for more information on using the DescribePortfolioShareStatus
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribePortfolioShareStatusRequest method.
+//    req, resp := client.DescribePortfolioShareStatusRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DescribePortfolioShareStatus
+func (c *ServiceCatalog) DescribePortfolioShareStatusRequest(input *DescribePortfolioShareStatusInput) (req *request.Request, output *DescribePortfolioShareStatusOutput) {
+	op := &request.Operation{
+		Name:       opDescribePortfolioShareStatus,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribePortfolioShareStatusInput{}
+	}
+
+	output = &DescribePortfolioShareStatusOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribePortfolioShareStatus API operation for AWS Service Catalog.
+//
+// Gets the status of the specified portfolio share operation. This API can
+// only be called by the master account in the organization.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Service Catalog's
+// API operation DescribePortfolioShareStatus for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The specified resource was not found.
+//
+//   * ErrCodeInvalidParametersException "InvalidParametersException"
+//   One or more parameters provided to the operation are not valid.
+//
+//   * ErrCodeOperationNotSupportedException "OperationNotSupportedException"
+//   The operation is not supported.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DescribePortfolioShareStatus
+func (c *ServiceCatalog) DescribePortfolioShareStatus(input *DescribePortfolioShareStatusInput) (*DescribePortfolioShareStatusOutput, error) {
+	req, out := c.DescribePortfolioShareStatusRequest(input)
+	return out, req.Send()
+}
+
+// DescribePortfolioShareStatusWithContext is the same as DescribePortfolioShareStatus with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribePortfolioShareStatus for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ServiceCatalog) DescribePortfolioShareStatusWithContext(ctx aws.Context, input *DescribePortfolioShareStatusInput, opts ...request.Option) (*DescribePortfolioShareStatusOutput, error) {
+	req, out := c.DescribePortfolioShareStatusRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDescribeProduct = "DescribeProduct"
 
 // DescribeProductRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeProduct operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1759,8 +2553,8 @@ const opDescribeProductAsAdmin = "DescribeProductAsAdmin"
 
 // DescribeProductAsAdminRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeProductAsAdmin operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1839,8 +2633,8 @@ const opDescribeProductView = "DescribeProductView"
 
 // DescribeProductViewRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeProductView operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1921,8 +2715,8 @@ const opDescribeProvisionedProduct = "DescribeProvisionedProduct"
 
 // DescribeProvisionedProductRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeProvisionedProduct operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1996,12 +2790,94 @@ func (c *ServiceCatalog) DescribeProvisionedProductWithContext(ctx aws.Context, 
 	return out, req.Send()
 }
 
+const opDescribeProvisionedProductPlan = "DescribeProvisionedProductPlan"
+
+// DescribeProvisionedProductPlanRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeProvisionedProductPlan operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeProvisionedProductPlan for more information on using the DescribeProvisionedProductPlan
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeProvisionedProductPlanRequest method.
+//    req, resp := client.DescribeProvisionedProductPlanRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DescribeProvisionedProductPlan
+func (c *ServiceCatalog) DescribeProvisionedProductPlanRequest(input *DescribeProvisionedProductPlanInput) (req *request.Request, output *DescribeProvisionedProductPlanOutput) {
+	op := &request.Operation{
+		Name:       opDescribeProvisionedProductPlan,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeProvisionedProductPlanInput{}
+	}
+
+	output = &DescribeProvisionedProductPlanOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeProvisionedProductPlan API operation for AWS Service Catalog.
+//
+// Gets information about the resource changes for the specified plan.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Service Catalog's
+// API operation DescribeProvisionedProductPlan for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The specified resource was not found.
+//
+//   * ErrCodeInvalidParametersException "InvalidParametersException"
+//   One or more parameters provided to the operation are not valid.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DescribeProvisionedProductPlan
+func (c *ServiceCatalog) DescribeProvisionedProductPlan(input *DescribeProvisionedProductPlanInput) (*DescribeProvisionedProductPlanOutput, error) {
+	req, out := c.DescribeProvisionedProductPlanRequest(input)
+	return out, req.Send()
+}
+
+// DescribeProvisionedProductPlanWithContext is the same as DescribeProvisionedProductPlan with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeProvisionedProductPlan for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ServiceCatalog) DescribeProvisionedProductPlanWithContext(ctx aws.Context, input *DescribeProvisionedProductPlanInput, opts ...request.Option) (*DescribeProvisionedProductPlanOutput, error) {
+	req, out := c.DescribeProvisionedProductPlanRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDescribeProvisioningArtifact = "DescribeProvisioningArtifact"
 
 // DescribeProvisioningArtifactRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeProvisioningArtifact operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2080,8 +2956,8 @@ const opDescribeProvisioningParameters = "DescribeProvisioningParameters"
 
 // DescribeProvisioningParametersRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeProvisioningParameters operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2126,9 +3002,9 @@ func (c *ServiceCatalog) DescribeProvisioningParametersRequest(input *DescribePr
 // If the output contains a TagOption key with an empty list of values, there
 // is a TagOption conflict for that key. The end user cannot take action to
 // fix the conflict, and launch is not blocked. In subsequent calls to ProvisionProduct,
-// do not include conflicted TagOption keys as tags, or this will cause the
-// error "Parameter validation failed: Missing required parameter in Tags[N]:Value"
-// and tag the provisioned product with the value sc-tagoption-conflict-portfolioId-productId.
+// do not include conflicted TagOption keys as tags, or this causes the error
+// "Parameter validation failed: Missing required parameter in Tags[N]:Value".
+// Tag the provisioned product with the value sc-tagoption-conflict-portfolioId-productId.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2170,8 +3046,8 @@ const opDescribeRecord = "DescribeRecord"
 
 // DescribeRecordRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeRecord operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2248,12 +3124,91 @@ func (c *ServiceCatalog) DescribeRecordWithContext(ctx aws.Context, input *Descr
 	return out, req.Send()
 }
 
+const opDescribeServiceAction = "DescribeServiceAction"
+
+// DescribeServiceActionRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeServiceAction operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeServiceAction for more information on using the DescribeServiceAction
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeServiceActionRequest method.
+//    req, resp := client.DescribeServiceActionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DescribeServiceAction
+func (c *ServiceCatalog) DescribeServiceActionRequest(input *DescribeServiceActionInput) (req *request.Request, output *DescribeServiceActionOutput) {
+	op := &request.Operation{
+		Name:       opDescribeServiceAction,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeServiceActionInput{}
+	}
+
+	output = &DescribeServiceActionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeServiceAction API operation for AWS Service Catalog.
+//
+// Describes a self-service action.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Service Catalog's
+// API operation DescribeServiceAction for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The specified resource was not found.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DescribeServiceAction
+func (c *ServiceCatalog) DescribeServiceAction(input *DescribeServiceActionInput) (*DescribeServiceActionOutput, error) {
+	req, out := c.DescribeServiceActionRequest(input)
+	return out, req.Send()
+}
+
+// DescribeServiceActionWithContext is the same as DescribeServiceAction with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeServiceAction for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ServiceCatalog) DescribeServiceActionWithContext(ctx aws.Context, input *DescribeServiceActionInput, opts ...request.Option) (*DescribeServiceActionOutput, error) {
+	req, out := c.DescribeServiceActionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDescribeTagOption = "DescribeTagOption"
 
 // DescribeTagOptionRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeTagOption operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2332,12 +3287,104 @@ func (c *ServiceCatalog) DescribeTagOptionWithContext(ctx aws.Context, input *De
 	return out, req.Send()
 }
 
+const opDisableAWSOrganizationsAccess = "DisableAWSOrganizationsAccess"
+
+// DisableAWSOrganizationsAccessRequest generates a "aws/request.Request" representing the
+// client's request for the DisableAWSOrganizationsAccess operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DisableAWSOrganizationsAccess for more information on using the DisableAWSOrganizationsAccess
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DisableAWSOrganizationsAccessRequest method.
+//    req, resp := client.DisableAWSOrganizationsAccessRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DisableAWSOrganizationsAccess
+func (c *ServiceCatalog) DisableAWSOrganizationsAccessRequest(input *DisableAWSOrganizationsAccessInput) (req *request.Request, output *DisableAWSOrganizationsAccessOutput) {
+	op := &request.Operation{
+		Name:       opDisableAWSOrganizationsAccess,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DisableAWSOrganizationsAccessInput{}
+	}
+
+	output = &DisableAWSOrganizationsAccessOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DisableAWSOrganizationsAccess API operation for AWS Service Catalog.
+//
+// Disable portfolio sharing through AWS Organizations feature. This feature
+// will not delete your current shares but it will prevent you from creating
+// new shares throughout your organization. Current shares will not be in sync
+// with your organization structure if it changes after calling this API. This
+// API can only be called by the master account in the organization.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Service Catalog's
+// API operation DisableAWSOrganizationsAccess for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The specified resource was not found.
+//
+//   * ErrCodeInvalidStateException "InvalidStateException"
+//   An attempt was made to modify a resource that is in a state that is not valid.
+//   Check your resources to ensure that they are in valid states before retrying
+//   the operation.
+//
+//   * ErrCodeOperationNotSupportedException "OperationNotSupportedException"
+//   The operation is not supported.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DisableAWSOrganizationsAccess
+func (c *ServiceCatalog) DisableAWSOrganizationsAccess(input *DisableAWSOrganizationsAccessInput) (*DisableAWSOrganizationsAccessOutput, error) {
+	req, out := c.DisableAWSOrganizationsAccessRequest(input)
+	return out, req.Send()
+}
+
+// DisableAWSOrganizationsAccessWithContext is the same as DisableAWSOrganizationsAccess with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DisableAWSOrganizationsAccess for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ServiceCatalog) DisableAWSOrganizationsAccessWithContext(ctx aws.Context, input *DisableAWSOrganizationsAccessInput, opts ...request.Option) (*DisableAWSOrganizationsAccessOutput, error) {
+	req, out := c.DisableAWSOrganizationsAccessRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDisassociatePrincipalFromPortfolio = "DisassociatePrincipalFromPortfolio"
 
 // DisassociatePrincipalFromPortfolioRequest generates a "aws/request.Request" representing the
 // client's request for the DisassociatePrincipalFromPortfolio operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2371,6 +3418,7 @@ func (c *ServiceCatalog) DisassociatePrincipalFromPortfolioRequest(input *Disass
 
 	output = &DisassociatePrincipalFromPortfolioOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -2418,8 +3466,8 @@ const opDisassociateProductFromPortfolio = "DisassociateProductFromPortfolio"
 
 // DisassociateProductFromPortfolioRequest generates a "aws/request.Request" representing the
 // client's request for the DisassociateProductFromPortfolio operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2453,6 +3501,7 @@ func (c *ServiceCatalog) DisassociateProductFromPortfolioRequest(input *Disassoc
 
 	output = &DisassociateProductFromPortfolioOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -2472,8 +3521,8 @@ func (c *ServiceCatalog) DisassociateProductFromPortfolioRequest(input *Disassoc
 //   The specified resource was not found.
 //
 //   * ErrCodeResourceInUseException "ResourceInUseException"
-//   A resource that is currently in use. Ensure the resource is not in use and
-//   retry the operation.
+//   A resource that is currently in use. Ensure that the resource is not in use
+//   and retry the operation.
 //
 //   * ErrCodeInvalidParametersException "InvalidParametersException"
 //   One or more parameters provided to the operation are not valid.
@@ -2500,12 +3549,93 @@ func (c *ServiceCatalog) DisassociateProductFromPortfolioWithContext(ctx aws.Con
 	return out, req.Send()
 }
 
+const opDisassociateServiceActionFromProvisioningArtifact = "DisassociateServiceActionFromProvisioningArtifact"
+
+// DisassociateServiceActionFromProvisioningArtifactRequest generates a "aws/request.Request" representing the
+// client's request for the DisassociateServiceActionFromProvisioningArtifact operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DisassociateServiceActionFromProvisioningArtifact for more information on using the DisassociateServiceActionFromProvisioningArtifact
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DisassociateServiceActionFromProvisioningArtifactRequest method.
+//    req, resp := client.DisassociateServiceActionFromProvisioningArtifactRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DisassociateServiceActionFromProvisioningArtifact
+func (c *ServiceCatalog) DisassociateServiceActionFromProvisioningArtifactRequest(input *DisassociateServiceActionFromProvisioningArtifactInput) (req *request.Request, output *DisassociateServiceActionFromProvisioningArtifactOutput) {
+	op := &request.Operation{
+		Name:       opDisassociateServiceActionFromProvisioningArtifact,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DisassociateServiceActionFromProvisioningArtifactInput{}
+	}
+
+	output = &DisassociateServiceActionFromProvisioningArtifactOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DisassociateServiceActionFromProvisioningArtifact API operation for AWS Service Catalog.
+//
+// Disassociates the specified self-service action association from the specified
+// provisioning artifact.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Service Catalog's
+// API operation DisassociateServiceActionFromProvisioningArtifact for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The specified resource was not found.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DisassociateServiceActionFromProvisioningArtifact
+func (c *ServiceCatalog) DisassociateServiceActionFromProvisioningArtifact(input *DisassociateServiceActionFromProvisioningArtifactInput) (*DisassociateServiceActionFromProvisioningArtifactOutput, error) {
+	req, out := c.DisassociateServiceActionFromProvisioningArtifactRequest(input)
+	return out, req.Send()
+}
+
+// DisassociateServiceActionFromProvisioningArtifactWithContext is the same as DisassociateServiceActionFromProvisioningArtifact with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DisassociateServiceActionFromProvisioningArtifact for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ServiceCatalog) DisassociateServiceActionFromProvisioningArtifactWithContext(ctx aws.Context, input *DisassociateServiceActionFromProvisioningArtifactInput, opts ...request.Option) (*DisassociateServiceActionFromProvisioningArtifactOutput, error) {
+	req, out := c.DisassociateServiceActionFromProvisioningArtifactRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDisassociateTagOptionFromResource = "DisassociateTagOptionFromResource"
 
 // DisassociateTagOptionFromResourceRequest generates a "aws/request.Request" representing the
 // client's request for the DisassociateTagOptionFromResource operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2539,6 +3669,7 @@ func (c *ServiceCatalog) DisassociateTagOptionFromResourceRequest(input *Disasso
 
 	output = &DisassociateTagOptionFromResourceOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -2584,12 +3715,365 @@ func (c *ServiceCatalog) DisassociateTagOptionFromResourceWithContext(ctx aws.Co
 	return out, req.Send()
 }
 
+const opEnableAWSOrganizationsAccess = "EnableAWSOrganizationsAccess"
+
+// EnableAWSOrganizationsAccessRequest generates a "aws/request.Request" representing the
+// client's request for the EnableAWSOrganizationsAccess operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See EnableAWSOrganizationsAccess for more information on using the EnableAWSOrganizationsAccess
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the EnableAWSOrganizationsAccessRequest method.
+//    req, resp := client.EnableAWSOrganizationsAccessRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/EnableAWSOrganizationsAccess
+func (c *ServiceCatalog) EnableAWSOrganizationsAccessRequest(input *EnableAWSOrganizationsAccessInput) (req *request.Request, output *EnableAWSOrganizationsAccessOutput) {
+	op := &request.Operation{
+		Name:       opEnableAWSOrganizationsAccess,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &EnableAWSOrganizationsAccessInput{}
+	}
+
+	output = &EnableAWSOrganizationsAccessOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// EnableAWSOrganizationsAccess API operation for AWS Service Catalog.
+//
+// Enable portfolio sharing feature through AWS Organizations. This API will
+// allow Service Catalog to receive updates on your organization in order to
+// sync your shares with the current structure. This API can only be called
+// by the master account in the organization.
+//
+// By calling this API Service Catalog will make a call to organizations:EnableAWSServiceAccess
+// on your behalf so that your shares can be in sync with any changes in your
+// AWS Organizations structure.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Service Catalog's
+// API operation EnableAWSOrganizationsAccess for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The specified resource was not found.
+//
+//   * ErrCodeInvalidStateException "InvalidStateException"
+//   An attempt was made to modify a resource that is in a state that is not valid.
+//   Check your resources to ensure that they are in valid states before retrying
+//   the operation.
+//
+//   * ErrCodeOperationNotSupportedException "OperationNotSupportedException"
+//   The operation is not supported.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/EnableAWSOrganizationsAccess
+func (c *ServiceCatalog) EnableAWSOrganizationsAccess(input *EnableAWSOrganizationsAccessInput) (*EnableAWSOrganizationsAccessOutput, error) {
+	req, out := c.EnableAWSOrganizationsAccessRequest(input)
+	return out, req.Send()
+}
+
+// EnableAWSOrganizationsAccessWithContext is the same as EnableAWSOrganizationsAccess with the addition of
+// the ability to pass a context and additional request options.
+//
+// See EnableAWSOrganizationsAccess for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ServiceCatalog) EnableAWSOrganizationsAccessWithContext(ctx aws.Context, input *EnableAWSOrganizationsAccessInput, opts ...request.Option) (*EnableAWSOrganizationsAccessOutput, error) {
+	req, out := c.EnableAWSOrganizationsAccessRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opExecuteProvisionedProductPlan = "ExecuteProvisionedProductPlan"
+
+// ExecuteProvisionedProductPlanRequest generates a "aws/request.Request" representing the
+// client's request for the ExecuteProvisionedProductPlan operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ExecuteProvisionedProductPlan for more information on using the ExecuteProvisionedProductPlan
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ExecuteProvisionedProductPlanRequest method.
+//    req, resp := client.ExecuteProvisionedProductPlanRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ExecuteProvisionedProductPlan
+func (c *ServiceCatalog) ExecuteProvisionedProductPlanRequest(input *ExecuteProvisionedProductPlanInput) (req *request.Request, output *ExecuteProvisionedProductPlanOutput) {
+	op := &request.Operation{
+		Name:       opExecuteProvisionedProductPlan,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ExecuteProvisionedProductPlanInput{}
+	}
+
+	output = &ExecuteProvisionedProductPlanOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ExecuteProvisionedProductPlan API operation for AWS Service Catalog.
+//
+// Provisions or modifies a product based on the resource changes for the specified
+// plan.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Service Catalog's
+// API operation ExecuteProvisionedProductPlan for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidParametersException "InvalidParametersException"
+//   One or more parameters provided to the operation are not valid.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The specified resource was not found.
+//
+//   * ErrCodeInvalidStateException "InvalidStateException"
+//   An attempt was made to modify a resource that is in a state that is not valid.
+//   Check your resources to ensure that they are in valid states before retrying
+//   the operation.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ExecuteProvisionedProductPlan
+func (c *ServiceCatalog) ExecuteProvisionedProductPlan(input *ExecuteProvisionedProductPlanInput) (*ExecuteProvisionedProductPlanOutput, error) {
+	req, out := c.ExecuteProvisionedProductPlanRequest(input)
+	return out, req.Send()
+}
+
+// ExecuteProvisionedProductPlanWithContext is the same as ExecuteProvisionedProductPlan with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ExecuteProvisionedProductPlan for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ServiceCatalog) ExecuteProvisionedProductPlanWithContext(ctx aws.Context, input *ExecuteProvisionedProductPlanInput, opts ...request.Option) (*ExecuteProvisionedProductPlanOutput, error) {
+	req, out := c.ExecuteProvisionedProductPlanRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opExecuteProvisionedProductServiceAction = "ExecuteProvisionedProductServiceAction"
+
+// ExecuteProvisionedProductServiceActionRequest generates a "aws/request.Request" representing the
+// client's request for the ExecuteProvisionedProductServiceAction operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ExecuteProvisionedProductServiceAction for more information on using the ExecuteProvisionedProductServiceAction
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ExecuteProvisionedProductServiceActionRequest method.
+//    req, resp := client.ExecuteProvisionedProductServiceActionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ExecuteProvisionedProductServiceAction
+func (c *ServiceCatalog) ExecuteProvisionedProductServiceActionRequest(input *ExecuteProvisionedProductServiceActionInput) (req *request.Request, output *ExecuteProvisionedProductServiceActionOutput) {
+	op := &request.Operation{
+		Name:       opExecuteProvisionedProductServiceAction,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ExecuteProvisionedProductServiceActionInput{}
+	}
+
+	output = &ExecuteProvisionedProductServiceActionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ExecuteProvisionedProductServiceAction API operation for AWS Service Catalog.
+//
+// Executes a self-service action against a provisioned product.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Service Catalog's
+// API operation ExecuteProvisionedProductServiceAction for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidParametersException "InvalidParametersException"
+//   One or more parameters provided to the operation are not valid.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The specified resource was not found.
+//
+//   * ErrCodeInvalidStateException "InvalidStateException"
+//   An attempt was made to modify a resource that is in a state that is not valid.
+//   Check your resources to ensure that they are in valid states before retrying
+//   the operation.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ExecuteProvisionedProductServiceAction
+func (c *ServiceCatalog) ExecuteProvisionedProductServiceAction(input *ExecuteProvisionedProductServiceActionInput) (*ExecuteProvisionedProductServiceActionOutput, error) {
+	req, out := c.ExecuteProvisionedProductServiceActionRequest(input)
+	return out, req.Send()
+}
+
+// ExecuteProvisionedProductServiceActionWithContext is the same as ExecuteProvisionedProductServiceAction with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ExecuteProvisionedProductServiceAction for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ServiceCatalog) ExecuteProvisionedProductServiceActionWithContext(ctx aws.Context, input *ExecuteProvisionedProductServiceActionInput, opts ...request.Option) (*ExecuteProvisionedProductServiceActionOutput, error) {
+	req, out := c.ExecuteProvisionedProductServiceActionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetAWSOrganizationsAccessStatus = "GetAWSOrganizationsAccessStatus"
+
+// GetAWSOrganizationsAccessStatusRequest generates a "aws/request.Request" representing the
+// client's request for the GetAWSOrganizationsAccessStatus operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetAWSOrganizationsAccessStatus for more information on using the GetAWSOrganizationsAccessStatus
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetAWSOrganizationsAccessStatusRequest method.
+//    req, resp := client.GetAWSOrganizationsAccessStatusRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/GetAWSOrganizationsAccessStatus
+func (c *ServiceCatalog) GetAWSOrganizationsAccessStatusRequest(input *GetAWSOrganizationsAccessStatusInput) (req *request.Request, output *GetAWSOrganizationsAccessStatusOutput) {
+	op := &request.Operation{
+		Name:       opGetAWSOrganizationsAccessStatus,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetAWSOrganizationsAccessStatusInput{}
+	}
+
+	output = &GetAWSOrganizationsAccessStatusOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetAWSOrganizationsAccessStatus API operation for AWS Service Catalog.
+//
+// Get the Access Status for AWS Organization portfolio share feature. This
+// API can only be called by the master account in the organization.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Service Catalog's
+// API operation GetAWSOrganizationsAccessStatus for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The specified resource was not found.
+//
+//   * ErrCodeOperationNotSupportedException "OperationNotSupportedException"
+//   The operation is not supported.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/GetAWSOrganizationsAccessStatus
+func (c *ServiceCatalog) GetAWSOrganizationsAccessStatus(input *GetAWSOrganizationsAccessStatusInput) (*GetAWSOrganizationsAccessStatusOutput, error) {
+	req, out := c.GetAWSOrganizationsAccessStatusRequest(input)
+	return out, req.Send()
+}
+
+// GetAWSOrganizationsAccessStatusWithContext is the same as GetAWSOrganizationsAccessStatus with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetAWSOrganizationsAccessStatus for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ServiceCatalog) GetAWSOrganizationsAccessStatusWithContext(ctx aws.Context, input *GetAWSOrganizationsAccessStatusInput, opts ...request.Option) (*GetAWSOrganizationsAccessStatusOutput, error) {
+	req, out := c.GetAWSOrganizationsAccessStatusRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opListAcceptedPortfolioShares = "ListAcceptedPortfolioShares"
 
 // ListAcceptedPortfolioSharesRequest generates a "aws/request.Request" representing the
 // client's request for the ListAcceptedPortfolioShares operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2646,6 +4130,9 @@ func (c *ServiceCatalog) ListAcceptedPortfolioSharesRequest(input *ListAcceptedP
 // Returned Error Codes:
 //   * ErrCodeInvalidParametersException "InvalidParametersException"
 //   One or more parameters provided to the operation are not valid.
+//
+//   * ErrCodeOperationNotSupportedException "OperationNotSupportedException"
+//   The operation is not supported.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListAcceptedPortfolioShares
 func (c *ServiceCatalog) ListAcceptedPortfolioShares(input *ListAcceptedPortfolioSharesInput) (*ListAcceptedPortfolioSharesOutput, error) {
@@ -2723,8 +4210,8 @@ const opListConstraintsForPortfolio = "ListConstraintsForPortfolio"
 
 // ListConstraintsForPortfolioRequest generates a "aws/request.Request" representing the
 // client's request for the ListConstraintsForPortfolio operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2861,8 +4348,8 @@ const opListLaunchPaths = "ListLaunchPaths"
 
 // ListLaunchPathsRequest generates a "aws/request.Request" representing the
 // client's request for the ListLaunchPaths operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2997,12 +4484,154 @@ func (c *ServiceCatalog) ListLaunchPathsPagesWithContext(ctx aws.Context, input 
 	return p.Err()
 }
 
+const opListOrganizationPortfolioAccess = "ListOrganizationPortfolioAccess"
+
+// ListOrganizationPortfolioAccessRequest generates a "aws/request.Request" representing the
+// client's request for the ListOrganizationPortfolioAccess operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListOrganizationPortfolioAccess for more information on using the ListOrganizationPortfolioAccess
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListOrganizationPortfolioAccessRequest method.
+//    req, resp := client.ListOrganizationPortfolioAccessRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListOrganizationPortfolioAccess
+func (c *ServiceCatalog) ListOrganizationPortfolioAccessRequest(input *ListOrganizationPortfolioAccessInput) (req *request.Request, output *ListOrganizationPortfolioAccessOutput) {
+	op := &request.Operation{
+		Name:       opListOrganizationPortfolioAccess,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"PageToken"},
+			OutputTokens:    []string{"NextPageToken"},
+			LimitToken:      "PageSize",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &ListOrganizationPortfolioAccessInput{}
+	}
+
+	output = &ListOrganizationPortfolioAccessOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListOrganizationPortfolioAccess API operation for AWS Service Catalog.
+//
+// Lists the organization nodes that have access to the specified portfolio.
+// This API can only be called by the master account in the organization.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Service Catalog's
+// API operation ListOrganizationPortfolioAccess for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The specified resource was not found.
+//
+//   * ErrCodeInvalidParametersException "InvalidParametersException"
+//   One or more parameters provided to the operation are not valid.
+//
+//   * ErrCodeOperationNotSupportedException "OperationNotSupportedException"
+//   The operation is not supported.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListOrganizationPortfolioAccess
+func (c *ServiceCatalog) ListOrganizationPortfolioAccess(input *ListOrganizationPortfolioAccessInput) (*ListOrganizationPortfolioAccessOutput, error) {
+	req, out := c.ListOrganizationPortfolioAccessRequest(input)
+	return out, req.Send()
+}
+
+// ListOrganizationPortfolioAccessWithContext is the same as ListOrganizationPortfolioAccess with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListOrganizationPortfolioAccess for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ServiceCatalog) ListOrganizationPortfolioAccessWithContext(ctx aws.Context, input *ListOrganizationPortfolioAccessInput, opts ...request.Option) (*ListOrganizationPortfolioAccessOutput, error) {
+	req, out := c.ListOrganizationPortfolioAccessRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// ListOrganizationPortfolioAccessPages iterates over the pages of a ListOrganizationPortfolioAccess operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListOrganizationPortfolioAccess method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListOrganizationPortfolioAccess operation.
+//    pageNum := 0
+//    err := client.ListOrganizationPortfolioAccessPages(params,
+//        func(page *ListOrganizationPortfolioAccessOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *ServiceCatalog) ListOrganizationPortfolioAccessPages(input *ListOrganizationPortfolioAccessInput, fn func(*ListOrganizationPortfolioAccessOutput, bool) bool) error {
+	return c.ListOrganizationPortfolioAccessPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListOrganizationPortfolioAccessPagesWithContext same as ListOrganizationPortfolioAccessPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ServiceCatalog) ListOrganizationPortfolioAccessPagesWithContext(ctx aws.Context, input *ListOrganizationPortfolioAccessInput, fn func(*ListOrganizationPortfolioAccessOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListOrganizationPortfolioAccessInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListOrganizationPortfolioAccessRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListOrganizationPortfolioAccessOutput), !p.HasNextPage())
+	}
+	return p.Err()
+}
+
 const opListPortfolioAccess = "ListPortfolioAccess"
 
 // ListPortfolioAccessRequest generates a "aws/request.Request" representing the
 // client's request for the ListPortfolioAccess operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3080,8 +4709,8 @@ const opListPortfolios = "ListPortfolios"
 
 // ListPortfoliosRequest generates a "aws/request.Request" representing the
 // client's request for the ListPortfolios operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3215,8 +4844,8 @@ const opListPortfoliosForProduct = "ListPortfoliosForProduct"
 
 // ListPortfoliosForProductRequest generates a "aws/request.Request" representing the
 // client's request for the ListPortfoliosForProduct operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3353,8 +4982,8 @@ const opListPrincipalsForPortfolio = "ListPrincipalsForPortfolio"
 
 // ListPrincipalsForPortfolioRequest generates a "aws/request.Request" representing the
 // client's request for the ListPrincipalsForPortfolio operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3487,12 +5116,95 @@ func (c *ServiceCatalog) ListPrincipalsForPortfolioPagesWithContext(ctx aws.Cont
 	return p.Err()
 }
 
+const opListProvisionedProductPlans = "ListProvisionedProductPlans"
+
+// ListProvisionedProductPlansRequest generates a "aws/request.Request" representing the
+// client's request for the ListProvisionedProductPlans operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListProvisionedProductPlans for more information on using the ListProvisionedProductPlans
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListProvisionedProductPlansRequest method.
+//    req, resp := client.ListProvisionedProductPlansRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListProvisionedProductPlans
+func (c *ServiceCatalog) ListProvisionedProductPlansRequest(input *ListProvisionedProductPlansInput) (req *request.Request, output *ListProvisionedProductPlansOutput) {
+	op := &request.Operation{
+		Name:       opListProvisionedProductPlans,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ListProvisionedProductPlansInput{}
+	}
+
+	output = &ListProvisionedProductPlansOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListProvisionedProductPlans API operation for AWS Service Catalog.
+//
+// Lists the plans for the specified provisioned product or all plans to which
+// the user has access.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Service Catalog's
+// API operation ListProvisionedProductPlans for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The specified resource was not found.
+//
+//   * ErrCodeInvalidParametersException "InvalidParametersException"
+//   One or more parameters provided to the operation are not valid.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListProvisionedProductPlans
+func (c *ServiceCatalog) ListProvisionedProductPlans(input *ListProvisionedProductPlansInput) (*ListProvisionedProductPlansOutput, error) {
+	req, out := c.ListProvisionedProductPlansRequest(input)
+	return out, req.Send()
+}
+
+// ListProvisionedProductPlansWithContext is the same as ListProvisionedProductPlans with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListProvisionedProductPlans for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ServiceCatalog) ListProvisionedProductPlansWithContext(ctx aws.Context, input *ListProvisionedProductPlansInput, opts ...request.Option) (*ListProvisionedProductPlansOutput, error) {
+	req, out := c.ListProvisionedProductPlansRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opListProvisioningArtifacts = "ListProvisioningArtifacts"
 
 // ListProvisioningArtifactsRequest generates a "aws/request.Request" representing the
 // client's request for the ListProvisioningArtifacts operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3570,12 +5282,151 @@ func (c *ServiceCatalog) ListProvisioningArtifactsWithContext(ctx aws.Context, i
 	return out, req.Send()
 }
 
+const opListProvisioningArtifactsForServiceAction = "ListProvisioningArtifactsForServiceAction"
+
+// ListProvisioningArtifactsForServiceActionRequest generates a "aws/request.Request" representing the
+// client's request for the ListProvisioningArtifactsForServiceAction operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListProvisioningArtifactsForServiceAction for more information on using the ListProvisioningArtifactsForServiceAction
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListProvisioningArtifactsForServiceActionRequest method.
+//    req, resp := client.ListProvisioningArtifactsForServiceActionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListProvisioningArtifactsForServiceAction
+func (c *ServiceCatalog) ListProvisioningArtifactsForServiceActionRequest(input *ListProvisioningArtifactsForServiceActionInput) (req *request.Request, output *ListProvisioningArtifactsForServiceActionOutput) {
+	op := &request.Operation{
+		Name:       opListProvisioningArtifactsForServiceAction,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"PageToken"},
+			OutputTokens:    []string{"NextPageToken"},
+			LimitToken:      "PageSize",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &ListProvisioningArtifactsForServiceActionInput{}
+	}
+
+	output = &ListProvisioningArtifactsForServiceActionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListProvisioningArtifactsForServiceAction API operation for AWS Service Catalog.
+//
+// Lists all provisioning artifacts (also known as versions) for the specified
+// self-service action.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Service Catalog's
+// API operation ListProvisioningArtifactsForServiceAction for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The specified resource was not found.
+//
+//   * ErrCodeInvalidParametersException "InvalidParametersException"
+//   One or more parameters provided to the operation are not valid.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListProvisioningArtifactsForServiceAction
+func (c *ServiceCatalog) ListProvisioningArtifactsForServiceAction(input *ListProvisioningArtifactsForServiceActionInput) (*ListProvisioningArtifactsForServiceActionOutput, error) {
+	req, out := c.ListProvisioningArtifactsForServiceActionRequest(input)
+	return out, req.Send()
+}
+
+// ListProvisioningArtifactsForServiceActionWithContext is the same as ListProvisioningArtifactsForServiceAction with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListProvisioningArtifactsForServiceAction for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ServiceCatalog) ListProvisioningArtifactsForServiceActionWithContext(ctx aws.Context, input *ListProvisioningArtifactsForServiceActionInput, opts ...request.Option) (*ListProvisioningArtifactsForServiceActionOutput, error) {
+	req, out := c.ListProvisioningArtifactsForServiceActionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// ListProvisioningArtifactsForServiceActionPages iterates over the pages of a ListProvisioningArtifactsForServiceAction operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListProvisioningArtifactsForServiceAction method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListProvisioningArtifactsForServiceAction operation.
+//    pageNum := 0
+//    err := client.ListProvisioningArtifactsForServiceActionPages(params,
+//        func(page *ListProvisioningArtifactsForServiceActionOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *ServiceCatalog) ListProvisioningArtifactsForServiceActionPages(input *ListProvisioningArtifactsForServiceActionInput, fn func(*ListProvisioningArtifactsForServiceActionOutput, bool) bool) error {
+	return c.ListProvisioningArtifactsForServiceActionPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListProvisioningArtifactsForServiceActionPagesWithContext same as ListProvisioningArtifactsForServiceActionPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ServiceCatalog) ListProvisioningArtifactsForServiceActionPagesWithContext(ctx aws.Context, input *ListProvisioningArtifactsForServiceActionInput, fn func(*ListProvisioningArtifactsForServiceActionOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListProvisioningArtifactsForServiceActionInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListProvisioningArtifactsForServiceActionRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListProvisioningArtifactsForServiceActionOutput), !p.HasNextPage())
+	}
+	return p.Err()
+}
+
 const opListRecordHistory = "ListRecordHistory"
 
 // ListRecordHistoryRequest generates a "aws/request.Request" representing the
 // client's request for the ListRecordHistory operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3653,8 +5504,8 @@ const opListResourcesForTagOption = "ListResourcesForTagOption"
 
 // ListResourcesForTagOptionRequest generates a "aws/request.Request" representing the
 // client's request for the ListResourcesForTagOption operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3792,12 +5643,286 @@ func (c *ServiceCatalog) ListResourcesForTagOptionPagesWithContext(ctx aws.Conte
 	return p.Err()
 }
 
+const opListServiceActions = "ListServiceActions"
+
+// ListServiceActionsRequest generates a "aws/request.Request" representing the
+// client's request for the ListServiceActions operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListServiceActions for more information on using the ListServiceActions
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListServiceActionsRequest method.
+//    req, resp := client.ListServiceActionsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListServiceActions
+func (c *ServiceCatalog) ListServiceActionsRequest(input *ListServiceActionsInput) (req *request.Request, output *ListServiceActionsOutput) {
+	op := &request.Operation{
+		Name:       opListServiceActions,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"PageToken"},
+			OutputTokens:    []string{"NextPageToken"},
+			LimitToken:      "PageSize",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &ListServiceActionsInput{}
+	}
+
+	output = &ListServiceActionsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListServiceActions API operation for AWS Service Catalog.
+//
+// Lists all self-service actions.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Service Catalog's
+// API operation ListServiceActions for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidParametersException "InvalidParametersException"
+//   One or more parameters provided to the operation are not valid.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListServiceActions
+func (c *ServiceCatalog) ListServiceActions(input *ListServiceActionsInput) (*ListServiceActionsOutput, error) {
+	req, out := c.ListServiceActionsRequest(input)
+	return out, req.Send()
+}
+
+// ListServiceActionsWithContext is the same as ListServiceActions with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListServiceActions for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ServiceCatalog) ListServiceActionsWithContext(ctx aws.Context, input *ListServiceActionsInput, opts ...request.Option) (*ListServiceActionsOutput, error) {
+	req, out := c.ListServiceActionsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// ListServiceActionsPages iterates over the pages of a ListServiceActions operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListServiceActions method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListServiceActions operation.
+//    pageNum := 0
+//    err := client.ListServiceActionsPages(params,
+//        func(page *ListServiceActionsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *ServiceCatalog) ListServiceActionsPages(input *ListServiceActionsInput, fn func(*ListServiceActionsOutput, bool) bool) error {
+	return c.ListServiceActionsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListServiceActionsPagesWithContext same as ListServiceActionsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ServiceCatalog) ListServiceActionsPagesWithContext(ctx aws.Context, input *ListServiceActionsInput, fn func(*ListServiceActionsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListServiceActionsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListServiceActionsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListServiceActionsOutput), !p.HasNextPage())
+	}
+	return p.Err()
+}
+
+const opListServiceActionsForProvisioningArtifact = "ListServiceActionsForProvisioningArtifact"
+
+// ListServiceActionsForProvisioningArtifactRequest generates a "aws/request.Request" representing the
+// client's request for the ListServiceActionsForProvisioningArtifact operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListServiceActionsForProvisioningArtifact for more information on using the ListServiceActionsForProvisioningArtifact
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListServiceActionsForProvisioningArtifactRequest method.
+//    req, resp := client.ListServiceActionsForProvisioningArtifactRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListServiceActionsForProvisioningArtifact
+func (c *ServiceCatalog) ListServiceActionsForProvisioningArtifactRequest(input *ListServiceActionsForProvisioningArtifactInput) (req *request.Request, output *ListServiceActionsForProvisioningArtifactOutput) {
+	op := &request.Operation{
+		Name:       opListServiceActionsForProvisioningArtifact,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"PageToken"},
+			OutputTokens:    []string{"NextPageToken"},
+			LimitToken:      "PageSize",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &ListServiceActionsForProvisioningArtifactInput{}
+	}
+
+	output = &ListServiceActionsForProvisioningArtifactOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListServiceActionsForProvisioningArtifact API operation for AWS Service Catalog.
+//
+// Returns a paginated list of self-service actions associated with the specified
+// Product ID and Provisioning Artifact ID.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Service Catalog's
+// API operation ListServiceActionsForProvisioningArtifact for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The specified resource was not found.
+//
+//   * ErrCodeInvalidParametersException "InvalidParametersException"
+//   One or more parameters provided to the operation are not valid.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListServiceActionsForProvisioningArtifact
+func (c *ServiceCatalog) ListServiceActionsForProvisioningArtifact(input *ListServiceActionsForProvisioningArtifactInput) (*ListServiceActionsForProvisioningArtifactOutput, error) {
+	req, out := c.ListServiceActionsForProvisioningArtifactRequest(input)
+	return out, req.Send()
+}
+
+// ListServiceActionsForProvisioningArtifactWithContext is the same as ListServiceActionsForProvisioningArtifact with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListServiceActionsForProvisioningArtifact for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ServiceCatalog) ListServiceActionsForProvisioningArtifactWithContext(ctx aws.Context, input *ListServiceActionsForProvisioningArtifactInput, opts ...request.Option) (*ListServiceActionsForProvisioningArtifactOutput, error) {
+	req, out := c.ListServiceActionsForProvisioningArtifactRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// ListServiceActionsForProvisioningArtifactPages iterates over the pages of a ListServiceActionsForProvisioningArtifact operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListServiceActionsForProvisioningArtifact method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListServiceActionsForProvisioningArtifact operation.
+//    pageNum := 0
+//    err := client.ListServiceActionsForProvisioningArtifactPages(params,
+//        func(page *ListServiceActionsForProvisioningArtifactOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *ServiceCatalog) ListServiceActionsForProvisioningArtifactPages(input *ListServiceActionsForProvisioningArtifactInput, fn func(*ListServiceActionsForProvisioningArtifactOutput, bool) bool) error {
+	return c.ListServiceActionsForProvisioningArtifactPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListServiceActionsForProvisioningArtifactPagesWithContext same as ListServiceActionsForProvisioningArtifactPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ServiceCatalog) ListServiceActionsForProvisioningArtifactPagesWithContext(ctx aws.Context, input *ListServiceActionsForProvisioningArtifactInput, fn func(*ListServiceActionsForProvisioningArtifactOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListServiceActionsForProvisioningArtifactInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListServiceActionsForProvisioningArtifactRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListServiceActionsForProvisioningArtifactOutput), !p.HasNextPage())
+	}
+	return p.Err()
+}
+
 const opListTagOptions = "ListTagOptions"
 
 // ListTagOptionsRequest generates a "aws/request.Request" representing the
 // client's request for the ListTagOptions operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3936,8 +6061,8 @@ const opProvisionProduct = "ProvisionProduct"
 
 // ProvisionProductRequest generates a "aws/request.Request" representing the
 // client's request for the ProvisionProduct operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3985,7 +6110,7 @@ func (c *ServiceCatalog) ProvisionProductRequest(input *ProvisionProductInput) (
 //
 // If the request contains a tag key with an empty list of values, there is
 // a tag conflict for that key. Do not include conflicted keys as tags, or this
-// will cause the error "Parameter validation failed: Missing required parameter
+// causes the error "Parameter validation failed: Missing required parameter
 // in Tags[N]:Value".
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -4031,8 +6156,8 @@ const opRejectPortfolioShare = "RejectPortfolioShare"
 
 // RejectPortfolioShareRequest generates a "aws/request.Request" representing the
 // client's request for the RejectPortfolioShare operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4066,6 +6191,7 @@ func (c *ServiceCatalog) RejectPortfolioShareRequest(input *RejectPortfolioShare
 
 	output = &RejectPortfolioShareOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -4110,8 +6236,8 @@ const opScanProvisionedProducts = "ScanProvisionedProducts"
 
 // ScanProvisionedProductsRequest generates a "aws/request.Request" representing the
 // client's request for the ScanProvisionedProducts operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4152,6 +6278,8 @@ func (c *ServiceCatalog) ScanProvisionedProductsRequest(input *ScanProvisionedPr
 //
 // Lists the provisioned products that are available (not terminated).
 //
+// To use additional filtering, see SearchProvisionedProducts.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -4189,8 +6317,8 @@ const opSearchProducts = "SearchProducts"
 
 // SearchProductsRequest generates a "aws/request.Request" representing the
 // client's request for the SearchProducts operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4324,8 +6452,8 @@ const opSearchProductsAsAdmin = "SearchProductsAsAdmin"
 
 // SearchProductsAsAdminRequest generates a "aws/request.Request" representing the
 // client's request for the SearchProductsAsAdmin operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4458,12 +6586,147 @@ func (c *ServiceCatalog) SearchProductsAsAdminPagesWithContext(ctx aws.Context, 
 	return p.Err()
 }
 
+const opSearchProvisionedProducts = "SearchProvisionedProducts"
+
+// SearchProvisionedProductsRequest generates a "aws/request.Request" representing the
+// client's request for the SearchProvisionedProducts operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See SearchProvisionedProducts for more information on using the SearchProvisionedProducts
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the SearchProvisionedProductsRequest method.
+//    req, resp := client.SearchProvisionedProductsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/SearchProvisionedProducts
+func (c *ServiceCatalog) SearchProvisionedProductsRequest(input *SearchProvisionedProductsInput) (req *request.Request, output *SearchProvisionedProductsOutput) {
+	op := &request.Operation{
+		Name:       opSearchProvisionedProducts,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"PageToken"},
+			OutputTokens:    []string{"NextPageToken"},
+			LimitToken:      "PageSize",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &SearchProvisionedProductsInput{}
+	}
+
+	output = &SearchProvisionedProductsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// SearchProvisionedProducts API operation for AWS Service Catalog.
+//
+// Gets information about the provisioned products that meet the specified criteria.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Service Catalog's
+// API operation SearchProvisionedProducts for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidParametersException "InvalidParametersException"
+//   One or more parameters provided to the operation are not valid.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/SearchProvisionedProducts
+func (c *ServiceCatalog) SearchProvisionedProducts(input *SearchProvisionedProductsInput) (*SearchProvisionedProductsOutput, error) {
+	req, out := c.SearchProvisionedProductsRequest(input)
+	return out, req.Send()
+}
+
+// SearchProvisionedProductsWithContext is the same as SearchProvisionedProducts with the addition of
+// the ability to pass a context and additional request options.
+//
+// See SearchProvisionedProducts for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ServiceCatalog) SearchProvisionedProductsWithContext(ctx aws.Context, input *SearchProvisionedProductsInput, opts ...request.Option) (*SearchProvisionedProductsOutput, error) {
+	req, out := c.SearchProvisionedProductsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// SearchProvisionedProductsPages iterates over the pages of a SearchProvisionedProducts operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See SearchProvisionedProducts method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a SearchProvisionedProducts operation.
+//    pageNum := 0
+//    err := client.SearchProvisionedProductsPages(params,
+//        func(page *SearchProvisionedProductsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *ServiceCatalog) SearchProvisionedProductsPages(input *SearchProvisionedProductsInput, fn func(*SearchProvisionedProductsOutput, bool) bool) error {
+	return c.SearchProvisionedProductsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// SearchProvisionedProductsPagesWithContext same as SearchProvisionedProductsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ServiceCatalog) SearchProvisionedProductsPagesWithContext(ctx aws.Context, input *SearchProvisionedProductsInput, fn func(*SearchProvisionedProductsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *SearchProvisionedProductsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.SearchProvisionedProductsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*SearchProvisionedProductsOutput), !p.HasNextPage())
+	}
+	return p.Err()
+}
+
 const opTerminateProvisionedProduct = "TerminateProvisionedProduct"
 
 // TerminateProvisionedProductRequest generates a "aws/request.Request" representing the
 // client's request for the TerminateProvisionedProduct operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4546,8 +6809,8 @@ const opUpdateConstraint = "UpdateConstraint"
 
 // UpdateConstraintRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateConstraint operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4628,8 +6891,8 @@ const opUpdatePortfolio = "UpdatePortfolio"
 
 // UpdatePortfolioRequest generates a "aws/request.Request" representing the
 // client's request for the UpdatePortfolio operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4722,8 +6985,8 @@ const opUpdateProduct = "UpdateProduct"
 
 // UpdateProductRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateProduct operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4809,8 +7072,8 @@ const opUpdateProvisionedProduct = "UpdateProvisionedProduct"
 
 // UpdateProvisionedProductRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateProvisionedProduct operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4898,8 +7161,8 @@ const opUpdateProvisioningArtifact = "UpdateProvisioningArtifact"
 
 // UpdateProvisioningArtifactRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateProvisioningArtifact operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -4980,12 +7243,94 @@ func (c *ServiceCatalog) UpdateProvisioningArtifactWithContext(ctx aws.Context, 
 	return out, req.Send()
 }
 
+const opUpdateServiceAction = "UpdateServiceAction"
+
+// UpdateServiceActionRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateServiceAction operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateServiceAction for more information on using the UpdateServiceAction
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateServiceActionRequest method.
+//    req, resp := client.UpdateServiceActionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/UpdateServiceAction
+func (c *ServiceCatalog) UpdateServiceActionRequest(input *UpdateServiceActionInput) (req *request.Request, output *UpdateServiceActionOutput) {
+	op := &request.Operation{
+		Name:       opUpdateServiceAction,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &UpdateServiceActionInput{}
+	}
+
+	output = &UpdateServiceActionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateServiceAction API operation for AWS Service Catalog.
+//
+// Updates a self-service action.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Service Catalog's
+// API operation UpdateServiceAction for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The specified resource was not found.
+//
+//   * ErrCodeInvalidParametersException "InvalidParametersException"
+//   One or more parameters provided to the operation are not valid.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/UpdateServiceAction
+func (c *ServiceCatalog) UpdateServiceAction(input *UpdateServiceActionInput) (*UpdateServiceActionOutput, error) {
+	req, out := c.UpdateServiceActionRequest(input)
+	return out, req.Send()
+}
+
+// UpdateServiceActionWithContext is the same as UpdateServiceAction with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateServiceAction for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ServiceCatalog) UpdateServiceActionWithContext(ctx aws.Context, input *UpdateServiceActionInput, opts ...request.Option) (*UpdateServiceActionOutput, error) {
+	req, out := c.UpdateServiceActionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opUpdateTagOption = "UpdateTagOption"
 
 // UpdateTagOptionRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateTagOption operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -5070,7 +7415,6 @@ func (c *ServiceCatalog) UpdateTagOptionWithContext(ctx aws.Context, input *Upda
 	return out, req.Send()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/AcceptPortfolioShareInput
 type AcceptPortfolioShareInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5087,6 +7431,20 @@ type AcceptPortfolioShareInput struct {
 	//
 	// PortfolioId is a required field
 	PortfolioId *string `min:"1" type:"string" required:"true"`
+
+	// The type of shared portfolios to accept. The default is to accept imported
+	// portfolios.
+	//
+	//    * AWS_ORGANIZATIONS - Accept portfolios shared by the master account of
+	//    your organization.
+	//
+	//    * IMPORTED - Accept imported portfolios.
+	//
+	//    * AWS_SERVICECATALOG - Not supported. (Throws ResourceNotFoundException.)
+	//
+	// For example, aws servicecatalog accept-portfolio-share --portfolio-id "port-2qwzkwxt3y5fk"
+	// --portfolio-share-type AWS_ORGANIZATIONS
+	PortfolioShareType *string `type:"string" enum:"PortfolioShareType"`
 }
 
 // String returns the string representation
@@ -5127,7 +7485,12 @@ func (s *AcceptPortfolioShareInput) SetPortfolioId(v string) *AcceptPortfolioSha
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/AcceptPortfolioShareOutput
+// SetPortfolioShareType sets the PortfolioShareType field's value.
+func (s *AcceptPortfolioShareInput) SetPortfolioShareType(v string) *AcceptPortfolioShareInput {
+	s.PortfolioShareType = &v
+	return s
+}
+
 type AcceptPortfolioShareOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -5143,7 +7506,6 @@ func (s AcceptPortfolioShareOutput) GoString() string {
 }
 
 // The access level to use to filter results.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/AccessLevelFilter
 type AccessLevelFilter struct {
 	_ struct{} `type:"structure"`
 
@@ -5182,7 +7544,6 @@ func (s *AccessLevelFilter) SetValue(v string) *AccessLevelFilter {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/AssociatePrincipalWithPortfolioInput
 type AssociatePrincipalWithPortfolioInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5270,7 +7631,6 @@ func (s *AssociatePrincipalWithPortfolioInput) SetPrincipalType(v string) *Assoc
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/AssociatePrincipalWithPortfolioOutput
 type AssociatePrincipalWithPortfolioOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -5285,7 +7645,6 @@ func (s AssociatePrincipalWithPortfolioOutput) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/AssociateProductWithPortfolioInput
 type AssociateProductWithPortfolioInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5371,7 +7730,6 @@ func (s *AssociateProductWithPortfolioInput) SetSourcePortfolioId(v string) *Ass
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/AssociateProductWithPortfolioOutput
 type AssociateProductWithPortfolioOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -5386,7 +7744,110 @@ func (s AssociateProductWithPortfolioOutput) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/AssociateTagOptionWithResourceInput
+type AssociateServiceActionWithProvisioningArtifactInput struct {
+	_ struct{} `type:"structure"`
+
+	// The language code.
+	//
+	//    * en - English (default)
+	//
+	//    * jp - Japanese
+	//
+	//    * zh - Chinese
+	AcceptLanguage *string `type:"string"`
+
+	// The product identifier. For example, prod-abcdzk7xy33qa.
+	//
+	// ProductId is a required field
+	ProductId *string `min:"1" type:"string" required:"true"`
+
+	// The identifier of the provisioning artifact. For example, pa-4abcdjnxjj6ne.
+	//
+	// ProvisioningArtifactId is a required field
+	ProvisioningArtifactId *string `min:"1" type:"string" required:"true"`
+
+	// The self-service action identifier. For example, act-fs7abcd89wxyz.
+	//
+	// ServiceActionId is a required field
+	ServiceActionId *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s AssociateServiceActionWithProvisioningArtifactInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AssociateServiceActionWithProvisioningArtifactInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AssociateServiceActionWithProvisioningArtifactInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AssociateServiceActionWithProvisioningArtifactInput"}
+	if s.ProductId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ProductId"))
+	}
+	if s.ProductId != nil && len(*s.ProductId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ProductId", 1))
+	}
+	if s.ProvisioningArtifactId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ProvisioningArtifactId"))
+	}
+	if s.ProvisioningArtifactId != nil && len(*s.ProvisioningArtifactId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ProvisioningArtifactId", 1))
+	}
+	if s.ServiceActionId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ServiceActionId"))
+	}
+	if s.ServiceActionId != nil && len(*s.ServiceActionId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ServiceActionId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAcceptLanguage sets the AcceptLanguage field's value.
+func (s *AssociateServiceActionWithProvisioningArtifactInput) SetAcceptLanguage(v string) *AssociateServiceActionWithProvisioningArtifactInput {
+	s.AcceptLanguage = &v
+	return s
+}
+
+// SetProductId sets the ProductId field's value.
+func (s *AssociateServiceActionWithProvisioningArtifactInput) SetProductId(v string) *AssociateServiceActionWithProvisioningArtifactInput {
+	s.ProductId = &v
+	return s
+}
+
+// SetProvisioningArtifactId sets the ProvisioningArtifactId field's value.
+func (s *AssociateServiceActionWithProvisioningArtifactInput) SetProvisioningArtifactId(v string) *AssociateServiceActionWithProvisioningArtifactInput {
+	s.ProvisioningArtifactId = &v
+	return s
+}
+
+// SetServiceActionId sets the ServiceActionId field's value.
+func (s *AssociateServiceActionWithProvisioningArtifactInput) SetServiceActionId(v string) *AssociateServiceActionWithProvisioningArtifactInput {
+	s.ServiceActionId = &v
+	return s
+}
+
+type AssociateServiceActionWithProvisioningArtifactOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s AssociateServiceActionWithProvisioningArtifactOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AssociateServiceActionWithProvisioningArtifactOutput) GoString() string {
+	return s.String()
+}
+
 type AssociateTagOptionWithResourceInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5442,7 +7903,6 @@ func (s *AssociateTagOptionWithResourceInput) SetTagOptionId(v string) *Associat
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/AssociateTagOptionWithResourceOutput
 type AssociateTagOptionWithResourceOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -5457,8 +7917,213 @@ func (s AssociateTagOptionWithResourceOutput) GoString() string {
 	return s.String()
 }
 
+type BatchAssociateServiceActionWithProvisioningArtifactInput struct {
+	_ struct{} `type:"structure"`
+
+	// The language code.
+	//
+	//    * en - English (default)
+	//
+	//    * jp - Japanese
+	//
+	//    * zh - Chinese
+	AcceptLanguage *string `type:"string"`
+
+	// One or more associations, each consisting of the Action ID, the Product ID,
+	// and the Provisioning Artifact ID.
+	//
+	// ServiceActionAssociations is a required field
+	ServiceActionAssociations []*ServiceActionAssociation `min:"1" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s BatchAssociateServiceActionWithProvisioningArtifactInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BatchAssociateServiceActionWithProvisioningArtifactInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *BatchAssociateServiceActionWithProvisioningArtifactInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "BatchAssociateServiceActionWithProvisioningArtifactInput"}
+	if s.ServiceActionAssociations == nil {
+		invalidParams.Add(request.NewErrParamRequired("ServiceActionAssociations"))
+	}
+	if s.ServiceActionAssociations != nil && len(s.ServiceActionAssociations) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ServiceActionAssociations", 1))
+	}
+	if s.ServiceActionAssociations != nil {
+		for i, v := range s.ServiceActionAssociations {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "ServiceActionAssociations", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAcceptLanguage sets the AcceptLanguage field's value.
+func (s *BatchAssociateServiceActionWithProvisioningArtifactInput) SetAcceptLanguage(v string) *BatchAssociateServiceActionWithProvisioningArtifactInput {
+	s.AcceptLanguage = &v
+	return s
+}
+
+// SetServiceActionAssociations sets the ServiceActionAssociations field's value.
+func (s *BatchAssociateServiceActionWithProvisioningArtifactInput) SetServiceActionAssociations(v []*ServiceActionAssociation) *BatchAssociateServiceActionWithProvisioningArtifactInput {
+	s.ServiceActionAssociations = v
+	return s
+}
+
+type BatchAssociateServiceActionWithProvisioningArtifactOutput struct {
+	_ struct{} `type:"structure"`
+
+	// An object that contains a list of errors, along with information to help
+	// you identify the self-service action.
+	FailedServiceActionAssociations []*FailedServiceActionAssociation `type:"list"`
+}
+
+// String returns the string representation
+func (s BatchAssociateServiceActionWithProvisioningArtifactOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BatchAssociateServiceActionWithProvisioningArtifactOutput) GoString() string {
+	return s.String()
+}
+
+// SetFailedServiceActionAssociations sets the FailedServiceActionAssociations field's value.
+func (s *BatchAssociateServiceActionWithProvisioningArtifactOutput) SetFailedServiceActionAssociations(v []*FailedServiceActionAssociation) *BatchAssociateServiceActionWithProvisioningArtifactOutput {
+	s.FailedServiceActionAssociations = v
+	return s
+}
+
+type BatchDisassociateServiceActionFromProvisioningArtifactInput struct {
+	_ struct{} `type:"structure"`
+
+	// The language code.
+	//
+	//    * en - English (default)
+	//
+	//    * jp - Japanese
+	//
+	//    * zh - Chinese
+	AcceptLanguage *string `type:"string"`
+
+	// One or more associations, each consisting of the Action ID, the Product ID,
+	// and the Provisioning Artifact ID.
+	//
+	// ServiceActionAssociations is a required field
+	ServiceActionAssociations []*ServiceActionAssociation `min:"1" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s BatchDisassociateServiceActionFromProvisioningArtifactInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BatchDisassociateServiceActionFromProvisioningArtifactInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *BatchDisassociateServiceActionFromProvisioningArtifactInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "BatchDisassociateServiceActionFromProvisioningArtifactInput"}
+	if s.ServiceActionAssociations == nil {
+		invalidParams.Add(request.NewErrParamRequired("ServiceActionAssociations"))
+	}
+	if s.ServiceActionAssociations != nil && len(s.ServiceActionAssociations) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ServiceActionAssociations", 1))
+	}
+	if s.ServiceActionAssociations != nil {
+		for i, v := range s.ServiceActionAssociations {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "ServiceActionAssociations", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAcceptLanguage sets the AcceptLanguage field's value.
+func (s *BatchDisassociateServiceActionFromProvisioningArtifactInput) SetAcceptLanguage(v string) *BatchDisassociateServiceActionFromProvisioningArtifactInput {
+	s.AcceptLanguage = &v
+	return s
+}
+
+// SetServiceActionAssociations sets the ServiceActionAssociations field's value.
+func (s *BatchDisassociateServiceActionFromProvisioningArtifactInput) SetServiceActionAssociations(v []*ServiceActionAssociation) *BatchDisassociateServiceActionFromProvisioningArtifactInput {
+	s.ServiceActionAssociations = v
+	return s
+}
+
+type BatchDisassociateServiceActionFromProvisioningArtifactOutput struct {
+	_ struct{} `type:"structure"`
+
+	// An object that contains a list of errors, along with information to help
+	// you identify the self-service action.
+	FailedServiceActionAssociations []*FailedServiceActionAssociation `type:"list"`
+}
+
+// String returns the string representation
+func (s BatchDisassociateServiceActionFromProvisioningArtifactOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BatchDisassociateServiceActionFromProvisioningArtifactOutput) GoString() string {
+	return s.String()
+}
+
+// SetFailedServiceActionAssociations sets the FailedServiceActionAssociations field's value.
+func (s *BatchDisassociateServiceActionFromProvisioningArtifactOutput) SetFailedServiceActionAssociations(v []*FailedServiceActionAssociation) *BatchDisassociateServiceActionFromProvisioningArtifactOutput {
+	s.FailedServiceActionAssociations = v
+	return s
+}
+
+// Information about a CloudWatch dashboard.
+type CloudWatchDashboard struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the CloudWatch dashboard.
+	Name *string `type:"string"`
+}
+
+// String returns the string representation
+func (s CloudWatchDashboard) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CloudWatchDashboard) GoString() string {
+	return s.String()
+}
+
+// SetName sets the Name field's value.
+func (s *CloudWatchDashboard) SetName(v string) *CloudWatchDashboard {
+	s.Name = &v
+	return s
+}
+
 // Information about a constraint.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ConstraintDetail
 type ConstraintDetail struct {
 	_ struct{} `type:"structure"`
 
@@ -5476,6 +8141,8 @@ type ConstraintDetail struct {
 	//    * LAUNCH
 	//
 	//    * NOTIFICATION
+	//
+	//    * STACKSET
 	//
 	//    * TEMPLATE
 	Type *string `min:"1" type:"string"`
@@ -5516,7 +8183,6 @@ func (s *ConstraintDetail) SetType(v string) *ConstraintDetail {
 }
 
 // Summary information about a constraint.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ConstraintSummary
 type ConstraintSummary struct {
 	_ struct{} `type:"structure"`
 
@@ -5528,6 +8194,8 @@ type ConstraintSummary struct {
 	//    * LAUNCH
 	//
 	//    * NOTIFICATION
+	//
+	//    * STACKSET
 	//
 	//    * TEMPLATE
 	Type *string `min:"1" type:"string"`
@@ -5555,7 +8223,6 @@ func (s *ConstraintSummary) SetType(v string) *ConstraintSummary {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/CopyProductInput
 type CopyProductInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5575,9 +8242,7 @@ type CopyProductInput struct {
 	// A unique identifier that you provide to ensure idempotency. If multiple requests
 	// differ only by the idempotency token, the same response is returned for each
 	// repeated request.
-	//
-	// IdempotencyToken is a required field
-	IdempotencyToken *string `min:"1" type:"string" required:"true" idempotencyToken:"true"`
+	IdempotencyToken *string `min:"1" type:"string" idempotencyToken:"true"`
 
 	// The Amazon Resource Name (ARN) of the source product.
 	//
@@ -5608,9 +8273,6 @@ func (s CopyProductInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *CopyProductInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CopyProductInput"}
-	if s.IdempotencyToken == nil {
-		invalidParams.Add(request.NewErrParamRequired("IdempotencyToken"))
-	}
 	if s.IdempotencyToken != nil && len(*s.IdempotencyToken) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("IdempotencyToken", 1))
 	}
@@ -5672,7 +8334,6 @@ func (s *CopyProductInput) SetTargetProductName(v string) *CopyProductInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/CopyProductOutput
 type CopyProductOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -5696,7 +8357,6 @@ func (s *CopyProductOutput) SetCopyProductToken(v string) *CopyProductOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/CreateConstraintInput
 type CreateConstraintInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5715,20 +8375,34 @@ type CreateConstraintInput struct {
 	// A unique identifier that you provide to ensure idempotency. If multiple requests
 	// differ only by the idempotency token, the same response is returned for each
 	// repeated request.
-	//
-	// IdempotencyToken is a required field
-	IdempotencyToken *string `min:"1" type:"string" required:"true" idempotencyToken:"true"`
+	IdempotencyToken *string `min:"1" type:"string" idempotencyToken:"true"`
 
 	// The constraint parameters, in JSON format. The syntax depends on the constraint
 	// type as follows:
 	//
 	// LAUNCHSpecify the RoleArn property as follows:
 	//
-	// \"RoleArn\" : \"arn:aws:iam::123456789012:role/LaunchRole\"
+	// {"RoleArn" : "arn:aws:iam::123456789012:role/LaunchRole"}
+	//
+	// You cannot have both a LAUNCH and a STACKSET constraint.
+	//
+	// You also cannot have more than one LAUNCH constraint on a product and portfolio.
 	//
 	// NOTIFICATIONSpecify the NotificationArns property as follows:
 	//
-	// \"NotificationArns\" : [\"arn:aws:sns:us-east-1:123456789012:Topic\"]
+	// {"NotificationArns" : ["arn:aws:sns:us-east-1:123456789012:Topic"]}
+	//
+	// STACKSETSpecify the Parameters property as follows:
+	//
+	// {"Version": "String", "Properties": {"AccountList": [ "String" ], "RegionList":
+	// [ "String" ], "AdminRole": "String", "ExecutionRole": "String"}}
+	//
+	// You cannot have both a LAUNCH and a STACKSET constraint.
+	//
+	// You also cannot have more than one STACKSET constraint on a product and portfolio.
+	//
+	// Products with a STACKSET constraint will launch an AWS CloudFormation stack
+	// set.
 	//
 	// TEMPLATESpecify the Rules property. For more information, see Template Constraint
 	// Rules (http://docs.aws.amazon.com/servicecatalog/latest/adminguide/reference-template_constraint_rules.html).
@@ -5752,6 +8426,8 @@ type CreateConstraintInput struct {
 	//
 	//    * NOTIFICATION
 	//
+	//    * STACKSET
+	//
 	//    * TEMPLATE
 	//
 	// Type is a required field
@@ -5771,9 +8447,6 @@ func (s CreateConstraintInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *CreateConstraintInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CreateConstraintInput"}
-	if s.IdempotencyToken == nil {
-		invalidParams.Add(request.NewErrParamRequired("IdempotencyToken"))
-	}
 	if s.IdempotencyToken != nil && len(*s.IdempotencyToken) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("IdempotencyToken", 1))
 	}
@@ -5847,7 +8520,6 @@ func (s *CreateConstraintInput) SetType(v string) *CreateConstraintInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/CreateConstraintOutput
 type CreateConstraintOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -5889,7 +8561,6 @@ func (s *CreateConstraintOutput) SetStatus(v string) *CreateConstraintOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/CreatePortfolioInput
 type CreatePortfolioInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5913,16 +8584,14 @@ type CreatePortfolioInput struct {
 	// A unique identifier that you provide to ensure idempotency. If multiple requests
 	// differ only by the idempotency token, the same response is returned for each
 	// repeated request.
-	//
-	// IdempotencyToken is a required field
-	IdempotencyToken *string `min:"1" type:"string" required:"true" idempotencyToken:"true"`
+	IdempotencyToken *string `min:"1" type:"string" idempotencyToken:"true"`
 
 	// The name of the portfolio provider.
 	//
 	// ProviderName is a required field
 	ProviderName *string `min:"1" type:"string" required:"true"`
 
-	// The tags to associate with the portfolio.
+	// One or more tags.
 	Tags []*Tag `type:"list"`
 }
 
@@ -5944,9 +8613,6 @@ func (s *CreatePortfolioInput) Validate() error {
 	}
 	if s.DisplayName != nil && len(*s.DisplayName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("DisplayName", 1))
-	}
-	if s.IdempotencyToken == nil {
-		invalidParams.Add(request.NewErrParamRequired("IdempotencyToken"))
 	}
 	if s.IdempotencyToken != nil && len(*s.IdempotencyToken) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("IdempotencyToken", 1))
@@ -6010,7 +8676,6 @@ func (s *CreatePortfolioInput) SetTags(v []*Tag) *CreatePortfolioInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/CreatePortfolioOutput
 type CreatePortfolioOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -6043,7 +8708,6 @@ func (s *CreatePortfolioOutput) SetTags(v []*Tag) *CreatePortfolioOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/CreatePortfolioShareInput
 type CreatePortfolioShareInput struct {
 	_ struct{} `type:"structure"`
 
@@ -6056,10 +8720,15 @@ type CreatePortfolioShareInput struct {
 	//    * zh - Chinese
 	AcceptLanguage *string `type:"string"`
 
-	// The AWS account ID.
-	//
-	// AccountId is a required field
-	AccountId *string `type:"string" required:"true"`
+	// The AWS account ID. For example, 123456789012.
+	AccountId *string `type:"string"`
+
+	// The organization node to whom you are going to share. If OrganizationNode
+	// is passed in, PortfolioShare will be created for the node and its children
+	// (when applies), and a PortfolioShareToken will be returned in the output
+	// in order for the administrator to monitor the status of the PortfolioShare
+	// creation process.
+	OrganizationNode *OrganizationNode `type:"structure"`
 
 	// The portfolio identifier.
 	//
@@ -6080,9 +8749,6 @@ func (s CreatePortfolioShareInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *CreatePortfolioShareInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CreatePortfolioShareInput"}
-	if s.AccountId == nil {
-		invalidParams.Add(request.NewErrParamRequired("AccountId"))
-	}
 	if s.PortfolioId == nil {
 		invalidParams.Add(request.NewErrParamRequired("PortfolioId"))
 	}
@@ -6108,15 +8774,24 @@ func (s *CreatePortfolioShareInput) SetAccountId(v string) *CreatePortfolioShare
 	return s
 }
 
+// SetOrganizationNode sets the OrganizationNode field's value.
+func (s *CreatePortfolioShareInput) SetOrganizationNode(v *OrganizationNode) *CreatePortfolioShareInput {
+	s.OrganizationNode = v
+	return s
+}
+
 // SetPortfolioId sets the PortfolioId field's value.
 func (s *CreatePortfolioShareInput) SetPortfolioId(v string) *CreatePortfolioShareInput {
 	s.PortfolioId = &v
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/CreatePortfolioShareOutput
 type CreatePortfolioShareOutput struct {
 	_ struct{} `type:"structure"`
+
+	// The portfolio share unique identifier. This will only be returned if portfolio
+	// is shared to an organization node.
+	PortfolioShareToken *string `type:"string"`
 }
 
 // String returns the string representation
@@ -6129,7 +8804,12 @@ func (s CreatePortfolioShareOutput) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/CreateProductInput
+// SetPortfolioShareToken sets the PortfolioShareToken field's value.
+func (s *CreatePortfolioShareOutput) SetPortfolioShareToken(v string) *CreatePortfolioShareOutput {
+	s.PortfolioShareToken = &v
+	return s
+}
+
 type CreateProductInput struct {
 	_ struct{} `type:"structure"`
 
@@ -6151,9 +8831,7 @@ type CreateProductInput struct {
 	// A unique identifier that you provide to ensure idempotency. If multiple requests
 	// differ only by the idempotency token, the same response is returned for each
 	// repeated request.
-	//
-	// IdempotencyToken is a required field
-	IdempotencyToken *string `min:"1" type:"string" required:"true" idempotencyToken:"true"`
+	IdempotencyToken *string `min:"1" type:"string" idempotencyToken:"true"`
 
 	// The name of the product.
 	//
@@ -6184,7 +8862,7 @@ type CreateProductInput struct {
 	// The contact URL for product support.
 	SupportUrl *string `type:"string"`
 
-	// The tags to associate with the product.
+	// One or more tags.
 	Tags []*Tag `type:"list"`
 }
 
@@ -6201,9 +8879,6 @@ func (s CreateProductInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *CreateProductInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CreateProductInput"}
-	if s.IdempotencyToken == nil {
-		invalidParams.Add(request.NewErrParamRequired("IdempotencyToken"))
-	}
 	if s.IdempotencyToken != nil && len(*s.IdempotencyToken) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("IdempotencyToken", 1))
 	}
@@ -6313,7 +8988,6 @@ func (s *CreateProductInput) SetTags(v []*Tag) *CreateProductInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/CreateProductOutput
 type CreateProductOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -6355,7 +9029,261 @@ func (s *CreateProductOutput) SetTags(v []*Tag) *CreateProductOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/CreateProvisioningArtifactInput
+type CreateProvisionedProductPlanInput struct {
+	_ struct{} `type:"structure"`
+
+	// The language code.
+	//
+	//    * en - English (default)
+	//
+	//    * jp - Japanese
+	//
+	//    * zh - Chinese
+	AcceptLanguage *string `type:"string"`
+
+	// A unique identifier that you provide to ensure idempotency. If multiple requests
+	// differ only by the idempotency token, the same response is returned for each
+	// repeated request.
+	IdempotencyToken *string `min:"1" type:"string" idempotencyToken:"true"`
+
+	// Passed to CloudFormation. The SNS topic ARNs to which to publish stack-related
+	// events.
+	NotificationArns []*string `type:"list"`
+
+	// The path identifier of the product. This value is optional if the product
+	// has a default path, and required if the product has more than one path. To
+	// list the paths for a product, use ListLaunchPaths.
+	PathId *string `min:"1" type:"string"`
+
+	// The name of the plan.
+	//
+	// PlanName is a required field
+	PlanName *string `type:"string" required:"true"`
+
+	// The plan type.
+	//
+	// PlanType is a required field
+	PlanType *string `type:"string" required:"true" enum:"ProvisionedProductPlanType"`
+
+	// The product identifier.
+	//
+	// ProductId is a required field
+	ProductId *string `min:"1" type:"string" required:"true"`
+
+	// A user-friendly name for the provisioned product. This value must be unique
+	// for the AWS account and cannot be updated after the product is provisioned.
+	//
+	// ProvisionedProductName is a required field
+	ProvisionedProductName *string `min:"1" type:"string" required:"true"`
+
+	// The identifier of the provisioning artifact.
+	//
+	// ProvisioningArtifactId is a required field
+	ProvisioningArtifactId *string `min:"1" type:"string" required:"true"`
+
+	// Parameters specified by the administrator that are required for provisioning
+	// the product.
+	ProvisioningParameters []*UpdateProvisioningParameter `type:"list"`
+
+	// One or more tags.
+	Tags []*Tag `type:"list"`
+}
+
+// String returns the string representation
+func (s CreateProvisionedProductPlanInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateProvisionedProductPlanInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateProvisionedProductPlanInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateProvisionedProductPlanInput"}
+	if s.IdempotencyToken != nil && len(*s.IdempotencyToken) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("IdempotencyToken", 1))
+	}
+	if s.PathId != nil && len(*s.PathId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("PathId", 1))
+	}
+	if s.PlanName == nil {
+		invalidParams.Add(request.NewErrParamRequired("PlanName"))
+	}
+	if s.PlanType == nil {
+		invalidParams.Add(request.NewErrParamRequired("PlanType"))
+	}
+	if s.ProductId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ProductId"))
+	}
+	if s.ProductId != nil && len(*s.ProductId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ProductId", 1))
+	}
+	if s.ProvisionedProductName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ProvisionedProductName"))
+	}
+	if s.ProvisionedProductName != nil && len(*s.ProvisionedProductName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ProvisionedProductName", 1))
+	}
+	if s.ProvisioningArtifactId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ProvisioningArtifactId"))
+	}
+	if s.ProvisioningArtifactId != nil && len(*s.ProvisioningArtifactId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ProvisioningArtifactId", 1))
+	}
+	if s.ProvisioningParameters != nil {
+		for i, v := range s.ProvisioningParameters {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "ProvisioningParameters", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAcceptLanguage sets the AcceptLanguage field's value.
+func (s *CreateProvisionedProductPlanInput) SetAcceptLanguage(v string) *CreateProvisionedProductPlanInput {
+	s.AcceptLanguage = &v
+	return s
+}
+
+// SetIdempotencyToken sets the IdempotencyToken field's value.
+func (s *CreateProvisionedProductPlanInput) SetIdempotencyToken(v string) *CreateProvisionedProductPlanInput {
+	s.IdempotencyToken = &v
+	return s
+}
+
+// SetNotificationArns sets the NotificationArns field's value.
+func (s *CreateProvisionedProductPlanInput) SetNotificationArns(v []*string) *CreateProvisionedProductPlanInput {
+	s.NotificationArns = v
+	return s
+}
+
+// SetPathId sets the PathId field's value.
+func (s *CreateProvisionedProductPlanInput) SetPathId(v string) *CreateProvisionedProductPlanInput {
+	s.PathId = &v
+	return s
+}
+
+// SetPlanName sets the PlanName field's value.
+func (s *CreateProvisionedProductPlanInput) SetPlanName(v string) *CreateProvisionedProductPlanInput {
+	s.PlanName = &v
+	return s
+}
+
+// SetPlanType sets the PlanType field's value.
+func (s *CreateProvisionedProductPlanInput) SetPlanType(v string) *CreateProvisionedProductPlanInput {
+	s.PlanType = &v
+	return s
+}
+
+// SetProductId sets the ProductId field's value.
+func (s *CreateProvisionedProductPlanInput) SetProductId(v string) *CreateProvisionedProductPlanInput {
+	s.ProductId = &v
+	return s
+}
+
+// SetProvisionedProductName sets the ProvisionedProductName field's value.
+func (s *CreateProvisionedProductPlanInput) SetProvisionedProductName(v string) *CreateProvisionedProductPlanInput {
+	s.ProvisionedProductName = &v
+	return s
+}
+
+// SetProvisioningArtifactId sets the ProvisioningArtifactId field's value.
+func (s *CreateProvisionedProductPlanInput) SetProvisioningArtifactId(v string) *CreateProvisionedProductPlanInput {
+	s.ProvisioningArtifactId = &v
+	return s
+}
+
+// SetProvisioningParameters sets the ProvisioningParameters field's value.
+func (s *CreateProvisionedProductPlanInput) SetProvisioningParameters(v []*UpdateProvisioningParameter) *CreateProvisionedProductPlanInput {
+	s.ProvisioningParameters = v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateProvisionedProductPlanInput) SetTags(v []*Tag) *CreateProvisionedProductPlanInput {
+	s.Tags = v
+	return s
+}
+
+type CreateProvisionedProductPlanOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The plan identifier.
+	PlanId *string `min:"1" type:"string"`
+
+	// The name of the plan.
+	PlanName *string `type:"string"`
+
+	// The product identifier.
+	ProvisionProductId *string `min:"1" type:"string"`
+
+	// The user-friendly name of the provisioned product.
+	ProvisionedProductName *string `min:"1" type:"string"`
+
+	// The identifier of the provisioning artifact.
+	ProvisioningArtifactId *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s CreateProvisionedProductPlanOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateProvisionedProductPlanOutput) GoString() string {
+	return s.String()
+}
+
+// SetPlanId sets the PlanId field's value.
+func (s *CreateProvisionedProductPlanOutput) SetPlanId(v string) *CreateProvisionedProductPlanOutput {
+	s.PlanId = &v
+	return s
+}
+
+// SetPlanName sets the PlanName field's value.
+func (s *CreateProvisionedProductPlanOutput) SetPlanName(v string) *CreateProvisionedProductPlanOutput {
+	s.PlanName = &v
+	return s
+}
+
+// SetProvisionProductId sets the ProvisionProductId field's value.
+func (s *CreateProvisionedProductPlanOutput) SetProvisionProductId(v string) *CreateProvisionedProductPlanOutput {
+	s.ProvisionProductId = &v
+	return s
+}
+
+// SetProvisionedProductName sets the ProvisionedProductName field's value.
+func (s *CreateProvisionedProductPlanOutput) SetProvisionedProductName(v string) *CreateProvisionedProductPlanOutput {
+	s.ProvisionedProductName = &v
+	return s
+}
+
+// SetProvisioningArtifactId sets the ProvisioningArtifactId field's value.
+func (s *CreateProvisionedProductPlanOutput) SetProvisioningArtifactId(v string) *CreateProvisionedProductPlanOutput {
+	s.ProvisioningArtifactId = &v
+	return s
+}
+
 type CreateProvisioningArtifactInput struct {
 	_ struct{} `type:"structure"`
 
@@ -6371,9 +9299,7 @@ type CreateProvisioningArtifactInput struct {
 	// A unique identifier that you provide to ensure idempotency. If multiple requests
 	// differ only by the idempotency token, the same response is returned for each
 	// repeated request.
-	//
-	// IdempotencyToken is a required field
-	IdempotencyToken *string `min:"1" type:"string" required:"true" idempotencyToken:"true"`
+	IdempotencyToken *string `min:"1" type:"string" idempotencyToken:"true"`
 
 	// The configuration for the provisioning artifact.
 	//
@@ -6399,9 +9325,6 @@ func (s CreateProvisioningArtifactInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *CreateProvisioningArtifactInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CreateProvisioningArtifactInput"}
-	if s.IdempotencyToken == nil {
-		invalidParams.Add(request.NewErrParamRequired("IdempotencyToken"))
-	}
 	if s.IdempotencyToken != nil && len(*s.IdempotencyToken) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("IdempotencyToken", 1))
 	}
@@ -6450,7 +9373,6 @@ func (s *CreateProvisioningArtifactInput) SetProductId(v string) *CreateProvisio
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/CreateProvisioningArtifactOutput
 type CreateProvisioningArtifactOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -6492,7 +9414,153 @@ func (s *CreateProvisioningArtifactOutput) SetStatus(v string) *CreateProvisioni
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/CreateTagOptionInput
+type CreateServiceActionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The language code.
+	//
+	//    * en - English (default)
+	//
+	//    * jp - Japanese
+	//
+	//    * zh - Chinese
+	AcceptLanguage *string `type:"string"`
+
+	// The self-service action definition. Can be one of the following:
+	//
+	// NameThe name of the AWS Systems Manager Document. For example, AWS-RestartEC2Instance.
+	//
+	// VersionThe AWS Systems Manager automation document version. For example,
+	// "Version": "1"
+	//
+	// AssumeRoleThe Amazon Resource Name (ARN) of the role that performs the self-service
+	// actions on your behalf. For example, "AssumeRole": "arn:aws:iam::12345678910:role/ActionRole".
+	//
+	// To reuse the provisioned product launch role, set to "AssumeRole": "LAUNCH_ROLE".
+	//
+	// ParametersThe list of parameters in JSON format.
+	//
+	// For example: [{\"Name\":\"InstanceId\",\"Type\":\"TARGET\"}].
+	//
+	// Definition is a required field
+	Definition map[string]*string `min:"1" type:"map" required:"true"`
+
+	// The service action definition type. For example, SSM_AUTOMATION.
+	//
+	// DefinitionType is a required field
+	DefinitionType *string `type:"string" required:"true" enum:"ServiceActionDefinitionType"`
+
+	// The self-service action description.
+	Description *string `type:"string"`
+
+	// A unique identifier that you provide to ensure idempotency. If multiple requests
+	// differ only by the idempotency token, the same response is returned for each
+	// repeated request.
+	IdempotencyToken *string `min:"1" type:"string" idempotencyToken:"true"`
+
+	// The self-service action name.
+	//
+	// Name is a required field
+	Name *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s CreateServiceActionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateServiceActionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateServiceActionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateServiceActionInput"}
+	if s.Definition == nil {
+		invalidParams.Add(request.NewErrParamRequired("Definition"))
+	}
+	if s.Definition != nil && len(s.Definition) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Definition", 1))
+	}
+	if s.DefinitionType == nil {
+		invalidParams.Add(request.NewErrParamRequired("DefinitionType"))
+	}
+	if s.IdempotencyToken != nil && len(*s.IdempotencyToken) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("IdempotencyToken", 1))
+	}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAcceptLanguage sets the AcceptLanguage field's value.
+func (s *CreateServiceActionInput) SetAcceptLanguage(v string) *CreateServiceActionInput {
+	s.AcceptLanguage = &v
+	return s
+}
+
+// SetDefinition sets the Definition field's value.
+func (s *CreateServiceActionInput) SetDefinition(v map[string]*string) *CreateServiceActionInput {
+	s.Definition = v
+	return s
+}
+
+// SetDefinitionType sets the DefinitionType field's value.
+func (s *CreateServiceActionInput) SetDefinitionType(v string) *CreateServiceActionInput {
+	s.DefinitionType = &v
+	return s
+}
+
+// SetDescription sets the Description field's value.
+func (s *CreateServiceActionInput) SetDescription(v string) *CreateServiceActionInput {
+	s.Description = &v
+	return s
+}
+
+// SetIdempotencyToken sets the IdempotencyToken field's value.
+func (s *CreateServiceActionInput) SetIdempotencyToken(v string) *CreateServiceActionInput {
+	s.IdempotencyToken = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *CreateServiceActionInput) SetName(v string) *CreateServiceActionInput {
+	s.Name = &v
+	return s
+}
+
+type CreateServiceActionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// An object containing information about the self-service action.
+	ServiceActionDetail *ServiceActionDetail `type:"structure"`
+}
+
+// String returns the string representation
+func (s CreateServiceActionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateServiceActionOutput) GoString() string {
+	return s.String()
+}
+
+// SetServiceActionDetail sets the ServiceActionDetail field's value.
+func (s *CreateServiceActionOutput) SetServiceActionDetail(v *ServiceActionDetail) *CreateServiceActionOutput {
+	s.ServiceActionDetail = v
+	return s
+}
+
 type CreateTagOptionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -6551,7 +9619,6 @@ func (s *CreateTagOptionInput) SetValue(v string) *CreateTagOptionInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/CreateTagOptionOutput
 type CreateTagOptionOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -6575,7 +9642,6 @@ func (s *CreateTagOptionOutput) SetTagOptionDetail(v *TagOptionDetail) *CreateTa
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DeleteConstraintInput
 type DeleteConstraintInput struct {
 	_ struct{} `type:"structure"`
 
@@ -6632,7 +9698,6 @@ func (s *DeleteConstraintInput) SetId(v string) *DeleteConstraintInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DeleteConstraintOutput
 type DeleteConstraintOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -6647,7 +9712,6 @@ func (s DeleteConstraintOutput) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DeletePortfolioInput
 type DeletePortfolioInput struct {
 	_ struct{} `type:"structure"`
 
@@ -6704,7 +9768,6 @@ func (s *DeletePortfolioInput) SetId(v string) *DeletePortfolioInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DeletePortfolioOutput
 type DeletePortfolioOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -6719,7 +9782,6 @@ func (s DeletePortfolioOutput) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DeletePortfolioShareInput
 type DeletePortfolioShareInput struct {
 	_ struct{} `type:"structure"`
 
@@ -6733,9 +9795,10 @@ type DeletePortfolioShareInput struct {
 	AcceptLanguage *string `type:"string"`
 
 	// The AWS account ID.
-	//
-	// AccountId is a required field
-	AccountId *string `type:"string" required:"true"`
+	AccountId *string `type:"string"`
+
+	// The organization node to whom you are going to stop sharing.
+	OrganizationNode *OrganizationNode `type:"structure"`
 
 	// The portfolio identifier.
 	//
@@ -6756,9 +9819,6 @@ func (s DeletePortfolioShareInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *DeletePortfolioShareInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DeletePortfolioShareInput"}
-	if s.AccountId == nil {
-		invalidParams.Add(request.NewErrParamRequired("AccountId"))
-	}
 	if s.PortfolioId == nil {
 		invalidParams.Add(request.NewErrParamRequired("PortfolioId"))
 	}
@@ -6784,15 +9844,24 @@ func (s *DeletePortfolioShareInput) SetAccountId(v string) *DeletePortfolioShare
 	return s
 }
 
+// SetOrganizationNode sets the OrganizationNode field's value.
+func (s *DeletePortfolioShareInput) SetOrganizationNode(v *OrganizationNode) *DeletePortfolioShareInput {
+	s.OrganizationNode = v
+	return s
+}
+
 // SetPortfolioId sets the PortfolioId field's value.
 func (s *DeletePortfolioShareInput) SetPortfolioId(v string) *DeletePortfolioShareInput {
 	s.PortfolioId = &v
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DeletePortfolioShareOutput
 type DeletePortfolioShareOutput struct {
 	_ struct{} `type:"structure"`
+
+	// The portfolio share unique identifier. This will only be returned if delete
+	// is made to an organization node.
+	PortfolioShareToken *string `type:"string"`
 }
 
 // String returns the string representation
@@ -6805,7 +9874,12 @@ func (s DeletePortfolioShareOutput) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DeleteProductInput
+// SetPortfolioShareToken sets the PortfolioShareToken field's value.
+func (s *DeletePortfolioShareOutput) SetPortfolioShareToken(v string) *DeletePortfolioShareOutput {
+	s.PortfolioShareToken = &v
+	return s
+}
+
 type DeleteProductInput struct {
 	_ struct{} `type:"structure"`
 
@@ -6862,7 +9936,6 @@ func (s *DeleteProductInput) SetId(v string) *DeleteProductInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DeleteProductOutput
 type DeleteProductOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -6877,7 +9950,86 @@ func (s DeleteProductOutput) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DeleteProvisioningArtifactInput
+type DeleteProvisionedProductPlanInput struct {
+	_ struct{} `type:"structure"`
+
+	// The language code.
+	//
+	//    * en - English (default)
+	//
+	//    * jp - Japanese
+	//
+	//    * zh - Chinese
+	AcceptLanguage *string `type:"string"`
+
+	// If set to true, AWS Service Catalog stops managing the specified provisioned
+	// product even if it cannot delete the underlying resources.
+	IgnoreErrors *bool `type:"boolean"`
+
+	// The plan identifier.
+	//
+	// PlanId is a required field
+	PlanId *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteProvisionedProductPlanInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteProvisionedProductPlanInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteProvisionedProductPlanInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteProvisionedProductPlanInput"}
+	if s.PlanId == nil {
+		invalidParams.Add(request.NewErrParamRequired("PlanId"))
+	}
+	if s.PlanId != nil && len(*s.PlanId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("PlanId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAcceptLanguage sets the AcceptLanguage field's value.
+func (s *DeleteProvisionedProductPlanInput) SetAcceptLanguage(v string) *DeleteProvisionedProductPlanInput {
+	s.AcceptLanguage = &v
+	return s
+}
+
+// SetIgnoreErrors sets the IgnoreErrors field's value.
+func (s *DeleteProvisionedProductPlanInput) SetIgnoreErrors(v bool) *DeleteProvisionedProductPlanInput {
+	s.IgnoreErrors = &v
+	return s
+}
+
+// SetPlanId sets the PlanId field's value.
+func (s *DeleteProvisionedProductPlanInput) SetPlanId(v string) *DeleteProvisionedProductPlanInput {
+	s.PlanId = &v
+	return s
+}
+
+type DeleteProvisionedProductPlanOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteProvisionedProductPlanOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteProvisionedProductPlanOutput) GoString() string {
+	return s.String()
+}
+
 type DeleteProvisioningArtifactInput struct {
 	_ struct{} `type:"structure"`
 
@@ -6951,7 +10103,6 @@ func (s *DeleteProvisioningArtifactInput) SetProvisioningArtifactId(v string) *D
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DeleteProvisioningArtifactOutput
 type DeleteProvisioningArtifactOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -6966,7 +10117,131 @@ func (s DeleteProvisioningArtifactOutput) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DescribeConstraintInput
+type DeleteServiceActionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The language code.
+	//
+	//    * en - English (default)
+	//
+	//    * jp - Japanese
+	//
+	//    * zh - Chinese
+	AcceptLanguage *string `type:"string"`
+
+	// The self-service action identifier. For example, act-fs7abcd89wxyz.
+	//
+	// Id is a required field
+	Id *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteServiceActionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteServiceActionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteServiceActionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteServiceActionInput"}
+	if s.Id == nil {
+		invalidParams.Add(request.NewErrParamRequired("Id"))
+	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAcceptLanguage sets the AcceptLanguage field's value.
+func (s *DeleteServiceActionInput) SetAcceptLanguage(v string) *DeleteServiceActionInput {
+	s.AcceptLanguage = &v
+	return s
+}
+
+// SetId sets the Id field's value.
+func (s *DeleteServiceActionInput) SetId(v string) *DeleteServiceActionInput {
+	s.Id = &v
+	return s
+}
+
+type DeleteServiceActionOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteServiceActionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteServiceActionOutput) GoString() string {
+	return s.String()
+}
+
+type DeleteTagOptionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The TagOption identifier.
+	//
+	// Id is a required field
+	Id *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteTagOptionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteTagOptionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteTagOptionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteTagOptionInput"}
+	if s.Id == nil {
+		invalidParams.Add(request.NewErrParamRequired("Id"))
+	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetId sets the Id field's value.
+func (s *DeleteTagOptionInput) SetId(v string) *DeleteTagOptionInput {
+	s.Id = &v
+	return s
+}
+
+type DeleteTagOptionOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteTagOptionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteTagOptionOutput) GoString() string {
+	return s.String()
+}
+
 type DescribeConstraintInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7023,7 +10298,6 @@ func (s *DescribeConstraintInput) SetId(v string) *DescribeConstraintInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DescribeConstraintOutput
 type DescribeConstraintOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -7065,7 +10339,6 @@ func (s *DescribeConstraintOutput) SetStatus(v string) *DescribeConstraintOutput
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DescribeCopyProductStatusInput
 type DescribeCopyProductStatusInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7122,7 +10395,6 @@ func (s *DescribeCopyProductStatusInput) SetCopyProductToken(v string) *Describe
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DescribeCopyProductStatusOutput
 type DescribeCopyProductStatusOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -7164,7 +10436,6 @@ func (s *DescribeCopyProductStatusOutput) SetTargetProductId(v string) *Describe
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DescribePortfolioInput
 type DescribePortfolioInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7221,7 +10492,6 @@ func (s *DescribePortfolioInput) SetId(v string) *DescribePortfolioInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DescribePortfolioOutput
 type DescribePortfolioOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -7263,7 +10533,105 @@ func (s *DescribePortfolioOutput) SetTags(v []*Tag) *DescribePortfolioOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DescribeProductAsAdminInput
+type DescribePortfolioShareStatusInput struct {
+	_ struct{} `type:"structure"`
+
+	// The token for the portfolio share operation. This token is returned either
+	// by CreatePortfolioShare or by DeletePortfolioShare.
+	//
+	// PortfolioShareToken is a required field
+	PortfolioShareToken *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribePortfolioShareStatusInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribePortfolioShareStatusInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribePortfolioShareStatusInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribePortfolioShareStatusInput"}
+	if s.PortfolioShareToken == nil {
+		invalidParams.Add(request.NewErrParamRequired("PortfolioShareToken"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetPortfolioShareToken sets the PortfolioShareToken field's value.
+func (s *DescribePortfolioShareStatusInput) SetPortfolioShareToken(v string) *DescribePortfolioShareStatusInput {
+	s.PortfolioShareToken = &v
+	return s
+}
+
+type DescribePortfolioShareStatusOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Organization node identifier. It can be either account id, organizational
+	// unit id or organization id.
+	OrganizationNodeValue *string `type:"string"`
+
+	// The portfolio identifier.
+	PortfolioId *string `min:"1" type:"string"`
+
+	// The token for the portfolio share operation. For example, share-6v24abcdefghi.
+	PortfolioShareToken *string `type:"string"`
+
+	// Information about the portfolio share operation.
+	ShareDetails *ShareDetails `type:"structure"`
+
+	// Status of the portfolio share operation.
+	Status *string `type:"string" enum:"ShareStatus"`
+}
+
+// String returns the string representation
+func (s DescribePortfolioShareStatusOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribePortfolioShareStatusOutput) GoString() string {
+	return s.String()
+}
+
+// SetOrganizationNodeValue sets the OrganizationNodeValue field's value.
+func (s *DescribePortfolioShareStatusOutput) SetOrganizationNodeValue(v string) *DescribePortfolioShareStatusOutput {
+	s.OrganizationNodeValue = &v
+	return s
+}
+
+// SetPortfolioId sets the PortfolioId field's value.
+func (s *DescribePortfolioShareStatusOutput) SetPortfolioId(v string) *DescribePortfolioShareStatusOutput {
+	s.PortfolioId = &v
+	return s
+}
+
+// SetPortfolioShareToken sets the PortfolioShareToken field's value.
+func (s *DescribePortfolioShareStatusOutput) SetPortfolioShareToken(v string) *DescribePortfolioShareStatusOutput {
+	s.PortfolioShareToken = &v
+	return s
+}
+
+// SetShareDetails sets the ShareDetails field's value.
+func (s *DescribePortfolioShareStatusOutput) SetShareDetails(v *ShareDetails) *DescribePortfolioShareStatusOutput {
+	s.ShareDetails = v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *DescribePortfolioShareStatusOutput) SetStatus(v string) *DescribePortfolioShareStatusOutput {
+	s.Status = &v
+	return s
+}
+
 type DescribeProductAsAdminInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7320,7 +10688,6 @@ func (s *DescribeProductAsAdminInput) SetId(v string) *DescribeProductAsAdminInp
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DescribeProductAsAdminOutput
 type DescribeProductAsAdminOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -7372,7 +10739,6 @@ func (s *DescribeProductAsAdminOutput) SetTags(v []*Tag) *DescribeProductAsAdmin
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DescribeProductInput
 type DescribeProductInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7429,7 +10795,6 @@ func (s *DescribeProductInput) SetId(v string) *DescribeProductInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DescribeProductOutput
 type DescribeProductOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -7462,7 +10827,6 @@ func (s *DescribeProductOutput) SetProvisioningArtifacts(v []*ProvisioningArtifa
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DescribeProductViewInput
 type DescribeProductViewInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7519,7 +10883,6 @@ func (s *DescribeProductViewInput) SetId(v string) *DescribeProductViewInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DescribeProductViewOutput
 type DescribeProductViewOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -7552,7 +10915,6 @@ func (s *DescribeProductViewOutput) SetProvisioningArtifacts(v []*ProvisioningAr
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DescribeProvisionedProductInput
 type DescribeProvisionedProductInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7609,9 +10971,11 @@ func (s *DescribeProvisionedProductInput) SetId(v string) *DescribeProvisionedPr
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DescribeProvisionedProductOutput
 type DescribeProvisionedProductOutput struct {
 	_ struct{} `type:"structure"`
+
+	// Any CloudWatch dashboards that were created when provisioning the product.
+	CloudWatchDashboards []*CloudWatchDashboard `type:"list"`
 
 	// Information about the provisioned product.
 	ProvisionedProductDetail *ProvisionedProductDetail `type:"structure"`
@@ -7627,13 +10991,135 @@ func (s DescribeProvisionedProductOutput) GoString() string {
 	return s.String()
 }
 
+// SetCloudWatchDashboards sets the CloudWatchDashboards field's value.
+func (s *DescribeProvisionedProductOutput) SetCloudWatchDashboards(v []*CloudWatchDashboard) *DescribeProvisionedProductOutput {
+	s.CloudWatchDashboards = v
+	return s
+}
+
 // SetProvisionedProductDetail sets the ProvisionedProductDetail field's value.
 func (s *DescribeProvisionedProductOutput) SetProvisionedProductDetail(v *ProvisionedProductDetail) *DescribeProvisionedProductOutput {
 	s.ProvisionedProductDetail = v
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DescribeProvisioningArtifactInput
+type DescribeProvisionedProductPlanInput struct {
+	_ struct{} `type:"structure"`
+
+	// The language code.
+	//
+	//    * en - English (default)
+	//
+	//    * jp - Japanese
+	//
+	//    * zh - Chinese
+	AcceptLanguage *string `type:"string"`
+
+	// The maximum number of items to return with this call.
+	PageSize *int64 `type:"integer"`
+
+	// The page token for the next set of results. To retrieve the first set of
+	// results, use null.
+	PageToken *string `type:"string"`
+
+	// The plan identifier.
+	//
+	// PlanId is a required field
+	PlanId *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeProvisionedProductPlanInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeProvisionedProductPlanInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeProvisionedProductPlanInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeProvisionedProductPlanInput"}
+	if s.PlanId == nil {
+		invalidParams.Add(request.NewErrParamRequired("PlanId"))
+	}
+	if s.PlanId != nil && len(*s.PlanId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("PlanId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAcceptLanguage sets the AcceptLanguage field's value.
+func (s *DescribeProvisionedProductPlanInput) SetAcceptLanguage(v string) *DescribeProvisionedProductPlanInput {
+	s.AcceptLanguage = &v
+	return s
+}
+
+// SetPageSize sets the PageSize field's value.
+func (s *DescribeProvisionedProductPlanInput) SetPageSize(v int64) *DescribeProvisionedProductPlanInput {
+	s.PageSize = &v
+	return s
+}
+
+// SetPageToken sets the PageToken field's value.
+func (s *DescribeProvisionedProductPlanInput) SetPageToken(v string) *DescribeProvisionedProductPlanInput {
+	s.PageToken = &v
+	return s
+}
+
+// SetPlanId sets the PlanId field's value.
+func (s *DescribeProvisionedProductPlanInput) SetPlanId(v string) *DescribeProvisionedProductPlanInput {
+	s.PlanId = &v
+	return s
+}
+
+type DescribeProvisionedProductPlanOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The page token to use to retrieve the next set of results. If there are no
+	// additional results, this value is null.
+	NextPageToken *string `type:"string"`
+
+	// Information about the plan.
+	ProvisionedProductPlanDetails *ProvisionedProductPlanDetails `type:"structure"`
+
+	// Information about the resource changes that will occur when the plan is executed.
+	ResourceChanges []*ResourceChange `type:"list"`
+}
+
+// String returns the string representation
+func (s DescribeProvisionedProductPlanOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeProvisionedProductPlanOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextPageToken sets the NextPageToken field's value.
+func (s *DescribeProvisionedProductPlanOutput) SetNextPageToken(v string) *DescribeProvisionedProductPlanOutput {
+	s.NextPageToken = &v
+	return s
+}
+
+// SetProvisionedProductPlanDetails sets the ProvisionedProductPlanDetails field's value.
+func (s *DescribeProvisionedProductPlanOutput) SetProvisionedProductPlanDetails(v *ProvisionedProductPlanDetails) *DescribeProvisionedProductPlanOutput {
+	s.ProvisionedProductPlanDetails = v
+	return s
+}
+
+// SetResourceChanges sets the ResourceChanges field's value.
+func (s *DescribeProvisionedProductPlanOutput) SetResourceChanges(v []*ResourceChange) *DescribeProvisionedProductPlanOutput {
+	s.ResourceChanges = v
+	return s
+}
+
 type DescribeProvisioningArtifactInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7716,7 +11202,6 @@ func (s *DescribeProvisioningArtifactInput) SetVerbose(v bool) *DescribeProvisio
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DescribeProvisioningArtifactOutput
 type DescribeProvisioningArtifactOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -7758,7 +11243,6 @@ func (s *DescribeProvisioningArtifactOutput) SetStatus(v string) *DescribeProvis
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DescribeProvisioningParametersInput
 type DescribeProvisioningParametersInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7846,7 +11330,6 @@ func (s *DescribeProvisioningParametersInput) SetProvisioningArtifactId(v string
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DescribeProvisioningParametersOutput
 type DescribeProvisioningParametersOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -7855,6 +11338,10 @@ type DescribeProvisioningParametersOutput struct {
 
 	// Information about the parameters used to provision the product.
 	ProvisioningArtifactParameters []*ProvisioningArtifactParameter `type:"list"`
+
+	// An object that contains information about preferences, such as regions and
+	// accounts, for the provisioning artifact.
+	ProvisioningArtifactPreferences *ProvisioningArtifactPreferences `type:"structure"`
 
 	// Information about the TagOptions associated with the resource.
 	TagOptions []*TagOptionSummary `type:"list"`
@@ -7886,6 +11373,12 @@ func (s *DescribeProvisioningParametersOutput) SetProvisioningArtifactParameters
 	return s
 }
 
+// SetProvisioningArtifactPreferences sets the ProvisioningArtifactPreferences field's value.
+func (s *DescribeProvisioningParametersOutput) SetProvisioningArtifactPreferences(v *ProvisioningArtifactPreferences) *DescribeProvisioningParametersOutput {
+	s.ProvisioningArtifactPreferences = v
+	return s
+}
+
 // SetTagOptions sets the TagOptions field's value.
 func (s *DescribeProvisioningParametersOutput) SetTagOptions(v []*TagOptionSummary) *DescribeProvisioningParametersOutput {
 	s.TagOptions = v
@@ -7898,7 +11391,6 @@ func (s *DescribeProvisioningParametersOutput) SetUsageInstructions(v []*UsageIn
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DescribeRecordInput
 type DescribeRecordInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7975,7 +11467,6 @@ func (s *DescribeRecordInput) SetPageToken(v string) *DescribeRecordInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DescribeRecordOutput
 type DescribeRecordOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -8020,7 +11511,85 @@ func (s *DescribeRecordOutput) SetRecordOutputs(v []*RecordOutput) *DescribeReco
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DescribeTagOptionInput
+type DescribeServiceActionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The language code.
+	//
+	//    * en - English (default)
+	//
+	//    * jp - Japanese
+	//
+	//    * zh - Chinese
+	AcceptLanguage *string `type:"string"`
+
+	// The self-service action identifier.
+	//
+	// Id is a required field
+	Id *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeServiceActionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeServiceActionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeServiceActionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeServiceActionInput"}
+	if s.Id == nil {
+		invalidParams.Add(request.NewErrParamRequired("Id"))
+	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAcceptLanguage sets the AcceptLanguage field's value.
+func (s *DescribeServiceActionInput) SetAcceptLanguage(v string) *DescribeServiceActionInput {
+	s.AcceptLanguage = &v
+	return s
+}
+
+// SetId sets the Id field's value.
+func (s *DescribeServiceActionInput) SetId(v string) *DescribeServiceActionInput {
+	s.Id = &v
+	return s
+}
+
+type DescribeServiceActionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Detailed information about the self-service action.
+	ServiceActionDetail *ServiceActionDetail `type:"structure"`
+}
+
+// String returns the string representation
+func (s DescribeServiceActionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeServiceActionOutput) GoString() string {
+	return s.String()
+}
+
+// SetServiceActionDetail sets the ServiceActionDetail field's value.
+func (s *DescribeServiceActionOutput) SetServiceActionDetail(v *ServiceActionDetail) *DescribeServiceActionOutput {
+	s.ServiceActionDetail = v
+	return s
+}
+
 type DescribeTagOptionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8062,7 +11631,6 @@ func (s *DescribeTagOptionInput) SetId(v string) *DescribeTagOptionInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DescribeTagOptionOutput
 type DescribeTagOptionOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -8086,7 +11654,34 @@ func (s *DescribeTagOptionOutput) SetTagOptionDetail(v *TagOptionDetail) *Descri
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DisassociatePrincipalFromPortfolioInput
+type DisableAWSOrganizationsAccessInput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DisableAWSOrganizationsAccessInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DisableAWSOrganizationsAccessInput) GoString() string {
+	return s.String()
+}
+
+type DisableAWSOrganizationsAccessOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DisableAWSOrganizationsAccessOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DisableAWSOrganizationsAccessOutput) GoString() string {
+	return s.String()
+}
+
 type DisassociatePrincipalFromPortfolioInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8160,7 +11755,6 @@ func (s *DisassociatePrincipalFromPortfolioInput) SetPrincipalARN(v string) *Dis
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DisassociatePrincipalFromPortfolioOutput
 type DisassociatePrincipalFromPortfolioOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -8175,7 +11769,6 @@ func (s DisassociatePrincipalFromPortfolioOutput) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DisassociateProductFromPortfolioInput
 type DisassociateProductFromPortfolioInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8249,7 +11842,6 @@ func (s *DisassociateProductFromPortfolioInput) SetProductId(v string) *Disassoc
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DisassociateProductFromPortfolioOutput
 type DisassociateProductFromPortfolioOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -8264,7 +11856,110 @@ func (s DisassociateProductFromPortfolioOutput) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DisassociateTagOptionFromResourceInput
+type DisassociateServiceActionFromProvisioningArtifactInput struct {
+	_ struct{} `type:"structure"`
+
+	// The language code.
+	//
+	//    * en - English (default)
+	//
+	//    * jp - Japanese
+	//
+	//    * zh - Chinese
+	AcceptLanguage *string `type:"string"`
+
+	// The product identifier. For example, prod-abcdzk7xy33qa.
+	//
+	// ProductId is a required field
+	ProductId *string `min:"1" type:"string" required:"true"`
+
+	// The identifier of the provisioning artifact. For example, pa-4abcdjnxjj6ne.
+	//
+	// ProvisioningArtifactId is a required field
+	ProvisioningArtifactId *string `min:"1" type:"string" required:"true"`
+
+	// The self-service action identifier. For example, act-fs7abcd89wxyz.
+	//
+	// ServiceActionId is a required field
+	ServiceActionId *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DisassociateServiceActionFromProvisioningArtifactInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DisassociateServiceActionFromProvisioningArtifactInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DisassociateServiceActionFromProvisioningArtifactInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DisassociateServiceActionFromProvisioningArtifactInput"}
+	if s.ProductId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ProductId"))
+	}
+	if s.ProductId != nil && len(*s.ProductId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ProductId", 1))
+	}
+	if s.ProvisioningArtifactId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ProvisioningArtifactId"))
+	}
+	if s.ProvisioningArtifactId != nil && len(*s.ProvisioningArtifactId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ProvisioningArtifactId", 1))
+	}
+	if s.ServiceActionId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ServiceActionId"))
+	}
+	if s.ServiceActionId != nil && len(*s.ServiceActionId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ServiceActionId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAcceptLanguage sets the AcceptLanguage field's value.
+func (s *DisassociateServiceActionFromProvisioningArtifactInput) SetAcceptLanguage(v string) *DisassociateServiceActionFromProvisioningArtifactInput {
+	s.AcceptLanguage = &v
+	return s
+}
+
+// SetProductId sets the ProductId field's value.
+func (s *DisassociateServiceActionFromProvisioningArtifactInput) SetProductId(v string) *DisassociateServiceActionFromProvisioningArtifactInput {
+	s.ProductId = &v
+	return s
+}
+
+// SetProvisioningArtifactId sets the ProvisioningArtifactId field's value.
+func (s *DisassociateServiceActionFromProvisioningArtifactInput) SetProvisioningArtifactId(v string) *DisassociateServiceActionFromProvisioningArtifactInput {
+	s.ProvisioningArtifactId = &v
+	return s
+}
+
+// SetServiceActionId sets the ServiceActionId field's value.
+func (s *DisassociateServiceActionFromProvisioningArtifactInput) SetServiceActionId(v string) *DisassociateServiceActionFromProvisioningArtifactInput {
+	s.ServiceActionId = &v
+	return s
+}
+
+type DisassociateServiceActionFromProvisioningArtifactOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DisassociateServiceActionFromProvisioningArtifactOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DisassociateServiceActionFromProvisioningArtifactOutput) GoString() string {
+	return s.String()
+}
+
 type DisassociateTagOptionFromResourceInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8320,7 +12015,6 @@ func (s *DisassociateTagOptionFromResourceInput) SetTagOptionId(v string) *Disas
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DisassociateTagOptionFromResourceOutput
 type DisassociateTagOptionFromResourceOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -8335,8 +12029,335 @@ func (s DisassociateTagOptionFromResourceOutput) GoString() string {
 	return s.String()
 }
 
+type EnableAWSOrganizationsAccessInput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s EnableAWSOrganizationsAccessInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s EnableAWSOrganizationsAccessInput) GoString() string {
+	return s.String()
+}
+
+type EnableAWSOrganizationsAccessOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s EnableAWSOrganizationsAccessOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s EnableAWSOrganizationsAccessOutput) GoString() string {
+	return s.String()
+}
+
+type ExecuteProvisionedProductPlanInput struct {
+	_ struct{} `type:"structure"`
+
+	// The language code.
+	//
+	//    * en - English (default)
+	//
+	//    * jp - Japanese
+	//
+	//    * zh - Chinese
+	AcceptLanguage *string `type:"string"`
+
+	// A unique identifier that you provide to ensure idempotency. If multiple requests
+	// differ only by the idempotency token, the same response is returned for each
+	// repeated request.
+	IdempotencyToken *string `min:"1" type:"string" idempotencyToken:"true"`
+
+	// The plan identifier.
+	//
+	// PlanId is a required field
+	PlanId *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ExecuteProvisionedProductPlanInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ExecuteProvisionedProductPlanInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ExecuteProvisionedProductPlanInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ExecuteProvisionedProductPlanInput"}
+	if s.IdempotencyToken != nil && len(*s.IdempotencyToken) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("IdempotencyToken", 1))
+	}
+	if s.PlanId == nil {
+		invalidParams.Add(request.NewErrParamRequired("PlanId"))
+	}
+	if s.PlanId != nil && len(*s.PlanId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("PlanId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAcceptLanguage sets the AcceptLanguage field's value.
+func (s *ExecuteProvisionedProductPlanInput) SetAcceptLanguage(v string) *ExecuteProvisionedProductPlanInput {
+	s.AcceptLanguage = &v
+	return s
+}
+
+// SetIdempotencyToken sets the IdempotencyToken field's value.
+func (s *ExecuteProvisionedProductPlanInput) SetIdempotencyToken(v string) *ExecuteProvisionedProductPlanInput {
+	s.IdempotencyToken = &v
+	return s
+}
+
+// SetPlanId sets the PlanId field's value.
+func (s *ExecuteProvisionedProductPlanInput) SetPlanId(v string) *ExecuteProvisionedProductPlanInput {
+	s.PlanId = &v
+	return s
+}
+
+type ExecuteProvisionedProductPlanOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Information about the result of provisioning the product.
+	RecordDetail *RecordDetail `type:"structure"`
+}
+
+// String returns the string representation
+func (s ExecuteProvisionedProductPlanOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ExecuteProvisionedProductPlanOutput) GoString() string {
+	return s.String()
+}
+
+// SetRecordDetail sets the RecordDetail field's value.
+func (s *ExecuteProvisionedProductPlanOutput) SetRecordDetail(v *RecordDetail) *ExecuteProvisionedProductPlanOutput {
+	s.RecordDetail = v
+	return s
+}
+
+type ExecuteProvisionedProductServiceActionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The language code.
+	//
+	//    * en - English (default)
+	//
+	//    * jp - Japanese
+	//
+	//    * zh - Chinese
+	AcceptLanguage *string `type:"string"`
+
+	// An idempotency token that uniquely identifies the execute request.
+	ExecuteToken *string `min:"1" type:"string" idempotencyToken:"true"`
+
+	// The identifier of the provisioned product.
+	//
+	// ProvisionedProductId is a required field
+	ProvisionedProductId *string `min:"1" type:"string" required:"true"`
+
+	// The self-service action identifier. For example, act-fs7abcd89wxyz.
+	//
+	// ServiceActionId is a required field
+	ServiceActionId *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ExecuteProvisionedProductServiceActionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ExecuteProvisionedProductServiceActionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ExecuteProvisionedProductServiceActionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ExecuteProvisionedProductServiceActionInput"}
+	if s.ExecuteToken != nil && len(*s.ExecuteToken) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ExecuteToken", 1))
+	}
+	if s.ProvisionedProductId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ProvisionedProductId"))
+	}
+	if s.ProvisionedProductId != nil && len(*s.ProvisionedProductId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ProvisionedProductId", 1))
+	}
+	if s.ServiceActionId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ServiceActionId"))
+	}
+	if s.ServiceActionId != nil && len(*s.ServiceActionId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ServiceActionId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAcceptLanguage sets the AcceptLanguage field's value.
+func (s *ExecuteProvisionedProductServiceActionInput) SetAcceptLanguage(v string) *ExecuteProvisionedProductServiceActionInput {
+	s.AcceptLanguage = &v
+	return s
+}
+
+// SetExecuteToken sets the ExecuteToken field's value.
+func (s *ExecuteProvisionedProductServiceActionInput) SetExecuteToken(v string) *ExecuteProvisionedProductServiceActionInput {
+	s.ExecuteToken = &v
+	return s
+}
+
+// SetProvisionedProductId sets the ProvisionedProductId field's value.
+func (s *ExecuteProvisionedProductServiceActionInput) SetProvisionedProductId(v string) *ExecuteProvisionedProductServiceActionInput {
+	s.ProvisionedProductId = &v
+	return s
+}
+
+// SetServiceActionId sets the ServiceActionId field's value.
+func (s *ExecuteProvisionedProductServiceActionInput) SetServiceActionId(v string) *ExecuteProvisionedProductServiceActionInput {
+	s.ServiceActionId = &v
+	return s
+}
+
+type ExecuteProvisionedProductServiceActionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// An object containing detailed information about the result of provisioning
+	// the product.
+	RecordDetail *RecordDetail `type:"structure"`
+}
+
+// String returns the string representation
+func (s ExecuteProvisionedProductServiceActionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ExecuteProvisionedProductServiceActionOutput) GoString() string {
+	return s.String()
+}
+
+// SetRecordDetail sets the RecordDetail field's value.
+func (s *ExecuteProvisionedProductServiceActionOutput) SetRecordDetail(v *RecordDetail) *ExecuteProvisionedProductServiceActionOutput {
+	s.RecordDetail = v
+	return s
+}
+
+// An object containing information about the error, along with identifying
+// information about the self-service action and its associations.
+type FailedServiceActionAssociation struct {
+	_ struct{} `type:"structure"`
+
+	// The error code. Valid values are listed below.
+	ErrorCode *string `type:"string" enum:"ServiceActionAssociationErrorCode"`
+
+	// A text description of the error.
+	ErrorMessage *string `min:"1" type:"string"`
+
+	// The product identifier. For example, prod-abcdzk7xy33qa.
+	ProductId *string `min:"1" type:"string"`
+
+	// The identifier of the provisioning artifact. For example, pa-4abcdjnxjj6ne.
+	ProvisioningArtifactId *string `min:"1" type:"string"`
+
+	// The self-service action identifier. For example, act-fs7abcd89wxyz.
+	ServiceActionId *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s FailedServiceActionAssociation) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s FailedServiceActionAssociation) GoString() string {
+	return s.String()
+}
+
+// SetErrorCode sets the ErrorCode field's value.
+func (s *FailedServiceActionAssociation) SetErrorCode(v string) *FailedServiceActionAssociation {
+	s.ErrorCode = &v
+	return s
+}
+
+// SetErrorMessage sets the ErrorMessage field's value.
+func (s *FailedServiceActionAssociation) SetErrorMessage(v string) *FailedServiceActionAssociation {
+	s.ErrorMessage = &v
+	return s
+}
+
+// SetProductId sets the ProductId field's value.
+func (s *FailedServiceActionAssociation) SetProductId(v string) *FailedServiceActionAssociation {
+	s.ProductId = &v
+	return s
+}
+
+// SetProvisioningArtifactId sets the ProvisioningArtifactId field's value.
+func (s *FailedServiceActionAssociation) SetProvisioningArtifactId(v string) *FailedServiceActionAssociation {
+	s.ProvisioningArtifactId = &v
+	return s
+}
+
+// SetServiceActionId sets the ServiceActionId field's value.
+func (s *FailedServiceActionAssociation) SetServiceActionId(v string) *FailedServiceActionAssociation {
+	s.ServiceActionId = &v
+	return s
+}
+
+type GetAWSOrganizationsAccessStatusInput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s GetAWSOrganizationsAccessStatusInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetAWSOrganizationsAccessStatusInput) GoString() string {
+	return s.String()
+}
+
+type GetAWSOrganizationsAccessStatusOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The status of the portfolio share feature.
+	AccessStatus *string `type:"string" enum:"AccessStatus"`
+}
+
+// String returns the string representation
+func (s GetAWSOrganizationsAccessStatusOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetAWSOrganizationsAccessStatusOutput) GoString() string {
+	return s.String()
+}
+
+// SetAccessStatus sets the AccessStatus field's value.
+func (s *GetAWSOrganizationsAccessStatusOutput) SetAccessStatus(v string) *GetAWSOrganizationsAccessStatusOutput {
+	s.AccessStatus = &v
+	return s
+}
+
 // Summary information about a product path for a user.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/LaunchPathSummary
 type LaunchPathSummary struct {
 	_ struct{} `type:"structure"`
 
@@ -8387,7 +12408,6 @@ func (s *LaunchPathSummary) SetTags(v []*Tag) *LaunchPathSummary {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListAcceptedPortfolioSharesInput
 type ListAcceptedPortfolioSharesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8406,6 +12426,16 @@ type ListAcceptedPortfolioSharesInput struct {
 	// The page token for the next set of results. To retrieve the first set of
 	// results, use null.
 	PageToken *string `type:"string"`
+
+	// The type of shared portfolios to list. The default is to list imported portfolios.
+	//
+	//    * AWS_ORGANIZATIONS - List portfolios shared by the master account of
+	//    your organization
+	//
+	//    * AWS_SERVICECATALOG - List default portfolios
+	//
+	//    * IMPORTED - List imported portfolios
+	PortfolioShareType *string `type:"string" enum:"PortfolioShareType"`
 }
 
 // String returns the string representation
@@ -8436,7 +12466,12 @@ func (s *ListAcceptedPortfolioSharesInput) SetPageToken(v string) *ListAcceptedP
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListAcceptedPortfolioSharesOutput
+// SetPortfolioShareType sets the PortfolioShareType field's value.
+func (s *ListAcceptedPortfolioSharesInput) SetPortfolioShareType(v string) *ListAcceptedPortfolioSharesInput {
+	s.PortfolioShareType = &v
+	return s
+}
+
 type ListAcceptedPortfolioSharesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -8470,7 +12505,6 @@ func (s *ListAcceptedPortfolioSharesOutput) SetPortfolioDetails(v []*PortfolioDe
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListConstraintsForPortfolioInput
 type ListConstraintsForPortfolioInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8558,7 +12592,6 @@ func (s *ListConstraintsForPortfolioInput) SetProductId(v string) *ListConstrain
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListConstraintsForPortfolioOutput
 type ListConstraintsForPortfolioOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -8592,7 +12625,6 @@ func (s *ListConstraintsForPortfolioOutput) SetNextPageToken(v string) *ListCons
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListLaunchPathsInput
 type ListLaunchPathsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8668,7 +12700,6 @@ func (s *ListLaunchPathsInput) SetProductId(v string) *ListLaunchPathsInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListLaunchPathsOutput
 type ListLaunchPathsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -8702,7 +12733,135 @@ func (s *ListLaunchPathsOutput) SetNextPageToken(v string) *ListLaunchPathsOutpu
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListPortfolioAccessInput
+type ListOrganizationPortfolioAccessInput struct {
+	_ struct{} `type:"structure"`
+
+	// The language code.
+	//
+	//    * en - English (default)
+	//
+	//    * jp - Japanese
+	//
+	//    * zh - Chinese
+	AcceptLanguage *string `type:"string"`
+
+	// The organization node type that will be returned in the output.
+	//
+	//    * ORGANIZATION - Organization that has access to the portfolio.
+	//
+	//    * ORGANIZATIONAL_UNIT - Organizational unit that has access to the portfolio
+	//    within your organization.
+	//
+	//    * ACCOUNT - Account that has access to the portfolio within your organization.
+	//
+	// OrganizationNodeType is a required field
+	OrganizationNodeType *string `type:"string" required:"true" enum:"OrganizationNodeType"`
+
+	// The maximum number of items to return with this call.
+	PageSize *int64 `type:"integer"`
+
+	// The page token for the next set of results. To retrieve the first set of
+	// results, use null.
+	PageToken *string `type:"string"`
+
+	// The portfolio identifier. For example, port-2abcdext3y5fk.
+	//
+	// PortfolioId is a required field
+	PortfolioId *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ListOrganizationPortfolioAccessInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListOrganizationPortfolioAccessInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListOrganizationPortfolioAccessInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListOrganizationPortfolioAccessInput"}
+	if s.OrganizationNodeType == nil {
+		invalidParams.Add(request.NewErrParamRequired("OrganizationNodeType"))
+	}
+	if s.PortfolioId == nil {
+		invalidParams.Add(request.NewErrParamRequired("PortfolioId"))
+	}
+	if s.PortfolioId != nil && len(*s.PortfolioId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("PortfolioId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAcceptLanguage sets the AcceptLanguage field's value.
+func (s *ListOrganizationPortfolioAccessInput) SetAcceptLanguage(v string) *ListOrganizationPortfolioAccessInput {
+	s.AcceptLanguage = &v
+	return s
+}
+
+// SetOrganizationNodeType sets the OrganizationNodeType field's value.
+func (s *ListOrganizationPortfolioAccessInput) SetOrganizationNodeType(v string) *ListOrganizationPortfolioAccessInput {
+	s.OrganizationNodeType = &v
+	return s
+}
+
+// SetPageSize sets the PageSize field's value.
+func (s *ListOrganizationPortfolioAccessInput) SetPageSize(v int64) *ListOrganizationPortfolioAccessInput {
+	s.PageSize = &v
+	return s
+}
+
+// SetPageToken sets the PageToken field's value.
+func (s *ListOrganizationPortfolioAccessInput) SetPageToken(v string) *ListOrganizationPortfolioAccessInput {
+	s.PageToken = &v
+	return s
+}
+
+// SetPortfolioId sets the PortfolioId field's value.
+func (s *ListOrganizationPortfolioAccessInput) SetPortfolioId(v string) *ListOrganizationPortfolioAccessInput {
+	s.PortfolioId = &v
+	return s
+}
+
+type ListOrganizationPortfolioAccessOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The page token to use to retrieve the next set of results. If there are no
+	// additional results, this value is null.
+	NextPageToken *string `type:"string"`
+
+	// Displays information about the organization nodes.
+	OrganizationNodes []*OrganizationNode `type:"list"`
+}
+
+// String returns the string representation
+func (s ListOrganizationPortfolioAccessOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListOrganizationPortfolioAccessOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextPageToken sets the NextPageToken field's value.
+func (s *ListOrganizationPortfolioAccessOutput) SetNextPageToken(v string) *ListOrganizationPortfolioAccessOutput {
+	s.NextPageToken = &v
+	return s
+}
+
+// SetOrganizationNodes sets the OrganizationNodes field's value.
+func (s *ListOrganizationPortfolioAccessOutput) SetOrganizationNodes(v []*OrganizationNode) *ListOrganizationPortfolioAccessOutput {
+	s.OrganizationNodes = v
+	return s
+}
+
 type ListPortfolioAccessInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8759,7 +12918,6 @@ func (s *ListPortfolioAccessInput) SetPortfolioId(v string) *ListPortfolioAccess
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListPortfolioAccessOutput
 type ListPortfolioAccessOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -8793,7 +12951,6 @@ func (s *ListPortfolioAccessOutput) SetNextPageToken(v string) *ListPortfolioAcc
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListPortfoliosForProductInput
 type ListPortfoliosForProductInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8869,7 +13026,6 @@ func (s *ListPortfoliosForProductInput) SetProductId(v string) *ListPortfoliosFo
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListPortfoliosForProductOutput
 type ListPortfoliosForProductOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -8903,7 +13059,6 @@ func (s *ListPortfoliosForProductOutput) SetPortfolioDetails(v []*PortfolioDetai
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListPortfoliosInput
 type ListPortfoliosInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8952,7 +13107,6 @@ func (s *ListPortfoliosInput) SetPageToken(v string) *ListPortfoliosInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListPortfoliosOutput
 type ListPortfoliosOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -8986,7 +13140,6 @@ func (s *ListPortfoliosOutput) SetPortfolioDetails(v []*PortfolioDetail) *ListPo
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListPrincipalsForPortfolioInput
 type ListPrincipalsForPortfolioInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9062,7 +13215,6 @@ func (s *ListPrincipalsForPortfolioInput) SetPortfolioId(v string) *ListPrincipa
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListPrincipalsForPortfolioOutput
 type ListPrincipalsForPortfolioOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -9096,7 +13248,227 @@ func (s *ListPrincipalsForPortfolioOutput) SetPrincipals(v []*Principal) *ListPr
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListProvisioningArtifactsInput
+type ListProvisionedProductPlansInput struct {
+	_ struct{} `type:"structure"`
+
+	// The language code.
+	//
+	//    * en - English (default)
+	//
+	//    * jp - Japanese
+	//
+	//    * zh - Chinese
+	AcceptLanguage *string `type:"string"`
+
+	// The access level to use to obtain results. The default is User.
+	AccessLevelFilter *AccessLevelFilter `type:"structure"`
+
+	// The maximum number of items to return with this call.
+	PageSize *int64 `type:"integer"`
+
+	// The page token for the next set of results. To retrieve the first set of
+	// results, use null.
+	PageToken *string `type:"string"`
+
+	// The product identifier.
+	ProvisionProductId *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ListProvisionedProductPlansInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListProvisionedProductPlansInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListProvisionedProductPlansInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListProvisionedProductPlansInput"}
+	if s.ProvisionProductId != nil && len(*s.ProvisionProductId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ProvisionProductId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAcceptLanguage sets the AcceptLanguage field's value.
+func (s *ListProvisionedProductPlansInput) SetAcceptLanguage(v string) *ListProvisionedProductPlansInput {
+	s.AcceptLanguage = &v
+	return s
+}
+
+// SetAccessLevelFilter sets the AccessLevelFilter field's value.
+func (s *ListProvisionedProductPlansInput) SetAccessLevelFilter(v *AccessLevelFilter) *ListProvisionedProductPlansInput {
+	s.AccessLevelFilter = v
+	return s
+}
+
+// SetPageSize sets the PageSize field's value.
+func (s *ListProvisionedProductPlansInput) SetPageSize(v int64) *ListProvisionedProductPlansInput {
+	s.PageSize = &v
+	return s
+}
+
+// SetPageToken sets the PageToken field's value.
+func (s *ListProvisionedProductPlansInput) SetPageToken(v string) *ListProvisionedProductPlansInput {
+	s.PageToken = &v
+	return s
+}
+
+// SetProvisionProductId sets the ProvisionProductId field's value.
+func (s *ListProvisionedProductPlansInput) SetProvisionProductId(v string) *ListProvisionedProductPlansInput {
+	s.ProvisionProductId = &v
+	return s
+}
+
+type ListProvisionedProductPlansOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The page token to use to retrieve the next set of results. If there are no
+	// additional results, this value is null.
+	NextPageToken *string `type:"string"`
+
+	// Information about the plans.
+	ProvisionedProductPlans []*ProvisionedProductPlanSummary `type:"list"`
+}
+
+// String returns the string representation
+func (s ListProvisionedProductPlansOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListProvisionedProductPlansOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextPageToken sets the NextPageToken field's value.
+func (s *ListProvisionedProductPlansOutput) SetNextPageToken(v string) *ListProvisionedProductPlansOutput {
+	s.NextPageToken = &v
+	return s
+}
+
+// SetProvisionedProductPlans sets the ProvisionedProductPlans field's value.
+func (s *ListProvisionedProductPlansOutput) SetProvisionedProductPlans(v []*ProvisionedProductPlanSummary) *ListProvisionedProductPlansOutput {
+	s.ProvisionedProductPlans = v
+	return s
+}
+
+type ListProvisioningArtifactsForServiceActionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The language code.
+	//
+	//    * en - English (default)
+	//
+	//    * jp - Japanese
+	//
+	//    * zh - Chinese
+	AcceptLanguage *string `type:"string"`
+
+	// The maximum number of items to return with this call.
+	PageSize *int64 `type:"integer"`
+
+	// The page token for the next set of results. To retrieve the first set of
+	// results, use null.
+	PageToken *string `type:"string"`
+
+	// The self-service action identifier. For example, act-fs7abcd89wxyz.
+	//
+	// ServiceActionId is a required field
+	ServiceActionId *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ListProvisioningArtifactsForServiceActionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListProvisioningArtifactsForServiceActionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListProvisioningArtifactsForServiceActionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListProvisioningArtifactsForServiceActionInput"}
+	if s.ServiceActionId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ServiceActionId"))
+	}
+	if s.ServiceActionId != nil && len(*s.ServiceActionId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ServiceActionId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAcceptLanguage sets the AcceptLanguage field's value.
+func (s *ListProvisioningArtifactsForServiceActionInput) SetAcceptLanguage(v string) *ListProvisioningArtifactsForServiceActionInput {
+	s.AcceptLanguage = &v
+	return s
+}
+
+// SetPageSize sets the PageSize field's value.
+func (s *ListProvisioningArtifactsForServiceActionInput) SetPageSize(v int64) *ListProvisioningArtifactsForServiceActionInput {
+	s.PageSize = &v
+	return s
+}
+
+// SetPageToken sets the PageToken field's value.
+func (s *ListProvisioningArtifactsForServiceActionInput) SetPageToken(v string) *ListProvisioningArtifactsForServiceActionInput {
+	s.PageToken = &v
+	return s
+}
+
+// SetServiceActionId sets the ServiceActionId field's value.
+func (s *ListProvisioningArtifactsForServiceActionInput) SetServiceActionId(v string) *ListProvisioningArtifactsForServiceActionInput {
+	s.ServiceActionId = &v
+	return s
+}
+
+type ListProvisioningArtifactsForServiceActionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The page token to use to retrieve the next set of results. If there are no
+	// additional results, this value is null.
+	NextPageToken *string `type:"string"`
+
+	// An array of objects with information about product views and provisioning
+	// artifacts.
+	ProvisioningArtifactViews []*ProvisioningArtifactView `type:"list"`
+}
+
+// String returns the string representation
+func (s ListProvisioningArtifactsForServiceActionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListProvisioningArtifactsForServiceActionOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextPageToken sets the NextPageToken field's value.
+func (s *ListProvisioningArtifactsForServiceActionOutput) SetNextPageToken(v string) *ListProvisioningArtifactsForServiceActionOutput {
+	s.NextPageToken = &v
+	return s
+}
+
+// SetProvisioningArtifactViews sets the ProvisioningArtifactViews field's value.
+func (s *ListProvisioningArtifactsForServiceActionOutput) SetProvisioningArtifactViews(v []*ProvisioningArtifactView) *ListProvisioningArtifactsForServiceActionOutput {
+	s.ProvisioningArtifactViews = v
+	return s
+}
+
 type ListProvisioningArtifactsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9153,7 +13525,6 @@ func (s *ListProvisioningArtifactsInput) SetProductId(v string) *ListProvisionin
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListProvisioningArtifactsOutput
 type ListProvisioningArtifactsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -9187,7 +13558,6 @@ func (s *ListProvisioningArtifactsOutput) SetProvisioningArtifactDetails(v []*Pr
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListRecordHistoryInput
 type ListRecordHistoryInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9254,7 +13624,6 @@ func (s *ListRecordHistoryInput) SetSearchFilter(v *ListRecordHistorySearchFilte
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListRecordHistoryOutput
 type ListRecordHistoryOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -9289,7 +13658,6 @@ func (s *ListRecordHistoryOutput) SetRecordDetails(v []*RecordDetail) *ListRecor
 }
 
 // The search filter to use when listing history records.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListRecordHistorySearchFilter
 type ListRecordHistorySearchFilter struct {
 	_ struct{} `type:"structure"`
 
@@ -9327,7 +13695,6 @@ func (s *ListRecordHistorySearchFilter) SetValue(v string) *ListRecordHistorySea
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListResourcesForTagOptionInput
 type ListResourcesForTagOptionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9401,7 +13768,6 @@ func (s *ListResourcesForTagOptionInput) SetTagOptionId(v string) *ListResources
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListResourcesForTagOptionOutput
 type ListResourcesForTagOptionOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -9435,8 +13801,215 @@ func (s *ListResourcesForTagOptionOutput) SetResourceDetails(v []*ResourceDetail
 	return s
 }
 
+type ListServiceActionsForProvisioningArtifactInput struct {
+	_ struct{} `type:"structure"`
+
+	// The language code.
+	//
+	//    * en - English (default)
+	//
+	//    * jp - Japanese
+	//
+	//    * zh - Chinese
+	AcceptLanguage *string `type:"string"`
+
+	// The maximum number of items to return with this call.
+	PageSize *int64 `type:"integer"`
+
+	// The page token for the next set of results. To retrieve the first set of
+	// results, use null.
+	PageToken *string `type:"string"`
+
+	// The product identifier. For example, prod-abcdzk7xy33qa.
+	//
+	// ProductId is a required field
+	ProductId *string `min:"1" type:"string" required:"true"`
+
+	// The identifier of the provisioning artifact. For example, pa-4abcdjnxjj6ne.
+	//
+	// ProvisioningArtifactId is a required field
+	ProvisioningArtifactId *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ListServiceActionsForProvisioningArtifactInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListServiceActionsForProvisioningArtifactInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListServiceActionsForProvisioningArtifactInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListServiceActionsForProvisioningArtifactInput"}
+	if s.ProductId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ProductId"))
+	}
+	if s.ProductId != nil && len(*s.ProductId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ProductId", 1))
+	}
+	if s.ProvisioningArtifactId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ProvisioningArtifactId"))
+	}
+	if s.ProvisioningArtifactId != nil && len(*s.ProvisioningArtifactId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ProvisioningArtifactId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAcceptLanguage sets the AcceptLanguage field's value.
+func (s *ListServiceActionsForProvisioningArtifactInput) SetAcceptLanguage(v string) *ListServiceActionsForProvisioningArtifactInput {
+	s.AcceptLanguage = &v
+	return s
+}
+
+// SetPageSize sets the PageSize field's value.
+func (s *ListServiceActionsForProvisioningArtifactInput) SetPageSize(v int64) *ListServiceActionsForProvisioningArtifactInput {
+	s.PageSize = &v
+	return s
+}
+
+// SetPageToken sets the PageToken field's value.
+func (s *ListServiceActionsForProvisioningArtifactInput) SetPageToken(v string) *ListServiceActionsForProvisioningArtifactInput {
+	s.PageToken = &v
+	return s
+}
+
+// SetProductId sets the ProductId field's value.
+func (s *ListServiceActionsForProvisioningArtifactInput) SetProductId(v string) *ListServiceActionsForProvisioningArtifactInput {
+	s.ProductId = &v
+	return s
+}
+
+// SetProvisioningArtifactId sets the ProvisioningArtifactId field's value.
+func (s *ListServiceActionsForProvisioningArtifactInput) SetProvisioningArtifactId(v string) *ListServiceActionsForProvisioningArtifactInput {
+	s.ProvisioningArtifactId = &v
+	return s
+}
+
+type ListServiceActionsForProvisioningArtifactOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The page token to use to retrieve the next set of results. If there are no
+	// additional results, this value is null.
+	NextPageToken *string `type:"string"`
+
+	// An object containing information about the self-service actions associated
+	// with the provisioning artifact.
+	ServiceActionSummaries []*ServiceActionSummary `type:"list"`
+}
+
+// String returns the string representation
+func (s ListServiceActionsForProvisioningArtifactOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListServiceActionsForProvisioningArtifactOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextPageToken sets the NextPageToken field's value.
+func (s *ListServiceActionsForProvisioningArtifactOutput) SetNextPageToken(v string) *ListServiceActionsForProvisioningArtifactOutput {
+	s.NextPageToken = &v
+	return s
+}
+
+// SetServiceActionSummaries sets the ServiceActionSummaries field's value.
+func (s *ListServiceActionsForProvisioningArtifactOutput) SetServiceActionSummaries(v []*ServiceActionSummary) *ListServiceActionsForProvisioningArtifactOutput {
+	s.ServiceActionSummaries = v
+	return s
+}
+
+type ListServiceActionsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The language code.
+	//
+	//    * en - English (default)
+	//
+	//    * jp - Japanese
+	//
+	//    * zh - Chinese
+	AcceptLanguage *string `type:"string"`
+
+	// The maximum number of items to return with this call.
+	PageSize *int64 `type:"integer"`
+
+	// The page token for the next set of results. To retrieve the first set of
+	// results, use null.
+	PageToken *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ListServiceActionsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListServiceActionsInput) GoString() string {
+	return s.String()
+}
+
+// SetAcceptLanguage sets the AcceptLanguage field's value.
+func (s *ListServiceActionsInput) SetAcceptLanguage(v string) *ListServiceActionsInput {
+	s.AcceptLanguage = &v
+	return s
+}
+
+// SetPageSize sets the PageSize field's value.
+func (s *ListServiceActionsInput) SetPageSize(v int64) *ListServiceActionsInput {
+	s.PageSize = &v
+	return s
+}
+
+// SetPageToken sets the PageToken field's value.
+func (s *ListServiceActionsInput) SetPageToken(v string) *ListServiceActionsInput {
+	s.PageToken = &v
+	return s
+}
+
+type ListServiceActionsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The page token to use to retrieve the next set of results. If there are no
+	// additional results, this value is null.
+	NextPageToken *string `type:"string"`
+
+	// An object containing information about the service actions associated with
+	// the provisioning artifact.
+	ServiceActionSummaries []*ServiceActionSummary `type:"list"`
+}
+
+// String returns the string representation
+func (s ListServiceActionsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListServiceActionsOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextPageToken sets the NextPageToken field's value.
+func (s *ListServiceActionsOutput) SetNextPageToken(v string) *ListServiceActionsOutput {
+	s.NextPageToken = &v
+	return s
+}
+
+// SetServiceActionSummaries sets the ServiceActionSummaries field's value.
+func (s *ListServiceActionsOutput) SetServiceActionSummaries(v []*ServiceActionSummary) *ListServiceActionsOutput {
+	s.ServiceActionSummaries = v
+	return s
+}
+
 // Filters to use when listing TagOptions.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListTagOptionsFilters
 type ListTagOptionsFilters struct {
 	_ struct{} `type:"structure"`
 
@@ -9494,7 +14067,6 @@ func (s *ListTagOptionsFilters) SetValue(v string) *ListTagOptionsFilters {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListTagOptionsInput
 type ListTagOptionsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9553,7 +14125,6 @@ func (s *ListTagOptionsInput) SetPageToken(v string) *ListTagOptionsInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListTagOptionsOutput
 type ListTagOptionsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -9587,8 +14158,40 @@ func (s *ListTagOptionsOutput) SetTagOptionDetails(v []*TagOptionDetail) *ListTa
 	return s
 }
 
+// Information about the organization node.
+type OrganizationNode struct {
+	_ struct{} `type:"structure"`
+
+	// The organization node type.
+	Type *string `type:"string" enum:"OrganizationNodeType"`
+
+	// The identifier of the organization node.
+	Value *string `type:"string"`
+}
+
+// String returns the string representation
+func (s OrganizationNode) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OrganizationNode) GoString() string {
+	return s.String()
+}
+
+// SetType sets the Type field's value.
+func (s *OrganizationNode) SetType(v string) *OrganizationNode {
+	s.Type = &v
+	return s
+}
+
+// SetValue sets the Value field's value.
+func (s *OrganizationNode) SetValue(v string) *OrganizationNode {
+	s.Value = &v
+	return s
+}
+
 // The constraints that the administrator has put on the parameter.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ParameterConstraints
 type ParameterConstraints struct {
 	_ struct{} `type:"structure"`
 
@@ -9613,15 +14216,14 @@ func (s *ParameterConstraints) SetAllowedValues(v []*string) *ParameterConstrain
 }
 
 // Information about a portfolio.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/PortfolioDetail
 type PortfolioDetail struct {
 	_ struct{} `type:"structure"`
 
 	// The ARN assigned to the portfolio.
 	ARN *string `min:"1" type:"string"`
 
-	// The UTC timestamp of the creation time.
-	CreatedTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	// The UTC time stamp of the creation time.
+	CreatedTime *time.Time `type:"timestamp"`
 
 	// The description of the portfolio.
 	Description *string `type:"string"`
@@ -9683,7 +14285,6 @@ func (s *PortfolioDetail) SetProviderName(v string) *PortfolioDetail {
 }
 
 // Information about a principal.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/Principal
 type Principal struct {
 	_ struct{} `type:"structure"`
 
@@ -9718,7 +14319,6 @@ func (s *Principal) SetPrincipalType(v string) *Principal {
 
 // A single product view aggregation value/count pair, containing metadata about
 // each product to which the calling user has access.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ProductViewAggregationValue
 type ProductViewAggregationValue struct {
 	_ struct{} `type:"structure"`
 
@@ -9752,12 +14352,11 @@ func (s *ProductViewAggregationValue) SetValue(v string) *ProductViewAggregation
 }
 
 // Information about a product view.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ProductViewDetail
 type ProductViewDetail struct {
 	_ struct{} `type:"structure"`
 
-	// The UTC timestamp of the creation time.
-	CreatedTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	// The UTC time stamp of the creation time.
+	CreatedTime *time.Time `type:"timestamp"`
 
 	// The ARN of the product.
 	ProductARN *string `min:"1" type:"string"`
@@ -9811,7 +14410,6 @@ func (s *ProductViewDetail) SetStatus(v string) *ProductViewDetail {
 }
 
 // Summary information about a product view.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ProductViewSummary
 type ProductViewSummary struct {
 	_ struct{} `type:"structure"`
 
@@ -9932,7 +14530,6 @@ func (s *ProductViewSummary) SetType(v string) *ProductViewSummary {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ProvisionProductInput
 type ProvisionProductInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9960,9 +14557,7 @@ type ProvisionProductInput struct {
 	ProductId *string `min:"1" type:"string" required:"true"`
 
 	// An idempotency token that uniquely identifies the provisioning request.
-	//
-	// ProvisionToken is a required field
-	ProvisionToken *string `min:"1" type:"string" required:"true" idempotencyToken:"true"`
+	ProvisionToken *string `min:"1" type:"string" idempotencyToken:"true"`
 
 	// A user-friendly name for the provisioned product. This value must be unique
 	// for the AWS account and cannot be updated after the product is provisioned.
@@ -9979,7 +14574,11 @@ type ProvisionProductInput struct {
 	// the product.
 	ProvisioningParameters []*ProvisioningParameter `type:"list"`
 
-	// The tags to use as provisioning options.
+	// An object that contains information about the provisioning preferences for
+	// a stack set.
+	ProvisioningPreferences *ProvisioningPreferences `type:"structure"`
+
+	// One or more tags.
 	Tags []*Tag `type:"list"`
 }
 
@@ -10005,9 +14604,6 @@ func (s *ProvisionProductInput) Validate() error {
 	if s.ProductId != nil && len(*s.ProductId) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("ProductId", 1))
 	}
-	if s.ProvisionToken == nil {
-		invalidParams.Add(request.NewErrParamRequired("ProvisionToken"))
-	}
 	if s.ProvisionToken != nil && len(*s.ProvisionToken) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("ProvisionToken", 1))
 	}
@@ -10031,6 +14627,11 @@ func (s *ProvisionProductInput) Validate() error {
 			if err := v.Validate(); err != nil {
 				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "ProvisioningParameters", i), err.(request.ErrInvalidParams))
 			}
+		}
+	}
+	if s.ProvisioningPreferences != nil {
+		if err := s.ProvisioningPreferences.Validate(); err != nil {
+			invalidParams.AddNested("ProvisioningPreferences", err.(request.ErrInvalidParams))
 		}
 	}
 	if s.Tags != nil {
@@ -10098,17 +14699,22 @@ func (s *ProvisionProductInput) SetProvisioningParameters(v []*ProvisioningParam
 	return s
 }
 
+// SetProvisioningPreferences sets the ProvisioningPreferences field's value.
+func (s *ProvisionProductInput) SetProvisioningPreferences(v *ProvisioningPreferences) *ProvisionProductInput {
+	s.ProvisioningPreferences = v
+	return s
+}
+
 // SetTags sets the Tags field's value.
 func (s *ProvisionProductInput) SetTags(v []*Tag) *ProvisionProductInput {
 	s.Tags = v
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ProvisionProductOutput
 type ProvisionProductOutput struct {
 	_ struct{} `type:"structure"`
 
-	// Information about the result of ProvisionProduct.
+	// Information about the result of provisioning the product.
 	RecordDetail *RecordDetail `type:"structure"`
 }
 
@@ -10129,15 +14735,188 @@ func (s *ProvisionProductOutput) SetRecordDetail(v *RecordDetail) *ProvisionProd
 }
 
 // Information about a provisioned product.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ProvisionedProductDetail
+type ProvisionedProductAttribute struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the provisioned product.
+	Arn *string `min:"1" type:"string"`
+
+	// The UTC time stamp of the creation time.
+	CreatedTime *time.Time `type:"timestamp"`
+
+	// The identifier of the provisioned product.
+	Id *string `min:"1" type:"string"`
+
+	// A unique identifier that you provide to ensure idempotency. If multiple requests
+	// differ only by the idempotency token, the same response is returned for each
+	// repeated request.
+	IdempotencyToken *string `min:"1" type:"string"`
+
+	// The record identifier of the last request performed on this provisioned product.
+	LastRecordId *string `min:"1" type:"string"`
+
+	// The user-friendly name of the provisioned product.
+	Name *string `min:"1" type:"string"`
+
+	// The assigned identifier for the resource, such as an EC2 instance ID or an
+	// S3 bucket name.
+	PhysicalId *string `type:"string"`
+
+	// The product identifier.
+	ProductId *string `min:"1" type:"string"`
+
+	// The identifier of the provisioning artifact.
+	ProvisioningArtifactId *string `min:"1" type:"string"`
+
+	// The current status of the provisioned product.
+	//
+	//    * AVAILABLE - Stable state, ready to perform any operation. The most recent
+	//    operation succeeded and completed.
+	//
+	//    * UNDER_CHANGE - Transitive state. Operations performed might not have
+	//    valid results. Wait for an AVAILABLE status before performing operations.
+	//
+	//    * TAINTED - Stable state, ready to perform any operation. The stack has
+	//    completed the requested operation but is not exactly what was requested.
+	//    For example, a request to update to a new version failed and the stack
+	//    rolled back to the current version.
+	//
+	//    * ERROR - An unexpected error occurred. The provisioned product exists
+	//    but the stack is not running. For example, CloudFormation received a parameter
+	//    value that was not valid and could not launch the stack.
+	//
+	//    * PLAN_IN_PROGRESS - Transitive state. The plan operations were performed
+	//    to provision a new product, but resources have not yet been created. After
+	//    reviewing the list of resources to be created, execute the plan. Wait
+	//    for an AVAILABLE status before performing operations.
+	Status *string `type:"string" enum:"ProvisionedProductStatus"`
+
+	// The current status message of the provisioned product.
+	StatusMessage *string `type:"string"`
+
+	// One or more tags.
+	Tags []*Tag `type:"list"`
+
+	// The type of provisioned product. The supported values are CFN_STACK and CFN_STACKSET.
+	Type *string `type:"string"`
+
+	// The Amazon Resource Name (ARN) of the IAM user.
+	UserArn *string `type:"string"`
+
+	// The ARN of the IAM user in the session. This ARN might contain a session
+	// ID.
+	UserArnSession *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ProvisionedProductAttribute) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ProvisionedProductAttribute) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *ProvisionedProductAttribute) SetArn(v string) *ProvisionedProductAttribute {
+	s.Arn = &v
+	return s
+}
+
+// SetCreatedTime sets the CreatedTime field's value.
+func (s *ProvisionedProductAttribute) SetCreatedTime(v time.Time) *ProvisionedProductAttribute {
+	s.CreatedTime = &v
+	return s
+}
+
+// SetId sets the Id field's value.
+func (s *ProvisionedProductAttribute) SetId(v string) *ProvisionedProductAttribute {
+	s.Id = &v
+	return s
+}
+
+// SetIdempotencyToken sets the IdempotencyToken field's value.
+func (s *ProvisionedProductAttribute) SetIdempotencyToken(v string) *ProvisionedProductAttribute {
+	s.IdempotencyToken = &v
+	return s
+}
+
+// SetLastRecordId sets the LastRecordId field's value.
+func (s *ProvisionedProductAttribute) SetLastRecordId(v string) *ProvisionedProductAttribute {
+	s.LastRecordId = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *ProvisionedProductAttribute) SetName(v string) *ProvisionedProductAttribute {
+	s.Name = &v
+	return s
+}
+
+// SetPhysicalId sets the PhysicalId field's value.
+func (s *ProvisionedProductAttribute) SetPhysicalId(v string) *ProvisionedProductAttribute {
+	s.PhysicalId = &v
+	return s
+}
+
+// SetProductId sets the ProductId field's value.
+func (s *ProvisionedProductAttribute) SetProductId(v string) *ProvisionedProductAttribute {
+	s.ProductId = &v
+	return s
+}
+
+// SetProvisioningArtifactId sets the ProvisioningArtifactId field's value.
+func (s *ProvisionedProductAttribute) SetProvisioningArtifactId(v string) *ProvisionedProductAttribute {
+	s.ProvisioningArtifactId = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *ProvisionedProductAttribute) SetStatus(v string) *ProvisionedProductAttribute {
+	s.Status = &v
+	return s
+}
+
+// SetStatusMessage sets the StatusMessage field's value.
+func (s *ProvisionedProductAttribute) SetStatusMessage(v string) *ProvisionedProductAttribute {
+	s.StatusMessage = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *ProvisionedProductAttribute) SetTags(v []*Tag) *ProvisionedProductAttribute {
+	s.Tags = v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *ProvisionedProductAttribute) SetType(v string) *ProvisionedProductAttribute {
+	s.Type = &v
+	return s
+}
+
+// SetUserArn sets the UserArn field's value.
+func (s *ProvisionedProductAttribute) SetUserArn(v string) *ProvisionedProductAttribute {
+	s.UserArn = &v
+	return s
+}
+
+// SetUserArnSession sets the UserArnSession field's value.
+func (s *ProvisionedProductAttribute) SetUserArnSession(v string) *ProvisionedProductAttribute {
+	s.UserArnSession = &v
+	return s
+}
+
+// Information about a provisioned product.
 type ProvisionedProductDetail struct {
 	_ struct{} `type:"structure"`
 
 	// The ARN of the provisioned product.
 	Arn *string `min:"1" type:"string"`
 
-	// The UTC timestamp of the creation time.
-	CreatedTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	// The UTC time stamp of the creation time.
+	CreatedTime *time.Time `type:"timestamp"`
 
 	// The identifier of the provisioned product.
 	Id *string `type:"string"`
@@ -10153,12 +14932,18 @@ type ProvisionedProductDetail struct {
 	// The user-friendly name of the provisioned product.
 	Name *string `min:"1" type:"string"`
 
+	// The product identifier. For example, prod-abcdzk7xy33qa.
+	ProductId *string `min:"1" type:"string"`
+
+	// The identifier of the provisioning artifact. For example, pa-4abcdjnxjj6ne.
+	ProvisioningArtifactId *string `min:"1" type:"string"`
+
 	// The current status of the provisioned product.
 	//
 	//    * AVAILABLE - Stable state, ready to perform any operation. The most recent
 	//    operation succeeded and completed.
 	//
-	//    * UNDER_CHANGE - Transitive state, operations performed might not have
+	//    * UNDER_CHANGE - Transitive state. Operations performed might not have
 	//    valid results. Wait for an AVAILABLE status before performing operations.
 	//
 	//    * TAINTED - Stable state, ready to perform any operation. The stack has
@@ -10166,15 +14951,20 @@ type ProvisionedProductDetail struct {
 	//    For example, a request to update to a new version failed and the stack
 	//    rolled back to the current version.
 	//
-	//    * ERROR - An unexpected error occurred, the provisioned product exists
+	//    * ERROR - An unexpected error occurred. The provisioned product exists
 	//    but the stack is not running. For example, CloudFormation received a parameter
 	//    value that was not valid and could not launch the stack.
+	//
+	//    * PLAN_IN_PROGRESS - Transitive state. The plan operations were performed
+	//    to provision a new product, but resources have not yet been created. After
+	//    reviewing the list of resources to be created, execute the plan. Wait
+	//    for an AVAILABLE status before performing operations.
 	Status *string `type:"string" enum:"ProvisionedProductStatus"`
 
 	// The current status message of the provisioned product.
 	StatusMessage *string `type:"string"`
 
-	// The type of provisioned product. The supported value is CFN_STACK.
+	// The type of provisioned product. The supported values are CFN_STACK and CFN_STACKSET.
 	Type *string `type:"string"`
 }
 
@@ -10224,6 +15014,18 @@ func (s *ProvisionedProductDetail) SetName(v string) *ProvisionedProductDetail {
 	return s
 }
 
+// SetProductId sets the ProductId field's value.
+func (s *ProvisionedProductDetail) SetProductId(v string) *ProvisionedProductDetail {
+	s.ProductId = &v
+	return s
+}
+
+// SetProvisioningArtifactId sets the ProvisioningArtifactId field's value.
+func (s *ProvisionedProductDetail) SetProvisioningArtifactId(v string) *ProvisionedProductDetail {
+	s.ProvisioningArtifactId = &v
+	return s
+}
+
 // SetStatus sets the Status field's value.
 func (s *ProvisionedProductDetail) SetStatus(v string) *ProvisionedProductDetail {
 	s.Status = &v
@@ -10242,14 +15044,236 @@ func (s *ProvisionedProductDetail) SetType(v string) *ProvisionedProductDetail {
 	return s
 }
 
+// Information about a plan.
+type ProvisionedProductPlanDetails struct {
+	_ struct{} `type:"structure"`
+
+	// The UTC time stamp of the creation time.
+	CreatedTime *time.Time `type:"timestamp"`
+
+	// Passed to CloudFormation. The SNS topic ARNs to which to publish stack-related
+	// events.
+	NotificationArns []*string `type:"list"`
+
+	// The path identifier of the product. This value is optional if the product
+	// has a default path, and required if the product has more than one path. To
+	// list the paths for a product, use ListLaunchPaths.
+	PathId *string `min:"1" type:"string"`
+
+	// The plan identifier.
+	PlanId *string `min:"1" type:"string"`
+
+	// The name of the plan.
+	PlanName *string `type:"string"`
+
+	// The plan type.
+	PlanType *string `type:"string" enum:"ProvisionedProductPlanType"`
+
+	// The product identifier.
+	ProductId *string `min:"1" type:"string"`
+
+	// The product identifier.
+	ProvisionProductId *string `min:"1" type:"string"`
+
+	// The user-friendly name of the provisioned product.
+	ProvisionProductName *string `min:"1" type:"string"`
+
+	// The identifier of the provisioning artifact.
+	ProvisioningArtifactId *string `min:"1" type:"string"`
+
+	// Parameters specified by the administrator that are required for provisioning
+	// the product.
+	ProvisioningParameters []*UpdateProvisioningParameter `type:"list"`
+
+	// The status.
+	Status *string `type:"string" enum:"ProvisionedProductPlanStatus"`
+
+	// The status message.
+	StatusMessage *string `type:"string"`
+
+	// One or more tags.
+	Tags []*Tag `type:"list"`
+
+	// The time when the plan was last updated.
+	UpdatedTime *time.Time `type:"timestamp"`
+}
+
+// String returns the string representation
+func (s ProvisionedProductPlanDetails) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ProvisionedProductPlanDetails) GoString() string {
+	return s.String()
+}
+
+// SetCreatedTime sets the CreatedTime field's value.
+func (s *ProvisionedProductPlanDetails) SetCreatedTime(v time.Time) *ProvisionedProductPlanDetails {
+	s.CreatedTime = &v
+	return s
+}
+
+// SetNotificationArns sets the NotificationArns field's value.
+func (s *ProvisionedProductPlanDetails) SetNotificationArns(v []*string) *ProvisionedProductPlanDetails {
+	s.NotificationArns = v
+	return s
+}
+
+// SetPathId sets the PathId field's value.
+func (s *ProvisionedProductPlanDetails) SetPathId(v string) *ProvisionedProductPlanDetails {
+	s.PathId = &v
+	return s
+}
+
+// SetPlanId sets the PlanId field's value.
+func (s *ProvisionedProductPlanDetails) SetPlanId(v string) *ProvisionedProductPlanDetails {
+	s.PlanId = &v
+	return s
+}
+
+// SetPlanName sets the PlanName field's value.
+func (s *ProvisionedProductPlanDetails) SetPlanName(v string) *ProvisionedProductPlanDetails {
+	s.PlanName = &v
+	return s
+}
+
+// SetPlanType sets the PlanType field's value.
+func (s *ProvisionedProductPlanDetails) SetPlanType(v string) *ProvisionedProductPlanDetails {
+	s.PlanType = &v
+	return s
+}
+
+// SetProductId sets the ProductId field's value.
+func (s *ProvisionedProductPlanDetails) SetProductId(v string) *ProvisionedProductPlanDetails {
+	s.ProductId = &v
+	return s
+}
+
+// SetProvisionProductId sets the ProvisionProductId field's value.
+func (s *ProvisionedProductPlanDetails) SetProvisionProductId(v string) *ProvisionedProductPlanDetails {
+	s.ProvisionProductId = &v
+	return s
+}
+
+// SetProvisionProductName sets the ProvisionProductName field's value.
+func (s *ProvisionedProductPlanDetails) SetProvisionProductName(v string) *ProvisionedProductPlanDetails {
+	s.ProvisionProductName = &v
+	return s
+}
+
+// SetProvisioningArtifactId sets the ProvisioningArtifactId field's value.
+func (s *ProvisionedProductPlanDetails) SetProvisioningArtifactId(v string) *ProvisionedProductPlanDetails {
+	s.ProvisioningArtifactId = &v
+	return s
+}
+
+// SetProvisioningParameters sets the ProvisioningParameters field's value.
+func (s *ProvisionedProductPlanDetails) SetProvisioningParameters(v []*UpdateProvisioningParameter) *ProvisionedProductPlanDetails {
+	s.ProvisioningParameters = v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *ProvisionedProductPlanDetails) SetStatus(v string) *ProvisionedProductPlanDetails {
+	s.Status = &v
+	return s
+}
+
+// SetStatusMessage sets the StatusMessage field's value.
+func (s *ProvisionedProductPlanDetails) SetStatusMessage(v string) *ProvisionedProductPlanDetails {
+	s.StatusMessage = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *ProvisionedProductPlanDetails) SetTags(v []*Tag) *ProvisionedProductPlanDetails {
+	s.Tags = v
+	return s
+}
+
+// SetUpdatedTime sets the UpdatedTime field's value.
+func (s *ProvisionedProductPlanDetails) SetUpdatedTime(v time.Time) *ProvisionedProductPlanDetails {
+	s.UpdatedTime = &v
+	return s
+}
+
+// Summary information about a plan.
+type ProvisionedProductPlanSummary struct {
+	_ struct{} `type:"structure"`
+
+	// The plan identifier.
+	PlanId *string `min:"1" type:"string"`
+
+	// The name of the plan.
+	PlanName *string `type:"string"`
+
+	// The plan type.
+	PlanType *string `type:"string" enum:"ProvisionedProductPlanType"`
+
+	// The product identifier.
+	ProvisionProductId *string `min:"1" type:"string"`
+
+	// The user-friendly name of the provisioned product.
+	ProvisionProductName *string `min:"1" type:"string"`
+
+	// The identifier of the provisioning artifact.
+	ProvisioningArtifactId *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ProvisionedProductPlanSummary) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ProvisionedProductPlanSummary) GoString() string {
+	return s.String()
+}
+
+// SetPlanId sets the PlanId field's value.
+func (s *ProvisionedProductPlanSummary) SetPlanId(v string) *ProvisionedProductPlanSummary {
+	s.PlanId = &v
+	return s
+}
+
+// SetPlanName sets the PlanName field's value.
+func (s *ProvisionedProductPlanSummary) SetPlanName(v string) *ProvisionedProductPlanSummary {
+	s.PlanName = &v
+	return s
+}
+
+// SetPlanType sets the PlanType field's value.
+func (s *ProvisionedProductPlanSummary) SetPlanType(v string) *ProvisionedProductPlanSummary {
+	s.PlanType = &v
+	return s
+}
+
+// SetProvisionProductId sets the ProvisionProductId field's value.
+func (s *ProvisionedProductPlanSummary) SetProvisionProductId(v string) *ProvisionedProductPlanSummary {
+	s.ProvisionProductId = &v
+	return s
+}
+
+// SetProvisionProductName sets the ProvisionProductName field's value.
+func (s *ProvisionedProductPlanSummary) SetProvisionProductName(v string) *ProvisionedProductPlanSummary {
+	s.ProvisionProductName = &v
+	return s
+}
+
+// SetProvisioningArtifactId sets the ProvisioningArtifactId field's value.
+func (s *ProvisionedProductPlanSummary) SetProvisioningArtifactId(v string) *ProvisionedProductPlanSummary {
+	s.ProvisioningArtifactId = &v
+	return s
+}
+
 // Information about a provisioning artifact. A provisioning artifact is also
 // known as a product version.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ProvisioningArtifact
 type ProvisioningArtifact struct {
 	_ struct{} `type:"structure"`
 
-	// The UTC timestamp of the creation time.
-	CreatedTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	// The UTC time stamp of the creation time.
+	CreatedTime *time.Time `type:"timestamp"`
 
 	// The description of the provisioning artifact.
 	Description *string `type:"string"`
@@ -10297,15 +15321,14 @@ func (s *ProvisioningArtifact) SetName(v string) *ProvisioningArtifact {
 
 // Information about a provisioning artifact (also known as a version) for a
 // product.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ProvisioningArtifactDetail
 type ProvisioningArtifactDetail struct {
 	_ struct{} `type:"structure"`
 
 	// Indicates whether the product version is active.
 	Active *bool `type:"boolean"`
 
-	// The UTC timestamp of the creation time.
-	CreatedTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	// The UTC time stamp of the creation time.
+	CreatedTime *time.Time `type:"timestamp"`
 
 	// The description of the provisioning artifact.
 	Description *string `type:"string"`
@@ -10373,7 +15396,6 @@ func (s *ProvisioningArtifactDetail) SetType(v string) *ProvisioningArtifactDeta
 }
 
 // Information about a parameter used to provision a product.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ProvisioningArtifactParameter
 type ProvisioningArtifactParameter struct {
 	_ struct{} `type:"structure"`
 
@@ -10444,9 +15466,54 @@ func (s *ProvisioningArtifactParameter) SetParameterType(v string) *Provisioning
 	return s
 }
 
+// The user-defined preferences that will be applied during product provisioning,
+// unless overridden by ProvisioningPreferences or UpdateProvisioningPreferences.
+//
+// For more information on maximum concurrent accounts and failure tolerance,
+// see Stack set operation options (https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/stacksets-concepts.html#stackset-ops-options)
+// in the AWS CloudFormation User Guide.
+type ProvisioningArtifactPreferences struct {
+	_ struct{} `type:"structure"`
+
+	// One or more AWS accounts where stack instances are deployed from the stack
+	// set. These accounts can be scoped in ProvisioningPreferences$StackSetAccounts
+	// and UpdateProvisioningPreferences$StackSetAccounts.
+	//
+	// Applicable only to a CFN_STACKSET provisioned product type.
+	StackSetAccounts []*string `type:"list"`
+
+	// One or more AWS Regions where stack instances are deployed from the stack
+	// set. These regions can be scoped in ProvisioningPreferences$StackSetRegions
+	// and UpdateProvisioningPreferences$StackSetRegions.
+	//
+	// Applicable only to a CFN_STACKSET provisioned product type.
+	StackSetRegions []*string `type:"list"`
+}
+
+// String returns the string representation
+func (s ProvisioningArtifactPreferences) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ProvisioningArtifactPreferences) GoString() string {
+	return s.String()
+}
+
+// SetStackSetAccounts sets the StackSetAccounts field's value.
+func (s *ProvisioningArtifactPreferences) SetStackSetAccounts(v []*string) *ProvisioningArtifactPreferences {
+	s.StackSetAccounts = v
+	return s
+}
+
+// SetStackSetRegions sets the StackSetRegions field's value.
+func (s *ProvisioningArtifactPreferences) SetStackSetRegions(v []*string) *ProvisioningArtifactPreferences {
+	s.StackSetRegions = v
+	return s
+}
+
 // Information about a provisioning artifact (also known as a version) for a
 // product.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ProvisioningArtifactProperties
 type ProvisioningArtifactProperties struct {
 	_ struct{} `type:"structure"`
 
@@ -10528,12 +15595,11 @@ func (s *ProvisioningArtifactProperties) SetType(v string) *ProvisioningArtifact
 
 // Summary information about a provisioning artifact (also known as a version)
 // for a product.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ProvisioningArtifactSummary
 type ProvisioningArtifactSummary struct {
 	_ struct{} `type:"structure"`
 
-	// The UTC timestamp of the creation time.
-	CreatedTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	// The UTC time stamp of the creation time.
+	CreatedTime *time.Time `type:"timestamp"`
 
 	// The description of the provisioning artifact.
 	Description *string `type:"string"`
@@ -10589,8 +15655,42 @@ func (s *ProvisioningArtifactSummary) SetProvisioningArtifactMetadata(v map[stri
 	return s
 }
 
+// An object that contains summary information about a product view and a provisioning
+// artifact.
+type ProvisioningArtifactView struct {
+	_ struct{} `type:"structure"`
+
+	// Summary information about a product view.
+	ProductViewSummary *ProductViewSummary `type:"structure"`
+
+	// Information about a provisioning artifact. A provisioning artifact is also
+	// known as a product version.
+	ProvisioningArtifact *ProvisioningArtifact `type:"structure"`
+}
+
+// String returns the string representation
+func (s ProvisioningArtifactView) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ProvisioningArtifactView) GoString() string {
+	return s.String()
+}
+
+// SetProductViewSummary sets the ProductViewSummary field's value.
+func (s *ProvisioningArtifactView) SetProductViewSummary(v *ProductViewSummary) *ProvisioningArtifactView {
+	s.ProductViewSummary = v
+	return s
+}
+
+// SetProvisioningArtifact sets the ProvisioningArtifact field's value.
+func (s *ProvisioningArtifactView) SetProvisioningArtifact(v *ProvisioningArtifact) *ProvisioningArtifactView {
+	s.ProvisioningArtifact = v
+	return s
+}
+
 // Information about a parameter used to provision a product.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ProvisioningParameter
 type ProvisioningParameter struct {
 	_ struct{} `type:"structure"`
 
@@ -10636,13 +15736,163 @@ func (s *ProvisioningParameter) SetValue(v string) *ProvisioningParameter {
 	return s
 }
 
+// The user-defined preferences that will be applied when updating a provisioned
+// product. Not all preferences are applicable to all provisioned product types.
+type ProvisioningPreferences struct {
+	_ struct{} `type:"structure"`
+
+	// One or more AWS accounts that will have access to the provisioned product.
+	//
+	// Applicable only to a CFN_STACKSET provisioned product type.
+	//
+	// The AWS accounts specified should be within the list of accounts in the STACKSET
+	// constraint. To get the list of accounts in the STACKSET constraint, use the
+	// DescribeProvisioningParameters operation.
+	//
+	// If no values are specified, the default value is all accounts from the STACKSET
+	// constraint.
+	StackSetAccounts []*string `type:"list"`
+
+	// The number of accounts, per region, for which this operation can fail before
+	// AWS Service Catalog stops the operation in that region. If the operation
+	// is stopped in a region, AWS Service Catalog doesn't attempt the operation
+	// in any subsequent regions.
+	//
+	// Applicable only to a CFN_STACKSET provisioned product type.
+	//
+	// Conditional: You must specify either StackSetFailureToleranceCount or StackSetFailureTolerancePercentage,
+	// but not both.
+	//
+	// The default value is 0 if no value is specified.
+	StackSetFailureToleranceCount *int64 `type:"integer"`
+
+	// The percentage of accounts, per region, for which this stack operation can
+	// fail before AWS Service Catalog stops the operation in that region. If the
+	// operation is stopped in a region, AWS Service Catalog doesn't attempt the
+	// operation in any subsequent regions.
+	//
+	// When calculating the number of accounts based on the specified percentage,
+	// AWS Service Catalog rounds down to the next whole number.
+	//
+	// Applicable only to a CFN_STACKSET provisioned product type.
+	//
+	// Conditional: You must specify either StackSetFailureToleranceCount or StackSetFailureTolerancePercentage,
+	// but not both.
+	StackSetFailureTolerancePercentage *int64 `type:"integer"`
+
+	// The maximum number of accounts in which to perform this operation at one
+	// time. This is dependent on the value of StackSetFailureToleranceCount. StackSetMaxConcurrentCount
+	// is at most one more than the StackSetFailureToleranceCount.
+	//
+	// Note that this setting lets you specify the maximum for operations. For large
+	// deployments, under certain circumstances the actual number of accounts acted
+	// upon concurrently may be lower due to service throttling.
+	//
+	// Applicable only to a CFN_STACKSET provisioned product type.
+	//
+	// Conditional: You must specify either StackSetMaxConcurrentCount or StackSetMaxConcurrentPercentage,
+	// but not both.
+	StackSetMaxConcurrencyCount *int64 `min:"1" type:"integer"`
+
+	// The maximum percentage of accounts in which to perform this operation at
+	// one time.
+	//
+	// When calculating the number of accounts based on the specified percentage,
+	// AWS Service Catalog rounds down to the next whole number. This is true except
+	// in cases where rounding down would result is zero. In this case, AWS Service
+	// Catalog sets the number as 1 instead.
+	//
+	// Note that this setting lets you specify the maximum for operations. For large
+	// deployments, under certain circumstances the actual number of accounts acted
+	// upon concurrently may be lower due to service throttling.
+	//
+	// Applicable only to a CFN_STACKSET provisioned product type.
+	//
+	// Conditional: You must specify either StackSetMaxConcurrentCount or StackSetMaxConcurrentPercentage,
+	// but not both.
+	StackSetMaxConcurrencyPercentage *int64 `min:"1" type:"integer"`
+
+	// One or more AWS Regions where the provisioned product will be available.
+	//
+	// Applicable only to a CFN_STACKSET provisioned product type.
+	//
+	// The specified regions should be within the list of regions from the STACKSET
+	// constraint. To get the list of regions in the STACKSET constraint, use the
+	// DescribeProvisioningParameters operation.
+	//
+	// If no values are specified, the default value is all regions from the STACKSET
+	// constraint.
+	StackSetRegions []*string `type:"list"`
+}
+
+// String returns the string representation
+func (s ProvisioningPreferences) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ProvisioningPreferences) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ProvisioningPreferences) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ProvisioningPreferences"}
+	if s.StackSetMaxConcurrencyCount != nil && *s.StackSetMaxConcurrencyCount < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("StackSetMaxConcurrencyCount", 1))
+	}
+	if s.StackSetMaxConcurrencyPercentage != nil && *s.StackSetMaxConcurrencyPercentage < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("StackSetMaxConcurrencyPercentage", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetStackSetAccounts sets the StackSetAccounts field's value.
+func (s *ProvisioningPreferences) SetStackSetAccounts(v []*string) *ProvisioningPreferences {
+	s.StackSetAccounts = v
+	return s
+}
+
+// SetStackSetFailureToleranceCount sets the StackSetFailureToleranceCount field's value.
+func (s *ProvisioningPreferences) SetStackSetFailureToleranceCount(v int64) *ProvisioningPreferences {
+	s.StackSetFailureToleranceCount = &v
+	return s
+}
+
+// SetStackSetFailureTolerancePercentage sets the StackSetFailureTolerancePercentage field's value.
+func (s *ProvisioningPreferences) SetStackSetFailureTolerancePercentage(v int64) *ProvisioningPreferences {
+	s.StackSetFailureTolerancePercentage = &v
+	return s
+}
+
+// SetStackSetMaxConcurrencyCount sets the StackSetMaxConcurrencyCount field's value.
+func (s *ProvisioningPreferences) SetStackSetMaxConcurrencyCount(v int64) *ProvisioningPreferences {
+	s.StackSetMaxConcurrencyCount = &v
+	return s
+}
+
+// SetStackSetMaxConcurrencyPercentage sets the StackSetMaxConcurrencyPercentage field's value.
+func (s *ProvisioningPreferences) SetStackSetMaxConcurrencyPercentage(v int64) *ProvisioningPreferences {
+	s.StackSetMaxConcurrencyPercentage = &v
+	return s
+}
+
+// SetStackSetRegions sets the StackSetRegions field's value.
+func (s *ProvisioningPreferences) SetStackSetRegions(v []*string) *ProvisioningPreferences {
+	s.StackSetRegions = v
+	return s
+}
+
 // Information about a request operation.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/RecordDetail
 type RecordDetail struct {
 	_ struct{} `type:"structure"`
 
-	// The UTC timestamp of the creation time.
-	CreatedTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	// The UTC time stamp of the creation time.
+	CreatedTime *time.Time `type:"timestamp"`
 
 	// The path identifier.
 	PathId *string `min:"1" type:"string"`
@@ -10656,22 +15906,22 @@ type RecordDetail struct {
 	// The user-friendly name of the provisioned product.
 	ProvisionedProductName *string `min:"1" type:"string"`
 
-	// The type of provisioned product. The supported value is CFN_STACK.
+	// The type of provisioned product. The supported values are CFN_STACK and CFN_STACKSET.
 	ProvisionedProductType *string `type:"string"`
 
 	// The identifier of the provisioning artifact.
 	ProvisioningArtifactId *string `min:"1" type:"string"`
 
-	// The errors that occurred while processing the request.
+	// The errors that occurred.
 	RecordErrors []*RecordError `type:"list"`
 
 	// The identifier of the record.
 	RecordId *string `min:"1" type:"string"`
 
-	// The tags associated with this record.
+	// One or more tags.
 	RecordTags []*RecordTag `type:"list"`
 
-	// The record type for this record.
+	// The record type.
 	//
 	//    * PROVISION_PRODUCT
 	//
@@ -10697,7 +15947,7 @@ type RecordDetail struct {
 	Status *string `type:"string" enum:"RecordStatus"`
 
 	// The time when the record was last updated.
-	UpdatedTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	UpdatedTime *time.Time `type:"timestamp"`
 }
 
 // String returns the string representation
@@ -10789,7 +16039,6 @@ func (s *RecordDetail) SetUpdatedTime(v time.Time) *RecordDetail {
 }
 
 // The error code and description resulting from an operation.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/RecordError
 type RecordError struct {
 	_ struct{} `type:"structure"`
 
@@ -10825,7 +16074,6 @@ func (s *RecordError) SetDescription(v string) *RecordError {
 // The output for the product created as the result of a request. For example,
 // the output for a CloudFormation-backed product that creates an S3 bucket
 // would include the S3 bucket URL.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/RecordOutput
 type RecordOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -10867,8 +16115,7 @@ func (s *RecordOutput) SetOutputValue(v string) *RecordOutput {
 	return s
 }
 
-// A tag associated with the record, stored as a key-value pair.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/RecordTag
+// Information about a tag, which is a key-value pair.
 type RecordTag struct {
 	_ struct{} `type:"structure"`
 
@@ -10901,7 +16148,6 @@ func (s *RecordTag) SetValue(v string) *RecordTag {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/RejectPortfolioShareInput
 type RejectPortfolioShareInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10918,6 +16164,20 @@ type RejectPortfolioShareInput struct {
 	//
 	// PortfolioId is a required field
 	PortfolioId *string `min:"1" type:"string" required:"true"`
+
+	// The type of shared portfolios to reject. The default is to reject imported
+	// portfolios.
+	//
+	//    * AWS_ORGANIZATIONS - Reject portfolios shared by the master account of
+	//    your organization.
+	//
+	//    * IMPORTED - Reject imported portfolios.
+	//
+	//    * AWS_SERVICECATALOG - Not supported. (Throws ResourceNotFoundException.)
+	//
+	// For example, aws servicecatalog reject-portfolio-share --portfolio-id "port-2qwzkwxt3y5fk"
+	// --portfolio-share-type AWS_ORGANIZATIONS
+	PortfolioShareType *string `type:"string" enum:"PortfolioShareType"`
 }
 
 // String returns the string representation
@@ -10958,7 +16218,12 @@ func (s *RejectPortfolioShareInput) SetPortfolioId(v string) *RejectPortfolioSha
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/RejectPortfolioShareOutput
+// SetPortfolioShareType sets the PortfolioShareType field's value.
+func (s *RejectPortfolioShareInput) SetPortfolioShareType(v string) *RejectPortfolioShareInput {
+	s.PortfolioShareType = &v
+	return s
+}
+
 type RejectPortfolioShareOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -10973,8 +16238,130 @@ func (s RejectPortfolioShareOutput) GoString() string {
 	return s.String()
 }
 
+// Information about a resource change that will occur when a plan is executed.
+type ResourceChange struct {
+	_ struct{} `type:"structure"`
+
+	// The change action.
+	Action *string `type:"string" enum:"ChangeAction"`
+
+	// Information about the resource changes.
+	Details []*ResourceChangeDetail `type:"list"`
+
+	// The ID of the resource, as defined in the CloudFormation template.
+	LogicalResourceId *string `type:"string"`
+
+	// The ID of the resource, if it was already created.
+	PhysicalResourceId *string `type:"string"`
+
+	// If the change type is Modify, indicates whether the existing resource is
+	// deleted and replaced with a new one.
+	Replacement *string `type:"string" enum:"Replacement"`
+
+	// The type of resource.
+	ResourceType *string `min:"1" type:"string"`
+
+	// The change scope.
+	Scope []*string `type:"list"`
+}
+
+// String returns the string representation
+func (s ResourceChange) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceChange) GoString() string {
+	return s.String()
+}
+
+// SetAction sets the Action field's value.
+func (s *ResourceChange) SetAction(v string) *ResourceChange {
+	s.Action = &v
+	return s
+}
+
+// SetDetails sets the Details field's value.
+func (s *ResourceChange) SetDetails(v []*ResourceChangeDetail) *ResourceChange {
+	s.Details = v
+	return s
+}
+
+// SetLogicalResourceId sets the LogicalResourceId field's value.
+func (s *ResourceChange) SetLogicalResourceId(v string) *ResourceChange {
+	s.LogicalResourceId = &v
+	return s
+}
+
+// SetPhysicalResourceId sets the PhysicalResourceId field's value.
+func (s *ResourceChange) SetPhysicalResourceId(v string) *ResourceChange {
+	s.PhysicalResourceId = &v
+	return s
+}
+
+// SetReplacement sets the Replacement field's value.
+func (s *ResourceChange) SetReplacement(v string) *ResourceChange {
+	s.Replacement = &v
+	return s
+}
+
+// SetResourceType sets the ResourceType field's value.
+func (s *ResourceChange) SetResourceType(v string) *ResourceChange {
+	s.ResourceType = &v
+	return s
+}
+
+// SetScope sets the Scope field's value.
+func (s *ResourceChange) SetScope(v []*string) *ResourceChange {
+	s.Scope = v
+	return s
+}
+
+// Information about a change to a resource attribute.
+type ResourceChangeDetail struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the entity that caused the change.
+	CausingEntity *string `type:"string"`
+
+	// For static evaluations, the value of the resource attribute will change and
+	// the new value is known. For dynamic evaluations, the value might change,
+	// and any new value will be determined when the plan is updated.
+	Evaluation *string `type:"string" enum:"EvaluationType"`
+
+	// Information about the resource attribute to be modified.
+	Target *ResourceTargetDefinition `type:"structure"`
+}
+
+// String returns the string representation
+func (s ResourceChangeDetail) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceChangeDetail) GoString() string {
+	return s.String()
+}
+
+// SetCausingEntity sets the CausingEntity field's value.
+func (s *ResourceChangeDetail) SetCausingEntity(v string) *ResourceChangeDetail {
+	s.CausingEntity = &v
+	return s
+}
+
+// SetEvaluation sets the Evaluation field's value.
+func (s *ResourceChangeDetail) SetEvaluation(v string) *ResourceChangeDetail {
+	s.Evaluation = &v
+	return s
+}
+
+// SetTarget sets the Target field's value.
+func (s *ResourceChangeDetail) SetTarget(v *ResourceTargetDefinition) *ResourceChangeDetail {
+	s.Target = v
+	return s
+}
+
 // Information about a resource.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ResourceDetail
 type ResourceDetail struct {
 	_ struct{} `type:"structure"`
 
@@ -10982,7 +16369,7 @@ type ResourceDetail struct {
 	ARN *string `type:"string"`
 
 	// The creation time of the resource.
-	CreatedTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreatedTime *time.Time `type:"timestamp"`
 
 	// The description of the resource.
 	Description *string `type:"string"`
@@ -11034,7 +16421,50 @@ func (s *ResourceDetail) SetName(v string) *ResourceDetail {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ScanProvisionedProductsInput
+// Information about a change to a resource attribute.
+type ResourceTargetDefinition struct {
+	_ struct{} `type:"structure"`
+
+	// The attribute to be changed.
+	Attribute *string `type:"string" enum:"ResourceAttribute"`
+
+	// If the attribute is Properties, the value is the name of the property. Otherwise,
+	// the value is null.
+	Name *string `type:"string"`
+
+	// If the attribute is Properties, indicates whether a change to this property
+	// causes the resource to be re-created.
+	RequiresRecreation *string `type:"string" enum:"RequiresRecreation"`
+}
+
+// String returns the string representation
+func (s ResourceTargetDefinition) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceTargetDefinition) GoString() string {
+	return s.String()
+}
+
+// SetAttribute sets the Attribute field's value.
+func (s *ResourceTargetDefinition) SetAttribute(v string) *ResourceTargetDefinition {
+	s.Attribute = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *ResourceTargetDefinition) SetName(v string) *ResourceTargetDefinition {
+	s.Name = &v
+	return s
+}
+
+// SetRequiresRecreation sets the RequiresRecreation field's value.
+func (s *ResourceTargetDefinition) SetRequiresRecreation(v string) *ResourceTargetDefinition {
+	s.RequiresRecreation = &v
+	return s
+}
+
 type ScanProvisionedProductsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -11092,7 +16522,6 @@ func (s *ScanProvisionedProductsInput) SetPageToken(v string) *ScanProvisionedPr
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ScanProvisionedProductsOutput
 type ScanProvisionedProductsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -11126,7 +16555,6 @@ func (s *ScanProvisionedProductsOutput) SetProvisionedProducts(v []*ProvisionedP
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/SearchProductsAsAdminInput
 type SearchProductsAsAdminInput struct {
 	_ struct{} `type:"structure"`
 
@@ -11234,7 +16662,6 @@ func (s *SearchProductsAsAdminInput) SetSortOrder(v string) *SearchProductsAsAdm
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/SearchProductsAsAdminOutput
 type SearchProductsAsAdminOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -11268,7 +16695,6 @@ func (s *SearchProductsAsAdminOutput) SetProductViewDetails(v []*ProductViewDeta
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/SearchProductsInput
 type SearchProductsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -11345,7 +16771,6 @@ func (s *SearchProductsInput) SetSortOrder(v string) *SearchProductsInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/SearchProductsOutput
 type SearchProductsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -11388,9 +16813,377 @@ func (s *SearchProductsOutput) SetProductViewSummaries(v []*ProductViewSummary) 
 	return s
 }
 
-// Information about a tag. A tag is a key-value pair. Tags are entirely discretionary
-// and are propagated to the resources created when provisioning a product.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/Tag
+type SearchProvisionedProductsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The language code.
+	//
+	//    * en - English (default)
+	//
+	//    * jp - Japanese
+	//
+	//    * zh - Chinese
+	AcceptLanguage *string `type:"string"`
+
+	// The access level to use to obtain results. The default is User.
+	AccessLevelFilter *AccessLevelFilter `type:"structure"`
+
+	// The search filters.
+	//
+	// When the key is SearchQuery, the searchable fields are arn, createdTime,
+	// id, lastRecordId, idempotencyToken, name, physicalId, productId, provisioningArtifact,
+	// type, status, tags, userArn, and userArnSession.
+	//
+	// Example: "SearchQuery":["status:AVAILABLE"]
+	Filters map[string][]*string `type:"map"`
+
+	// The maximum number of items to return with this call.
+	PageSize *int64 `type:"integer"`
+
+	// The page token for the next set of results. To retrieve the first set of
+	// results, use null.
+	PageToken *string `type:"string"`
+
+	// The sort field. If no value is specified, the results are not sorted. The
+	// valid values are arn, id, name, and lastRecordId.
+	SortBy *string `type:"string"`
+
+	// The sort order. If no value is specified, the results are not sorted.
+	SortOrder *string `type:"string" enum:"SortOrder"`
+}
+
+// String returns the string representation
+func (s SearchProvisionedProductsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SearchProvisionedProductsInput) GoString() string {
+	return s.String()
+}
+
+// SetAcceptLanguage sets the AcceptLanguage field's value.
+func (s *SearchProvisionedProductsInput) SetAcceptLanguage(v string) *SearchProvisionedProductsInput {
+	s.AcceptLanguage = &v
+	return s
+}
+
+// SetAccessLevelFilter sets the AccessLevelFilter field's value.
+func (s *SearchProvisionedProductsInput) SetAccessLevelFilter(v *AccessLevelFilter) *SearchProvisionedProductsInput {
+	s.AccessLevelFilter = v
+	return s
+}
+
+// SetFilters sets the Filters field's value.
+func (s *SearchProvisionedProductsInput) SetFilters(v map[string][]*string) *SearchProvisionedProductsInput {
+	s.Filters = v
+	return s
+}
+
+// SetPageSize sets the PageSize field's value.
+func (s *SearchProvisionedProductsInput) SetPageSize(v int64) *SearchProvisionedProductsInput {
+	s.PageSize = &v
+	return s
+}
+
+// SetPageToken sets the PageToken field's value.
+func (s *SearchProvisionedProductsInput) SetPageToken(v string) *SearchProvisionedProductsInput {
+	s.PageToken = &v
+	return s
+}
+
+// SetSortBy sets the SortBy field's value.
+func (s *SearchProvisionedProductsInput) SetSortBy(v string) *SearchProvisionedProductsInput {
+	s.SortBy = &v
+	return s
+}
+
+// SetSortOrder sets the SortOrder field's value.
+func (s *SearchProvisionedProductsInput) SetSortOrder(v string) *SearchProvisionedProductsInput {
+	s.SortOrder = &v
+	return s
+}
+
+type SearchProvisionedProductsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The page token to use to retrieve the next set of results. If there are no
+	// additional results, this value is null.
+	NextPageToken *string `type:"string"`
+
+	// Information about the provisioned products.
+	ProvisionedProducts []*ProvisionedProductAttribute `type:"list"`
+
+	// The number of provisioned products found.
+	TotalResultsCount *int64 `type:"integer"`
+}
+
+// String returns the string representation
+func (s SearchProvisionedProductsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SearchProvisionedProductsOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextPageToken sets the NextPageToken field's value.
+func (s *SearchProvisionedProductsOutput) SetNextPageToken(v string) *SearchProvisionedProductsOutput {
+	s.NextPageToken = &v
+	return s
+}
+
+// SetProvisionedProducts sets the ProvisionedProducts field's value.
+func (s *SearchProvisionedProductsOutput) SetProvisionedProducts(v []*ProvisionedProductAttribute) *SearchProvisionedProductsOutput {
+	s.ProvisionedProducts = v
+	return s
+}
+
+// SetTotalResultsCount sets the TotalResultsCount field's value.
+func (s *SearchProvisionedProductsOutput) SetTotalResultsCount(v int64) *SearchProvisionedProductsOutput {
+	s.TotalResultsCount = &v
+	return s
+}
+
+// A self-service action association consisting of the Action ID, the Product
+// ID, and the Provisioning Artifact ID.
+type ServiceActionAssociation struct {
+	_ struct{} `type:"structure"`
+
+	// The product identifier. For example, prod-abcdzk7xy33qa.
+	//
+	// ProductId is a required field
+	ProductId *string `min:"1" type:"string" required:"true"`
+
+	// The identifier of the provisioning artifact. For example, pa-4abcdjnxjj6ne.
+	//
+	// ProvisioningArtifactId is a required field
+	ProvisioningArtifactId *string `min:"1" type:"string" required:"true"`
+
+	// The self-service action identifier. For example, act-fs7abcd89wxyz.
+	//
+	// ServiceActionId is a required field
+	ServiceActionId *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ServiceActionAssociation) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ServiceActionAssociation) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ServiceActionAssociation) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ServiceActionAssociation"}
+	if s.ProductId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ProductId"))
+	}
+	if s.ProductId != nil && len(*s.ProductId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ProductId", 1))
+	}
+	if s.ProvisioningArtifactId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ProvisioningArtifactId"))
+	}
+	if s.ProvisioningArtifactId != nil && len(*s.ProvisioningArtifactId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ProvisioningArtifactId", 1))
+	}
+	if s.ServiceActionId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ServiceActionId"))
+	}
+	if s.ServiceActionId != nil && len(*s.ServiceActionId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ServiceActionId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetProductId sets the ProductId field's value.
+func (s *ServiceActionAssociation) SetProductId(v string) *ServiceActionAssociation {
+	s.ProductId = &v
+	return s
+}
+
+// SetProvisioningArtifactId sets the ProvisioningArtifactId field's value.
+func (s *ServiceActionAssociation) SetProvisioningArtifactId(v string) *ServiceActionAssociation {
+	s.ProvisioningArtifactId = &v
+	return s
+}
+
+// SetServiceActionId sets the ServiceActionId field's value.
+func (s *ServiceActionAssociation) SetServiceActionId(v string) *ServiceActionAssociation {
+	s.ServiceActionId = &v
+	return s
+}
+
+// An object containing detailed information about the self-service action.
+type ServiceActionDetail struct {
+	_ struct{} `type:"structure"`
+
+	// A map that defines the self-service action.
+	Definition map[string]*string `min:"1" type:"map"`
+
+	// Summary information about the self-service action.
+	ServiceActionSummary *ServiceActionSummary `type:"structure"`
+}
+
+// String returns the string representation
+func (s ServiceActionDetail) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ServiceActionDetail) GoString() string {
+	return s.String()
+}
+
+// SetDefinition sets the Definition field's value.
+func (s *ServiceActionDetail) SetDefinition(v map[string]*string) *ServiceActionDetail {
+	s.Definition = v
+	return s
+}
+
+// SetServiceActionSummary sets the ServiceActionSummary field's value.
+func (s *ServiceActionDetail) SetServiceActionSummary(v *ServiceActionSummary) *ServiceActionDetail {
+	s.ServiceActionSummary = v
+	return s
+}
+
+// Detailed information about the self-service action.
+type ServiceActionSummary struct {
+	_ struct{} `type:"structure"`
+
+	// The self-service action definition type. For example, SSM_AUTOMATION.
+	DefinitionType *string `type:"string" enum:"ServiceActionDefinitionType"`
+
+	// The self-service action description.
+	Description *string `type:"string"`
+
+	// The self-service action identifier.
+	Id *string `min:"1" type:"string"`
+
+	// The self-service action name.
+	Name *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ServiceActionSummary) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ServiceActionSummary) GoString() string {
+	return s.String()
+}
+
+// SetDefinitionType sets the DefinitionType field's value.
+func (s *ServiceActionSummary) SetDefinitionType(v string) *ServiceActionSummary {
+	s.DefinitionType = &v
+	return s
+}
+
+// SetDescription sets the Description field's value.
+func (s *ServiceActionSummary) SetDescription(v string) *ServiceActionSummary {
+	s.Description = &v
+	return s
+}
+
+// SetId sets the Id field's value.
+func (s *ServiceActionSummary) SetId(v string) *ServiceActionSummary {
+	s.Id = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *ServiceActionSummary) SetName(v string) *ServiceActionSummary {
+	s.Name = &v
+	return s
+}
+
+// Information about the portfolio share operation.
+type ShareDetails struct {
+	_ struct{} `type:"structure"`
+
+	// List of errors.
+	ShareErrors []*ShareError `type:"list"`
+
+	// List of accounts for whom the operation succeeded.
+	SuccessfulShares []*string `type:"list"`
+}
+
+// String returns the string representation
+func (s ShareDetails) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ShareDetails) GoString() string {
+	return s.String()
+}
+
+// SetShareErrors sets the ShareErrors field's value.
+func (s *ShareDetails) SetShareErrors(v []*ShareError) *ShareDetails {
+	s.ShareErrors = v
+	return s
+}
+
+// SetSuccessfulShares sets the SuccessfulShares field's value.
+func (s *ShareDetails) SetSuccessfulShares(v []*string) *ShareDetails {
+	s.SuccessfulShares = v
+	return s
+}
+
+// Errors that occurred during the portfolio share operation.
+type ShareError struct {
+	_ struct{} `type:"structure"`
+
+	// List of accounts impacted by the error.
+	Accounts []*string `type:"list"`
+
+	// Error type that happened when processing the operation.
+	Error *string `type:"string"`
+
+	// Information about the error.
+	Message *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ShareError) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ShareError) GoString() string {
+	return s.String()
+}
+
+// SetAccounts sets the Accounts field's value.
+func (s *ShareError) SetAccounts(v []*string) *ShareError {
+	s.Accounts = v
+	return s
+}
+
+// SetError sets the Error field's value.
+func (s *ShareError) SetError(v string) *ShareError {
+	s.Error = &v
+	return s
+}
+
+// SetMessage sets the Message field's value.
+func (s *ShareError) SetMessage(v string) *ShareError {
+	s.Message = &v
+	return s
+}
+
+// Information about a tag. A tag is a key-value pair. Tags are propagated to
+// the resources created when provisioning a product.
 type Tag struct {
 	_ struct{} `type:"structure"`
 
@@ -11450,7 +17243,6 @@ func (s *Tag) SetValue(v string) *Tag {
 }
 
 // Information about a TagOption.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/TagOptionDetail
 type TagOptionDetail struct {
 	_ struct{} `type:"structure"`
 
@@ -11502,7 +17294,6 @@ func (s *TagOptionDetail) SetValue(v string) *TagOptionDetail {
 }
 
 // Summary information about a TagOption.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/TagOptionSummary
 type TagOptionSummary struct {
 	_ struct{} `type:"structure"`
 
@@ -11535,7 +17326,6 @@ func (s *TagOptionSummary) SetValues(v []*string) *TagOptionSummary {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/TerminateProvisionedProductInput
 type TerminateProvisionedProductInput struct {
 	_ struct{} `type:"structure"`
 
@@ -11564,9 +17354,7 @@ type TerminateProvisionedProductInput struct {
 	// token is only valid during the termination process. After the provisioned
 	// product is terminated, subsequent requests to terminate the same provisioned
 	// product always return ResourceNotFound.
-	//
-	// TerminateToken is a required field
-	TerminateToken *string `min:"1" type:"string" required:"true" idempotencyToken:"true"`
+	TerminateToken *string `min:"1" type:"string" idempotencyToken:"true"`
 }
 
 // String returns the string representation
@@ -11587,9 +17375,6 @@ func (s *TerminateProvisionedProductInput) Validate() error {
 	}
 	if s.ProvisionedProductName != nil && len(*s.ProvisionedProductName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("ProvisionedProductName", 1))
-	}
-	if s.TerminateToken == nil {
-		invalidParams.Add(request.NewErrParamRequired("TerminateToken"))
 	}
 	if s.TerminateToken != nil && len(*s.TerminateToken) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("TerminateToken", 1))
@@ -11631,7 +17416,6 @@ func (s *TerminateProvisionedProductInput) SetTerminateToken(v string) *Terminat
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/TerminateProvisionedProductOutput
 type TerminateProvisionedProductOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -11655,7 +17439,6 @@ func (s *TerminateProvisionedProductOutput) SetRecordDetail(v *RecordDetail) *Te
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/UpdateConstraintInput
 type UpdateConstraintInput struct {
 	_ struct{} `type:"structure"`
 
@@ -11721,7 +17504,6 @@ func (s *UpdateConstraintInput) SetId(v string) *UpdateConstraintInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/UpdateConstraintOutput
 type UpdateConstraintOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -11763,7 +17545,6 @@ func (s *UpdateConstraintOutput) SetStatus(v string) *UpdateConstraintOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/UpdatePortfolioInput
 type UpdatePortfolioInput struct {
 	_ struct{} `type:"structure"`
 
@@ -11881,7 +17662,6 @@ func (s *UpdatePortfolioInput) SetRemoveTags(v []*string) *UpdatePortfolioInput 
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/UpdatePortfolioOutput
 type UpdatePortfolioOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -11914,7 +17694,6 @@ func (s *UpdatePortfolioOutput) SetTags(v []*Tag) *UpdatePortfolioOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/UpdateProductInput
 type UpdateProductInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12062,7 +17841,6 @@ func (s *UpdateProductInput) SetSupportUrl(v string) *UpdateProductInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/UpdateProductOutput
 type UpdateProductOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -12095,7 +17873,6 @@ func (s *UpdateProductOutput) SetTags(v []*Tag) *UpdateProductOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/UpdateProvisionedProductInput
 type UpdateProvisionedProductInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12112,7 +17889,7 @@ type UpdateProvisionedProductInput struct {
 	// path, and required if the product has more than one path.
 	PathId *string `min:"1" type:"string"`
 
-	// The identifier of the provisioned product.
+	// The identifier of the product.
 	ProductId *string `min:"1" type:"string"`
 
 	// The identifier of the provisioned product. You cannot specify both ProvisionedProductName
@@ -12129,10 +17906,12 @@ type UpdateProvisionedProductInput struct {
 	// The new parameters.
 	ProvisioningParameters []*UpdateProvisioningParameter `type:"list"`
 
-	// The idempotency token that uniquely identifies the provisioning update rquest.
-	//
-	// UpdateToken is a required field
-	UpdateToken *string `min:"1" type:"string" required:"true" idempotencyToken:"true"`
+	// An object that contains information about the provisioning preferences for
+	// a stack set.
+	ProvisioningPreferences *UpdateProvisioningPreferences `type:"structure"`
+
+	// The idempotency token that uniquely identifies the provisioning update request.
+	UpdateToken *string `min:"1" type:"string" idempotencyToken:"true"`
 }
 
 // String returns the string representation
@@ -12163,9 +17942,6 @@ func (s *UpdateProvisionedProductInput) Validate() error {
 	if s.ProvisioningArtifactId != nil && len(*s.ProvisioningArtifactId) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("ProvisioningArtifactId", 1))
 	}
-	if s.UpdateToken == nil {
-		invalidParams.Add(request.NewErrParamRequired("UpdateToken"))
-	}
 	if s.UpdateToken != nil && len(*s.UpdateToken) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("UpdateToken", 1))
 	}
@@ -12177,6 +17953,11 @@ func (s *UpdateProvisionedProductInput) Validate() error {
 			if err := v.Validate(); err != nil {
 				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "ProvisioningParameters", i), err.(request.ErrInvalidParams))
 			}
+		}
+	}
+	if s.ProvisioningPreferences != nil {
+		if err := s.ProvisioningPreferences.Validate(); err != nil {
+			invalidParams.AddNested("ProvisioningPreferences", err.(request.ErrInvalidParams))
 		}
 	}
 
@@ -12228,13 +18009,18 @@ func (s *UpdateProvisionedProductInput) SetProvisioningParameters(v []*UpdatePro
 	return s
 }
 
+// SetProvisioningPreferences sets the ProvisioningPreferences field's value.
+func (s *UpdateProvisionedProductInput) SetProvisioningPreferences(v *UpdateProvisioningPreferences) *UpdateProvisionedProductInput {
+	s.ProvisioningPreferences = v
+	return s
+}
+
 // SetUpdateToken sets the UpdateToken field's value.
 func (s *UpdateProvisionedProductInput) SetUpdateToken(v string) *UpdateProvisionedProductInput {
 	s.UpdateToken = &v
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/UpdateProvisionedProductOutput
 type UpdateProvisionedProductOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -12258,7 +18044,6 @@ func (s *UpdateProvisionedProductOutput) SetRecordDetail(v *RecordDetail) *Updat
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/UpdateProvisioningArtifactInput
 type UpdateProvisioningArtifactInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12359,7 +18144,6 @@ func (s *UpdateProvisioningArtifactInput) SetProvisioningArtifactId(v string) *U
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/UpdateProvisioningArtifactOutput
 type UpdateProvisioningArtifactOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -12402,7 +18186,6 @@ func (s *UpdateProvisioningArtifactOutput) SetStatus(v string) *UpdateProvisioni
 }
 
 // The parameter key-value pair used to update a provisioned product.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/UpdateProvisioningParameter
 type UpdateProvisioningParameter struct {
 	_ struct{} `type:"structure"`
 
@@ -12457,7 +18240,293 @@ func (s *UpdateProvisioningParameter) SetValue(v string) *UpdateProvisioningPara
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/UpdateTagOptionInput
+// The user-defined preferences that will be applied when updating a provisioned
+// product. Not all preferences are applicable to all provisioned product types.
+type UpdateProvisioningPreferences struct {
+	_ struct{} `type:"structure"`
+
+	// One or more AWS accounts that will have access to the provisioned product.
+	//
+	// Applicable only to a CFN_STACKSET provisioned product type.
+	//
+	// The AWS accounts specified should be within the list of accounts in the STACKSET
+	// constraint. To get the list of accounts in the STACKSET constraint, use the
+	// DescribeProvisioningParameters operation.
+	//
+	// If no values are specified, the default value is all accounts from the STACKSET
+	// constraint.
+	StackSetAccounts []*string `type:"list"`
+
+	// The number of accounts, per region, for which this operation can fail before
+	// AWS Service Catalog stops the operation in that region. If the operation
+	// is stopped in a region, AWS Service Catalog doesn't attempt the operation
+	// in any subsequent regions.
+	//
+	// Applicable only to a CFN_STACKSET provisioned product type.
+	//
+	// Conditional: You must specify either StackSetFailureToleranceCount or StackSetFailureTolerancePercentage,
+	// but not both.
+	//
+	// The default value is 0 if no value is specified.
+	StackSetFailureToleranceCount *int64 `type:"integer"`
+
+	// The percentage of accounts, per region, for which this stack operation can
+	// fail before AWS Service Catalog stops the operation in that region. If the
+	// operation is stopped in a region, AWS Service Catalog doesn't attempt the
+	// operation in any subsequent regions.
+	//
+	// When calculating the number of accounts based on the specified percentage,
+	// AWS Service Catalog rounds down to the next whole number.
+	//
+	// Applicable only to a CFN_STACKSET provisioned product type.
+	//
+	// Conditional: You must specify either StackSetFailureToleranceCount or StackSetFailureTolerancePercentage,
+	// but not both.
+	StackSetFailureTolerancePercentage *int64 `type:"integer"`
+
+	// The maximum number of accounts in which to perform this operation at one
+	// time. This is dependent on the value of StackSetFailureToleranceCount. StackSetMaxConcurrentCount
+	// is at most one more than the StackSetFailureToleranceCount.
+	//
+	// Note that this setting lets you specify the maximum for operations. For large
+	// deployments, under certain circumstances the actual number of accounts acted
+	// upon concurrently may be lower due to service throttling.
+	//
+	// Applicable only to a CFN_STACKSET provisioned product type.
+	//
+	// Conditional: You must specify either StackSetMaxConcurrentCount or StackSetMaxConcurrentPercentage,
+	// but not both.
+	StackSetMaxConcurrencyCount *int64 `min:"1" type:"integer"`
+
+	// The maximum percentage of accounts in which to perform this operation at
+	// one time.
+	//
+	// When calculating the number of accounts based on the specified percentage,
+	// AWS Service Catalog rounds down to the next whole number. This is true except
+	// in cases where rounding down would result is zero. In this case, AWS Service
+	// Catalog sets the number as 1 instead.
+	//
+	// Note that this setting lets you specify the maximum for operations. For large
+	// deployments, under certain circumstances the actual number of accounts acted
+	// upon concurrently may be lower due to service throttling.
+	//
+	// Applicable only to a CFN_STACKSET provisioned product type.
+	//
+	// Conditional: You must specify either StackSetMaxConcurrentCount or StackSetMaxConcurrentPercentage,
+	// but not both.
+	StackSetMaxConcurrencyPercentage *int64 `min:"1" type:"integer"`
+
+	// Determines what action AWS Service Catalog performs to a stack set or a stack
+	// instance represented by the provisioned product. The default value is UPDATE
+	// if nothing is specified.
+	//
+	// Applicable only to a CFN_STACKSET provisioned product type.
+	//
+	// CREATECreates a new stack instance in the stack set represented by the provisioned
+	// product. In this case, only new stack instances are created based on accounts
+	// and regions; if new ProductId or ProvisioningArtifactID are passed, they
+	// will be ignored.
+	//
+	// UPDATEUpdates the stack set represented by the provisioned product and also
+	// its stack instances.
+	//
+	// DELETEDeletes a stack instance in the stack set represented by the provisioned
+	// product.
+	StackSetOperationType *string `type:"string" enum:"StackSetOperationType"`
+
+	// One or more AWS Regions where the provisioned product will be available.
+	//
+	// Applicable only to a CFN_STACKSET provisioned product type.
+	//
+	// The specified regions should be within the list of regions from the STACKSET
+	// constraint. To get the list of regions in the STACKSET constraint, use the
+	// DescribeProvisioningParameters operation.
+	//
+	// If no values are specified, the default value is all regions from the STACKSET
+	// constraint.
+	StackSetRegions []*string `type:"list"`
+}
+
+// String returns the string representation
+func (s UpdateProvisioningPreferences) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateProvisioningPreferences) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateProvisioningPreferences) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateProvisioningPreferences"}
+	if s.StackSetMaxConcurrencyCount != nil && *s.StackSetMaxConcurrencyCount < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("StackSetMaxConcurrencyCount", 1))
+	}
+	if s.StackSetMaxConcurrencyPercentage != nil && *s.StackSetMaxConcurrencyPercentage < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("StackSetMaxConcurrencyPercentage", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetStackSetAccounts sets the StackSetAccounts field's value.
+func (s *UpdateProvisioningPreferences) SetStackSetAccounts(v []*string) *UpdateProvisioningPreferences {
+	s.StackSetAccounts = v
+	return s
+}
+
+// SetStackSetFailureToleranceCount sets the StackSetFailureToleranceCount field's value.
+func (s *UpdateProvisioningPreferences) SetStackSetFailureToleranceCount(v int64) *UpdateProvisioningPreferences {
+	s.StackSetFailureToleranceCount = &v
+	return s
+}
+
+// SetStackSetFailureTolerancePercentage sets the StackSetFailureTolerancePercentage field's value.
+func (s *UpdateProvisioningPreferences) SetStackSetFailureTolerancePercentage(v int64) *UpdateProvisioningPreferences {
+	s.StackSetFailureTolerancePercentage = &v
+	return s
+}
+
+// SetStackSetMaxConcurrencyCount sets the StackSetMaxConcurrencyCount field's value.
+func (s *UpdateProvisioningPreferences) SetStackSetMaxConcurrencyCount(v int64) *UpdateProvisioningPreferences {
+	s.StackSetMaxConcurrencyCount = &v
+	return s
+}
+
+// SetStackSetMaxConcurrencyPercentage sets the StackSetMaxConcurrencyPercentage field's value.
+func (s *UpdateProvisioningPreferences) SetStackSetMaxConcurrencyPercentage(v int64) *UpdateProvisioningPreferences {
+	s.StackSetMaxConcurrencyPercentage = &v
+	return s
+}
+
+// SetStackSetOperationType sets the StackSetOperationType field's value.
+func (s *UpdateProvisioningPreferences) SetStackSetOperationType(v string) *UpdateProvisioningPreferences {
+	s.StackSetOperationType = &v
+	return s
+}
+
+// SetStackSetRegions sets the StackSetRegions field's value.
+func (s *UpdateProvisioningPreferences) SetStackSetRegions(v []*string) *UpdateProvisioningPreferences {
+	s.StackSetRegions = v
+	return s
+}
+
+type UpdateServiceActionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The language code.
+	//
+	//    * en - English (default)
+	//
+	//    * jp - Japanese
+	//
+	//    * zh - Chinese
+	AcceptLanguage *string `type:"string"`
+
+	// A map that defines the self-service action.
+	Definition map[string]*string `min:"1" type:"map"`
+
+	// The self-service action description.
+	Description *string `type:"string"`
+
+	// The self-service action identifier.
+	//
+	// Id is a required field
+	Id *string `min:"1" type:"string" required:"true"`
+
+	// The self-service action name.
+	Name *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s UpdateServiceActionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateServiceActionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateServiceActionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateServiceActionInput"}
+	if s.Definition != nil && len(s.Definition) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Definition", 1))
+	}
+	if s.Id == nil {
+		invalidParams.Add(request.NewErrParamRequired("Id"))
+	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
+	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAcceptLanguage sets the AcceptLanguage field's value.
+func (s *UpdateServiceActionInput) SetAcceptLanguage(v string) *UpdateServiceActionInput {
+	s.AcceptLanguage = &v
+	return s
+}
+
+// SetDefinition sets the Definition field's value.
+func (s *UpdateServiceActionInput) SetDefinition(v map[string]*string) *UpdateServiceActionInput {
+	s.Definition = v
+	return s
+}
+
+// SetDescription sets the Description field's value.
+func (s *UpdateServiceActionInput) SetDescription(v string) *UpdateServiceActionInput {
+	s.Description = &v
+	return s
+}
+
+// SetId sets the Id field's value.
+func (s *UpdateServiceActionInput) SetId(v string) *UpdateServiceActionInput {
+	s.Id = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *UpdateServiceActionInput) SetName(v string) *UpdateServiceActionInput {
+	s.Name = &v
+	return s
+}
+
+type UpdateServiceActionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Detailed information about the self-service action.
+	ServiceActionDetail *ServiceActionDetail `type:"structure"`
+}
+
+// String returns the string representation
+func (s UpdateServiceActionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateServiceActionOutput) GoString() string {
+	return s.String()
+}
+
+// SetServiceActionDetail sets the ServiceActionDetail field's value.
+func (s *UpdateServiceActionOutput) SetServiceActionDetail(v *ServiceActionDetail) *UpdateServiceActionOutput {
+	s.ServiceActionDetail = v
+	return s
+}
+
 type UpdateTagOptionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12520,7 +18589,6 @@ func (s *UpdateTagOptionInput) SetValue(v string) *UpdateTagOptionInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/UpdateTagOptionOutput
 type UpdateTagOptionOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -12545,7 +18613,6 @@ func (s *UpdateTagOptionOutput) SetTagOptionDetail(v *TagOptionDetail) *UpdateTa
 }
 
 // Additional information provided by the administrator.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/UsageInstruction
 type UsageInstruction struct {
 	_ struct{} `type:"structure"`
 
@@ -12590,6 +18657,28 @@ const (
 )
 
 const (
+	// AccessStatusEnabled is a AccessStatus enum value
+	AccessStatusEnabled = "ENABLED"
+
+	// AccessStatusUnderChange is a AccessStatus enum value
+	AccessStatusUnderChange = "UNDER_CHANGE"
+
+	// AccessStatusDisabled is a AccessStatus enum value
+	AccessStatusDisabled = "DISABLED"
+)
+
+const (
+	// ChangeActionAdd is a ChangeAction enum value
+	ChangeActionAdd = "ADD"
+
+	// ChangeActionModify is a ChangeAction enum value
+	ChangeActionModify = "MODIFY"
+
+	// ChangeActionRemove is a ChangeAction enum value
+	ChangeActionRemove = "REMOVE"
+)
+
+const (
 	// CopyOptionCopyTags is a CopyOption enum value
 	CopyOptionCopyTags = "CopyTags"
 )
@@ -12603,6 +18692,36 @@ const (
 
 	// CopyProductStatusFailed is a CopyProductStatus enum value
 	CopyProductStatusFailed = "FAILED"
+)
+
+const (
+	// EvaluationTypeStatic is a EvaluationType enum value
+	EvaluationTypeStatic = "STATIC"
+
+	// EvaluationTypeDynamic is a EvaluationType enum value
+	EvaluationTypeDynamic = "DYNAMIC"
+)
+
+const (
+	// OrganizationNodeTypeOrganization is a OrganizationNodeType enum value
+	OrganizationNodeTypeOrganization = "ORGANIZATION"
+
+	// OrganizationNodeTypeOrganizationalUnit is a OrganizationNodeType enum value
+	OrganizationNodeTypeOrganizationalUnit = "ORGANIZATIONAL_UNIT"
+
+	// OrganizationNodeTypeAccount is a OrganizationNodeType enum value
+	OrganizationNodeTypeAccount = "ACCOUNT"
+)
+
+const (
+	// PortfolioShareTypeImported is a PortfolioShareType enum value
+	PortfolioShareTypeImported = "IMPORTED"
+
+	// PortfolioShareTypeAwsServicecatalog is a PortfolioShareType enum value
+	PortfolioShareTypeAwsServicecatalog = "AWS_SERVICECATALOG"
+
+	// PortfolioShareTypeAwsOrganizations is a PortfolioShareType enum value
+	PortfolioShareTypeAwsOrganizations = "AWS_ORGANIZATIONS"
 )
 
 const (
@@ -12649,6 +18768,31 @@ const (
 )
 
 const (
+	// ProvisionedProductPlanStatusCreateInProgress is a ProvisionedProductPlanStatus enum value
+	ProvisionedProductPlanStatusCreateInProgress = "CREATE_IN_PROGRESS"
+
+	// ProvisionedProductPlanStatusCreateSuccess is a ProvisionedProductPlanStatus enum value
+	ProvisionedProductPlanStatusCreateSuccess = "CREATE_SUCCESS"
+
+	// ProvisionedProductPlanStatusCreateFailed is a ProvisionedProductPlanStatus enum value
+	ProvisionedProductPlanStatusCreateFailed = "CREATE_FAILED"
+
+	// ProvisionedProductPlanStatusExecuteInProgress is a ProvisionedProductPlanStatus enum value
+	ProvisionedProductPlanStatusExecuteInProgress = "EXECUTE_IN_PROGRESS"
+
+	// ProvisionedProductPlanStatusExecuteSuccess is a ProvisionedProductPlanStatus enum value
+	ProvisionedProductPlanStatusExecuteSuccess = "EXECUTE_SUCCESS"
+
+	// ProvisionedProductPlanStatusExecuteFailed is a ProvisionedProductPlanStatus enum value
+	ProvisionedProductPlanStatusExecuteFailed = "EXECUTE_FAILED"
+)
+
+const (
+	// ProvisionedProductPlanTypeCloudformation is a ProvisionedProductPlanType enum value
+	ProvisionedProductPlanTypeCloudformation = "CLOUDFORMATION"
+)
+
+const (
 	// ProvisionedProductStatusAvailable is a ProvisionedProductStatus enum value
 	ProvisionedProductStatusAvailable = "AVAILABLE"
 
@@ -12660,6 +18804,14 @@ const (
 
 	// ProvisionedProductStatusError is a ProvisionedProductStatus enum value
 	ProvisionedProductStatusError = "ERROR"
+
+	// ProvisionedProductStatusPlanInProgress is a ProvisionedProductStatus enum value
+	ProvisionedProductStatusPlanInProgress = "PLAN_IN_PROGRESS"
+)
+
+const (
+	// ProvisionedProductViewFilterBySearchQuery is a ProvisionedProductViewFilterBy enum value
+	ProvisionedProductViewFilterBySearchQuery = "SearchQuery"
 )
 
 const (
@@ -12696,11 +18848,117 @@ const (
 )
 
 const (
+	// ReplacementTrue is a Replacement enum value
+	ReplacementTrue = "TRUE"
+
+	// ReplacementFalse is a Replacement enum value
+	ReplacementFalse = "FALSE"
+
+	// ReplacementConditional is a Replacement enum value
+	ReplacementConditional = "CONDITIONAL"
+)
+
+const (
+	// RequiresRecreationNever is a RequiresRecreation enum value
+	RequiresRecreationNever = "NEVER"
+
+	// RequiresRecreationConditionally is a RequiresRecreation enum value
+	RequiresRecreationConditionally = "CONDITIONALLY"
+
+	// RequiresRecreationAlways is a RequiresRecreation enum value
+	RequiresRecreationAlways = "ALWAYS"
+)
+
+const (
+	// ResourceAttributeProperties is a ResourceAttribute enum value
+	ResourceAttributeProperties = "PROPERTIES"
+
+	// ResourceAttributeMetadata is a ResourceAttribute enum value
+	ResourceAttributeMetadata = "METADATA"
+
+	// ResourceAttributeCreationpolicy is a ResourceAttribute enum value
+	ResourceAttributeCreationpolicy = "CREATIONPOLICY"
+
+	// ResourceAttributeUpdatepolicy is a ResourceAttribute enum value
+	ResourceAttributeUpdatepolicy = "UPDATEPOLICY"
+
+	// ResourceAttributeDeletionpolicy is a ResourceAttribute enum value
+	ResourceAttributeDeletionpolicy = "DELETIONPOLICY"
+
+	// ResourceAttributeTags is a ResourceAttribute enum value
+	ResourceAttributeTags = "TAGS"
+)
+
+const (
+	// ServiceActionAssociationErrorCodeDuplicateResource is a ServiceActionAssociationErrorCode enum value
+	ServiceActionAssociationErrorCodeDuplicateResource = "DUPLICATE_RESOURCE"
+
+	// ServiceActionAssociationErrorCodeInternalFailure is a ServiceActionAssociationErrorCode enum value
+	ServiceActionAssociationErrorCodeInternalFailure = "INTERNAL_FAILURE"
+
+	// ServiceActionAssociationErrorCodeLimitExceeded is a ServiceActionAssociationErrorCode enum value
+	ServiceActionAssociationErrorCodeLimitExceeded = "LIMIT_EXCEEDED"
+
+	// ServiceActionAssociationErrorCodeResourceNotFound is a ServiceActionAssociationErrorCode enum value
+	ServiceActionAssociationErrorCodeResourceNotFound = "RESOURCE_NOT_FOUND"
+
+	// ServiceActionAssociationErrorCodeThrottling is a ServiceActionAssociationErrorCode enum value
+	ServiceActionAssociationErrorCodeThrottling = "THROTTLING"
+)
+
+const (
+	// ServiceActionDefinitionKeyName is a ServiceActionDefinitionKey enum value
+	ServiceActionDefinitionKeyName = "Name"
+
+	// ServiceActionDefinitionKeyVersion is a ServiceActionDefinitionKey enum value
+	ServiceActionDefinitionKeyVersion = "Version"
+
+	// ServiceActionDefinitionKeyAssumeRole is a ServiceActionDefinitionKey enum value
+	ServiceActionDefinitionKeyAssumeRole = "AssumeRole"
+
+	// ServiceActionDefinitionKeyParameters is a ServiceActionDefinitionKey enum value
+	ServiceActionDefinitionKeyParameters = "Parameters"
+)
+
+const (
+	// ServiceActionDefinitionTypeSsmAutomation is a ServiceActionDefinitionType enum value
+	ServiceActionDefinitionTypeSsmAutomation = "SSM_AUTOMATION"
+)
+
+const (
+	// ShareStatusNotStarted is a ShareStatus enum value
+	ShareStatusNotStarted = "NOT_STARTED"
+
+	// ShareStatusInProgress is a ShareStatus enum value
+	ShareStatusInProgress = "IN_PROGRESS"
+
+	// ShareStatusCompleted is a ShareStatus enum value
+	ShareStatusCompleted = "COMPLETED"
+
+	// ShareStatusCompletedWithErrors is a ShareStatus enum value
+	ShareStatusCompletedWithErrors = "COMPLETED_WITH_ERRORS"
+
+	// ShareStatusError is a ShareStatus enum value
+	ShareStatusError = "ERROR"
+)
+
+const (
 	// SortOrderAscending is a SortOrder enum value
 	SortOrderAscending = "ASCENDING"
 
 	// SortOrderDescending is a SortOrder enum value
 	SortOrderDescending = "DESCENDING"
+)
+
+const (
+	// StackSetOperationTypeCreate is a StackSetOperationType enum value
+	StackSetOperationTypeCreate = "CREATE"
+
+	// StackSetOperationTypeUpdate is a StackSetOperationType enum value
+	StackSetOperationTypeUpdate = "UPDATE"
+
+	// StackSetOperationTypeDelete is a StackSetOperationType enum value
+	StackSetOperationTypeDelete = "DELETE"
 )
 
 const (

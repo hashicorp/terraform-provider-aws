@@ -11,8 +11,8 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAwsDxConnectionAssociation_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+func TestAccAWSDxConnectionAssociation_basic(t *testing.T) {
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDxConnectionAssociationDestroy,
@@ -27,8 +27,8 @@ func TestAccAwsDxConnectionAssociation_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsDxConnectionAssociation_multiConns(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+func TestAccAWSDxConnectionAssociation_multiConns(t *testing.T) {
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDxConnectionAssociationDestroy,
@@ -92,7 +92,6 @@ resource "aws_dx_lag" "test" {
   name = "tf-dx-%s"
   connections_bandwidth = "1Gbps"
   location = "EqSe2"
-  number_of_connections = 1
   force_destroy = true
 }
 
@@ -121,7 +120,6 @@ resource "aws_dx_lag" "test" {
   name = "tf-dx-%s"
   connections_bandwidth = "1Gbps"
   location = "EqSe2"
-  number_of_connections = 1
   force_destroy = true
 }
 

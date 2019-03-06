@@ -12,12 +12,12 @@ import (
 func TestAccAWSVPCPeeringConnectionAccepter_sameRegion(t *testing.T) {
 	var connection ec2.VpcPeeringConnection
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccAwsVPCPeeringConnectionAccepterDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAwsVPCPeeringConnectionAccepterSameRegion,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSVpcPeeringConnectionExists(
@@ -36,20 +36,13 @@ func TestAccAWSVPCPeeringConnectionAccepter_differentRegion(t *testing.T) {
 	var connection ec2.VpcPeeringConnection
 
 	var providers []*schema.Provider
-	providerFactories := map[string]terraform.ResourceProviderFactory{
-		"aws": func() (terraform.ResourceProvider, error) {
-			p := Provider()
-			providers = append(providers, p.(*schema.Provider))
-			return p, nil
-		},
-	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: providerFactories,
+		ProviderFactories: testAccProviderFactories(&providers),
 		CheckDestroy:      testAccAwsVPCPeeringConnectionAccepterDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAwsVPCPeeringConnectionAccepterDifferentRegion,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSVpcPeeringConnectionExists(
@@ -72,15 +65,15 @@ func testAccAwsVPCPeeringConnectionAccepterDestroy(s *terraform.State) error {
 const testAccAwsVPCPeeringConnectionAccepterSameRegion = `
 resource "aws_vpc" "main" {
 	cidr_block = "10.0.0.0/16"
-	tags {
-		Name = "tf-acc-revoke-vpc-peering-connection-accepter-same-region"
+	tags = {
+		Name = "terraform-testacc-vpc-peering-conn-accepter-same-region-main"
 	}
 }
 
 resource "aws_vpc" "peer" {
 	cidr_block = "10.1.0.0/16"
-	tags {
-		Name = "tf-acc-revoke-vpc-peering-connection-accepter-same-region"
+	tags = {
+		Name = "terraform-testacc-vpc-peering-conn-accepter-same-region-peer"
 	}
 }
 
@@ -112,16 +105,16 @@ provider "aws" {
 resource "aws_vpc" "main" {
 	provider = "aws.main"
 	cidr_block = "10.0.0.0/16"
-	tags {
-		Name = "tf-acc-revoke-vpc-peering-connection-accepter-different-region"
+	tags = {
+		Name = "terraform-testacc-vpc-peering-conn-accepter-diff-region-main"
 	}
 }
 
 resource "aws_vpc" "peer" {
 	provider = "aws.peer"
 	cidr_block = "10.1.0.0/16"
-	tags {
-		Name = "tf-acc-revoke-vpc-peering-connection-accepter-different-region"
+	tags = {
+		Name = "terraform-testacc-vpc-peering-conn-accepter-diff-region-peer"
 	}
 }
 

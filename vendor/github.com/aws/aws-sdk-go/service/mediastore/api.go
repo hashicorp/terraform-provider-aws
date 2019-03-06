@@ -3,19 +3,22 @@
 package mediastore
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/aws/aws-sdk-go/aws/request"
+	"github.com/aws/aws-sdk-go/private/protocol"
+	"github.com/aws/aws-sdk-go/private/protocol/jsonrpc"
 )
 
 const opCreateContainer = "CreateContainer"
 
 // CreateContainerRequest generates a "aws/request.Request" representing the
 // client's request for the CreateContainer operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -66,7 +69,8 @@ func (c *MediaStore) CreateContainerRequest(input *CreateContainerInput) (req *r
 //
 // Returned Error Codes:
 //   * ErrCodeContainerInUseException "ContainerInUseException"
-//   Resource already exists or is being updated.
+//   The container that you specified in the request already exists or is being
+//   updated.
 //
 //   * ErrCodeLimitExceededException "LimitExceededException"
 //   A service limit has been exceeded.
@@ -100,8 +104,8 @@ const opDeleteContainer = "DeleteContainer"
 
 // DeleteContainerRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteContainer operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -135,6 +139,7 @@ func (c *MediaStore) DeleteContainerRequest(input *DeleteContainerInput) (req *r
 
 	output = &DeleteContainerOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -153,10 +158,11 @@ func (c *MediaStore) DeleteContainerRequest(input *DeleteContainerInput) (req *r
 //
 // Returned Error Codes:
 //   * ErrCodeContainerInUseException "ContainerInUseException"
-//   Resource already exists or is being updated.
+//   The container that you specified in the request already exists or is being
+//   updated.
 //
 //   * ErrCodeContainerNotFoundException "ContainerNotFoundException"
-//   Could not perform an operation on a container that does not exist.
+//   The container that you specified in the request does not exist.
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   The service is temporarily unavailable.
@@ -187,8 +193,8 @@ const opDeleteContainerPolicy = "DeleteContainerPolicy"
 
 // DeleteContainerPolicyRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteContainerPolicy operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -222,6 +228,7 @@ func (c *MediaStore) DeleteContainerPolicyRequest(input *DeleteContainerPolicyIn
 
 	output = &DeleteContainerPolicyOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -238,13 +245,14 @@ func (c *MediaStore) DeleteContainerPolicyRequest(input *DeleteContainerPolicyIn
 //
 // Returned Error Codes:
 //   * ErrCodeContainerInUseException "ContainerInUseException"
-//   Resource already exists or is being updated.
+//   The container that you specified in the request already exists or is being
+//   updated.
 //
 //   * ErrCodeContainerNotFoundException "ContainerNotFoundException"
-//   Could not perform an operation on a container that does not exist.
+//   The container that you specified in the request does not exist.
 //
 //   * ErrCodePolicyNotFoundException "PolicyNotFoundException"
-//   Could not perform an operation on a policy that does not exist.
+//   The policy that you specified in the request does not exist.
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   The service is temporarily unavailable.
@@ -271,12 +279,198 @@ func (c *MediaStore) DeleteContainerPolicyWithContext(ctx aws.Context, input *De
 	return out, req.Send()
 }
 
+const opDeleteCorsPolicy = "DeleteCorsPolicy"
+
+// DeleteCorsPolicyRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteCorsPolicy operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteCorsPolicy for more information on using the DeleteCorsPolicy
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteCorsPolicyRequest method.
+//    req, resp := client.DeleteCorsPolicyRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/DeleteCorsPolicy
+func (c *MediaStore) DeleteCorsPolicyRequest(input *DeleteCorsPolicyInput) (req *request.Request, output *DeleteCorsPolicyOutput) {
+	op := &request.Operation{
+		Name:       opDeleteCorsPolicy,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteCorsPolicyInput{}
+	}
+
+	output = &DeleteCorsPolicyOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DeleteCorsPolicy API operation for AWS Elemental MediaStore.
+//
+// Deletes the cross-origin resource sharing (CORS) configuration information
+// that is set for the container.
+//
+// To use this operation, you must have permission to perform the MediaStore:DeleteCorsPolicy
+// action. The container owner has this permission by default and can grant
+// this permission to others.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaStore's
+// API operation DeleteCorsPolicy for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeContainerInUseException "ContainerInUseException"
+//   The container that you specified in the request already exists or is being
+//   updated.
+//
+//   * ErrCodeContainerNotFoundException "ContainerNotFoundException"
+//   The container that you specified in the request does not exist.
+//
+//   * ErrCodeCorsPolicyNotFoundException "CorsPolicyNotFoundException"
+//   The CORS policy that you specified in the request does not exist.
+//
+//   * ErrCodeInternalServerError "InternalServerError"
+//   The service is temporarily unavailable.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/DeleteCorsPolicy
+func (c *MediaStore) DeleteCorsPolicy(input *DeleteCorsPolicyInput) (*DeleteCorsPolicyOutput, error) {
+	req, out := c.DeleteCorsPolicyRequest(input)
+	return out, req.Send()
+}
+
+// DeleteCorsPolicyWithContext is the same as DeleteCorsPolicy with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteCorsPolicy for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaStore) DeleteCorsPolicyWithContext(ctx aws.Context, input *DeleteCorsPolicyInput, opts ...request.Option) (*DeleteCorsPolicyOutput, error) {
+	req, out := c.DeleteCorsPolicyRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteLifecyclePolicy = "DeleteLifecyclePolicy"
+
+// DeleteLifecyclePolicyRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteLifecyclePolicy operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteLifecyclePolicy for more information on using the DeleteLifecyclePolicy
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteLifecyclePolicyRequest method.
+//    req, resp := client.DeleteLifecyclePolicyRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/DeleteLifecyclePolicy
+func (c *MediaStore) DeleteLifecyclePolicyRequest(input *DeleteLifecyclePolicyInput) (req *request.Request, output *DeleteLifecyclePolicyOutput) {
+	op := &request.Operation{
+		Name:       opDeleteLifecyclePolicy,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteLifecyclePolicyInput{}
+	}
+
+	output = &DeleteLifecyclePolicyOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DeleteLifecyclePolicy API operation for AWS Elemental MediaStore.
+//
+// Removes an object lifecycle policy from a container. It takes up to 20 minutes
+// for the change to take effect.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaStore's
+// API operation DeleteLifecyclePolicy for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeContainerInUseException "ContainerInUseException"
+//   The container that you specified in the request already exists or is being
+//   updated.
+//
+//   * ErrCodeContainerNotFoundException "ContainerNotFoundException"
+//   The container that you specified in the request does not exist.
+//
+//   * ErrCodePolicyNotFoundException "PolicyNotFoundException"
+//   The policy that you specified in the request does not exist.
+//
+//   * ErrCodeInternalServerError "InternalServerError"
+//   The service is temporarily unavailable.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/DeleteLifecyclePolicy
+func (c *MediaStore) DeleteLifecyclePolicy(input *DeleteLifecyclePolicyInput) (*DeleteLifecyclePolicyOutput, error) {
+	req, out := c.DeleteLifecyclePolicyRequest(input)
+	return out, req.Send()
+}
+
+// DeleteLifecyclePolicyWithContext is the same as DeleteLifecyclePolicy with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteLifecyclePolicy for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaStore) DeleteLifecyclePolicyWithContext(ctx aws.Context, input *DeleteLifecyclePolicyInput, opts ...request.Option) (*DeleteLifecyclePolicyOutput, error) {
+	req, out := c.DeleteLifecyclePolicyRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDescribeContainer = "DescribeContainer"
 
 // DescribeContainerRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeContainer operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -315,9 +509,12 @@ func (c *MediaStore) DescribeContainerRequest(input *DescribeContainerInput) (re
 
 // DescribeContainer API operation for AWS Elemental MediaStore.
 //
-// Retrieves the properties of the requested container. This returns a single
-// Container object based on ContainerName. To return all Container objects
-// that are associated with a specified AWS account, use ListContainers.
+// Retrieves the properties of the requested container. This request is commonly
+// used to retrieve the endpoint of a container. An endpoint is a value assigned
+// by the service when a new container is created. A container's endpoint does
+// not change after it has been assigned. The DescribeContainer request returns
+// a single Container object based on ContainerName. To return all Container
+// objects that are associated with a specified AWS account, use ListContainers.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -328,7 +525,7 @@ func (c *MediaStore) DescribeContainerRequest(input *DescribeContainerInput) (re
 //
 // Returned Error Codes:
 //   * ErrCodeContainerNotFoundException "ContainerNotFoundException"
-//   Could not perform an operation on a container that does not exist.
+//   The container that you specified in the request does not exist.
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   The service is temporarily unavailable.
@@ -359,8 +556,8 @@ const opGetContainerPolicy = "GetContainerPolicy"
 
 // GetContainerPolicyRequest generates a "aws/request.Request" representing the
 // client's request for the GetContainerPolicy operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -412,13 +609,14 @@ func (c *MediaStore) GetContainerPolicyRequest(input *GetContainerPolicyInput) (
 //
 // Returned Error Codes:
 //   * ErrCodeContainerInUseException "ContainerInUseException"
-//   Resource already exists or is being updated.
+//   The container that you specified in the request already exists or is being
+//   updated.
 //
 //   * ErrCodeContainerNotFoundException "ContainerNotFoundException"
-//   Could not perform an operation on a container that does not exist.
+//   The container that you specified in the request does not exist.
 //
 //   * ErrCodePolicyNotFoundException "PolicyNotFoundException"
-//   Could not perform an operation on a policy that does not exist.
+//   The policy that you specified in the request does not exist.
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   The service is temporarily unavailable.
@@ -445,12 +643,195 @@ func (c *MediaStore) GetContainerPolicyWithContext(ctx aws.Context, input *GetCo
 	return out, req.Send()
 }
 
+const opGetCorsPolicy = "GetCorsPolicy"
+
+// GetCorsPolicyRequest generates a "aws/request.Request" representing the
+// client's request for the GetCorsPolicy operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetCorsPolicy for more information on using the GetCorsPolicy
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetCorsPolicyRequest method.
+//    req, resp := client.GetCorsPolicyRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/GetCorsPolicy
+func (c *MediaStore) GetCorsPolicyRequest(input *GetCorsPolicyInput) (req *request.Request, output *GetCorsPolicyOutput) {
+	op := &request.Operation{
+		Name:       opGetCorsPolicy,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetCorsPolicyInput{}
+	}
+
+	output = &GetCorsPolicyOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetCorsPolicy API operation for AWS Elemental MediaStore.
+//
+// Returns the cross-origin resource sharing (CORS) configuration information
+// that is set for the container.
+//
+// To use this operation, you must have permission to perform the MediaStore:GetCorsPolicy
+// action. By default, the container owner has this permission and can grant
+// it to others.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaStore's
+// API operation GetCorsPolicy for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeContainerInUseException "ContainerInUseException"
+//   The container that you specified in the request already exists or is being
+//   updated.
+//
+//   * ErrCodeContainerNotFoundException "ContainerNotFoundException"
+//   The container that you specified in the request does not exist.
+//
+//   * ErrCodeCorsPolicyNotFoundException "CorsPolicyNotFoundException"
+//   The CORS policy that you specified in the request does not exist.
+//
+//   * ErrCodeInternalServerError "InternalServerError"
+//   The service is temporarily unavailable.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/GetCorsPolicy
+func (c *MediaStore) GetCorsPolicy(input *GetCorsPolicyInput) (*GetCorsPolicyOutput, error) {
+	req, out := c.GetCorsPolicyRequest(input)
+	return out, req.Send()
+}
+
+// GetCorsPolicyWithContext is the same as GetCorsPolicy with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetCorsPolicy for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaStore) GetCorsPolicyWithContext(ctx aws.Context, input *GetCorsPolicyInput, opts ...request.Option) (*GetCorsPolicyOutput, error) {
+	req, out := c.GetCorsPolicyRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetLifecyclePolicy = "GetLifecyclePolicy"
+
+// GetLifecyclePolicyRequest generates a "aws/request.Request" representing the
+// client's request for the GetLifecyclePolicy operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetLifecyclePolicy for more information on using the GetLifecyclePolicy
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetLifecyclePolicyRequest method.
+//    req, resp := client.GetLifecyclePolicyRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/GetLifecyclePolicy
+func (c *MediaStore) GetLifecyclePolicyRequest(input *GetLifecyclePolicyInput) (req *request.Request, output *GetLifecyclePolicyOutput) {
+	op := &request.Operation{
+		Name:       opGetLifecyclePolicy,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetLifecyclePolicyInput{}
+	}
+
+	output = &GetLifecyclePolicyOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetLifecyclePolicy API operation for AWS Elemental MediaStore.
+//
+// Retrieves the object lifecycle policy that is assigned to a container.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaStore's
+// API operation GetLifecyclePolicy for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeContainerInUseException "ContainerInUseException"
+//   The container that you specified in the request already exists or is being
+//   updated.
+//
+//   * ErrCodeContainerNotFoundException "ContainerNotFoundException"
+//   The container that you specified in the request does not exist.
+//
+//   * ErrCodePolicyNotFoundException "PolicyNotFoundException"
+//   The policy that you specified in the request does not exist.
+//
+//   * ErrCodeInternalServerError "InternalServerError"
+//   The service is temporarily unavailable.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/GetLifecyclePolicy
+func (c *MediaStore) GetLifecyclePolicy(input *GetLifecyclePolicyInput) (*GetLifecyclePolicyOutput, error) {
+	req, out := c.GetLifecyclePolicyRequest(input)
+	return out, req.Send()
+}
+
+// GetLifecyclePolicyWithContext is the same as GetLifecyclePolicy with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetLifecyclePolicy for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaStore) GetLifecyclePolicyWithContext(ctx aws.Context, input *GetLifecyclePolicyInput, opts ...request.Option) (*GetLifecyclePolicyOutput, error) {
+	req, out := c.GetLifecyclePolicyRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opListContainers = "ListContainers"
 
 // ListContainersRequest generates a "aws/request.Request" representing the
 // client's request for the ListContainers operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -537,8 +918,8 @@ const opPutContainerPolicy = "PutContainerPolicy"
 
 // PutContainerPolicyRequest generates a "aws/request.Request" representing the
 // client's request for the PutContainerPolicy operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -572,6 +953,7 @@ func (c *MediaStore) PutContainerPolicyRequest(input *PutContainerPolicyInput) (
 
 	output = &PutContainerPolicyOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -595,10 +977,11 @@ func (c *MediaStore) PutContainerPolicyRequest(input *PutContainerPolicyInput) (
 //
 // Returned Error Codes:
 //   * ErrCodeContainerNotFoundException "ContainerNotFoundException"
-//   Could not perform an operation on a container that does not exist.
+//   The container that you specified in the request does not exist.
 //
 //   * ErrCodeContainerInUseException "ContainerInUseException"
-//   Resource already exists or is being updated.
+//   The container that you specified in the request already exists or is being
+//   updated.
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   The service is temporarily unavailable.
@@ -625,9 +1008,378 @@ func (c *MediaStore) PutContainerPolicyWithContext(ctx aws.Context, input *PutCo
 	return out, req.Send()
 }
 
+const opPutCorsPolicy = "PutCorsPolicy"
+
+// PutCorsPolicyRequest generates a "aws/request.Request" representing the
+// client's request for the PutCorsPolicy operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See PutCorsPolicy for more information on using the PutCorsPolicy
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the PutCorsPolicyRequest method.
+//    req, resp := client.PutCorsPolicyRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/PutCorsPolicy
+func (c *MediaStore) PutCorsPolicyRequest(input *PutCorsPolicyInput) (req *request.Request, output *PutCorsPolicyOutput) {
+	op := &request.Operation{
+		Name:       opPutCorsPolicy,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &PutCorsPolicyInput{}
+	}
+
+	output = &PutCorsPolicyOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// PutCorsPolicy API operation for AWS Elemental MediaStore.
+//
+// Sets the cross-origin resource sharing (CORS) configuration on a container
+// so that the container can service cross-origin requests. For example, you
+// might want to enable a request whose origin is http://www.example.com to
+// access your AWS Elemental MediaStore container at my.example.container.com
+// by using the browser's XMLHttpRequest capability.
+//
+// To enable CORS on a container, you attach a CORS policy to the container.
+// In the CORS policy, you configure rules that identify origins and the HTTP
+// methods that can be executed on your container. The policy can contain up
+// to 398,000 characters. You can add up to 100 rules to a CORS policy. If more
+// than one rule applies, the service uses the first applicable rule listed.
+//
+// To learn more about CORS, see Cross-Origin Resource Sharing (CORS) in AWS
+// Elemental MediaStore (https://docs.aws.amazon.com/mediastore/latest/ug/cors-policy.html).
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaStore's
+// API operation PutCorsPolicy for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeContainerNotFoundException "ContainerNotFoundException"
+//   The container that you specified in the request does not exist.
+//
+//   * ErrCodeContainerInUseException "ContainerInUseException"
+//   The container that you specified in the request already exists or is being
+//   updated.
+//
+//   * ErrCodeInternalServerError "InternalServerError"
+//   The service is temporarily unavailable.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/PutCorsPolicy
+func (c *MediaStore) PutCorsPolicy(input *PutCorsPolicyInput) (*PutCorsPolicyOutput, error) {
+	req, out := c.PutCorsPolicyRequest(input)
+	return out, req.Send()
+}
+
+// PutCorsPolicyWithContext is the same as PutCorsPolicy with the addition of
+// the ability to pass a context and additional request options.
+//
+// See PutCorsPolicy for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaStore) PutCorsPolicyWithContext(ctx aws.Context, input *PutCorsPolicyInput, opts ...request.Option) (*PutCorsPolicyOutput, error) {
+	req, out := c.PutCorsPolicyRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opPutLifecyclePolicy = "PutLifecyclePolicy"
+
+// PutLifecyclePolicyRequest generates a "aws/request.Request" representing the
+// client's request for the PutLifecyclePolicy operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See PutLifecyclePolicy for more information on using the PutLifecyclePolicy
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the PutLifecyclePolicyRequest method.
+//    req, resp := client.PutLifecyclePolicyRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/PutLifecyclePolicy
+func (c *MediaStore) PutLifecyclePolicyRequest(input *PutLifecyclePolicyInput) (req *request.Request, output *PutLifecyclePolicyOutput) {
+	op := &request.Operation{
+		Name:       opPutLifecyclePolicy,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &PutLifecyclePolicyInput{}
+	}
+
+	output = &PutLifecyclePolicyOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// PutLifecyclePolicy API operation for AWS Elemental MediaStore.
+//
+// Writes an object lifecycle policy to a container. If the container already
+// has an object lifecycle policy, the service replaces the existing policy
+// with the new policy. It takes up to 20 minutes for the change to take effect.
+//
+// For information about how to construct an object lifecycle policy, see Components
+// of an Object Lifecycle Policy (https://docs.aws.amazon.com/mediastore/latest/ug/policies-object-lifecycle-components.html).
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaStore's
+// API operation PutLifecyclePolicy for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeContainerInUseException "ContainerInUseException"
+//   The container that you specified in the request already exists or is being
+//   updated.
+//
+//   * ErrCodeContainerNotFoundException "ContainerNotFoundException"
+//   The container that you specified in the request does not exist.
+//
+//   * ErrCodeInternalServerError "InternalServerError"
+//   The service is temporarily unavailable.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/PutLifecyclePolicy
+func (c *MediaStore) PutLifecyclePolicy(input *PutLifecyclePolicyInput) (*PutLifecyclePolicyOutput, error) {
+	req, out := c.PutLifecyclePolicyRequest(input)
+	return out, req.Send()
+}
+
+// PutLifecyclePolicyWithContext is the same as PutLifecyclePolicy with the addition of
+// the ability to pass a context and additional request options.
+//
+// See PutLifecyclePolicy for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaStore) PutLifecyclePolicyWithContext(ctx aws.Context, input *PutLifecyclePolicyInput, opts ...request.Option) (*PutLifecyclePolicyOutput, error) {
+	req, out := c.PutLifecyclePolicyRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opStartAccessLogging = "StartAccessLogging"
+
+// StartAccessLoggingRequest generates a "aws/request.Request" representing the
+// client's request for the StartAccessLogging operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See StartAccessLogging for more information on using the StartAccessLogging
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the StartAccessLoggingRequest method.
+//    req, resp := client.StartAccessLoggingRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/StartAccessLogging
+func (c *MediaStore) StartAccessLoggingRequest(input *StartAccessLoggingInput) (req *request.Request, output *StartAccessLoggingOutput) {
+	op := &request.Operation{
+		Name:       opStartAccessLogging,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &StartAccessLoggingInput{}
+	}
+
+	output = &StartAccessLoggingOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// StartAccessLogging API operation for AWS Elemental MediaStore.
+//
+// Starts access logging on the specified container. When you enable access
+// logging on a container, MediaStore delivers access logs for objects stored
+// in that container to Amazon CloudWatch Logs.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaStore's
+// API operation StartAccessLogging for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeContainerInUseException "ContainerInUseException"
+//   The container that you specified in the request already exists or is being
+//   updated.
+//
+//   * ErrCodeContainerNotFoundException "ContainerNotFoundException"
+//   The container that you specified in the request does not exist.
+//
+//   * ErrCodeInternalServerError "InternalServerError"
+//   The service is temporarily unavailable.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/StartAccessLogging
+func (c *MediaStore) StartAccessLogging(input *StartAccessLoggingInput) (*StartAccessLoggingOutput, error) {
+	req, out := c.StartAccessLoggingRequest(input)
+	return out, req.Send()
+}
+
+// StartAccessLoggingWithContext is the same as StartAccessLogging with the addition of
+// the ability to pass a context and additional request options.
+//
+// See StartAccessLogging for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaStore) StartAccessLoggingWithContext(ctx aws.Context, input *StartAccessLoggingInput, opts ...request.Option) (*StartAccessLoggingOutput, error) {
+	req, out := c.StartAccessLoggingRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opStopAccessLogging = "StopAccessLogging"
+
+// StopAccessLoggingRequest generates a "aws/request.Request" representing the
+// client's request for the StopAccessLogging operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See StopAccessLogging for more information on using the StopAccessLogging
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the StopAccessLoggingRequest method.
+//    req, resp := client.StopAccessLoggingRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/StopAccessLogging
+func (c *MediaStore) StopAccessLoggingRequest(input *StopAccessLoggingInput) (req *request.Request, output *StopAccessLoggingOutput) {
+	op := &request.Operation{
+		Name:       opStopAccessLogging,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &StopAccessLoggingInput{}
+	}
+
+	output = &StopAccessLoggingOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// StopAccessLogging API operation for AWS Elemental MediaStore.
+//
+// Stops access logging on the specified container. When you stop access logging
+// on a container, MediaStore stops sending access logs to Amazon CloudWatch
+// Logs. These access logs are not saved and are not retrievable.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaStore's
+// API operation StopAccessLogging for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeContainerInUseException "ContainerInUseException"
+//   The container that you specified in the request already exists or is being
+//   updated.
+//
+//   * ErrCodeContainerNotFoundException "ContainerNotFoundException"
+//   The container that you specified in the request does not exist.
+//
+//   * ErrCodeInternalServerError "InternalServerError"
+//   The service is temporarily unavailable.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/StopAccessLogging
+func (c *MediaStore) StopAccessLogging(input *StopAccessLoggingInput) (*StopAccessLoggingOutput, error) {
+	req, out := c.StopAccessLoggingRequest(input)
+	return out, req.Send()
+}
+
+// StopAccessLoggingWithContext is the same as StopAccessLogging with the addition of
+// the ability to pass a context and additional request options.
+//
+// See StopAccessLogging for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaStore) StopAccessLoggingWithContext(ctx aws.Context, input *StopAccessLoggingInput, opts ...request.Option) (*StopAccessLoggingOutput, error) {
+	req, out := c.StopAccessLoggingRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 // This section describes operations that you can perform on an AWS Elemental
 // MediaStore container.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/Container
 type Container struct {
 	_ struct{} `type:"structure"`
 
@@ -639,11 +1391,20 @@ type Container struct {
 	// For example: arn:aws:mediastore:us-west-2:111122223333:container/movies
 	ARN *string `min:"1" type:"string"`
 
-	// Unix timestamp.
-	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+	// The state of access logging on the container. This value is false by default,
+	// indicating that AWS Elemental MediaStore does not send access logs to Amazon
+	// CloudWatch Logs. When you enable access logging on the container, MediaStore
+	// changes this value to true, indicating that the service delivers access logs
+	// for objects stored in that container to CloudWatch Logs.
+	AccessLoggingEnabled *bool `type:"boolean"`
 
-	// The DNS endpoint of the container. Use from 1 to 255 characters. Use this
-	// endpoint to identify this container when sending requests to the data plane.
+	// Unix timestamp.
+	CreationTime *time.Time `type:"timestamp"`
+
+	// The DNS endpoint of the container. Use the endpoint to identify the specific
+	// container when sending requests to the data plane. The service assigns this
+	// value when the container is created. Once the value has been assigned, it
+	// does not change.
 	Endpoint *string `min:"1" type:"string"`
 
 	// The name of the container.
@@ -672,6 +1433,12 @@ func (s *Container) SetARN(v string) *Container {
 	return s
 }
 
+// SetAccessLoggingEnabled sets the AccessLoggingEnabled field's value.
+func (s *Container) SetAccessLoggingEnabled(v bool) *Container {
+	s.AccessLoggingEnabled = &v
+	return s
+}
+
 // SetCreationTime sets the CreationTime field's value.
 func (s *Container) SetCreationTime(v time.Time) *Container {
 	s.CreationTime = &v
@@ -696,7 +1463,114 @@ func (s *Container) SetStatus(v string) *Container {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/CreateContainerInput
+// A rule for a CORS policy. You can add up to 100 rules to a CORS policy. If
+// more than one rule applies, the service uses the first applicable rule listed.
+type CorsRule struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies which headers are allowed in a preflight OPTIONS request through
+	// the Access-Control-Request-Headers header. Each header name that is specified
+	// in Access-Control-Request-Headers must have a corresponding entry in the
+	// rule. Only the headers that were requested are sent back.
+	//
+	// This element can contain only one wildcard character (*).
+	//
+	// AllowedHeaders is a required field
+	AllowedHeaders []*string `type:"list" required:"true"`
+
+	// Identifies an HTTP method that the origin that is specified in the rule is
+	// allowed to execute.
+	//
+	// Each CORS rule must contain at least one AllowedMethods and one AllowedOrigins
+	// element.
+	AllowedMethods []*string `min:"1" type:"list"`
+
+	// One or more response headers that you want users to be able to access from
+	// their applications (for example, from a JavaScript XMLHttpRequest object).
+	//
+	// Each CORS rule must have at least one AllowedOrigins element. The string
+	// value can include only one wildcard character (*), for example, http://*.example.com.
+	// Additionally, you can specify only one wildcard character to allow cross-origin
+	// access for all origins.
+	//
+	// AllowedOrigins is a required field
+	AllowedOrigins []*string `min:"1" type:"list" required:"true"`
+
+	// One or more headers in the response that you want users to be able to access
+	// from their applications (for example, from a JavaScript XMLHttpRequest object).
+	//
+	// This element is optional for each rule.
+	ExposeHeaders []*string `type:"list"`
+
+	// The time in seconds that your browser caches the preflight response for the
+	// specified resource.
+	//
+	// A CORS rule can have only one MaxAgeSeconds element.
+	MaxAgeSeconds *int64 `type:"integer"`
+}
+
+// String returns the string representation
+func (s CorsRule) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CorsRule) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CorsRule) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CorsRule"}
+	if s.AllowedHeaders == nil {
+		invalidParams.Add(request.NewErrParamRequired("AllowedHeaders"))
+	}
+	if s.AllowedMethods != nil && len(s.AllowedMethods) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AllowedMethods", 1))
+	}
+	if s.AllowedOrigins == nil {
+		invalidParams.Add(request.NewErrParamRequired("AllowedOrigins"))
+	}
+	if s.AllowedOrigins != nil && len(s.AllowedOrigins) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AllowedOrigins", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAllowedHeaders sets the AllowedHeaders field's value.
+func (s *CorsRule) SetAllowedHeaders(v []*string) *CorsRule {
+	s.AllowedHeaders = v
+	return s
+}
+
+// SetAllowedMethods sets the AllowedMethods field's value.
+func (s *CorsRule) SetAllowedMethods(v []*string) *CorsRule {
+	s.AllowedMethods = v
+	return s
+}
+
+// SetAllowedOrigins sets the AllowedOrigins field's value.
+func (s *CorsRule) SetAllowedOrigins(v []*string) *CorsRule {
+	s.AllowedOrigins = v
+	return s
+}
+
+// SetExposeHeaders sets the ExposeHeaders field's value.
+func (s *CorsRule) SetExposeHeaders(v []*string) *CorsRule {
+	s.ExposeHeaders = v
+	return s
+}
+
+// SetMaxAgeSeconds sets the MaxAgeSeconds field's value.
+func (s *CorsRule) SetMaxAgeSeconds(v int64) *CorsRule {
+	s.MaxAgeSeconds = &v
+	return s
+}
+
 type CreateContainerInput struct {
 	_ struct{} `type:"structure"`
 
@@ -741,7 +1615,6 @@ func (s *CreateContainerInput) SetContainerName(v string) *CreateContainerInput 
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/CreateContainerOutput
 type CreateContainerOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -751,7 +1624,7 @@ type CreateContainerOutput struct {
 	//
 	// ContainerName: The container name as specified in the request.
 	//
-	// CreationTime: Unix timestamp.
+	// CreationTime: Unix time stamp.
 	//
 	// Status: The status of container creation or deletion. The status is one of
 	// the following: CREATING, ACTIVE, or DELETING. While the service is creating
@@ -781,7 +1654,6 @@ func (s *CreateContainerOutput) SetContainer(v *Container) *CreateContainerOutpu
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/DeleteContainerInput
 type DeleteContainerInput struct {
 	_ struct{} `type:"structure"`
 
@@ -823,7 +1695,6 @@ func (s *DeleteContainerInput) SetContainerName(v string) *DeleteContainerInput 
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/DeleteContainerOutput
 type DeleteContainerOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -838,7 +1709,6 @@ func (s DeleteContainerOutput) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/DeleteContainerPolicyInput
 type DeleteContainerPolicyInput struct {
 	_ struct{} `type:"structure"`
 
@@ -880,7 +1750,6 @@ func (s *DeleteContainerPolicyInput) SetContainerName(v string) *DeleteContainer
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/DeleteContainerPolicyOutput
 type DeleteContainerPolicyOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -895,7 +1764,116 @@ func (s DeleteContainerPolicyOutput) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/DescribeContainerInput
+type DeleteCorsPolicyInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the container to remove the policy from.
+	//
+	// ContainerName is a required field
+	ContainerName *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteCorsPolicyInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteCorsPolicyInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteCorsPolicyInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteCorsPolicyInput"}
+	if s.ContainerName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ContainerName"))
+	}
+	if s.ContainerName != nil && len(*s.ContainerName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ContainerName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetContainerName sets the ContainerName field's value.
+func (s *DeleteCorsPolicyInput) SetContainerName(v string) *DeleteCorsPolicyInput {
+	s.ContainerName = &v
+	return s
+}
+
+type DeleteCorsPolicyOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteCorsPolicyOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteCorsPolicyOutput) GoString() string {
+	return s.String()
+}
+
+type DeleteLifecyclePolicyInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the container that holds the object lifecycle policy.
+	//
+	// ContainerName is a required field
+	ContainerName *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteLifecyclePolicyInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteLifecyclePolicyInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteLifecyclePolicyInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteLifecyclePolicyInput"}
+	if s.ContainerName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ContainerName"))
+	}
+	if s.ContainerName != nil && len(*s.ContainerName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ContainerName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetContainerName sets the ContainerName field's value.
+func (s *DeleteLifecyclePolicyInput) SetContainerName(v string) *DeleteLifecyclePolicyInput {
+	s.ContainerName = &v
+	return s
+}
+
+type DeleteLifecyclePolicyOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteLifecyclePolicyOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteLifecyclePolicyOutput) GoString() string {
+	return s.String()
+}
+
 type DescribeContainerInput struct {
 	_ struct{} `type:"structure"`
 
@@ -932,7 +1910,6 @@ func (s *DescribeContainerInput) SetContainerName(v string) *DescribeContainerIn
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/DescribeContainerOutput
 type DescribeContainerOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -956,7 +1933,6 @@ func (s *DescribeContainerOutput) SetContainer(v *Container) *DescribeContainerO
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/GetContainerPolicyInput
 type GetContainerPolicyInput struct {
 	_ struct{} `type:"structure"`
 
@@ -998,7 +1974,6 @@ func (s *GetContainerPolicyInput) SetContainerName(v string) *GetContainerPolicy
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/GetContainerPolicyOutput
 type GetContainerPolicyOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -1024,7 +1999,138 @@ func (s *GetContainerPolicyOutput) SetPolicy(v string) *GetContainerPolicyOutput
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/ListContainersInput
+type GetCorsPolicyInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the container that the policy is assigned to.
+	//
+	// ContainerName is a required field
+	ContainerName *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetCorsPolicyInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetCorsPolicyInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetCorsPolicyInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetCorsPolicyInput"}
+	if s.ContainerName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ContainerName"))
+	}
+	if s.ContainerName != nil && len(*s.ContainerName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ContainerName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetContainerName sets the ContainerName field's value.
+func (s *GetCorsPolicyInput) SetContainerName(v string) *GetCorsPolicyInput {
+	s.ContainerName = &v
+	return s
+}
+
+type GetCorsPolicyOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The CORS policy assigned to the container.
+	//
+	// CorsPolicy is a required field
+	CorsPolicy []*CorsRule `min:"1" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s GetCorsPolicyOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetCorsPolicyOutput) GoString() string {
+	return s.String()
+}
+
+// SetCorsPolicy sets the CorsPolicy field's value.
+func (s *GetCorsPolicyOutput) SetCorsPolicy(v []*CorsRule) *GetCorsPolicyOutput {
+	s.CorsPolicy = v
+	return s
+}
+
+type GetLifecyclePolicyInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the container that the object lifecycle policy is assigned to.
+	//
+	// ContainerName is a required field
+	ContainerName *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetLifecyclePolicyInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetLifecyclePolicyInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetLifecyclePolicyInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetLifecyclePolicyInput"}
+	if s.ContainerName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ContainerName"))
+	}
+	if s.ContainerName != nil && len(*s.ContainerName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ContainerName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetContainerName sets the ContainerName field's value.
+func (s *GetLifecyclePolicyInput) SetContainerName(v string) *GetLifecyclePolicyInput {
+	s.ContainerName = &v
+	return s
+}
+
+type GetLifecyclePolicyOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The object lifecycle policy that is assigned to the container.
+	//
+	// LifecyclePolicy is a required field
+	LifecyclePolicy *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetLifecyclePolicyOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetLifecyclePolicyOutput) GoString() string {
+	return s.String()
+}
+
+// SetLifecyclePolicy sets the LifecyclePolicy field's value.
+func (s *GetLifecyclePolicyOutput) SetLifecyclePolicy(v string) *GetLifecyclePolicyOutput {
+	s.LifecyclePolicy = &v
+	return s
+}
+
 type ListContainersInput struct {
 	_ struct{} `type:"structure"`
 
@@ -1077,7 +2183,6 @@ func (s *ListContainersInput) SetNextToken(v string) *ListContainersInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/ListContainersOutput
 type ListContainersOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -1114,7 +2219,6 @@ func (s *ListContainersOutput) SetNextToken(v string) *ListContainersOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/PutContainerPolicyInput
 type PutContainerPolicyInput struct {
 	_ struct{} `type:"structure"`
 
@@ -1177,7 +2281,6 @@ func (s *PutContainerPolicyInput) SetPolicy(v string) *PutContainerPolicyInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/PutContainerPolicyOutput
 type PutContainerPolicyOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -1192,6 +2295,268 @@ func (s PutContainerPolicyOutput) GoString() string {
 	return s.String()
 }
 
+type PutCorsPolicyInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the container that you want to assign the CORS policy to.
+	//
+	// ContainerName is a required field
+	ContainerName *string `min:"1" type:"string" required:"true"`
+
+	// The CORS policy to apply to the container.
+	//
+	// CorsPolicy is a required field
+	CorsPolicy []*CorsRule `min:"1" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s PutCorsPolicyInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PutCorsPolicyInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *PutCorsPolicyInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "PutCorsPolicyInput"}
+	if s.ContainerName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ContainerName"))
+	}
+	if s.ContainerName != nil && len(*s.ContainerName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ContainerName", 1))
+	}
+	if s.CorsPolicy == nil {
+		invalidParams.Add(request.NewErrParamRequired("CorsPolicy"))
+	}
+	if s.CorsPolicy != nil && len(s.CorsPolicy) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("CorsPolicy", 1))
+	}
+	if s.CorsPolicy != nil {
+		for i, v := range s.CorsPolicy {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "CorsPolicy", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetContainerName sets the ContainerName field's value.
+func (s *PutCorsPolicyInput) SetContainerName(v string) *PutCorsPolicyInput {
+	s.ContainerName = &v
+	return s
+}
+
+// SetCorsPolicy sets the CorsPolicy field's value.
+func (s *PutCorsPolicyInput) SetCorsPolicy(v []*CorsRule) *PutCorsPolicyInput {
+	s.CorsPolicy = v
+	return s
+}
+
+type PutCorsPolicyOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s PutCorsPolicyOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PutCorsPolicyOutput) GoString() string {
+	return s.String()
+}
+
+type PutLifecyclePolicyInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the container that you want to assign the object lifecycle policy
+	// to.
+	//
+	// ContainerName is a required field
+	ContainerName *string `min:"1" type:"string" required:"true"`
+
+	// The object lifecycle policy to apply to the container.
+	//
+	// LifecyclePolicy is a required field
+	LifecyclePolicy *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s PutLifecyclePolicyInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PutLifecyclePolicyInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *PutLifecyclePolicyInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "PutLifecyclePolicyInput"}
+	if s.ContainerName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ContainerName"))
+	}
+	if s.ContainerName != nil && len(*s.ContainerName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ContainerName", 1))
+	}
+	if s.LifecyclePolicy == nil {
+		invalidParams.Add(request.NewErrParamRequired("LifecyclePolicy"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetContainerName sets the ContainerName field's value.
+func (s *PutLifecyclePolicyInput) SetContainerName(v string) *PutLifecyclePolicyInput {
+	s.ContainerName = &v
+	return s
+}
+
+// SetLifecyclePolicy sets the LifecyclePolicy field's value.
+func (s *PutLifecyclePolicyInput) SetLifecyclePolicy(v string) *PutLifecyclePolicyInput {
+	s.LifecyclePolicy = &v
+	return s
+}
+
+type PutLifecyclePolicyOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s PutLifecyclePolicyOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PutLifecyclePolicyOutput) GoString() string {
+	return s.String()
+}
+
+type StartAccessLoggingInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the container that you want to start access logging on.
+	//
+	// ContainerName is a required field
+	ContainerName *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s StartAccessLoggingInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StartAccessLoggingInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *StartAccessLoggingInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "StartAccessLoggingInput"}
+	if s.ContainerName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ContainerName"))
+	}
+	if s.ContainerName != nil && len(*s.ContainerName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ContainerName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetContainerName sets the ContainerName field's value.
+func (s *StartAccessLoggingInput) SetContainerName(v string) *StartAccessLoggingInput {
+	s.ContainerName = &v
+	return s
+}
+
+type StartAccessLoggingOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s StartAccessLoggingOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StartAccessLoggingOutput) GoString() string {
+	return s.String()
+}
+
+type StopAccessLoggingInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the container that you want to stop access logging on.
+	//
+	// ContainerName is a required field
+	ContainerName *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s StopAccessLoggingInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StopAccessLoggingInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *StopAccessLoggingInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "StopAccessLoggingInput"}
+	if s.ContainerName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ContainerName"))
+	}
+	if s.ContainerName != nil && len(*s.ContainerName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ContainerName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetContainerName sets the ContainerName field's value.
+func (s *StopAccessLoggingInput) SetContainerName(v string) *StopAccessLoggingInput {
+	s.ContainerName = &v
+	return s
+}
+
+type StopAccessLoggingOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s StopAccessLoggingOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StopAccessLoggingOutput) GoString() string {
+	return s.String()
+}
+
 const (
 	// ContainerStatusActive is a ContainerStatus enum value
 	ContainerStatusActive = "ACTIVE"
@@ -1201,4 +2566,18 @@ const (
 
 	// ContainerStatusDeleting is a ContainerStatus enum value
 	ContainerStatusDeleting = "DELETING"
+)
+
+const (
+	// MethodNamePut is a MethodName enum value
+	MethodNamePut = "PUT"
+
+	// MethodNameGet is a MethodName enum value
+	MethodNameGet = "GET"
+
+	// MethodNameDelete is a MethodName enum value
+	MethodNameDelete = "DELETE"
+
+	// MethodNameHead is a MethodName enum value
+	MethodNameHead = "HEAD"
 )

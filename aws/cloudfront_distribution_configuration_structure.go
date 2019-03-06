@@ -10,8 +10,6 @@ package aws
 import (
 	"bytes"
 	"fmt"
-	"reflect"
-	"sort"
 	"strconv"
 	"time"
 
@@ -26,14 +24,6 @@ import (
 // is used to set the zone_id attribute.
 const cloudFrontRoute53ZoneID = "Z2FDTNDATAQYW2"
 
-// Define Sort interface for []*string so we can ensure the order of
-// geo_restrictions.locations
-type StringPtrSlice []*string
-
-func (p StringPtrSlice) Len() int           { return len(p) }
-func (p StringPtrSlice) Less(i, j int) bool { return *p[i] < *p[j] }
-func (p StringPtrSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
-
 // Assemble the *cloudfront.DistributionConfig variable. Calls out to various
 // expander functions to convert attributes and sub-attributes to the various
 // complex structures which are necessary to properly build the
@@ -42,33 +32,27 @@ func (p StringPtrSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 // Used by the aws_cloudfront_distribution Create and Update functions.
 func expandDistributionConfig(d *schema.ResourceData) *cloudfront.DistributionConfig {
 	distributionConfig := &cloudfront.DistributionConfig{
-		CacheBehaviors:       expandCacheBehaviors(d.Get("cache_behavior").(*schema.Set)),
+		CacheBehaviors:       expandCacheBehaviors(d.Get("ordered_cache_behavior").([]interface{})),
+		CallerReference:      aws.String(time.Now().Format(time.RFC3339Nano)),
+		Comment:              aws.String(d.Get("comment").(string)),
 		CustomErrorResponses: expandCustomErrorResponses(d.Get("custom_error_response").(*schema.Set)),
-		DefaultCacheBehavior: expandDefaultCacheBehavior(d.Get("default_cache_behavior").(*schema.Set).List()[0].(map[string]interface{})),
+		DefaultCacheBehavior: expandCloudFrontDefaultCacheBehavior(d.Get("default_cache_behavior").([]interface{})[0].(map[string]interface{})),
+		DefaultRootObject:    aws.String(d.Get("default_root_object").(string)),
 		Enabled:              aws.Bool(d.Get("enabled").(bool)),
 		IsIPV6Enabled:        aws.Bool(d.Get("is_ipv6_enabled").(bool)),
 		HttpVersion:          aws.String(d.Get("http_version").(string)),
 		Origins:              expandOrigins(d.Get("origin").(*schema.Set)),
 		PriceClass:           aws.String(d.Get("price_class").(string)),
+		WebACLId:             aws.String(d.Get("web_acl_id").(string)),
 	}
+
 	// This sets CallerReference if it's still pending computation (ie: new resource)
-	if v, ok := d.GetOk("caller_reference"); ok == false {
-		distributionConfig.CallerReference = aws.String(time.Now().Format(time.RFC3339Nano))
-	} else {
+	if v, ok := d.GetOk("caller_reference"); ok {
 		distributionConfig.CallerReference = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("comment"); ok {
-		distributionConfig.Comment = aws.String(v.(string))
-	} else {
-		distributionConfig.Comment = aws.String("")
-	}
-	if v, ok := d.GetOk("default_root_object"); ok {
-		distributionConfig.DefaultRootObject = aws.String(v.(string))
-	} else {
-		distributionConfig.DefaultRootObject = aws.String("")
-	}
+
 	if v, ok := d.GetOk("logging_config"); ok {
-		distributionConfig.Logging = expandLoggingConfig(v.(*schema.Set).List()[0].(map[string]interface{}))
+		distributionConfig.Logging = expandLoggingConfig(v.([]interface{})[0].(map[string]interface{}))
 	} else {
 		distributionConfig.Logging = expandLoggingConfig(nil)
 	}
@@ -78,15 +62,10 @@ func expandDistributionConfig(d *schema.ResourceData) *cloudfront.DistributionCo
 		distributionConfig.Aliases = expandAliases(schema.NewSet(aliasesHash, []interface{}{}))
 	}
 	if v, ok := d.GetOk("restrictions"); ok {
-		distributionConfig.Restrictions = expandRestrictions(v.(*schema.Set).List()[0].(map[string]interface{}))
+		distributionConfig.Restrictions = expandRestrictions(v.([]interface{})[0].(map[string]interface{}))
 	}
 	if v, ok := d.GetOk("viewer_certificate"); ok {
-		distributionConfig.ViewerCertificate = expandViewerCertificate(v.(*schema.Set).List()[0].(map[string]interface{}))
-	}
-	if v, ok := d.GetOk("web_acl_id"); ok {
-		distributionConfig.WebACLId = aws.String(v.(string))
-	} else {
-		distributionConfig.WebACLId = aws.String("")
+		distributionConfig.ViewerCertificate = expandViewerCertificate(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	return distributionConfig
@@ -140,8 +119,7 @@ func flattenDistributionConfig(d *schema.ResourceData, distributionConfig *cloud
 		}
 	}
 	if distributionConfig.CacheBehaviors != nil {
-		err = d.Set("cache_behavior", flattenCacheBehaviors(distributionConfig.CacheBehaviors))
-		if err != nil {
+		if err := d.Set("ordered_cache_behavior", flattenCacheBehaviors(distributionConfig.CacheBehaviors)); err != nil {
 			return err
 		}
 	}
@@ -149,7 +127,7 @@ func flattenDistributionConfig(d *schema.ResourceData, distributionConfig *cloud
 	if distributionConfig.Logging != nil && *distributionConfig.Logging.Enabled {
 		err = d.Set("logging_config", flattenLoggingConfig(distributionConfig.Logging))
 	} else {
-		err = d.Set("logging_config", schema.NewSet(loggingConfigHash, []interface{}{}))
+		err = d.Set("logging_config", []interface{}{})
 	}
 	if err != nil {
 		return err
@@ -177,76 +155,14 @@ func flattenDistributionConfig(d *schema.ResourceData, distributionConfig *cloud
 	return nil
 }
 
-func expandDefaultCacheBehavior(m map[string]interface{}) *cloudfront.DefaultCacheBehavior {
-	cb := expandCacheBehavior(m)
-	var dcb cloudfront.DefaultCacheBehavior
-
-	simpleCopyStruct(cb, &dcb)
-	return &dcb
+func flattenDefaultCacheBehavior(dcb *cloudfront.DefaultCacheBehavior) []interface{} {
+	return []interface{}{flattenCloudFrontDefaultCacheBehavior(dcb)}
 }
 
-func flattenDefaultCacheBehavior(dcb *cloudfront.DefaultCacheBehavior) *schema.Set {
-	m := make(map[string]interface{})
-	var cb cloudfront.CacheBehavior
-
-	simpleCopyStruct(dcb, &cb)
-	m = flattenCacheBehavior(&cb)
-	return schema.NewSet(defaultCacheBehaviorHash, []interface{}{m})
-}
-
-// Assemble the hash for the aws_cloudfront_distribution default_cache_behavior
-// TypeSet attribute.
-func defaultCacheBehaviorHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	buf.WriteString(fmt.Sprintf("%t-", m["compress"].(bool)))
-	buf.WriteString(fmt.Sprintf("%s-", m["viewer_protocol_policy"].(string)))
-	buf.WriteString(fmt.Sprintf("%s-", m["target_origin_id"].(string)))
-	buf.WriteString(fmt.Sprintf("%d-", forwardedValuesHash(m["forwarded_values"].(*schema.Set).List()[0].(map[string]interface{}))))
-	buf.WriteString(fmt.Sprintf("%d-", m["min_ttl"].(int)))
-	if d, ok := m["trusted_signers"]; ok {
-		for _, e := range sortInterfaceSlice(d.([]interface{})) {
-			buf.WriteString(fmt.Sprintf("%s-", e.(string)))
-		}
-	}
-	if d, ok := m["max_ttl"]; ok {
-		buf.WriteString(fmt.Sprintf("%d-", d.(int)))
-	}
-	if d, ok := m["smooth_streaming"]; ok {
-		buf.WriteString(fmt.Sprintf("%t-", d.(bool)))
-	}
-	if d, ok := m["default_ttl"]; ok {
-		buf.WriteString(fmt.Sprintf("%d-", d.(int)))
-	}
-	if d, ok := m["allowed_methods"]; ok {
-		for _, e := range sortInterfaceSlice(d.([]interface{})) {
-			buf.WriteString(fmt.Sprintf("%s-", e.(string)))
-		}
-	}
-	if d, ok := m["cached_methods"]; ok {
-		for _, e := range sortInterfaceSlice(d.([]interface{})) {
-			buf.WriteString(fmt.Sprintf("%s-", e.(string)))
-		}
-	}
-	if d, ok := m["lambda_function_association"]; ok {
-		var associations []interface{}
-		switch d.(type) {
-		case *schema.Set:
-			associations = d.(*schema.Set).List()
-		default:
-			associations = d.([]interface{})
-		}
-		for _, lfa := range associations {
-			buf.WriteString(fmt.Sprintf("%d-", lambdaFunctionAssociationHash(lfa.(map[string]interface{}))))
-		}
-	}
-	return hashcode.String(buf.String())
-}
-
-func expandCacheBehaviors(s *schema.Set) *cloudfront.CacheBehaviors {
+func expandCacheBehaviors(lst []interface{}) *cloudfront.CacheBehaviors {
 	var qty int64
 	var items []*cloudfront.CacheBehavior
-	for _, v := range s.List() {
+	for _, v := range lst {
 		items = append(items, expandCacheBehavior(v.(map[string]interface{})))
 		qty++
 	}
@@ -256,24 +172,61 @@ func expandCacheBehaviors(s *schema.Set) *cloudfront.CacheBehaviors {
 	}
 }
 
-func flattenCacheBehaviors(cbs *cloudfront.CacheBehaviors) *schema.Set {
-	s := []interface{}{}
+func flattenCacheBehaviors(cbs *cloudfront.CacheBehaviors) []interface{} {
+	lst := []interface{}{}
 	for _, v := range cbs.Items {
-		s = append(s, flattenCacheBehavior(v))
+		lst = append(lst, flattenCacheBehavior(v))
 	}
-	return schema.NewSet(cacheBehaviorHash, s)
+	return lst
+}
+
+func expandCloudFrontDefaultCacheBehavior(m map[string]interface{}) *cloudfront.DefaultCacheBehavior {
+	dcb := &cloudfront.DefaultCacheBehavior{
+		Compress:               aws.Bool(m["compress"].(bool)),
+		DefaultTTL:             aws.Int64(int64(m["default_ttl"].(int))),
+		FieldLevelEncryptionId: aws.String(m["field_level_encryption_id"].(string)),
+		ForwardedValues:        expandForwardedValues(m["forwarded_values"].([]interface{})[0].(map[string]interface{})),
+		MaxTTL:                 aws.Int64(int64(m["max_ttl"].(int))),
+		MinTTL:                 aws.Int64(int64(m["min_ttl"].(int))),
+		TargetOriginId:         aws.String(m["target_origin_id"].(string)),
+		ViewerProtocolPolicy:   aws.String(m["viewer_protocol_policy"].(string)),
+	}
+
+	if v, ok := m["trusted_signers"]; ok {
+		dcb.TrustedSigners = expandTrustedSigners(v.([]interface{}))
+	} else {
+		dcb.TrustedSigners = expandTrustedSigners([]interface{}{})
+	}
+
+	if v, ok := m["lambda_function_association"]; ok {
+		dcb.LambdaFunctionAssociations = expandLambdaFunctionAssociations(v.(*schema.Set).List())
+	}
+
+	if v, ok := m["smooth_streaming"]; ok {
+		dcb.SmoothStreaming = aws.Bool(v.(bool))
+	}
+	if v, ok := m["allowed_methods"]; ok {
+		dcb.AllowedMethods = expandAllowedMethods(v.(*schema.Set))
+	}
+	if v, ok := m["cached_methods"]; ok {
+		dcb.AllowedMethods.CachedMethods = expandCachedMethods(v.(*schema.Set))
+	}
+
+	return dcb
 }
 
 func expandCacheBehavior(m map[string]interface{}) *cloudfront.CacheBehavior {
 	cb := &cloudfront.CacheBehavior{
-		Compress:             aws.Bool(m["compress"].(bool)),
-		ViewerProtocolPolicy: aws.String(m["viewer_protocol_policy"].(string)),
-		TargetOriginId:       aws.String(m["target_origin_id"].(string)),
-		ForwardedValues:      expandForwardedValues(m["forwarded_values"].(*schema.Set).List()[0].(map[string]interface{})),
-		MinTTL:               aws.Int64(int64(m["min_ttl"].(int))),
-		MaxTTL:               aws.Int64(int64(m["max_ttl"].(int))),
-		DefaultTTL:           aws.Int64(int64(m["default_ttl"].(int))),
+		Compress:               aws.Bool(m["compress"].(bool)),
+		DefaultTTL:             aws.Int64(int64(m["default_ttl"].(int))),
+		FieldLevelEncryptionId: aws.String(m["field_level_encryption_id"].(string)),
+		ForwardedValues:        expandForwardedValues(m["forwarded_values"].([]interface{})[0].(map[string]interface{})),
+		MaxTTL:                 aws.Int64(int64(m["max_ttl"].(int))),
+		MinTTL:                 aws.Int64(int64(m["min_ttl"].(int))),
+		TargetOriginId:         aws.String(m["target_origin_id"].(string)),
+		ViewerProtocolPolicy:   aws.String(m["viewer_protocol_policy"].(string)),
 	}
+
 	if v, ok := m["trusted_signers"]; ok {
 		cb.TrustedSigners = expandTrustedSigners(v.([]interface{}))
 	} else {
@@ -288,10 +241,10 @@ func expandCacheBehavior(m map[string]interface{}) *cloudfront.CacheBehavior {
 		cb.SmoothStreaming = aws.Bool(v.(bool))
 	}
 	if v, ok := m["allowed_methods"]; ok {
-		cb.AllowedMethods = expandAllowedMethods(v.([]interface{}))
+		cb.AllowedMethods = expandAllowedMethods(v.(*schema.Set))
 	}
 	if v, ok := m["cached_methods"]; ok {
-		cb.AllowedMethods.CachedMethods = expandCachedMethods(v.([]interface{}))
+		cb.AllowedMethods.CachedMethods = expandCachedMethods(v.(*schema.Set))
 	}
 	if v, ok := m["path_pattern"]; ok {
 		cb.PathPattern = aws.String(v.(string))
@@ -299,13 +252,49 @@ func expandCacheBehavior(m map[string]interface{}) *cloudfront.CacheBehavior {
 	return cb
 }
 
+func flattenCloudFrontDefaultCacheBehavior(dcb *cloudfront.DefaultCacheBehavior) map[string]interface{} {
+	m := map[string]interface{}{
+		"compress":                  aws.BoolValue(dcb.Compress),
+		"field_level_encryption_id": aws.StringValue(dcb.FieldLevelEncryptionId),
+		"viewer_protocol_policy":    aws.StringValue(dcb.ViewerProtocolPolicy),
+		"target_origin_id":          aws.StringValue(dcb.TargetOriginId),
+		"forwarded_values":          []interface{}{flattenForwardedValues(dcb.ForwardedValues)},
+		"min_ttl":                   aws.Int64Value(dcb.MinTTL),
+	}
+
+	if len(dcb.TrustedSigners.Items) > 0 {
+		m["trusted_signers"] = flattenTrustedSigners(dcb.TrustedSigners)
+	}
+	if len(dcb.LambdaFunctionAssociations.Items) > 0 {
+		m["lambda_function_association"] = flattenLambdaFunctionAssociations(dcb.LambdaFunctionAssociations)
+	}
+	if dcb.MaxTTL != nil {
+		m["max_ttl"] = aws.Int64Value(dcb.MaxTTL)
+	}
+	if dcb.SmoothStreaming != nil {
+		m["smooth_streaming"] = aws.BoolValue(dcb.SmoothStreaming)
+	}
+	if dcb.DefaultTTL != nil {
+		m["default_ttl"] = int(aws.Int64Value(dcb.DefaultTTL))
+	}
+	if dcb.AllowedMethods != nil {
+		m["allowed_methods"] = flattenAllowedMethods(dcb.AllowedMethods)
+	}
+	if dcb.AllowedMethods.CachedMethods != nil {
+		m["cached_methods"] = flattenCachedMethods(dcb.AllowedMethods.CachedMethods)
+	}
+
+	return m
+}
+
 func flattenCacheBehavior(cb *cloudfront.CacheBehavior) map[string]interface{} {
 	m := make(map[string]interface{})
 
 	m["compress"] = *cb.Compress
+	m["field_level_encryption_id"] = aws.StringValue(cb.FieldLevelEncryptionId)
 	m["viewer_protocol_policy"] = *cb.ViewerProtocolPolicy
 	m["target_origin_id"] = *cb.TargetOriginId
-	m["forwarded_values"] = schema.NewSet(forwardedValuesHash, []interface{}{flattenForwardedValues(cb.ForwardedValues)})
+	m["forwarded_values"] = []interface{}{flattenForwardedValues(cb.ForwardedValues)}
 	m["min_ttl"] = int(*cb.MinTTL)
 
 	if len(cb.TrustedSigners.Items) > 0 {
@@ -335,58 +324,6 @@ func flattenCacheBehavior(cb *cloudfront.CacheBehavior) map[string]interface{} {
 	return m
 }
 
-// Assemble the hash for the aws_cloudfront_distribution cache_behavior
-// TypeSet attribute.
-func cacheBehaviorHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	buf.WriteString(fmt.Sprintf("%t-", m["compress"].(bool)))
-	buf.WriteString(fmt.Sprintf("%s-", m["viewer_protocol_policy"].(string)))
-	buf.WriteString(fmt.Sprintf("%s-", m["target_origin_id"].(string)))
-	buf.WriteString(fmt.Sprintf("%d-", forwardedValuesHash(m["forwarded_values"].(*schema.Set).List()[0].(map[string]interface{}))))
-	buf.WriteString(fmt.Sprintf("%d-", m["min_ttl"].(int)))
-	if d, ok := m["trusted_signers"]; ok {
-		for _, e := range sortInterfaceSlice(d.([]interface{})) {
-			buf.WriteString(fmt.Sprintf("%s-", e.(string)))
-		}
-	}
-	if d, ok := m["max_ttl"]; ok {
-		buf.WriteString(fmt.Sprintf("%d-", d.(int)))
-	}
-	if d, ok := m["smooth_streaming"]; ok {
-		buf.WriteString(fmt.Sprintf("%t-", d.(bool)))
-	}
-	if d, ok := m["default_ttl"]; ok {
-		buf.WriteString(fmt.Sprintf("%d-", d.(int)))
-	}
-	if d, ok := m["allowed_methods"]; ok {
-		for _, e := range sortInterfaceSlice(d.([]interface{})) {
-			buf.WriteString(fmt.Sprintf("%s-", e.(string)))
-		}
-	}
-	if d, ok := m["cached_methods"]; ok {
-		for _, e := range sortInterfaceSlice(d.([]interface{})) {
-			buf.WriteString(fmt.Sprintf("%s-", e.(string)))
-		}
-	}
-	if d, ok := m["path_pattern"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", d))
-	}
-	if d, ok := m["lambda_function_association"]; ok {
-		var associations []interface{}
-		switch d.(type) {
-		case *schema.Set:
-			associations = d.(*schema.Set).List()
-		default:
-			associations = d.([]interface{})
-		}
-		for _, lfa := range associations {
-			buf.WriteString(fmt.Sprintf("%d-", lambdaFunctionAssociationHash(lfa.(map[string]interface{}))))
-		}
-	}
-	return hashcode.String(buf.String())
-}
-
 func expandTrustedSigners(s []interface{}) *cloudfront.TrustedSigners {
 	var ts cloudfront.TrustedSigners
 	if len(s) > 0 {
@@ -411,7 +348,8 @@ func lambdaFunctionAssociationHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 	buf.WriteString(fmt.Sprintf("%s-", m["event_type"].(string)))
-	buf.WriteString(fmt.Sprintf("%s", m["lambda_arn"].(string)))
+	buf.WriteString(m["lambda_arn"].(string))
+	buf.WriteString(fmt.Sprintf("%t", m["include_body"].(bool)))
 	return hashcode.String(buf.String())
 }
 
@@ -440,6 +378,9 @@ func expandLambdaFunctionAssociation(lf map[string]interface{}) *cloudfront.Lamb
 	if v, ok := lf["lambda_arn"]; ok {
 		lfa.LambdaFunctionARN = aws.String(v.(string))
 	}
+	if v, ok := lf["include_body"]; ok {
+		lfa.IncludeBody = aws.Bool(v.(bool))
+	}
 	return &lfa
 }
 
@@ -456,6 +397,7 @@ func flattenLambdaFunctionAssociation(lfa *cloudfront.LambdaFunctionAssociation)
 	if lfa != nil {
 		m["event_type"] = *lfa.EventType
 		m["lambda_arn"] = *lfa.LambdaFunctionARN
+		m["include_body"] = *lfa.IncludeBody
 	}
 	return m
 }
@@ -464,8 +406,8 @@ func expandForwardedValues(m map[string]interface{}) *cloudfront.ForwardedValues
 	fv := &cloudfront.ForwardedValues{
 		QueryString: aws.Bool(m["query_string"].(bool)),
 	}
-	if v, ok := m["cookies"]; ok && v.(*schema.Set).Len() > 0 {
-		fv.Cookies = expandCookiePreference(v.(*schema.Set).List()[0].(map[string]interface{}))
+	if v, ok := m["cookies"]; ok && len(v.([]interface{})) > 0 {
+		fv.Cookies = expandCookiePreference(v.([]interface{})[0].(map[string]interface{}))
 	}
 	if v, ok := m["headers"]; ok {
 		fv.Headers = expandHeaders(v.([]interface{}))
@@ -480,7 +422,7 @@ func flattenForwardedValues(fv *cloudfront.ForwardedValues) map[string]interface
 	m := make(map[string]interface{})
 	m["query_string"] = *fv.QueryString
 	if fv.Cookies != nil {
-		m["cookies"] = schema.NewSet(cookiePreferenceHash, []interface{}{flattenCookiePreference(fv.Cookies)})
+		m["cookies"] = []interface{}{flattenCookiePreference(fv.Cookies)}
 	}
 	if fv.Headers != nil {
 		m["headers"] = flattenHeaders(fv.Headers)
@@ -489,28 +431,6 @@ func flattenForwardedValues(fv *cloudfront.ForwardedValues) map[string]interface
 		m["query_string_cache_keys"] = flattenQueryStringCacheKeys(fv.QueryStringCacheKeys)
 	}
 	return m
-}
-
-// Assemble the hash for the aws_cloudfront_distribution forwarded_values
-// TypeSet attribute.
-func forwardedValuesHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	buf.WriteString(fmt.Sprintf("%t-", m["query_string"].(bool)))
-	if d, ok := m["cookies"]; ok && d.(*schema.Set).Len() > 0 {
-		buf.WriteString(fmt.Sprintf("%d-", cookiePreferenceHash(d.(*schema.Set).List()[0].(map[string]interface{}))))
-	}
-	if d, ok := m["headers"]; ok {
-		for _, e := range sortInterfaceSlice(d.([]interface{})) {
-			buf.WriteString(fmt.Sprintf("%s-", e.(string)))
-		}
-	}
-	if d, ok := m["query_string_cache_keys"]; ok {
-		for _, e := range sortInterfaceSlice(d.([]interface{})) {
-			buf.WriteString(fmt.Sprintf("%s-", e.(string)))
-		}
-	}
-	return hashcode.String(buf.String())
 }
 
 func expandHeaders(d []interface{}) *cloudfront.Headers {
@@ -560,20 +480,6 @@ func flattenCookiePreference(cp *cloudfront.CookiePreference) map[string]interfa
 	return m
 }
 
-// Assemble the hash for the aws_cloudfront_distribution cookies
-// TypeSet attribute.
-func cookiePreferenceHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	buf.WriteString(fmt.Sprintf("%s-", m["forward"].(string)))
-	if d, ok := m["whitelisted_names"]; ok {
-		for _, e := range sortInterfaceSlice(d.([]interface{})) {
-			buf.WriteString(fmt.Sprintf("%s-", e.(string)))
-		}
-	}
-	return hashcode.String(buf.String())
-}
-
 func expandCookieNames(d []interface{}) *cloudfront.CookieNames {
 	return &cloudfront.CookieNames{
 		Quantity: aws.Int64(int64(len(d))),
@@ -588,32 +494,32 @@ func flattenCookieNames(cn *cloudfront.CookieNames) []interface{} {
 	return []interface{}{}
 }
 
-func expandAllowedMethods(s []interface{}) *cloudfront.AllowedMethods {
+func expandAllowedMethods(s *schema.Set) *cloudfront.AllowedMethods {
 	return &cloudfront.AllowedMethods{
-		Quantity: aws.Int64(int64(len(s))),
-		Items:    expandStringList(s),
+		Quantity: aws.Int64(int64(s.Len())),
+		Items:    expandStringList(s.List()),
 	}
 }
 
-func flattenAllowedMethods(am *cloudfront.AllowedMethods) []interface{} {
+func flattenAllowedMethods(am *cloudfront.AllowedMethods) *schema.Set {
 	if am.Items != nil {
-		return flattenStringList(am.Items)
+		return schema.NewSet(schema.HashString, flattenStringList(am.Items))
 	}
-	return []interface{}{}
+	return nil
 }
 
-func expandCachedMethods(s []interface{}) *cloudfront.CachedMethods {
+func expandCachedMethods(s *schema.Set) *cloudfront.CachedMethods {
 	return &cloudfront.CachedMethods{
-		Quantity: aws.Int64(int64(len(s))),
-		Items:    expandStringList(s),
+		Quantity: aws.Int64(int64(s.Len())),
+		Items:    expandStringList(s.List()),
 	}
 }
 
-func flattenCachedMethods(cm *cloudfront.CachedMethods) []interface{} {
+func flattenCachedMethods(cm *cloudfront.CachedMethods) *schema.Set {
 	if cm.Items != nil {
-		return flattenStringList(cm.Items)
+		return schema.NewSet(schema.HashString, flattenStringList(cm.Items))
 	}
-	return []interface{}{}
+	return nil
 }
 
 func expandOrigins(s *schema.Set) *cloudfront.Origins {
@@ -646,7 +552,7 @@ func expandOrigin(m map[string]interface{}) *cloudfront.Origin {
 		origin.CustomHeaders = expandCustomHeaders(v.(*schema.Set))
 	}
 	if v, ok := m["custom_origin_config"]; ok {
-		if s := v.(*schema.Set).List(); len(s) > 0 {
+		if s := v.([]interface{}); len(s) > 0 {
 			origin.CustomOriginConfig = expandCustomOriginConfig(s[0].(map[string]interface{}))
 		}
 	}
@@ -654,7 +560,7 @@ func expandOrigin(m map[string]interface{}) *cloudfront.Origin {
 		origin.OriginPath = aws.String(v.(string))
 	}
 	if v, ok := m["s3_origin_config"]; ok {
-		if s := v.(*schema.Set).List(); len(s) > 0 {
+		if s := v.([]interface{}); len(s) > 0 {
 			origin.S3OriginConfig = expandS3OriginConfig(s[0].(map[string]interface{}))
 		}
 	}
@@ -672,21 +578,19 @@ func expandOrigin(m map[string]interface{}) *cloudfront.Origin {
 
 func flattenOrigin(or *cloudfront.Origin) map[string]interface{} {
 	m := make(map[string]interface{})
-	m["origin_id"] = *or.Id
-	m["domain_name"] = *or.DomainName
+	m["origin_id"] = aws.StringValue(or.Id)
+	m["domain_name"] = aws.StringValue(or.DomainName)
 	if or.CustomHeaders != nil {
 		m["custom_header"] = flattenCustomHeaders(or.CustomHeaders)
 	}
 	if or.CustomOriginConfig != nil {
-		m["custom_origin_config"] = schema.NewSet(customOriginConfigHash, []interface{}{flattenCustomOriginConfig(or.CustomOriginConfig)})
+		m["custom_origin_config"] = []interface{}{flattenCustomOriginConfig(or.CustomOriginConfig)}
 	}
 	if or.OriginPath != nil {
-		m["origin_path"] = *or.OriginPath
+		m["origin_path"] = aws.StringValue(or.OriginPath)
 	}
-	if or.S3OriginConfig != nil {
-		if or.S3OriginConfig.OriginAccessIdentity != nil && *or.S3OriginConfig.OriginAccessIdentity != "" {
-			m["s3_origin_config"] = schema.NewSet(s3OriginConfigHash, []interface{}{flattenS3OriginConfig(or.S3OriginConfig)})
-		}
+	if or.S3OriginConfig != nil && aws.StringValue(or.S3OriginConfig.OriginAccessIdentity) != "" {
+		m["s3_origin_config"] = []interface{}{flattenS3OriginConfig(or.S3OriginConfig)}
 	}
 	return m
 }
@@ -702,7 +606,7 @@ func originHash(v interface{}) int {
 		buf.WriteString(fmt.Sprintf("%d-", customHeadersHash(v.(*schema.Set))))
 	}
 	if v, ok := m["custom_origin_config"]; ok {
-		if s := v.(*schema.Set).List(); len(s) > 0 {
+		if s := v.([]interface{}); len(s) > 0 && s[0] != nil {
 			buf.WriteString(fmt.Sprintf("%d-", customOriginConfigHash((s[0].(map[string]interface{})))))
 		}
 	}
@@ -710,7 +614,7 @@ func originHash(v interface{}) int {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
 	if v, ok := m["s3_origin_config"]; ok {
-		if s := v.(*schema.Set).List(); len(s) > 0 {
+		if s := v.([]interface{}); len(s) > 0 && s[0] != nil {
 			buf.WriteString(fmt.Sprintf("%d-", s3OriginConfigHash((s[0].(map[string]interface{})))))
 		}
 	}
@@ -778,7 +682,7 @@ func expandCustomOriginConfig(m map[string]interface{}) *cloudfront.CustomOrigin
 		OriginProtocolPolicy:   aws.String(m["origin_protocol_policy"].(string)),
 		HTTPPort:               aws.Int64(int64(m["http_port"].(int))),
 		HTTPSPort:              aws.Int64(int64(m["https_port"].(int))),
-		OriginSslProtocols:     expandCustomOriginConfigSSL(m["origin_ssl_protocols"].([]interface{})),
+		OriginSslProtocols:     expandCustomOriginConfigSSL(m["origin_ssl_protocols"].(*schema.Set).List()),
 		OriginReadTimeout:      aws.Int64(int64(m["origin_read_timeout"].(int))),
 		OriginKeepaliveTimeout: aws.Int64(int64(m["origin_keepalive_timeout"].(int))),
 	}
@@ -808,7 +712,7 @@ func customOriginConfigHash(v interface{}) int {
 	buf.WriteString(fmt.Sprintf("%s-", m["origin_protocol_policy"].(string)))
 	buf.WriteString(fmt.Sprintf("%d-", m["http_port"].(int)))
 	buf.WriteString(fmt.Sprintf("%d-", m["https_port"].(int)))
-	for _, v := range sortInterfaceSlice(m["origin_ssl_protocols"].([]interface{})) {
+	for _, v := range sortInterfaceSlice(m["origin_ssl_protocols"].(*schema.Set).List()) {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
 	buf.WriteString(fmt.Sprintf("%d-", m["origin_keepalive_timeout"].(int)))
@@ -825,8 +729,8 @@ func expandCustomOriginConfigSSL(s []interface{}) *cloudfront.OriginSslProtocols
 	}
 }
 
-func flattenCustomOriginConfigSSL(osp *cloudfront.OriginSslProtocols) []interface{} {
-	return flattenStringList(osp.Items)
+func flattenCustomOriginConfigSSL(osp *cloudfront.OriginSslProtocols) *schema.Set {
+	return schema.NewSet(schema.HashString, flattenStringList(osp.Items))
 }
 
 func expandS3OriginConfig(m map[string]interface{}) *cloudfront.S3OriginConfig {
@@ -939,23 +843,14 @@ func expandLoggingConfig(m map[string]interface{}) *cloudfront.LoggingConfig {
 	return &lc
 }
 
-func flattenLoggingConfig(lc *cloudfront.LoggingConfig) *schema.Set {
-	m := make(map[string]interface{})
-	m["prefix"] = *lc.Prefix
-	m["bucket"] = *lc.Bucket
-	m["include_cookies"] = *lc.IncludeCookies
-	return schema.NewSet(loggingConfigHash, []interface{}{m})
-}
+func flattenLoggingConfig(lc *cloudfront.LoggingConfig) []interface{} {
+	m := map[string]interface{}{
+		"bucket":          aws.StringValue(lc.Bucket),
+		"include_cookies": aws.BoolValue(lc.IncludeCookies),
+		"prefix":          aws.StringValue(lc.Prefix),
+	}
 
-// Assemble the hash for the aws_cloudfront_distribution logging_config
-// TypeSet attribute.
-func loggingConfigHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	buf.WriteString(fmt.Sprintf("%s-", m["prefix"].(string)))
-	buf.WriteString(fmt.Sprintf("%s-", m["bucket"].(string)))
-	buf.WriteString(fmt.Sprintf("%t-", m["include_cookies"].(bool)))
-	return hashcode.String(buf.String())
+	return []interface{}{m}
 }
 
 func expandAliases(as *schema.Set) *cloudfront.Aliases {
@@ -985,64 +880,40 @@ func aliasesHash(v interface{}) int {
 
 func expandRestrictions(m map[string]interface{}) *cloudfront.Restrictions {
 	return &cloudfront.Restrictions{
-		GeoRestriction: expandGeoRestriction(m["geo_restriction"].(*schema.Set).List()[0].(map[string]interface{})),
+		GeoRestriction: expandGeoRestriction(m["geo_restriction"].([]interface{})[0].(map[string]interface{})),
 	}
 }
 
-func flattenRestrictions(r *cloudfront.Restrictions) *schema.Set {
-	m := make(map[string]interface{})
-	s := schema.NewSet(geoRestrictionHash, []interface{}{flattenGeoRestriction(r.GeoRestriction)})
-	m["geo_restriction"] = s
-	return schema.NewSet(restrictionsHash, []interface{}{m})
-}
+func flattenRestrictions(r *cloudfront.Restrictions) []interface{} {
+	m := map[string]interface{}{
+		"geo_restriction": []interface{}{flattenGeoRestriction(r.GeoRestriction)},
+	}
 
-// Assemble the hash for the aws_cloudfront_distribution restrictions
-// TypeSet attribute.
-func restrictionsHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	buf.WriteString(fmt.Sprintf("%d-", geoRestrictionHash(m["geo_restriction"].(*schema.Set).List()[0].(map[string]interface{}))))
-	return hashcode.String(buf.String())
+	return []interface{}{m}
 }
 
 func expandGeoRestriction(m map[string]interface{}) *cloudfront.GeoRestriction {
-	gr := cloudfront.GeoRestriction{
+	gr := &cloudfront.GeoRestriction{
+		Quantity:        aws.Int64(int64(0)),
 		RestrictionType: aws.String(m["restriction_type"].(string)),
 	}
+
 	if v, ok := m["locations"]; ok {
-		gr.Quantity = aws.Int64(int64(len(v.([]interface{}))))
-		gr.Items = expandStringList(v.([]interface{}))
-		sort.Sort(StringPtrSlice(gr.Items))
-	} else {
-		gr.Quantity = aws.Int64(0)
+		gr.Items = expandStringSet(v.(*schema.Set))
+		gr.Quantity = aws.Int64(int64(v.(*schema.Set).Len()))
 	}
-	return &gr
+
+	return gr
 }
 
 func flattenGeoRestriction(gr *cloudfront.GeoRestriction) map[string]interface{} {
 	m := make(map[string]interface{})
 
-	m["restriction_type"] = *gr.RestrictionType
+	m["restriction_type"] = aws.StringValue(gr.RestrictionType)
 	if gr.Items != nil {
-		sort.Sort(StringPtrSlice(gr.Items))
-		m["locations"] = flattenStringList(gr.Items)
+		m["locations"] = schema.NewSet(schema.HashString, flattenStringList(gr.Items))
 	}
 	return m
-}
-
-// Assemble the hash for the aws_cloudfront_distribution geo_restriction
-// TypeSet attribute.
-func geoRestrictionHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	// All keys added in alphabetical order.
-	buf.WriteString(fmt.Sprintf("%s-", m["restriction_type"].(string)))
-	if v, ok := m["locations"]; ok {
-		for _, w := range sortInterfaceSlice(v.([]interface{})) {
-			buf.WriteString(fmt.Sprintf("%s-", w.(string)))
-		}
-	}
-	return hashcode.String(buf.String())
 }
 
 func expandViewerCertificate(m map[string]interface{}) *cloudfront.ViewerCertificate {
@@ -1062,7 +933,7 @@ func expandViewerCertificate(m map[string]interface{}) *cloudfront.ViewerCertifi
 	return &vc
 }
 
-func flattenViewerCertificate(vc *cloudfront.ViewerCertificate) *schema.Set {
+func flattenViewerCertificate(vc *cloudfront.ViewerCertificate) []interface{} {
 	m := make(map[string]interface{})
 
 	if vc.IAMCertificateId != nil {
@@ -1079,50 +950,7 @@ func flattenViewerCertificate(vc *cloudfront.ViewerCertificate) *schema.Set {
 	if vc.MinimumProtocolVersion != nil {
 		m["minimum_protocol_version"] = *vc.MinimumProtocolVersion
 	}
-	return schema.NewSet(viewerCertificateHash, []interface{}{m})
-}
-
-// Assemble the hash for the aws_cloudfront_distribution viewer_certificate
-// TypeSet attribute.
-func viewerCertificateHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	if v, ok := m["iam_certificate_id"]; ok && v.(string) != "" {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-		buf.WriteString(fmt.Sprintf("%s-", m["ssl_support_method"].(string)))
-	} else if v, ok := m["acm_certificate_arn"]; ok && v.(string) != "" {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-		buf.WriteString(fmt.Sprintf("%s-", m["ssl_support_method"].(string)))
-	} else {
-		buf.WriteString(fmt.Sprintf("%t-", m["cloudfront_default_certificate"].(bool)))
-	}
-	// if minimum_protocol_version is not specified and we use cloudfront_default_certificate,
-	// ignore current value of minimum_protocol_version
-	if c, ok := m["cloudfront_default_certificate"]; !(ok && c.(bool)) {
-		if v, ok := m["minimum_protocol_version"]; ok && v.(string) != "" {
-			buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-		}
-	}
-	return hashcode.String(buf.String())
-}
-
-// Do a top-level copy of struct fields from one struct to another. Used to
-// copy fields between CacheBehavior and DefaultCacheBehavior structs.
-func simpleCopyStruct(src, dst interface{}) {
-	s := reflect.ValueOf(src).Elem()
-	d := reflect.ValueOf(dst).Elem()
-
-	for i := 0; i < s.NumField(); i++ {
-		if s.Field(i).CanSet() == true {
-			if s.Field(i).Interface() != nil {
-				for j := 0; j < d.NumField(); j++ {
-					if d.Type().Field(j).Name == s.Type().Field(i).Name {
-						d.Field(j).Set(s.Field(i))
-					}
-				}
-			}
-		}
-	}
+	return []interface{}{m}
 }
 
 // Convert *cloudfront.ActiveTrustedSigners to a flatmap.Map type, which ensures

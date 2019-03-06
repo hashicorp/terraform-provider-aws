@@ -10,7 +10,7 @@ import (
 )
 
 func TestAccAWSAmiDataSource_natInstance(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -54,7 +54,7 @@ func TestAccAWSAmiDataSource_natInstance(t *testing.T) {
 	})
 }
 func TestAccAWSAmiDataSource_windowsInstance(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -65,7 +65,7 @@ func TestAccAWSAmiDataSource_windowsInstance(t *testing.T) {
 					resource.TestCheckResourceAttr("data.aws_ami.windows_ami", "architecture", "x86_64"),
 					resource.TestCheckResourceAttr("data.aws_ami.windows_ami", "block_device_mappings.#", "27"),
 					resource.TestMatchResourceAttr("data.aws_ami.windows_ami", "creation_date", regexp.MustCompile("^20[0-9]{2}-")),
-					resource.TestMatchResourceAttr("data.aws_ami.windows_ami", "description", regexp.MustCompile("^Microsoft Windows Server 2012")),
+					resource.TestMatchResourceAttr("data.aws_ami.windows_ami", "description", regexp.MustCompile("^Microsoft Windows Server")),
 					resource.TestCheckResourceAttr("data.aws_ami.windows_ami", "hypervisor", "xen"),
 					resource.TestMatchResourceAttr("data.aws_ami.windows_ami", "image_id", regexp.MustCompile("^ami-")),
 					resource.TestMatchResourceAttr("data.aws_ami.windows_ami", "image_location", regexp.MustCompile("^amazon/")),
@@ -93,7 +93,7 @@ func TestAccAWSAmiDataSource_windowsInstance(t *testing.T) {
 }
 
 func TestAccAWSAmiDataSource_instanceStore(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -127,39 +127,8 @@ func TestAccAWSAmiDataSource_instanceStore(t *testing.T) {
 	})
 }
 
-func TestAccAWSAmiDataSource_owners(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccCheckAwsAmiDataSourceOwnersConfig,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAmiDataSourceID("data.aws_ami.amazon_ami"),
-				),
-			},
-		},
-	})
-}
-
-// Acceptance test for: https://github.com/hashicorp/terraform/issues/10758
-func TestAccAWSAmiDataSource_ownersEmpty(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccCheckAwsAmiDataSourceEmptyOwnersConfig,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAmiDataSourceID("data.aws_ami.amazon_ami"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccAWSAmiDataSource_localNameFilter(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -174,63 +143,7 @@ func TestAccAWSAmiDataSource_localNameFilter(t *testing.T) {
 	})
 }
 
-func TestResourceValidateNameRegex(t *testing.T) {
-	type testCases struct {
-		Value    string
-		ErrCount int
-	}
-
-	invalidCases := []testCases{
-		{
-			Value:    `\`,
-			ErrCount: 1,
-		},
-		{
-			Value:    `**`,
-			ErrCount: 1,
-		},
-		{
-			Value:    `(.+`,
-			ErrCount: 1,
-		},
-	}
-
-	for _, tc := range invalidCases {
-		_, errors := validateNameRegex(tc.Value, "name_regex")
-		if len(errors) != tc.ErrCount {
-			t.Fatalf("Expected %q to trigger a validation error.", tc.Value)
-		}
-	}
-
-	validCases := []testCases{
-		{
-			Value:    `\/`,
-			ErrCount: 0,
-		},
-		{
-			Value:    `.*`,
-			ErrCount: 0,
-		},
-		{
-			Value:    `\b(?:\d{1,3}\.){3}\d{1,3}\b`,
-			ErrCount: 0,
-		},
-	}
-
-	for _, tc := range validCases {
-		_, errors := validateNameRegex(tc.Value, "name_regex")
-		if len(errors) != tc.ErrCount {
-			t.Fatalf("Expected %q not to trigger a validation error.", tc.Value)
-		}
-	}
-}
-
-func testAccCheckAwsAmiDataSourceDestroy(s *terraform.State) error {
-	return nil
-}
-
 func testAccCheckAwsAmiDataSourceID(n string) resource.TestCheckFunc {
-	// Wait for IAM role
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -251,10 +164,8 @@ func testAccCheckAwsAmiDataSourceID(n string) resource.TestCheckFunc {
 const testAccCheckAwsAmiDataSourceConfig = `
 data "aws_ami" "nat_ami" {
   most_recent = true
-  filter {
-    name = "owner-alias"
-    values = ["amazon"]
-  }
+  owners      = ["amazon"]
+
   filter {
     name = "name"
     values = ["amzn-ami-vpc-nat*"]
@@ -278,10 +189,8 @@ data "aws_ami" "nat_ami" {
 const testAccCheckAwsAmiDataSourceWindowsConfig = `
 data "aws_ami" "windows_ami" {
   most_recent = true
-  filter {
-    name = "owner-alias"
-    values = ["amazon"]
-  }
+  owners      = ["amazon"]
+
   filter {
     name = "name"
     values = ["Windows_Server-2012-R2*"]
@@ -305,10 +214,8 @@ data "aws_ami" "windows_ami" {
 const testAccCheckAwsAmiDataSourceInstanceStoreConfig = `
 data "aws_ami" "instance_store_ami" {
   most_recent = true
-  filter {
-    name = "owner-id"
-    values = ["099720109477"]
-  }
+  owners      = ["099720109477"]
+
   filter {
     name = "name"
     values = ["ubuntu/images/hvm-instance/ubuntu-trusty-14.04-amd64-server*"]
@@ -321,21 +228,6 @@ data "aws_ami" "instance_store_ami" {
     name = "root-device-type"
     values = ["instance-store"]
   }
-}
-`
-
-// Testing owner parameter
-const testAccCheckAwsAmiDataSourceOwnersConfig = `
-data "aws_ami" "amazon_ami" {
-  most_recent = true
-  owners = ["amazon"]
-}
-`
-
-const testAccCheckAwsAmiDataSourceEmptyOwnersConfig = `
-data "aws_ami" "amazon_ami" {
-  most_recent = true
-  owners = [""]
 }
 `
 

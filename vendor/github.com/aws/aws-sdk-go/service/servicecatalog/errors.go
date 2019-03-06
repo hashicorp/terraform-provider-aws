@@ -32,11 +32,17 @@ const (
 	// operation.
 	ErrCodeLimitExceededException = "LimitExceededException"
 
+	// ErrCodeOperationNotSupportedException for service response error code
+	// "OperationNotSupportedException".
+	//
+	// The operation is not supported.
+	ErrCodeOperationNotSupportedException = "OperationNotSupportedException"
+
 	// ErrCodeResourceInUseException for service response error code
 	// "ResourceInUseException".
 	//
-	// A resource that is currently in use. Ensure the resource is not in use and
-	// retry the operation.
+	// A resource that is currently in use. Ensure that the resource is not in use
+	// and retry the operation.
 	ErrCodeResourceInUseException = "ResourceInUseException"
 
 	// ErrCodeResourceNotFoundException for service response error code
