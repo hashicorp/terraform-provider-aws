@@ -1325,6 +1325,7 @@ resource "aws_cloudfront_distribution" "failover_distribution" {
 	%s
 }
 `
+
 func testAccAWSCloudFrontDistributionConfigViewerCertificateAcmCertificateArnBase(commonName string) string {
 	return fmt.Sprintf(`
 provider "aws" {
