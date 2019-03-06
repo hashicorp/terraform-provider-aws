@@ -36,6 +36,11 @@ func TestAccAWSSSMPatchBaseline_basic(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      "aws_ssm_patch_baseline.foo",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccAWSSSMPatchBaselineBasicConfigUpdated(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMPatchBaselineExists("aws_ssm_patch_baseline.foo", &after),
@@ -85,7 +90,7 @@ func TestAccAWSSSMPatchBaseline_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMPatchBaselineWithOperatingSystem(t *testing.T) {
+func TestAccAWSSSMPatchBaseline_OperatingSystem(t *testing.T) {
 	var before, after ssm.PatchBaselineIdentity
 	name := acctest.RandString(10)
 	resource.ParallelTest(t, resource.TestCase{
@@ -110,6 +115,11 @@ func TestAccAWSSSMPatchBaselineWithOperatingSystem(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_ssm_patch_baseline.foo", "operating_system", "AMAZON_LINUX"),
 				),
+			},
+			{
+				ResourceName:      "aws_ssm_patch_baseline.foo",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSSSMPatchBaselineConfigWithOperatingSystemUpdated(name),
