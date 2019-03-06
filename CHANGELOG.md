@@ -9,6 +9,7 @@ ENHANCEMENTS:
 * data-source/aws_elastic_beanstalk_hosted_zone: Add eu-north-1 region support [GH-7829]
 * data-source/aws_redshift_service_account: Add us-gov-east-1 and us-gov-west-1 region mappings [GH-7635]
 * data-source/aws_s3_bucket: Add `bucket_regional_domain_name` attribute [GH-7765]
+* resource/aws_autoscaling_group: Support new `mixed_instances_policy` `instance_distribution` `spot_max_price` ability to unset with empty string [GH-7821]
 * resource/aws_dlm_lifecycle_policy: Add validation support for 2, 3, 4, 6, and 8 in `policy_details` `schedule` `create_rule` `interval` argument (support shorter intervals) [GH-7751]
 * resource/aws_ec2_client_vpn_endpoint: Add `tags` argument [GH-7619]
 * resource/aws_ecs_service: Support plan time validation of new `health_check_grace_period_seconds` max of `2147483647` [GH-7806]
@@ -18,6 +19,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_autoscaling_group: Allow configuration of `mixed_instances_policy` `instance_distribution` `on_demand_base_capacity` argument to 0 [GH-7821]
 * resource/aws_cloudfront_distribution: Remove problematic `viewer_certificate` configuration block argument `ConflictsWith` usage from version 2.0.0 [GH-7794]
 * resource/aws_cloudfront_distribution: Skip disabling distributions on deletion for previously disabled distributions [GH-7794]
 * resource/aws_cloudfront_distribution: Retry on `PreconditionFailed` error messages after disabling distribution on deletion [GH-7794]
