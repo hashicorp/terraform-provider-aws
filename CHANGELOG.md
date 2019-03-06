@@ -10,6 +10,7 @@ ENHANCEMENTS:
 * data-source/aws_s3_bucket: Add `bucket_regional_domain_name` attribute [GH-7765]
 * resource/aws_dlm_lifecycle_policy: Add validation support for 2, 3, 4, 6, and 8 in `policy_details` `schedule` `create_rule` `interval` argument (support shorter intervals) [GH-7751]
 * resource/aws_ec2_client_vpn_endpoint: Add `tags` argument [GH-7619]
+* resource/aws_ecs_service: Support plan time validation of new `health_check_grace_period_seconds` max of `2147483647` [GH-7806]
 * resource/aws_lb_target_group: Add `lambda_multi_value_headers_enabled` argument [GH-7648]
 * resource/aws_ram_resource_share: Add `arn` attribute [GH-7634]
 * resource/aws_s3_bucket: Add plan time length validation for `bucket` and `bucket_prefix` arguments [GH-7778]
