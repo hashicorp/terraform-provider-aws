@@ -280,7 +280,7 @@ func (c CloudWatchEventPermissionPolicyStatementCondition) GoString() string {
 	return c.String()
 }
 
-func (condition *CloudWatchEventPermissionPolicyStatementCondition) UnmarshalJSON(b []byte) error {
+func (c *CloudWatchEventPermissionPolicyStatementCondition) UnmarshalJSON(b []byte) error {
 	var out CloudWatchEventPermissionPolicyStatementCondition
 
 	// JSON representation: \"Condition\":{\"StringEquals\":{\"aws:PrincipalOrgID\":\"o-0123456789\"}}
@@ -299,7 +299,7 @@ func (condition *CloudWatchEventPermissionPolicyStatementCondition) UnmarshalJSO
 		}
 	}
 
-	*condition = out
+	*c = out
 	return nil
 }
 
@@ -336,15 +336,15 @@ func expandCloudWatchEventsCondition(l []interface{}) *events.Condition {
 	return condition
 }
 
-func flattenCloudWatchEventPermissionPolicyStatementCondition(condition *CloudWatchEventPermissionPolicyStatementCondition) []interface{} {
-	if condition == nil {
+func flattenCloudWatchEventPermissionPolicyStatementCondition(c *CloudWatchEventPermissionPolicyStatementCondition) []interface{} {
+	if c == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"key":   condition.Key,
-		"type":  condition.Type,
-		"value": condition.Value,
+		"key":   c.Key,
+		"type":  c.Type,
+		"value": c.Value,
 	}
 
 	return []interface{}{m}
