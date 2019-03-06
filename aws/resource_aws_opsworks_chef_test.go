@@ -1,18 +1,5 @@
 package aws
 
-// import (
-// 	"fmt"
-// 	"testing"
-//
-// 	"github.com/hashicorp/terraform/helper/acctest"
-// 	"github.com/hashicorp/terraform/helper/resource"
-// 	"github.com/hashicorp/terraform/terraform"
-//
-// 	"github.com/aws/aws-sdk-go/aws"
-// 	"github.com/aws/aws-sdk-go/aws/awserr"
-// 	"github.com/aws/aws-sdk-go/service/opsworks"
-// )
-
 import (
 	"fmt"
 	"testing"
@@ -20,6 +7,10 @@ import (
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/service/opsworkscm"
 )
 
 func TestAccAWSOpsworksChefImportBasic(t *testing.T) {
@@ -161,6 +152,27 @@ func testAccAwsOpsworksChefConfigCreate(name string) string {
 }
 
 func testAccCheckAwsOpsworksChefDestroy(s *terraform.State) error {
+	opsworkscmconn := testAccProvider.Meta().(*AWSClient).opsworkscmconn
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_opsworks_chef" {
+			continue
+		}
+
+		req := &opsworkscm.DescribeServersInput{
+			ServerName: aws.String(rs.Primary.ID),
+		}
+
+		_, err := opsworkscmconn.DescribeServers(req)
+		if err != nil {
+			if awserr, ok := err.(awserr.Error); ok {
+				if awserr.Code() == "ResourceNotFoundException" {
+					// not found, all good
+					return nil
+				}
+			}
+			return err
+		}
+	}
 	// TODO: implement
-	return fmt.Errorf("not implemented")
+	return fmt.Errorf("fall through error for OpsWorks Chef test")
 }
