@@ -82,9 +82,10 @@ func resourceAwsOpsworksChef() *schema.Resource {
 			// TODO: document the instance role required
 			// https://s3.amazonaws.com/opsworks-cm-us-east-1-prod-default-assets/misc/opsworks-cm-roles.yaml
 			"instance_profile_arn": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validateArn,
 			},
 
 			"instance_type": {
@@ -101,12 +102,20 @@ func resourceAwsOpsworksChef() *schema.Resource {
 
 			"preferred_backup_window": {
 				Type:     schema.TypeString,
-				Required: true, // TODO: ?
+				Required: true,
+				ValidateFunc: validateAny(
+					validateOnceADayWindowFormat,
+					validateOnceAWeekWindowFormat,
+				),
 			},
 
 			"preferred_maintenance_window": {
 				Type:     schema.TypeString,
 				Required: true,
+				ValidateFunc: validateAny(
+					validateOnceADayWindowFormat,
+					validateOnceAWeekWindowFormat,
+				),
 			},
 
 			// TODO:
@@ -122,9 +131,10 @@ func resourceAwsOpsworksChef() *schema.Resource {
 			// TODO: document this role creation
 			// https://s3.amazonaws.com/opsworks-cm-us-east-1-prod-default-assets/misc/opsworks-cm-roles.yaml
 			"service_role_arn": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validateArn,
 			},
 
 			// TODO: huh?
@@ -159,8 +169,6 @@ func resourceAwsOpsworksChef() *schema.Resource {
 
 func resourceAwsOpsworksChefValidate(d *schema.ResourceData) error {
 	// TODO: validation function
-	// preferredMaintenanceWindow := d.Get("preferred_maintenance_window")
-	// preferredBackupWindow := d.Get("preferred_backup_window")
 	// engineModel? // really depends if/how we're enforcing that there's only one actual valid value for these
 	// engineVersion?
 	// chefPivotalKey validate rsa? or is that too much?
