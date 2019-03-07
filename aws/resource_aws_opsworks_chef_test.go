@@ -101,14 +101,16 @@ func testAccAwsOpsworksChefConfigCreate(name string) string {
 			name = "opsworks_chef"
 			description = "security group for opsworks chef server"
 			vpc_id = "${aws_vpc.tf-acc.id}"
-			
+
 			ingress {
+				protocol = "TCP"
 				from_port = 0
 				to_port = 443
 				cidr_blocks = ["0.0.0.0/0"]
 			}
 			
 			ingress {
+				protocol = "TCP"
 				from_port = 0
 				to_port = 22
 				cidr_blocks = ["0.0.0.0/0"]
@@ -138,7 +140,7 @@ func testAccAwsOpsworksChefConfigCreate(name string) string {
 		}
 
 		resource "aws_opsworks_chef" "%s" {
-			chef_pivotal_key = "${tls_private_key.private_key_pem}"
+			chef_pivotal_key = "${tls_private_key.opsworks_chef_rsa_key.private_key_pem}"
 			chef_delivery_admin_password = "${random_string.opsworks_chef_admin_password.result}"
 			instance_profile_arn = "${aws_iam_instance_profile.opsworks_chef_instance.arn}"
 			instance_type = "t2.medium"
