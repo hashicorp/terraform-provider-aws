@@ -116,7 +116,7 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/d
 
 ### Block devices
 
-Each of the `*_block_device` attributes controls a portion of the AWS
+Each of the `*_block_device` attributes control a portion of the AWS
 Instance's "Block Device Mapping". It's a good idea to familiarize yourself with [AWS's Block Device
 Mapping docs](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/block-device-mapping-concepts.html)
 to understand the implications of using these attributes.
@@ -151,9 +151,7 @@ Each `ebs_block_device` supports the following:
   encryption](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html)
   on the volume (Default: `false`). Cannot be used with `snapshot_id`.
 
-Modifying any `ebs_block_device` currently requires resource replacement.
-
-~> **NOTE on EBS block devices:** If you use `ebs_block_device` on an `aws_instance`, Terraform will assume management over the full set of non-root EBS block devices for the instance, and treats additional block devices as drift. For this reason, `ebs_block_device` cannot be mixed with external `aws_ebs_volume` + `aws_volume_attachment` resources for a given instance.
+~> **NOTE:** Currently, changes to the `ebs_block_device` configuration of _existing_ resources cannot be automatically detected by Terraform. To manage changes and attachments of an EBS block to an instance, use the `aws_ebs_volume` and `aws_volume_attachment` resources instead. If you use `ebs_block_device` on an `aws_instance`, Terraform will assume management over the full set of non-root EBS block devices for the instance, treating additional block devices as drift. For this reason, `ebs_block_device` cannot be mixed with external `aws_ebs_volume` and `aws_volume_attachment` resources for a given instance.
 
 Each `ephemeral_block_device` supports the following:
 
@@ -168,11 +166,6 @@ available for attachment. AWS [publishes a
 list](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/InstanceStorage.html#StorageOnInstanceTypes)
 of which ephemeral devices are available on each type. The devices are always
 identified by the `virtual_name` in the format `"ephemeral{0..N}"`.
-
-~> **NOTE:** Currently, changes to `*_block_device` configuration of _existing_
-resources cannot be automatically detected by Terraform. After making updates
-to block device configuration, resource recreation can be manually triggered by
-using the [`taint` command](/docs/commands/taint.html).
 
 ### Network Interfaces
 
