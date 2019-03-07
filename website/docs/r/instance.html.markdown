@@ -98,11 +98,11 @@ instances. See [Shutdown Behavior](https://docs.aws.amazon.com/AWSEC2/latest/Use
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 * `volume_tags` - (Optional) A mapping of tags to assign to the devices created by the instance at launch time.
 * `root_block_device` - (Optional) Customize details about the root block
-  device of the instance. Block device configurations only apply on resource creation. See [Block Devices](#block-devices) below for details on attributes and drift detection.
+  device of the instance. See [Block Devices](#block-devices) below for details.
 * `ebs_block_device` - (Optional) Additional EBS block devices to attach to the
   instance.  Block device configurations only apply on resource creation. See [Block Devices](#block-devices) below for details on attributes and drift detection.
 * `ephemeral_block_device` - (Optional) Customize Ephemeral (also known as
-  "Instance Store") volumes on the instance. Block device configurations only apply on resource creation. See [Block Devices](#block-devices) below for details on attributes and drift detection.
+  "Instance Store") volumes on the instance. See [Block Devices](#block-devices) below for details.
 * `network_interface` - (Optional) Customize network interfaces to be attached at instance boot time. See [Network Interfaces](#network-interfaces) below for more details.
 * `credit_specification` - (Optional) Customize the credit specification of the instance. See [Credit Specification](#credit-specification) below for more details.
 
@@ -116,13 +116,10 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/d
 
 ### Block devices
 
-Each of the `*_block_device` attributes controls a portion of the AWS
+Each of the `*_block_device` attributes control a portion of the AWS
 Instance's "Block Device Mapping". It's a good idea to familiarize yourself with [AWS's Block Device
 Mapping docs](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/block-device-mapping-concepts.html)
 to understand the implications of using these attributes.
-
-~> **NOTE:** Modification to the configuration of `*_block_device` on _existing_ resources cannot be automatically
-detected by Terraform and will require resource replacement. After making updates to block device configuration, resource recreation can be manually triggered by using the [`taint` command](/docs/commands/taint.html).
 
 The `root_block_device` mapping supports the following:
 
@@ -135,6 +132,8 @@ The `root_block_device` mapping supports the following:
 * `delete_on_termination` - (Optional) Whether the volume should be destroyed
   on instance termination (Default: `true`).
 
+Modifying any of the `root_block_device` settings requires resource
+replacement.
 
 Each `ebs_block_device` supports the following:
 
@@ -152,10 +151,7 @@ Each `ebs_block_device` supports the following:
   encryption](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html)
   on the volume (Default: `false`). Cannot be used with `snapshot_id`.
 
-When using `ebs_block_device` on an `aws_instance`, Terraform will assume management over the full set of non-root
-EBS block devices for the instance, and treat additional block devices as drift.
-For this reason, `ebs_block_device` cannot be mixed with external `aws_ebs_volume` + `aws_volume_attachment` resources for a given instance.
-
+~> **NOTE:** Currently, changes to the `ebs_block_device` configuration of _existing_ resources cannot be automatically detected by Terraform. To manage changes and attachments of an EBS block to an instance, use the `aws_ebs_volume` and `aws_volume_attachment` resources instead. If you use `ebs_block_device` on an `aws_instance`, Terraform will assume management over the full set of non-root EBS block devices for the instance, treating additional block devices as drift. For this reason, `ebs_block_device` cannot be mixed with external `aws_ebs_volume` and `aws_volume_attachment` resources for a given instance.
 
 Each `ephemeral_block_device` supports the following:
 
