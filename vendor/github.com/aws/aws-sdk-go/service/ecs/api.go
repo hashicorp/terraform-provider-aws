@@ -4841,6 +4841,10 @@ type ContainerDefinition struct {
 	// of CPU that is described in the task definition.
 	Cpu *int64 `locationName:"cpu" type:"integer"`
 
+	// The dependencies defined for container startup. A container can contain multiple
+	// dependencies.
+	DependsOn []*ContainerDependency `locationName:"dependsOn" type:"list"`
+
 	// When this parameter is true, networking is disabled within the container.
 	// This parameter maps to NetworkDisabled in the Create a container (https://docs.docker.com/engine/api/v1.35/#operation/ContainerCreate)
 	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/).
@@ -5178,6 +5182,19 @@ type ContainerDefinition struct {
 	// in the Amazon Elastic Container Service Developer Guide.
 	Secrets []*Secret `locationName:"secrets" type:"list"`
 
+	// Time duration to wait before giving up on starting the container.
+	//
+	// The startTimeout value for the container will take precedence over the ECS_CONTAINER_START_TIMEOUT
+	// container agent configuration parameter, if used.
+	StartTimeout *int64 `locationName:"startTimeout" type:"integer"`
+
+	// Time duration to wait before the container is forcefully killed if it does
+	// not exit normally on its own.
+	//
+	// The stopTimeout value for the container will take precedence over the ECS_CONTAINER_STOP_TIMEOUT
+	// container agent configuration parameter, if used.
+	StopTimeout *int64 `locationName:"stopTimeout" type:"integer"`
+
 	// A list of namespaced kernel parameters to set in the container. This parameter
 	// maps to Sysctls in the Create a container (https://docs.docker.com/engine/api/v1.35/#operation/ContainerCreate)
 	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
@@ -5204,10 +5221,25 @@ type ContainerDefinition struct {
 	// This parameter is not supported for Windows containers.
 	Ulimits []*Ulimit `locationName:"ulimits" type:"list"`
 
-	// The user name to use inside the container. This parameter maps to User in
+	// The username to use inside the container. This parameter maps to User in
 	// the Create a container (https://docs.docker.com/engine/api/v1.35/#operation/ContainerCreate)
 	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
 	// and the --user option to docker run (https://docs.docker.com/engine/reference/run/).
+	//
+	// This following formats can be used. If specifying a UID or GID, it must be
+	// specified as a positive integer.
+	//
+	//    * user
+	//
+	//    * user:group
+	//
+	//    * uid
+	//
+	//    * uid:gid
+	//
+	//    * user:gid
+	//
+	//    * uid:group
 	//
 	// This parameter is not supported for Windows containers.
 	User *string `locationName:"user" type:"string"`
@@ -5238,6 +5270,16 @@ func (s ContainerDefinition) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *ContainerDefinition) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "ContainerDefinition"}
+	if s.DependsOn != nil {
+		for i, v := range s.DependsOn {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "DependsOn", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 	if s.ExtraHosts != nil {
 		for i, v := range s.ExtraHosts {
 			if v == nil {
@@ -5314,6 +5356,12 @@ func (s *ContainerDefinition) SetCommand(v []*string) *ContainerDefinition {
 // SetCpu sets the Cpu field's value.
 func (s *ContainerDefinition) SetCpu(v int64) *ContainerDefinition {
 	s.Cpu = &v
+	return s
+}
+
+// SetDependsOn sets the DependsOn field's value.
+func (s *ContainerDefinition) SetDependsOn(v []*ContainerDependency) *ContainerDefinition {
+	s.DependsOn = v
 	return s
 }
 
@@ -5479,6 +5527,18 @@ func (s *ContainerDefinition) SetSecrets(v []*Secret) *ContainerDefinition {
 	return s
 }
 
+// SetStartTimeout sets the StartTimeout field's value.
+func (s *ContainerDefinition) SetStartTimeout(v int64) *ContainerDefinition {
+	s.StartTimeout = &v
+	return s
+}
+
+// SetStopTimeout sets the StopTimeout field's value.
+func (s *ContainerDefinition) SetStopTimeout(v int64) *ContainerDefinition {
+	s.StopTimeout = &v
+	return s
+}
+
 // SetSystemControls sets the SystemControls field's value.
 func (s *ContainerDefinition) SetSystemControls(v []*SystemControl) *ContainerDefinition {
 	s.SystemControls = v
@@ -5506,6 +5566,78 @@ func (s *ContainerDefinition) SetVolumesFrom(v []*VolumeFrom) *ContainerDefiniti
 // SetWorkingDirectory sets the WorkingDirectory field's value.
 func (s *ContainerDefinition) SetWorkingDirectory(v string) *ContainerDefinition {
 	s.WorkingDirectory = &v
+	return s
+}
+
+// The dependencies defined for container startup. A container can contain multiple
+// dependencies.
+type ContainerDependency struct {
+	_ struct{} `type:"structure"`
+
+	// The dependency condition of the container. The following are the available
+	// conditions and their behavior:
+	//
+	//    * START - This condition emulates the behavior of links and volumes today.
+	//    It validates that a dependent container is started before permitting other
+	//    containers to start.
+	//
+	//    * COMPLETE - This condition validates that a dependent container runs
+	//    to completion (exits) before permitting other containers to start. This
+	//    can be useful for non-essential containers that run a script and then
+	//    subsequently exit.
+	//
+	//    * SUCCESS - This condition is the same as COMPLETE, but it will also require
+	//    that the container exits with a zero status.
+	//
+	//    * HEALTHY - This condition validates that the dependent container passes
+	//    its Docker health check before permitting other containers to start. This
+	//    requires that the dependent container has health checks configured. This
+	//    condition will only be confirmed at task startup.
+	//
+	// Condition is a required field
+	Condition *string `locationName:"condition" type:"string" required:"true" enum:"ContainerCondition"`
+
+	// The name of a container.
+	//
+	// ContainerName is a required field
+	ContainerName *string `locationName:"containerName" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ContainerDependency) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ContainerDependency) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ContainerDependency) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ContainerDependency"}
+	if s.Condition == nil {
+		invalidParams.Add(request.NewErrParamRequired("Condition"))
+	}
+	if s.ContainerName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ContainerName"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCondition sets the Condition field's value.
+func (s *ContainerDependency) SetCondition(v string) *ContainerDependency {
+	s.Condition = &v
+	return s
+}
+
+// SetContainerName sets the ContainerName field's value.
+func (s *ContainerDependency) SetContainerName(v string) *ContainerDependency {
+	s.ContainerName = &v
 	return s
 }
 
@@ -5981,10 +6113,10 @@ type CreateServiceInput struct {
 	// has first started. This is only valid if your service is configured to use
 	// a load balancer. If your service's tasks take a while to start and respond
 	// to Elastic Load Balancing health checks, you can specify a health check grace
-	// period of up to 7,200 seconds. During that time, the ECS service scheduler
-	// ignores health check status. This grace period can prevent the ECS service
-	// scheduler from marking tasks as unhealthy and stopping them before they have
-	// time to come up.
+	// period of up to 2,147,483,647 seconds. During that time, the ECS service
+	// scheduler ignores health check status. This grace period can prevent the
+	// ECS service scheduler from marking tasks as unhealthy and stopping them before
+	// they have time to come up.
 	HealthCheckGracePeriodSeconds *int64 `locationName:"healthCheckGracePeriodSeconds" type:"integer"`
 
 	// The launch type on which to run your service. For more information, see Amazon
@@ -9737,6 +9869,91 @@ func (s *PortMapping) SetProtocol(v string) *PortMapping {
 	return s
 }
 
+// The configuration details for the App Mesh proxy.
+type ProxyConfiguration struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the container that will serve as the App Mesh proxy.
+	//
+	// ContainerName is a required field
+	ContainerName *string `locationName:"containerName" type:"string" required:"true"`
+
+	// The set of network configuration parameters to provide the Container Network
+	// Interface (CNI) plugin, specified as key-value pairs.
+	//
+	//    * IgnoredUID - (Required) The user ID (UID) of the proxy container as
+	//    defined by the user parameter in a container definition. This is used
+	//    to ensure the proxy ignores its own traffic. If IgnoredGID is specified,
+	//    this field can be empty.
+	//
+	//    * IgnoredGID - (Required) The group ID (GID) of the proxy container as
+	//    defined by the user parameter in a container definition. This is used
+	//    to ensure the proxy ignores its own traffic. If IgnoredGID is specified,
+	//    this field can be empty.
+	//
+	//    * AppPorts - (Required) The list of ports that the application uses. Network
+	//    traffic to these ports will be forwarded to the ProxyIngressPort and ProxyEgressPort.
+	//
+	//    * ProxyIngressPort - (Required) Specifies the port that incoming traffic
+	//    to the AppPorts is directed to.
+	//
+	//    * ProxyEgressPort - (Required) Specifies the port that outgoing traffic
+	//    from the AppPorts is directed to.
+	//
+	//    * EgressIgnoredPorts - (Required) The egress traffic going to these specified
+	//    ports will be ignored and not redirected to the ProxyEgressPort. It can
+	//    be empty list.
+	//
+	//    * EgressIgnoredIPs - (Required) The egress traffic going to these specified
+	//    IP addresses will be ignored and not redirected to the ProxyEgressPort.
+	//    It can be empty list.
+	Properties []*KeyValuePair `locationName:"properties" type:"list"`
+
+	// The proxy type. The only supported value is APPMESH.
+	Type *string `locationName:"type" type:"string" enum:"ProxyConfigurationType"`
+}
+
+// String returns the string representation
+func (s ProxyConfiguration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ProxyConfiguration) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ProxyConfiguration) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ProxyConfiguration"}
+	if s.ContainerName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ContainerName"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetContainerName sets the ContainerName field's value.
+func (s *ProxyConfiguration) SetContainerName(v string) *ProxyConfiguration {
+	s.ContainerName = &v
+	return s
+}
+
+// SetProperties sets the Properties field's value.
+func (s *ProxyConfiguration) SetProperties(v []*KeyValuePair) *ProxyConfiguration {
+	s.Properties = v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *ProxyConfiguration) SetType(v string) *ProxyConfiguration {
+	s.Type = &v
+	return s
+}
+
 type PutAccountSettingDefaultInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10334,6 +10551,9 @@ type RegisterTaskDefinitionInput struct {
 	// the task definition and those specified at runtime).
 	PlacementConstraints []*TaskDefinitionPlacementConstraint `locationName:"placementConstraints" type:"list"`
 
+	// The configuration details for the App Mesh proxy.
+	ProxyConfiguration *ProxyConfiguration `locationName:"proxyConfiguration" type:"structure"`
+
 	// The launch type required by the task. If no value is specified, it defaults
 	// to EC2.
 	RequiresCompatibilities []*string `locationName:"requiresCompatibilities" type:"list"`
@@ -10383,6 +10603,11 @@ func (s *RegisterTaskDefinitionInput) Validate() error {
 			if err := v.Validate(); err != nil {
 				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "ContainerDefinitions", i), err.(request.ErrInvalidParams))
 			}
+		}
+	}
+	if s.ProxyConfiguration != nil {
+		if err := s.ProxyConfiguration.Validate(); err != nil {
+			invalidParams.AddNested("ProxyConfiguration", err.(request.ErrInvalidParams))
 		}
 	}
 	if s.Tags != nil {
@@ -10453,6 +10678,12 @@ func (s *RegisterTaskDefinitionInput) SetPidMode(v string) *RegisterTaskDefiniti
 // SetPlacementConstraints sets the PlacementConstraints field's value.
 func (s *RegisterTaskDefinitionInput) SetPlacementConstraints(v []*TaskDefinitionPlacementConstraint) *RegisterTaskDefinitionInput {
 	s.PlacementConstraints = v
+	return s
+}
+
+// SetProxyConfiguration sets the ProxyConfiguration field's value.
+func (s *RegisterTaskDefinitionInput) SetProxyConfiguration(v *ProxyConfiguration) *RegisterTaskDefinitionInput {
+	s.ProxyConfiguration = v
 	return s
 }
 
@@ -12745,6 +12976,9 @@ type TaskDefinition struct {
 	// not valid if you are using the Fargate launch type for your task.
 	PlacementConstraints []*TaskDefinitionPlacementConstraint `locationName:"placementConstraints" type:"list"`
 
+	// The configuration details for the App Mesh proxy.
+	ProxyConfiguration *ProxyConfiguration `locationName:"proxyConfiguration" type:"structure"`
+
 	// The container instance attributes required by your task. This field is not
 	// valid if you are using the Fargate launch type for your task.
 	RequiresAttributes []*Attribute `locationName:"requiresAttributes" type:"list"`
@@ -12854,6 +13088,12 @@ func (s *TaskDefinition) SetPidMode(v string) *TaskDefinition {
 // SetPlacementConstraints sets the PlacementConstraints field's value.
 func (s *TaskDefinition) SetPlacementConstraints(v []*TaskDefinitionPlacementConstraint) *TaskDefinition {
 	s.PlacementConstraints = v
+	return s
+}
+
+// SetProxyConfiguration sets the ProxyConfiguration field's value.
+func (s *TaskDefinition) SetProxyConfiguration(v *ProxyConfiguration) *TaskDefinition {
+	s.ProxyConfiguration = v
 	return s
 }
 
@@ -13956,6 +14196,20 @@ const (
 )
 
 const (
+	// ContainerConditionStart is a ContainerCondition enum value
+	ContainerConditionStart = "START"
+
+	// ContainerConditionComplete is a ContainerCondition enum value
+	ContainerConditionComplete = "COMPLETE"
+
+	// ContainerConditionSuccess is a ContainerCondition enum value
+	ContainerConditionSuccess = "SUCCESS"
+
+	// ContainerConditionHealthy is a ContainerCondition enum value
+	ContainerConditionHealthy = "HEALTHY"
+)
+
+const (
 	// ContainerInstanceFieldTags is a ContainerInstanceField enum value
 	ContainerInstanceFieldTags = "TAGS"
 )
@@ -14103,6 +14357,11 @@ const (
 
 	// PropagateTagsService is a PropagateTags enum value
 	PropagateTagsService = "SERVICE"
+)
+
+const (
+	// ProxyConfigurationTypeAppmesh is a ProxyConfigurationType enum value
+	ProxyConfigurationTypeAppmesh = "APPMESH"
 )
 
 const (

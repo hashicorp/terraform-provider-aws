@@ -4034,8 +4034,7 @@ type AllocateConnectionOnInterconnectInput struct {
 	// ConnectionName is a required field
 	ConnectionName *string `locationName:"connectionName" type:"string" required:"true"`
 
-	// The ID of the interconnect on which the connection will be provisioned. For
-	// example, dxcon-456abc78.
+	// The ID of the interconnect on which the connection will be provisioned.
 	//
 	// InterconnectId is a required field
 	InterconnectId *string `locationName:"interconnectId" type:"string" required:"true"`
@@ -4357,12 +4356,12 @@ func (s *AllocatePublicVirtualInterfaceInput) SetOwnerAccount(v string) *Allocat
 type AssociateConnectionWithLagInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ID of the connection. For example, dxcon-abc123.
+	// The ID of the connection.
 	//
 	// ConnectionId is a required field
 	ConnectionId *string `locationName:"connectionId" type:"string" required:"true"`
 
-	// The ID of the LAG with which to associate the connection. For example, dxlag-abc123.
+	// The ID of the LAG with which to associate the connection.
 	//
 	// LagId is a required field
 	LagId *string `locationName:"lagId" type:"string" required:"true"`
@@ -6961,12 +6960,12 @@ func (s *DescribeVirtualInterfacesOutput) SetVirtualInterfaces(v []*VirtualInter
 type DisassociateConnectionFromLagInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ID of the connection. For example, dxcon-abc123.
+	// The ID of the connection.
 	//
 	// ConnectionId is a required field
 	ConnectionId *string `locationName:"connectionId" type:"string" required:"true"`
 
-	// The ID of the LAG. For example, dxlag-abc123.
+	// The ID of the LAG.
 	//
 	// LagId is a required field
 	LagId *string `locationName:"lagId" type:"string" required:"true"`
@@ -7603,6 +7602,9 @@ func (s *Loa) SetLoaContentType(v string) *Loa {
 type Location struct {
 	_ struct{} `type:"structure"`
 
+	// The available port speeds for the location.
+	AvailablePortSpeeds []*string `locationName:"availablePortSpeeds" type:"list"`
+
 	// The code for the location.
 	LocationCode *string `locationName:"locationCode" type:"string"`
 
@@ -7622,6 +7624,12 @@ func (s Location) String() string {
 // GoString returns the string representation
 func (s Location) GoString() string {
 	return s.String()
+}
+
+// SetAvailablePortSpeeds sets the AvailablePortSpeeds field's value.
+func (s *Location) SetAvailablePortSpeeds(v []*string) *Location {
+	s.AvailablePortSpeeds = v
+	return s
 }
 
 // SetLocationCode sets the LocationCode field's value.
