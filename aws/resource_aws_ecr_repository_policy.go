@@ -99,6 +99,7 @@ func resourceAwsEcrRepositoryPolicyRead(d *schema.ResourceData, meta interface{}
 
 	d.SetId(*repositoryPolicy.RepositoryName)
 	d.Set("registry_id", repositoryPolicy.RegistryId)
+	d.Set("policy", repositoryPolicy.PolicyText)
 
 	return nil
 }
