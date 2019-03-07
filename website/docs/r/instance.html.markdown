@@ -55,8 +55,8 @@ The following arguments are supported:
 * `placement_group` - (Optional) The Placement Group to start the instance in.
 * `tenancy` - (Optional) The tenancy of the instance (if the instance is running in a VPC). An instance with a tenancy of dedicated runs on single-tenant hardware. The host tenancy is not supported for the import-instance command.
 * `host_id` - (optional) The Id of a dedicated host that the instance will be assigned to. Use when an instance is to be launched on a specific dedicated host.
-* `cpu_core_count` - (Optional) Sets the number of CPU cores for an instance. This option is 
-  only supported on creation of instance type that support CPU Options 
+* `cpu_core_count` - (Optional) Sets the number of CPU cores for an instance. This option is
+  only supported on creation of instance type that support CPU Options
   [CPU Cores and Threads Per CPU Core Per Instance Type](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-optimize-cpu.html#cpu-options-supported-instances-values) - specifying this option for unsupported instance types will return an error from the EC2 API.
 * `cpu_threads_per_core` - (Optional - has no effect unless `cpu_core_count` is also set)  If set to to 1, hyperthreading is disabled on the launched instance. Defaults to 2 if not set. See [Optimizing CPU Options](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-optimize-cpu.html) for more information.
 
@@ -98,11 +98,11 @@ instances. See [Shutdown Behavior](https://docs.aws.amazon.com/AWSEC2/latest/Use
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 * `volume_tags` - (Optional) A mapping of tags to assign to the devices created by the instance at launch time.
 * `root_block_device` - (Optional) Customize details about the root block
-  device of the instance. See [Block Devices](#block-devices) below for details.
+  device of the instance. Block device configurations only apply on resource creation. See [Block Devices](#block-devices) below for details on attributes and drift detection.
 * `ebs_block_device` - (Optional) Additional EBS block devices to attach to the
-  instance.  See [Block Devices](#block-devices) below for details.
+  instance.  Block device configurations only apply on resource creation. See [Block Devices](#block-devices) below for details on attributes and drift detection.
 * `ephemeral_block_device` - (Optional) Customize Ephemeral (also known as
-  "Instance Store") volumes on the instance. See [Block Devices](#block-devices) below for details.
+  "Instance Store") volumes on the instance. Block device configurations only apply on resource creation. See [Block Devices](#block-devices) below for details on attributes and drift detection.
 * `network_interface` - (Optional) Customize network interfaces to be attached at instance boot time. See [Network Interfaces](#network-interfaces) below for more details.
 * `credit_specification` - (Optional) Customize the credit specification of the instance. See [Credit Specification](#credit-specification) below for more details.
 
@@ -121,6 +121,9 @@ Instance's "Block Device Mapping". It's a good idea to familiarize yourself with
 Mapping docs](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/block-device-mapping-concepts.html)
 to understand the implications of using these attributes.
 
+~> **NOTE:** Modification to the configuration of `*_block_device` on _existing_ resources cannot be automatically
+detected by Terraform and will require resource replacement. After making updates to block device configuration, resource recreation can be manually triggered by using the [`taint` command](/docs/commands/taint.html).
+
 The `root_block_device` mapping supports the following:
 
 * `volume_type` - (Optional) The type of volume. Can be `"standard"`, `"gp2"`, `"io1"`, `"sc1"`, or `"st1"`. (Default: `"standard"`).
@@ -132,8 +135,6 @@ The `root_block_device` mapping supports the following:
 * `delete_on_termination` - (Optional) Whether the volume should be destroyed
   on instance termination (Default: `true`).
 
-Modifying any of the `root_block_device` settings requires resource
-replacement.
 
 Each `ebs_block_device` supports the following:
 
@@ -151,9 +152,10 @@ Each `ebs_block_device` supports the following:
   encryption](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html)
   on the volume (Default: `false`). Cannot be used with `snapshot_id`.
 
-Modifying any `ebs_block_device` currently requires resource replacement.
+When using `ebs_block_device` on an `aws_instance`, Terraform will assume management over the full set of non-root
+EBS block devices for the instance, and treat additional block devices as drift.
+For this reason, `ebs_block_device` cannot be mixed with external `aws_ebs_volume` + `aws_volume_attachment` resources for a given instance.
 
-~> **NOTE on EBS block devices:** If you use `ebs_block_device` on an `aws_instance`, Terraform will assume management over the full set of non-root EBS block devices for the instance, and treats additional block devices as drift. For this reason, `ebs_block_device` cannot be mixed with external `aws_ebs_volume` + `aws_volume_attachment` resources for a given instance.
 
 Each `ephemeral_block_device` supports the following:
 
@@ -168,11 +170,6 @@ available for attachment. AWS [publishes a
 list](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/InstanceStorage.html#StorageOnInstanceTypes)
 of which ephemeral devices are available on each type. The devices are always
 identified by the `virtual_name` in the format `"ephemeral{0..N}"`.
-
-~> **NOTE:** Currently, changes to `*_block_device` configuration of _existing_
-resources cannot be automatically detected by Terraform. After making updates
-to block device configuration, resource recreation can be manually triggered by
-using the [`taint` command](/docs/commands/taint.html).
 
 ### Network Interfaces
 
