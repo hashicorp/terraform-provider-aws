@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsSsmAssociation() *schema.Resource {
@@ -91,6 +92,12 @@ func resourceAwsSsmAssociation() *schema.Resource {
 			"compliance_severity": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					ssm.ComplianceSeverityUnspecified,
+					ssm.ComplianceSeverityLow,
+					ssm.ComplianceSeverityMedium,
+					ssm.ComplianceSeverityHigh,
+				}, false),
 			},
 		},
 	}
