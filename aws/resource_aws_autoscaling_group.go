@@ -1259,7 +1259,7 @@ func expandAutoScalingInstancesDistribution(l []interface{}) *autoscaling.Instan
 		instancesDistribution.OnDemandAllocationStrategy = aws.String(v.(string))
 	}
 
-	if v, ok := m["on_demand_base_capacity"]; ok && v.(int) != 0 {
+	if v, ok := m["on_demand_base_capacity"]; ok {
 		instancesDistribution.OnDemandBaseCapacity = aws.Int64(int64(v.(int)))
 	}
 
@@ -1275,7 +1275,7 @@ func expandAutoScalingInstancesDistribution(l []interface{}) *autoscaling.Instan
 		instancesDistribution.SpotInstancePools = aws.Int64(int64(v.(int)))
 	}
 
-	if v, ok := m["spot_max_price"]; ok && v.(string) != "" {
+	if v, ok := m["spot_max_price"]; ok {
 		instancesDistribution.SpotMaxPrice = aws.String(v.(string))
 	}
 
