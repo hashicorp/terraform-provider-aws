@@ -35,6 +35,7 @@ The following arguments are supported:
 * `parameters` - (Optional) A block of arbitrary string parameters to pass to the SSM document.
 * `schedule_expression` - (Optional) A cron expression when the association will be applied to the target(s).
 * `targets` - (Optional) A block containing the targets of the SSM association. Targets are documented below. AWS currently supports a maximum of 5 targets.
+* `compliance_severity` - (Optional) The compliance severity for the association. Can be one of the following: `UNSPECIFIED`, `LOW`, `MEDIUM`, `HIGH` or `CRITICAL`
 
 Output Location (`output_location`) is an S3 bucket where you want to store the results of this association:
 
