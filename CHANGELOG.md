@@ -29,6 +29,7 @@ BUG FIXES:
 * resource/aws_dynamodb_table: Prevent perpetual plan differences with `ttl` configuration block `enabled` argument set to `false` [GH-3960]
 * resource/aws_ecs_service: Ensure `placement_strategy` removal in version 2.0.0 does not force recreation [GH-7790]
 * resource/aws_guardduty_detector: Prevent GuardDuty member accounts with unconfigured `finding_publishing_frequency` from triggering update errors [GH-7804]
+* resource/aws_launch_configuration: Prevent `ResourceInUse` errors caused by eventual consistency during deletion [GH-7819]
 * resource/aws_s3_bucket_notification: Prevent crash with empty filters configuration [GH-7791]
 
 ## 2.0.0 (February 27, 2019)
