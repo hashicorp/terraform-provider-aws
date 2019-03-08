@@ -6,6 +6,7 @@ import (
 	"os"
 	"regexp"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
@@ -73,6 +74,27 @@ func testSweepCloudFrontDistributions(region string) error {
 	}
 
 	return nil
+}
+
+func TestAccAWSCloudFrontDistribution_disappears(t *testing.T) {
+	var distribution cloudfront.Distribution
+	resourceName := "aws_cloudfront_distribution.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudFrontDistributionConfigEnabled(false, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudFrontDistributionExists(resourceName, &distribution),
+					testAccCheckCloudFrontDistributionDisappears(&distribution),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
 }
 
 // TestAccAWSCloudFrontDistribution_S3Origin runs an
@@ -429,6 +451,73 @@ func TestAccAWSCloudFrontDistribution_noCustomErrorResponseConfig(t *testing.T) 
 	})
 }
 
+func TestAccAWSCloudFrontDistribution_Enabled(t *testing.T) {
+	var distribution cloudfront.Distribution
+	resourceName := "aws_cloudfront_distribution.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudFrontDistributionConfigEnabled(false, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudFrontDistributionExists(resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retain_on_delete"},
+			},
+			{
+				Config: testAccAWSCloudFrontDistributionConfigEnabled(true, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudFrontDistributionExists(resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+				),
+			},
+		},
+	})
+}
+
+// TestAccAWSCloudFrontDistribution_RetainOnDelete verifies retain_on_delete = true
+// This acceptance test performs the following steps:
+//  * Trigger a Terraform destroy of the resource, which should only disable the distribution
+//  * Check it still exists and is disabled outside Terraform
+//  * Destroy for real outside Terraform
+func TestAccAWSCloudFrontDistribution_RetainOnDelete(t *testing.T) {
+	var distribution cloudfront.Distribution
+	resourceName := "aws_cloudfront_distribution.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudFrontDistributionConfigEnabled(true, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudFrontDistributionExists(resourceName, &distribution),
+				),
+			},
+			{
+				Config:  testAccAWSCloudFrontDistributionConfigEnabled(true, true),
+				Destroy: true,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudFrontDistributionExistsAPIOnly(&distribution),
+					testAccCheckCloudFrontDistributionWaitForDeployment(&distribution),
+					testAccCheckCloudFrontDistributionDisabled(&distribution),
+					testAccCheckCloudFrontDistributionDisappears(&distribution),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSCloudFrontDistribution_ViewerCertificate_AcmCertificateArn(t *testing.T) {
 	var distribution cloudfront.Distribution
 	resourceName := "aws_cloudfront_distribution.test"
@@ -543,6 +632,97 @@ func testAccCheckCloudFrontDistributionExists(resourceName string, distribution 
 		*distribution = *output.Distribution
 
 		return nil
+	}
+}
+
+func testAccCheckCloudFrontDistributionExistsAPIOnly(distribution *cloudfront.Distribution) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).cloudfrontconn
+
+		input := &cloudfront.GetDistributionInput{
+			Id: distribution.Id,
+		}
+
+		output, err := conn.GetDistribution(input)
+
+		if err != nil {
+			return err
+		}
+
+		*distribution = *output.Distribution
+
+		return nil
+	}
+}
+
+func testAccCheckCloudFrontDistributionDisabled(distribution *cloudfront.Distribution) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if distribution == nil || distribution.DistributionConfig == nil {
+			return fmt.Errorf("CloudFront Distribution configuration empty")
+		}
+
+		if aws.BoolValue(distribution.DistributionConfig.Enabled) {
+			return fmt.Errorf("CloudFront Distribution (%s) enabled", aws.StringValue(distribution.Id))
+		}
+
+		return nil
+	}
+}
+
+// testAccCheckCloudFrontDistributionDisappears deletes a CloudFront Distribution outside Terraform
+// This requires the CloudFront Distribution to previously be disabled and fetches latest ETag automatically.
+func testAccCheckCloudFrontDistributionDisappears(distribution *cloudfront.Distribution) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).cloudfrontconn
+
+		getDistributionInput := &cloudfront.GetDistributionInput{
+			Id: distribution.Id,
+		}
+
+		getDistributionOutput, err := conn.GetDistribution(getDistributionInput)
+
+		if err != nil {
+			return err
+		}
+
+		deleteDistributionInput := &cloudfront.DeleteDistributionInput{
+			Id:      distribution.Id,
+			IfMatch: getDistributionOutput.ETag,
+		}
+
+		err = resource.Retry(2*time.Minute, func() *resource.RetryError {
+			_, err = conn.DeleteDistribution(deleteDistributionInput)
+
+			if isAWSErr(err, cloudfront.ErrCodeDistributionNotDisabled, "") {
+				return resource.RetryableError(err)
+			}
+
+			if isAWSErr(err, cloudfront.ErrCodeNoSuchDistribution, "") {
+				return nil
+			}
+
+			if isAWSErr(err, cloudfront.ErrCodePreconditionFailed, "") {
+				return resource.RetryableError(err)
+			}
+
+			if err != nil {
+				return resource.NonRetryableError(err)
+			}
+
+			return nil
+		})
+
+		if isResourceTimeoutError(err) {
+			_, err = conn.DeleteDistribution(deleteDistributionInput)
+		}
+
+		return err
+	}
+}
+
+func testAccCheckCloudFrontDistributionWaitForDeployment(distribution *cloudfront.Distribution) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		return resourceAwsCloudFrontDistributionWaitUntilDeployed(aws.StringValue(distribution.Id), testAccProvider.Meta())
 	}
 }
 
@@ -1241,6 +1421,52 @@ resource "aws_cloudfront_distribution" "main" {
 	%s
 }
 `, acctest.RandInt(), testAccAWSCloudFrontDistributionRetainConfig())
+
+func testAccAWSCloudFrontDistributionConfigEnabled(enabled, retainOnDelete bool) string {
+	return fmt.Sprintf(`
+resource "aws_cloudfront_distribution" "test" {
+  enabled          = %[1]t
+  retain_on_delete = %[2]t
+
+  default_cache_behavior {
+    allowed_methods        = ["GET", "HEAD"]
+    cached_methods         = ["GET", "HEAD"]
+    target_origin_id       = "test"
+    viewer_protocol_policy = "allow-all"
+
+    forwarded_values {
+      query_string = false
+
+      cookies {
+        forward = "all"
+      }
+    }
+  }
+
+  origin {
+    domain_name = "www.example.com"
+    origin_id   = "test"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "https-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+}
+`, enabled, retainOnDelete)
+}
 
 func testAccAWSCloudFrontDistributionConfigViewerCertificateAcmCertificateArnBase(commonName string) string {
 	return fmt.Sprintf(`
