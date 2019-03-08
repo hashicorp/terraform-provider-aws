@@ -15,8 +15,8 @@ Provides an AWS App Mesh route resource.
 ```hcl
 resource "aws_appmesh_route" "serviceb" {
   name                = "serviceB-route"
-  mesh_name           = "simpleapp"
-  virtual_router_name = "serviceB"
+  mesh_name           = "${aws_appmesh_mesh.simple.id}"
+  virtual_router_name = "${aws_appmesh_virtual_router.serviceb.name}"
 
   spec {
     http_route {
@@ -26,12 +26,12 @@ resource "aws_appmesh_route" "serviceb" {
 
       action {
         weighted_target {
-          virtual_node = "serviceBv1"
+          virtual_node = "${aws_appmesh_virtual_node.serviceb1.name}"
           weight       = 90
         }
 
         weighted_target {
-          virtual_node = "serviceBv2"
+          virtual_node = "${aws_appmesh_virtual_node.serviceb2.name}"
           weight       = 10
         }
       }

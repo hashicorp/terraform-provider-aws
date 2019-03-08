@@ -17,12 +17,12 @@ Provides an AWS App Mesh virtual service resource.
 ```hcl
 resource "aws_appmesh_virtual_service" "servicea" {
   name                = "servicea.simpleapp.local"
-  mesh_name           = "simpleapp"
+  mesh_name           = "${aws_appmesh_mesh.simple.id}"
 
   spec {
     provider {
       virtual_node {
-        virtual_node_name = "serviceBv1"
+        virtual_node_name = "${aws_appmesh_virtual_node.serviceb1.name}"
       }
     }
   }
@@ -34,12 +34,12 @@ resource "aws_appmesh_virtual_service" "servicea" {
 ```hcl
 resource "aws_appmesh_virtual_service" "servicea" {
   name                = "servicea.simpleapp.local"
-  mesh_name           = "simpleapp"
+  mesh_name           = "${aws_appmesh_mesh.simple.id}"
 
   spec {
     provider {
       virtual_router {
-        virtual_router_name = "serviceB"
+        virtual_router_name = "${aws_appmesh_virtual_router.serviceb.name}"
       }
     }
   }
@@ -56,20 +56,20 @@ The following arguments are supported:
 
 The `spec` object supports the following:
 
-* `provider`- (Required) The provider information for the virtual node.
+* `provider`- (Optional) The App Mesh object that is acting as the provider for a virtual service. You can specify a single virtual node or virtual router.
 
 The `provider` object supports the following:
 
-* `virtual_node` - (Optional) The virtual node information for the provider.
-* `virtual_router` - (Optional) The virtual router information for the provider.
+* `virtual_node` - (Optional) The virtual node associated with a virtual service.
+* `virtual_router` - (Optional) The virtual router associated with a virtual service.
 
 The `virtual_node` object supports the following:
 
-* `virtual_node_name` - (Required) Specifies the name of the virtual node.
+* `virtual_node_name` - (Required) The name of the virtual node that is acting as a service provider.
 
 The `virtual_router` object supports the following:
 
-* `virtual_router_name` - (Required) The name of the virtual router.
+* `virtual_router_name` - (Required) The name of the virtual router that is acting as a service provider.
 
 ## Attributes Reference
 

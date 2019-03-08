@@ -13,18 +13,18 @@ func TestAWSAppmeshVirtualRouterMigrateState(t *testing.T) {
 		Expected     map[string]string
 		Meta         interface{}
 	}{
-		"v0_1-noSpec": {
+		"v0_1-emptySpec": {
 			StateVersion: 0,
 			Attributes: map[string]string{
 				"name":   "svcb",
-				"spec.#": "0",
+				"spec.#": "1",
 			},
 			Expected: map[string]string{
 				"name":   "svcb",
-				"spec.#": "0",
+				"spec.#": "1",
 			},
 		},
-		"v0_1-withSpec": {
+		"v0_1-nonEmptySpec": {
 			StateVersion: 0,
 			Attributes: map[string]string{
 				"name":                           "svcb",
@@ -34,7 +34,7 @@ func TestAWSAppmeshVirtualRouterMigrateState(t *testing.T) {
 			},
 			Expected: map[string]string{
 				"name":   "svcb",
-				"spec.#": "0",
+				"spec.#": "1",
 			},
 		},
 	}

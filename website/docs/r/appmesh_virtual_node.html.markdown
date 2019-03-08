@@ -19,7 +19,7 @@ Provides an AWS App Mesh virtual node resource.
 ```hcl
 resource "aws_appmesh_virtual_node" "serviceb1" {
   name                = "serviceBv1"
-  mesh_name           = "simpleapp"
+  mesh_name           = "${aws_appmesh_mesh.simple.id}"
 
   spec {
     backend {
@@ -49,7 +49,7 @@ resource "aws_appmesh_virtual_node" "serviceb1" {
 ```hcl
 resource "aws_appmesh_virtual_node" "serviceb1" {
   name                = "serviceBv1"
-  mesh_name           = "simpleapp"
+  mesh_name           = "${aws_appmesh_mesh.simple.id}"
 
   spec {
     backend {
@@ -99,11 +99,11 @@ The `spec` object supports the following:
 
 The `backend` object supports the following:
 
-* `virtual_service` - (Required) The virtual service to which the virtual node is expected to send outbound traffic.
+* `virtual_service` - (Optional) Specifies a virtual service to use as a backend for a virtual node.
 
 The `virtual_service` object supports the following:
 
-* `virtual_service_name` - (Required) The name of the virtual service.
+* `virtual_service_name` - (Required) The name of the virtual service that is acting as a virtual node backend.
 
 The `listener` object supports the following:
 

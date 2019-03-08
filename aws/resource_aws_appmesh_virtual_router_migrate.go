@@ -25,15 +25,14 @@ func migrateAppmeshVirtualRouterStateV0toV1(is *terraform.InstanceState) (*terra
 	}
 
 	log.Printf("[DEBUG] Attributes before migration: %#v", is.Attributes)
-	// Remove spec{} attribute.
+	// Remove 'spec' attribute.
 	for k := range is.Attributes {
 		if strings.HasPrefix(k, "spec.") {
 			delete(is.Attributes, k)
 		}
 	}
-	// Add back 0 spec count so that we avoid diffs (and hence attempted resource update).
-	// This can be removed once the 'spec' attribute has been removed from the resource schema.
-	is.Attributes["spec.#"] = "0"
+	// Add back and empty 'spec'.
+	is.Attributes["spec.#"] = "1"
 
 	log.Printf("[DEBUG] Attributes after migration: %#v", is.Attributes)
 	return is, nil

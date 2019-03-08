@@ -94,7 +94,7 @@ func testAccAwsAppmeshVirtualRouter_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAppmeshVirtualRouterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppmeshVirtualRouterConfig(meshName, vrName),
+				Config: testAccAppmeshVirtualRouterConfig_basic(meshName, vrName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppmeshVirtualRouterExists(
 						resourceName, &vr),
@@ -102,12 +102,43 @@ func testAccAwsAppmeshVirtualRouter_basic(t *testing.T) {
 						resourceName, "name", vrName),
 					resource.TestCheckResourceAttr(
 						resourceName, "mesh_name", meshName),
+					resource.TestCheckResourceAttr(
+						resourceName, "spec.#", "1"),
+					resource.TestCheckResourceAttr(
+						resourceName, "spec.0.listener.#", "1"),
+					resource.TestCheckResourceAttr(
+						resourceName, "spec.0.listener.2279702354.port_mapping.#", "1"),
+					resource.TestCheckResourceAttr(
+						resourceName, "spec.0.listener.2279702354.port_mapping.0.port", "8080"),
+					resource.TestCheckResourceAttr(
+						resourceName, "spec.0.listener.2279702354.port_mapping.0.protocol", "http"),
 					resource.TestCheckResourceAttrSet(
 						resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(
 						resourceName, "last_updated_date"),
 					resource.TestMatchResourceAttr(
 						resourceName, "arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:appmesh:[^:]+:\\d{12}:mesh/%s/virtualRouter/%s", meshName, vrName))),
+				),
+			},
+			{
+				Config: testAccAppmeshVirtualRouterConfig_updated(meshName, vrName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppmeshVirtualRouterExists(
+						resourceName, &vr),
+					resource.TestCheckResourceAttr(
+						resourceName, "name", vrName),
+					resource.TestCheckResourceAttr(
+						resourceName, "mesh_name", meshName),
+					resource.TestCheckResourceAttr(
+						resourceName, "spec.#", "1"),
+					resource.TestCheckResourceAttr(
+						resourceName, "spec.0.listener.#", "1"),
+					resource.TestCheckResourceAttr(
+						resourceName, "spec.0.listener.563508454.port_mapping.#", "1"),
+					resource.TestCheckResourceAttr(
+						resourceName, "spec.0.listener.563508454.port_mapping.0.port", "8081"),
+					resource.TestCheckResourceAttr(
+						resourceName, "spec.0.listener.563508454.port_mapping.0.protocol", "http"),
 				),
 			},
 			{
@@ -170,7 +201,7 @@ func testAccCheckAppmeshVirtualRouterExists(name string, v *appmesh.VirtualRoute
 	}
 }
 
-func testAccAppmeshVirtualRouterConfig(meshName, vrName string) string {
+func testAccAppmeshVirtualRouterConfig_basic(meshName, vrName string) string {
 	return fmt.Sprintf(`
 resource "aws_appmesh_mesh" "foo" {
   name = "%s"
@@ -179,6 +210,37 @@ resource "aws_appmesh_mesh" "foo" {
 resource "aws_appmesh_virtual_router" "foo" {
   name      = "%s"
   mesh_name = "${aws_appmesh_mesh.foo.id}"
+
+  spec {
+    listener {
+      port_mapping {
+        port     = 8080
+        protocol = "http"
+      }
+    }
+  }
+}
+`, meshName, vrName)
+}
+
+func testAccAppmeshVirtualRouterConfig_updated(meshName, vrName string) string {
+	return fmt.Sprintf(`
+resource "aws_appmesh_mesh" "foo" {
+  name = "%s"
+}
+
+resource "aws_appmesh_virtual_router" "foo" {
+  name      = "%s"
+  mesh_name = "${aws_appmesh_mesh.foo.id}"
+
+  spec {
+    listener {
+      port_mapping {
+        port     = 8081
+        protocol = "http"
+      }
+    }
+  }
 }
 `, meshName, vrName)
 }

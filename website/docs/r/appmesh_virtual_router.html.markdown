@@ -17,7 +17,16 @@ Provides an AWS App Mesh virtual router resource.
 ```hcl
 resource "aws_appmesh_virtual_router" "serviceb" {
   name          = "serviceB"
-  mesh_name     = "simpleapp"
+  mesh_name     = "${aws_appmesh_mesh.simple.id}"
+
+  spec {
+    listener {
+      port_mapping {
+        port     = 8080
+        protocol = "http"
+      }
+    }
+  }
 }
 ```
 
@@ -27,6 +36,21 @@ The following arguments are supported:
 
 * `name` - (Required) The name to use for the virtual router.
 * `mesh_name` - (Required) The name of the service mesh in which to create the virtual router.
+* `spec` - (Required) The virtual router specification to apply.
+
+The `spec` object supports the following:
+
+* `listener` - (Required) The listeners that the virtual router is expected to receive inbound traffic from.
+Currently only one listener is supported per virtual router.
+
+The `listener` object supports the following:
+
+* `port_mapping` - (Required) The port mapping information for the listener.
+
+The `port_mapping` object supports the following:
+
+* `port` - (Required) The port used for the port mapping.
+* `protocol` - (Required) The protocol used for the port mapping. Valid values are `http` and `tcp`.
 
 ## Attributes Reference
 

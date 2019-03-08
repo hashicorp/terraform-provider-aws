@@ -284,6 +284,15 @@ resource "aws_appmesh_mesh" "foo" {
 resource "aws_appmesh_virtual_router" "foo" {
   name      = "%s"
   mesh_name = "${aws_appmesh_mesh.foo.id}"
+
+  spec {
+    listener {
+      port_mapping {
+        port     = 8080
+        protocol = "http"
+      }
+    }
+  }
 }
 
 resource "aws_appmesh_route" "foo" {
@@ -305,6 +314,15 @@ resource "aws_appmesh_mesh" "foo" {
 resource "aws_appmesh_virtual_router" "foo" {
   name      = "%s"
   mesh_name = "${aws_appmesh_mesh.foo.id}"
+
+  spec {
+    listener {
+      port_mapping {
+        port     = 8080
+        protocol = "http"
+      }
+    }
+  }
 }
 
 resource "aws_appmesh_virtual_node" "foo" {
@@ -353,6 +371,15 @@ resource "aws_appmesh_mesh" "foo" {
 resource "aws_appmesh_virtual_router" "foo" {
   name      = "%s"
   mesh_name = "${aws_appmesh_mesh.foo.id}"
+
+  spec {
+    listener {
+      port_mapping {
+        port     = 8080
+        protocol = "http"
+      }
+    }
+  }
 }
 
 resource "aws_appmesh_virtual_node" "foo" {
