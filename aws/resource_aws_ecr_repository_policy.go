@@ -25,8 +25,8 @@ func resourceAwsEcrRepositoryPolicy() *schema.Resource {
 				ForceNew: true,
 			},
 			"policy": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:             schema.TypeString,
+				Required:         true,
 				DiffSuppressFunc: suppressEquivalentJsonDiffs,
 			},
 			"registry_id": {
