@@ -68,6 +68,10 @@ func resourceAwsAppsyncResolverCreate(d *schema.ResourceData, meta interface{}) 
 		ResponseMappingTemplate: aws.String(d.Get("response_template").(string)),
 	}
 
+	mutexKey := fmt.Sprintf("appsync-schema-%s", d.Get("api_id").(string))
+	awsMutexKV.Lock(mutexKey)
+	defer awsMutexKV.Unlock(mutexKey)
+
 	_, err := retryOnAwsCode(appsync.ErrCodeConcurrentModificationException, func() (interface{}, error) {
 		return conn.CreateResolver(input)
 	})
@@ -124,6 +128,10 @@ func resourceAwsAppsyncResolverUpdate(d *schema.ResourceData, meta interface{}) 
 		ResponseMappingTemplate: aws.String(d.Get("response_template").(string)),
 	}
 
+	mutexKey := fmt.Sprintf("appsync-schema-%s", d.Get("api_id").(string))
+	awsMutexKV.Lock(mutexKey)
+	defer awsMutexKV.Unlock(mutexKey)
+
 	_, err := retryOnAwsCode(appsync.ErrCodeConcurrentModificationException, func() (interface{}, error) {
 		return conn.UpdateResolver(input)
 	})
@@ -149,6 +157,10 @@ func resourceAwsAppsyncResolverDelete(d *schema.ResourceData, meta interface{}) 
 		TypeName:  aws.String(typeName),
 		FieldName: aws.String(fieldName),
 	}
+
+	mutexKey := fmt.Sprintf("appsync-schema-%s", d.Get("api_id").(string))
+	awsMutexKV.Lock(mutexKey)
+	defer awsMutexKV.Unlock(mutexKey)
 
 	_, err = retryOnAwsCode(appsync.ErrCodeConcurrentModificationException, func() (interface{}, error) {
 		return conn.DeleteResolver(input)
