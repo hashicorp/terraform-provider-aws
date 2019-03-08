@@ -155,6 +155,11 @@ func resourceAwsCodePipeline() *schema.Resource {
 										Optional: true,
 										Computed: true,
 									},
+									"region": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+									},
 								},
 							},
 						},
@@ -319,6 +324,10 @@ func expandAwsCodePipelineActions(s []interface{}) []*codepipeline.ActionDeclara
 		if ro > 0 {
 			action.RunOrder = aws.Int64(int64(ro))
 		}
+		r := data["region"].(string)
+		if r != "" {
+			action.Region = aws.String(r)
+		}
 		actions = append(actions, &action)
 	}
 	return actions
@@ -358,6 +367,10 @@ func flattenAwsCodePipelineStageActions(actions []*codepipeline.ActionDeclaratio
 
 		if action.RunOrder != nil {
 			values["run_order"] = int(*action.RunOrder)
+		}
+
+		if action.Region != nil {
+			values["region"] = *action.Region
 		}
 
 		actionsList = append(actionsList, values)
