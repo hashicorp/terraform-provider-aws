@@ -82,12 +82,12 @@ the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/referenc
 The following arguments are supported:
 
 * `cluster_identifier` - (Optional, Forces new resources) The cluster identifier. If omitted, Terraform will assign a random, unique identifier.
-* `cluster_identifier_prefix` - (Optional, Forces new resource) Creates a unique cluster identifier beginning with the specified prefix. Conflicts with `cluster_identifer`.
+* `cluster_identifier_prefix` - (Optional, Forces new resource) Creates a unique cluster identifier beginning with the specified prefix. Conflicts with `cluster_identifier`.
 * `database_name` - (Optional) Name for an automatically created database on cluster creation. There are different naming restrictions per database engine: [RDS Naming Constraints][5]
 * `deletion_protection` - (Optional) If the DB instance should have deletion protection enabled. The database can't be deleted when this value is set to `true`. The default is `false`.
-* `master_password` - (Required unless a `snapshot_identifier` is provided) Password for the master DB user. Note that this may
+* `master_password` - (Required unless a `snapshot_identifier` or `global_cluster_identifier` is provided) Password for the master DB user. Note that this may
     show up in logs, and it will be stored in the state file. Please refer to the [RDS Naming Constraints][5]
-* `master_username` - (Required unless a `snapshot_identifier` is provided) Username for the master DB user. Please refer to the [RDS Naming Constraints][5]
+* `master_username` - (Required unless a `snapshot_identifier` or `global_cluster_identifier` is provided) Username for the master DB user. Please refer to the [RDS Naming Constraints][5]
 * `final_snapshot_identifier` - (Optional) The name of your final DB snapshot
     when this DB cluster is deleted. If omitted, no final snapshot will be
     made.
@@ -103,6 +103,7 @@ Default: A 30-minute window selected at random from an 8-hour block of time per 
 * `vpc_security_group_ids` - (Optional) List of VPC security groups to associate
   with the Cluster
 * `snapshot_identifier` - (Optional) Specifies whether or not to create this cluster from a snapshot. You can use either the name or ARN when specifying a DB cluster snapshot, or the ARN when specifying a DB snapshot.
+* `global_cluster_identifier` - (Optional) The global cluster identifier specified on [`aws_rds_global_cluster`](/docs/providers/aws/r/rds_global_cluster.html).
 * `storage_encrypted` - (Optional) Specifies whether the DB cluster is encrypted. The default is `false` for `provisioned` `engine_mode` and `true` for `serverless` `engine_mode`.
 * `replication_source_identifier` - (Optional) ARN of a source DB cluster or DB instance if this DB cluster is to be created as a Read Replica.
 * `apply_immediately` - (Optional) Specifies whether any cluster modifications
@@ -112,9 +113,9 @@ Default: A 30-minute window selected at random from an 8-hour block of time per 
 * `db_cluster_parameter_group_name` - (Optional) A cluster parameter group to associate with the cluster.
 * `kms_key_id` - (Optional) The ARN for the KMS encryption key. When specifying `kms_key_id`, `storage_encrypted` needs to be set to true.
 * `iam_roles` - (Optional) A List of ARNs for the IAM roles to associate to the RDS Cluster.
-* `iam_database_authentication_enabled` - (Optional) Specifies whether or mappings of AWS Identity and Access Management (IAM) accounts to database accounts is enabled. Please see [AWS Documentation][6] for availability and limitations.
+* `iam_database_authentication_enabled` - (Optional) Specifies whether or mappings of AWS Identity and Access Management (IAM) accounts to database accounts is enabled. Please see [AWS Documentation](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/UsingWithRDS.IAMDBAuth.html) for availability and limitations.
 * `engine` - (Optional) The name of the database engine to be used for this DB cluster. Defaults to `aurora`. Valid Values: `aurora`, `aurora-mysql`, `aurora-postgresql`
-* `engine_mode` - (Optional) The database engine mode. Valid values: `parallelquery`, `provisioned`, `serverless`. Defaults to: `provisioned`. See the [RDS User Guide](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/aurora-serverless.html) for limitations when using `serverless`.
+* `engine_mode` - (Optional) The database engine mode. Valid values: `global`, `parallelquery`, `provisioned`, `serverless`. Defaults to: `provisioned`. See the [RDS User Guide](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/aurora-serverless.html) for limitations when using `serverless`.
 * `engine_version` - (Optional) The database engine version. Updating this argument results in an outage.
 * `source_region` - (Optional) The source region for an encrypted replica DB cluster.
 * `enabled_cloudwatch_logs_exports` - (Optional) List of log types to export to cloudwatch. If omitted, no logs will be exported.
@@ -133,11 +134,11 @@ resource "aws_rds_cluster" "db" {
   engine = "aurora"
 
   s3_import {
-    source_engine = "mysql"
+    source_engine         = "mysql"
     source_engine_version = "5.6"
-    bucket_name = "mybucket"
-    bucket_prefix = "backups"
-    ingestion_role = "arn:aws:iam::1234567890:role/role-xtrabackup-rds-restore"
+    bucket_name           = "mybucket"
+    bucket_prefix         = "backups"
+    ingestion_role        = "arn:aws:iam::1234567890:role/role-xtrabackup-rds-restore"
   }
 }
 ```
@@ -209,7 +210,6 @@ load-balanced across replicas
 [3]: /docs/providers/aws/r/rds_cluster_instance.html
 [4]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_UpgradeDBInstance.Maintenance.html
 [5]: http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Limits.html#RDS_Limits.Constraints
-[6]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.IAMDBAuth.html#UsingWithRDS.IAMDBAuth.Availability
 
 ## Timeouts
 

@@ -100,7 +100,19 @@ func setVolumeTags(conn *ec2.EC2, d *schema.ResourceData) error {
 				return nil
 			})
 			if err != nil {
-				return err
+				// Retry without time bounds for EC2 throttling
+				if isResourceTimeoutError(err) {
+					log.Printf("[DEBUG] Removing volume tags: %#v from %s", remove, d.Id())
+					_, err := conn.DeleteTags(&ec2.DeleteTagsInput{
+						Resources: volumeIds,
+						Tags:      remove,
+					})
+					if err != nil {
+						return err
+					}
+				} else {
+					return err
+				}
 			}
 		}
 		if len(create) > 0 {
@@ -120,7 +132,19 @@ func setVolumeTags(conn *ec2.EC2, d *schema.ResourceData) error {
 				return nil
 			})
 			if err != nil {
-				return err
+				// Retry without time bounds for EC2 throttling
+				if isResourceTimeoutError(err) {
+					log.Printf("[DEBUG] Creating vol tags: %s for %s", create, d.Id())
+					_, err := conn.CreateTags(&ec2.CreateTagsInput{
+						Resources: volumeIds,
+						Tags:      create,
+					})
+					if err != nil {
+						return err
+					}
+				} else {
+					return err
+				}
 			}
 		}
 	}
@@ -155,7 +179,19 @@ func setTags(conn *ec2.EC2, d *schema.ResourceData) error {
 				return nil
 			})
 			if err != nil {
-				return err
+				// Retry without time bounds for EC2 throttling
+				if isResourceTimeoutError(err) {
+					log.Printf("[DEBUG] Removing tags: %#v from %s", remove, d.Id())
+					_, err := conn.DeleteTags(&ec2.DeleteTagsInput{
+						Resources: []*string{aws.String(d.Id())},
+						Tags:      remove,
+					})
+					if err != nil {
+						return err
+					}
+				} else {
+					return err
+				}
 			}
 		}
 		if len(create) > 0 {
@@ -175,7 +211,19 @@ func setTags(conn *ec2.EC2, d *schema.ResourceData) error {
 				return nil
 			})
 			if err != nil {
-				return err
+				// Retry without time bounds for EC2 throttling
+				if isResourceTimeoutError(err) {
+					log.Printf("[DEBUG] Creating tags: %s for %s", create, d.Id())
+					_, err := conn.CreateTags(&ec2.CreateTagsInput{
+						Resources: []*string{aws.String(d.Id())},
+						Tags:      create,
+					})
+					if err != nil {
+						return err
+					}
+				} else {
+					return err
+				}
 			}
 		}
 	}
@@ -190,15 +238,18 @@ func diffTags(oldTags, newTags []*ec2.Tag) ([]*ec2.Tag, []*ec2.Tag) {
 	// First, we're creating everything we have
 	create := make(map[string]interface{})
 	for _, t := range newTags {
-		create[*t.Key] = *t.Value
+		create[aws.StringValue(t.Key)] = aws.StringValue(t.Value)
 	}
 
 	// Build the list of what to remove
 	var remove []*ec2.Tag
 	for _, t := range oldTags {
-		old, ok := create[*t.Key]
-		if !ok || old != *t.Value {
+		old, ok := create[aws.StringValue(t.Key)]
+		if !ok || old != aws.StringValue(t.Value) {
 			remove = append(remove, t)
+		} else if ok {
+			// already present so remove from new
+			delete(create, aws.StringValue(t.Key))
 		}
 	}
 
@@ -287,7 +338,8 @@ func tagIgnored(t *ec2.Tag) bool {
 	filter := []string{"^aws:"}
 	for _, v := range filter {
 		log.Printf("[DEBUG] Matching %v with %v\n", v, *t.Key)
-		if r, _ := regexp.MatchString(v, *t.Key); r == true {
+		r, _ := regexp.MatchString(v, *t.Key)
+		if r {
 			log.Printf("[DEBUG] Found AWS specific tag %s (val: %s), ignoring.\n", *t.Key, *t.Value)
 			return true
 		}
@@ -300,7 +352,8 @@ func tagIgnoredELBv2(t *elbv2.Tag) bool {
 	filter := []string{"^aws:"}
 	for _, v := range filter {
 		log.Printf("[DEBUG] Matching %v with %v\n", v, *t.Key)
-		if r, _ := regexp.MatchString(v, *t.Key); r == true {
+		r, _ := regexp.MatchString(v, *t.Key)
+		if r {
 			log.Printf("[DEBUG] Found AWS specific tag %s (val: %s), ignoring.\n", *t.Key, *t.Value)
 			return true
 		}
@@ -422,4 +475,18 @@ func tagsMapToRaw(m map[string]string) map[string]interface{} {
 	}
 
 	return raw
+}
+
+// ec2TagSpecificationsFromMap returns the tag specifications for the given map of data m and resource type t.
+func ec2TagSpecificationsFromMap(m map[string]interface{}, t string) []*ec2.TagSpecification {
+	if len(m) == 0 {
+		return nil
+	}
+
+	return []*ec2.TagSpecification{
+		{
+			ResourceType: aws.String(t),
+			Tags:         tagsFromMap(m),
+		},
+	}
 }

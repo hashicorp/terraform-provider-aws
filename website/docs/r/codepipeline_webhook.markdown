@@ -20,6 +20,7 @@ resource "aws_codepipeline" "bar" {
   artifact_store {
     location = "${aws_s3_bucket.bar.bucket}"
     type     = "S3"
+
     encryption_key {
       id   = "${data.aws_kms_alias.s3kmskey.arn}"
       type = "KMS"
@@ -37,10 +38,10 @@ resource "aws_codepipeline" "bar" {
       version          = "1"
       output_artifacts = ["test"]
 
-      configuration {
-        Owner      = "my-organization"
-        Repo       = "test"
-        Branch     = "master"
+      configuration = {
+        Owner  = "my-organization"
+        Repo   = "test"
+        Branch = "master"
       }
     }
   }
@@ -56,7 +57,7 @@ resource "aws_codepipeline" "bar" {
       input_artifacts = ["test"]
       version         = "1"
 
-      configuration {
+      configuration = {
         ProjectName = "test"
       }
     }
@@ -72,19 +73,19 @@ locals {
 }
 
 resource "aws_codepipeline_webhook" "bar" {
-    name            = "test-webhook-github-bar" 
-    authentication  = "GITHUB_HMAC" 
-    target_action   = "Source"
-    target_pipeline = "${aws_codepipeline.bar.name}"
+  name            = "test-webhook-github-bar"
+  authentication  = "GITHUB_HMAC"
+  target_action   = "Source"
+  target_pipeline = "${aws_codepipeline.bar.name}"
 
-    authentication_configuration {
-      secret_token = "${local.webhook_secret}"
-    }
+  authentication_configuration {
+    secret_token = "${local.webhook_secret}"
+  }
 
-    filter {
-      json_path    = "$.ref"
-      match_equals = "refs/heads/{Branch}"
-    }
+  filter {
+    json_path    = "$.ref"
+    match_equals = "refs/heads/{Branch}"
+  }
 }
 
 # Wire the CodePipeline webhook into a GitHub repository.
@@ -96,9 +97,10 @@ resource "github_repository_webhook" "bar" {
   configuration {
     url          = "${aws_codepipeline_webhook.bar.url}"
     content_type = "form"
-    insecure_ssl = true 
+    insecure_ssl = true
     secret       = "${local.webhook_secret}"
   }
+
   events = ["push"]
 }
 ```

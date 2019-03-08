@@ -1394,7 +1394,7 @@ func (c *SecretsManager) PutResourcePolicyRequest(input *PutResourcePolicyInput)
 // For more information, see Using Resource-Based Policies for AWS Secrets Manager
 // (http://docs.aws.amazon.com/secretsmanager/latest/userguide/auth-and-access_resource-based-policies.html).
 // For the complete description of the AWS policy syntax and grammar, see IAM
-// JSON Policy Reference (http://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies.html)
+// JSON Policy Reference (https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies.html)
 // in the IAM User Guide.
 //
 // Minimum permissions
@@ -1815,7 +1815,7 @@ func (c *SecretsManager) RotateSecretRequest(input *RotateSecretInput) (req *req
 // clients all immediately begin to use the new version. For more information
 // about rotating secrets and how to configure a Lambda function to rotate the
 // secrets for your protected service, see Rotating Secrets in AWS Secrets Manager
-// (http://docs.aws.amazon.com/secretsmanager/latest/userguide/rotating-secrets.html)
+// (https://docs.aws.amazon.com/secretsmanager/latest/userguide/rotating-secrets.html)
 // in the AWS Secrets Manager User Guide.
 //
 // Secrets Manager schedules the next rotation when the previous one is complete.
@@ -1948,8 +1948,7 @@ func (c *SecretsManager) TagResourceRequest(input *TagResourceInput) (req *reque
 
 	output = &TagResourceOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(jsonrpc.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -2090,8 +2089,7 @@ func (c *SecretsManager) UntagResourceRequest(input *UntagResourceInput) (req *r
 
 	output = &UntagResourceOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(jsonrpc.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -2402,7 +2400,7 @@ func (c *SecretsManager) UpdateSecretVersionStageRequest(input *UpdateSecretVers
 // a time. If a staging label to be added is already attached to another version,
 // then it is moved--removed from the other version first and then attached
 // to this one. For more information about staging labels, see Staging Labels
-// (http://docs.aws.amazon.com/secretsmanager/latest/userguide/terms-concepts.html#term_staging-label)
+// (https://docs.aws.amazon.com/secretsmanager/latest/userguide/terms-concepts.html#term_staging-label)
 // in the AWS Secrets Manager User Guide.
 //
 // The staging labels that you specify in the VersionStage parameter are added
@@ -2668,7 +2666,7 @@ type CreateSecretInput struct {
 	// be accessed only by using the AWS CLI or one of the AWS SDKs.
 	//
 	// SecretBinary is automatically base64 encoded/decoded by the SDK.
-	SecretBinary []byte `type:"blob"`
+	SecretBinary []byte `type:"blob" sensitive:"true"`
 
 	// (Optional) Specifies text data that you want to encrypt and store in this
 	// new version of the secret.
@@ -2684,7 +2682,7 @@ type CreateSecretInput struct {
 	// For storing multiple values, we recommend that you use a JSON text string
 	// argument and specify key/value pairs. For information on how to format a
 	// JSON parameter for the various command line tool environments, see Using
-	// JSON for Parameters (http://docs.aws.amazon.com/cli/latest/userguide/cli-using-param.html#cli-using-param-json)
+	// JSON for Parameters (https://docs.aws.amazon.com/cli/latest/userguide/cli-using-param.html#cli-using-param-json)
 	// in the AWS CLI User Guide. For example:
 	//
 	// [{"username":"bob"},{"password":"abc123xyz456"}]
@@ -2692,7 +2690,7 @@ type CreateSecretInput struct {
 	// If your command-line tool or SDK requires quotation marks around the parameter,
 	// you should use single quotes to avoid confusion with the double quotes required
 	// in the JSON text.
-	SecretString *string `type:"string"`
+	SecretString *string `type:"string" sensitive:"true"`
 
 	// (Optional) Specifies a list of user-defined tags that are attached to the
 	// secret. Each tag is a "Key" and "Value" pair of strings. This operation only
@@ -2709,7 +2707,7 @@ type CreateSecretInput struct {
 	//
 	// This parameter requires a JSON text string argument. For information on how
 	// to format a JSON parameter for the various command line tool environments,
-	// see Using JSON for Parameters (http://docs.aws.amazon.com/cli/latest/userguide/cli-using-param.html#cli-using-param-json)
+	// see Using JSON for Parameters (https://docs.aws.amazon.com/cli/latest/userguide/cli-using-param.html#cli-using-param-json)
 	// in the AWS CLI User Guide. For example:
 	//
 	// [{"Key":"CostCenter","Value":"12345"},{"Key":"environment","Value":"production"}]
@@ -3661,7 +3659,7 @@ type GetSecretValueOutput struct {
 	// in the SecretString or SecretBinary fields.
 	//
 	// SecretBinary is automatically base64 encoded/decoded by the SDK.
-	SecretBinary []byte `type:"blob"`
+	SecretBinary []byte `type:"blob" sensitive:"true"`
 
 	// The decrypted part of the protected secret information that was originally
 	// provided as a string.
@@ -3675,7 +3673,7 @@ type GetSecretValueOutput struct {
 	// UpdateSecret, or PutSecretValue API operations instead of the Secrets Manager
 	// console, or by using the Other secret type in the console, then you must
 	// code your Lambda rotation function to parse and interpret those values.
-	SecretString *string `type:"string"`
+	SecretString *string `type:"string" sensitive:"true"`
 
 	// The unique identifier of this version of the secret.
 	VersionId *string `min:"32" type:"string"`
@@ -4151,7 +4149,7 @@ type PutSecretValueInput struct {
 	// console.
 	//
 	// SecretBinary is automatically base64 encoded/decoded by the SDK.
-	SecretBinary []byte `type:"blob"`
+	SecretBinary []byte `type:"blob" sensitive:"true"`
 
 	// Specifies the secret to which you want to add a new version. You can specify
 	// either the Amazon Resource Name (ARN) or the friendly name of the secret.
@@ -4184,7 +4182,7 @@ type PutSecretValueInput struct {
 	// For storing multiple values, we recommend that you use a JSON text string
 	// argument and specify key/value pairs. For information on how to format a
 	// JSON parameter for the various command line tool environments, see Using
-	// JSON for Parameters (http://docs.aws.amazon.com/cli/latest/userguide/cli-using-param.html#cli-using-param-json)
+	// JSON for Parameters (https://docs.aws.amazon.com/cli/latest/userguide/cli-using-param.html#cli-using-param-json)
 	// in the AWS CLI User Guide.
 	//
 	// For example:
@@ -4194,7 +4192,7 @@ type PutSecretValueInput struct {
 	// If your command-line tool or SDK requires quotation marks around the parameter,
 	// you should use single quotes to avoid confusion with the double quotes required
 	// in the JSON text.
-	SecretString *string `type:"string"`
+	SecretString *string `type:"string" sensitive:"true"`
 
 	// (Optional) Specifies a list of staging labels that are attached to this version
 	// of the secret. These staging labels are used to track the versions through
@@ -4614,7 +4612,7 @@ type SecretListEntry struct {
 	// The Amazon Resource Name (ARN) of the secret.
 	//
 	// For more information about ARNs in Secrets Manager, see Policy Resources
-	// (http://docs.aws.amazon.com/secretsmanager/latest/userguide/reference_iam-permissions.html#iam-resources)
+	// (https://docs.aws.amazon.com/secretsmanager/latest/userguide/reference_iam-permissions.html#iam-resources)
 	// in the AWS Secrets Manager User Guide.
 	ARN *string `min:"20" type:"string"`
 
@@ -4887,7 +4885,7 @@ type TagResourceInput struct {
 	//
 	// This parameter to the API requires a JSON text string argument. For information
 	// on how to format a JSON parameter for the various command line tool environments,
-	// see Using JSON for Parameters (http://docs.aws.amazon.com/cli/latest/userguide/cli-using-param.html#cli-using-param-json)
+	// see Using JSON for Parameters (https://docs.aws.amazon.com/cli/latest/userguide/cli-using-param.html#cli-using-param-json)
 	// in the AWS CLI User Guide. For the AWS CLI, you can also use the syntax:
 	// --Tags Key="Key1",Value="Value1",Key="Key2",Value="Value2"[,…]
 	//
@@ -4987,7 +4985,7 @@ type UntagResourceInput struct {
 	//
 	// This parameter to the API requires a JSON text string argument. For information
 	// on how to format a JSON parameter for the various command line tool environments,
-	// see Using JSON for Parameters (http://docs.aws.amazon.com/cli/latest/userguide/cli-using-param.html#cli-using-param-json)
+	// see Using JSON for Parameters (https://docs.aws.amazon.com/cli/latest/userguide/cli-using-param.html#cli-using-param-json)
 	// in the AWS CLI User Guide.
 	//
 	// TagKeys is a required field
@@ -5110,7 +5108,7 @@ type UpdateSecretInput struct {
 	// This parameter is not accessible using the Secrets Manager console.
 	//
 	// SecretBinary is automatically base64 encoded/decoded by the SDK.
-	SecretBinary []byte `type:"blob"`
+	SecretBinary []byte `type:"blob" sensitive:"true"`
 
 	// Specifies the secret that you want to modify or to which you want to add
 	// a new version. You can specify either the Amazon Resource Name (ARN) or the
@@ -5143,7 +5141,7 @@ type UpdateSecretInput struct {
 	// For storing multiple values, we recommend that you use a JSON text string
 	// argument and specify key/value pairs. For information on how to format a
 	// JSON parameter for the various command line tool environments, see Using
-	// JSON for Parameters (http://docs.aws.amazon.com/cli/latest/userguide/cli-using-param.html#cli-using-param-json)
+	// JSON for Parameters (https://docs.aws.amazon.com/cli/latest/userguide/cli-using-param.html#cli-using-param-json)
 	// in the AWS CLI User Guide. For example:
 	//
 	// [{"username":"bob"},{"password":"abc123xyz456"}]
@@ -5156,7 +5154,7 @@ type UpdateSecretInput struct {
 	// are escaped:
 	//
 	// "[{\"username\":\"bob\"},{\"password\":\"abc123xyz456\"}]"
-	SecretString *string `type:"string"`
+	SecretString *string `type:"string" sensitive:"true"`
 }
 
 // String returns the string representation

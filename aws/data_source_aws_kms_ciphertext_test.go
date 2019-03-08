@@ -32,10 +32,6 @@ func TestAccDataSourceAwsKmsCiphertext_validate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(
 						"data.aws_kms_ciphertext.foo", "ciphertext_blob"),
-					resource.TestCheckResourceAttrSet(
-						"data.aws_kms_secret.foo", "plaintext"),
-					resource.TestCheckResourceAttr(
-						"data.aws_kms_secret.foo", "plaintext", "Super secret data"),
 				),
 			},
 		},
@@ -52,10 +48,6 @@ func TestAccDataSourceAwsKmsCiphertext_validate_withContext(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(
 						"data.aws_kms_ciphertext.foo", "ciphertext_blob"),
-					resource.TestCheckResourceAttrSet(
-						"data.aws_kms_secret.foo", "plaintext"),
-					resource.TestCheckResourceAttr(
-						"data.aws_kms_secret.foo", "plaintext", "Super secret data"),
 				),
 			},
 		},
@@ -95,12 +87,6 @@ data "aws_kms_ciphertext" "foo" {
   plaintext = "Super secret data"
 }
 
-data "aws_kms_secret" "foo" {
-  secret {
-    name = "plaintext"
-    payload = "${data.aws_kms_ciphertext.foo.ciphertext_blob}"
-  }
-}
 `
 
 const testAccDataSourceAwsKmsCiphertextConfig_validate_withContext = `
@@ -118,19 +104,9 @@ data "aws_kms_ciphertext" "foo" {
 
   plaintext = "Super secret data"
 
-  context {
-	name = "value"
+  context = {
+		name = "value"
   }
 }
 
-data "aws_kms_secret" "foo" {
-  secret {
-    name = "plaintext"
-    payload = "${data.aws_kms_ciphertext.foo.ciphertext_blob}"
-
-    context {
-	  name = "value"
-    }
-  }
-}
 `

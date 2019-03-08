@@ -30,7 +30,7 @@ resource "aws_rds_cluster_instance" "cluster_instances" {
   count              = 2
   identifier         = "aurora-cluster-demo-${count.index}"
   cluster_identifier = "${aws_rds_cluster.default.id}"
-  instance_class     = "db.r3.large"
+  instance_class     = "db.r4.large"
 }
 
 resource "aws_rds_cluster" "default" {
@@ -50,7 +50,7 @@ the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/referenc
 The following arguments are supported:
 
 * `identifier` - (Optional, Forces new resource) The indentifier for the RDS instance, if omitted, Terraform will assign a random, unique identifier.
-* `identifier_prefix` - (Optional, Forces new resource) Creates a unique identifier beginning with the specified prefix. Conflicts with `identifer`.
+* `identifier_prefix` - (Optional, Forces new resource) Creates a unique identifier beginning with the specified prefix. Conflicts with `identifier`.
 * `cluster_identifier` - (Required) The identifier of the [`aws_rds_cluster`](/docs/providers/aws/r/rds_cluster.html) in which to launch this instance.
 * `engine` - (Optional) The name of the database engine to be used for the RDS instance. Defaults to `aurora`. Valid Values: `aurora`, `aurora-mysql`, `aurora-postgresql`.
 For information on the difference between the available Aurora MySQL engines
@@ -93,6 +93,7 @@ what IAM permissions are needed to allow Enhanced Monitoring for RDS Instances.
 * `auto_minor_version_upgrade` - (Optional) Indicates that minor engine upgrades will be applied automatically to the DB instance during the maintenance window. Default `true`.
 * `performance_insights_enabled` - (Optional) Specifies whether Performance Insights is enabled or not.
 * `performance_insights_kms_key_id` - (Optional) The ARN for the KMS key to encrypt Performance Insights data. When specifying `performance_insights_kms_key_id`, `performance_insights_enabled` needs to be set to true.
+* `copy_tags_to_snapshot` – (Optional, boolean) Indicates whether to copy all of the user-defined tags from the DB instance to snapshots of the DB instance. Default `false`.
 * `tags` - (Optional) A mapping of tags to assign to the instance.
 
 ## Attributes Reference

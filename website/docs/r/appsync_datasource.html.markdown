@@ -14,10 +14,11 @@ Provides an AppSync DataSource.
 
 ```hcl
 resource "aws_dynamodb_table" "example" {
-  name = "example"
+  name           = "example"
   read_capacity  = 1
   write_capacity = 1
-  hash_key = "UserId"
+  hash_key       = "UserId"
+
   attribute {
     name = "UserId"
     type = "S"
@@ -67,7 +68,7 @@ EOF
 
 resource "aws_appsync_graphql_api" "example" {
   authentication_type = "API_KEY"
-  name = "tf_appsync_example"
+  name                = "tf_appsync_example"
 }
 
 resource "aws_appsync_datasource" "example" {

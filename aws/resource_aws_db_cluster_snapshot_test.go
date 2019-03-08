@@ -117,7 +117,7 @@ data "aws_availability_zones" "available" {}
 resource "aws_vpc" "test" {
   cidr_block = "192.168.0.0/16"
 
-  tags {
+  tags = {
    Name = %q
   }
 }
@@ -129,14 +129,14 @@ resource "aws_subnet" "test" {
   cidr_block        = "192.168.${count.index}.0/24"
   vpc_id            = "${aws_vpc.test.id}"
 
-  tags {
+  tags = {
     Name = %q
   }
 }
 
 resource "aws_db_subnet_group" "test" {
   name       = %q
-  subnet_ids = ["${aws_subnet.test.*.id}"]
+  subnet_ids = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
 }
 
 resource "aws_rds_cluster" "test" {

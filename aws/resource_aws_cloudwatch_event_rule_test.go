@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -18,6 +17,9 @@ func init() {
 	resource.AddTestSweepers("aws_cloudwatch_event_rule", &resource.Sweeper{
 		Name: "aws_cloudwatch_event_rule",
 		F:    testSweepCloudWatchEventRules,
+		Dependencies: []string{
+			"aws_cloudwatch_event_target",
+		},
 	})
 }
 
@@ -47,10 +49,6 @@ func testSweepCloudWatchEventRules(region string) error {
 
 		for _, rule := range output.Rules {
 			name := aws.StringValue(rule.Name)
-
-			if !strings.HasPrefix(name, "tf") {
-				continue
-			}
 
 			log.Printf("[INFO] Deleting CloudWatch Event Rule %s", name)
 			_, err := conn.DeleteRule(&events.DeleteRuleInput{

@@ -26,6 +26,11 @@ const (
 	// Additional Config fields
 	regionKey = `region`
 
+	// endpoint discovery group
+	enableEndpointDiscoveryKey = `endpoint_discovery_enabled` // optional
+	// External Credential Process
+	credentialProcessKey = `credential_process`
+
 	// DefaultSharedConfigProfile is the default profile to be used when
 	// loading configuration from the config files if another profile name
 	// is not provided.
@@ -57,11 +62,20 @@ type sharedConfig struct {
 	AssumeRole       assumeRoleConfig
 	AssumeRoleSource *sharedConfig
 
+	// An external process to request credentials
+	CredentialProcess string
+
 	// Region is the region the SDK should use for looking up AWS service endpoints
 	// and signing requests.
 	//
 	//	region
 	Region string
+
+	// EnableEndpointDiscovery can be enabled in the shared config by setting
+	// endpoint_discovery_enabled to true
+	//
+	//	endpoint_discovery_enabled = true
+	EnableEndpointDiscovery *bool
 }
 
 type sharedConfigFile struct {
@@ -214,9 +228,20 @@ func (cfg *sharedConfig) setFromIniFile(profile string, file sharedConfigFile) e
 		}
 	}
 
+	// `credential_process`
+	if credProc := section.String(credentialProcessKey); len(credProc) > 0 {
+		cfg.CredentialProcess = credProc
+	}
+
 	// Region
 	if v := section.String(regionKey); len(v) > 0 {
 		cfg.Region = v
+	}
+
+	// Endpoint discovery
+	if section.Has(enableEndpointDiscoveryKey) {
+		v := section.Bool(enableEndpointDiscoveryKey)
+		cfg.EnableEndpointDiscovery = &v
 	}
 
 	return nil

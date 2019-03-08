@@ -51,7 +51,7 @@ resource "aws_default_network_acl" "default" {
     protocol   = -1
     rule_no    = 100
     action     = "allow"
-    cidr_block = "0.0.0.0/0"
+    cidr_block = # set a CIDR block here
     from_port  = 0
     to_port    = 0
   }
@@ -84,7 +84,7 @@ resource "aws_default_network_acl" "default" {
     protocol   = -1
     rule_no    = 100
     action     = "allow"
-    cidr_block = "0.0.0.0/0"
+    cidr_block = # set a CIDR block here
     from_port  = 0
     to_port    = 0
   }
@@ -164,9 +164,9 @@ As an alternative to the above, you can also specify the following lifecycle con
 
 ```hcl
 lifecycle {
-    ignore_changes = ["subnet_ids"]
+  ignore_changes = ["subnet_ids"]
 }
- ```
+```
 
 ### Removing `aws_default_network_acl` from your configuration
 
@@ -186,5 +186,6 @@ In addition to all arguments above, the following attributes are exported:
 * `ingress` - Set of ingress rules
 * `egress` - Set of egress rules
 * `subnet_ids` – IDs of associated Subnets
+* `owner_id` - The ID of the AWS account that owns the Default Network ACL
 
 [aws-network-acls]: http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_ACLs.html

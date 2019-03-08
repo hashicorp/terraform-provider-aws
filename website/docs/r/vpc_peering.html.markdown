@@ -59,7 +59,7 @@ resource "aws_vpc_peering_connection" "foo" {
   vpc_id        = "${aws_vpc.foo.id}"
   auto_accept   = true
 
-  tags {
+  tags = {
     Name = "VPC Peering between foo and bar"
   }
 }
@@ -164,7 +164,7 @@ or accept the connection manually using the AWS Management Console, AWS CLI, thr
 
 VPC Peering resources can be imported using the `vpc peering id`, e.g.
 
-```
+```sh
 $ terraform import aws_vpc_peering_connection.test_connection pcx-111aaa111
 ```
 

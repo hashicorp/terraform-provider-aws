@@ -140,6 +140,13 @@ const (
 	// the content of the document and try again.
 	ErrCodeDuplicateDocumentContent = "DuplicateDocumentContent"
 
+	// ErrCodeDuplicateDocumentVersionName for service response error code
+	// "DuplicateDocumentVersionName".
+	//
+	// The version name has already been used in this document. Specify a different
+	// version name, and then try again.
+	ErrCodeDuplicateDocumentVersionName = "DuplicateDocumentVersionName"
+
 	// ErrCodeDuplicateInstanceId for service response error code
 	// "DuplicateInstanceId".
 	//
@@ -590,6 +597,13 @@ const (
 	// For information about resource limits in Systems Manager, see AWS Systems
 	// Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 	ErrCodeResourceLimitExceededException = "ResourceLimitExceededException"
+
+	// ErrCodeServiceSettingNotFound for service response error code
+	// "ServiceSettingNotFound".
+	//
+	// The specified service setting was not found. Either the service name or the
+	// setting has not been provisioned by the AWS service team.
+	ErrCodeServiceSettingNotFound = "ServiceSettingNotFound"
 
 	// ErrCodeStatusUnchanged for service response error code
 	// "StatusUnchanged".

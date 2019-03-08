@@ -24,16 +24,19 @@ a conflict of rule settings and will overwrite rules.
 Basic usage
 
 ```hcl
-resource "aws_security_group" "allow_all" {
-  name        = "allow_all"
-  description = "Allow all inbound traffic"
+resource "aws_security_group" "allow_tls" {
+  name        = "allow_tls"
+  description = "Allow TLS inbound traffic"
   vpc_id      = "${aws_vpc.main.id}"
 
   ingress {
-    from_port   = 0
-    to_port     = 0
+    # TLS (change to whatever ports you need)
+    from_port   = 443
+    to_port     = 443
     protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    # Please restrict your ingress to only necessary IPs and ports.
+    # Opening to 0.0.0.0/0 can lead to security vulnerabilities.
+    cidr_blocks = # add a CIDR block here
   }
 
   egress {
@@ -49,18 +52,21 @@ resource "aws_security_group" "allow_all" {
 Basic usage with tags:
 
 ```hcl
-resource "aws_security_group" "allow_all" {
-  name        = "allow_all"
-  description = "Allow all inbound traffic"
+resource "aws_security_group" "allow_tls" {
+  name        = "allow_tls"
+  description = "Allow TLS inbound traffic"
 
   ingress {
-    from_port   = 0
-    to_port     = 65535
+    # TLS (change to whatever ports you need)
+    from_port   = 443
+    to_port     = 443
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    # Please restrict your ingress to only necessary IPs and ports.
+    # Opening to 0.0.0.0/0 can lead to security vulnerabilities.
+    cidr_blocks = # add your IP address here
   }
 
-  tags {
+  tags = {
     Name = "allow_all"
   }
 }
@@ -130,12 +136,12 @@ surprises in terms of controlling your egress rules. If you desire this rule to
 be in place, you can use this `egress` block:
 
 ```hcl
-    egress {
-      from_port = 0
-      to_port = 0
-      protocol = "-1"
-      cidr_blocks = ["0.0.0.0/0"]
-    }
+egress {
+  from_port   = 0
+  to_port     = 0
+  protocol    = "-1"
+  cidr_blocks = ["0.0.0.0/0"]
+}
 ```
 
 ## Usage with prefix list IDs
@@ -145,17 +151,18 @@ are associated with a prefix list name, or service name, that is linked to a spe
 Prefix list IDs are exported on VPC Endpoints, so you can use this format:
 
 ```hcl
-    # ...
-      egress {
-        from_port = 0
-        to_port = 0
-        protocol = "-1"
-        prefix_list_ids = ["${aws_vpc_endpoint.my_endpoint.prefix_list_id}"]
-      }
-    # ...
-    resource "aws_vpc_endpoint" "my_endpoint" {
-      # ...
-    }
+# ...
+egress {
+  from_port       = 0
+  to_port         = 0
+  protocol        = "-1"
+  prefix_list_ids = ["${aws_vpc_endpoint.my_endpoint.prefix_list_id}"]
+}
+
+# ...
+resource "aws_vpc_endpoint" "my_endpoint" {
+  # ...
+}
 ```
 
 ## Attributes Reference

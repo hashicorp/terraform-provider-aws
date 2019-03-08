@@ -27,17 +27,16 @@ fmt:
 fmtcheck:
 	@sh -c "'$(CURDIR)/scripts/gofmtcheck.sh'"
 
+websitefmtcheck:
+	@sh -c "'$(CURDIR)/scripts/websitefmtcheck.sh'"
+
 lint:
 	@echo "==> Checking source code against linters..."
-	@gometalinter ./$(PKG_NAME)
+	@golangci-lint run ./$(PKG_NAME)
 
 tools:
-	go get -u github.com/kardianos/govendor
-	go get -u github.com/alecthomas/gometalinter
-	gometalinter --install
-
-vendor-status:
-	@govendor status
+	GO111MODULE=off go get -u github.com/client9/misspell/cmd/misspell
+	GO111MODULE=off go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
 
 test-compile:
 	@if [ "$(TEST)" = "./..." ]; then \
@@ -65,5 +64,5 @@ ifeq (,$(wildcard $(GOPATH)/src/$(WEBSITE_REPO)))
 endif
 	@$(MAKE) -C $(GOPATH)/src/$(WEBSITE_REPO) website-provider-test PROVIDER_PATH=$(shell pwd) PROVIDER_NAME=$(PKG_NAME)
 
-.PHONY: build sweep test testacc fmt fmtcheck lint tools vendor-status test-compile website website-lint website-test
+.PHONY: build sweep test testacc fmt fmtcheck lint tools test-compile website website-lint website-test
 

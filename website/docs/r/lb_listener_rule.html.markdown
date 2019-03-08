@@ -62,9 +62,10 @@ resource "aws_lb_listener_rule" "redirect_http_to_https" {
 
   action {
     type = "redirect"
+
     redirect {
-      port = "443"
-      protocol = "HTTPS"
+      port        = "443"
+      protocol    = "HTTPS"
       status_code = "HTTP_301"
     }
   }
@@ -82,10 +83,11 @@ resource "aws_lb_listener_rule" "health_check" {
 
   action {
     type = "fixed-response"
+
     fixed_response {
       content_type = "text/plain"
       message_body = "HEALTHY"
-      status_code = "200"
+      status_code  = "200"
     }
   }
 
@@ -113,7 +115,8 @@ resource "aws_lb_listener_rule" "admin" {
   listener_arn = "${aws_lb_listener.front_end.arn}"
 
   action {
-    type  = "authenticate-cognito"
+    type = "authenticate-cognito"
+
     authenticate_cognito {
       user_pool_arn       = "${aws_cognito_user_pool.pool.arn}"
       user_pool_client_id = "${aws_cognito_user_pool_client.client.id}"
@@ -133,7 +136,8 @@ resource "aws_lb_listener" "admin" {
   listener_arn = "${aws_lb_listener.front_end.arn}"
 
   action {
-    type  = "authenticate-oidc"
+    type = "authenticate-oidc"
+
     authenticate_oidc {
       authorization_endpoint = "https://example.com/authorization_endpoint"
       client_id              = "client_id"
@@ -192,7 +196,7 @@ Authenticate Cognito Blocks (for `authenticate_cognito`) supports the following:
 * `on_unauthenticated_request` - (Optional) The behavior if the user is not authenticated. Valid values: `deny`, `allow` and `authenticate`
 * `scope` - (Optional) The set of user claims to be requested from the IdP.
 * `session_cookie_name` - (Optional) The name of the cookie used to maintain session information.
-* `session_time_out` - (Optional) The maximum duration of the authentication session, in seconds.
+* `session_timeout` - (Optional) The maximum duration of the authentication session, in seconds.
 * `user_pool_arn` - (Required) The ARN of the Cognito user pool.
 * `user_pool_client_id` - (Required) The ID of the Cognito user pool client.
 * `user_pool_domain` - (Required) The domain prefix or fully-qualified domain name of the Cognito user pool.
@@ -207,7 +211,7 @@ Authenticate OIDC Blocks (for `authenticate_oidc`) supports the following:
 * `on_unauthenticated_request` - (Optional) The behavior if the user is not authenticated. Valid values: `deny`, `allow` and `authenticate`
 * `scope` - (Optional) The set of user claims to be requested from the IdP.
 * `session_cookie_name` - (Optional) The name of the cookie used to maintain session information.
-* `session_time_out` - (Optional) The maximum duration of the authentication session, in seconds.
+* `session_timeout` - (Optional) The maximum duration of the authentication session, in seconds.
 * `token_endpoint` - (Required) The token endpoint of the IdP.
 * `user_info_endpoint` - (Required) The user info endpoint of the IdP.
 

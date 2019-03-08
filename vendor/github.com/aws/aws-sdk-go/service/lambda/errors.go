@@ -7,7 +7,7 @@ const (
 	// ErrCodeCodeStorageExceededException for service response error code
 	// "CodeStorageExceededException".
 	//
-	// You have exceeded your maximum total code size per account. Limits (http://docs.aws.amazon.com/lambda/latest/dg/limits.html)
+	// You have exceeded your maximum total code size per account. Limits (https://docs.aws.amazon.com/lambda/latest/dg/limits.html)
 	ErrCodeCodeStorageExceededException = "CodeStorageExceededException"
 
 	// ErrCodeEC2AccessDeniedException for service response error code
@@ -123,7 +123,7 @@ const (
 	// "RequestTooLargeException".
 	//
 	// The request payload exceeded the Invoke request body JSON input limit. For
-	// more information, see Limits (http://docs.aws.amazon.com/lambda/latest/dg/limits.html).
+	// more information, see Limits (https://docs.aws.amazon.com/lambda/latest/dg/limits.html).
 	ErrCodeRequestTooLargeException = "RequestTooLargeException"
 
 	// ErrCodeResourceConflictException for service response error code
@@ -136,8 +136,8 @@ const (
 	// "ResourceInUseException".
 	//
 	// The operation conflicts with the resource's availability. For example, you
-	// attempted to update an EventSoure Mapping in CREATING, or tried to delete
-	// a EventSoure mapping currently in the UPDATING state.
+	// attempted to update an EventSource Mapping in CREATING, or tried to delete
+	// a EventSource mapping currently in the UPDATING state.
 	ErrCodeResourceInUseException = "ResourceInUseException"
 
 	// ErrCodeResourceNotFoundException for service response error code
@@ -163,7 +163,7 @@ const (
 	// ErrCodeTooManyRequestsException for service response error code
 	// "TooManyRequestsException".
 	//
-	// Request throughput limit exceeded
+	// Request throughput limit exceeded.
 	ErrCodeTooManyRequestsException = "TooManyRequestsException"
 
 	// ErrCodeUnsupportedMediaTypeException for service response error code

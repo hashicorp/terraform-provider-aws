@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strings"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -29,20 +29,8 @@ func testSweepDynamoDbTables(region string) error {
 	}
 	conn := client.(*AWSClient).dynamodbconn
 
-	prefixes := []string{
-		"TerraformTest",
-		"tf-acc-test-",
-		"tf-autoscaled-table-",
-	}
-
 	err = conn.ListTablesPages(&dynamodb.ListTablesInput{}, func(out *dynamodb.ListTablesOutput, lastPage bool) bool {
 		for _, tableName := range out.TableNames {
-			for _, prefix := range prefixes {
-				if !strings.HasPrefix(*tableName, prefix) {
-					log.Printf("[INFO] Skipping DynamoDB Table: %s", *tableName)
-					continue
-				}
-			}
 			log.Printf("[INFO] Deleting DynamoDB Table: %s", *tableName)
 
 			err := deleteAwsDynamoDbTable(*tableName, conn)
@@ -315,7 +303,7 @@ func TestDiffDynamoDbGSI(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		ops, err := diffDynamoDbGSI(tc.Old, tc.New)
+		ops, err := diffDynamoDbGSI(tc.Old, tc.New, dynamodb.BillingModeProvisioned)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -374,28 +362,6 @@ func TestAccAWSDynamoDbTable_importTags(t *testing.T) {
 	})
 }
 
-func TestAccAWSDynamoDbTable_importTimeToLive(t *testing.T) {
-	resourceName := "aws_dynamodb_table.basic-dynamodb-table"
-	rName := acctest.RandomWithPrefix("TerraformTestTable-")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSDynamoDbConfigAddTimeToLive(rName),
-			},
-
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
 func TestAccAWSDynamoDbTable_basic(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 
@@ -421,6 +387,57 @@ func TestAccAWSDynamoDbTable_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAWSDynamoDbTable_disappears(t *testing.T) {
+	var table1 dynamodb.DescribeTableOutput
+	resourceName := "aws_dynamodb_table.basic-dynamodb-table"
+	rName := acctest.RandomWithPrefix("TerraformTestTable-")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDynamoDbConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &table1),
+					testAccCheckAWSDynamoDbTableDisappears(&table1),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSDynamoDbTable_disappears_PayPerRequestWithGSI(t *testing.T) {
+	var table1, table2 dynamodb.DescribeTableOutput
+	resourceName := "aws_dynamodb_table.basic-dynamodb-table"
+	rName := acctest.RandomWithPrefix("TerraformTestTable-")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDynamoDbBilling_PayPerRequestWithGSI(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &table1),
+					testAccCheckAWSDynamoDbTableDisappears(&table1),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				Config: testAccAWSDynamoDbBilling_PayPerRequestWithGSI(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &table2),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSDynamoDbTable_extended(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 
@@ -471,6 +488,102 @@ func TestAccAWSDynamoDbTable_enablePitr(t *testing.T) {
 					testAccCheckDynamoDbTableHasPointInTimeRecoveryEnabled("aws_dynamodb_table.basic-dynamodb-table"),
 					resource.TestCheckResourceAttr("aws_dynamodb_table.basic-dynamodb-table", "point_in_time_recovery.#", "1"),
 					resource.TestCheckResourceAttr("aws_dynamodb_table.basic-dynamodb-table", "point_in_time_recovery.0.enabled", "true"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDynamoDbTable_BillingMode_PayPerRequestToProvisioned(t *testing.T) {
+	rName := acctest.RandomWithPrefix("TerraformTestTable-")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDynamoDbBilling_PayPerRequest(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDynamoDbTableHasBilling_PayPerRequest("aws_dynamodb_table.basic-dynamodb-table"),
+				),
+			},
+			{
+				Config: testAccAWSDynamoDbBilling_Provisioned(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDynamoDbTableHasBilling_Provisioned("aws_dynamodb_table.basic-dynamodb-table"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDynamoDbTable_BillingMode_ProvisionedToPayPerRequest(t *testing.T) {
+	rName := acctest.RandomWithPrefix("TerraformTestTable-")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDynamoDbBilling_Provisioned(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDynamoDbTableHasBilling_Provisioned("aws_dynamodb_table.basic-dynamodb-table"),
+				),
+			},
+			{
+				Config: testAccAWSDynamoDbBilling_PayPerRequest(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDynamoDbTableHasBilling_PayPerRequest("aws_dynamodb_table.basic-dynamodb-table"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDynamoDbTable_BillingMode_GSI_PayPerRequestToProvisioned(t *testing.T) {
+	rName := acctest.RandomWithPrefix("TerraformTestTable-")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDynamoDbBilling_PayPerRequestWithGSI(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDynamoDbTableHasBilling_PayPerRequest("aws_dynamodb_table.basic-dynamodb-table"),
+				),
+			},
+			{
+				Config: testAccAWSDynamoDbBilling_ProvisionedWithGSI(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDynamoDbTableHasBilling_Provisioned("aws_dynamodb_table.basic-dynamodb-table"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDynamoDbTable_BillingMode_GSI_ProvisionedToPayPerRequest(t *testing.T) {
+	rName := acctest.RandomWithPrefix("TerraformTestTable-")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDynamoDbBilling_ProvisionedWithGSI(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDynamoDbTableHasBilling_Provisioned("aws_dynamodb_table.basic-dynamodb-table"),
+				),
+			},
+			{
+				Config: testAccAWSDynamoDbBilling_PayPerRequestWithGSI(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDynamoDbTableHasBilling_PayPerRequest("aws_dynamodb_table.basic-dynamodb-table"),
 				),
 			},
 		},
@@ -729,10 +842,12 @@ func TestAccAWSDynamoDbTable_gsiUpdateNonKeyAttributes(t *testing.T) {
 	})
 }
 
-func TestAccAWSDynamoDbTable_ttl(t *testing.T) {
-	var conf dynamodb.DescribeTableOutput
-
+// TTL tests must be split since it can only be updated once per hour
+// ValidationException: Time to live has been modified multiple times within a fixed interval
+func TestAccAWSDynamoDbTable_Ttl_Enabled(t *testing.T) {
+	var table dynamodb.DescribeTableOutput
 	rName := acctest.RandomWithPrefix("TerraformTestTable-")
+	resourceName := "aws_dynamodb_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -740,15 +855,53 @@ func TestAccAWSDynamoDbTable_ttl(t *testing.T) {
 		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDynamoDbConfigInitialState(rName),
+				Config: testAccAWSDynamoDbConfigTimeToLive(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInitialAWSDynamoDbTableExists("aws_dynamodb_table.basic-dynamodb-table", &conf),
+					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &table),
+					resource.TestCheckResourceAttr(resourceName, "ttl.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ttl.0.enabled", "true"),
 				),
 			},
 			{
-				Config: testAccAWSDynamoDbConfigAddTimeToLive(rName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+// TTL tests must be split since it can only be updated once per hour
+// ValidationException: Time to live has been modified multiple times within a fixed interval
+func TestAccAWSDynamoDbTable_Ttl_Disabled(t *testing.T) {
+	var table dynamodb.DescribeTableOutput
+	rName := acctest.RandomWithPrefix("TerraformTestTable-")
+	resourceName := "aws_dynamodb_table.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDynamoDbConfigTimeToLive(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDynamoDbTableTimeToLiveWasUpdated("aws_dynamodb_table.basic-dynamodb-table"),
+					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &table),
+					resource.TestCheckResourceAttr(resourceName, "ttl.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ttl.0.enabled", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSDynamoDbConfigTimeToLive(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &table),
+					resource.TestCheckResourceAttr(resourceName, "ttl.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ttl.0.enabled", "true"),
 				),
 			},
 		},
@@ -811,46 +964,6 @@ func TestAccAWSDynamoDbTable_attributeUpdateValidation(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccCheckDynamoDbTableTimeToLiveWasUpdated(n string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		log.Printf("[DEBUG] Trying to create initial table state!")
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No DynamoDB table name specified!")
-		}
-
-		conn := testAccProvider.Meta().(*AWSClient).dynamodbconn
-
-		params := &dynamodb.DescribeTimeToLiveInput{
-			TableName: aws.String(rs.Primary.ID),
-		}
-
-		resp, err := conn.DescribeTimeToLive(params)
-
-		if err != nil {
-			return fmt.Errorf("Problem describing time to live for table '%s': %s", rs.Primary.ID, err)
-		}
-
-		ttlDescription := resp.TimeToLiveDescription
-
-		log.Printf("[DEBUG] Checking on table %s", rs.Primary.ID)
-
-		if *ttlDescription.TimeToLiveStatus != dynamodb.TimeToLiveStatusEnabled {
-			return fmt.Errorf("TimeToLiveStatus %s, not ENABLED!", *ttlDescription.TimeToLiveStatus)
-		}
-
-		if *ttlDescription.AttributeName != "TestTTL" {
-			return fmt.Errorf("AttributeName was %s, not TestTTL!", *ttlDescription.AttributeName)
-		}
-
-		return nil
-	}
 }
 
 func TestAccAWSDynamoDbTable_encryption(t *testing.T) {
@@ -989,6 +1102,10 @@ func testAccCheckInitialAWSDynamoDbTableConf(n string) resource.TestCheckFunc {
 
 		log.Printf("[DEBUG] Checking on table %s", rs.Primary.ID)
 
+		if table.BillingModeSummary != nil && aws.StringValue(table.BillingModeSummary.BillingMode) != dynamodb.BillingModeProvisioned {
+			return fmt.Errorf("Billing Mode was %s, not %s!", aws.StringValue(table.BillingModeSummary.BillingMode), dynamodb.BillingModeProvisioned)
+		}
+
 		if *table.ProvisionedThroughput.WriteCapacityUnits != 2 {
 			return fmt.Errorf("Provisioned write capacity was %d, not 2!", table.ProvisionedThroughput.WriteCapacityUnits)
 		}
@@ -1066,6 +1183,71 @@ func testAccCheckDynamoDbTableHasPointInTimeRecoveryEnabled(n string) resource.T
 	}
 }
 
+func testAccCheckDynamoDbTableHasBilling_PayPerRequest(n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No DynamoDB table name specified!")
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).dynamodbconn
+		params := &dynamodb.DescribeTableInput{
+			TableName: aws.String(rs.Primary.ID),
+		}
+		resp, err := conn.DescribeTable(params)
+
+		if err != nil {
+			return err
+		}
+		table := resp.Table
+
+		if table.BillingModeSummary == nil {
+			return fmt.Errorf("Billing Mode summary was empty, expected summary to exist and contain billing mode %s", dynamodb.BillingModePayPerRequest)
+		} else if aws.StringValue(table.BillingModeSummary.BillingMode) != dynamodb.BillingModePayPerRequest {
+			return fmt.Errorf("Billing Mode was %s, not %s!", aws.StringValue(table.BillingModeSummary.BillingMode), dynamodb.BillingModePayPerRequest)
+
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckDynamoDbTableHasBilling_Provisioned(n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No DynamoDB table name specified!")
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).dynamodbconn
+		params := &dynamodb.DescribeTableInput{
+			TableName: aws.String(rs.Primary.ID),
+		}
+		resp, err := conn.DescribeTable(params)
+
+		if err != nil {
+			return err
+		}
+		table := resp.Table
+
+		// DynamoDB can omit BillingModeSummary for tables created as PROVISIONED
+		if table.BillingModeSummary != nil && aws.StringValue(table.BillingModeSummary.BillingMode) != dynamodb.BillingModeProvisioned {
+			return fmt.Errorf("Billing Mode was %s, not %s!", aws.StringValue(table.BillingModeSummary.BillingMode), dynamodb.BillingModeProvisioned)
+
+		}
+
+		return nil
+	}
+}
+
 func testAccCheckDynamoDbTableWasUpdated(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -1131,6 +1313,29 @@ func testAccCheckDynamoDbTableWasUpdated(n string) resource.TestCheckFunc {
 	}
 }
 
+func testAccCheckAWSDynamoDbTableDisappears(table *dynamodb.DescribeTableOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).dynamodbconn
+		tableName := aws.StringValue(table.Table.TableName)
+
+		input := &dynamodb.DeleteTableInput{
+			TableName: table.Table.TableName,
+		}
+
+		_, err := conn.DeleteTable(input)
+
+		if err != nil {
+			return fmt.Errorf("error deleting DynamoDB Table (%s): %s", tableName, err)
+		}
+
+		if err := waitForDynamodbTableDeletion(conn, tableName, 10*time.Minute); err != nil {
+			return fmt.Errorf("error waiting for DynamoDB Table (%s) deletion: %s", tableName, err)
+		}
+
+		return nil
+	}
+}
+
 func dynamoDbGetGSIIndex(gsiList *[]*dynamodb.GlobalSecondaryIndexDescription, target string) int {
 	for idx, gsiObject := range *gsiList {
 		if *gsiObject.IndexName == target {
@@ -1181,6 +1386,95 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
   }
   point_in_time_recovery {
     enabled = true
+  }
+}
+`, rName)
+}
+
+func testAccAWSDynamoDbBilling_PayPerRequest(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "basic-dynamodb-table" {
+  name = "%s"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key = "TestTableHashKey"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+}
+`, rName)
+}
+
+func testAccAWSDynamoDbBilling_Provisioned(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "basic-dynamodb-table" {
+  name = "%s"
+  billing_mode = "PROVISIONED"
+  hash_key = "TestTableHashKey"
+
+  read_capacity = 5
+  write_capacity = 5
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+}
+`, rName)
+}
+
+func testAccAWSDynamoDbBilling_PayPerRequestWithGSI(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "basic-dynamodb-table" {
+  name = "%s"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key = "TestTableHashKey"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  attribute {
+    name = "TestTableGSIKey"
+    type = "S"
+  }
+
+  global_secondary_index {
+    name            = "TestTableGSI"
+    hash_key        = "TestTableGSIKey"
+    projection_type = "KEYS_ONLY"
+  }
+}
+`, rName)
+}
+
+func testAccAWSDynamoDbBilling_ProvisionedWithGSI(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "basic-dynamodb-table" {
+  billing_mode   = "PROVISIONED"
+  hash_key       = "TestTableHashKey"
+  name           = %q
+  read_capacity  = 1
+  write_capacity = 1
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  attribute {
+    name = "TestTableGSIKey"
+    type = "S"
+  }
+
+  global_secondary_index {
+    hash_key        = "TestTableGSIKey"
+    name            = "TestTableGSI"
+    projection_type = "KEYS_ONLY"
+    read_capacity   = 1
+    write_capacity  = 1
   }
 }
 `, rName)
@@ -1363,7 +1657,7 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
     projection_type = "KEYS_ONLY"
   }
 
-  tags {
+  tags = {
     Name = "terraform-test-table-%d"
     AccTest = "yes"
     Testing = "absolutely"
@@ -1624,56 +1918,25 @@ resource "aws_dynamodb_table" "test" {
 `, name)
 }
 
-func testAccAWSDynamoDbConfigAddTimeToLive(rName string) string {
+func testAccAWSDynamoDbConfigTimeToLive(rName string, ttlEnabled bool) string {
 	return fmt.Sprintf(`
-resource "aws_dynamodb_table" "basic-dynamodb-table" {
-  name = "%s"
-  read_capacity = 1
-  write_capacity = 2
-  hash_key = "TestTableHashKey"
-  range_key = "TestTableRangeKey"
+resource "aws_dynamodb_table" "test" {
+  hash_key       = "TestTableHashKey"
+  name           = %[1]q
+  read_capacity  = 1
+  write_capacity = 1
 
   attribute {
     name = "TestTableHashKey"
     type = "S"
   }
 
-  attribute {
-    name = "TestTableRangeKey"
-    type = "S"
-  }
-
-  attribute {
-    name = "TestLSIRangeKey"
-    type = "N"
-  }
-
-  attribute {
-    name = "TestGSIRangeKey"
-    type = "S"
-  }
-
-  local_secondary_index {
-    name = "TestTableLSI"
-    range_key = "TestLSIRangeKey"
-    projection_type = "ALL"
-  }
-
   ttl {
-    attribute_name = "TestTTL"
-    enabled = true
-  }
-
-  global_secondary_index {
-    name = "InitialTestTableGSI"
-    hash_key = "TestTableHashKey"
-    range_key = "TestGSIRangeKey"
-    write_capacity = 1
-    read_capacity = 1
-    projection_type = "KEYS_ONLY"
+    attribute_name = "${%[2]t ? "TestTTL" : ""}"
+    enabled        = %[2]t
   }
 }
-`, rName)
+`, rName, ttlEnabled)
 }
 
 func testAccAWSDynamoDbConfigOneAttribute(rName, hashKey, attrName, attrType string) string {

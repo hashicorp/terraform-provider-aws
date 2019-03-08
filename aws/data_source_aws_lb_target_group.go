@@ -49,6 +49,11 @@ func dataSourceAwsLbTargetGroup() *schema.Resource {
 				Computed: true,
 			},
 
+			"lambda_multi_value_headers_enabled": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+
 			"slow_start": {
 				Type:     schema.TypeInt,
 				Computed: true,

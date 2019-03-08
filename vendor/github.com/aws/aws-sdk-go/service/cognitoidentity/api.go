@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awsutil"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/private/protocol"
 	"github.com/aws/aws-sdk-go/private/protocol/jsonrpc"
@@ -249,8 +250,7 @@ func (c *CognitoIdentity) DeleteIdentityPoolRequest(input *DeleteIdentityPoolInp
 
 	output = &DeleteIdentityPoolOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(jsonrpc.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -536,6 +536,7 @@ func (c *CognitoIdentity) GetCredentialsForIdentityRequest(input *GetCredentials
 
 	output = &GetCredentialsForIdentityOutput{}
 	req = c.newRequest(op, input, output)
+	req.Config.Credentials = credentials.AnonymousCredentials
 	return
 }
 
@@ -645,6 +646,7 @@ func (c *CognitoIdentity) GetIdRequest(input *GetIdInput) (req *request.Request,
 
 	output = &GetIdOutput{}
 	req = c.newRequest(op, input, output)
+	req.Config.Credentials = credentials.AnonymousCredentials
 	return
 }
 
@@ -849,6 +851,7 @@ func (c *CognitoIdentity) GetOpenIdTokenRequest(input *GetOpenIdTokenInput) (req
 
 	output = &GetOpenIdTokenOutput{}
 	req = c.newRequest(op, input, output)
+	req.Config.Credentials = credentials.AnonymousCredentials
 	return
 }
 
@@ -1463,8 +1466,7 @@ func (c *CognitoIdentity) SetIdentityPoolRolesRequest(input *SetIdentityPoolRole
 
 	output = &SetIdentityPoolRolesOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(jsonrpc.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -1567,8 +1569,7 @@ func (c *CognitoIdentity) UnlinkDeveloperIdentityRequest(input *UnlinkDeveloperI
 
 	output = &UnlinkDeveloperIdentityOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(jsonrpc.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -1670,8 +1671,8 @@ func (c *CognitoIdentity) UnlinkIdentityRequest(input *UnlinkIdentityInput) (req
 
 	output = &UnlinkIdentityOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(jsonrpc.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Config.Credentials = credentials.AnonymousCredentials
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 

@@ -9,6 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/aws/aws-sdk-go/aws/request"
+	"github.com/aws/aws-sdk-go/private/protocol"
+	"github.com/aws/aws-sdk-go/private/protocol/jsonrpc"
 )
 
 const opAllocateConnectionOnInterconnect = "AllocateConnectionOnInterconnect"
@@ -961,11 +963,12 @@ func (c *DirectConnect) CreateBGPPeerRequest(input *CreateBGPPeerInput) (req *re
 //
 // Creates a BGP peer on the specified virtual interface.
 //
-// The BGP peer cannot be in the same address family (IPv4/IPv6) of an existing
-// BGP peer on the virtual interface.
+// You must create a BGP peer for the corresponding address family (IPv4/IPv6)
+// in order to access AWS resources that also use that address family.
 //
-// You must create a BGP peer for the corresponding address family in order
-// to access AWS resources that also use that address family.
+// If logical redundancy is not supported by the connection, interconnect, or
+// LAG, the BGP peer cannot be in the same address family as an existing BGP
+// peer on the virtual interface.
 //
 // When creating a IPv6 BGP peer, omit the Amazon address and customer address.
 // IPv6 addresses are automatically assigned from the Amazon pool of IPv6 addresses;
@@ -1707,8 +1710,8 @@ func (c *DirectConnect) DeleteBGPPeerRequest(input *DeleteBGPPeerInput) (req *re
 
 // DeleteBGPPeer API operation for AWS Direct Connect.
 //
-// Deletes the BGP peer on the specified virtual interface with the specified
-// customer address and ASN.
+// Deletes the specified BGP peer on the specified virtual interface with the
+// specified customer address and ASN.
 //
 // You cannot delete the last BGP peer from a virtual interface.
 //
@@ -2308,7 +2311,7 @@ func (c *DirectConnect) DescribeConnectionLoaRequest(input *DescribeConnectionLo
 // The Letter of Authorization - Connecting Facility Assignment (LOA-CFA) is
 // a document that your APN partner or service provider uses when establishing
 // your cross connect to AWS at the colocation facility. For more information,
-// see Requesting Cross Connects at AWS Direct Connect Locations (http://docs.aws.amazon.com/directconnect/latest/UserGuide/Colocation.html)
+// see Requesting Cross Connects at AWS Direct Connect Locations (https://docs.aws.amazon.com/directconnect/latest/UserGuide/Colocation.html)
 // in the AWS Direct Connect User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -2929,7 +2932,7 @@ func (c *DirectConnect) DescribeInterconnectLoaRequest(input *DescribeInterconne
 // The Letter of Authorization - Connecting Facility Assignment (LOA-CFA) is
 // a document that is used when establishing your cross connect to AWS at the
 // colocation facility. For more information, see Requesting Cross Connects
-// at AWS Direct Connect Locations (http://docs.aws.amazon.com/directconnect/latest/UserGuide/Colocation.html)
+// at AWS Direct Connect Locations (https://docs.aws.amazon.com/directconnect/latest/UserGuide/Colocation.html)
 // in the AWS Direct Connect User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -3186,7 +3189,7 @@ func (c *DirectConnect) DescribeLoaRequest(input *DescribeLoaInput) (req *reques
 // The Letter of Authorization - Connecting Facility Assignment (LOA-CFA) is
 // a document that is used when establishing your cross connect to AWS at the
 // colocation facility. For more information, see Requesting Cross Connects
-// at AWS Direct Connect Locations (http://docs.aws.amazon.com/directconnect/latest/UserGuide/Colocation.html)
+// at AWS Direct Connect Locations (https://docs.aws.amazon.com/directconnect/latest/UserGuide/Colocation.html)
 // in the AWS Direct Connect User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -3695,6 +3698,7 @@ func (c *DirectConnect) TagResourceRequest(input *TagResourceInput) (req *reques
 
 	output = &TagResourceOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -3787,6 +3791,7 @@ func (c *DirectConnect) UntagResourceRequest(input *UntagResourceInput) (req *re
 
 	output = &UntagResourceOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -4524,6 +4529,9 @@ type BGPPeer struct {
 	// The Direct Connect endpoint on which the BGP peer terminates.
 	AwsDeviceV2 *string `locationName:"awsDeviceV2" type:"string"`
 
+	// The ID of the BGP peer.
+	BgpPeerId *string `locationName:"bgpPeerId" type:"string"`
+
 	// The state of the BGP peer. The following are the possible values:
 	//
 	//    * verifying: The BGP peering addresses or ASN require validation before
@@ -4548,7 +4556,7 @@ type BGPPeer struct {
 	//
 	//    * down: The BGP peer is down.
 	//
-	//    * unknown: The BGP peer status is unknown.
+	//    * unknown: The BGP peer status is not available.
 	BgpStatus *string `locationName:"bgpStatus" type:"string" enum:"BGPStatus"`
 
 	// The IP address assigned to the customer interface.
@@ -4592,6 +4600,12 @@ func (s *BGPPeer) SetAuthKey(v string) *BGPPeer {
 // SetAwsDeviceV2 sets the AwsDeviceV2 field's value.
 func (s *BGPPeer) SetAwsDeviceV2(v string) *BGPPeer {
 	s.AwsDeviceV2 = &v
+	return s
+}
+
+// SetBgpPeerId sets the BgpPeerId field's value.
+func (s *BGPPeer) SetBgpPeerId(v string) *BGPPeer {
+	s.BgpPeerId = &v
 	return s
 }
 
@@ -4676,6 +4690,8 @@ type ConfirmConnectionOutput struct {
 	//
 	//    * rejected: A hosted connection in the ordering state enters the rejected
 	//    state if it is deleted by the customer.
+	//
+	//    * unknown: The state of the connection is not available.
 	ConnectionState *string `locationName:"connectionState" type:"string" enum:"ConnectionState"`
 }
 
@@ -4782,6 +4798,8 @@ type ConfirmPrivateVirtualInterfaceOutput struct {
 	//    interface. If a virtual interface in the Confirming state is deleted by
 	//    the virtual interface owner, the virtual interface enters the Rejected
 	//    state.
+	//
+	//    * unknown: The state of the virtual interface is not available.
 	VirtualInterfaceState *string `locationName:"virtualInterfaceState" type:"string" enum:"VirtualInterfaceState"`
 }
 
@@ -4870,6 +4888,8 @@ type ConfirmPublicVirtualInterfaceOutput struct {
 	//    interface. If a virtual interface in the Confirming state is deleted by
 	//    the virtual interface owner, the virtual interface enters the Rejected
 	//    state.
+	//
+	//    * unknown: The state of the virtual interface is not available.
 	VirtualInterfaceState *string `locationName:"virtualInterfaceState" type:"string" enum:"VirtualInterfaceState"`
 }
 
@@ -4930,7 +4950,13 @@ type Connection struct {
 	//
 	//    * rejected: A hosted connection in the ordering state enters the rejected
 	//    state if it is deleted by the customer.
+	//
+	//    * unknown: The state of the connection is not available.
 	ConnectionState *string `locationName:"connectionState" type:"string" enum:"ConnectionState"`
+
+	// Indicates whether the connection supports a secondary BGP peer in the same
+	// address family (IPv4/IPv6).
+	HasLogicalRedundancy *string `locationName:"hasLogicalRedundancy" type:"string" enum:"HasLogicalRedundancy"`
 
 	// Indicates whether jumbo frames (9001 MTU) are supported.
 	JumboFrameCapable *bool `locationName:"jumboFrameCapable" type:"boolean"`
@@ -5000,6 +5026,12 @@ func (s *Connection) SetConnectionName(v string) *Connection {
 // SetConnectionState sets the ConnectionState field's value.
 func (s *Connection) SetConnectionState(v string) *Connection {
 	s.ConnectionState = &v
+	return s
+}
+
+// SetHasLogicalRedundancy sets the HasLogicalRedundancy field's value.
+func (s *Connection) SetHasLogicalRedundancy(v string) *Connection {
+	s.HasLogicalRedundancy = &v
 	return s
 }
 
@@ -5638,6 +5670,9 @@ type DeleteBGPPeerInput struct {
 	// The autonomous system (AS) number for Border Gateway Protocol (BGP) configuration.
 	Asn *int64 `locationName:"asn" type:"integer"`
 
+	// The ID of the BGP peer.
+	BgpPeerId *string `locationName:"bgpPeerId" type:"string"`
+
 	// The IP address assigned to the customer interface.
 	CustomerAddress *string `locationName:"customerAddress" type:"string"`
 
@@ -5658,6 +5693,12 @@ func (s DeleteBGPPeerInput) GoString() string {
 // SetAsn sets the Asn field's value.
 func (s *DeleteBGPPeerInput) SetAsn(v int64) *DeleteBGPPeerInput {
 	s.Asn = &v
+	return s
+}
+
+// SetBgpPeerId sets the BgpPeerId field's value.
+func (s *DeleteBGPPeerInput) SetBgpPeerId(v string) *DeleteBGPPeerInput {
+	s.BgpPeerId = &v
 	return s
 }
 
@@ -5927,6 +5968,8 @@ type DeleteInterconnectOutput struct {
 	//    * deleting: The interconnect is being deleted.
 	//
 	//    * deleted: The interconnect is deleted.
+	//
+	//    * unknown: The state of the interconnect is not available.
 	InterconnectState *string `locationName:"interconnectState" type:"string" enum:"InterconnectState"`
 }
 
@@ -6053,6 +6096,8 @@ type DeleteVirtualInterfaceOutput struct {
 	//    interface. If a virtual interface in the Confirming state is deleted by
 	//    the virtual interface owner, the virtual interface enters the Rejected
 	//    state.
+	//
+	//    * unknown: The state of the virtual interface is not available.
 	VirtualInterfaceState *string `locationName:"virtualInterfaceState" type:"string" enum:"VirtualInterfaceState"`
 }
 
@@ -7219,6 +7264,10 @@ type Interconnect struct {
 	// The bandwidth of the connection.
 	Bandwidth *string `locationName:"bandwidth" type:"string"`
 
+	// Indicates whether the interconnect supports a secondary BGP in the same address
+	// family (IPv4/IPv6).
+	HasLogicalRedundancy *string `locationName:"hasLogicalRedundancy" type:"string" enum:"HasLogicalRedundancy"`
+
 	// The ID of the interconnect.
 	InterconnectId *string `locationName:"interconnectId" type:"string"`
 
@@ -7241,6 +7290,8 @@ type Interconnect struct {
 	//    * deleting: The interconnect is being deleted.
 	//
 	//    * deleted: The interconnect is deleted.
+	//
+	//    * unknown: The state of the interconnect is not available.
 	InterconnectState *string `locationName:"interconnectState" type:"string" enum:"InterconnectState"`
 
 	// Indicates whether jumbo frames (9001 MTU) are supported.
@@ -7284,6 +7335,12 @@ func (s *Interconnect) SetAwsDeviceV2(v string) *Interconnect {
 // SetBandwidth sets the Bandwidth field's value.
 func (s *Interconnect) SetBandwidth(v string) *Interconnect {
 	s.Bandwidth = &v
+	return s
+}
+
+// SetHasLogicalRedundancy sets the HasLogicalRedundancy field's value.
+func (s *Interconnect) SetHasLogicalRedundancy(v string) *Interconnect {
+	s.HasLogicalRedundancy = &v
 	return s
 }
 
@@ -7355,6 +7412,10 @@ type Lag struct {
 	// The possible values are 1Gbps and 10Gbps.
 	ConnectionsBandwidth *string `locationName:"connectionsBandwidth" type:"string"`
 
+	// Indicates whether the LAG supports a secondary BGP peer in the same address
+	// family (IPv4/IPv6).
+	HasLogicalRedundancy *string `locationName:"hasLogicalRedundancy" type:"string" enum:"HasLogicalRedundancy"`
+
 	// Indicates whether jumbo frames (9001 MTU) are supported.
 	JumboFrameCapable *bool `locationName:"jumboFrameCapable" type:"boolean"`
 
@@ -7379,6 +7440,8 @@ type Lag struct {
 	//    * deleting: The LAG is being deleted.
 	//
 	//    * deleted: The LAG is deleted.
+	//
+	//    * unknown: The state of the LAG is not available.
 	LagState *string `locationName:"lagState" type:"string" enum:"LagState"`
 
 	// The location of the LAG.
@@ -7436,6 +7499,12 @@ func (s *Lag) SetConnections(v []*Connection) *Lag {
 // SetConnectionsBandwidth sets the ConnectionsBandwidth field's value.
 func (s *Lag) SetConnectionsBandwidth(v string) *Lag {
 	s.ConnectionsBandwidth = &v
+	return s
+}
+
+// SetHasLogicalRedundancy sets the HasLogicalRedundancy field's value.
+func (s *Lag) SetHasLogicalRedundancy(v string) *Lag {
+	s.HasLogicalRedundancy = &v
 	return s
 }
 
@@ -8557,6 +8626,8 @@ type UpdateVirtualInterfaceAttributesOutput struct {
 	//    interface. If a virtual interface in the Confirming state is deleted by
 	//    the virtual interface owner, the virtual interface enters the Rejected
 	//    state.
+	//
+	//    * unknown: The state of the virtual interface is not available.
 	VirtualInterfaceState *string `locationName:"virtualInterfaceState" type:"string" enum:"VirtualInterfaceState"`
 
 	// The type of virtual interface. The possible values are private and public.
@@ -8851,6 +8922,8 @@ type VirtualInterface struct {
 	//    interface. If a virtual interface in the Confirming state is deleted by
 	//    the virtual interface owner, the virtual interface enters the Rejected
 	//    state.
+	//
+	//    * unknown: The state of the virtual interface is not available.
 	VirtualInterfaceState *string `locationName:"virtualInterfaceState" type:"string" enum:"VirtualInterfaceState"`
 
 	// The type of virtual interface. The possible values are private and public.
@@ -9039,6 +9112,9 @@ const (
 
 	// BGPStatusDown is a BGPStatus enum value
 	BGPStatusDown = "down"
+
+	// BGPStatusUnknown is a BGPStatus enum value
+	BGPStatusUnknown = "unknown"
 )
 
 const (
@@ -9065,6 +9141,9 @@ const (
 
 	// ConnectionStateRejected is a ConnectionState enum value
 	ConnectionStateRejected = "rejected"
+
+	// ConnectionStateUnknown is a ConnectionState enum value
+	ConnectionStateUnknown = "unknown"
 )
 
 const (
@@ -9110,6 +9189,17 @@ const (
 )
 
 const (
+	// HasLogicalRedundancyUnknown is a HasLogicalRedundancy enum value
+	HasLogicalRedundancyUnknown = "unknown"
+
+	// HasLogicalRedundancyYes is a HasLogicalRedundancy enum value
+	HasLogicalRedundancyYes = "yes"
+
+	// HasLogicalRedundancyNo is a HasLogicalRedundancy enum value
+	HasLogicalRedundancyNo = "no"
+)
+
+const (
 	// InterconnectStateRequested is a InterconnectState enum value
 	InterconnectStateRequested = "requested"
 
@@ -9127,6 +9217,9 @@ const (
 
 	// InterconnectStateDeleted is a InterconnectState enum value
 	InterconnectStateDeleted = "deleted"
+
+	// InterconnectStateUnknown is a InterconnectState enum value
+	InterconnectStateUnknown = "unknown"
 )
 
 const (
@@ -9147,6 +9240,9 @@ const (
 
 	// LagStateDeleted is a LagState enum value
 	LagStateDeleted = "deleted"
+
+	// LagStateUnknown is a LagState enum value
+	LagStateUnknown = "unknown"
 )
 
 const (
@@ -9178,4 +9274,7 @@ const (
 
 	// VirtualInterfaceStateRejected is a VirtualInterfaceState enum value
 	VirtualInterfaceStateRejected = "rejected"
+
+	// VirtualInterfaceStateUnknown is a VirtualInterfaceState enum value
+	VirtualInterfaceStateUnknown = "unknown"
 )

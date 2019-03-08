@@ -28,7 +28,7 @@ resource "aws_directory_service_directory" "bar" {
     subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
   }
 
-  tags {
+  tags = {
     Project = "foo"
   }
 }
@@ -64,7 +64,7 @@ resource "aws_directory_service_directory" "bar" {
     subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
   }
 
-  tags {
+  tags = {
     Project = "foo"
   }
 }
@@ -156,7 +156,7 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The directory identifier.
 * `access_url` - The access URL for the directory, such as `http://alias.awsapps.com`.
 * `dns_ip_addresses` - A list of IP addresses of the DNS servers for the directory or connector.
-* `security_group_id` - The ID of the security group created by the directory (`SimpleAD` or `MicrosoftAD` only).
+* `security_group_id` - The ID of the security group created by the directory.
 
 
 ## Import

@@ -17,7 +17,12 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_key_pair", &resource.Sweeper{
 		Name: "aws_key_pair",
-		F:    testSweepKeyPairs,
+		Dependencies: []string{
+			"aws_elastic_beanstalk_environment",
+			"aws_instance",
+			"aws_spot_fleet_request",
+		},
+		F: testSweepKeyPairs,
 	})
 }
 
@@ -30,14 +35,7 @@ func testSweepKeyPairs(region string) error {
 
 	log.Printf("Destroying the tmp keys in (%s)", client.(*AWSClient).region)
 
-	resp, err := ec2conn.DescribeKeyPairs(&ec2.DescribeKeyPairsInput{
-		Filters: []*ec2.Filter{
-			{
-				Name:   aws.String("key-name"),
-				Values: []*string{aws.String("tmp-key*")},
-			},
-		},
-	})
+	resp, err := ec2conn.DescribeKeyPairs(&ec2.DescribeKeyPairsInput{})
 	if err != nil {
 		if testSweepSkipSweepError(err) {
 			log.Printf("[WARN] Skipping EC2 Key Pair sweep for %s: %s", region, err)

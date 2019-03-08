@@ -52,8 +52,7 @@ func (c *CloudWatch) DeleteAlarmsRequest(input *DeleteAlarmsInput) (req *request
 
 	output = &DeleteAlarmsOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(query.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(query.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -133,6 +132,7 @@ func (c *CloudWatch) DeleteDashboardsRequest(input *DeleteDashboardsInput) (req 
 
 	output = &DeleteDashboardsOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(query.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -570,8 +570,7 @@ func (c *CloudWatch) DisableAlarmActionsRequest(input *DisableAlarmActionsInput)
 
 	output = &DisableAlarmActionsOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(query.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(query.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -647,8 +646,7 @@ func (c *CloudWatch) EnableAlarmActionsRequest(input *EnableAlarmActionsInput) (
 
 	output = &EnableAlarmActionsOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(query.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(query.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -823,7 +821,7 @@ func (c *CloudWatch) GetMetricDataRequest(input *GetMetricDataInput) (req *reque
 // to create new time series that represent new insights into your data. For
 // example, using Lambda metrics, you could divide the Errors metric by the
 // Invocations metric to get an error rate time series. For more information
-// about metric math expressions, see Metric Math Syntax and Functions (http://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/using-metric-math.html#metric-math-syntax)
+// about metric math expressions, see Metric Math Syntax and Functions (https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/using-metric-math.html#metric-math-syntax)
 // in the Amazon CloudWatch User Guide.
 //
 // Calls to the GetMetricData API have a different pricing structure than calls
@@ -982,7 +980,7 @@ func (c *CloudWatch) GetMetricStatisticsRequest(input *GetMetricStatisticsInput)
 // 2016.
 //
 // For information about metrics and dimensions supported by AWS services, see
-// the Amazon CloudWatch Metrics and Dimensions Reference (http://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CW_Support_For_AWS.html)
+// the Amazon CloudWatch Metrics and Dimensions Reference (https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CW_Support_For_AWS.html)
 // in the Amazon CloudWatch User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -1488,25 +1486,24 @@ func (c *CloudWatch) PutMetricAlarmRequest(input *PutMetricAlarmInput) (req *req
 
 	output = &PutMetricAlarmOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(query.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(query.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
 // PutMetricAlarm API operation for Amazon CloudWatch.
 //
-// Creates or updates an alarm and associates it with the specified metric.
-// Optionally, this operation can associate one or more Amazon SNS resources
-// with the alarm.
+// Creates or updates an alarm and associates it with the specified metric or
+// metric math expression.
 //
 // When this operation creates an alarm, the alarm state is immediately set
-// to INSUFFICIENT_DATA. The alarm is evaluated and its state is set appropriately.
-// Any actions associated with the state are then executed.
+// to INSUFFICIENT_DATA. The alarm is then evaluated and its state is set appropriately.
+// Any actions associated with the new state are then executed.
 //
 // When you update an existing alarm, its state is left unchanged, but the update
 // completely overwrites the previous configuration of the alarm.
 //
-// If you are an IAM user, you must have Amazon EC2 permissions for some operations:
+// If you are an IAM user, you must have Amazon EC2 permissions for some alarm
+// operations:
 //
 //    * iam:CreateServiceLinkedRole for all alarms with EC2 actions
 //
@@ -1536,8 +1533,7 @@ func (c *CloudWatch) PutMetricAlarmRequest(input *PutMetricAlarmInput) (req *req
 // The first time you create an alarm in the AWS Management Console, the CLI,
 // or by using the PutMetricAlarm API, CloudWatch creates the necessary service-linked
 // role for you. The service-linked role is called AWSServiceRoleForCloudWatchEvents.
-// For more information about service-linked roles, see AWS service-linked role
-// (http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_terms-and-concepts.html#iam-term-service-linked-role).
+// For more information, see AWS service-linked role (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_terms-and-concepts.html#iam-term-service-linked-role).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1611,17 +1607,16 @@ func (c *CloudWatch) PutMetricDataRequest(input *PutMetricDataInput) (req *reque
 
 	output = &PutMetricDataOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(query.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(query.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
 // PutMetricData API operation for Amazon CloudWatch.
 //
-// Publishes metric data to Amazon CloudWatch. CloudWatch associates the data
-// with the specified metric. If the specified metric does not exist, CloudWatch
-// creates the metric. When CloudWatch creates a metric, it can take up to fifteen
-// minutes for the metric to appear in calls to ListMetrics.
+// Publishes metric data points to Amazon CloudWatch. CloudWatch associates
+// the data points with the specified metric. If the specified metric does not
+// exist, CloudWatch creates the metric. When CloudWatch creates a metric, it
+// can take up to fifteen minutes for the metric to appear in calls to ListMetrics.
 //
 // You can publish either individual data points in the Value field, or arrays
 // of values and the number of times each value occurred during the period by
@@ -1641,19 +1636,17 @@ func (c *CloudWatch) PutMetricDataRequest(input *PutMetricDataInput) (req *reque
 // not supported.
 //
 // You can use up to 10 dimensions per metric to further clarify what data the
-// metric collects. For more information about specifying dimensions, see Publishing
-// Metrics (http://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/publishingMetrics.html)
+// metric collects. Each dimension consists of a Name and Value pair. For more
+// information about specifying dimensions, see Publishing Metrics (https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/publishingMetrics.html)
 // in the Amazon CloudWatch User Guide.
 //
 // Data points with time stamps from 24 hours ago or longer can take at least
 // 48 hours to become available for GetMetricData or GetMetricStatistics from
 // the time they are submitted.
 //
-// CloudWatch needs raw data points to calculate percentile statistics. These
-// raw data points could be published individually or as part of Values and
-// Counts arrays. If you publish data using statistic sets in the StatisticValues
-// field instead, you can only retrieve percentile statistics for this data
-// if one of the following conditions is true:
+// CloudWatch needs raw data points to calculate percentile statistics. If you
+// publish data using a statistic set instead, you can only retrieve percentile
+// statistics for this data if one of the following conditions is true:
 //
 //    * The SampleCount value of the statistic set is 1 and Min, Max, and Sum
 //    are all equal.
@@ -1741,8 +1734,7 @@ func (c *CloudWatch) SetAlarmStateRequest(input *SetAlarmStateInput) (req *reque
 
 	output = &SetAlarmStateOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(query.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(query.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -2817,7 +2809,7 @@ type GetMetricDataInput struct {
 	// For better performance, specify StartTime and EndTime values that align with
 	// the value of the metric's Period and sync up with the beginning and end of
 	// an hour. For example, if the Period of a metric is 5 minutes, specifying
-	// 12:05 or 12:30 as EndTime can get a faster response from CloudWatch then
+	// 12:05 or 12:30 as EndTime can get a faster response from CloudWatch than
 	// setting 12:07 or 12:29 as the EndTime.
 	//
 	// EndTime is a required field
@@ -2850,7 +2842,7 @@ type GetMetricDataInput struct {
 	// For better performance, specify StartTime and EndTime values that align with
 	// the value of the metric's Period and sync up with the beginning and end of
 	// an hour. For example, if the Period of a metric is 5 minutes, specifying
-	// 12:05 or 12:30 as StartTime can get a faster response from CloudWatch then
+	// 12:05 or 12:30 as StartTime can get a faster response from CloudWatch than
 	// setting 12:07 or 12:29 as the StartTime.
 	//
 	// StartTime is a required field
@@ -2973,9 +2965,9 @@ type GetMetricStatisticsInput struct {
 	// dimensions as a separate metric. If a specific combination of dimensions
 	// was not published, you can't retrieve statistics for it. You must specify
 	// the same dimensions that were used when the metrics were created. For an
-	// example, see Dimension Combinations (http://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/cloudwatch_concepts.html#dimension-combinations)
+	// example, see Dimension Combinations (https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/cloudwatch_concepts.html#dimension-combinations)
 	// in the Amazon CloudWatch User Guide. For more information about specifying
-	// dimensions, see Publishing Metrics (http://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/publishingMetrics.html)
+	// dimensions, see Publishing Metrics (https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/publishingMetrics.html)
 	// in the Amazon CloudWatch User Guide.
 	Dimensions []*Dimension `type:"list"`
 
@@ -3233,7 +3225,7 @@ type GetMetricWidgetImageInput struct {
 	// with the content-type set to text/xml. The image data is in a MetricWidgetImage
 	// field. For example:
 	//
-	// <GetMetricWidgetImageResponse xmlns="http://monitoring.amazonaws.com/doc/2010-08-01/">
+	// <GetMetricWidgetImageResponse xmlns=<URLstring>>
 	//
 	// <GetMetricWidgetImageResult>
 	//
@@ -3536,7 +3528,7 @@ type Metric struct {
 	// The dimensions for the metric.
 	Dimensions []*Dimension `type:"list"`
 
-	// The name of the metric.
+	// The name of the metric. This is a required field.
 	MetricName *string `min:"1" type:"string"`
 
 	// The namespace of the metric.
@@ -3651,6 +3643,8 @@ type MetricAlarm struct {
 
 	// The name of the metric associated with the alarm.
 	MetricName *string `min:"1" type:"string"`
+
+	Metrics []*MetricDataQuery `type:"list"`
 
 	// The namespace of the metric associated with the alarm.
 	Namespace *string `min:"1" type:"string"`
@@ -3783,6 +3777,12 @@ func (s *MetricAlarm) SetMetricName(v string) *MetricAlarm {
 	return s
 }
 
+// SetMetrics sets the Metrics field's value.
+func (s *MetricAlarm) SetMetrics(v []*MetricDataQuery) *MetricAlarm {
+	s.Metrics = v
+	return s
+}
+
 // SetNamespace sets the Namespace field's value.
 func (s *MetricAlarm) SetNamespace(v string) *MetricAlarm {
 	s.Namespace = &v
@@ -3849,23 +3849,46 @@ func (s *MetricAlarm) SetUnit(v string) *MetricAlarm {
 	return s
 }
 
-// This structure indicates the metric data to return, and whether this call
-// is just retrieving a batch set of data for one metric, or is performing a
-// math expression on metric data. A single GetMetricData call can include up
-// to 100 MetricDataQuery structures.
+// This structure is used in both GetMetricData and PutMetricAlarm. The supported
+// use of this structure is different for those two operations.
+//
+// When used in GetMetricData, it indicates the metric data to return, and whether
+// this call is just retrieving a batch set of data for one metric, or is performing
+// a math expression on metric data. A single GetMetricData call can include
+// up to 100 MetricDataQuery structures.
+//
+// When used in PutMetricAlarm, it enables you to create an alarm based on a
+// metric math expression. Each MetricDataQuery in the array specifies either
+// a metric to retrieve, or a math expression to be performed on retrieved metrics.
+// A single PutMetricAlarm call can include up to 20 MetricDataQuery structures
+// in the array. The 20 structures can include as many as 10 structures that
+// contain a MetricStat parameter to retrieve a metric, and as many as 10 structures
+// that contain the Expression parameter to perform a math expression. Of those
+// Expression structures, one must have True as the value for ReturnData. The
+// result of this expression is the value the alarm watches.
+//
+// Any expression used in a PutMetricAlarm operation must return a single time
+// series. For more information, see Metric Math Syntax and Functions (https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/using-metric-math.html#metric-math-syntax)
+// in the Amazon CloudWatch User Guide.
+//
+// Some of the parameters of this structure also have different uses whether
+// you are using this structure in a GetMetricData operation or a PutMetricAlarm
+// operation. These differences are explained in the following parameter list.
 type MetricDataQuery struct {
 	_ struct{} `type:"structure"`
 
-	// The math expression to be performed on the returned data, if this structure
-	// is performing a math expression. For more information about metric math expressions,
-	// see Metric Math Syntax and Functions (http://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/using-metric-math.html#metric-math-syntax)
+	// The math expression to be performed on the returned data, if this object
+	// is performing a math expression. This expression can use the Id of the other
+	// metrics to refer to those metrics, and can also use the Id of other expressions
+	// to use the result of those expressions. For more information about metric
+	// math expressions, see Metric Math Syntax and Functions (https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/using-metric-math.html#metric-math-syntax)
 	// in the Amazon CloudWatch User Guide.
 	//
-	// Within one MetricDataQuery structure, you must specify either Expression
-	// or MetricStat but not both.
+	// Within each MetricDataQuery object, you must specify either Expression or
+	// MetricStat but not both.
 	Expression *string `min:"1" type:"string"`
 
-	// A short name used to tie this structure to the results in the response. This
+	// A short name used to tie this object to the results in the response. This
 	// name must be unique within a single call to GetMetricData. If you are performing
 	// math expressions on this set of data, this name represents that data and
 	// can serve as a variable in the mathematical expression. The valid characters
@@ -3882,17 +3905,21 @@ type MetricDataQuery struct {
 	Label *string `type:"string"`
 
 	// The metric to be returned, along with statistics, period, and units. Use
-	// this parameter only if this structure is performing a data retrieval and
-	// not performing a math expression on the returned data.
+	// this parameter only if this object is retrieving a metric and not performing
+	// a math expression on returned data.
 	//
-	// Within one MetricDataQuery structure, you must specify either Expression
-	// or MetricStat but not both.
+	// Within one MetricDataQuery object, you must specify either Expression or
+	// MetricStat but not both.
 	MetricStat *MetricStat `type:"structure"`
 
-	// Indicates whether to return the time stamps and raw data values of this metric.
-	// If you are performing this call just to do math expressions and do not also
-	// need the raw data returned, you can specify False. If you omit this, the
-	// default of True is used.
+	// When used in GetMetricData, this option indicates whether to return the timestamps
+	// and raw data values of this metric. If you are performing this call just
+	// to do math expressions and do not also need the raw data returned, you can
+	// specify False. If you omit this, the default of True is used.
+	//
+	// When used in PutMetricAlarm, specify True for the one expression result to
+	// use as the alarm. For all other metrics and expressions in the same PutMetricAlarm
+	// operation, specify ReturnData as False.
 	ReturnData *bool `type:"boolean"`
 }
 
@@ -3962,7 +3989,7 @@ func (s *MetricDataQuery) SetReturnData(v bool) *MetricDataQuery {
 
 // A GetMetricData call returns an array of MetricDataResult structures. Each
 // of these structures includes the data points for that metric, along with
-// the time stamps of those data points and other identifying information.
+// the timestamps of those data points and other identifying information.
 type MetricDataResult struct {
 	_ struct{} `type:"structure"`
 
@@ -3983,13 +4010,13 @@ type MetricDataResult struct {
 	// that an error occurred. Retry your request using NextToken, if present.
 	StatusCode *string `type:"string" enum:"StatusCode"`
 
-	// The time stamps for the data points, formatted in Unix timestamp format.
-	// The number of time stamps always matches the number of values and the value
-	// for Timestamps[x] is Values[x].
+	// The timestamps for the data points, formatted in Unix timestamp format. The
+	// number of timestamps always matches the number of values and the value for
+	// Timestamps[x] is Values[x].
 	Timestamps []*time.Time `type:"list"`
 
 	// The data points for the metric corresponding to Timestamps. The number of
-	// values always matches the number of time stamps and the time stamp for Values[x]
+	// values always matches the number of timestamps and the timestamp for Values[x]
 	// is Timestamps[x].
 	Values []*float64 `type:"list"`
 }
@@ -4070,7 +4097,7 @@ type MetricDatum struct {
 	// to one second. Setting this to 60 specifies this metric as a regular-resolution
 	// metric, which CloudWatch stores at 1-minute resolution. Currently, high resolution
 	// is available only for custom metrics. For more information about high-resolution
-	// metrics, see High-Resolution Metrics (http://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/publishingMetrics.html#high-resolution-metrics)
+	// metrics, see High-Resolution Metrics (https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/publishingMetrics.html#high-resolution-metrics)
 	// in the Amazon CloudWatch User Guide.
 	//
 	// This field is optional, if you do not specify it the default of 60 is used.
@@ -4214,7 +4241,7 @@ type MetricStat struct {
 	// Metric is a required field
 	Metric *Metric `type:"structure" required:"true"`
 
-	// The period to use when retrieving the metric.
+	// The period, in seconds, to use when retrieving the metric.
 	//
 	// Period is a required field
 	Period *int64 `min:"1" type:"integer" required:"true"`
@@ -4384,15 +4411,15 @@ type PutMetricAlarmInput struct {
 	_ struct{} `type:"structure"`
 
 	// Indicates whether actions should be executed during any changes to the alarm
-	// state.
+	// state. The default is TRUE.
 	ActionsEnabled *bool `type:"boolean"`
 
 	// The actions to execute when this alarm transitions to the ALARM state from
 	// any other state. Each action is specified as an Amazon Resource Name (ARN).
 	//
 	// Valid Values: arn:aws:automate:region:ec2:stop | arn:aws:automate:region:ec2:terminate
-	// | arn:aws:automate:region:ec2:recover | arn:aws:sns:region:account-id:sns-topic-name
-	// | arn:aws:autoscaling:region:account-id:scalingPolicy:policy-idautoScalingGroupName/group-friendly-name:policyName/policy-friendly-name
+	// | arn:aws:automate:region:ec2:recover | arn:aws:automate:region:ec2:reboot
+	// | arn:aws:sns:region:account-id:sns-topic-name | arn:aws:autoscaling:region:account-id:scalingPolicy:policy-idautoScalingGroupName/group-friendly-name:policyName/policy-friendly-name
 	//
 	// Valid Values (for use with IAM roles): arn:aws:swf:region:account-id:action/actions/AWS_EC2.InstanceId.Stop/1.0
 	// | arn:aws:swf:region:account-id:action/actions/AWS_EC2.InstanceId.Terminate/1.0
@@ -4402,7 +4429,7 @@ type PutMetricAlarmInput struct {
 	// The description for the alarm.
 	AlarmDescription *string `type:"string"`
 
-	// The name for the alarm. This name must be unique within the AWS account.
+	// The name for the alarm. This name must be unique within your AWS account.
 	//
 	// AlarmName is a required field
 	AlarmName *string `min:"1" type:"string" required:"true"`
@@ -4415,11 +4442,11 @@ type PutMetricAlarmInput struct {
 
 	// The number of datapoints that must be breaching to trigger the alarm. This
 	// is used only if you are setting an "M out of N" alarm. In that case, this
-	// value is the M. For more information, see Evaluating an Alarm (http://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/AlarmThatSendsEmail.html#alarm-evaluation)
+	// value is the M. For more information, see Evaluating an Alarm (https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/AlarmThatSendsEmail.html#alarm-evaluation)
 	// in the Amazon CloudWatch User Guide.
 	DatapointsToAlarm *int64 `min:"1" type:"integer"`
 
-	// The dimensions for the metric associated with the alarm.
+	// The dimensions for the metric specified in MetricName.
 	Dimensions []*Dimension `type:"list"`
 
 	// Used only for alarms based on percentiles. If you specify ignore, the alarm
@@ -4427,13 +4454,13 @@ type PutMetricAlarmInput struct {
 	// significant. If you specify evaluate or omit this parameter, the alarm is
 	// always evaluated and possibly changes state no matter how many data points
 	// are available. For more information, see Percentile-Based CloudWatch Alarms
-	// and Low Data Samples (http://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/AlarmThatSendsEmail.html#percentiles-with-low-samples).
+	// and Low Data Samples (https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/AlarmThatSendsEmail.html#percentiles-with-low-samples).
 	//
 	// Valid Values: evaluate | ignore
 	EvaluateLowSampleCountPercentile *string `min:"1" type:"string"`
 
 	// The number of periods over which data is compared to the specified threshold.
-	// If you are setting an alarm which requires that a number of consecutive data
+	// If you are setting an alarm that requires that a number of consecutive data
 	// points be breaching to trigger the alarm, this value specifies that number.
 	// If you are setting an "M out of N" alarm, this value is the N.
 	//
@@ -4443,9 +4470,10 @@ type PutMetricAlarmInput struct {
 	// EvaluationPeriods is a required field
 	EvaluationPeriods *int64 `min:"1" type:"integer" required:"true"`
 
-	// The percentile statistic for the metric associated with the alarm. Specify
-	// a value between p0.0 and p100. When you call PutMetricAlarm, you must specify
-	// either Statistic or ExtendedStatistic, but not both.
+	// The percentile statistic for the metric specified in MetricName. Specify
+	// a value between p0.0 and p100. When you call PutMetricAlarm and specify a
+	// MetricName, you must specify either Statistic or ExtendedStatistic, but not
+	// both.
 	ExtendedStatistic *string `type:"string"`
 
 	// The actions to execute when this alarm transitions to the INSUFFICIENT_DATA
@@ -4453,8 +4481,8 @@ type PutMetricAlarmInput struct {
 	// Name (ARN).
 	//
 	// Valid Values: arn:aws:automate:region:ec2:stop | arn:aws:automate:region:ec2:terminate
-	// | arn:aws:automate:region:ec2:recover | arn:aws:sns:region:account-id:sns-topic-name
-	// | arn:aws:autoscaling:region:account-id:scalingPolicy:policy-idautoScalingGroupName/group-friendly-name:policyName/policy-friendly-name
+	// | arn:aws:automate:region:ec2:recover | arn:aws:automate:region:ec2:reboot
+	// | arn:aws:sns:region:account-id:sns-topic-name | arn:aws:autoscaling:region:account-id:scalingPolicy:policy-idautoScalingGroupName/group-friendly-name:policyName/policy-friendly-name
 	//
 	// Valid Values (for use with IAM roles): >arn:aws:swf:region:account-id:action/actions/AWS_EC2.InstanceId.Stop/1.0
 	// | arn:aws:swf:region:account-id:action/actions/AWS_EC2.InstanceId.Terminate/1.0
@@ -4463,28 +4491,43 @@ type PutMetricAlarmInput struct {
 
 	// The name for the metric associated with the alarm.
 	//
-	// MetricName is a required field
-	MetricName *string `min:"1" type:"string" required:"true"`
+	// If you are creating an alarm based on a math expression, you cannot specify
+	// this parameter, or any of the Dimensions, Period, Namespace, Statistic, or
+	// ExtendedStatistic parameters. Instead, you specify all this information in
+	// the Metrics array.
+	MetricName *string `min:"1" type:"string"`
 
-	// The namespace for the metric associated with the alarm.
+	// An array of MetricDataQuery structures that enable you to create an alarm
+	// based on the result of a metric math expression. Each item in the Metrics
+	// array either retrieves a metric or performs a math expression.
 	//
-	// Namespace is a required field
-	Namespace *string `min:"1" type:"string" required:"true"`
+	// One item in the Metrics array is the expression that the alarm watches. You
+	// designate this expression by setting ReturnValue to true for this object
+	// in the array. For more information, see MetricDataQuery.
+	//
+	// If you use the Metrics parameter, you cannot include the MetricName, Dimensions,
+	// Period, Namespace, Statistic, or ExtendedStatistic parameters of PutMetricAlarm
+	// in the same operation. Instead, you retrieve the metrics you are using in
+	// your math expression as part of the Metrics array.
+	Metrics []*MetricDataQuery `type:"list"`
+
+	// The namespace for the metric associated specified in MetricName.
+	Namespace *string `min:"1" type:"string"`
 
 	// The actions to execute when this alarm transitions to an OK state from any
 	// other state. Each action is specified as an Amazon Resource Name (ARN).
 	//
 	// Valid Values: arn:aws:automate:region:ec2:stop | arn:aws:automate:region:ec2:terminate
-	// | arn:aws:automate:region:ec2:recover | arn:aws:sns:region:account-id:sns-topic-name
-	// | arn:aws:autoscaling:region:account-id:scalingPolicy:policy-idautoScalingGroupName/group-friendly-name:policyName/policy-friendly-name
+	// | arn:aws:automate:region:ec2:recover | arn:aws:automate:region:ec2:reboot
+	// | arn:aws:sns:region:account-id:sns-topic-name | arn:aws:autoscaling:region:account-id:scalingPolicy:policy-idautoScalingGroupName/group-friendly-name:policyName/policy-friendly-name
 	//
 	// Valid Values (for use with IAM roles): arn:aws:swf:region:account-id:action/actions/AWS_EC2.InstanceId.Stop/1.0
 	// | arn:aws:swf:region:account-id:action/actions/AWS_EC2.InstanceId.Terminate/1.0
 	// | arn:aws:swf:region:account-id:action/actions/AWS_EC2.InstanceId.Reboot/1.0
 	OKActions []*string `type:"list"`
 
-	// The period, in seconds, over which the specified statistic is applied. Valid
-	// values are 10, 30, and any multiple of 60.
+	// The length, in seconds, used each time the metric specified in MetricName
+	// is evaluated. Valid values are 10, 30, and any multiple of 60.
 	//
 	// Be sure to specify 10 or 30 only for metrics that are stored by a PutMetricData
 	// call with a StorageResolution of 1. If you specify a period of 10 or 30 for
@@ -4498,13 +4541,12 @@ type PutMetricAlarmInput struct {
 	//
 	// An alarm's total current evaluation period can be no longer than one day,
 	// so Period multiplied by EvaluationPeriods cannot be more than 86,400 seconds.
-	//
-	// Period is a required field
-	Period *int64 `min:"1" type:"integer" required:"true"`
+	Period *int64 `min:"1" type:"integer"`
 
-	// The statistic for the metric associated with the alarm, other than percentile.
-	// For percentile statistics, use ExtendedStatistic. When you call PutMetricAlarm,
-	// you must specify either Statistic or ExtendedStatistic, but not both.
+	// The statistic for the metric specified in MetricName, other than percentile.
+	// For percentile statistics, use ExtendedStatistic. When you call PutMetricAlarm
+	// and specify a MetricName, you must specify either Statistic or ExtendedStatistic,
+	// but not both.
 	Statistic *string `type:"string" enum:"Statistic"`
 
 	// The value against which the specified statistic is compared.
@@ -4514,7 +4556,7 @@ type PutMetricAlarmInput struct {
 
 	// Sets how this alarm is to handle missing data points. If TreatMissingData
 	// is omitted, the default behavior of missing is used. For more information,
-	// see Configuring How CloudWatch Alarms Treats Missing Data (http://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/AlarmThatSendsEmail.html#alarms-and-missing-data).
+	// see Configuring How CloudWatch Alarms Treats Missing Data (https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/AlarmThatSendsEmail.html#alarms-and-missing-data).
 	//
 	// Valid Values: breaching | notBreaching | ignore | missing
 	TreatMissingData *string `min:"1" type:"string"`
@@ -4565,20 +4607,11 @@ func (s *PutMetricAlarmInput) Validate() error {
 	if s.EvaluationPeriods != nil && *s.EvaluationPeriods < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("EvaluationPeriods", 1))
 	}
-	if s.MetricName == nil {
-		invalidParams.Add(request.NewErrParamRequired("MetricName"))
-	}
 	if s.MetricName != nil && len(*s.MetricName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("MetricName", 1))
 	}
-	if s.Namespace == nil {
-		invalidParams.Add(request.NewErrParamRequired("Namespace"))
-	}
 	if s.Namespace != nil && len(*s.Namespace) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Namespace", 1))
-	}
-	if s.Period == nil {
-		invalidParams.Add(request.NewErrParamRequired("Period"))
 	}
 	if s.Period != nil && *s.Period < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("Period", 1))
@@ -4596,6 +4629,16 @@ func (s *PutMetricAlarmInput) Validate() error {
 			}
 			if err := v.Validate(); err != nil {
 				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Dimensions", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+	if s.Metrics != nil {
+		for i, v := range s.Metrics {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Metrics", i), err.(request.ErrInvalidParams))
 			}
 		}
 	}
@@ -4675,6 +4718,12 @@ func (s *PutMetricAlarmInput) SetInsufficientDataActions(v []*string) *PutMetric
 // SetMetricName sets the MetricName field's value.
 func (s *PutMetricAlarmInput) SetMetricName(v string) *PutMetricAlarmInput {
 	s.MetricName = &v
+	return s
+}
+
+// SetMetrics sets the Metrics field's value.
+func (s *PutMetricAlarmInput) SetMetrics(v []*MetricDataQuery) *PutMetricAlarmInput {
+	s.Metrics = v
 	return s
 }
 

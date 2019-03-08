@@ -275,11 +275,7 @@ func resourceAwsKmsGrantDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Checking if grant is revoked: %s", grantId)
 	err = waitForKmsGrantToBeRevoked(conn, keyId, grantId)
 
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func resourceAwsKmsGrantExists(d *schema.ResourceData, meta interface{}) (bool, error) {
@@ -346,10 +342,8 @@ func findKmsGrantByIdWithRetry(conn *kms.KMS, keyId string, grantId string) (*km
 func waitForKmsGrantToBeRevoked(conn *kms.KMS, keyId string, grantId string) error {
 	err := resource.Retry(3*time.Minute, func() *resource.RetryError {
 		grant, err := findKmsGrantById(conn, keyId, grantId, nil)
-		if err != nil {
-			if _, ok := err.(KmsGrantMissingError); ok {
-				return nil
-			}
+		if _, ok := err.(KmsGrantMissingError); ok {
+			return nil
 		}
 
 		if grant != nil {
@@ -429,10 +423,8 @@ func kmsGrantConstraintsIsValid(constraints *schema.Set) bool {
 		}
 	}
 
-	if constraintCount > 1 {
-		return false
-	}
-	return true
+	return constraintCount <= 1
+
 }
 
 func expandKmsGrantConstraints(configured *schema.Set) *kms.GrantConstraints {
@@ -506,7 +498,7 @@ func flattenKmsGrantConstraints(constraint *kms.GrantConstraints) *schema.Set {
 		return constraints
 	}
 
-	m := make(map[string]interface{}, 0)
+	m := make(map[string]interface{})
 	if constraint.EncryptionContextEquals != nil {
 		if len(constraint.EncryptionContextEquals) > 0 {
 			m["encryption_context_equals"] = pointersMapToStringList(constraint.EncryptionContextEquals)

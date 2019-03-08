@@ -168,7 +168,7 @@ func updateSqlInjectionMatchSetResource(id string, oldT, newT []interface{}, con
 }
 
 func flattenWafSqlInjectionMatchTuples(ts []*waf.SqlInjectionMatchTuple) []interface{} {
-	out := make([]interface{}, len(ts), len(ts))
+	out := make([]interface{}, len(ts))
 	for i, t := range ts {
 		m := make(map[string]interface{})
 		m["text_transformation"] = *t.TextTransformation

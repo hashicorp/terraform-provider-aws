@@ -2,9 +2,9 @@ package aws
 
 import (
 	"fmt"
-	"testing"
-
+	"log"
 	"regexp"
+	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -13,17 +13,81 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAWSEBSVolume_importBasic(t *testing.T) {
+func init() {
+	resource.AddTestSweepers("aws_ebs_volume", &resource.Sweeper{
+		Name: "aws_ebs_volume",
+		Dependencies: []string{
+			"aws_instance",
+		},
+		F: testSweepEbsVolumes,
+	})
+}
+
+func testSweepEbsVolumes(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).ec2conn
+
+	err = conn.DescribeVolumesPages(&ec2.DescribeVolumesInput{}, func(page *ec2.DescribeVolumesOutput, lastPage bool) bool {
+		for _, volume := range page.Volumes {
+			id := aws.StringValue(volume.VolumeId)
+
+			if aws.StringValue(volume.State) != ec2.VolumeStateAvailable {
+				log.Printf("[INFO] Skipping unavailable EC2 EBS Volume: %s", id)
+				continue
+			}
+
+			input := &ec2.DeleteVolumeInput{
+				VolumeId: aws.String(id),
+			}
+
+			log.Printf("[INFO] Deleting EC2 EBS Volume: %s", id)
+			_, err := conn.DeleteVolume(input)
+
+			if err != nil {
+				log.Printf("[ERROR] Error deleting EC2 EBS Volume (%s): %s", id, err)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping EC2 EBS Volume sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("Error retrieving EC2 EBS Volumes: %s", err)
+	}
+
+	return nil
+}
+
+func TestAccAWSEBSVolume_basic(t *testing.T) {
+	var v ec2.Volume
 	resourceName := "aws_ebs_volume.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsEbsVolumeConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVolumeExists(resourceName, &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
+					resource.TestCheckNoResourceAttr(resourceName, "iops"),
+					resource.TestCheckNoResourceAttr(resourceName, "kms_key_id"),
+					resource.TestCheckResourceAttr(resourceName, "size", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "type", "gp2"),
+				),
 			},
-
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -33,43 +97,32 @@ func TestAccAWSEBSVolume_importBasic(t *testing.T) {
 	})
 }
 
-func TestAccAWSEBSVolume_basic(t *testing.T) {
-	var v ec2.Volume
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_ebs_volume.test",
-		Providers:     testAccProviders,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAwsEbsVolumeConfig,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVolumeExists("aws_ebs_volume.test", &v),
-					resource.TestCheckResourceAttrSet("aws_ebs_volume.test", "arn"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccAWSEBSVolume_updateAttachedEbsVolume(t *testing.T) {
 	var v ec2.Volume
+	resourceName := "aws_ebs_volume.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_ebs_volume.test",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsEbsAttachedVolumeConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVolumeExists("aws_ebs_volume.test", &v),
-					resource.TestCheckResourceAttr("aws_ebs_volume.test", "size", "10"),
+					testAccCheckVolumeExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "size", "10"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAwsEbsAttachedVolumeConfigUpdateSize,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVolumeExists("aws_ebs_volume.test", &v),
-					resource.TestCheckResourceAttr("aws_ebs_volume.test", "size", "20"),
+					testAccCheckVolumeExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "size", "20"),
 				),
 			},
 		},
@@ -78,23 +131,30 @@ func TestAccAWSEBSVolume_updateAttachedEbsVolume(t *testing.T) {
 
 func TestAccAWSEBSVolume_updateSize(t *testing.T) {
 	var v ec2.Volume
+	resourceName := "aws_ebs_volume.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_ebs_volume.test",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsEbsVolumeConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVolumeExists("aws_ebs_volume.test", &v),
-					resource.TestCheckResourceAttr("aws_ebs_volume.test", "size", "1"),
+					testAccCheckVolumeExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "size", "1"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAwsEbsVolumeConfigUpdateSize,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVolumeExists("aws_ebs_volume.test", &v),
-					resource.TestCheckResourceAttr("aws_ebs_volume.test", "size", "10"),
+					testAccCheckVolumeExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "size", "10"),
 				),
 			},
 		},
@@ -103,23 +163,30 @@ func TestAccAWSEBSVolume_updateSize(t *testing.T) {
 
 func TestAccAWSEBSVolume_updateType(t *testing.T) {
 	var v ec2.Volume
+	resourceName := "aws_ebs_volume.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_ebs_volume.test",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsEbsVolumeConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVolumeExists("aws_ebs_volume.test", &v),
-					resource.TestCheckResourceAttr("aws_ebs_volume.test", "type", "gp2"),
+					testAccCheckVolumeExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "type", "gp2"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAwsEbsVolumeConfigUpdateType,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVolumeExists("aws_ebs_volume.test", &v),
-					resource.TestCheckResourceAttr("aws_ebs_volume.test", "type", "sc1"),
+					testAccCheckVolumeExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "type", "sc1"),
 				),
 			},
 		},
@@ -128,23 +195,30 @@ func TestAccAWSEBSVolume_updateType(t *testing.T) {
 
 func TestAccAWSEBSVolume_updateIops(t *testing.T) {
 	var v ec2.Volume
+	resourceName := "aws_ebs_volume.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_ebs_volume.test",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsEbsVolumeConfigWithIops,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVolumeExists("aws_ebs_volume.test", &v),
-					resource.TestCheckResourceAttr("aws_ebs_volume.test", "iops", "100"),
+					testAccCheckVolumeExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "iops", "100"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAwsEbsVolumeConfigWithIopsUpdated,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVolumeExists("aws_ebs_volume.test", &v),
-					resource.TestCheckResourceAttr("aws_ebs_volume.test", "iops", "200"),
+					testAccCheckVolumeExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "iops", "200"),
 				),
 			},
 		},
@@ -155,20 +229,26 @@ func TestAccAWSEBSVolume_kmsKey(t *testing.T) {
 	var v ec2.Volume
 	ri := acctest.RandInt()
 	config := fmt.Sprintf(testAccAwsEbsVolumeConfigWithKmsKey, ri)
-	keyRegex := regexp.MustCompile("^arn:aws[\\w-]*:([a-zA-Z0-9\\-])+:([a-z-]+-\\d{1})?:(\\d{12})?:(.*)$")
+	kmsKeyResourceName := "aws_kms_key.test"
+	resourceName := "aws_ebs_volume.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_ebs_volume.test",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVolumeExists("aws_ebs_volume.test", &v),
-					resource.TestCheckResourceAttr("aws_ebs_volume.test", "encrypted", "true"),
-					resource.TestMatchResourceAttr("aws_ebs_volume.test", "kms_key_id", keyRegex),
+					testAccCheckVolumeExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "encrypted", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName, "arn"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -176,6 +256,8 @@ func TestAccAWSEBSVolume_kmsKey(t *testing.T) {
 
 func TestAccAWSEBSVolume_NoIops(t *testing.T) {
 	var v ec2.Volume
+	resourceName := "aws_ebs_volume.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
@@ -183,8 +265,14 @@ func TestAccAWSEBSVolume_NoIops(t *testing.T) {
 			{
 				Config: testAccAwsEbsVolumeConfigWithNoIops,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVolumeExists("aws_ebs_volume.iops_test", &v),
+					testAccCheckVolumeExists(resourceName, &v),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"iops"},
 			},
 		},
 	})
@@ -192,16 +280,25 @@ func TestAccAWSEBSVolume_NoIops(t *testing.T) {
 
 func TestAccAWSEBSVolume_withTags(t *testing.T) {
 	var v ec2.Volume
+	resourceName := "aws_ebs_volume.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_ebs_volume.tags_test",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsEbsVolumeConfigWithTags,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVolumeExists("aws_ebs_volume.tags_test", &v),
+					testAccCheckVolumeExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "TerraformTest"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -242,9 +339,6 @@ resource "aws_ebs_volume" "test" {
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
   type = "gp2"
   size = 1
-  tags {
-    Name = "tf-acc-test-ebs-volume-test"
-  }
 }
 `
 
@@ -276,9 +370,7 @@ data "aws_ami" "debian_jessie_latest" {
 }
 
 resource "aws_instance" "test" {
-  ami = "${data.aws_ami.debian_jessie_latest.id}"
-  associate_public_ip_address = true
-  count = 1
+  ami           = "${data.aws_ami.debian_jessie_latest.id}"
   instance_type = "t2.medium"
 
   root_block_device {
@@ -287,7 +379,7 @@ resource "aws_instance" "test" {
     delete_on_termination = true
   }
 
-  tags {
+  tags = {
     Name    = "test-terraform"
   }
 }
@@ -337,9 +429,7 @@ data "aws_ami" "debian_jessie_latest" {
 }
 
 resource "aws_instance" "test" {
-  ami = "${data.aws_ami.debian_jessie_latest.id}"
-  associate_public_ip_address = true
-  count = 1
+  ami           = "${data.aws_ami.debian_jessie_latest.id}"
   instance_type = "t2.medium"
 
   root_block_device {
@@ -348,7 +438,7 @@ resource "aws_instance" "test" {
     delete_on_termination = true
   }
 
-  tags {
+  tags = {
     Name    = "test-terraform"
   }
 }
@@ -375,7 +465,7 @@ resource "aws_ebs_volume" "test" {
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
   type = "gp2"
   size = 10
-  tags {
+  tags = {
     Name = "tf-acc-test-ebs-volume-test"
   }
 }
@@ -388,7 +478,7 @@ resource "aws_ebs_volume" "test" {
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
   type = "sc1"
   size = 500
-  tags {
+  tags = {
     Name = "tf-acc-test-ebs-volume-test"
   }
 }
@@ -402,7 +492,7 @@ resource "aws_ebs_volume" "test" {
   type = "io1"
   size = 4
   iops = 100
-  tags {
+  tags = {
     Name = "tf-acc-test-ebs-volume-test"
   }
 }
@@ -416,14 +506,14 @@ resource "aws_ebs_volume" "test" {
   type = "io1"
   size = 4
   iops = 200
-  tags {
+  tags = {
     Name = "tf-acc-test-ebs-volume-test"
   }
 }
 `
 
 const testAccAwsEbsVolumeConfigWithKmsKey = `
-resource "aws_kms_key" "foo" {
+resource "aws_kms_key" "test" {
   description = "Terraform acc test %d"
   policy = <<POLICY
 {
@@ -448,19 +538,19 @@ data "aws_availability_zones" "available" {}
 
 resource "aws_ebs_volume" "test" {
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
-  size = 1
-  encrypted = true
-  kms_key_id = "${aws_kms_key.foo.arn}"
+  size              = 1
+  encrypted         = true
+  kms_key_id        = "${aws_kms_key.test.arn}"
 }
 `
 
 const testAccAwsEbsVolumeConfigWithTags = `
 data "aws_availability_zones" "available" {}
 
-resource "aws_ebs_volume" "tags_test" {
+resource "aws_ebs_volume" "test" {
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
   size = 1
-  tags {
+  tags = {
     Name = "TerraformTest"
   }
 }
@@ -469,12 +559,12 @@ resource "aws_ebs_volume" "tags_test" {
 const testAccAwsEbsVolumeConfigWithNoIops = `
 data "aws_availability_zones" "available" {}
 
-resource "aws_ebs_volume" "iops_test" {
+resource "aws_ebs_volume" "test" {
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
   size = 10
   type = "gp2"
   iops = 0
-  tags {
+  tags = {
     Name = "TerraformTest"
   }
 }

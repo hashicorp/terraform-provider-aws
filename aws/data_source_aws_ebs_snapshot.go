@@ -129,7 +129,7 @@ func dataSourceAwsEbsSnapshotRead(d *schema.ResourceData, meta interface{}) erro
 				"specific search criteria, or set `most_recent` attribute to true.")
 		}
 		sort.Slice(resp.Snapshots, func(i, j int) bool {
-			return aws.TimeValue(resp.Snapshots[i].StartTime).Unix() < aws.TimeValue(resp.Snapshots[j].StartTime).Unix()
+			return aws.TimeValue(resp.Snapshots[i].StartTime).Unix() > aws.TimeValue(resp.Snapshots[j].StartTime).Unix()
 		})
 	}
 
@@ -150,9 +150,6 @@ func snapshotDescriptionAttributes(d *schema.ResourceData, snapshot *ec2.Snapsho
 	d.Set("owner_id", snapshot.OwnerId)
 	d.Set("owner_alias", snapshot.OwnerAlias)
 
-	if err := d.Set("tags", tagsToMap(snapshot.Tags)); err != nil {
-		return err
-	}
-
-	return nil
+	err := d.Set("tags", tagsToMap(snapshot.Tags))
+	return err
 }

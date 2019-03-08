@@ -6,7 +6,6 @@ import (
 	"reflect"
 	"regexp"
 	"sort"
-	"strings"
 	"testing"
 	"time"
 
@@ -51,23 +50,6 @@ func testSweepBeanstalkEnvironments(region string) error {
 	}
 
 	for _, bse := range resp.Environments {
-		var testOptGroup bool
-		for _, testName := range []string{
-			"terraform-",
-			"tf-test-",
-			"tf_acc_",
-			"tf-acc-",
-		} {
-			if strings.HasPrefix(*bse.EnvironmentName, testName) {
-				testOptGroup = true
-			}
-		}
-
-		if !testOptGroup {
-			log.Printf("Skipping (%s) (%s)", *bse.EnvironmentName, *bse.EnvironmentId)
-			continue
-		}
-
 		log.Printf("Trying to terminate (%s) (%s)", *bse.EnvironmentName, *bse.EnvironmentId)
 
 		_, err := beanstalkconn.TerminateEnvironment(
@@ -1052,7 +1034,7 @@ resource "aws_elastic_beanstalk_environment" "tfenvtest" {
 
   wait_for_ready_timeout = "15m"
 
-  tags {
+  tags = {
     firstTag = "%s"
     secondTag = "%s"
   }
@@ -1063,7 +1045,7 @@ func testAccBeanstalkEnv_VPC(sgName, appName, envName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "tf_b_test" {
   cidr_block = "10.0.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-elastic-beanstalk-env-vpc"
 	}
 }
@@ -1081,7 +1063,7 @@ resource "aws_route" "r" {
 resource "aws_subnet" "main" {
   vpc_id     = "${aws_vpc.tf_b_test.id}"
   cidr_block = "10.0.0.0/24"
-  tags {
+  tags = {
     Name = "tf-acc-elastic-beanstalk-env-vpc"
   }
 }

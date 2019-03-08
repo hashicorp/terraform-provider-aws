@@ -126,7 +126,7 @@ resource "aws_vpc" "foo" {
 	cidr_block = "10.6.0.0/16"
 	enable_dns_hostnames = true
 	enable_dns_support = true
-	tags {
+	tags = {
 		Name = "terraform-testacc-route53-zone-association-foo"
 	}
 }
@@ -135,14 +135,19 @@ resource "aws_vpc" "bar" {
 	cidr_block = "10.7.0.0/16"
 	enable_dns_hostnames = true
 	enable_dns_support = true
-	tags {
+	tags = {
 		Name = "terraform-testacc-route53-zone-association-bar"
 	}
 }
 
 resource "aws_route53_zone" "foo" {
 	name = "foo.com"
-	vpc_id = "${aws_vpc.foo.id}"
+	vpc {
+		vpc_id = "${aws_vpc.foo.id}"
+	}
+	lifecycle {
+		ignore_changes = ["vpc"]
+	}
 }
 
 resource "aws_route53_zone_association" "foobar" {
@@ -167,7 +172,7 @@ resource "aws_vpc" "foo" {
 	cidr_block = "10.6.0.0/16"
 	enable_dns_hostnames = true
 	enable_dns_support = true
-	tags {
+	tags = {
 		Name = "terraform-testacc-route53-zone-association-region-foo"
 	}
 }
@@ -177,7 +182,7 @@ resource "aws_vpc" "bar" {
 	cidr_block = "10.7.0.0/16"
 	enable_dns_hostnames = true
 	enable_dns_support = true
-	tags {
+	tags = {
 		Name = "terraform-testacc-route53-zone-association-region-bar"
 	}
 }
@@ -185,8 +190,13 @@ resource "aws_vpc" "bar" {
 resource "aws_route53_zone" "foo" {
 	provider = "aws.west"
 	name = "foo.com"
-	vpc_id = "${aws_vpc.foo.id}"
-	vpc_region = "us-west-2"
+	vpc {
+		vpc_id     = "${aws_vpc.foo.id}"
+		vpc_region = "us-west-2"
+	}
+	lifecycle {
+		ignore_changes = ["vpc"]
+	}
 }
 
 resource "aws_route53_zone_association" "foobar" {

@@ -18,6 +18,9 @@ func resourceAwsElasticTranscoderPipeline() *schema.Resource {
 		Read:   resourceAwsElasticTranscoderPipelineRead,
 		Update: resourceAwsElasticTranscoderPipelineUpdate,
 		Delete: resourceAwsElasticTranscoderPipelineDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -235,7 +238,7 @@ func expandETNotifications(d *schema.ResourceData) *elastictranscoder.Notificati
 	}
 
 	s := set.(*schema.Set).List()
-	if s == nil || len(s) == 0 {
+	if len(s) == 0 {
 		return nil
 	}
 

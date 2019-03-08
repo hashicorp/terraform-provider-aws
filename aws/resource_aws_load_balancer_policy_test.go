@@ -250,7 +250,7 @@ func testAccAWSLoadBalancerPolicyConfig_basic(rInt int) string {
 			lb_protocol = "http"
 		}
 
-		tags {
+	tags = {
 			Name = "tf-acc-test"
 		}
 	}
@@ -259,7 +259,7 @@ func testAccAWSLoadBalancerPolicyConfig_basic(rInt int) string {
 		load_balancer_name = "${aws_elb.test-lb.name}"
 		policy_name = "test-policy-%d"
 		policy_type_name = "AppCookieStickinessPolicyType"
-		policy_attribute = {
+		policy_attribute {
 			name = "CookieName"
 			value = "magic_cookie"
 		}
@@ -279,7 +279,7 @@ func testAccAWSLoadBalancerPolicyConfig_updateWhileAssigned0(rInt int) string {
 			lb_protocol = "http"
 		}
 
-		tags {
+	tags = {
 			Name = "tf-acc-test"
 		}
 	}
@@ -288,7 +288,7 @@ func testAccAWSLoadBalancerPolicyConfig_updateWhileAssigned0(rInt int) string {
 		load_balancer_name = "${aws_elb.test-lb.name}"
 		policy_name = "test-policy-%d"
 		policy_type_name = "AppCookieStickinessPolicyType"
-		policy_attribute = {
+		policy_attribute {
 			name = "CookieName"
 			value = "magic_cookie"
 		}
@@ -316,7 +316,7 @@ func testAccAWSLoadBalancerPolicyConfig_updateWhileAssigned1(rInt int) string {
 			lb_protocol = "http"
 		}
 
-		tags {
+	tags = {
 			Name = "tf-acc-test"
 		}
 	}
@@ -325,7 +325,7 @@ func testAccAWSLoadBalancerPolicyConfig_updateWhileAssigned1(rInt int) string {
 		load_balancer_name = "${aws_elb.test-lb.name}"
 		policy_name = "test-policy-%d"
 		policy_type_name = "AppCookieStickinessPolicyType"
-		policy_attribute = {
+		policy_attribute {
 			name = "CookieName"
 			value = "unicorn_cookie"
 		}

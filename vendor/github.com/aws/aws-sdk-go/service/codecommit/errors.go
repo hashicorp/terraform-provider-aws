@@ -189,6 +189,14 @@ const (
 	// The encryption key is not available.
 	ErrCodeEncryptionKeyUnavailableException = "EncryptionKeyUnavailableException"
 
+	// ErrCodeFileContentAndSourceFileSpecifiedException for service response error code
+	// "FileContentAndSourceFileSpecifiedException".
+	//
+	// The commit cannot be created because both a source file and file content
+	// have been specified for the same file. You cannot provide both. Either specify
+	// a source file, or provide the file content directly.
+	ErrCodeFileContentAndSourceFileSpecifiedException = "FileContentAndSourceFileSpecifiedException"
+
 	// ErrCodeFileContentRequiredException for service response error code
 	// "FileContentRequiredException".
 	//
@@ -200,8 +208,8 @@ const (
 	// "FileContentSizeLimitExceededException".
 	//
 	// The file cannot be added because it is too large. The maximum file size that
-	// can be added using PutFile is 6 MB. For files larger than 6 MB but smaller
-	// than 2 GB, add them using a Git client.
+	// can be added using PutFile is 6 MB, and the combined file content change
+	// size is 7 MB. Consider making these changes using a Git client.
 	ErrCodeFileContentSizeLimitExceededException = "FileContentSizeLimitExceededException"
 
 	// ErrCodeFileDoesNotExistException for service response error code
@@ -210,6 +218,20 @@ const (
 	// The specified file does not exist. Verify that you have provided the correct
 	// name of the file, including its full path and extension.
 	ErrCodeFileDoesNotExistException = "FileDoesNotExistException"
+
+	// ErrCodeFileEntryRequiredException for service response error code
+	// "FileEntryRequiredException".
+	//
+	// The commit cannot be created because no files have been specified as added,
+	// updated, or changed (PutFile or DeleteFile) for the commit.
+	ErrCodeFileEntryRequiredException = "FileEntryRequiredException"
+
+	// ErrCodeFileModeRequiredException for service response error code
+	// "FileModeRequiredException".
+	//
+	// The commit cannot be created because a file mode is required to update mode
+	// permissions for an existing file, but no file mode has been specified.
+	ErrCodeFileModeRequiredException = "FileModeRequiredException"
 
 	// ErrCodeFileNameConflictsWithDirectoryNameException for service response error code
 	// "FileNameConflictsWithDirectoryNameException".
@@ -220,6 +242,14 @@ const (
 	// file name.
 	ErrCodeFileNameConflictsWithDirectoryNameException = "FileNameConflictsWithDirectoryNameException"
 
+	// ErrCodeFilePathConflictsWithSubmodulePathException for service response error code
+	// "FilePathConflictsWithSubmodulePathException".
+	//
+	// The commit cannot be created because a specified file path points to a submodule.
+	// Verify that the destination files have valid file paths that do not point
+	// to a submodule.
+	ErrCodeFilePathConflictsWithSubmodulePathException = "FilePathConflictsWithSubmodulePathException"
+
 	// ErrCodeFileTooLargeException for service response error code
 	// "FileTooLargeException".
 	//
@@ -227,6 +257,15 @@ const (
 	// information about limits in AWS CodeCommit, see AWS CodeCommit User Guide
 	// (http://docs.aws.amazon.com/codecommit/latest/userguide/limits.html).
 	ErrCodeFileTooLargeException = "FileTooLargeException"
+
+	// ErrCodeFolderContentSizeLimitExceededException for service response error code
+	// "FolderContentSizeLimitExceededException".
+	//
+	// The commit cannot be created because at least one of the overall changes
+	// in the commit result in a folder contents exceeding the limit of 6 MB. Either
+	// reduce the number and size of your changes, or split the changes across multiple
+	// folders.
+	ErrCodeFolderContentSizeLimitExceededException = "FolderContentSizeLimitExceededException"
 
 	// ErrCodeFolderDoesNotExistException for service response error code
 	// "FolderDoesNotExistException".
@@ -531,6 +570,14 @@ const (
 	// The number of branches for the trigger was exceeded.
 	ErrCodeMaximumBranchesExceededException = "MaximumBranchesExceededException"
 
+	// ErrCodeMaximumFileEntriesExceededException for service response error code
+	// "MaximumFileEntriesExceededException".
+	//
+	// The number of specified files to change as part of this commit exceeds the
+	// maximum number of files that can be changed in a single commit. Consider
+	// using a Git client for these changes.
+	ErrCodeMaximumFileEntriesExceededException = "MaximumFileEntriesExceededException"
+
 	// ErrCodeMaximumOpenPullRequestsExceededException for service response error code
 	// "MaximumOpenPullRequestsExceededException".
 	//
@@ -573,6 +620,13 @@ const (
 	// file names. File names, including the path to the file, cannot exceed the
 	// character limit.
 	ErrCodeNameLengthExceededException = "NameLengthExceededException"
+
+	// ErrCodeNoChangeException for service response error code
+	// "NoChangeException".
+	//
+	// The commit cannot be created because no changes will be made to the repository
+	// as a result of this commit. A commit must contain at least one change.
+	ErrCodeNoChangeException = "NoChangeException"
 
 	// ErrCodeParentCommitDoesNotExistException for service response error code
 	// "ParentCommitDoesNotExistException".
@@ -634,6 +688,13 @@ const (
 	// A pull request status is required, but none was provided.
 	ErrCodePullRequestStatusRequiredException = "PullRequestStatusRequiredException"
 
+	// ErrCodePutFileEntryConflictException for service response error code
+	// "PutFileEntryConflictException".
+	//
+	// The commit cannot be created because one or more files specified in the commit
+	// reference both a file and a folder.
+	ErrCodePutFileEntryConflictException = "PutFileEntryConflictException"
+
 	// ErrCodeReferenceDoesNotExistException for service response error code
 	// "ReferenceDoesNotExistException".
 	//
@@ -686,8 +747,8 @@ const (
 	// "RepositoryNotAssociatedWithPullRequestException".
 	//
 	// The repository does not contain any pull requests with that pull request
-	// ID. Check to make sure you have provided the correct repository name for
-	// the pull request.
+	// ID. Use GetPullRequest to verify the correct repository name for the pull
+	// request ID.
 	ErrCodeRepositoryNotAssociatedWithPullRequestException = "RepositoryNotAssociatedWithPullRequestException"
 
 	// ErrCodeRepositoryTriggerBranchNameListRequiredException for service response error code
@@ -722,6 +783,13 @@ const (
 	// The list of triggers for the repository is required but was not specified.
 	ErrCodeRepositoryTriggersListRequiredException = "RepositoryTriggersListRequiredException"
 
+	// ErrCodeRestrictedSourceFileException for service response error code
+	// "RestrictedSourceFileException".
+	//
+	// The commit cannot be created because one of the changes specifies copying
+	// or moving a .gitkeep file.
+	ErrCodeRestrictedSourceFileException = "RestrictedSourceFileException"
+
 	// ErrCodeSameFileContentException for service response error code
 	// "SameFileContentException".
 	//
@@ -730,12 +798,28 @@ const (
 	// specified.
 	ErrCodeSameFileContentException = "SameFileContentException"
 
+	// ErrCodeSamePathRequestException for service response error code
+	// "SamePathRequestException".
+	//
+	// The commit cannot be created because one or more changes in this commit duplicate
+	// actions in the same file path. For example, you cannot make the same delete
+	// request to the same file in the same file path twice, or make a delete request
+	// and a move request to the same file as part of the same commit.
+	ErrCodeSamePathRequestException = "SamePathRequestException"
+
 	// ErrCodeSourceAndDestinationAreSameException for service response error code
 	// "SourceAndDestinationAreSameException".
 	//
 	// The source branch and the destination branch for the pull request are the
 	// same. You must specify different branches for the source and destination.
 	ErrCodeSourceAndDestinationAreSameException = "SourceAndDestinationAreSameException"
+
+	// ErrCodeSourceFileOrContentRequiredException for service response error code
+	// "SourceFileOrContentRequiredException".
+	//
+	// The commit cannot be created because no source files or file content have
+	// been specified for the commit.
+	ErrCodeSourceFileOrContentRequiredException = "SourceFileOrContentRequiredException"
 
 	// ErrCodeTargetRequiredException for service response error code
 	// "TargetRequiredException".

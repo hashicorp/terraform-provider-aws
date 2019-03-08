@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -58,7 +59,7 @@ func TestAccAWSFlowLog_SubnetID(t *testing.T) {
 	subnetResourceName := "aws_subnet.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckFlowLogDestroy,
@@ -91,7 +92,7 @@ func TestAccAWSFlowLog_LogDestinationType_CloudWatchLogs(t *testing.T) {
 	resourceName := "aws_flow_log.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckFlowLogDestroy,
@@ -101,9 +102,10 @@ func TestAccAWSFlowLog_LogDestinationType_CloudWatchLogs(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowLogExists(resourceName, &flowLog),
 					testAccCheckAWSFlowLogAttributes(&flowLog),
-					resource.TestCheckResourceAttrPair(resourceName, "log_destination", cloudwatchLogGroupResourceName, "arn"),
+					// We automatically trim :* from ARNs if present
+					testAccCheckResourceAttrRegionalARN(resourceName, "log_destination", "logs", fmt.Sprintf("log-group:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_type", "cloud-watch-logs"),
-					resource.TestCheckResourceAttr(resourceName, "log_group_name", fmt.Sprintf("%s:*", rName)),
+					resource.TestCheckResourceAttrPair(resourceName, "log_group_name", cloudwatchLogGroupResourceName, "name"),
 				),
 			},
 			{
@@ -121,7 +123,7 @@ func TestAccAWSFlowLog_LogDestinationType_S3(t *testing.T) {
 	resourceName := "aws_flow_log.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckFlowLogDestroy,
@@ -140,6 +142,22 @@ func TestAccAWSFlowLog_LogDestinationType_S3(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSFlowLog_LogDestinationType_S3_Invalid(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test-flow-log-s3-invalid")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckFlowLogDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccFlowLogConfig_LogDestinationType_S3_Invalid(rName),
+				ExpectError: regexp.MustCompile(`Access Denied for LogDestination`),
 			},
 		},
 	})
@@ -203,7 +221,7 @@ func testAccFlowLogConfig_LogDestinationType_CloudWatchLogs(rName string) string
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = %q
   }
 }
@@ -249,7 +267,7 @@ func testAccFlowLogConfig_LogDestinationType_S3(rName string) string {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = %q
   }
 }
@@ -268,12 +286,31 @@ resource "aws_flow_log" "test" {
 `, rName, rName)
 }
 
+func testAccFlowLogConfig_LogDestinationType_S3_Invalid(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %q
+  }
+}
+
+resource "aws_flow_log" "test" {
+  log_destination      = "arn:aws:s3:::does-not-exist"
+  log_destination_type = "s3"
+  traffic_type         = "ALL"
+  vpc_id               = "${aws_vpc.test.id}"
+}
+`, rName)
+}
+
 func testAccFlowLogConfig_SubnetID(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = %q
   }
 }
@@ -282,7 +319,7 @@ resource "aws_subnet" "test" {
   cidr_block = "10.0.1.0/24"
   vpc_id     = "${aws_vpc.test.id}"
 
-  tags {
+  tags = {
     Name = %q
   }
 }
@@ -327,7 +364,7 @@ func testAccFlowLogConfig_VPCID(rName string) string {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = %q
   }
 }
