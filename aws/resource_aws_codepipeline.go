@@ -40,10 +40,9 @@ func resourceAwsCodePipeline() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-
 			"artifact_store": {
 				Type:     schema.TypeList,
-				Required: true,
+				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -80,6 +79,59 @@ func resourceAwsCodePipeline() *schema.Resource {
 									},
 								},
 							},
+						},
+					},
+				},
+			},
+			"artifact_stores": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"artifact_store": {
+							Type:     schema.TypeList,
+							Required: false,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"location": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"type": {
+										Type:     schema.TypeString,
+										Required: true,
+										ValidateFunc: validation.StringInSlice([]string{
+											codepipeline.ArtifactStoreTypeS3,
+										}, false),
+									},
+									"encryption_key": {
+										Type:     schema.TypeList,
+										MaxItems: 1,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"id": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+
+												"type": {
+													Type:     schema.TypeString,
+													Required: true,
+													ValidateFunc: validation.StringInSlice([]string{
+														codepipeline.EncryptionKeyTypeKms,
+													}, false),
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"region": {
+							Type:     schema.TypeString,
+							Required: true,
 						},
 					},
 				},
@@ -206,19 +258,28 @@ func resourceAwsCodePipelineCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func expandAwsCodePipeline(d *schema.ResourceData) *codepipeline.PipelineDeclaration {
-	pipelineArtifactStore := expandAwsCodePipelineArtifactStore(d)
 	pipelineStages := expandAwsCodePipelineStages(d)
+	pipelineArtifactStore := expandAwsCodePipelineArtifactStore(d)
+	pipelineArtifactStores := expandAwsCodePipelineArtifactStores(d)
 
 	pipeline := codepipeline.PipelineDeclaration{
-		Name:          aws.String(d.Get("name").(string)),
-		RoleArn:       aws.String(d.Get("role_arn").(string)),
-		ArtifactStore: pipelineArtifactStore,
-		Stages:        pipelineStages,
+		Name:           aws.String(d.Get("name").(string)),
+		RoleArn:        aws.String(d.Get("role_arn").(string)),
+		ArtifactStore:  pipelineArtifactStore,
+		ArtifactStores: pipelineArtifactStores,
+		Stages:         pipelineStages,
 	}
+
 	return &pipeline
 }
+
 func expandAwsCodePipelineArtifactStore(d *schema.ResourceData) *codepipeline.ArtifactStore {
 	configs := d.Get("artifact_store").([]interface{})
+
+	if configs == nil {
+		return nil
+	}
+
 	data := configs[0].(map[string]interface{})
 	pipelineArtifactStore := codepipeline.ArtifactStore{
 		Location: aws.String(data["location"].(string)),
@@ -234,6 +295,37 @@ func expandAwsCodePipelineArtifactStore(d *schema.ResourceData) *codepipeline.Ar
 		pipelineArtifactStore.EncryptionKey = &ek
 	}
 	return &pipelineArtifactStore
+}
+
+func expandAwsCodePipelineArtifactStores(d *schema.ResourceData) map[string]*codepipeline.ArtifactStore {
+	configs := d.Get("artifact_stores").([]interface{})
+
+	if configs == nil {
+		return nil
+	}
+
+	pipelineArtifactStores := make(map[string]*codepipeline.ArtifactStore)
+
+	for _, config := range configs {
+		data := config.(map[string]interface{})
+		pipelineArtifactStores[data["region"].(string)] = &codepipeline.ArtifactStore{
+			Location: aws.String(data["location"].(string)),
+			Type:     aws.String(data["type"].(string)),
+		}
+
+		tek := data["encryption_key"].([]interface{})
+
+		if len(tek) > 0 {
+			vk := tek[0].(map[string]interface{})
+			ek := codepipeline.EncryptionKey{
+				Type: aws.String(vk["type"].(string)),
+				Id:   aws.String(vk["id"].(string)),
+			}
+			pipelineArtifactStores[data["region"].(string)].EncryptionKey = &ek
+		}
+	}
+
+	return pipelineArtifactStores
 }
 
 func flattenAwsCodePipelineArtifactStore(artifactStore *codepipeline.ArtifactStore) []interface{} {
