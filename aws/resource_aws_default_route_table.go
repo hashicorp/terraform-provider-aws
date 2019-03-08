@@ -258,6 +258,10 @@ func revokeAllRouteTableRules(defaultRouteTableId string, meta interface{}) erro
 			// See aws_vpc_endpoint
 			continue
 		}
+		if *r.Origin == "EnableVgwRoutePropagation" {
+			// Skipping because its from a Gateway associations. Already removed above
+			continue
+		}
 
 		if r.DestinationCidrBlock != nil {
 			log.Printf(
