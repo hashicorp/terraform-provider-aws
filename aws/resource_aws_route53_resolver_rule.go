@@ -2,7 +2,6 @@ package aws
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -116,10 +115,10 @@ func resourceAwsRoute53ResolverRuleCreate(d *schema.ResourceData, meta interface
 		DomainName:       aws.String(d.Get("domain_name").(string)),
 		RuleType:         aws.String(d.Get("rule_type").(string)),
 	}
-	if v, ok := d.GetOk("name"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("name"); ok {
 		req.Name = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("resolver_endpoint_id"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("resolver_endpoint_id"); ok {
 		req.ResolverEndpointId = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("target_ip"); ok {
@@ -262,11 +261,11 @@ func route53ResolverRuleRefresh(conn *route53resolver.Route53Resolver, ruleId st
 			return nil, "", err
 		}
 
-		status := aws.StringValue(resp.ResolverRule.Status)
-		if status == route53resolver.ResolverRuleStatusFailed {
-			return nil, status, errors.New(aws.StringValue(resp.ResolverRule.StatusMessage))
+		if statusMessage := aws.StringValue(resp.ResolverRule.StatusMessage); statusMessage != "" {
+			log.Printf("[INFO] Route 53 Resolver rule (%s) status message: %s", ruleId, statusMessage)
 		}
-		return resp.ResolverRule, status, nil
+
+		return resp.ResolverRule, aws.StringValue(resp.ResolverRule.Status), nil
 	}
 }
 

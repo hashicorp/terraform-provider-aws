@@ -2,7 +2,6 @@ package aws
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -112,7 +111,7 @@ func resourceAwsRoute53ResolverEndpointCreate(d *schema.ResourceData, meta inter
 		IpAddresses:      expandRoute53ResolverEndpointIpAddresses(d.Get("ip_address").(*schema.Set)),
 		SecurityGroupIds: expandStringSet(d.Get("security_group_ids").(*schema.Set)),
 	}
-	if v, ok := d.GetOk("name"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("name"); ok {
 		req.Name = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("tags"); ok && len(v.(map[string]interface{})) > 0 {
@@ -303,11 +302,11 @@ func route53ResolverEndpointRefresh(conn *route53resolver.Route53Resolver, epId 
 			return nil, "", err
 		}
 
-		status := aws.StringValue(resp.ResolverEndpoint.Status)
-		if status == route53resolver.ResolverEndpointStatusActionNeeded {
-			return nil, status, errors.New(aws.StringValue(resp.ResolverEndpoint.StatusMessage))
+		if statusMessage := aws.StringValue(resp.ResolverEndpoint.StatusMessage); statusMessage != "" {
+			log.Printf("[INFO] Route 53 Resolver endpoint (%s) status message: %s", epId, statusMessage)
 		}
-		return resp.ResolverEndpoint, status, nil
+
+		return resp.ResolverEndpoint, aws.StringValue(resp.ResolverEndpoint.Status), nil
 	}
 }
 

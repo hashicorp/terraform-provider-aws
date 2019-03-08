@@ -29,6 +29,7 @@ func TestAccAwsRoute53ResolverRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "rule_type", "SYSTEM"),
 					resource.TestCheckResourceAttr(resourceName, "share_status", "NOT_SHARED"),
 					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -59,6 +60,11 @@ func TestAccAwsRoute53ResolverRule_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Usage", "original"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccRoute53ResolverRuleConfig_basicTagsChanged,
@@ -106,6 +112,11 @@ func TestAccAwsRoute53ResolverRule_updateName(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccRoute53ResolverRuleConfig_basicName(name2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverRuleExists(resourceName, &rule),
@@ -121,8 +132,7 @@ func TestAccAwsRoute53ResolverRule_updateName(t *testing.T) {
 func TestAccAwsRoute53ResolverRule_forward(t *testing.T) {
 	var rule route53resolver.ResolverRule
 	resourceName := "aws_route53_resolver_rule.example"
-	rInt := acctest.RandInt()
-	name := fmt.Sprintf("terraform-testacc-r53-resolver-%d", rInt)
+	name := fmt.Sprintf("terraform-testacc-r53-resolver-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -130,7 +140,7 @@ func TestAccAwsRoute53ResolverRule_forward(t *testing.T) {
 		CheckDestroy: testAccCheckRoute53ResolverRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53ResolverRuleConfig_forward(rInt, name),
+				Config: testAccRoute53ResolverRuleConfig_forward(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverRuleExists(resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com."),
@@ -142,7 +152,12 @@ func TestAccAwsRoute53ResolverRule_forward(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRoute53ResolverRuleConfig_forwardChanged(rInt, name),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccRoute53ResolverRuleConfig_forwardChanged(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverRuleExists(resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com."),
@@ -248,7 +263,7 @@ resource "aws_route53_resolver_rule" "example" {
 `, name)
 }
 
-func testAccRoute53ResolverRuleConfig_forward(rInt int, name string) string {
+func testAccRoute53ResolverRuleConfig_forward(name string) string {
 	return fmt.Sprintf(`
 %s
 
@@ -263,10 +278,10 @@ resource "aws_route53_resolver_rule" "example" {
     ip = "192.0.2.6"
   }
 }
-`, testAccRoute53ResolverEndpointConfig_initial(rInt, "OUTBOUND", name), name)
+`, testAccRoute53ResolverRuleConfig_resolverEndpoint(name), name)
 }
 
-func testAccRoute53ResolverRuleConfig_forwardChanged(rInt int, name string) string {
+func testAccRoute53ResolverRuleConfig_forwardChanged(name string) string {
 	return fmt.Sprintf(`
 %s
 
@@ -285,5 +300,67 @@ resource "aws_route53_resolver_rule" "example" {
     port = 54
   }
 }
-`, testAccRoute53ResolverEndpointConfig_initial(rInt, "OUTBOUND", name), name)
+`, testAccRoute53ResolverRuleConfig_resolverEndpoint(name), name)
+}
+
+func testAccRoute53ResolverRuleConfig_resolverEndpoint(name string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "foo" {
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_support   = true
+  enable_dns_hostnames = true
+
+  tags = {
+    Name = %q
+  }
+}
+
+data "aws_availability_zones" "available" {}
+
+resource "aws_subnet" "sn1" {
+  vpc_id            = "${aws_vpc.foo.id}"
+  cidr_block        = "${cidrsubnet(aws_vpc.foo.cidr_block, 2, 0)}"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+
+  tags = {
+    Name = %q
+  }
+}
+
+resource "aws_subnet" "sn2" {
+  vpc_id            = "${aws_vpc.foo.id}"
+  cidr_block        = "${cidrsubnet(aws_vpc.foo.cidr_block, 2, 1)}"
+  availability_zone = "${data.aws_availability_zones.available.names[1]}"
+
+  tags = {
+    Name = %q
+  }
+}
+
+resource "aws_security_group" "sg1" {
+  vpc_id = "${aws_vpc.foo.id}"
+  name   = %q
+
+  tags = {
+    Name = %q
+  }
+}
+
+resource "aws_route53_resolver_endpoint" "foo" {
+  direction = "OUTBOUND"
+  name      = %q
+
+  security_group_ids = [
+    "${aws_security_group.sg1.id}",
+  ]
+
+  ip_address {
+    subnet_id = "${aws_subnet.sn1.id}"
+  }
+
+  ip_address {
+    subnet_id = "${aws_subnet.sn2.id}"
+  }
+}
+`, name, name, name, name, name, name)
 }

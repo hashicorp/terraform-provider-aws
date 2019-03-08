@@ -12,18 +12,30 @@ Provides a Route53 Resolver rule.
 
 ## Example Usage
 
+### System rule
+
 ```hcl
-resource "aws_route53_resolver_rule" "example" {
+resource "aws_route53_resolver_rule" "sys" {
+  domain_name = "subdomain.example.com"
+  rule_type   = "SYSTEM"
+}
+```
+
+### Forward rule
+
+```hcl
+resource "aws_route53_resolver_rule" "fwd" {
   domain_name          = "example.com"
   name                 = "example"
   rule_type            = "FORWARD"
+  resolver_endpoint_id = "${aws_route53_resolver_endpoint.foo.id}"
 
   target_ip {
     ip   = "123.45.67.89"
   }
 
   tags {
-    Foo = "Barr"
+    Environment = "Prod"
   }
 }
 ```
@@ -36,7 +48,9 @@ The following arguments are supported:
 * `rule_type` - (Required) The rule type. Valid values are `FORWARD`, `SYSTEM` and `RECURSIVE`.
 * `name` - (Optional) A friendly name that lets you easily find a rule in the Resolver dashboard in the Route 53 console.
 * `resolver_endpoint_id` (Optional) The ID of the outbound resolver endpoint that you want to use to route DNS queries to the IP addresses that you specify using `target_ip`.
+This argument should only be specified for `FORWARD` type rules.
 * `target_ip` - (Optional) Configuration block(s) indicating the IPs that you want Resolver to forward DNS queries to (documented below).
+This argument should only be specified for `FORWARD` type rules.
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 
 The `target_ip` object supports the following:
@@ -59,5 +73,5 @@ Values are `NOT_SHARED`, `SHARED_BY_ME` or `SHARED_WITH_ME`
 Route53 Resolver rules can be imported using the `id`, e.g.
 
 ```
-$ terraform import aws_route53_resolver_rule.example rslvr-rr-0123456789abcdef0
+$ terraform import aws_route53_resolver_rule.sys rslvr-rr-0123456789abcdef0
 ```

@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -64,7 +63,7 @@ func resourceAwsRoute53ResolverRuleAssociationCreate(d *schema.ResourceData, met
 		ResolverRuleId: aws.String(d.Get("resolver_rule_id").(string)),
 		VPCId:          aws.String(d.Get("vpc_id").(string)),
 	}
-	if v, ok := d.GetOk("name"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("name"); ok {
 		req.Name = aws.String(v.(string))
 	}
 
@@ -145,11 +144,11 @@ func route53ResolverRuleAssociationRefresh(conn *route53resolver.Route53Resolver
 			return nil, "", err
 		}
 
-		status := aws.StringValue(resp.ResolverRuleAssociation.Status)
-		if status == route53resolver.ResolverRuleAssociationStatusFailed {
-			return nil, status, errors.New(aws.StringValue(resp.ResolverRuleAssociation.StatusMessage))
+		if statusMessage := aws.StringValue(resp.ResolverRuleAssociation.StatusMessage); statusMessage != "" {
+			log.Printf("[INFO] Route 53 Resolver rule association (%s) status message: %s", assocId, statusMessage)
 		}
-		return resp.ResolverRuleAssociation, status, nil
+
+		return resp.ResolverRuleAssociation, aws.StringValue(resp.ResolverRuleAssociation.Status), nil
 	}
 }
 
