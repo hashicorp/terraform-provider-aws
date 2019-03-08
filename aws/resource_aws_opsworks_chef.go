@@ -54,9 +54,8 @@ func resourceAwsOpsworksChef() *schema.Resource {
 			// I kinda want to make this required because how else are we going to get at that info?
 			// Also, since these are write-only and not returned by the API, we'll probably need a custom diff function that ignores them?
 			"chef_pivotal_key": {
-				Type:      schema.TypeString,
-				Required:  true,
-				Sensitive: true,
+				Type:     schema.TypeString,
+				Required: true,
 				// TODO: should we?
 				// ValidateFunc: validateRsaKey,
 			},
@@ -67,24 +66,6 @@ func resourceAwsOpsworksChef() *schema.Resource {
 				Sensitive: true,
 				// TODO: should we?
 				// ValidateFunc: validatePasswordOk,
-			},
-
-			// TODO:
-			// default and only valid. I'll leave it configurable for future proofing but
-			// validation failure, maybe?
-			"engine_model": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  EngineModel,
-			},
-
-			// TODO:
-			// default and only valid. I'll leave it configurable for future proofing but
-			// validation failure, maybe?
-			"engine_version": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  EngineVersion,
 			},
 
 			// TODO: document the instance role required
@@ -102,6 +83,12 @@ func resourceAwsOpsworksChef() *schema.Resource {
 				ForceNew: true,
 			},
 
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+
 			"ssh_key_pair": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -109,21 +96,15 @@ func resourceAwsOpsworksChef() *schema.Resource {
 			},
 
 			"preferred_backup_window": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validateAny(
-					validateOnceADayWindowFormat,
-					validateOnceAWeekWindowFormat,
-				),
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validateStartTimeFormat,
 			},
 
 			"preferred_maintenance_window": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validateAny(
-					validateOnceADayWindowFormat,
-					validateOnceAWeekWindowFormat,
-				),
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validateStartTimeFormat,
 			},
 
 			// TODO:
@@ -131,10 +112,11 @@ func resourceAwsOpsworksChef() *schema.Resource {
 			// create it themselves. Or maybe some sort of wrapper module? I dunno.
 			// if it's optional, will they be computed? if so, is that something we can express here?
 			"security_group_ids": {
-				Type:     schema.TypeList, // TODO: should this be a schema.TypeSet instead so order doesn't matter? check ALB and aws_instance resources?
+				Type:     schema.TypeSet,
 				Required: true,
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
 				MinItems: 1,
 			},
 
@@ -159,10 +141,11 @@ func resourceAwsOpsworksChef() *schema.Resource {
 			// enabled.
 			// if it's optional, will they be computed? if so, is that something we can express here?
 			"subnet_ids": {
-				Type:     schema.TypeList, // TODO: schema.TypeSet? check ALB resources?
+				Type:     schema.TypeSet,
 				Required: true,
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
 				MinItems: 1,
 			},
 
@@ -181,8 +164,6 @@ func resourceAwsOpsworksChef() *schema.Resource {
 
 func resourceAwsOpsworksChefValidate(d *schema.ResourceData) error {
 	// TODO: validation function
-	// engineModel? // really depends if/how we're enforcing that there's only one actual valid value for these
-	// engineVersion?
 	// chefPivotalKey validate rsa? or is that too much?
 	// chefDeliveryAdminPassword validate the password meets the API's requirements or is that too much?
 	// backupRetentionCount validate that it's positive
@@ -214,16 +195,17 @@ func resourceAwsOpsworksChefRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("associate_public_ip_address", server.AssociatePublicIpAddress)
 	d.Set("backup_retention_count", server.BackupRetentionCount)
 	d.Set("disable_automated_backup", server.DisableAutomatedBackup)
-	d.Set("engine_model", server.EngineModel)     // TODO: possibly not bother with this
-	d.Set("engine_version", server.EngineVersion) // TODO: possibly not bother with this
 	d.Set("instance_profile_arn", server.InstanceProfileArn)
 	d.Set("instance_type", server.InstanceType)
+	d.SetId(*server.ServerName)
+	d.Set("name", server.ServerName)
 	if server.KeyPair != nil {
 		d.Set("ssh_key_pair", server.KeyPair)
 	}
 	d.Set("preferred_backup_window", server.PreferredBackupWindow)
 	d.Set("preferred_maintenance_window", server.PreferredMaintenanceWindow)
-	d.Set("security_group_ids", server.SecurityGroupIds)
+	d.Set("security_group_ids", flattenStringList(server.SecurityGroupIds))
+	d.Set("subnet_ids", flattenStringList(server.SubnetIds))
 	d.Set("endpoint", server.Endpoint)
 	d.Set("arn", server.ServerArn)
 
@@ -242,16 +224,17 @@ func resourceAwsOpsworksChefCreate(d *schema.ResourceData, meta interface{}) err
 		AssociatePublicIpAddress:   aws.Bool(d.Get("associate_public_ip_address").(bool)),
 		BackupRetentionCount:       aws.Int64(int64(d.Get("backup_retention_count").(int))),
 		DisableAutomatedBackup:     aws.Bool(d.Get("disable_automated_backup").(bool)),
-		EngineModel:                aws.String(d.Get("engine_model").(string)),
-		EngineVersion:              aws.String(d.Get("engine_version").(string)),
+		Engine:                     aws.String("Chef"),
+		EngineModel:                aws.String(EngineModel),
+		EngineVersion:              aws.String(EngineVersion),
 		InstanceProfileArn:         aws.String(d.Get("instance_profile_arn").(string)),
 		InstanceType:               aws.String(d.Get("instance_type").(string)),
+		ServerName:                 aws.String(d.Get("name").(string)),
 		PreferredBackupWindow:      aws.String(d.Get("preferred_backup_window").(string)),
 		PreferredMaintenanceWindow: aws.String(d.Get("preferred_maintenance_window").(string)),
-		SecurityGroupIds:           aws.StringSlice(d.Get("security_group_ids").([]string)), // TODO: SecurityGroupIds, set?
-		ServerName:                 aws.String(d.Id()),
+		SecurityGroupIds:           expandStringSet(d.Get("security_group_ids").(*schema.Set)),
 		ServiceRoleArn:             aws.String(d.Get("service_role_arn").(string)),
-		SubnetIds:                  aws.StringSlice(d.Get("subnet_ids").([]string)), // TODO: set?
+		SubnetIds:                  expandStringSet(d.Get("subnet_ids").(*schema.Set)),
 	}
 
 	chefPivotalKeyAttribute := opsworkscm.EngineAttribute{
@@ -329,6 +312,7 @@ func resourceAwsOpsworksChefUpdate(d *schema.ResourceData, meta interface{}) err
 		DisableAutomatedBackup:     aws.Bool(d.Get("disable_automated_backup").(bool)),
 		PreferredBackupWindow:      aws.String(d.Get("preferred_backup_window").(string)),
 		PreferredMaintenanceWindow: aws.String(d.Get("preferred_maintenance_window").(string)),
+		ServerName:                 aws.String(d.Get("name").(string)),
 	}
 
 	log.Printf("[DEBUG] Updating OpsWorks Chef server: %s", req)
