@@ -39,7 +39,7 @@ func resourceAwsS3Bucket() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"bucket_prefix"},
-				ValidateFunc:  validation.StringLenBetween(3, 63),
+				ValidateFunc:  validation.StringLenBetween(0, 63),
 			},
 			"bucket_prefix": {
 				Type:          schema.TypeString,
