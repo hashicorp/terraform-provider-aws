@@ -678,7 +678,56 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-
+			"origin_group": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"origin_id": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"failover_criteria": {
+							Type:     schema.TypeSet,
+							Required: true,
+							MaxItems: 1,
+							MinItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"status_codes": {
+										Type:     schema.TypeList,
+										MinItems: 1,
+										Required: true,
+										Elem:     &schema.Schema{Type: schema.TypeInt},
+									},
+								},
+							},
+						},
+						"members": {
+							Type:     schema.TypeList,
+							Required: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"ordered_origin_group_member": {
+										Type:     schema.TypeSet,
+										Required: true,
+										MaxItems: 2,
+										MinItems: 2,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"origin_id": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"tags": tagsSchema(),
 		},
 	}

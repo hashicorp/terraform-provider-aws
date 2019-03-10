@@ -46,6 +46,10 @@ func expandDistributionConfig(d *schema.ResourceData) *cloudfront.DistributionCo
 		WebACLId:             aws.String(d.Get("web_acl_id").(string)),
 	}
 
+	if v, ok := d.GetOk("origin_group"); ok {
+		distributionConfig.OriginGroups = expandOriginGroups(v.(*schema.Set))
+	}
+
 	// This sets CallerReference if it's still pending computation (ie: new resource)
 	if v, ok := d.GetOk("caller_reference"); ok {
 		distributionConfig.CallerReference = aws.String(v.(string))
@@ -535,6 +539,20 @@ func expandOrigins(s *schema.Set) *cloudfront.Origins {
 	}
 }
 
+func expandOriginGroups(s *schema.Set) *cloudfront.OriginGroups {
+	qty := 0
+	items := []*cloudfront.OriginGroup{}
+	for _, v := range s.List() {
+		items = append(items, expandOriginGroup(v.(map[string]interface{})))
+		qty++
+	}
+
+	return &cloudfront.OriginGroups{
+		Quantity: aws.Int64(int64(qty)),
+		Items:    items,
+	}
+}
+
 func flattenOrigins(ors *cloudfront.Origins) *schema.Set {
 	s := []interface{}{}
 	for _, v := range ors.Items {
@@ -574,6 +592,76 @@ func expandOrigin(m map[string]interface{}) *cloudfront.Origin {
 	}
 
 	return origin
+}
+
+func expandOriginGroup(m map[string]interface{}) *cloudfront.OriginGroup {
+	failOverCriteria := &cloudfront.OriginGroupFailoverCriteria{}
+	if v, ok := m["failover_criteria"]; ok {
+		criteriaSet := v.(*schema.Set)
+
+		for _, c := range criteriaSet.List() {
+			criteria := c.(map[string]interface{})
+
+			if codes, ok := criteria["status_codes"]; ok {
+				codesList := codes.([]interface{})
+
+				failOverCriteria.StatusCodes = &cloudfront.StatusCodes{
+					Items:    expandFailOverStatusCodes(codesList),
+					Quantity: aws.Int64(int64(len(codesList))),
+				}
+			}
+		}
+	}
+
+	var members *cloudfront.OriginGroupMembers
+	if v, ok := m["members"]; ok {
+		membersList := v.([]interface{})
+
+		items := expandOriginGroupMemberList(membersList)
+		members = &cloudfront.OriginGroupMembers{
+			Items:    items,
+			Quantity: aws.Int64(int64(len(items))),
+		}
+	}
+
+	origin := &cloudfront.OriginGroup{
+		Id:               aws.String(m["origin_id"].(string)),
+		FailoverCriteria: failOverCriteria,
+		Members:          members,
+	}
+
+	return origin
+}
+
+func expandOriginGroupMemberList(members []interface{}) []*cloudfront.OriginGroupMember {
+	vs := make([]*cloudfront.OriginGroupMember, 0, len(members))
+	for _, v := range members {
+		val := v.(map[string]interface{})
+		if member, ok := val["ordered_origin_group_member"]; ok {
+			groupMemberSet := member.(*schema.Set)
+
+			for _, groupMemberRaw := range groupMemberSet.List() {
+
+				groupMember := groupMemberRaw.(map[string]interface{})
+				if originID, hasKey := groupMember["origin_id"]; hasKey {
+					vs = append(vs, &cloudfront.OriginGroupMember{
+						OriginId: aws.String(originID.(string)),
+					})
+				}
+			}
+		}
+	}
+	return vs
+}
+
+func expandFailOverStatusCodes(codes []interface{}) []*int64 {
+	log.Printf("[DEBUG] expandFailOverStatusCodes > %+v", codes)
+	vs := make([]*int64, 0, len(codes))
+	for _, v := range codes {
+		vs = append(vs, aws.Int64(int64(v.(int))))
+	}
+
+	return vs
 }
 
 func flattenOrigin(or *cloudfront.Origin) map[string]interface{} {
