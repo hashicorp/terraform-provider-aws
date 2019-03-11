@@ -1598,11 +1598,31 @@ func testAccCheckAWSS3BucketDestroyWithProvider(s *terraform.State, provider *sc
 			continue
 		}
 
-		_, err := conn.HeadBucket(&s3.HeadBucketInput{
+		input := &s3.HeadBucketInput{
 			Bucket: aws.String(rs.Primary.ID),
+		}
+
+		// Retry for S3 eventual consistency
+		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+			_, err := conn.HeadBucket(input)
+
+			if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") || isAWSErr(err, "NotFound", "") {
+				return nil
+			}
+
+			if err != nil {
+				return resource.NonRetryableError(err)
+			}
+
+			return resource.RetryableError(fmt.Errorf("AWS S3 Bucket still exists: %s", rs.Primary.ID))
 		})
-		if err == nil {
-			return fmt.Errorf("AWS S3 Bucket still exists: %s", rs.Primary.ID)
+
+		if isResourceTimeoutError(err) {
+			_, err = conn.HeadBucket(input)
+		}
+
+		if err != nil {
+			return err
 		}
 	}
 	return nil
