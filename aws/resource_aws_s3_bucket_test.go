@@ -59,7 +59,17 @@ func testSweepS3Buckets(region string) error {
 	for _, bucket := range output.Buckets {
 		name := aws.StringValue(bucket.Name)
 
-		if !strings.HasPrefix(name, "tf-acc") && !strings.HasPrefix(name, "tf-object-test") && !strings.HasPrefix(name, "tf-test") {
+		hasPrefix := false
+		prefixes := []string{"mybucket.", "mylogs.", "tf-acc", "tf-object-test", "tf-test"}
+
+		for _, prefix := range prefixes {
+			if strings.HasPrefix(name, prefix) {
+				hasPrefix = true
+				break
+			}
+		}
+
+		if !hasPrefix {
 			log.Printf("[INFO] Skipping S3 Bucket: %s", name)
 			continue
 		}
