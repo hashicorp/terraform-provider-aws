@@ -21,10 +21,11 @@ const (
 
 func resourceAwsRoute53ResolverRule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRoute53ResolverRuleCreate,
-		Read:   resourceAwsRoute53ResolverRuleRead,
-		Update: resourceAwsRoute53ResolverRuleUpdate,
-		Delete: resourceAwsRoute53ResolverRuleDelete,
+		Create:        resourceAwsRoute53ResolverRuleCreate,
+		Read:          resourceAwsRoute53ResolverRuleRead,
+		Update:        resourceAwsRoute53ResolverRuleUpdate,
+		Delete:        resourceAwsRoute53ResolverRuleDelete,
+		CustomizeDiff: resourceAwsRoute53ResolverRuleCustomizeDiff,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -244,6 +245,20 @@ func resourceAwsRoute53ResolverRuleDelete(d *schema.ResourceData, meta interface
 		[]string{route53ResolverRuleStatusDeleted})
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func resourceAwsRoute53ResolverRuleCustomizeDiff(diff *schema.ResourceDiff, v interface{}) error {
+	if diff.Id() != "" {
+		if diff.HasChange("resolver_endpoint_id") {
+			if _, n := diff.GetChange("resolver_endpoint_id"); n.(string) == "" {
+				if err := diff.ForceNew("resolver_endpoint_id"); err != nil {
+					return err
+				}
+			}
+		}
 	}
 
 	return nil
