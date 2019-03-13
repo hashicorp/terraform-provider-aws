@@ -116,6 +116,7 @@ more information.
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - Contains the EIP allocation ID.
+* `association_id` - Contains the EIP allocation ID.
 * `private_ip` - Contains the private IP address (if in VPC).
 * `associate_with_private_ip` - Contains the user specified private IP address
 (if in VPC).
