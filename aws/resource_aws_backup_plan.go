@@ -263,12 +263,12 @@ func resourceAwsPlanRuleHash(v interface{}) int {
 
 	if v.(map[string]interface{})["lifecycle"] != nil {
 		l := v.(map[string]interface{})["lifecycle"].(map[string]interface{})
-		if v, ok := l["delete_after"]; ok {
-			buf.WriteString(fmt.Sprintf("%d-", v.(int)))
+		if w, ok := l["delete_after"]; ok {
+			buf.WriteString(fmt.Sprintf("%d-", w.(int)))
 		}
 
-		if v, ok := l["cold_storage_after"]; ok {
-			buf.WriteString(fmt.Sprintf("%d-", v.(int)))
+		if w, ok := l["cold_storage_after"]; ok {
+			buf.WriteString(fmt.Sprintf("%d-", w.(int)))
 		}
 	}
 
