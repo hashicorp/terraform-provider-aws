@@ -2348,9 +2348,9 @@ func validateWorklinkFleetName(v interface{}, k string) (ws []string, errors []e
 
 func validateMediaConnectFlowName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-	if !regexp.MustCompile(`^[0-9A-Za-z]+$`).MatchString(value) {
+	if !regexp.MustCompile(`^[0-9A-Za-z-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
-			"only alphanumeric characters are allowed in %q", k))
+			"only alphanumeric characters and hyphens are allowed in %q", k))
 	}
 	if len(value) > 64 {
 		errors = append(errors, fmt.Errorf(
