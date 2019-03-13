@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/terraform/helper/schema"
 )
@@ -38,12 +39,27 @@ func dataSourceAwsS3BucketPolicyRead(d *schema.ResourceData, meta interface{}) e
 	log.Printf("[DEBUG] Reading S3 bucket policy: %s", input)
 	result, err := conn.GetBucketPolicy(input)
 
+	policy := ""
+
 	if err != nil {
-		return fmt.Errorf("Failed getting S3 bucket policy: %s Bucket: %q", err, bucket)
+		log.Printf("[DEBUG] Error reading S3 bucket policy: %q", err)
+
+		if reqerr, ok := err.(awserr.RequestFailure); ok {
+			log.Printf("[DEBUG] Request failure reading S3 bucket policy: %q", reqerr)
+
+			// ignore error if bucket policy doesn't exist
+			if reqerr.StatusCode() != 404 {
+				return fmt.Errorf("Failed getting S3 bucket policy: %s Bucket: %q", err, bucket)
+			}
+		} else {
+			return fmt.Errorf("Failed getting S3 bucket policy: %s Bucket: %q", err, bucket)
+		}
+	} else {
+		policy = *result.Policy
 	}
 
 	d.SetId(bucket)
-	d.Set("policy", *result.Policy)
+	d.Set("policy", policy)
 
-	return err
+	return nil
 }
