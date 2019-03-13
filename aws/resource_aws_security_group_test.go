@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -37,70 +38,85 @@ func testSweepSecurityGroups(region string) error {
 	}
 	conn := client.(*AWSClient).ec2conn
 
-	req := &ec2.DescribeSecurityGroupsInput{
-		Filters: []*ec2.Filter{
-			{
-				Name: aws.String("tag-value"),
-				Values: []*string{
-					aws.String("tf-acc-revoke*"),
-					aws.String("tf-acc-test-*"),
-				},
-			},
-		},
-	}
-	resp, err := conn.DescribeSecurityGroups(req)
-	if err != nil {
-		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] Skipping EC2 Security Group sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving EC2 Security Groups: %s", err)
-	}
+	input := &ec2.DescribeSecurityGroupsInput{}
 
-	if len(resp.SecurityGroups) == 0 {
-		log.Print("[DEBUG] No aws security groups to sweep")
+	// Delete all non-default EC2 Security Group Rules to prevent DependencyViolation errors
+	err = conn.DescribeSecurityGroupsPages(input, func(page *ec2.DescribeSecurityGroupsOutput, lastPage bool) bool {
+		for _, sg := range page.SecurityGroups {
+			if aws.StringValue(sg.GroupName) == "default" {
+				log.Printf("[DEBUG] Skipping default EC2 Security Group: %s", aws.StringValue(sg.GroupId))
+				continue
+			}
+
+			if sg.IpPermissions != nil {
+				req := &ec2.RevokeSecurityGroupIngressInput{
+					GroupId:       sg.GroupId,
+					IpPermissions: sg.IpPermissions,
+				}
+
+				if _, err = conn.RevokeSecurityGroupIngress(req); err != nil {
+					log.Printf("[ERROR] Error revoking ingress rule for Security Group (%s): %s", aws.StringValue(sg.GroupId), err)
+				}
+			}
+
+			if sg.IpPermissionsEgress != nil {
+				req := &ec2.RevokeSecurityGroupEgressInput{
+					GroupId:       sg.GroupId,
+					IpPermissions: sg.IpPermissionsEgress,
+				}
+
+				if _, err = conn.RevokeSecurityGroupEgress(req); err != nil {
+					log.Printf("[ERROR] Error revoking egress rule for Security Group (%s): %s", aws.StringValue(sg.GroupId), err)
+				}
+			}
+		}
+
+		return !lastPage
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping EC2 Security Group sweep for %s: %s", region, err)
 		return nil
 	}
 
-	for _, sg := range resp.SecurityGroups {
-		// revoke the rules
-		if sg.IpPermissions != nil {
-			req := &ec2.RevokeSecurityGroupIngressInput{
-				GroupId:       sg.GroupId,
-				IpPermissions: sg.IpPermissions,
-			}
-
-			if _, err = conn.RevokeSecurityGroupIngress(req); err != nil {
-				return fmt.Errorf(
-					"Error revoking default egress rule for Security Group (%s): %s",
-					*sg.GroupId, err)
-			}
-		}
-
-		if sg.IpPermissionsEgress != nil {
-			req := &ec2.RevokeSecurityGroupEgressInput{
-				GroupId:       sg.GroupId,
-				IpPermissions: sg.IpPermissionsEgress,
-			}
-
-			if _, err = conn.RevokeSecurityGroupEgress(req); err != nil {
-				return fmt.Errorf(
-					"Error revoking default egress rule for Security Group (%s): %s",
-					*sg.GroupId, err)
-			}
-		}
+	if err != nil {
+		return fmt.Errorf("Error retrieving EC2 Security Groups: %s", err)
 	}
 
-	for _, sg := range resp.SecurityGroups {
-		// delete the group
-		_, err := conn.DeleteSecurityGroup(&ec2.DeleteSecurityGroupInput{
-			GroupId: sg.GroupId,
-		})
-		if err != nil {
-			return fmt.Errorf(
-				"Error deleting Security Group (%s): %s",
-				*sg.GroupId, err)
+	err = conn.DescribeSecurityGroupsPages(input, func(page *ec2.DescribeSecurityGroupsOutput, lastPage bool) bool {
+		for _, sg := range page.SecurityGroups {
+			if aws.StringValue(sg.GroupName) == "default" {
+				log.Printf("[DEBUG] Skipping default EC2 Security Group: %s", aws.StringValue(sg.GroupId))
+				continue
+			}
+
+			input := &ec2.DeleteSecurityGroupInput{
+				GroupId: sg.GroupId,
+			}
+
+			// Handle EC2 eventual consistency
+			err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+				_, err := conn.DeleteSecurityGroup(input)
+
+				if isAWSErr(err, "DependencyViolation", "") {
+					return resource.RetryableError(err)
+				}
+				if err != nil {
+					return resource.NonRetryableError(err)
+				}
+				return nil
+			})
+
+			if err != nil {
+				log.Printf("[ERROR] Error deleting Security Group (%s): %s", aws.StringValue(sg.GroupId), err)
+			}
 		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return fmt.Errorf("Error retrieving EC2 Security Groups: %s", err)
 	}
 
 	return nil

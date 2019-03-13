@@ -28,6 +28,8 @@ func TestAccDataSourceS3Bucket_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"data.aws_s3_bucket.bucket", "bucket_domain_name", testAccBucketDomainName(rInt)),
 					resource.TestCheckResourceAttr(
+						"data.aws_s3_bucket.bucket", "bucket_regional_domain_name", testAccBucketRegionalDomainName(rInt, region)),
+					resource.TestCheckResourceAttr(
 						"data.aws_s3_bucket.bucket", "hosted_zone_id", hostedZoneID),
 					resource.TestCheckNoResourceAttr("data.aws_s3_bucket.bucket", "website_endpoint"),
 				),

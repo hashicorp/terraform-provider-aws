@@ -706,7 +706,7 @@ func testAccDocDBClusterConfig_Port(rInt, port int) string {
 data "aws_availability_zones" "available" {}
 
 resource "aws_docdb_cluster" "test" {
-  availability_zones              = ["${data.aws_availability_zones.available.names}"]
+  availability_zones              = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
   cluster_identifier              = "tf-acc-test-%d"
   db_cluster_parameter_group_name = "default.docdb3.6"
   engine                          = "docdb"

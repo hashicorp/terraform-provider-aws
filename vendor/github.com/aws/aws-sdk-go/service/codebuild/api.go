@@ -391,7 +391,7 @@ func (c *CodeBuild) CreateWebhookRequest(input *CreateWebhookInput) (req *reques
 // for both builds. Therefore, if you are using AWS CodePipeline, we recommend
 // that you disable webhooks in AWS CodeBuild. In the AWS CodeBuild console,
 // clear the Webhook box. For more information, see step 5 in Change a Build
-// Project's Settings (http://docs.aws.amazon.com/codebuild/latest/userguide/change-project.html#change-project-console).
+// Project's Settings (https://docs.aws.amazon.com/codebuild/latest/userguide/change-project.html#change-project-console).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2334,7 +2334,7 @@ type CloudWatchLogsConfig struct {
 	_ struct{} `type:"structure"`
 
 	// The group name of the logs in Amazon CloudWatch Logs. For more information,
-	// see Working with Log Groups and Log Streams (http://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/Working-with-log-groups-and-streams.html).
+	// see Working with Log Groups and Log Streams (https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/Working-with-log-groups-and-streams.html).
 	GroupName *string `locationName:"groupName" type:"string"`
 
 	// The current status of the logs in Amazon CloudWatch Logs for a build project.
@@ -2348,7 +2348,7 @@ type CloudWatchLogsConfig struct {
 	Status *string `locationName:"status" type:"string" required:"true" enum:"LogsConfigStatusType"`
 
 	// The prefix of the stream name of the Amazon CloudWatch Logs. For more information,
-	// see Working with Log Groups and Log Streams (http://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/Working-with-log-groups-and-streams.html).
+	// see Working with Log Groups and Log Streams (https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/Working-with-log-groups-and-streams.html).
 	StreamName *string `locationName:"streamName" type:"string"`
 }
 
@@ -2705,7 +2705,17 @@ type CreateWebhookInput struct {
 	// when a webhook is triggered. If the name of a branch matches the regular
 	// expression, then it is built. If branchFilter is empty, then all branches
 	// are built.
+	//
+	// It is recommended that you use filterGroups instead of branchFilter.
 	BranchFilter *string `locationName:"branchFilter" type:"string"`
+
+	// An array of arrays of WebhookFilter objects used to determine which webhooks
+	// are triggered. At least one WebhookFilter in the array must specify EVENT
+	// as its type.
+	//
+	// For a build to be triggered, at least one filter group in the filterGroups
+	// array must pass. For a filter group to pass, each of its filters must pass.
+	FilterGroups [][]*WebhookFilter `locationName:"filterGroups" type:"list"`
 
 	// The name of the AWS CodeBuild project.
 	//
@@ -2742,6 +2752,12 @@ func (s *CreateWebhookInput) Validate() error {
 // SetBranchFilter sets the BranchFilter field's value.
 func (s *CreateWebhookInput) SetBranchFilter(v string) *CreateWebhookInput {
 	s.BranchFilter = &v
+	return s
+}
+
+// SetFilterGroups sets the FilterGroups field's value.
+func (s *CreateWebhookInput) SetFilterGroups(v [][]*WebhookFilter) *CreateWebhookInput {
+	s.FilterGroups = v
 	return s
 }
 
@@ -4317,16 +4333,57 @@ type ProjectCache struct {
 
 	// Information about the cache location:
 	//
-	//    * NO_CACHE: This value is ignored.
+	//    * NO_CACHE or LOCAL: This value is ignored.
 	//
 	//    * S3: This is the S3 bucket name/prefix.
 	Location *string `locationName:"location" type:"string"`
+
+	// If you use a LOCAL cache, the local cache mode. You can use one or more local
+	// cache modes at the same time.
+	//
+	//    * LOCAL_SOURCE_CACHE mode caches Git metadata for primary and secondary
+	//    sources. After the cache is created, subsequent builds pull only the change
+	//    between commits. This mode is a good choice for projects with a clean
+	//    working directory and a source that is a large Git repository. If your
+	//    project does not use a Git repository (GitHub, GitHub Enterprise, or Bitbucket)
+	//    and you choose this option, then it is ignored.
+	//
+	//    * LOCAL_DOCKER_LAYER_CACHE mode caches existing Docker layers. This mode
+	//    is a good choice for projects that build or pull large Docker images.
+	//    It can prevent the performance hit that would be caused by pulling large
+	//    Docker images down from the network.
+	//
+	//  You can only use a Docker layer cache in the Linux enviornment.
+	//
+	//  The privileged flag must be set so that your project has the necessary Docker
+	//    privileges.
+	//
+	//  You should consider the security implications before using a Docker layer
+	//    cache.
+	//
+	//    * LOCAL_CUSTOM_CACHE mode caches directories you specify in the buildspec
+	//    file. This mode is a good choice if your build scenario does not match
+	//    one that works well with one of the other three local cache modes. If
+	//    you use a custom cache:
+	//
+	//  Only directories can be specified for caching. You cannot specify individual
+	//    files.
+	//
+	//  Symlinks are used to reference cached directories.
+	//
+	//  Cached directories are linked to your build before it downloads its project
+	//    sources. Cached items are overriden if a source item has the same name.
+	//    Directories are specified using cache paths in the buildspec file.
+	Modes []*string `locationName:"modes" type:"list"`
 
 	// The type of cache used by the build project. Valid values include:
 	//
 	//    * NO_CACHE: The build project does not use any cache.
 	//
 	//    * S3: The build project reads and writes from and to S3.
+	//
+	//    * LOCAL: The build project stores a cache locally on a build host that
+	//    is only available to that build host.
 	//
 	// Type is a required field
 	Type *string `locationName:"type" type:"string" required:"true" enum:"CacheType"`
@@ -4358,6 +4415,12 @@ func (s *ProjectCache) Validate() error {
 // SetLocation sets the Location field's value.
 func (s *ProjectCache) SetLocation(v string) *ProjectCache {
 	s.Location = &v
+	return s
+}
+
+// SetModes sets the Modes field's value.
+func (s *ProjectCache) SetModes(v []*string) *ProjectCache {
+	s.Modes = v
 	return s
 }
 
@@ -4799,8 +4862,8 @@ func (s *ProjectSourceVersion) SetSourceVersion(v string) *ProjectSourceVersion 
 //
 //    *  images cannot be curated or an Amazon ECR image.
 //
-// For more information, see Private Registry with AWS Secrets Manager Samle
-// for AWS CodeBuild (http://docs.aws.amazon.com/codebuild/latest/userguide/sample-private-registry.html).
+// For more information, see Private Registry with AWS Secrets Manager Sample
+// for AWS CodeBuild (https://docs.aws.amazon.com/codebuild/latest/userguide/sample-private-registry.html).
 type RegistryCredential struct {
 	_ struct{} `type:"structure"`
 
@@ -5856,7 +5919,13 @@ type UpdateWebhookInput struct {
 	// when a webhook is triggered. If the name of a branch matches the regular
 	// expression, then it is built. If branchFilter is empty, then all branches
 	// are built.
+	//
+	// It is recommended that you use filterGroups instead of branchFilter.
 	BranchFilter *string `locationName:"branchFilter" type:"string"`
+
+	// An array of arrays of WebhookFilter objects used to determine if a webhook
+	// event can trigger a build. A filter group must pcontain at least one EVENTWebhookFilter.
+	FilterGroups [][]*WebhookFilter `locationName:"filterGroups" type:"list"`
 
 	// The name of the AWS CodeBuild project.
 	//
@@ -5898,6 +5967,12 @@ func (s *UpdateWebhookInput) Validate() error {
 // SetBranchFilter sets the BranchFilter field's value.
 func (s *UpdateWebhookInput) SetBranchFilter(v string) *UpdateWebhookInput {
 	s.BranchFilter = &v
+	return s
+}
+
+// SetFilterGroups sets the FilterGroups field's value.
+func (s *UpdateWebhookInput) SetFilterGroups(v [][]*WebhookFilter) *UpdateWebhookInput {
+	s.FilterGroups = v
 	return s
 }
 
@@ -6001,7 +6076,17 @@ type Webhook struct {
 	// when a webhook is triggered. If the name of a branch matches the regular
 	// expression, then it is built. If branchFilter is empty, then all branches
 	// are built.
+	//
+	// It is recommended that you use filterGroups instead of branchFilter.
 	BranchFilter *string `locationName:"branchFilter" type:"string"`
+
+	// An array of arrays of WebhookFilter objects used to determine which webhooks
+	// are triggered. At least one WebhookFilter in the array must specify EVENT
+	// as its type.
+	//
+	// For a build to be triggered, at least one filter group in the filterGroups
+	// array must pass. For a filter group to pass, each of its filters must pass.
+	FilterGroups [][]*WebhookFilter `locationName:"filterGroups" type:"list"`
 
 	// A timestamp that indicates the last time a repository's secret token was
 	// modified.
@@ -6035,6 +6120,12 @@ func (s *Webhook) SetBranchFilter(v string) *Webhook {
 	return s
 }
 
+// SetFilterGroups sets the FilterGroups field's value.
+func (s *Webhook) SetFilterGroups(v [][]*WebhookFilter) *Webhook {
+	s.FilterGroups = v
+	return s
+}
+
 // SetLastModifiedSecret sets the LastModifiedSecret field's value.
 func (s *Webhook) SetLastModifiedSecret(v time.Time) *Webhook {
 	s.LastModifiedSecret = &v
@@ -6056,6 +6147,91 @@ func (s *Webhook) SetSecret(v string) *Webhook {
 // SetUrl sets the Url field's value.
 func (s *Webhook) SetUrl(v string) *Webhook {
 	s.Url = &v
+	return s
+}
+
+// A filter used to determine which webhooks trigger a build.
+type WebhookFilter struct {
+	_ struct{} `type:"structure"`
+
+	// Used to indicate that the pattern determines which webhook events do not
+	// trigger a build. If true, then a webhook event that does not match the pattern
+	// triggers a build. If false, then a webhook event that matches the pattern
+	// triggers a build.
+	ExcludeMatchedPattern *bool `locationName:"excludeMatchedPattern" type:"boolean"`
+
+	// For a WebHookFilter that uses EVENT type, a comma-separated string that specifies
+	// one or more events. For example, the webhook filter PUSH, PULL_REQUEST_CREATED,
+	// PULL_REQUEST_UPDATED allows all push, pull request created, and pull request
+	// updated events to trigger a build.
+	//
+	// For a WebHookFilter that uses any of the other filter types, a regular expression
+	// pattern. For example, a WebHookFilter that uses HEAD_REF for its type and
+	// the pattern ^refs/heads/ triggers a build when the head reference is a branch
+	// with a reference name refs/heads/branch-name.
+	//
+	// Pattern is a required field
+	Pattern *string `locationName:"pattern" type:"string" required:"true"`
+
+	// The type of webhook filter. There are five webhook filter types: EVENT, ACTOR_ACCOUNT_ID,
+	// HEAD_REF, BASE_REF, and FILE_PATH.
+	//
+	// EVENT  A webhook event triggers a build when the provided pattern matches
+	// one of four event types: PUSH, PULL_REQUEST_CREATED, PULL_REQUEST_UPDATED,
+	// and PULL_REQUEST_REOPENED. The EVENT patterns are specified as a comma-separated
+	// string. For example, PUSH, PULL_REQUEST_CREATED, PULL_REQUEST_UPDATED filters
+	// all push, pull request created, and pull request updated events.
+	//
+	//  The PULL_REQUEST_REOPENED works with GitHub and GitHub Enterprise only.
+	//
+	//  ACTOR_ACCOUNT_ID  A webhook event triggers a build when a GitHub, GitHub
+	// Enterprise, or Bitbucket account ID matches the regular expression pattern.
+	//
+	//  HEAD_REF  A webhook event triggers a build when the head reference matches
+	// the regular expression pattern. For example, refs/heads/branch-name and refs/tags/tag-name.
+	//
+	//  Works with GitHub and GitHub Enterprise push, GitHub and GitHub Enterprise
+	// pull request, Bitbucket push, and Bitbucket pull request events.
+	//
+	//  BASE_REF  A webhook event triggers a build when the base reference matches
+	// the regular expression pattern. For example, refs/heads/branch-name.
+	//
+	//  Works with pull request events only.
+	//
+	//  FILE_PATH  A webhook triggers a build when the path of a changed file matches
+	// the regular expression pattern.
+	//
+	//  Works with GitHub and GitHub Enterprise push events only.
+	//
+	// Type is a required field
+	Type *string `locationName:"type" type:"string" required:"true" enum:"WebhookFilterType"`
+}
+
+// String returns the string representation
+func (s WebhookFilter) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s WebhookFilter) GoString() string {
+	return s.String()
+}
+
+// SetExcludeMatchedPattern sets the ExcludeMatchedPattern field's value.
+func (s *WebhookFilter) SetExcludeMatchedPattern(v bool) *WebhookFilter {
+	s.ExcludeMatchedPattern = &v
+	return s
+}
+
+// SetPattern sets the Pattern field's value.
+func (s *WebhookFilter) SetPattern(v string) *WebhookFilter {
+	s.Pattern = &v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *WebhookFilter) SetType(v string) *WebhookFilter {
+	s.Type = &v
 	return s
 }
 
@@ -6133,11 +6309,25 @@ const (
 )
 
 const (
+	// CacheModeLocalDockerLayerCache is a CacheMode enum value
+	CacheModeLocalDockerLayerCache = "LOCAL_DOCKER_LAYER_CACHE"
+
+	// CacheModeLocalSourceCache is a CacheMode enum value
+	CacheModeLocalSourceCache = "LOCAL_SOURCE_CACHE"
+
+	// CacheModeLocalCustomCache is a CacheMode enum value
+	CacheModeLocalCustomCache = "LOCAL_CUSTOM_CACHE"
+)
+
+const (
 	// CacheTypeNoCache is a CacheType enum value
 	CacheTypeNoCache = "NO_CACHE"
 
 	// CacheTypeS3 is a CacheType enum value
 	CacheTypeS3 = "S3"
+
+	// CacheTypeLocal is a CacheType enum value
+	CacheTypeLocal = "LOCAL"
 )
 
 const (
@@ -6310,4 +6500,21 @@ const (
 
 	// StatusTypeStopped is a StatusType enum value
 	StatusTypeStopped = "STOPPED"
+)
+
+const (
+	// WebhookFilterTypeEvent is a WebhookFilterType enum value
+	WebhookFilterTypeEvent = "EVENT"
+
+	// WebhookFilterTypeBaseRef is a WebhookFilterType enum value
+	WebhookFilterTypeBaseRef = "BASE_REF"
+
+	// WebhookFilterTypeHeadRef is a WebhookFilterType enum value
+	WebhookFilterTypeHeadRef = "HEAD_REF"
+
+	// WebhookFilterTypeActorAccountId is a WebhookFilterType enum value
+	WebhookFilterTypeActorAccountId = "ACTOR_ACCOUNT_ID"
+
+	// WebhookFilterTypeFilePath is a WebhookFilterType enum value
+	WebhookFilterTypeFilePath = "FILE_PATH"
 )

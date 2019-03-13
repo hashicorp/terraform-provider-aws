@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -11,7 +10,6 @@ import (
 	"strconv"
 	"strings"
 	"testing"
-	"text/template"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -258,21 +256,25 @@ func TestAccAWSS3Bucket_generatedName(t *testing.T) {
 }
 
 func TestAccAWSS3Bucket_region(t *testing.T) {
+	resourceName := "aws_s3_bucket.bucket"
 	rInt := acctest.RandInt()
+	bucketName := fmt.Sprintf("tf-test-bucket-%d", rInt)
+	region := "eu-west-1"
+	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccMultipleRegionsPreCheck(t)
 		},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSS3BucketDestroy,
+		ProviderFactories: testAccProviderFactories(&providers),
+		CheckDestroy:      testAccCheckWithProviders(testAccCheckAWSS3BucketDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3BucketConfigWithRegion(rInt),
+				Config: testAccAWSS3BucketConfigWithRegion(bucketName, region),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketExists("aws_s3_bucket.bucket"),
-					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "region", "eu-west-1"),
+					testAccCheckAWSS3BucketExistsWithProvider(resourceName, testAccAwsRegionProviderFunc(region, &providers)),
+					resource.TestCheckResourceAttr(resourceName, "region", region),
 				),
 			},
 		},
@@ -1595,14 +1597,12 @@ func testAccCheckAWSS3BucketDestroyWithProvider(s *terraform.State, provider *sc
 		if rs.Type != "aws_s3_bucket" {
 			continue
 		}
-		_, err := conn.DeleteBucket(&s3.DeleteBucketInput{
+
+		_, err := conn.HeadBucket(&s3.HeadBucketInput{
 			Bucket: aws.String(rs.Primary.ID),
 		})
-		if err != nil {
-			if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") {
-				return nil
-			}
-			return err
+		if err == nil {
+			return fmt.Errorf("AWS S3 Bucket still exists: %s", rs.Primary.ID)
 		}
 	}
 	return nil
@@ -2019,89 +2019,83 @@ resource "aws_s3_bucket" "bucket" {
 }
 
 func testAccAWSS3MultiBucketConfigWithTags(randInt int) string {
-	t := template.Must(template.New("t1").
-		Parse(`
+	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket1" {
-	bucket = "tf-test-bucket-1-{{.GUID}}"
+	bucket = "tf-test-bucket-1-%[1]d"
 	acl = "private"
 	force_destroy = true
 	tags = {
-		Name = "tf-test-bucket-1-{{.GUID}}"
-		Environment = "{{.GUID}}"
+		Name = "tf-test-bucket-1-%[1]d"
+		Environment = "%[1]d"
 	}
 }
 
 resource "aws_s3_bucket" "bucket2" {
-	bucket = "tf-test-bucket-2-{{.GUID}}"
+	bucket = "tf-test-bucket-2-%[1]d"
 	acl = "private"
 	force_destroy = true
 	tags = {
-		Name = "tf-test-bucket-2-{{.GUID}}"
-		Environment = "{{.GUID}}"
+		Name = "tf-test-bucket-2-%[1]d"
+		Environment = "%[1]d"
 	}
 }
 
 resource "aws_s3_bucket" "bucket3" {
-	bucket = "tf-test-bucket-3-{{.GUID}}"
+	bucket = "tf-test-bucket-3-%[1]d"
 	acl = "private"
 	force_destroy = true
 	tags = {
-		Name = "tf-test-bucket-3-{{.GUID}}"
-		Environment = "{{.GUID}}"
+		Name = "tf-test-bucket-3-%[1]d"
+		Environment = "%[1]d"
 	}
 }
 
 resource "aws_s3_bucket" "bucket4" {
-	bucket = "tf-test-bucket-4-{{.GUID}}"
+	bucket = "tf-test-bucket-4-%[1]d"
 	acl = "private"
 	force_destroy = true
 	tags = {
-		Name = "tf-test-bucket-4-{{.GUID}}"
-		Environment = "{{.GUID}}"
+		Name = "tf-test-bucket-4-%[1]d"
+		Environment = "%[1]d"
 	}
 }
 
 resource "aws_s3_bucket" "bucket5" {
-	bucket = "tf-test-bucket-5-{{.GUID}}"
+	bucket = "tf-test-bucket-5-%[1]d"
 	acl = "private"
 	force_destroy = true
 	tags = {
-		Name = "tf-test-bucket-5-{{.GUID}}"
-		Environment = "{{.GUID}}"
+		Name = "tf-test-bucket-5-%[1]d"
+		Environment = "%[1]d"
 	}
 }
 
 resource "aws_s3_bucket" "bucket6" {
-	bucket = "tf-test-bucket-6-{{.GUID}}"
+	bucket = "tf-test-bucket-6-%[1]d"
 	acl = "private"
 	force_destroy = true
 	tags = {
-		Name = "tf-test-bucket-6-{{.GUID}}"
-		Environment = "{{.GUID}}"
+		Name = "tf-test-bucket-6-%[1]d"
+		Environment = "%[1]d"
 	}
-}
-`))
-	var doc bytes.Buffer
-	// TODO: Convert to fmt.Sprintf() (https://github.com/terraform-providers/terraform-provider-aws/issues/7456)
-	if err := t.Execute(&doc, struct{ GUID int }{GUID: randInt}); err != nil {
-		panic(fmt.Sprintf("error executing template: %s", err))
-	}
-	return doc.String()
 }
 
-func testAccAWSS3BucketConfigWithRegion(randInt int) string {
+`, randInt)
+}
+
+func testAccAWSS3BucketConfigWithRegion(bucketName, region string) string {
 	return fmt.Sprintf(`
 provider "aws" {
-	alias = "west"
-	region = "eu-west-1"
+  alias = "west"
+  region = "%s"
 }
 
 resource "aws_s3_bucket" "bucket" {
-	provider = "aws.west"
-	bucket = "tf-test-bucket-%d"
-	region = "eu-west-1"
+  provider = "aws.west"
+  bucket = "%s"
+  region = "%s"
 }
-`, randInt)
+`, region, bucketName, region)
 }
 
 func testAccAWSS3BucketWebsiteConfig(randInt int) string {

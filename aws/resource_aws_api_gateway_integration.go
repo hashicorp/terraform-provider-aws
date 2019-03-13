@@ -1,17 +1,14 @@
 package aws
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 )
@@ -112,17 +109,15 @@ func resourceAwsApiGatewayIntegration() *schema.Resource {
 			},
 
 			"request_parameters": {
-				Type:          schema.TypeMap,
-				Elem:          &schema.Schema{Type: schema.TypeString},
-				Optional:      true,
-				ConflictsWith: []string{"request_parameters_in_json"},
+				Type:     schema.TypeMap,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Optional: true,
 			},
 
 			"request_parameters_in_json": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"request_parameters"},
-				Deprecated:    "Use field request_parameters instead",
+				Type:     schema.TypeString,
+				Optional: true,
+				Removed:  "Use `request_parameters` argument instead",
 			},
 
 			"content_handling": {
@@ -199,12 +194,6 @@ func resourceAwsApiGatewayIntegrationCreate(d *schema.ResourceData, meta interfa
 	if kv, ok := d.GetOk("request_parameters"); ok {
 		for k, v := range kv.(map[string]interface{}) {
 			parameters[k] = v.(string)
-		}
-	}
-
-	if v, ok := d.GetOk("request_parameters_in_json"); ok {
-		if err := json.Unmarshal([]byte(v.(string)), &parameters); err != nil {
-			return fmt.Errorf("Error unmarshaling request_parameters_in_json: %s", err)
 		}
 	}
 
@@ -302,15 +291,9 @@ func resourceAwsApiGatewayIntegrationRead(d *schema.ResourceData, meta interface
 	d.Set("integration_http_method", integration.HttpMethod)
 	d.Set("passthrough_behavior", integration.PassthroughBehavior)
 
-	// KNOWN ISSUE: This next d.Set() is broken as it should be a JSON string of the map,
-	//              however leaving as-is since this attribute has been deprecated
-	//              for a very long time and will be removed soon in the next major release.
-	//              Not worth the effort of fixing, acceptance testing, and potential JSON equivalence bugs.
-	if _, ok := d.GetOk("request_parameters_in_json"); ok {
-		d.Set("request_parameters_in_json", aws.StringValueMap(integration.RequestParameters))
+	if err := d.Set("request_parameters", aws.StringValueMap(integration.RequestParameters)); err != nil {
+		return fmt.Errorf("error setting request_parameters: %s", err)
 	}
-
-	d.Set("request_parameters", aws.StringValueMap(integration.RequestParameters))
 
 	// We need to explicitly convert key = nil values into key = "", which aws.StringValueMap() removes
 	requestTemplateMap := make(map[string]string)
@@ -509,25 +492,19 @@ func resourceAwsApiGatewayIntegrationDelete(d *schema.ResourceData, meta interfa
 	conn := meta.(*AWSClient).apigateway
 	log.Printf("[DEBUG] Deleting API Gateway Integration: %s", d.Id())
 
-	return resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteIntegration(&apigateway.DeleteIntegrationInput{
-			HttpMethod: aws.String(d.Get("http_method").(string)),
-			ResourceId: aws.String(d.Get("resource_id").(string)),
-			RestApiId:  aws.String(d.Get("rest_api_id").(string)),
-		})
-		if err == nil {
-			return nil
-		}
-
-		apigatewayErr, ok := err.(awserr.Error)
-		if apigatewayErr.Code() == "NotFoundException" {
-			return nil
-		}
-
-		if !ok {
-			return resource.NonRetryableError(err)
-		}
-
-		return resource.NonRetryableError(err)
+	_, err := conn.DeleteIntegration(&apigateway.DeleteIntegrationInput{
+		HttpMethod: aws.String(d.Get("http_method").(string)),
+		ResourceId: aws.String(d.Get("resource_id").(string)),
+		RestApiId:  aws.String(d.Get("rest_api_id").(string)),
 	})
+
+	if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error deleting API Gateway Integration (%s): %s", d.Id(), err)
+	}
+
+	return nil
 }

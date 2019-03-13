@@ -86,7 +86,7 @@ func resourceAwsSsmMaintenanceWindowTask() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(3, 128),
+				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
 
 			"priority": {
@@ -207,9 +207,15 @@ func resourceAwsSsmMaintenanceWindowTaskCreate(d *schema.ResourceData, meta inte
 		TaskType:       aws.String(d.Get("task_type").(string)),
 		ServiceRoleArn: aws.String(d.Get("service_role_arn").(string)),
 		TaskArn:        aws.String(d.Get("task_arn").(string)),
-		Name:           aws.String(d.Get("name").(string)),
-		Description:    aws.String(d.Get("description").(string)),
 		Targets:        expandAwsSsmTargets(d.Get("targets").([]interface{})),
+	}
+
+	if v, ok := d.GetOk("name"); ok {
+		params.Name = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("description"); ok {
+		params.Description = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("priority"); ok {
