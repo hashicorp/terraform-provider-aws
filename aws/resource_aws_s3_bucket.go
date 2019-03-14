@@ -1931,7 +1931,7 @@ func resourceAwsS3BucketReplicationConfigurationUpdate(s3conn *s3.S3, d *schema.
 			rcRule.SourceSelectionCriteria = ruleSsc
 		}
 
-		if f, ok := rr["filter"].([]interface{}); ok && len(f) > 0 {
+		if f, ok := rr["filter"].([]interface{}); ok && len(f) > 0 && f[0] != nil {
 			// XML schema V2.
 			rcRule.Priority = aws.Int64(int64(rr["priority"].(int)))
 			rcRule.Filter = &s3.ReplicationRuleFilter{}
