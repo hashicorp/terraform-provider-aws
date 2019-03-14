@@ -68,6 +68,15 @@ func TestAccAwsBackupVault_withTags(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_backup_vault.test", "tags.left", "right"),
 				),
 			},
+			{
+				Config: testAccBackupVaultWithUpdateTags(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsBackupVaultExists("aws_backup_vault.test", &vault),
+					resource.TestCheckResourceAttr("aws_backup_vault.test", "tags.%", "2"),
+					resource.TestCheckResourceAttr("aws_backup_vault.test", "tags.foo", "bar"),
+					resource.TestCheckResourceAttr("aws_backup_vault.test", "tags.fizz", "buzz"),
+				),
+			},
 		},
 	})
 }
@@ -147,6 +156,19 @@ resource "aws_backup_vault" "test" {
 	tags = {
 		up		= "down"
 		left	= "right"
+	}
+}
+`, randInt)
+}
+
+func testAccBackupVaultWithUpdateTags(randInt int) string {
+	return fmt.Sprintf(`
+resource "aws_backup_vault" "test" {
+	name = "tf_acc_test_backup_vault_%d"
+	
+	tags = {
+		foo		= "bar"
+		fizz	= "buzz"
 	}
 }
 `, randInt)
