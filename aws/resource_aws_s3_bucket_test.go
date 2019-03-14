@@ -217,6 +217,27 @@ func TestAccAWSS3Bucket_basic(t *testing.T) {
 	})
 }
 
+// Support for common Terraform 0.11 pattern
+// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/7868
+func TestAccAWSS3Bucket_Bucket_EmptyString(t *testing.T) {
+	resourceName := "aws_s3_bucket.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketConfigBucketEmptyString,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketExists(resourceName),
+					resource.TestMatchResourceAttr(resourceName, "bucket", regexp.MustCompile("^terraform-")),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSS3MultiBucket_withTags(t *testing.T) {
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
@@ -3121,6 +3142,12 @@ resource "aws_s3_bucket" "arbitrary" {
 }
 `, randInt)
 }
+
+const testAccAWSS3BucketConfigBucketEmptyString = `
+resource "aws_s3_bucket" "test" {
+  bucket = ""
+}
+`
 
 const testAccAWSS3BucketConfig_namePrefix = `
 resource "aws_s3_bucket" "test" {
