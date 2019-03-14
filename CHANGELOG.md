@@ -12,14 +12,14 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_cloudfront_distribution: Ensure retain_on_delete disables the CloudFront Distribution before exiting [GH-7875]
 * resource/aws_codebuild_webhook: Only pass BranchFilter configuration if non-empty [GH-7841]
 * resource/aws_ec2_transit_gateway_vpc_attachment: Prevent errors with Resource Access Manager shared EC2 Transit Gateways [GH-7513]
 * resource/aws_iam_role_policy_attachment: Prevent `NoSuchEntity` errors from race conditions [GH-7855]
+* resource/aws_kms_alias: Prevent state removal of resource immediately after creation due to eventual consistency [GH-7891]
 * resource/aws_s3_bucket: Prevent empty `replication_configuration` `rules` `filter` crash [GH-7887]
 * resource/aws_s3_bucket: Continue supporting empty string (`""`) `bucket` argument [GH-7881]
-* resource/aws_kms_alias: Prevent state removal of resource immediately after creation due to eventual consistency [GH-7891]
 * resource/aws_ses_domain_mail_from: Prevent crash with deleted SES Domain Identity [GH-7883]
-* resource/aws_cloudfront_distribution: Ensure retain_on_delete disables the CloudFront Distribution before exiting [GH-7875]
 
 ## 2.1.0 (March 07, 2019)
 
