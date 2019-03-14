@@ -215,6 +215,7 @@ func createDirectoryConnector(dsconn *directoryservice.DirectoryService, d *sche
 	input := directoryservice.ConnectDirectoryInput{
 		Name:     aws.String(d.Get("name").(string)),
 		Password: aws.String(d.Get("password").(string)),
+		Tags:     tagsFromMapDS(d.Get("tags").(map[string]interface{})),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -249,6 +250,7 @@ func createSimpleDirectoryService(dsconn *directoryservice.DirectoryService, d *
 	input := directoryservice.CreateDirectoryInput{
 		Name:     aws.String(d.Get("name").(string)),
 		Password: aws.String(d.Get("password").(string)),
+		Tags:     tagsFromMapDS(d.Get("tags").(map[string]interface{})),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -283,6 +285,7 @@ func createActiveDirectoryService(dsconn *directoryservice.DirectoryService, d *
 	input := directoryservice.CreateMicrosoftADInput{
 		Name:     aws.String(d.Get("name").(string)),
 		Password: aws.String(d.Get("password").(string)),
+		Tags:     tagsFromMapDS(d.Get("tags").(map[string]interface{})),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
