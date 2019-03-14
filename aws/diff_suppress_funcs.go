@@ -108,5 +108,9 @@ func suppressAutoscalingGroupAvailabilityZoneDiffs(k, old, new string, d *schema
 }
 
 func suppressRoute53ZoneNameWithTrailingDot(k, old, new string, d *schema.ResourceData) bool {
+	// "." is different from "".
+	if old == "." || new == "." {
+		return old == new
+	}
 	return strings.TrimSuffix(old, ".") == strings.TrimSuffix(new, ".")
 }
