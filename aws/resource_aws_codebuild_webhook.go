@@ -51,7 +51,7 @@ func resourceAwsCodeBuildWebhookCreate(d *schema.ResourceData, meta interface{})
 	conn := meta.(*AWSClient).codebuildconn
 
 	input := &codebuild.CreateWebhookInput{
-		ProjectName:  aws.String(d.Get("project_name").(string)),
+		ProjectName: aws.String(d.Get("project_name").(string)),
 	}
 
 	// The CodeBuild API requires this to be non-empty if defined
