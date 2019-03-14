@@ -14,7 +14,7 @@ Provides an MSK Kafka cluster resource.
 
 ```hcl
 resource "aws_msk_cluster" "test_cluster" {
-	name = "test_cluster"
+	name = "test-cluster"
 	broker_count = 3
 	broker_instance_type = "kafka.m5.large"
 	broker_volume_size = 10
@@ -30,7 +30,7 @@ resource "aws_msk_cluster" "test_cluster" {
 * `broker_count` - (Required) Number of broker nodes you want to create in each Availability Zone.
 * `broker_instance_type` - (Required) Instance type for brokers from the m5 family. e.g. kafka.m5.large
 * `broker_volume_size` - (Required) The size of the drive in GiBs.
-* `broker_security_groups` - (Optional) Security groups to attach to broker nodes.
+* `broker_security_groups` - (Required) Security groups to attach to broker nodes.
 * `encrypt_rest_arn` - (Optional) 
 * `enhanced_monitoring` - (Optional) Level of monitoring for the cluster. Possible values are DEFAULT, PER_BROKER, and PER_TOPIC_PER_BROKER.
 
