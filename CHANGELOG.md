@@ -16,6 +16,7 @@ BUG FIXES:
 * resource/aws_iam_role_policy_attachment: Prevent `NoSuchEntity` errors from race conditions [GH-7855]
 * resource/aws_s3_bucket: Prevent empty `replication_configuration` `rules` `filter` crash [GH-7887]
 * resource/aws_s3_bucket: Continue supporting empty string (`""`) `bucket` argument [GH-7881]
+* resource/aws_kms_alias: Prevent state removal of resource immediately after creation due to eventual consistency [GH-7891]
 
 ## 2.1.0 (March 07, 2019)
 
