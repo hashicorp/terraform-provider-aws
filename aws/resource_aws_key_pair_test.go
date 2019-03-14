@@ -35,18 +35,7 @@ func testSweepKeyPairs(region string) error {
 
 	log.Printf("Destroying the tmp keys in (%s)", client.(*AWSClient).region)
 
-	resp, err := ec2conn.DescribeKeyPairs(&ec2.DescribeKeyPairsInput{
-		Filters: []*ec2.Filter{
-			{
-				Name: aws.String("key-name"),
-				Values: []*string{
-					aws.String("tf-acctest*"),
-					aws.String("tf_acc*"),
-					aws.String("tmp-key*"),
-				},
-			},
-		},
-	})
+	resp, err := ec2conn.DescribeKeyPairs(&ec2.DescribeKeyPairsInput{})
 	if err != nil {
 		if testSweepSkipSweepError(err) {
 			log.Printf("[WARN] Skipping EC2 Key Pair sweep for %s: %s", region, err)

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strings"
 	"testing"
 	"time"
 
@@ -32,10 +31,6 @@ func testSweepBatchComputeEnvironments(region string) error {
 	}
 	conn := client.(*AWSClient).batchconn
 
-	prefixes := []string{
-		"tf_acc",
-	}
-
 	out, err := conn.DescribeComputeEnvironments(&batch.DescribeComputeEnvironmentsInput{})
 	if err != nil {
 		if testSweepSkipSweepError(err) {
@@ -45,30 +40,23 @@ func testSweepBatchComputeEnvironments(region string) error {
 		return fmt.Errorf("Error retrieving Batch Compute Environments: %s", err)
 	}
 	for _, computeEnvironment := range out.ComputeEnvironments {
-		name := computeEnvironment.ComputeEnvironmentName
-		skip := true
-		for _, prefix := range prefixes {
-			if strings.HasPrefix(*name, prefix) {
-				skip = false
-				break
+		name := aws.StringValue(computeEnvironment.ComputeEnvironmentName)
+
+		if aws.StringValue(computeEnvironment.State) == batch.CEStateEnabled {
+			log.Printf("[INFO] Disabling Batch Compute Environment: %s", name)
+			err := disableBatchComputeEnvironment(name, 20*time.Minute, conn)
+
+			if err != nil {
+				log.Printf("[ERROR] Failed to disable Batch Compute Environment %s: %s", name, err)
+				continue
 			}
 		}
-		if skip {
-			log.Printf("[INFO] Skipping Batch Compute Environment: %s", *name)
-			continue
-		}
 
-		log.Printf("[INFO] Disabling Batch Compute Environment: %s", *name)
-		err := disableBatchComputeEnvironment(*name, 20*time.Minute, conn)
-		if err != nil {
-			log.Printf("[ERROR] Failed to disable Batch Compute Environment %s: %s", *name, err)
-			continue
-		}
+		log.Printf("[INFO] Deleting Batch Compute Environment: %s", name)
+		err := deleteBatchComputeEnvironment(name, 20*time.Minute, conn)
 
-		log.Printf("[INFO] Deleting Batch Compute Environment: %s", *name)
-		err = deleteBatchComputeEnvironment(*name, 20*time.Minute, conn)
 		if err != nil {
-			log.Printf("[ERROR] Failed to delete Batch Compute Environment %s: %s", *name, err)
+			log.Printf("[ERROR] Failed to delete Batch Compute Environment %s: %s", name, err)
 		}
 	}
 

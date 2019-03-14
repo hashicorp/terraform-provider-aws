@@ -55,7 +55,7 @@ resource "aws_lambda_function" "test_lambda" {
 
 ### Lambda Layers
 
-~> **NOTE:** The `aws_lambda_layer_version` attribute values for `arn` and `layer_arn` will be swapped in version 2.0.0 of the Terraform AWS Provider. For version 1.x, use `layer_arn` references. For version 2.x, use `arn` references.
+~> **NOTE:** The `aws_lambda_layer_version` attribute values for `arn` and `layer_arn` were swapped in version 2.0.0 of the Terraform AWS Provider. For version 1.x, use `layer_arn` references. For version 2.x, use `arn` references.
 
 ```hcl
 resource "aws_lambda_layer_version" "example" {
@@ -64,7 +64,7 @@ resource "aws_lambda_layer_version" "example" {
 
 resource "aws_lambda_function" "example" {
   # ... other configuration ...
-  layers = ["${aws_lambda_layer_version.example.layer_arn}"]
+  layers = ["${aws_lambda_layer_version.example.arn}"]
 }
 ```
 
@@ -137,7 +137,7 @@ large files efficiently.
 * `memory_size` - (Optional) Amount of memory in MB your Lambda Function can use at runtime. Defaults to `128`. See [Limits][5]
 * `runtime` - (Required) See [Runtimes][6] for valid values.
 * `timeout` - (Optional) The amount of time your Lambda Function has to run in seconds. Defaults to `3`. See [Limits][5]
-* `reserved_concurrent_executions` - (Optional) The amount of reserved concurrent executions for this lambda function. Defaults to Unreserved Concurrency Limits. See [Managing Concurrency][9]
+* `reserved_concurrent_executions` - (Optional) The amount of reserved concurrent executions for this lambda function. A value of `0` disables lambda from being triggered and `-1` removes any concurrency limitations. Defaults to Unreserved Concurrency Limits `-1`. See [Managing Concurrency][9]
 * `publish` - (Optional) Whether to publish creation/change as new Lambda Function Version. Defaults to `false`.
 * `vpc_config` - (Optional) Provide this to allow your function to access your VPC. Fields documented below. See [Lambda in VPC][7]
 * `environment` - (Optional) The Lambda environment's configuration settings. Fields documented below.

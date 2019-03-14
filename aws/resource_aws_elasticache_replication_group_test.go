@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 	"regexp"
-	"strings"
 	"testing"
 	"time"
 
@@ -31,12 +30,6 @@ func testSweepElasticacheReplicationGroups(region string) error {
 	}
 	conn := client.(*AWSClient).elasticacheconn
 
-	prefixes := []string{
-		"tf-",
-		"tf-test-",
-		"tf-acc-test-",
-	}
-
 	err = conn.DescribeReplicationGroupsPages(&elasticache.DescribeReplicationGroupsInput{}, func(page *elasticache.DescribeReplicationGroupsOutput, isLast bool) bool {
 		if len(page.ReplicationGroups) == 0 {
 			log.Print("[DEBUG] No Elasticache Replicaton Groups to sweep")
@@ -45,17 +38,7 @@ func testSweepElasticacheReplicationGroups(region string) error {
 
 		for _, replicationGroup := range page.ReplicationGroups {
 			id := aws.StringValue(replicationGroup.ReplicationGroupId)
-			skip := true
-			for _, prefix := range prefixes {
-				if strings.HasPrefix(id, prefix) {
-					skip = false
-					break
-				}
-			}
-			if skip {
-				log.Printf("[INFO] Skipping Elasticache Replication Group: %s", id)
-				continue
-			}
+
 			log.Printf("[INFO] Deleting Elasticache Replication Group: %s", id)
 			err := deleteElasticacheReplicationGroup(id, conn)
 			if err != nil {

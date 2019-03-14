@@ -91,22 +91,6 @@ func Provider() terraform.ResourceProvider {
 				Set:           schema.HashString,
 			},
 
-			"dynamodb_endpoint": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "",
-				Description: descriptions["dynamodb_endpoint"],
-				Removed:     "Use `dynamodb` inside `endpoints` block instead",
-			},
-
-			"kinesis_endpoint": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "",
-				Description: descriptions["kinesis_endpoint"],
-				Removed:     "Use `kinesis` inside `endpoints` block instead",
-			},
-
 			"endpoints": endpointsSchema(),
 
 			"insecure": {
@@ -185,6 +169,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_cloudwatch_log_group":               dataSourceAwsCloudwatchLogGroup(),
 			"aws_cognito_user_pools":                 dataSourceAwsCognitoUserPools(),
 			"aws_codecommit_repository":              dataSourceAwsCodeCommitRepository(),
+			"aws_cur_report_definition":              dataSourceAwsCurReportDefinition(),
 			"aws_db_cluster_snapshot":                dataSourceAwsDbClusterSnapshot(),
 			"aws_db_event_categories":                dataSourceAwsDbEventCategories(),
 			"aws_db_instance":                        dataSourceAwsDbInstance(),
@@ -383,6 +368,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_codebuild_webhook":                            resourceAwsCodeBuildWebhook(),
 			"aws_codepipeline":                                 resourceAwsCodePipeline(),
 			"aws_codepipeline_webhook":                         resourceAwsCodePipelineWebhook(),
+			"aws_cur_report_definition":                        resourceAwsCurReportDefinition(),
 			"aws_customer_gateway":                             resourceAwsCustomerGateway(),
 			"aws_datasync_agent":                               resourceAwsDataSyncAgent(),
 			"aws_datasync_location_efs":                        resourceAwsDataSyncLocationEfs(),
@@ -526,6 +512,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_iot_thing_principal_attachment":               resourceAwsIotThingPrincipalAttachment(),
 			"aws_iot_thing_type":                               resourceAwsIotThingType(),
 			"aws_iot_topic_rule":                               resourceAwsIotTopicRule(),
+			"aws_iot_role_alias":                               resourceAwsIotRoleAlias(),
 			"aws_key_pair":                                     resourceAwsKeyPair(),
 			"aws_kinesis_firehose_delivery_stream":             resourceAwsKinesisFirehoseDeliveryStream(),
 			"aws_kinesis_stream":                               resourceAwsKinesisStream(),
@@ -595,6 +582,8 @@ func Provider() terraform.ResourceProvider {
 			"aws_organizations_policy_attachment":              resourceAwsOrganizationsPolicyAttachment(),
 			"aws_placement_group":                              resourceAwsPlacementGroup(),
 			"aws_proxy_protocol_policy":                        resourceAwsProxyProtocolPolicy(),
+			"aws_ram_principal_association":                    resourceAwsRamPrincipalAssociation(),
+			"aws_ram_resource_association":                     resourceAwsRamResourceAssociation(),
 			"aws_ram_resource_share":                           resourceAwsRamResourceShare(),
 			"aws_rds_cluster":                                  resourceAwsRDSCluster(),
 			"aws_rds_cluster_endpoint":                         resourceAwsRDSClusterEndpoint(),
@@ -614,6 +603,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_route53_zone_association":                     resourceAwsRoute53ZoneAssociation(),
 			"aws_route53_zone":                                 resourceAwsRoute53Zone(),
 			"aws_route53_health_check":                         resourceAwsRoute53HealthCheck(),
+			"aws_route53_resolver_endpoint":                    resourceAwsRoute53ResolverEndpoint(),
 			"aws_route":                                        resourceAwsRoute(),
 			"aws_route_table":                                  resourceAwsRouteTable(),
 			"aws_default_route_table":                          resourceAwsDefaultRouteTable(),
@@ -961,11 +951,15 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 	}
 
 	if v, ok := d.GetOk("allowed_account_ids"); ok {
-		config.AllowedAccountIds = v.(*schema.Set).List()
+		for _, accountIDRaw := range v.(*schema.Set).List() {
+			config.AllowedAccountIds = append(config.AllowedAccountIds, accountIDRaw.(string))
+		}
 	}
 
 	if v, ok := d.GetOk("forbidden_account_ids"); ok {
-		config.ForbiddenAccountIds = v.(*schema.Set).List()
+		for _, accountIDRaw := range v.(*schema.Set).List() {
+			config.ForbiddenAccountIds = append(config.ForbiddenAccountIds, accountIDRaw.(string))
+		}
 	}
 
 	return config.Client()

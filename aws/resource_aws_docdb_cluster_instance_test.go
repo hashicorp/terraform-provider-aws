@@ -326,7 +326,7 @@ data "aws_availability_zones" "available" {}
 
 resource "aws_docdb_cluster" "default" {
   cluster_identifier = "tf-docdb-cluster-test-%d"
-  availability_zones = ["${data.aws_availability_zones.available.names}"]
+  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
   master_username    = "foo"
   master_password    = "mustbeeightcharaters"
   skip_final_snapshot = true

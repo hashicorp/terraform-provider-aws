@@ -113,6 +113,9 @@
                         <li<%= sidebar_current("docs-aws-datasource-cognito-user-pools") %>>
                             <a href="/docs/providers/aws/d/cognito_user_pools.html">aws_cognito_user_pools</a>
                         </li>
+                        <li<%= sidebar_current("docs-aws-datasource-cur-report-definition") %>>
+                            <a href="/docs/providers/aws/d/cur_report_definition.html">aws_cur_report_definition</a>
+                        </li>
                         <li<%= sidebar_current("docs-aws-datasource-db-cluster-snapshot") %>>
                           <a href="/docs/providers/aws/d/db_cluster_snapshot.html">aws_db_cluster_snapshot</a>
                         </li>
@@ -177,7 +180,7 @@
                             <a href="/docs/providers/aws/d/eks_cluster.html">aws_eks_cluster</a>
                         </li>
                         <li<%= sidebar_current("docs-aws-datasource-eks-cluster-auth") %>>
-                            <a href="/docs/providers/aws/d/eks_cluster.html">aws_eks_cluster_auth</a>
+                            <a href="/docs/providers/aws/d/eks_cluster_auth.html">aws_eks_cluster_auth</a>
                         </li>
                         <li<%= sidebar_current("docs-aws-datasource-elastic-beanstalk-application") %>>
                             <a href="/docs/providers/aws/d/elastic_beanstalk_application.html">aws_elastic_beanstalk_application</a>
@@ -259,9 +262,6 @@
                         </li>
                         <li<%= sidebar_current("docs-aws-datasource-kms-key") %>>
                           <a href="/docs/providers/aws/d/kms_key.html">aws_kms_key</a>
-                        </li>
-                        <li<%= sidebar_current("docs-aws-datasource-kms-secret-x") %>>
-                            <a href="/docs/providers/aws/d/kms_secret.html">aws_kms_secret</a>
                         </li>
                         <li<%= sidebar_current("docs-aws-datasource-kms-secrets") %>>
                             <a href="/docs/providers/aws/d/kms_secrets.html">aws_kms_secrets</a>
@@ -826,6 +826,17 @@
 
                         <li<%= sidebar_current("docs-aws-resource-config-delivery-channel") %>>
                             <a href="/docs/providers/aws/r/config_delivery_channel.html">aws_config_delivery_channel</a>
+                        </li>
+
+                    </ul>
+                </li>
+
+                <li<%= sidebar_current("docs-aws-resource-cur-report-definition") %>>
+                    <a href="#">Cost and Usage Report Resources</a>
+                    <ul class="nav nav-visible">
+
+                        <li<%= sidebar_current("docs-aws-resource-cur-report-definition") %>>
+                            <a href="/docs/providers/aws/r/cur_report_definition.html">aws_cur_report_definition</a>
                         </li>
 
                     </ul>
@@ -1630,6 +1641,10 @@
                     <li<%= sidebar_current("docs-aws-resource-iot-thing-type") %>>
                         <a href="/docs/providers/aws/r/iot_thing_type.html">aws_iot_thing_type</a>
                     </li>
+
+                    <li<%= sidebar_current("docs-aws-resource-iot-role-alias") %>>
+                        <a href="/docs/providers/aws/r/iot_role_alias.html">aws_iot_role_alias</a>
+                    </li>
                   </ul>
                 </li>
 
@@ -1947,6 +1962,12 @@
                 <li<%= sidebar_current("docs-aws-resource-ram") %>>
                     <a href="#">RAM Resources</a>
                     <ul class="nav nav-visible">
+                        <li<%= sidebar_current("docs-aws-resource-ram-principal-association") %>>
+                        <a href="/docs/providers/aws/r/ram_principal_association.html">aws_ram_principal_association</a>
+                        </li>
+                        <li<%= sidebar_current("docs-aws-resource-ram-resource-association") %>>
+                        <a href="/docs/providers/aws/r/ram_resource_association.html">aws_ram_resource_association</a>
+                        </li>
                         <li<%= sidebar_current("docs-aws-resource-ram-resource-share") %>>
                         <a href="/docs/providers/aws/r/ram_resource_share.html">aws_ram_resource_share</a>
                         </li>
@@ -2236,6 +2257,18 @@
 
                         <li<%= sidebar_current("docs-aws-resource-route53-zone-association") %>>
                             <a href="/docs/providers/aws/r/route53_zone_association.html">aws_route53_zone_association</a>
+                        </li>
+
+                    </ul>
+                </li>
+
+
+                <li<%= sidebar_current("docs-aws-resource-route53-resolver") %>>
+                    <a href="#">Route53 Resolver Resources</a>
+                    <ul class="nav nav-visible">
+
+                        <li<%= sidebar_current("docs-aws-resource-route53-resolver-endpoint") %>>
+                            <a href="/docs/providers/aws/r/route53_resolver_endpoint.html">aws_route53_resolver_endpoint</a>
                         </li>
 
                     </ul>

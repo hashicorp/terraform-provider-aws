@@ -419,11 +419,9 @@ resource "aws_worklink_fleet" "test" {
 
 	network {
 		vpc_id = "${aws_vpc.test.id}"
-		subnet_ids = ["${aws_subnet.test.*.id}"]
+		subnet_ids = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
 		security_group_ids = ["${aws_security_group.test.id}"]
 	}
-
-	depends_on = ["aws_vpc.test", "aws_subnet.test"]
 }
 
 `, testAccAWSWorkLinkFleetConfigNetwork_Base(r, cidrBlock), r)

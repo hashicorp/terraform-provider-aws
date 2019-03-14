@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -47,10 +46,6 @@ func testSweepDAXClusters(region string) error {
 	log.Printf("[INFO] Found %d DAX clusters", len(resp.Clusters))
 
 	for _, cluster := range resp.Clusters {
-		if !strings.HasPrefix(*cluster.ClusterName, "tf-") {
-			continue
-		}
-
 		log.Printf("[INFO] Deleting DAX cluster %s", *cluster.ClusterName)
 		_, err := conn.DeleteCluster(&dax.DeleteClusterInput{
 			ClusterName: cluster.ClusterName,

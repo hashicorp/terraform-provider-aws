@@ -3142,7 +3142,7 @@ func (c *EC2) CopySnapshotRequest(input *CopySnapshotInput) (req *request.Reques
 // CopySnapshot API operation for Amazon Elastic Compute Cloud.
 //
 // Copies a point-in-time snapshot of an EBS volume and stores it in Amazon
-// S3. You can copy the snapshot within the same region or from one region to
+// S3. You can copy the snapshot within the same Region or from one Region to
 // another. You can use the snapshot to create EBS volumes or Amazon Machine
 // Images (AMIs). The snapshot is copied to the regional endpoint that you send
 // the HTTP request to.
@@ -5160,9 +5160,8 @@ func (c *EC2) CreateReservedInstancesListingRequest(input *CreateReservedInstanc
 // listing at a time. To get a list of your Standard Reserved Instances, you
 // can use the DescribeReservedInstances operation.
 //
-// Only Standard Reserved Instances with a capacity reservation can be sold
-// in the Reserved Instance Marketplace. Convertible Reserved Instances and
-// Standard Reserved Instances with a regional benefit cannot be sold.
+// Only Standard Reserved Instances can be sold in the Reserved Instance Marketplace.
+// Convertible Reserved Instances cannot be sold.
 //
 // The Reserved Instance Marketplace matches sellers who want to resell Standard
 // Reserved Instance capacity that they no longer need with buyers who want
@@ -15558,9 +15557,9 @@ func (c *EC2) DescribeSnapshotsRequest(input *DescribeSnapshotsInput) (req *requ
 // DescribeSnapshots API operation for Amazon Elastic Compute Cloud.
 //
 // Describes one or more of the EBS snapshots available to you. Available snapshots
-// include public snapshots available for any AWS account to launch, private
-// snapshots that you own, and private snapshots owned by another AWS account
-// but for which you've been given explicit create volume permissions.
+// include public snapshots available for use by any AWS account, private snapshots
+// that you own, and private snapshots owned by another AWS account for which
+// you've been given explicit create volume permissions.
 //
 // The create volume permissions fall into the following categories:
 //
@@ -22258,6 +22257,80 @@ func (c *EC2) ModifyInstanceCreditSpecification(input *ModifyInstanceCreditSpeci
 // for more information on using Contexts.
 func (c *EC2) ModifyInstanceCreditSpecificationWithContext(ctx aws.Context, input *ModifyInstanceCreditSpecificationInput, opts ...request.Option) (*ModifyInstanceCreditSpecificationOutput, error) {
 	req, out := c.ModifyInstanceCreditSpecificationRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opModifyInstanceEventStartTime = "ModifyInstanceEventStartTime"
+
+// ModifyInstanceEventStartTimeRequest generates a "aws/request.Request" representing the
+// client's request for the ModifyInstanceEventStartTime operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ModifyInstanceEventStartTime for more information on using the ModifyInstanceEventStartTime
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ModifyInstanceEventStartTimeRequest method.
+//    req, resp := client.ModifyInstanceEventStartTimeRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/ModifyInstanceEventStartTime
+func (c *EC2) ModifyInstanceEventStartTimeRequest(input *ModifyInstanceEventStartTimeInput) (req *request.Request, output *ModifyInstanceEventStartTimeOutput) {
+	op := &request.Operation{
+		Name:       opModifyInstanceEventStartTime,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ModifyInstanceEventStartTimeInput{}
+	}
+
+	output = &ModifyInstanceEventStartTimeOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ModifyInstanceEventStartTime API operation for Amazon Elastic Compute Cloud.
+//
+// Modifies the start time for a scheduled Amazon EC2 instance event.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic Compute Cloud's
+// API operation ModifyInstanceEventStartTime for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/ModifyInstanceEventStartTime
+func (c *EC2) ModifyInstanceEventStartTime(input *ModifyInstanceEventStartTimeInput) (*ModifyInstanceEventStartTimeOutput, error) {
+	req, out := c.ModifyInstanceEventStartTimeRequest(input)
+	return out, req.Send()
+}
+
+// ModifyInstanceEventStartTimeWithContext is the same as ModifyInstanceEventStartTime with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ModifyInstanceEventStartTime for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) ModifyInstanceEventStartTimeWithContext(ctx aws.Context, input *ModifyInstanceEventStartTimeInput, opts ...request.Option) (*ModifyInstanceEventStartTimeOutput, error) {
+	req, out := c.ModifyInstanceEventStartTimeRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -32178,8 +32251,8 @@ func (s *ClientData) SetUploadStart(v time.Time) *ClientData {
 
 // Describes the authentication methods used by a Client VPN endpoint. Client
 // VPN supports Active Directory and mutual authentication. For more information,
-// see Authentication (vpn/latest/clientvpn-admin/authentication-authrization.html#client-authentication)
-// in the AWS Client VPN Admin Guide.
+// see Authentication (https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/authentication-authrization.html#client-authentication)
+// in the AWS Client VPN Administrator Guide.
 type ClientVpnAuthentication struct {
 	_ struct{} `type:"structure"`
 
@@ -32223,8 +32296,8 @@ func (s *ClientVpnAuthentication) SetType(v string) *ClientVpnAuthentication {
 
 // Describes the authentication method to be used by a Client VPN endpoint.
 // Client VPN supports Active Directory and mutual authentication. For more
-// information, see Authentication (vpn/latest/clientvpn-admin/authentication-authrization.html#client-authentication)
-// in the AWS Client VPN Admin Guide.
+// information, see Authentication (https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/authentication-authrization.html#client-authentication)
+// in the AWS Client VPN Administrator Guide.
 type ClientVpnAuthenticationRequest struct {
 	_ struct{} `type:"structure"`
 
@@ -32476,7 +32549,9 @@ type ClientVpnEndpoint struct {
 
 	// Information about the associated target networks. A target network is a subnet
 	// in a VPC.
-	AssociatedTargetNetworks []*AssociatedTargetNetwork `locationName:"associatedTargetNetwork" locationNameList:"item" type:"list"`
+	//
+	// Deprecated: This property is deprecated. To view the target networks associated with a Client VPN endpoint, call DescribeClientVpnTargetNetworks and inspect the clientVpnTargetNetworks response element.
+	AssociatedTargetNetworks []*AssociatedTargetNetwork `locationName:"associatedTargetNetwork" locationNameList:"item" deprecated:"true" type:"list"`
 
 	// Information about the authentication method used by the Client VPN endpoint.
 	AuthenticationOptions []*ClientVpnAuthentication `locationName:"authenticationOptions" locationNameList:"item" type:"list"`
@@ -32495,16 +32570,17 @@ type ClientVpnEndpoint struct {
 	// The date and time the Client VPN endpoint was created.
 	CreationTime *string `locationName:"creationTime" type:"string"`
 
-	// The date and time the Client VPN endpoint was deleted, if applicable. Information
-	// about deleted Client VPN endpoints is retained for 24 hours, unless a new
-	// Client VPN is created with the same name.
+	// The date and time the Client VPN endpoint was deleted, if applicable.
 	DeletionTime *string `locationName:"deletionTime" type:"string"`
 
 	// A brief description of the endpoint.
 	Description *string `locationName:"description" type:"string"`
 
-	// The DNS name to be used by clients when establishing a connection.
+	// The DNS name to be used by clients when connecting to the Client VPN endpoint.
 	DnsName *string `locationName:"dnsName" type:"string"`
+
+	// Information about the DNS servers to be used for DNS resolution.
+	DnsServers []*string `locationName:"dnsServer" locationNameList:"item" type:"list"`
 
 	// The ARN of the server certificate.
 	ServerCertificateArn *string `locationName:"serverCertificateArn" type:"string"`
@@ -32514,6 +32590,9 @@ type ClientVpnEndpoint struct {
 
 	// The current state of the Client VPN endpoint.
 	Status *ClientVpnEndpointStatus `locationName:"status" type:"structure"`
+
+	// Any tags assigned to the Client VPN endpoint.
+	Tags []*Tag `locationName:"tagSet" locationNameList:"item" type:"list"`
 
 	// The transport protocol used by the Client VPN endpoint.
 	TransportProtocol *string `locationName:"transportProtocol" type:"string" enum:"TransportProtocol"`
@@ -32586,6 +32665,12 @@ func (s *ClientVpnEndpoint) SetDnsName(v string) *ClientVpnEndpoint {
 	return s
 }
 
+// SetDnsServers sets the DnsServers field's value.
+func (s *ClientVpnEndpoint) SetDnsServers(v []*string) *ClientVpnEndpoint {
+	s.DnsServers = v
+	return s
+}
+
 // SetServerCertificateArn sets the ServerCertificateArn field's value.
 func (s *ClientVpnEndpoint) SetServerCertificateArn(v string) *ClientVpnEndpoint {
 	s.ServerCertificateArn = &v
@@ -32601,6 +32686,12 @@ func (s *ClientVpnEndpoint) SetSplitTunnel(v bool) *ClientVpnEndpoint {
 // SetStatus sets the Status field's value.
 func (s *ClientVpnEndpoint) SetStatus(v *ClientVpnEndpointStatus) *ClientVpnEndpoint {
 	s.Status = v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *ClientVpnEndpoint) SetTags(v []*Tag) *ClientVpnEndpoint {
+	s.Tags = v
 	return s
 }
 
@@ -33419,13 +33510,13 @@ type CopySnapshotInput struct {
 	// A description for the EBS snapshot.
 	Description *string `type:"string"`
 
-	// The destination region to use in the PresignedUrl parameter of a snapshot
+	// The destination Region to use in the PresignedUrl parameter of a snapshot
 	// copy operation. This parameter is only valid for specifying the destination
-	// region in a PresignedUrl parameter, where it is required.
+	// Region in a PresignedUrl parameter, where it is required.
 	//
 	// The snapshot copy is sent to the regional endpoint that you sent the HTTP
 	// request to (for example, ec2.us-east-1.amazonaws.com). With the AWS CLI,
-	// this is specified using the --region parameter or the default region in your
+	// this is specified using the --region parameter or the default Region in your
 	// AWS configuration file.
 	DestinationRegion *string `locationName:"destinationRegion" type:"string"`
 
@@ -33485,7 +33576,7 @@ type CopySnapshotInput struct {
 	// and the snapshot will move to an error state.
 	PresignedUrl *string `locationName:"presignedUrl" type:"string"`
 
-	// The ID of the region that contains the snapshot to be copied.
+	// The ID of the Region that contains the snapshot to be copied.
 	//
 	// SourceRegion is a required field
 	SourceRegion *string `type:"string" required:"true"`
@@ -33952,10 +34043,13 @@ type CreateClientVpnEndpointInput struct {
 	DryRun *bool `type:"boolean"`
 
 	// The ARN of the server certificate. For more information, see the AWS Certificate
-	// Manager User Guide (acm/latest/userguide/acm-overview.html) .
+	// Manager User Guide (https://docs.aws.amazon.com/acm/latest/userguide/).
 	//
 	// ServerCertificateArn is a required field
 	ServerCertificateArn *string `type:"string" required:"true"`
+
+	// The tags to apply to the Client VPN endpoint during creation.
+	TagSpecifications []*TagSpecification `locationName:"TagSpecification" locationNameList:"item" type:"list"`
 
 	// The transport protocol to be used by the VPN session.
 	//
@@ -34040,6 +34134,12 @@ func (s *CreateClientVpnEndpointInput) SetDryRun(v bool) *CreateClientVpnEndpoin
 // SetServerCertificateArn sets the ServerCertificateArn field's value.
 func (s *CreateClientVpnEndpointInput) SetServerCertificateArn(v string) *CreateClientVpnEndpointInput {
 	s.ServerCertificateArn = &v
+	return s
+}
+
+// SetTagSpecifications sets the TagSpecifications field's value.
+func (s *CreateClientVpnEndpointInput) SetTagSpecifications(v []*TagSpecification) *CreateClientVpnEndpointInput {
+	s.TagSpecifications = v
 	return s
 }
 
@@ -34725,7 +34825,7 @@ type CreateFleetInput struct {
 
 	// The end date and time of the request, in UTC format (for example, YYYY-MM-DDTHH:MM:SSZ).
 	// At this point, no new EC2 Fleet requests are placed or able to fulfill the
-	// request. The default end date is 7 days from the current date.
+	// request. If no value is specified, the request remains until you cancel it.
 	ValidUntil *time.Time `type:"timestamp"`
 }
 
@@ -35624,6 +35724,8 @@ type CreateLaunchTemplateInput struct {
 
 	// Unique, case-sensitive identifier you provide to ensure the idempotency of
 	// the request. For more information, see Ensuring Idempotency (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
+	//
+	// Constraint: Maximum 128 ASCII characters.
 	ClientToken *string `type:"string"`
 
 	// Checks whether you have the required permissions for the action, without
@@ -35738,6 +35840,8 @@ type CreateLaunchTemplateVersionInput struct {
 
 	// Unique, case-sensitive identifier you provide to ensure the idempotency of
 	// the request. For more information, see Ensuring Idempotency (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
+	//
+	// Constraint: Maximum 128 ASCII characters.
 	ClientToken *string `type:"string"`
 
 	// Checks whether you have the required permissions for the action, without
@@ -37787,8 +37891,8 @@ type CreateVolumeInput struct {
 
 	// The number of I/O operations per second (IOPS) to provision for the volume,
 	// with a maximum ratio of 50 IOPS/GiB. Range is 100 to 64,000 IOPS for volumes
-	// in most regions. Maximum IOPS of 64,000 is guaranteed only on Nitro-based
-	// instances (AWSEC2/latest/UserGuide/instance-types.html#ec2-nitro-instances).
+	// in most Regions. Maximum IOPS of 64,000 is guaranteed only on Nitro-based
+	// instances (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-types.html#ec2-nitro-instances).
 	// Other instance families guarantee performance up to 32,000 IOPS. For more
 	// information, see Amazon EBS Volume Types (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSVolumeTypes.html)
 	// in the Amazon Elastic Compute Cloud User Guide.
@@ -37850,7 +37954,7 @@ type CreateVolumeInput struct {
 	// Defaults: If no volume type is specified, the default is standard in us-east-1,
 	// eu-west-1, eu-central-1, us-west-2, us-west-1, sa-east-1, ap-northeast-1,
 	// ap-northeast-2, ap-southeast-1, ap-southeast-2, ap-south-1, us-gov-west-1,
-	// and cn-north-1. In all other regions, EBS defaults to gp2.
+	// and cn-north-1. In all other Regions, EBS defaults to gp2.
 	VolumeType *string `type:"string" enum:"VolumeType"`
 }
 
@@ -37931,17 +38035,15 @@ func (s *CreateVolumeInput) SetVolumeType(v string) *CreateVolumeInput {
 	return s
 }
 
-// Describes the user or group to be added or removed from the permissions for
-// a volume.
+// Describes the user or group to be added or removed from the list of create
+// volume permissions for a volume.
 type CreateVolumePermission struct {
 	_ struct{} `type:"structure"`
 
-	// The specific group that is to be added or removed from a volume's list of
-	// create volume permissions.
+	// The group to be added or removed. The possible value is all.
 	Group *string `locationName:"group" type:"string" enum:"PermissionGroup"`
 
-	// The specific AWS account ID that is to be added or removed from a volume's
-	// list of create volume permissions.
+	// The AWS account ID to be added or removed.
 	UserId *string `locationName:"userId" type:"string"`
 }
 
@@ -37967,16 +38069,14 @@ func (s *CreateVolumePermission) SetUserId(v string) *CreateVolumePermission {
 	return s
 }
 
-// Describes modifications to the permissions for a volume.
+// Describes modifications to the list of create volume permissions for a volume.
 type CreateVolumePermissionModifications struct {
 	_ struct{} `type:"structure"`
 
-	// Adds a specific AWS account ID or group to a volume's list of create volume
-	// permissions.
+	// Adds the specified AWS account ID or group to the list.
 	Add []*CreateVolumePermission `locationNameList:"item" type:"list"`
 
-	// Removes a specific AWS account ID or group from a volume's list of create
-	// volume permissions.
+	// Removes the specified AWS account ID or group from the list.
 	Remove []*CreateVolumePermission `locationNameList:"item" type:"list"`
 }
 
@@ -38142,10 +38242,9 @@ type CreateVpcEndpointInput struct {
 	// it is UnauthorizedOperation.
 	DryRun *bool `type:"boolean"`
 
-	// (Gateway endpoint) A policy to attach to the endpoint that controls access
-	// to the service. The policy must be in valid JSON format. If this parameter
-	// is not specified, we attach a default policy that allows full access to the
-	// service.
+	// A policy to attach to the endpoint that controls access to the service. The
+	// policy must be in valid JSON format. If this parameter is not specified,
+	// we attach a default policy that allows full access to the service.
 	PolicyDocument *string `type:"string"`
 
 	// (Interface endpoint) Indicate whether to associate a private hosted zone
@@ -45531,6 +45630,9 @@ type DescribeImagesInput struct {
 	//    * block-device-mapping.volume-type - The volume type of the EBS volume
 	//    (gp2 | io1 | st1 | sc1 | standard).
 	//
+	//    * block-device-mapping.encrypted - A Boolean that indicates whether the
+	//    EBS volume is encrypted.
+	//
 	//    * description - The description of the image (provided during image creation).
 	//
 	//    * ena-support - A Boolean that indicates whether enhanced networking with
@@ -46112,7 +46214,7 @@ type DescribeInstanceCreditSpecificationsInput struct {
 	// remaining results, make another call with the returned NextToken value. This
 	// value can be between 5 and 1000. You cannot specify this parameter and the
 	// instance IDs parameter in the same call.
-	MaxResults *int64 `type:"integer"`
+	MaxResults *int64 `min:"5" type:"integer"`
 
 	// The token to retrieve the next page of results.
 	NextToken *string `type:"string"`
@@ -46126,6 +46228,19 @@ func (s DescribeInstanceCreditSpecificationsInput) String() string {
 // GoString returns the string representation
 func (s DescribeInstanceCreditSpecificationsInput) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeInstanceCreditSpecificationsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeInstanceCreditSpecificationsInput"}
+	if s.MaxResults != nil && *s.MaxResults < 5 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 5))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetDryRun sets the DryRun field's value.
@@ -46209,10 +46324,16 @@ type DescribeInstanceStatusInput struct {
 	//
 	//    * event.description - A description of the event.
 	//
+	//    * event.instance-event-id - The ID of the event whose date and time you
+	//    are modifying.
+	//
 	//    * event.not-after - The latest end time for the scheduled event (for example,
 	//    2014-09-15T17:15:20.000Z).
 	//
 	//    * event.not-before - The earliest start time for the scheduled event (for
+	//    example, 2014-09-15T17:15:20.000Z).
+	//
+	//    * event.not-before-deadline - The deadline for starting the event (for
 	//    example, 2014-09-15T17:15:20.000Z).
 	//
 	//    * instance-state-code - The code for the instance state, as a 16-bit unsigned
@@ -49653,10 +49774,11 @@ func (s *DescribeSnapshotAttributeInput) SetSnapshotId(v string) *DescribeSnapsh
 type DescribeSnapshotAttributeOutput struct {
 	_ struct{} `type:"structure"`
 
-	// A list of permissions for creating volumes from the snapshot.
+	// The users and groups that have the permissions for creating volumes from
+	// the snapshot.
 	CreateVolumePermissions []*CreateVolumePermission `locationName:"createVolumePermission" locationNameList:"item" type:"list"`
 
-	// A list of product codes.
+	// The product codes.
 	ProductCodes []*ProductCode `locationName:"productCodes" locationNameList:"item" type:"list"`
 
 	// The ID of the EBS snapshot.
@@ -49753,8 +49875,7 @@ type DescribeSnapshotsInput struct {
 	// to return.
 	NextToken *string `type:"string"`
 
-	// Returns the snapshots owned by the specified owner. Multiple owners can be
-	// specified.
+	// Describes the snapshots owned by one or more owners.
 	OwnerIds []*string `locationName:"Owner" locationNameList:"Owner" type:"list"`
 
 	// One or more AWS accounts IDs that can create volumes from the snapshot.
@@ -49762,7 +49883,7 @@ type DescribeSnapshotsInput struct {
 
 	// One or more snapshot IDs.
 	//
-	// Default: Describes snapshots for which you have launch permissions.
+	// Default: Describes the snapshots for which you have create volume permissions.
 	SnapshotIds []*string `locationName:"SnapshotId" locationNameList:"SnapshotId" type:"list"`
 }
 
@@ -55011,19 +55132,16 @@ type EbsBlockDevice struct {
 	Encrypted *bool `locationName:"encrypted" type:"boolean"`
 
 	// The number of I/O operations per second (IOPS) that the volume supports.
-	// For io1, this represents the number of IOPS that are provisioned for the
-	// volume. For gp2, this represents the baseline performance of the volume and
-	// the rate at which the volume accumulates I/O credits for bursting. For more
-	// information about General Purpose SSD baseline performance, I/O credits,
-	// and bursting, see Amazon EBS Volume Types (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSVolumeTypes.html)
+	// For io1 volumes, this represents the number of IOPS that are provisioned
+	// for the volume. For gp2 volumes, this represents the baseline performance
+	// of the volume and the rate at which the volume accumulates I/O credits for
+	// bursting. For more information, see Amazon EBS Volume Types (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSVolumeTypes.html)
 	// in the Amazon Elastic Compute Cloud User Guide.
 	//
 	// Constraints: Range is 100-16,000 IOPS for gp2 volumes and 100 to 64,000IOPS
-	// for io1 volumes in most Regions. Maximum io1IOPS of 64,000 is guaranteed
-	// only on Nitro-based instances (AWSEC2/latest/UserGuide/instance-types.html#ec2-nitro-instances).
-	// Other instance families guarantee performance up to 32,000 IOPS. For more
-	// information, see Amazon EBS Volume Types (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSVolumeTypes.html)
-	// in the Amazon Elastic Compute Cloud User Guide.
+	// for io1 volumes, in most Regions. The maximum IOPS for io1 of 64,000 is guaranteed
+	// only on Nitro-based instances (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-types.html#ec2-nitro-instances).
+	// Other instance families guarantee performance up to 32,000 IOPS.
 	//
 	// Condition: This parameter is required for requests to create io1 volumes;
 	// it is not used in requests to create gp2, st1, sc1, or standard volumes.
@@ -55881,10 +55999,6 @@ type EventInformation struct {
 	//    * iamFleetRoleInvalid - The Spot Fleet did not have the required permissions
 	//    either to launch or terminate an instance.
 	//
-	//    * launchSpecTemporarilyBlacklisted - The configuration is not valid and
-	//    several attempts to launch instances have failed. For more information,
-	//    see the description of the event.
-	//
 	//    * spotFleetRequestConfigurationInvalid - The configuration is not valid.
 	//    For more information, see the description of the event.
 	//
@@ -55928,6 +56042,10 @@ type EventInformation struct {
 	//    * terminated - An instance was terminated by the user.
 	//
 	// The following are the Information events:
+	//
+	//    * launchSpecTemporarilyBlacklisted - The configuration is not valid and
+	//    several attempts to launch instances have failed. For more information,
+	//    see the description of the event.
 	//
 	//    * launchSpecUnusable - The price in a launch specification is not valid
 	//    because it is below the Spot price or the Spot price is above the On-Demand
@@ -59549,8 +59667,8 @@ type ImportClientVpnClientCertificateRevocationListInput struct {
 	_ struct{} `type:"structure"`
 
 	// The client certificate revocation list file. For more information, see Generate
-	// a Client Certificate Revocation List (vpn/latest/clientvpn-admin/cvpn-working-certificates.html#cvpn-working-certificates-generate)
-	// in the AWS Client VPN Admin Guide.
+	// a Client Certificate Revocation List (https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/cvpn-working-certificates.html#cvpn-working-certificates-generate)
+	// in the AWS Client VPN Administrator Guide.
 	//
 	// CertificateRevocationList is a required field
 	CertificateRevocationList *string `type:"string" required:"true"`
@@ -59709,7 +59827,16 @@ type ImportImageInput struct {
 	// see Prerequisites (https://docs.aws.amazon.com/vm-import/latest/userguide/vmimport-image-import.html#prerequisites-image)
 	// in the VM Import/Export User Guide.
 	//
-	// Valid values: AWS | BYOL
+	// Valid values include:
+	//
+	//    * Auto - Detects the source-system operating system (OS) and applies the
+	//    appropriate license.
+	//
+	//    * AWS - Replaces the source-system license with an AWS license, if appropriate.
+	//
+	//    * BYOL - Retains the source-system license, if appropriate.
+	//
+	// Default value: Auto
 	LicenseType *string `type:"string"`
 
 	// The operating system of the virtual machine.
@@ -62192,8 +62319,17 @@ func (s *InstancePrivateIpAddress) SetPrivateIpAddress(v string) *InstancePrivat
 type InstanceState struct {
 	_ struct{} `type:"structure"`
 
-	// The low byte represents the state. The high byte is used for internal purposes
-	// and should be ignored.
+	// The state of the instance as a 16-bit unsigned integer.
+	//
+	// The high byte is all of the bits between 2^8 and (2^16)-1, which equals decimal
+	// values between 256 and 65,535. These numerical values are used for internal
+	// purposes and should be ignored.
+	//
+	// The low byte is all of the bits between 2^0 and (2^8)-1, which equals decimal
+	// values between 0 and 255.
+	//
+	// The valid values for instance-state-code will all be in the range of the
+	// low byte and they are:
 	//
 	//    * 0 : pending
 	//
@@ -62206,6 +62342,9 @@ type InstanceState struct {
 	//    * 64 : stopping
 	//
 	//    * 80 : stopped
+	//
+	// You can ignore the high byte value by zeroing out all of the bits above 2^8
+	// or 256 in decimal.
 	Code *int64 `locationName:"code" type:"integer"`
 
 	// The current state of the instance.
@@ -62406,11 +62545,17 @@ type InstanceStatusEvent struct {
 	// following text: [Completed].
 	Description *string `locationName:"description" type:"string"`
 
+	// The ID of the event.
+	InstanceEventId *string `locationName:"instanceEventId" type:"string"`
+
 	// The latest scheduled end time for the event.
 	NotAfter *time.Time `locationName:"notAfter" type:"timestamp"`
 
 	// The earliest scheduled start time for the event.
 	NotBefore *time.Time `locationName:"notBefore" type:"timestamp"`
+
+	// The deadline for starting the event.
+	NotBeforeDeadline *time.Time `locationName:"notBeforeDeadline" type:"timestamp"`
 }
 
 // String returns the string representation
@@ -62435,6 +62580,12 @@ func (s *InstanceStatusEvent) SetDescription(v string) *InstanceStatusEvent {
 	return s
 }
 
+// SetInstanceEventId sets the InstanceEventId field's value.
+func (s *InstanceStatusEvent) SetInstanceEventId(v string) *InstanceStatusEvent {
+	s.InstanceEventId = &v
+	return s
+}
+
 // SetNotAfter sets the NotAfter field's value.
 func (s *InstanceStatusEvent) SetNotAfter(v time.Time) *InstanceStatusEvent {
 	s.NotAfter = &v
@@ -62444,6 +62595,12 @@ func (s *InstanceStatusEvent) SetNotAfter(v time.Time) *InstanceStatusEvent {
 // SetNotBefore sets the NotBefore field's value.
 func (s *InstanceStatusEvent) SetNotBefore(v time.Time) *InstanceStatusEvent {
 	s.NotBefore = &v
+	return s
+}
+
+// SetNotBeforeDeadline sets the NotBeforeDeadline field's value.
+func (s *InstanceStatusEvent) SetNotBeforeDeadline(v time.Time) *InstanceStatusEvent {
+	s.NotBeforeDeadline = &v
 	return s
 }
 
@@ -66253,6 +66410,107 @@ func (s *ModifyInstanceCreditSpecificationOutput) SetUnsuccessfulInstanceCreditS
 	return s
 }
 
+type ModifyInstanceEventStartTimeInput struct {
+	_ struct{} `type:"structure"`
+
+	// Checks whether you have the required permissions for the action, without
+	// actually making the request, and provides an error response. If you have
+	// the required permissions, the error response is DryRunOperation. Otherwise,
+	// it is UnauthorizedOperation.
+	DryRun *bool `type:"boolean"`
+
+	// The ID of the event whose date and time you are modifying.
+	//
+	// InstanceEventId is a required field
+	InstanceEventId *string `type:"string" required:"true"`
+
+	// The ID of the instance with the scheduled event.
+	//
+	// InstanceId is a required field
+	InstanceId *string `type:"string" required:"true"`
+
+	// The new date and time when the event will take place.
+	//
+	// NotBefore is a required field
+	NotBefore *time.Time `type:"timestamp" required:"true"`
+}
+
+// String returns the string representation
+func (s ModifyInstanceEventStartTimeInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ModifyInstanceEventStartTimeInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ModifyInstanceEventStartTimeInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ModifyInstanceEventStartTimeInput"}
+	if s.InstanceEventId == nil {
+		invalidParams.Add(request.NewErrParamRequired("InstanceEventId"))
+	}
+	if s.InstanceId == nil {
+		invalidParams.Add(request.NewErrParamRequired("InstanceId"))
+	}
+	if s.NotBefore == nil {
+		invalidParams.Add(request.NewErrParamRequired("NotBefore"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDryRun sets the DryRun field's value.
+func (s *ModifyInstanceEventStartTimeInput) SetDryRun(v bool) *ModifyInstanceEventStartTimeInput {
+	s.DryRun = &v
+	return s
+}
+
+// SetInstanceEventId sets the InstanceEventId field's value.
+func (s *ModifyInstanceEventStartTimeInput) SetInstanceEventId(v string) *ModifyInstanceEventStartTimeInput {
+	s.InstanceEventId = &v
+	return s
+}
+
+// SetInstanceId sets the InstanceId field's value.
+func (s *ModifyInstanceEventStartTimeInput) SetInstanceId(v string) *ModifyInstanceEventStartTimeInput {
+	s.InstanceId = &v
+	return s
+}
+
+// SetNotBefore sets the NotBefore field's value.
+func (s *ModifyInstanceEventStartTimeInput) SetNotBefore(v time.Time) *ModifyInstanceEventStartTimeInput {
+	s.NotBefore = &v
+	return s
+}
+
+type ModifyInstanceEventStartTimeOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Describes a scheduled event for an instance.
+	Event *InstanceStatusEvent `locationName:"event" type:"structure"`
+}
+
+// String returns the string representation
+func (s ModifyInstanceEventStartTimeOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ModifyInstanceEventStartTimeOutput) GoString() string {
+	return s.String()
+}
+
+// SetEvent sets the Event field's value.
+func (s *ModifyInstanceEventStartTimeOutput) SetEvent(v *InstanceStatusEvent) *ModifyInstanceEventStartTimeOutput {
+	s.Event = v
+	return s
+}
+
 type ModifyInstancePlacementInput struct {
 	_ struct{} `type:"structure"`
 
@@ -66369,6 +66627,8 @@ type ModifyLaunchTemplateInput struct {
 
 	// Unique, case-sensitive identifier you provide to ensure the idempotency of
 	// the request. For more information, see Ensuring Idempotency (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
+	//
+	// Constraint: Maximum 128 ASCII characters.
 	ClientToken *string `type:"string"`
 
 	// The version number of the launch template to set as the default version.
@@ -67448,8 +67708,9 @@ type ModifyVpcEndpointInput struct {
 	// it is UnauthorizedOperation.
 	DryRun *bool `type:"boolean"`
 
-	// (Gateway endpoint) A policy document to attach to the endpoint. The policy
-	// must be in valid JSON format.
+	// A policy to attach to the endpoint that controls access to the service. The
+	// policy must be in valid JSON format. If this parameter is not specified,
+	// we attach a default policy that allows full access to the service.
 	PolicyDocument *string `type:"string"`
 
 	// (Interface endpoint) Indicate whether a private hosted zone is associated
@@ -75383,6 +75644,9 @@ type RunInstancesInput struct {
 	// You cannot specify this option and the option to assign specific IPv6 addresses
 	// in the same request. You can specify this option if you've specified a minimum
 	// number of instances to launch.
+	//
+	// You cannot specify this option and the network interfaces option in the same
+	// request.
 	Ipv6AddressCount *int64 `type:"integer"`
 
 	// [EC2-VPC] Specify one or more IPv6 addresses from the range of the subnet
@@ -75390,6 +75654,9 @@ type RunInstancesInput struct {
 	// option and the option to assign a number of IPv6 addresses in the same request.
 	// You cannot specify this option if you've specified a minimum number of instances
 	// to launch.
+	//
+	// You cannot specify this option and the network interfaces option in the same
+	// request.
 	Ipv6Addresses []*InstanceIpv6Address `locationName:"Ipv6Address" locationNameList:"item" type:"list"`
 
 	// The ID of the kernel.
@@ -75442,6 +75709,9 @@ type RunInstancesInput struct {
 	Monitoring *RunInstancesMonitoringEnabled `type:"structure"`
 
 	// One or more network interfaces.
+	//
+	// You cannot specify this option and the network interfaces option in the same
+	// request.
 	NetworkInterfaces []*InstanceNetworkInterfaceSpecification `locationName:"networkInterface" locationNameList:"item" type:"list"`
 
 	// The placement for the instance.
@@ -75454,6 +75724,9 @@ type RunInstancesInput struct {
 	// this option if you've specified the option to designate a private IP address
 	// as the primary IP address in a network interface specification. You cannot
 	// specify this option if you're launching more than one instance in the request.
+	//
+	// You cannot specify this option and the network interfaces option in the same
+	// request.
 	PrivateIpAddress *string `locationName:"privateIpAddress" type:"string"`
 
 	// The ID of the RAM disk.
@@ -75466,15 +75739,24 @@ type RunInstancesInput struct {
 	// One or more security group IDs. You can create a security group using CreateSecurityGroup.
 	//
 	// Default: Amazon EC2 uses the default security group.
+	//
+	// You cannot specify this option and the network interfaces option in the same
+	// request.
 	SecurityGroupIds []*string `locationName:"SecurityGroupId" locationNameList:"SecurityGroupId" type:"list"`
 
 	// [EC2-Classic, default VPC] One or more security group names. For a nondefault
 	// VPC, you must use security group IDs instead.
 	//
+	// You cannot specify this option and the network interfaces option in the same
+	// request.
+	//
 	// Default: Amazon EC2 uses the default security group.
 	SecurityGroups []*string `locationName:"SecurityGroup" locationNameList:"SecurityGroup" type:"list"`
 
 	// [EC2-VPC] The ID of the subnet to launch the instance into.
+	//
+	// You cannot specify this option and the network interfaces option in the same
+	// request.
 	SubnetId *string `type:"string"`
 
 	// The tags to apply to the resources during launch. You can only tag instances
@@ -78470,7 +78752,8 @@ type SpotFleetRequestConfigData struct {
 
 	// The end date and time of the request, in UTC format (for example, YYYY-MM-DDTHH:MM:SSZ).
 	// At this point, no new Spot Instance requests are placed or able to fulfill
-	// the request. The default end date is 7 days from the current date.
+	// the request. If no value is specified, the Spot Fleet request remains until
+	// you cancel it.
 	ValidUntil *time.Time `locationName:"validUntil" type:"timestamp"`
 }
 
@@ -82465,17 +82748,14 @@ type Volume struct {
 	// For Provisioned IOPS SSD volumes, this represents the number of IOPS that
 	// are provisioned for the volume. For General Purpose SSD volumes, this represents
 	// the baseline performance of the volume and the rate at which the volume accumulates
-	// I/O credits for bursting. For more information about General Purpose SSD
-	// baseline performance, I/O credits, and bursting, see Amazon EBS Volume Types
+	// I/O credits for bursting. For more information, see Amazon EBS Volume Types
 	// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSVolumeTypes.html)
 	// in the Amazon Elastic Compute Cloud User Guide.
 	//
 	// Constraints: Range is 100-16,000 IOPS for gp2 volumes and 100 to 64,000IOPS
-	// for io1 volumes in most regions. Maximum io1IOPS of 64,000 is guaranteed
-	// only on Nitro-based instances (AWSEC2/latest/UserGuide/instance-types.html#ec2-nitro-instances).
-	// Other instance families guarantee performance up to 32,000 IOPS. For more
-	// information, see Amazon EBS Volume Types (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSVolumeTypes.html)
-	// in the Amazon Elastic Compute Cloud User Guide.
+	// for io1 volumes, in most Regions. The maximum IOPS for io1 of 64,000 is guaranteed
+	// only on Nitro-based instances (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-types.html#ec2-nitro-instances).
+	// Other instance families guarantee performance up to 32,000 IOPS.
 	//
 	// Condition: This parameter is required for requests to create io1 volumes;
 	// it is not used in requests to create gp2, st1, sc1, or standard volumes.
@@ -85536,6 +85816,9 @@ const (
 	// InstanceTypeM524xlarge is a InstanceType enum value
 	InstanceTypeM524xlarge = "m5.24xlarge"
 
+	// InstanceTypeM5Metal is a InstanceType enum value
+	InstanceTypeM5Metal = "m5.metal"
+
 	// InstanceTypeM5aLarge is a InstanceType enum value
 	InstanceTypeM5aLarge = "m5a.large"
 
@@ -85572,6 +85855,9 @@ const (
 	// InstanceTypeM5d24xlarge is a InstanceType enum value
 	InstanceTypeM5d24xlarge = "m5d.24xlarge"
 
+	// InstanceTypeM5dMetal is a InstanceType enum value
+	InstanceTypeM5dMetal = "m5d.metal"
+
 	// InstanceTypeH12xlarge is a InstanceType enum value
 	InstanceTypeH12xlarge = "h1.2xlarge"
 
@@ -85601,6 +85887,9 @@ const (
 
 	// InstanceTypeZ1d12xlarge is a InstanceType enum value
 	InstanceTypeZ1d12xlarge = "z1d.12xlarge"
+
+	// InstanceTypeZ1dMetal is a InstanceType enum value
+	InstanceTypeZ1dMetal = "z1d.metal"
 
 	// InstanceTypeU6tb1Metal is a InstanceType enum value
 	InstanceTypeU6tb1Metal = "u-6tb1.metal"
@@ -86009,6 +86298,9 @@ const (
 )
 
 const (
+	// ResourceTypeClientVpnEndpoint is a ResourceType enum value
+	ResourceTypeClientVpnEndpoint = "client-vpn-endpoint"
+
 	// ResourceTypeCustomerGateway is a ResourceType enum value
 	ResourceTypeCustomerGateway = "customer-gateway"
 

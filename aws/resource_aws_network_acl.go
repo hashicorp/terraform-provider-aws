@@ -36,20 +36,18 @@ func resourceAwsNetworkAcl() *schema.Resource {
 				Computed: false,
 			},
 			"subnet_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				Computed:      false,
-				ConflictsWith: []string{"subnet_ids"},
-				Deprecated:    "Attribute subnet_id is deprecated on network_acl resources. Use subnet_ids instead",
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Computed: false,
+				Removed:  "Use `subnet_ids` argument instead",
 			},
 			"subnet_ids": {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"subnet_id"},
-				Elem:          &schema.Schema{Type: schema.TypeString},
-				Set:           schema.HashString,
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
 			},
 			"ingress": {
 				Type:     schema.TypeSet,
@@ -266,23 +264,6 @@ func resourceAwsNetworkAclUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	if d.HasChange("subnet_id") {
-		//associate new subnet with the acl.
-		_, n := d.GetChange("subnet_id")
-		newSubnet := n.(string)
-		association, err := findNetworkAclAssociation(newSubnet, conn)
-		if err != nil {
-			return fmt.Errorf("Failed to update acl %s with subnet %s: %s", d.Id(), newSubnet, err)
-		}
-		_, err = conn.ReplaceNetworkAclAssociation(&ec2.ReplaceNetworkAclAssociationInput{
-			AssociationId: association.NetworkAclAssociationId,
-			NetworkAclId:  aws.String(d.Id()),
-		})
-		if err != nil {
-			return err
-		}
-	}
-
 	if d.HasChange("subnet_ids") {
 		o, n := d.GetChange("subnet_ids")
 		if o == nil {
@@ -471,14 +452,7 @@ func resourceAwsNetworkAclDelete(d *schema.ResourceData, meta interface{}) error
 				// In case of dependency violation, we remove the association between subnet and network acl.
 				// This means the subnet is attached to default acl of vpc.
 				var associations []*ec2.NetworkAclAssociation
-				if v, ok := d.GetOk("subnet_id"); ok {
-
-					a, err := findNetworkAclAssociation(v.(string), conn)
-					if err != nil {
-						return resource.NonRetryableError(err)
-					}
-					associations = append(associations, a)
-				} else if v, ok := d.GetOk("subnet_ids"); ok {
+				if v, ok := d.GetOk("subnet_ids"); ok {
 					ids := v.(*schema.Set).List()
 					for _, i := range ids {
 						a, err := findNetworkAclAssociation(i.(string), conn)

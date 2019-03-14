@@ -142,7 +142,12 @@ resource "aws_vpc" "bar" {
 
 resource "aws_route53_zone" "foo" {
 	name = "foo.com"
-	vpc_id = "${aws_vpc.foo.id}"
+	vpc {
+		vpc_id = "${aws_vpc.foo.id}"
+	}
+	lifecycle {
+		ignore_changes = ["vpc"]
+	}
 }
 
 resource "aws_route53_zone_association" "foobar" {
@@ -185,8 +190,13 @@ resource "aws_vpc" "bar" {
 resource "aws_route53_zone" "foo" {
 	provider = "aws.west"
 	name = "foo.com"
-	vpc_id = "${aws_vpc.foo.id}"
-	vpc_region = "us-west-2"
+	vpc {
+		vpc_id     = "${aws_vpc.foo.id}"
+		vpc_region = "us-west-2"
+	}
+	lifecycle {
+		ignore_changes = ["vpc"]
+	}
 }
 
 resource "aws_route53_zone_association" "foobar" {
