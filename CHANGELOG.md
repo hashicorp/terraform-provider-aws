@@ -3,6 +3,8 @@
 FEATURES:
 
 * **New Resource:** `aws_guardduty_invite_accepter` [GH-4610]
+* **New Resource:** `aws_route53_resolver_rule` [GH-7799]
+* **New Resource:** `aws_route53_resolver_rule_association` [GH-7799]
 
 ENHANCEMENTS:
 
