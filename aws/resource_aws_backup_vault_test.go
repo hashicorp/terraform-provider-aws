@@ -72,6 +72,17 @@ func TestAccAwsBackupVault_withTags(t *testing.T) {
 				Config: testAccBackupVaultWithUpdateTags(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBackupVaultExists("aws_backup_vault.test", &vault),
+					resource.TestCheckResourceAttr("aws_backup_vault.test", "tags.%", "4"),
+					resource.TestCheckResourceAttr("aws_backup_vault.test", "tags.up", "downdown"),
+					resource.TestCheckResourceAttr("aws_backup_vault.test", "tags.left", "rightright"),
+					resource.TestCheckResourceAttr("aws_backup_vault.test", "tags.foo", "bar"),
+					resource.TestCheckResourceAttr("aws_backup_vault.test", "tags.fizz", "buzz"),
+				),
+			},
+			{
+				Config: testAccBackupVaultWithRemoveTags(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsBackupVaultExists("aws_backup_vault.test", &vault),
 					resource.TestCheckResourceAttr("aws_backup_vault.test", "tags.%", "2"),
 					resource.TestCheckResourceAttr("aws_backup_vault.test", "tags.foo", "bar"),
 					resource.TestCheckResourceAttr("aws_backup_vault.test", "tags.fizz", "buzz"),
@@ -166,6 +177,21 @@ func testAccBackupVaultWithUpdateTags(randInt int) string {
 resource "aws_backup_vault" "test" {
 	name = "tf_acc_test_backup_vault_%d"
 	
+	tags = {
+		up		= "downdown"
+		left	= "rightright"
+		foo		= "bar"
+		fizz	= "buzz"
+	}
+}
+`, randInt)
+}
+
+func testAccBackupVaultWithRemoveTags(randInt int) string {
+	return fmt.Sprintf(`
+resource "aws_backup_vault" "test" {
+	name = "tf_acc_test_backup_vault_%d"
+
 	tags = {
 		foo		= "bar"
 		fizz	= "buzz"
