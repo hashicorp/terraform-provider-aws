@@ -1,5 +1,9 @@
 ## 2.2.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_guardduty_invite_accepter` [GH-4610]
+
 ENHANCEMENTS:
 
 * resource/aws_ssm_patch_baseline: Support resource import [GH-7838]
