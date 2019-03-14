@@ -15,6 +15,7 @@ BUG FIXES:
 * resource/aws_cloudfront_distribution: Ensure retain_on_delete disables the CloudFront Distribution before exiting [GH-7875]
 * resource/aws_codebuild_webhook: Only pass BranchFilter configuration if non-empty [GH-7841]
 * resource/aws_ec2_transit_gateway_vpc_attachment: Prevent errors with Resource Access Manager shared EC2 Transit Gateways [GH-7513]
+* resource/aws_ecr_repository_policy: Properly read `policy` into the Terraform state [GH-7853]
 * resource/aws_iam_role_policy_attachment: Prevent `NoSuchEntity` errors from race conditions [GH-7855]
 * resource/aws_kms_alias: Prevent state removal of resource immediately after creation due to eventual consistency [GH-7891]
 * resource/aws_s3_bucket: Prevent empty `replication_configuration` `rules` `filter` crash [GH-7887]
