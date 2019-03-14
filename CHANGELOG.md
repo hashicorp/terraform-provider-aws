@@ -1,5 +1,9 @@
 ## 2.2.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_ssm_patch_baseline: Support resource import [GH-7838]
+
 BUG FIXES:
 
 * resource/aws_codebuild_webhook: Only pass BranchFilter configuration if non-empty [GH-7841]
