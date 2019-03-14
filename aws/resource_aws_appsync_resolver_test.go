@@ -117,7 +117,7 @@ func TestAccAwsAppsyncResolver_ResponseTemplate(t *testing.T) {
 				Config: testAccAppsyncResolver_ResponseTemplate(rName, 200),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppsyncResolverExists(resourceName),
-					resource.TestMatchResourceAttr(resourceName, "response_template", regexp.MustCompile("ctx\\.result\\.statusCode == 200")),
+					resource.TestMatchResourceAttr(resourceName, "response_template", regexp.MustCompile(`ctx\.result\.statusCode == 200`)),
 				),
 			},
 			{
@@ -129,7 +129,7 @@ func TestAccAwsAppsyncResolver_ResponseTemplate(t *testing.T) {
 				Config: testAccAppsyncResolver_ResponseTemplate(rName, 201),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppsyncResolverExists(resourceName),
-					resource.TestMatchResourceAttr(resourceName, "response_template", regexp.MustCompile("ctx\\.result\\.statusCode == 201")),
+					resource.TestMatchResourceAttr(resourceName, "response_template", regexp.MustCompile(`ctx\.result\.statusCode == 201`)),
 				),
 			},
 		},
