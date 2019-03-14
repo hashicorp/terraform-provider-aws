@@ -1,4 +1,9 @@
 ## 2.2.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_s3_bucket: Prevent empty `replication_configuration` `rules` `filter` crash [GH-7887]
+
 ## 2.1.0 (March 07, 2019)
 
 FEATURES:
