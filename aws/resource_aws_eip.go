@@ -72,7 +72,6 @@ func resourceAwsEip() *schema.Resource {
 
 			"public_dns": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 
@@ -83,7 +82,6 @@ func resourceAwsEip() *schema.Resource {
 
 			"private_dns": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 
