@@ -313,23 +313,19 @@ func (c *GameLift) CreateBuildRequest(input *CreateBuildInput) (req *request.Req
 // Storage Service (Amazon S3) location.
 //
 // Game server binaries must be combined into a .zip file for use with Amazon
-// GameLift. See Uploading Your Game (https://docs.aws.amazon.com/gamelift/latest/developerguide/gamelift-build-intro.html)
-// for more information.
+// GameLift.
 //
 // To create new builds quickly and easily, use the AWS CLI command upload-build
 // (https://docs.aws.amazon.com/cli/latest/reference/gamelift/upload-build.html).
 // This helper command uploads your build and creates a new build record in
-// one step, and automatically handles the necessary permissions. See  Upload
-// Build Files to Amazon GameLift (https://docs.aws.amazon.com/gamelift/latest/developerguide/gamelift-build-cli-uploading.html)
-// for more help.
+// one step, and automatically handles the necessary permissions.
 //
 // The CreateBuild operation should be used only when you need to manually upload
 // your build files, as in the following scenarios:
 //
 //    * Store a build file in an Amazon S3 bucket under your own AWS account.
 //    To use this option, you must first give Amazon GameLift access to that
-//    Amazon S3 bucket. See  Create a Build with Files in Amazon S3 (https://docs.aws.amazon.com/gamelift/latest/developerguide/gamelift-build-cli-uploading.html#gamelift-build-cli-uploading-create-build)
-//    for detailed help. To create a new build record using files in your Amazon
+//    Amazon S3 bucket. To create a new build record using files in your Amazon
 //    S3 bucket, call CreateBuild and specify a build name, operating system,
 //    and the storage location of your game build.
 //
@@ -345,6 +341,14 @@ func (c *GameLift) CreateBuildRequest(input *CreateBuildInput) (req *request.Req
 // ID and places it in INITIALIZED status. You can use DescribeBuild to check
 // the status of your build. A build must be in READY status before it can be
 // used to create fleets.
+//
+// Learn more
+//
+// Uploading Your Game (https://docs.aws.amazon.com/gamelift/latest/developerguide/gamelift-build-intro.html)
+//
+// Create a Build with Files in Amazon S3 (https://docs.aws.amazon.com/gamelift/latest/developerguide/gamelift-build-cli-uploading.html#gamelift-build-cli-uploading-create-build)
+//
+// Related operations
 //
 //    * CreateBuild
 //
@@ -483,7 +487,7 @@ func (c *GameLift) CreateFleetRequest(input *CreateFleetInput) (req *request.Req
 //
 // Learn more
 //
-// See Amazon GameLift Developer Guide topics in  Working with Fleets (https://docs.aws.amazon.com/gamelift/latest/developerguide/fleets-intro.html).
+// Working with Fleets (https://docs.aws.amazon.com/gamelift/latest/developerguide/fleets-intro.html).
 //
 // Related operations
 //
@@ -1823,6 +1827,12 @@ func (c *GameLift) DeleteBuildRequest(input *DeleteBuildInput) (req *request.Req
 // of any active fleets using the build, but you can no longer create new fleets
 // with the deleted build.
 //
+// Learn more
+//
+// Working with Builds (https://docs.aws.amazon.com/gamelift/latest/developerguide/build-intro.html)
+//
+// Related operations
+//
 //    * CreateBuild
 //
 //    * ListBuilds
@@ -1929,6 +1939,12 @@ func (c *GameLift) DeleteFleetRequest(input *DeleteFleetInput) (req *request.Req
 //
 // This action removes the fleet's resources and the fleet record. Once a fleet
 // is deleted, you can no longer use that fleet.
+//
+// Learn more
+//
+// Working with Fleets (https://docs.aws.amazon.com/gamelift/latest/developerguide/fleets-intro.html).
+//
+// Related operations
 //
 //    * CreateFleet
 //
@@ -2843,6 +2859,12 @@ func (c *GameLift) DescribeBuildRequest(input *DescribeBuildInput) (req *request
 // Retrieves properties for a build. To request a build record, specify a build
 // ID. If successful, an object containing the build properties is returned.
 //
+// Learn more
+//
+// Working with Builds (https://docs.aws.amazon.com/gamelift/latest/developerguide/build-intro.html)
+//
+// Related operations
+//
 //    * CreateBuild
 //
 //    * ListBuilds
@@ -2952,6 +2974,12 @@ func (c *GameLift) DescribeEC2InstanceLimitsRequest(input *DescribeEC2InstanceLi
 // Service limits vary depending on region. Available regions for Amazon GameLift
 // can be found in the AWS Management Console for Amazon GameLift (see the drop-down
 // list in the upper right corner).
+//
+// Learn more
+//
+// Working with Fleets (https://docs.aws.amazon.com/gamelift/latest/developerguide/fleets-intro.html).
+//
+// Related operations
 //
 //    * CreateFleet
 //
@@ -3088,6 +3116,12 @@ func (c *GameLift) DescribeFleetAttributesRequest(input *DescribeFleetAttributes
 // Some API actions may limit the number of fleet IDs allowed in one request.
 // If a request exceeds this limit, the request fails and the error message
 // includes the maximum allowed.
+//
+// Learn more
+//
+// Working with Fleets (https://docs.aws.amazon.com/gamelift/latest/developerguide/fleets-intro.html).
+//
+// Related operations
 //
 //    * CreateFleet
 //
@@ -3230,6 +3264,12 @@ func (c *GameLift) DescribeFleetCapacityRequest(input *DescribeFleetCapacityInpu
 // If a request exceeds this limit, the request fails and the error message
 // includes the maximum allowed.
 //
+// Learn more
+//
+// Working with Fleets (https://docs.aws.amazon.com/gamelift/latest/developerguide/fleets-intro.html).
+//
+// Related operations
+//
 //    * CreateFleet
 //
 //    * ListFleets
@@ -3362,6 +3402,12 @@ func (c *GameLift) DescribeFleetEventsRequest(input *DescribeFleetEventsInput) (
 // time range to limit the result set. Use the pagination parameters to retrieve
 // results as a set of sequential pages. If successful, a collection of event
 // log entries matching the request are returned.
+//
+// Learn more
+//
+// Working with Fleets (https://docs.aws.amazon.com/gamelift/latest/developerguide/fleets-intro.html).
+//
+// Related operations
 //
 //    * CreateFleet
 //
@@ -3497,6 +3543,12 @@ func (c *GameLift) DescribeFleetPortSettingsRequest(input *DescribeFleetPortSett
 // permissions, specify a fleet ID. If successful, a collection of IpPermission
 // objects is returned for the requested fleet ID. If the requested fleet has
 // been deleted, the result set is empty.
+//
+// Learn more
+//
+// Working with Fleets (https://docs.aws.amazon.com/gamelift/latest/developerguide/fleets-intro.html).
+//
+// Related operations
 //
 //    * CreateFleet
 //
@@ -3636,6 +3688,12 @@ func (c *GameLift) DescribeFleetUtilizationRequest(input *DescribeFleetUtilizati
 // Some API actions may limit the number of fleet IDs allowed in one request.
 // If a request exceeds this limit, the request fails and the error message
 // includes the maximum allowed.
+//
+// Learn more
+//
+// Working with Fleets (https://docs.aws.amazon.com/gamelift/latest/developerguide/fleets-intro.html).
+//
+// Related operations
 //
 //    * CreateFleet
 //
@@ -4801,6 +4859,12 @@ func (c *GameLift) DescribeRuntimeConfigurationRequest(input *DescribeRuntimeCon
 // run-time configuration tells Amazon GameLift how to launch server processes
 // on instances in the fleet.
 //
+// Learn more
+//
+// Working with Fleets (https://docs.aws.amazon.com/gamelift/latest/developerguide/fleets-intro.html).
+//
+// Related operations
+//
 //    * CreateFleet
 //
 //    * ListFleets
@@ -5602,6 +5666,12 @@ func (c *GameLift) ListBuildsRequest(input *ListBuildsInput) (req *request.Reque
 //
 // Build records are not listed in any particular order.
 //
+// Learn more
+//
+// Working with Builds (https://docs.aws.amazon.com/gamelift/latest/developerguide/build-intro.html)
+//
+// Related operations
+//
 //    * CreateBuild
 //
 //    * ListBuilds
@@ -5703,6 +5773,12 @@ func (c *GameLift) ListFleetsRequest(input *ListFleetsInput) (req *request.Reque
 // in sequential pages.
 //
 // Fleet records are not listed in any particular order.
+//
+// Learn more
+//
+// Working with Fleets (https://docs.aws.amazon.com/gamelift/latest/developerguide/fleets-intro.html).
+//
+// Related operations
 //
 //    * CreateFleet
 //
@@ -6024,6 +6100,22 @@ func (c *GameLift) RequestUploadCredentialsRequest(input *RequestUploadCredentia
 // To request new credentials, specify the build ID as returned with an initial
 // CreateBuild request. If successful, a new set of credentials are returned,
 // along with the S3 storage location associated with the build ID.
+//
+// Learn more
+//
+// Uploading Your Game (https://docs.aws.amazon.com/gamelift/latest/developerguide/gamelift-build-intro.html)
+//
+// Related operations
+//
+//    * CreateBuild
+//
+//    * ListBuilds
+//
+//    * DescribeBuild
+//
+//    * UpdateBuild
+//
+//    * DeleteBuild
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -6403,19 +6495,43 @@ func (c *GameLift) StartFleetActionsRequest(input *StartFleetActionsInput) (req 
 // actions on the fleet were never stopped, this operation will have no effect.
 // You can view a fleet's stopped actions using DescribeFleetAttributes.
 //
-//    * DescribeFleetCapacity
+// Learn more
 //
-//    * UpdateFleetCapacity
+// Working with Fleets (https://docs.aws.amazon.com/gamelift/latest/developerguide/fleets-intro.html).
 //
-//    * DescribeEC2InstanceLimits
+// Related operations
 //
-//    * Manage scaling policies:
+//    * CreateFleet
 //
-// PutScalingPolicy (auto-scaling)
+//    * ListFleets
 //
-// DescribeScalingPolicies (auto-scaling)
+//    * DeleteFleet
 //
-// DeleteScalingPolicy (auto-scaling)
+//    * Describe fleets:
+//
+// DescribeFleetAttributes
+//
+// DescribeFleetCapacity
+//
+// DescribeFleetPortSettings
+//
+// DescribeFleetUtilization
+//
+// DescribeRuntimeConfiguration
+//
+// DescribeEC2InstanceLimits
+//
+// DescribeFleetEvents
+//
+//    * Update fleets:
+//
+// UpdateFleetAttributes
+//
+// UpdateFleetCapacity
+//
+// UpdateFleetPortSettings
+//
+// UpdateRuntimeConfiguration
 //
 //    * Manage fleet actions:
 //
@@ -6966,6 +7082,50 @@ func (c *GameLift) StopFleetActionsRequest(input *StopFleetActionsInput) (req *r
 // scaling events except to maintain the fleet's desired instances setting (FleetCapacity.
 // Changes to the fleet's capacity must be done manually using UpdateFleetCapacity.
 //
+// Learn more
+//
+// Working with Fleets (https://docs.aws.amazon.com/gamelift/latest/developerguide/fleets-intro.html).
+//
+// Related operations
+//
+//    * CreateFleet
+//
+//    * ListFleets
+//
+//    * DeleteFleet
+//
+//    * Describe fleets:
+//
+// DescribeFleetAttributes
+//
+// DescribeFleetCapacity
+//
+// DescribeFleetPortSettings
+//
+// DescribeFleetUtilization
+//
+// DescribeRuntimeConfiguration
+//
+// DescribeEC2InstanceLimits
+//
+// DescribeFleetEvents
+//
+//    * Update fleets:
+//
+// UpdateFleetAttributes
+//
+// UpdateFleetCapacity
+//
+// UpdateFleetPortSettings
+//
+// UpdateRuntimeConfiguration
+//
+//    * Manage fleet actions:
+//
+// StartFleetActions
+//
+// StopFleetActions
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -7387,6 +7547,12 @@ func (c *GameLift) UpdateBuildRequest(input *UpdateBuildInput) (req *request.Req
 // values. If successful, a build object containing the updated metadata is
 // returned.
 //
+// Learn more
+//
+// Working with Builds (https://docs.aws.amazon.com/gamelift/latest/developerguide/build-intro.html)
+//
+// Related operations
+//
 //    * CreateBuild
 //
 //    * ListBuilds
@@ -7490,6 +7656,12 @@ func (c *GameLift) UpdateFleetAttributesRequest(input *UpdateFleetAttributesInpu
 // Updates fleet properties, including name and description, for a fleet. To
 // update metadata, specify the fleet ID and the property values that you want
 // to change. If successful, the fleet ID for the updated fleet is returned.
+//
+// Learn more
+//
+// Working with Fleets (https://docs.aws.amazon.com/gamelift/latest/developerguide/fleets-intro.html).
+//
+// Related operations
 //
 //    * CreateFleet
 //
@@ -7650,6 +7822,12 @@ func (c *GameLift) UpdateFleetCapacityRequest(input *UpdateFleetCapacityInput) (
 // If the desired instance count is higher than the instance type's limit, the
 // "Limit Exceeded" exception occurs.
 //
+// Learn more
+//
+// Working with Fleets (https://docs.aws.amazon.com/gamelift/latest/developerguide/fleets-intro.html).
+//
+// Related operations
+//
 //    * CreateFleet
 //
 //    * ListFleets
@@ -7798,6 +7976,12 @@ func (c *GameLift) UpdateFleetPortSettingsRequest(input *UpdateFleetPortSettings
 // to remove in InboundPermissionRevocations. Permissions to be removed must
 // match existing fleet permissions. If successful, the fleet ID for the updated
 // fleet is returned.
+//
+// Learn more
+//
+// Working with Fleets (https://docs.aws.amazon.com/gamelift/latest/developerguide/fleets-intro.html).
+//
+// Related operations
 //
 //    * CreateFleet
 //
@@ -8297,6 +8481,12 @@ func (c *GameLift) UpdateRuntimeConfigurationRequest(input *UpdateRuntimeConfigu
 // result, the run-time configuration changes are applied gradually as existing
 // processes shut down and new processes are launched in Amazon GameLift's normal
 // process recycling activity.
+//
+// Learn more
+//
+// Working with Fleets (https://docs.aws.amazon.com/gamelift/latest/developerguide/fleets-intro.html).
+//
+// Related operations
 //
 //    * CreateFleet
 //
@@ -9162,6 +9352,14 @@ type CreateFleetInput struct {
 	// with at  Set up Access to External Services (https://docs.aws.amazon.com/gamelift/latest/developerguide/gamelift-sdk-server-credentials.html).
 	FleetType *string `type:"string" enum:"FleetType"`
 
+	// Unique identifier for an AWS IAM role that manages access to your AWS services.
+	// Any application that runs on an instance in this fleet can assume the role,
+	// including install scripts, server processs, daemons (background processes).
+	// Create a role or look up a role's ARN using the IAM dashboard (https://console.aws.amazon.com/iam/)
+	// in the AWS Management Console. Learn more about using on-box credentials
+	// for your game servers at  Access external resources from a game server (https://docs.aws.amazon.com/gamelift/latest/developerguide/gamelift-sdk-server-resources.html).
+	InstanceRoleArn *string `min:"1" type:"string"`
+
 	// This parameter is no longer used. Instead, to specify where Amazon GameLift
 	// should store log files once a server process shuts down, use the Amazon GameLift
 	// server API ProcessReady() and specify one or more directory paths in logParameters.
@@ -9257,6 +9455,9 @@ func (s *CreateFleetInput) Validate() error {
 	if s.EC2InstanceType == nil {
 		invalidParams.Add(request.NewErrParamRequired("EC2InstanceType"))
 	}
+	if s.InstanceRoleArn != nil && len(*s.InstanceRoleArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("InstanceRoleArn", 1))
+	}
 	if s.Name == nil {
 		invalidParams.Add(request.NewErrParamRequired("Name"))
 	}
@@ -9324,6 +9525,12 @@ func (s *CreateFleetInput) SetEC2InstanceType(v string) *CreateFleetInput {
 // SetFleetType sets the FleetType field's value.
 func (s *CreateFleetInput) SetFleetType(v string) *CreateFleetInput {
 	s.FleetType = &v
+	return s
+}
+
+// SetInstanceRoleArn sets the InstanceRoleArn field's value.
+func (s *CreateFleetInput) SetInstanceRoleArn(v string) *CreateFleetInput {
+	s.InstanceRoleArn = &v
 	return s
 }
 
@@ -13326,6 +13533,14 @@ type FleetAttributes struct {
 	// in use may be interrupted with a two-minute notification.
 	FleetType *string `type:"string" enum:"FleetType"`
 
+	// Unique identifier for an AWS IAM role that manages access to your AWS services.
+	// Any application that runs on an instance in this fleet can assume the role,
+	// including install scripts, server processs, daemons (background processes).
+	// Create a role or look up a role's ARN using the IAM dashboard (https://console.aws.amazon.com/iam/)
+	// in the AWS Management Console. Learn more about using on-box credentials
+	// for your game servers at  Access external resources from a game server (https://docs.aws.amazon.com/gamelift/latest/developerguide/gamelift-sdk-server-resources.html).
+	InstanceRoleArn *string `min:"1" type:"string"`
+
 	// EC2 instance type indicating the computing resources of each instance in
 	// the fleet, including CPU, memory, storage, and networking capacity. See Amazon
 	// EC2 Instance Types (http://aws.amazon.com/ec2/instance-types/) for detailed
@@ -13454,6 +13669,12 @@ func (s *FleetAttributes) SetFleetId(v string) *FleetAttributes {
 // SetFleetType sets the FleetType field's value.
 func (s *FleetAttributes) SetFleetType(v string) *FleetAttributes {
 	s.FleetType = &v
+	return s
+}
+
+// SetInstanceRoleArn sets the InstanceRoleArn field's value.
+func (s *FleetAttributes) SetInstanceRoleArn(v string) *FleetAttributes {
+	s.InstanceRoleArn = &v
 	return s
 }
 
