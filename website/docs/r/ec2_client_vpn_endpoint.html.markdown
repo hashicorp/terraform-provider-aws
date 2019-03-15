@@ -45,6 +45,7 @@ The following arguments are supported:
 * `connection_log_options` - (Required) Information about the client connection logging options.
 * `network_association` - (Optional) Information about associating networks to this Client VPN endpoint.  Multiple definitions of this parameter can be supplied.
 * `authorization_rule` - (Optional) Information about granting access to networks via this Client VPN endpoint.  Multiple definitions of this parameter can be supplied.
+* `route` - (Optional)  Information about routes to add to a Client VPN endpoint.  Multiple definitions of this parameter can be supplied.
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 
 ### `authentication_options` Argument Reference
@@ -78,6 +79,14 @@ One of the following arguments must be supplied:
 * `target_network_cidr` - (Required) The IPv4 address range, in CIDR notation, of the network to which the authorization rule applies.
 * `access_group_id` - (Optional) The ID of the Active Directory group to which the authorization rule grants access.
 * `authorize_all_groups` - (Optional) Indicates whether the authorization rule grants access to all clients.
+
+### `route` Argument Reference
+
+One of the following arguments must be supplied:
+
+* `description` - (Optional) A brief description of the route.
+* `destination_network_cidr` - (Required) The IPv4 address range, in CIDR notation, of the route destination.
+* `subnet_id` - (Required) The ID of the subnet through which you want to route traffic. The specified subnet must be an existing target network of the Client VPN endpoint.
 
 ## Attributes Reference
 

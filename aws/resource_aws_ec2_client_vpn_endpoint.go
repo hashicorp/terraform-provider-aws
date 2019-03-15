@@ -151,6 +151,27 @@ func resourceAwsEc2ClientVpnEndpoint() *schema.Resource {
 					},
 				},
 			},
+			"route": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Set:      resourceAwsRouteHash,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"description": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"destination_network_cidr": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"subnet_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+			},
 			"dns_name": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -290,6 +311,17 @@ func resourceAwsEc2ClientVpnEndpointCreate(d *schema.ResourceData, meta interfac
 		}
 	}
 
+	if _, ok := d.GetOk("route"); ok {
+		rules := addRoutes(d.Id(), d.Get("route").(*schema.Set).List())
+
+		for _, r := range rules {
+			_, err := conn.CreateClientVpnRoute(r)
+			if err != nil {
+				return fmt.Errorf("Failure adding new Client VPN routes: %s", err)
+			}
+		}
+	}
+
 	return resourceAwsEc2ClientVpnEndpointRead(d, meta)
 }
 
@@ -355,6 +387,15 @@ func resourceAwsEc2ClientVpnEndpointRead(d *schema.ResourceData, meta interface{
 	}
 
 	d.Set("authorization_rule", flattenAuthRules(authRuleResult.AuthorizationRules))
+
+	routeResult, err := conn.DescribeClientVpnRoutes(&ec2.DescribeClientVpnRoutesInput{
+		ClientVpnEndpointId: aws.String(d.Id()),
+	})
+	if err != nil {
+		return err
+	}
+
+	d.Set("route", flattenRoutes(routeResult.Routes))
 
 	return nil
 }
@@ -563,6 +604,35 @@ func resourceAwsEc2ClientVpnEndpointUpdate(d *schema.ResourceData, meta interfac
 		}
 	}
 
+	if d.HasChange("route") {
+		o, n := d.GetChange("route")
+		os := o.(*schema.Set)
+		ns := n.(*schema.Set)
+
+		remove := removeRoutes(d.Id(), os.Difference(ns).List())
+		add := addRoutes(d.Id(), ns.Difference(os).List())
+
+		if len(remove) > 0 {
+			for _, r := range remove {
+				log.Printf("[DEBUG] Client VPN authorization route opts: %s", r)
+				_, err := conn.DeleteClientVpnRoute(r)
+				if err != nil {
+					return fmt.Errorf("Failure removing outdated Client VPN routes: %s", err)
+				}
+			}
+		}
+
+		if len(add) > 0 {
+			for _, r := range add {
+				log.Printf("[DEBUG] Client VPN authorization route opts: %s", r)
+				_, err := conn.CreateClientVpnRoute(r)
+				if err != nil {
+					return fmt.Errorf("Failure adding new Client VPN authorization routes: %s", err)
+				}
+			}
+		}
+	}
+
 	if err := setTags(conn, d); err != nil {
 		return err
 	}
@@ -765,6 +835,80 @@ func resourceAwsAuthRuleHash(v interface{}) int {
 
 	if v, ok := m["authorize_all_groups"]; ok {
 		buf.WriteString(fmt.Sprintf("%v-", v.(bool)))
+	}
+
+	return hashcode.String(buf.String())
+}
+
+func flattenRoutes(list []*ec2.ClientVpnRoute) []map[string]interface{} {
+	result := make([]map[string]interface{}, 0, len(list))
+	for _, i := range list {
+		l := map[string]interface{}{
+			"destination_network_cidr": *i.DestinationCidr,
+			"subnet_id":                *i.TargetSubnet,
+		}
+
+		if i.Description != nil {
+			l["description"] = aws.String(*i.Description)
+		}
+
+		result = append(result, l)
+	}
+	return result
+}
+
+func addRoutes(eid string, configured []interface{}) []*ec2.CreateClientVpnRouteInput {
+	routes := make([]*ec2.CreateClientVpnRouteInput, 0, len(configured))
+
+	for _, i := range configured {
+		item := i.(map[string]interface{})
+		route := &ec2.CreateClientVpnRouteInput{}
+
+		route.ClientVpnEndpointId = aws.String(eid)
+		route.DestinationCidrBlock = aws.String(item["destination_network_cidr"].(string))
+		route.TargetVpcSubnetId = aws.String(item["subnet_id"].(string))
+
+		if item["description"].(string) != "" {
+			route.Description = aws.String(item["description"].(string))
+		}
+
+		routes = append(routes, route)
+	}
+
+	return routes
+}
+
+func removeRoutes(eid string, configured []interface{}) []*ec2.DeleteClientVpnRouteInput {
+	routes := make([]*ec2.DeleteClientVpnRouteInput, 0, len(configured))
+
+	for _, i := range configured {
+		item := i.(map[string]interface{})
+		route := &ec2.DeleteClientVpnRouteInput{}
+
+		route.ClientVpnEndpointId = aws.String(eid)
+		route.DestinationCidrBlock = aws.String(item["destination_network_cidr"].(string))
+		route.TargetVpcSubnetId = aws.String(item["subnet_id"].(string))
+
+		routes = append(routes, route)
+	}
+
+	return routes
+}
+
+func resourceAwsRouteHash(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.(map[string]interface{})
+
+	if v, ok := m["description"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+
+	if v, ok := m["destination_network_cidr"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+
+	if v, ok := m["subnet_id"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
 
 	return hashcode.String(buf.String())
