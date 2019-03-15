@@ -9,7 +9,7 @@ BREAKING CHANGES:
 
 FEATURES:
 
-**New Resource:** `aws_appmesh_virtual_service` [GH-7858]
+* **New Resource:** `aws_appmesh_virtual_service` [GH-7858]
 
 ENHANCEMENTS:
 
