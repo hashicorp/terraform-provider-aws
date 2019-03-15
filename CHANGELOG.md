@@ -8,6 +8,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* resource/aws_backup_vault: Support `tags` updates [GH-7933]
 * resource/aws_ssm_patch_baseline: Support resource import [GH-7838]
 
 BUG FIXES:
