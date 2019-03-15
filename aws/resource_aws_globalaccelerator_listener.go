@@ -77,7 +77,7 @@ func resourceAwsGlobalAcceleratorListenerCreate(d *schema.ResourceData, meta int
 
 	opts := &globalaccelerator.CreateListenerInput{
 		AcceleratorArn:   aws.String(d.Get("accelerator_arn").(string)),
-		ClientAffinity: aws.String(d.Get("client_affinity").(string)),
+		ClientAffinity:   aws.String(d.Get("client_affinity").(string)),
 		IdempotencyToken: aws.String(resource.UniqueId()),
 		Protocol:         aws.String(d.Get("protocol").(string)),
 		PortRanges:       resourceAwsGlobalAcceleratorListenerExpandPortRanges(d.Get("port_range").(*schema.Set).List()),
