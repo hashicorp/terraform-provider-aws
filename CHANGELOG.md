@@ -14,6 +14,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_cloudfront_distribution: Ensure retain_on_delete disables the CloudFront Distribution before exiting [GH-7875]
+* resource/aws_cloudwatch_log_metric_filter: Serialize create, update, and delete operations on the same CloudWatch Log Group to prevent `OperationAbortedException` errors [GH-7880]
 * resource/aws_codebuild_webhook: Only pass BranchFilter configuration if non-empty [GH-7841]
 * resource/aws_ec2_transit_gateway_vpc_attachment: Prevent errors with Resource Access Manager shared EC2 Transit Gateways [GH-7513]
 * resource/aws_ecr_repository_policy: Properly read `policy` into the Terraform state [GH-7853]
