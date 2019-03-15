@@ -1,4 +1,23 @@
 ## 2.3.0 (Unreleased)
+
+BREAKING CHANGES:
+
+* service/appmesh: Changes to support AppMesh General Availability (GA) release. The AppMesh resources were added while the API was under Public Preview and the GA release earlier this month introduced breaking changes which prevented further AWS Go SDK updates. This is a very atypical situation for the Terraform AWS Provider as most AWS API and SDK changes are additive. To prevent this situation in the future we may introduce separate Terraform AWS Provider(s) specifically for Public Preview or Beta APIs. If or when this occurs, it will be separately announced. The maintainers will continue following Terraform Provider compatibility promises outlined on the [HashiCorp Blog](https://www.hashicorp.com/blog/hashicorp-terraform-provider-versioning) and [Extending Terraform documentation](https://www.terraform.io/docs/extend/best-practices/versioning.html) as best as possible except other existing Public Preview resources. [GH-7659]
+* resource/aws_appmesh_virtual_node: Replace `backends` configuration block(s) with `backend` configuration blocks [GH-7858]
+* resource/aws_appmesh_virtual_node: Replace `service_discovery` configuration block `service_name` argument with `service_discovery` configuration block `dns` configuration block [GH-7858]
+* resource/aws_appmesh_virtual_router: Remove `spec` configuration block `service_names` argument [GH-7858]
+
+FEATURES:
+
+**New Resource:** `aws_appmesh_virtual_service` [GH-7858]
+
+ENHANCEMENTS:
+
+* resource/aws_appmesh_route: Support resource import [GH-7858]
+* resource/aws_appmesh_virtual_node: Support resource import [GH-7858]
+* resource/aws_appmesh_virtual_router: Support resource import [GH-7858]
+* resource/aws_appmesh_virtual_router: Add `spec` configuration block `listener` configuration block [GH-7858]
+
 ## 2.2.0 (March 15, 2019)
 
 FEATURES:
