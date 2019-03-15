@@ -81,6 +81,10 @@ func resourceAwsDxPublicVirtualInterface() *schema.Resource {
 				MinItems: 1,
 			},
 			"tags": tagsSchema(),
+			"aws_device": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -160,6 +164,7 @@ func resourceAwsDxPublicVirtualInterfaceRead(d *schema.ResourceData, meta interf
 	d.Set("customer_address", vif.CustomerAddress)
 	d.Set("amazon_address", vif.AmazonAddress)
 	d.Set("route_filter_prefixes", flattenDxRouteFilterPrefixes(vif.RouteFilterPrefixes))
+	d.Set("aws_device", vif.AwsDeviceV2)
 	err1 := getTagsDX(conn, d, d.Get("arn").(string))
 	return err1
 }
