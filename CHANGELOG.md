@@ -17,6 +17,7 @@ ENHANCEMENTS:
 * resource/aws_appmesh_virtual_node: Support resource import [GH-7858]
 * resource/aws_appmesh_virtual_router: Support resource import [GH-7858]
 * resource/aws_appmesh_virtual_router: Add `spec` configuration block `listener` configuration block [GH-7858]
+* resource/aws_codebuild_project: Add `project_environment` configuration block `image_pull_credentials_type` argument (support cross-account images) [GH-7458]
 
 ## 2.2.0 (March 15, 2019)
 
