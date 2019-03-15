@@ -25,12 +25,6 @@ func resourceAwsGlobalAcceleratorListener() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(5 * time.Minute),
-			Update: schema.DefaultTimeout(5 * time.Minute),
-			Delete: schema.DefaultTimeout(5 * time.Minute),
-		},
-
 		Schema: map[string]*schema.Schema{
 			"accelerator_arn": {
 				Type:     schema.TypeString,
@@ -40,7 +34,7 @@ func resourceAwsGlobalAcceleratorListener() *schema.Resource {
 			"client_affinity": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  globalaccelerator.ClientAffinityNone,
 				ValidateFunc: validation.StringInSlice([]string{
 					globalaccelerator.ClientAffinityNone,
 					globalaccelerator.ClientAffinitySourceIp,
@@ -55,19 +49,21 @@ func resourceAwsGlobalAcceleratorListener() *schema.Resource {
 				}, false),
 			},
 			"port_range": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Required: true,
 				MinItems: 1,
 				MaxItems: 10,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"from_port": {
-							Type:     schema.TypeInt,
-							Optional: true,
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(0, 65535),
 						},
 						"to_port": {
-							Type:     schema.TypeInt,
-							Optional: true,
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(0, 65535),
 						},
 					},
 				},
@@ -81,13 +77,10 @@ func resourceAwsGlobalAcceleratorListenerCreate(d *schema.ResourceData, meta int
 
 	opts := &globalaccelerator.CreateListenerInput{
 		AcceleratorArn:   aws.String(d.Get("accelerator_arn").(string)),
+		ClientAffinity: aws.String(d.Get("client_affinity").(string)),
 		IdempotencyToken: aws.String(resource.UniqueId()),
 		Protocol:         aws.String(d.Get("protocol").(string)),
-		PortRanges:       resourceAwsGlobalAcceleratorListenerExpandPortRanges(d.Get("port_range").([]interface{})),
-	}
-
-	if v, ok := d.GetOk("client_affinity"); ok {
-		opts.ClientAffinity = aws.String(v.(string))
+		PortRanges:       resourceAwsGlobalAcceleratorListenerExpandPortRanges(d.Get("port_range").(*schema.Set).List()),
 	}
 
 	log.Printf("[DEBUG] Create Global Accelerator listener: %s", opts)
@@ -104,7 +97,7 @@ func resourceAwsGlobalAcceleratorListenerCreate(d *schema.ResourceData, meta int
 		Pending: []string{globalaccelerator.AcceleratorStatusInProgress},
 		Target:  []string{globalaccelerator.AcceleratorStatusDeployed},
 		Refresh: resourceAwsGlobalAcceleratorAcceleratorStateRefreshFunc(conn, d.Get("accelerator_arn").(string)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Timeout: 5 * time.Minute,
 	}
 
 	log.Printf("[DEBUG] Waiting for Global Accelerator listener (%s) availability", d.Id())
@@ -140,7 +133,9 @@ func resourceAwsGlobalAcceleratorListenerRead(d *schema.ResourceData, meta inter
 	d.Set("accelerator_arn", acceleratorArn)
 	d.Set("client_affinity", listener.ClientAffinity)
 	d.Set("protocol", listener.Protocol)
-	d.Set("port_range", resourceAwsGlobalAcceleratorListenerFlattenPortRanges(listener.PortRanges))
+	if err := d.Set("port_range", resourceAwsGlobalAcceleratorListenerFlattenPortRanges(listener.PortRanges)); err != nil {
+		return fmt.Errorf("error setting port_range: %s", err)
+	}
 
 	return nil
 }
@@ -175,13 +170,12 @@ func resourceAwsGlobalAcceleratorListenerFlattenPortRanges(portRanges []*globala
 	for i, portRange := range portRanges {
 		m := make(map[string]interface{})
 
-		m["from_port"] = *portRange.FromPort
-		m["to_port"] = *portRange.ToPort
+		m["from_port"] = aws.Int64Value(portRange.FromPort)
+		m["to_port"] = aws.Int64Value(portRange.ToPort)
 
 		out[i] = m
 	}
 
-	log.Printf("[DEBUG] Flatten port_range: %s", out)
 	return out
 }
 
@@ -204,13 +198,10 @@ func resourceAwsGlobalAcceleratorListenerUpdate(d *schema.ResourceData, meta int
 	conn := meta.(*AWSClient).globalacceleratorconn
 
 	opts := &globalaccelerator.UpdateListenerInput{
-		ListenerArn: aws.String(d.Id()),
-		Protocol:    aws.String(d.Get("protocol").(string)),
-		PortRanges:  resourceAwsGlobalAcceleratorListenerExpandPortRanges(d.Get("port_range").([]interface{})),
-	}
-
-	if v, ok := d.GetOk("client_affinity"); ok {
-		opts.ClientAffinity = aws.String(v.(string))
+		ClientAffinity: aws.String(d.Get("client_affinity").(string)),
+		ListenerArn:    aws.String(d.Id()),
+		Protocol:       aws.String(d.Get("protocol").(string)),
+		PortRanges:     resourceAwsGlobalAcceleratorListenerExpandPortRanges(d.Get("port_range").(*schema.Set).List()),
 	}
 
 	log.Printf("[DEBUG] Update Global Accelerator listener: %s", opts)
@@ -225,7 +216,7 @@ func resourceAwsGlobalAcceleratorListenerUpdate(d *schema.ResourceData, meta int
 		Pending: []string{globalaccelerator.AcceleratorStatusInProgress},
 		Target:  []string{globalaccelerator.AcceleratorStatusDeployed},
 		Refresh: resourceAwsGlobalAcceleratorAcceleratorStateRefreshFunc(conn, d.Get("accelerator_arn").(string)),
-		Timeout: d.Timeout(schema.TimeoutUpdate),
+		Timeout: 5 * time.Minute,
 	}
 
 	log.Printf("[DEBUG] Waiting for Global Accelerator listener (%s) availability", d.Id())
@@ -257,7 +248,7 @@ func resourceAwsGlobalAcceleratorListenerDelete(d *schema.ResourceData, meta int
 		Pending: []string{globalaccelerator.AcceleratorStatusInProgress},
 		Target:  []string{globalaccelerator.AcceleratorStatusDeployed},
 		Refresh: resourceAwsGlobalAcceleratorAcceleratorStateRefreshFunc(conn, d.Get("accelerator_arn").(string)),
-		Timeout: d.Timeout(schema.TimeoutDelete),
+		Timeout: 5 * time.Minute,
 	}
 
 	log.Printf("[DEBUG] Waiting for Global Accelerator listener (%s) deletion", d.Id())
