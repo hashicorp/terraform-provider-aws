@@ -95,6 +95,10 @@ func resourceAwsDxPrivateVirtualInterface() *schema.Resource {
 				Computed: true,
 			},
 			"tags": tagsSchema(),
+			"aws_device": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 
 		Timeouts: &schema.ResourceTimeout{
