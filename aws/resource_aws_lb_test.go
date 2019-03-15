@@ -20,6 +20,7 @@ func init() {
 		F:    testSweepLBs,
 		Dependencies: []string{
 			"aws_api_gateway_vpc_link",
+			"aws_vpc_endpoint_service",
 		},
 	})
 }

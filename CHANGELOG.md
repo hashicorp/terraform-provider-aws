@@ -1,4 +1,62 @@
-## 2.1.0 (Unreleased)
+## 2.3.0 (Unreleased)
+
+BREAKING CHANGES:
+
+* service/appmesh: Changes to support AppMesh General Availability (GA) release. The AppMesh resources were added while the API was under Public Preview and the GA release earlier this month introduced breaking changes which prevented further AWS Go SDK updates. This is a very atypical situation for the Terraform AWS Provider as most AWS API and SDK changes are additive. To prevent this situation in the future we may introduce separate Terraform AWS Provider(s) specifically for Public Preview or Beta APIs. If or when this occurs, it will be separately announced. The maintainers will continue following Terraform Provider compatibility promises outlined on the [HashiCorp Blog](https://www.hashicorp.com/blog/hashicorp-terraform-provider-versioning) and [Extending Terraform documentation](https://www.terraform.io/docs/extend/best-practices/versioning.html) as best as possible except other existing Public Preview resources. [GH-7659]
+* resource/aws_appmesh_virtual_node: Replace `backends` configuration block(s) with `backend` configuration blocks [GH-7858]
+* resource/aws_appmesh_virtual_node: Replace `service_discovery` configuration block `service_name` argument with `service_discovery` configuration block `dns` configuration block [GH-7858]
+* resource/aws_appmesh_virtual_router: Remove `spec` configuration block `service_names` argument [GH-7858]
+
+FEATURES:
+
+* **New Resource:** `aws_appmesh_virtual_service` [GH-7858]
+
+ENHANCEMENTS:
+
+* resource/aws_appmesh_route: Support resource import [GH-7858]
+* resource/aws_appmesh_virtual_node: Support resource import [GH-7858]
+* resource/aws_appmesh_virtual_router: Support resource import [GH-7858]
+* resource/aws_appmesh_virtual_router: Add `spec` configuration block `listener` configuration block [GH-7858]
+
+## 2.2.0 (March 15, 2019)
+
+FEATURES:
+
+* **New Resource:** `aws_globalaccelerator_listener` ([#7003](https://github.com/terraform-providers/terraform-provider-aws/issues/7003))
+* **New Resource:** `aws_guardduty_invite_accepter` ([#4610](https://github.com/terraform-providers/terraform-provider-aws/issues/4610))
+* **New Resource:** `aws_route53_resolver_rule` ([#7799](https://github.com/terraform-providers/terraform-provider-aws/issues/7799))
+* **New Resource:** `aws_route53_resolver_rule_association` ([#7799](https://github.com/terraform-providers/terraform-provider-aws/issues/7799))
+
+ENHANCEMENTS:
+
+* data-source/aws_eip: Add `private_dns` and `public_dns` attributes ([#7349](https://github.com/terraform-providers/terraform-provider-aws/issues/7349))
+* resource/aws_backup_vault: Support `tags` updates ([#7933](https://github.com/terraform-providers/terraform-provider-aws/issues/7933))
+* resource/aws_dx_bgp_peer: Add `aws_device` and `bgp_peer_id` attributes ([#7131](https://github.com/terraform-providers/terraform-provider-aws/issues/7131))
+* resource/aws_dx_connection: Add `aws_device` and `has_logical_redundancy` attributes ([#7131](https://github.com/terraform-providers/terraform-provider-aws/issues/7131))
+* resource/aws_dx_hosted_private_virtual_interface: Add `aws_device` attribute ([#7131](https://github.com/terraform-providers/terraform-provider-aws/issues/7131))
+* resource/aws_dx_hosted_public_virtual_interface: Add `aws_device` attribute ([#7131](https://github.com/terraform-providers/terraform-provider-aws/issues/7131))
+* resource/aws_dx_lag: Add `has_logical_redundancy` attribute ([#7131](https://github.com/terraform-providers/terraform-provider-aws/issues/7131))
+* resource/aws_dx_private_virtual_interface: Add `aws_device` attribute ([#7131](https://github.com/terraform-providers/terraform-provider-aws/issues/7131))
+* resource/aws_dx_public_virtual_interface: Add `aws_device` attribute ([#7131](https://github.com/terraform-providers/terraform-provider-aws/issues/7131))
+* resource/aws_eip: Add `private_dns` and `public_dns` attributes ([#7349](https://github.com/terraform-providers/terraform-provider-aws/issues/7349))
+* resource/aws_glue_crawler: Add `arn` attribute ([#7948](https://github.com/terraform-providers/terraform-provider-aws/issues/7948))
+* resource/aws_ssm_patch_baseline: Support resource import ([#7838](https://github.com/terraform-providers/terraform-provider-aws/issues/7838))
+
+BUG FIXES:
+
+* resource/aws_cloudfront_distribution: Ensure retain_on_delete disables the CloudFront Distribution before exiting ([#7875](https://github.com/terraform-providers/terraform-provider-aws/issues/7875))
+* resource/aws_cloudwatch_log_metric_filter: Serialize create, update, and delete operations on the same CloudWatch Log Group to prevent `OperationAbortedException` errors ([#7880](https://github.com/terraform-providers/terraform-provider-aws/issues/7880))
+* resource/aws_codebuild_webhook: Only pass BranchFilter configuration if non-empty ([#7841](https://github.com/terraform-providers/terraform-provider-aws/issues/7841))
+* resource/aws_ec2_transit_gateway_vpc_attachment: Prevent errors with Resource Access Manager shared EC2 Transit Gateways ([#7513](https://github.com/terraform-providers/terraform-provider-aws/issues/7513))
+* resource/aws_ecr_repository_policy: Properly read `policy` into the Terraform state ([#7853](https://github.com/terraform-providers/terraform-provider-aws/issues/7853))
+* resource/aws_iam_role_policy_attachment: Prevent `NoSuchEntity` errors from race conditions ([#7855](https://github.com/terraform-providers/terraform-provider-aws/issues/7855))
+* resource/aws_kms_alias: Prevent state removal of resource immediately after creation due to eventual consistency ([#7891](https://github.com/terraform-providers/terraform-provider-aws/issues/7891))
+* resource/aws_s3_bucket: Prevent empty `replication_configuration` `rules` `filter` crash ([#7887](https://github.com/terraform-providers/terraform-provider-aws/issues/7887))
+* resource/aws_s3_bucket: Continue supporting empty string (`""`) `bucket` argument ([#7881](https://github.com/terraform-providers/terraform-provider-aws/issues/7881))
+* resource/aws_s3_bucket: Prevent `NoSuchBucket` errors when putting lifecycle configuration on resource creation ([#7930](https://github.com/terraform-providers/terraform-provider-aws/issues/7930))
+* resource/aws_ses_domain_mail_from: Prevent crash with deleted SES Domain Identity ([#7883](https://github.com/terraform-providers/terraform-provider-aws/issues/7883))
+
+## 2.1.0 (March 07, 2019)
 
 FEATURES:
 
@@ -6,28 +64,31 @@ FEATURES:
 
 ENHANCEMENTS:
 
-* data-source/aws_elastic_beanstalk_hosted_zone: Add eu-north-1 region support [GH-7829]
-* data-source/aws_redshift_service_account: Add us-gov-east-1 and us-gov-west-1 region mappings [GH-7635]
-* data-source/aws_s3_bucket: Add `bucket_regional_domain_name` attribute [GH-7765]
-* resource/aws_dlm_lifecycle_policy: Add validation support for 2, 3, 4, 6, and 8 in `policy_details` `schedule` `create_rule` `interval` argument (support shorter intervals) [GH-7751]
-* resource/aws_ec2_client_vpn_endpoint: Add `tags` argument [GH-7619]
-* resource/aws_ecs_service: Support plan time validation of new `health_check_grace_period_seconds` max of `2147483647` [GH-7806]
-* resource/aws_lb_target_group: Add `lambda_multi_value_headers_enabled` argument [GH-7648]
-* resource/aws_ram_resource_share: Add `arn` attribute [GH-7634]
-* resource/aws_s3_bucket: Add plan time length validation for `bucket` and `bucket_prefix` arguments [GH-7778]
+* data-source/aws_elastic_beanstalk_hosted_zone: Add eu-north-1 region support ([#7829](https://github.com/terraform-providers/terraform-provider-aws/issues/7829))
+* data-source/aws_redshift_service_account: Add us-gov-east-1 and us-gov-west-1 region mappings ([#7635](https://github.com/terraform-providers/terraform-provider-aws/issues/7635))
+* data-source/aws_s3_bucket: Add `bucket_regional_domain_name` attribute ([#7765](https://github.com/terraform-providers/terraform-provider-aws/issues/7765))
+* resource/aws_autoscaling_group: Support new `mixed_instances_policy` `instance_distribution` `spot_max_price` ability to unset with empty string ([#7821](https://github.com/terraform-providers/terraform-provider-aws/issues/7821))
+* resource/aws_dlm_lifecycle_policy: Add validation support for 2, 3, 4, 6, and 8 in `policy_details` `schedule` `create_rule` `interval` argument (support shorter intervals) ([#7751](https://github.com/terraform-providers/terraform-provider-aws/issues/7751))
+* resource/aws_ec2_client_vpn_endpoint: Add `tags` argument ([#7619](https://github.com/terraform-providers/terraform-provider-aws/issues/7619))
+* resource/aws_ecs_service: Support plan time validation of new `health_check_grace_period_seconds` max of `2147483647` ([#7806](https://github.com/terraform-providers/terraform-provider-aws/issues/7806))
+* resource/aws_lb_target_group: Add `lambda_multi_value_headers_enabled` argument ([#7648](https://github.com/terraform-providers/terraform-provider-aws/issues/7648))
+* resource/aws_ram_resource_share: Add `arn` attribute ([#7634](https://github.com/terraform-providers/terraform-provider-aws/issues/7634))
+* resource/aws_s3_bucket: Add plan time length validation for `bucket` and `bucket_prefix` arguments ([#7778](https://github.com/terraform-providers/terraform-provider-aws/issues/7778))
 
 BUG FIXES:
 
-* resource/aws_cloudfront_distribution: Remove problematic `viewer_certificate` configuration block argument `ConflictsWith` usage from version 2.0.0 [GH-7794]
-* resource/aws_cloudfront_distribution: Skip disabling distributions on deletion for previously disabled distributions [GH-7794]
-* resource/aws_cloudfront_distribution: Retry on `PreconditionFailed` error messages after disabling distribution on deletion [GH-7794]
-* resource/aws_cloudfront_distribution: Wait for creation and update deployments to complete [GH-7794]
-* resource/aws_cloudfront_distribution: Prevent one minute timeout error for creation and update errors due to throttling [GH-7809]
-* resource/aws_db_instance: Properly set `engine_version` with `snapshot_identifier` [GH-7738]
-* resource/aws_dynamodb_table: Prevent perpetual plan differences with `ttl` configuration block `enabled` argument set to `false` [GH-3960]
-* resource/aws_ecs_service: Ensure `placement_strategy` removal in version 2.0.0 does not force recreation [GH-7790]
-* resource/aws_guardduty_detector: Prevent GuardDuty member accounts with unconfigured `finding_publishing_frequency` from triggering update errors [GH-7804]
-* resource/aws_s3_bucket_notification: Prevent crash with empty filters configuration [GH-7791]
+* resource/aws_autoscaling_group: Allow configuration of `mixed_instances_policy` `instance_distribution` `on_demand_base_capacity` argument to 0 ([#7821](https://github.com/terraform-providers/terraform-provider-aws/issues/7821))
+* resource/aws_cloudfront_distribution: Remove problematic `viewer_certificate` configuration block argument `ConflictsWith` usage from version 2.0.0 ([#7794](https://github.com/terraform-providers/terraform-provider-aws/issues/7794))
+* resource/aws_cloudfront_distribution: Skip disabling distributions on deletion for previously disabled distributions ([#7794](https://github.com/terraform-providers/terraform-provider-aws/issues/7794))
+* resource/aws_cloudfront_distribution: Retry on `PreconditionFailed` error messages after disabling distribution on deletion ([#7794](https://github.com/terraform-providers/terraform-provider-aws/issues/7794))
+* resource/aws_cloudfront_distribution: Wait for creation and update deployments to complete ([#7794](https://github.com/terraform-providers/terraform-provider-aws/issues/7794))
+* resource/aws_cloudfront_distribution: Prevent one minute timeout error for creation and update errors due to throttling ([#7809](https://github.com/terraform-providers/terraform-provider-aws/issues/7809))
+* resource/aws_db_instance: Properly set `engine_version` with `snapshot_identifier` ([#7738](https://github.com/terraform-providers/terraform-provider-aws/issues/7738))
+* resource/aws_dynamodb_table: Prevent perpetual plan differences with `ttl` configuration block `enabled` argument set to `false` ([#3960](https://github.com/terraform-providers/terraform-provider-aws/issues/3960))
+* resource/aws_ecs_service: Ensure `placement_strategy` removal in version 2.0.0 does not force recreation ([#7790](https://github.com/terraform-providers/terraform-provider-aws/issues/7790))
+* resource/aws_guardduty_detector: Prevent GuardDuty member accounts with unconfigured `finding_publishing_frequency` from triggering update errors ([#7804](https://github.com/terraform-providers/terraform-provider-aws/issues/7804))
+* resource/aws_launch_configuration: Prevent `ResourceInUse` errors caused by eventual consistency during deletion ([#7819](https://github.com/terraform-providers/terraform-provider-aws/issues/7819))
+* resource/aws_s3_bucket_notification: Prevent crash with empty filters configuration ([#7791](https://github.com/terraform-providers/terraform-provider-aws/issues/7791))
 
 ## 2.0.0 (February 27, 2019)
 

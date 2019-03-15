@@ -39,6 +39,8 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the BGP peer.
 * `bgp_status` - The Up/Down state of the BGP peer.
+* `bgp_peer_id` - The ID of the BGP peer.
+* `aws_device` - The Direct Connect endpoint on which the BGP peer terminates.
 
 ## Timeouts
 

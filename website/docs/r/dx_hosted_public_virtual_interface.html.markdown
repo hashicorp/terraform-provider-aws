@@ -53,6 +53,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the virtual interface.
 * `arn` - The ARN of the virtual interface.
+* `aws_device` - The Direct Connect endpoint on which the virtual interface terminates.
 
 ## Timeouts
 
