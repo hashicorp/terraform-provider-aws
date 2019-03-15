@@ -32,6 +32,10 @@ func resourceAwsGlueCrawler() *schema.Resource {
 				ForceNew: true,
 				Required: true,
 			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"database_name": {
 				Type:     schema.TypeString,
 				ForceNew: true,
@@ -459,6 +463,14 @@ func resourceAwsGlueCrawlerRead(d *schema.ResourceData, meta interface{}) error 
 		return nil
 	}
 
+	crawlerARN := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "glue",
+		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("crawler/%s", d.Id()),
+	}.String()
+	d.Set("arn", crawlerARN)
 	d.Set("name", crawlerOutput.Crawler.Name)
 	d.Set("database_name", crawlerOutput.Crawler.DatabaseName)
 	d.Set("role", crawlerOutput.Crawler.Role)
