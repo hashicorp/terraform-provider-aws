@@ -1,40 +1,40 @@
-## 2.2.0 (Unreleased)
+## 2.2.0 (March 15, 2019)
 
 FEATURES:
 
-* **New Resource:** `aws_globalaccelerator_listener` [GH-7003]
-* **New Resource:** `aws_guardduty_invite_accepter` [GH-4610]
-* **New Resource:** `aws_route53_resolver_rule` [GH-7799]
-* **New Resource:** `aws_route53_resolver_rule_association` [GH-7799]
+* **New Resource:** `aws_globalaccelerator_listener` ([#7003](https://github.com/terraform-providers/terraform-provider-aws/issues/7003))
+* **New Resource:** `aws_guardduty_invite_accepter` ([#4610](https://github.com/terraform-providers/terraform-provider-aws/issues/4610))
+* **New Resource:** `aws_route53_resolver_rule` ([#7799](https://github.com/terraform-providers/terraform-provider-aws/issues/7799))
+* **New Resource:** `aws_route53_resolver_rule_association` ([#7799](https://github.com/terraform-providers/terraform-provider-aws/issues/7799))
 
 ENHANCEMENTS:
 
-* data-source/aws_eip: Add `private_dns` and `public_dns` attributes [GH-7349]
-* resource/aws_backup_vault: Support `tags` updates [GH-7933]
-* resource/aws_dx_bgp_peer: Add `aws_device` and `bgp_peer_id` attributes [GH-7131]
-* resource/aws_dx_connection: Add `aws_device` and `has_logical_redundancy` attributes [GH-7131]
-* resource/aws_dx_hosted_private_virtual_interface: Add `aws_device` attribute [GH-7131]
-* resource/aws_dx_hosted_public_virtual_interface: Add `aws_device` attribute [GH-7131]
-* resource/aws_dx_lag: Add `has_logical_redundancy` attribute [GH-7131]
-* resource/aws_dx_private_virtual_interface: Add `aws_device` attribute [GH-7131]
-* resource/aws_dx_public_virtual_interface: Add `aws_device` attribute [GH-7131]
-* resource/aws_eip: Add `private_dns` and `public_dns` attributes [GH-7349]
-* resource/aws_glue_crawler: Add `arn` attribute [GH-7948]
-* resource/aws_ssm_patch_baseline: Support resource import [GH-7838]
+* data-source/aws_eip: Add `private_dns` and `public_dns` attributes ([#7349](https://github.com/terraform-providers/terraform-provider-aws/issues/7349))
+* resource/aws_backup_vault: Support `tags` updates ([#7933](https://github.com/terraform-providers/terraform-provider-aws/issues/7933))
+* resource/aws_dx_bgp_peer: Add `aws_device` and `bgp_peer_id` attributes ([#7131](https://github.com/terraform-providers/terraform-provider-aws/issues/7131))
+* resource/aws_dx_connection: Add `aws_device` and `has_logical_redundancy` attributes ([#7131](https://github.com/terraform-providers/terraform-provider-aws/issues/7131))
+* resource/aws_dx_hosted_private_virtual_interface: Add `aws_device` attribute ([#7131](https://github.com/terraform-providers/terraform-provider-aws/issues/7131))
+* resource/aws_dx_hosted_public_virtual_interface: Add `aws_device` attribute ([#7131](https://github.com/terraform-providers/terraform-provider-aws/issues/7131))
+* resource/aws_dx_lag: Add `has_logical_redundancy` attribute ([#7131](https://github.com/terraform-providers/terraform-provider-aws/issues/7131))
+* resource/aws_dx_private_virtual_interface: Add `aws_device` attribute ([#7131](https://github.com/terraform-providers/terraform-provider-aws/issues/7131))
+* resource/aws_dx_public_virtual_interface: Add `aws_device` attribute ([#7131](https://github.com/terraform-providers/terraform-provider-aws/issues/7131))
+* resource/aws_eip: Add `private_dns` and `public_dns` attributes ([#7349](https://github.com/terraform-providers/terraform-provider-aws/issues/7349))
+* resource/aws_glue_crawler: Add `arn` attribute ([#7948](https://github.com/terraform-providers/terraform-provider-aws/issues/7948))
+* resource/aws_ssm_patch_baseline: Support resource import ([#7838](https://github.com/terraform-providers/terraform-provider-aws/issues/7838))
 
 BUG FIXES:
 
-* resource/aws_cloudfront_distribution: Ensure retain_on_delete disables the CloudFront Distribution before exiting [GH-7875]
-* resource/aws_cloudwatch_log_metric_filter: Serialize create, update, and delete operations on the same CloudWatch Log Group to prevent `OperationAbortedException` errors [GH-7880]
-* resource/aws_codebuild_webhook: Only pass BranchFilter configuration if non-empty [GH-7841]
-* resource/aws_ec2_transit_gateway_vpc_attachment: Prevent errors with Resource Access Manager shared EC2 Transit Gateways [GH-7513]
-* resource/aws_ecr_repository_policy: Properly read `policy` into the Terraform state [GH-7853]
-* resource/aws_iam_role_policy_attachment: Prevent `NoSuchEntity` errors from race conditions [GH-7855]
-* resource/aws_kms_alias: Prevent state removal of resource immediately after creation due to eventual consistency [GH-7891]
-* resource/aws_s3_bucket: Prevent empty `replication_configuration` `rules` `filter` crash [GH-7887]
-* resource/aws_s3_bucket: Continue supporting empty string (`""`) `bucket` argument [GH-7881]
-* resource/aws_s3_bucket: Prevent `NoSuchBucket` errors when putting lifecycle configuration on resource creation [GH-7930]
-* resource/aws_ses_domain_mail_from: Prevent crash with deleted SES Domain Identity [GH-7883]
+* resource/aws_cloudfront_distribution: Ensure retain_on_delete disables the CloudFront Distribution before exiting ([#7875](https://github.com/terraform-providers/terraform-provider-aws/issues/7875))
+* resource/aws_cloudwatch_log_metric_filter: Serialize create, update, and delete operations on the same CloudWatch Log Group to prevent `OperationAbortedException` errors ([#7880](https://github.com/terraform-providers/terraform-provider-aws/issues/7880))
+* resource/aws_codebuild_webhook: Only pass BranchFilter configuration if non-empty ([#7841](https://github.com/terraform-providers/terraform-provider-aws/issues/7841))
+* resource/aws_ec2_transit_gateway_vpc_attachment: Prevent errors with Resource Access Manager shared EC2 Transit Gateways ([#7513](https://github.com/terraform-providers/terraform-provider-aws/issues/7513))
+* resource/aws_ecr_repository_policy: Properly read `policy` into the Terraform state ([#7853](https://github.com/terraform-providers/terraform-provider-aws/issues/7853))
+* resource/aws_iam_role_policy_attachment: Prevent `NoSuchEntity` errors from race conditions ([#7855](https://github.com/terraform-providers/terraform-provider-aws/issues/7855))
+* resource/aws_kms_alias: Prevent state removal of resource immediately after creation due to eventual consistency ([#7891](https://github.com/terraform-providers/terraform-provider-aws/issues/7891))
+* resource/aws_s3_bucket: Prevent empty `replication_configuration` `rules` `filter` crash ([#7887](https://github.com/terraform-providers/terraform-provider-aws/issues/7887))
+* resource/aws_s3_bucket: Continue supporting empty string (`""`) `bucket` argument ([#7881](https://github.com/terraform-providers/terraform-provider-aws/issues/7881))
+* resource/aws_s3_bucket: Prevent `NoSuchBucket` errors when putting lifecycle configuration on resource creation ([#7930](https://github.com/terraform-providers/terraform-provider-aws/issues/7930))
+* resource/aws_ses_domain_mail_from: Prevent crash with deleted SES Domain Identity ([#7883](https://github.com/terraform-providers/terraform-provider-aws/issues/7883))
 
 ## 2.1.0 (March 07, 2019)
 
