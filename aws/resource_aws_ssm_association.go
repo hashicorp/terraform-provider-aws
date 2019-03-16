@@ -97,6 +97,7 @@ func resourceAwsSsmAssociation() *schema.Resource {
 					ssm.ComplianceSeverityLow,
 					ssm.ComplianceSeverityMedium,
 					ssm.ComplianceSeverityHigh,
+					ssm.ComplianceSeverityCritical,
 				}, false),
 			},
 		},
