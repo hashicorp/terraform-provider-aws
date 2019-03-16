@@ -3099,7 +3099,7 @@ func TestValidateSecretManagerSecretNamePrefix(t *testing.T) {
 	}
 }
 
-func TestValidateRoute53ResolverEndpointName(t *testing.T) {
+func TestValidateRoute53ResolverName(t *testing.T) {
 	cases := []struct {
 		Value    string
 		ErrCount int
@@ -3130,7 +3130,7 @@ func TestValidateRoute53ResolverEndpointName(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		_, errors := validateRoute53ResolverEndpointName(tc.Value, "aws_route53_resolver_endpoint")
+		_, errors := validateRoute53ResolverName(tc.Value, "aws_route53_resolver_endpoint")
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected the AWS Route 53 Resolver Endpoint Name to not trigger a validation error for %q", tc.Value)
 		}

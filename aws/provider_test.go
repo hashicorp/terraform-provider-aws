@@ -192,6 +192,16 @@ func testAccGetPartition() string {
 	return "aws"
 }
 
+func testAccAlternateAccountPreCheck(t *testing.T) {
+	if os.Getenv("AWS_ALTERNATE_PROFILE") == "" && os.Getenv("AWS_ALTERNATE_ACCESS_KEY_ID") == "" {
+		t.Fatal("AWS_ALTERNATE_ACCESS_KEY_ID or AWS_ALTERNATE_PROFILE must be set for acceptance tests")
+	}
+
+	if os.Getenv("AWS_ALTERNATE_ACCESS_KEY_ID") != "" && os.Getenv("AWS_ALTERNATE_SECRET_ACCESS_KEY") == "" {
+		t.Fatal("AWS_ALTERNATE_SECRET_ACCESS_KEY must be set for acceptance tests")
+	}
+}
+
 func testAccEC2ClassicPreCheck(t *testing.T) {
 	client := testAccProvider.Meta().(*AWSClient)
 	platforms := client.supportedplatforms
@@ -229,6 +239,17 @@ func testAccOrganizationsAccountPreCheck(t *testing.T) {
 		t.Fatalf("error describing AWS Organization: %s", err)
 	}
 	t.Skip("skipping tests; this AWS account must not be an existing member of an AWS Organization")
+}
+
+func testAccAlternateAccountProviderConfig() string {
+	return fmt.Sprintf(`
+provider "aws" {
+  access_key = %[1]q
+  alias      = "alternate"
+  profile    = %[2]q
+  secret_key = %[3]q
+}
+`, os.Getenv("AWS_ALTERNATE_ACCESS_KEY_ID"), os.Getenv("AWS_ALTERNATE_PROFILE"), os.Getenv("AWS_ALTERNATE_SECRET_ACCESS_KEY"))
 }
 
 func testAccAwsRegionProviderFunc(region string, providers *[]*schema.Provider) func() *schema.Provider {
