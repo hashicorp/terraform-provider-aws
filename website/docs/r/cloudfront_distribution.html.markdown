@@ -144,6 +144,99 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
 }
 ```
 
+Following example shows how to use Cloudfront with [Origin Groups][8]
+
+```hcl
+resource "aws_s3_bucket" "b" {
+  bucket = "myBucket"
+  acl    = "private"
+}
+
+locals {
+  s3_origin_1_id = "s3Origin1"
+  s3_origin_2_id = "s3Origin2"
+
+  origin_group_id = "myOriginGroupId"
+}
+
+resource "aws_cloudfront_origin_access_identity" "origin_access_identity" {
+  comment = "Some comment"
+}
+
+resource "aws_cloudfront_distribution" "s3_distribution" {
+  origin {
+    domain_name = "${aws_s3_bucket.b.bucket_regional_domain_name}"
+    origin_id   = "${local.s3_origin_1_id}"
+
+    s3_origin_config {
+      origin_access_identity = "${aws_cloudfront_origin_access_identity.origin_access_identity.cloudfront_access_identity_path}"
+    }
+  }
+
+  origin {
+    domain_name = "${aws_s3_bucket.b.bucket_regional_domain_name}"
+    origin_id   = "${local.s3_origin_2_id}"
+
+    s3_origin_config {
+      origin_access_identity = "${aws_cloudfront_origin_access_identity.origin_access_identity.cloudfront_access_identity_path}"
+    }
+  }
+
+  origin_group {
+    origin_id = "${local.origin_group_id}"
+
+    failover_criteria {
+      status_codes = [403, 404, 500, 502, 503, 504]
+    }
+
+    members {
+      ordered_origin_group_member {
+        origin_id = "${local.s3_origin_1_id}"
+      }
+
+      ordered_origin_group_member {
+        origin_id = "${local.s3_origin_2_id}"
+      }
+    }
+  }
+
+  enabled             = true
+  comment             = "Cloudfront with origin groups"
+  default_root_object = "index.html"
+
+  default_cache_behavior {
+    allowed_methods  = ["GET", "HEAD", "OPTIONS"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "${local.origin_group_id}"
+
+    forwarded_values {
+      query_string = false
+
+      cookies {
+        forward = "none"
+      }
+    }
+
+    viewer_protocol_policy = "allow-all"
+    min_ttl                = 0
+    default_ttl            = 3600
+    max_ttl                = 86400
+  }
+
+  price_class = "PriceClass_200"
+
+  restrictions {
+      geo_restriction {
+        restriction_type = "none"
+      }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+}
+```
+
 ## Argument Reference
 
 The CloudFront distribution argument layout is a complex structure composed
@@ -184,6 +277,9 @@ of several sub-resources - these resources are laid out below.
 
   * `origin` (Required) - One or more [origins](#origin-arguments) for this
     distribution (multiples allowed).
+
+  * `origin_group` (Optional) - One or more [origin groups](#origin-group-arguments), can be used to create fallback behavior.
+    If first origin returns error, then second is called.
 
   * `price_class` (Optional) - The price class for this distribution. One of
     `PriceClass_All`, `PriceClass_200`, `PriceClass_100`
@@ -396,6 +492,26 @@ argument is not required.
 * `origin_access_identity` (Optional) - The [CloudFront origin access
   identity][5] to associate with the origin.
 
+#### Origin Group Arguments
+
+  * `origin_id` (Required) - id of this origin group.
+
+  * `failover_criteria` (Required) - criteria for which [failover](#failover-criteria-arguments) will be triggered.
+
+  * `members` (Required) - origin members of origin group, should have two entries with [`ordered_origin_group_member`](#ordered-origin-group-members-arguments).
+
+##### Failover Criteria Arguments
+
+  * `status_codes` (Required) - List of status codes (numbers) for which fallback should be triggered.
+
+##### Ordered Origin Group Members Arguments
+
+  * `ordered_origin_group_member` (Required) - member of origin group, order in which they occur, informs which origin should be called first (first occurrence - first called).
+
+###### Ordered Origin Group Member Arguments
+
+  * `origin_id` (Required) - id of origin group which should be attached to this origin group.
+
 #### Restrictions Arguments
 
 The `restrictions` sub-resource takes another single sub-resource named
@@ -482,6 +598,7 @@ In addition to all arguments above, the following attributes are exported:
 [5]: /docs/providers/aws/r/cloudfront_origin_access_identity.html
 [6]: https://aws.amazon.com/certificate-manager/
 [7]: http://docs.aws.amazon.com/Route53/latest/APIReference/CreateAliasRRSAPI.html
+[8]: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/RequestAndResponseBehaviorOriginGroups.html
 
 ## Import
 

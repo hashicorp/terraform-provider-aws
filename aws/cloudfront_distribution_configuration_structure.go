@@ -10,14 +10,13 @@ package aws
 import (
 	"bytes"
 	"fmt"
-	"strconv"
-	"time"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/terraform/flatmap"
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/schema"
+	"strconv"
+	"time"
 )
 
 // cloudFrontRoute53ZoneID defines the route 53 zone ID for CloudFront. This
@@ -595,29 +594,18 @@ func expandOrigin(m map[string]interface{}) *cloudfront.Origin {
 }
 
 func expandOriginGroup(m map[string]interface{}) *cloudfront.OriginGroup {
-	failOverCriteria := &cloudfront.OriginGroupFailoverCriteria{}
+	var failOverCriteria *cloudfront.OriginGroupFailoverCriteria
+
 	if v, ok := m["failover_criteria"]; ok {
-		criteriaSet := v.(*schema.Set)
-
-		for _, c := range criteriaSet.List() {
-			criteria := c.(map[string]interface{})
-
-			if codes, ok := criteria["status_codes"]; ok {
-				codesList := codes.([]interface{})
-
-				failOverCriteria.StatusCodes = &cloudfront.StatusCodes{
-					Items:    expandFailOverStatusCodes(codesList),
-					Quantity: aws.Int64(int64(len(codesList))),
-				}
-			}
+		if len(v.([]interface{})) > 0 {
+			failOverCriteria = expandFailOverCriteria(v.([]interface{})[0])
 		}
 	}
 
 	var members *cloudfront.OriginGroupMembers
 	if v, ok := m["members"]; ok {
-		membersList := v.([]interface{})
+		items := expandOriginGroupMemberList(v.([]interface{}))
 
-		items := expandOriginGroupMemberList(membersList)
 		members = &cloudfront.OriginGroupMembers{
 			Items:    items,
 			Quantity: aws.Int64(int64(len(items))),
@@ -634,34 +622,52 @@ func expandOriginGroup(m map[string]interface{}) *cloudfront.OriginGroup {
 }
 
 func expandOriginGroupMemberList(members []interface{}) []*cloudfront.OriginGroupMember {
-	vs := make([]*cloudfront.OriginGroupMember, 0, len(members))
+	ogml := make([]*cloudfront.OriginGroupMember, 0)
 	for _, v := range members {
-		val := v.(map[string]interface{})
-		if member, ok := val["ordered_origin_group_member"]; ok {
-			groupMemberSet := member.(*schema.Set)
-
-			for _, groupMemberRaw := range groupMemberSet.List() {
-
-				groupMember := groupMemberRaw.(map[string]interface{})
-				if originID, hasKey := groupMember["origin_id"]; hasKey {
-					vs = append(vs, &cloudfront.OriginGroupMember{
-						OriginId: aws.String(originID.(string)),
-					})
-				}
-			}
+		member := v.(map[string]interface{})
+		if ogm, ok := member["ordered_origin_group_member"]; ok {
+			ogml = append(ogml, expandOriginGroupMember(ogm.([]interface{}))...)
 		}
 	}
-	return vs
+
+	return ogml
+}
+
+func expandOriginGroupMember(origins []interface{}) []*cloudfront.OriginGroupMember {
+	ogml := make([]*cloudfront.OriginGroupMember, 0)
+	for _, m := range origins {
+		gm := m.(map[string]interface{})
+		ogml = append(ogml, &cloudfront.OriginGroupMember{
+			OriginId: aws.String(gm["origin_id"].(string)),
+		})
+	}
+
+	return ogml
+}
+
+func expandFailOverCriteria(v interface{}) *cloudfront.OriginGroupFailoverCriteria {
+	ogfc := &cloudfront.OriginGroupFailoverCriteria{}
+	criteria := v.(map[string]interface{})
+
+	if codes, ok := criteria["status_codes"]; ok {
+		codesList := codes.(*schema.Set).List()
+
+		ogfc.StatusCodes = &cloudfront.StatusCodes{
+			Items:    expandFailOverStatusCodes(codesList),
+			Quantity: aws.Int64(int64(len(codesList))),
+		}
+	}
+
+	return ogfc
 }
 
 func expandFailOverStatusCodes(codes []interface{}) []*int64 {
-	log.Printf("[DEBUG] expandFailOverStatusCodes > %+v", codes)
-	vs := make([]*int64, 0, len(codes))
-	for _, v := range codes {
-		vs = append(vs, aws.Int64(int64(v.(int))))
+	sc := make([]*int64, 0, len(codes))
+	for _, c := range codes {
+		sc = append(sc, aws.Int64(int64(c.(int))))
 	}
 
-	return vs
+	return sc
 }
 
 func flattenOrigin(or *cloudfront.Origin) map[string]interface{} {

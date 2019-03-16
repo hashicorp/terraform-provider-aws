@@ -146,6 +146,43 @@ func multiOriginConf() *schema.Set {
 	return schema.NewSet(originHash, []interface{}{originWithCustomConf(), originWithS3Conf()})
 }
 
+func originGroupWithCustomConf(id string) map[string]interface{} {
+	return map[string]interface{}{
+			"failover_criteria": failoverCriteria(),
+			"members":           originGroupMemberList(),
+			"origin_id":         id,
+		}
+}
+
+func failoverCriteria() []interface{} {
+	return []interface{}{
+		map[string]interface{}{
+			"status_codes": schema.NewSet(schema.HashInt, []interface{}{404, 401, 500}),
+		},
+	}
+}
+
+func originGroupMemberList() []interface{} {
+	return []interface{}{
+		orderedOriginGroupMember("origin_group_member_id_1"),
+		orderedOriginGroupMember("origin_group_member_id_2"),
+	}
+}
+
+func orderedOriginGroupMember(id string) map[string]interface{} {
+	return map[string]interface{}{
+		"ordered_origin_group_member": originGroupMember(id),
+	}
+}
+
+func originGroupMember(id string) []interface{} {
+	return []interface{}{
+		map[string]interface{}{
+			"origin_id": id,
+		},
+	}
+}
+
 func geoRestrictionWhitelistConf() map[string]interface{} {
 	return map[string]interface{}{
 		"restriction_type": "whitelist",
@@ -557,6 +594,66 @@ func TestCloudFrontStructure_expandOrigin(t *testing.T) {
 	}
 	if *or.CustomHeaders.Items[0].HeaderValue != "samplevalue" {
 		t.Fatalf("Expected CustomHeaders.Items[0].HeaderValue to be samplevalue, got %v", *or.CustomHeaders.Items[0].HeaderValue)
+	}
+}
+
+func TestCloudFrontStructure_expandOriginGroup(t *testing.T) {
+	data := originGroupWithCustomConf("id_1")
+	or := expandOriginGroup(data)
+	if *or.Id != "id_1" {
+		t.Fatalf("Expected Id to be id_1, got %v", *or.Id)
+	}
+
+	if *(or.FailoverCriteria).StatusCodes.Quantity != 3 {
+		t.Fatalf("Expected FailoverCriteria.StatusCodes.Quantity to equal 3, got %v", *or.FailoverCriteria.StatusCodes.Quantity)
+	}
+
+	items := or.FailoverCriteria.StatusCodes.Items
+	codes := [3]int64{*items[0], *items[1], *items[2]}
+	if codes != [3]int64{401, 404, 500} {
+		t.Fatalf("Expected FailoverCriteria.StatusCodes.Items to equal [401, 404, 500], got %v", codes)
+	}
+
+	members := *or.Members
+	if *members.Quantity != 2 {
+		t.Fatalf("Expected Members.Quantity to equal 2, got %v", *or.Members.Quantity)
+	}
+
+	if *members.Items[0].OriginId != "origin_group_member_id_1" {
+		t.Fatalf("Expected Members.Items[0].OriginId to equal origin_group_member_id_1, got %v", *members.Items[0].OriginId)
+	}
+
+	if *members.Items[1].OriginId != "origin_group_member_id_2" {
+		t.Fatalf("Expected Members.Items[1].OriginId to equal origin_group_member_id_2, got %v", *members.Items[1].OriginId)
+	}
+}
+
+func TestCloudFrontStructure_expandOriginGroupMemberList(t *testing.T) {
+	data := originGroupMemberList()
+	ogml := expandOriginGroupMemberList(data)
+	if len(ogml) != 2 {
+		t.Fatalf("Expected Members to equal 2, got %v", len(ogml))
+	}
+
+	if *ogml[0].OriginId != "origin_group_member_id_1" {
+		t.Fatalf("Expected ogml[0].OriginGroupMember.OriginId to equal origin_group_member_id_1, got %v", ogml[0].OriginId)
+	}
+
+	if *ogml[1].OriginId != "origin_group_member_id_2" {
+		t.Fatalf("Expected ogml[1].OriginGroupMember.OriginId to equal origin_group_member_id_2, got %v", ogml[1].OriginId)
+	}
+}
+
+func TestCloudFrontStructure_expandOriginGroupMember(t *testing.T) {
+	data := originGroupMember("origin_group_member_id")
+	ogm := expandOriginGroupMember(data)
+
+	if len(ogm) != 1 {
+		t.Fatalf("Expected to return single element list expandOriginGroupMember bot got %v", len(ogm))
+	}
+
+	if *ogm[0].OriginId != "origin_group_member_id" {
+		t.Fatalf("Expected OriginId to equal origin_group_member_id, got %v", *ogm[0].OriginId)
 	}
 }
 
