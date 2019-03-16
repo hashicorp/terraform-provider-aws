@@ -50,7 +50,8 @@ The following arguments are supported:
 * `backup_retention_period` - (Optional) The days to retain backups for. Default `1`
 * `cluster_identifier_prefix` - (Optional, Forces new resource) Creates a unique cluster identifier beginning with the specified prefix. Conflicts with `cluster_identifer`.
 * `cluster_identifier` - (Optional, Forces new resources) The cluster identifier. If omitted, Terraform will assign a random, unique identifier.
-* `db_subnet_group_name` - (Optional) A DB subnet group to associate with this DB instance.* `db_cluster_parameter_group_name` - (Optional) A cluster parameter group to associate with the cluster.
+* `db_subnet_group_name` - (Optional) A DB subnet group to associate with this DB instance.
+* `db_cluster_parameter_group_name` - (Optional) A cluster parameter group to associate with the cluster.
 * `enabled_cloudwatch_logs_exports` - (Optional) List of log types to export to cloudwatch. If omitted, no logs will be exported.
    The following log types are supported: `audit`.
 * `engine_version` - (Optional) The database engine version. Updating this argument results in an outage.

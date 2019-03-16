@@ -35,7 +35,7 @@ func testAccAwsAppmeshVirtualNode_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(
-						resourceName, "spec.0.backends.#", "0"),
+						resourceName, "spec.0.backend.#", "0"),
 					resource.TestCheckResourceAttr(
 						resourceName, "spec.0.listener.#", "0"),
 					resource.TestCheckResourceAttr(
@@ -47,6 +47,12 @@ func testAccAwsAppmeshVirtualNode_basic(t *testing.T) {
 					resource.TestMatchResourceAttr(
 						resourceName, "arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:appmesh:[^:]+:\\d{12}:mesh/%s/virtualNode/%s", meshName, vnName))),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateId:     fmt.Sprintf("%s/%s", meshName, vnName),
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -75,9 +81,11 @@ func testAccAwsAppmeshVirtualNode_allAttributes(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(
-						resourceName, "spec.0.backends.#", "1"),
+						resourceName, "spec.0.backend.#", "1"),
 					resource.TestCheckResourceAttr(
-						resourceName, "spec.0.backends.1255689679", "servicea.simpleapp.local"),
+						resourceName, "spec.0.backend.2622272660.virtual_service.#", "1"),
+					resource.TestCheckResourceAttr(
+						resourceName, "spec.0.backend.2622272660.virtual_service.0.virtual_service_name", "servicea.simpleapp.local"),
 					resource.TestCheckResourceAttr(
 						resourceName, "spec.0.listener.#", "1"),
 					resource.TestCheckResourceAttr(
@@ -107,7 +115,7 @@ func testAccAwsAppmeshVirtualNode_allAttributes(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, "spec.0.service_discovery.0.dns.#", "1"),
 					resource.TestCheckResourceAttr(
-						resourceName, "spec.0.service_discovery.0.dns.0.service_name", "serviceb.simpleapp.local"),
+						resourceName, "spec.0.service_discovery.0.dns.0.hostname", "serviceb.simpleapp.local"),
 					resource.TestCheckResourceAttrSet(
 						resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(
@@ -128,11 +136,15 @@ func testAccAwsAppmeshVirtualNode_allAttributes(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(
-						resourceName, "spec.0.backends.#", "2"),
+						resourceName, "spec.0.backend.#", "2"),
 					resource.TestCheckResourceAttr(
-						resourceName, "spec.0.backends.2665798920", "servicec.simpleapp.local"),
+						resourceName, "spec.0.backend.2576932631.virtual_service.#", "1"),
 					resource.TestCheckResourceAttr(
-						resourceName, "spec.0.backends.3195445571", "serviced.simpleapp.local"),
+						resourceName, "spec.0.backend.2576932631.virtual_service.0.virtual_service_name", "servicec.simpleapp.local"),
+					resource.TestCheckResourceAttr(
+						resourceName, "spec.0.backend.2025248115.virtual_service.#", "1"),
+					resource.TestCheckResourceAttr(
+						resourceName, "spec.0.backend.2025248115.virtual_service.0.virtual_service_name", "serviced.simpleapp.local"),
 					resource.TestCheckResourceAttr(
 						resourceName, "spec.0.listener.#", "1"),
 					resource.TestCheckResourceAttr(
@@ -160,7 +172,7 @@ func testAccAwsAppmeshVirtualNode_allAttributes(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, "spec.0.service_discovery.0.dns.#", "1"),
 					resource.TestCheckResourceAttr(
-						resourceName, "spec.0.service_discovery.0.dns.0.service_name", "serviceb1.simpleapp.local"),
+						resourceName, "spec.0.service_discovery.0.dns.0.hostname", "serviceb1.simpleapp.local"),
 					resource.TestCheckResourceAttrSet(
 						resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(
@@ -185,10 +197,10 @@ func testAccCheckAppmeshVirtualNodeDestroy(s *terraform.State) error {
 			MeshName:        aws.String(rs.Primary.Attributes["mesh_name"]),
 			VirtualNodeName: aws.String(rs.Primary.Attributes["name"]),
 		})
+		if isAWSErr(err, appmesh.ErrCodeNotFoundException, "") {
+			continue
+		}
 		if err != nil {
-			if isAWSErr(err, appmesh.ErrCodeNotFoundException, "") {
-				return nil
-			}
 			return err
 		}
 		return fmt.Errorf("still exist.")
@@ -249,7 +261,11 @@ resource "aws_appmesh_virtual_node" "foo" {
   mesh_name = "${aws_appmesh_mesh.foo.id}"
 
   spec {
-    backends = ["servicea.simpleapp.local"]
+    backend {
+      virtual_service {
+        virtual_service_name = "servicea.simpleapp.local"
+      }
+    }
 
     listener {
       port_mapping {
@@ -269,7 +285,7 @@ resource "aws_appmesh_virtual_node" "foo" {
 
     service_discovery {
       dns {
-        service_name = "serviceb.simpleapp.local"
+        hostname = "serviceb.simpleapp.local"
       }
     }
   }
@@ -288,7 +304,17 @@ resource "aws_appmesh_virtual_node" "foo" {
   mesh_name = "${aws_appmesh_mesh.foo.id}"
 
   spec {
-    backends = ["servicec.simpleapp.local", "serviced.simpleapp.local"]
+    backend {
+      virtual_service {
+        virtual_service_name = "servicec.simpleapp.local"
+      }
+    }
+
+    backend {
+      virtual_service {
+        virtual_service_name = "serviced.simpleapp.local"
+      }
+    }
 
     listener {
       port_mapping {
@@ -308,7 +334,7 @@ resource "aws_appmesh_virtual_node" "foo" {
 
     service_discovery {
       dns {
-        service_name = "serviceb1.simpleapp.local"
+        hostname = "serviceb1.simpleapp.local"
       }
     }
   }

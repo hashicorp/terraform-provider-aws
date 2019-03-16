@@ -400,7 +400,7 @@ EOF
 
 resource "aws_lambda_function" "authorizer" {
   filename = "test-fixtures/lambdatest.zip"
-  source_code_hash = "${base64sha256(file("test-fixtures/lambdatest.zip"))}"
+  source_code_hash = "${filebase64sha256("test-fixtures/lambdatest.zip")}"
   function_name = "%s"
   role = "${aws_iam_role.iam_for_lambda.arn}"
   handler = "exports.example"

@@ -30,21 +30,21 @@
 //
 // Amazon RDS API Reference
 //
-//    * For the alphabetical list of API actions, see API Actions (http://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_Operations.html).
+//    * For the alphabetical list of API actions, see API Actions (https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_Operations.html).
 //
-//    * For the alphabetical list of data types, see Data Types (http://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_Types.html).
+//    * For the alphabetical list of data types, see Data Types (https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_Types.html).
 //
-//    * For a list of common query parameters, see Common Parameters (http://docs.aws.amazon.com/AmazonRDS/latest/APIReference/CommonParameters.html).
+//    * For a list of common query parameters, see Common Parameters (https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/CommonParameters.html).
 //
-//    * For descriptions of the error codes, see Common Errors (http://docs.aws.amazon.com/AmazonRDS/latest/APIReference/CommonErrors.html).
+//    * For descriptions of the error codes, see Common Errors (https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/CommonErrors.html).
 //
 // Amazon RDS User Guide
 //
 //    * For a summary of the Amazon RDS interfaces, see Available RDS Interfaces
-//    (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Welcome.html#Welcome.Interfaces).
+//    (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Welcome.html#Welcome.Interfaces).
 //
 //    * For more information about how to use the Query API, see Using the Query
-//    API (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Using_the_Query_API.html).
+//    API (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Using_the_Query_API.html).
 //
 // See https://docs.aws.amazon.com/goto/WebAPI/rds-2014-10-31 for more information on this service.
 //

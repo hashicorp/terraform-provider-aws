@@ -21,7 +21,7 @@ func isAWSErr(err error, code string, message string) bool {
 
 func retryOnAwsCode(code string, f func() (interface{}, error)) (interface{}, error) {
 	var resp interface{}
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
 		var err error
 		resp, err = f()
 		if err != nil {

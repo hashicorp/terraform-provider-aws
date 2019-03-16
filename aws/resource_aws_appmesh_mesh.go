@@ -71,12 +71,12 @@ func resourceAwsAppmeshMeshRead(d *schema.ResourceData, meta interface{}) error 
 	resp, err := conn.DescribeMesh(&appmesh.DescribeMeshInput{
 		MeshName: aws.String(d.Id()),
 	})
+	if isAWSErr(err, "NotFoundException", "") {
+		log.Printf("[WARN] App Mesh service mesh (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
 	if err != nil {
-		if isAWSErr(err, "NotFoundException", "") {
-			log.Printf("[WARN] App Mesh service mesh (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
 		return fmt.Errorf("error reading App Mesh service mesh: %s", err)
 	}
 	if aws.StringValue(resp.Mesh.Status.Status) == appmesh.MeshStatusCodeDeleted {
@@ -100,10 +100,10 @@ func resourceAwsAppmeshMeshDelete(d *schema.ResourceData, meta interface{}) erro
 	_, err := conn.DeleteMesh(&appmesh.DeleteMeshInput{
 		MeshName: aws.String(d.Id()),
 	})
+	if isAWSErr(err, "NotFoundException", "") {
+		return nil
+	}
 	if err != nil {
-		if isAWSErr(err, "NotFoundException", "") {
-			return nil
-		}
 		return fmt.Errorf("error deleting App Mesh service mesh: %s", err)
 	}
 
