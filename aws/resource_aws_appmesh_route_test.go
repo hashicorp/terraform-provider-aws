@@ -133,6 +133,12 @@ func testAccAwsAppmeshRoute_basic(t *testing.T) {
 						resourceName, "arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:appmesh:[^:]+:\\d{12}:mesh/%s/virtualRouter/%s/route/%s", meshName, vrName, rName))),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportStateId:     fmt.Sprintf("%s/%s/%s", meshName, vrName, rName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -230,10 +236,10 @@ func testAccCheckAppmeshRouteDestroy(s *terraform.State) error {
 			RouteName:         aws.String(rs.Primary.Attributes["name"]),
 			VirtualRouterName: aws.String(rs.Primary.Attributes["virtual_router_name"]),
 		})
+		if isAWSErr(err, appmesh.ErrCodeNotFoundException, "") {
+			continue
+		}
 		if err != nil {
-			if isAWSErr(err, appmesh.ErrCodeNotFoundException, "") {
-				return nil
-			}
 			return err
 		}
 		return fmt.Errorf("still exist.")
@@ -280,7 +286,12 @@ resource "aws_appmesh_virtual_router" "foo" {
   mesh_name = "${aws_appmesh_mesh.foo.id}"
 
   spec {
-    service_names = ["serviceb.simpleapp.local"]
+    listener {
+      port_mapping {
+        port     = 8080
+        protocol = "http"
+      }
+    }
   }
 }
 
@@ -305,7 +316,12 @@ resource "aws_appmesh_virtual_router" "foo" {
   mesh_name = "${aws_appmesh_mesh.foo.id}"
 
   spec {
-    service_names = ["serviceb.simpleapp.local"]
+    listener {
+      port_mapping {
+        port     = 8080
+        protocol = "http"
+      }
+    }
   }
 }
 
@@ -357,7 +373,12 @@ resource "aws_appmesh_virtual_router" "foo" {
   mesh_name = "${aws_appmesh_mesh.foo.id}"
 
   spec {
-    service_names = ["serviceb.simpleapp.local"]
+    listener {
+      port_mapping {
+        port     = 8080
+        protocol = "http"
+      }
+    }
   }
 }
 

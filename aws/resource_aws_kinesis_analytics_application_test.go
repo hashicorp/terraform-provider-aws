@@ -592,9 +592,9 @@ resource "aws_kinesis_analytics_application" "test" {
 func testAccKinesisAnalyticsApplication_inputsKinesisFirehose(rInt int) string {
 	return fmt.Sprintf(`
 data "aws_iam_policy_document" "trust_firehose" {
-  statement = {
+  statement {
     actions = ["sts:AssumeRole"]
-    principals = {
+    principals {
       type = "Service"
       identifiers = ["firehose.amazonaws.com"]
     }
@@ -607,9 +607,9 @@ resource "aws_iam_role" "firehose" {
 }
 
 data "aws_iam_policy_document" "trust_lambda" {
-  statement = {
+  statement {
     actions = ["sts:AssumeRole"]
-    principals = {
+    principals {
       type = "Service"
       identifiers = ["lambda.amazonaws.com"]
     }
@@ -636,8 +636,8 @@ resource "aws_lambda_function" "test" {
 
 resource "aws_kinesis_firehose_delivery_stream" "test" {
   name = "testAcc-%d"
-  destination = "extended_s3" 
-  extended_s3_configuration = {
+  destination = "extended_s3"
+  extended_s3_configuration {
     role_arn = "${aws_iam_role.firehose.arn}"
     bucket_arn = "${aws_s3_bucket.test.arn}"
   }
@@ -646,25 +646,25 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 resource "aws_kinesis_analytics_application" "test" {
   name = "testAcc-%d"
   code = "testCode\n"
-  inputs = {
+  inputs {
     name_prefix = "test_prefix"
-    kinesis_firehose = {
+    kinesis_firehose {
       resource_arn = "${aws_kinesis_firehose_delivery_stream.test.arn}"
       role_arn = "${aws_iam_role.test.arn}"
     }
-    parallelism = {
+    parallelism {
       count = 1
     }
-    schema = {
-      record_columns = {
+    schema {
+      record_columns {
         mapping = "$.test"
         name = "test"
         sql_type = "VARCHAR(8)"
       }
       record_encoding = "UTF-8"
-      record_format = {
-        mapping_parameters = {
-          csv = {
+      record_format {
+        mapping_parameters {
+          csv {
             record_column_delimiter = ","
             record_row_delimiter = "\n"
           }
@@ -999,9 +999,9 @@ resource "aws_kinesis_analytics_application" "test" {
 func testAccKinesisAnalyticsApplication_prereq(rInt int) string {
 	return fmt.Sprintf(`
 data "aws_iam_policy_document" "trust" {
-  statement = {
+  statement {
     actions = ["sts:AssumeRole"]
-    principals = {
+    principals {
       type = "Service"
       identifiers = ["kinesisanalytics.amazonaws.com"]
     }
@@ -1014,7 +1014,7 @@ resource "aws_iam_role" "test" {
 }
 
 data "aws_iam_policy_document" "test" {
-  statement = {
+  statement {
     actions = ["firehose:*"]
     resources = ["*"]
   }

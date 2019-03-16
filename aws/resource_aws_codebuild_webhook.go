@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -49,12 +50,20 @@ func resourceAwsCodeBuildWebhook() *schema.Resource {
 func resourceAwsCodeBuildWebhookCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).codebuildconn
 
-	resp, err := conn.CreateWebhook(&codebuild.CreateWebhookInput{
-		ProjectName:  aws.String(d.Get("project_name").(string)),
-		BranchFilter: aws.String(d.Get("branch_filter").(string)),
-	})
+	input := &codebuild.CreateWebhookInput{
+		ProjectName: aws.String(d.Get("project_name").(string)),
+	}
+
+	// The CodeBuild API requires this to be non-empty if defined
+	if v, ok := d.GetOk("branch_filter"); ok {
+		input.BranchFilter = aws.String(v.(string))
+	}
+
+	log.Printf("[DEBUG] Creating CodeBuild Webhook: %s", input)
+	resp, err := conn.CreateWebhook(input)
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating CodeBuild Webhook: %s", err)
 	}
 
 	// Secret is only returned on create, so capture it at the start

@@ -2382,7 +2382,7 @@ func validateWorklinkFleetName(v interface{}, k string) (ws []string, errors []e
 	return
 }
 
-func validateRoute53ResolverEndpointName(v interface{}, k string) (ws []string, errors []error) {
+func validateRoute53ResolverName(v interface{}, k string) (ws []string, errors []error) {
 	// Type: String
 	// Length Constraints: Maximum length of 64.
 	// Pattern: (?!^[0-9]+$)([a-zA-Z0-9-_' ']+)

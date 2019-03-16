@@ -5308,6 +5308,16 @@ func (s CreateChannelInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *CreateChannelInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CreateChannelInput"}
+	if s.Destinations != nil {
+		for i, v := range s.Destinations {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Destinations", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 	if s.EncoderSettings != nil {
 		if err := s.EncoderSettings.Validate(); err != nil {
 			invalidParams.AddNested("EncoderSettings", err.(request.ErrInvalidParams))
@@ -9092,8 +9102,17 @@ type HlsGroupSettings struct {
 	// Period of insertion of EXT-X-PROGRAM-DATE-TIME entry, in seconds.
 	ProgramDateTimePeriod *int64 `locationName:"programDateTimePeriod" type:"integer"`
 
-	// When set to "enabled", includes the media playlists from both pipelines in
-	// the master manifest (.m3u8) file.
+	// ENABLED: The master manifest (.m3u8 file) for each pipeline includes information
+	// about both pipelines: first its own media files, then the media files of
+	// the other pipeline. This feature allows playout device that support stale
+	// manifest detection to switch from one manifest to the other, when the current
+	// manifest seems to be stale. There are still two destinations and two master
+	// manifests, but both master manifests reference the media files from both
+	// pipelines.DISABLED: The master manifest (.m3u8 file) for each pipeline includes
+	// information about its own pipeline only.For an HLS output group with MediaPackage
+	// as the destination, the DISABLED behavior is always followed. MediaPackage
+	// regenerates the manifests it serves to players so a redundant manifest from
+	// MediaLive is irrelevant.
 	RedundantManifest *string `locationName:"redundantManifest" type:"string" enum:"HlsRedundantManifest"`
 
 	// Length of MPEG-2 Transport Stream segments to create (in seconds). Note that
@@ -12044,6 +12063,101 @@ func (s *MediaConnectFlowRequest) SetFlowArn(v string) *MediaConnectFlowRequest 
 	return s
 }
 
+// Media Package Group Settings
+type MediaPackageGroupSettings struct {
+	_ struct{} `type:"structure"`
+
+	// MediaPackage channel destination.
+	//
+	// Destination is a required field
+	Destination *OutputLocationRef `locationName:"destination" type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s MediaPackageGroupSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MediaPackageGroupSettings) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *MediaPackageGroupSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "MediaPackageGroupSettings"}
+	if s.Destination == nil {
+		invalidParams.Add(request.NewErrParamRequired("Destination"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDestination sets the Destination field's value.
+func (s *MediaPackageGroupSettings) SetDestination(v *OutputLocationRef) *MediaPackageGroupSettings {
+	s.Destination = v
+	return s
+}
+
+// Media Package Output Destination Settings
+type MediaPackageOutputDestinationSettings struct {
+	_ struct{} `type:"structure"`
+
+	// ID of the channel in MediaPackage that is the destination for this output
+	// group. You do not need to specify the individual inputs in MediaPackage;
+	// MediaLive will handle the connection of the two MediaLive pipelines to the
+	// two MediaPackage inputs. The MediaPackage channel and MediaLive channel must
+	// be in the same region.
+	ChannelId *string `locationName:"channelId" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s MediaPackageOutputDestinationSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MediaPackageOutputDestinationSettings) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *MediaPackageOutputDestinationSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "MediaPackageOutputDestinationSettings"}
+	if s.ChannelId != nil && len(*s.ChannelId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ChannelId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetChannelId sets the ChannelId field's value.
+func (s *MediaPackageOutputDestinationSettings) SetChannelId(v string) *MediaPackageOutputDestinationSettings {
+	s.ChannelId = &v
+	return s
+}
+
+// Media Package Output Settings
+type MediaPackageOutputSettings struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s MediaPackageOutputSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MediaPackageOutputSettings) GoString() string {
+	return s.String()
+}
+
 type Mp2Settings struct {
 	_ struct{} `type:"structure"`
 
@@ -12578,7 +12692,12 @@ type OutputDestination struct {
 	// User-specified id. This is used in an output group or an output.
 	Id *string `locationName:"id" type:"string"`
 
-	// Destination settings for output; one for each redundant encoder.
+	// Destination settings for a MediaPackage output; one destination for both
+	// encoders.
+	MediaPackageSettings []*MediaPackageOutputDestinationSettings `locationName:"mediaPackageSettings" type:"list"`
+
+	// Destination settings for a standard output; one destination for each redundant
+	// encoder.
 	Settings []*OutputDestinationSettings `locationName:"settings" type:"list"`
 }
 
@@ -12592,9 +12711,35 @@ func (s OutputDestination) GoString() string {
 	return s.String()
 }
 
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *OutputDestination) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "OutputDestination"}
+	if s.MediaPackageSettings != nil {
+		for i, v := range s.MediaPackageSettings {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "MediaPackageSettings", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
 // SetId sets the Id field's value.
 func (s *OutputDestination) SetId(v string) *OutputDestination {
 	s.Id = &v
+	return s
+}
+
+// SetMediaPackageSettings sets the MediaPackageSettings field's value.
+func (s *OutputDestination) SetMediaPackageSettings(v []*MediaPackageOutputDestinationSettings) *OutputDestination {
+	s.MediaPackageSettings = v
 	return s
 }
 
@@ -12741,6 +12886,9 @@ type OutputGroupSettings struct {
 
 	HlsGroupSettings *HlsGroupSettings `locationName:"hlsGroupSettings" type:"structure"`
 
+	// Media Package Group Settings
+	MediaPackageGroupSettings *MediaPackageGroupSettings `locationName:"mediaPackageGroupSettings" type:"structure"`
+
 	MsSmoothGroupSettings *MsSmoothGroupSettings `locationName:"msSmoothGroupSettings" type:"structure"`
 
 	RtmpGroupSettings *RtmpGroupSettings `locationName:"rtmpGroupSettings" type:"structure"`
@@ -12776,6 +12924,11 @@ func (s *OutputGroupSettings) Validate() error {
 			invalidParams.AddNested("HlsGroupSettings", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.MediaPackageGroupSettings != nil {
+		if err := s.MediaPackageGroupSettings.Validate(); err != nil {
+			invalidParams.AddNested("MediaPackageGroupSettings", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.MsSmoothGroupSettings != nil {
 		if err := s.MsSmoothGroupSettings.Validate(); err != nil {
 			invalidParams.AddNested("MsSmoothGroupSettings", err.(request.ErrInvalidParams))
@@ -12808,6 +12961,12 @@ func (s *OutputGroupSettings) SetFrameCaptureGroupSettings(v *FrameCaptureGroupS
 // SetHlsGroupSettings sets the HlsGroupSettings field's value.
 func (s *OutputGroupSettings) SetHlsGroupSettings(v *HlsGroupSettings) *OutputGroupSettings {
 	s.HlsGroupSettings = v
+	return s
+}
+
+// SetMediaPackageGroupSettings sets the MediaPackageGroupSettings field's value.
+func (s *OutputGroupSettings) SetMediaPackageGroupSettings(v *MediaPackageGroupSettings) *OutputGroupSettings {
+	s.MediaPackageGroupSettings = v
 	return s
 }
 
@@ -12861,6 +13020,9 @@ type OutputSettings struct {
 	FrameCaptureOutputSettings *FrameCaptureOutputSettings `locationName:"frameCaptureOutputSettings" type:"structure"`
 
 	HlsOutputSettings *HlsOutputSettings `locationName:"hlsOutputSettings" type:"structure"`
+
+	// Media Package Output Settings
+	MediaPackageOutputSettings *MediaPackageOutputSettings `locationName:"mediaPackageOutputSettings" type:"structure"`
 
 	MsSmoothOutputSettings *MsSmoothOutputSettings `locationName:"msSmoothOutputSettings" type:"structure"`
 
@@ -12924,6 +13086,12 @@ func (s *OutputSettings) SetFrameCaptureOutputSettings(v *FrameCaptureOutputSett
 // SetHlsOutputSettings sets the HlsOutputSettings field's value.
 func (s *OutputSettings) SetHlsOutputSettings(v *HlsOutputSettings) *OutputSettings {
 	s.HlsOutputSettings = v
+	return s
+}
+
+// SetMediaPackageOutputSettings sets the MediaPackageOutputSettings field's value.
+func (s *OutputSettings) SetMediaPackageOutputSettings(v *MediaPackageOutputSettings) *OutputSettings {
+	s.MediaPackageOutputSettings = v
 	return s
 }
 
@@ -15558,6 +15726,16 @@ func (s *UpdateChannelInput) Validate() error {
 	}
 	if s.ChannelId != nil && len(*s.ChannelId) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("ChannelId", 1))
+	}
+	if s.Destinations != nil {
+		for i, v := range s.Destinations {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Destinations", i), err.(request.ErrInvalidParams))
+			}
+		}
 	}
 	if s.EncoderSettings != nil {
 		if err := s.EncoderSettings.Validate(); err != nil {
