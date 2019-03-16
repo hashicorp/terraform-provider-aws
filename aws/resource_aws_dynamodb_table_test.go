@@ -2034,7 +2034,7 @@ resource "aws_dynamodb_table" "test" {
     type = "S"
   }
 
-	final_backup_identifier = "%s"
+  final_backup_identifier = "%s"
 }
 `, rName, rName)
 }
