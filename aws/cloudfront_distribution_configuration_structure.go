@@ -701,19 +701,6 @@ func flattenOriginGroupMembers(ogm *cloudfront.OriginGroupMembers) []interface{}
 	return s
 }
 
-func expandOriginGroupMember(m map[string]interface{}) *cloudfront.OriginGroupMember {
-	return &cloudfront.OriginGroupMember{
-		OriginId: aws.String(m["origin_id"].(string)),
-	}
-}
-
-func flattenOriginGroupMember(ogms *cloudfront.OriginGroupMember) map[string]interface{} {
-	m := map[string]interface{}{
-		"origin_id": *ogms.OriginId,
-	}
-	return m
-}
-
 // Assemble the hash for the aws_cloudfront_distribution origin
 // TypeSet attribute.
 func originHash(v interface{}) int {

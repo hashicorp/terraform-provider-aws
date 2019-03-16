@@ -753,16 +753,16 @@ func TestAccAWSCloudFrontDistribution_OriginGroups(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontDistributionExists(resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, "origin_group.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "origin_group.3694416691.origin_id", "groupS3"),
-					resource.TestCheckResourceAttr(resourceName, "origin_group.3694416691.failover_criteria.409426305.status_codes.#", "4"),
-					resource.TestCheckResourceAttr(resourceName, "origin_group.3694416691.failover_criteria.409426305.status_codes.0", "403"),
-					resource.TestCheckResourceAttr(resourceName, "origin_group.3694416691.failover_criteria.409426305.status_codes.1", "404"),
-					resource.TestCheckResourceAttr(resourceName, "origin_group.3694416691.failover_criteria.409426305.status_codes.2", "500"),
-					resource.TestCheckResourceAttr(resourceName, "origin_group.3694416691.failover_criteria.409426305.status_codes.3", "502"),
-					resource.TestCheckResourceAttr(resourceName, "origin_group.3694416691.members.1751759501.ordered_origin_group_member.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "origin_group.3694416691.members.1751759501.ordered_origin_group_member.0.origin_id", "primaryS3"),
-					resource.TestCheckResourceAttr(resourceName, "origin_group.3694416691.members.1751759501.ordered_origin_group_member.1.origin_id", "failoverS3"),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.2496375652.target_origin_id", "groupS3"),
+					resource.TestCheckResourceAttr(resourceName, "origin_group.1789175660.origin_id", "groupS3"),
+					resource.TestCheckResourceAttr(resourceName, "origin_group.1789175660.failover_criteria.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "origin_group.1789175660.failover_criteria.0.status_codes.#", "4"),
+					resource.TestCheckResourceAttr(resourceName, "origin_group.1789175660.failover_criteria.0.status_codes.1057413486", "403"),
+					resource.TestCheckResourceAttr(resourceName, "origin_group.1789175660.failover_criteria.0.status_codes.1883721641", "404"),
+					resource.TestCheckResourceAttr(resourceName, "origin_group.1789175660.failover_criteria.0.status_codes.2661388106", "502"),
+					resource.TestCheckResourceAttr(resourceName, "origin_group.1789175660.failover_criteria.0.status_codes.2895637960", "500"),
+					resource.TestCheckResourceAttr(resourceName, "origin_group.1789175660.member.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "origin_group.1789175660.member.0.origin_id", "primaryS3"),
+					resource.TestCheckResourceAttr(resourceName, "origin_group.1789175660.member.1.origin_id", "failoverS3"),
 				),
 			},
 		},
@@ -1482,13 +1482,11 @@ resource "aws_cloudfront_distribution" "failover_distribution" {
     failover_criteria {
       status_codes = [403, 404, 500, 502]
     }
-    members {
-      ordered_origin_group_member {
-        origin_id = "primaryS3"
-      }
-      ordered_origin_group_member {
-        origin_id = "failoverS3"
-      }
+    member {
+      origin_id = "primaryS3"
+    }
+    member {
+      origin_id = "failoverS3"
     }
   }
   enabled = true

@@ -493,7 +493,6 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 							Type:     schema.TypeList,
 							Required: true,
 							MaxItems: 1,
-							Set:      failoverCriteriaHash,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"status_codes": {

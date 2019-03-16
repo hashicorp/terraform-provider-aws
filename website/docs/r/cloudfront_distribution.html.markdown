@@ -151,16 +151,15 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
     origin_id = "groupS3"
 
     failover_criteria {
-      status_codes = [403, 404, 500, 502, 503, 504]
+      status_codes = [403, 404, 500, 502]
     }
 
-    members {
-      ordered_origin_group_member {
-        origin_id = "primaryS3"
-      }
-      ordered_origin_group_member {
-        origin_id = "failoverS3"
-      }
+    member {
+      origin_id = "primaryS3"
+    }
+    
+    member {
+      origin_id = "failoverS3"
     }
   }
 
