@@ -1491,7 +1491,7 @@ resource "aws_cloudfront_distribution" "failover_distribution" {
       }
     }
   }
-	enabled = true
+  enabled = true
   restrictions {
 		geo_restriction {
 			restriction_type = "whitelist"

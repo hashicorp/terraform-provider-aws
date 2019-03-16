@@ -146,35 +146,25 @@ func multiOriginConf() *schema.Set {
 	return schema.NewSet(originHash, []interface{}{originWithCustomConf(), originWithS3Conf()})
 }
 
-func orderedMemberConf() map[string]interface{} {
-	return map[string]interface{}{
-		"ordered_origin_group_member": []interface{}{map[string]interface{}{
-			"origin_id": "S3failover",
-		}, map[string]interface{}{
-			"origin_id": "S3origin",
-		}},
-	}
-}
-
-func originGroupMembers() *schema.Set {
-	return schema.NewSet(membersHash, []interface{}{orderedMemberConf()})
+func originGroupMembers() []interface{} {
+	return []interface{}{map[string]interface{}{
+		"origin_id": "S3origin",
+	}, map[string]interface{}{
+		"origin_id": "S3failover",
+	}}
 }
 
 func failoverStatusCodes() map[string]interface{} {
 	return map[string]interface{}{
-		"status_codes": []interface{}{503, 504},
+		"status_codes": schema.NewSet(schema.HashInt, []interface{}{503, 504}),
 	}
-}
-
-func failoverCriteriaConf() *schema.Set {
-	return schema.NewSet(failoverCriteriaHash, []interface{}{failoverStatusCodes()})
 }
 
 func originGroupConf() map[string]interface{} {
 	return map[string]interface{}{
 		"origin_id":         "groupS3",
-		"failover_criteria": failoverCriteriaConf(),
-		"members":           originGroupMembers(),
+		"failover_criteria": []interface{}{failoverStatusCodes()},
+		"member":            originGroupMembers(),
 	}
 }
 
@@ -588,7 +578,7 @@ func TestCloudFrontStructure_expandOriginGroups(t *testing.T) {
 		t.Fatalf("Expected origin group id to be %v, got %v", "groupS3", *originGroup.Id)
 	}
 	if *originGroup.FailoverCriteria.StatusCodes.Quantity != 2 {
-		t.Fatalf("Expected 2 origin group members, got %v", *originGroup.FailoverCriteria.StatusCodes.Quantity)
+		t.Fatalf("Expected 2 origin group status codes, got %v", *originGroup.FailoverCriteria.StatusCodes.Quantity)
 	}
 	statusCodes := originGroup.FailoverCriteria.StatusCodes.Items
 	for _, code := range statusCodes {

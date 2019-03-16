@@ -490,37 +490,29 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 							ValidateFunc: validation.NoZeroValues,
 						},
 						"failover_criteria": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Required: true,
+							MaxItems: 1,
 							Set:      failoverCriteriaHash,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"status_codes": {
-										Type:     schema.TypeList,
+										Type:     schema.TypeSet,
 										Required: true,
 										Elem:     &schema.Schema{Type: schema.TypeInt},
 									},
 								},
 							},
 						},
-						"members": {
-							Type:     schema.TypeSet,
+						"member": {
+							Type:     schema.TypeList,
 							Required: true,
-							Set:      membersHash,
+							MinItems: 2,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"ordered_origin_group_member": {
-										Type:     schema.TypeList,
+									"origin_id": {
+										Type:     schema.TypeString,
 										Required: true,
-										MinItems: 2,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"origin_id": {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-											},
-										},
 									},
 								},
 							},
