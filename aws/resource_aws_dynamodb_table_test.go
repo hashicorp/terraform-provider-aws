@@ -1014,6 +1014,26 @@ func TestAccAWSDynamoDbTable_encryption(t *testing.T) {
 	})
 }
 
+func TestAccAWSDynamoDbTable_final_backup(t *testing.T) {
+	var conf dynamodb.DescribeTableOutput
+
+	rName := acctest.RandomWithPrefix("TerraformTestTable-")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDynamoDbConfig_final_backup(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialAWSDynamoDbTableExists("aws_dynamodb_table.test", &conf),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSDynamoDbTableDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).dynamodbconn
 
@@ -1999,4 +2019,22 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
   }
 }
 `, rName, attrName1, attrType1, attrName2, attrType2, hashKey, rangeKey)
+}
+
+func testAccAWSDynamoDbConfig_final_backup(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name = "%s"
+  read_capacity = 1
+  write_capacity = 1
+  hash_key = "TestTableHashKey"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+	final_backup_identifier = "%s"
+}
+`, rName, rName)
 }
