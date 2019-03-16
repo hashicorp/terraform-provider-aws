@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
@@ -38,6 +39,30 @@ func resourceAwsSsmAssociation() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+			},
+			"max_concurrency": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: func(v interface{}, k string) (ws []string, es []error) {
+					value := v.(string)
+					if !regexp.MustCompile(`^([1-9][0-9]*|[0]|[1-9][0-9]%|[0-9]%|100%)$`).MatchString(value) {
+						es = append(es, fmt.Errorf(
+							"%q invalid format", k))
+					}
+					return
+				},
+			},
+			"max_errors": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: func(v interface{}, k string) (ws []string, es []error) {
+					value := v.(string)
+					if !regexp.MustCompile(`^([1-9][0-9]*|[0]|[1-9][0-9]%|[0-9]%|100%)$`).MatchString(value) {
+						es = append(es, fmt.Errorf(
+							"%q invalid format", k))
+					}
+					return
+				},
 			},
 			"name": {
 				Type:     schema.TypeString,
