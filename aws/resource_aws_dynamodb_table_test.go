@@ -1022,7 +1022,7 @@ func TestAccAWSDynamoDbTable_final_backup(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
+		CheckDestroy: testAccCheckAWSDynamoDbTableFinalBackupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSDynamoDbConfig_final_backup(rName),
@@ -1055,6 +1055,64 @@ func testAccCheckAWSDynamoDbTableDestroy(s *terraform.State) error {
 
 		// Verify the error is what we want
 		if dbErr, ok := err.(awserr.Error); ok && dbErr.Code() == "ResourceNotFoundException" {
+			return nil
+		}
+
+		return err
+	}
+
+	return nil
+}
+
+func testAccCheckAWSDynamoDbTableFinalBackupDestroy(s *terraform.State) error {
+	conn := testAccProvider.Meta().(*AWSClient).dynamodbconn
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_dynamodb_table" {
+			continue
+		}
+
+		log.Printf("[DEBUG] Checking if DynamoDB table %s exists", rs.Primary.ID)
+		// Check if queue exists by checking for its attributes
+		params := &dynamodb.DescribeTableInput{
+			TableName: aws.String(rs.Primary.ID),
+		}
+
+		_, err := conn.DescribeTable(params)
+		if err == nil {
+			return fmt.Errorf("DynamoDB table %s still exists. Failing!", rs.Primary.ID)
+		}
+
+		// Verify the error is what we want
+		if dbErr, ok := err.(awserr.Error); ok && dbErr.Code() == "ResourceNotFoundException" {
+			params := &dynamodb.ListBackupsInput{
+				TableName: aws.String(rs.Primary.ID),
+			}
+			resp, err := conn.ListBackups(params)
+			if err != nil {
+				return err
+			}
+
+			found := false
+			var backupArn *string
+			for _, v := range resp.BackupSummaries {
+				if aws.StringValue(v.BackupName) == rs.Primary.ID {
+					backupArn = v.BackupArn
+					found = true
+					break
+				}
+			}
+			if !found {
+				return fmt.Errorf("Not found DynamoDB table final_backup_identifier %s", rs.Primary.ID)
+			}
+
+			delInput := &dynamodb.DeleteBackupInput{
+				BackupArn: backupArn,
+			}
+			if _, err := conn.DeleteBackup(delInput); err != nil {
+				return err
+			}
+
 			return nil
 		}
 
