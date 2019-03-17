@@ -150,10 +150,10 @@ func resourceAwsBackupPlanRead(d *schema.ResourceData, meta interface{}) error {
 		m["target_vault_name"] = aws.StringValue(r.TargetBackupVaultName)
 
 		if r.Lifecycle != nil {
-			l := map[string]int64{}
+			l := make(map[string]interface{})
 			l["delete_after"] = aws.Int64Value(r.Lifecycle.DeleteAfterDays)
 			l["cold_storage_after"] = aws.Int64Value(r.Lifecycle.MoveToColdStorageAfterDays)
-			m["lifecycle"] = l
+			m["lifecycle"] = []interface{}{l}
 		}
 
 		rule.Add(m)
@@ -243,12 +243,14 @@ func expandBackupPlanRules(l []interface{}) []*backup.RuleInput {
 			lifecycleRaw := i.(map[string]interface{})["lifecycle"].([]interface{})
 			if len(lifecycleRaw) == 1 {
 				lifecycle = lifecycleRaw[0].(map[string]interface{})
+				lcValues := &backup.Lifecycle{}
 				if lifecycle["delete_after"] != nil {
-					rule.Lifecycle.DeleteAfterDays = aws.Int64(int64(lifecycle["delete_after"].(int)))
+					lcValues.DeleteAfterDays = aws.Int64(int64(lifecycle["delete_after"].(int)))
 				}
 				if lifecycle["cold_storage_after"] != nil {
-					rule.Lifecycle.MoveToColdStorageAfterDays = aws.Int64(int64(lifecycle["cold_storage_after"].(int)))
+					lcValues.MoveToColdStorageAfterDays = aws.Int64(int64(lifecycle["cold_storage_after"].(int)))
 				}
+				rule.Lifecycle = lcValues
 			}
 
 		}
@@ -268,11 +270,11 @@ func resourceAwsPlanRuleHash(v interface{}) int {
 		if len(lcRaw) == 1 {
 			l := lcRaw[0].(map[string]interface{})
 			if w, ok := l["delete_after"]; ok {
-				buf.WriteString(fmt.Sprintf("%d-", w.(int)))
+				buf.WriteString(fmt.Sprintf("%v-", w))
 			}
 
 			if w, ok := l["cold_storage_after"]; ok {
-				buf.WriteString(fmt.Sprintf("%d-", w.(int)))
+				buf.WriteString(fmt.Sprintf("%v-", w))
 			}
 		}
 	}

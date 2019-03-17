@@ -107,6 +107,26 @@ func TestAccAwsBackupPlan_withRuleAdd(t *testing.T) {
 	})
 }
 
+func TestAccAwsBackupPlan_withLifecycle(t *testing.T) {
+	var plan backup.GetBackupPlanOutput
+	rStr := "lifecycle_policy"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsBackupPlanDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBackupPlanWithLifecycle(rStr),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsBackupPlanExists("aws_backup_plan.test", &plan),
+					resource.TestCheckResourceAttr("aws_backup_plan.test", "rule.1028372010.lifecycle.#", "1"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAwsBackupPlan_disappears(t *testing.T) {
 	var plan backup.GetBackupPlanOutput
 	rInt := acctest.RandInt()
@@ -211,6 +231,28 @@ resource "aws_backup_plan" "test" {
   }
 }
 `, randInt, randInt, randInt)
+}
+
+func testAccBackupPlanWithLifecycle(stringID string) string {
+	return fmt.Sprintf(`
+resource "aws_backup_vault" "test" {
+  name = "tf_acc_test_backup_vault_%s"
+}
+
+resource "aws_backup_plan" "test" {
+  name = "tf_acc_test_backup_plan_%s"
+
+  rule {
+    rule_name          = "tf_acc_test_backup_rule_%s"
+    target_vault_name  = "${aws_backup_vault.test.name}"
+    schedule           = "cron(0 12 * * ? *)"
+    lifecycle {
+        cold_storage_after = 30
+        delete_after       = 160
+    }
+  }
+}
+`, stringID, stringID, stringID)
 }
 
 func testAccBackupPlanWithRules(randInt int) string {
