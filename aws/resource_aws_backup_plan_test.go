@@ -33,6 +33,44 @@ func TestAccAwsBackupPlan_basic(t *testing.T) {
 	})
 }
 
+func TestAccAwsBackupPlan_withTags(t *testing.T) {
+	var plan backup.GetBackupPlanOutput
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsBackupPlanDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBackupPlanWithTag(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsBackupPlanExists("aws_backup_plan.test", &plan),
+					resource.TestCheckResourceAttr("aws_backup_plan.test", "tags.%", "1"),
+					resource.TestCheckResourceAttr("aws_backup_plan.test", "tags.env", "test"),
+				),
+			},
+			{
+				Config: testAccBackupPlanWithTags(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsBackupPlanExists("aws_backup_plan.test", &plan),
+					resource.TestCheckResourceAttr("aws_backup_plan.test", "tags.%", "2"),
+					resource.TestCheckResourceAttr("aws_backup_plan.test", "tags.env", "test"),
+					resource.TestCheckResourceAttr("aws_backup_plan.test", "tags.app", "widget"),
+				),
+			},
+			{
+				Config: testAccBackupPlanWithTag(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsBackupPlanExists("aws_backup_plan.test", &plan),
+					resource.TestCheckResourceAttr("aws_backup_plan.test", "tags.%", "1"),
+					resource.TestCheckResourceAttr("aws_backup_plan.test", "tags.env", "test"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAwsBackupPlan_withRules(t *testing.T) {
 	var plan backup.GetBackupPlanOutput
 	rInt := acctest.RandInt()
@@ -228,6 +266,51 @@ resource "aws_backup_plan" "test" {
     rule_name          = "tf_acc_test_backup_rule_%d"
     target_vault_name  = "${aws_backup_vault.test.name}"
     schedule           = "cron(0 12 * * ? *)"
+  }
+}
+`, randInt, randInt, randInt)
+}
+
+func testAccBackupPlanWithTag(randInt int) string {
+	return fmt.Sprintf(`
+resource "aws_backup_vault" "test" {
+  name = "tf_acc_test_backup_vault_%d"
+}
+
+resource "aws_backup_plan" "test" {
+  name = "tf_acc_test_backup_plan_%d"
+
+  rule {
+    rule_name          = "tf_acc_test_backup_rule_%d"
+    target_vault_name  = "${aws_backup_vault.test.name}"
+    schedule           = "cron(0 12 * * ? *)"
+  }
+
+  tags {
+	  env = "test"
+  }
+}
+`, randInt, randInt, randInt)
+}
+
+func testAccBackupPlanWithTags(randInt int) string {
+	return fmt.Sprintf(`
+resource "aws_backup_vault" "test" {
+  name = "tf_acc_test_backup_vault_%d"
+}
+
+resource "aws_backup_plan" "test" {
+  name = "tf_acc_test_backup_plan_%d"
+
+  rule {
+    rule_name          = "tf_acc_test_backup_rule_%d"
+    target_vault_name  = "${aws_backup_vault.test.name}"
+    schedule           = "cron(0 12 * * ? *)"
+  }
+
+  tags {
+	  env = "test"
+	  app = "widget"
   }
 }
 `, randInt, randInt, randInt)

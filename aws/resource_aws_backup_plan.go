@@ -106,7 +106,7 @@ func resourceAwsBackupPlanCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if v, ok := d.GetOk("tags"); ok {
-		input.BackupPlanTags = v.(map[string]*string)
+		input.BackupPlanTags = tagsFromMapGeneric(v.(map[string]interface{}))
 	}
 
 	resp, err := conn.CreateBackupPlan(input)
@@ -162,6 +162,17 @@ func resourceAwsBackupPlanRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting rule: %s", err)
 	}
 
+	tagsOutput, err := conn.ListTags(&backup.ListTagsInput{
+		ResourceArn: resp.BackupPlanArn,
+	})
+	if err != nil {
+		return fmt.Errorf("error listing tags AWS Backup plan %s: %s", d.Id(), err)
+	}
+
+	if err := d.Set("tags", tagsToMapGeneric(tagsOutput.Tags)); err != nil {
+		return fmt.Errorf("error setting tags on AWS Backup plan %s: %s", d.Id(), err)
+	}
+
 	d.Set("arn", resp.BackupPlanArn)
 	d.Set("version", resp.VersionId)
 
@@ -187,6 +198,48 @@ func resourceAwsBackupPlanUpdate(d *schema.ResourceData, meta interface{}) error
 	_, err := conn.UpdateBackupPlan(input)
 	if err != nil {
 		return fmt.Errorf("error updating Backup Plan: %s", err)
+	}
+
+	if d.HasChange("tags") {
+		resourceArn := d.Get("arn").(string)
+		oraw, nraw := d.GetChange("tags")
+		create, remove := diffTagsGeneric(oraw.(map[string]interface{}), nraw.(map[string]interface{}))
+
+		if len(remove) > 0 {
+			log.Printf("[DEBUG] Removing tags: %#v", remove)
+			keys := make([]*string, 0, len(remove))
+			for k := range remove {
+				keys = append(keys, aws.String(k))
+			}
+
+			_, err := conn.UntagResource(&backup.UntagResourceInput{
+				ResourceArn: aws.String(resourceArn),
+				TagKeyList:  keys,
+			})
+			if isAWSErr(err, backup.ErrCodeResourceNotFoundException, "") {
+				log.Printf("[WARN] Backup Plan %s not found, removing from state", d.Id())
+				d.SetId("")
+				return nil
+			}
+			if err != nil {
+				return fmt.Errorf("Error removing tags for (%s): %s", d.Id(), err)
+			}
+		}
+		if len(create) > 0 {
+			log.Printf("[DEBUG] Creating tags: %#v", create)
+			_, err := conn.TagResource(&backup.TagResourceInput{
+				ResourceArn: aws.String(resourceArn),
+				Tags:        create,
+			})
+			if isAWSErr(err, backup.ErrCodeResourceNotFoundException, "") {
+				log.Printf("[WARN] Backup Plan %s not found, removing from state", d.Id())
+				d.SetId("")
+				return nil
+			}
+			if err != nil {
+				return fmt.Errorf("Error setting tags for (%s): %s", d.Id(), err)
+			}
+		}
 	}
 
 	return resourceAwsBackupPlanRead(d, meta)
