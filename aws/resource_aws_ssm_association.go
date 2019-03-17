@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsSsmAssociation() *schema.Resource {
@@ -88,6 +89,17 @@ func resourceAwsSsmAssociation() *schema.Resource {
 					},
 				},
 			},
+			"compliance_severity": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					ssm.ComplianceSeverityUnspecified,
+					ssm.ComplianceSeverityLow,
+					ssm.ComplianceSeverityMedium,
+					ssm.ComplianceSeverityHigh,
+					ssm.ComplianceSeverityCritical,
+				}, false),
+			},
 		},
 	}
 }
@@ -127,6 +139,10 @@ func resourceAwsSsmAssociationCreate(d *schema.ResourceData, meta interface{}) e
 
 	if v, ok := d.GetOk("output_location"); ok {
 		associationInput.OutputLocation = expandSSMAssociationOutputLocation(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("compliance_severity"); ok {
+		associationInput.ComplianceSeverity = aws.String(v.(string))
 	}
 
 	resp, err := ssmconn.CreateAssociation(associationInput)
@@ -174,6 +190,7 @@ func resourceAwsSsmAssociationRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("association_id", association.AssociationId)
 	d.Set("schedule_expression", association.ScheduleExpression)
 	d.Set("document_version", association.DocumentVersion)
+	d.Set("compliance_severity", association.ComplianceSeverity)
 
 	if err := d.Set("targets", flattenAwsSsmTargets(association.Targets)); err != nil {
 		return fmt.Errorf("Error setting targets error: %#v", err)
@@ -218,6 +235,10 @@ func resourceAwsSsmAssociationUpdate(d *schema.ResourceData, meta interface{}) e
 
 	if v, ok := d.GetOk("output_location"); ok {
 		associationInput.OutputLocation = expandSSMAssociationOutputLocation(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("compliance_severity"); ok {
+		associationInput.ComplianceSeverity = aws.String(v.(string))
 	}
 
 	_, err := ssmconn.UpdateAssociation(associationInput)

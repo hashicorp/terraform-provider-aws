@@ -307,6 +307,41 @@ func TestAccAWSSSMAssociation_withScheduleExpression(t *testing.T) {
 	})
 }
 
+func TestAccAWSSSMAssociation_withComplianceSeverity(t *testing.T) {
+	assocName := acctest.RandString(10)
+	rName := acctest.RandString(10)
+	compSeverity1 := "HIGH"
+	compSeverity2 := "LOW"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMAssociationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMAssociationBasicConfigWithComplianceSeverity(compSeverity1, rName, assocName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMAssociationExists("aws_ssm_association.foo"),
+					resource.TestCheckResourceAttr(
+						"aws_ssm_association.foo", "association_name", assocName),
+					resource.TestCheckResourceAttr(
+						"aws_ssm_association.foo", "compliance_severity", compSeverity1),
+				),
+			},
+			{
+				Config: testAccAWSSSMAssociationBasicConfigWithComplianceSeverity(compSeverity2, rName, assocName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMAssociationExists("aws_ssm_association.foo"),
+					resource.TestCheckResourceAttr(
+						"aws_ssm_association.foo", "association_name", assocName),
+					resource.TestCheckResourceAttr(
+						"aws_ssm_association.foo", "compliance_severity", compSeverity2),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSSSMAssociationExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -886,4 +921,41 @@ resource "aws_ssm_association" "test" {
   }
 }
 `, rName, associationName, scheduleExpression)
+}
+
+func testAccAWSSSMAssociationBasicConfigWithComplianceSeverity(compSeverity, rName, assocName string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_document" "foo_document" {
+  name = "test_document_association-%s"
+  document_type = "Command"
+  content = <<DOC
+  {
+    "schemaVersion": "1.2",
+    "description": "Check ip configuration of a Linux instance.",
+    "parameters": {
+    },
+    "runtimeConfig": {
+      "aws:runShellScript": {
+        "properties": [
+          {
+            "id": "0.aws:runShellScript",
+            "runCommand": ["ifconfig"]
+          }
+        ]
+      }
+    }
+  }
+DOC
+}
+
+resource "aws_ssm_association" "foo" {
+  name = "${aws_ssm_document.foo_document.name}"
+  association_name = "%s"
+  compliance_severity = "%s"
+  targets {
+    key = "tag:Name"
+    values = ["acceptanceTest"]
+  }
+}
+`, rName, assocName, compSeverity)
 }
