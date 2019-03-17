@@ -342,6 +342,37 @@ func TestAccAWSSSMAssociation_withComplianceSeverity(t *testing.T) {
 	})
 }
 
+func TestAccAWSSSMAssociation_rateControl(t *testing.T) {
+	name := acctest.RandString(10)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMAssociationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMAssociationRateControlConfig(name, "10%"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMAssociationExists("aws_ssm_association.foo"),
+					resource.TestCheckResourceAttr(
+						"aws_ssm_association.foo", "max_concurrency", "10%"),
+					resource.TestCheckResourceAttr(
+						"aws_ssm_association.foo", "max_errors", "10%"),
+				),
+			},
+			{
+				Config: testAccAWSSSMAssociationRateControlConfig(name, "20%"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMAssociationExists("aws_ssm_association.foo"),
+					resource.TestCheckResourceAttr(
+						"aws_ssm_association.foo", "max_concurrency", "20%"),
+					resource.TestCheckResourceAttr(
+						"aws_ssm_association.foo", "max_errors", "20%"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSSSMAssociationExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -958,4 +989,40 @@ resource "aws_ssm_association" "foo" {
   }
 }
 `, rName, assocName, compSeverity)
+}
+
+func testAccAWSSSMAssociationRateControlConfig(rName, rate string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_document" "foo_document" {
+  name    = "tf-test-ssm-document-%s"
+	document_type = "Command"
+  content = <<DOC
+  {
+    "schemaVersion": "1.2",
+    "description": "Check ip configuration of a Linux instance.",
+    "parameters": {
+    },
+    "runtimeConfig": {
+      "aws:runShellScript": {
+        "properties": [
+          {
+            "id": "0.aws:runShellScript",
+            "runCommand": ["ifconfig"]
+          }
+        ]
+      }
+    }
+  }
+DOC
+}
+resource "aws_ssm_association" "foo" {
+  name        = "${aws_ssm_document.foo_document.name}"
+  max_concurrency = "%s"
+  max_errors = "%s"
+	targets {
+    key = "tag:Name"
+    values = ["acceptanceTest"]
+  }
+}
+`, rName, rate, rate)
 }
