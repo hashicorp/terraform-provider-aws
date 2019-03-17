@@ -40,6 +40,7 @@ func resourceAwsAppautoscalingPolicy() *schema.Resource {
 			"resource_id": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			"scalable_dimension": {
 				Type:     schema.TypeString,
@@ -368,17 +369,29 @@ func resourceAwsAppautoscalingPolicyDelete(d *schema.ResourceData, meta interfac
 	log.Printf("[DEBUG] Deleting Application AutoScaling Policy opts: %#v", params)
 	err = resource.Retry(2*time.Minute, func() *resource.RetryError {
 		_, err = conn.DeleteScalingPolicy(&params)
+
+		if isAWSErr(err, applicationautoscaling.ErrCodeFailedResourceAccessException, "") {
+			return resource.RetryableError(err)
+		}
+
+		if isAWSErr(err, applicationautoscaling.ErrCodeObjectNotFoundException, "") {
+			return nil
+		}
+
 		if err != nil {
-			if isAWSErr(err, applicationautoscaling.ErrCodeFailedResourceAccessException, "") {
-				return resource.RetryableError(err)
-			}
 			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
+
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteScalingPolicy(&params)
+	}
+
 	if err != nil {
 		return fmt.Errorf("Failed to delete scaling policy: %s", err)
 	}
+
 	return nil
 }
 
