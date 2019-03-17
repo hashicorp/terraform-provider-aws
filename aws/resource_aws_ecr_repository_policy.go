@@ -25,8 +25,9 @@ func resourceAwsEcrRepositoryPolicy() *schema.Resource {
 				ForceNew: true,
 			},
 			"policy": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:             schema.TypeString,
+				Required:         true,
+				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
 			},
 			"registry_id": {
 				Type:     schema.TypeString,
@@ -99,6 +100,7 @@ func resourceAwsEcrRepositoryPolicyRead(d *schema.ResourceData, meta interface{}
 
 	d.SetId(*repositoryPolicy.RepositoryName)
 	d.Set("registry_id", repositoryPolicy.RegistryId)
+	d.Set("policy", repositoryPolicy.PolicyText)
 
 	return nil
 }

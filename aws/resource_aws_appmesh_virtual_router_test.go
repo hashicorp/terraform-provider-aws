@@ -94,7 +94,7 @@ func testAccAwsAppmeshVirtualRouter_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAppmeshVirtualRouterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppmeshVirtualRouterConfig(meshName, vrName),
+				Config: testAccAppmeshVirtualRouterConfig_basic(meshName, vrName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppmeshVirtualRouterExists(
 						resourceName, &vr),
@@ -105,9 +105,13 @@ func testAccAwsAppmeshVirtualRouter_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(
-						resourceName, "spec.0.service_names.#", "1"),
+						resourceName, "spec.0.listener.#", "1"),
 					resource.TestCheckResourceAttr(
-						resourceName, "spec.0.service_names.423761483", "serviceb.simpleapp.local"),
+						resourceName, "spec.0.listener.2279702354.port_mapping.#", "1"),
+					resource.TestCheckResourceAttr(
+						resourceName, "spec.0.listener.2279702354.port_mapping.0.port", "8080"),
+					resource.TestCheckResourceAttr(
+						resourceName, "spec.0.listener.2279702354.port_mapping.0.protocol", "http"),
 					resource.TestCheckResourceAttrSet(
 						resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(
@@ -117,7 +121,7 @@ func testAccAwsAppmeshVirtualRouter_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAppmeshVirtualRouterConfig_serviceNamesUpdated(meshName, vrName),
+				Config: testAccAppmeshVirtualRouterConfig_updated(meshName, vrName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppmeshVirtualRouterExists(
 						resourceName, &vr),
@@ -128,12 +132,20 @@ func testAccAwsAppmeshVirtualRouter_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(
-						resourceName, "spec.0.service_names.#", "2"),
+						resourceName, "spec.0.listener.#", "1"),
 					resource.TestCheckResourceAttr(
-						resourceName, "spec.0.service_names.3826429429", "serviceb1.simpleapp.local"),
+						resourceName, "spec.0.listener.563508454.port_mapping.#", "1"),
 					resource.TestCheckResourceAttr(
-						resourceName, "spec.0.service_names.3079206513", "serviceb2.simpleapp.local"),
+						resourceName, "spec.0.listener.563508454.port_mapping.0.port", "8081"),
+					resource.TestCheckResourceAttr(
+						resourceName, "spec.0.listener.563508454.port_mapping.0.protocol", "http"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateId:     fmt.Sprintf("%s/%s", meshName, vrName),
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -151,10 +163,10 @@ func testAccCheckAppmeshVirtualRouterDestroy(s *terraform.State) error {
 			MeshName:          aws.String(rs.Primary.Attributes["mesh_name"]),
 			VirtualRouterName: aws.String(rs.Primary.Attributes["name"]),
 		})
+		if isAWSErr(err, appmesh.ErrCodeNotFoundException, "") {
+			continue
+		}
 		if err != nil {
-			if isAWSErr(err, appmesh.ErrCodeNotFoundException, "") {
-				return nil
-			}
 			return err
 		}
 		return fmt.Errorf("still exist.")
@@ -189,7 +201,7 @@ func testAccCheckAppmeshVirtualRouterExists(name string, v *appmesh.VirtualRoute
 	}
 }
 
-func testAccAppmeshVirtualRouterConfig(meshName, vrName string) string {
+func testAccAppmeshVirtualRouterConfig_basic(meshName, vrName string) string {
 	return fmt.Sprintf(`
 resource "aws_appmesh_mesh" "foo" {
   name = "%s"
@@ -200,13 +212,18 @@ resource "aws_appmesh_virtual_router" "foo" {
   mesh_name = "${aws_appmesh_mesh.foo.id}"
 
   spec {
-    service_names = ["serviceb.simpleapp.local"]
+    listener {
+      port_mapping {
+        port     = 8080
+        protocol = "http"
+      }
+    }
   }
 }
 `, meshName, vrName)
 }
 
-func testAccAppmeshVirtualRouterConfig_serviceNamesUpdated(meshName, vrName string) string {
+func testAccAppmeshVirtualRouterConfig_updated(meshName, vrName string) string {
 	return fmt.Sprintf(`
 resource "aws_appmesh_mesh" "foo" {
   name = "%s"
@@ -217,7 +234,12 @@ resource "aws_appmesh_virtual_router" "foo" {
   mesh_name = "${aws_appmesh_mesh.foo.id}"
 
   spec {
-    service_names = ["serviceb1.simpleapp.local", "serviceb2.simpleapp.local"]
+    listener {
+      port_mapping {
+        port     = 8081
+        protocol = "http"
+      }
+    }
   }
 }
 `, meshName, vrName)

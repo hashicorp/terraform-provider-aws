@@ -625,12 +625,12 @@ func flattenOriginGroups(ogs *cloudfront.OriginGroups) *schema.Set {
 }
 
 func expandOriginGroup(m map[string]interface{}) *cloudfront.OriginGroup {
-	failoverCriteria := m["failover_criteria"].(*schema.Set)
-	members := m["members"].(*schema.Set)
+	failoverCriteria := m["failover_criteria"].([]interface{})[0].(map[string]interface{})
+	members := m["member"].([]interface{})
 	originGroup := &cloudfront.OriginGroup{
 		Id:               aws.String(m["origin_id"].(string)),
 		FailoverCriteria: expandOriginGroupFailoverCriteria(failoverCriteria),
-		Members:          expandOriginGroupMembers(members),
+		Members:          expandMembers(members),
 	}
 	return originGroup
 }
@@ -642,17 +642,16 @@ func flattenOriginGroup(og *cloudfront.OriginGroup) map[string]interface{} {
 		m["failover_criteria"] = flattenOriginGroupFailoverCriteria(og.FailoverCriteria)
 	}
 	if og.Members != nil {
-		m["members"] = flattenOriginGroupMembers(og.Members)
+		m["member"] = flattenOriginGroupMembers(og.Members)
 	}
 	return m
 }
 
-func expandOriginGroupFailoverCriteria(s *schema.Set) *cloudfront.OriginGroupFailoverCriteria {
+func expandOriginGroupFailoverCriteria(m map[string]interface{}) *cloudfront.OriginGroupFailoverCriteria {
 	failoverCriteria := &cloudfront.OriginGroupFailoverCriteria{}
-	m := s.List()[0].(map[string]interface{})
 	if v, ok := m["status_codes"]; ok {
 		codes := []*int64{}
-		for _, code := range v.([]interface{}) {
+		for _, code := range v.(*schema.Set).List() {
 			codes = append(codes, aws.Int64(int64(code.(int))))
 		}
 		failoverCriteria.StatusCodes = &cloudfront.StatusCodes{
@@ -663,23 +662,26 @@ func expandOriginGroupFailoverCriteria(s *schema.Set) *cloudfront.OriginGroupFai
 	return failoverCriteria
 }
 
-func flattenOriginGroupFailoverCriteria(ogfc *cloudfront.OriginGroupFailoverCriteria) *schema.Set {
+func flattenOriginGroupFailoverCriteria(ogfc *cloudfront.OriginGroupFailoverCriteria) []interface{} {
 	m := make(map[string]interface{})
-	codes := []interface{}{}
-	for _, code := range ogfc.StatusCodes.Items {
-		codes = append(codes, *code)
+	if ogfc.StatusCodes.Items != nil {
+		l := []interface{}{}
+		for _, i := range ogfc.StatusCodes.Items {
+			l = append(l, int(*i))
+		}
+		m["status_codes"] = schema.NewSet(schema.HashInt, l)
 	}
-	m["status_codes"] = codes
-	s := []interface{}{m}
-	return schema.NewSet(failoverCriteriaHash, s)
+	return []interface{}{m}
 }
 
-func expandOriginGroupMembers(s *schema.Set) *cloudfront.OriginGroupMembers {
-	members := s.List()[0].(map[string]interface{})["ordered_origin_group_member"].([]interface{})
+func expandMembers(l []interface{}) *cloudfront.OriginGroupMembers {
 	qty := 0
 	items := []*cloudfront.OriginGroupMember{}
-	for _, v := range members {
-		items = append(items, expandOriginGroupMember(v.(map[string]interface{})))
+	for _, m := range l {
+		ogm := &cloudfront.OriginGroupMember{
+			OriginId: aws.String(m.(map[string]interface{})["origin_id"].(string)),
+		}
+		items = append(items, ogm)
 		qty++
 	}
 	return &cloudfront.OriginGroupMembers{
@@ -688,28 +690,15 @@ func expandOriginGroupMembers(s *schema.Set) *cloudfront.OriginGroupMembers {
 	}
 }
 
-func flattenOriginGroupMembers(ogm *cloudfront.OriginGroupMembers) *schema.Set {
+func flattenOriginGroupMembers(ogm *cloudfront.OriginGroupMembers) []interface{} {
 	s := []interface{}{}
-	for _, v := range ogm.Items {
-		s = append(s, flattenOriginGroupMember(v))
+	for _, i := range ogm.Items {
+		m := map[string]interface{}{
+			"origin_id": *i.OriginId,
+		}
+		s = append(s, m)
 	}
-	m := []interface{}{map[string]interface{}{
-		"ordered_origin_group_member": s,
-	}}
-	return schema.NewSet(membersHash, m)
-}
-
-func expandOriginGroupMember(m map[string]interface{}) *cloudfront.OriginGroupMember {
-	return &cloudfront.OriginGroupMember{
-		OriginId: aws.String(m["origin_id"].(string)),
-	}
-}
-
-func flattenOriginGroupMember(ogms *cloudfront.OriginGroupMember) map[string]interface{} {
-	m := map[string]interface{}{
-		"origin_id": *ogms.OriginId,
-	}
-	return m
+	return s
 }
 
 // Assemble the hash for the aws_cloudfront_distribution origin
@@ -745,28 +734,23 @@ func originGroupHash(v interface{}) int {
 	m := v.(map[string]interface{})
 	buf.WriteString(fmt.Sprintf("%s-", m["origin_id"].(string)))
 	if v, ok := m["failover_criteria"]; ok {
-		if s := v.(*schema.Set).List(); len(s) > 0 {
-			buf.WriteString(fmt.Sprintf("%d-", failoverCriteriaHash(s[0])))
+		if l := v.([]interface{}); len(l) > 0 {
+			buf.WriteString(fmt.Sprintf("%d-", failoverCriteriaHash(l[0])))
 		}
 	}
-	if v, ok := m["members"]; ok {
-		if members := v.(*schema.Set).List(); len(members) > 0 {
+	if v, ok := m["member"]; ok {
+		if members := v.([]interface{}); len(members) > 0 {
 			for _, member := range members {
-				buf.WriteString(fmt.Sprintf("%d-", membersHash(member)))
+				buf.WriteString(fmt.Sprintf("%d-", memberHash(member)))
 			}
 		}
 	}
 	return hashcode.String(buf.String())
 }
 
-func membersHash(v interface{}) int {
+func memberHash(v interface{}) int {
 	var buf bytes.Buffer
-	m := v.(map[string]interface{})["ordered_origin_group_member"]
-	gm := m.([]interface{})
-	for _, member := range gm {
-		buf.WriteString(fmt.Sprintf("%s-", member.(map[string]interface{})["origin_id"]))
-	}
-
+	buf.WriteString(fmt.Sprintf("%s-", v.(map[string]interface{})["origin_id"]))
 	return hashcode.String(buf.String())
 }
 
@@ -774,8 +758,7 @@ func failoverCriteriaHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 	if v, ok := m["status_codes"]; ok {
-		codes := sortIntInterfaceSlice(v.([]interface{}))
-		for _, w := range codes {
+		for _, w := range v.(*schema.Set).List() {
 			buf.WriteString(fmt.Sprintf("%d-", w))
 		}
 	}

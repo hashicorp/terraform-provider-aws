@@ -21,7 +21,7 @@ const (
 	// ErrCodeForbiddenException for service response error code
 	// "ForbiddenException".
 	//
-	// You do not have permissions to perform this action.
+	// You don't have permissions to perform this action.
 	ErrCodeForbiddenException = "ForbiddenException"
 
 	// ErrCodeInternalServerErrorException for service response error code
@@ -42,15 +42,14 @@ const (
 	// ErrCodeNotFoundException for service response error code
 	// "NotFoundException".
 	//
-	// The specified resource does not exist. Check your request syntax and try
-	// again.
+	// The specified resource doesn't exist. Check your request syntax and try again.
 	ErrCodeNotFoundException = "NotFoundException"
 
 	// ErrCodeResourceInUseException for service response error code
 	// "ResourceInUseException".
 	//
-	// You cannot delete the specified resource because it is in use or required
-	// by another resource.
+	// You can't delete the specified resource because it's in use or required by
+	// another resource.
 	ErrCodeResourceInUseException = "ResourceInUseException"
 
 	// ErrCodeServiceUnavailableException for service response error code
