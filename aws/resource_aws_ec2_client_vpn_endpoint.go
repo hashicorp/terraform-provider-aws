@@ -273,7 +273,7 @@ func resourceAwsEc2ClientVpnEndpointCreate(d *schema.ResourceData, meta interfac
 			stateConf := &resource.StateChangeConf{
 				Pending: []string{ec2.AssociationStatusCodeAssociating},
 				Target:  []string{ec2.AssociationStatusCodeAssociated},
-				Refresh: clientVpnNetworkAssociationRefreshFunc(conn, aws.StringValue(netResp.AssociationId), d.Id()),
+				Refresh: clientVpnNetworkAssociationRefresh(conn, aws.StringValue(netResp.AssociationId), d.Id()),
 				Timeout: d.Timeout(schema.TimeoutCreate),
 			}
 
@@ -425,7 +425,7 @@ func resourceAwsEc2ClientVpnEndpointDelete(d *schema.ResourceData, meta interfac
 		stateConf := &resource.StateChangeConf{
 			Pending: []string{ec2.AssociationStatusCodeDisassociating},
 			Target:  []string{ec2.AssociationStatusCodeDisassociated},
-			Refresh: clientVpnNetworkAssociationRefreshFunc(conn, aws.StringValue(n.AssociationId), d.Id()),
+			Refresh: clientVpnNetworkAssociationRefresh(conn, aws.StringValue(n.AssociationId), d.Id()),
 			Timeout: d.Timeout(schema.TimeoutDelete),
 		}
 
@@ -524,7 +524,7 @@ func resourceAwsEc2ClientVpnEndpointUpdate(d *schema.ResourceData, meta interfac
 				stateConf := &resource.StateChangeConf{
 					Pending: []string{ec2.AssociationStatusCodeDisassociating},
 					Target:  []string{ec2.AssociationStatusCodeDisassociated},
-					Refresh: clientVpnNetworkAssociationRefreshFunc(conn, aws.StringValue(r.AssociationId), d.Id()),
+					Refresh: clientVpnNetworkAssociationRefresh(conn, aws.StringValue(r.AssociationId), d.Id()),
 					Timeout: d.Timeout(schema.TimeoutDelete),
 				}
 
@@ -547,7 +547,7 @@ func resourceAwsEc2ClientVpnEndpointUpdate(d *schema.ResourceData, meta interfac
 				stateConf := &resource.StateChangeConf{
 					Pending: []string{ec2.AssociationStatusCodeAssociating},
 					Target:  []string{ec2.AssociationStatusCodeAssociated},
-					Refresh: clientVpnNetworkAssociationRefreshFunc(conn, aws.StringValue(addResp.AssociationId), d.Id()),
+					Refresh: clientVpnNetworkAssociationRefresh(conn, aws.StringValue(addResp.AssociationId), d.Id()),
 					Timeout: d.Timeout(schema.TimeoutCreate),
 				}
 
@@ -642,7 +642,7 @@ func resourceAwsEc2ClientVpnEndpointUpdate(d *schema.ResourceData, meta interfac
 	return resourceAwsEc2ClientVpnEndpointRead(d, meta)
 }
 
-func clientVpnNetworkAssociationRefreshFunc(conn *ec2.EC2, cvnaID string, cvepID string) resource.StateRefreshFunc {
+func clientVpnNetworkAssociationRefresh(conn *ec2.EC2, cvnaID string, cvepID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		resp, err := conn.DescribeClientVpnTargetNetworks(&ec2.DescribeClientVpnTargetNetworksInput{
 			ClientVpnEndpointId: aws.String(cvepID),
