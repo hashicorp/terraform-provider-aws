@@ -148,10 +148,10 @@ func multiOriginConf() *schema.Set {
 
 func originGroupWithCustomConf(id string) map[string]interface{} {
 	return map[string]interface{}{
-			"failover_criteria": failoverCriteria(),
-			"members":           originGroupMemberList(),
-			"origin_id":         id,
-		}
+		"failover_criteria": failoverCriteria(),
+		"members":           originGroupMemberList(),
+		"origin_id":         id,
+	}
 }
 
 func failoverCriteria() []interface{} {
