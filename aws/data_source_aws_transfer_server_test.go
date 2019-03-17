@@ -20,7 +20,10 @@ func TestAccDataSourceAwsTransferServer_basic(t *testing.T) {
 			{
 				Config: testAccDataSourceAwsTransferServerConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccDataSourceAwsTransferServerCheck(datasourceName, resourceName),
+					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, "endpoint", resourceName, "endpoint"),
+					resource.TestCheckResourceAttrPair(datasourceName, "identity_provider_type", resourceName, "identity_provider_type"),
+					resource.TestCheckResourceAttrPair(datasourceName, "logging_role", resourceName, "logging_role"),
 				),
 			},
 		},
@@ -39,7 +42,10 @@ func TestAccDataSourceAwsTransferServer_service_managed(t *testing.T) {
 			{
 				Config: testAccDataSourceAwsTransferServerConfig_service_managed(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccDataSourceAwsTransferServerCheck(datasourceName, resourceName),
+					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, "endpoint", resourceName, "endpoint"),
+					resource.TestCheckResourceAttrPair(datasourceName, "identity_provider_type", resourceName, "identity_provider_type"),
+					resource.TestCheckResourceAttrPair(datasourceName, "logging_role", resourceName, "logging_role"),
 				),
 			},
 		},
@@ -58,7 +64,12 @@ func TestAccDataSourceAwsTransferServer_apigateway(t *testing.T) {
 			{
 				Config: testAccDataSourceAwsTransferServerConfig_apigateway(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccDataSourceAwsTransferServerCheck(datasourceName, resourceName),
+					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, "endpoint", resourceName, "endpoint"),
+					resource.TestCheckResourceAttrPair(datasourceName, "identity_provider_type", resourceName, "identity_provider_type"),
+					resource.TestCheckResourceAttrPair(datasourceName, "invocation_role", resourceName, "invocation_role"),
+					resource.TestCheckResourceAttrPair(datasourceName, "logging_role", resourceName, "logging_role"),
+					resource.TestCheckResourceAttrPair(datasourceName, "url", resourceName, "url"),
 				),
 			},
 		},

@@ -28,22 +28,18 @@ func dataSourceAwsTransferServer() *schema.Resource {
 			"invocation_role": {
 				Type:     schema.TypeString,
 				Computed: true,
-				Optional: true,
 			},
 			"url": {
 				Type:     schema.TypeString,
 				Computed: true,
-				Optional: true,
 			},
 			"identity_provider_type": {
 				Type:     schema.TypeString,
 				Computed: true,
-				Optional: true,
 			},
 			"logging_role": {
 				Type:     schema.TypeString,
 				Computed: true,
-				Optional: true,
 			},
 		},
 	}
@@ -61,11 +57,7 @@ func dataSourceAwsTransferServerRead(d *schema.ResourceData, meta interface{}) e
 
 	resp, err := conn.DescribeServer(input)
 	if err != nil {
-		if isAWSErr(err, transfer.ErrCodeResourceNotFoundException, "") {
-			log.Printf("[ERROR] Transfer Server (%s) not found", serverID)
-			return nil
-		}
-		return err
+		return fmt.Errorf("error describing Transfer Server (%s): %s", serverID, err)
 	}
 
 	endpoint := fmt.Sprintf("%s.server.transfer.%s.amazonaws.com", serverID, meta.(*AWSClient).region)
