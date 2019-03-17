@@ -144,6 +144,53 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
 }
 ```
 
+The following example below creates a Cloudfront distribution with an origin group for failover routing:
+
+```hcl
+resource "aws_cloudfront_distribution" "s3_distribution" {
+  origin_group {
+    origin_id = "groupS3"
+
+    failover_criteria {
+      status_codes = [403, 404, 500, 502]
+    }
+
+    member {
+      origin_id = "primaryS3"
+    }
+
+    member {
+      origin_id = "failoverS3"
+    }
+  }
+
+  origin {
+    domain_name = "${aws_s3_bucket.primary.bucket_regional_domain_name}"
+    origin_id   = "primaryS3"
+
+    s3_origin_config {
+      origin_access_identity = "${aws_cloudfront_origin_access_identity.default.cloudfront_access_identity_path}"
+    }
+  }
+
+  origin {
+    domain_name = "${aws_s3_bucket.failover.bucket_regional_domain_name}"
+    origin_id   = "failoverS3"
+
+    s3_origin_config {
+      origin_access_identity = "${aws_cloudfront_origin_access_identity.default.cloudfront_access_identity_path}"
+    }
+  }
+
+  default_cache_behavior {
+    # ... other configuration ...
+    target_origin_id       = "groupS3"
+  }
+
+  # ... other configuration ...
+}
+```
+
 ## Argument Reference
 
 The CloudFront distribution argument layout is a complex structure composed
@@ -184,6 +231,9 @@ of several sub-resources - these resources are laid out below.
 
   * `origin` (Required) - One or more [origins](#origin-arguments) for this
     distribution (multiples allowed).
+
+  * `origin_group` (Required) - One or more [origin_group](#origin-group-arguments) for this
+  distribution (multiples allowed).  
 
   * `price_class` (Optional) - The price class for this distribution. One of
     `PriceClass_All`, `PriceClass_200`, `PriceClass_100`
@@ -372,7 +422,7 @@ argument is not required.
 
   * `s3_origin_config` - The [CloudFront S3 origin](#s3-origin-config-arguments)
     configuration information. If a custom origin is required, use
-    `custom_origin_config` instead.
+    `custom_origin_config` instead.    
 
 ##### Custom Origin Config Arguments
 
@@ -395,6 +445,22 @@ argument is not required.
 
 * `origin_access_identity` (Optional) - The [CloudFront origin access
   identity][5] to associate with the origin.
+
+#### Origin Group Arguments
+
+  * `origin_id` (Required) - A unique identifier for the origin group.
+
+  * `failover_criteria` (Required) - The [failover criteria](#failover-criteria-arguments) for when to failover to the secondary origin
+
+  * `member` (Required) - Ordered [member](#member-arguments) configuration blocks assigned to the origin group, where the first member is the primary origin. Minimum 2.
+
+##### Failover Criteria Arguments
+
+* `status_codes` (Required) - A list of HTTP status codes for the origin group
+
+##### Member Arguments
+
+* `origin_id` (Required) - The unique identifier of the member origin
 
 #### Restrictions Arguments
 
