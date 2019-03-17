@@ -12,9 +12,10 @@ import (
 
 func resourceAwsEc2ClientVpnNetworkAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEc2ClientVpnNetworkAssociationCreate,
-		Read:   resourceAwsEc2ClientVpnNetworkAssociationRead,
-		Delete: resourceAwsEc2ClientVpnNetworkAssociationDelete,
+		Create:             resourceAwsEc2ClientVpnNetworkAssociationCreate,
+		Read:               resourceAwsEc2ClientVpnNetworkAssociationRead,
+		Delete:             resourceAwsEc2ClientVpnNetworkAssociationDelete,
+		DeprecationMessage: "WARN: aws_ec2_client_vpn_network_association functionality has been consolidated into aws_ec2_client_vpn_endpoint.  This resource will be removed in an upcoming version of this provider.",
 
 		Schema: map[string]*schema.Schema{
 			"client_vpn_endpoint_id": {
