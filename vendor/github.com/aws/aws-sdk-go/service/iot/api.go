@@ -18935,6 +18935,9 @@ type CreateOTAUpdateInput struct {
 	// RoleArn is a required field
 	RoleArn *string `locationName:"roleArn" min:"20" type:"string" required:"true"`
 
+	// Metadata which can be used to manage updates.
+	Tags []*Tag `locationName:"tags" type:"list"`
+
 	// Specifies whether the update will continue to run (CONTINUOUS), or will be
 	// complete after all the things specified as targets have completed the update
 	// (SNAPSHOT). If continuous, the update may also be run on a thing when a change
@@ -19041,6 +19044,12 @@ func (s *CreateOTAUpdateInput) SetOtaUpdateId(v string) *CreateOTAUpdateInput {
 // SetRoleArn sets the RoleArn field's value.
 func (s *CreateOTAUpdateInput) SetRoleArn(v string) *CreateOTAUpdateInput {
 	s.RoleArn = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateOTAUpdateInput) SetTags(v []*Tag) *CreateOTAUpdateInput {
+	s.Tags = v
 	return s
 }
 
@@ -19737,6 +19746,9 @@ type CreateStreamInput struct {
 	//
 	// StreamId is a required field
 	StreamId *string `location:"uri" locationName:"streamId" min:"1" type:"string" required:"true"`
+
+	// Metadata which can be used to manage streams.
+	Tags []*Tag `locationName:"tags" type:"list"`
 }
 
 // String returns the string representation
@@ -19808,6 +19820,12 @@ func (s *CreateStreamInput) SetRoleArn(v string) *CreateStreamInput {
 // SetStreamId sets the StreamId field's value.
 func (s *CreateStreamInput) SetStreamId(v string) *CreateStreamInput {
 	s.StreamId = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateStreamInput) SetTags(v []*Tag) *CreateStreamInput {
+	s.Tags = v
 	return s
 }
 
