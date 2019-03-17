@@ -20,6 +20,7 @@ ENHANCEMENTS:
 * resource/aws_appmesh_virtual_router: Add `spec` configuration block `listener` configuration block [GH-7858]
 * resource/aws_codebuild_project: Add `project_environment` configuration block `image_pull_credentials_type` argument (support cross-account images) [GH-7458]
 * resource/aws_ecr_repository_policy: Support resource import [GH-7974]
+* resource/aws_iam_access_key: Support `status` updates (support disabling/enabling access keys) [GH-7961]
 * resource/aws_s3_bucket_inventory: Support plan-time validation of `optional_fields` values `ObjectLockRetainUntilDate`, `ObjectLockMode` and `ObjectLockLegalHoldStatus` [GH-7952]
 * resource/aws_ssm_association: Add `compliance_severity` argument [GH-7852]
 
