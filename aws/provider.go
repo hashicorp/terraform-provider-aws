@@ -253,6 +253,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_storagegateway_local_disk":          dataSourceAwsStorageGatewayLocalDisk(),
 			"aws_subnet":                             dataSourceAwsSubnet(),
 			"aws_subnet_ids":                         dataSourceAwsSubnetIDs(),
+			"aws_transfer_server":                    dataSourceAwsTransferServer(),
 			"aws_vpcs":                               dataSourceAwsVpcs(),
 			"aws_security_group":                     dataSourceAwsSecurityGroup(),
 			"aws_security_groups":                    dataSourceAwsSecurityGroups(),
