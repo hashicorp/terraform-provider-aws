@@ -20,6 +20,7 @@ ENHANCEMENTS:
 * resource/aws_appmesh_virtual_router: Add `spec` configuration block `listener` configuration block [GH-7858]
 * resource/aws_codebuild_project: Add `project_environment` configuration block `image_pull_credentials_type` argument (support cross-account images) [GH-7458]
 * resource/aws_ecr_repository_policy: Support resource import [GH-7974]
+* resource/aws_ssm_association: Add `compliance_severity` argument [GH-7852]
 
 ## 2.2.0 (March 15, 2019)
 
