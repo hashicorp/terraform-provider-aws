@@ -55,7 +55,8 @@ The following arguments are supported:
 * `user` - (Required) The IAM user to associate with this access key.
 * `pgp_key` - (Optional) Either a base-64 encoded PGP public key, or a
   keybase username in the form `keybase:some_person_that_exists`.
-* `status` - (Optional) The access key status to apply. Defaults to "Active".
+* `status` - (Optional) The access key status to apply. Defaults to `Active`.
+Valid values are `Active` and `Inactive`.
 
 ## Attributes Reference
 
