@@ -6,7 +6,6 @@ import (
 
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccDataSourceAwsTransferServer_basic(t *testing.T) {
@@ -74,42 +73,6 @@ func TestAccDataSourceAwsTransferServer_apigateway(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccDataSourceAwsTransferServerCheck(datasourceName, resourceName string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[datasourceName]
-		if !ok {
-			return fmt.Errorf("root module has no resource called %s", datasourceName)
-		}
-
-		transferServerRs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return fmt.Errorf("root module has no resource called %s", resourceName)
-		}
-
-		attrNames := []string{
-			"arn",
-			"endpoint",
-			"invocation_role",
-			"url",
-			"identity_provider_type",
-			"logging_role",
-		}
-
-		for _, attrName := range attrNames {
-			if rs.Primary.Attributes[attrName] != transferServerRs.Primary.Attributes[attrName] {
-				return fmt.Errorf(
-					"%s is %s; want %s",
-					attrName,
-					rs.Primary.Attributes[attrName],
-					transferServerRs.Primary.Attributes[attrName],
-				)
-			}
-		}
-
-		return nil
-	}
 }
 
 const testAccDataSourceAwsTransferServerConfig_basic = `
