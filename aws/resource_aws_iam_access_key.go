@@ -12,6 +12,7 @@ import (
 
 	"github.com/hashicorp/terraform/helper/encryption"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsIamAccessKey() *schema.Resource {
@@ -31,6 +32,10 @@ func resourceAwsIamAccessKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					iam.StatusTypeActive,
+					iam.StatusTypeInactive,
+				}, false),
 			},
 			"secret": {
 				Type:       schema.TypeString,
