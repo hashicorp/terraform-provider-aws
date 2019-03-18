@@ -222,13 +222,9 @@ func testAccAWSVpnConnectionDisappears(connection *ec2.VpnConnection) resource.T
 		_, err := conn.DeleteVpnConnection(&ec2.DeleteVpnConnectionInput{
 			VpnConnectionId: connection.VpnConnectionId,
 		})
+
 		if err != nil {
-			if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "InvalidVpnConnectionID.NotFound" {
-				return nil
-			}
-			if err != nil {
-				return err
-			}
+			return err
 		}
 
 		return resource.Retry(40*time.Minute, func() *resource.RetryError {
