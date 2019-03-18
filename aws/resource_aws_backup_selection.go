@@ -81,7 +81,7 @@ func resourceAwsBackupSelectionCreate(d *schema.ResourceData, meta interface{}) 
 
 	resp, err := conn.CreateBackupSelection(input)
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating Backup Selection: %s", err)
 	}
 
 	d.SetId(*resp.SelectionId)
@@ -99,7 +99,7 @@ func resourceAwsBackupSelectionRead(d *schema.ResourceData, meta interface{}) er
 
 	resp, err := conn.GetBackupSelection(input)
 	if err != nil {
-		return err
+		return fmt.Errorf("error reading Backup Selection: %s", err)
 	}
 
 	d.Set("plan_id", resp.BackupPlanId)
@@ -138,7 +138,7 @@ func resourceAwsBackupSelectionDelete(d *schema.ResourceData, meta interface{}) 
 
 	_, err := conn.DeleteBackupSelection(input)
 	if err != nil {
-		return err
+		return fmt.Errorf("error deleting Backup Selection: %s", err)
 	}
 
 	return nil

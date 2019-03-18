@@ -103,17 +103,17 @@ func testAccBackupSelectionConfigBase(rInt int) string {
 data "aws_caller_identity" "current" {}
 
 resource "aws_backup_vault" "test" {
-	name = "tf_acc_test_backup_vault_%d"
+  name = "tf_acc_test_backup_vault_%d"
 }
 
 resource "aws_backup_plan" "test" {
-	name = "tf_acc_test_backup_plan_%d"
+  name = "tf_acc_test_backup_plan_%d"
 
-	rule {
-		rule_name 			= "tf_acc_test_backup_rule_%d"
-		target_vault_name 	= "${aws_backup_vault.test.name}"
-		schedule			= "cron(0 12 * * ? *)"
-	}
+  rule {
+    rule_name         = "tf_acc_test_backup_rule_%d"
+    target_vault_name = "${aws_backup_vault.test.name}"
+    schedule          = "cron(0 12 * * ? *)"
+  }
 }
 `, rInt, rInt, rInt)
 }
@@ -121,20 +121,20 @@ resource "aws_backup_plan" "test" {
 func testAccBackupSelectionConfigBasic(rInt int) string {
 	return testAccBackupSelectionConfigBase(rInt) + fmt.Sprintf(`
 resource "aws_backup_selection" "test" {
-	plan_id 	= "${aws_backup_plan.test.id}"
+  plan_id  = "${aws_backup_plan.test.id}"
 
-	name 		= "tf_acc_test_backup_selection_%d"
-	iam_role 	= "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/service-role/AWSBackupDefaultServiceRole"
+  name     = "tf_acc_test_backup_selection_%d"
+  iam_role = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/service-role/AWSBackupDefaultServiceRole"
 
-	tag {
-		type = "STRINGEQUALS"
-		key = "foo"
-		value = "bar"
-	}
+  tag {
+    type = "STRINGEQUALS"
+    key = "foo"
+    value = "bar"
+  }
 
-	resources = [
-		"arn:aws:ec2:us-east-1:${data.aws_caller_identity.current.account_id}:volume/"
-	]
+  resources = [
+    "arn:aws:ec2:us-east-1:${data.aws_caller_identity.current.account_id}:volume/"
+  ]
 }
 `, rInt)
 }
@@ -142,26 +142,26 @@ resource "aws_backup_selection" "test" {
 func testAccBackupSelectionConfigWithTags(rInt int) string {
 	return testAccBackupSelectionConfigBase(rInt) + fmt.Sprintf(`
 resource "aws_backup_selection" "test" {
-	plan_id 	= "${aws_backup_plan.test.id}"
+  plan_id  = "${aws_backup_plan.test.id}"
 
-	name 		= "tf_acc_test_backup_selection_%d"
-	iam_role 	= "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/service-role/AWSBackupDefaultServiceRole"
+  name     = "tf_acc_test_backup_selection_%d"
+  iam_role = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/service-role/AWSBackupDefaultServiceRole"
 
-	tag {
-		type = "STRINGEQUALS"
-		key = "foo"
-		value = "bar"
-	}
+  tag {
+    type = "STRINGEQUALS"
+    key = "foo"
+    value = "bar"
+  }
 
-	tag {
-		type = "STRINGEQUALS"
-		key = "boo"
-		value = "far"
-	}
+  tag {
+    type = "STRINGEQUALS"
+    key = "boo"
+    value = "far"
+  }
 
-	resources = [
-		"arn:aws:ec2:us-east-1:${data.aws_caller_identity.current.account_id}:volume/"
-	]
+  resources = [
+    "arn:aws:ec2:us-east-1:${data.aws_caller_identity.current.account_id}:volume/"
+  ]
 }
 `, rInt)
 }
@@ -169,21 +169,21 @@ resource "aws_backup_selection" "test" {
 func testAccBackupSelectionConfigWithResources(rInt int) string {
 	return testAccBackupSelectionConfigBase(rInt) + fmt.Sprintf(`
 resource "aws_backup_selection" "test" {
-	plan_id 	= "${aws_backup_plan.test.id}"
+  plan_id  = "${aws_backup_plan.test.id}"
 
-	name 		= "tf_acc_test_backup_selection_%d"
-	iam_role 	= "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/service-role/AWSBackupDefaultServiceRole"
+  name     = "tf_acc_test_backup_selection_%d"
+  iam_role = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/service-role/AWSBackupDefaultServiceRole"
 
-	tag {
-		type = "STRINGEQUALS"
-		key = "foo"
-		value = "bar"
-	}
+  tag {
+    type = "STRINGEQUALS"
+    key = "foo"
+    value = "bar"
+  }
 
-	resources = [
-		"arn:aws:ec2:us-east-1:${data.aws_caller_identity.current.account_id}:volume/",
-		"arn:aws:elasticfilesystem:us-east-1:${data.aws_caller_identity.current.account_id}:file-system/"
-	]
+  resources = [
+    "arn:aws:ec2:us-east-1:${data.aws_caller_identity.current.account_id}:volume/",
+    "arn:aws:elasticfilesystem:us-east-1:${data.aws_caller_identity.current.account_id}:file-system/"
+  ]
 }
 `, rInt)
 }
