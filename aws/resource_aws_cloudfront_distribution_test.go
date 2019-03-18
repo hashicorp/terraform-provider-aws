@@ -738,9 +738,47 @@ func testAccAWSCloudFrontDistributionRetainConfig() string {
 	return ""
 }
 
+func TestAccAWSCloudFrontDistribution_OriginGroups(t *testing.T) {
+	var distribution cloudfront.Distribution
+	resourceName := "aws_cloudfront_distribution.failover_distribution"
+	ri := acctest.RandInt()
+	testConfig := fmt.Sprintf(testAccAWSCloudFrontDistributionOriginGroupsConfig, ri, originBucket, backupBucket, testAccAWSCloudFrontDistributionRetainConfig())
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudFrontDistributionExists(resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "origin_group.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "origin_group.1789175660.origin_id", "groupS3"),
+					resource.TestCheckResourceAttr(resourceName, "origin_group.1789175660.failover_criteria.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "origin_group.1789175660.failover_criteria.0.status_codes.#", "4"),
+					resource.TestCheckResourceAttr(resourceName, "origin_group.1789175660.failover_criteria.0.status_codes.1057413486", "403"),
+					resource.TestCheckResourceAttr(resourceName, "origin_group.1789175660.failover_criteria.0.status_codes.1883721641", "404"),
+					resource.TestCheckResourceAttr(resourceName, "origin_group.1789175660.failover_criteria.0.status_codes.2661388106", "502"),
+					resource.TestCheckResourceAttr(resourceName, "origin_group.1789175660.failover_criteria.0.status_codes.2895637960", "500"),
+					resource.TestCheckResourceAttr(resourceName, "origin_group.1789175660.member.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "origin_group.1789175660.member.0.origin_id", "primaryS3"),
+					resource.TestCheckResourceAttr(resourceName, "origin_group.1789175660.member.1.origin_id", "failoverS3"),
+				),
+			},
+		},
+	})
+}
+
 var originBucket = fmt.Sprintf(`
 resource "aws_s3_bucket" "s3_bucket_origin" {
 	bucket = "mybucket.${var.rand_id}"
+	acl = "public-read"
+}
+`)
+
+var backupBucket = fmt.Sprintf(`
+resource "aws_s3_bucket" "s3_backup_bucket_origin" {
+	bucket = "mybucket-backup.${var.rand_id}"
 	acl = "public-read"
 }
 `)
@@ -1421,6 +1459,61 @@ resource "aws_cloudfront_distribution" "main" {
 	%s
 }
 `, acctest.RandInt(), testAccAWSCloudFrontDistributionRetainConfig())
+
+var testAccAWSCloudFrontDistributionOriginGroupsConfig = `
+variable rand_id {
+	default = %d
+}
+# origin bucket
+%s
+# backup bucket
+%s
+resource "aws_cloudfront_distribution" "failover_distribution" {
+	origin {
+		domain_name = "${aws_s3_bucket.s3_bucket_origin.bucket_regional_domain_name}"
+		origin_id = "primaryS3"
+	}
+  origin {
+    domain_name = "${aws_s3_bucket.s3_backup_bucket_origin.bucket_regional_domain_name}"
+    origin_id = "failoverS3"
+  }
+  origin_group {
+    origin_id = "groupS3"
+    failover_criteria {
+      status_codes = [403, 404, 500, 502]
+    }
+    member {
+      origin_id = "primaryS3"
+    }
+    member {
+      origin_id = "failoverS3"
+    }
+  }
+  enabled = true
+  restrictions {
+		geo_restriction {
+			restriction_type = "whitelist"
+			locations = [ "US", "CA", "GB", "DE" ]
+		}
+	}
+	default_cache_behavior {
+		allowed_methods = [ "GET", "HEAD" ]
+		cached_methods = [ "GET", "HEAD" ]
+		target_origin_id = "groupS3"
+		forwarded_values {
+			query_string = false
+			cookies {
+				forward = "none"
+			}
+		}
+		viewer_protocol_policy = "allow-all"
+	}
+	viewer_certificate {
+		cloudfront_default_certificate = true
+	}
+	%s
+}
+`
 
 func testAccAWSCloudFrontDistributionConfigEnabled(enabled, retainOnDelete bool) string {
 	return fmt.Sprintf(`

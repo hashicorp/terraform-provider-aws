@@ -146,6 +146,32 @@ func multiOriginConf() *schema.Set {
 	return schema.NewSet(originHash, []interface{}{originWithCustomConf(), originWithS3Conf()})
 }
 
+func originGroupMembers() []interface{} {
+	return []interface{}{map[string]interface{}{
+		"origin_id": "S3origin",
+	}, map[string]interface{}{
+		"origin_id": "S3failover",
+	}}
+}
+
+func failoverStatusCodes() map[string]interface{} {
+	return map[string]interface{}{
+		"status_codes": schema.NewSet(schema.HashInt, []interface{}{503, 504}),
+	}
+}
+
+func originGroupConf() map[string]interface{} {
+	return map[string]interface{}{
+		"origin_id":         "groupS3",
+		"failover_criteria": []interface{}{failoverStatusCodes()},
+		"member":            originGroupMembers(),
+	}
+}
+
+func originGroupsConf() *schema.Set {
+	return schema.NewSet(originGroupHash, []interface{}{originGroupConf()})
+}
+
 func geoRestrictionWhitelistConf() map[string]interface{} {
 	return map[string]interface{}{
 		"restriction_type": "whitelist",
@@ -533,6 +559,53 @@ func TestCloudFrontStructure_flattenOrigins(t *testing.T) {
 	in := multiOriginConf()
 	origins := expandOrigins(in)
 	out := flattenOrigins(origins)
+	diff := in.Difference(out)
+
+	if len(diff.List()) > 0 {
+		t.Fatalf("Expected out to be %v, got %v, diff: %v", in, out, diff)
+	}
+}
+
+func TestCloudFrontStructure_expandOriginGroups(t *testing.T) {
+	in := originGroupsConf()
+	groups := expandOriginGroups(in)
+
+	if *groups.Quantity != 1 {
+		t.Fatalf("Expected origin group quantity to be %v, got %v", 1, *groups.Quantity)
+	}
+	originGroup := groups.Items[0]
+	if *originGroup.Id != "groupS3" {
+		t.Fatalf("Expected origin group id to be %v, got %v", "groupS3", *originGroup.Id)
+	}
+	if *originGroup.FailoverCriteria.StatusCodes.Quantity != 2 {
+		t.Fatalf("Expected 2 origin group status codes, got %v", *originGroup.FailoverCriteria.StatusCodes.Quantity)
+	}
+	statusCodes := originGroup.FailoverCriteria.StatusCodes.Items
+	for _, code := range statusCodes {
+		if *code != 503 && *code != 504 {
+			t.Fatalf("Expected origin group failover status code to either 503 or 504 got %v", *code)
+		}
+	}
+
+	if *originGroup.Members.Quantity > 2 {
+		t.Fatalf("Expected origin group member quantity to be 2, got %v", *originGroup.Members.Quantity)
+	}
+
+	members := originGroup.Members.Items
+	if len(members) > 2 {
+		t.Fatalf("Expected 2 origin group members, got %v", len(members))
+	}
+	for _, member := range members {
+		if *member.OriginId != "S3failover" && *member.OriginId != "S3origin" {
+			t.Fatalf("Expected origin group member to either S3failover or s3origin got %v", *member.OriginId)
+		}
+	}
+}
+
+func TestCloudFrontStructure_flattenOriginGroups(t *testing.T) {
+	in := originGroupsConf()
+	groups := expandOriginGroups(in)
+	out := flattenOriginGroups(groups)
 	diff := in.Difference(out)
 
 	if len(diff.List()) > 0 {
