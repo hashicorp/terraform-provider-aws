@@ -21,7 +21,6 @@ func resourceAwsAthenaWorkgroup() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: ,
 			},
 			"description": {
 				Type:     schema.TypeString,
