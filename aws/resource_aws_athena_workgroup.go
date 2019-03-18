@@ -46,7 +46,7 @@ func resourceAwsAthenaWorkgroup() *schema.Resource {
 			},
 			"encryption_option": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					athena.EncryptionOptionCseKms,
 					athena.EncryptionOptionSseKms,
@@ -75,7 +75,7 @@ func resourceAwsAthenaWorkgroupCreate(d *schema.ResourceData, meta interface{}) 
 		input.Description = aws.String(v.(string))
 	}
 
-	resp, err := conn.CreateWorkGroup(input)
+	_, err := conn.CreateWorkGroup(input)
 
 	if err != nil {
 		return err
@@ -106,12 +106,28 @@ func resourceAwsAthenaWorkgroupRead(d *schema.ResourceData, meta interface{}) er
 
 	d.Set("name", resp.WorkGroup.Name)
 	d.Set("description", resp.WorkGroup.Description)
-	d.Set("bytes_scanned_cutoff_per_query", resp.WorkGroup.Configuration.BytesScannedCutoffPerQuery)
-	d.Set("publish_cloudwatch_metrics_enabled", resp.WorkGroup.Configuration.PublishCloudWatchMetricsEnabled)
-	d.Set("enforce_workgroup_configuration", resp.WorkGroup.Configuration.EnforceWorkGroupConfiguration)
-	d.Set("output_location", resp.WorkGroup.Configuration.ResultConfiguration.OutputLocation)
-	d.Set("encryption_option", resp.WorkGroup.Configuration.ResultConfiguration.EncryptionConfiguration.EncryptionOption)
-	d.Set("kms_key", resp.WorkGroup.Configuration.ResultConfiguration.EncryptionConfiguration.KmsKey)
+	// d.Set("bytes_scanned_cutoff_per_query", resp.WorkGroup.Configuration.BytesScannedCutoffPerQuery)
+	// d.Set("publish_cloudwatch_metrics_enabled", resp.WorkGroup.Configuration.PublishCloudWatchMetricsEnabled)
+	// d.Set("enforce_workgroup_configuration", resp.WorkGroup.Configuration.EnforceWorkGroupConfiguration)
+	// d.Set("output_location", resp.WorkGroup.Configuration.ResultConfiguration.OutputLocation)
+	// d.Set("encryption_option", resp.WorkGroup.Configuration.ResultConfiguration.EncryptionConfiguration.EncryptionOption)
+	// d.Set("kms_key", resp.WorkGroup.Configuration.ResultConfiguration.EncryptionConfiguration.KmsKey)
 
+	return nil
+}
+
+func resourceAwsAthenaWorkgroupDelete(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).athenaconn
+
+	input := &athena.DeleteWorkGroupInput{
+		WorkGroup: aws.String(d.Id()),
+	}
+
+	_, err := conn.DeleteWorkGroup(input)
+
+	return err
+}
+
+func resourceAwsAthenaWorkgroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
