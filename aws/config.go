@@ -158,6 +158,7 @@ type Config struct {
 	EfsEndpoint              string
 	EsEndpoint               string
 	ElbEndpoint              string
+	FirehoseEndpoint         string
 	IamEndpoint              string
 	KinesisEndpoint          string
 	KinesisAnalyticsEndpoint string
@@ -405,7 +406,7 @@ func (c *Config) Client() (interface{}, error) {
 		elbv2conn:                           elbv2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.ElbEndpoint)})),
 		emrconn:                             emr.New(sess),
 		esconn:                              elasticsearch.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.EsEndpoint)})),
-		firehoseconn:                        firehose.New(sess),
+		firehoseconn:                        firehose.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.FirehoseEndpoint)})),
 		fmsconn:                             fms.New(sess),
 		fsxconn:                             fsx.New(sess),
 		gameliftconn:                        gamelift.New(sess),
