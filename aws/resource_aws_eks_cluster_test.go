@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strings"
 	"testing"
 	"time"
 
@@ -48,11 +47,6 @@ func testSweepEksClusters(region string) error {
 
 		for _, cluster := range out.Clusters {
 			name := aws.StringValue(cluster)
-
-			if !strings.HasPrefix(name, "tf-acc-test-") {
-				log.Printf("[INFO] Skipping EKS Cluster: %s", name)
-				continue
-			}
 
 			log.Printf("[INFO] Deleting EKS Cluster: %s", name)
 			err := deleteEksCluster(conn, name)

@@ -20,7 +20,8 @@ func sharedClientForRegion(region string) (interface{}, error) {
 	}
 
 	conf := &Config{
-		Region: region,
+		MaxRetries: 5,
+		Region:     region,
 	}
 
 	// configures a default client for the region, using the above env vars

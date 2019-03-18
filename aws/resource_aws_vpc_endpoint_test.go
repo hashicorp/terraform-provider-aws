@@ -168,6 +168,67 @@ func TestAccAWSVpcEndpoint_gatewayWithRouteTableAndPolicy(t *testing.T) {
 	})
 }
 
+func TestAccAWSVpcEndpoint_Gateway_Policy(t *testing.T) {
+	var endpoint ec2.VpcEndpoint
+	// This policy checks the DiffSuppressFunc
+	policy1 := `
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AmazonLinux2AMIRepositoryAccess",
+      "Principal": "*",
+      "Action": [
+        "s3:GetObject"
+      ],
+      "Effect": "Allow",
+      "Resource": [
+        "arn:aws:s3:::amazonlinux.*.amazonaws.com/*"
+      ]
+    }
+  ]
+}
+`
+	policy2 := `
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Sid": "AllowAll",
+    "Effect": "Allow",
+    "Principal": {"AWS": "*" },
+    "Action": "*",
+    "Resource": "*"
+  }]
+}
+`
+	resourceName := "aws_vpc_endpoint.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckVpcEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpcEndpointConfigGatewayPolicy(policy1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpcEndpointExists(resourceName, &endpoint),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccVpcEndpointConfigGatewayPolicy(policy2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpcEndpointExists(resourceName, &endpoint),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSVpcEndpoint_interfaceBasic(t *testing.T) {
 	var endpoint ec2.VpcEndpoint
 
@@ -506,6 +567,28 @@ resource "aws_vpc_endpoint" "ec2" {
   security_group_ids = ["${data.aws_security_group.default.id}"]
 }
 `
+
+func testAccVpcEndpointConfigGatewayPolicy(policy string) string {
+	return fmt.Sprintf(`
+data "aws_vpc_endpoint_service" "s3" {
+  service = "s3"
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-vpc-endpoint-gateway-policy"
+  }
+}
+
+resource "aws_vpc_endpoint" "test" {
+  policy       = <<POLICY%[1]sPOLICY
+  service_name = "${data.aws_vpc_endpoint_service.s3.service_name}"
+  vpc_id       = "${aws_vpc.test.id}"
+}
+`, policy)
+}
 
 const testAccVpcEndpointConfig_interfaceWithSubnet = `
 resource "aws_vpc" "foo" {

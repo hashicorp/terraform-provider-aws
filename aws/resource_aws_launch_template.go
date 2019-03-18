@@ -519,6 +519,10 @@ func resourceAwsLaunchTemplateCreate(d *schema.ResourceData, meta interface{}) e
 		LaunchTemplateData: launchTemplateData,
 	}
 
+	if v, ok := d.GetOk("description"); ok && v.(string) != "" {
+		launchTemplateOpts.VersionDescription = aws.String(v.(string))
+	}
+
 	resp, err := conn.CreateLaunchTemplate(launchTemplateOpts)
 	if err != nil {
 		return err
@@ -596,6 +600,8 @@ func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	log.Printf("[DEBUG] Received launch template version %q (version %d)", d.Id(), *lt.LatestVersionNumber)
+
+	d.Set("description", dltv.LaunchTemplateVersions[0].VersionDescription)
 
 	ltData := dltv.LaunchTemplateVersions[0].LaunchTemplateData
 
@@ -677,6 +683,10 @@ func resourceAwsLaunchTemplateUpdate(d *schema.ResourceData, meta interface{}) e
 			ClientToken:        aws.String(resource.UniqueId()),
 			LaunchTemplateId:   aws.String(d.Id()),
 			LaunchTemplateData: launchTemplateData,
+		}
+
+		if v, ok := d.GetOk("description"); ok && v.(string) != "" {
+			launchTemplateVersionOpts.VersionDescription = aws.String(v.(string))
 		}
 
 		_, createErr := conn.CreateLaunchTemplateVersion(launchTemplateVersionOpts)

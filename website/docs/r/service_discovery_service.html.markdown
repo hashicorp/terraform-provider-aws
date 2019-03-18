@@ -14,7 +14,9 @@ Provides a Service Discovery Service resource.
 
 ```hcl
 resource "aws_vpc" "example" {
-  cidr_block = "10.0.0.0/16"
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_support   = true
+  enable_dns_hostnames = true
 }
 
 resource "aws_service_discovery_private_dns_namespace" "example" {

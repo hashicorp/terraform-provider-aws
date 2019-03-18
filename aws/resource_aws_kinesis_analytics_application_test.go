@@ -126,6 +126,28 @@ func TestAccAWSKinesisAnalyticsApplication_updateCloudwatchLoggingOptions(t *tes
 	})
 }
 
+func TestAccAWSKinesisAnalyticsApplication_inputsKinesisFirehose(t *testing.T) {
+	var application kinesisanalytics.ApplicationDetail
+	resName := "aws_kinesis_analytics_application.test"
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_inputsKinesisFirehose(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resName, &application),
+					resource.TestCheckResourceAttr(resName, "inputs.#", "1"),
+					resource.TestCheckResourceAttr(resName, "inputs.0.kinesis_firehose.#", "1"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSKinesisAnalyticsApplication_inputsKinesisStream(t *testing.T) {
 	var application kinesisanalytics.ApplicationDetail
 	resName := "aws_kinesis_analytics_application.test"
@@ -255,6 +277,29 @@ func TestAccAWSKinesisAnalyticsApplication_outputsKinesisStream(t *testing.T) {
 					resource.TestCheckResourceAttr(resName, "outputs.0.kinesis_stream.#", "1"),
 					resource.TestCheckResourceAttr(resName, "outputs.0.schema.#", "1"),
 					resource.TestCheckResourceAttr(resName, "outputs.0.schema.0.record_format_type", "JSON"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSKinesisAnalyticsApplication_outputsMultiple(t *testing.T) {
+	var application kinesisanalytics.ApplicationDetail
+	resName := "aws_kinesis_analytics_application.test"
+	rInt1 := acctest.RandInt()
+	rInt2 := acctest.RandInt()
+	step := testAccKinesisAnalyticsApplication_prereq(rInt1) + testAccKinesisAnalyticsApplication_outputsMultiple(rInt1, rInt2)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: step,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resName, &application),
+					resource.TestCheckResourceAttr(resName, "outputs.#", "2"),
 				),
 			},
 		},
@@ -544,6 +589,93 @@ resource "aws_kinesis_analytics_application" "test" {
 `, rInt, streamName, rInt, rInt)
 }
 
+func testAccKinesisAnalyticsApplication_inputsKinesisFirehose(rInt int) string {
+	return fmt.Sprintf(`
+data "aws_iam_policy_document" "trust_firehose" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    principals {
+      type = "Service"
+      identifiers = ["firehose.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "firehose" {
+  name = "testAcc-firehose-%d"
+  assume_role_policy = "${data.aws_iam_policy_document.trust_firehose.json}"
+}
+
+data "aws_iam_policy_document" "trust_lambda" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    principals {
+      type = "Service"
+      identifiers = ["lambda.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "lambda" {
+  name = "testAcc-lambda-%d"
+  assume_role_policy = "${data.aws_iam_policy_document.trust_lambda.json}"
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = "testacc-%d"
+  acl = "private"
+}
+
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "testAcc-%d"
+  handler       = "exports.example"
+  role          = "${aws_iam_role.lambda.arn}"
+  runtime       = "nodejs8.10"
+}
+
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  name = "testAcc-%d"
+  destination = "extended_s3"
+  extended_s3_configuration {
+    role_arn = "${aws_iam_role.firehose.arn}"
+    bucket_arn = "${aws_s3_bucket.test.arn}"
+  }
+}
+
+resource "aws_kinesis_analytics_application" "test" {
+  name = "testAcc-%d"
+  code = "testCode\n"
+  inputs {
+    name_prefix = "test_prefix"
+    kinesis_firehose {
+      resource_arn = "${aws_kinesis_firehose_delivery_stream.test.arn}"
+      role_arn = "${aws_iam_role.test.arn}"
+    }
+    parallelism {
+      count = 1
+    }
+    schema {
+      record_columns {
+        mapping = "$.test"
+        name = "test"
+        sql_type = "VARCHAR(8)"
+      }
+      record_encoding = "UTF-8"
+      record_format {
+        mapping_parameters {
+          csv {
+            record_column_delimiter = ","
+            record_row_delimiter = "\n"
+          }
+        }
+      }
+    }
+  }
+}
+`, rInt, rInt, rInt, rInt, rInt, rInt)
+}
+
 func testAccKinesisAnalyticsApplication_inputsKinesisStream(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_stream" "test" {
@@ -648,6 +780,47 @@ resource "aws_kinesis_analytics_application" "test" {
   }
 }
 `, rInt, rInt)
+}
+
+func testAccKinesisAnalyticsApplication_outputsMultiple(rInt1, rInt2 int) string {
+	return fmt.Sprintf(`
+resource "aws_kinesis_stream" "test1" {
+  name = "testAcc-%d"
+  shard_count = 1
+}
+
+resource "aws_kinesis_stream" "test2" {
+  name = "testAcc-%d"
+  shard_count = 1
+}
+
+resource "aws_kinesis_analytics_application" "test" {
+  name = "testAcc-%d"
+  code = "testCode\n"
+
+  outputs {
+    name = "test_name1"
+    kinesis_stream {
+      resource_arn = "${aws_kinesis_stream.test1.arn}"
+      role_arn = "${aws_iam_role.test.arn}"
+    }
+    schema {
+      record_format_type = "JSON"
+    }
+  }
+
+  outputs {
+    name = "test_name2"
+    kinesis_stream {
+      resource_arn = "${aws_kinesis_stream.test2.arn}"
+      role_arn = "${aws_iam_role.test.arn}"
+    }
+    schema {
+      record_format_type = "JSON"
+    }
+  }
+}
+`, rInt1, rInt2, rInt1)
 }
 
 func testAccKinesisAnalyticsApplicationConfigOutputsLambda(rInt int) string {
@@ -825,7 +998,7 @@ resource "aws_kinesis_analytics_application" "test" {
 // this is used to set up the IAM role
 func testAccKinesisAnalyticsApplication_prereq(rInt int) string {
 	return fmt.Sprintf(`
-data "aws_iam_policy_document" "test" {
+data "aws_iam_policy_document" "trust" {
   statement {
     actions = ["sts:AssumeRole"]
     principals {
@@ -837,7 +1010,24 @@ data "aws_iam_policy_document" "test" {
 
 resource "aws_iam_role" "test" {
   name = "testAcc-%d"
-  assume_role_policy = "${data.aws_iam_policy_document.test.json}" 
+  assume_role_policy = "${data.aws_iam_policy_document.trust.json}" 
 }
-`, rInt)
+
+data "aws_iam_policy_document" "test" {
+  statement {
+    actions = ["firehose:*"]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_policy" "test" {
+  name = "testAcc-%d"
+  policy = "${data.aws_iam_policy_document.test.json}"
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  role = "${aws_iam_role.test.name}"
+  policy_arn = "${aws_iam_policy.test.arn}"
+}
+`, rInt, rInt)
 }

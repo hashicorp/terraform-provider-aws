@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -12,7 +13,9 @@ import (
 )
 
 func TestAccAwsBackupPlan_basic(t *testing.T) {
+	var plan backup.GetBackupPlanOutput
 	rInt := acctest.RandInt()
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -21,9 +24,47 @@ func TestAccAwsBackupPlan_basic(t *testing.T) {
 			{
 				Config: testAccBackupPlanConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsBackupPlanExists("aws_backup_plan.test"),
-					resource.TestCheckResourceAttrSet("aws_backup_plan.test", "arn"),
+					testAccCheckAwsBackupPlanExists("aws_backup_plan.test", &plan),
+					testAccMatchResourceAttrRegionalARN("aws_backup_plan.test", "arn", "backup", regexp.MustCompile(`backup-plan:.+`)),
 					resource.TestCheckResourceAttrSet("aws_backup_plan.test", "version"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAwsBackupPlan_withTags(t *testing.T) {
+	var plan backup.GetBackupPlanOutput
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsBackupPlanDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBackupPlanWithTag(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsBackupPlanExists("aws_backup_plan.test", &plan),
+					resource.TestCheckResourceAttr("aws_backup_plan.test", "tags.%", "1"),
+					resource.TestCheckResourceAttr("aws_backup_plan.test", "tags.env", "test"),
+				),
+			},
+			{
+				Config: testAccBackupPlanWithTags(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsBackupPlanExists("aws_backup_plan.test", &plan),
+					resource.TestCheckResourceAttr("aws_backup_plan.test", "tags.%", "2"),
+					resource.TestCheckResourceAttr("aws_backup_plan.test", "tags.env", "test"),
+					resource.TestCheckResourceAttr("aws_backup_plan.test", "tags.app", "widget"),
+				),
+			},
+			{
+				Config: testAccBackupPlanWithTag(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsBackupPlanExists("aws_backup_plan.test", &plan),
+					resource.TestCheckResourceAttr("aws_backup_plan.test", "tags.%", "1"),
+					resource.TestCheckResourceAttr("aws_backup_plan.test", "tags.env", "test"),
 				),
 			},
 		},
@@ -31,7 +72,9 @@ func TestAccAwsBackupPlan_basic(t *testing.T) {
 }
 
 func TestAccAwsBackupPlan_withRules(t *testing.T) {
+	var plan backup.GetBackupPlanOutput
 	rInt := acctest.RandInt()
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -40,10 +83,8 @@ func TestAccAwsBackupPlan_withRules(t *testing.T) {
 			{
 				Config: testAccBackupPlanWithRules(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsBackupPlanExists("aws_backup_plan.test"),
+					testAccCheckAwsBackupPlanExists("aws_backup_plan.test", &plan),
 					resource.TestCheckResourceAttr("aws_backup_plan.test", "rule.#", "2"),
-					resource.TestCheckResourceAttrSet("aws_backup_plan.test", "arn"),
-					resource.TestCheckResourceAttrSet("aws_backup_plan.test", "version"),
 				),
 			},
 		},
@@ -51,7 +92,9 @@ func TestAccAwsBackupPlan_withRules(t *testing.T) {
 }
 
 func TestAccAwsBackupPlan_withRuleRemove(t *testing.T) {
+	var plan backup.GetBackupPlanOutput
 	rInt := acctest.RandInt()
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -60,19 +103,15 @@ func TestAccAwsBackupPlan_withRuleRemove(t *testing.T) {
 			{
 				Config: testAccBackupPlanWithRules(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsBackupPlanExists("aws_backup_plan.test"),
+					testAccCheckAwsBackupPlanExists("aws_backup_plan.test", &plan),
 					resource.TestCheckResourceAttr("aws_backup_plan.test", "rule.#", "2"),
-					resource.TestCheckResourceAttrSet("aws_backup_plan.test", "arn"),
-					resource.TestCheckResourceAttrSet("aws_backup_plan.test", "version"),
 				),
 			},
 			{
 				Config: testAccBackupPlanConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsBackupPlanExists("aws_backup_plan.test"),
+					testAccCheckAwsBackupPlanExists("aws_backup_plan.test", &plan),
 					resource.TestCheckResourceAttr("aws_backup_plan.test", "rule.#", "1"),
-					resource.TestCheckResourceAttrSet("aws_backup_plan.test", "arn"),
-					resource.TestCheckResourceAttrSet("aws_backup_plan.test", "version"),
 				),
 			},
 		},
@@ -80,7 +119,9 @@ func TestAccAwsBackupPlan_withRuleRemove(t *testing.T) {
 }
 
 func TestAccAwsBackupPlan_withRuleAdd(t *testing.T) {
+	var plan backup.GetBackupPlanOutput
 	rInt := acctest.RandInt()
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -89,20 +130,57 @@ func TestAccAwsBackupPlan_withRuleAdd(t *testing.T) {
 			{
 				Config: testAccBackupPlanConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsBackupPlanExists("aws_backup_plan.test"),
+					testAccCheckAwsBackupPlanExists("aws_backup_plan.test", &plan),
 					resource.TestCheckResourceAttr("aws_backup_plan.test", "rule.#", "1"),
-					resource.TestCheckResourceAttrSet("aws_backup_plan.test", "arn"),
-					resource.TestCheckResourceAttrSet("aws_backup_plan.test", "version"),
 				),
 			},
 			{
 				Config: testAccBackupPlanWithRules(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsBackupPlanExists("aws_backup_plan.test"),
+					testAccCheckAwsBackupPlanExists("aws_backup_plan.test", &plan),
 					resource.TestCheckResourceAttr("aws_backup_plan.test", "rule.#", "2"),
-					resource.TestCheckResourceAttrSet("aws_backup_plan.test", "arn"),
-					resource.TestCheckResourceAttrSet("aws_backup_plan.test", "version"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAwsBackupPlan_withLifecycle(t *testing.T) {
+	var plan backup.GetBackupPlanOutput
+	rStr := "lifecycle_policy"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsBackupPlanDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBackupPlanWithLifecycle(rStr),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsBackupPlanExists("aws_backup_plan.test", &plan),
+					resource.TestCheckResourceAttr("aws_backup_plan.test", "rule.1028372010.lifecycle.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAwsBackupPlan_disappears(t *testing.T) {
+	var plan backup.GetBackupPlanOutput
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsBackupPlanDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBackupPlanConfig(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsBackupPlanExists("aws_backup_plan.test", &plan),
+					testAccCheckAwsBackupPlanDisappears(&plan),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -131,12 +209,46 @@ func testAccCheckAwsBackupPlanDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAwsBackupPlanExists(name string) resource.TestCheckFunc {
+func testAccCheckAwsBackupPlanDisappears(backupPlan *backup.GetBackupPlanOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		_, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("not found: %s, %v", name, s.RootModule().Resources)
+		conn := testAccProvider.Meta().(*AWSClient).backupconn
+
+		input := &backup.DeleteBackupPlanInput{
+			BackupPlanId: backupPlan.BackupPlanId,
 		}
+
+		_, err := conn.DeleteBackupPlan(input)
+
+		return err
+	}
+}
+
+func testAccCheckAwsBackupPlanExists(name string, plan *backup.GetBackupPlanOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[name]
+
+		if !ok {
+			return fmt.Errorf("Not found: %s", name)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("Resource ID is not set")
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).backupconn
+
+		input := &backup.GetBackupPlanInput{
+			BackupPlanId: aws.String(rs.Primary.ID),
+		}
+
+		output, err := conn.GetBackupPlan(input)
+
+		if err != nil {
+			return err
+		}
+
+		*plan = *output
+
 		return nil
 	}
 }
@@ -144,41 +256,108 @@ func testAccCheckAwsBackupPlanExists(name string) resource.TestCheckFunc {
 func testAccBackupPlanConfig(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_backup_vault" "test" {
-	name = "tf_acc_test_backup_vault_%d"
+  name = "tf_acc_test_backup_vault_%d"
 }
 
 resource "aws_backup_plan" "test" {
-	name = "tf_acc_test_backup_plan_%d"
+  name = "tf_acc_test_backup_plan_%d"
 
-	rule {
-		rule_name 			= "tf_acc_test_backup_rule_%d"
-		target_vault_name 	= "${aws_backup_vault.test.name}"
-		schedule			= "cron(0 12 * * ? *)"
-	}
+  rule {
+    rule_name          = "tf_acc_test_backup_rule_%d"
+    target_vault_name  = "${aws_backup_vault.test.name}"
+    schedule           = "cron(0 12 * * ? *)"
+  }
 }
 `, randInt, randInt, randInt)
+}
+
+func testAccBackupPlanWithTag(randInt int) string {
+	return fmt.Sprintf(`
+resource "aws_backup_vault" "test" {
+  name = "tf_acc_test_backup_vault_%d"
+}
+
+resource "aws_backup_plan" "test" {
+  name = "tf_acc_test_backup_plan_%d"
+
+  rule {
+    rule_name          = "tf_acc_test_backup_rule_%d"
+    target_vault_name  = "${aws_backup_vault.test.name}"
+    schedule           = "cron(0 12 * * ? *)"
+  }
+
+  tags {
+	  env = "test"
+  }
+}
+`, randInt, randInt, randInt)
+}
+
+func testAccBackupPlanWithTags(randInt int) string {
+	return fmt.Sprintf(`
+resource "aws_backup_vault" "test" {
+  name = "tf_acc_test_backup_vault_%d"
+}
+
+resource "aws_backup_plan" "test" {
+  name = "tf_acc_test_backup_plan_%d"
+
+  rule {
+    rule_name          = "tf_acc_test_backup_rule_%d"
+    target_vault_name  = "${aws_backup_vault.test.name}"
+    schedule           = "cron(0 12 * * ? *)"
+  }
+
+  tags {
+	  env = "test"
+	  app = "widget"
+  }
+}
+`, randInt, randInt, randInt)
+}
+
+func testAccBackupPlanWithLifecycle(stringID string) string {
+	return fmt.Sprintf(`
+resource "aws_backup_vault" "test" {
+  name = "tf_acc_test_backup_vault_%s"
+}
+
+resource "aws_backup_plan" "test" {
+  name = "tf_acc_test_backup_plan_%s"
+
+  rule {
+    rule_name          = "tf_acc_test_backup_rule_%s"
+    target_vault_name  = "${aws_backup_vault.test.name}"
+    schedule           = "cron(0 12 * * ? *)"
+    lifecycle {
+        cold_storage_after = 30
+        delete_after       = 160
+    }
+  }
+}
+`, stringID, stringID, stringID)
 }
 
 func testAccBackupPlanWithRules(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_backup_vault" "test" {
-	name = "tf_acc_test_backup_vault_%d"
+  name = "tf_acc_test_backup_vault_%d"
 }
 
 resource "aws_backup_plan" "test" {
-	name = "tf_acc_test_backup_plan_%d"
+  name = "tf_acc_test_backup_plan_%d"
 
-	rule {
-		rule_name 			= "tf_acc_test_backup_rule_%d"
-		target_vault_name 	= "${aws_backup_vault.test.name}"
-		schedule			= "cron(0 12 * * ? *)"
-	}
+  rule {
+    rule_name          = "tf_acc_test_backup_rule_%d"
+    target_vault_name  = "${aws_backup_vault.test.name}"
+    schedule           = "cron(0 12 * * ? *)"
+  }
 
-	rule {
-		rule_name 			= "tf_acc_test_backup_rule_%d_2"
-		target_vault_name 	= "${aws_backup_vault.test.name}"
-		schedule			= "cron(0 6 * * ? *)"
-	}
+  rule {
+    rule_name          = "tf_acc_test_backup_rule_%d_2"
+    target_vault_name  = "${aws_backup_vault.test.name}"
+    schedule           = "cron(0 6 * * ? *)"
+  }
 }
 `, randInt, randInt, randInt, randInt)
 }

@@ -142,6 +142,10 @@ func resourceAwsLogFlowCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error creating Flow Log for (%s), error: %s", resourceId, err)
 	}
 
+	if len(resp.Unsuccessful) > 0 {
+		return fmt.Errorf("Error creating Flow Log for (%s), error: %s", resourceId, *resp.Unsuccessful[0].Error.Message)
+	}
+
 	if len(resp.FlowLogIds) > 1 {
 		return fmt.Errorf("Error: multiple Flow Logs created for (%s)", resourceId)
 	}

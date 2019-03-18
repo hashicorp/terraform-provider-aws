@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -37,10 +36,7 @@ func testSweepRedshiftClusters(region string) error {
 		}
 
 		for _, c := range resp.Clusters {
-			id := *c.ClusterIdentifier
-			if !strings.HasPrefix(id, "tf-redshift-cluster-") {
-				continue
-			}
+			id := aws.StringValue(c.ClusterIdentifier)
 
 			input := &redshift.DeleteClusterInput{
 				ClusterIdentifier:        c.ClusterIdentifier,
@@ -48,8 +44,7 @@ func testSweepRedshiftClusters(region string) error {
 			}
 			_, err := conn.DeleteCluster(input)
 			if err != nil {
-				log.Printf("[ERROR] Failed deleting Redshift cluster (%s): %s",
-					*c.ClusterIdentifier, err)
+				log.Printf("[ERROR] Failed deleting Redshift cluster (%s): %s", id, err)
 			}
 		}
 		return !isLast
@@ -222,38 +217,6 @@ func TestAccAWSRedshiftCluster_enhancedVpcRoutingEnabled(t *testing.T) {
 					testAccCheckAWSRedshiftClusterExists("aws_redshift_cluster.default", &v),
 					resource.TestCheckResourceAttr(
 						"aws_redshift_cluster.default", "enhanced_vpc_routing", "false"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSRedshiftCluster_loggingEnabledDeprecated(t *testing.T) {
-	var v redshift.Cluster
-	rInt := acctest.RandInt()
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSRedshiftClusterDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSRedshiftClusterConfig_loggingEnabledDeprecated(rInt),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftClusterExists("aws_redshift_cluster.default", &v),
-					resource.TestCheckResourceAttr(
-						"aws_redshift_cluster.default", "enable_logging", "true"),
-					resource.TestCheckResourceAttr(
-						"aws_redshift_cluster.default", "bucket_name", fmt.Sprintf("tf-redshift-logging-%d", rInt)),
-				),
-			},
-
-			{
-				Config: testAccAWSRedshiftClusterConfig_loggingDisabledDeprecated(rInt),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftClusterExists("aws_redshift_cluster.default", &v),
-					resource.TestCheckResourceAttr(
-						"aws_redshift_cluster.default", "enable_logging", "false"),
 				),
 			},
 		},
@@ -1124,72 +1087,6 @@ resource "aws_redshift_cluster" "default" {
   skip_final_snapshot = true
 }
 `, rInt)
-}
-
-func testAccAWSRedshiftClusterConfig_loggingDisabledDeprecated(rInt int) string {
-	return fmt.Sprintf(`
-	resource "aws_redshift_cluster" "default" {
-		cluster_identifier = "tf-redshift-cluster-%d"
-		availability_zone = "us-west-2a"
-		database_name = "mydb"
-		master_username = "foo_test"
-		master_password = "Mustbe8characters"
-		node_type = "dc1.large"
-		automated_snapshot_retention_period = 0
-		allow_version_upgrade = false
-		enable_logging = false
-		skip_final_snapshot = true
-	}`, rInt)
-}
-
-func testAccAWSRedshiftClusterConfig_loggingEnabledDeprecated(rInt int) string {
-	return fmt.Sprintf(`
-data "aws_redshift_service_account" "main" {}
-
- resource "aws_s3_bucket" "bucket" {
-	 bucket = "tf-redshift-logging-%d"
-	 force_destroy = true
-	 policy = <<EOF
-{
- "Version": "2008-10-17",
- "Statement": [
-	 {
-		 "Sid": "Stmt1376526643067",
-		 "Effect": "Allow",
-		 "Principal": {
-			 "AWS": "${data.aws_redshift_service_account.main.arn}"
-		 },
-		 "Action": "s3:PutObject",
-		 "Resource": "arn:aws:s3:::tf-redshift-logging-%d/*"
-	 },
-	 {
-		 "Sid": "Stmt137652664067",
-		 "Effect": "Allow",
-		 "Principal": {
-			 "AWS": "${data.aws_redshift_service_account.main.arn}"
-		 },
-		 "Action": "s3:GetBucketAcl",
-		 "Resource": "arn:aws:s3:::tf-redshift-logging-%d"
-	 }
- ]
-}
-EOF
- }
-
-
- resource "aws_redshift_cluster" "default" {
-	 cluster_identifier = "tf-redshift-cluster-%d"
-	 availability_zone = "us-west-2a"
-	 database_name = "mydb"
-	 master_username = "foo_test"
-	 master_password = "Mustbe8characters"
-	 node_type = "dc1.large"
-	 automated_snapshot_retention_period = 0
-	 allow_version_upgrade = false
-	 enable_logging = true
-	 bucket_name = "${aws_s3_bucket.bucket.bucket}"
-	 skip_final_snapshot = true
- }`, rInt, rInt, rInt, rInt)
 }
 
 func testAccAWSRedshiftClusterConfig_loggingDisabled(rInt int) string {

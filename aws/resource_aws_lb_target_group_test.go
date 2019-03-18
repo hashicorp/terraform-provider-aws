@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -32,13 +31,6 @@ func testSweepLBTargetGroups(region string) error {
 	}
 	conn := client.(*AWSClient).elbv2conn
 
-	prefixes := []string{
-		"tf-",
-		"tf-test-",
-		"tf-acc-test-",
-		"test",
-	}
-
 	err = conn.DescribeTargetGroupsPages(&elbv2.DescribeTargetGroupsInput{}, func(page *elbv2.DescribeTargetGroupsOutput, isLast bool) bool {
 		if page == nil || len(page.TargetGroups) == 0 {
 			log.Print("[DEBUG] No LB Target Groups to sweep")
@@ -47,17 +39,7 @@ func testSweepLBTargetGroups(region string) error {
 
 		for _, targetGroup := range page.TargetGroups {
 			name := aws.StringValue(targetGroup.TargetGroupName)
-			skip := true
-			for _, prefix := range prefixes {
-				if strings.HasPrefix(name, prefix) {
-					skip = false
-					break
-				}
-			}
-			if skip {
-				log.Printf("[INFO] Skipping LB Target Group: %s", name)
-				continue
-			}
+
 			log.Printf("[INFO] Deleting LB Target Group: %s", name)
 			_, err := conn.DeleteTargetGroup(&elbv2.DeleteTargetGroupInput{
 				TargetGroupArn: targetGroup.TargetGroupArn,

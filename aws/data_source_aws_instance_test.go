@@ -648,11 +648,7 @@ func testAccInstanceDataSourceConfig_getPasswordData(val bool, rInt int) string 
 	# Find latest Microsoft Windows Server 2016 Core image (Amazon deletes old ones)
 	data "aws_ami" "win2016core" {
 		most_recent = true
-
-		filter {
-			name = "owner-alias"
-			values = ["amazon"]
-		}
+		owners      = ["amazon"]
 
 		filter {
 			name = "name"

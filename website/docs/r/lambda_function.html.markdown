@@ -14,6 +14,8 @@ For information about Lambda and how to use it, see [What is AWS Lambda?][1]
 
 ## Example Usage
 
+### Basic Example
+
 ```hcl
 resource "aws_iam_role" "iam_for_lambda" {
   name = "iam_for_lambda"
@@ -40,7 +42,10 @@ resource "aws_lambda_function" "test_lambda" {
   function_name    = "lambda_function_name"
   role             = "${aws_iam_role.iam_for_lambda.arn}"
   handler          = "exports.test"
-  source_code_hash = "${base64sha256(file("lambda_function_payload.zip"))}"
+  # The filebase64sha256() function is available in Terraform 0.11.12 and later
+  # For Terraform 0.11.11 and earlier, use the base64sha256() function and the file() function:
+  # source_code_hash = "${base64sha256(file("lambda_function_payload.zip"))}"
+  source_code_hash = "${filebase64sha256("lambda_function_payload.zip")}"
   runtime          = "nodejs8.10"
 
   environment {
@@ -48,6 +53,21 @@ resource "aws_lambda_function" "test_lambda" {
       foo = "bar"
     }
   }
+}
+```
+
+### Lambda Layers
+
+~> **NOTE:** The `aws_lambda_layer_version` attribute values for `arn` and `layer_arn` were swapped in version 2.0.0 of the Terraform AWS Provider. For version 1.x, use `layer_arn` references. For version 2.x, use `arn` references.
+
+```hcl
+resource "aws_lambda_layer_version" "example" {
+  # ... other configuration ...
+}
+
+resource "aws_lambda_function" "example" {
+  # ... other configuration ...
+  layers = ["${aws_lambda_layer_version.example.arn}"]
 }
 ```
 
@@ -120,7 +140,7 @@ large files efficiently.
 * `memory_size` - (Optional) Amount of memory in MB your Lambda Function can use at runtime. Defaults to `128`. See [Limits][5]
 * `runtime` - (Required) See [Runtimes][6] for valid values.
 * `timeout` - (Optional) The amount of time your Lambda Function has to run in seconds. Defaults to `3`. See [Limits][5]
-* `reserved_concurrent_executions` - (Optional) The amount of reserved concurrent executions for this lambda function. Defaults to Unreserved Concurrency Limits. See [Managing Concurrency][9]
+* `reserved_concurrent_executions` - (Optional) The amount of reserved concurrent executions for this lambda function. A value of `0` disables lambda from being triggered and `-1` removes any concurrency limitations. Defaults to Unreserved Concurrency Limits `-1`. See [Managing Concurrency][9]
 * `publish` - (Optional) Whether to publish creation/change as new Lambda Function Version. Defaults to `false`.
 * `vpc_config` - (Optional) Provide this to allow your function to access your VPC. Fields documented below. See [Lambda in VPC][7]
 * `environment` - (Optional) The Lambda environment's configuration settings. Fields documented below.

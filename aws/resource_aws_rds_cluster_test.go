@@ -1260,7 +1260,7 @@ func TestAccAWSRDSCluster_SnapshotIdentifier_VpcSecurityGroupIds(t *testing.T) {
 }
 
 // Regression reference: https://github.com/terraform-providers/terraform-provider-aws/issues/5450
-// This acceptance test explicitly tests when snapshot_identifer is set,
+// This acceptance test explicitly tests when snapshot_identifier is set,
 // vpc_security_group_ids is set (which triggered the resource update function),
 // and tags is set which was missing its ARN used for tagging
 func TestAccAWSRDSCluster_SnapshotIdentifier_VpcSecurityGroupIds_Tags(t *testing.T) {
@@ -1547,7 +1547,7 @@ resource "aws_s3_bucket_object" "xtrabackup_db" {
   bucket = "${aws_s3_bucket.xtrabackup.id}"
   key    = "%s/mysql-5-6-xtrabackup.tar.gz"
   source = "../files/mysql-5-6-xtrabackup.tar.gz"
-  etag   = "${md5(file("../files/mysql-5-6-xtrabackup.tar.gz"))}"
+  etag   = "${filemd5("../files/mysql-5-6-xtrabackup.tar.gz")}"
 }
 
 

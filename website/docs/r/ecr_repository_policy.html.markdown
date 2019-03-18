@@ -70,3 +70,11 @@ In addition to all arguments above, the following attributes are exported:
 
 * `repository` - The name of the repository.
 * `registry_id` - The registry ID where the repository was created.
+
+## Import
+
+ECR Repository Policy can be imported using the repository name, e.g.
+
+```
+$ terraform import aws_ecr_repository_policy.example example
+```

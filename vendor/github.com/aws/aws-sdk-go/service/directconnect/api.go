@@ -2311,7 +2311,7 @@ func (c *DirectConnect) DescribeConnectionLoaRequest(input *DescribeConnectionLo
 // The Letter of Authorization - Connecting Facility Assignment (LOA-CFA) is
 // a document that your APN partner or service provider uses when establishing
 // your cross connect to AWS at the colocation facility. For more information,
-// see Requesting Cross Connects at AWS Direct Connect Locations (http://docs.aws.amazon.com/directconnect/latest/UserGuide/Colocation.html)
+// see Requesting Cross Connects at AWS Direct Connect Locations (https://docs.aws.amazon.com/directconnect/latest/UserGuide/Colocation.html)
 // in the AWS Direct Connect User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -2932,7 +2932,7 @@ func (c *DirectConnect) DescribeInterconnectLoaRequest(input *DescribeInterconne
 // The Letter of Authorization - Connecting Facility Assignment (LOA-CFA) is
 // a document that is used when establishing your cross connect to AWS at the
 // colocation facility. For more information, see Requesting Cross Connects
-// at AWS Direct Connect Locations (http://docs.aws.amazon.com/directconnect/latest/UserGuide/Colocation.html)
+// at AWS Direct Connect Locations (https://docs.aws.amazon.com/directconnect/latest/UserGuide/Colocation.html)
 // in the AWS Direct Connect User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -3189,7 +3189,7 @@ func (c *DirectConnect) DescribeLoaRequest(input *DescribeLoaInput) (req *reques
 // The Letter of Authorization - Connecting Facility Assignment (LOA-CFA) is
 // a document that is used when establishing your cross connect to AWS at the
 // colocation facility. For more information, see Requesting Cross Connects
-// at AWS Direct Connect Locations (http://docs.aws.amazon.com/directconnect/latest/UserGuide/Colocation.html)
+// at AWS Direct Connect Locations (https://docs.aws.amazon.com/directconnect/latest/UserGuide/Colocation.html)
 // in the AWS Direct Connect User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -4034,8 +4034,7 @@ type AllocateConnectionOnInterconnectInput struct {
 	// ConnectionName is a required field
 	ConnectionName *string `locationName:"connectionName" type:"string" required:"true"`
 
-	// The ID of the interconnect on which the connection will be provisioned. For
-	// example, dxcon-456abc78.
+	// The ID of the interconnect on which the connection will be provisioned.
 	//
 	// InterconnectId is a required field
 	InterconnectId *string `locationName:"interconnectId" type:"string" required:"true"`
@@ -4357,12 +4356,12 @@ func (s *AllocatePublicVirtualInterfaceInput) SetOwnerAccount(v string) *Allocat
 type AssociateConnectionWithLagInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ID of the connection. For example, dxcon-abc123.
+	// The ID of the connection.
 	//
 	// ConnectionId is a required field
 	ConnectionId *string `locationName:"connectionId" type:"string" required:"true"`
 
-	// The ID of the LAG with which to associate the connection. For example, dxlag-abc123.
+	// The ID of the LAG with which to associate the connection.
 	//
 	// LagId is a required field
 	LagId *string `locationName:"lagId" type:"string" required:"true"`
@@ -4556,7 +4555,7 @@ type BGPPeer struct {
 	//
 	//    * down: The BGP peer is down.
 	//
-	//    * unknown: The BGP peer status is unknown.
+	//    * unknown: The BGP peer status is not available.
 	BgpStatus *string `locationName:"bgpStatus" type:"string" enum:"BGPStatus"`
 
 	// The IP address assigned to the customer interface.
@@ -4690,6 +4689,8 @@ type ConfirmConnectionOutput struct {
 	//
 	//    * rejected: A hosted connection in the ordering state enters the rejected
 	//    state if it is deleted by the customer.
+	//
+	//    * unknown: The state of the connection is not available.
 	ConnectionState *string `locationName:"connectionState" type:"string" enum:"ConnectionState"`
 }
 
@@ -4796,6 +4797,8 @@ type ConfirmPrivateVirtualInterfaceOutput struct {
 	//    interface. If a virtual interface in the Confirming state is deleted by
 	//    the virtual interface owner, the virtual interface enters the Rejected
 	//    state.
+	//
+	//    * unknown: The state of the virtual interface is not available.
 	VirtualInterfaceState *string `locationName:"virtualInterfaceState" type:"string" enum:"VirtualInterfaceState"`
 }
 
@@ -4884,6 +4887,8 @@ type ConfirmPublicVirtualInterfaceOutput struct {
 	//    interface. If a virtual interface in the Confirming state is deleted by
 	//    the virtual interface owner, the virtual interface enters the Rejected
 	//    state.
+	//
+	//    * unknown: The state of the virtual interface is not available.
 	VirtualInterfaceState *string `locationName:"virtualInterfaceState" type:"string" enum:"VirtualInterfaceState"`
 }
 
@@ -4944,6 +4949,8 @@ type Connection struct {
 	//
 	//    * rejected: A hosted connection in the ordering state enters the rejected
 	//    state if it is deleted by the customer.
+	//
+	//    * unknown: The state of the connection is not available.
 	ConnectionState *string `locationName:"connectionState" type:"string" enum:"ConnectionState"`
 
 	// Indicates whether the connection supports a secondary BGP peer in the same
@@ -5960,6 +5967,8 @@ type DeleteInterconnectOutput struct {
 	//    * deleting: The interconnect is being deleted.
 	//
 	//    * deleted: The interconnect is deleted.
+	//
+	//    * unknown: The state of the interconnect is not available.
 	InterconnectState *string `locationName:"interconnectState" type:"string" enum:"InterconnectState"`
 }
 
@@ -6086,6 +6095,8 @@ type DeleteVirtualInterfaceOutput struct {
 	//    interface. If a virtual interface in the Confirming state is deleted by
 	//    the virtual interface owner, the virtual interface enters the Rejected
 	//    state.
+	//
+	//    * unknown: The state of the virtual interface is not available.
 	VirtualInterfaceState *string `locationName:"virtualInterfaceState" type:"string" enum:"VirtualInterfaceState"`
 }
 
@@ -6949,12 +6960,12 @@ func (s *DescribeVirtualInterfacesOutput) SetVirtualInterfaces(v []*VirtualInter
 type DisassociateConnectionFromLagInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ID of the connection. For example, dxcon-abc123.
+	// The ID of the connection.
 	//
 	// ConnectionId is a required field
 	ConnectionId *string `locationName:"connectionId" type:"string" required:"true"`
 
-	// The ID of the LAG. For example, dxlag-abc123.
+	// The ID of the LAG.
 	//
 	// LagId is a required field
 	LagId *string `locationName:"lagId" type:"string" required:"true"`
@@ -7278,6 +7289,8 @@ type Interconnect struct {
 	//    * deleting: The interconnect is being deleted.
 	//
 	//    * deleted: The interconnect is deleted.
+	//
+	//    * unknown: The state of the interconnect is not available.
 	InterconnectState *string `locationName:"interconnectState" type:"string" enum:"InterconnectState"`
 
 	// Indicates whether jumbo frames (9001 MTU) are supported.
@@ -7426,6 +7439,8 @@ type Lag struct {
 	//    * deleting: The LAG is being deleted.
 	//
 	//    * deleted: The LAG is deleted.
+	//
+	//    * unknown: The state of the LAG is not available.
 	LagState *string `locationName:"lagState" type:"string" enum:"LagState"`
 
 	// The location of the LAG.
@@ -7587,6 +7602,9 @@ func (s *Loa) SetLoaContentType(v string) *Loa {
 type Location struct {
 	_ struct{} `type:"structure"`
 
+	// The available port speeds for the location.
+	AvailablePortSpeeds []*string `locationName:"availablePortSpeeds" type:"list"`
+
 	// The code for the location.
 	LocationCode *string `locationName:"locationCode" type:"string"`
 
@@ -7606,6 +7624,12 @@ func (s Location) String() string {
 // GoString returns the string representation
 func (s Location) GoString() string {
 	return s.String()
+}
+
+// SetAvailablePortSpeeds sets the AvailablePortSpeeds field's value.
+func (s *Location) SetAvailablePortSpeeds(v []*string) *Location {
+	s.AvailablePortSpeeds = v
+	return s
 }
 
 // SetLocationCode sets the LocationCode field's value.
@@ -8610,6 +8634,8 @@ type UpdateVirtualInterfaceAttributesOutput struct {
 	//    interface. If a virtual interface in the Confirming state is deleted by
 	//    the virtual interface owner, the virtual interface enters the Rejected
 	//    state.
+	//
+	//    * unknown: The state of the virtual interface is not available.
 	VirtualInterfaceState *string `locationName:"virtualInterfaceState" type:"string" enum:"VirtualInterfaceState"`
 
 	// The type of virtual interface. The possible values are private and public.
@@ -8904,6 +8930,8 @@ type VirtualInterface struct {
 	//    interface. If a virtual interface in the Confirming state is deleted by
 	//    the virtual interface owner, the virtual interface enters the Rejected
 	//    state.
+	//
+	//    * unknown: The state of the virtual interface is not available.
 	VirtualInterfaceState *string `locationName:"virtualInterfaceState" type:"string" enum:"VirtualInterfaceState"`
 
 	// The type of virtual interface. The possible values are private and public.
@@ -9092,6 +9120,9 @@ const (
 
 	// BGPStatusDown is a BGPStatus enum value
 	BGPStatusDown = "down"
+
+	// BGPStatusUnknown is a BGPStatus enum value
+	BGPStatusUnknown = "unknown"
 )
 
 const (
@@ -9118,6 +9149,9 @@ const (
 
 	// ConnectionStateRejected is a ConnectionState enum value
 	ConnectionStateRejected = "rejected"
+
+	// ConnectionStateUnknown is a ConnectionState enum value
+	ConnectionStateUnknown = "unknown"
 )
 
 const (
@@ -9191,6 +9225,9 @@ const (
 
 	// InterconnectStateDeleted is a InterconnectState enum value
 	InterconnectStateDeleted = "deleted"
+
+	// InterconnectStateUnknown is a InterconnectState enum value
+	InterconnectStateUnknown = "unknown"
 )
 
 const (
@@ -9211,6 +9248,9 @@ const (
 
 	// LagStateDeleted is a LagState enum value
 	LagStateDeleted = "deleted"
+
+	// LagStateUnknown is a LagState enum value
+	LagStateUnknown = "unknown"
 )
 
 const (
@@ -9242,4 +9282,7 @@ const (
 
 	// VirtualInterfaceStateRejected is a VirtualInterfaceState enum value
 	VirtualInterfaceStateRejected = "rejected"
+
+	// VirtualInterfaceStateUnknown is a VirtualInterfaceState enum value
+	VirtualInterfaceStateUnknown = "unknown"
 )
