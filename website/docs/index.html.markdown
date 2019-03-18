@@ -376,6 +376,10 @@ Nested `endpoints` block supports the following:
   URL constructed from the `region`. It's typically used to connect to
   custom S3 Control endpoints (e.g. account-level public access block).
 
+* `ses` - (Optional) Use this to override the default endpoint
+  URL constructed from the `region`. It's typically used to connect to
+  custom SNS endpoints.
+
 * `sns` - (Optional) Use this to override the default endpoint
   URL constructed from the `region`. It's typically used to connect to
   custom SNS endpoints.
