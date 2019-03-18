@@ -15,6 +15,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* provider: Support custom endpoint for `ses` [GH-7986]
 * resource/aws_api_gateway_deployment: Allow `stage_name` argument to be optional [GH-6459]
 * resource/aws_appmesh_route: Support resource import [GH-7858]
 * resource/aws_appmesh_virtual_node: Support resource import [GH-7858]
