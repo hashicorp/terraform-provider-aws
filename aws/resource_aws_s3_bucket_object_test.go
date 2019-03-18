@@ -864,7 +864,7 @@ resource "aws_s3_bucket_object" "object" {
   bucket = "${aws_s3_bucket.object_bucket_3.bucket}"
   key = "updateable-key"
   source = "%s"
-  etag = "${md5(file("%s"))}"
+  etag = "${filemd5("%s")}"
 }
 `, randInt, bucketVersioning, source, source)
 }
