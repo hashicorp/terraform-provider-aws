@@ -74,6 +74,49 @@ func TestAccAWSMediaPackageChannel_description(t *testing.T) {
 	})
 }
 
+func TestAccAWSMediaPackageChannel_tags(t *testing.T) {
+	resourceName := "aws_media_package_channel.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsMediaPackageChannelDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMediaPackageChannelConfigWithTags(rName, "Environment", "test"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsMediaPackageChannelExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "test"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccMediaPackageChannelConfigWithTags(rName, "Environment", "test1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsMediaPackageChannelExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "test1"),
+				),
+			},
+			{
+				Config: testAccMediaPackageChannelConfigWithTags(rName, "Update", "true"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsMediaPackageChannelExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Update", "true"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAwsMediaPackageChannelDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).mediapackageconn
 
@@ -131,4 +174,16 @@ resource "aws_media_package_channel" "test" {
   channel_id = %q
   description = %q
 }`, rName, description)
+}
+
+func testAccMediaPackageChannelConfigWithTags(rName, key, value string) string {
+	return fmt.Sprintf(`
+resource "aws_media_package_channel" "test" {
+  channel_id = "%[1]s"
+
+  tags = {
+	  Name = "%[1]s"
+	  %[2]s = "%[3]s"
+  }
+}`, rName, key, value)
 }
