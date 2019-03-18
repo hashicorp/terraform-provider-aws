@@ -24,6 +24,7 @@ ENHANCEMENTS:
 * resource/aws_iam_access_key: Support `status` updates (support disabling/enabling access keys) [GH-7961]
 * resource/aws_s3_bucket_inventory: Support plan-time validation of `optional_fields` values `ObjectLockRetainUntilDate`, `ObjectLockMode` and `ObjectLockLegalHoldStatus` [GH-7952]
 * resource/aws_ssm_association: Add `compliance_severity` argument [GH-7852]
+* resource/aws_ssm_association: Add `max_concurrency` and `max_errors` arguments [GH-7970]
 
 ## 2.2.0 (March 15, 2019)
 
