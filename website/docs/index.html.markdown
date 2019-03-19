@@ -344,10 +344,6 @@ Nested `endpoints` block supports the following:
   URL constructed from the `region`.  It's typically used to connect to
   custom Elasticsearch endpoints.
 
-* `firehose` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`.  It's typically used to connect to
-  custom Firehose endpoints.
-
 * `iam` - (Optional) Use this to override the default endpoint
   URL constructed from the `region`. It's typically used to connect to
   custom IAM endpoints.
@@ -367,10 +363,14 @@ Nested `endpoints` block supports the following:
 * `r53` - (Optional) Use this to override the default endpoint
   URL constructed from the `region`. It's typically used to connect to
   custom Route53 endpoints.
-
+  
 * `rds` - (Optional) Use this to override the default endpoint
   URL constructed from the `region`. It's typically used to connect to
   custom RDS endpoints.
+
+* `redshift` - (Optional) Use this to override the default endpoint
+  URL constructed from the `region`. It's typically used to connect to
+  custom Redshift endpoints.
 
 * `s3` - (Optional) Use this to override the default endpoint
   URL constructed from the `region`. It's typically used to connect to
