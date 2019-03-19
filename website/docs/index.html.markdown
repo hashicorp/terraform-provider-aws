@@ -344,6 +344,10 @@ Nested `endpoints` block supports the following:
   URL constructed from the `region`.  It's typically used to connect to
   custom Elasticsearch endpoints.
 
+* `firehose` - (Optional) Use this to override the default endpoint
+  URL constructed from the `region`.  It's typically used to connect to
+  custom Firehose endpoints.
+
 * `iam` - (Optional) Use this to override the default endpoint
   URL constructed from the `region`. It's typically used to connect to
   custom IAM endpoints.

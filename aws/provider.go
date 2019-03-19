@@ -813,6 +813,8 @@ func init() {
 		"dynamodb_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n" +
 			"It's typically used to connect to dynamodb-local.",
 
+		"firehose_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
+
 		"kinesis_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n" +
 			"It's typically used to connect to kinesalite.",
 
@@ -947,6 +949,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		config.EfsEndpoint = endpoints["efs"].(string)
 		config.ElbEndpoint = endpoints["elb"].(string)
 		config.EsEndpoint = endpoints["es"].(string)
+		config.FirehoseEndpoint = endpoints["firehose"].(string)
 		config.IamEndpoint = endpoints["iam"].(string)
 		config.KinesisEndpoint = endpoints["kinesis"].(string)
 		config.KinesisAnalyticsEndpoint = endpoints["kinesis_analytics"].(string)
@@ -1125,6 +1128,12 @@ func endpointsSchema() *schema.Schema {
 					Default:     "",
 					Description: descriptions["es_endpoint"],
 				},
+				"firehose": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: descriptions["firehose_endpoint"],
+				},
 				"kinesis": {
 					Type:        schema.TypeString,
 					Optional:    true,
@@ -1230,6 +1239,7 @@ func endpointsToHash(v interface{}) int {
 	buf.WriteString(fmt.Sprintf("%s-", m["autoscaling"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["efs"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["elb"].(string)))
+	buf.WriteString(fmt.Sprintf("%s-", m["firehose"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["kinesis"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["kms"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["lambda"].(string)))
