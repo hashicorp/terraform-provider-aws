@@ -318,6 +318,38 @@ func TestAccAWSInstanceDataSource_GetUserData(t *testing.T) {
 	})
 }
 
+func TestAccAWSInstanceDataSource_GetUserData_NoUserData(t *testing.T) {
+	dataSourceName := "data.aws_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceDataSourceConfigGetUserDataNoUserData(true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "get_user_data", "true"),
+					resource.TestCheckNoResourceAttr(dataSourceName, "user_data_base64"),
+				),
+			},
+			{
+				Config: testAccInstanceDataSourceConfigGetUserDataNoUserData(false),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "get_user_data", "false"),
+					resource.TestCheckNoResourceAttr(dataSourceName, "user_data_base64"),
+				),
+			},
+			{
+				Config: testAccInstanceDataSourceConfigGetUserDataNoUserData(true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "get_user_data", "true"),
+					resource.TestCheckNoResourceAttr(dataSourceName, "user_data_base64"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSInstanceDataSource_creditSpecification(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -750,6 +782,52 @@ resource "aws_instance" "test" {
 
 echo "hello world"
 EUD
+}
+
+data "aws_instance" "test" {
+  get_user_data = %t
+  instance_id   = "${aws_instance.test.id}"
+}
+`, getUserData)
+}
+
+func testAccInstanceDataSourceConfigGetUserDataNoUserData(getUserData bool) string {
+	return fmt.Sprintf(`
+data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name = "name"
+    values = ["amzn-ami-minimal-hvm-*"]
+  }
+  filter {
+    name = "root-device-type"
+    values = ["ebs"]
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "172.16.0.0/16"
+
+  tags = {
+    Name = "tf-acc-test-instance-datasource-get-user-data"
+  }
+}
+
+resource "aws_subnet" "test" {
+  cidr_block = "172.16.0.0/24"
+  vpc_id     = "${aws_vpc.test.id}"
+
+  tags = {
+    Name = "tf-acc-test-instance-datasource-get-user-data"
+  }
+}
+
+resource "aws_instance" "test" {
+  ami           = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+  instance_type = "t2.micro"
+  subnet_id     = "${aws_subnet.test.id}"
 }
 
 data "aws_instance" "test" {
