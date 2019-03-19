@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -129,5 +130,26 @@ func resourceAwsAthenaWorkgroupDelete(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsAthenaWorkgroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	return nil
+	conn := meta.(*AWSClient).athenaconn
+
+	workGroupUpdate := false
+
+	input := &athena.UpdateWorkGroupInput{
+		WorkGroup: aws.String(d.Get("name").(string)),
+	}
+
+	if d.HasChange("description") {
+		workGroupUpdate = true
+		input.Description = aws.String(d.Get("description").(string))
+	}
+
+	if workGroupUpdate {
+		_, err := conn.UpdateWorkGroup(input)
+
+		if err != nil {
+			return fmt.Errorf("Error updating Athena WorkGroup (%s): %s", d.Id(), err)
+		}
+	}
+
+	return resourceAwsAthenaWorkgroupRead(d, meta)
 }
