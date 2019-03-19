@@ -11,8 +11,6 @@ import (
 func TestAccAWSDataElasticsearchDomain_basic(t *testing.T) {
 	rInt := acctest.RandInt()
 
-	fmt.Println("Inside TestAccAWSDataElasticsearchDomain_basic")
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,

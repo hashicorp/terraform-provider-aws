@@ -15,6 +15,23 @@ func dataSourceAwsElasticSearchDomain() *schema.Resource {
 		Read: dataSourceAwsElasticSearchDomainRead,
 
 		Schema: map[string]*schema.Schema{
+			"access_policies": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"advanced_options": {
+				Type:     schema.TypeMap,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"domain_name": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"domain_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -23,33 +40,29 @@ func dataSourceAwsElasticSearchDomain() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created": {
-				Type:     schema.TypeBool,
+			"ebs_options": {
+				Type:     schema.TypeList,
 				Computed: true,
-			},
-			"deleted": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"domain_name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"access_policies": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"processing": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"elasticsearch_version": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"iops": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"volume_size": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"volume_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"ebs_enabled": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+					},
+				},
 			},
 			"cluster_config": {
 				Type:     schema.TypeList,
@@ -83,30 +96,6 @@ func dataSourceAwsElasticSearchDomain() *schema.Resource {
 					},
 				},
 			},
-			"ebs_options": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"iops": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"volume_size": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"volume_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"ebs_enabled": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-					},
-				},
-			},
 			"snapshot_options": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -119,11 +108,51 @@ func dataSourceAwsElasticSearchDomain() *schema.Resource {
 					},
 				},
 			},
-			"advanced_options": {
-				Type:     schema.TypeMap,
+			"vpc_options": {
+				Type:     schema.TypeList,
 				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"availability_zones": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+							//Set:      schema.HashString,
+						},
+						"security_group_ids": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"subnet_ids": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"vpc_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
+			"elasticsearch_version": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"created": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"deleted": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"processing": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"tags": tagsSchemaComputed(),
 		},
 	}
@@ -142,7 +171,7 @@ func dataSourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface
 	}
 
 	if resp.DomainStatus == nil {
-		return fmt.Errorf("Your query returned no results.  Please change your search criteria and try again.")
+		return fmt.Errorf("your query returned no results")
 	}
 
 	ds := resp.DomainStatus
@@ -199,6 +228,11 @@ func dataSourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface
 	}
 
 	d.Set("tags", tagsToMapElasticsearchService(tagResp.TagList))
+
+	err = d.Set("vpc_options", flattenESVPCDerivedInfo(ds.VPCOptions))
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
