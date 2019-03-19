@@ -28,6 +28,26 @@ func TestAccAWSAthenaWorkGroup_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSAthenaWorkGroup_withDescription(t *testing.T) {
+	rName := acctest.RandString(5)
+	rDescription := acctest.RandString(20)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAthenaWorkGroupConfigDescription(rName, rDescription),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAthenaWorkGroupExists("aws_athena_workgroup.foo"),
+					resource.TestCheckResourceAttr(
+						"aws_athena_workgroup.foo", "description", rDescription),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSAthenaWorkGroupDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).athenaconn
 	for _, rs := range s.RootModule().Resources {
@@ -77,4 +97,13 @@ resource "aws_athena_workgroup" "foo" {
   name = "tf-athena-workgroup-%s"
 }
 		`, rName)
+}
+
+func testAccAthenaWorkGroupConfigDescription(rName string, rDescription string) string {
+	return fmt.Sprintf(`
+	resource "aws_athena_workgroup" "foo" {
+		name = "tf-athena-workgroup-%s"
+		description = "%s"
+	}
+	`, rName, rDescription)
 }
