@@ -31,11 +31,12 @@ func testSweepGameliftGameSessionQueue(region string) error {
 
 	out, err := conn.DescribeGameSessionQueues(&gamelift.DescribeGameSessionQueuesInput{})
 
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping Gamelife Queue sweep for %s: %s", region, err)
+		return nil
+	}
+
 	if err != nil {
-		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] Skipping Gamelife Queue sweep for %s: %s", region, err)
-			return nil
-		}
 		return fmt.Errorf("error listing Gamelift Session Queue: %s", err)
 	}
 
@@ -55,14 +56,6 @@ func testSweepGameliftGameSessionQueue(region string) error {
 			return fmt.Errorf("error deleting Gamelift Session Queue (%s): %s",
 				*queue.Name, err)
 		}
-	}
-
-	if err != nil {
-		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] Skipping Gamelift Session Queue sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("error listing Gamelift Session Queue: %s", err)
 	}
 
 	return nil

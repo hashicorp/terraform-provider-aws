@@ -11,9 +11,16 @@ import (
 func TestGetSupportedEC2Platforms(t *testing.T) {
 	ec2Endpoints := []*awsbase.MockEndpoint{
 		{
-			Request: &awsbase.MockRequest{"POST", "/", "Action=DescribeAccountAttributes&" +
-				"AttributeName.1=supported-platforms&Version=2016-11-15"},
-			Response: &awsbase.MockResponse{200, test_ec2_describeAccountAttributes_response, "text/xml"},
+			Request: &awsbase.MockRequest{
+				Method: "POST",
+				Uri:    "/",
+				Body:   "Action=DescribeAccountAttributes&AttributeName.1=supported-platforms&Version=2016-11-15",
+			},
+			Response: &awsbase.MockResponse{
+				StatusCode:  200,
+				Body:        test_ec2_describeAccountAttributes_response,
+				ContentType: "text/xml",
+			},
 		},
 	}
 	closeFunc, sess, err := awsbase.GetMockedAwsApiSession("EC2", ec2Endpoints)
