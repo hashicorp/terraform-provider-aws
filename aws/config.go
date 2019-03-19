@@ -164,6 +164,7 @@ type Config struct {
 	KmsEndpoint              string
 	LambdaEndpoint           string
 	RdsEndpoint              string
+	RedshiftEndpoint         string
 	R53Endpoint              string
 	S3Endpoint               string
 	S3ControlEndpoint        string
@@ -442,7 +443,7 @@ func (c *Config) Client() (interface{}, error) {
 		r53conn:                             route53.New(sess.Copy(&aws.Config{Region: aws.String("us-east-1"), Endpoint: aws.String(c.R53Endpoint)})),
 		ramconn:                             ram.New(sess),
 		rdsconn:                             rds.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.RdsEndpoint)})),
-		redshiftconn:                        redshift.New(sess),
+		redshiftconn:                        redshift.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.RedshiftEndpoint)})),
 		region:                              c.Region,
 		resourcegroupsconn:                  resourcegroups.New(sess),
 		route53resolverconn:                 route53resolver.New(sess),
