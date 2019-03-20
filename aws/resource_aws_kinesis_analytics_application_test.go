@@ -29,6 +29,11 @@ func TestAccAWSKinesisAnalyticsApplication_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resName, "code", "testCode\n"),
 				),
 			},
+			{
+				ResourceName:      resName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -1010,7 +1015,7 @@ data "aws_iam_policy_document" "trust" {
 
 resource "aws_iam_role" "test" {
   name = "testAcc-%d"
-  assume_role_policy = "${data.aws_iam_policy_document.trust.json}" 
+  assume_role_policy = "${data.aws_iam_policy_document.trust.json}"
 }
 
 data "aws_iam_policy_document" "test" {
