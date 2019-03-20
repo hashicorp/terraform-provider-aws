@@ -252,6 +252,30 @@ func TestAccAWSBatchComputeEnvironment_createUnmanagedWithComputeResources(t *te
 	})
 }
 
+func TestAccAWSBatchComputeEnvironment_launchTemplate(t *testing.T) {
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSBatchComputeEnvironmentConfigLaunchTemplate(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsBatchComputeEnvironmentExists(),
+					resource.TestCheckResourceAttr("aws_batch_compute_environment.ec2",
+						"compute_resources.0.launch_template.#",
+						"1"),
+					resource.TestCheckResourceAttr("aws_batch_compute_environment.ec2",
+						"compute_resources.0.launch_template.0.launch_template_name",
+						fmt.Sprintf("tf_acc_test_%d", rInt)),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSBatchComputeEnvironment_createSpotWithoutBidPercentage(t *testing.T) {
 	rInt := acctest.RandInt()
 
@@ -718,4 +742,38 @@ resource "aws_batch_compute_environment" "ec2" {
   depends_on = ["aws_iam_role_policy_attachment.aws_batch_service_role"]
 }
 `, rInt)
+}
+
+func testAccAWSBatchComputeEnvironmentConfigLaunchTemplate(rInt int) string {
+	return testAccAWSBatchComputeEnvironmentConfigBase(rInt) + fmt.Sprintf(`
+resource "aws_launch_template" "foo" {
+  name = "tf_acc_test_%d"
+}
+
+resource "aws_batch_compute_environment" "ec2" {
+  compute_environment_name = "tf_acc_test_%d"
+  compute_resources {
+    instance_role = "${aws_iam_instance_profile.ecs_instance_role.arn}"
+    instance_type = [
+      "c4.large",
+    ]
+    launch_template {
+			launch_template_name = "${aws_launch_template.foo.name}"
+		}
+    max_vcpus = 16
+    min_vcpus = 0
+    security_group_ids = [
+      "${aws_security_group.test_acc.id}"
+    ]
+    spot_iam_fleet_role = "${aws_iam_role.aws_ec2_spot_fleet_role.arn}"
+    subnets = [
+      "${aws_subnet.test_acc.id}"
+    ]
+    type = "SPOT"
+  }
+  service_role = "${aws_iam_role.aws_batch_service_role.arn}"
+  type = "MANAGED"
+  depends_on = ["aws_iam_role_policy_attachment.aws_batch_service_role"]
+}
+`, rInt, rInt)
 }
