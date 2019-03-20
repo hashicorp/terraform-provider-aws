@@ -331,6 +331,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_cloud9_environment_ec2":                       resourceAwsCloud9EnvironmentEc2(),
 			"aws_cloudformation_stack":                         resourceAwsCloudFormationStack(),
 			"aws_cloudformation_stack_set":                     resourceAwsCloudFormationStackSet(),
+			"aws_cloudformation_stack_set_instance":            resourceAwsCloudFormationStackSetInstance(),
 			"aws_cloudfront_distribution":                      resourceAwsCloudFrontDistribution(),
 			"aws_cloudfront_origin_access_identity":            resourceAwsCloudFrontOriginAccessIdentity(),
 			"aws_cloudfront_public_key":                        resourceAwsCloudFrontPublicKey(),
