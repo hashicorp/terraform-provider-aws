@@ -15,6 +15,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_eks_cluster: Add `vpc_config` configuration block `endpoint_private_access` and `endpoint_public_access` attributes [GH-8024]
 * data-source/aws_instance: Add `get_user_data` argument and `user_data_base64` attribute [GH-8001]
 * provider: Support custom endpoint for `ses` [GH-7986]
 * resource/aws_api_gateway_deployment: Allow `stage_name` argument to be optional [GH-6459]
