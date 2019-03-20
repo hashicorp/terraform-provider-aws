@@ -345,5 +345,13 @@ func testSweepSkipSweepError(err error) bool {
 	if isAWSErr(err, "AccessDeniedException", "") {
 		return true
 	}
+	// Example: BadRequestException: vpc link not supported for region us-gov-west-1
+	if isAWSErr(err, "BadRequestException", "not supported") {
+		return true
+	}
+	// Example: InvalidAction: The action DescribeTransitGatewayAttachments is not valid for this web service
+	if isAWSErr(err, "InvalidAction", "is not valid") {
+		return true
+	}
 	return false
 }
