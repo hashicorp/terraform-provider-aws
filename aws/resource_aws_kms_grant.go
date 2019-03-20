@@ -39,7 +39,7 @@ func resourceAwsKmsGrant() *schema.Resource {
 			},
 			"grantee_principal": {
 				Type:         schema.TypeString,
-				Required:     true,
+				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validateArn,
 			},
