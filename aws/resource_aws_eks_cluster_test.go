@@ -188,8 +188,8 @@ func TestAccAWSEksCluster_VpcConfig_EndpointPrivateAccess(t *testing.T) {
 				Config: testAccAWSEksClusterConfig_VpcConfig_EndpointPrivateAccess(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksClusterExists(resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "vpc.config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "vpc.config.0.endpoint_private_access", "true"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.endpoint_private_access", "true"),
 				),
 			},
 			{
@@ -202,8 +202,8 @@ func TestAccAWSEksCluster_VpcConfig_EndpointPrivateAccess(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksClusterExists(resourceName, &cluster2),
 					testAccCheckAWSEksClusterNotRecreated(&cluster1, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, "vpc.config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "vpc.config.0.endpoint_private_access", "false"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.endpoint_private_access", "false"),
 				),
 			},
 			{
@@ -211,8 +211,8 @@ func TestAccAWSEksCluster_VpcConfig_EndpointPrivateAccess(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksClusterExists(resourceName, &cluster3),
 					testAccCheckAWSEksClusterNotRecreated(&cluster2, &cluster3),
-					resource.TestCheckResourceAttr(resourceName, "vpc.config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "vpc.config.0.endpoint_private_access", "true"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.endpoint_private_access", "true"),
 				),
 			},
 		},
@@ -234,8 +234,8 @@ func TestAccAWSEksCluster_VpcConfig_EndpointPublicAccess(t *testing.T) {
 				Config: testAccAWSEksClusterConfig_VpcConfig_EndpointPublicAccess(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksClusterExists(resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "vpc.config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "vpc.config.0.endpoint_public_access", "false"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.endpoint_public_access", "false"),
 				),
 			},
 			{
@@ -248,8 +248,8 @@ func TestAccAWSEksCluster_VpcConfig_EndpointPublicAccess(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksClusterExists(resourceName, &cluster2),
 					testAccCheckAWSEksClusterNotRecreated(&cluster1, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, "vpc.config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "vpc.config.0.endpoint_public_access", "true"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.endpoint_public_access", "true"),
 				),
 			},
 			{
@@ -257,8 +257,8 @@ func TestAccAWSEksCluster_VpcConfig_EndpointPublicAccess(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksClusterExists(resourceName, &cluster3),
 					testAccCheckAWSEksClusterNotRecreated(&cluster2, &cluster3),
-					resource.TestCheckResourceAttr(resourceName, "vpc.config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "vpc.config.0.endpoint_public_access", "false"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.endpoint_public_access", "false"),
 				),
 			},
 		},
