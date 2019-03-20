@@ -76,6 +76,14 @@ func resourceAwsAthenaWorkgroupCreate(d *schema.ResourceData, meta interface{}) 
 		input.Description = aws.String(v.(string))
 	}
 
+	inputConfiguration := &athena.WorkGroupConfiguration{}
+
+	if v, ok := d.GetOk("bytes_scanned_cutoff_per_query"); ok {
+		inputConfiguration.BytesScannedCutoffPerQuery = aws.Int64(int64(v.(int)))
+	}
+
+	input.Configuration = inputConfiguration
+
 	_, err := conn.CreateWorkGroup(input)
 
 	if err != nil {
@@ -107,7 +115,13 @@ func resourceAwsAthenaWorkgroupRead(d *schema.ResourceData, meta interface{}) er
 
 	d.Set("name", resp.WorkGroup.Name)
 	d.Set("description", resp.WorkGroup.Description)
-	// d.Set("bytes_scanned_cutoff_per_query", resp.WorkGroup.Configuration.BytesScannedCutoffPerQuery)
+
+	if resp.WorkGroup.Configuration != nil {
+		if resp.WorkGroup.Configuration.BytesScannedCutoffPerQuery != nil {
+			d.Set("bytes_scanned_cutoff_per_query", resp.WorkGroup.Configuration.BytesScannedCutoffPerQuery)
+		}
+	}
+
 	// d.Set("publish_cloudwatch_metrics_enabled", resp.WorkGroup.Configuration.PublishCloudWatchMetricsEnabled)
 	// d.Set("enforce_workgroup_configuration", resp.WorkGroup.Configuration.EnforceWorkGroupConfiguration)
 	// d.Set("output_location", resp.WorkGroup.Configuration.ResultConfiguration.OutputLocation)
@@ -133,6 +147,7 @@ func resourceAwsAthenaWorkgroupUpdate(d *schema.ResourceData, meta interface{}) 
 	conn := meta.(*AWSClient).athenaconn
 
 	workGroupUpdate := false
+	configUpdate := false
 
 	input := &athena.UpdateWorkGroupInput{
 		WorkGroup: aws.String(d.Get("name").(string)),
@@ -143,7 +158,24 @@ func resourceAwsAthenaWorkgroupUpdate(d *schema.ResourceData, meta interface{}) 
 		input.Description = aws.String(d.Get("description").(string))
 	}
 
+	inputConfigurationUpdates := &athena.WorkGroupConfigurationUpdates{}
+
+	if d.HasChange("bytes_scanned_cutoff_per_query") {
+		workGroupUpdate = true
+		configUpdate = true
+
+		if v, ok := d.GetOk("bytes_scanned_cutoff_per_query"); ok {
+			inputConfigurationUpdates.BytesScannedCutoffPerQuery = aws.Int64(int64(v.(int)))
+		} else {
+			inputConfigurationUpdates.RemoveBytesScannedCutoffPerQuery = aws.Bool(true)
+		}
+	}
+
 	if workGroupUpdate {
+		if configUpdate {
+			input.ConfigurationUpdates = inputConfigurationUpdates
+		}
+
 		_, err := conn.UpdateWorkGroup(input)
 
 		if err != nil {
