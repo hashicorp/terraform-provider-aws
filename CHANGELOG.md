@@ -25,6 +25,7 @@ ENHANCEMENTS:
 * resource/aws_cloudfront_distribution: Add `origin_group` configuration block (support Origin Groups and failover) [GH-7202]
 * resource/aws_codebuild_project: Add `project_environment` configuration block `image_pull_credentials_type` argument (support cross-account images) [GH-7458]
 * resource/aws_ecr_repository_policy: Support resource import [GH-7974]
+* resource/aws_eks_cluster: Add `vpc_config` configuration block `endpoint_private_access` and `endpoint_public_access` arguments (support disabling public access) [GH-8024]
 * resource/aws_iam_access_key: Support `status` updates (support disabling/enabling access keys) [GH-7961]
 * resource/aws_media_package_channel: Add `tags` argument [GH-7984]
 * resource/aws_route53_zone_association: Support resource import [GH-7966]
