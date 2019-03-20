@@ -193,6 +193,12 @@ const (
 	// You have specified a delivery channel that does not exist.
 	ErrCodeNoSuchDeliveryChannelException = "NoSuchDeliveryChannelException"
 
+	// ErrCodeNoSuchRemediationConfigurationException for service response error code
+	// "NoSuchRemediationConfigurationException".
+	//
+	// You specified an AWS Config rule without a remediation configuration.
+	ErrCodeNoSuchRemediationConfigurationException = "NoSuchRemediationConfigurationException"
+
 	// ErrCodeNoSuchRetentionConfigurationException for service response error code
 	// "NoSuchRetentionConfigurationException".
 	//
@@ -230,6 +236,19 @@ const (
 	//
 	// You have specified a resource that is either unknown or has not been discovered.
 	ErrCodeResourceNotDiscoveredException = "ResourceNotDiscoveredException"
+
+	// ErrCodeResourceNotFoundException for service response error code
+	// "ResourceNotFoundException".
+	//
+	// You have specified a resource that does not exist.
+	ErrCodeResourceNotFoundException = "ResourceNotFoundException"
+
+	// ErrCodeTooManyTagsException for service response error code
+	// "TooManyTagsException".
+	//
+	// You have reached the limit of the number of tags you can use. You have more
+	// than 50 tags.
+	ErrCodeTooManyTagsException = "TooManyTagsException"
 
 	// ErrCodeValidationException for service response error code
 	// "ValidationException".
