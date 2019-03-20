@@ -78,6 +78,55 @@ func TestAccAWSAthenaWorkGroup_withDescriptionUpdate(t *testing.T) {
 	})
 }
 
+func TestAccAWSAthenaWorkGroup_withBytesScannedCutoffPerQuery(t *testing.T) {
+	rName := acctest.RandString(5)
+	rBytesScannedCutoffPerQuery := "10485760"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAthenaWorkGroupConfigBytesScannedCutoffPerQuery(rName, rBytesScannedCutoffPerQuery),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAthenaWorkGroupExists("aws_athena_workgroup.foo"),
+					resource.TestCheckResourceAttr(
+						"aws_athena_workgroup.foo", "bytes_scanned_cutoff_per_query", rBytesScannedCutoffPerQuery),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSAthenaWorkGroup_withBytesScannedCutoffPerQueryUpdate(t *testing.T) {
+	rName := acctest.RandString(5)
+	rBytesScannedCutoffPerQuery := "10485760"
+	rBytesScannedCutoffPerQueryUpdate := "12582912"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAthenaWorkGroupConfigBytesScannedCutoffPerQuery(rName, rBytesScannedCutoffPerQuery),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAthenaWorkGroupExists("aws_athena_workgroup.foo"),
+					resource.TestCheckResourceAttr(
+						"aws_athena_workgroup.foo", "bytes_scanned_cutoff_per_query", rBytesScannedCutoffPerQuery),
+				),
+			},
+			{
+				Config: testAccAthenaWorkGroupConfigBytesScannedCutoffPerQuery(rName, rBytesScannedCutoffPerQueryUpdate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAthenaWorkGroupExists("aws_athena_workgroup.foo"),
+					resource.TestCheckResourceAttr(
+						"aws_athena_workgroup.foo", "bytes_scanned_cutoff_per_query", rBytesScannedCutoffPerQueryUpdate),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSAthenaWorkGroupDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).athenaconn
 	for _, rs := range s.RootModule().Resources {
@@ -136,4 +185,13 @@ func testAccAthenaWorkGroupConfigDescription(rName string, rDescription string) 
 		description = "%s"
 	}
 	`, rName, rDescription)
+}
+
+func testAccAthenaWorkGroupConfigBytesScannedCutoffPerQuery(rName string, rBytesScannedCutoffPerQuery string) string {
+	return fmt.Sprintf(`
+	resource "aws_athena_workgroup" "foo" {
+		name = "tf-athena-workgroup-%s"
+		bytes_scanned_cutoff_per_query = %s
+	}
+	`, rName, rBytesScannedCutoffPerQuery)
 }
