@@ -42,6 +42,8 @@ The following arguments are supported:
 
 ### vpc_config
 
+* `endpoint_private_access` - (Optional) Indicates whether or not the Amazon EKS private API server endpoint is enabled. Default is `false`.
+* `endpoint_public_access` - (Optional) Indicates whether or not the Amazon EKS public API server endpoint is enabled. Default is `true`.
 * `security_group_ids` – (Optional) List of security group IDs for the cross-account elastic network interfaces that Amazon EKS creates to use to allow communication between your worker nodes and the Kubernetes control plane.
 * `subnet_ids` – (Required) List of subnet IDs. Must be in at least two different availability zones. Amazon EKS creates cross-account elastic network interfaces in these subnets to allow communication between your worker nodes and the Kubernetes control plane.
 
@@ -66,6 +68,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `create` - (Default `15 minutes`) How long to wait for the EKS Cluster to be created.
 * `update` - (Default `60 minutes`) How long to wait for the EKS Cluster to be updated.
+Note that the `update` timeout is used separately for both `version` and `vpc_config` update timeouts.
 * `delete` - (Default `15 minutes`) How long to wait for the EKS Cluster to be deleted.
 
 ## Import

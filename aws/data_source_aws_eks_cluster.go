@@ -60,6 +60,14 @@ func dataSourceAwsEksCluster() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"endpoint_private_access": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"endpoint_public_access": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
 						"security_group_ids": {
 							Type:     schema.TypeSet,
 							Computed: true,
