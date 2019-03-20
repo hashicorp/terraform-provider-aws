@@ -34,6 +34,12 @@ const (
 	// The specified delivery channel name is not valid.
 	ErrCodeInvalidDeliveryChannelNameException = "InvalidDeliveryChannelNameException"
 
+	// ErrCodeInvalidExpressionException for service response error code
+	// "InvalidExpressionException".
+	//
+	// The syntax of the query is incorrect.
+	ErrCodeInvalidExpressionException = "InvalidExpressionException"
+
 	// ErrCodeInvalidLimitException for service response error code
 	// "InvalidLimitException".
 	//
