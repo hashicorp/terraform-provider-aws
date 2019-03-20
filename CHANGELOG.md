@@ -34,6 +34,8 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_appautoscaling_policy: Recreate resource for `resource_id` updates [GH-7982]
+* resource/aws_appautoscaling_policy: Ignore `ObjectNotFoundException` on deletion [GH-7982]
 * resource/aws_route53_zone_association: Properly trigger resource recreation on all updates [GH-7966]
 
 ## 2.2.0 (March 15, 2019)
