@@ -39,6 +39,12 @@ func TestAccAWSAppautoScalingPolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "step_scaling_policy_configuration.0.step_adjustment.207530251.metric_interval_upper_bound", ""),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSAppautoscalingPolicyImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -117,6 +123,18 @@ func TestAccAWSAppautoScalingPolicy_scaleOutAndIn(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_appautoscaling_policy.foobar_in", "scalable_dimension", "ecs:service:DesiredCount"),
 				),
 			},
+			{
+				ResourceName:      "aws_appautoscaling_policy.foobar_out",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSAppautoscalingPolicyImportStateIdFunc("aws_appautoscaling_policy.foobar_out"),
+				ImportStateVerify: true,
+			},
+			{
+				ResourceName:      "aws_appautoscaling_policy.foobar_in",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSAppautoscalingPolicyImportStateIdFunc("aws_appautoscaling_policy.foobar_in"),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -139,6 +157,12 @@ func TestAccAWSAppautoScalingPolicy_spotFleetRequest(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_appautoscaling_policy.test", "service_namespace", "ec2"),
 					resource.TestCheckResourceAttr("aws_appautoscaling_policy.test", "scalable_dimension", "ec2:spot-fleet-request:TargetCapacity"),
 				),
+			},
+			{
+				ResourceName:      "aws_appautoscaling_policy.test",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSAppautoscalingPolicyImportStateIdFunc("aws_appautoscaling_policy.test"),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -164,6 +188,12 @@ func TestAccAWSAppautoScalingPolicy_dynamoDb(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_appautoscaling_policy.dynamo_test", "service_namespace", "dynamodb"),
 					resource.TestCheckResourceAttr("aws_appautoscaling_policy.dynamo_test", "scalable_dimension", "dynamodb:table:WriteCapacityUnits"),
 				),
+			},
+			{
+				ResourceName:      "aws_appautoscaling_policy.dynamo_test",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSAppautoscalingPolicyImportStateIdFunc("aws_appautoscaling_policy.dynamo_test"),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -229,6 +259,18 @@ func TestAccAWSAppautoScalingPolicy_multiplePoliciesSameResource(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_appautoscaling_policy.write", "service_namespace", "dynamodb"),
 					resource.TestCheckResourceAttr("aws_appautoscaling_policy.write", "scalable_dimension", "dynamodb:table:WriteCapacityUnits"),
 				),
+			},
+			{
+				ResourceName:      "aws_appautoscaling_policy.read",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSAppautoscalingPolicyImportStateIdFunc("aws_appautoscaling_policy.read"),
+				ImportStateVerify: true,
+			},
+			{
+				ResourceName:      "aws_appautoscaling_policy.write",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSAppautoscalingPolicyImportStateIdFunc("aws_appautoscaling_policy.write"),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -891,4 +933,21 @@ resource "aws_cloudwatch_metric_alarm" "test" {
   }
 }
 `, rName)
+}
+
+func testAccAWSAppautoscalingPolicyImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		id := fmt.Sprintf("%s/%s/%s/%s",
+			rs.Primary.Attributes["service_namespace"],
+			rs.Primary.Attributes["resource_id"],
+			rs.Primary.Attributes["scalable_dimension"],
+			rs.Primary.Attributes["name"])
+
+		return id, nil
+	}
 }

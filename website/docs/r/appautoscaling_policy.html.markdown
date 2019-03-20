@@ -193,3 +193,11 @@ resource "aws_appautoscaling_policy" "ecs_policy" {
 * `arn` - The ARN assigned by AWS to the scaling policy.
 * `name` - The scaling policy's name.
 * `policy_type` - The scaling policy's type.
+
+## Import
+
+Application AutoScaling Policy can be imported using the `service-namespace` , `resource-id`, `scalable-dimension` and `policy-name` separated by `/`.
+
+```
+$ terraform import aws_appautoscaling_policy.test-policy service-namespace/resource-id/scalable-dimension/policy-name
+```

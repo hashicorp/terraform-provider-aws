@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
+	"strings"
 )
 
 func resourceAwsAppautoscalingPolicy() *schema.Resource {
@@ -19,6 +20,9 @@ func resourceAwsAppautoscalingPolicy() *schema.Resource {
 		Read:   resourceAwsAppautoscalingPolicyRead,
 		Update: resourceAwsAppautoscalingPolicyUpdate,
 		Delete: resourceAwsAppautoscalingPolicyDelete,
+		Importer: &schema.ResourceImporter{
+			State: resourceAwsAppautoscalingPolicyImport,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -393,6 +397,31 @@ func resourceAwsAppautoscalingPolicyDelete(d *schema.ResourceData, meta interfac
 	}
 
 	return nil
+}
+
+func resourceAwsAppautoscalingPolicyImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	idParts := strings.Split(d.Id(), "/")
+
+	if len(idParts) < 4 {
+		return nil, fmt.Errorf("unexpected format (%q), expected <service-namespace>/<resource-id>/<scalable-dimension>/<policy-name>", d.Id())
+	}
+
+	serviceNamespace := idParts[0]
+	resourceId := strings.Join(idParts[1:len(idParts)-2], "/")
+	scalableDimension := idParts[len(idParts)-2]
+	policyName := idParts[len(idParts)-1]
+
+	if serviceNamespace == "" || resourceId == "" || scalableDimension == "" || policyName == "" {
+		return nil, fmt.Errorf("unexpected format (%q), expected <service-namespace>/<resource-id>/<scalable-dimension>/<policy-name>", d.Id())
+	}
+
+	d.Set("service_namespace", serviceNamespace)
+	d.Set("resource_id", resourceId)
+	d.Set("scalable_dimension", scalableDimension)
+	d.Set("name", policyName)
+	d.SetId(policyName)
+
+	return []*schema.ResourceData{d}, nil
 }
 
 // Takes the result of flatmap.Expand for an array of step adjustments and
