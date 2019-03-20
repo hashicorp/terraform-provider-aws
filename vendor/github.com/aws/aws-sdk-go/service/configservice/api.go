@@ -4630,6 +4630,96 @@ func (c *ConfigService) PutRetentionConfigurationWithContext(ctx aws.Context, in
 	return out, req.Send()
 }
 
+const opSelectResourceConfig = "SelectResourceConfig"
+
+// SelectResourceConfigRequest generates a "aws/request.Request" representing the
+// client's request for the SelectResourceConfig operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See SelectResourceConfig for more information on using the SelectResourceConfig
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the SelectResourceConfigRequest method.
+//    req, resp := client.SelectResourceConfigRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/SelectResourceConfig
+func (c *ConfigService) SelectResourceConfigRequest(input *SelectResourceConfigInput) (req *request.Request, output *SelectResourceConfigOutput) {
+	op := &request.Operation{
+		Name:       opSelectResourceConfig,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &SelectResourceConfigInput{}
+	}
+
+	output = &SelectResourceConfigOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// SelectResourceConfig API operation for AWS Config.
+//
+// Accepts a structured query language (SQL) SELECT command, performs the corresponding
+// search, and returns resource configurations matching the properties.
+//
+// For more information about query components, see the Query Components (https://docs.aws.amazon.com/config/latest/developerguide/query-components.html)
+// section in the AWS Config Developer Guide.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Config's
+// API operation SelectResourceConfig for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidExpressionException "InvalidExpressionException"
+//   The syntax of the query is incorrect.
+//
+//   * ErrCodeInvalidLimitException "InvalidLimitException"
+//   The specified limit is outside the allowable range.
+//
+//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   The specified next token is invalid. Specify the nextToken string that was
+//   returned in the previous response to get the next page of results.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/SelectResourceConfig
+func (c *ConfigService) SelectResourceConfig(input *SelectResourceConfigInput) (*SelectResourceConfigOutput, error) {
+	req, out := c.SelectResourceConfigRequest(input)
+	return out, req.Send()
+}
+
+// SelectResourceConfigWithContext is the same as SelectResourceConfig with the addition of
+// the ability to pass a context and additional request options.
+//
+// See SelectResourceConfig for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ConfigService) SelectResourceConfigWithContext(ctx aws.Context, input *SelectResourceConfigInput, opts ...request.Option) (*SelectResourceConfigOutput, error) {
+	req, out := c.SelectResourceConfigRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opStartConfigRulesEvaluation = "StartConfigRulesEvaluation"
 
 // StartConfigRulesEvaluationRequest generates a "aws/request.Request" representing the
@@ -9553,6 +9643,30 @@ func (s *FailedRemediationBatch) SetFailureMessage(v string) *FailedRemediationB
 	return s
 }
 
+// Details about the fields such as name of the field.
+type FieldInfo struct {
+	_ struct{} `type:"structure"`
+
+	// Name of the field.
+	Name *string `type:"string"`
+}
+
+// String returns the string representation
+func (s FieldInfo) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s FieldInfo) GoString() string {
+	return s.String()
+}
+
+// SetName sets the Name field's value.
+func (s *FieldInfo) SetName(v string) *FieldInfo {
+	s.Name = &v
+	return s
+}
+
 type GetAggregateComplianceDetailsByConfigRuleInput struct {
 	_ struct{} `type:"structure"`
 
@@ -11683,6 +11797,30 @@ func (s *PutRetentionConfigurationOutput) SetRetentionConfiguration(v *Retention
 	return s
 }
 
+// Details about the query.
+type QueryInfo struct {
+	_ struct{} `type:"structure"`
+
+	// Returns a FieldInfo object.
+	SelectFields []*FieldInfo `type:"list"`
+}
+
+// String returns the string representation
+func (s QueryInfo) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s QueryInfo) GoString() string {
+	return s.String()
+}
+
+// SetSelectFields sets the SelectFields field's value.
+func (s *QueryInfo) SetSelectFields(v []*FieldInfo) *QueryInfo {
+	s.SelectFields = v
+	return s
+}
+
 // Specifies the types of AWS resource for which AWS Config records configuration
 // changes.
 //
@@ -12501,6 +12639,108 @@ func (s *Scope) SetTagKey(v string) *Scope {
 // SetTagValue sets the TagValue field's value.
 func (s *Scope) SetTagValue(v string) *Scope {
 	s.TagValue = &v
+	return s
+}
+
+type SelectResourceConfigInput struct {
+	_ struct{} `type:"structure"`
+
+	// The SQL query SELECT command.
+	//
+	// Expression is a required field
+	Expression *string `min:"1" type:"string" required:"true"`
+
+	// The maximum number of query results returned on each page.
+	Limit *int64 `type:"integer"`
+
+	// The nextToken string returned in a previous request that you use to request
+	// the next page of results in a paginated response.
+	NextToken *string `type:"string"`
+}
+
+// String returns the string representation
+func (s SelectResourceConfigInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SelectResourceConfigInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *SelectResourceConfigInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "SelectResourceConfigInput"}
+	if s.Expression == nil {
+		invalidParams.Add(request.NewErrParamRequired("Expression"))
+	}
+	if s.Expression != nil && len(*s.Expression) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Expression", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetExpression sets the Expression field's value.
+func (s *SelectResourceConfigInput) SetExpression(v string) *SelectResourceConfigInput {
+	s.Expression = &v
+	return s
+}
+
+// SetLimit sets the Limit field's value.
+func (s *SelectResourceConfigInput) SetLimit(v int64) *SelectResourceConfigInput {
+	s.Limit = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *SelectResourceConfigInput) SetNextToken(v string) *SelectResourceConfigInput {
+	s.NextToken = &v
+	return s
+}
+
+type SelectResourceConfigOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The nextToken string returned in a previous request that you use to request
+	// the next page of results in a paginated response.
+	NextToken *string `type:"string"`
+
+	// Returns the QueryInfo object.
+	QueryInfo *QueryInfo `type:"structure"`
+
+	// Returns the results for the SQL query.
+	Results []*string `type:"list"`
+}
+
+// String returns the string representation
+func (s SelectResourceConfigOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SelectResourceConfigOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *SelectResourceConfigOutput) SetNextToken(v string) *SelectResourceConfigOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetQueryInfo sets the QueryInfo field's value.
+func (s *SelectResourceConfigOutput) SetQueryInfo(v *QueryInfo) *SelectResourceConfigOutput {
+	s.QueryInfo = v
+	return s
+}
+
+// SetResults sets the Results field's value.
+func (s *SelectResourceConfigOutput) SetResults(v []*string) *SelectResourceConfigOutput {
+	s.Results = v
 	return s
 }
 
