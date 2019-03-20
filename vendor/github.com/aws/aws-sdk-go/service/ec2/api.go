@@ -57672,6 +57672,9 @@ type FpgaImage struct {
 	// The date and time the AFI was created.
 	CreateTime *time.Time `locationName:"createTime" type:"timestamp"`
 
+	// Indicates whether data retention support is enabled for the AFI.
+	DataRetentionSupport *bool `locationName:"dataRetentionSupport" type:"boolean"`
+
 	// The description of the AFI.
 	Description *string `locationName:"description" type:"string"`
 
@@ -57725,6 +57728,12 @@ func (s FpgaImage) GoString() string {
 // SetCreateTime sets the CreateTime field's value.
 func (s *FpgaImage) SetCreateTime(v time.Time) *FpgaImage {
 	s.CreateTime = &v
+	return s
+}
+
+// SetDataRetentionSupport sets the DataRetentionSupport field's value.
+func (s *FpgaImage) SetDataRetentionSupport(v bool) *FpgaImage {
+	s.DataRetentionSupport = &v
 	return s
 }
 
