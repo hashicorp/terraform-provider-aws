@@ -628,7 +628,7 @@ func resourceAwsDynamoDbTableDelete(d *schema.ResourceData, meta interface{}) er
 			BackupName: aws.String(backupName.(string)),
 			TableName:  aws.String(d.Id()),
 		}
-		err := resource.Retry(10*time.Minute, func() *resource.RetryError {
+		err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 			_, err := conn.CreateBackup(backupInput)
 			if err == nil {
 				return nil
