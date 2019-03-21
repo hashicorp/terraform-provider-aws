@@ -813,6 +813,8 @@ func init() {
 		"dynamodb_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n" +
 			"It's typically used to connect to dynamodb-local.",
 
+		"firehose_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
+
 		"kinesis_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n" +
 			"It's typically used to connect to kinesalite.",
 
@@ -835,6 +837,8 @@ func init() {
 		"es_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
 
 		"rds_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
+
+		"redshift_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
 
 		"s3_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
 
@@ -945,6 +949,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		config.EfsEndpoint = endpoints["efs"].(string)
 		config.ElbEndpoint = endpoints["elb"].(string)
 		config.EsEndpoint = endpoints["es"].(string)
+		config.FirehoseEndpoint = endpoints["firehose"].(string)
 		config.IamEndpoint = endpoints["iam"].(string)
 		config.KinesisEndpoint = endpoints["kinesis"].(string)
 		config.KinesisAnalyticsEndpoint = endpoints["kinesis_analytics"].(string)
@@ -952,6 +957,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		config.LambdaEndpoint = endpoints["lambda"].(string)
 		config.R53Endpoint = endpoints["r53"].(string)
 		config.RdsEndpoint = endpoints["rds"].(string)
+		config.RedshiftEndpoint = endpoints["redshift"].(string)
 		config.S3Endpoint = endpoints["s3"].(string)
 		config.S3ControlEndpoint = endpoints["s3control"].(string)
 		config.SesEndpoint = endpoints["ses"].(string)
@@ -1122,6 +1128,12 @@ func endpointsSchema() *schema.Schema {
 					Default:     "",
 					Description: descriptions["es_endpoint"],
 				},
+				"firehose": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: descriptions["firehose_endpoint"],
+				},
 				"kinesis": {
 					Type:        schema.TypeString,
 					Optional:    true,
@@ -1157,6 +1169,12 @@ func endpointsSchema() *schema.Schema {
 					Optional:    true,
 					Default:     "",
 					Description: descriptions["rds_endpoint"],
+				},
+				"redshift": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: descriptions["redshift_endpoint"],
 				},
 				"s3": {
 					Type:        schema.TypeString,
@@ -1221,10 +1239,12 @@ func endpointsToHash(v interface{}) int {
 	buf.WriteString(fmt.Sprintf("%s-", m["autoscaling"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["efs"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["elb"].(string)))
+	buf.WriteString(fmt.Sprintf("%s-", m["firehose"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["kinesis"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["kms"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["lambda"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["rds"].(string)))
+	buf.WriteString(fmt.Sprintf("%s-", m["redshift"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["s3"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["ses"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["sns"].(string)))
