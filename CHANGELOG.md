@@ -31,6 +31,7 @@ ENHANCEMENTS:
 * resource/aws_ecr_repository_policy: Support resource import [GH-7974]
 * resource/aws_eks_cluster: Add `vpc_config` configuration block `endpoint_private_access` and `endpoint_public_access` arguments (support disabling public access) [GH-8024]
 * resource/aws_iam_access_key: Support `status` updates (support disabling/enabling access keys) [GH-7961]
+* resource/aws_kinesis_analytics_application: Support resource import [GH-8027]
 * resource/aws_media_package_channel: Add `tags` argument [GH-7984]
 * resource/aws_route53_zone_association: Support resource import [GH-7966]
 * resource/aws_s3_bucket_inventory: Support plan-time validation of `optional_fields` values `ObjectLockRetainUntilDate`, `ObjectLockMode` and `ObjectLockLegalHoldStatus` [GH-7952]
