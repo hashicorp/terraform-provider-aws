@@ -18,6 +18,7 @@ ENHANCEMENTS:
 * data-source/aws_eks_cluster: Add `vpc_config` configuration block `endpoint_private_access` and `endpoint_public_access` attributes [GH-8024]
 * data-source/aws_instance: Add `get_user_data` argument and `user_data_base64` attribute [GH-8001]
 * provider: Support custom endpoint for `ses` [GH-7986]
+* provider: Support custom endpoints for `firehose` and `redshift` [GH-8007]
 * resource/aws_api_gateway_deployment: Allow `stage_name` argument to be optional [GH-6459]
 * resource/aws_appmesh_route: Support resource import [GH-7858]
 * resource/aws_appmesh_virtual_node: Support resource import [GH-7858]
