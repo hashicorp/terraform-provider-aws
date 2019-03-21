@@ -1,50 +1,50 @@
-## 2.3.0 (Unreleased)
+## 2.3.0 (March 21, 2019)
 
 BREAKING CHANGES:
 
-* service/appmesh: Changes to support AppMesh General Availability (GA) release. The AppMesh resources were added while the API was under Public Preview and the GA release earlier this month introduced breaking changes which prevented further AWS Go SDK updates. This is a very atypical situation for the Terraform AWS Provider as most AWS API and SDK changes are additive. To prevent this situation in the future we may introduce separate Terraform AWS Provider(s) specifically for Public Preview or Beta APIs. If or when this occurs, it will be separately announced. The maintainers will continue following Terraform Provider compatibility promises outlined on the [HashiCorp Blog](https://www.hashicorp.com/blog/hashicorp-terraform-provider-versioning) and [Extending Terraform documentation](https://www.terraform.io/docs/extend/best-practices/versioning.html) as best as possible except other existing Public Preview resources. [GH-7659]
-* resource/aws_appmesh_virtual_node: Replace `backends` configuration block(s) with `backend` configuration blocks [GH-7858]
-* resource/aws_appmesh_virtual_node: Replace `service_discovery` configuration block `service_name` argument with `service_discovery` configuration block `dns` configuration block [GH-7858]
-* resource/aws_appmesh_virtual_router: Remove `spec` configuration block `service_names` argument [GH-7858]
+* service/appmesh: Changes to support AppMesh General Availability (GA) release. The AppMesh resources were added while the API was under Public Preview and the GA release earlier this month introduced breaking changes which prevented further AWS Go SDK updates. This is a very atypical situation for the Terraform AWS Provider as most AWS API and SDK changes are additive. To prevent this situation in the future we may introduce separate Terraform AWS Provider(s) specifically for Public Preview or Beta APIs. If or when this occurs, it will be separately announced. The maintainers will continue following Terraform Provider compatibility promises outlined on the [HashiCorp Blog](https://www.hashicorp.com/blog/hashicorp-terraform-provider-versioning) and [Extending Terraform documentation](https://www.terraform.io/docs/extend/best-practices/versioning.html) as best as possible except other existing Public Preview resources. ([#7659](https://github.com/terraform-providers/terraform-provider-aws/issues/7659))
+* resource/aws_appmesh_virtual_node: Replace `backends` configuration block(s) with `backend` configuration blocks ([#7858](https://github.com/terraform-providers/terraform-provider-aws/issues/7858))
+* resource/aws_appmesh_virtual_node: Replace `service_discovery` configuration block `service_name` argument with `service_discovery` configuration block `dns` configuration block ([#7858](https://github.com/terraform-providers/terraform-provider-aws/issues/7858))
+* resource/aws_appmesh_virtual_router: Remove `spec` configuration block `service_names` argument ([#7858](https://github.com/terraform-providers/terraform-provider-aws/issues/7858))
 
 FEATURES:
 
-* **New Data Source:** `aws_transfer_server` [GH-7977]
-* **New Resource:** `aws_appmesh_virtual_service` [GH-7858]
-* **New Resource:** `aws_backup_plan` [GH-7350]
-* **New Resource:** `aws_cloudformation_stack_set` [GH-8020]
-* **New Resource:** `aws_cloudformation_stack_set_instance` [GH-8020]
+* **New Data Source:** `aws_transfer_server` ([#7977](https://github.com/terraform-providers/terraform-provider-aws/issues/7977))
+* **New Resource:** `aws_appmesh_virtual_service` ([#7858](https://github.com/terraform-providers/terraform-provider-aws/issues/7858))
+* **New Resource:** `aws_backup_plan` ([#7350](https://github.com/terraform-providers/terraform-provider-aws/issues/7350))
+* **New Resource:** `aws_cloudformation_stack_set` ([#8020](https://github.com/terraform-providers/terraform-provider-aws/issues/8020))
+* **New Resource:** `aws_cloudformation_stack_set_instance` ([#8020](https://github.com/terraform-providers/terraform-provider-aws/issues/8020))
 
 ENHANCEMENTS:
 
-* data-source/aws_eks_cluster: Add `vpc_config` configuration block `endpoint_private_access` and `endpoint_public_access` attributes [GH-8024]
-* data-source/aws_instance: Add `get_user_data` argument and `user_data_base64` attribute [GH-8001]
-* provider: Support custom endpoint for `ses` [GH-7986]
-* provider: Support custom endpoints for `firehose` and `redshift` [GH-8007]
-* resource/aws_api_gateway_deployment: Allow `stage_name` argument to be optional [GH-6459]
-* resource/aws_appautoscaling_policy: Support resource import [GH-8032]
-* resource/aws_appautoscaling_target: Support resource import [GH-8032]
-* resource/aws_appmesh_route: Support resource import [GH-7858]
-* resource/aws_appmesh_virtual_node: Support resource import [GH-7858]
-* resource/aws_appmesh_virtual_router: Support resource import [GH-7858]
-* resource/aws_appmesh_virtual_router: Add `spec` configuration block `listener` configuration block [GH-7858]
-* resource/aws_cloudfront_distribution: Add `origin_group` configuration block (support Origin Groups and failover) [GH-7202]
-* resource/aws_codebuild_project: Add `project_environment` configuration block `image_pull_credentials_type` argument (support cross-account images) [GH-7458]
-* resource/aws_ecr_repository_policy: Support resource import [GH-7974]
-* resource/aws_eks_cluster: Add `vpc_config` configuration block `endpoint_private_access` and `endpoint_public_access` arguments (support disabling public access) [GH-8024]
-* resource/aws_iam_access_key: Support `status` updates (support disabling/enabling access keys) [GH-7961]
-* resource/aws_kinesis_analytics_application: Support resource import [GH-8027]
-* resource/aws_media_package_channel: Add `tags` argument [GH-7984]
-* resource/aws_route53_zone_association: Support resource import [GH-7966]
-* resource/aws_s3_bucket_inventory: Support plan-time validation of `optional_fields` values `ObjectLockRetainUntilDate`, `ObjectLockMode` and `ObjectLockLegalHoldStatus` [GH-7952]
-* resource/aws_ssm_association: Add `compliance_severity` argument [GH-7852]
-* resource/aws_ssm_association: Add `max_concurrency` and `max_errors` arguments [GH-7970]
+* data-source/aws_eks_cluster: Add `vpc_config` configuration block `endpoint_private_access` and `endpoint_public_access` attributes ([#8024](https://github.com/terraform-providers/terraform-provider-aws/issues/8024))
+* data-source/aws_instance: Add `get_user_data` argument and `user_data_base64` attribute ([#8001](https://github.com/terraform-providers/terraform-provider-aws/issues/8001))
+* provider: Support custom endpoint for `ses` ([#7986](https://github.com/terraform-providers/terraform-provider-aws/issues/7986))
+* provider: Support custom endpoints for `firehose` and `redshift` ([#8007](https://github.com/terraform-providers/terraform-provider-aws/issues/8007))
+* resource/aws_api_gateway_deployment: Allow `stage_name` argument to be optional ([#6459](https://github.com/terraform-providers/terraform-provider-aws/issues/6459))
+* resource/aws_appautoscaling_policy: Support resource import ([#8032](https://github.com/terraform-providers/terraform-provider-aws/issues/8032))
+* resource/aws_appautoscaling_target: Support resource import ([#8032](https://github.com/terraform-providers/terraform-provider-aws/issues/8032))
+* resource/aws_appmesh_route: Support resource import ([#7858](https://github.com/terraform-providers/terraform-provider-aws/issues/7858))
+* resource/aws_appmesh_virtual_node: Support resource import ([#7858](https://github.com/terraform-providers/terraform-provider-aws/issues/7858))
+* resource/aws_appmesh_virtual_router: Support resource import ([#7858](https://github.com/terraform-providers/terraform-provider-aws/issues/7858))
+* resource/aws_appmesh_virtual_router: Add `spec` configuration block `listener` configuration block ([#7858](https://github.com/terraform-providers/terraform-provider-aws/issues/7858))
+* resource/aws_cloudfront_distribution: Add `origin_group` configuration block (support Origin Groups and failover) ([#7202](https://github.com/terraform-providers/terraform-provider-aws/issues/7202))
+* resource/aws_codebuild_project: Add `project_environment` configuration block `image_pull_credentials_type` argument (support cross-account images) ([#7458](https://github.com/terraform-providers/terraform-provider-aws/issues/7458))
+* resource/aws_ecr_repository_policy: Support resource import ([#7974](https://github.com/terraform-providers/terraform-provider-aws/issues/7974))
+* resource/aws_eks_cluster: Add `vpc_config` configuration block `endpoint_private_access` and `endpoint_public_access` arguments (support disabling public access) ([#8024](https://github.com/terraform-providers/terraform-provider-aws/issues/8024))
+* resource/aws_iam_access_key: Support `status` updates (support disabling/enabling access keys) ([#7961](https://github.com/terraform-providers/terraform-provider-aws/issues/7961))
+* resource/aws_kinesis_analytics_application: Support resource import ([#8027](https://github.com/terraform-providers/terraform-provider-aws/issues/8027))
+* resource/aws_media_package_channel: Add `tags` argument ([#7984](https://github.com/terraform-providers/terraform-provider-aws/issues/7984))
+* resource/aws_route53_zone_association: Support resource import ([#7966](https://github.com/terraform-providers/terraform-provider-aws/issues/7966))
+* resource/aws_s3_bucket_inventory: Support plan-time validation of `optional_fields` values `ObjectLockRetainUntilDate`, `ObjectLockMode` and `ObjectLockLegalHoldStatus` ([#7952](https://github.com/terraform-providers/terraform-provider-aws/issues/7952))
+* resource/aws_ssm_association: Add `compliance_severity` argument ([#7852](https://github.com/terraform-providers/terraform-provider-aws/issues/7852))
+* resource/aws_ssm_association: Add `max_concurrency` and `max_errors` arguments ([#7970](https://github.com/terraform-providers/terraform-provider-aws/issues/7970))
 
 BUG FIXES:
 
-* resource/aws_appautoscaling_policy: Recreate resource for `resource_id` updates [GH-7982]
-* resource/aws_appautoscaling_policy: Ignore `ObjectNotFoundException` on deletion [GH-7982]
-* resource/aws_route53_zone_association: Properly trigger resource recreation on all updates [GH-7966]
+* resource/aws_appautoscaling_policy: Recreate resource for `resource_id` updates ([#7982](https://github.com/terraform-providers/terraform-provider-aws/issues/7982))
+* resource/aws_appautoscaling_policy: Ignore `ObjectNotFoundException` on deletion ([#7982](https://github.com/terraform-providers/terraform-provider-aws/issues/7982))
+* resource/aws_route53_zone_association: Properly trigger resource recreation on all updates ([#7966](https://github.com/terraform-providers/terraform-provider-aws/issues/7966))
 
 ## 2.2.0 (March 15, 2019)
 
