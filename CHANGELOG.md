@@ -12,6 +12,8 @@ FEATURES:
 * **New Data Source:** `aws_transfer_server` [GH-7977]
 * **New Resource:** `aws_appmesh_virtual_service` [GH-7858]
 * **New Resource:** `aws_backup_plan` [GH-7350]
+* **New Resource:** `aws_cloudformation_stack_set` [GH-8020]
+* **New Resource:** `aws_cloudformation_stack_set_instance` [GH-8020]
 
 ENHANCEMENTS:
 
