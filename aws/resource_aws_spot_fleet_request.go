@@ -1151,9 +1151,8 @@ func resourceAwsSpotFleetRequestUpdate(d *schema.ResourceData, meta interface{})
 		req.ExcessCapacityTerminationPolicy = aws.String(val.(string))
 	}
 
-	resp, err := conn.ModifySpotFleetRequest(req)
-	if err == nil && aws.BoolValue(resp.Return) {
-		// TODO: rollback to old values?
+	if _, err := conn.ModifySpotFleetRequest(req); err != nil {
+		return fmt.Errorf("error updating spot request (%s): %s", d.Id(), err)
 	}
 
 	return nil
@@ -1187,7 +1186,7 @@ func deleteSpotFleetRequest(spotFleetRequestID string, terminateInstances bool, 
 		return nil
 	}
 
-	return resource.Retry(timeout, func() *resource.RetryError {
+	err = resource.Retry(timeout, func() *resource.RetryError {
 		resp, err := conn.DescribeSpotFleetInstances(&ec2.DescribeSpotFleetInstancesInput{
 			SpotFleetRequestId: aws.String(spotFleetRequestID),
 		})
@@ -1195,16 +1194,27 @@ func deleteSpotFleetRequest(spotFleetRequestID string, terminateInstances bool, 
 			return resource.NonRetryableError(err)
 		}
 
-		if len(resp.ActiveInstances) == 0 {
-			log.Printf("[DEBUG] Active instance count is 0 for Spot Fleet Request (%s), removing", spotFleetRequestID)
-			return nil
+		if n := len(resp.ActiveInstances); n > 0 {
+			log.Printf("[DEBUG] Active instance count in Spot Fleet Request (%s): %d", spotFleetRequestID, n)
+			return resource.RetryableError(fmt.Errorf("fleet still has (%d) running instances", n))
 		}
 
-		log.Printf("[DEBUG] Active instance count in Spot Fleet Request (%s): %d", spotFleetRequestID, len(resp.ActiveInstances))
-
-		return resource.RetryableError(
-			fmt.Errorf("fleet still has (%d) running instances", len(resp.ActiveInstances)))
+		log.Printf("[DEBUG] Active instance count is 0 for Spot Fleet Request (%s), removing", spotFleetRequestID)
+		return nil
 	})
+
+	if isResourceTimeoutError(err) {
+		resp, _ := conn.DescribeSpotFleetInstances(&ec2.DescribeSpotFleetInstancesInput{
+			SpotFleetRequestId: aws.String(spotFleetRequestID),
+		})
+
+		if n := len(resp.ActiveInstances); n > 0 {
+			log.Printf("[DEBUG] Active instance count in Spot Fleet Request (%s): %d", spotFleetRequestID, n)
+			return fmt.Errorf("fleet still has (%d) running instances", n)
+		}
+	}
+
+	return nil
 }
 
 func hashEphemeralBlockDevice(v interface{}) int {
