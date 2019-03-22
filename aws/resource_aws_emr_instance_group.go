@@ -2,10 +2,9 @@ package aws
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"time"
-
-	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/emr"
@@ -26,6 +25,11 @@ func resourceAwsEMRInstanceGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+			},
+			"instance_role": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "TASK",
 			},
 			"instance_type": {
 				Type:     schema.TypeString,
@@ -119,43 +123,38 @@ func readEmrEBSConfig(d *schema.ResourceData) *emr.EbsConfiguration {
 func resourceAwsEMRInstanceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).emrconn
 
-	clusterId := d.Get("cluster_id").(string)
-	instanceType := d.Get("instance_type").(string)
-	instanceCount := d.Get("instance_count").(int)
-	groupName := d.Get("name").(string)
-
-	ebsConfig := readEmrEBSConfig(d)
-
+	instanceRole := d.Get("instance_role").(string)
 	params := &emr.AddInstanceGroupsInput{
 		InstanceGroups: []*emr.InstanceGroupConfig{
 			{
-				InstanceRole:     aws.String("TASK"),
-				InstanceCount:    aws.Int64(int64(instanceCount)),
-				InstanceType:     aws.String(instanceType),
-				Name:             aws.String(groupName),
-				EbsConfiguration: ebsConfig,
+				InstanceRole:     aws.String(instanceRole),
+				InstanceCount:    aws.Int64(int64(d.Get("instance_count").(int))),
+				InstanceType:     aws.String(d.Get("instance_type").(string)),
+				Name:             aws.String(d.Get("name").(string)),
+				EbsConfiguration: readEmrEBSConfig(d),
 			},
 		},
-		JobFlowId: aws.String(clusterId),
+		JobFlowId: aws.String(d.Get("cluster_id").(string)),
 	}
 
-	log.Printf("[DEBUG] Creating EMR task group params: %s", params)
+	log.Printf("[DEBUG] Creating EMR %s group with the following params: %s", instanceRole, params)
 	resp, err := conn.AddInstanceGroups(params)
 	if err != nil {
 		return err
 	}
 
-	log.Printf("[DEBUG] Created EMR task group finished: %#v", resp)
+	log.Printf("[DEBUG] Created EMR %s group finished: %#v", instanceRole, resp)
 	if resp == nil || len(resp.InstanceGroupIds) == 0 {
 		return fmt.Errorf("Error creating instance groups: no instance group returned")
 	}
 	d.SetId(*resp.InstanceGroupIds[0])
 
-	return nil
+	return resourceAwsEMRInstanceGroupRead(d, meta)
 }
 
 func resourceAwsEMRInstanceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).emrconn
+
 	group, err := fetchEMRInstanceGroup(conn, d.Get("cluster_id").(string), d.Id())
 	if err != nil {
 		switch err {
@@ -220,6 +219,8 @@ func fetchAllEMRInstanceGroups(conn *emr.EMR, clusterId string) ([]*emr.Instance
 }
 
 func fetchEMRInstanceGroup(conn *emr.EMR, clusterId, groupId string) (*emr.InstanceGroup, error) {
+	// Is this needed or can we consolidate this a bit?
+
 	groups, err := fetchAllEMRInstanceGroups(conn, clusterId)
 	if err != nil {
 		return nil, err

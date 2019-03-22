@@ -23,7 +23,10 @@ func TestAccAWSEMRInstanceGroup_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSEmrInstanceGroupConfig(rInt),
-				Check:  testAccCheckAWSEmrInstanceGroupExists("aws_emr_instance_group.task", &ig),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEmrInstanceGroupExists("aws_emr_instance_group.task", &ig),
+					resource.TestCheckResourceAttr("aws_emr_instance_group.task", "instance_role", "TASK"),
+				),
 			},
 		},
 	})
@@ -412,6 +415,7 @@ func testAccAWSEmrInstanceGroupConfig_zero_count(r int) string {
 	return fmt.Sprintf(testAccAWSEmrInstanceGroupBase+`
 	resource "aws_emr_instance_group" "task" {
     cluster_id     = "${aws_emr_cluster.tf-test-cluster.id}"
+    instance_role  = "TASK"
     instance_count = 0
     instance_type  = "c4.large"
   }
@@ -422,6 +426,7 @@ func testAccAWSEmrInstanceGroupConfig_ebsBasic(r int) string {
 	return fmt.Sprintf(testAccAWSEmrInstanceGroupBase+`
 		resource "aws_emr_instance_group" "task" {
     cluster_id     = "${aws_emr_cluster.tf-test-cluster.id}"
+    instance_role  = "TASK"
     instance_count = 1
     instance_type  = "c4.large"
     ebs_optimized = true
