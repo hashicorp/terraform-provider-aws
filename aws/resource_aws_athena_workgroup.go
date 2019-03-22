@@ -36,6 +36,7 @@ func resourceAwsAthenaWorkgroup() *schema.Resource {
 			"enforce_workgroup_configuration": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Default:  true,
 			},
 			"publish_cloudwatch_metrics_enable": {
 				Type:     schema.TypeBool,
@@ -82,6 +83,10 @@ func resourceAwsAthenaWorkgroupCreate(d *schema.ResourceData, meta interface{}) 
 		inputConfiguration.BytesScannedCutoffPerQuery = aws.Int64(int64(v.(int)))
 	}
 
+	if v, ok := d.GetOk("enforce_workgroup_configuration"); ok {
+		inputConfiguration.EnforceWorkGroupConfiguration = aws.Bool(v.(bool))
+	}
+
 	input.Configuration = inputConfiguration
 
 	_, err := conn.CreateWorkGroup(input)
@@ -120,10 +125,13 @@ func resourceAwsAthenaWorkgroupRead(d *schema.ResourceData, meta interface{}) er
 		if resp.WorkGroup.Configuration.BytesScannedCutoffPerQuery != nil {
 			d.Set("bytes_scanned_cutoff_per_query", resp.WorkGroup.Configuration.BytesScannedCutoffPerQuery)
 		}
+
+		if resp.WorkGroup.Configuration.EnforceWorkGroupConfiguration != nil {
+			d.Set("enforce_workgroup_configuration", resp.WorkGroup.Configuration.EnforceWorkGroupConfiguration)
+		}
 	}
 
 	// d.Set("publish_cloudwatch_metrics_enabled", resp.WorkGroup.Configuration.PublishCloudWatchMetricsEnabled)
-	// d.Set("enforce_workgroup_configuration", resp.WorkGroup.Configuration.EnforceWorkGroupConfiguration)
 	// d.Set("output_location", resp.WorkGroup.Configuration.ResultConfiguration.OutputLocation)
 	// d.Set("encryption_option", resp.WorkGroup.Configuration.ResultConfiguration.EncryptionConfiguration.EncryptionOption)
 	// d.Set("kms_key", resp.WorkGroup.Configuration.ResultConfiguration.EncryptionConfiguration.KmsKey)
@@ -169,6 +177,14 @@ func resourceAwsAthenaWorkgroupUpdate(d *schema.ResourceData, meta interface{}) 
 		} else {
 			inputConfigurationUpdates.RemoveBytesScannedCutoffPerQuery = aws.Bool(true)
 		}
+	}
+
+	if d.HasChange("enforce_workgroup_configuration") {
+		workGroupUpdate = true
+		configUpdate = true
+
+		v := d.Get("enforce_workgroup_configuration")
+		inputConfigurationUpdates.EnforceWorkGroupConfiguration = aws.Bool(v.(bool))
 	}
 
 	if workGroupUpdate {
