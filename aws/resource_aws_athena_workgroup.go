@@ -38,7 +38,7 @@ func resourceAwsAthenaWorkgroup() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
-			"publish_cloudwatch_metrics_enable": {
+			"publish_cloudwatch_metrics_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
@@ -87,6 +87,10 @@ func resourceAwsAthenaWorkgroupCreate(d *schema.ResourceData, meta interface{}) 
 		inputConfiguration.EnforceWorkGroupConfiguration = aws.Bool(v.(bool))
 	}
 
+	if v, ok := d.GetOk("publish_cloudwatch_metrics_enabled"); ok {
+		inputConfiguration.PublishCloudWatchMetricsEnabled = aws.Bool(v.(bool))
+	}
+
 	input.Configuration = inputConfiguration
 
 	_, err := conn.CreateWorkGroup(input)
@@ -129,9 +133,12 @@ func resourceAwsAthenaWorkgroupRead(d *schema.ResourceData, meta interface{}) er
 		if resp.WorkGroup.Configuration.EnforceWorkGroupConfiguration != nil {
 			d.Set("enforce_workgroup_configuration", resp.WorkGroup.Configuration.EnforceWorkGroupConfiguration)
 		}
+
+		if resp.WorkGroup.Configuration.PublishCloudWatchMetricsEnabled != nil {
+			d.Set("publish_cloudwatch_metrics_enabled", resp.WorkGroup.Configuration.PublishCloudWatchMetricsEnabled)
+		}
 	}
 
-	// d.Set("publish_cloudwatch_metrics_enabled", resp.WorkGroup.Configuration.PublishCloudWatchMetricsEnabled)
 	// d.Set("output_location", resp.WorkGroup.Configuration.ResultConfiguration.OutputLocation)
 	// d.Set("encryption_option", resp.WorkGroup.Configuration.ResultConfiguration.EncryptionConfiguration.EncryptionOption)
 	// d.Set("kms_key", resp.WorkGroup.Configuration.ResultConfiguration.EncryptionConfiguration.KmsKey)
@@ -185,6 +192,14 @@ func resourceAwsAthenaWorkgroupUpdate(d *schema.ResourceData, meta interface{}) 
 
 		v := d.Get("enforce_workgroup_configuration")
 		inputConfigurationUpdates.EnforceWorkGroupConfiguration = aws.Bool(v.(bool))
+	}
+
+	if d.HasChange("publish_cloudwatch_metrics_enabled") {
+		workGroupUpdate = true
+		configUpdate = true
+
+		v := d.Get("publish_cloudwatch_metrics_enabled")
+		inputConfigurationUpdates.PublishCloudWatchMetricsEnabled = aws.Bool(v.(bool))
 	}
 
 	if workGroupUpdate {
