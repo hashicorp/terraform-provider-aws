@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -10,9 +11,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/emr"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/structure"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
-var emrInstanceGroupNotFound = errors.New("No matching EMR Instance Group")
+var errEMRInstanceGroupNotFound = errors.New("No matching EMR Instance Group")
 
 func resourceAwsEMRInstanceGroup() *schema.Resource {
 	return &schema.Resource{
@@ -21,6 +24,20 @@ func resourceAwsEMRInstanceGroup() *schema.Resource {
 		Update: resourceAwsEMRInstanceGroupUpdate,
 		Delete: resourceAwsEMRInstanceGroupDelete,
 		Schema: map[string]*schema.Schema{
+			"autoscaling_policy": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				DiffSuppressFunc: suppressEquivalentJsonDiffs,
+				ValidateFunc:     validation.ValidateJsonString,
+				StateFunc: func(v interface{}) string {
+					s, _ := structure.NormalizeJsonString(v.(string))
+					return s
+				},
+			},
+			"bid_price": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"cluster_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -124,17 +141,30 @@ func resourceAwsEMRInstanceGroupCreate(d *schema.ResourceData, meta interface{})
 	conn := meta.(*AWSClient).emrconn
 
 	instanceRole := d.Get("instance_role").(string)
+	groupConfig := &emr.InstanceGroupConfig{
+		EbsConfiguration: readEmrEBSConfig(d),
+		InstanceRole:     aws.String(instanceRole),
+		InstanceCount:    aws.Int64(int64(d.Get("instance_count").(int))),
+		InstanceType:     aws.String(d.Get("instance_type").(string)),
+		Name:             aws.String(d.Get("name").(string)),
+	}
+
+	if v, ok := d.GetOk("autoscaling_policy"); ok {
+		var autoScalingPolicy *emr.AutoScalingPolicy
+
+		if err := json.Unmarshal([]byte(v.(string)), &autoScalingPolicy); err != nil {
+			return fmt.Errorf("[DEBUG] error parsing Auto Scaling Policy %s", err)
+		}
+		groupConfig.AutoScalingPolicy = autoScalingPolicy
+	}
+
+	if v, ok := d.GetOk("bid_price"); ok {
+		groupConfig.BidPrice = aws.String(v.(string))
+	}
+
 	params := &emr.AddInstanceGroupsInput{
-		InstanceGroups: []*emr.InstanceGroupConfig{
-			{
-				InstanceRole:     aws.String(instanceRole),
-				InstanceCount:    aws.Int64(int64(d.Get("instance_count").(int))),
-				InstanceType:     aws.String(d.Get("instance_type").(string)),
-				Name:             aws.String(d.Get("name").(string)),
-				EbsConfiguration: readEmrEBSConfig(d),
-			},
-		},
-		JobFlowId: aws.String(d.Get("cluster_id").(string)),
+		InstanceGroups: []*emr.InstanceGroupConfig{groupConfig},
+		JobFlowId:      aws.String(d.Get("cluster_id").(string)),
 	}
 
 	log.Printf("[DEBUG] Creating EMR %s group with the following params: %s", instanceRole, params)
@@ -155,40 +185,80 @@ func resourceAwsEMRInstanceGroupCreate(d *schema.ResourceData, meta interface{})
 func resourceAwsEMRInstanceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).emrconn
 
-	group, err := fetchEMRInstanceGroup(conn, d.Get("cluster_id").(string), d.Id())
-	if err != nil {
-		switch err {
-		case emrInstanceGroupNotFound:
-			log.Printf("[DEBUG] EMR Instance Group (%s) not found, removing", d.Id())
-			d.SetId("")
-			return nil
-		default:
-			return err
-		}
-	}
+	ig, err := fetchEMRInstanceGroup(conn, d.Get("cluster_id").(string), d.Id())
 
-	// Guard against the chance of fetchEMRInstanceGroup returning nil group but
-	// not a emrInstanceGroupNotFound error
-	if group == nil {
+	if err == errEMRInstanceGroupNotFound {
 		log.Printf("[DEBUG] EMR Instance Group (%s) not found, removing", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	d.Set("name", group.Name)
-	d.Set("instance_count", group.RequestedInstanceCount)
-	d.Set("running_instance_count", group.RunningInstanceCount)
-	d.Set("instance_type", group.InstanceType)
-	if group.Status != nil && group.Status.State != nil {
-		d.Set("status", group.Status.State)
+	if err != nil {
+		return err
 	}
+
+	// Guard against the chance of fetchEMRInstanceGroup returning nil group but not a errEMRInstanceGroupNotFound error
+	if ig == nil {
+		log.Printf("[DEBUG] EMR Instance Group (%s) not found, removing", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	d.Set("instance_count", ig.RequestedInstanceCount)
+	d.Set("instance_role", ig.InstanceGroupType)
+	d.Set("instance_type", ig.InstanceType)
+	d.Set("name", ig.Name)
+	d.Set("running_instance_count", ig.RunningInstanceCount)
+
+	if ig.BidPrice != nil {
+		d.Set("bid_price", ig.BidPrice)
+	}
+
+	if ig.Status != nil && ig.Status.State != nil {
+		d.Set("status", ig.Status.State)
+	}
+
+	var autoscalingPolicyString string
+	if ig.AutoScalingPolicy != nil {
+		// AutoScalingPolicy has an additional Status field and null values that are causing a new hashcode to be generated for `instance_group`.
+		// We are purposefully omitting that field and the null values here when we flatten the autoscaling policy string for the statefile.
+		for i, rule := range ig.AutoScalingPolicy.Rules {
+			for j, dimension := range rule.Trigger.CloudWatchAlarmDefinition.Dimensions {
+				if *dimension.Key == "JobFlowId" {
+					tmpDimensions := append(ig.AutoScalingPolicy.Rules[i].Trigger.CloudWatchAlarmDefinition.Dimensions[:j], ig.AutoScalingPolicy.Rules[i].Trigger.CloudWatchAlarmDefinition.Dimensions[j+1:]...)
+					ig.AutoScalingPolicy.Rules[i].Trigger.CloudWatchAlarmDefinition.Dimensions = tmpDimensions
+				}
+			}
+
+			if len(ig.AutoScalingPolicy.Rules[i].Trigger.CloudWatchAlarmDefinition.Dimensions) == 0 {
+				ig.AutoScalingPolicy.Rules[i].Trigger.CloudWatchAlarmDefinition.Dimensions = nil
+			}
+		}
+
+		tmpAutoScalingPolicy := emr.AutoScalingPolicy{
+			Constraints: ig.AutoScalingPolicy.Constraints,
+			Rules:       ig.AutoScalingPolicy.Rules,
+		}
+		autoscalingPolicyConstraintsBytes, err := json.Marshal(tmpAutoScalingPolicy.Constraints)
+		if err != nil {
+			return fmt.Errorf("error parsing EMR Cluster Instance Groups AutoScalingPolicy Constraints: %s", err)
+		}
+
+		autoscalingPolicyRulesBytes, err := normalizeEmptyRules(tmpAutoScalingPolicy.Rules)
+		if err != nil {
+			return fmt.Errorf("error parsing EMR Cluster Instance Groups AutoScalingPolicy Rules: %s", err)
+		}
+
+		autoscalingPolicyString = fmt.Sprintf("{\"Constraints\":%s,\"Rules\":%s}", string(autoscalingPolicyConstraintsBytes), string(autoscalingPolicyRulesBytes))
+	}
+	d.Set("autoscaling_policy", autoscalingPolicyString)
 
 	return nil
 }
 
-func fetchAllEMRInstanceGroups(conn *emr.EMR, clusterId string) ([]*emr.InstanceGroup, error) {
+func fetchAllEMRInstanceGroups(conn *emr.EMR, clusterID string) ([]*emr.InstanceGroup, error) {
 	req := &emr.ListInstanceGroupsInput{
-		ClusterId: aws.String(clusterId),
+		ClusterId: aws.String(clusterID),
 	}
 
 	var groups []*emr.InstanceGroup
@@ -197,10 +267,10 @@ func fetchAllEMRInstanceGroups(conn *emr.EMR, clusterId string) ([]*emr.Instance
 		log.Printf("[DEBUG] EMR Cluster Instance Marker: %s", *marker)
 		respGrps, errGrps := conn.ListInstanceGroups(req)
 		if errGrps != nil {
-			return nil, fmt.Errorf("Error reading EMR cluster (%s): %s", clusterId, errGrps)
+			return nil, fmt.Errorf("Error reading EMR cluster (%s): %s", clusterID, errGrps)
 		}
 		if respGrps == nil {
-			return nil, fmt.Errorf("Error reading EMR Instance Group for cluster (%s)", clusterId)
+			return nil, fmt.Errorf("Error reading EMR Instance Group for cluster (%s)", clusterID)
 		}
 
 		if respGrps.InstanceGroups != nil {
@@ -212,23 +282,23 @@ func fetchAllEMRInstanceGroups(conn *emr.EMR, clusterId string) ([]*emr.Instance
 	}
 
 	if len(groups) == 0 {
-		return nil, fmt.Errorf("No instance groups found for EMR Cluster (%s)", clusterId)
+		return nil, fmt.Errorf("No instance groups found for EMR Cluster (%s)", clusterID)
 	}
 
 	return groups, nil
 }
 
-func fetchEMRInstanceGroup(conn *emr.EMR, clusterId, groupId string) (*emr.InstanceGroup, error) {
+func fetchEMRInstanceGroup(conn *emr.EMR, clusterID, groupID string) (*emr.InstanceGroup, error) {
 	// Is this needed or can we consolidate this a bit?
 
-	groups, err := fetchAllEMRInstanceGroups(conn, clusterId)
+	groups, err := fetchAllEMRInstanceGroups(conn, clusterID)
 	if err != nil {
 		return nil, err
 	}
 
 	var group *emr.InstanceGroup
 	for _, ig := range groups {
-		if groupId == *ig.Id {
+		if groupID == *ig.Id {
 			group = ig
 			break
 		}
@@ -238,7 +308,7 @@ func fetchEMRInstanceGroup(conn *emr.EMR, clusterId, groupId string) (*emr.Insta
 		return group, nil
 	}
 
-	return nil, emrInstanceGroupNotFound
+	return nil, errEMRInstanceGroupNotFound
 }
 
 func resourceAwsEMRInstanceGroupUpdate(d *schema.ResourceData, meta interface{}) error {

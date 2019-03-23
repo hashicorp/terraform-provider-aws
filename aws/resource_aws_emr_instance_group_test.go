@@ -32,6 +32,27 @@ func TestAccAWSEMRInstanceGroup_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSEMRInstanceGroup_basicAutoScalingPolicy(t *testing.T) {
+	var ig emr.InstanceGroup
+	rInt := acctest.RandInt()
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEmrInstanceGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEmrInstanceGroupConfigWithAutoScalingPolicy(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEmrInstanceGroupExists("aws_emr_instance_group.task", &ig),
+					resource.TestCheckResourceAttr("aws_emr_instance_group.task", "instance_role", "TASK"),
+					resource.TestCheckResourceAttrSet("aws_emr_instance_group.task", "autoscaling_policy"),
+				),
+			},
+		},
+	})
+
+}
+
 // Confirm we can scale down the instance count. Regression test for https://github.com/terraform-providers/terraform-provider-aws/issues/1264
 func TestAccAWSEMRInstanceGroup_zero_count(t *testing.T) {
 	var ig emr.InstanceGroup
@@ -137,41 +158,6 @@ provider "aws" {
   region = "us-west-2"
 }
 
-resource "aws_emr_cluster" "tf-test-cluster" {
-  name          = "tf-test-emr-%d"
-  release_label = "emr-4.6.0"
-  applications  = ["Spark"]
-
-  ec2_attributes {
-    subnet_id                         = "${aws_subnet.main.id}"
-    emr_managed_master_security_group = "${aws_security_group.allow_all.id}"
-    emr_managed_slave_security_group  = "${aws_security_group.allow_all.id}"
-    instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
-  }
-
-  master_instance_type = "c4.large"
-  core_instance_type   = "c4.large"
-  core_instance_count  = 2
-
-  tags = {
-    role     = "rolename"
-    dns_zone = "env_zone"
-    env      = "env"
-    name     = "name-env"
-  }
-
-  bootstrap_action {
-    path = "s3://elasticmapreduce/bootstrap-actions/run-if"
-    name = "runif"
-    args = ["instance.isMaster=true", "echo running on master node"]
-  }
-
-  configurations = "test-fixtures/emr_configurations.json"
-  service_role = "${aws_iam_role.iam_emr_default_role.arn}"
-
-  depends_on = ["aws_internet_gateway.gw"]
-}
-
 resource "aws_security_group" "allow_all" {
   name        = "allow_all"
   description = "Allow all inbound traffic"
@@ -234,11 +220,49 @@ resource "aws_main_route_table_association" "a" {
   route_table_id = "${aws_route_table.r.id}"
 }
 
+## EMR Cluster Configuration
+resource "aws_emr_cluster" "tf-test-cluster" {
+  name          = "tf-test-emr-%[1]d"
+  release_label = "emr-4.6.0"
+  applications  = ["Spark"]
+
+  ec2_attributes {
+    subnet_id                         = "${aws_subnet.main.id}"
+    emr_managed_master_security_group = "${aws_security_group.allow_all.id}"
+    emr_managed_slave_security_group  = "${aws_security_group.allow_all.id}"
+    instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
+  }
+
+  master_instance_type = "c4.large"
+  core_instance_type   = "c4.large"
+  core_instance_count  = 2
+
+  tags = {
+    role     = "rolename"
+    dns_zone = "env_zone"
+    env      = "env"
+    name     = "name-env"
+  }
+
+  bootstrap_action {
+    path = "s3://elasticmapreduce/bootstrap-actions/run-if"
+    name = "runif"
+    args = ["instance.isMaster=true", "echo running on master node"]
+  }
+
+  configurations = "test-fixtures/emr_configurations.json"
+  service_role = "${aws_iam_role.iam_emr_default_role.arn}"
+  autoscaling_role = "${aws_iam_role.emr-autoscaling-role.arn}"
+
+  depends_on = ["aws_internet_gateway.gw"]
+}
+
+
 ###
 
 # IAM role for EMR Service
 resource "aws_iam_role" "iam_emr_default_role" {
-  name = "iam_emr_default_role_%d"
+  name = "iam_emr_default_role_%[1]d"
 
   assume_role_policy = <<EOT
 {
@@ -263,7 +287,7 @@ resource "aws_iam_role_policy_attachment" "service-attach" {
 }
 
 resource "aws_iam_policy" "iam_emr_default_policy" {
-  name = "iam_emr_default_policy_%d"
+  name = "iam_emr_default_policy_%[1]d"
 
   policy = <<EOT
 {
@@ -333,7 +357,7 @@ EOT
 
 # IAM Role for EC2 Instance Profile
 resource "aws_iam_role" "iam_emr_profile_role" {
-  name = "iam_emr_profile_role_%d"
+  name = "iam_emr_profile_role_%[1]d"
 
   assume_role_policy = <<EOT
 {
@@ -353,8 +377,8 @@ EOT
 }
 
 resource "aws_iam_instance_profile" "emr_profile" {
-  name  = "emr_profile_%d"
-  roles = ["${aws_iam_role.iam_emr_profile_role.name}"]
+  name  = "emr_profile_%[1]d"
+  role = "${aws_iam_role.iam_emr_profile_role.name}"
 }
 
 resource "aws_iam_role_policy_attachment" "profile-attach" {
@@ -363,7 +387,7 @@ resource "aws_iam_role_policy_attachment" "profile-attach" {
 }
 
 resource "aws_iam_policy" "iam_emr_profile_policy" {
-  name = "iam_emr_profile_policy_%d"
+  name = "iam_emr_profile_policy_%[1]d"
 
   policy = <<EOT
 {
@@ -399,16 +423,83 @@ resource "aws_iam_policy" "iam_emr_profile_policy" {
 }
 EOT
 }
+
+# IAM Role for autoscaling
+resource "aws_iam_role" "emr-autoscaling-role" {
+  name               = "EMR_AutoScaling_DefaultRole_%[1]d"
+  assume_role_policy = "${data.aws_iam_policy_document.emr-autoscaling-role-policy.json}"
+}
+
+data "aws_iam_policy_document" "emr-autoscaling-role-policy" {
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["elasticmapreduce.amazonaws.com","application-autoscaling.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role_policy_attachment" "emr-autoscaling-role" {
+  role       = "${aws_iam_role.emr-autoscaling-role.name}"
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonElasticMapReduceforAutoScalingRole"
+}
 `
 
 func testAccAWSEmrInstanceGroupConfig(r int) string {
 	return fmt.Sprintf(testAccAWSEmrInstanceGroupBase+`
 	resource "aws_emr_instance_group" "task" {
     cluster_id     = "${aws_emr_cluster.tf-test-cluster.id}"
+    instance_role  = "TASK"
     instance_count = 1
     instance_type  = "c4.large"
   }
-	`, r, r, r, r, r, r)
+	`, r)
+}
+
+func testAccAWSEmrInstanceGroupConfigWithAutoScalingPolicy(r int) string {
+	return fmt.Sprintf(testAccAWSEmrInstanceGroupBase+`
+	resource "aws_emr_instance_group" "task" {
+    cluster_id     = "${aws_emr_cluster.tf-test-cluster.id}"
+    instance_role  = "TASK"
+    instance_count = 1
+    instance_type  = "c4.large"
+    autoscaling_policy = <<EOT
+{
+  "Constraints": {
+    "MinCapacity": 1,
+    "MaxCapacity": 3
+  },
+  "Rules": [
+    {
+      "Name": "ScaleOutMemoryPercentage",
+      "Description": "Scale out if YARNMemoryAvailablePercentage is less than 15",
+      "Action": {
+        "SimpleScalingPolicyConfiguration": {
+          "AdjustmentType": "CHANGE_IN_CAPACITY",
+          "ScalingAdjustment": 1,
+          "CoolDown": 300
+        }
+      },
+      "Trigger": {
+        "CloudWatchAlarmDefinition": {
+          "ComparisonOperator": "LESS_THAN",
+          "EvaluationPeriods": 1,
+          "MetricName": "YARNMemoryAvailablePercentage",
+          "Namespace": "AWS/ElasticMapReduce",
+          "Period": 300,
+          "Statistic": "AVERAGE",
+          "Threshold": 15.0,
+          "Unit": "PERCENT"
+        }
+      }
+    }
+  ]
+}
+EOT
+}
+`, r)
 }
 
 func testAccAWSEmrInstanceGroupConfig_zero_count(r int) string {
@@ -419,7 +510,7 @@ func testAccAWSEmrInstanceGroupConfig_zero_count(r int) string {
     instance_count = 0
     instance_type  = "c4.large"
   }
-	`, r, r, r, r, r, r)
+	`, r)
 }
 
 func testAccAWSEmrInstanceGroupConfig_ebsBasic(r int) string {
@@ -435,5 +526,5 @@ func testAccAWSEmrInstanceGroupConfig_ebsBasic(r int) string {
       type = "gp2"
     }
   }
-	`, r, r, r, r, r, r)
+	`, r)
 }
