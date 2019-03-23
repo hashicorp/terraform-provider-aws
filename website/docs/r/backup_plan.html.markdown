@@ -17,10 +17,10 @@ resource "aws_backup_plan" "example" {
   name = "tf_example_backup_plan"
 
   rule {
-    rule_name           = "tf_example_backup_rule"
-      target_vault_name = "${aws_backup_vault.test.name}"
-      schedule          = "cron(0 12 * * ? *)"
-    }
+    rule_name         = "tf_example_backup_rule"
+    target_vault_name = "${aws_backup_vault.test.name}"
+    schedule          = "cron(0 12 * * ? *)"
+  }
 }
 ```
 
@@ -54,4 +54,4 @@ For **lifecycle** the following attributes are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The ARN of the backup plan.
-* `version` - Unique, randomly generated, Unicode, UTF-8 encoded string that serves as the version ID of the backup plan. 
+* `version` - Unique, randomly generated, Unicode, UTF-8 encoded string that serves as the version ID of the backup plan.

@@ -201,7 +201,7 @@ func testAccCheckAwsBackupPlanDestroy(s *terraform.State) error {
 
 		if err == nil {
 			if *resp.BackupPlanId == rs.Primary.ID {
-				return fmt.Errorf("Plane '%s' was not deleted properly", rs.Primary.ID)
+				return fmt.Errorf("Plan '%s' was not deleted properly", rs.Primary.ID)
 			}
 		}
 	}
