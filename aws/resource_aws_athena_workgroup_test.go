@@ -176,6 +176,55 @@ func TestAccAWSAthenaWorkGroup_withEnforceWorkgroupConfigurationUpdate(t *testin
 	})
 }
 
+func TestAccAWSAthenaWorkGroup_withPublishCloudWatchMetricsEnabled(t *testing.T) {
+	rName := acctest.RandString(5)
+	rEnabled := "true"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAthenaWorkGroupConfigPublishCloudWatchMetricsEnabled(rName, rEnabled),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAthenaWorkGroupExists("aws_athena_workgroup.enable"),
+					resource.TestCheckResourceAttr(
+						"aws_athena_workgroup.enable", "publish_cloudwatch_metrics_enabled", rEnabled),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSAthenaWorkGroup_withPublishCloudWatchMetricsEnabledUpdate(t *testing.T) {
+	rName := acctest.RandString(5)
+	rEnabled := "true"
+	rEnabledUpdate := "false"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAthenaWorkGroupConfigPublishCloudWatchMetricsEnabled(rName, rEnabled),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAthenaWorkGroupExists("aws_athena_workgroup.enable"),
+					resource.TestCheckResourceAttr(
+						"aws_athena_workgroup.enable", "publish_cloudwatch_metrics_enabled", rEnabled),
+				),
+			},
+			{
+				Config: testAccAthenaWorkGroupConfigPublishCloudWatchMetricsEnabled(rName, rEnabledUpdate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAthenaWorkGroupExists("aws_athena_workgroup.enable"),
+					resource.TestCheckResourceAttr(
+						"aws_athena_workgroup.enable", "publish_cloudwatch_metrics_enabled", rEnabledUpdate),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSAthenaWorkGroupDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).athenaconn
 	for _, rs := range s.RootModule().Resources {
@@ -252,4 +301,13 @@ func testAccAthenaWorkGroupConfigEnforceWorkgroupConfiguration(rName string, rEn
 		enforce_workgroup_configuration = %s
 	}
 	`, rName, rEnforce)
+}
+
+func testAccAthenaWorkGroupConfigPublishCloudWatchMetricsEnabled(rName string, rEnable string) string {
+	return fmt.Sprintf(`
+	resource "aws_athena_workgroup" "enable" {
+		name = "tf-athena-workgroup-%s"
+		publish_cloudwatch_metrics_enabled = %s
+	}
+	`, rName, rEnable)
 }
