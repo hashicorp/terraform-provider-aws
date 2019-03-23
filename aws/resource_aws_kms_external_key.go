@@ -1,16 +1,21 @@
 package aws
 
 import (
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/sha256"
+	"crypto/x509"
+	"encoding/base64"
 	"fmt"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/kms"
-	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/structure"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsKmsExternalKey() *schema.Resource {
@@ -19,7 +24,6 @@ func resourceAwsKmsExternalKey() *schema.Resource {
 		Read:   resourceAwsKmsExternalKeyRead,
 		Update: resourceAwsKmsExternalKeyUpdate,
 		Delete: resourceAwsKmsExternalKeyDelete,
-		Exists: resourceAwsKmsExternalKeyExists,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -30,65 +34,56 @@ func resourceAwsKmsExternalKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"key_id": {
+			"deletion_window_in_days": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      30,
+				ValidateFunc: validation.IntBetween(7, 30),
+			},
+			"description": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(0, 8192),
+			},
+			"enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
+			"expiration_model": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"key_material_base64": {
+				Type:      schema.TypeString,
+				Optional:  true,
+				ForceNew:  true,
+				Sensitive: true,
 			},
 			"key_state": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
 			"key_usage": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
-				ForceNew: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, es []error) {
-					value := v.(string)
-					if !(value == "ENCRYPT_DECRYPT" || value == "") {
-						es = append(es, fmt.Errorf(
-							"%q must be ENCRYPT_DECRYPT or not specified", k))
-					}
-					return
-				},
 			},
 			"policy": {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
-				ValidateFunc:     validateJsonString,
 				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
-			},
-			"is_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-				// Cannot enable PendingImport keys
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if d.Get("key_state") == "PendingImport" {
-						return true
-					}
-					return false
-				},
-			},
-			"deletion_window_in_days": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, es []error) {
-					value := v.(int)
-					if value > 30 || value < 7 {
-						es = append(es, fmt.Errorf(
-							"%q must be between 7 and 30 days inclusive", k))
-					}
-					return
-				},
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(0, 32768),
+					validation.ValidateJsonString,
+				),
 			},
 			"tags": tagsSchema(),
+			"valid_to": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.ValidateRFC3339TimeString,
+			},
 		},
 	}
 }
@@ -96,105 +91,171 @@ func resourceAwsKmsExternalKey() *schema.Resource {
 func resourceAwsKmsExternalKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kmsconn
 
-	// Allow aws to chose default values if we don't pass them
-	var req kms.CreateKeyInput
-	if v, exists := d.GetOk("description"); exists {
-		req.Description = aws.String(v.(string))
+	input := &kms.CreateKeyInput{
+		KeyUsage: aws.String(kms.KeyUsageTypeEncryptDecrypt),
+		Origin:   aws.String(kms.OriginTypeExternal),
 	}
-	if v, exists := d.GetOk("key_usage"); exists {
-		req.KeyUsage = aws.String(v.(string))
-	}
-	if v, exists := d.GetOk("policy"); exists {
-		req.Policy = aws.String(v.(string))
-	}
-	if v, exists := d.GetOk("tags"); exists {
-		req.Tags = tagsFromMapKMS(v.(map[string]interface{}))
-	}
-	req.Origin = aws.String("EXTERNAL")
 
-	var resp *kms.CreateKeyOutput
+	if v, ok := d.GetOk("description"); ok {
+		input.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("policy"); ok {
+		input.Policy = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("tags"); ok {
+		input.Tags = tagsFromMapKMS(v.(map[string]interface{}))
+	}
+
+	var output *kms.CreateKeyOutput
 	// AWS requires any principal in the policy to exist before the key is created.
 	// The KMS service's awareness of principals is limited by "eventual consistency".
 	// They acknowledge this here:
 	// http://docs.aws.amazon.com/kms/latest/APIReference/API_CreateKey.html
-	err := resource.Retry(30*time.Second, func() *resource.RetryError {
+	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		var err error
-		resp, err = conn.CreateKey(&req)
-		if isAWSErr(err, "MalformedPolicyDocumentException", "") {
+
+		output, err = conn.CreateKey(input)
+
+		if isAWSErr(err, kms.ErrCodeMalformedPolicyDocumentException, "") {
 			return resource.RetryableError(err)
 		}
-		return resource.NonRetryableError(err)
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
 	})
-	if err != nil {
-		return err
+
+	if isResourceTimeoutError(err) {
+		output, err = conn.CreateKey(input)
 	}
 
-	d.SetId(*resp.KeyMetadata.KeyId)
-	d.Set("key_id", resp.KeyMetadata.KeyId)
-	d.Set("key_state", resp.KeyMetadata.KeyState)
+	if err != nil {
+		return fmt.Errorf("error creating KMS External Key: %s", err)
+	}
 
-	return resourceAwsKmsExternalKeyUpdate(d, meta)
+	d.SetId(aws.StringValue(output.KeyMetadata.KeyId))
+
+	if v, ok := d.GetOk("key_material_base64"); ok {
+		if err := importKmsExternalKeyMaterial(conn, d.Id(), v.(string), d.Get("valid_to").(string)); err != nil {
+			return fmt.Errorf("error importing KMS External Key (%s) material: %s", d.Id(), err)
+		}
+
+		if !d.Get("enabled").(bool) {
+			if err := updateKmsKeyStatus(conn, d.Id(), false); err != nil {
+				return fmt.Errorf("error disabling KMS External Key (%s): %s", d.Id(), err)
+			}
+		}
+	}
+
+	return resourceAwsKmsExternalKeyRead(d, meta)
 }
 
 func resourceAwsKmsExternalKeyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kmsconn
 
-	req := &kms.DescribeKeyInput{
+	input := &kms.DescribeKeyInput{
 		KeyId: aws.String(d.Id()),
 	}
 
-	var resp *kms.DescribeKeyOutput
-	var err error
-	if d.IsNewResource() {
-		var out interface{}
-		out, err = retryOnAwsCode("NotFoundException", func() (interface{}, error) {
-			return conn.DescribeKey(req)
-		})
-		resp, _ = out.(*kms.DescribeKeyOutput)
-	} else {
-		resp, err = conn.DescribeKey(req)
-	}
-	if err != nil {
-		return err
-	}
-	metadata := resp.KeyMetadata
+	var output *kms.DescribeKeyOutput
+	// Retry for KMS eventual consistency on creation
+	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+		var err error
 
-	if *metadata.KeyState == "PendingDeletion" {
-		log.Printf("[WARN] Removing KMS key %s because it's already gone", d.Id())
+		output, err = conn.DescribeKey(input)
+
+		if d.IsNewResource() && isAWSErr(err, kms.ErrCodeNotFoundException, "") {
+			return resource.RetryableError(err)
+		}
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if isResourceTimeoutError(err) {
+		output, err = conn.DescribeKey(input)
+	}
+
+	if !d.IsNewResource() && isAWSErr(err, kms.ErrCodeNotFoundException, "") {
+		log.Printf("[WARN] KMS External Key (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	d.SetId(*metadata.KeyId)
+	if err != nil {
+		return fmt.Errorf("error describing KMS External Key (%s): %s", d.Id(), err)
+	}
 
-	d.Set("arn", metadata.Arn)
-	d.Set("key_id", metadata.KeyId)
-	d.Set("key_state", metadata.KeyState)
-	d.Set("description", metadata.Description)
-	d.Set("key_usage", metadata.KeyUsage)
-	d.Set("is_enabled", metadata.Enabled)
+	if output == nil || output.KeyMetadata == nil {
+		return fmt.Errorf("error describing KMS External Key (%s): empty response", d.Id())
+	}
 
-	p, err := conn.GetKeyPolicy(&kms.GetKeyPolicyInput{
+	metadata := output.KeyMetadata
+
+	if aws.StringValue(metadata.KeyState) == kms.KeyStatePendingDeletion {
+		log.Printf("[WARN] KMS External Key (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	getKeyPolicyInput := &kms.GetKeyPolicyInput{
 		KeyId:      metadata.KeyId,
 		PolicyName: aws.String("default"),
-	})
-	if err != nil {
-		return err
 	}
 
-	policy, err := normalizeJsonString(*p.Policy)
+	getKeyPolicyOutput, err := conn.GetKeyPolicy(getKeyPolicyInput)
+
 	if err != nil {
-		return errwrap.Wrapf("policy contains an invalid JSON: {{err}}", err)
+		return fmt.Errorf("error getting KMS External Key (%s) policy: %s", d.Id(), err)
 	}
+
+	if getKeyPolicyOutput == nil {
+		return fmt.Errorf("error getting KMS External Key (%s) policy: empty response", d.Id())
+	}
+
+	policy, err := structure.NormalizeJsonString(aws.StringValue(getKeyPolicyOutput.Policy))
+
+	if err != nil {
+		return fmt.Errorf("error normalizing KMS External Key (%s) policy: %s", d.Id(), err)
+	}
+
+	listResourceTagsInput := &kms.ListResourceTagsInput{
+		KeyId: metadata.KeyId,
+	}
+
+	listResourceTagsOutput, err := conn.ListResourceTags(listResourceTagsInput)
+
+	if err != nil {
+		return fmt.Errorf("error listing KMS External Key (%s) tags: %s", d.Id(), err)
+	}
+
+	if listResourceTagsOutput == nil {
+		return fmt.Errorf("error listing KMS External Key (%s) tags: empty response", d.Id())
+	}
+
+	d.Set("arn", metadata.Arn)
+	d.Set("description", metadata.Description)
+	d.Set("enabled", metadata.Enabled)
+	d.Set("expiration_model", metadata.ExpirationModel)
+	d.Set("key_state", metadata.KeyState)
+	d.Set("key_usage", metadata.KeyUsage)
 	d.Set("policy", policy)
 
-	tagList, err := conn.ListResourceTags(&kms.ListResourceTagsInput{
-		KeyId: metadata.KeyId,
-	})
-	if err != nil {
-		return fmt.Errorf("Failed to get KMS key tags (key: %s): %s", d.Get("key_id").(string), err)
+	if err := d.Set("tags", tagsToMapKMS(listResourceTagsOutput.Tags)); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
-	d.Set("tags", tagsToMapKMS(tagList.Tags))
+
+	d.Set("valid_to", "")
+	if metadata.ValidTo != nil {
+		d.Set("valid_to", aws.TimeValue(metadata.ValidTo).Format(time.RFC3339))
+	}
 
 	return nil
 }
@@ -202,28 +263,52 @@ func resourceAwsKmsExternalKeyRead(d *schema.ResourceData, meta interface{}) err
 func resourceAwsKmsExternalKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kmsconn
 
-	if d.HasChange("is_enabled") && d.Get("is_enabled").(bool) && d.Get("key_state") != "PendingImport" {
+	if d.HasChange("enabled") && d.Get("enabled").(bool) && d.Get("key_state") != kms.KeyStatePendingImport {
 		// Enable before any attributes will be modified
-		if err := updateKmsExternalKeyStatus(conn, d.Id(), d.Get("is_enabled").(bool)); err != nil {
+		if err := updateKmsKeyStatus(conn, d.Id(), d.Get("enabled").(bool)); err != nil {
 			return err
 		}
 	}
 
 	if d.HasChange("description") {
-		if err := resourceAwsKmsExternalKeyDescriptionUpdate(conn, d); err != nil {
-			return err
+		input := &kms.UpdateKeyDescriptionInput{
+			Description: aws.String(d.Get("description").(string)),
+			KeyId:       aws.String(d.Id()),
 		}
-	}
-	if d.HasChange("policy") {
-		if err := resourceAwsKmsExternalKeyPolicyUpdate(conn, d); err != nil {
-			return err
+
+		if _, err := conn.UpdateKeyDescription(input); err != nil {
+			return fmt.Errorf("error updating KMS External Key (%s) description: %s", d.Id(), err)
 		}
 	}
 
-	if d.HasChange("is_enabled") && !d.Get("is_enabled").(bool) && d.Get("key_state") != "PendingImport" {
+	if d.HasChange("policy") {
+		policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+
+		if err != nil {
+			return fmt.Errorf("error parsing KMS External Key (%s) policy JSON: %s", d.Id(), err)
+		}
+
+		input := &kms.PutKeyPolicyInput{
+			KeyId:      aws.String(d.Id()),
+			Policy:     aws.String(policy),
+			PolicyName: aws.String("default"),
+		}
+
+		if _, err := conn.PutKeyPolicy(input); err != nil {
+			return fmt.Errorf("error updating KMS External Key (%s) policy: %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("valid_to") {
+		if err := importKmsExternalKeyMaterial(conn, d.Id(), d.Get("key_material_base64").(string), d.Get("valid_to").(string)); err != nil {
+			return fmt.Errorf("error importing KMS External Key (%s) material: %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("enabled") && !d.Get("enabled").(bool) && d.Get("key_state") != kms.KeyStatePendingImport {
 		// Only disable when all attributes are modified
 		// because we cannot modify disabled keys
-		if err := updateKmsExternalKeyStatus(conn, d.Id(), d.Get("is_enabled").(bool)); err != nil {
+		if err := updateKmsKeyStatus(conn, d.Id(), d.Get("enabled").(bool)); err != nil {
 			return err
 		}
 	}
@@ -235,165 +320,162 @@ func resourceAwsKmsExternalKeyUpdate(d *schema.ResourceData, meta interface{}) e
 	return resourceAwsKmsExternalKeyRead(d, meta)
 }
 
-func resourceAwsKmsExternalKeyDescriptionUpdate(conn *kms.KMS, d *schema.ResourceData) error {
-	description := d.Get("description").(string)
-	keyId := d.Get("key_id").(string)
+func resourceAwsKmsExternalKeyDelete(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).kmsconn
 
-	log.Printf("[DEBUG] KMS key: %s, update description: %s", keyId, description)
-
-	req := &kms.UpdateKeyDescriptionInput{
-		Description: aws.String(description),
-		KeyId:       aws.String(keyId),
+	input := &kms.ScheduleKeyDeletionInput{
+		KeyId:               aws.String(d.Id()),
+		PendingWindowInDays: aws.Int64(int64(d.Get("deletion_window_in_days").(int))),
 	}
-	_, err := retryOnAwsCode("NotFoundException", func() (interface{}, error) {
-		return conn.UpdateKeyDescription(req)
-	})
-	return err
-}
 
-func resourceAwsKmsExternalKeyPolicyUpdate(conn *kms.KMS, d *schema.ResourceData) error {
-	policy, err := normalizeJsonString(d.Get("policy").(string))
-	if err != nil {
-		return errwrap.Wrapf("policy contains an invalid JSON: {{err}}", err)
-	}
-	keyId := d.Get("key_id").(string)
+	_, err := conn.ScheduleKeyDeletion(input)
 
-	log.Printf("[DEBUG] KMS key: %s, update policy: %s", keyId, policy)
-
-	req := &kms.PutKeyPolicyInput{
-		KeyId:      aws.String(keyId),
-		Policy:     aws.String(policy),
-		PolicyName: aws.String("default"),
-	}
-	_, err = retryOnAwsCode("NotFoundException", func() (interface{}, error) {
-		return conn.PutKeyPolicy(req)
-	})
-	return err
-}
-
-func updateKmsExternalKeyStatus(conn *kms.KMS, id string, shouldBeEnabled bool) error {
-	var err error
-
-	if shouldBeEnabled {
-		log.Printf("[DEBUG] Enabling KMS key %q", id)
-		_, err = conn.EnableKey(&kms.EnableKeyInput{
-			KeyId: aws.String(id),
-		})
-	} else {
-		log.Printf("[DEBUG] Disabling KMS key %q", id)
-		_, err = conn.DisableKey(&kms.DisableKeyInput{
-			KeyId: aws.String(id),
-		})
+	if isAWSErr(err, kms.ErrCodeNotFoundException, "") {
+		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("Failed to set KMS key %q status to %t: %q",
-			id, shouldBeEnabled, err.Error())
+		return fmt.Errorf("error scheduling KMS External Key (%s) deletion: %s", d.Id(), err)
 	}
 
-	// Wait for propagation since KMS is eventually consistent
-	wait := resource.StateChangeConf{
-		Pending:                   []string{fmt.Sprintf("%t", !shouldBeEnabled)},
-		Target:                    []string{fmt.Sprintf("%t", shouldBeEnabled)},
-		Timeout:                   20 * time.Minute,
-		MinTimeout:                2 * time.Second,
-		ContinuousTargetOccurence: 15,
-		Refresh: func() (interface{}, string, error) {
-			log.Printf("[DEBUG] Checking if KMS key %s enabled status is %t",
-				id, shouldBeEnabled)
-			resp, err := conn.DescribeKey(&kms.DescribeKeyInput{
-				KeyId: aws.String(id),
-			})
-			if err != nil {
-				awsErr, ok := err.(awserr.Error)
-				if ok && awsErr.Code() == "NotFoundException" {
-					return nil, fmt.Sprintf("%t", !shouldBeEnabled), nil
-				}
-				return resp, "FAILED", err
-			}
-			status := fmt.Sprintf("%t", *resp.KeyMetadata.Enabled)
-			log.Printf("[DEBUG] KMS key %s status received: %s, retrying", id, status)
-
-			return resp, status, nil
-		},
-	}
-
-	_, err = wait.WaitForState()
-	if err != nil {
-		return fmt.Errorf("Failed setting KMS key status to %t: %s", shouldBeEnabled, err)
+	if err := waitForKmsKeyScheduleDeletion(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for KMS External Key (%s) deletion scheduling: %s", d.Id(), err)
 	}
 
 	return nil
 }
 
-func resourceAwsKmsExternalKeyExists(d *schema.ResourceData, meta interface{}) (bool, error) {
-	conn := meta.(*AWSClient).kmsconn
-
-	req := &kms.DescribeKeyInput{
-		KeyId: aws.String(d.Id()),
+func importKmsExternalKeyMaterial(conn *kms.KMS, keyID, keyMaterialBase64, validTo string) error {
+	getParametersForImportInput := &kms.GetParametersForImportInput{
+		KeyId:             aws.String(keyID),
+		WrappingAlgorithm: aws.String(kms.AlgorithmSpecRsaesOaepSha256),
+		WrappingKeySpec:   aws.String(kms.WrappingKeySpecRsa2048),
 	}
-	resp, err := conn.DescribeKey(req)
-	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == "NotFoundException" {
-				return false, nil
-			}
+
+	var getParametersForImportOutput *kms.GetParametersForImportOutput
+	// Handle KMS eventual consistency
+	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		var err error
+
+		getParametersForImportOutput, err = conn.GetParametersForImport(getParametersForImportInput)
+
+		if isAWSErr(err, kms.ErrCodeNotFoundException, "") {
+			return resource.RetryableError(err)
 		}
-		return false, err
-	}
-	metadata := resp.KeyMetadata
 
-	if *metadata.KeyState == "PendingDeletion" {
-		return false, nil
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if isResourceTimeoutError(err) {
+		getParametersForImportOutput, err = conn.GetParametersForImport(getParametersForImportInput)
 	}
 
-	return true, nil
+	if err != nil {
+		return fmt.Errorf("error getting parameters for import: %s", err)
+	}
+
+	if getParametersForImportOutput == nil {
+		return fmt.Errorf("error getting parameters for import: empty response")
+	}
+
+	keyMaterial, err := base64.StdEncoding.DecodeString(keyMaterialBase64)
+
+	if err != nil {
+		return fmt.Errorf("error Base64 decoding key material: %s", err)
+	}
+
+	publicKey, err := x509.ParsePKIXPublicKey(getParametersForImportOutput.PublicKey)
+
+	if err != nil {
+		return fmt.Errorf("error parsing public key: %s", err)
+	}
+
+	encryptedKeyMaterial, err := rsa.EncryptOAEP(sha256.New(), rand.Reader, publicKey.(*rsa.PublicKey), keyMaterial, []byte{})
+
+	if err != nil {
+		return fmt.Errorf("error encrypting key material: %s", err)
+	}
+
+	importKeyMaterialInput := &kms.ImportKeyMaterialInput{
+		EncryptedKeyMaterial: encryptedKeyMaterial,
+		ExpirationModel:      aws.String(kms.ExpirationModelTypeKeyMaterialDoesNotExpire),
+		ImportToken:          getParametersForImportOutput.ImportToken,
+		KeyId:                aws.String(keyID),
+	}
+
+	if validTo != "" {
+		t, err := time.Parse(time.RFC3339, validTo)
+
+		if err != nil {
+			return fmt.Errorf("error parsing valid to timestamp: %s", err)
+		}
+
+		importKeyMaterialInput.ExpirationModel = aws.String(kms.ExpirationModelTypeKeyMaterialExpires)
+		importKeyMaterialInput.ValidTo = aws.Time(t)
+	}
+
+	// Handle KMS eventual consistency
+	err = resource.Retry(1*time.Minute, func() *resource.RetryError {
+		_, err := conn.ImportKeyMaterial(importKeyMaterialInput)
+
+		if isAWSErr(err, kms.ErrCodeNotFoundException, "") {
+			return resource.RetryableError(err)
+		}
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if isResourceTimeoutError(err) {
+		_, err = conn.ImportKeyMaterial(importKeyMaterialInput)
+	}
+
+	if err != nil {
+		return fmt.Errorf("error importing key material: %s", err)
+	}
+
+	return nil
 }
 
-func resourceAwsKmsExternalKeyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kmsconn
-	keyId := d.Get("key_id").(string)
-
-	req := &kms.ScheduleKeyDeletionInput{
-		KeyId: aws.String(keyId),
-	}
-	if v, exists := d.GetOk("deletion_window_in_days"); exists {
-		req.PendingWindowInDays = aws.Int64(int64(v.(int)))
-	}
-	_, err := conn.ScheduleKeyDeletion(req)
-	if err != nil {
-		return err
-	}
-
+func waitForKmsKeyScheduleDeletion(conn *kms.KMS, keyID string) error {
 	// Wait for propagation since KMS is eventually consistent
+	input := &kms.DescribeKeyInput{
+		KeyId: aws.String(keyID),
+	}
+
 	wait := resource.StateChangeConf{
-		Pending:                   []string{"Enabled", "Disabled"},
-		Target:                    []string{"PendingDeletion"},
+		Pending:                   []string{kms.KeyStateDisabled, kms.KeyStateEnabled},
+		Target:                    []string{kms.KeyStatePendingDeletion},
 		Timeout:                   20 * time.Minute,
 		MinTimeout:                2 * time.Second,
 		ContinuousTargetOccurence: 10,
 		Refresh: func() (interface{}, string, error) {
-			log.Printf("[DEBUG] Checking if KMS key %s state is PendingDeletion", keyId)
-			resp, err := conn.DescribeKey(&kms.DescribeKeyInput{
-				KeyId: aws.String(keyId),
-			})
-			if err != nil {
-				return resp, "Failed", err
+			output, err := conn.DescribeKey(input)
+
+			if isAWSErr(err, kms.ErrCodeNotFoundException, "") {
+				return 42, kms.KeyStatePendingDeletion, nil
 			}
 
-			metadata := *resp.KeyMetadata
-			log.Printf("[DEBUG] KMS key %s state is %s, retrying", keyId, *metadata.KeyState)
+			if err != nil {
+				return nil, kms.KeyStateUnavailable, err
+			}
 
-			return resp, *metadata.KeyState, nil
+			if output == nil || output.KeyMetadata == nil {
+				return 42, kms.KeyStatePendingDeletion, nil
+			}
+
+			return output, aws.StringValue(output.KeyMetadata.KeyState), nil
 		},
 	}
 
-	_, err = wait.WaitForState()
-	if err != nil {
-		return fmt.Errorf("Failed deactivating KMS key %s: %s", keyId, err)
-	}
+	_, err := wait.WaitForState()
 
-	log.Printf("[DEBUG] KMS Key %s deactivated.", keyId)
-	d.SetId("")
-	return nil
+	return err
 }

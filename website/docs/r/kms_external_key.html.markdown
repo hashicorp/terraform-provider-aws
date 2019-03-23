@@ -1,24 +1,22 @@
 ---
 layout: "aws"
-page_title: "AWS: aws_kms_key"
-sidebar_current: "docs-aws-resource-kms-key"
+page_title: "AWS: aws_kms_external_key"
+sidebar_current: "docs-aws-resource-kms-external-key"
 description: |-
-  Provides a KMS customer master key that uses external key data
+  Manages a KMS Customer Master Key that uses external key material
 ---
 
-# aws\_kms\_key
+# aws_kms_external_key
 
-Provides a KMS customer master key that uses external key data
+Manages a KMS Customer Master Key that uses external key material. To instead manage a KMS Customer Master Key where AWS automatically generates and potentially rotates key material, see the [`aws_kms_key` resource](/docs/providers/aws/r/kms_key.html).
 
-~> **NOTE:** By default, AWS KMS creates key material for you when you create a customer master key (CMK). To instead import your own key material, you need to create a CMK with no key material, which is what this resource does. Currently importing the key material is not implemented in Terraform, and should be done as documented in the [AWS importing key material guide](https://docs.aws.amazon.com/kms/latest/developerguide/importing-keys.html)
-
+~> **Note:** All arguments including the key material will be stored in the raw state as plain-text. [Read more about sensitive data in state](/docs/state/sensitive-data.html).
 
 ## Example Usage
 
 ```hcl
-resource "aws_kms_external_key" "a" {
+resource "aws_kms_external_key" "example" {
   description = "KMS EXTERNAL for AMI encryption"
-  deletion_window_in_days = 10
 }
 ```
 
@@ -26,26 +24,27 @@ resource "aws_kms_external_key" "a" {
 
 The following arguments are supported:
 
-* `description` - (Optional) The description of the key as viewed in AWS console.
-* `key_usage` - (Optional) Specifies the intended use of the key.
-  Defaults to ENCRYPT/DECRYPT, and only symmetric encryption and decryption are supported.
-* `policy` - (Optional) A valid policy JSON document.
-* `deletion_window_in_days` - (Optional) Duration in days after which the key is deleted
-  after destruction of the resource, must be between 7 and 30 days. Defaults to 30 days.
-* `is_enabled` - (Optional) Specifies whether the key is enabled. this option is always false while `key_state` is `PendingImport`. Defaults to true.
-* `tags` - (Optional) A mapping of tags to assign to the object.
+* `deletion_window_in_days` - (Optional) Duration in days after which the key is deleted after destruction of the resource. Must be between `7` and `30` days. Defaults to `30`.
+* `description` - (Optional) Description of the key.
+* `enabled` - (Optional) Specifies whether the key is enabled. Keys pending import can only be `false`. Imported keys default to `true` unless expired.
+* `key_material_base64` - (Optional) Base64 encoded 256-bit symmetric encryption key material to import. The CMK is permanently associated with this key material. The same key material can be reimported, but you cannot import different key material.
+* `policy` - (Optional) A key policy JSON document. If you do not provide a key policy, AWS KMS attaches a default key policy to the CMK.
+* `tags` - (Optional) A key-value map of tags to assign to the key.
+* `valid_to` - (Optional) Time at which the imported key material expires. When the key material expires, AWS KMS deletes the key material and the CMK becomes unusable. If not specified, key material does not expire. Valid values: [RFC3339 time string](https://tools.ietf.org/html/rfc3339#section-5.8) (`YYYY-MM-DDTHH:MM:SSZ`)
 
 ## Attributes Reference
 
 The following attributes are exported:
 
 * `arn` - The Amazon Resource Name (ARN) of the key.
-* `key_id` - The globally unique identifier for the key.
+* `expiration_model` - Whether the key material expires. Empty when pending key material import, otherwise `KEY_MATERIAL_EXPIRES` or `KEY_MATERIAL_DOES_NOT_EXPIRE`.
+* `id` - The unique identifier for the key.
 * `key_state` - The state of the CMK.
+* `key_usage` - The cryptographic operations for which you can use the CMK.
 
 ## Import
 
-KMS Keys can be imported using the `id`, e.g.
+KMS External Keys can be imported using the `id`, e.g.
 
 ```
 $ terraform import aws_kms_external_key.a arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab
