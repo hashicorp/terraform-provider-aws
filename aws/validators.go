@@ -2404,3 +2404,12 @@ func validateRoute53ResolverName(v interface{}, k string) (ws []string, errors [
 
 	return
 }
+
+func validateRdsPassword(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !regexp.MustCompile(`^[^@"/]{8,128}$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only 8 to 128 alphanumeric characters or symbols (excluding @, \", and /) allowed in %q", k))
+	}
+	return
+}

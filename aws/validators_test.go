@@ -3136,3 +3136,43 @@ func TestValidateRoute53ResolverName(t *testing.T) {
 		}
 	}
 }
+
+func TestValidateRdsPassword(t *testing.T) {
+	cases := []struct {
+		Value    string
+		ErrCount int
+	}{
+		{
+			Value:    "this-is-valid!#%()^",
+			ErrCount: 0,
+		},
+		{
+			Value:    randomString(7),
+			ErrCount: 1,
+		},
+		{
+			Value:    "this-is-not-valid\"",
+			ErrCount: 1,
+		},
+		{
+			Value:    "this-is-not-valid@",
+			ErrCount: 1,
+		},
+		{
+			Value:    "this-is-not-valid/",
+			ErrCount: 1,
+		},
+		{
+			Value:    randomString(129),
+			ErrCount: 1,
+		},
+	}
+
+	for _, tc := range cases {
+		_, errors := validateRdsPassword(tc.Value, "aws_db_instance")
+
+		if len(errors) != tc.ErrCount {
+			t.Fatalf("Expected the RDS Password to trigger a validation error")
+		}
+	}
+}

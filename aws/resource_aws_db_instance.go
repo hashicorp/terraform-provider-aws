@@ -52,9 +52,10 @@ func resourceAwsDbInstance() *schema.Resource {
 			},
 
 			"password": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Sensitive:    true,
+				ValidateFunc: validateRdsPassword,
 			},
 
 			"deletion_protection": {
@@ -467,6 +468,36 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			}
 		}
 		d.Set("identifier", identifier)
+	}
+
+	if attr, ok := d.GetOk("password"); ok {
+		var engine = d.Get("engine").(string)
+		if strings.Contains(strings.ToLower(engine), "mariadb") {
+			if !regexp.MustCompile(`^[^@"/]{8,41}$`).MatchString(attr.(string)) {
+				return fmt.Errorf(`The password parameter should be only 8 to 41 alphanumeric
+characters or symbols (excluding @, \", and /) allowed in %s engine`, engine)
+			}
+		} else if strings.Contains(strings.ToLower(engine), "mysql") {
+			if !regexp.MustCompile(`^[^@"/]{8,41}$`).MatchString(attr.(string)) {
+				return fmt.Errorf(`The password parameter should be only 8 to 41 alphanumeric
+characters or symbols (excluding @, \", and /) allowed in %s engine`, engine)
+			}
+		} else if strings.Contains(strings.ToLower(engine), "oracle") {
+			if !regexp.MustCompile(`^[^@"/]{8,30}$`).MatchString(attr.(string)) {
+				return fmt.Errorf(`The password parameter should be only 8 to 30 alphanumeric
+characters or symbols (excluding @, \", and /) allowed in %s engine`, engine)
+			}
+		} else if strings.Contains(strings.ToLower(engine), "postgres") {
+			if !regexp.MustCompile(`^[^@"/]{8,128}$`).MatchString(attr.(string)) {
+				return fmt.Errorf(`The password parameter should be only 8 to 128 alphanumeric
+characters or symbols (excluding @, \", and /) allowed in %s engine`, engine)
+			}
+		} else if strings.Contains(strings.ToLower(engine), "sqlserver") {
+			if !regexp.MustCompile(`^[^@"/]{8,128}$`).MatchString(attr.(string)) {
+				return fmt.Errorf(`The password parameter should be only 8 to 128 alphanumeric
+characters or symbols (excluding @, \", and /) allowed in %s engine`, engine)
+			}
+		}
 	}
 
 	if v, ok := d.GetOk("replicate_source_db"); ok {
@@ -1384,6 +1415,35 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 		requestUpdate = true
 	}
 	if d.HasChange("password") {
+		if attr, ok := d.GetOk("password"); ok {
+			var engine = d.Get("engine").(string)
+			if strings.Contains(strings.ToLower(engine), "mariadb") {
+				if !regexp.MustCompile(`^[^@"/]{8,41}$`).MatchString(attr.(string)) {
+					return fmt.Errorf(`The password parameter should be only 8 to 41 alphanumeric
+characters or symbols (excluding @, \", and /) allowed in %s engine`, engine)
+				}
+			} else if strings.Contains(strings.ToLower(engine), "mysql") {
+				if !regexp.MustCompile(`^[^@"/]{8,41}$`).MatchString(attr.(string)) {
+					return fmt.Errorf(`The password parameter should be only 8 to 41 alphanumeric
+characters or symbols (excluding @, \", and /) allowed in %s engine`, engine)
+				}
+			} else if strings.Contains(strings.ToLower(engine), "oracle") {
+				if !regexp.MustCompile(`^[^@"/]{8,30}$`).MatchString(attr.(string)) {
+					return fmt.Errorf(`The password parameter should be only 8 to 30 alphanumeric
+characters or symbols (excluding @, \", and /) allowed in %s engine`, engine)
+				}
+			} else if strings.Contains(strings.ToLower(engine), "postgres") {
+				if !regexp.MustCompile(`^[^@"/]{8,128}$`).MatchString(attr.(string)) {
+					return fmt.Errorf(`The password parameter should be only 8 to 128 alphanumeric
+characters or symbols (excluding @, \", and /) allowed in %s engine`, engine)
+				}
+			} else if strings.Contains(strings.ToLower(engine), "sqlserver") {
+				if !regexp.MustCompile(`^[^@"/]{8,128}$`).MatchString(attr.(string)) {
+					return fmt.Errorf(`The password parameter should be only 8 to 128 alphanumeric
+characters or symbols (excluding @, \", and /) allowed in %s engine`, engine)
+				}
+			}
+		}
 		d.SetPartial("password")
 		req.MasterUserPassword = aws.String(d.Get("password").(string))
 		requestUpdate = true
