@@ -4,6 +4,10 @@ FEATURES:
 
 * **New Resource:** `aws_sagemaker_endpoint_configuration` [GH-2477]
 
+ENHANCEMENTS:
+
+* resource/aws_vpn_connection: Add `transit_gateway_attachment_id` attribute [GH-8070]
+
 ## 2.3.0 (March 21, 2019)
 
 BREAKING CHANGES:
