@@ -84,6 +84,11 @@ func resourceAwsVpnConnection() *schema.Resource {
 				ForceNew: true,
 			},
 
+			"transit_gateway_attachment_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"transit_gateway_id": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -375,25 +380,68 @@ func resourceAwsVpnConnectionRead(d *schema.ResourceData, meta interface{}) erro
 	resp, err := conn.DescribeVpnConnections(&ec2.DescribeVpnConnectionsInput{
 		VpnConnectionIds: []*string{aws.String(d.Id())},
 	})
-	if err != nil {
-		if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "InvalidVpnConnectionID.NotFound" {
-			d.SetId("")
-			return nil
-		} else {
-			log.Printf("[ERROR] Error finding VPN connection: %s", err)
-			return err
-		}
+
+	if isAWSErr(err, "InvalidVpnConnectionID.NotFound", "") {
+		log.Printf("[WARN] EC2 VPN Connection (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
-	if len(resp.VpnConnections) != 1 {
-		return fmt.Errorf("Error finding VPN connection: %s", d.Id())
+	if err != nil {
+		return fmt.Errorf("error reading EC2 VPN Connection (%s): %s", d.Id(), err)
+	}
+
+	if resp == nil || len(resp.VpnConnections) == 0 || resp.VpnConnections[0] == nil {
+		return fmt.Errorf("error reading EC2 VPN Connection (%s): empty response", d.Id())
+	}
+
+	if len(resp.VpnConnections) > 1 {
+		return fmt.Errorf("error reading EC2 VPN Connection (%s): multiple responses", d.Id())
 	}
 
 	vpnConnection := resp.VpnConnections[0]
-	if vpnConnection == nil || *vpnConnection.State == "deleted" {
-		// Seems we have lost our VPN Connection
+
+	if aws.StringValue(vpnConnection.State) == ec2.VpnStateDeleted {
+		log.Printf("[WARN] EC2 VPN Connection (%s) already deleted, removing from state", d.Id())
 		d.SetId("")
 		return nil
+	}
+
+	var transitGatewayAttachmentID string
+	if vpnConnection.TransitGatewayId != nil {
+		input := &ec2.DescribeTransitGatewayAttachmentsInput{
+			Filters: []*ec2.Filter{
+				{
+					Name:   aws.String("resource-id"),
+					Values: []*string{vpnConnection.VpnConnectionId},
+				},
+				{
+					Name:   aws.String("resource-type"),
+					Values: []*string{aws.String(ec2.TransitGatewayAttachmentResourceTypeVpn)},
+				},
+				{
+					Name:   aws.String("transit-gateway-id"),
+					Values: []*string{vpnConnection.TransitGatewayId},
+				},
+			},
+		}
+
+		log.Printf("[DEBUG] Finding EC2 VPN Connection Transit Gateway Attachment: %s", input)
+		output, err := conn.DescribeTransitGatewayAttachments(input)
+
+		if err != nil {
+			return fmt.Errorf("error finding EC2 VPN Connection (%s) Transit Gateway Attachment: %s", d.Id(), err)
+		}
+
+		if output == nil || len(output.TransitGatewayAttachments) == 0 || output.TransitGatewayAttachments[0] == nil {
+			return fmt.Errorf("error finding EC2 VPN Connection (%s) Transit Gateway Attachment: empty response", d.Id())
+		}
+
+		if len(output.TransitGatewayAttachments) > 1 {
+			return fmt.Errorf("error reading EC2 VPN Connection (%s) Transit Gateway Attachment: multiple responses", d.Id())
+		}
+
+		transitGatewayAttachmentID = aws.StringValue(output.TransitGatewayAttachments[0].TransitGatewayAttachmentId)
 	}
 
 	// Set attributes under the user's control.
@@ -414,6 +462,7 @@ func resourceAwsVpnConnectionRead(d *schema.ResourceData, meta interface{}) erro
 
 	// Set read only attributes.
 	d.Set("customer_gateway_configuration", vpnConnection.CustomerGatewayConfiguration)
+	d.Set("transit_gateway_attachment_id", transitGatewayAttachmentID)
 
 	if vpnConnection.CustomerGatewayConfiguration != nil {
 		if tunnelInfo, err := xmlConfigToTunnelInfo(*vpnConnection.CustomerGatewayConfiguration); err != nil {
