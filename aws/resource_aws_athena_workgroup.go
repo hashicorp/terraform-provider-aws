@@ -91,7 +91,14 @@ func resourceAwsAthenaWorkgroupCreate(d *schema.ResourceData, meta interface{}) 
 		inputConfiguration.PublishCloudWatchMetricsEnabled = aws.Bool(v.(bool))
 	}
 
+	resultConfiguration := &athena.ResultConfiguration{}
+
+	if v, ok := d.GetOk("output_location"); ok {
+		resultConfiguration.OutputLocation = aws.String(v.(string))
+	}
+
 	input.Configuration = inputConfiguration
+	input.Configuration.ResultConfiguration = resultConfiguration
 
 	_, err := conn.CreateWorkGroup(input)
 
@@ -137,9 +144,14 @@ func resourceAwsAthenaWorkgroupRead(d *schema.ResourceData, meta interface{}) er
 		if resp.WorkGroup.Configuration.PublishCloudWatchMetricsEnabled != nil {
 			d.Set("publish_cloudwatch_metrics_enabled", resp.WorkGroup.Configuration.PublishCloudWatchMetricsEnabled)
 		}
+
+		if resp.WorkGroup.Configuration.ResultConfiguration != nil {
+			if resp.WorkGroup.Configuration.ResultConfiguration.OutputLocation != nil {
+				d.Set("output_location", resp.WorkGroup.Configuration.ResultConfiguration.OutputLocation)
+			}
+		}
 	}
 
-	// d.Set("output_location", resp.WorkGroup.Configuration.ResultConfiguration.OutputLocation)
 	// d.Set("encryption_option", resp.WorkGroup.Configuration.ResultConfiguration.EncryptionConfiguration.EncryptionOption)
 	// d.Set("kms_key", resp.WorkGroup.Configuration.ResultConfiguration.EncryptionConfiguration.KmsKey)
 
@@ -162,6 +174,7 @@ func resourceAwsAthenaWorkgroupUpdate(d *schema.ResourceData, meta interface{}) 
 	conn := meta.(*AWSClient).athenaconn
 
 	workGroupUpdate := false
+	resultConfigUpdate := false
 	configUpdate := false
 
 	input := &athena.UpdateWorkGroupInput{
@@ -202,9 +215,27 @@ func resourceAwsAthenaWorkgroupUpdate(d *schema.ResourceData, meta interface{}) 
 		inputConfigurationUpdates.PublishCloudWatchMetricsEnabled = aws.Bool(v.(bool))
 	}
 
+	resultConfigurationUpdates := &athena.ResultConfigurationUpdates{}
+
+	if d.HasChange("output_location") {
+		workGroupUpdate = true
+		configUpdate = true
+		resultConfigUpdate = true
+
+		if v, ok := d.GetOk("output_location"); ok {
+			resultConfigurationUpdates.OutputLocation = aws.String(v.(string))
+		} else {
+			resultConfigurationUpdates.RemoveOutputLocation = aws.Bool(true)
+		}
+	}
+
 	if workGroupUpdate {
 		if configUpdate {
 			input.ConfigurationUpdates = inputConfigurationUpdates
+		}
+
+		if resultConfigUpdate {
+			input.ConfigurationUpdates.ResultConfigurationUpdates = resultConfigurationUpdates
 		}
 
 		_, err := conn.UpdateWorkGroup(input)
