@@ -107,9 +107,10 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 										Default:  "prioritized",
-										ValidateFunc: validation.StringInSlice([]string{
-											"prioritized",
-										}, false),
+										// Reference: https://github.com/hashicorp/terraform/issues/18027
+										// ValidateFunc: validation.StringInSlice([]string{
+										// 	"prioritized",
+										// }, false),
 									},
 									"on_demand_base_capacity": {
 										Type:         schema.TypeInt,
@@ -126,9 +127,10 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 										Default:  "lowest-price",
-										ValidateFunc: validation.StringInSlice([]string{
-											"lowest-price",
-										}, false),
+										// Reference: https://github.com/hashicorp/terraform/issues/18027
+										// ValidateFunc: validation.StringInSlice([]string{
+										// 	"lowest-price",
+										// }, false),
 									},
 									"spot_instance_pools": {
 										Type:         schema.TypeInt,
