@@ -225,6 +225,55 @@ func TestAccAWSAthenaWorkGroup_withPublishCloudWatchMetricsEnabledUpdate(t *test
 	})
 }
 
+func TestAccAWSAthenaWorkGroup_withOutputLocation(t *testing.T) {
+	rName := acctest.RandString(5)
+	rOutputLocation := acctest.RandString(10)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAthenaWorkGroupConfigOutputLocation(rName, rOutputLocation),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAthenaWorkGroupExists("aws_athena_workgroup.output"),
+					resource.TestCheckResourceAttr(
+						"aws_athena_workgroup.output", "output_location", "s3://"+rOutputLocation+"/test/output"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSAthenaWorkGroup_withOutputLocationUpdate(t *testing.T) {
+	rName := acctest.RandString(5)
+	rOutputLocation1 := acctest.RandString(10)
+	rOutputLocation2 := acctest.RandString(10)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAthenaWorkGroupConfigOutputLocation(rName, rOutputLocation1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAthenaWorkGroupExists("aws_athena_workgroup.output"),
+					resource.TestCheckResourceAttr(
+						"aws_athena_workgroup.output", "output_location", "s3://"+rOutputLocation1+"/test/output"),
+				),
+			},
+			{
+				Config: testAccAthenaWorkGroupConfigOutputLocation(rName, rOutputLocation2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAthenaWorkGroupExists("aws_athena_workgroup.output"),
+					resource.TestCheckResourceAttr(
+						"aws_athena_workgroup.output", "output_location", "s3://"+rOutputLocation2+"/test/output"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSAthenaWorkGroupDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).athenaconn
 	for _, rs := range s.RootModule().Resources {
@@ -310,4 +359,18 @@ func testAccAthenaWorkGroupConfigPublishCloudWatchMetricsEnabled(rName string, r
 		publish_cloudwatch_metrics_enabled = %s
 	}
 	`, rName, rEnable)
+}
+
+func testAccAthenaWorkGroupConfigOutputLocation(rName string, rOutputLocation string) string {
+	return fmt.Sprintf(`
+	resource "aws_s3_bucket" "output-bucket"{
+		bucket = "%s"
+		force_destroy = true
+	}
+
+	resource "aws_athena_workgroup" "output" {
+		name = "tf-athena-workgroup-%s"
+		output_location = "s3://${aws_s3_bucket.output-bucket.bucket}/test/output"
+	}
+	`, rOutputLocation, rName)
 }
