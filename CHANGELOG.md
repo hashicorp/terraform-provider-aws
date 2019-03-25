@@ -1,4 +1,9 @@
 ## 2.4.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_sagemaker_endpoint_configuration` [GH-2477]
+
 ## 2.3.0 (March 21, 2019)
 
 BREAKING CHANGES:
