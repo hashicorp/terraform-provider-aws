@@ -7,6 +7,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_kms_ciphertext: Hide `plaintext` in logs and user interface [GH-6100]
 * resource/aws_vpn_connection: Add `transit_gateway_attachment_id` attribute [GH-8070]
 
 ## 2.3.0 (March 21, 2019)
