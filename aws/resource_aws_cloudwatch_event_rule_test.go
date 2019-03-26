@@ -136,6 +136,36 @@ func TestAccAWSCloudWatchEventRule_prefix(t *testing.T) {
 	})
 }
 
+func TestAccAWSCloudWatchEventRule_tags(t *testing.T) {
+	var rule events.DescribeRuleOutput
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCloudWatchEventRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudWatchEventRuleConfig_tags,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchEventRuleExists("aws_cloudwatch_event_rule.default", &rule),
+					resource.TestCheckResourceAttr("aws_cloudwatch_event_rule.default", "tags.%", "2"),
+					resource.TestCheckResourceAttr("aws_cloudwatch_event_rule.default", "tags.fizz", "buzz"),
+					resource.TestCheckResourceAttr("aws_cloudwatch_event_rule.default", "tags.foo", "bar"),
+				),
+			},
+			{
+				Config: testAccAWSCloudWatchEventRuleConfig_updateTags,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchEventRuleExists("aws_cloudwatch_event_rule.default", &rule),
+					resource.TestCheckResourceAttr("aws_cloudwatch_event_rule.default", "tags.%", "2"),
+					resource.TestCheckResourceAttr("aws_cloudwatch_event_rule.default", "tags.foo", "bar2"),
+					resource.TestCheckResourceAttr("aws_cloudwatch_event_rule.default", "tags.good", "bad"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSCloudWatchEventRule_full(t *testing.T) {
 	var rule events.DescribeRuleOutput
 
@@ -154,6 +184,8 @@ func TestAccAWSCloudWatchEventRule_full(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_cloudwatch_event_rule.moobar", "description", "He's not dead, he's just resting!"),
 					resource.TestCheckResourceAttr("aws_cloudwatch_event_rule.moobar", "role_arn", ""),
 					testAccCheckCloudWatchEventRuleEnabled("aws_cloudwatch_event_rule.moobar", "DISABLED", &rule),
+					resource.TestCheckResourceAttr("aws_cloudwatch_event_rule.moobar", "tags.%", "1"),
+					resource.TestCheckResourceAttr("aws_cloudwatch_event_rule.moobar", "tags.Name", "tf-acc-cw-event-rule-full"),
 				),
 			},
 		},
@@ -356,6 +388,30 @@ PATTERN
 }
 `
 
+var testAccAWSCloudWatchEventRuleConfig_tags = `
+resource "aws_cloudwatch_event_rule" "default" {
+    name = "tf-acc-cw-event-rule"
+	schedule_expression = "rate(1 hour)"
+	
+	tags = {
+		fizz 	= "buzz"
+		foo		= "bar"
+	}
+}
+`
+
+var testAccAWSCloudWatchEventRuleConfig_updateTags = `
+resource "aws_cloudwatch_event_rule" "default" {
+    name = "tf-acc-cw-event-rule"
+	schedule_expression = "rate(1 hour)"
+	
+	tags = {
+		foo		= "bar2"
+		good	= "bad"
+	}
+}
+`
+
 var testAccAWSCloudWatchEventRuleConfig_full = `
 resource "aws_cloudwatch_event_rule" "moobar" {
     name = "tf-acc-cw-event-rule-full"
@@ -365,6 +421,9 @@ resource "aws_cloudwatch_event_rule" "moobar" {
 PATTERN
 	description = "He's not dead, he's just resting!"
 	is_enabled = false
+	tags = {
+		Name = "tf-acc-cw-event-rule-full"
+	}
 }
 `
 
