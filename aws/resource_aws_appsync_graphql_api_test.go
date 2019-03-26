@@ -96,7 +96,7 @@ func TestAccAWSAppsyncGraphqlApi_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppsyncGraphqlApi_schema(t *testing.T) {
+func TestAccAWSAppsyncGraphqlApi_Schema(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_appsync_graphql_api.test"
 
@@ -118,6 +118,7 @@ func TestAccAWSAppsyncGraphqlApi_schema(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "schema"),
 					resource.TestCheckResourceAttrSet(resourceName, "uris.%"),
 					resource.TestCheckResourceAttrSet(resourceName, "uris.GRAPHQL"),
+					testAccCheckAwsAppsyncTypeExists(resourceName, "Post"),
 				),
 			},
 			{
@@ -125,6 +126,13 @@ func TestAccAWSAppsyncGraphqlApi_schema(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"schema"},
+			},
+			{
+				Config: testAccAppsyncGraphqlApiConfig_SchemaUpdate(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsAppsyncGraphqlApiExists(resourceName),
+					testAccCheckAwsAppsyncTypeExists(resourceName, "PostV2"),
+				),
 			},
 		},
 	})
@@ -607,39 +615,6 @@ func TestAccAWSAppsyncGraphqlApi_UserPoolConfig_DefaultAction(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppsyncGraphqlApi_Schema(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_appsync_graphql_api.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAppsyncGraphqlApiConfig_Schema(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAppsyncGraphqlApiExists(resourceName),
-					testAccCheckAwsAppsyncTypeExists(resourceName, "Post"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"schema"},
-			},
-			{
-				Config: testAccAppsyncGraphqlApiConfig_SchemaUpdate(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAppsyncGraphqlApiExists(resourceName),
-					testAccCheckAwsAppsyncTypeExists(resourceName, "PostV2"),
-				),
-			},
-		},
-	})
-}
-
 func testAccCheckAwsAppsyncGraphqlApiDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).appsyncconn
 	for _, rs := range s.RootModule().Resources {
@@ -711,16 +686,6 @@ resource "aws_appsync_graphql_api" "test" {
   name                = %q
 }
 `, authenticationType, rName)
-}
-
-func testAccAppsyncGraphqlApiConfig_Schema(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_appsync_graphql_api" "test" {
-  authentication_type = "API_KEY"
-  name                = %q
-  schema		      = "type Query { test:String }\nschema { query:Query }"
-}
-`, rName)
 }
 
 func testAccAppsyncGraphqlApiConfig_LogConfig_FieldLogLevel(rName, fieldLogLevel string) string {
