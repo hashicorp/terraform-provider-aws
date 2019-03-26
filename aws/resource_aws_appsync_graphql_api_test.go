@@ -96,6 +96,40 @@ func TestAccAWSAppsyncGraphqlApi_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSAppsyncGraphqlApi_schema(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_appsync_graphql_api.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppsyncGraphqlApiConfig_Schema(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsAppsyncGraphqlApiExists(resourceName),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "appsync", regexp.MustCompile(`apis/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "authentication_type", "API_KEY"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "log_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "openid_connect_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "user_pool_config.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "schema"),
+					resource.TestCheckResourceAttrSet(resourceName, "uris.%"),
+					resource.TestCheckResourceAttrSet(resourceName, "uris.GRAPHQL"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"schema"},
+			},
+		},
+	})
+}
+
 func TestAccAWSAppsyncGraphqlApi_AuthenticationType(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_appsync_graphql_api.test"
@@ -677,6 +711,16 @@ resource "aws_appsync_graphql_api" "test" {
   name                = %q
 }
 `, authenticationType, rName)
+}
+
+func testAccAppsyncGraphqlApiConfig_Schema(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_appsync_graphql_api" "test" {
+  authentication_type = "API_KEY"
+  name                = %q
+  schema		      = "type Query { test:String }\nschema { query:Query }"
+}
+`, rName)
 }
 
 func testAccAppsyncGraphqlApiConfig_LogConfig_FieldLogLevel(rName, fieldLogLevel string) string {

@@ -13248,6 +13248,12 @@ func (c *EC2) DescribeInternetGatewaysRequest(input *DescribeInternetGatewaysInp
 		Name:       opDescribeInternetGateways,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -13289,6 +13295,56 @@ func (c *EC2) DescribeInternetGatewaysWithContext(ctx aws.Context, input *Descri
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// DescribeInternetGatewaysPages iterates over the pages of a DescribeInternetGateways operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeInternetGateways method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeInternetGateways operation.
+//    pageNum := 0
+//    err := client.DescribeInternetGatewaysPages(params,
+//        func(page *DescribeInternetGatewaysOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *EC2) DescribeInternetGatewaysPages(input *DescribeInternetGatewaysInput, fn func(*DescribeInternetGatewaysOutput, bool) bool) error {
+	return c.DescribeInternetGatewaysPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeInternetGatewaysPagesWithContext same as DescribeInternetGatewaysPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) DescribeInternetGatewaysPagesWithContext(ctx aws.Context, input *DescribeInternetGatewaysInput, fn func(*DescribeInternetGatewaysOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeInternetGatewaysInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeInternetGatewaysRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*DescribeInternetGatewaysOutput), !p.HasNextPage())
+	}
+	return p.Err()
 }
 
 const opDescribeKeyPairs = "DescribeKeyPairs"
@@ -13754,6 +13810,12 @@ func (c *EC2) DescribeNetworkAclsRequest(input *DescribeNetworkAclsInput) (req *
 		Name:       opDescribeNetworkAcls,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -13798,6 +13860,56 @@ func (c *EC2) DescribeNetworkAclsWithContext(ctx aws.Context, input *DescribeNet
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// DescribeNetworkAclsPages iterates over the pages of a DescribeNetworkAcls operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeNetworkAcls method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeNetworkAcls operation.
+//    pageNum := 0
+//    err := client.DescribeNetworkAclsPages(params,
+//        func(page *DescribeNetworkAclsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *EC2) DescribeNetworkAclsPages(input *DescribeNetworkAclsInput, fn func(*DescribeNetworkAclsOutput, bool) bool) error {
+	return c.DescribeNetworkAclsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeNetworkAclsPagesWithContext same as DescribeNetworkAclsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) DescribeNetworkAclsPagesWithContext(ctx aws.Context, input *DescribeNetworkAclsInput, fn func(*DescribeNetworkAclsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeNetworkAclsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeNetworkAclsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*DescribeNetworkAclsOutput), !p.HasNextPage())
+	}
+	return p.Err()
 }
 
 const opDescribeNetworkInterfaceAttribute = "DescribeNetworkInterfaceAttribute"
@@ -18036,6 +18148,12 @@ func (c *EC2) DescribeVpcPeeringConnectionsRequest(input *DescribeVpcPeeringConn
 		Name:       opDescribeVpcPeeringConnections,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -18079,6 +18197,56 @@ func (c *EC2) DescribeVpcPeeringConnectionsWithContext(ctx aws.Context, input *D
 	return out, req.Send()
 }
 
+// DescribeVpcPeeringConnectionsPages iterates over the pages of a DescribeVpcPeeringConnections operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeVpcPeeringConnections method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeVpcPeeringConnections operation.
+//    pageNum := 0
+//    err := client.DescribeVpcPeeringConnectionsPages(params,
+//        func(page *DescribeVpcPeeringConnectionsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *EC2) DescribeVpcPeeringConnectionsPages(input *DescribeVpcPeeringConnectionsInput, fn func(*DescribeVpcPeeringConnectionsOutput, bool) bool) error {
+	return c.DescribeVpcPeeringConnectionsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeVpcPeeringConnectionsPagesWithContext same as DescribeVpcPeeringConnectionsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) DescribeVpcPeeringConnectionsPagesWithContext(ctx aws.Context, input *DescribeVpcPeeringConnectionsInput, fn func(*DescribeVpcPeeringConnectionsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeVpcPeeringConnectionsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeVpcPeeringConnectionsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*DescribeVpcPeeringConnectionsOutput), !p.HasNextPage())
+	}
+	return p.Err()
+}
+
 const opDescribeVpcs = "DescribeVpcs"
 
 // DescribeVpcsRequest generates a "aws/request.Request" representing the
@@ -18110,6 +18278,12 @@ func (c *EC2) DescribeVpcsRequest(input *DescribeVpcsInput) (req *request.Reques
 		Name:       opDescribeVpcs,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -18151,6 +18325,56 @@ func (c *EC2) DescribeVpcsWithContext(ctx aws.Context, input *DescribeVpcsInput,
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// DescribeVpcsPages iterates over the pages of a DescribeVpcs operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeVpcs method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeVpcs operation.
+//    pageNum := 0
+//    err := client.DescribeVpcsPages(params,
+//        func(page *DescribeVpcsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *EC2) DescribeVpcsPages(input *DescribeVpcsInput, fn func(*DescribeVpcsOutput, bool) bool) error {
+	return c.DescribeVpcsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeVpcsPagesWithContext same as DescribeVpcsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) DescribeVpcsPagesWithContext(ctx aws.Context, input *DescribeVpcsInput, fn func(*DescribeVpcsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeVpcsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeVpcsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*DescribeVpcsOutput), !p.HasNextPage())
+	}
+	return p.Err()
 }
 
 const opDescribeVpnConnections = "DescribeVpnConnections"
@@ -22553,7 +22777,8 @@ func (c *EC2) ModifyNetworkInterfaceAttributeRequest(input *ModifyNetworkInterfa
 // ModifyNetworkInterfaceAttribute API operation for Amazon Elastic Compute Cloud.
 //
 // Modifies the specified network interface attribute. You can specify only
-// one attribute at a time.
+// one attribute at a time. You can use this action to attach and detach security
+// groups from an existing EC2 instance.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -31941,7 +32166,10 @@ func (s *CertificateAuthenticationRequest) SetClientRootCertificateChainArn(v st
 }
 
 // Provides authorization for Amazon to bring a specific IP address range to
-// a specific AWS account using bring your own IP addresses (BYOIP).
+// a specific AWS account using bring your own IP addresses (BYOIP). For more
+// information, see Prepare to Bring Your Address Range to Your AWS Account
+// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-byoip.html#prepare-for-byoip)
+// in the Amazon Elastic Compute Cloud User Guide.
 type CidrAuthorizationContext struct {
 	_ struct{} `type:"structure"`
 
@@ -42850,17 +43078,13 @@ type DescribeClassicLinkInstancesInput struct {
 	// One or more instance IDs. Must be instances linked to a VPC through ClassicLink.
 	InstanceIds []*string `locationName:"InstanceId" locationNameList:"InstanceId" type:"list"`
 
-	// The maximum number of results to return for the request in a single page.
-	// The remaining results of the initial request can be seen by sending another
-	// request with the returned NextToken value. This value can be between 5 and
-	// 1000. If MaxResults is given a value larger than 1000, only 1000 results
-	// are returned. You cannot specify this parameter and the instance IDs parameter
-	// in the same request.
+	// The maximum number of results to return with a single call. To retrieve the
+	// remaining results, make another call with the returned nextToken value.
 	//
 	// Constraint: If the value is greater than 1000, we return only 1000 items.
 	MaxResults *int64 `locationName:"maxResults" type:"integer"`
 
-	// The token to retrieve the next page of results.
+	// The token for the next page of results.
 	NextToken *string `locationName:"nextToken" type:"string"`
 }
 
@@ -43785,13 +44009,11 @@ type DescribeEgressOnlyInternetGatewaysInput struct {
 	// One or more egress-only internet gateway IDs.
 	EgressOnlyInternetGatewayIds []*string `locationName:"EgressOnlyInternetGatewayId" locationNameList:"item" type:"list"`
 
-	// The maximum number of results to return for the request in a single page.
-	// The remaining results can be seen by sending another request with the returned
-	// NextToken value. This value can be between 5 and 1000. If MaxResults is given
-	// a value larger than 1000, only 1000 results are returned.
+	// The maximum number of results to return with a single call. To retrieve the
+	// remaining results, make another call with the returned nextToken value.
 	MaxResults *int64 `type:"integer"`
 
-	// The token to retrieve the next page of results.
+	// The token for the next page of results.
 	NextToken *string `type:"string"`
 }
 
@@ -43835,7 +44057,8 @@ type DescribeEgressOnlyInternetGatewaysOutput struct {
 	// Information about the egress-only internet gateways.
 	EgressOnlyInternetGateways []*EgressOnlyInternetGateway `locationName:"egressOnlyInternetGatewaySet" locationNameList:"item" type:"list"`
 
-	// The token to use to retrieve the next page of results.
+	// The token to use to retrieve the next page of results. This value is null
+	// when there are no more results to return.
 	NextToken *string `locationName:"nextToken" type:"string"`
 }
 
@@ -44568,14 +44791,11 @@ type DescribeFlowLogsInput struct {
 	// One or more flow log IDs.
 	FlowLogIds []*string `locationName:"FlowLogId" locationNameList:"item" type:"list"`
 
-	// The maximum number of results to return for the request in a single page.
-	// The remaining results can be seen by sending another request with the returned
-	// NextToken value. This value can be between 5 and 1000. If MaxResults is given
-	// a value larger than 1000, only 1000 results are returned. You cannot specify
-	// this parameter and the flow log IDs parameter in the same request.
+	// The maximum number of results to return with a single call. To retrieve the
+	// remaining results, make another call with the returned nextToken value.
 	MaxResults *int64 `type:"integer"`
 
-	// The token to retrieve the next page of results.
+	// The token for the next page of results.
 	NextToken *string `type:"string"`
 }
 
@@ -44911,7 +45131,7 @@ type DescribeHostReservationOfferingsInput struct {
 	// The remaining results can be seen by sending another request with the returned
 	// nextToken value. This value can be between 5 and 500. If maxResults is given
 	// a larger value than 500, you receive an error.
-	MaxResults *int64 `type:"integer"`
+	MaxResults *int64 `min:"5" type:"integer"`
 
 	// This is the minimum duration of the reservation you'd like to purchase, specified
 	// in seconds. Reservations are available in one-year and three-year terms.
@@ -44935,6 +45155,19 @@ func (s DescribeHostReservationOfferingsInput) String() string {
 // GoString returns the string representation
 func (s DescribeHostReservationOfferingsInput) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeHostReservationOfferingsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeHostReservationOfferingsInput"}
+	if s.MaxResults != nil && *s.MaxResults < 5 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 5))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetFilter sets the Filter field's value.
@@ -45017,6 +45250,16 @@ type DescribeHostReservationsInput struct {
 	//
 	//    * state - The state of the reservation (payment-pending | payment-failed
 	//    | active | retired).
+	//
+	//    * tag:<key> - The key/value combination of a tag assigned to the resource.
+	//    Use the tag key in the filter name and the tag value as the filter value.
+	//    For example, to find all resources that have a tag with the key Owner
+	//    and the value TeamA, specify tag:Owner for the filter name and TeamA for
+	//    the filter value.
+	//
+	//    * tag-key - The key of a tag assigned to the resource. Use this filter
+	//    to find all resources assigned a tag with a specific key, regardless of
+	//    the tag value.
 	Filter []*Filter `locationNameList:"Filter" type:"list"`
 
 	// One or more host reservation IDs.
@@ -46834,6 +47077,13 @@ type DescribeInternetGatewaysInput struct {
 	//
 	// Default: Describes all your internet gateways.
 	InternetGatewayIds []*string `locationName:"internetGatewayId" locationNameList:"item" type:"list"`
+
+	// The maximum number of results to return with a single call. To retrieve the
+	// remaining results, make another call with the returned nextToken value.
+	MaxResults *int64 `min:"5" type:"integer"`
+
+	// The token for the next page of results.
+	NextToken *string `type:"string"`
 }
 
 // String returns the string representation
@@ -46844,6 +47094,19 @@ func (s DescribeInternetGatewaysInput) String() string {
 // GoString returns the string representation
 func (s DescribeInternetGatewaysInput) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeInternetGatewaysInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeInternetGatewaysInput"}
+	if s.MaxResults != nil && *s.MaxResults < 5 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 5))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetDryRun sets the DryRun field's value.
@@ -46864,11 +47127,27 @@ func (s *DescribeInternetGatewaysInput) SetInternetGatewayIds(v []*string) *Desc
 	return s
 }
 
+// SetMaxResults sets the MaxResults field's value.
+func (s *DescribeInternetGatewaysInput) SetMaxResults(v int64) *DescribeInternetGatewaysInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeInternetGatewaysInput) SetNextToken(v string) *DescribeInternetGatewaysInput {
+	s.NextToken = &v
+	return s
+}
+
 type DescribeInternetGatewaysOutput struct {
 	_ struct{} `type:"structure"`
 
 	// Information about one or more internet gateways.
 	InternetGateways []*InternetGateway `locationName:"internetGatewaySet" locationNameList:"item" type:"list"`
+
+	// The token to use to retrieve the next page of results. This value is null
+	// when there are no more results to return.
+	NextToken *string `locationName:"nextToken" type:"string"`
 }
 
 // String returns the string representation
@@ -46884,6 +47163,12 @@ func (s DescribeInternetGatewaysOutput) GoString() string {
 // SetInternetGateways sets the InternetGateways field's value.
 func (s *DescribeInternetGatewaysOutput) SetInternetGateways(v []*InternetGateway) *DescribeInternetGatewaysOutput {
 	s.InternetGateways = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeInternetGatewaysOutput) SetNextToken(v string) *DescribeInternetGatewaysOutput {
+	s.NextToken = &v
 	return s
 }
 
@@ -47374,18 +47659,14 @@ type DescribeNatGatewaysInput struct {
 	//    * vpc-id - The ID of the VPC in which the NAT gateway resides.
 	Filter []*Filter `locationNameList:"Filter" type:"list"`
 
-	// The maximum number of items to return for this request. The request returns
-	// a token that you can specify in a subsequent call to get the next set of
-	// results.
-	//
-	// Constraint: If the value specified is greater than 1000, we return only 1000
-	// items.
+	// The maximum number of results to return with a single call. To retrieve the
+	// remaining results, make another call with the returned nextToken value.
 	MaxResults *int64 `type:"integer"`
 
 	// One or more NAT gateway IDs.
 	NatGatewayIds []*string `locationName:"NatGatewayId" locationNameList:"item" type:"list"`
 
-	// The token to retrieve the next page of results.
+	// The token for the next page of results.
 	NextToken *string `type:"string"`
 }
 
@@ -47516,10 +47797,17 @@ type DescribeNetworkAclsInput struct {
 	//    * vpc-id - The ID of the VPC for the network ACL.
 	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
 
+	// The maximum number of results to return with a single call. To retrieve the
+	// remaining results, make another call with the returned nextToken value.
+	MaxResults *int64 `min:"5" type:"integer"`
+
 	// One or more network ACL IDs.
 	//
 	// Default: Describes all your network ACLs.
 	NetworkAclIds []*string `locationName:"NetworkAclId" locationNameList:"item" type:"list"`
+
+	// The token for the next page of results.
+	NextToken *string `type:"string"`
 }
 
 // String returns the string representation
@@ -47530,6 +47818,19 @@ func (s DescribeNetworkAclsInput) String() string {
 // GoString returns the string representation
 func (s DescribeNetworkAclsInput) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeNetworkAclsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeNetworkAclsInput"}
+	if s.MaxResults != nil && *s.MaxResults < 5 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 5))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetDryRun sets the DryRun field's value.
@@ -47544,9 +47845,21 @@ func (s *DescribeNetworkAclsInput) SetFilters(v []*Filter) *DescribeNetworkAclsI
 	return s
 }
 
+// SetMaxResults sets the MaxResults field's value.
+func (s *DescribeNetworkAclsInput) SetMaxResults(v int64) *DescribeNetworkAclsInput {
+	s.MaxResults = &v
+	return s
+}
+
 // SetNetworkAclIds sets the NetworkAclIds field's value.
 func (s *DescribeNetworkAclsInput) SetNetworkAclIds(v []*string) *DescribeNetworkAclsInput {
 	s.NetworkAclIds = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeNetworkAclsInput) SetNextToken(v string) *DescribeNetworkAclsInput {
+	s.NextToken = &v
 	return s
 }
 
@@ -47555,6 +47868,10 @@ type DescribeNetworkAclsOutput struct {
 
 	// Information about one or more network ACLs.
 	NetworkAcls []*NetworkAcl `locationName:"networkAclSet" locationNameList:"item" type:"list"`
+
+	// The token to use to retrieve the next page of results. This value is null
+	// when there are no more results to return.
+	NextToken *string `locationName:"nextToken" type:"string"`
 }
 
 // String returns the string representation
@@ -47570,6 +47887,12 @@ func (s DescribeNetworkAclsOutput) GoString() string {
 // SetNetworkAcls sets the NetworkAcls field's value.
 func (s *DescribeNetworkAclsOutput) SetNetworkAcls(v []*NetworkAcl) *DescribeNetworkAclsOutput {
 	s.NetworkAcls = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeNetworkAclsOutput) SetNextToken(v string) *DescribeNetworkAclsOutput {
+	s.NextToken = &v
 	return s
 }
 
@@ -48089,16 +48412,11 @@ type DescribePrefixListsInput struct {
 	//    * prefix-list-name: The name of a prefix list.
 	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
 
-	// The maximum number of items to return for this request. The request returns
-	// a token that you can specify in a subsequent call to get the next set of
-	// results.
-	//
-	// Constraint: If the value specified is greater than 1000, we return only 1000
-	// items.
+	// The maximum number of results to return with a single call. To retrieve the
+	// remaining results, make another call with the returned nextToken value.
 	MaxResults *int64 `type:"integer"`
 
-	// The token for the next set of items to return. (You received this token from
-	// a prior call.)
+	// The token for the next page of results.
 	NextToken *string `type:"string"`
 
 	// One or more prefix list IDs.
@@ -48148,8 +48466,8 @@ func (s *DescribePrefixListsInput) SetPrefixListIds(v []*string) *DescribePrefix
 type DescribePrefixListsOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The token to use when requesting the next set of items. If there are no additional
-	// items to return, the string is empty.
+	// The token to use to retrieve the next page of results. This value is null
+	// when there are no more results to return.
 	NextToken *string `locationName:"nextToken" type:"string"`
 
 	// All available prefix lists.
@@ -49074,12 +49392,11 @@ type DescribeRouteTablesInput struct {
 	//    * vpc-id - The ID of the VPC for the route table.
 	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
 
-	// The maximum number of results to return in a single call. To retrieve the
-	// remaining results, make another call with the returned NextToken value. This
-	// value can be between 5 and 100.
+	// The maximum number of results to return with a single call. To retrieve the
+	// remaining results, make another call with the returned nextToken value.
 	MaxResults *int64 `type:"integer"`
 
-	// The token to retrieve the next page of results.
+	// The token for the next page of results.
 	NextToken *string `type:"string"`
 
 	// One or more route table IDs.
@@ -50988,9 +51305,10 @@ type DescribeTagsInput struct {
 	//
 	//    * resource-type - The resource type (customer-gateway | dedicated-host
 	//    | dhcp-options | elastic-ip | fleet | fpga-image | image | instance |
-	//    internet-gateway | launch-template | natgateway | network-acl | network-interface
-	//    | reserved-instances | route-table | security-group | snapshot | spot-instances-request
-	//    | subnet | volume | vpc | vpc-peering-connection | vpn-connection | vpn-gateway).
+	//    host-reservation | internet-gateway | launch-template | natgateway | network-acl
+	//    | network-interface | reserved-instances | route-table | security-group
+	//    | snapshot | spot-instances-request | subnet | volume | vpc | vpc-peering-connection
+	//    | vpn-connection | vpn-gateway).
 	//
 	//    * tag:<key> - The key/value combination of the tag. For example, specify
 	//    "tag:Owner" for the filter name and "TeamA" for the filter value to find
@@ -52200,13 +52518,11 @@ func (s *DescribeVpcAttributeOutput) SetVpcId(v string) *DescribeVpcAttributeOut
 type DescribeVpcClassicLinkDnsSupportInput struct {
 	_ struct{} `type:"structure"`
 
-	// The maximum number of items to return for this request. The request returns
-	// a token that you can specify in a subsequent call to get the next set of
-	// results.
+	// The maximum number of results to return with a single call. To retrieve the
+	// remaining results, make another call with the returned nextToken value.
 	MaxResults *int64 `locationName:"maxResults" min:"5" type:"integer"`
 
-	// The token for the next set of items to return. (You received this token from
-	// a prior call.)
+	// The token for the next page of results.
 	NextToken *string `locationName:"nextToken" min:"1" type:"string"`
 
 	// One or more VPC IDs.
@@ -52260,7 +52576,8 @@ func (s *DescribeVpcClassicLinkDnsSupportInput) SetVpcIds(v []*string) *Describe
 type DescribeVpcClassicLinkDnsSupportOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The token to use when requesting the next set of items.
+	// The token to use to retrieve the next page of results. This value is null
+	// when there are no more results to return.
 	NextToken *string `locationName:"nextToken" min:"1" type:"string"`
 
 	// Information about the ClassicLink DNS support status of the VPCs.
@@ -53073,13 +53390,11 @@ type DescribeVpcPeeringConnectionsInput struct {
 	//    * vpc-peering-connection-id - The ID of the VPC peering connection.
 	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
 
-	// The maximum number of results to return for this request. The request returns
-	// a token that you can specify in a subsequent call to get the next set of
-	// results.
+	// The maximum number of results to return with a single call. To retrieve the
+	// remaining results, make another call with the returned nextToken value.
 	MaxResults *int64 `min:"5" type:"integer"`
 
-	// The token to request the next page of results. (You received this token from
-	// a prior call.)
+	// The token for the next page of results.
 	NextToken *string `type:"string"`
 
 	// One or more VPC peering connection IDs.
@@ -53229,6 +53544,13 @@ type DescribeVpcsInput struct {
 	//    * vpc-id - The ID of the VPC.
 	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
 
+	// The maximum number of results to return with a single call. To retrieve the
+	// remaining results, make another call with the returned nextToken value.
+	MaxResults *int64 `min:"5" type:"integer"`
+
+	// The token for the next page of results.
+	NextToken *string `type:"string"`
+
 	// One or more VPC IDs.
 	//
 	// Default: Describes all your VPCs.
@@ -53245,6 +53567,19 @@ func (s DescribeVpcsInput) GoString() string {
 	return s.String()
 }
 
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeVpcsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeVpcsInput"}
+	if s.MaxResults != nil && *s.MaxResults < 5 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 5))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
 // SetDryRun sets the DryRun field's value.
 func (s *DescribeVpcsInput) SetDryRun(v bool) *DescribeVpcsInput {
 	s.DryRun = &v
@@ -53257,6 +53592,18 @@ func (s *DescribeVpcsInput) SetFilters(v []*Filter) *DescribeVpcsInput {
 	return s
 }
 
+// SetMaxResults sets the MaxResults field's value.
+func (s *DescribeVpcsInput) SetMaxResults(v int64) *DescribeVpcsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeVpcsInput) SetNextToken(v string) *DescribeVpcsInput {
+	s.NextToken = &v
+	return s
+}
+
 // SetVpcIds sets the VpcIds field's value.
 func (s *DescribeVpcsInput) SetVpcIds(v []*string) *DescribeVpcsInput {
 	s.VpcIds = v
@@ -53265,6 +53612,10 @@ func (s *DescribeVpcsInput) SetVpcIds(v []*string) *DescribeVpcsInput {
 
 type DescribeVpcsOutput struct {
 	_ struct{} `type:"structure"`
+
+	// The token to use to retrieve the next page of results. This value is null
+	// when there are no more results to return.
+	NextToken *string `locationName:"nextToken" type:"string"`
 
 	// Information about one or more VPCs.
 	Vpcs []*Vpc `locationName:"vpcSet" locationNameList:"item" type:"list"`
@@ -53278,6 +53629,12 @@ func (s DescribeVpcsOutput) String() string {
 // GoString returns the string representation
 func (s DescribeVpcsOutput) GoString() string {
 	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeVpcsOutput) SetNextToken(v string) *DescribeVpcsOutput {
+	s.NextToken = &v
+	return s
 }
 
 // SetVpcs sets the Vpcs field's value.
@@ -57315,6 +57672,9 @@ type FpgaImage struct {
 	// The date and time the AFI was created.
 	CreateTime *time.Time `locationName:"createTime" type:"timestamp"`
 
+	// Indicates whether data retention support is enabled for the AFI.
+	DataRetentionSupport *bool `locationName:"dataRetentionSupport" type:"boolean"`
+
 	// The description of the AFI.
 	Description *string `locationName:"description" type:"string"`
 
@@ -57368,6 +57728,12 @@ func (s FpgaImage) GoString() string {
 // SetCreateTime sets the CreateTime field's value.
 func (s *FpgaImage) SetCreateTime(v time.Time) *FpgaImage {
 	s.CreateTime = &v
+	return s
+}
+
+// SetDataRetentionSupport sets the DataRetentionSupport field's value.
+func (s *FpgaImage) SetDataRetentionSupport(v bool) *FpgaImage {
+	s.DataRetentionSupport = &v
 	return s
 }
 
@@ -59057,6 +59423,9 @@ type HostReservation struct {
 	// The state of the reservation.
 	State *string `locationName:"state" type:"string" enum:"ReservationState"`
 
+	// Any tags assigned to the Dedicated Host Reservation.
+	Tags []*Tag `locationName:"tagSet" locationNameList:"item" type:"list"`
+
 	// The upfront price of the reservation.
 	UpfrontPrice *string `locationName:"upfrontPrice" type:"string"`
 }
@@ -59140,6 +59509,12 @@ func (s *HostReservation) SetStart(v time.Time) *HostReservation {
 // SetState sets the State field's value.
 func (s *HostReservation) SetState(v string) *HostReservation {
 	s.State = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *HostReservation) SetTags(v []*Tag) *HostReservation {
+	s.Tags = v
 	return s
 }
 
@@ -86318,6 +86693,9 @@ const (
 
 	// ResourceTypeFpgaImage is a ResourceType enum value
 	ResourceTypeFpgaImage = "fpga-image"
+
+	// ResourceTypeHostReservation is a ResourceType enum value
+	ResourceTypeHostReservation = "host-reservation"
 
 	// ResourceTypeImage is a ResourceType enum value
 	ResourceTypeImage = "image"

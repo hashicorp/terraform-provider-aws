@@ -4790,15 +4790,39 @@ func flattenRdsScalingConfigurationInfo(scalingConfigurationInfo *rds.ScalingCon
 }
 
 func expandAppmeshVirtualRouterSpec(vSpec []interface{}) *appmesh.VirtualRouterSpec {
+	spec := &appmesh.VirtualRouterSpec{}
+
 	if len(vSpec) == 0 || vSpec[0] == nil {
-		return nil
+		// Empty Spec is allowed.
+		return spec
 	}
 	mSpec := vSpec[0].(map[string]interface{})
 
-	spec := &appmesh.VirtualRouterSpec{}
+	if vListeners, ok := mSpec["listener"].(*schema.Set); ok && vListeners.Len() > 0 {
+		listeners := []*appmesh.VirtualRouterListener{}
 
-	if vServiceNames, ok := mSpec["service_names"].(*schema.Set); ok && vServiceNames.Len() > 0 {
-		spec.ServiceNames = expandStringSet(vServiceNames)
+		for _, vListener := range vListeners.List() {
+			listener := &appmesh.VirtualRouterListener{}
+
+			mListener := vListener.(map[string]interface{})
+
+			if vPortMapping, ok := mListener["port_mapping"].([]interface{}); ok && len(vPortMapping) > 0 && vPortMapping[0] != nil {
+				mPortMapping := vPortMapping[0].(map[string]interface{})
+
+				listener.PortMapping = &appmesh.PortMapping{}
+
+				if vPort, ok := mPortMapping["port"].(int); ok && vPort > 0 {
+					listener.PortMapping.Port = aws.Int64(int64(vPort))
+				}
+				if vProtocol, ok := mPortMapping["protocol"].(string); ok && vProtocol != "" {
+					listener.PortMapping.Protocol = aws.String(vProtocol)
+				}
+			}
+
+			listeners = append(listeners, listener)
+		}
+
+		spec.Listeners = listeners
 	}
 
 	return spec
@@ -4809,8 +4833,26 @@ func flattenAppmeshVirtualRouterSpec(spec *appmesh.VirtualRouterSpec) []interfac
 		return []interface{}{}
 	}
 
-	mSpec := map[string]interface{}{
-		"service_names": flattenStringSet(spec.ServiceNames),
+	mSpec := map[string]interface{}{}
+
+	if spec.Listeners != nil {
+		vListeners := []interface{}{}
+
+		for _, listener := range spec.Listeners {
+			mListener := map[string]interface{}{}
+
+			if listener.PortMapping != nil {
+				mPortMapping := map[string]interface{}{
+					"port":     int(aws.Int64Value(listener.PortMapping.Port)),
+					"protocol": aws.StringValue(listener.PortMapping.Protocol),
+				}
+				mListener["port_mapping"] = []interface{}{mPortMapping}
+			}
+
+			vListeners = append(vListeners, mListener)
+		}
+
+		mSpec["listener"] = schema.NewSet(appmeshVirtualNodeListenerHash, vListeners)
 	}
 
 	return []interface{}{mSpec}
@@ -4825,8 +4867,27 @@ func expandAppmeshVirtualNodeSpec(vSpec []interface{}) *appmesh.VirtualNodeSpec 
 	}
 	mSpec := vSpec[0].(map[string]interface{})
 
-	if vBackends, ok := mSpec["backends"].(*schema.Set); ok && vBackends.Len() > 0 {
-		spec.Backends = expandStringSet(vBackends)
+	if vBackends, ok := mSpec["backend"].(*schema.Set); ok && vBackends.Len() > 0 {
+		backends := []*appmesh.Backend{}
+
+		for _, vBackend := range vBackends.List() {
+			backend := &appmesh.Backend{}
+
+			mBackend := vBackend.(map[string]interface{})
+
+			if vVirtualService, ok := mBackend["virtual_service"].([]interface{}); ok && len(vVirtualService) > 0 && vVirtualService[0] != nil {
+				mVirtualService := vVirtualService[0].(map[string]interface{})
+
+				backend.VirtualService = &appmesh.VirtualServiceBackend{}
+
+				if vVirtualServiceName, ok := mVirtualService["virtual_service_name"].(string); ok {
+					backend.VirtualService.VirtualServiceName = aws.String(vVirtualServiceName)
+				}
+			}
+			backends = append(backends, backend)
+		}
+
+		spec.Backends = backends
 	}
 
 	if vListeners, ok := mSpec["listener"].(*schema.Set); ok && vListeners.Len() > 0 {
@@ -4890,10 +4951,10 @@ func expandAppmeshVirtualNodeSpec(vSpec []interface{}) *appmesh.VirtualNodeSpec 
 		if vDns, ok := mServiceDiscovery["dns"].([]interface{}); ok && len(vDns) > 0 && vDns[0] != nil {
 			mDns := vDns[0].(map[string]interface{})
 
-			if vServiceName, ok := mDns["service_name"].(string); ok && vServiceName != "" {
+			if vHostname, ok := mDns["hostname"].(string); ok && vHostname != "" {
 				spec.ServiceDiscovery = &appmesh.ServiceDiscovery{
 					Dns: &appmesh.DnsServiceDiscovery{
-						ServiceName: aws.String(vServiceName),
+						Hostname: aws.String(vHostname),
 					},
 				}
 			}
@@ -4911,7 +4972,22 @@ func flattenAppmeshVirtualNodeSpec(spec *appmesh.VirtualNodeSpec) []interface{} 
 	mSpec := map[string]interface{}{}
 
 	if spec.Backends != nil {
-		mSpec["backends"] = flattenStringSet(spec.Backends)
+		vBackends := []interface{}{}
+
+		for _, backend := range spec.Backends {
+			mBackend := map[string]interface{}{}
+
+			if backend.VirtualService != nil {
+				mVirtualService := map[string]interface{}{
+					"virtual_service_name": aws.StringValue(backend.VirtualService.VirtualServiceName),
+				}
+				mBackend["virtual_service"] = []interface{}{mVirtualService}
+			}
+
+			vBackends = append(vBackends, mBackend)
+		}
+
+		mSpec["backend"] = schema.NewSet(appmeshVirtualNodeBackendHash, vBackends)
 	}
 
 	if spec.Listeners != nil {
@@ -4952,11 +5028,81 @@ func flattenAppmeshVirtualNodeSpec(spec *appmesh.VirtualNodeSpec) []interface{} 
 			map[string]interface{}{
 				"dns": []interface{}{
 					map[string]interface{}{
-						"service_name": aws.StringValue(spec.ServiceDiscovery.Dns.ServiceName),
+						"hostname": aws.StringValue(spec.ServiceDiscovery.Dns.Hostname),
 					},
 				},
 			},
 		}
+	}
+
+	return []interface{}{mSpec}
+}
+
+func expandAppmeshVirtualServiceSpec(vSpec []interface{}) *appmesh.VirtualServiceSpec {
+	spec := &appmesh.VirtualServiceSpec{}
+
+	if len(vSpec) == 0 || vSpec[0] == nil {
+		// Empty Spec is allowed.
+		return spec
+	}
+	mSpec := vSpec[0].(map[string]interface{})
+
+	if vProvider, ok := mSpec["provider"].([]interface{}); ok && len(vProvider) > 0 && vProvider[0] != nil {
+		mProvider := vProvider[0].(map[string]interface{})
+
+		spec.Provider = &appmesh.VirtualServiceProvider{}
+
+		if vVirtualNode, ok := mProvider["virtual_node"].([]interface{}); ok && len(vVirtualNode) > 0 && vVirtualNode[0] != nil {
+			mVirtualNode := vVirtualNode[0].(map[string]interface{})
+
+			if vVirtualNodeName, ok := mVirtualNode["virtual_node_name"].(string); ok && vVirtualNodeName != "" {
+				spec.Provider.VirtualNode = &appmesh.VirtualNodeServiceProvider{
+					VirtualNodeName: aws.String(vVirtualNodeName),
+				}
+			}
+		}
+
+		if vVirtualRouter, ok := mProvider["virtual_router"].([]interface{}); ok && len(vVirtualRouter) > 0 && vVirtualRouter[0] != nil {
+			mVirtualRouter := vVirtualRouter[0].(map[string]interface{})
+
+			if vVirtualRouterName, ok := mVirtualRouter["virtual_router_name"].(string); ok && vVirtualRouterName != "" {
+				spec.Provider.VirtualRouter = &appmesh.VirtualRouterServiceProvider{
+					VirtualRouterName: aws.String(vVirtualRouterName),
+				}
+			}
+		}
+	}
+
+	return spec
+}
+
+func flattenAppmeshVirtualServiceSpec(spec *appmesh.VirtualServiceSpec) []interface{} {
+	if spec == nil {
+		return []interface{}{}
+	}
+
+	mSpec := map[string]interface{}{}
+
+	if spec.Provider != nil {
+		mProvider := map[string]interface{}{}
+
+		if spec.Provider.VirtualNode != nil {
+			mProvider["virtual_node"] = []interface{}{
+				map[string]interface{}{
+					"virtual_node_name": aws.StringValue(spec.Provider.VirtualNode.VirtualNodeName),
+				},
+			}
+		}
+
+		if spec.Provider.VirtualRouter != nil {
+			mProvider["virtual_router"] = []interface{}{
+				map[string]interface{}{
+					"virtual_router_name": aws.StringValue(spec.Provider.VirtualRouter.VirtualRouterName),
+				},
+			}
+		}
+
+		mSpec["provider"] = []interface{}{mProvider}
 	}
 
 	return []interface{}{mSpec}
@@ -5062,7 +5208,7 @@ func flattenAppmeshRouteSpec(spec *appmesh.RouteSpec) []interface{} {
 	return []interface{}{mSpec}
 }
 
-func expandRoute53ResolverIpAddresses(vIpAddresses *schema.Set) []*route53resolver.IpAddressRequest {
+func expandRoute53ResolverEndpointIpAddresses(vIpAddresses *schema.Set) []*route53resolver.IpAddressRequest {
 	ipAddressRequests := []*route53resolver.IpAddressRequest{}
 
 	for _, vIpAddress := range vIpAddresses.List() {
@@ -5083,7 +5229,7 @@ func expandRoute53ResolverIpAddresses(vIpAddresses *schema.Set) []*route53resolv
 	return ipAddressRequests
 }
 
-func flattenRoute53ResolverIpAddresses(ipAddresses []*route53resolver.IpAddressResponse) []interface{} {
+func flattenRoute53ResolverEndpointIpAddresses(ipAddresses []*route53resolver.IpAddressResponse) []interface{} {
 	if ipAddresses == nil {
 		return []interface{}{}
 	}
@@ -5091,11 +5237,11 @@ func flattenRoute53ResolverIpAddresses(ipAddresses []*route53resolver.IpAddressR
 	vIpAddresses := []interface{}{}
 
 	for _, ipAddress := range ipAddresses {
-		mIpAddress := map[string]interface{}{}
-
-		mIpAddress["subnet_id"] = aws.StringValue(ipAddress.SubnetId)
-		mIpAddress["ip"] = aws.StringValue(ipAddress.Ip)
-		mIpAddress["ip_id"] = aws.StringValue(ipAddress.IpId)
+		mIpAddress := map[string]interface{}{
+			"subnet_id": aws.StringValue(ipAddress.SubnetId),
+			"ip":        aws.StringValue(ipAddress.Ip),
+			"ip_id":     aws.StringValue(ipAddress.IpId),
+		}
 
 		vIpAddresses = append(vIpAddresses, mIpAddress)
 	}
@@ -5103,7 +5249,7 @@ func flattenRoute53ResolverIpAddresses(ipAddresses []*route53resolver.IpAddressR
 	return vIpAddresses
 }
 
-func expandRoute53ResolverIpAddressUpdate(vIpAddress interface{}) *route53resolver.IpAddressUpdate {
+func expandRoute53ResolverEndpointIpAddressUpdate(vIpAddress interface{}) *route53resolver.IpAddressUpdate {
 	ipAddressUpdate := &route53resolver.IpAddressUpdate{}
 
 	mIpAddress := vIpAddress.(map[string]interface{})
@@ -5119,4 +5265,44 @@ func expandRoute53ResolverIpAddressUpdate(vIpAddress interface{}) *route53resolv
 	}
 
 	return ipAddressUpdate
+}
+
+func expandRoute53ResolverRuleTargetIps(vTargetIps *schema.Set) []*route53resolver.TargetAddress {
+	targetAddresses := []*route53resolver.TargetAddress{}
+
+	for _, vTargetIp := range vTargetIps.List() {
+		targetAddress := &route53resolver.TargetAddress{}
+
+		mTargetIp := vTargetIp.(map[string]interface{})
+
+		if vIp, ok := mTargetIp["ip"].(string); ok && vIp != "" {
+			targetAddress.Ip = aws.String(vIp)
+		}
+		if vPort, ok := mTargetIp["port"].(int); ok {
+			targetAddress.Port = aws.Int64(int64(vPort))
+		}
+
+		targetAddresses = append(targetAddresses, targetAddress)
+	}
+
+	return targetAddresses
+}
+
+func flattenRoute53ResolverRuleTargetIps(targetAddresses []*route53resolver.TargetAddress) []interface{} {
+	if targetAddresses == nil {
+		return []interface{}{}
+	}
+
+	vTargetIps := []interface{}{}
+
+	for _, targetAddress := range targetAddresses {
+		mTargetIp := map[string]interface{}{
+			"ip":   aws.StringValue(targetAddress.Ip),
+			"port": int(aws.Int64Value(targetAddress.Port)),
+		}
+
+		vTargetIps = append(vTargetIps, mTargetIp)
+	}
+
+	return vTargetIps
 }

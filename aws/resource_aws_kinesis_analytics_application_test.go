@@ -29,6 +29,11 @@ func TestAccAWSKinesisAnalyticsApplication_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resName, "code", "testCode\n"),
 				),
 			},
+			{
+				ResourceName:      resName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -55,6 +60,11 @@ func TestAccAWSKinesisAnalyticsApplication_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resName, "version", "2"),
 					resource.TestCheckResourceAttr(resName, "code", "testCode2\n"),
 				),
+			},
+			{
+				ResourceName:      resName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -87,6 +97,11 @@ func TestAccAWSKinesisAnalyticsApplication_addCloudwatchLoggingOptions(t *testin
 					resource.TestCheckResourceAttr(resName, "cloudwatch_logging_options.#", "1"),
 					resource.TestCheckResourceAttrPair(resName, "cloudwatch_logging_options.0.log_stream_arn", "aws_cloudwatch_log_stream.test", "arn"),
 				),
+			},
+			{
+				ResourceName:      resName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -122,6 +137,11 @@ func TestAccAWSKinesisAnalyticsApplication_updateCloudwatchLoggingOptions(t *tes
 					resource.TestCheckResourceAttrPair(resName, "cloudwatch_logging_options.0.log_stream_arn", "aws_cloudwatch_log_stream.test", "arn"),
 				),
 			},
+			{
+				ResourceName:      resName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -143,6 +163,11 @@ func TestAccAWSKinesisAnalyticsApplication_inputsKinesisFirehose(t *testing.T) {
 					resource.TestCheckResourceAttr(resName, "inputs.#", "1"),
 					resource.TestCheckResourceAttr(resName, "inputs.0.kinesis_firehose.#", "1"),
 				),
+			},
+			{
+				ResourceName:      resName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -172,6 +197,11 @@ func TestAccAWSKinesisAnalyticsApplication_inputsKinesisStream(t *testing.T) {
 					resource.TestCheckResourceAttr(resName, "inputs.0.schema.0.record_format.#", "1"),
 					resource.TestCheckResourceAttr(resName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.json.#", "1"),
 				),
+			},
+			{
+				ResourceName:      resName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -211,6 +241,11 @@ func TestAccAWSKinesisAnalyticsApplication_inputsAdd(t *testing.T) {
 					resource.TestCheckResourceAttr(resName, "inputs.0.schema.0.record_format.#", "1"),
 					resource.TestCheckResourceAttr(resName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.json.#", "1"),
 				),
+			},
+			{
+				ResourceName:      resName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -252,6 +287,11 @@ func TestAccAWSKinesisAnalyticsApplication_inputsUpdateKinesisStream(t *testing.
 					resource.TestCheckResourceAttr(resName, "inputs.0.schema.0.record_format.0.mapping_parameters.0.csv.#", "1"),
 				),
 			},
+			{
+				ResourceName:      resName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -279,6 +319,11 @@ func TestAccAWSKinesisAnalyticsApplication_outputsKinesisStream(t *testing.T) {
 					resource.TestCheckResourceAttr(resName, "outputs.0.schema.0.record_format_type", "JSON"),
 				),
 			},
+			{
+				ResourceName:      resName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -301,6 +346,11 @@ func TestAccAWSKinesisAnalyticsApplication_outputsMultiple(t *testing.T) {
 					testAccCheckKinesisAnalyticsApplicationExists(resName, &application),
 					resource.TestCheckResourceAttr(resName, "outputs.#", "2"),
 				),
+			},
+			{
+				ResourceName:      resName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -336,6 +386,11 @@ func TestAccAWSKinesisAnalyticsApplication_outputsAdd(t *testing.T) {
 					resource.TestCheckResourceAttr(resName, "outputs.0.kinesis_stream.#", "1"),
 					resource.TestCheckResourceAttr(resName, "outputs.0.schema.#", "1"),
 				),
+			},
+			{
+				ResourceName:      resName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -378,6 +433,11 @@ func TestAccAWSKinesisAnalyticsApplication_outputsUpdateKinesisStream(t *testing
 					resource.TestCheckResourceAttr(resName, "outputs.0.schema.0.record_format_type", "CSV"),
 				),
 			},
+			{
+				ResourceName:      resName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -413,6 +473,11 @@ func TestAccAWSKinesisAnalyticsApplication_Outputs_Lambda_Add(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "outputs.0.lambda.0.role_arn", iamRoleResourceName, "arn"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -440,6 +505,11 @@ func TestAccAWSKinesisAnalyticsApplication_Outputs_Lambda_Create(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "outputs.0.lambda.0.role_arn", iamRoleResourceName, "arn"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -466,6 +536,11 @@ func TestAccAWSKinesisAnalyticsApplication_referenceDataSource(t *testing.T) {
 					resource.TestCheckResourceAttr(resName, "reference_data_sources.0.schema.0.record_format.#", "1"),
 					resource.TestCheckResourceAttr(resName, "reference_data_sources.0.schema.0.record_format.0.mapping_parameters.0.json.#", "1"),
 				),
+			},
+			{
+				ResourceName:      resName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -498,6 +573,11 @@ func TestAccAWSKinesisAnalyticsApplication_referenceDataSourceUpdate(t *testing.
 					resource.TestCheckResourceAttr(resName, "version", "3"),
 					resource.TestCheckResourceAttr(resName, "reference_data_sources.#", "1"),
 				),
+			},
+			{
+				ResourceName:      resName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -592,9 +672,9 @@ resource "aws_kinesis_analytics_application" "test" {
 func testAccKinesisAnalyticsApplication_inputsKinesisFirehose(rInt int) string {
 	return fmt.Sprintf(`
 data "aws_iam_policy_document" "trust_firehose" {
-  statement = {
+  statement {
     actions = ["sts:AssumeRole"]
-    principals = {
+    principals {
       type = "Service"
       identifiers = ["firehose.amazonaws.com"]
     }
@@ -607,9 +687,9 @@ resource "aws_iam_role" "firehose" {
 }
 
 data "aws_iam_policy_document" "trust_lambda" {
-  statement = {
+  statement {
     actions = ["sts:AssumeRole"]
-    principals = {
+    principals {
       type = "Service"
       identifiers = ["lambda.amazonaws.com"]
     }
@@ -636,8 +716,8 @@ resource "aws_lambda_function" "test" {
 
 resource "aws_kinesis_firehose_delivery_stream" "test" {
   name = "testAcc-%d"
-  destination = "extended_s3" 
-  extended_s3_configuration = {
+  destination = "extended_s3"
+  extended_s3_configuration {
     role_arn = "${aws_iam_role.firehose.arn}"
     bucket_arn = "${aws_s3_bucket.test.arn}"
   }
@@ -646,25 +726,25 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 resource "aws_kinesis_analytics_application" "test" {
   name = "testAcc-%d"
   code = "testCode\n"
-  inputs = {
+  inputs {
     name_prefix = "test_prefix"
-    kinesis_firehose = {
+    kinesis_firehose {
       resource_arn = "${aws_kinesis_firehose_delivery_stream.test.arn}"
       role_arn = "${aws_iam_role.test.arn}"
     }
-    parallelism = {
+    parallelism {
       count = 1
     }
-    schema = {
-      record_columns = {
+    schema {
+      record_columns {
         mapping = "$.test"
         name = "test"
         sql_type = "VARCHAR(8)"
       }
       record_encoding = "UTF-8"
-      record_format = {
-        mapping_parameters = {
-          csv = {
+      record_format {
+        mapping_parameters {
+          csv {
             record_column_delimiter = ","
             record_row_delimiter = "\n"
           }
@@ -999,9 +1079,9 @@ resource "aws_kinesis_analytics_application" "test" {
 func testAccKinesisAnalyticsApplication_prereq(rInt int) string {
 	return fmt.Sprintf(`
 data "aws_iam_policy_document" "trust" {
-  statement = {
+  statement {
     actions = ["sts:AssumeRole"]
-    principals = {
+    principals {
       type = "Service"
       identifiers = ["kinesisanalytics.amazonaws.com"]
     }
@@ -1010,11 +1090,11 @@ data "aws_iam_policy_document" "trust" {
 
 resource "aws_iam_role" "test" {
   name = "testAcc-%d"
-  assume_role_policy = "${data.aws_iam_policy_document.trust.json}" 
+  assume_role_policy = "${data.aws_iam_policy_document.trust.json}"
 }
 
 data "aws_iam_policy_document" "test" {
-  statement = {
+  statement {
     actions = ["firehose:*"]
     resources = ["*"]
   }

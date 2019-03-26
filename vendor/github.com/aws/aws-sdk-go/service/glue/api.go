@@ -12584,6 +12584,9 @@ func (s CreateDatabaseOutput) GoString() string {
 type CreateDevEndpointInput struct {
 	_ struct{} `type:"structure"`
 
+	// A map of arguments used to configure the DevEndpoint.
+	Arguments map[string]*string `type:"map"`
+
 	// The name to be assigned to the new DevEndpoint.
 	//
 	// EndpointName is a required field
@@ -12670,6 +12673,12 @@ func (s *CreateDevEndpointInput) Validate() error {
 	return nil
 }
 
+// SetArguments sets the Arguments field's value.
+func (s *CreateDevEndpointInput) SetArguments(v map[string]*string) *CreateDevEndpointInput {
+	s.Arguments = v
+	return s
+}
+
 // SetEndpointName sets the EndpointName field's value.
 func (s *CreateDevEndpointInput) SetEndpointName(v string) *CreateDevEndpointInput {
 	s.EndpointName = &v
@@ -12739,6 +12748,9 @@ func (s *CreateDevEndpointInput) SetTags(v map[string]*string) *CreateDevEndpoin
 type CreateDevEndpointOutput struct {
 	_ struct{} `type:"structure"`
 
+	// The map of arguments used to configure this DevEndpoint.
+	Arguments map[string]*string `type:"map"`
+
 	// The AWS availability zone where this DevEndpoint is located.
 	AvailabilityZone *string `type:"string"`
 
@@ -12795,6 +12807,12 @@ func (s CreateDevEndpointOutput) String() string {
 // GoString returns the string representation
 func (s CreateDevEndpointOutput) GoString() string {
 	return s.String()
+}
+
+// SetArguments sets the Arguments field's value.
+func (s *CreateDevEndpointOutput) SetArguments(v map[string]*string) *CreateDevEndpointOutput {
+	s.Arguments = v
+	return s
 }
 
 // SetAvailabilityZone sets the AvailabilityZone field's value.
@@ -15081,6 +15099,12 @@ func (s DeleteUserDefinedFunctionOutput) GoString() string {
 type DevEndpoint struct {
 	_ struct{} `type:"structure"`
 
+	// A map of arguments used to configure the DevEndpoint.
+	//
+	// Note that currently, we only support "--enable-glue-datacatalog": "" as a
+	// valid argument.
+	Arguments map[string]*string `type:"map"`
+
 	// The AWS availability zone where this DevEndpoint is located.
 	AvailabilityZone *string `type:"string"`
 
@@ -15175,6 +15199,12 @@ func (s DevEndpoint) String() string {
 // GoString returns the string representation
 func (s DevEndpoint) GoString() string {
 	return s.String()
+}
+
+// SetArguments sets the Arguments field's value.
+func (s *DevEndpoint) SetArguments(v map[string]*string) *DevEndpoint {
+	s.Arguments = v
+	return s
 }
 
 // SetAvailabilityZone sets the AvailabilityZone field's value.
@@ -23181,11 +23211,18 @@ func (s UpdateDatabaseOutput) GoString() string {
 type UpdateDevEndpointInput struct {
 	_ struct{} `type:"structure"`
 
+	// The map of arguments to add the map of arguments used to configure the DevEndpoint.
+	AddArguments map[string]*string `type:"map"`
+
 	// The list of public keys for the DevEndpoint to use.
 	AddPublicKeys []*string `type:"list"`
 
 	// Custom Python or Java libraries to be loaded in the DevEndpoint.
 	CustomLibraries *DevEndpointCustomLibraries `type:"structure"`
+
+	// The list of argument keys to be deleted from the map of arguments used to
+	// configure the DevEndpoint.
+	DeleteArguments []*string `type:"list"`
 
 	// The list of public keys to be deleted from the DevEndpoint.
 	DeletePublicKeys []*string `type:"list"`
@@ -23226,6 +23263,12 @@ func (s *UpdateDevEndpointInput) Validate() error {
 	return nil
 }
 
+// SetAddArguments sets the AddArguments field's value.
+func (s *UpdateDevEndpointInput) SetAddArguments(v map[string]*string) *UpdateDevEndpointInput {
+	s.AddArguments = v
+	return s
+}
+
 // SetAddPublicKeys sets the AddPublicKeys field's value.
 func (s *UpdateDevEndpointInput) SetAddPublicKeys(v []*string) *UpdateDevEndpointInput {
 	s.AddPublicKeys = v
@@ -23235,6 +23278,12 @@ func (s *UpdateDevEndpointInput) SetAddPublicKeys(v []*string) *UpdateDevEndpoin
 // SetCustomLibraries sets the CustomLibraries field's value.
 func (s *UpdateDevEndpointInput) SetCustomLibraries(v *DevEndpointCustomLibraries) *UpdateDevEndpointInput {
 	s.CustomLibraries = v
+	return s
+}
+
+// SetDeleteArguments sets the DeleteArguments field's value.
+func (s *UpdateDevEndpointInput) SetDeleteArguments(v []*string) *UpdateDevEndpointInput {
+	s.DeleteArguments = v
 	return s
 }
 

@@ -2530,7 +2530,10 @@ func (c *IoT) CreateThingRequest(input *CreateThingInput) (req *request.Request,
 
 // CreateThing API operation for AWS IoT.
 //
-// Creates a thing record in the registry.
+// Creates a thing record in the registry. If this call is made multiple times
+// using the same thing name and configuration, the call will succeed. If this
+// call is made with the same thing name but different configuration a ResourceAlreadyExistsException
+// is thrown.
 //
 // This is a control plane operation. See Authorization (https://docs.aws.amazon.com/iot/latest/developerguide/authorization.html)
 // for information about authorizing control plane actions.
@@ -7920,6 +7923,106 @@ func (c *IoT) GetRegistrationCode(input *GetRegistrationCodeInput) (*GetRegistra
 // for more information on using Contexts.
 func (c *IoT) GetRegistrationCodeWithContext(ctx aws.Context, input *GetRegistrationCodeInput, opts ...request.Option) (*GetRegistrationCodeOutput, error) {
 	req, out := c.GetRegistrationCodeRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetStatistics = "GetStatistics"
+
+// GetStatisticsRequest generates a "aws/request.Request" representing the
+// client's request for the GetStatistics operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetStatistics for more information on using the GetStatistics
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetStatisticsRequest method.
+//    req, resp := client.GetStatisticsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) GetStatisticsRequest(input *GetStatisticsInput) (req *request.Request, output *GetStatisticsOutput) {
+	op := &request.Operation{
+		Name:       opGetStatistics,
+		HTTPMethod: "POST",
+		HTTPPath:   "/indices/statistics",
+	}
+
+	if input == nil {
+		input = &GetStatisticsInput{}
+	}
+
+	output = &GetStatisticsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetStatistics API operation for AWS IoT.
+//
+// Gets statistics about things that match the specified query.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation GetStatistics for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   The request is not valid.
+//
+//   * ErrCodeThrottlingException "ThrottlingException"
+//   The rate exceeds the limit.
+//
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   You are not authorized to perform this operation.
+//
+//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   The service is temporarily unavailable.
+//
+//   * ErrCodeInternalFailureException "InternalFailureException"
+//   An unexpected error has occurred.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The specified resource does not exist.
+//
+//   * ErrCodeInvalidQueryException "InvalidQueryException"
+//   The query is invalid.
+//
+//   * ErrCodeInvalidAggregationException "InvalidAggregationException"
+//   The aggregation is invalid.
+//
+//   * ErrCodeIndexNotReadyException "IndexNotReadyException"
+//   The index is not ready.
+//
+func (c *IoT) GetStatistics(input *GetStatisticsInput) (*GetStatisticsOutput, error) {
+	req, out := c.GetStatisticsRequest(input)
+	return out, req.Send()
+}
+
+// GetStatisticsWithContext is the same as GetStatistics with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetStatistics for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) GetStatisticsWithContext(ctx aws.Context, input *GetStatisticsInput, opts ...request.Option) (*GetStatisticsOutput, error) {
+	req, out := c.GetStatisticsRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -18935,6 +19038,9 @@ type CreateOTAUpdateInput struct {
 	// RoleArn is a required field
 	RoleArn *string `locationName:"roleArn" min:"20" type:"string" required:"true"`
 
+	// Metadata which can be used to manage updates.
+	Tags []*Tag `locationName:"tags" type:"list"`
+
 	// Specifies whether the update will continue to run (CONTINUOUS), or will be
 	// complete after all the things specified as targets have completed the update
 	// (SNAPSHOT). If continuous, the update may also be run on a thing when a change
@@ -19041,6 +19147,12 @@ func (s *CreateOTAUpdateInput) SetOtaUpdateId(v string) *CreateOTAUpdateInput {
 // SetRoleArn sets the RoleArn field's value.
 func (s *CreateOTAUpdateInput) SetRoleArn(v string) *CreateOTAUpdateInput {
 	s.RoleArn = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateOTAUpdateInput) SetTags(v []*Tag) *CreateOTAUpdateInput {
+	s.Tags = v
 	return s
 }
 
@@ -19737,6 +19849,9 @@ type CreateStreamInput struct {
 	//
 	// StreamId is a required field
 	StreamId *string `location:"uri" locationName:"streamId" min:"1" type:"string" required:"true"`
+
+	// Metadata which can be used to manage streams.
+	Tags []*Tag `locationName:"tags" type:"list"`
 }
 
 // String returns the string representation
@@ -19808,6 +19923,12 @@ func (s *CreateStreamInput) SetRoleArn(v string) *CreateStreamInput {
 // SetStreamId sets the StreamId field's value.
 func (s *CreateStreamInput) SetStreamId(v string) *CreateStreamInput {
 	s.StreamId = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateStreamInput) SetTags(v []*Tag) *CreateStreamInput {
+	s.Tags = v
 	return s
 }
 
@@ -22430,16 +22551,16 @@ type DescribeIndexOutput struct {
 	// Contains a value that specifies the type of indexing performed. Valid values
 	// are:
 	//
-	//    * REGISTRY – Your thing index will contain only registry data.
+	//    * REGISTRY – Your thing index contains only registry data.
 	//
-	//    * REGISTRY_AND_SHADOW - Your thing index will contain registry data and
-	//    shadow data.
+	//    * REGISTRY_AND_SHADOW - Your thing index contains registry data and shadow
+	//    data.
 	//
-	//    * REGISTRY_AND_CONNECTIVITY_STATUS - Your thing index will contain registry
+	//    * REGISTRY_AND_CONNECTIVITY_STATUS - Your thing index contains registry
 	//    data and thing connectivity status data.
 	//
-	//    * REGISTRY_AND_SHADOW_AND_CONNECTIVITY_STATUS - Your thing index will
-	//    contain registry data, shadow data, and thing connectivity status data.
+	//    * REGISTRY_AND_SHADOW_AND_CONNECTIVITY_STATUS - Your thing index contains
+	//    registry data, shadow data, and thing connectivity status data.
 	Schema *string `locationName:"schema" type:"string"`
 }
 
@@ -25217,6 +25338,105 @@ func (s GetRegistrationCodeOutput) GoString() string {
 // SetRegistrationCode sets the RegistrationCode field's value.
 func (s *GetRegistrationCodeOutput) SetRegistrationCode(v string) *GetRegistrationCodeOutput {
 	s.RegistrationCode = &v
+	return s
+}
+
+type GetStatisticsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The aggregation field name. Currently not supported.
+	AggregationField *string `locationName:"aggregationField" min:"1" type:"string"`
+
+	// The name of the index to search. The default value is AWS_Things.
+	IndexName *string `locationName:"indexName" min:"1" type:"string"`
+
+	// The query used to search. You can specify "*" for the query string to get
+	// the count of all indexed things in your AWS account.
+	//
+	// QueryString is a required field
+	QueryString *string `locationName:"queryString" min:"1" type:"string" required:"true"`
+
+	// The version of the query used to search.
+	QueryVersion *string `locationName:"queryVersion" type:"string"`
+}
+
+// String returns the string representation
+func (s GetStatisticsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetStatisticsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetStatisticsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetStatisticsInput"}
+	if s.AggregationField != nil && len(*s.AggregationField) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AggregationField", 1))
+	}
+	if s.IndexName != nil && len(*s.IndexName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("IndexName", 1))
+	}
+	if s.QueryString == nil {
+		invalidParams.Add(request.NewErrParamRequired("QueryString"))
+	}
+	if s.QueryString != nil && len(*s.QueryString) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("QueryString", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAggregationField sets the AggregationField field's value.
+func (s *GetStatisticsInput) SetAggregationField(v string) *GetStatisticsInput {
+	s.AggregationField = &v
+	return s
+}
+
+// SetIndexName sets the IndexName field's value.
+func (s *GetStatisticsInput) SetIndexName(v string) *GetStatisticsInput {
+	s.IndexName = &v
+	return s
+}
+
+// SetQueryString sets the QueryString field's value.
+func (s *GetStatisticsInput) SetQueryString(v string) *GetStatisticsInput {
+	s.QueryString = &v
+	return s
+}
+
+// SetQueryVersion sets the QueryVersion field's value.
+func (s *GetStatisticsInput) SetQueryVersion(v string) *GetStatisticsInput {
+	s.QueryVersion = &v
+	return s
+}
+
+type GetStatisticsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The statistics returned by the Fleet Indexing service based on the query
+	// and aggregation field.
+	Statistics *Statistics `locationName:"statistics" type:"structure"`
+}
+
+// String returns the string representation
+func (s GetStatisticsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetStatisticsOutput) GoString() string {
+	return s.String()
+}
+
+// SetStatistics sets the Statistics field's value.
+func (s *GetStatisticsOutput) SetStatistics(v *Statistics) *GetStatisticsOutput {
+	s.Statistics = v
 	return s
 }
 
@@ -31193,7 +31413,7 @@ type RegisterCertificateInput struct {
 	// CertificatePem is a required field
 	CertificatePem *string `locationName:"certificatePem" min:"1" type:"string" required:"true"`
 
-	// A boolean value that specifies if the CA certificate is set to active.
+	// A boolean value that specifies if the certificate is set to active.
 	//
 	// Deprecated: SetAsActive has been deprecated
 	SetAsActive *bool `location:"querystring" locationName:"setAsActive" deprecated:"true" type:"boolean"`
@@ -33275,6 +33495,31 @@ func (s *StatisticalThreshold) SetStatistic(v string) *StatisticalThreshold {
 	return s
 }
 
+// A map of key-value pairs for all supported statistics. Currently, only count
+// is supported.
+type Statistics struct {
+	_ struct{} `type:"structure"`
+
+	// The count of things that match the query.
+	Count *int64 `locationName:"count" type:"integer"`
+}
+
+// String returns the string representation
+func (s Statistics) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Statistics) GoString() string {
+	return s.String()
+}
+
+// SetCount sets the Count field's value.
+func (s *Statistics) SetCount(v int64) *Statistics {
+	s.Count = &v
+	return s
+}
+
 // Starts execution of a Step Functions state machine.
 type StepFunctionsAction struct {
 	_ struct{} `type:"structure"`
@@ -34116,13 +34361,13 @@ func (s *ThingAttribute) SetVersion(v int64) *ThingAttribute {
 type ThingConnectivity struct {
 	_ struct{} `type:"structure"`
 
-	// True if the thing is connected to the AWS IoT service, false if it is not
+	// True if the thing is connected to the AWS IoT service; false if it is not
 	// connected.
 	Connected *bool `locationName:"connected" type:"boolean"`
 
 	// The epoch time (in milliseconds) when the thing last connected or disconnected.
-	// Note that if the thing has been disconnected for more than a few weeks, the
-	// time value can be missing.
+	// If the thing has been disconnected for more than a few weeks, the time value
+	// might be missing.
 	Timestamp *int64 `locationName:"timestamp" type:"long"`
 }
 
@@ -34155,7 +34400,7 @@ type ThingDocument struct {
 	// The attributes.
 	Attributes map[string]*string `locationName:"attributes" type:"map"`
 
-	// Indicates whether or not the thing is connected to the AWS IoT service.
+	// Indicates whether the thing is connected to the AWS IoT service.
 	Connectivity *ThingConnectivity `locationName:"connectivity" type:"structure"`
 
 	// The shadow.
@@ -34407,18 +34652,17 @@ type ThingIndexingConfiguration struct {
 
 	// Thing connectivity indexing mode. Valid values are:
 	//
-	//    * STATUS – Your thing index will contain connectivity status. In order
-	//    to enable thing connectivity indexing, thingIndexMode must not be set
-	//    to OFF.
+	//    * STATUS – Your thing index contains connectivity status. To enable thing
+	//    connectivity indexing, thingIndexMode must not be set to OFF.
 	//
 	//    * OFF - Thing connectivity status indexing is disabled.
 	ThingConnectivityIndexingMode *string `locationName:"thingConnectivityIndexingMode" type:"string" enum:"ThingConnectivityIndexingMode"`
 
 	// Thing indexing mode. Valid values are:
 	//
-	//    * REGISTRY – Your thing index will contain only registry data.
+	//    * REGISTRY – Your thing index contains registry data only.
 	//
-	//    * REGISTRY_AND_SHADOW - Your thing index will contain registry and shadow
+	//    * REGISTRY_AND_SHADOW - Your thing index contains registry and shadow
 	//    data.
 	//
 	//    * OFF - Thing indexing is disabled.

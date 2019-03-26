@@ -60,6 +60,10 @@ func TestAccAWSCloudWatchLogMetricFilter_basic(t *testing.T) {
 					}),
 				),
 			},
+			{
+				Config: testAccAWSCloudwatchLogMetricFilterConfigMany(rInt),
+				Check:  testAccCheckCloudwatchLogMetricFilterManyExist("aws_cloudwatch_log_metric_filter.count_dracula", &mf),
+			},
 		},
 	})
 }
@@ -158,6 +162,21 @@ func testAccCheckAWSCloudWatchLogMetricFilterDestroy(s *terraform.State) error {
 	return nil
 }
 
+func testAccCheckCloudwatchLogMetricFilterManyExist(basename string, mf *cloudwatchlogs.MetricFilter) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		for i := 0; i < 15; i++ {
+			n := fmt.Sprintf("%s.%d", basename, i)
+			testfunc := testAccCheckCloudWatchLogMetricFilterExists(n, mf)
+			err := testfunc(s)
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
+	}
+}
+
 func testAccAWSCloudWatchLogMetricFilterConfig(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_metric_filter" "foobar" {
@@ -197,6 +216,27 @@ PATTERN
 
 resource "aws_cloudwatch_log_group" "dada" {
 	name = "MyApp/access-%d.log"
+}
+`, rInt, rInt)
+}
+
+func testAccAWSCloudwatchLogMetricFilterConfigMany(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_log_metric_filter" "count_dracula" {
+	count = 15
+	name = "MyAppCountLog-${count.index}-%d"
+	pattern = "count ${count.index}"
+	log_group_name = "${aws_cloudwatch_log_group.mama.name}"
+
+	metric_transformation {
+		name = "CountDracula-${count.index}"
+		namespace = "CountNamespace"
+		value = "1"
+	}
+}
+
+resource "aws_cloudwatch_log_group" "mama" {
+	name = "MyApp/count-log-%d.log"
 }
 `, rInt, rInt)
 }

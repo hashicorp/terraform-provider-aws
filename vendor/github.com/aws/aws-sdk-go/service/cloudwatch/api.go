@@ -802,6 +802,12 @@ func (c *CloudWatch) GetMetricDataRequest(input *GetMetricDataInput) (req *reque
 		Name:       opGetMetricData,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxDatapoints",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -882,6 +888,56 @@ func (c *CloudWatch) GetMetricDataWithContext(ctx aws.Context, input *GetMetricD
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// GetMetricDataPages iterates over the pages of a GetMetricData operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See GetMetricData method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a GetMetricData operation.
+//    pageNum := 0
+//    err := client.GetMetricDataPages(params,
+//        func(page *GetMetricDataOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *CloudWatch) GetMetricDataPages(input *GetMetricDataInput, fn func(*GetMetricDataOutput, bool) bool) error {
+	return c.GetMetricDataPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// GetMetricDataPagesWithContext same as GetMetricDataPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CloudWatch) GetMetricDataPagesWithContext(ctx aws.Context, input *GetMetricDataInput, fn func(*GetMetricDataOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *GetMetricDataInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.GetMetricDataRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*GetMetricDataOutput), !p.HasNextPage())
+	}
+	return p.Err()
 }
 
 const opGetMetricStatistics = "GetMetricStatistics"
@@ -1144,6 +1200,12 @@ func (c *CloudWatch) ListDashboardsRequest(input *ListDashboardsInput) (req *req
 		Name:       opListDashboards,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -1199,6 +1261,56 @@ func (c *CloudWatch) ListDashboardsWithContext(ctx aws.Context, input *ListDashb
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// ListDashboardsPages iterates over the pages of a ListDashboards operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListDashboards method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListDashboards operation.
+//    pageNum := 0
+//    err := client.ListDashboardsPages(params,
+//        func(page *ListDashboardsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *CloudWatch) ListDashboardsPages(input *ListDashboardsInput, fn func(*ListDashboardsOutput, bool) bool) error {
+	return c.ListDashboardsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListDashboardsPagesWithContext same as ListDashboardsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CloudWatch) ListDashboardsPagesWithContext(ctx aws.Context, input *ListDashboardsInput, fn func(*ListDashboardsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListDashboardsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListDashboardsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListDashboardsOutput), !p.HasNextPage())
+	}
+	return p.Err()
 }
 
 const opListMetrics = "ListMetrics"
@@ -1636,8 +1748,8 @@ func (c *CloudWatch) PutMetricDataRequest(input *PutMetricDataInput) (req *reque
 // not supported.
 //
 // You can use up to 10 dimensions per metric to further clarify what data the
-// metric collects. Each dimension consists of a Name and Value pair. For more
-// information about specifying dimensions, see Publishing Metrics (https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/publishingMetrics.html)
+// metric collects. For more information about specifying dimensions, see Publishing
+// Metrics (https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/publishingMetrics.html)
 // in the Amazon CloudWatch User Guide.
 //
 // Data points with time stamps from 24 hours ago or longer can take at least
@@ -2809,7 +2921,7 @@ type GetMetricDataInput struct {
 	// For better performance, specify StartTime and EndTime values that align with
 	// the value of the metric's Period and sync up with the beginning and end of
 	// an hour. For example, if the Period of a metric is 5 minutes, specifying
-	// 12:05 or 12:30 as EndTime can get a faster response from CloudWatch than
+	// 12:05 or 12:30 as EndTime can get a faster response from CloudWatch then
 	// setting 12:07 or 12:29 as the EndTime.
 	//
 	// EndTime is a required field
@@ -2842,7 +2954,7 @@ type GetMetricDataInput struct {
 	// For better performance, specify StartTime and EndTime values that align with
 	// the value of the metric's Period and sync up with the beginning and end of
 	// an hour. For example, if the Period of a metric is 5 minutes, specifying
-	// 12:05 or 12:30 as StartTime can get a faster response from CloudWatch than
+	// 12:05 or 12:30 as StartTime can get a faster response from CloudWatch then
 	// setting 12:07 or 12:29 as the StartTime.
 	//
 	// StartTime is a required field
@@ -2927,6 +3039,13 @@ func (s *GetMetricDataInput) SetStartTime(v time.Time) *GetMetricDataInput {
 type GetMetricDataOutput struct {
 	_ struct{} `type:"structure"`
 
+	// Contains a message about the operation or the results, if the operation results
+	// in such a message. Examples of messages that may be returned include Maximum
+	// number of allowed metrics exceeded and You are not authorized to search one
+	// or more metrics. If there is a message, as much of the operation as possible
+	// is still executed.
+	Messages []*MessageData `type:"list"`
+
 	// The metrics that are returned, including the metric name, namespace, and
 	// dimensions.
 	MetricDataResults []*MetricDataResult `type:"list"`
@@ -2943,6 +3062,12 @@ func (s GetMetricDataOutput) String() string {
 // GoString returns the string representation
 func (s GetMetricDataOutput) GoString() string {
 	return s.String()
+}
+
+// SetMessages sets the Messages field's value.
+func (s *GetMetricDataOutput) SetMessages(v []*MessageData) *GetMetricDataOutput {
+	s.Messages = v
+	return s
 }
 
 // SetMetricDataResults sets the MetricDataResults field's value.
@@ -3225,7 +3350,7 @@ type GetMetricWidgetImageInput struct {
 	// with the content-type set to text/xml. The image data is in a MetricWidgetImage
 	// field. For example:
 	//
-	// <GetMetricWidgetImageResponse xmlns=<URLstring>>
+	// <GetMetricWidgetImageResponse xmlns="http://monitoring.amazonaws.com/doc/2010-08-01/">
 	//
 	// <GetMetricWidgetImageResult>
 	//
@@ -3863,12 +3988,9 @@ func (s *MetricAlarm) SetUnit(v string) *MetricAlarm {
 // A single PutMetricAlarm call can include up to 20 MetricDataQuery structures
 // in the array. The 20 structures can include as many as 10 structures that
 // contain a MetricStat parameter to retrieve a metric, and as many as 10 structures
-// that contain the Expression parameter to perform a math expression. Of those
-// Expression structures, one must have True as the value for ReturnData. The
-// result of this expression is the value the alarm watches.
-//
-// Any expression used in a PutMetricAlarm operation must return a single time
-// series. For more information, see Metric Math Syntax and Functions (https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/using-metric-math.html#metric-math-syntax)
+// that contain the Expression parameter to perform a math expression. Any expression
+// used in a PutMetricAlarm operation must return a single time series. For
+// more information, see Metric Math Syntax and Functions (https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/using-metric-math.html#metric-math-syntax)
 // in the Amazon CloudWatch User Guide.
 //
 // Some of the parameters of this structure also have different uses whether
@@ -4418,8 +4540,8 @@ type PutMetricAlarmInput struct {
 	// any other state. Each action is specified as an Amazon Resource Name (ARN).
 	//
 	// Valid Values: arn:aws:automate:region:ec2:stop | arn:aws:automate:region:ec2:terminate
-	// | arn:aws:automate:region:ec2:recover | arn:aws:automate:region:ec2:reboot
-	// | arn:aws:sns:region:account-id:sns-topic-name | arn:aws:autoscaling:region:account-id:scalingPolicy:policy-idautoScalingGroupName/group-friendly-name:policyName/policy-friendly-name
+	// | arn:aws:automate:region:ec2:recover | arn:aws:sns:region:account-id:sns-topic-name
+	// | arn:aws:autoscaling:region:account-id:scalingPolicy:policy-idautoScalingGroupName/group-friendly-name:policyName/policy-friendly-name
 	//
 	// Valid Values (for use with IAM roles): arn:aws:swf:region:account-id:action/actions/AWS_EC2.InstanceId.Stop/1.0
 	// | arn:aws:swf:region:account-id:action/actions/AWS_EC2.InstanceId.Terminate/1.0
@@ -4481,8 +4603,8 @@ type PutMetricAlarmInput struct {
 	// Name (ARN).
 	//
 	// Valid Values: arn:aws:automate:region:ec2:stop | arn:aws:automate:region:ec2:terminate
-	// | arn:aws:automate:region:ec2:recover | arn:aws:automate:region:ec2:reboot
-	// | arn:aws:sns:region:account-id:sns-topic-name | arn:aws:autoscaling:region:account-id:scalingPolicy:policy-idautoScalingGroupName/group-friendly-name:policyName/policy-friendly-name
+	// | arn:aws:automate:region:ec2:recover | arn:aws:sns:region:account-id:sns-topic-name
+	// | arn:aws:autoscaling:region:account-id:scalingPolicy:policy-idautoScalingGroupName/group-friendly-name:policyName/policy-friendly-name
 	//
 	// Valid Values (for use with IAM roles): >arn:aws:swf:region:account-id:action/actions/AWS_EC2.InstanceId.Stop/1.0
 	// | arn:aws:swf:region:account-id:action/actions/AWS_EC2.InstanceId.Terminate/1.0
@@ -4500,10 +4622,6 @@ type PutMetricAlarmInput struct {
 	// An array of MetricDataQuery structures that enable you to create an alarm
 	// based on the result of a metric math expression. Each item in the Metrics
 	// array either retrieves a metric or performs a math expression.
-	//
-	// One item in the Metrics array is the expression that the alarm watches. You
-	// designate this expression by setting ReturnValue to true for this object
-	// in the array. For more information, see MetricDataQuery.
 	//
 	// If you use the Metrics parameter, you cannot include the MetricName, Dimensions,
 	// Period, Namespace, Statistic, or ExtendedStatistic parameters of PutMetricAlarm

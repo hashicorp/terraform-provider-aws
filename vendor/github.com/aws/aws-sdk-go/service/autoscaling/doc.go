@@ -10,7 +10,7 @@
 //
 // For more information, including information about granting IAM users required
 // permissions for Amazon EC2 Auto Scaling actions, see the Amazon EC2 Auto
-// Scaling User Guide (http://docs.aws.amazon.com/autoscaling/ec2/userguide/what-is-amazon-ec2-auto-scaling.html).
+// Scaling User Guide (https://docs.aws.amazon.com/autoscaling/ec2/userguide/what-is-amazon-ec2-auto-scaling.html).
 //
 // See https://docs.aws.amazon.com/goto/WebAPI/autoscaling-2011-01-01 for more information on this service.
 //

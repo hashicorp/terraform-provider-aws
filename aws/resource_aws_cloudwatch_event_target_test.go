@@ -872,7 +872,7 @@ EOF
 resource "aws_lambda_function" "lambda" {
 	function_name = "tf_acc_input_transformer"
 	filename = "test-fixtures/lambdatest.zip"
-  source_code_hash = "${base64sha256(file("test-fixtures/lambdatest.zip"))}"
+  source_code_hash = "${filebase64sha256("test-fixtures/lambdatest.zip")}"
   role = "${aws_iam_role.iam_for_lambda.arn}"
   handler = "exports.example"
 	runtime = "nodejs8.10"
@@ -890,7 +890,7 @@ resource "aws_cloudwatch_event_target" "test" {
   rule = "${aws_cloudwatch_event_rule.schedule.id}"
 
   input_transformer {
-    input_paths {
+    input_paths = {
       time = "$.time"
     }
 

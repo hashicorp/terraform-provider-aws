@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appsync"
+	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 )
@@ -34,6 +35,10 @@ func resourceAwsAppsyncGraphqlApi() *schema.Resource {
 					appsync.AuthenticationTypeAmazonCognitoUserPools,
 					appsync.AuthenticationTypeOpenidConnect,
 				}, false),
+			},
+			"schema": {
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"name": {
 				Type:     schema.TypeString,
@@ -167,43 +172,18 @@ func resourceAwsAppsyncGraphqlApiCreate(d *schema.ResourceData, meta interface{}
 
 	d.SetId(*resp.GraphqlApi.ApiId)
 
+<<<<<<< HEAD
 	if v, ok := d.GetOk("schema"); ok {
 		if err := startSchemaCreationAndWaitForItToBeActive(d.Id(), v.(string), d.Timeout(schema.TimeoutCreate), conn); err != nil {
 			return err
 		}
+=======
+	if err := resourceAwsAppsyncSchemaPut(d.Id(), d, meta); err != nil {
+		return fmt.Errorf("error creating AppSync GraphQL API (%s) Schema: %s", d.Id(), err)
+>>>>>>> upstream/master
 	}
 
 	return resourceAwsAppsyncGraphqlApiRead(d, meta)
-}
-
-func startSchemaCreationAndWaitForItToBeActive(apiID string, schema string, timeout time.Duration, conn *appsync.AppSync) error {
-	input := &appsync.StartSchemaCreationInput{
-		ApiId:      aws.String(apiID),
-		Definition: []byte(schema),
-	}
-
-	if _, err := conn.StartSchemaCreation(input); err != nil {
-		return err
-	}
-
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{appsync.SchemaStatusProcessing},
-		Target:  []string{"SUCCESS"}, // should be appsync.SchemaStatusActive . I think this is a problem in documentation: https://docs.aws.amazon.com/appsync/latest/APIReference/API_GetSchemaCreationStatus.html
-		Timeout: timeout,
-		Refresh: func() (interface{}, string, error) {
-			result, err := conn.GetSchemaCreationStatus(&appsync.GetSchemaCreationStatusInput{
-				ApiId: aws.String(apiID),
-			})
-			if err != nil {
-				return 42, "", err
-			}
-
-			return result, *result.Status, nil
-		},
-	}
-	_, err := stateConf.WaitForState()
-
-	return err
 }
 
 func resourceAwsAppsyncGraphqlApiRead(d *schema.ResourceData, meta interface{}) error {
@@ -272,6 +252,7 @@ func resourceAwsAppsyncGraphqlApiUpdate(d *schema.ResourceData, meta interface{}
 		return err
 	}
 
+<<<<<<< HEAD
 	if d.HasChange("schema") {
 		if v, ok := d.GetOk("schema"); ok {
 			if err := startSchemaCreationAndWaitForItToBeActive(d.Id(), v.(string), d.Timeout(schema.TimeoutUpdate), conn); err != nil {
@@ -279,6 +260,12 @@ func resourceAwsAppsyncGraphqlApiUpdate(d *schema.ResourceData, meta interface{}
 			}
 		}
 	}
+=======
+	if err := resourceAwsAppsyncSchemaPut(d.Id(), d, meta); err != nil {
+		return fmt.Errorf("error updating AppSync GraphQL API (%s) Schema: %s", d.Id(), err)
+	}
+
+>>>>>>> upstream/master
 	return resourceAwsAppsyncGraphqlApiRead(d, meta)
 }
 
@@ -408,4 +395,44 @@ func flattenAppsyncGraphqlApiUserPoolConfig(userPoolConfig *appsync.UserPoolConf
 	}
 
 	return []interface{}{m}
+}
+
+func resourceAwsAppsyncSchemaPut(apiId string, d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).appsyncconn
+
+	if d.HasChange("schema") {
+		input := &appsync.StartSchemaCreationInput{
+			ApiId:      aws.String(apiId),
+			Definition: ([]byte)(d.Get("schema").(string)),
+		}
+		if _, err := conn.StartSchemaCreation(input); err != nil {
+			return err
+		}
+
+		activeSchemaConfig := &resource.StateChangeConf{
+			Pending: []string{"PROCESSING"},
+			Target:  []string{"ACTIVE", "SUCCESS"},
+			Refresh: func() (interface{}, string, error) {
+				conn := meta.(*AWSClient).appsyncconn
+				input := &appsync.GetSchemaCreationStatusInput{
+					ApiId: aws.String(apiId),
+				}
+				result, err := conn.GetSchemaCreationStatus(input)
+
+				if err != nil {
+					return 0, "", err
+				}
+				return result, *result.Status, nil
+			},
+			Timeout:    d.Timeout(schema.TimeoutCreate),
+			Delay:      10 * time.Second,
+			MinTimeout: 5 * time.Second,
+		}
+
+		if _, err := activeSchemaConfig.WaitForState(); err != nil {
+			return fmt.Errorf("Error waiting for schema creation status on AppSync API %s: %s", apiId, err)
+		}
+	}
+
+	return nil
 }

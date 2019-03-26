@@ -182,6 +182,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_ec2_transit_gateway":                dataSourceAwsEc2TransitGateway(),
 			"aws_ec2_transit_gateway_route_table":    dataSourceAwsEc2TransitGatewayRouteTable(),
 			"aws_ec2_transit_gateway_vpc_attachment": dataSourceAwsEc2TransitGatewayVpcAttachment(),
+			"aws_ec2_transit_gateway_vpn_attachment": dataSourceAwsEc2TransitGatewayVpnAttachment(),
 			"aws_ecr_repository":                     dataSourceAwsEcrRepository(),
 			"aws_ecs_cluster":                        dataSourceAwsEcsCluster(),
 			"aws_ecs_container_definition":           dataSourceAwsEcsContainerDefinition(),
@@ -253,6 +254,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_storagegateway_local_disk":          dataSourceAwsStorageGatewayLocalDisk(),
 			"aws_subnet":                             dataSourceAwsSubnet(),
 			"aws_subnet_ids":                         dataSourceAwsSubnetIDs(),
+			"aws_transfer_server":                    dataSourceAwsTransferServer(),
 			"aws_vpcs":                               dataSourceAwsVpcs(),
 			"aws_security_group":                     dataSourceAwsSecurityGroup(),
 			"aws_security_groups":                    dataSourceAwsSecurityGroups(),
@@ -312,6 +314,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_appmesh_route":                                resourceAwsAppmeshRoute(),
 			"aws_appmesh_virtual_node":                         resourceAwsAppmeshVirtualNode(),
 			"aws_appmesh_virtual_router":                       resourceAwsAppmeshVirtualRouter(),
+			"aws_appmesh_virtual_service":                      resourceAwsAppmeshVirtualService(),
 			"aws_appsync_api_key":                              resourceAwsAppsyncApiKey(),
 			"aws_appsync_datasource":                           resourceAwsAppsyncDatasource(),
 			"aws_appsync_graphql_api":                          resourceAwsAppsyncGraphqlApi(),
@@ -324,10 +327,13 @@ func Provider() terraform.ResourceProvider {
 			"aws_autoscaling_notification":                     resourceAwsAutoscalingNotification(),
 			"aws_autoscaling_policy":                           resourceAwsAutoscalingPolicy(),
 			"aws_autoscaling_schedule":                         resourceAwsAutoscalingSchedule(),
+			"aws_backup_plan":                                  resourceAwsBackupPlan(),
 			"aws_backup_vault":                                 resourceAwsBackupVault(),
 			"aws_budgets_budget":                               resourceAwsBudgetsBudget(),
 			"aws_cloud9_environment_ec2":                       resourceAwsCloud9EnvironmentEc2(),
 			"aws_cloudformation_stack":                         resourceAwsCloudFormationStack(),
+			"aws_cloudformation_stack_set":                     resourceAwsCloudFormationStackSet(),
+			"aws_cloudformation_stack_set_instance":            resourceAwsCloudFormationStackSetInstance(),
 			"aws_cloudfront_distribution":                      resourceAwsCloudFrontDistribution(),
 			"aws_cloudfront_origin_access_identity":            resourceAwsCloudFrontOriginAccessIdentity(),
 			"aws_cloudfront_public_key":                        resourceAwsCloudFrontPublicKey(),
@@ -467,6 +473,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_glacier_vault":                                resourceAwsGlacierVault(),
 			"aws_glacier_vault_lock":                           resourceAwsGlacierVaultLock(),
 			"aws_globalaccelerator_accelerator":                resourceAwsGlobalAcceleratorAccelerator(),
+			"aws_globalaccelerator_listener":                   resourceAwsGlobalAcceleratorListener(),
 			"aws_glue_catalog_database":                        resourceAwsGlueCatalogDatabase(),
 			"aws_glue_catalog_table":                           resourceAwsGlueCatalogTable(),
 			"aws_glue_classifier":                              resourceAwsGlueClassifier(),
@@ -476,6 +483,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_glue_security_configuration":                  resourceAwsGlueSecurityConfiguration(),
 			"aws_glue_trigger":                                 resourceAwsGlueTrigger(),
 			"aws_guardduty_detector":                           resourceAwsGuardDutyDetector(),
+			"aws_guardduty_invite_accepter":                    resourceAwsGuardDutyInviteAccepter(),
 			"aws_guardduty_ipset":                              resourceAwsGuardDutyIpset(),
 			"aws_guardduty_member":                             resourceAwsGuardDutyMember(),
 			"aws_guardduty_threatintelset":                     resourceAwsGuardDutyThreatintelset(),
@@ -522,6 +530,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_kms_alias":                                    resourceAwsKmsAlias(),
 			"aws_kms_grant":                                    resourceAwsKmsGrant(),
 			"aws_kms_key":                                      resourceAwsKmsKey(),
+			"aws_kms_ciphertext":                               resourceAwsKmsCiphertext(),
 			"aws_lambda_function":                              resourceAwsLambdaFunction(),
 			"aws_lambda_event_source_mapping":                  resourceAwsLambdaEventSourceMapping(),
 			"aws_lambda_alias":                                 resourceAwsLambdaAlias(),
@@ -606,11 +615,14 @@ func Provider() terraform.ResourceProvider {
 			"aws_route53_zone":                                 resourceAwsRoute53Zone(),
 			"aws_route53_health_check":                         resourceAwsRoute53HealthCheck(),
 			"aws_route53_resolver_endpoint":                    resourceAwsRoute53ResolverEndpoint(),
+			"aws_route53_resolver_rule_association":            resourceAwsRoute53ResolverRuleAssociation(),
+			"aws_route53_resolver_rule":                        resourceAwsRoute53ResolverRule(),
 			"aws_route":                                        resourceAwsRoute(),
 			"aws_route_table":                                  resourceAwsRouteTable(),
 			"aws_default_route_table":                          resourceAwsDefaultRouteTable(),
 			"aws_route_table_association":                      resourceAwsRouteTableAssociation(),
 			"aws_sagemaker_model":                              resourceAwsSagemakerModel(),
+			"aws_sagemaker_endpoint_configuration":             resourceAwsSagemakerEndpointConfiguration(),
 			"aws_secretsmanager_secret":                        resourceAwsSecretsManagerSecret(),
 			"aws_secretsmanager_secret_version":                resourceAwsSecretsManagerSecretVersion(),
 			"aws_ses_active_receipt_rule_set":                  resourceAwsSesActiveReceiptRuleSet(),
@@ -807,6 +819,8 @@ func init() {
 		"dynamodb_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n" +
 			"It's typically used to connect to dynamodb-local.",
 
+		"firehose_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
+
 		"kinesis_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n" +
 			"It's typically used to connect to kinesalite.",
 
@@ -830,9 +844,13 @@ func init() {
 
 		"rds_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
 
+		"redshift_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
+
 		"s3_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
 
 		"s3control_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
+
+		"ses_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
 
 		"sns_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
 
@@ -937,6 +955,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		config.EfsEndpoint = endpoints["efs"].(string)
 		config.ElbEndpoint = endpoints["elb"].(string)
 		config.EsEndpoint = endpoints["es"].(string)
+		config.FirehoseEndpoint = endpoints["firehose"].(string)
 		config.IamEndpoint = endpoints["iam"].(string)
 		config.KinesisEndpoint = endpoints["kinesis"].(string)
 		config.KinesisAnalyticsEndpoint = endpoints["kinesis_analytics"].(string)
@@ -944,8 +963,10 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		config.LambdaEndpoint = endpoints["lambda"].(string)
 		config.R53Endpoint = endpoints["r53"].(string)
 		config.RdsEndpoint = endpoints["rds"].(string)
+		config.RedshiftEndpoint = endpoints["redshift"].(string)
 		config.S3Endpoint = endpoints["s3"].(string)
 		config.S3ControlEndpoint = endpoints["s3control"].(string)
+		config.SesEndpoint = endpoints["ses"].(string)
 		config.SnsEndpoint = endpoints["sns"].(string)
 		config.SqsEndpoint = endpoints["sqs"].(string)
 		config.StsEndpoint = endpoints["sts"].(string)
@@ -1113,6 +1134,12 @@ func endpointsSchema() *schema.Schema {
 					Default:     "",
 					Description: descriptions["es_endpoint"],
 				},
+				"firehose": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: descriptions["firehose_endpoint"],
+				},
 				"kinesis": {
 					Type:        schema.TypeString,
 					Optional:    true,
@@ -1149,6 +1176,12 @@ func endpointsSchema() *schema.Schema {
 					Default:     "",
 					Description: descriptions["rds_endpoint"],
 				},
+				"redshift": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: descriptions["redshift_endpoint"],
+				},
 				"s3": {
 					Type:        schema.TypeString,
 					Optional:    true,
@@ -1160,6 +1193,12 @@ func endpointsSchema() *schema.Schema {
 					Optional:    true,
 					Default:     "",
 					Description: descriptions["s3control_endpoint"],
+				},
+				"ses": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: descriptions["ses_endpoint"],
 				},
 				"sns": {
 					Type:        schema.TypeString,
@@ -1206,11 +1245,14 @@ func endpointsToHash(v interface{}) int {
 	buf.WriteString(fmt.Sprintf("%s-", m["autoscaling"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["efs"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["elb"].(string)))
+	buf.WriteString(fmt.Sprintf("%s-", m["firehose"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["kinesis"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["kms"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["lambda"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["rds"].(string)))
+	buf.WriteString(fmt.Sprintf("%s-", m["redshift"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["s3"].(string)))
+	buf.WriteString(fmt.Sprintf("%s-", m["ses"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["sns"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["sqs"].(string)))
 

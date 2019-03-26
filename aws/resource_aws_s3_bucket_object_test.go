@@ -53,7 +53,17 @@ func testSweepS3BucketObjects(region string) error {
 	for _, bucket := range output.Buckets {
 		bucketName := aws.StringValue(bucket.Name)
 
-		if !strings.HasPrefix(bucketName, "tf-acc") && !strings.HasPrefix(bucketName, "tf-object-test") && !strings.HasPrefix(bucketName, "tf-test") {
+		hasPrefix := false
+		prefixes := []string{"mybucket.", "mylogs.", "tf-acc", "tf-object-test", "tf-test"}
+
+		for _, prefix := range prefixes {
+			if strings.HasPrefix(bucketName, prefix) {
+				hasPrefix = true
+				break
+			}
+		}
+
+		if !hasPrefix {
 			log.Printf("[INFO] Skipping S3 Bucket: %s", bucketName)
 			continue
 		}
@@ -854,7 +864,7 @@ resource "aws_s3_bucket_object" "object" {
   bucket = "${aws_s3_bucket.object_bucket_3.bucket}"
   key = "updateable-key"
   source = "%s"
-  etag = "${md5(file("%s"))}"
+  etag = "${filemd5("%s")}"
 }
 `, randInt, bucketVersioning, source, source)
 }

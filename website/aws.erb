@@ -152,6 +152,9 @@
                         <li<%= sidebar_current("docs-aws-datasource-ec2-transit-gateway-vpc-attachment") %>>
                           <a href="/docs/providers/aws/d/ec2_transit_gateway_vpc_attachment.html">aws_ec2_transit_gateway_vpc_attachment</a>
                         </li>
+                        <li<%= sidebar_current("docs-aws-datasource-ec2-transit-gateway-vpn-attachment") %>>
+                          <a href="/docs/providers/aws/d/ec2_transit_gateway_vpn_attachment.html">aws_ec2_transit_gateway_vpn_attachment</a>
+                        </li>
                         <li<%= sidebar_current("docs-aws-datasource-ecr-repository") %>>
                           <a href="/docs/providers/aws/d/ecr_repository.html">aws_ecr_repository</a>
                         </li>
@@ -381,6 +384,9 @@
                         <li<%= sidebar_current("docs-aws-datasource-subnet-ids") %>>
                             <a href="/docs/providers/aws/d/subnet_ids.html">aws_subnet_ids</a>
                         </li>
+                        <li<%= sidebar_current("docs-aws-datasource-transfer-server") %>>
+                            <a href="/docs/providers/aws/d/transfer_server.html">aws_transfer_server</a>
+                        </li>
                         <li<%= sidebar_current("docs-aws-datasource-vpc-x") %>>
                             <a href="/docs/providers/aws/d/vpc.html">aws_vpc</a>
                         </li>
@@ -534,6 +540,9 @@
                         <li<%= sidebar_current("docs-aws-resource-appmesh-virtual-router") %>>
                             <a href="/docs/providers/aws/r/appmesh_virtual_router.html">aws_appmesh_virtual_router</a>
                         </li>
+                        <li<%= sidebar_current("docs-aws-resource-appmesh-virtual-service") %>>
+                            <a href="/docs/providers/aws/r/appmesh_virtual_service.html">aws_appmesh_virtual_service</a>
+                        </li>
                     </ul>
                 </li>
 
@@ -570,6 +579,9 @@
                 <li<%= sidebar_current("docs-aws-resource-backup") %>>
                     <a href="#">Backup Resources</a>
                     <ul class="nav nav-visible">
+                        <li<%= sidebar_current("docs-aws-resource-backup-plan") %>>
+                            <a href="/docs/providers/aws/r/backup_plan.html">aws_backup_plan</a>
+                        </li>
                         <li<%= sidebar_current("docs-aws-resource-backup-vault") %>>
                             <a href="/docs/providers/aws/r/backup_vault.html">aws_backup_vault</a>
                         </li>
@@ -614,6 +626,12 @@
                     <ul class="nav nav-visible">
                         <li<%= sidebar_current("docs-aws-resource-cloudformation-stack") %>>
                             <a href="/docs/providers/aws/r/cloudformation_stack.html">aws_cloudformation_stack</a>
+                        </li>
+                        <li<%= sidebar_current("docs-aws-resource-cloudformation-stack-set") %>>
+                            <a href="/docs/providers/aws/r/cloudformation_stack_set.html">aws_cloudformation_stack_set</a>
+                        </li>
+                        <li<%= sidebar_current("docs-aws-resource-cloudformation-stack-set-instance") %>>
+                            <a href="/docs/providers/aws/r/cloudformation_stack_set_instance.html">aws_cloudformation_stack_set_instance</a>
                         </li>
                     </ul>
                 </li>
@@ -1466,6 +1484,11 @@
                             <a href="/docs/providers/aws/r/globalaccelerator_accelerator.html">aws_globalaccelerator_accelerator</a>
                         </li>
                     </ul>
+                    <ul class="nav nav-visible">
+                        <li<%= sidebar_current("docs-aws-resource-globalaccelerator-listener") %>>
+                            <a href="/docs/providers/aws/r/globalaccelerator_listener.html">aws_globalaccelerator_listener</a>
+                        </li>
+                    </ul>
                  </li>
 
                  <li<%= sidebar_current("docs-aws-resource-glue") %>>
@@ -1503,6 +1526,10 @@
                     <ul class="nav nav-visible">
                         <li<%= sidebar_current("docs-aws-resource-guardduty-detector") %>>
                             <a href="/docs/providers/aws/r/guardduty_detector.html">aws_guardduty_detector</a>
+                        </li>
+
+                        <li<%= sidebar_current("docs-aws-resource-guardduty-invite-accepter") %>>
+                            <a href="/docs/providers/aws/r/guardduty_invite_accepter.html">aws_guardduty_invite_accepter</a>
                         </li>
 
                         <li<%= sidebar_current("docs-aws-resource-guardduty-ipset") %>>
@@ -1711,6 +1738,10 @@
 
                   <li<%= sidebar_current("docs-aws-resource-kms-grant") %>>
                     <a href="/docs/providers/aws/r/kms_grant.html">aws_kms_grant</a>
+                  </li>
+
+                  <li<%= sidebar_current("docs-aws-resource-kms-ciphertext") %>>
+                      <a href="/docs/providers/aws/r/kms_ciphertext.html">aws_kms_ciphertext</a>
                   </li>
 
                   <li<%= sidebar_current("docs-aws-resource-kms-key") %>>
@@ -2278,6 +2309,14 @@
                             <a href="/docs/providers/aws/r/route53_resolver_endpoint.html">aws_route53_resolver_endpoint</a>
                         </li>
 
+                        <li<%= sidebar_current("docs-aws-resource-route53-resolver-rule") %>>
+                            <a href="/docs/providers/aws/r/route53_resolver_rule.html">aws_route53_resolver_rule</a>
+                        </li>
+
+                        <li<%= sidebar_current("docs-aws-resource-route53-resolver-rule-association") %>>
+                            <a href="/docs/providers/aws/r/route53_resolver_rule_association.html">aws_route53_resolver_rule_association</a>
+                        </li>
+
                     </ul>
                 </li>
 
@@ -2323,6 +2362,10 @@
                 <li<%= sidebar_current("docs-aws-resource-sagemaker") %>>
                     <a href="#">Sagemaker Resources</a>
                     <ul class="nav nav-visible">
+
+                        <li<%= sidebar_current("docs-aws-resource-sagemaker-endpoint-configuration") %>>
+                          <a href="/docs/providers/aws/r/sagemaker_endpoint_configuration.html">aws_sagemaker_endpoint_configuration</a>
+                        </li>
 
                         <li<%= sidebar_current("docs-aws-resource-sagemaker-model") %>>
                           <a href="/docs/providers/aws/r/sagemaker_model.html">aws_sagemaker_model</a>

@@ -478,6 +478,47 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 					},
 				},
 			},
+			"origin_group": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Set:      originGroupHash,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"origin_id": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.NoZeroValues,
+						},
+						"failover_criteria": {
+							Type:     schema.TypeList,
+							Required: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"status_codes": {
+										Type:     schema.TypeSet,
+										Required: true,
+										Elem:     &schema.Schema{Type: schema.TypeInt},
+									},
+								},
+							},
+						},
+						"member": {
+							Type:     schema.TypeList,
+							Required: true,
+							MinItems: 2,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"origin_id": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"origin": {
 				Type:     schema.TypeSet,
 				Required: true,
@@ -833,6 +874,41 @@ func resourceAwsCloudFrontDistributionDelete(d *schema.ResourceData, meta interf
 	conn := meta.(*AWSClient).cloudfrontconn
 
 	if d.Get("retain_on_delete").(bool) {
+		// Check if we need to disable first
+		getDistributionInput := &cloudfront.GetDistributionInput{
+			Id: aws.String(d.Id()),
+		}
+
+		log.Printf("[DEBUG] Refreshing CloudFront Distribution (%s) to check if disable is necessary", d.Id())
+		getDistributionOutput, err := conn.GetDistribution(getDistributionInput)
+
+		if err != nil {
+			return fmt.Errorf("error refreshing CloudFront Distribution (%s) to check if disable is necessary: %s", d.Id(), err)
+		}
+
+		if getDistributionOutput == nil || getDistributionOutput.Distribution == nil || getDistributionOutput.Distribution.DistributionConfig == nil {
+			return fmt.Errorf("error refreshing CloudFront Distribution (%s) to check if disable is necessary: empty response", d.Id())
+		}
+
+		if !aws.BoolValue(getDistributionOutput.Distribution.DistributionConfig.Enabled) {
+			log.Printf("[WARN] Removing CloudFront Distribution ID %q with `retain_on_delete` set. Please delete this distribution manually.", d.Id())
+			return nil
+		}
+
+		updateDistributionInput := &cloudfront.UpdateDistributionInput{
+			DistributionConfig: getDistributionOutput.Distribution.DistributionConfig,
+			Id:                 getDistributionInput.Id,
+			IfMatch:            getDistributionOutput.ETag,
+		}
+		updateDistributionInput.DistributionConfig.Enabled = aws.Bool(false)
+
+		log.Printf("[DEBUG] Disabling CloudFront Distribution: %s", d.Id())
+		_, err = conn.UpdateDistribution(updateDistributionInput)
+
+		if err != nil {
+			return fmt.Errorf("error disabling CloudFront Distribution (%s): %s", d.Id(), err)
+		}
+
 		log.Printf("[WARN] Removing CloudFront Distribution ID %q with `retain_on_delete` set. Please delete this distribution manually.", d.Id())
 		return nil
 	}

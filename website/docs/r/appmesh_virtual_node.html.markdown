@@ -10,7 +10,16 @@ description: |-
 
 Provides an AWS App Mesh virtual node resource.
 
-~> **Note:** Backward incompatible API changes have been announced for AWS App Mesh which will affect this resource. Read more about the changes [here](https://github.com/awslabs/aws-app-mesh-examples/issues/92).
+## Breaking Changes
+
+Because of backward incompatible API changes (read [here](https://github.com/awslabs/aws-app-mesh-examples/issues/92)), `aws_appmesh_virtual_node` resource definitions created with provider versions earlier than vX.Y.Z will need to be modified:
+
+* Rename the `service_name` attribute of the `dns` object to `hostname`.
+
+* Replace the `backends` attribute of the `spec` object with one or more `backend` configuration blocks,
+setting `virtual_service_name` to the name of the service.
+
+The Terraform state associated with existing resources will automatically be migrated.
 
 ## Example Usage
 
@@ -19,10 +28,14 @@ Provides an AWS App Mesh virtual node resource.
 ```hcl
 resource "aws_appmesh_virtual_node" "serviceb1" {
   name                = "serviceBv1"
-  mesh_name           = "simpleapp"
+  mesh_name           = "${aws_appmesh_mesh.simple.id}"
 
   spec {
-    backends = ["servicea.simpleapp.local"]
+    backend {
+      virtual_service {
+        virtual_service_name = "servicea.simpleapp.local"
+      }
+    }
 
     listener {
       port_mapping {
@@ -33,7 +46,7 @@ resource "aws_appmesh_virtual_node" "serviceb1" {
 
     service_discovery {
       dns {
-        service_name = "serviceb.simpleapp.local"
+        hostname = "serviceb.simpleapp.local"
       }
     }
   }
@@ -45,10 +58,14 @@ resource "aws_appmesh_virtual_node" "serviceb1" {
 ```hcl
 resource "aws_appmesh_virtual_node" "serviceb1" {
   name                = "serviceBv1"
-  mesh_name           = "simpleapp"
+  mesh_name           = "${aws_appmesh_mesh.simple.id}"
 
   spec {
-    backends = ["servicea.simpleapp.local"]
+    backend {
+      virtual_service {
+        virtual_service_name = "servicea.simpleapp.local"
+      }
+    }
 
     listener {
       port_mapping {
@@ -68,7 +85,7 @@ resource "aws_appmesh_virtual_node" "serviceb1" {
 
     service_discovery {
       dns {
-        service_name = "serviceb.simpleapp.local"
+        hostname = "serviceb.simpleapp.local"
       }
     }
   }
@@ -85,9 +102,17 @@ The following arguments are supported:
 
 The `spec` object supports the following:
 
-* `backends` - (Optional) The backends to which the virtual node is expected to send outbound traffic.
+* `backend` - (Optional) The backends to which the virtual node is expected to send outbound traffic.
 * `listener` - (Optional) The listeners from which the virtual node is expected to receive inbound traffic.
 * `service_discovery`- (Optional) The service discovery information for the virtual node.
+
+The `backend` object supports the following:
+
+* `virtual_service` - (Optional) Specifies a virtual service to use as a backend for a virtual node.
+
+The `virtual_service` object supports the following:
+
+* `virtual_service_name` - (Required) The name of the virtual service that is acting as a virtual node backend.
 
 The `listener` object supports the following:
 
@@ -100,7 +125,7 @@ The `service_discovery` object supports the following:
 
 The `dns` object supports the following:
 
-* `service_name` - (Required) The DNS service name for your virtual node.
+* `hostname` - (Required) The DNS host name for your virtual node.
 
 The `port_mapping` object supports the following:
 
@@ -125,3 +150,12 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - The ARN of the virtual node.
 * `created_date` - The creation date of the virtual node.
 * `last_updated_date` - The last update date of the virtual node.
+
+## Import
+
+App Mesh virtual nodes can be imported using `mesh_name` together with the virtual node's `name`,
+e.g.
+
+```
+$ terraform import aws_appmesh_virtual_node.serviceb1 simpleapp/serviceBv1
+```

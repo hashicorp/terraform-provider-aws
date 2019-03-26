@@ -238,6 +238,7 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
   - [`aws_elasticache_cluster` data source](/docs/providers/aws/d/elasticache_cluster.html)
   - [`aws_elasticache_cluster` resource](/docs/providers/aws/r/elasticache_cluster.html)
   - [`aws_elb` resource](/docs/providers/aws/r/elb.html)
+  - [`aws_glue_crawler` resource](/docs/providers/aws/r/glue_crawler.html)
   - [`aws_instance` data source](/docs/providers/aws/d/instance.html)
   - [`aws_instance` resource](/docs/providers/aws/r/instance.html)
   - [`aws_launch_template` resource](/docs/providers/aws/r/launch_template.html)
@@ -343,6 +344,10 @@ Nested `endpoints` block supports the following:
   URL constructed from the `region`.  It's typically used to connect to
   custom Elasticsearch endpoints.
 
+* `firehose` - (Optional) Use this to override the default endpoint
+  URL constructed from the `region`.  It's typically used to connect to
+  custom Firehose endpoints.
+
 * `iam` - (Optional) Use this to override the default endpoint
   URL constructed from the `region`. It's typically used to connect to
   custom IAM endpoints.
@@ -367,6 +372,10 @@ Nested `endpoints` block supports the following:
   URL constructed from the `region`. It's typically used to connect to
   custom RDS endpoints.
 
+* `redshift` - (Optional) Use this to override the default endpoint
+  URL constructed from the `region`. It's typically used to connect to
+  custom Redshift endpoints.
+
 * `s3` - (Optional) Use this to override the default endpoint
   URL constructed from the `region`. It's typically used to connect to
   custom S3 endpoints.
@@ -374,6 +383,10 @@ Nested `endpoints` block supports the following:
 * `s3control` - (Optional) Use this to override the default endpoint
   URL constructed from the `region`. It's typically used to connect to
   custom S3 Control endpoints (e.g. account-level public access block).
+
+* `ses` - (Optional) Use this to override the default endpoint
+  URL constructed from the `region`. It's typically used to connect to
+  custom SNS endpoints.
 
 * `sns` - (Optional) Use this to override the default endpoint
   URL constructed from the `region`. It's typically used to connect to

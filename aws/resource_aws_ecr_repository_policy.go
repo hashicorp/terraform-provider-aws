@@ -17,6 +17,9 @@ func resourceAwsEcrRepositoryPolicy() *schema.Resource {
 		Read:   resourceAwsEcrRepositoryPolicyRead,
 		Update: resourceAwsEcrRepositoryPolicyUpdate,
 		Delete: resourceAwsEcrRepositoryPolicyDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"repository": {
@@ -25,8 +28,9 @@ func resourceAwsEcrRepositoryPolicy() *schema.Resource {
 				ForceNew: true,
 			},
 			"policy": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:             schema.TypeString,
+				Required:         true,
+				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
 			},
 			"registry_id": {
 				Type:     schema.TypeString,
@@ -77,7 +81,6 @@ func resourceAwsEcrRepositoryPolicyRead(d *schema.ResourceData, meta interface{}
 
 	log.Printf("[DEBUG] Reading repository policy %s", d.Id())
 	out, err := conn.GetRepositoryPolicy(&ecr.GetRepositoryPolicyInput{
-		RegistryId:     aws.String(d.Get("registry_id").(string)),
 		RepositoryName: aws.String(d.Id()),
 	})
 	if err != nil {
@@ -98,7 +101,9 @@ func resourceAwsEcrRepositoryPolicyRead(d *schema.ResourceData, meta interface{}
 	repositoryPolicy := out
 
 	d.SetId(*repositoryPolicy.RepositoryName)
+	d.Set("repository", repositoryPolicy.RepositoryName)
 	d.Set("registry_id", repositoryPolicy.RegistryId)
+	d.Set("policy", repositoryPolicy.PolicyText)
 
 	return nil
 }
