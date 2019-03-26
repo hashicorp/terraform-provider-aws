@@ -9,6 +9,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_kms_ciphertext: Hide `plaintext` in logs and user interface [GH-6100]
+* resource/aws_appsync_graphql_api: Add `schema` argument [GH-4840]
 * resource/aws_ram_principal_association: Validate `principal` as AWS Account ID or ARN [GH-8048]
 * resource/aws_vpn_connection: Add `transit_gateway_attachment_id` attribute [GH-8070]
 
