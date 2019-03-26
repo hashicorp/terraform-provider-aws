@@ -14,8 +14,8 @@ func resourceAwsKmsCiphertext() *schema.Resource {
 
 	return &schema.Resource{
 		Create: resourceAwsKmsCiphertextCreate,
-		Read:   resourceAwsKmsCiphertextRead,
-		Delete: resourceAwsKmsCiphertextDelete,
+		Read:   schema.Noop,
+		Delete: schema.Noop,
 
 		Schema: map[string]*schema.Schema{
 			"plaintext": {
@@ -68,19 +68,5 @@ func resourceAwsKmsCiphertextCreate(d *schema.ResourceData, meta interface{}) er
 
 	d.Set("ciphertext_blob", base64.StdEncoding.EncodeToString(resp.CiphertextBlob))
 
-	return nil
-}
-
-func resourceAwsKmsCiphertextDelete(d *schema.ResourceData, meta interface{}) error {
-	d.SetId("")
-	return nil
-}
-
-func resourceAwsKmsCiphertextRead(d *schema.ResourceData, meta interface{}) error {
-	// If the input has changed, generate a new ciphertext_blob
-	// This should never be the case since ForceNew set on all input.
-	if d.HasChange("plaintext") || d.HasChange("key_id") || d.HasChange("context") {
-		return resourceAwsKmsCiphertextCreate(d, meta)
-	}
 	return nil
 }

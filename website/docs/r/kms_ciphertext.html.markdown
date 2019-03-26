@@ -9,7 +9,9 @@ description: |-
 # Resource: aws_kms_ciphertext
 
 The KMS ciphertext resource allows you to encrypt plaintext into ciphertext
-by using an AWS KMS customer master key.
+by using an AWS KMS customer master key. The value returned by this resource
+is stable across every apply. For a changing ciphertext value each apply, see
+the [`aws_kms_ciphertext` data source](/docs/providers/aws/d/kms_ciphertext.html).
 
 ~> **Note:** All arguments including the plaintext be stored in the raw state as plain-text.
 [Read more about sensitive data in state](/docs/state/sensitive-data.html).

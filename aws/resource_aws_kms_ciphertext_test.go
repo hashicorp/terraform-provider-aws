@@ -23,6 +23,9 @@ func TestAccResourceAwsKmsCiphertext_basic(t *testing.T) {
 }
 
 func TestAccResourceAwsKmsCiphertext_validate(t *testing.T) {
+	kmsSecretsDataSource := "data.aws_kms_secrets.foo"
+	resourceName := "aws_kms_ciphertext.foo"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
@@ -30,12 +33,8 @@ func TestAccResourceAwsKmsCiphertext_validate(t *testing.T) {
 			{
 				Config: testAccResourceAwsKmsCiphertextConfig_validate,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(
-						"aws_kms_ciphertext.foo", "ciphertext_blob"),
-					resource.TestCheckResourceAttrSet(
-						"data.aws_kms_secret.foo", "plaintext"),
-					resource.TestCheckResourceAttr(
-						"data.aws_kms_secret.foo", "plaintext", "Super secret data"),
+					resource.TestCheckResourceAttrSet(resourceName, "ciphertext_blob"),
+					resource.TestCheckResourceAttrPair(resourceName, "plaintext", kmsSecretsDataSource, "plaintext.plaintext"),
 				),
 			},
 		},
@@ -43,6 +42,9 @@ func TestAccResourceAwsKmsCiphertext_validate(t *testing.T) {
 }
 
 func TestAccResourceAwsKmsCiphertext_validate_withContext(t *testing.T) {
+	kmsSecretsDataSource := "data.aws_kms_secrets.foo"
+	resourceName := "aws_kms_ciphertext.foo"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
@@ -50,12 +52,8 @@ func TestAccResourceAwsKmsCiphertext_validate_withContext(t *testing.T) {
 			{
 				Config: testAccResourceAwsKmsCiphertextConfig_validate_withContext,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(
-						"aws_kms_ciphertext.foo", "ciphertext_blob"),
-					resource.TestCheckResourceAttrSet(
-						"aws_kms_secret.foo", "plaintext"),
-					resource.TestCheckResourceAttr(
-						"aws_kms_secret.foo", "plaintext", "Super secret data"),
+					resource.TestCheckResourceAttrSet(resourceName, "ciphertext_blob"),
+					resource.TestCheckResourceAttrPair(resourceName, "plaintext", kmsSecretsDataSource, "plaintext.plaintext"),
 				),
 			},
 		},
@@ -63,16 +61,12 @@ func TestAccResourceAwsKmsCiphertext_validate_withContext(t *testing.T) {
 }
 
 const testAccResourceAwsKmsCiphertextConfig_basic = `
-provider "aws" {
-  region = "us-west-2"
-}
-
 resource "aws_kms_key" "foo" {
   description = "tf-test-acc-data-source-aws-kms-ciphertext-basic"
   is_enabled = true
 }
 
-data "aws_kms_ciphertext" "foo" {
+resource "aws_kms_ciphertext" "foo" {
   key_id = "${aws_kms_key.foo.key_id}"
 
   plaintext = "Super secret data"
@@ -80,22 +74,18 @@ data "aws_kms_ciphertext" "foo" {
 `
 
 const testAccResourceAwsKmsCiphertextConfig_validate = `
-provider "aws" {
-  region = "us-west-2"
-}
-
 resource "aws_kms_key" "foo" {
   description = "tf-test-acc-data-source-aws-kms-ciphertext-validate"
   is_enabled = true
 }
 
-data "aws_kms_ciphertext" "foo" {
+resource "aws_kms_ciphertext" "foo" {
   key_id = "${aws_kms_key.foo.key_id}"
 
   plaintext = "Super secret data"
 }
 
-data "aws_kms_secret" "foo" {
+data "aws_kms_secrets" "foo" {
   secret {
     name = "plaintext"
     payload = "${aws_kms_ciphertext.foo.ciphertext_blob}"
@@ -104,32 +94,28 @@ data "aws_kms_secret" "foo" {
 `
 
 const testAccResourceAwsKmsCiphertextConfig_validate_withContext = `
-provider "aws" {
-  region = "us-west-2"
-}
-
 resource "aws_kms_key" "foo" {
   description = "tf-test-acc-data-source-aws-kms-ciphertext-validate-with-context"
   is_enabled = true
 }
 
-data "aws_kms_ciphertext" "foo" {
+resource "aws_kms_ciphertext" "foo" {
   key_id = "${aws_kms_key.foo.key_id}"
 
   plaintext = "Super secret data"
 
-  context {
-	name = "value"
+  context = {
+    name = "value"
   }
 }
 
-data "aws_kms_secret" "foo" {
+data "aws_kms_secrets" "foo" {
   secret {
     name = "plaintext"
     payload = "${aws_kms_ciphertext.foo.ciphertext_blob}"
 
-    context {
-	  name = "value"
+  context = {
+    name = "value"
     }
   }
 }
