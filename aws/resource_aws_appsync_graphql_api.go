@@ -2,10 +2,11 @@ package aws
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform/helper/resource"
 	"log"
 	"regexp"
 	"time"
+
+	"github.com/hashicorp/terraform/helper/resource"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appsync"
@@ -172,15 +173,8 @@ func resourceAwsAppsyncGraphqlApiCreate(d *schema.ResourceData, meta interface{}
 
 	d.SetId(*resp.GraphqlApi.ApiId)
 
-<<<<<<< HEAD
-	if v, ok := d.GetOk("schema"); ok {
-		if err := startSchemaCreationAndWaitForItToBeActive(d.Id(), v.(string), d.Timeout(schema.TimeoutCreate), conn); err != nil {
-			return err
-		}
-=======
 	if err := resourceAwsAppsyncSchemaPut(d.Id(), d, meta); err != nil {
 		return fmt.Errorf("error creating AppSync GraphQL API (%s) Schema: %s", d.Id(), err)
->>>>>>> upstream/master
 	}
 
 	return resourceAwsAppsyncGraphqlApiRead(d, meta)
@@ -252,20 +246,10 @@ func resourceAwsAppsyncGraphqlApiUpdate(d *schema.ResourceData, meta interface{}
 		return err
 	}
 
-<<<<<<< HEAD
-	if d.HasChange("schema") {
-		if v, ok := d.GetOk("schema"); ok {
-			if err := startSchemaCreationAndWaitForItToBeActive(d.Id(), v.(string), d.Timeout(schema.TimeoutUpdate), conn); err != nil {
-				return err
-			}
-		}
-	}
-=======
 	if err := resourceAwsAppsyncSchemaPut(d.Id(), d, meta); err != nil {
 		return fmt.Errorf("error updating AppSync GraphQL API (%s) Schema: %s", d.Id(), err)
 	}
 
->>>>>>> upstream/master
 	return resourceAwsAppsyncGraphqlApiRead(d, meta)
 }
 
