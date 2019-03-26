@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New Resource:** `aws_kms_ciphertext` [GH-6993]
 * **New Resource:** `aws_sagemaker_endpoint_configuration` [GH-2477]
 
 ENHANCEMENTS:
