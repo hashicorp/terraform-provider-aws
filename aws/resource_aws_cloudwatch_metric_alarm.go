@@ -422,8 +422,12 @@ func getAwsCloudWatchPutMetricAlarmInput(d *schema.ResourceData) cloudwatch.PutM
 	if v := d.Get("metric_query"); v != nil {
 		for _, v := range v.(*schema.Set).List() {
 			metricQueryResource := v.(map[string]interface{})
+			id := metricQueryResource["id"].(string)
+			if id == "" {
+				continue
+			}
 			metricQuery := cloudwatch.MetricDataQuery{
-				Id: aws.String(metricQueryResource["id"].(string)),
+				Id: aws.String(id),
 			}
 			if v, ok := metricQueryResource["expression"]; ok && v.(string) != "" {
 				metricQuery.Expression = aws.String(v.(string))
