@@ -17,26 +17,27 @@ we need to be able to review and respond quickly.
 
 <!-- TOC depthFrom:2 -->
 
-- [HashiCorp vs. Community Providers](#hashicorp-vs-community-providers)
-- [Issues](#issues)
+- [Contributing to Terraform - AWS Provider](#contributing-to-terraform---aws-provider)
+  - [HashiCorp vs. Community Providers](#hashicorp-vs-community-providers)
+  - [Issues](#issues)
     - [Issue Reporting Checklists](#issue-reporting-checklists)
-        - [Bug Reports](#bug-reports)
-        - [Feature Requests](#feature-requests)
-        - [Questions](#questions)
+      - [Bug Reports](#bug-reports)
+      - [Feature Requests](#feature-requests)
+      - [Questions](#questions)
     - [Issue Lifecycle](#issue-lifecycle)
-- [Pull Requests](#pull-requests)
+  - [Pull Requests](#pull-requests)
     - [Pull Request Lifecycle](#pull-request-lifecycle)
     - [Checklists for Contribution](#checklists-for-contribution)
-        - [Documentation Update](#documentation-update)
-        - [Enhancement/Bugfix to a Resource](#enhancementbugfix-to-a-resource)
-        - [New Resource](#new-resource)
-        - [New Provider](#new-provider)
-        - [New Region](#new-region)
-        - [Terraform Schema and Code Idiosyncracies](#terraform-schema-and-code-idiosyncracies)
+      - [Documentation Update](#documentation-update)
+      - [Enhancement/Bugfix to a Resource](#enhancementbugfix-to-a-resource)
+      - [New Resource](#new-resource)
+      - [New Provider](#new-provider)
+      - [New Region](#new-region)
+      - [Terraform Schema and Code Idiosyncracies](#terraform-schema-and-code-idiosyncracies)
     - [Writing Acceptance Tests](#writing-acceptance-tests)
-        - [Acceptance Tests Often Cost Money to Run](#acceptance-tests-often-cost-money-to-run)
-        - [Running an Acceptance Test](#running-an-acceptance-test)
-        - [Writing an Acceptance Test](#writing-an-acceptance-test)
+      - [Acceptance Tests Often Cost Money to Run](#acceptance-tests-often-cost-money-to-run)
+      - [Running an Acceptance Test](#running-an-acceptance-test)
+      - [Writing an Acceptance Test](#writing-an-acceptance-test)
 
 <!-- /TOC -->
 
@@ -416,20 +417,24 @@ readable, and allows reuse of assertion functions across different tests of the
 same type of resource. The definition of a complete test looks like this:
 
 ```go
-func TestAccAzureRMPublicIpStatic_update(t *testing.T) {
+func TestAccAWSCloudWatchDashboard_update(t *testing.T) {
+	var dashboard cloudwatch.GetDashboardOutput
+	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testCheckAzureRMPublicIpDestroy,
+		CheckDestroy: testAccCheckAWSCloudWatchDashboardDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
-				Config: testAccAzureRMVPublicIpStatic_basic,
+			{
+				Config: testAccAWSCloudWatchDashboardConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testCheckAzureRMPublicIpExists("azurerm_public_ip.test"),
+					testAccCheckCloudWatchDashboardExists("aws_cloudwatch_dashboard.foobar", &dashboard),
+					testAccCloudWatchCheckDashboardBodyIsExpected("aws_cloudwatch_dashboard.foobar", basicWidget),
+					resource.TestCheckResourceAttr("aws_cloudwatch_dashboard.foobar", "dashboard_name", testAccAWSCloudWatchDashboardName(rInt)),
 				),
 			},
-        },
-    })
+		},
+	})
 }
 ```
 
@@ -461,33 +466,27 @@ When executing the test, the following steps are taken for each `TestStep`:
    successfully, a test function like this is used:
 
     ```go
-    func testCheckAzureRMPublicIpExists(name string) resource.TestCheckFunc {
-        return func(s *terraform.State) error {
-            // Ensure we have enough information in state to look up in API
-            rs, ok := s.RootModule().Resources[name]
-            if !ok {
-                return fmt.Errorf("Not found: %s", name)
-            }
-
-            publicIPName := rs.Primary.Attributes["name"]
-            resourceGroup, hasResourceGroup := rs.Primary.Attributes["resource_group_name"]
-            if !hasResourceGroup {
-                return fmt.Errorf("Bad: no resource group found in state for public ip: %s", availSetName)
-            }
-
-            conn := testAccProvider.Meta().(*ArmClient).publicIPClient
-
-            resp, err := conn.Get(resourceGroup, publicIPName, "")
-            if err != nil {
-                return fmt.Errorf("Bad: Get on publicIPClient: %s", err)
-            }
-
-            if resp.StatusCode == http.StatusNotFound {
-                return fmt.Errorf("Bad: Public IP %q (resource group: %q) does not exist", name, resourceGroup)
-            }
-
-            return nil
+    func testAccCheckCloudWatchDashboardExists(n string, dashboard *cloudwatch.GetDashboardOutput) resource.TestCheckFunc {
+      return func(s *terraform.State) error {
+        rs, ok := s.RootModule().Resources[n]
+        if !ok {
+          return fmt.Errorf("Not found: %s", n)
         }
+
+        conn := testAccProvider.Meta().(*AWSClient).cloudwatchconn
+        params := cloudwatch.GetDashboardInput{
+          DashboardName: aws.String(rs.Primary.ID),
+        }
+
+        resp, err := conn.GetDashboard(&params)
+        if err != nil {
+          return err
+        }
+
+        *dashboard = *resp
+
+        return nil
+      }
     }
     ```
 
@@ -499,7 +498,7 @@ When executing the test, the following steps are taken for each `TestStep`:
    for several common types of check - for example:
 
     ```go
-    resource.TestCheckResourceAttr("azurerm_public_ip.test", "domain_name_label", "mylabel01"),
+    resource.TestCheckResourceAttr("aws_cloudwatch_dashboard.foobar", "dashboard_name", testAccAWSCloudWatchDashboardName(rInt)),
     ```
 
 1. The resources created by the test are destroyed. This step happens
@@ -511,29 +510,28 @@ When executing the test, the following steps are taken for each `TestStep`:
    above looks like this:
 
     ```go
-    func testCheckAzureRMPublicIpDestroy(s *terraform.State) error {
-        conn := testAccProvider.Meta().(*ArmClient).publicIPClient
+    func testAccCheckAWSCloudWatchDashboardDestroy(s *terraform.State) error {
+      conn := testAccProvider.Meta().(*AWSClient).cloudwatchconn
 
-        for _, rs := range s.RootModule().Resources {
-            if rs.Type != "azurerm_public_ip" {
-                continue
-            }
-
-            name := rs.Primary.Attributes["name"]
-            resourceGroup := rs.Primary.Attributes["resource_group_name"]
-
-            resp, err := conn.Get(resourceGroup, name, "")
-
-            if err != nil {
-                return nil
-            }
-
-            if resp.StatusCode != http.StatusNotFound {
-                return fmt.Errorf("Public IP still exists:\n%#v", resp.Properties)
-            }
+      for _, rs := range s.RootModule().Resources {
+        if rs.Type != "aws_cloudwatch_dashboard" {
+          continue
         }
 
-        return nil
+        params := cloudwatch.GetDashboardInput{
+          DashboardName: aws.String(rs.Primary.ID),
+        }
+
+        _, err := conn.GetDashboard(&params)
+        if err == nil {
+          return fmt.Errorf("Dashboard still exists: %s", rs.Primary.ID)
+        }
+        if !isCloudWatchDashboardNotFoundErr(err) {
+          return err
+        }
+      }
+
+      return nil
     }
     ```
 
