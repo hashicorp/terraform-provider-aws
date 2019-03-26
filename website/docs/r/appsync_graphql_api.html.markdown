@@ -111,41 +111,12 @@ resource "aws_appsync_graphql_api" "example" {
 }
 ```
 
-### Defining a schema
-
-```hcl
-resource "aws_appsync_graphql_api" "test" {
-  authentication_type = "API_KEY"
-  name                = "tf-example"
-  schema              = <<EOF
-type Mutation {
-	putPost(id: ID!, title: String!): Post
-}
-
-type Post {
-	id: ID!
-	title: String!
-}
-
-type Query {
-	singlePost(id: ID!): Post
-}
-
-schema {
-	query: Query
-	mutation: Mutation
-}
-EOF
-}
-```
-
 ## Argument Reference
 
 The following arguments are supported:
 
 * `authentication_type` - (Required) The authentication type. Valid values: `API_KEY`, `AWS_IAM`, `AMAZON_COGNITO_USER_POOLS`, `OPENID_CONNECT`
 * `name` - (Required) A user-supplied name for the GraphqlApi.
-* `schema` - (Optional) A Graphql Schema definition.
 * `log_config` - (Optional) Nested argument containing logging configuration. Defined below.
 * `openid_connect_config` - (Optional) Nested argument containing OpenID Connect configuration. Defined below.
 * `user_pool_config` - (Optional) The Amazon Cognito User Pool configuration. Defined below.

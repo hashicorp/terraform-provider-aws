@@ -6,8 +6,6 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/hashicorp/terraform/helper/resource"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appsync"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -137,10 +135,6 @@ func resourceAwsAppsyncGraphqlApi() *schema.Resource {
 				Type:     schema.TypeMap,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"schema": {
-				Type:     schema.TypeString,
-				Optional: true,
 			},
 		},
 	}
