@@ -165,12 +165,11 @@ func resourceAwsAppsyncGraphqlApiCreate(d *schema.ResourceData, meta interface{}
 		return err
 	}
 
-	err = resourceAwsAppsyncSchemaPut(*resp.GraphqlApi.ApiId, d, meta)
-	if err != nil {
-		return err
-	}
-
 	d.SetId(*resp.GraphqlApi.ApiId)
+
+	if err := resourceAwsAppsyncSchemaPut(d.Id(), d, meta); err != nil {
+		return fmt.Errorf("error creating AppSync GraphQL API (%s) Schema: %s", d.Id(), err)
+	}
 
 	return resourceAwsAppsyncGraphqlApiRead(d, meta)
 }
@@ -241,9 +240,8 @@ func resourceAwsAppsyncGraphqlApiUpdate(d *schema.ResourceData, meta interface{}
 		return err
 	}
 
-	err = resourceAwsAppsyncSchemaPut(d.Id(), d, meta)
-	if err != nil {
-		return err
+	if err := resourceAwsAppsyncSchemaPut(d.Id(), d, meta); err != nil {
+		return fmt.Errorf("error updating AppSync GraphQL API (%s) Schema: %s", d.Id(), err)
 	}
 
 	return resourceAwsAppsyncGraphqlApiRead(d, meta)

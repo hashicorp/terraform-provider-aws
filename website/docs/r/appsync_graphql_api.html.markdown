@@ -120,7 +120,7 @@ The following arguments are supported:
 * `log_config` - (Optional) Nested argument containing logging configuration. Defined below.
 * `openid_connect_config` - (Optional) Nested argument containing OpenID Connect configuration. Defined below.
 * `user_pool_config` - (Optional) The Amazon Cognito User Pool configuration. Defined below.
-* `schema` - (Required) The schema definition, in GraphQL schema language format
+* `schema` - (Optional) The schema definition, in GraphQL schema language format. Terraform cannot perform drift detection of this configuration.
 
 ### log_config
 
