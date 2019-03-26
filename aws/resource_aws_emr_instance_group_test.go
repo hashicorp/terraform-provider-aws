@@ -16,23 +16,30 @@ import (
 func TestAccAWSEMRInstanceGroup_basic(t *testing.T) {
 	var ig emr.InstanceGroup
 	rInt := acctest.RandInt()
+	resourceName := "aws_emr_instance_group.task"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEmrInstanceGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEmrInstanceGroupConfig(rInt),
+				Config: testAccAWSEmrInstanceGroupConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEmrInstanceGroupExists("aws_emr_instance_group.task", &ig),
+					testAccCheckAWSEmrInstanceGroupExists(resourceName, &ig),
 					resource.TestCheckResourceAttr("aws_emr_instance_group.task", "instance_role", "TASK"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSEMRInstanceGroupResourceImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
-func TestAccAWSEMRInstanceGroup_basicAutoScalingPolicy(t *testing.T) {
+func TestAccAWSEMRInstanceGroup_AutoScalingPolicy(t *testing.T) {
 	var ig emr.InstanceGroup
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
@@ -41,7 +48,7 @@ func TestAccAWSEMRInstanceGroup_basicAutoScalingPolicy(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEmrInstanceGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEmrInstanceGroupConfigWithAutoScalingPolicy(rInt),
+				Config: testAccAWSEmrInstanceGroupConfig_AutoScalingPolicy(rInt, 1, 3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEmrInstanceGroupExists("aws_emr_instance_group.task", &ig),
 					resource.TestCheckResourceAttr("aws_emr_instance_group.task", "instance_role", "TASK"),
@@ -50,11 +57,9 @@ func TestAccAWSEMRInstanceGroup_basicAutoScalingPolicy(t *testing.T) {
 			},
 		},
 	})
-
 }
 
-// Confirm we can scale down the instance count. Regression test for https://github.com/terraform-providers/terraform-provider-aws/issues/1264
-func TestAccAWSEMRInstanceGroup_zero_count(t *testing.T) {
+func TestAccAWSEMRInstanceGroup_updateAutoScalingPolicy(t *testing.T) {
 	var ig emr.InstanceGroup
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
@@ -63,18 +68,48 @@ func TestAccAWSEMRInstanceGroup_zero_count(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEmrInstanceGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEmrInstanceGroupConfig(rInt),
+				Config: testAccAWSEmrInstanceGroupConfig_AutoScalingPolicy(rInt, 1, 3),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEmrInstanceGroupExists("aws_emr_instance_group.task", &ig),
+					resource.TestCheckResourceAttr("aws_emr_instance_group.task", "instance_role", "TASK"),
+					resource.TestCheckResourceAttrSet("aws_emr_instance_group.task", "autoscaling_policy"),
+				),
+			},
+			{
+				Config: testAccAWSEmrInstanceGroupConfig_AutoScalingPolicy(rInt, 2, 3),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEmrInstanceGroupExists("aws_emr_instance_group.task", &ig),
+					resource.TestCheckResourceAttr("aws_emr_instance_group.task", "instance_role", "TASK"),
+					resource.TestCheckResourceAttrSet("aws_emr_instance_group.task", "autoscaling_policy"),
+				),
+			},
+		},
+	})
+}
+
+// Confirm we can scale down the instance count.
+// Regression test for https://github.com/terraform-providers/terraform-provider-aws/issues/1264
+func TestAccAWSEMRInstanceGroup_updateInstanceCount(t *testing.T) {
+	var ig emr.InstanceGroup
+	rInt := acctest.RandInt()
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEmrInstanceGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEmrInstanceGroupConfig_basic(rInt),
 				Check:  testAccCheckAWSEmrInstanceGroupExists("aws_emr_instance_group.task", &ig),
 			},
 			{
-				Config: testAccAWSEmrInstanceGroupConfig_zero_count(rInt),
+				Config: testAccAWSEmrInstanceGroupConfig_zeroCount(rInt),
 				Check:  testAccCheckAWSEmrInstanceGroupExists("aws_emr_instance_group.task", &ig),
 			},
 		},
 	})
 }
 
-func TestAccAWSEMRInstanceGroup_ebsBasic(t *testing.T) {
+func TestAccAWSEMRInstanceGroup_ebsConfig(t *testing.T) {
 	var ig emr.InstanceGroup
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
@@ -83,7 +118,7 @@ func TestAccAWSEMRInstanceGroup_ebsBasic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEmrInstanceGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEmrInstanceGroupConfig_ebsBasic(rInt),
+				Config: testAccAWSEmrInstanceGroupConfig_ebsConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEmrInstanceGroupExists("aws_emr_instance_group.task", &ig),
 					resource.TestCheckResourceAttr(
@@ -150,6 +185,18 @@ func testAccCheckAWSEmrInstanceGroupExists(n string, v *emr.InstanceGroup) resou
 
 		v = g
 		return nil
+	}
+}
+
+func testAccAWSEMRInstanceGroupResourceImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		log.Println(fmt.Sprintf("%s/%s", rs.Primary.Attributes["cluster_id"], rs.Primary.ID))
+		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["cluster_id"], rs.Primary.ID), nil
 	}
 }
 
@@ -233,9 +280,9 @@ resource "aws_emr_cluster" "tf-test-cluster" {
     instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
   }
 
-  master_instance_type = "c4.large"
-  core_instance_type   = "c4.large"
-  core_instance_count  = 2
+  master_instance_type = "m4.large"
+  core_instance_type = "m4.large"
+  core_instance_count = 2
 
   tags = {
     role     = "rolename"
@@ -447,29 +494,29 @@ resource "aws_iam_role_policy_attachment" "emr-autoscaling-role" {
 }
 `
 
-func testAccAWSEmrInstanceGroupConfig(r int) string {
+func testAccAWSEmrInstanceGroupConfig_basic(r int) string {
 	return fmt.Sprintf(testAccAWSEmrInstanceGroupBase+`
 	resource "aws_emr_instance_group" "task" {
     cluster_id     = "${aws_emr_cluster.tf-test-cluster.id}"
     instance_role  = "TASK"
     instance_count = 1
-    instance_type  = "c4.large"
+    instance_type  = "m4.large"
   }
 	`, r)
 }
 
-func testAccAWSEmrInstanceGroupConfigWithAutoScalingPolicy(r int) string {
+func testAccAWSEmrInstanceGroupConfig_AutoScalingPolicy(r, min, max int) string {
 	return fmt.Sprintf(testAccAWSEmrInstanceGroupBase+`
 	resource "aws_emr_instance_group" "task" {
     cluster_id     = "${aws_emr_cluster.tf-test-cluster.id}"
     instance_role  = "TASK"
     instance_count = 1
-    instance_type  = "c4.large"
+    instance_type  = "m4.large"
     autoscaling_policy = <<EOT
 {
   "Constraints": {
-    "MinCapacity": 1,
-    "MaxCapacity": 3
+    "MinCapacity": %d,
+    "MaxCapacity": %d
   },
   "Rules": [
     {
@@ -499,32 +546,32 @@ func testAccAWSEmrInstanceGroupConfigWithAutoScalingPolicy(r int) string {
 }
 EOT
 }
-`, r)
+`, r, min, max)
 }
 
-func testAccAWSEmrInstanceGroupConfig_zero_count(r int) string {
-	return fmt.Sprintf(testAccAWSEmrInstanceGroupBase+`
-	resource "aws_emr_instance_group" "task" {
-    cluster_id     = "${aws_emr_cluster.tf-test-cluster.id}"
-    instance_role  = "TASK"
-    instance_count = 0
-    instance_type  = "c4.large"
-  }
-	`, r)
-}
-
-func testAccAWSEmrInstanceGroupConfig_ebsBasic(r int) string {
+func testAccAWSEmrInstanceGroupConfig_ebsConfig(r int) string {
 	return fmt.Sprintf(testAccAWSEmrInstanceGroupBase+`
 		resource "aws_emr_instance_group" "task" {
     cluster_id     = "${aws_emr_cluster.tf-test-cluster.id}"
     instance_role  = "TASK"
     instance_count = 1
-    instance_type  = "c4.large"
+    instance_type  = "m4.large"
     ebs_optimized = true
     ebs_config {
       size = 10
       type = "gp2"
     }
+  }
+	`, r)
+}
+
+func testAccAWSEmrInstanceGroupConfig_zeroCount(r int) string {
+	return fmt.Sprintf(testAccAWSEmrInstanceGroupBase+`
+	resource "aws_emr_instance_group" "task" {
+    cluster_id     = "${aws_emr_cluster.tf-test-cluster.id}"
+    instance_role  = "TASK"
+    instance_count = 0
+    instance_type  = "m4.large"
   }
 	`, r)
 }

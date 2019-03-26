@@ -32,10 +32,14 @@ The following arguments are supported:
 
 * `name` (Required) Human friendly name given to the instance group. Changing this forces a new resource to be created.
 * `cluster_id` (Required) ID of the EMR Cluster to attach to. Changing this forces a new resource to be created.
+* `instance_role` (Optional) The EC2 instance role for all instances in the instance group. Valid values are MASTER, CORE, TASK. Default `"TASK"`
 * `instance_type` (Required) The EC2 instance type for all instances in the instance group. Changing this forces a new resource to be created.
+* `bid_price` - (Optional) If set, the bid price for each EC2 instance in the instance group, expressed in USD. By setting this attribute, the instance group is being declared as a Spot Instance, and will implicitly create a Spot request. Leave this blank to use On-Demand Instances. `bid_price` can not be set for the `MASTER` instance group, since that group must always be On-Demand
 * `instance_count` (Optional) Target number of instances for the instance group. Defaults to 0.
 * `ebs_optimized` (Optional) Indicates whether an Amazon EBS volume is EBS-optimized. Changing this forces a new resource to be created.
 * `ebs_config` (Optional) One or more `ebs_config` blocks as defined below. Changing this forces a new resource to be created.
+* `autoscaling_policy` - (Optional) The autoscaling policy document. This is a JSON formatted string. See [EMR Auto Scaling](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-automatic-scaling.html)
+
 
 `ebs_config` supports the following:
 
