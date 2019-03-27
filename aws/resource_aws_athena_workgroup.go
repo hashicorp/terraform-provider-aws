@@ -116,6 +116,14 @@ func resourceAwsAthenaWorkgroupCreate(d *schema.ResourceData, meta interface{}) 
 		resultConfig = true
 		encryptConfig = true
 		encryptionConfiguration.EncryptionOption = aws.String(v.(string))
+
+		if v.(string) == athena.EncryptionOptionCseKms || v.(string) == athena.EncryptionOptionSseKms {
+			if vkms, ok := d.GetOk("kms_key"); ok {
+				encryptionConfiguration.KmsKey = aws.String(vkms.(string))
+			} else {
+				return fmt.Errorf("KMS Key required but not provided for encryption_option: %s", v.(string))
+			}
+		}
 	}
 
 	if basicConfig {
@@ -194,11 +202,18 @@ func resourceAwsAthenaWorkgroupRead(d *schema.ResourceData, meta interface{}) er
 			if resp.WorkGroup.Configuration.ResultConfiguration.OutputLocation != nil {
 				d.Set("output_location", *resp.WorkGroup.Configuration.ResultConfiguration.OutputLocation)
 			}
+
+			if resp.WorkGroup.Configuration.ResultConfiguration.EncryptionConfiguration != nil {
+				if resp.WorkGroup.Configuration.ResultConfiguration.EncryptionConfiguration.EncryptionOption != nil {
+					d.Set("encryption_option", *resp.WorkGroup.Configuration.ResultConfiguration.EncryptionConfiguration.EncryptionOption)
+				}
+
+				if resp.WorkGroup.Configuration.ResultConfiguration.EncryptionConfiguration.KmsKey != nil {
+					d.Set("kms_key", *resp.WorkGroup.Configuration.ResultConfiguration.EncryptionConfiguration.KmsKey)
+				}
+			}
 		}
 	}
-
-	// d.Set("encryption_option", resp.WorkGroup.Configuration.ResultConfiguration.EncryptionConfiguration.EncryptionOption)
-	// d.Set("kms_key", resp.WorkGroup.Configuration.ResultConfiguration.EncryptionConfiguration.KmsKey)
 
 	return nil
 }
@@ -221,6 +236,8 @@ func resourceAwsAthenaWorkgroupUpdate(d *schema.ResourceData, meta interface{}) 
 	workGroupUpdate := false
 	resultConfigUpdate := false
 	configUpdate := false
+	encryptionUpdate := false
+	removeEncryption := false
 
 	input := &athena.UpdateWorkGroupInput{
 		WorkGroup: aws.String(d.Get("name").(string)),
@@ -274,6 +291,30 @@ func resourceAwsAthenaWorkgroupUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
+	encryptionConfiguration := &athena.EncryptionConfiguration{}
+
+	if d.HasChange("encryption_option") {
+		workGroupUpdate = true
+		configUpdate = true
+		resultConfigUpdate = true
+		encryptionUpdate = true
+
+		if v, ok := d.GetOk("encryption_option"); ok {
+			encryptionConfiguration.EncryptionOption = aws.String(v.(string))
+
+			if v.(string) == athena.EncryptionOptionCseKms || v.(string) == athena.EncryptionOptionSseKms {
+				if vkms, ok := d.GetOk("kms_key"); ok {
+					encryptionConfiguration.KmsKey = aws.String(vkms.(string))
+				} else {
+					return fmt.Errorf("KMS Key required but not provided for encryption_option: %s", v.(string))
+				}
+			}
+		} else {
+			removeEncryption = true
+			resultConfigurationUpdates.RemoveEncryptionConfiguration = aws.Bool(true)
+		}
+	}
+
 	if workGroupUpdate {
 		if configUpdate {
 			input.ConfigurationUpdates = inputConfigurationUpdates
@@ -281,6 +322,10 @@ func resourceAwsAthenaWorkgroupUpdate(d *schema.ResourceData, meta interface{}) 
 
 		if resultConfigUpdate {
 			input.ConfigurationUpdates.ResultConfigurationUpdates = resultConfigurationUpdates
+
+			if encryptionUpdate && !removeEncryption {
+				input.ConfigurationUpdates.ResultConfigurationUpdates.EncryptionConfiguration = encryptionConfiguration
+			}
 		}
 
 		_, err := conn.UpdateWorkGroup(input)
