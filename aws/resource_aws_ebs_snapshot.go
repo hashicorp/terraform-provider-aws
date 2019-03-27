@@ -172,11 +172,24 @@ func resourceAwsEbsSnapshotDelete(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsEbsSnapshotWaitForAvailable(id string, conn *ec2.EC2) error {
-	log.Printf("Waiting for Snapshot %s to become available...", id)
+	return resource.Retry(5*time.Minute, func() *resource.RetryError {
+		log.Printf("Waiting for Snapshot %s to become available...", id)
 
-	req := &ec2.DescribeSnapshotsInput{
-		SnapshotIds: []*string{aws.String(id)},
-	}
-	err := conn.WaitUntilSnapshotCompleted(req)
-	return err
+		req := &ec2.DescribeSnapshotsInput{
+			SnapshotIds: []*string{aws.String(id)},
+		}
+		err := conn.WaitUntilSnapshotCompleted(req)
+		if err == nil {
+			return nil
+		}
+		ebsErr, ok := err.(awserr.Error)
+		if ebsErr.Code() == "ResourceNotReady" {
+			return resource.RetryableError(fmt.Errorf("EBS SnapshotInCreating - trying again while it creating"))
+		}
+		if !ok {
+			return resource.NonRetryableError(err)
+		}
+
+		return resource.NonRetryableError(err)
+	})
 }
