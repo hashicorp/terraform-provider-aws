@@ -274,6 +274,75 @@ func TestAccAWSAthenaWorkGroup_withOutputLocationUpdate(t *testing.T) {
 	})
 }
 
+func TestAccAWSAthenaWorkGroup_withSseS3Encryption(t *testing.T) {
+	rName := acctest.RandString(5)
+	rEncryption := athena.EncryptionOptionSseS3
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAthenaWorkGroupConfigEncryptionS3(rName, rEncryption),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAthenaWorkGroupExists("aws_athena_workgroup.encryption"),
+					resource.TestCheckResourceAttr(
+						"aws_athena_workgroup.encryption", "encryption_option", rEncryption),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSAthenaWorkGroup_withKmsEncryption(t *testing.T) {
+	rName := acctest.RandString(5)
+	rEncryption := athena.EncryptionOptionSseKms
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAthenaWorkGroupConfigEncryptionKms(rName, rEncryption),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAthenaWorkGroupExists("aws_athena_workgroup.encryptionkms"),
+					resource.TestCheckResourceAttr(
+						"aws_athena_workgroup.encryptionkms", "encryption_option", rEncryption),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSAthenaWorkGroup_withKmsEncryptionUpdate(t *testing.T) {
+	rName := acctest.RandString(5)
+	rEncryption := athena.EncryptionOptionSseKms
+	rEncryption2 := athena.EncryptionOptionCseKms
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAthenaWorkGroupConfigEncryptionKms(rName, rEncryption),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAthenaWorkGroupExists("aws_athena_workgroup.encryptionkms"),
+					resource.TestCheckResourceAttr(
+						"aws_athena_workgroup.encryptionkms", "encryption_option", rEncryption),
+				),
+			},
+			{
+				Config: testAccAthenaWorkGroupConfigEncryptionKms(rName, rEncryption2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAthenaWorkGroupExists("aws_athena_workgroup.encryptionkms"),
+					resource.TestCheckResourceAttr(
+						"aws_athena_workgroup.encryptionkms", "encryption_option", rEncryption2),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSAthenaWorkGroupDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).athenaconn
 	for _, rs := range s.RootModule().Resources {
@@ -373,4 +442,44 @@ func testAccAthenaWorkGroupConfigOutputLocation(rName string, rOutputLocation st
 		output_location = "s3://${aws_s3_bucket.output-bucket.bucket}/test/output"
 	}
 	`, rOutputLocation, rName)
+}
+
+func testAccAthenaWorkGroupConfigEncryptionS3(rName string, rEncryption string) string {
+	return fmt.Sprintf(`
+	resource "aws_athena_workgroup" "encryption" {
+		name = "tf-athena-workgroup-%s"
+		encryption_option = "%s"
+	}
+	`, rName, rEncryption)
+}
+
+func testAccAthenaWorkGroupConfigEncryptionKms(rName string, rEncryption string) string {
+	return fmt.Sprintf(`
+	resource "aws_kms_key" "kmstest" {
+		description = "EncryptionKmsTest"
+		policy = <<POLICY
+	{
+		"Version": "2012-10-17",
+		"Id": "kms-tf-1",
+		"Statement": [
+			{
+				"Sid": "Enable IAM User Permissions",
+				"Effect": "Allow",
+				"Principal": {
+					"AWS": "*"
+				},
+				"Action": "kms:*",
+				"Resource": "*"
+			}
+		]
+	}
+	POLICY
+	}
+
+	resource "aws_athena_workgroup" "encryptionkms" {
+		name = "tf-athena-workgroup-%s"
+		encryption_option = "%s"
+		kms_key = "${aws_kms_key.kmstest.arn}"
+	}
+	`, rName, rEncryption)
 }
