@@ -18,6 +18,11 @@ func resourceAwsEbsSnapshot() *schema.Resource {
 		Read:   resourceAwsEbsSnapshotRead,
 		Delete: resourceAwsEbsSnapshotDelete,
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(40 * time.Minute),
+			Delete: schema.DefaultTimeout(40 * time.Minute),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"volume_id": {
 				Type:     schema.TypeString,
