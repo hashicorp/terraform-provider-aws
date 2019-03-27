@@ -40,8 +40,7 @@ func TestAccAwsAppsyncResolver_basic(t *testing.T) {
 }
 
 func TestAccAwsAppsyncResolver_DataSource(t *testing.T) {
-	rName1 := fmt.Sprintf("tfacctest%d", acctest.RandInt())
-	rName2 := fmt.Sprintf("tfacctest%d", acctest.RandInt())
+	rName := fmt.Sprintf("tfacctest%d", acctest.RandInt())
 	resourceName := "aws_appsync_resolver.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -50,23 +49,23 @@ func TestAccAwsAppsyncResolver_DataSource(t *testing.T) {
 		CheckDestroy: testAccCheckAwsAppsyncResolverDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppsyncResolver_DataSource(rName1, rName1),
+				Config: testAccAppsyncResolver_DataSource(rName, "test_ds_1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppsyncResolverExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "data_source", rName1),
+					resource.TestCheckResourceAttr(resourceName, "data_source", "test_ds_1"),
+				),
+			},
+			{
+				Config: testAccAppsyncResolver_DataSource(rName, "test_ds_2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsAppsyncResolverExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "data_source", "test_ds_2"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-			},
-			{
-				Config: testAccAppsyncResolver_DataSource(rName1, rName2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAppsyncResolverExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "data_source", rName2),
-				),
 			},
 		},
 	})
@@ -312,9 +311,19 @@ schema {
 EOF
 }
 
-resource "aws_appsync_datasource" "test" {
+resource "aws_appsync_datasource" "test_ds_1" {
   api_id      = "${aws_appsync_graphql_api.test.id}"
-  name        = %q
+  name        = "test_ds_1"
+  type        = "HTTP"
+
+  http_config {
+    endpoint = "http://example.com"
+  }
+}
+
+resource "aws_appsync_datasource" "test_ds_2" {
+  api_id      = "${aws_appsync_graphql_api.test.id}"
+  name        = "test_ds_2"
   type        = "HTTP"
 
   http_config {
@@ -326,7 +335,7 @@ resource "aws_appsync_resolver" "test" {
   api_id           = "${aws_appsync_graphql_api.test.id}"
   field            = "singlePost"
   type             = "Query"
-  data_source      = "${aws_appsync_datasource.test.name}"
+  data_source      = "${aws_appsync_datasource.%s.name}"
   request_template = <<EOF
 {
     "version": "2018-05-29",
