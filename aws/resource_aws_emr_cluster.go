@@ -1637,6 +1637,7 @@ func flattenInstanceGroups(igs []*emr.InstanceGroup) (*schema.Set, error) {
 }
 
 func flattenEBSConfig(ebsBlockDevices []*emr.EbsBlockDevice) *schema.Set {
+
 	ebsConfig := make([]interface{}, 0)
 	for _, ebs := range ebsBlockDevices {
 		ebsAttrs := make(map[string]interface{})
@@ -2113,4 +2114,19 @@ func getEmrCoreInstanceGroupAutoscalingPolicy(conn *emr.EMR, clusterID string) (
 	}
 
 	return coreGroup.AutoScalingPolicy, nil
+}
+
+func fetchAllEMRInstanceGroups(conn *emr.EMR, clusterID string) ([]*emr.InstanceGroup, error) {
+	input := &emr.ListInstanceGroupsInput{
+		ClusterId: aws.String(clusterID),
+	}
+	var groups []*emr.InstanceGroup
+
+	err := conn.ListInstanceGroupsPages(input, func(page *emr.ListInstanceGroupsOutput, lastPage bool) bool {
+		groups = append(groups, page.InstanceGroups...)
+
+		return !lastPage
+	})
+
+	return groups, err
 }
