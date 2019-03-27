@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/athena"
 	"github.com/hashicorp/terraform/helper/validation"
 
@@ -59,6 +60,10 @@ func resourceAwsAthenaWorkgroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"tags": tagsSchema(),
 		},
 	}
@@ -73,6 +78,10 @@ func resourceAwsAthenaWorkgroupCreate(d *schema.ResourceData, meta interface{}) 
 		Name: aws.String(name),
 	}
 
+	basicConfig := false
+	resultConfig := false
+	encryptConfig := false
+
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
@@ -80,25 +89,46 @@ func resourceAwsAthenaWorkgroupCreate(d *schema.ResourceData, meta interface{}) 
 	inputConfiguration := &athena.WorkGroupConfiguration{}
 
 	if v, ok := d.GetOk("bytes_scanned_cutoff_per_query"); ok {
+		basicConfig = true
 		inputConfiguration.BytesScannedCutoffPerQuery = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("enforce_workgroup_configuration"); ok {
+		basicConfig = true
 		inputConfiguration.EnforceWorkGroupConfiguration = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("publish_cloudwatch_metrics_enabled"); ok {
+		basicConfig = true
 		inputConfiguration.PublishCloudWatchMetricsEnabled = aws.Bool(v.(bool))
 	}
 
 	resultConfiguration := &athena.ResultConfiguration{}
 
 	if v, ok := d.GetOk("output_location"); ok {
+		resultConfig = true
 		resultConfiguration.OutputLocation = aws.String(v.(string))
 	}
 
-	input.Configuration = inputConfiguration
-	input.Configuration.ResultConfiguration = resultConfiguration
+	encryptionConfiguration := &athena.EncryptionConfiguration{}
+
+	if v, ok := d.GetOk("encryption_option"); ok {
+		resultConfig = true
+		encryptConfig = true
+		encryptionConfiguration.EncryptionOption = aws.String(v.(string))
+	}
+
+	if basicConfig {
+		input.Configuration = inputConfiguration
+	}
+
+	if resultConfig {
+		input.Configuration.ResultConfiguration = resultConfiguration
+
+		if encryptConfig {
+			input.Configuration.ResultConfiguration.EncryptionConfiguration = encryptionConfiguration
+		}
+	}
 
 	_, err := conn.CreateWorkGroup(input)
 
@@ -129,25 +159,40 @@ func resourceAwsAthenaWorkgroupRead(d *schema.ResourceData, meta interface{}) er
 		return err
 	}
 
-	d.Set("name", resp.WorkGroup.Name)
-	d.Set("description", resp.WorkGroup.Description)
+	d.Set("name", *resp.WorkGroup.Name)
+
+	if resp.WorkGroup.Description != nil {
+		d.Set("description", *resp.WorkGroup.Description)
+	}
+
+	client := meta.(*AWSClient)
+
+	arn := arn.ARN{
+		Partition: client.partition,
+		Region:    client.region,
+		Service:   "athena",
+		AccountID: client.accountid,
+		Resource:  fmt.Sprintf("workgroup/%s", d.Id()),
+	}
+
+	d.Set("arn", arn.String())
 
 	if resp.WorkGroup.Configuration != nil {
 		if resp.WorkGroup.Configuration.BytesScannedCutoffPerQuery != nil {
-			d.Set("bytes_scanned_cutoff_per_query", resp.WorkGroup.Configuration.BytesScannedCutoffPerQuery)
+			d.Set("bytes_scanned_cutoff_per_query", *resp.WorkGroup.Configuration.BytesScannedCutoffPerQuery)
 		}
 
 		if resp.WorkGroup.Configuration.EnforceWorkGroupConfiguration != nil {
-			d.Set("enforce_workgroup_configuration", resp.WorkGroup.Configuration.EnforceWorkGroupConfiguration)
+			d.Set("enforce_workgroup_configuration", *resp.WorkGroup.Configuration.EnforceWorkGroupConfiguration)
 		}
 
 		if resp.WorkGroup.Configuration.PublishCloudWatchMetricsEnabled != nil {
-			d.Set("publish_cloudwatch_metrics_enabled", resp.WorkGroup.Configuration.PublishCloudWatchMetricsEnabled)
+			d.Set("publish_cloudwatch_metrics_enabled", *resp.WorkGroup.Configuration.PublishCloudWatchMetricsEnabled)
 		}
 
 		if resp.WorkGroup.Configuration.ResultConfiguration != nil {
 			if resp.WorkGroup.Configuration.ResultConfiguration.OutputLocation != nil {
-				d.Set("output_location", resp.WorkGroup.Configuration.ResultConfiguration.OutputLocation)
+				d.Set("output_location", *resp.WorkGroup.Configuration.ResultConfiguration.OutputLocation)
 			}
 		}
 	}
