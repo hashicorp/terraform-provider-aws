@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -28,6 +29,28 @@ func TestAccAWSGlueCatalogDatabase_importBasic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSGlueCatalogDatabase_validation(t *testing.T) {
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckGlueDatabaseDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccGlueCatalogDatabase_validation(acctest.RandString(256)),
+				ExpectError: regexp.MustCompile(`"name" cannot be longer than 255 characters`),
+			},
+			{
+				Config:      testAccGlueCatalogDatabase_validation(""),
+				ExpectError: regexp.MustCompile(`"name" cannot be shorter than 1 character`),
+			},
+			{
+				Config:      testAccGlueCatalogDatabase_validation("ABCDEFG"),
+				ExpectError: regexp.MustCompile(`"name" cannot contain uppercase alphanumeric characters`),
 			},
 		},
 	})
@@ -220,6 +243,21 @@ resource "aws_glue_catalog_database" "test" {
   }
 }
 `, rInt, desc)
+}
+
+func testAccGlueCatalogDatabase_validation(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name = "%s"
+  description = "validation test"
+  location_uri = "my-location"
+  parameters = {
+	param1 = "value1"
+	param2 = true
+	param3 = 50
+  }
+}
+`, rName)
 }
 
 func testAccCheckGlueCatalogDatabaseExists(name string) resource.TestCheckFunc {
