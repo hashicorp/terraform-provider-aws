@@ -28,9 +28,10 @@ func resourceAwsGlueCatalogTable() *schema.Resource {
 				Computed: true,
 			},
 			"database_name": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
+				Type:         schema.TypeString,
+				ForceNew:     true,
+				Required:     true,
+				ValidateFunc: validateGlueDatabaseName,
 			},
 			"description": {
 				Type:     schema.TypeString,
