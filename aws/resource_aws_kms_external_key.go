@@ -109,15 +109,16 @@ func resourceAwsKmsExternalKeyCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	var output *kms.CreateKeyOutput
-	// AWS requires any principal in the policy to exist before the key is created.
-	// The KMS service's awareness of principals is limited by "eventual consistency".
-	// They acknowledge this here:
-	// http://docs.aws.amazon.com/kms/latest/APIReference/API_CreateKey.html
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		var err error
 
 		output, err = conn.CreateKey(input)
 
+		// AWS requires any principal in the policy to exist before the key is created.
+		// The KMS service's awareness of principals is limited by "eventual consistency".
+		// KMS will report this error until it can validate the policy itself.
+		// They acknowledge this here:
+		// http://docs.aws.amazon.com/kms/latest/APIReference/API_CreateKey.html
 		if isAWSErr(err, kms.ErrCodeMalformedPolicyDocumentException, "") {
 			return resource.RetryableError(err)
 		}
