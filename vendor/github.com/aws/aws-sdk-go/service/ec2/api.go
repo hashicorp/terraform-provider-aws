@@ -85951,6 +85951,30 @@ const (
 	// InstanceTypeR5dMetal is a InstanceType enum value
 	InstanceTypeR5dMetal = "r5d.metal"
 
+	// InstanceTypeR5adLarge is a InstanceType enum value
+	InstanceTypeR5adLarge = "r5ad.large"
+
+	// InstanceTypeR5adXlarge is a InstanceType enum value
+	InstanceTypeR5adXlarge = "r5ad.xlarge"
+
+	// InstanceTypeR5ad2xlarge is a InstanceType enum value
+	InstanceTypeR5ad2xlarge = "r5ad.2xlarge"
+
+	// InstanceTypeR5ad4xlarge is a InstanceType enum value
+	InstanceTypeR5ad4xlarge = "r5ad.4xlarge"
+
+	// InstanceTypeR5ad8xlarge is a InstanceType enum value
+	InstanceTypeR5ad8xlarge = "r5ad.8xlarge"
+
+	// InstanceTypeR5ad12xlarge is a InstanceType enum value
+	InstanceTypeR5ad12xlarge = "r5ad.12xlarge"
+
+	// InstanceTypeR5ad16xlarge is a InstanceType enum value
+	InstanceTypeR5ad16xlarge = "r5ad.16xlarge"
+
+	// InstanceTypeR5ad24xlarge is a InstanceType enum value
+	InstanceTypeR5ad24xlarge = "r5ad.24xlarge"
+
 	// InstanceTypeX116xlarge is a InstanceType enum value
 	InstanceTypeX116xlarge = "x1.16xlarge"
 
@@ -86232,6 +86256,30 @@ const (
 
 	// InstanceTypeM5dMetal is a InstanceType enum value
 	InstanceTypeM5dMetal = "m5d.metal"
+
+	// InstanceTypeM5adLarge is a InstanceType enum value
+	InstanceTypeM5adLarge = "m5ad.large"
+
+	// InstanceTypeM5adXlarge is a InstanceType enum value
+	InstanceTypeM5adXlarge = "m5ad.xlarge"
+
+	// InstanceTypeM5ad2xlarge is a InstanceType enum value
+	InstanceTypeM5ad2xlarge = "m5ad.2xlarge"
+
+	// InstanceTypeM5ad4xlarge is a InstanceType enum value
+	InstanceTypeM5ad4xlarge = "m5ad.4xlarge"
+
+	// InstanceTypeM5ad8xlarge is a InstanceType enum value
+	InstanceTypeM5ad8xlarge = "m5ad.8xlarge"
+
+	// InstanceTypeM5ad12xlarge is a InstanceType enum value
+	InstanceTypeM5ad12xlarge = "m5ad.12xlarge"
+
+	// InstanceTypeM5ad16xlarge is a InstanceType enum value
+	InstanceTypeM5ad16xlarge = "m5ad.16xlarge"
+
+	// InstanceTypeM5ad24xlarge is a InstanceType enum value
+	InstanceTypeM5ad24xlarge = "m5ad.24xlarge"
 
 	// InstanceTypeH12xlarge is a InstanceType enum value
 	InstanceTypeH12xlarge = "h1.2xlarge"

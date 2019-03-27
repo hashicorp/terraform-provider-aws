@@ -244,11 +244,11 @@ func (c *StorageGateway) AddTagsToResourceRequest(input *AddTagsToResourceInput)
 //
 //    * Storage gateways of all types
 //
-//    * Storage Volumes
+//    * Storage volumes
 //
-//    * Virtual Tapes
+//    * Virtual tapes
 //
-//    * NFS and SMB File Shares
+//    * NFS and SMB file shares
 //
 // You can create a maximum of 10 tags for each resource. Virtual tapes and
 // storage volumes that are recovered to a new gateway maintain their tags.
@@ -6875,8 +6875,8 @@ type ActivateGatewayInput struct {
 	// Valid Values: "STK-L700", "AWS-Gateway-VTL"
 	MediumChangerType *string `min:"2" type:"string"`
 
-	// A list of up to ten (10) tags assigned to the gateway may be specified. Every
-	// tag is a key-value pair.
+	// A list of up to 10 tags that can be assigned to the gateway. Each tag is
+	// a key-value pair.
 	//
 	// Valid characters for key and value are letters, spaces, and numbers representable
 	// in UTF-8 format, and the following special characters: + - = . _ : / @. The
@@ -8166,7 +8166,7 @@ type CreateNFSFileShareInput struct {
 	// Role is a required field
 	Role *string `min:"20" type:"string" required:"true"`
 
-	// Maps a user to anonymous user. Valid options are the following:
+	// A value that maps a user to anonymous user. Valid options are the following:
 	//
 	//    * RootSquash - Only root is mapped to anonymous user.
 	//
@@ -8175,7 +8175,7 @@ type CreateNFSFileShareInput struct {
 	//    * AllSquash - Everyone is mapped to anonymous user.
 	Squash *string `min:"5" type:"string"`
 
-	// A list of up to ten (10) tags can be assigned to the NFS file share. Every
+	// A list of up to 10 tags that can be assigned to the NFS file share. Each
 	// tag is a key-value pair.
 	//
 	// Valid characters for key and value are letters, spaces, and numbers representable
@@ -8437,7 +8437,7 @@ type CreateSMBFileShareInput struct {
 	// Role is a required field
 	Role *string `min:"20" type:"string" required:"true"`
 
-	// A list of up to ten (10) tags can be assigned to the NFS file share. Every
+	// A list of up to 10 tags that can be assigned to the NFS file share. Each
 	// tag is a key-value pair.
 	//
 	// Valid characters for key and value are letters, spaces, and numbers representable
@@ -9061,6 +9061,15 @@ type CreateTapeWithBarcodeInput struct {
 	// side encryption. This value can only be set when KMSEncrypted is true. Optional.
 	KMSKey *string `min:"7" type:"string"`
 
+	// The ID of the pool that you want to add your tape to for archiving. The tape
+	// in this pool is archived in the S3 storage class that is associated with
+	// the pool. When you use your backup application to eject the tape, the tape
+	// is archived directly into the storage class (Glacier or Deep Archive) that
+	// corresponds to the pool.
+	//
+	// Valid values: "GLACIER", "DEEP_ARCHIVE"
+	PoolId *string `min:"1" type:"string"`
+
 	// The barcode that you want to assign to the tape.
 	//
 	// Barcodes cannot be reused. This includes barcodes used for tapes that have
@@ -9099,6 +9108,9 @@ func (s *CreateTapeWithBarcodeInput) Validate() error {
 	if s.KMSKey != nil && len(*s.KMSKey) < 7 {
 		invalidParams.Add(request.NewErrParamMinLen("KMSKey", 7))
 	}
+	if s.PoolId != nil && len(*s.PoolId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("PoolId", 1))
+	}
 	if s.TapeBarcode == nil {
 		invalidParams.Add(request.NewErrParamRequired("TapeBarcode"))
 	}
@@ -9130,6 +9142,12 @@ func (s *CreateTapeWithBarcodeInput) SetKMSEncrypted(v bool) *CreateTapeWithBarc
 // SetKMSKey sets the KMSKey field's value.
 func (s *CreateTapeWithBarcodeInput) SetKMSKey(v string) *CreateTapeWithBarcodeInput {
 	s.KMSKey = &v
+	return s
+}
+
+// SetPoolId sets the PoolId field's value.
+func (s *CreateTapeWithBarcodeInput) SetPoolId(v string) *CreateTapeWithBarcodeInput {
+	s.PoolId = &v
 	return s
 }
 
@@ -9202,6 +9220,14 @@ type CreateTapesInput struct {
 	// NumTapesToCreate is a required field
 	NumTapesToCreate *int64 `min:"1" type:"integer" required:"true"`
 
+	// The ID of the pool that you want to add your tape to for archiving. The tape
+	// in this pool is archived in the S3 storage class you chose when you created
+	// the tape. When you use your backup application to eject the tape, the tape
+	// is archived directly into the storage class (Glacier or Deep Archive).
+	//
+	// Valid values: "GLACIER", "DEEP_ARCHIVE"
+	PoolId *string `min:"1" type:"string"`
+
 	// A prefix that you append to the barcode of the virtual tape you are creating.
 	// This prefix makes the barcode unique.
 	//
@@ -9253,6 +9279,9 @@ func (s *CreateTapesInput) Validate() error {
 	if s.NumTapesToCreate != nil && *s.NumTapesToCreate < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("NumTapesToCreate", 1))
 	}
+	if s.PoolId != nil && len(*s.PoolId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("PoolId", 1))
+	}
 	if s.TapeBarcodePrefix == nil {
 		invalidParams.Add(request.NewErrParamRequired("TapeBarcodePrefix"))
 	}
@@ -9296,6 +9325,12 @@ func (s *CreateTapesInput) SetKMSKey(v string) *CreateTapesInput {
 // SetNumTapesToCreate sets the NumTapesToCreate field's value.
 func (s *CreateTapesInput) SetNumTapesToCreate(v int64) *CreateTapesInput {
 	s.NumTapesToCreate = &v
+	return s
+}
+
+// SetPoolId sets the PoolId field's value.
+func (s *CreateTapesInput) SetPoolId(v string) *CreateTapesInput {
+	s.PoolId = &v
 	return s
 }
 
@@ -10398,10 +10433,9 @@ type DescribeGatewayInformationOutput struct {
 	// this field is not returned in the response.
 	NextUpdateAvailabilityDate *string `min:"1" type:"string"`
 
-	// A list of up to ten (10) tags assigned to the gateway are returned, sorted
-	// alphabetically by key name. Every tag is a key-value pair. For a gateway
-	// with more than 10 tags assigned, you can view all tags using the ListTagsForResource
-	// API.
+	// A list of up to 10 tags assigned to the gateway, sorted alphabetically by
+	// key name. Each tag is a key-value pair. For a gateway with more than 10 tags
+	// assigned, you can view all tags using the ListTagsForResource API operation.
 	Tags []*Tag `type:"list"`
 }
 
@@ -13208,10 +13242,9 @@ type NFSFileShareInfo struct {
 	//    * AllSquash - Everyone is mapped to anonymous user.
 	Squash *string `min:"5" type:"string"`
 
-	// A list of up to ten (10) tags assigned to the NFS file share are returned,
-	// sorted alphabetically by key name. Every tag is a key-value pair. For a gateway
-	// with more than 10 tags assigned, you can view all tags using the ListTagsForResource
-	// API.
+	// A list of up to 10 tags assigned to the NFS file share, sorted alphabetically
+	// by key name. Each tag is a key-value pair. For a gateway with more than 10
+	// tags assigned, you can view all tags using the ListTagsForResource API operation.
 	Tags []*Tag `type:"list"`
 }
 
@@ -13952,10 +13985,9 @@ type SMBFileShareInfo struct {
 	// storage.
 	Role *string `min:"20" type:"string"`
 
-	// A list of up to ten (10) tags assigned to the SMB file share are returned,
-	// sorted alphabetically by key name. Every tag is a key-value pair. For a gateway
-	// with more than 10 tags assigned, you can view all tags using the ListTagsForResource
-	// API.
+	// A list of up to 10 tags assigned to the SMB file share, sorted alphabetically
+	// by key name. Each tag is a key-value pair. For a gateway with more than 10
+	// tags assigned, you can view all tags using the ListTagsForResource API operation.
 	Tags []*Tag `type:"list"`
 
 	// A list of users or groups in the Active Directory that are allowed to access
@@ -14623,6 +14655,15 @@ type Tape struct {
 	// side encryption. This value can only be set when KMSEncrypted is true. Optional.
 	KMSKey *string `min:"7" type:"string"`
 
+	// The ID of the pool that contains tapes that will be archived. The tapes in
+	// this pool are archived in the S3 storage class that is associated with the
+	// pool. When you use your backup application to eject the tape, the tape is
+	// archived directly into the storage class (Glacier or Deep Archive) that corresponds
+	// to the pool.
+	//
+	// Valid values: "GLACIER", "DEEP_ARCHIVE"
+	PoolId *string `min:"1" type:"string"`
+
 	// For archiving virtual tapes, indicates how much data remains to be uploaded
 	// before archiving is complete.
 	//
@@ -14667,6 +14708,12 @@ func (s Tape) GoString() string {
 // SetKMSKey sets the KMSKey field's value.
 func (s *Tape) SetKMSKey(v string) *Tape {
 	s.KMSKey = &v
+	return s
+}
+
+// SetPoolId sets the PoolId field's value.
+func (s *Tape) SetPoolId(v string) *Tape {
+	s.PoolId = &v
 	return s
 }
 
@@ -14732,6 +14779,12 @@ type TapeArchive struct {
 	// side encryption. This value can only be set when KMSEncrypted is true. Optional.
 	KMSKey *string `min:"7" type:"string"`
 
+	// The ID of the pool that was used to archive the tape. The tapes in this pool
+	// are archived in the S3 storage class that is associated with the pool.
+	//
+	// Valid values: "GLACIER", "DEEP_ARCHIVE"
+	PoolId *string `min:"1" type:"string"`
+
 	// The Amazon Resource Name (ARN) of the tape gateway that the virtual tape
 	// is being retrieved to.
 	//
@@ -14778,6 +14831,12 @@ func (s *TapeArchive) SetCompletionTime(v time.Time) *TapeArchive {
 // SetKMSKey sets the KMSKey field's value.
 func (s *TapeArchive) SetKMSKey(v string) *TapeArchive {
 	s.KMSKey = &v
+	return s
+}
+
+// SetPoolId sets the PoolId field's value.
+func (s *TapeArchive) SetPoolId(v string) *TapeArchive {
+	s.PoolId = &v
 	return s
 }
 
@@ -14831,6 +14890,15 @@ type TapeInfo struct {
 	// to return a list of gateways for your account and region.
 	GatewayARN *string `min:"50" type:"string"`
 
+	// The ID of the pool that you want to add your tape to for archiving. The tape
+	// in this pool is archived in the S3 storage class that is associated with
+	// the pool. When you use your backup application to eject the tape, the tape
+	// is archived directly into the storage class (Glacier or Deep Archive) that
+	// corresponds to the pool.
+	//
+	// Valid values: "GLACIER", "DEEP_ARCHIVE"
+	PoolId *string `min:"1" type:"string"`
+
 	// The Amazon Resource Name (ARN) of a virtual tape.
 	TapeARN *string `min:"50" type:"string"`
 
@@ -14857,6 +14925,12 @@ func (s TapeInfo) GoString() string {
 // SetGatewayARN sets the GatewayARN field's value.
 func (s *TapeInfo) SetGatewayARN(v string) *TapeInfo {
 	s.GatewayARN = &v
+	return s
+}
+
+// SetPoolId sets the PoolId field's value.
+func (s *TapeInfo) SetPoolId(v string) *TapeInfo {
+	s.PoolId = &v
 	return s
 }
 

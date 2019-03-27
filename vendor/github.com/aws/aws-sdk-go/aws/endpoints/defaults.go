@@ -2544,6 +2544,9 @@ var awsPartition = partition{
 				"eu-west-2": endpoint{
 					Protocols: []string{"https"},
 				},
+				"eu-west-3": endpoint{
+					Protocols: []string{"https"},
+				},
 				"sa-east-1": endpoint{
 					Protocols: []string{"https"},
 				},
