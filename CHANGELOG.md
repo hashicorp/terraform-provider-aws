@@ -1,5 +1,9 @@
 ## 2.4.0 (Unreleased)
 
+NOTES:
+
+* service/ec2: Due to an upcoming update to the EC2 service, both the `aws_instance` data source and resource will no longer make the EC2 API call `DescribeInstanceCreditSpecifications` unless they are in the T2 or T3 instance families. Previously, the EC2 service would allow this API call for instance families that did not support credit specifications, however the upcoming update will return an error and prevent Terraform runs from completing.
+
 FEATURES:
 
 * **New Data Source:** `aws_ec2_transit_gateway_vpn_attachment` [GH-8071]
@@ -10,8 +14,10 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_instance: Only call `DescribeInstanceCreditSpecifications` for T2 and T3 Instance Families [GH-8107]
 * data-source/aws_kms_ciphertext: Hide `plaintext` in logs and user interface [GH-6100]
 * resource/aws_appsync_graphql_api: Add `schema` argument [GH-4840]
+* resource/aws_instance: Only call `DescribeInstanceCreditSpecifications` for T2 and T3 Instance Families [GH-8107]
 * resource/aws_ram_principal_association: Validate `principal` as AWS Account ID or ARN [GH-8048]
 * resource/aws_vpn_connection: Add `transit_gateway_attachment_id` attribute [GH-8070]
 
