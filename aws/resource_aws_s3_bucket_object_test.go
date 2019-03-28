@@ -458,6 +458,14 @@ func TestAccAWSS3BucketObject_storageClass(t *testing.T) {
 					testAccCheckAWSS3BucketObjectStorageClass(resourceName, "INTELLIGENT_TIERING"),
 				),
 			},
+			{
+				Config: testAccAWSS3BucketObjectConfig_storageClass(rInt, "DEEP_ARCHIVE"),
+				Check: resource.ComposeTestCheckFunc(
+					// 	Can't GetObject on an object in DEEP_ARCHIVE without restoring it.
+					resource.TestCheckResourceAttr(resourceName, "storage_class", "DEEP_ARCHIVE"),
+					testAccCheckAWSS3BucketObjectStorageClass(resourceName, "DEEP_ARCHIVE"),
+				),
+			},
 		},
 	})
 }
