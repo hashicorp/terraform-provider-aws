@@ -74,6 +74,8 @@ func resourceAwsAppmeshMesh() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -85,6 +87,7 @@ func resourceAwsAppmeshMeshCreate(d *schema.ResourceData, meta interface{}) erro
 	req := &appmesh.CreateMeshInput{
 		MeshName: aws.String(meshName),
 		Spec:     expandAppmeshMeshSpec(d.Get("spec").([]interface{})),
+		Tags:     tagsFromMapAppmesh(d.Get("tags").(map[string]interface{})),
 	}
 
 	log.Printf("[DEBUG] Creating App Mesh service mesh: %#v", req)
@@ -127,6 +130,15 @@ func resourceAwsAppmeshMeshRead(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error setting spec: %s", err)
 	}
 
+	if err := saveTagsAppmesh(conn, d, aws.StringValue(resp.Mesh.Metadata.Arn)); err != nil {
+		if isAWSErr(err, appmesh.ErrCodeNotFoundException, "") {
+			log.Printf("[WARN] App Mesh service mesh (%s) not found, removing from state", d.Id())
+			d.SetId("")
+			return nil
+		}
+		return fmt.Errorf("error saving tags: %s", err)
+	}
+
 	return nil
 }
 
@@ -145,6 +157,15 @@ func resourceAwsAppmeshMeshUpdate(d *schema.ResourceData, meta interface{}) erro
 		if err != nil {
 			return fmt.Errorf("error updating App Mesh service mesh: %s", err)
 		}
+	}
+
+	if err := setTagsAppmesh(conn, d, d.Get("arn").(string)); err != nil {
+		if isAWSErr(err, appmesh.ErrCodeNotFoundException, "") {
+			log.Printf("[WARN] App Mesh service mesh (%s) not found, removing from state", d.Id())
+			d.SetId("")
+			return nil
+		}
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	return resourceAwsAppmeshMeshRead(d, meta)
