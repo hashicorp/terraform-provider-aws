@@ -862,11 +862,18 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 	}
-	{
+
+	// AWS Standard will return InstanceCreditSpecification.NotSupported errors for EC2 Instance IDs outside T2 and T3 instance types
+	// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/8055
+	if strings.HasPrefix(aws.StringValue(instance.InstanceType), "t2") || strings.HasPrefix(aws.StringValue(instance.InstanceType), "t3") {
 		creditSpecifications, err := getCreditSpecifications(conn, d.Id())
+
+		// Ignore UnsupportedOperation errors for AWS China and GovCloud (US)
+		// Reference: https://github.com/terraform-providers/terraform-provider-aws/pull/4362
 		if err != nil && !isAWSErr(err, "UnsupportedOperation", "") {
-			return err
+			return fmt.Errorf("error getting EC2 Instance (%s) Credit Specifications: %s", d.Id(), err)
 		}
+
 		if err := d.Set("credit_specification", creditSpecifications); err != nil {
 			return fmt.Errorf("error setting credit_specification: %s", err)
 		}
