@@ -180,15 +180,7 @@ func resourceAwsVpcEndpointServiceDelete(d *schema.ResourceData, meta interface{
 		}
 	}
 
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{ec2.ServiceStateAvailable, ec2.ServiceStateDeleting},
-		Target:     []string{ec2.ServiceStateDeleted},
-		Refresh:    vpcEndpointServiceStateRefresh(conn, d.Id()),
-		Timeout:    10 * time.Minute,
-		Delay:      5 * time.Second,
-		MinTimeout: 5 * time.Second,
-	}
-	if _, err := stateConf.WaitForState(); err != nil {
+	if err := waitForVpcEndpointServiceDeletion(conn, d.Id()); err != nil {
 		return fmt.Errorf("Error waiting for VPC Endpoint Service %s to delete: %s", d.Id(), err.Error())
 	}
 
@@ -233,6 +225,21 @@ func vpcEndpointServiceWaitUntilAvailable(d *schema.ResourceData, conn *ec2.EC2)
 	}
 
 	return nil
+}
+
+func waitForVpcEndpointServiceDeletion(conn *ec2.EC2, serviceID string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{ec2.ServiceStateAvailable, ec2.ServiceStateDeleting},
+		Target:     []string{ec2.ServiceStateDeleted},
+		Refresh:    vpcEndpointServiceStateRefresh(conn, serviceID),
+		Timeout:    10 * time.Minute,
+		Delay:      5 * time.Second,
+		MinTimeout: 5 * time.Second,
+	}
+
+	_, err := stateConf.WaitForState()
+
+	return err
 }
 
 func vpcEndpointServiceAttributes(d *schema.ResourceData, svcCfg *ec2.ServiceConfiguration, conn *ec2.EC2) error {

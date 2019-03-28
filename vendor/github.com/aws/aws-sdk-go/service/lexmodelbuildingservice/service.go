@@ -29,8 +29,9 @@ var initRequest func(*request.Request)
 
 // Service information constants
 const (
-	ServiceName = "models.lex" // Service endpoint prefix API calls made to.
-	EndpointsID = ServiceName  // Service ID for Regions and Endpoints metadata.
+	ServiceName = "models.lex"                 // Name of service.
+	EndpointsID = ServiceName                  // ID to lookup a service endpoint with.
+	ServiceID   = "Lex Model Building Service" // ServiceID is a unique identifer of a specific service.
 )
 
 // New creates a new instance of the LexModelBuildingService client with a session.
@@ -45,24 +46,24 @@ const (
 //     svc := lexmodelbuildingservice.New(mySession, aws.NewConfig().WithRegion("us-west-2"))
 func New(p client.ConfigProvider, cfgs ...*aws.Config) *LexModelBuildingService {
 	c := p.ClientConfig(EndpointsID, cfgs...)
+	if c.SigningNameDerived || len(c.SigningName) == 0 {
+		c.SigningName = "lex"
+	}
 	return newClient(*c.Config, c.Handlers, c.Endpoint, c.SigningRegion, c.SigningName)
 }
 
 // newClient creates, initializes and returns a new service client instance.
 func newClient(cfg aws.Config, handlers request.Handlers, endpoint, signingRegion, signingName string) *LexModelBuildingService {
-	if len(signingName) == 0 {
-		signingName = "lex"
-	}
 	svc := &LexModelBuildingService{
 		Client: client.New(
 			cfg,
 			metadata.ClientInfo{
 				ServiceName:   ServiceName,
+				ServiceID:     ServiceID,
 				SigningName:   signingName,
 				SigningRegion: signingRegion,
 				Endpoint:      endpoint,
 				APIVersion:    "2017-04-19",
-				JSONVersion:   "1.1",
 			},
 			handlers,
 		),

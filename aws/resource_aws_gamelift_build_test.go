@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -31,6 +30,10 @@ func testSweepGameliftBuilds(region string) error {
 
 	resp, err := conn.ListBuilds(&gamelift.ListBuildsInput{})
 	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping Gamelife Build sweep for %s: %s", region, err)
+			return nil
+		}
 		return fmt.Errorf("Error listing Gamelift Builds: %s", err)
 	}
 
@@ -42,10 +45,6 @@ func testSweepGameliftBuilds(region string) error {
 	log.Printf("[INFO] Found %d Gamelift Builds", len(resp.Builds))
 
 	for _, build := range resp.Builds {
-		if !strings.HasPrefix(*build.Name, testAccGameliftBuildPrefix) {
-			continue
-		}
-
 		log.Printf("[INFO] Deleting Gamelift Build %q", *build.BuildId)
 		_, err := conn.DeleteBuild(&gamelift.DeleteBuildInput{
 			BuildId: build.BuildId,
@@ -78,7 +77,7 @@ func TestAccAWSGameliftBuild_basic(t *testing.T) {
 	roleArn := *loc.RoleArn
 	key := *loc.Key
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGameliftBuildDestroy,

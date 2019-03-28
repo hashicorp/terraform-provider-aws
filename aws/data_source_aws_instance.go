@@ -3,8 +3,10 @@ package aws
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform/helper/schema"
 )
@@ -23,6 +25,10 @@ func dataSourceAwsInstance() *schema.Resource {
 				ForceNew: true,
 			},
 			"ami": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -46,7 +52,20 @@ func dataSourceAwsInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"host_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"key_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"get_password_data": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"password_data": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -94,7 +113,16 @@ func dataSourceAwsInstance() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"get_user_data": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"user_data": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"user_data_base64": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -213,6 +241,22 @@ func dataSourceAwsInstance() *schema.Resource {
 					},
 				},
 			},
+			"credit_specification": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"cpu_credits": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"disable_api_termination": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -225,7 +269,7 @@ func dataSourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	instanceID, instanceIDOk := d.GetOk("instance_id")
 	tags, tagsOk := d.GetOk("instance_tags")
 
-	if filtersOk == false && instanceIDOk == false && tagsOk == false {
+	if !filtersOk && !instanceIDOk && !tagsOk {
 		return fmt.Errorf("One of filters, instance_tags, or instance_id must be assigned")
 	}
 
@@ -280,7 +324,29 @@ func dataSourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] aws_instance - Single Instance ID found: %s", *instance.InstanceId)
-	return instanceDescriptionAttributes(d, instance, conn)
+	if err := instanceDescriptionAttributes(d, instance, conn); err != nil {
+		return err
+	}
+
+	if d.Get("get_password_data").(bool) {
+		passwordData, err := getAwsEc2InstancePasswordData(*instance.InstanceId, conn)
+		if err != nil {
+			return err
+		}
+		d.Set("password_data", passwordData)
+	}
+
+	// ARN
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Region:    meta.(*AWSClient).region,
+		Service:   "ec2",
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("instance/%s", d.Id()),
+	}
+	d.Set("arn", arn.String())
+
+	return nil
 }
 
 // Populate instance attribute fields with the returned instance
@@ -296,6 +362,9 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 	}
 	if instance.Placement.Tenancy != nil {
 		d.Set("tenancy", instance.Placement.Tenancy)
+	}
+	if instance.Placement.HostId != nil {
+		d.Set("host_id", instance.Placement.HostId)
 	}
 	d.Set("ami", instance.ImageId)
 	d.Set("instance_type", instance.InstanceType)
@@ -364,9 +433,31 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 		if err != nil {
 			return err
 		}
-		if attr.UserData.Value != nil {
-			d.Set("user_data", userDataHashSum(*attr.UserData.Value))
+		if attr != nil && attr.UserData != nil && attr.UserData.Value != nil {
+			d.Set("user_data", userDataHashSum(aws.StringValue(attr.UserData.Value)))
+			if d.Get("get_user_data").(bool) {
+				d.Set("user_data_base64", aws.StringValue(attr.UserData.Value))
+			}
 		}
+	}
+
+	var creditSpecifications []map[string]interface{}
+
+	// AWS Standard will return InstanceCreditSpecification.NotSupported errors for EC2 Instance IDs outside T2 and T3 instance types
+	// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/8055
+	if strings.HasPrefix(aws.StringValue(instance.InstanceType), "t2") || strings.HasPrefix(aws.StringValue(instance.InstanceType), "t3") {
+		var err error
+		creditSpecifications, err = getCreditSpecifications(conn, d.Id())
+
+		// Ignore UnsupportedOperation errors for AWS China and GovCloud (US)
+		// Reference: https://github.com/terraform-providers/terraform-provider-aws/pull/4362
+		if err != nil && !isAWSErr(err, "UnsupportedOperation", "") {
+			return fmt.Errorf("error getting EC2 Instance (%s) Credit Specifications: %s", d.Id(), err)
+		}
+	}
+
+	if err := d.Set("credit_specification", creditSpecifications); err != nil {
+		return fmt.Errorf("error setting credit_specification: %s", err)
 	}
 
 	return nil

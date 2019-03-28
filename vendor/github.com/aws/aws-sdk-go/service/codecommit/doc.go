@@ -43,7 +43,21 @@
 //
 //    * UpdateDefaultBranch, which changes the default branch for a repository.
 //
+// Files, by calling the following:
+//
+//    * DeleteFile, which deletes the content of a specified file from a specified
+//    branch.
+//
+//    * GetFile, which returns the base-64 encoded content of a specified file.
+//
+//    * GetFolder, which returns the contents of a specified folder or directory.
+//
+//    * PutFile, which adds or modifies a file in a specified repository and
+//    branch.
+//
 // Information about committed code in a repository, by calling the following:
+//
+//    * CreateCommit, which creates a commit for changes to a repository.
 //
 //    * GetBlob, which returns the base-64 encoded content of an individual
 //    Git blob object within a repository.

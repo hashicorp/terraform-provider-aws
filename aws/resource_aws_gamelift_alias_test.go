@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -39,10 +38,6 @@ func testSweepGameliftAliases(region string) error {
 		log.Printf("[INFO] Found %d Gamelift Aliases", len(resp.Aliases))
 
 		for _, alias := range resp.Aliases {
-			if !strings.HasPrefix(*alias.Name, "tf_acc_alias_") {
-				continue
-			}
-
 			log.Printf("[INFO] Deleting Gamelift Alias %q", *alias.AliasId)
 			_, err := conn.DeleteAlias(&gamelift.DeleteAliasInput{
 				AliasId: alias.AliasId,
@@ -55,6 +50,10 @@ func testSweepGameliftAliases(region string) error {
 		return nil
 	})
 	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping Gamelift Alias sweep for %s: %s", region, err)
+			return nil
+		}
 		return fmt.Errorf("Error listing Gamelift Aliases: %s", err)
 	}
 
@@ -90,7 +89,7 @@ func TestAccAWSGameliftAlias_basic(t *testing.T) {
 	uDescription := fmt.Sprintf("tf test updated description %s", rString)
 	uMessage := fmt.Sprintf("tf test updated message %s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGameliftAliasDestroy,
@@ -130,7 +129,7 @@ func TestAccAWSGameliftAlias_importBasic(t *testing.T) {
 	description := fmt.Sprintf("tf test description %s", rString)
 	message := fmt.Sprintf("tf test message %s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGameliftAliasDestroy,
@@ -171,7 +170,7 @@ func TestAccAWSGameliftAlias_fleetRouting(t *testing.T) {
 	launchPath := g.LaunchPath
 	params := g.Parameters(33435)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGameliftAliasDestroy,
