@@ -58,6 +58,13 @@ The following arguments are supported:
 
 * `project_name` - (Required) The name of the build project.
 * `branch_filter` - (Optional) A regular expression used to determine which branches get built. Default is all branches are built.
+* `filter_group` - (Optional) Information about the webhook's trigger. Filter group blocks are documented below.
+
+`filter_group` supports the following:
+
+* `type` - (Required) The webhook filter group's type. Valid values for this parameter are: `EVENT`, `BASE_REF`, `HEAD_REF`, `ACTOR_ACCOUNT_ID`, `FILE_PATH`. At least one filter group must specify `EVENT` as its type.
+* `pattern` - (Required) For a filter that uses `EVENT` type, a comma-separated string that specifies one event: `PUSH`, `PULL_REQUEST_CREATED`, `PULL_REQUEST_UPDATED`, `PULL_REQUEST_REOPENED`. `PULL_REQUEST_REOPENED` works with GitHub & GitHub Enterprise only. For a fitler that uses any of the other filter types, a regular expression.
+* `exclude_matched_pattern` - (Optional) If set to `true`, the specified filter does *not* trigger a build. Defaults to `false`.
 
 ## Attributes Reference
 
