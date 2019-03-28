@@ -903,6 +903,7 @@ func validateS3BucketLifecycleTransitionStorageClass() schema.SchemaValidateFunc
 		s3.TransitionStorageClassStandardIa,
 		s3.TransitionStorageClassOnezoneIa,
 		s3.TransitionStorageClassIntelligentTiering,
+		s3.TransitionStorageClassDeepArchive,
 	}, false)
 }
 
