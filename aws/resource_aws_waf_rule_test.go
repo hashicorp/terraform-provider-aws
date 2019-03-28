@@ -17,12 +17,12 @@ import (
 func TestAccAWSWafRule_basic(t *testing.T) {
 	var v waf.Rule
 	wafRuleName := fmt.Sprintf("wafrule%s", acctest.RandString(5))
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRuleDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSWafRuleConfig(wafRuleName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafRuleExists("aws_waf_rule.wafrule", &v),
@@ -34,6 +34,11 @@ func TestAccAWSWafRule_basic(t *testing.T) {
 						"aws_waf_rule.wafrule", "metric_name", wafRuleName),
 				),
 			},
+			{
+				ResourceName:      "aws_waf_rule.wafrule",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -43,7 +48,7 @@ func TestAccAWSWafRule_changeNameForceNew(t *testing.T) {
 	wafRuleName := fmt.Sprintf("wafrule%s", acctest.RandString(5))
 	wafRuleNewName := fmt.Sprintf("wafrulenew%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafIPSetDestroy,
@@ -79,7 +84,7 @@ func TestAccAWSWafRule_changeNameForceNew(t *testing.T) {
 func TestAccAWSWafRule_disappears(t *testing.T) {
 	var v waf.Rule
 	wafRuleName := fmt.Sprintf("wafrule%s", acctest.RandString(5))
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRuleDestroy,
@@ -104,7 +109,7 @@ func TestAccAWSWafRule_changePredicates(t *testing.T) {
 	var idx int
 	ruleName := fmt.Sprintf("wafrule%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRuleDestroy,
@@ -131,6 +136,34 @@ func TestAccAWSWafRule_changePredicates(t *testing.T) {
 					computeWafRulePredicateWithByteMatchSet(&byteMatchSet, true, "ByteMatch", &idx),
 					testCheckResourceAttrWithIndexesAddr("aws_waf_rule.wafrule", "predicates.%d.negated", &idx, "true"),
 					testCheckResourceAttrWithIndexesAddr("aws_waf_rule.wafrule", "predicates.%d.type", &idx, "ByteMatch"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSWafRule_geoMatchSetPredicate(t *testing.T) {
+	var geoMatchSet waf.GeoMatchSet
+
+	var v waf.Rule
+	var idx int
+	ruleName := fmt.Sprintf("wafrule%s", acctest.RandString(5))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSWafRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSWafRuleConfig_geoMatchSetPredicate(ruleName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSWafGeoMatchSetExists("aws_waf_geo_match_set.geo_match_set", &geoMatchSet),
+					testAccCheckAWSWafRuleExists("aws_waf_rule.wafrule", &v),
+					resource.TestCheckResourceAttr("aws_waf_rule.wafrule", "name", ruleName),
+					resource.TestCheckResourceAttr("aws_waf_rule.wafrule", "predicates.#", "1"),
+					computeWafRulePredicateWithGeoMatchSet(&geoMatchSet, true, "GeoMatch", &idx),
+					testCheckResourceAttrWithIndexesAddr("aws_waf_rule.wafrule", "predicates.%d.negated", &idx, "true"),
+					testCheckResourceAttrWithIndexesAddr("aws_waf_rule.wafrule", "predicates.%d.type", &idx, "GeoMatch"),
 				),
 			},
 		},
@@ -175,6 +208,25 @@ func computeWafRulePredicateWithByteMatchSet(set *waf.ByteMatchSet, negated bool
 	}
 }
 
+// computeWafRulePredicateWithGeoMatchSet calculates index
+// which isn't static because dataId is generated as part of the test
+func computeWafRulePredicateWithGeoMatchSet(set *waf.GeoMatchSet, negated bool, pType string, idx *int) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		predicateResource := resourceAwsWafRule().Schema["predicates"].Elem.(*schema.Resource)
+
+		m := map[string]interface{}{
+			"data_id": *set.GeoMatchSetId,
+			"negated": negated,
+			"type":    pType,
+		}
+
+		f := schema.HashResource(predicateResource)
+		*idx = f(m)
+
+		return nil
+	}
+}
+
 func testCheckResourceAttrWithIndexesAddr(name, format string, idx *int, value string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		return resource.TestCheckResourceAttr(name, fmt.Sprintf(format, *idx), value)(s)
@@ -185,7 +237,7 @@ func TestAccAWSWafRule_noPredicates(t *testing.T) {
 	var rule waf.Rule
 	ruleName := fmt.Sprintf("wafrule%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRuleDestroy,
@@ -208,7 +260,7 @@ func testAccCheckAWSWafRuleDisappears(v *waf.Rule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).wafconn
 
-		wr := newWafRetryer(conn, "global")
+		wr := newWafRetryer(conn)
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.UpdateRuleInput{
 				ChangeToken: token,
@@ -392,4 +444,25 @@ resource "aws_waf_rule" "wafrule" {
   name = "%s"
   metric_name = "%s"
 }`, name, name)
+}
+
+func testAccAWSWafRuleConfig_geoMatchSetPredicate(name string) string {
+	return fmt.Sprintf(`
+resource "aws_waf_geo_match_set" "geo_match_set" {
+  name = "%s"
+  geo_match_constraint {
+    type  = "Country"
+    value	= "US"
+  }
+}
+
+resource "aws_waf_rule" "wafrule" {
+  name = "%s"
+  metric_name = "%s"
+  predicates {
+    data_id = "${aws_waf_geo_match_set.geo_match_set.id}"
+    negated = true
+    type = "GeoMatch"
+  }
+}`, name, name, name)
 }

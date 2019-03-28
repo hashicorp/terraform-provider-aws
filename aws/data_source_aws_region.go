@@ -20,15 +20,20 @@ func dataSourceAwsRegion() *schema.Resource {
 			},
 
 			"current": {
-				Type:       schema.TypeBool,
-				Optional:   true,
-				Computed:   true,
-				Deprecated: "Defaults to current provider region if no other filtering is enabled",
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+				Removed:  "Defaults to current provider region if no other filtering is enabled",
 			},
 
 			"endpoint": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
+			},
+
+			"description": {
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 		},
@@ -71,7 +76,6 @@ func dataSourceAwsRegionRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(region.ID())
-	d.Set("current", region.ID() == providerRegion)
 
 	regionEndpointEc2, err := region.ResolveEndpoint(endpoints.Ec2ServiceID)
 	if err != nil {
@@ -80,6 +84,8 @@ func dataSourceAwsRegionRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("endpoint", strings.TrimPrefix(regionEndpointEc2.URL, "https://"))
 
 	d.Set("name", region.ID())
+
+	d.Set("description", region.Description())
 
 	return nil
 }

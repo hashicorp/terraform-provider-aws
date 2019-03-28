@@ -55,10 +55,12 @@ The following arguments are supported:
 * `user` - (Required) The IAM user to associate with this access key.
 * `pgp_key` - (Optional) Either a base-64 encoded PGP public key, or a
   keybase username in the form `keybase:some_person_that_exists`.
+* `status` - (Optional) The access key status to apply. Defaults to `Active`.
+Valid values are `Active` and `Inactive`.
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The access key ID.
 * `user` - The IAM user associated with this access key.
@@ -69,9 +71,7 @@ to the state file. Please supply a `pgp_key` instead, which will prevent the
 secret from being stored in plain text
 * `encrypted_secret` - The encrypted secret, base64 encoded.
 ~> **NOTE:** The encrypted secret may be decrypted using the command line,
-   for example: `terraform output secret | base64 --decode | keybase pgp decrypt`.
+   for example: `terraform output encrypted_secret | base64 --decode | keybase pgp decrypt`.
 * `ses_smtp_password` - The secret access key converted into an SES SMTP
   password by applying [AWS's documented conversion
   algorithm](https://docs.aws.amazon.com/ses/latest/DeveloperGuide/smtp-credentials.html#smtp-credentials-convert).
-* `status` - "Active" or "Inactive". Keys are initially active, but can be made
-	inactive by other means.

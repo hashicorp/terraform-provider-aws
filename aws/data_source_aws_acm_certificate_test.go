@@ -12,7 +12,7 @@ import (
 
 const ACMCertificateRe = `^arn:[^:]+:acm:[^:]+:[^:]+:certificate/.+$`
 
-func TestAccAwsAcmCertificateDataSource_singleIssued(t *testing.T) {
+func TestAccAWSAcmCertificateDataSource_singleIssued(t *testing.T) {
 	if os.Getenv("ACM_CERTIFICATE_ROOT_DOMAIN") == "" {
 		t.Skip("Environment variable ACM_CERTIFICATE_ROOT_DOMAIN is not set")
 	}
@@ -34,7 +34,7 @@ func TestAccAwsAcmCertificateDataSource_singleIssued(t *testing.T) {
 
 	resourceName := "data.aws_acm_certificate.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -78,7 +78,7 @@ func TestAccAwsAcmCertificateDataSource_singleIssued(t *testing.T) {
 	})
 }
 
-func TestAccAwsAcmCertificateDataSource_multipleIssued(t *testing.T) {
+func TestAccAWSAcmCertificateDataSource_multipleIssued(t *testing.T) {
 	if os.Getenv("ACM_CERTIFICATE_ROOT_DOMAIN") == "" {
 		t.Skip("Environment variable ACM_CERTIFICATE_ROOT_DOMAIN is not set")
 	}
@@ -100,7 +100,7 @@ func TestAccAwsAcmCertificateDataSource_multipleIssued(t *testing.T) {
 
 	resourceName := "data.aws_acm_certificate.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -138,14 +138,14 @@ func TestAccAwsAcmCertificateDataSource_multipleIssued(t *testing.T) {
 	})
 }
 
-func TestAccAwsAcmCertificateDataSource_noMatchReturnsError(t *testing.T) {
+func TestAccAWSAcmCertificateDataSource_noMatchReturnsError(t *testing.T) {
 	if os.Getenv("ACM_CERTIFICATE_ROOT_DOMAIN") == "" {
 		t.Skip("Environment variable ACM_CERTIFICATE_ROOT_DOMAIN is not set")
 	}
 
 	domain := fmt.Sprintf("tf-acc-nonexistent.%s", os.Getenv("ACM_CERTIFICATE_ROOT_DOMAIN"))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{

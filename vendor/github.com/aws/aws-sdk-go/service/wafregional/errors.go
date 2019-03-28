@@ -41,9 +41,6 @@ const (
 	//    * You tried to add a Rule to a WebACL, but the Rule already exists in
 	//    the specified WebACL.
 	//
-	//    * You tried to add an IP address to an IPSet, but the IP address already
-	//    exists in the specified IPSet.
-	//
 	//    * You tried to add a ByteMatchTuple to a ByteMatchSet, but the ByteMatchTuple
 	//    already exists in the specified WebACL.
 	ErrCodeWAFInvalidOperationException = "WAFInvalidOperationException"
@@ -80,6 +77,33 @@ const (
 	//    a resource with which a web ACL cannot be associated.
 	ErrCodeWAFInvalidParameterException = "WAFInvalidParameterException"
 
+	// ErrCodeWAFInvalidPermissionPolicyException for service response error code
+	// "WAFInvalidPermissionPolicyException".
+	//
+	// The operation failed because the specified policy is not in the proper format.
+	//
+	// The policy is subject to the following restrictions:
+	//
+	//    * You can attach only one policy with each PutPermissionPolicy request.
+	//
+	//    * The policy must include an Effect, Action and Principal.
+	//
+	//    * Effect must specify Allow.
+	//
+	//    * The Action in the policy must be waf:UpdateWebACL, waf-regional:UpdateWebACL,
+	//    waf:GetRuleGroup and waf-regional:GetRuleGroup . Any extra or wildcard
+	//    actions in the policy will be rejected.
+	//
+	//    * The policy cannot include a Resource parameter.
+	//
+	//    * The ARN in the request must be a valid WAF RuleGroup ARN and the RuleGroup
+	//    must exist in the same region.
+	//
+	//    * The user making the request must be the owner of the RuleGroup.
+	//
+	//    * Your policy must be composed using IAM Policy version 2012-10-17.
+	ErrCodeWAFInvalidPermissionPolicyException = "WAFInvalidPermissionPolicyException"
+
 	// ErrCodeWAFInvalidRegexPatternException for service response error code
 	// "WAFInvalidRegexPatternException".
 	//
@@ -91,7 +115,7 @@ const (
 	//
 	// The operation exceeds a resource limit, for example, the maximum number of
 	// WebACL objects that you can create for an AWS account. For more information,
-	// see Limits (http://docs.aws.amazon.com/waf/latest/developerguide/limits.html)
+	// see Limits (https://docs.aws.amazon.com/waf/latest/developerguide/limits.html)
 	// in the AWS WAF Developer Guide.
 	ErrCodeWAFLimitsExceededException = "WAFLimitsExceededException"
 
@@ -147,6 +171,19 @@ const (
 	//
 	//    * You tried to delete a Rule that is still referenced by a WebACL.
 	ErrCodeWAFReferencedItemException = "WAFReferencedItemException"
+
+	// ErrCodeWAFServiceLinkedRoleErrorException for service response error code
+	// "WAFServiceLinkedRoleErrorException".
+	//
+	// AWS WAF is not able to access the service linked role. This can be caused
+	// by a previous PutLoggingConfiguration request, which can lock the service
+	// linked role for about 20 seconds. Please try your request again. The service
+	// linked role can also be locked by a previous DeleteServiceLinkedRole request,
+	// which can lock the role for 15 minutes or more. If you recently made a DeleteServiceLinkedRole,
+	// wait at least 15 minutes and try the request again. If you receive this same
+	// exception again, you will have to wait additional time until the role is
+	// unlocked.
+	ErrCodeWAFServiceLinkedRoleErrorException = "WAFServiceLinkedRoleErrorException"
 
 	// ErrCodeWAFStaleDataException for service response error code
 	// "WAFStaleDataException".

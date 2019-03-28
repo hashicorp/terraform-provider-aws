@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsWafRateBasedRule() *schema.Resource {
@@ -18,67 +19,47 @@ func resourceAwsWafRateBasedRule() *schema.Resource {
 		Delete: resourceAwsWafRateBasedRuleDelete,
 
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"metric_name": &schema.Schema{
+			"metric_name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validateWafMetricName,
 			},
-			"predicates": &schema.Schema{
+			"predicates": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"negated": &schema.Schema{
+						"negated": {
 							Type:     schema.TypeBool,
 							Required: true,
 						},
-						"data_id": &schema.Schema{
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-								value := v.(string)
-								if len(value) > 128 {
-									errors = append(errors, fmt.Errorf(
-										"%q cannot be longer than 128 characters", k))
-								}
-								return
-							},
+						"data_id": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringLenBetween(0, 128),
 						},
-						"type": &schema.Schema{
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-								value := v.(string)
-								if value != "IPMatch" && value != "ByteMatch" && value != "SqlInjectionMatch" && value != "SizeConstraint" && value != "XssMatch" {
-									errors = append(errors, fmt.Errorf(
-										"%q must be one of IPMatch | ByteMatch | SqlInjectionMatch | SizeConstraint | XssMatch", k))
-								}
-								return
-							},
+						"type": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validateWafPredicatesType(),
 						},
 					},
 				},
 			},
-			"rate_key": &schema.Schema{
+			"rate_key": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"rate_limit": &schema.Schema{
-				Type:     schema.TypeInt,
-				Required: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(int)
-					if value < 2000 {
-						errors = append(errors, fmt.Errorf("%q cannot be less than 2000", k))
-					}
-					return
-				},
+			"rate_limit": {
+				Type:         schema.TypeInt,
+				Required:     true,
+				ValidateFunc: validation.IntAtLeast(2000),
 			},
 		},
 	}
@@ -87,7 +68,7 @@ func resourceAwsWafRateBasedRule() *schema.Resource {
 func resourceAwsWafRateBasedRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafconn
 
-	wr := newWafRetryer(conn, "global")
+	wr := newWafRetryer(conn)
 	out, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		params := &waf.CreateRateBasedRuleInput{
 			ChangeToken: token,
@@ -176,7 +157,7 @@ func resourceAwsWafRateBasedRuleDelete(d *schema.ResourceData, meta interface{})
 		}
 	}
 
-	wr := newWafRetryer(conn, "global")
+	wr := newWafRetryer(conn)
 	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		req := &waf.DeleteRateBasedRuleInput{
 			ChangeToken: token,
@@ -193,7 +174,7 @@ func resourceAwsWafRateBasedRuleDelete(d *schema.ResourceData, meta interface{})
 }
 
 func updateWafRateBasedRuleResource(id string, oldP, newP []interface{}, rateLimit interface{}, conn *waf.WAF) error {
-	wr := newWafRetryer(conn, "global")
+	wr := newWafRetryer(conn)
 	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		req := &waf.UpdateRateBasedRuleInput{
 			ChangeToken: token,
