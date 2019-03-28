@@ -7,7 +7,8 @@ import (
 func TestAccAWSAppmesh(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Mesh": {
-			"basic": testAccAwsAppmeshMesh_basic,
+			"basic":        testAccAwsAppmeshMesh_basic,
+			"egressFilter": testAccAwsAppmeshMesh_egressFilter,
 		},
 		"Route": {
 			"basic":         testAccAwsAppmeshRoute_basic,
