@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codebuild"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsCodeBuildWebhook() *schema.Resource {
@@ -30,6 +31,34 @@ func resourceAwsCodeBuildWebhook() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"filter_group": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"type": {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								codebuild.WebhookFilterTypeEvent,
+								codebuild.WebhookFilterTypeActorAccountId,
+								codebuild.WebhookFilterTypeBaseRef,
+								codebuild.WebhookFilterTypeFilePath,
+								codebuild.WebhookFilterTypeHeadRef,
+							}, false),
+						},
+						"exclude_matched_pattern": {
+							Type:     schema.TypeBool,
+							Required: true,
+						},
+						"pattern": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+			},
 			"payload_url": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -50,8 +79,11 @@ func resourceAwsCodeBuildWebhook() *schema.Resource {
 func resourceAwsCodeBuildWebhookCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).codebuildconn
 
+	webhookFilterGroups := expandWebhookFilterGroup(d)
+
 	input := &codebuild.CreateWebhookInput{
-		ProjectName: aws.String(d.Get("project_name").(string)),
+		ProjectName:  aws.String(d.Get("project_name").(string)),
+		FilterGroups: webhookFilterGroups,
 	}
 
 	// The CodeBuild API requires this to be non-empty if defined
@@ -71,6 +103,36 @@ func resourceAwsCodeBuildWebhookCreate(d *schema.ResourceData, meta interface{})
 	d.SetId(d.Get("project_name").(string))
 
 	return resourceAwsCodeBuildWebhookRead(d, meta)
+}
+
+func expandWebhookFilterGroup(d *schema.ResourceData) [][]*codebuild.WebhookFilter {
+	webhookFilters := make([]*codebuild.WebhookFilter, 0)
+
+	configsList := d.Get("filter_group").(*schema.Set).List()
+
+	if len(configsList) == 0 {
+		return nil
+	}
+
+	for _, config := range configsList {
+		filter := expandWebhookFilterData(config.(map[string]interface{}))
+		webhookFilters = append(webhookFilters, &filter)
+	}
+
+	return [][]*codebuild.WebhookFilter{webhookFilters}
+}
+
+func expandWebhookFilterData(data map[string]interface{}) codebuild.WebhookFilter {
+	filter := codebuild.WebhookFilter{
+		Type:                  aws.String(data["type"].(string)),
+		ExcludeMatchedPattern: aws.Bool(data["exclude_matched_pattern"].(bool)),
+	}
+
+	if v := data["pattern"]; v != nil {
+		filter.Pattern = aws.String(v.(string))
+	}
+
+	return filter
 }
 
 func resourceAwsCodeBuildWebhookRead(d *schema.ResourceData, meta interface{}) error {
@@ -101,6 +163,7 @@ func resourceAwsCodeBuildWebhookRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	d.Set("branch_filter", project.Webhook.BranchFilter)
+	d.Set("filter_group", project.Webhook.FilterGroups)
 	d.Set("payload_url", project.Webhook.PayloadUrl)
 	d.Set("project_name", project.Name)
 	d.Set("url", project.Webhook.Url)
@@ -115,6 +178,7 @@ func resourceAwsCodeBuildWebhookUpdate(d *schema.ResourceData, meta interface{})
 	_, err := conn.UpdateWebhook(&codebuild.UpdateWebhookInput{
 		ProjectName:  aws.String(d.Id()),
 		BranchFilter: aws.String(d.Get("branch_filter").(string)),
+		FilterGroups: expandWebhookFilterGroup(d),
 		RotateSecret: aws.Bool(false),
 	})
 
