@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appsync"
@@ -162,12 +161,12 @@ func resourceAwsAppsyncGraphqlApiCreate(d *schema.ResourceData, meta interface{}
 
 	resp, err := conn.CreateGraphqlApi(input)
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating AppSync GraphQL API: %d", err)
 	}
 
 	d.SetId(*resp.GraphqlApi.ApiId)
 
-	if err := resourceAwsAppsyncSchemaPut(d.Id(), d, meta); err != nil {
+	if err := resourceAwsAppsyncSchemaPut(d, meta); err != nil {
 		return fmt.Errorf("error creating AppSync GraphQL API (%s) Schema: %s", d.Id(), err)
 	}
 
@@ -240,8 +239,10 @@ func resourceAwsAppsyncGraphqlApiUpdate(d *schema.ResourceData, meta interface{}
 		return err
 	}
 
-	if err := resourceAwsAppsyncSchemaPut(d.Id(), d, meta); err != nil {
-		return fmt.Errorf("error updating AppSync GraphQL API (%s) Schema: %s", d.Id(), err)
+	if d.HasChange("schema") {
+		if err := resourceAwsAppsyncSchemaPut(d, meta); err != nil {
+			return fmt.Errorf("error updating AppSync GraphQL API (%s) Schema: %s", d.Id(), err)
+		}
 	}
 
 	return resourceAwsAppsyncGraphqlApiRead(d, meta)
@@ -375,40 +376,35 @@ func flattenAppsyncGraphqlApiUserPoolConfig(userPoolConfig *appsync.UserPoolConf
 	return []interface{}{m}
 }
 
-func resourceAwsAppsyncSchemaPut(apiId string, d *schema.ResourceData, meta interface{}) error {
+func resourceAwsAppsyncSchemaPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).appsyncconn
 
-	if d.HasChange("schema") {
+	if v, ok := d.GetOk("schema"); ok {
 		input := &appsync.StartSchemaCreationInput{
-			ApiId:      aws.String(apiId),
-			Definition: ([]byte)(d.Get("schema").(string)),
+			ApiId:      aws.String(d.Id()),
+			Definition: ([]byte)(v.(string)),
 		}
 		if _, err := conn.StartSchemaCreation(input); err != nil {
 			return err
 		}
 
 		activeSchemaConfig := &resource.StateChangeConf{
-			Pending: []string{"PROCESSING"},
-			Target:  []string{"ACTIVE", "SUCCESS"},
+			Pending: []string{appsync.SchemaStatusProcessing},
+			Target:  []string{"SUCCESS", appsync.SchemaStatusActive}, // should be only appsync.SchemaStatusActive . I think this is a problem in documentation: https://docs.aws.amazon.com/appsync/latest/APIReference/API_GetSchemaCreationStatus.html
 			Refresh: func() (interface{}, string, error) {
-				conn := meta.(*AWSClient).appsyncconn
-				input := &appsync.GetSchemaCreationStatusInput{
-					ApiId: aws.String(apiId),
-				}
-				result, err := conn.GetSchemaCreationStatus(input)
-
+				result, err := conn.GetSchemaCreationStatus(&appsync.GetSchemaCreationStatusInput{
+					ApiId: aws.String(d.Id()),
+				})
 				if err != nil {
 					return 0, "", err
 				}
 				return result, *result.Status, nil
 			},
-			Timeout:    d.Timeout(schema.TimeoutCreate),
-			Delay:      10 * time.Second,
-			MinTimeout: 5 * time.Second,
+			Timeout: d.Timeout(schema.TimeoutCreate),
 		}
 
 		if _, err := activeSchemaConfig.WaitForState(); err != nil {
-			return fmt.Errorf("Error waiting for schema creation status on AppSync API %s: %s", apiId, err)
+			return fmt.Errorf("Error waiting for schema creation status on AppSync API %s: %s", d.Id(), err)
 		}
 	}
 

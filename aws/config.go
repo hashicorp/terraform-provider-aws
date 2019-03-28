@@ -501,6 +501,14 @@ func (c *Config) Client() (interface{}, error) {
 		}
 	})
 
+	client.appsyncconn.Handlers.Retry.PushBack(func(r *request.Request) {
+		if r.Operation.Name == "CreateGraphqlApi" {
+			if isAWSErr(r.Error, appsync.ErrCodeConcurrentModificationException, "a GraphQL API creation is already in progress") {
+				r.Retryable = aws.Bool(true)
+			}
+		}
+	})
+
 	// See https://github.com/aws/aws-sdk-go/pull/1276
 	client.dynamodbconn.Handlers.Retry.PushBack(func(r *request.Request) {
 		if r.Operation.Name != "PutItem" && r.Operation.Name != "UpdateItem" && r.Operation.Name != "DeleteItem" {
