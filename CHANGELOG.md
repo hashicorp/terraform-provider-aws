@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New Data Source:** `aws_ec2_transit_gateway_vpn_attachment` [GH-8071]
+* **New Resource:** `aws_appsync_resolver` [GH-6451]
 * **New Resource:** `aws_kms_ciphertext` [GH-6993]
 * **New Resource:** `aws_kms_external_key` [GH-8066]
 * **New Resource:** `aws_sagemaker_endpoint_configuration` [GH-2477]
