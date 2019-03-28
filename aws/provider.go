@@ -853,6 +853,8 @@ func init() {
 
 		"ses_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
 
+		"sfn_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
+
 		"sns_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
 
 		"sqs_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
@@ -968,6 +970,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		config.S3Endpoint = endpoints["s3"].(string)
 		config.S3ControlEndpoint = endpoints["s3control"].(string)
 		config.SesEndpoint = endpoints["ses"].(string)
+		config.SfnEndpoint = endpoints["sfn"].(string)
 		config.SnsEndpoint = endpoints["sns"].(string)
 		config.SqsEndpoint = endpoints["sqs"].(string)
 		config.StsEndpoint = endpoints["sts"].(string)
@@ -1201,6 +1204,12 @@ func endpointsSchema() *schema.Schema {
 					Default:     "",
 					Description: descriptions["ses_endpoint"],
 				},
+				"sfn": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: descriptions["sfn_endpoint"],
+				},
 				"sns": {
 					Type:        schema.TypeString,
 					Optional:    true,
@@ -1254,6 +1263,7 @@ func endpointsToHash(v interface{}) int {
 	buf.WriteString(fmt.Sprintf("%s-", m["redshift"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["s3"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["ses"].(string)))
+	buf.WriteString(fmt.Sprintf("%s-", m["sfn"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["sns"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["sqs"].(string)))
 

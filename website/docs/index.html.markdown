@@ -388,6 +388,10 @@ Nested `endpoints` block supports the following:
   URL constructed from the `region`. It's typically used to connect to
   custom SNS endpoints.
 
+* `sfn` - (Optional) Use this to override the default endpoint
+  URL constructed from the `region`. It's typically used to connect to
+  custom SFN endpoints.
+
 * `sns` - (Optional) Use this to override the default endpoint
   URL constructed from the `region`. It's typically used to connect to
   custom SNS endpoints.

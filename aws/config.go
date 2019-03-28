@@ -170,6 +170,7 @@ type Config struct {
 	S3Endpoint               string
 	S3ControlEndpoint        string
 	SesEndpoint              string
+	SfnEndpoint              string
 	SnsEndpoint              string
 	SqsEndpoint              string
 	StsEndpoint              string
@@ -457,7 +458,7 @@ func (c *Config) Client() (interface{}, error) {
 		securityhubconn:                     securityhub.New(sess),
 		serverlessapplicationrepositoryconn: serverlessapplicationrepository.New(sess),
 		sesConn:                             ses.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.SesEndpoint)})),
-		sfnconn:                             sfn.New(sess),
+		sfnconn:                             sfn.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.SfnEndpoint)})),
 		shieldconn:                          shield.New(sess),
 		simpledbconn:                        simpledb.New(sess),
 		snsconn:                             sns.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.SnsEndpoint)})),
