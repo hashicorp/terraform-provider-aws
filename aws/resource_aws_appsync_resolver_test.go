@@ -13,6 +13,7 @@ import (
 )
 
 func TestAccAwsAppsyncResolver_basic(t *testing.T) {
+	var resolver1 appsync.Resolver
 	rName := fmt.Sprintf("tfacctest%d", acctest.RandInt())
 	resourceName := "aws_appsync_resolver.test"
 
@@ -24,7 +25,7 @@ func TestAccAwsAppsyncResolver_basic(t *testing.T) {
 			{
 				Config: testAccAppsyncResolver_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAppsyncResolverExists(resourceName),
+					testAccCheckAwsAppsyncResolverExists(resourceName, &resolver1),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "appsync", regexp.MustCompile("apis/.+/types/.+/resolvers/.+")),
 					resource.TestCheckResourceAttr(resourceName, "data_source", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "request_template"),
@@ -39,7 +40,33 @@ func TestAccAwsAppsyncResolver_basic(t *testing.T) {
 	})
 }
 
+func TestAccAwsAppsyncResolver_disappears(t *testing.T) {
+	var api1 appsync.GraphqlApi
+	var resolver1 appsync.Resolver
+	rName := fmt.Sprintf("tfacctest%d", acctest.RandInt())
+	appsyncGraphqlApiResourceName := "aws_appsync_graphql_api.test"
+	resourceName := "aws_appsync_resolver.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsAppsyncResolverDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppsyncResolver_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsAppsyncGraphqlApiExists(appsyncGraphqlApiResourceName, &api1),
+					testAccCheckAwsAppsyncResolverExists(resourceName, &resolver1),
+					testAccCheckAwsAppsyncResolverDisappears(&api1, &resolver1),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccAwsAppsyncResolver_DataSource(t *testing.T) {
+	var resolver1, resolver2 appsync.Resolver
 	rName := fmt.Sprintf("tfacctest%d", acctest.RandInt())
 	resourceName := "aws_appsync_resolver.test"
 
@@ -51,14 +78,14 @@ func TestAccAwsAppsyncResolver_DataSource(t *testing.T) {
 			{
 				Config: testAccAppsyncResolver_DataSource(rName, "test_ds_1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAppsyncResolverExists(resourceName),
+					testAccCheckAwsAppsyncResolverExists(resourceName, &resolver1),
 					resource.TestCheckResourceAttr(resourceName, "data_source", "test_ds_1"),
 				),
 			},
 			{
 				Config: testAccAppsyncResolver_DataSource(rName, "test_ds_2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAppsyncResolverExists(resourceName),
+					testAccCheckAwsAppsyncResolverExists(resourceName, &resolver2),
 					resource.TestCheckResourceAttr(resourceName, "data_source", "test_ds_2"),
 				),
 			},
@@ -72,6 +99,7 @@ func TestAccAwsAppsyncResolver_DataSource(t *testing.T) {
 }
 
 func TestAccAwsAppsyncResolver_RequestTemplate(t *testing.T) {
+	var resolver1, resolver2 appsync.Resolver
 	rName := fmt.Sprintf("tfacctest%d", acctest.RandInt())
 	resourceName := "aws_appsync_resolver.test"
 
@@ -83,7 +111,7 @@ func TestAccAwsAppsyncResolver_RequestTemplate(t *testing.T) {
 			{
 				Config: testAccAppsyncResolver_RequestTemplate(rName, "/"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAppsyncResolverExists(resourceName),
+					testAccCheckAwsAppsyncResolverExists(resourceName, &resolver1),
 					resource.TestMatchResourceAttr(resourceName, "request_template", regexp.MustCompile("resourcePath\": \"/\"")),
 				),
 			},
@@ -95,7 +123,7 @@ func TestAccAwsAppsyncResolver_RequestTemplate(t *testing.T) {
 			{
 				Config: testAccAppsyncResolver_RequestTemplate(rName, "/test"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAppsyncResolverExists(resourceName),
+					testAccCheckAwsAppsyncResolverExists(resourceName, &resolver2),
 					resource.TestMatchResourceAttr(resourceName, "request_template", regexp.MustCompile("resourcePath\": \"/test\"")),
 				),
 			},
@@ -104,6 +132,7 @@ func TestAccAwsAppsyncResolver_RequestTemplate(t *testing.T) {
 }
 
 func TestAccAwsAppsyncResolver_ResponseTemplate(t *testing.T) {
+	var resolver1, resolver2 appsync.Resolver
 	rName := fmt.Sprintf("tfacctest%d", acctest.RandInt())
 	resourceName := "aws_appsync_resolver.test"
 
@@ -115,7 +144,7 @@ func TestAccAwsAppsyncResolver_ResponseTemplate(t *testing.T) {
 			{
 				Config: testAccAppsyncResolver_ResponseTemplate(rName, 200),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAppsyncResolverExists(resourceName),
+					testAccCheckAwsAppsyncResolverExists(resourceName, &resolver1),
 					resource.TestMatchResourceAttr(resourceName, "response_template", regexp.MustCompile(`ctx\.result\.statusCode == 200`)),
 				),
 			},
@@ -127,7 +156,7 @@ func TestAccAwsAppsyncResolver_ResponseTemplate(t *testing.T) {
 			{
 				Config: testAccAppsyncResolver_ResponseTemplate(rName, 201),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAppsyncResolverExists(resourceName),
+					testAccCheckAwsAppsyncResolverExists(resourceName, &resolver2),
 					resource.TestMatchResourceAttr(resourceName, "response_template", regexp.MustCompile(`ctx\.result\.statusCode == 201`)),
 				),
 			},
@@ -136,6 +165,7 @@ func TestAccAwsAppsyncResolver_ResponseTemplate(t *testing.T) {
 }
 
 func TestAccAwsAppsyncResolver_multipleResolvers(t *testing.T) {
+	var resolver appsync.Resolver
 	rName := fmt.Sprintf("tfacctest%d", acctest.RandInt())
 	resourceName := "aws_appsync_resolver.test"
 
@@ -147,16 +177,16 @@ func TestAccAwsAppsyncResolver_multipleResolvers(t *testing.T) {
 			{
 				Config: testAccAppsyncResolver_multipleResolvers(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAppsyncResolverExists(resourceName+"1"),
-					testAccCheckAwsAppsyncResolverExists(resourceName+"2"),
-					testAccCheckAwsAppsyncResolverExists(resourceName+"3"),
-					testAccCheckAwsAppsyncResolverExists(resourceName+"4"),
-					testAccCheckAwsAppsyncResolverExists(resourceName+"5"),
-					testAccCheckAwsAppsyncResolverExists(resourceName+"6"),
-					testAccCheckAwsAppsyncResolverExists(resourceName+"7"),
-					testAccCheckAwsAppsyncResolverExists(resourceName+"8"),
-					testAccCheckAwsAppsyncResolverExists(resourceName+"9"),
-					testAccCheckAwsAppsyncResolverExists(resourceName+"10"),
+					testAccCheckAwsAppsyncResolverExists(resourceName+"1", &resolver),
+					testAccCheckAwsAppsyncResolverExists(resourceName+"2", &resolver),
+					testAccCheckAwsAppsyncResolverExists(resourceName+"3", &resolver),
+					testAccCheckAwsAppsyncResolverExists(resourceName+"4", &resolver),
+					testAccCheckAwsAppsyncResolverExists(resourceName+"5", &resolver),
+					testAccCheckAwsAppsyncResolverExists(resourceName+"6", &resolver),
+					testAccCheckAwsAppsyncResolverExists(resourceName+"7", &resolver),
+					testAccCheckAwsAppsyncResolverExists(resourceName+"8", &resolver),
+					testAccCheckAwsAppsyncResolverExists(resourceName+"9", &resolver),
+					testAccCheckAwsAppsyncResolverExists(resourceName+"10", &resolver),
 				),
 			},
 		},
@@ -183,17 +213,19 @@ func testAccCheckAwsAppsyncResolverDestroy(s *terraform.State) error {
 		}
 
 		_, err = conn.GetResolver(input)
+
+		if isAWSErr(err, appsync.ErrCodeNotFoundException, "") {
+			continue
+		}
+
 		if err != nil {
-			if isAWSErr(err, appsync.ErrCodeNotFoundException, "") {
-				return nil
-			}
 			return err
 		}
 	}
 	return nil
 }
 
-func testAccCheckAwsAppsyncResolverExists(name string) resource.TestCheckFunc {
+func testAccCheckAwsAppsyncResolverExists(name string, resolver *appsync.Resolver) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -217,7 +249,29 @@ func testAccCheckAwsAppsyncResolverExists(name string) resource.TestCheckFunc {
 			FieldName: aws.String(fieldName),
 		}
 
-		_, err = conn.GetResolver(input)
+		output, err := conn.GetResolver(input)
+
+		if err != nil {
+			return err
+		}
+
+		*resolver = *output.Resolver
+
+		return nil
+	}
+}
+
+func testAccCheckAwsAppsyncResolverDisappears(api *appsync.GraphqlApi, resolver *appsync.Resolver) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).appsyncconn
+
+		input := &appsync.DeleteResolverInput{
+			ApiId:     api.ApiId,
+			FieldName: resolver.FieldName,
+			TypeName:  resolver.TypeName,
+		}
+
+		_, err := conn.DeleteResolver(input)
 
 		return err
 	}
