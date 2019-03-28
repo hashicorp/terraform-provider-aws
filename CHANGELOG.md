@@ -19,6 +19,8 @@ ENHANCEMENTS:
 * resource/aws_appsync_graphql_api: Add `schema` argument [GH-4840]
 * resource/aws_instance: Only call `DescribeInstanceCreditSpecifications` for T2 and T3 Instance Families [GH-8107]
 * resource/aws_ram_principal_association: Validate `principal` as AWS Account ID or ARN [GH-8048]
+* resource/aws_s3_bucket: Support `DEEP_ARCHIVE` in storage class validations [GH-8109]
+* resource/aws_s3_bucket_object: Support `DEEP_ARCHIVE` in `storage_class` validation [GH-8109]
 * resource/aws_vpn_connection: Add `transit_gateway_attachment_id` attribute [GH-8070]
 
 ## 2.3.0 (March 21, 2019)
