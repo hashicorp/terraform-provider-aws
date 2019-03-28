@@ -84,6 +84,10 @@ func resourceAwsDxHostedPublicVirtualInterface() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				MinItems: 1,
 			},
+			"aws_device": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -177,6 +181,7 @@ func resourceAwsDxHostedPublicVirtualInterfaceRead(d *schema.ResourceData, meta 
 	d.Set("amazon_address", vif.AmazonAddress)
 	d.Set("route_filter_prefixes", flattenDxRouteFilterPrefixes(vif.RouteFilterPrefixes))
 	d.Set("owner_account_id", vif.OwnerAccount)
+	d.Set("aws_device", vif.AwsDeviceV2)
 
 	return nil
 }

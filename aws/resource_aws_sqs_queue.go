@@ -267,7 +267,7 @@ func resourceAwsSqsQueueRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		if awsErr, ok := err.(awserr.Error); ok {
 			log.Printf("ERROR Found %s", awsErr.Code())
-			if "AWS.SimpleQueueService.NonExistentQueue" == awsErr.Code() {
+			if awsErr.Code() == "AWS.SimpleQueueService.NonExistentQueue" {
 				d.SetId("")
 				log.Printf("[DEBUG] SQS Queue (%s) not found", d.Get("name").(string))
 				return nil

@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/structure"
 	"github.com/hashicorp/terraform/helper/validation"
@@ -372,22 +371,23 @@ func resourceAwsApiGatewayRestApiUpdate(d *schema.ResourceData, meta interface{}
 
 func resourceAwsApiGatewayRestApiDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigateway
-	log.Printf("[DEBUG] Deleting API Gateway: %s", d.Id())
 
-	return resource.Retry(10*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteRestApi(&apigateway.DeleteRestApiInput{
-			RestApiId: aws.String(d.Id()),
-		})
-		if err == nil {
-			return nil
-		}
+	input := &apigateway.DeleteRestApiInput{
+		RestApiId: aws.String(d.Id()),
+	}
 
-		if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
-			return nil
-		}
+	log.Printf("[DEBUG] Deleting API Gateway: %s", input)
+	_, err := conn.DeleteRestApi(input)
 
-		return resource.NonRetryableError(err)
-	})
+	if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error deleting API Gateway (%s): %s", d.Id(), err)
+	}
+
+	return nil
 }
 
 func expandApiGatewayEndpointConfiguration(l []interface{}) *apigateway.EndpointConfiguration {

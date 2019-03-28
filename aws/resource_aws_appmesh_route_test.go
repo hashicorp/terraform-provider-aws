@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"testing"
 
@@ -11,6 +12,93 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_appmesh_route", &resource.Sweeper{
+		Name: "aws_appmesh_route",
+		F:    testSweepAppmeshRoutes,
+	})
+}
+
+func testSweepAppmeshRoutes(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).appmeshconn
+
+	err = conn.ListMeshesPages(&appmesh.ListMeshesInput{}, func(page *appmesh.ListMeshesOutput, isLast bool) bool {
+		if page == nil {
+			return !isLast
+		}
+
+		for _, mesh := range page.Meshes {
+			listVirtualRoutersInput := &appmesh.ListVirtualRoutersInput{
+				MeshName: mesh.MeshName,
+			}
+			meshName := aws.StringValue(mesh.MeshName)
+
+			err := conn.ListVirtualRoutersPages(listVirtualRoutersInput, func(page *appmesh.ListVirtualRoutersOutput, isLast bool) bool {
+				if page == nil {
+					return !isLast
+				}
+
+				for _, virtualRouter := range page.VirtualRouters {
+					listRoutesInput := &appmesh.ListRoutesInput{
+						MeshName:          mesh.MeshName,
+						VirtualRouterName: virtualRouter.VirtualRouterName,
+					}
+					virtualRouterName := aws.StringValue(virtualRouter.VirtualRouterName)
+
+					err := conn.ListRoutesPages(listRoutesInput, func(page *appmesh.ListRoutesOutput, isLast bool) bool {
+						if page == nil {
+							return !isLast
+						}
+
+						for _, route := range page.Routes {
+							input := &appmesh.DeleteRouteInput{
+								MeshName:          mesh.MeshName,
+								RouteName:         route.RouteName,
+								VirtualRouterName: virtualRouter.VirtualRouterName,
+							}
+							routeName := aws.StringValue(route.RouteName)
+
+							log.Printf("[INFO] Deleting Appmesh Mesh (%s) Virtual Router (%s) Route: %s", meshName, virtualRouterName, routeName)
+							_, err := conn.DeleteRoute(input)
+
+							if err != nil {
+								log.Printf("[ERROR] Error deleting Appmesh Mesh (%s) Virtual Router (%s) Route (%s): %s", meshName, virtualRouterName, routeName, err)
+							}
+						}
+
+						return !isLast
+					})
+
+					if err != nil {
+						log.Printf("[ERROR] Error retrieving Appmesh Mesh (%s) Virtual Router (%s) Routes: %s", meshName, virtualRouterName, err)
+					}
+				}
+
+				return !isLast
+			})
+
+			if err != nil {
+				log.Printf("[ERROR] Error retrieving Appmesh Mesh (%s) Virtual Routers: %s", meshName, err)
+			}
+		}
+
+		return !isLast
+	})
+	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping Appmesh Mesh sweep for %s: %s", region, err)
+			return nil
+		}
+		return fmt.Errorf("error retrieving Appmesh Meshes: %s", err)
+	}
+
+	return nil
+}
 
 func testAccAwsAppmeshRoute_basic(t *testing.T) {
 	var r appmesh.RouteData
@@ -44,6 +132,12 @@ func testAccAwsAppmeshRoute_basic(t *testing.T) {
 					resource.TestMatchResourceAttr(
 						resourceName, "arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:appmesh:[^:]+:\\d{12}:mesh/%s/virtualRouter/%s/route/%s", meshName, vrName, rName))),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateId:     fmt.Sprintf("%s/%s/%s", meshName, vrName, rName),
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -142,10 +236,10 @@ func testAccCheckAppmeshRouteDestroy(s *terraform.State) error {
 			RouteName:         aws.String(rs.Primary.Attributes["name"]),
 			VirtualRouterName: aws.String(rs.Primary.Attributes["virtual_router_name"]),
 		})
+		if isAWSErr(err, appmesh.ErrCodeNotFoundException, "") {
+			continue
+		}
 		if err != nil {
-			if isAWSErr(err, appmesh.ErrCodeNotFoundException, "") {
-				return nil
-			}
 			return err
 		}
 		return fmt.Errorf("still exist.")
@@ -192,7 +286,12 @@ resource "aws_appmesh_virtual_router" "foo" {
   mesh_name = "${aws_appmesh_mesh.foo.id}"
 
   spec {
-    service_names = ["serviceb.simpleapp.local"]
+    listener {
+      port_mapping {
+        port     = 8080
+        protocol = "http"
+      }
+    }
   }
 }
 
@@ -217,7 +316,12 @@ resource "aws_appmesh_virtual_router" "foo" {
   mesh_name = "${aws_appmesh_mesh.foo.id}"
 
   spec {
-    service_names = ["serviceb.simpleapp.local"]
+    listener {
+      port_mapping {
+        port     = 8080
+        protocol = "http"
+      }
+    }
   }
 }
 
@@ -269,7 +373,12 @@ resource "aws_appmesh_virtual_router" "foo" {
   mesh_name = "${aws_appmesh_mesh.foo.id}"
 
   spec {
-    service_names = ["serviceb.simpleapp.local"]
+    listener {
+      port_mapping {
+        port     = 8080
+        protocol = "http"
+      }
+    }
   }
 }
 

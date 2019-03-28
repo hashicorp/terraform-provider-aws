@@ -5,6 +5,7 @@ import (
 	"log"
 	"regexp"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -36,6 +37,7 @@ func init() {
 			"aws_mq_broker",
 			"aws_network_interface",
 			"aws_redshift_cluster",
+			"aws_route53_resolver_endpoint",
 			"aws_spot_fleet_request",
 			"aws_vpc_endpoint",
 		},
@@ -49,17 +51,7 @@ func testSweepSubnets(region string) error {
 	}
 	conn := client.(*AWSClient).ec2conn
 
-	req := &ec2.DescribeSubnetsInput{
-		Filters: []*ec2.Filter{
-			{
-				Name: aws.String("tag-value"),
-				Values: []*string{
-					aws.String("terraform-testacc-*"),
-					aws.String("tf-acc-*"),
-				},
-			},
-		},
-	}
+	req := &ec2.DescribeSubnetsInput{}
 	resp, err := conn.DescribeSubnets(req)
 	if err != nil {
 		if testSweepSkipSweepError(err) {
@@ -83,14 +75,27 @@ func testSweepSubnets(region string) error {
 			continue
 		}
 
-		// delete the subnet
-		_, err := conn.DeleteSubnet(&ec2.DeleteSubnetInput{
+		input := &ec2.DeleteSubnetInput{
 			SubnetId: subnet.SubnetId,
+		}
+
+		// Handle eventual consistency, especially with lingering ENIs from Load Balancers and Lambda
+		err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+			_, err := conn.DeleteSubnet(input)
+
+			if isAWSErr(err, "DependencyViolation", "") {
+				return resource.RetryableError(err)
+			}
+
+			if err != nil {
+				return resource.NonRetryableError(err)
+			}
+
+			return nil
 		})
+
 		if err != nil {
-			return fmt.Errorf(
-				"Error deleting Subnet (%s): %s",
-				*subnet.SubnetId, err)
+			return fmt.Errorf("Error deleting Subnet (%s): %s", aws.StringValue(subnet.SubnetId), err)
 		}
 	}
 

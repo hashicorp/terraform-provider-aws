@@ -5,14 +5,11 @@ import (
 	"log"
 	"os"
 	"regexp"
-	"strings"
 	"testing"
-
-	"github.com/aws/aws-sdk-go/service/organizations"
 
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
-
+	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
@@ -195,12 +192,14 @@ func testAccGetPartition() string {
 	return "aws"
 }
 
-func testAccGetServiceEndpoint(service string) string {
-	endpoint, err := endpoints.DefaultResolver().EndpointFor(service, testAccGetRegion())
-	if err != nil {
-		return ""
+func testAccAlternateAccountPreCheck(t *testing.T) {
+	if os.Getenv("AWS_ALTERNATE_PROFILE") == "" && os.Getenv("AWS_ALTERNATE_ACCESS_KEY_ID") == "" {
+		t.Fatal("AWS_ALTERNATE_ACCESS_KEY_ID or AWS_ALTERNATE_PROFILE must be set for acceptance tests")
 	}
-	return strings.TrimPrefix(endpoint.URL, "https://")
+
+	if os.Getenv("AWS_ALTERNATE_ACCESS_KEY_ID") != "" && os.Getenv("AWS_ALTERNATE_SECRET_ACCESS_KEY") == "" {
+		t.Fatal("AWS_ALTERNATE_SECRET_ACCESS_KEY must be set for acceptance tests")
+	}
 }
 
 func testAccEC2ClassicPreCheck(t *testing.T) {
@@ -240,6 +239,17 @@ func testAccOrganizationsAccountPreCheck(t *testing.T) {
 		t.Fatalf("error describing AWS Organization: %s", err)
 	}
 	t.Skip("skipping tests; this AWS account must not be an existing member of an AWS Organization")
+}
+
+func testAccAlternateAccountProviderConfig() string {
+	return fmt.Sprintf(`
+provider "aws" {
+  access_key = %[1]q
+  alias      = "alternate"
+  profile    = %[2]q
+  secret_key = %[3]q
+}
+`, os.Getenv("AWS_ALTERNATE_ACCESS_KEY_ID"), os.Getenv("AWS_ALTERNATE_PROFILE"), os.Getenv("AWS_ALTERNATE_SECRET_ACCESS_KEY"))
 }
 
 func testAccAwsRegionProviderFunc(region string, providers *[]*schema.Provider) func() *schema.Provider {
@@ -333,6 +343,14 @@ func testSweepSkipSweepError(err error) bool {
 	// Since acceptance test sweepers are best effort and this response is very common,
 	// we allow bypassing this error globally instead of individual test sweeper fixes.
 	if isAWSErr(err, "AccessDeniedException", "") {
+		return true
+	}
+	// Example: BadRequestException: vpc link not supported for region us-gov-west-1
+	if isAWSErr(err, "BadRequestException", "not supported") {
+		return true
+	}
+	// Example: InvalidAction: The action DescribeTransitGatewayAttachments is not valid for this web service
+	if isAWSErr(err, "InvalidAction", "is not valid") {
 		return true
 	}
 	return false

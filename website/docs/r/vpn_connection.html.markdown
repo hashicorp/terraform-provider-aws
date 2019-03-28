@@ -93,6 +93,7 @@ In addition to all arguments above, the following attributes are exported:
 * `customer_gateway_id` - The ID of the customer gateway to which the connection is attached.
 * `static_routes_only` - Whether the VPN connection uses static routes exclusively.
 * `tags` - Tags applied to the connection.
+* `transit_gateway_attachment_id` - When associated with an EC2 Transit Gateway (`transit_gateway_id` argument), the attachment ID.
 * `tunnel1_address` - The public IP address of the first VPN tunnel.
 * `tunnel1_cgw_inside_address` - The RFC 6890 link-local address of the first VPN tunnel (Customer Gateway Side).
 * `tunnel1_vgw_inside_address` - The RFC 6890 link-local address of the first VPN tunnel (VPN Gateway Side).

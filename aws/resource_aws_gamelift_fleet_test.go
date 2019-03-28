@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strings"
 	"testing"
 	"time"
 
@@ -50,10 +49,6 @@ func testSweepGameliftFleets(region string) error {
 		log.Printf("[INFO] Found %d Gamelift Fleets", len(out.FleetAttributes))
 
 		for _, attr := range out.FleetAttributes {
-			if !strings.HasPrefix(*attr.Name, testAccGameliftFleetPrefix) {
-				continue
-			}
-
 			log.Printf("[INFO] Deleting Gamelift Fleet %q", *attr.FleetId)
 			err := resource.Retry(60*time.Minute, func() *resource.RetryError {
 				_, err := conn.DeleteFleet(&gamelift.DeleteFleetInput{

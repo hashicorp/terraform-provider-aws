@@ -15,23 +15,6 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestResourceAWSEFSFileSystem_validateReferenceName(t *testing.T) {
-	var value string
-	var errors []error
-
-	value = acctest.RandString(128)
-	_, errors = validateReferenceName(value, "reference_name")
-	if len(errors) == 0 {
-		t.Fatalf("Expected to trigger a validation error")
-	}
-
-	value = acctest.RandString(32)
-	_, errors = validateReferenceName(value, "reference_name")
-	if len(errors) != 0 {
-		t.Fatalf("Expected not to trigger a validation error")
-	}
-}
-
 func TestResourceAWSEFSFileSystem_hasEmptyFileSystems(t *testing.T) {
 	fs := &efs.DescribeFileSystemsOutput{
 		FileSystems: []*efs.FileSystemDescription{},
@@ -69,7 +52,7 @@ func TestAccAWSEFSFileSystem_importBasic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"reference_name", "creation_token"},
+				ImportStateVerifyIgnore: []string{"creation_token"},
 			},
 		},
 	})
@@ -238,7 +221,7 @@ func TestAccAWSEFSFileSystem_ProvisionedThroughputInMibps(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"reference_name", "creation_token"},
+				ImportStateVerifyIgnore: []string{"creation_token"},
 			},
 		},
 	})
@@ -272,7 +255,7 @@ func TestAccAWSEFSFileSystem_ThroughputMode(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"reference_name", "creation_token"},
+				ImportStateVerifyIgnore: []string{"creation_token"},
 			},
 		},
 	})

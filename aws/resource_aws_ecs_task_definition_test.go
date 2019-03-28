@@ -435,9 +435,14 @@ func TestAccAWSEcsTaskDefinition_Inactive(t *testing.T) {
 
 	markTaskDefinitionInactive := func() {
 		conn := testAccProvider.Meta().(*AWSClient).ecsconn
-		conn.DeregisterTaskDefinition(&ecs.DeregisterTaskDefinitionInput{
+
+		_, err := conn.DeregisterTaskDefinition(&ecs.DeregisterTaskDefinitionInput{
 			TaskDefinition: aws.String(fmt.Sprintf("%s:1", tdName)),
 		})
+
+		if err != nil {
+			t.Fatalf("error deregistering ECS Task Definition (%s): %s", tdName, err)
+		}
 	}
 
 	resource.ParallelTest(t, resource.TestCase{

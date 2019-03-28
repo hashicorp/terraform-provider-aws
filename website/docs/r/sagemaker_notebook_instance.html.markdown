@@ -20,7 +20,7 @@ resource "aws_sagemaker_notebook_instance" "ni" {
   role_arn = "${aws_iam_role.role.arn}"
   instance_type = "ml.t2.medium"
 
-  tags {
+  tags = {
     Name = "foo"
   }
 }

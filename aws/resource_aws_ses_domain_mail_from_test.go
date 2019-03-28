@@ -51,6 +51,54 @@ func TestAccAWSSESDomainMailFrom_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSSESDomainMailFrom_disappears(t *testing.T) {
+	domain := fmt.Sprintf(
+		"%s.terraformtesting.com",
+		acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	mailFromDomain := fmt.Sprintf("bounce.%s", domain)
+	resourceName := "aws_ses_domain_mail_from.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckSESDomainMailFromDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsSESDomainMailFromConfig(domain, mailFromDomain),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsSESDomainMailFromExists(resourceName),
+					testAccCheckAwsSESDomainMailFromDisappears(domain),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSSESDomainMailFrom_disappears_Identity(t *testing.T) {
+	domain := fmt.Sprintf(
+		"%s.terraformtesting.com",
+		acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	mailFromDomain := fmt.Sprintf("bounce.%s", domain)
+	resourceName := "aws_ses_domain_mail_from.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckSESDomainMailFromDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsSESDomainMailFromConfig(domain, mailFromDomain),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsSESDomainMailFromExists(resourceName),
+					testAccCheckAwsSESDomainIdentityDisappears(domain),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSSESDomainMailFrom_behaviorOnMxFailure(t *testing.T) {
 	domain := fmt.Sprintf(
 		"%s.terraformtesting.com",
@@ -140,6 +188,21 @@ func testAccCheckSESDomainMailFromDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccCheckAwsSESDomainMailFromDisappears(identity string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).sesConn
+
+		input := &ses.SetIdentityMailFromDomainInput{
+			Identity:       aws.String(identity),
+			MailFromDomain: nil,
+		}
+
+		_, err := conn.SetIdentityMailFromDomain(input)
+
+		return err
+	}
 }
 
 func testAccAwsSESDomainMailFromConfig(domain, mailFromDomain string) string {
