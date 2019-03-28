@@ -387,8 +387,8 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 		params.Tags = tagsFromMapGeneric(v.(map[string]interface{}))
 	}
 
-	// IAM changes can take 1 minute to propagate in AWS
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+	// IAM changes can take 3 minute to propagate in AWS
+	err := resource.Retry(3*time.Minute, func() *resource.RetryError {
 		_, err := conn.CreateFunction(params)
 		if err != nil {
 			log.Printf("[DEBUG] Error creating Lambda Function: %s", err)
@@ -756,8 +756,8 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 	if configUpdate {
 		log.Printf("[DEBUG] Send Update Lambda Function Configuration request: %#v", configReq)
 
-		// IAM changes can take 1 minute to propagate in AWS
-		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		// IAM changes can take 3 minute to propagate in AWS
+		err := resource.Retry(3*time.Minute, func() *resource.RetryError {
 			_, err := conn.UpdateFunctionConfiguration(configReq)
 			if err != nil {
 				log.Printf("[DEBUG] Received error modifying Lambda Function Configuration %s: %s", d.Id(), err)
