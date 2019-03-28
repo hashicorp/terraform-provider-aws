@@ -255,6 +255,10 @@ of several sub-resources - these resources are laid out below.
     deleting it when destroying the resource through Terraform. If this is set,
     the distribution needs to be deleted manually afterwards. Default: `false`.
 
+  * `wait_for_deployment` (Optional) - By default, the resource will wait
+    for creation and updates to fully deploy. Setting this to `false`
+    will skip waiting for deployments to complete. Default: `true`.
+
 #### Cache Behavior Arguments
 
   * `allowed_methods` (Required) - Controls which HTTP methods CloudFront
