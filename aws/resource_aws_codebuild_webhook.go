@@ -34,7 +34,6 @@ func resourceAwsCodeBuildWebhook() *schema.Resource {
 			"filter_group": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"type": {
@@ -50,11 +49,12 @@ func resourceAwsCodeBuildWebhook() *schema.Resource {
 						},
 						"exclude_matched_pattern": {
 							Type:     schema.TypeBool,
-							Required: true,
+							Optional: true,
+							Default:  false,
 						},
 						"pattern": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Required: true,
 						},
 					},
 				},
