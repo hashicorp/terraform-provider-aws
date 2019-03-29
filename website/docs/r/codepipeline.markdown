@@ -75,9 +75,9 @@ data "aws_kms_alias" "s3kmskey" {
   name = "alias/myKmsKey"
 }
 
-resource "aws_codepipeline" "foo" {
+resource "aws_codepipeline" "codepipeline" {
   name     = "tf-test-pipeline"
-  role_arn = "${aws_iam_role.foo.arn}"
+  role_arn = "${aws_iam_role.codepipeline_role.arn}"
 
   artifact_store {
     location = "${aws_s3_bucket.codepipeline_bucket.bucket}"
