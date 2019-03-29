@@ -168,8 +168,9 @@ func resourceAwsCloudWatchEventRuleRead(d *schema.ResourceData, meta interface{}
 	}
 	log.Printf("[DEBUG] Setting boolean state: %t", boolState)
 	d.Set("is_enabled", boolState)
-	d.Set("tags", saveTagsCloudWatchEvents(conn, d, aws.StringValue(out.Arn)))
-
+	if err := saveTagsCloudWatchEvents(conn, d, aws.StringValue(out.Arn)); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
 	return nil
 }
 
