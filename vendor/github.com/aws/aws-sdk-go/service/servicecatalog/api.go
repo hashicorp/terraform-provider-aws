@@ -8392,6 +8392,13 @@ type CreateConstraintInput struct {
 	//
 	// {"NotificationArns" : ["arn:aws:sns:us-east-1:123456789012:Topic"]}
 	//
+	// RESOUCE_UPDATESpecify the TagUpdatesOnProvisionedProduct property as follows:
+	//
+	// {"Version":"2.0","Properties":{"TagUpdateOnProvisionedProduct":"String"}}
+	//
+	// The TagUpdatesOnProvisionedProduct property accepts a string value of ALLOWED
+	// or NOT_ALLOWED.
+	//
 	// STACKSETSpecify the Parameters property as follows:
 	//
 	// {"Version": "String", "Properties": {"AccountList": [ "String" ], "RegionList":
@@ -8425,6 +8432,8 @@ type CreateConstraintInput struct {
 	//    * LAUNCH
 	//
 	//    * NOTIFICATION
+	//
+	//    * RESOURCE_UPDATE
 	//
 	//    * STACKSET
 	//
@@ -17910,6 +17919,10 @@ type UpdateProvisionedProductInput struct {
 	// a stack set.
 	ProvisioningPreferences *UpdateProvisioningPreferences `type:"structure"`
 
+	// One or more tags. Requires the product to have RESOURCE_UPDATE constraint
+	// with TagUpdatesOnProvisionedProduct set to ALLOWED to allow tag updates.
+	Tags []*Tag `type:"list"`
+
 	// The idempotency token that uniquely identifies the provisioning update request.
 	UpdateToken *string `min:"1" type:"string" idempotencyToken:"true"`
 }
@@ -17958,6 +17971,16 @@ func (s *UpdateProvisionedProductInput) Validate() error {
 	if s.ProvisioningPreferences != nil {
 		if err := s.ProvisioningPreferences.Validate(); err != nil {
 			invalidParams.AddNested("ProvisioningPreferences", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
 		}
 	}
 
@@ -18012,6 +18035,12 @@ func (s *UpdateProvisionedProductInput) SetProvisioningParameters(v []*UpdatePro
 // SetProvisioningPreferences sets the ProvisioningPreferences field's value.
 func (s *UpdateProvisionedProductInput) SetProvisioningPreferences(v *UpdateProvisioningPreferences) *UpdateProvisionedProductInput {
 	s.ProvisioningPreferences = v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *UpdateProvisionedProductInput) SetTags(v []*Tag) *UpdateProvisionedProductInput {
+	s.Tags = v
 	return s
 }
 
