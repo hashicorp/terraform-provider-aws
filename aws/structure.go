@@ -5157,47 +5157,78 @@ func expandAppmeshRouteSpec(vSpec []interface{}) *appmesh.RouteSpec {
 	}
 	mSpec := vSpec[0].(map[string]interface{})
 
-	vHttpRoute, ok := mSpec["http_route"].([]interface{})
-	if !ok || len(vHttpRoute) == 0 || vHttpRoute[0] == nil {
-		return nil
-	}
-	mHttpRoute := vHttpRoute[0].(map[string]interface{})
+	if vHttpRoute, ok := mSpec["http_route"].([]interface{}); ok && len(vHttpRoute) > 0 && vHttpRoute[0] != nil {
+		mHttpRoute := vHttpRoute[0].(map[string]interface{})
 
-	spec.HttpRoute = &appmesh.HttpRoute{}
+		spec.HttpRoute = &appmesh.HttpRoute{}
 
-	if vHttpRouteAction, ok := mHttpRoute["action"].([]interface{}); ok && len(vHttpRouteAction) > 0 && vHttpRouteAction[0] != nil {
-		mHttpRouteAction := vHttpRouteAction[0].(map[string]interface{})
+		if vHttpRouteAction, ok := mHttpRoute["action"].([]interface{}); ok && len(vHttpRouteAction) > 0 && vHttpRouteAction[0] != nil {
+			mHttpRouteAction := vHttpRouteAction[0].(map[string]interface{})
 
-		if vWeightedTargets, ok := mHttpRouteAction["weighted_target"].(*schema.Set); ok && vWeightedTargets.Len() > 0 {
-			weightedTargets := []*appmesh.WeightedTarget{}
+			if vWeightedTargets, ok := mHttpRouteAction["weighted_target"].(*schema.Set); ok && vWeightedTargets.Len() > 0 {
+				weightedTargets := []*appmesh.WeightedTarget{}
 
-			for _, vWeightedTarget := range vWeightedTargets.List() {
-				weightedTarget := &appmesh.WeightedTarget{}
+				for _, vWeightedTarget := range vWeightedTargets.List() {
+					weightedTarget := &appmesh.WeightedTarget{}
 
-				mWeightedTarget := vWeightedTarget.(map[string]interface{})
+					mWeightedTarget := vWeightedTarget.(map[string]interface{})
 
-				if vVirtualNode, ok := mWeightedTarget["virtual_node"].(string); ok && vVirtualNode != "" {
-					weightedTarget.VirtualNode = aws.String(vVirtualNode)
+					if vVirtualNode, ok := mWeightedTarget["virtual_node"].(string); ok && vVirtualNode != "" {
+						weightedTarget.VirtualNode = aws.String(vVirtualNode)
+					}
+					if vWeight, ok := mWeightedTarget["weight"].(int); ok {
+						weightedTarget.Weight = aws.Int64(int64(vWeight))
+					}
+
+					weightedTargets = append(weightedTargets, weightedTarget)
 				}
-				if vWeight, ok := mWeightedTarget["weight"].(int); ok {
-					weightedTarget.Weight = aws.Int64(int64(vWeight))
-				}
 
-				weightedTargets = append(weightedTargets, weightedTarget)
+				spec.HttpRoute.Action = &appmesh.HttpRouteAction{
+					WeightedTargets: weightedTargets,
+				}
 			}
+		}
 
-			spec.HttpRoute.Action = &appmesh.HttpRouteAction{
-				WeightedTargets: weightedTargets,
+		if vHttpRouteMatch, ok := mHttpRoute["match"].([]interface{}); ok && len(vHttpRouteMatch) > 0 && vHttpRouteMatch[0] != nil {
+			mHttpRouteMatch := vHttpRouteMatch[0].(map[string]interface{})
+
+			if vPrefix, ok := mHttpRouteMatch["prefix"].(string); ok && vPrefix != "" {
+				spec.HttpRoute.Match = &appmesh.HttpRouteMatch{
+					Prefix: aws.String(vPrefix),
+				}
 			}
 		}
 	}
 
-	if vHttpRouteMatch, ok := mHttpRoute["match"].([]interface{}); ok && len(vHttpRouteMatch) > 0 && vHttpRouteMatch[0] != nil {
-		mHttpRouteMatch := vHttpRouteMatch[0].(map[string]interface{})
+	if vTcpRoute, ok := mSpec["tcp_route"].([]interface{}); ok && len(vTcpRoute) > 0 && vTcpRoute[0] != nil {
+		mTcpRoute := vTcpRoute[0].(map[string]interface{})
 
-		if vPrefix, ok := mHttpRouteMatch["prefix"].(string); ok && vPrefix != "" {
-			spec.HttpRoute.Match = &appmesh.HttpRouteMatch{
-				Prefix: aws.String(vPrefix),
+		spec.TcpRoute = &appmesh.TcpRoute{}
+
+		if vTcpRouteAction, ok := mTcpRoute["action"].([]interface{}); ok && len(vTcpRouteAction) > 0 && vTcpRouteAction[0] != nil {
+			mTcpRouteAction := vTcpRouteAction[0].(map[string]interface{})
+
+			if vWeightedTargets, ok := mTcpRouteAction["weighted_target"].(*schema.Set); ok && vWeightedTargets.Len() > 0 {
+				weightedTargets := []*appmesh.WeightedTarget{}
+
+				for _, vWeightedTarget := range vWeightedTargets.List() {
+					weightedTarget := &appmesh.WeightedTarget{}
+
+					mWeightedTarget := vWeightedTarget.(map[string]interface{})
+
+					if vVirtualNode, ok := mWeightedTarget["virtual_node"].(string); ok && vVirtualNode != "" {
+						weightedTarget.VirtualNode = aws.String(vVirtualNode)
+					}
+					if vWeight, ok := mWeightedTarget["weight"].(int); ok {
+						weightedTarget.Weight = aws.Int64(int64(vWeight))
+					}
+
+					weightedTargets = append(weightedTargets, weightedTarget)
+				}
+
+				spec.TcpRoute.Action = &appmesh.TcpRouteAction{
+					WeightedTargets: weightedTargets,
+				}
 			}
 		}
 	}
@@ -5243,6 +5274,31 @@ func flattenAppmeshRouteSpec(spec *appmesh.RouteSpec) []interface{} {
 		}
 
 		mSpec["http_route"] = []interface{}{mHttpRoute}
+	}
+
+	if spec.TcpRoute != nil {
+		mTcpRoute := map[string]interface{}{}
+
+		if spec.TcpRoute.Action != nil && spec.TcpRoute.Action.WeightedTargets != nil {
+			vWeightedTargets := []interface{}{}
+
+			for _, weightedTarget := range spec.TcpRoute.Action.WeightedTargets {
+				mWeightedTarget := map[string]interface{}{
+					"virtual_node": aws.StringValue(weightedTarget.VirtualNode),
+					"weight":       int(aws.Int64Value(weightedTarget.Weight)),
+				}
+
+				vWeightedTargets = append(vWeightedTargets, mWeightedTarget)
+			}
+
+			mTcpRoute["action"] = []interface{}{
+				map[string]interface{}{
+					"weighted_target": schema.NewSet(appmeshRouteWeightedTargetHash, vWeightedTargets),
+				},
+			}
+		}
+
+		mSpec["tcp_route"] = []interface{}{mTcpRoute}
 	}
 
 	return []interface{}{mSpec}

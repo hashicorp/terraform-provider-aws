@@ -12,6 +12,8 @@ Provides an AWS App Mesh route resource.
 
 ## Example Usage
 
+### HTTP Routing
+
 ```hcl
 resource "aws_appmesh_route" "serviceb" {
   name                = "serviceB-route"
@@ -40,6 +42,27 @@ resource "aws_appmesh_route" "serviceb" {
 }
 ```
 
+### TCP Routing
+
+```hcl
+resource "aws_appmesh_route" "serviceb" {
+  name                = "serviceB-route"
+  mesh_name           = "${aws_appmesh_mesh.simple.id}"
+  virtual_router_name = "${aws_appmesh_virtual_router.serviceb.name}"
+
+  spec {
+    tcp_route {
+      action {
+        weighted_target {
+          virtual_node = "${aws_appmesh_virtual_node.serviceb1.name}"
+          weight       = 100
+        }
+      }
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -52,11 +75,16 @@ The following arguments are supported:
 The `spec` object supports the following:
 
 * `http_route` - (Optional) The HTTP routing information for the route.
+* `tcp_route` - (Optional) The TCP routing information for the route.
 
 The `http_route` object supports the following:
 
 * `action` - (Required) The action to take if a match is determined.
 * `match` - (Required) The criteria for determining an HTTP request match.
+
+The `tcp_route` object supports the following:
+
+* `action` - (Required) The action to take if a match is determined.
 
 The `action` object supports the following:
 

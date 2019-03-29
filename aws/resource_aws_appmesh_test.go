@@ -11,8 +11,8 @@ func TestAccAWSAppmesh(t *testing.T) {
 			"egressFilter": testAccAwsAppmeshMesh_egressFilter,
 		},
 		"Route": {
-			"basic":         testAccAwsAppmeshRoute_basic,
-			"allAttributes": testAccAwsAppmeshRoute_allAttributes,
+			"httpRoute": testAccAwsAppmeshRoute_httpRoute,
+			"tcpRoute":  testAccAwsAppmeshRoute_tcpRoute,
 		},
 		"VirtualNode": {
 			"basic":         testAccAwsAppmeshVirtualNode_basic,
