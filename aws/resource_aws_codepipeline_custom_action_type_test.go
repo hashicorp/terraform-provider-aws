@@ -90,7 +90,6 @@ func TestAccAwsCodePipelineCustomActionType_configurationProperties(t *testing.T
 					resource.TestCheckResourceAttr(resourceName, "configuration_properties.0.queryable", "true"),
 					resource.TestCheckResourceAttr(resourceName, "configuration_properties.0.required", "true"),
 					resource.TestCheckResourceAttr(resourceName, "configuration_properties.0.secret", "false"),
-					resource.TestCheckResourceAttr(resourceName, "configuration_properties.0.type", "String"),
 				),
 			},
 			{
@@ -160,7 +159,7 @@ resource "aws_codepipeline_custom_action_type" "test" {
     maximum_count = 1
     minimum_count = 0
   }
-	provider_name = "tf-%s"
+  provider_name = "tf-%s"
   version = "1"
 }
 `, rName)
@@ -178,13 +177,13 @@ resource "aws_codepipeline_custom_action_type" "test" {
     maximum_count = 1
     minimum_count = 0
   }
-	provider_name = "tf-%s"
+  provider_name = "tf-%s"
   version = "1"
-	settings {
-		entity_url_template = "http://example.com"
-		execution_url_template = "http://example.com"
-		revision_url_template = "http://example.com"
-	}
+  settings {
+    entity_url_template = "http://example.com"
+    execution_url_template = "http://example.com"
+    revision_url_template = "http://example.com"
+  }
 }
 `, rName)
 }
@@ -201,17 +200,16 @@ resource "aws_codepipeline_custom_action_type" "test" {
     maximum_count = 1
     minimum_count = 0
   }
-	provider_name = "tf-%s"
+  provider_name = "tf-%s"
   version = "1"
-	configuration_properties {
-		description = "tf-test"
-		key = true
-		name = "tf-test-%s"
-		queryable = true
-		required = true
-		secret = false
-		type = "String"
-	}
+  configuration_properties {
+    description = "tf-test"
+    key = true
+    name = "tf-test-%s"
+    queryable = true
+    required = true
+    secret = false
+  }
 }
 `, rName, rName)
 }
