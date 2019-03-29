@@ -183,6 +183,8 @@ func resourceAwsCognitoUserPoolClient() *schema.Resource {
 					},
 				},
 			},
+
+			"ui_customization": cognitoUserPoolUICustomizationSchema(),
 		},
 	}
 }
@@ -261,6 +263,10 @@ func resourceAwsCognitoUserPoolClientCreate(d *schema.ResourceData, meta interfa
 
 	d.SetId(aws.StringValue(resp.UserPoolClient.ClientId))
 
+	if err = cognitoUserPoolUICustomizationSet(d, conn); err != nil {
+		return fmt.Errorf("Error setting User Pool Client UI Customization: %s", err)
+	}
+
 	return resourceAwsCognitoUserPoolClientRead(d, meta)
 }
 
@@ -304,6 +310,16 @@ func resourceAwsCognitoUserPoolClientRead(d *schema.ResourceData, meta interface
 
 	if err := d.Set("analytics_configuration", flattenAwsCognitoUserPoolClientAnalyticsConfig(resp.UserPoolClient.AnalyticsConfiguration)); err != nil {
 		return fmt.Errorf("error setting analytics_configuration: %s", err)
+	}
+
+	getUICustomizationOutput, err := cognitoUserPoolUICustomizationGet(d, conn)
+
+	if err != nil {
+		return fmt.Errorf("Error reading Cognito User Pool Client UI Customization: %s", err)
+	}
+
+	if err := d.Set("ui_customization", flattenCognitoUserPoolUICustomization(getUICustomizationOutput.UICustomization)); err != nil {
+		return fmt.Errorf("Failed setting ui_customization: %s", err)
 	}
 
 	return nil
@@ -378,6 +394,10 @@ func resourceAwsCognitoUserPoolClientUpdate(d *schema.ResourceData, meta interfa
 	_, err := conn.UpdateUserPoolClient(params)
 	if err != nil {
 		return fmt.Errorf("Error updating Cognito User Pool Client: %s", err)
+	}
+
+	if err = cognitoUserPoolUICustomizationSet(d, conn); err != nil {
+		return fmt.Errorf("Error updating User Pool Client UI Customization: %s", err)
 	}
 
 	return resourceAwsCognitoUserPoolClientRead(d, meta)

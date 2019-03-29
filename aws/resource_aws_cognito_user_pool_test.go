@@ -1110,6 +1110,27 @@ func TestAccAWSCognitoUserPool_withVerificationMessageTemplate(t *testing.T) {
 	})
 }
 
+func TestAccAWSCognitoUserPool_withUICustomization(t *testing.T) {
+	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", acctest.RandString(7))
+	css := ".label-customizable {font-weight: 400;}"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCognitoUserPoolClientDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCognitoUserPoolConfig_withUICustomization(userPoolName, css),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("aws_cognito_user_pool_pool.pool", "ui_customization.#", "1"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool_pool.pool", "ui_customization.0.css", css),
+					resource.TestCheckResourceAttrSet("aws_cognito_user_pool_pool.pool", "ui_customization.0.image_file"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSCognitoUserPool_update(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	optionalMfa := "OPTIONAL"
@@ -2016,4 +2037,17 @@ resource "aws_cognito_user_pool" "test" {
   }
 }
 `, name, mfaconfig, smsAuthMsg)
+}
+
+func testAccAWSCognitoUserPoolConfig_withUICustomization(userPoolName, css string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "pool" {
+  name = "%s"
+
+	ui_customization {
+		css        = "%s"
+		image_file = "test-fixtures/logo.png"
+	}
+}
+`, userPoolName, css)
 }

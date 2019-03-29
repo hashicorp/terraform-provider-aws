@@ -166,6 +166,28 @@ func TestAccAWSCognitoUserPoolClient_allFields(t *testing.T) {
 	})
 }
 
+func TestAccAWSCognitoUserPoolClient_withUICustomization(t *testing.T) {
+	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", acctest.RandString(7))
+	clientName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	css := ".label-customizable {font-weight: 400;}"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCognitoUserPoolClientDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCognitoUserPoolClientConfig_withUICustomization(userPoolName, clientName, css),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("aws_cognito_user_pool_client.client", "ui_customization.#", "1"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool_client.client", "ui_customization.0.css", css),
+					resource.TestCheckResourceAttrSet("aws_cognito_user_pool_client.client", "ui_customization.0.image_file"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSCognitoUserPoolClient_allFieldsUpdatingOneField(t *testing.T) {
 	var client cognitoidentityprovider.UserPoolClientType
 	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", acctest.RandString(7))
@@ -604,4 +626,21 @@ resource "aws_cognito_user_pool_client" "test" {
   }
 }
 `, clientName)
+}
+
+func testAccAWSCognitoUserPoolClientConfig_withUICustomization(userPoolName, clientName string, css string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "pool" {
+  name = "%s"
+}
+
+resource "aws_cognito_user_pool_client" "client" {
+  name         = "%s"
+  user_pool_id = "${aws_cognito_user_pool.pool.id}"
+  ui_customization {
+		css        = "%s"
+		image_file = "test-fixtures/logo.png"
+	}
+}
+`, userPoolName, clientName, css)
 }

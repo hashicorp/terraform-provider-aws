@@ -89,6 +89,7 @@ The following arguments are supported:
 * `user_pool_add_ons` - (Optional) Configuration block for [user pool add-ons](#user-pool-add-ons) to enable user pool advanced security mode features.
 * `verification_message_template` (Optional) - The [verification message templates](#verification-message-template) configuration.
 * `account_recovery_setting` (Optional) - The [account_recovery_setting](#account-recovery-setting) configuration.
+* `ui_customization` (Optional) - The uncustomized clients [UI Customization](#ui-customization).
 
 #### Admin Create User Config
 
@@ -212,6 +213,11 @@ The following arguments are required in the `software_token_mfa_configuration` c
 * `recovery_mechanism` (Required) - The list of Account Recovery Options of the following structure:
     * `name` (Required) - Specifies the recovery method for a user. Can be of the following: `verified_email`, `verified_phone_number`, and `admin_only`.
     * `priority` (Required) - A positive integer specifying priority of a method with 1 being the highest priority.
+
+#### UI Customization
+
+  * `css` (Optional) - The customized CSS.
+  * `image_file` (Optional) - Le local image file path.
 
 ## Attributes Reference
 

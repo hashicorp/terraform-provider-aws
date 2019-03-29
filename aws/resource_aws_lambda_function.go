@@ -1206,19 +1206,6 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 	return resourceAwsLambdaFunctionRead(d, meta)
 }
 
-// loadFileContent returns contents of a file in a given path
-func loadFileContent(v string) ([]byte, error) {
-	filename, err := homedir.Expand(v)
-	if err != nil {
-		return nil, err
-	}
-	fileContent, err := ioutil.ReadFile(filename)
-	if err != nil {
-		return nil, err
-	}
-	return fileContent, nil
-}
-
 func readEnvironmentVariables(ev map[string]interface{}) map[string]string {
 	variables := make(map[string]string)
 	for k, v := range ev {

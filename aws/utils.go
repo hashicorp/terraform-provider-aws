@@ -1,12 +1,17 @@
 package aws
 
 import (
+	"crypto/sha1"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
+	"io/ioutil"
+	"net/http"
 	"reflect"
 	"regexp"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	homedir "github.com/mitchellh/go-homedir"
 )
 
 // Base64Encode encodes data if the input isn't already encoded using base64.StdEncoding.EncodeToString.
@@ -60,4 +65,57 @@ func appendUniqueString(slice []string, elem string) []string {
 		}
 	}
 	return append(slice, elem)
+}
+
+// loadFileContent returns contents of a file in a given path
+func loadFileContent(v string) ([]byte, error) {
+	filename, err := homedir.Expand(v)
+	if err != nil {
+		return nil, err
+	}
+	fileContent, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return nil, err
+	}
+	return fileContent, nil
+}
+
+func byteHashSum(content []byte) string {
+	hash := sha1.Sum(content)
+
+	return hex.EncodeToString(hash[:])
+}
+
+func stringHashSum(css string) string {
+	v := []byte(css)
+	hash := sha1.Sum(v)
+	return hex.EncodeToString(hash[:])
+}
+
+func remoteFileContent(v string) ([]byte, error) {
+	match, _ := regexp.MatchString(`^https?:\/\/`, v)
+
+	if match {
+		resp, err := http.Get(v)
+
+		if err != nil {
+			return nil, err
+		}
+
+		defer resp.Body.Close()
+
+		return ioutil.ReadAll(resp.Body)
+	} else {
+		return loadFileContent(v)
+	}
+}
+
+func remoteFileHashSum(v string) string {
+	content, err := remoteFileContent(v)
+
+	if err != nil {
+		return ""
+	}
+
+	return byteHashSum(content)
 }

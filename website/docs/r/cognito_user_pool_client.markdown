@@ -110,6 +110,28 @@ resource "aws_cognito_user_pool_client" "test" {
 }
 ```
 
+### Create a user pool client with UI customization
+```hcl
+resource "aws_cognito_user_pool" "pool" {
+  name = "pool"
+}
+
+data "template_file" "custom_css" {
+  template = "${file("files/custom.css")}"
+}
+
+resource "aws_cognito_user_pool_client" "client" {
+  name = "client"
+
+  user_pool_id = "${aws_cognito_user_pool.pool.id}"
+
+  ui_customization {
+    css        = "${data.template_file.custom_css.rendered}"
+    image_file = "files/logo.png"
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -130,6 +152,7 @@ The following arguments are supported:
 * `user_pool_id` - (Required) The user pool the client belongs to.
 * `write_attributes` - (Optional) List of user pool attributes the application client can write to.
 * `analytics_configuration` - (Optional) The Amazon Pinpoint analytics configuration for collecting metrics for this user pool.
+* `ui_customization` (Optional) - The [UI Customization](#ui-customization).
 
 ### Analytics Configuration
 
@@ -141,6 +164,11 @@ Either `application_arn` or `application_id` is required.
 * `role_arn` - (Optional) The ARN of an IAM role that authorizes Amazon Cognito to publish events to Amazon Pinpoint analytics. Conflicts with `application_arn`.
 * `user_data_shared` (Optional) If set to `true`, Amazon Cognito will include user data in the events it publishes to Amazon Pinpoint analytics.
 
+#### UI Customization
+
+  * `css` (Optional) - The customized CSS.
+  * `image_file` (Optional) - Le local image file path.
+  
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
