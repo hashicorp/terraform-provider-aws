@@ -18,6 +18,7 @@ ENHANCEMENTS:
 * data-source/aws_kms_ciphertext: Hide `plaintext` in logs and user interface [GH-6100]
 * resource/aws_appsync_graphql_api: Add `schema` argument [GH-4840]
 * resource/aws_batch_compute_environment: Add `compute_resources` configuration block `launch_template` configuration block (support EC2 Launch Templates) [GH-8026]
+* resource/aws_cloudwatch_event_rule: Add `tags` argument [GH-8076]
 * resource/aws_instance: Only call `DescribeInstanceCreditSpecifications` for T2 and T3 Instance Families [GH-8107]
 * resource/aws_ram_principal_association: Validate `principal` as AWS Account ID or ARN [GH-8048]
 * resource/aws_s3_bucket: Support `DEEP_ARCHIVE` in storage class validations [GH-8109]
