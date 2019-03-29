@@ -8,7 +8,7 @@ description: |-
 
 # aws_elasticsearch_domain
 
-Use this data source to get information about an ElasticSearch Domain
+Use this data source to get information about an Elasticsearch Domain
 
 ## Example Usage
 
@@ -31,6 +31,7 @@ The following attributes are exported:
 
 * `domain_id` – Unique identifier for the domain.
 * `endpoint` – Domain-specific endpoint used to submit index, search, and data upload requests.
+* `kibana_endpoint` - Domain-specific endpoint used to access the Kibana application.
 * `created` – Status of the creation of the domain.
 * `deleted` – Status of the deletion of the domain.
 * `access_policies` – The policy document attached to the domain.
@@ -50,6 +51,25 @@ The following attributes are exported:
 ** `volume_size` - The size of EBS volumes attached to data nodes (in GB).
 ** `iops` - The baseline input/output (I/O) performance of EBS volumes
 	attached to data nodes.
+* `encryption_at_rest` - Domain encryption at rest related options.
+** `enabled` - Whether encryption at rest is enabled in the domain.
+** `kms_key_id` - The KMS key id used to encrypt data at rest.
+* `node_to_node_encryption` - Domain in transit encryption related options.
+** `enabled` - Whether node to node encryption is enabled.
+* `vpc_options` - VPC Options for private Elasticsearch domains.
+** `availability_zones` - The availability zones used by the domain.
+** `security_group_ids` - The security groups used by the domain.
+** `subnet_ids` - The subnets used by the domain.
+** `vpc_id` - The VPC used by the domain.
+* `log_publishing_options` - Domain log publishing related options.
+** `log_type` - The type of Elasticsearch log being published.
+** `cloudwatch_log_group_arn` - The CloudWatch Log Group where the logs are published.
+** `enabled` - Whether log publishing is enabled.
+* `cognito_options` - Domain Amazon Cognito Authentication options for Kibana.
+** `enabled` - Whether Amazon Cognito Authentication is enabled.
+** `user_pool_id` - The Cognito User pool used by the domain.
+** `identity_pool_id` - The Cognito Identity pool used by the domain.
+** `role_arn` - The IAM Role with the AmazonESCognitoAccess policy attached.
 * `snapshot_options` – Domain snapshot related options.
 ** `automated_snapshot_start_hour` - Hour during which the service takes an automated daily
 	snapshot of the indices in the domain.
