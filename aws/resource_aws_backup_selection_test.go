@@ -235,8 +235,8 @@ resource "aws_backup_selection" "test" {
   }
 
   resources = [
-    "arn:aws:ec2:us-east-1:${data.aws_caller_identity.current.account_id}:volume/",
-    "arn:aws:elasticfilesystem:us-east-1:${data.aws_caller_identity.current.account_id}:file-system/"
+    "arn:aws:elasticfilesystem:us-east-1:${data.aws_caller_identity.current.account_id}:file-system/",
+    "arn:aws:ec2:us-east-1:${data.aws_caller_identity.current.account_id}:volume/"
   ]
 }
 `, rInt)

@@ -141,7 +141,9 @@ func resourceAwsBackupSelectionRead(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 	if resp.BackupSelection.Resources != nil {
-		d.Set("resources", resp.BackupSelection.Resources)
+		if err := d.Set("resources", aws.StringValueSlice(resp.BackupSelection.Resources)); err != nil {
+			return fmt.Errorf("error setting resources: %s", err)
+		}
 	}
 
 	return nil
