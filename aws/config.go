@@ -158,12 +158,14 @@ type Config struct {
 	EfsEndpoint              string
 	EsEndpoint               string
 	ElbEndpoint              string
+	FirehoseEndpoint         string
 	IamEndpoint              string
 	KinesisEndpoint          string
 	KinesisAnalyticsEndpoint string
 	KmsEndpoint              string
 	LambdaEndpoint           string
 	RdsEndpoint              string
+	RedshiftEndpoint         string
 	R53Endpoint              string
 	S3Endpoint               string
 	S3ControlEndpoint        string
@@ -405,7 +407,7 @@ func (c *Config) Client() (interface{}, error) {
 		elbv2conn:                           elbv2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.ElbEndpoint)})),
 		emrconn:                             emr.New(sess),
 		esconn:                              elasticsearch.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.EsEndpoint)})),
-		firehoseconn:                        firehose.New(sess),
+		firehoseconn:                        firehose.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.FirehoseEndpoint)})),
 		fmsconn:                             fms.New(sess),
 		fsxconn:                             fsx.New(sess),
 		gameliftconn:                        gamelift.New(sess),
@@ -442,7 +444,7 @@ func (c *Config) Client() (interface{}, error) {
 		r53conn:                             route53.New(sess.Copy(&aws.Config{Region: aws.String("us-east-1"), Endpoint: aws.String(c.R53Endpoint)})),
 		ramconn:                             ram.New(sess),
 		rdsconn:                             rds.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.RdsEndpoint)})),
-		redshiftconn:                        redshift.New(sess),
+		redshiftconn:                        redshift.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.RedshiftEndpoint)})),
 		region:                              c.Region,
 		resourcegroupsconn:                  resourcegroups.New(sess),
 		route53resolverconn:                 route53resolver.New(sess),
@@ -496,6 +498,14 @@ func (c *Config) Client() (interface{}, error) {
 		}
 		if err.Code() == applicationautoscaling.ErrCodeFailedResourceAccessException {
 			r.Retryable = aws.Bool(true)
+		}
+	})
+
+	client.appsyncconn.Handlers.Retry.PushBack(func(r *request.Request) {
+		if r.Operation.Name == "CreateGraphqlApi" {
+			if isAWSErr(r.Error, appsync.ErrCodeConcurrentModificationException, "a GraphQL API creation is already in progress") {
+				r.Retryable = aws.Bool(true)
+			}
 		}
 	})
 

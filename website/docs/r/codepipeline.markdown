@@ -15,12 +15,12 @@ Provides a CodePipeline.
 ## Example Usage
 
 ```hcl
-resource "aws_s3_bucket" "foo" {
+resource "aws_s3_bucket" "codepipeline_bucket" {
   bucket = "test-bucket"
   acl    = "private"
 }
 
-resource "aws_iam_role" "foo" {
+resource "aws_iam_role" "codepipeline_role" {
   name = "test-role"
 
   assume_role_policy = <<EOF
@@ -55,8 +55,8 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
         "s3:GetBucketVersioning"
       ],
       "Resource": [
-        "${aws_s3_bucket.foo.arn}",
-        "${aws_s3_bucket.foo.arn}/*"
+        "${aws_s3_bucket.codepipeline_bucket.arn}",
+        "${aws_s3_bucket.codepipeline_bucket.arn}/*"
       ]
     },
     {
@@ -76,12 +76,12 @@ data "aws_kms_alias" "s3kmskey" {
   name = "alias/myKmsKey"
 }
 
-resource "aws_codepipeline" "foo" {
+resource "aws_codepipeline" "codepipeline" {
   name     = "tf-test-pipeline"
-  role_arn = "${aws_iam_role.foo.arn}"
+  role_arn = "${aws_iam_role.codepipeline_role.arn}"
 
   artifact_store {
-    location = "${aws_s3_bucket.foo.bucket}"
+    location = "${aws_s3_bucket.codepipeline_bucket.bucket}"
     type     = "S3"
 
     encryption_key {

@@ -119,6 +119,27 @@ func TestAccAWSVpc_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSVpc_disappears(t *testing.T) {
+	var vpc ec2.Vpc
+	resourceName := "aws_vpc.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckVpcDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpcConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpcExists(resourceName, &vpc),
+					testAccCheckVpcDisappears(&vpc),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSVpc_AssignGeneratedIpv6CidrBlock(t *testing.T) {
 	var vpc ec2.Vpc
 	resourceName := "aws_vpc.test"
@@ -365,6 +386,20 @@ func testAccCheckVpcExists(n string, vpc *ec2.Vpc) resource.TestCheckFunc {
 		*vpc = *resp.Vpcs[0]
 
 		return nil
+	}
+}
+
+func testAccCheckVpcDisappears(vpc *ec2.Vpc) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+
+		input := &ec2.DeleteVpcInput{
+			VpcId: vpc.VpcId,
+		}
+
+		_, err := conn.DeleteVpc(input)
+
+		return err
 	}
 }
 

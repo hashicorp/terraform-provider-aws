@@ -913,6 +913,12 @@ func TestAccAWSS3Bucket_Lifecycle(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_s3_bucket.bucket", "lifecycle_rule.0.transition.962205413.storage_class", "GLACIER"),
 					resource.TestCheckResourceAttr(
+						"aws_s3_bucket.bucket", "lifecycle_rule.0.transition.1571523406.date", ""),
+					resource.TestCheckResourceAttr(
+						"aws_s3_bucket.bucket", "lifecycle_rule.0.transition.1571523406.days", "210"),
+					resource.TestCheckResourceAttr(
+						"aws_s3_bucket.bucket", "lifecycle_rule.0.transition.1571523406.storage_class", "DEEP_ARCHIVE"),
+					resource.TestCheckResourceAttr(
 						"aws_s3_bucket.bucket", "lifecycle_rule.1.id", "id2"),
 					resource.TestCheckResourceAttr(
 						"aws_s3_bucket.bucket", "lifecycle_rule.1.prefix", "path2/"),
@@ -2473,6 +2479,11 @@ resource "aws_s3_bucket" "bucket" {
 		transition {
 			days = 120
 			storage_class = "GLACIER"
+		}
+
+		transition {
+			days = 210
+			storage_class = "DEEP_ARCHIVE"
 		}
 	}
 	lifecycle_rule {

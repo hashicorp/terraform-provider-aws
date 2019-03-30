@@ -182,6 +182,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_ec2_transit_gateway":                dataSourceAwsEc2TransitGateway(),
 			"aws_ec2_transit_gateway_route_table":    dataSourceAwsEc2TransitGatewayRouteTable(),
 			"aws_ec2_transit_gateway_vpc_attachment": dataSourceAwsEc2TransitGatewayVpcAttachment(),
+			"aws_ec2_transit_gateway_vpn_attachment": dataSourceAwsEc2TransitGatewayVpnAttachment(),
 			"aws_ecr_repository":                     dataSourceAwsEcrRepository(),
 			"aws_ecs_cluster":                        dataSourceAwsEcsCluster(),
 			"aws_ecs_container_definition":           dataSourceAwsEcsContainerDefinition(),
@@ -317,6 +318,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_appsync_api_key":                              resourceAwsAppsyncApiKey(),
 			"aws_appsync_datasource":                           resourceAwsAppsyncDatasource(),
 			"aws_appsync_graphql_api":                          resourceAwsAppsyncGraphqlApi(),
+			"aws_appsync_resolver":                             resourceAwsAppsyncResolver(),
 			"aws_athena_database":                              resourceAwsAthenaDatabase(),
 			"aws_athena_named_query":                           resourceAwsAthenaNamedQuery(),
 			"aws_autoscaling_attachment":                       resourceAwsAutoscalingAttachment(),
@@ -331,6 +333,8 @@ func Provider() terraform.ResourceProvider {
 			"aws_budgets_budget":                               resourceAwsBudgetsBudget(),
 			"aws_cloud9_environment_ec2":                       resourceAwsCloud9EnvironmentEc2(),
 			"aws_cloudformation_stack":                         resourceAwsCloudFormationStack(),
+			"aws_cloudformation_stack_set":                     resourceAwsCloudFormationStackSet(),
+			"aws_cloudformation_stack_set_instance":            resourceAwsCloudFormationStackSetInstance(),
 			"aws_cloudfront_distribution":                      resourceAwsCloudFrontDistribution(),
 			"aws_cloudfront_origin_access_identity":            resourceAwsCloudFrontOriginAccessIdentity(),
 			"aws_cloudfront_public_key":                        resourceAwsCloudFrontPublicKey(),
@@ -525,8 +529,10 @@ func Provider() terraform.ResourceProvider {
 			"aws_kinesis_stream":                               resourceAwsKinesisStream(),
 			"aws_kinesis_analytics_application":                resourceAwsKinesisAnalyticsApplication(),
 			"aws_kms_alias":                                    resourceAwsKmsAlias(),
+			"aws_kms_external_key":                             resourceAwsKmsExternalKey(),
 			"aws_kms_grant":                                    resourceAwsKmsGrant(),
 			"aws_kms_key":                                      resourceAwsKmsKey(),
+			"aws_kms_ciphertext":                               resourceAwsKmsCiphertext(),
 			"aws_lambda_function":                              resourceAwsLambdaFunction(),
 			"aws_lambda_event_source_mapping":                  resourceAwsLambdaEventSourceMapping(),
 			"aws_lambda_alias":                                 resourceAwsLambdaAlias(),
@@ -618,6 +624,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_default_route_table":                          resourceAwsDefaultRouteTable(),
 			"aws_route_table_association":                      resourceAwsRouteTableAssociation(),
 			"aws_sagemaker_model":                              resourceAwsSagemakerModel(),
+			"aws_sagemaker_endpoint_configuration":             resourceAwsSagemakerEndpointConfiguration(),
 			"aws_secretsmanager_secret":                        resourceAwsSecretsManagerSecret(),
 			"aws_secretsmanager_secret_version":                resourceAwsSecretsManagerSecretVersion(),
 			"aws_ses_active_receipt_rule_set":                  resourceAwsSesActiveReceiptRuleSet(),
@@ -814,6 +821,8 @@ func init() {
 		"dynamodb_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n" +
 			"It's typically used to connect to dynamodb-local.",
 
+		"firehose_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
+
 		"kinesis_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n" +
 			"It's typically used to connect to kinesalite.",
 
@@ -836,6 +845,8 @@ func init() {
 		"es_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
 
 		"rds_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
+
+		"redshift_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
 
 		"s3_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
 
@@ -946,6 +957,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		config.EfsEndpoint = endpoints["efs"].(string)
 		config.ElbEndpoint = endpoints["elb"].(string)
 		config.EsEndpoint = endpoints["es"].(string)
+		config.FirehoseEndpoint = endpoints["firehose"].(string)
 		config.IamEndpoint = endpoints["iam"].(string)
 		config.KinesisEndpoint = endpoints["kinesis"].(string)
 		config.KinesisAnalyticsEndpoint = endpoints["kinesis_analytics"].(string)
@@ -953,6 +965,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		config.LambdaEndpoint = endpoints["lambda"].(string)
 		config.R53Endpoint = endpoints["r53"].(string)
 		config.RdsEndpoint = endpoints["rds"].(string)
+		config.RedshiftEndpoint = endpoints["redshift"].(string)
 		config.S3Endpoint = endpoints["s3"].(string)
 		config.S3ControlEndpoint = endpoints["s3control"].(string)
 		config.SesEndpoint = endpoints["ses"].(string)
@@ -1123,6 +1136,12 @@ func endpointsSchema() *schema.Schema {
 					Default:     "",
 					Description: descriptions["es_endpoint"],
 				},
+				"firehose": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: descriptions["firehose_endpoint"],
+				},
 				"kinesis": {
 					Type:        schema.TypeString,
 					Optional:    true,
@@ -1158,6 +1177,12 @@ func endpointsSchema() *schema.Schema {
 					Optional:    true,
 					Default:     "",
 					Description: descriptions["rds_endpoint"],
+				},
+				"redshift": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: descriptions["redshift_endpoint"],
 				},
 				"s3": {
 					Type:        schema.TypeString,
@@ -1222,10 +1247,12 @@ func endpointsToHash(v interface{}) int {
 	buf.WriteString(fmt.Sprintf("%s-", m["autoscaling"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["efs"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["elb"].(string)))
+	buf.WriteString(fmt.Sprintf("%s-", m["firehose"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["kinesis"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["kms"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["lambda"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["rds"].(string)))
+	buf.WriteString(fmt.Sprintf("%s-", m["redshift"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["s3"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["ses"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["sns"].(string)))

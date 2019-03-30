@@ -6044,7 +6044,9 @@ type CreateAutoScalingGroupInput struct {
 	HealthCheckGracePeriod *int64 `type:"integer"`
 
 	// The service to use for the health checks. The valid values are EC2 and ELB.
-	// The default value is EC2.
+	// The default value is EC2. If you configure an Auto Scaling group to use ELB
+	// health checks, it considers the instance unhealthy if it fails either the
+	// EC2 status checks or the load balancer health checks.
 	//
 	// For more information, see Health Checks for Auto Scaling Instances (https://docs.aws.amazon.com/autoscaling/ec2/userguide/healthcheck.html)
 	// in the Amazon EC2 Auto Scaling User Guide.
@@ -6104,8 +6106,8 @@ type CreateAutoScalingGroupInput struct {
 	// The mixed instances policy to use to launch instances. This parameter, a
 	// launch template, a launch configuration, or an EC2 instance must be specified.
 	//
-	// For more information, see Using Multiple Instance Types and Purchase Options
-	// (https://docs.aws.amazon.com/autoscaling/ec2/userguide/AutoScalingGroup.html#asg-purchase-options)
+	// For more information, see Auto Scaling Groups with Multiple Instance Types
+	// and Purchase Options (https://docs.aws.amazon.com/autoscaling/ec2/userguide/asg-purchase-options.html)
 	// in the Amazon EC2 Auto Scaling User Guide.
 	MixedInstancesPolicy *MixedInstancesPolicy `type:"structure"`
 
@@ -8656,9 +8658,7 @@ type DescribeTerminationPolicyTypesOutput struct {
 
 	// The termination policies supported by Amazon EC2 Auto Scaling: OldestInstance,
 	// OldestLaunchConfiguration, NewestInstance, ClosestToNextInstanceHour, Default,
-	// OldestLaunchTemplate, and AllocationStrategy. Currently, the OldestLaunchTemplate
-	// and AllocationStrategy policies are only supported for Auto Scaling groups
-	// with MixedInstancesPolicy.
+	// OldestLaunchTemplate, and AllocationStrategy.
 	TerminationPolicyTypes []*string `type:"list"`
 }
 
@@ -9646,6 +9646,9 @@ type Group struct {
 	HealthCheckGracePeriod *int64 `type:"integer"`
 
 	// The service to use for the health checks. The valid values are EC2 and ELB.
+	// If you configure an Auto Scaling group to use ELB health checks, it considers
+	// the instance unhealthy if it fails either the EC2 status checks or the load
+	// balancer health checks.
 	//
 	// HealthCheckType is a required field
 	HealthCheckType *string `min:"1" type:"string" required:"true"`
@@ -11083,8 +11086,8 @@ func (s *MetricGranularityType) SetGranularity(v string) *MetricGranularityType 
 // Describes a mixed instances policy for an Auto Scaling group. With mixed
 // instances, your Auto Scaling group can provision a combination of On-Demand
 // Instances and Spot Instances across multiple instance types. Used in combination
-// with CreateAutoScalingGroup. For more information, see Using Multiple Instance
-// Types and Purchase Options (https://docs.aws.amazon.com/autoscaling/ec2/userguide/AutoScalingGroup.html#asg-purchase-options)
+// with CreateAutoScalingGroup. For more information, see Auto Scaling Groups
+// with Multiple Instance Types and Purchase Options (https://docs.aws.amazon.com/autoscaling/ec2/userguide/asg-purchase-options.html)
 // in the Amazon EC2 Auto Scaling User Guide.
 //
 // When you create your Auto Scaling group, you can specify a launch configuration
@@ -13252,6 +13255,9 @@ type UpdateAutoScalingGroupInput struct {
 	HealthCheckGracePeriod *int64 `type:"integer"`
 
 	// The service to use for the health checks. The valid values are EC2 and ELB.
+	// If you configure an Auto Scaling group to use ELB health checks, it considers
+	// the instance unhealthy if it fails either the EC2 status checks or the load
+	// balancer health checks.
 	HealthCheckType *string `min:"1" type:"string"`
 
 	// The name of the launch configuration. If you specify this parameter, you
@@ -13272,8 +13278,8 @@ type UpdateAutoScalingGroupInput struct {
 	// The mixed instances policy to use to specify the updates. If you specify
 	// this parameter, you can't specify a launch configuration or a launch template.
 	//
-	// For more information, see Using Multiple Instance Types and Purchase Options
-	// (https://docs.aws.amazon.com/autoscaling/ec2/userguide/AutoScalingGroup.html#asg-purchase-options)
+	// For more information, see Auto Scaling Groups with Multiple Instance Types
+	// and Purchase Options (https://docs.aws.amazon.com/autoscaling/ec2/userguide/asg-purchase-options.html)
 	// in the Amazon EC2 Auto Scaling User Guide.
 	MixedInstancesPolicy *MixedInstancesPolicy `type:"structure"`
 

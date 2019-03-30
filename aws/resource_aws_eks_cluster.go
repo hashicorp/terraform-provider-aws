@@ -82,9 +82,18 @@ func resourceAwsEksCluster() *schema.Resource {
 				MinItems: 1,
 				MaxItems: 1,
 				Required: true,
-				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"endpoint_private_access": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"endpoint_public_access": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
 						"security_group_ids": {
 							Type:     schema.TypeSet,
 							Optional: true,
@@ -236,7 +245,32 @@ func resourceAwsEksClusterUpdate(d *schema.ResourceData, meta interface{}) error
 
 		err = waitForUpdateEksCluster(conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate))
 		if err != nil {
-			return fmt.Errorf("error waiting for EKS Cluster (%s) update (%s): %s", d.Id(), updateID, err)
+			return fmt.Errorf("error waiting for EKS Cluster (%s) version update (%s): %s", d.Id(), updateID, err)
+		}
+	}
+
+	if d.HasChange("vpc_config.0.endpoint_private_access") || d.HasChange("vpc_config.0.endpoint_public_access") {
+		input := &eks.UpdateClusterConfigInput{
+			Name:               aws.String(d.Id()),
+			ResourcesVpcConfig: expandEksVpcConfigUpdateRequest(d.Get("vpc_config").([]interface{})),
+		}
+
+		log.Printf("[DEBUG] Updating EKS Cluster (%s) config: %s", d.Id(), input)
+		output, err := conn.UpdateClusterConfig(input)
+
+		if err != nil {
+			return fmt.Errorf("error updating EKS Cluster (%s) config: %s", d.Id(), err)
+		}
+
+		if output == nil || output.Update == nil || output.Update.Id == nil {
+			return fmt.Errorf("error determining EKS Cluster (%s) config update ID: empty response", d.Id())
+		}
+
+		updateID := aws.StringValue(output.Update.Id)
+
+		err = waitForUpdateEksCluster(conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate))
+		if err != nil {
+			return fmt.Errorf("error waiting for EKS Cluster (%s) config update (%s): %s", d.Id(), updateID, err)
 		}
 	}
 
@@ -289,8 +323,23 @@ func expandEksVpcConfigRequest(l []interface{}) *eks.VpcConfigRequest {
 	m := l[0].(map[string]interface{})
 
 	return &eks.VpcConfigRequest{
-		SecurityGroupIds: expandStringSet(m["security_group_ids"].(*schema.Set)),
-		SubnetIds:        expandStringSet(m["subnet_ids"].(*schema.Set)),
+		EndpointPrivateAccess: aws.Bool(m["endpoint_private_access"].(bool)),
+		EndpointPublicAccess:  aws.Bool(m["endpoint_public_access"].(bool)),
+		SecurityGroupIds:      expandStringSet(m["security_group_ids"].(*schema.Set)),
+		SubnetIds:             expandStringSet(m["subnet_ids"].(*schema.Set)),
+	}
+}
+
+func expandEksVpcConfigUpdateRequest(l []interface{}) *eks.VpcConfigRequest {
+	if len(l) == 0 {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	return &eks.VpcConfigRequest{
+		EndpointPrivateAccess: aws.Bool(m["endpoint_private_access"].(bool)),
+		EndpointPublicAccess:  aws.Bool(m["endpoint_public_access"].(bool)),
 	}
 }
 
@@ -312,9 +361,11 @@ func flattenEksVpcConfigResponse(vpcConfig *eks.VpcConfigResponse) []map[string]
 	}
 
 	m := map[string]interface{}{
-		"security_group_ids": schema.NewSet(schema.HashString, flattenStringList(vpcConfig.SecurityGroupIds)),
-		"subnet_ids":         schema.NewSet(schema.HashString, flattenStringList(vpcConfig.SubnetIds)),
-		"vpc_id":             aws.StringValue(vpcConfig.VpcId),
+		"endpoint_private_access": aws.BoolValue(vpcConfig.EndpointPrivateAccess),
+		"endpoint_public_access":  aws.BoolValue(vpcConfig.EndpointPublicAccess),
+		"security_group_ids":      schema.NewSet(schema.HashString, flattenStringList(vpcConfig.SecurityGroupIds)),
+		"subnet_ids":              schema.NewSet(schema.HashString, flattenStringList(vpcConfig.SubnetIds)),
+		"vpc_id":                  aws.StringValue(vpcConfig.VpcId),
 	}
 
 	return []map[string]interface{}{m}

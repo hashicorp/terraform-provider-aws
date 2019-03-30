@@ -40,6 +40,25 @@ func validateAny(validators ...schema.SchemaValidateFunc) schema.SchemaValidateF
 	}
 }
 
+// FloatAtLeast returns a SchemaValidateFunc which tests if the provided value
+// is of type float and is at least min (inclusive)
+func FloatAtLeast(min float64) schema.SchemaValidateFunc {
+	return func(i interface{}, k string) (s []string, es []error) {
+		v, ok := i.(float64)
+		if !ok {
+			es = append(es, fmt.Errorf("expected type of %s to be float", k))
+			return
+		}
+
+		if v < min {
+			es = append(es, fmt.Errorf("expected %s to be at least (%f), got %f", k, min, v))
+			return
+		}
+
+		return
+	}
+}
+
 // validateTypeStringNullableBoolean provides custom error messaging for TypeString booleans
 // Some arguments require three values: true, false, and "" (unspecified).
 // This ValidateFunc returns a custom message since the message with
@@ -884,6 +903,7 @@ func validateS3BucketLifecycleTransitionStorageClass() schema.SchemaValidateFunc
 		s3.TransitionStorageClassStandardIa,
 		s3.TransitionStorageClassOnezoneIa,
 		s3.TransitionStorageClassIntelligentTiering,
+		s3.TransitionStorageClassDeepArchive,
 	}, false)
 }
 
