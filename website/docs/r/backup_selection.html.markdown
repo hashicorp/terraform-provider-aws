@@ -49,4 +49,6 @@ Tag conditions (`tag`) support the following:
 
 ## Attributes Reference
 
-All of the above arguments are exported as attributes.
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - Backup Selection identifier
