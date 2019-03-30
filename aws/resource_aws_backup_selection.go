@@ -3,11 +3,14 @@ package aws
 import (
 	"bytes"
 	"fmt"
+	"log"
+	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/backup"
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsBackupSelection() *schema.Resource {
@@ -21,16 +24,21 @@ func resourceAwsBackupSelection() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 50),
+					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9\-\_\.]+$`), "must contain only alphanumeric, hyphen, underscore, and period characters"),
+				),
 			},
 			"plan_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"iam_role": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+			"iam_role_arn": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validateArn,
 			},
 			"tag": {
 				Type:     schema.TypeSet,
@@ -41,6 +49,9 @@ func resourceAwsBackupSelection() *schema.Resource {
 						"type": {
 							Type:     schema.TypeString,
 							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								backup.ConditionTypeStringequals,
+							}, false),
 						},
 						"key": {
 							Type:     schema.TypeString,
@@ -67,12 +78,12 @@ func resourceAwsBackupSelection() *schema.Resource {
 func resourceAwsBackupSelectionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).backupconn
 
-	selection := &backup.Selection{}
-
-	selection.SelectionName = aws.String(d.Get("name").(string))
-	selection.IamRoleArn = aws.String(d.Get("iam_role").(string))
-	selection.ListOfTags = gatherConditionTags(d)
-	selection.Resources = expandStringList(d.Get("resources").([]interface{}))
+	selection := &backup.Selection{
+		IamRoleArn:    aws.String(d.Get("iam_role_arn").(string)),
+		ListOfTags:    expandBackupConditionTags(d.Get("tag").(*schema.Set).List()),
+		Resources:     expandStringList(d.Get("resources").([]interface{})),
+		SelectionName: aws.String(d.Get("name").(string)),
+	}
 
 	input := &backup.CreateBackupSelectionInput{
 		BackupPlanId:    aws.String(d.Get("plan_id").(string)),
@@ -98,6 +109,12 @@ func resourceAwsBackupSelectionRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	resp, err := conn.GetBackupSelection(input)
+	if isAWSErr(err, backup.ErrCodeResourceNotFoundException, "") {
+		log.Printf("[WARN] Backup Selection (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
 		return fmt.Errorf("error reading Backup Selection: %s", err)
 	}
@@ -112,14 +129,16 @@ func resourceAwsBackupSelectionRead(d *schema.ResourceData, meta interface{}) er
 		for _, r := range resp.BackupSelection.ListOfTags {
 			m := make(map[string]interface{})
 
-			m["type"] = *r.ConditionType
-			m["key"] = *r.ConditionKey
-			m["value"] = *r.ConditionValue
+			m["type"] = aws.StringValue(r.ConditionType)
+			m["key"] = aws.StringValue(r.ConditionKey)
+			m["value"] = aws.StringValue(r.ConditionValue)
 
 			tag.Add(m)
 		}
 
-		d.Set("tag", tag)
+		if err := d.Set("tag", tag); err != nil {
+			return fmt.Errorf("error setting tag: %s", err)
+		}
 	}
 	if resp.BackupSelection.Resources != nil {
 		d.Set("resources", resp.BackupSelection.Resources)
@@ -144,11 +163,10 @@ func resourceAwsBackupSelectionDelete(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func gatherConditionTags(d *schema.ResourceData) []*backup.Condition {
+func expandBackupConditionTags(tagList []interface{}) []*backup.Condition {
 	conditions := []*backup.Condition{}
-	selectionTags := d.Get("tag").(*schema.Set).List()
 
-	for _, i := range selectionTags {
+	for _, i := range tagList {
 		item := i.(map[string]interface{})
 		tag := &backup.Condition{}
 

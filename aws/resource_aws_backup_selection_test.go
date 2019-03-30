@@ -12,6 +12,7 @@ import (
 )
 
 func TestAccAwsBackupSelection_basic(t *testing.T) {
+	var selection1 backup.GetBackupSelectionOutput
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -21,14 +22,35 @@ func TestAccAwsBackupSelection_basic(t *testing.T) {
 			{
 				Config: testAccBackupSelectionConfigBasic(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsBackupSelectionExists("aws_backup_selection.test"),
+					testAccCheckAwsBackupSelectionExists("aws_backup_selection.test", &selection1),
 				),
 			},
 		},
 	})
 }
 
+func TestAccAwsBackupSelection_disappears(t *testing.T) {
+	var selection1 backup.GetBackupSelectionOutput
+	rInt := acctest.RandInt()
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsBackupSelectionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBackupSelectionConfigBasic(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsBackupSelectionExists("aws_backup_selection.test", &selection1),
+					testAccCheckAwsBackupSelectionDisappears(&selection1),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccAwsBackupSelection_withTags(t *testing.T) {
+	var selection1 backup.GetBackupSelectionOutput
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -38,7 +60,7 @@ func TestAccAwsBackupSelection_withTags(t *testing.T) {
 			{
 				Config: testAccBackupSelectionConfigWithTags(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsBackupSelectionExists("aws_backup_selection.test"),
+					testAccCheckAwsBackupSelectionExists("aws_backup_selection.test", &selection1),
 					resource.TestCheckResourceAttr("aws_backup_selection.test", "tag.#", "2"),
 				),
 			},
@@ -47,6 +69,7 @@ func TestAccAwsBackupSelection_withTags(t *testing.T) {
 }
 
 func TestAccAwsBackupSelection_withResources(t *testing.T) {
+	var selection1 backup.GetBackupSelectionOutput
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -56,7 +79,7 @@ func TestAccAwsBackupSelection_withResources(t *testing.T) {
 			{
 				Config: testAccBackupSelectionConfigWithResources(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsBackupSelectionExists("aws_backup_selection.test"),
+					testAccCheckAwsBackupSelectionExists("aws_backup_selection.test", &selection1),
 					resource.TestCheckResourceAttr("aws_backup_selection.test", "resources.#", "2"),
 				),
 			},
@@ -88,13 +111,44 @@ func testAccCheckAwsBackupSelectionDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAwsBackupSelectionExists(name string) resource.TestCheckFunc {
+func testAccCheckAwsBackupSelectionExists(name string, selection *backup.GetBackupSelectionOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		_, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("not found: %s, %v", name, s.RootModule().Resources)
 		}
+
+		conn := testAccProvider.Meta().(*AWSClient).backupconn
+
+		input := &backup.GetBackupSelectionInput{
+			BackupPlanId: aws.String(rs.Primary.Attributes["plan_id"]),
+			SelectionId:  aws.String(rs.Primary.ID),
+		}
+
+		output, err := conn.GetBackupSelection(input)
+
+		if err != nil {
+			return err
+		}
+
+		*selection = *output
+
 		return nil
+	}
+}
+
+func testAccCheckAwsBackupSelectionDisappears(selection *backup.GetBackupSelectionOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).backupconn
+
+		input := &backup.DeleteBackupSelectionInput{
+			BackupPlanId: selection.BackupPlanId,
+			SelectionId:  selection.SelectionId,
+		}
+
+		_, err := conn.DeleteBackupSelection(input)
+
+		return err
 	}
 }
 
@@ -121,10 +175,10 @@ resource "aws_backup_plan" "test" {
 func testAccBackupSelectionConfigBasic(rInt int) string {
 	return testAccBackupSelectionConfigBase(rInt) + fmt.Sprintf(`
 resource "aws_backup_selection" "test" {
-  plan_id  = "${aws_backup_plan.test.id}"
+  plan_id      = "${aws_backup_plan.test.id}"
 
-  name     = "tf_acc_test_backup_selection_%d"
-  iam_role = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/service-role/AWSBackupDefaultServiceRole"
+  name         = "tf_acc_test_backup_selection_%d"
+  iam_role_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/service-role/AWSBackupDefaultServiceRole"
 
   tag {
     type = "STRINGEQUALS"
@@ -142,10 +196,10 @@ resource "aws_backup_selection" "test" {
 func testAccBackupSelectionConfigWithTags(rInt int) string {
 	return testAccBackupSelectionConfigBase(rInt) + fmt.Sprintf(`
 resource "aws_backup_selection" "test" {
-  plan_id  = "${aws_backup_plan.test.id}"
+  plan_id      = "${aws_backup_plan.test.id}"
 
-  name     = "tf_acc_test_backup_selection_%d"
-  iam_role = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/service-role/AWSBackupDefaultServiceRole"
+  name         = "tf_acc_test_backup_selection_%d"
+  iam_role_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/service-role/AWSBackupDefaultServiceRole"
 
   tag {
     type = "STRINGEQUALS"
@@ -169,10 +223,10 @@ resource "aws_backup_selection" "test" {
 func testAccBackupSelectionConfigWithResources(rInt int) string {
 	return testAccBackupSelectionConfigBase(rInt) + fmt.Sprintf(`
 resource "aws_backup_selection" "test" {
-  plan_id  = "${aws_backup_plan.test.id}"
+  plan_id      = "${aws_backup_plan.test.id}"
 
-  name     = "tf_acc_test_backup_selection_%d"
-  iam_role = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/service-role/AWSBackupDefaultServiceRole"
+  name         = "tf_acc_test_backup_selection_%d"
+  iam_role_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/service-role/AWSBackupDefaultServiceRole"
 
   tag {
     type = "STRINGEQUALS"

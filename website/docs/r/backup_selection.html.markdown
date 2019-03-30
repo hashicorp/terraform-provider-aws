@@ -16,7 +16,7 @@ Manages selection conditions for AWS Backup plan resources.
 resource "aws_backup_selection" "example" {
   plan_id  = "${aws_backup_plan.example.id}"
 
-  name     = "tf_example_backup_selection_%d"
+  name     = "tf_example_backup_selection"
   iam_role = "arn:aws:iam::123456789012:role/service-role/AWSBackupDefaultServiceRole"
 
   tag {
