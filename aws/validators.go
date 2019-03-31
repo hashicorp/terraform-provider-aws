@@ -613,15 +613,6 @@ func validateS3BucketLifecycleStorageClass() schema.SchemaValidateFunc {
 	}, false)
 }
 
-func validateS3BucketGrantType(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if value != s3.TypeCanonicalUser && value != s3.TypeGroup {
-		errors = append(errors, fmt.Errorf(
-			"%q must be '%q' or '%q'. '%q is not supported", k, s3.TypeCanonicalUser, s3.TypeGroup, s3.TypeAmazonCustomerByEmail))
-	}
-	return
-}
-
 func validateDbEventSubscriptionName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !regexp.MustCompile(`^[0-9A-Za-z-]+$`).MatchString(value) {
