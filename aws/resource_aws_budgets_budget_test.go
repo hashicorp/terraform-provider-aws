@@ -12,6 +12,8 @@ import (
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+	"strconv"
+	"strings"
 )
 
 func TestAccAWSBudgetsBudget_basic(t *testing.T) {
@@ -535,67 +537,60 @@ resource "aws_budgets_budget" "foo" {
 	`, *budgetConfig.BudgetName, *budgetConfig.BudgetType, *budgetConfig.BudgetLimit.Amount, *budgetConfig.BudgetLimit.Unit, *budgetConfig.CostTypes.IncludeTax, *budgetConfig.CostTypes.IncludeSubscription, *budgetConfig.CostTypes.UseBlended, timePeriodStart, timePeriodEnd, *budgetConfig.TimeUnit, costFilterKey, costFilterValue)
 }
 
-func testAccAWSBudgetsBudgetConfigWithNotification_Basic(budget budgets.Budget, notifications []budgets.Notification, emails []string, topics []string) string {
-	t := template.Must(template.New("t1").
-		Parse(`
-resource "aws_sns_topic" "budget_notifications" {
-  name_prefix = "user-updates-topic"
-}
-
-resource "aws_budgets_budget" "foo" {
-	name = "{{.budget.BudgetName}}"
-	budget_type = "{{.budget.BudgetType}}"
-	limit_amount = "{{.budget.BudgetLimit.Amount}}"
-	limit_unit = "{{.budget.BudgetLimit.Unit}}"
-	cost_types = {
-		include_tax = "{{.budget.CostTypes.IncludeTax}}"
-		include_subscription = "{{.budget.CostTypes.IncludeSubscription}}"
-		use_blended = "{{.budget.CostTypes.UseBlended}}"
-	}
-
-	time_period_start = "{{.budget.TimePeriod.Start.Format "2006-01-02_15:04"}}"
-	time_period_end = "{{.budget.TimePeriod.End.Format "2006-01-02_15:04"}}"
-	time_unit = "{{.budget.TimeUnit}}"
-
-	{{range $_, $notification := .notifications}}
-	{{$notification}}
-	{{end}}
-}
-`))
+func testAccAWSBudgetsBudgetConfigWithNotification_Basic(budgetConfig budgets.Budget, notifications []budgets.Notification, emails []string, topics []string) string {
+	timePeriodStart := budgetConfig.TimePeriod.Start.Format("2006-01-02_15:04")
+	timePeriodEnd := budgetConfig.TimePeriod.End.Format("2006-01-02_15:04")
 	notificationStrings := make([]string, len(notifications))
 
 	for i, notification := range notifications {
 		notificationStrings[i] = testAccAWSBudgetsBudgetConfigNotificationSnippet(notification, emails, topics)
 	}
 
-	var doc bytes.Buffer
-	t.Execute(&doc, map[string]interface{}{
-		"budget":        budget,
-		"notifications": notificationStrings,
-	})
+	return fmt.Sprintf(`
+resource "aws_sns_topic" "budget_notifications" {
+  name_prefix = "user-updates-topic"
+}
 
-	return doc.String()
+resource "aws_budgets_budget" "foo" {
+	name = "%s"
+	budget_type = "%s"
+	limit_amount = "%s"
+	limit_unit = "%s"
+	cost_types {
+		include_tax = "%t"
+		include_subscription = "%t"
+		use_blended = "%t"
+	}
+
+	time_period_start = "%s" 
+	time_period_end = "%s"
+	time_unit = "%s"
+	
+    %s
+}
+	`, *budgetConfig.BudgetName, *budgetConfig.BudgetType, *budgetConfig.BudgetLimit.Amount, *budgetConfig.BudgetLimit.Unit, *budgetConfig.CostTypes.IncludeTax, *budgetConfig.CostTypes.IncludeSubscription, *budgetConfig.CostTypes.UseBlended, timePeriodStart, timePeriodEnd, *budgetConfig.TimeUnit, strings.Join(notificationStrings, "\n"))
+
 }
 
 func testAccAWSBudgetsBudgetConfigNotificationSnippet(notification budgets.Notification, emails []string, topics []string) string {
-	t := template.Must(template.New("t1").
-		Parse(`
-	notification {
-		threshold = {{.notification.Threshold}}
-		threshold_type = "{{.notification.ThresholdType}}"
-		notification_type = "{{.notification.NotificationType}}"
-		subscriber_email_addresses = [{{range $_, $email := .emails}} "{{$email}}",{{end}}]
-		subscriber_sns_topic_arns = [{{range $_, $topic := .topics}} "{{$topic}}",{{end}}]
-		comparison_operator = "{{.notification.ComparisonOperator}}"
+	quotedEMails := make([]string, len(emails))
+	for i, email := range emails {
+		quotedEMails[i] = strconv.Quote(email)
 	}
-`))
 
-	var doc bytes.Buffer
-	t.Execute(&doc, map[string]interface{}{
-		"notification": notification,
-		"emails":       emails,
-		"topics":       topics,
-	})
+	quotedTopics := make([]string, len(topics))
+	for i, topic := range topics {
+		quotedTopics[i] = strconv.Quote(topic)
+	}
 
-	return doc.String()
+	return fmt.Sprintf(`
+	notification {
+		threshold = %f
+		threshold_type = "%s"
+		notification_type = "%s"
+		subscriber_email_addresses = [%s]
+		subscriber_sns_topic_arns = [%s]
+		comparison_operator = "%s"
+	}
+`, *notification.Threshold, *notification.ThresholdType, *notification.NotificationType, strings.Join(quotedEMails, ","), strings.Join(quotedTopics, ","), *notification.ComparisonOperator)
 }
