@@ -205,7 +205,7 @@ func resourceAwsBudgetsBudgetCreate(d *schema.ResourceData, meta interface{}) er
 		budget.BudgetName = aws.String(resource.UniqueId())
 	}
 
-	client := meta.(*AWSClient).budgetconn
+	conn := meta.(*AWSClient).budgetconn
 	var accountID string
 	if v, ok := d.GetOk("account_id"); ok {
 		accountID = v.(string)
@@ -213,7 +213,7 @@ func resourceAwsBudgetsBudgetCreate(d *schema.ResourceData, meta interface{}) er
 		accountID = meta.(*AWSClient).accountid
 	}
 
-	_, err = client.CreateBudget(&budgets.CreateBudgetInput{
+	_, err = conn.CreateBudget(&budgets.CreateBudgetInput{
 		AccountId: aws.String(accountID),
 		Budget:    budget,
 	})
@@ -236,14 +236,14 @@ func resourceAwsBudgetsBudgetCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsBudgetsBudgetNotificationsCreate(notifications []*budgets.Notification, subscribers [][]*budgets.Subscriber, budgetName string, accountID string, meta interface{}) error {
-	client := meta.(*AWSClient).budgetconn
+	conn := meta.(*AWSClient).budgetconn
 
 	for i, notification := range notifications {
 		subscribers := subscribers[i]
 		if len(subscribers) == 0 {
 			return fmt.Errorf("Notification must have at least one subscriber!")
 		}
-		_, err := client.CreateNotification(&budgets.CreateNotificationInput{
+		_, err := conn.CreateNotification(&budgets.CreateNotificationInput{
 			BudgetName:   aws.String(budgetName),
 			AccountId:    aws.String(accountID),
 			Notification: notification,
@@ -302,8 +302,8 @@ func resourceAwsBudgetsBudgetRead(d *schema.ResourceData, meta interface{}) erro
 		return err
 	}
 
-	client := meta.(*AWSClient).budgetconn
-	describeBudgetOutput, err := client.DescribeBudget(&budgets.DescribeBudgetInput{
+	conn := meta.(*AWSClient).budgetconn
+	describeBudgetOutput, err := conn.DescribeBudget(&budgets.DescribeBudgetInput{
 		BudgetName: aws.String(budgetName),
 		AccountId:  aws.String(accountID),
 	})
@@ -353,11 +353,11 @@ func resourceAwsBudgetsBudgetRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsBudgetsBudgetNotificationRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*AWSClient).budgetconn
+	conn := meta.(*AWSClient).budgetconn
 
 	accountID, budgetName, err := decodeBudgetsBudgetID(d.Id())
 
-	describeNotificationsForBudgetOutput, err := client.DescribeNotificationsForBudget(&budgets.DescribeNotificationsForBudgetInput{
+	describeNotificationsForBudgetOutput, err := conn.DescribeNotificationsForBudget(&budgets.DescribeNotificationsForBudgetInput{
 		BudgetName: aws.String(budgetName),
 		AccountId:  aws.String(accountID),
 	})
@@ -376,7 +376,7 @@ func resourceAwsBudgetsBudgetNotificationRead(d *schema.ResourceData, meta inter
 		notification["threshold"] = *notificationOutput.Threshold
 		notification["notification_type"] = *notificationOutput.NotificationType
 
-		subscribersOutput, err := client.DescribeSubscribersForNotification(&budgets.DescribeSubscribersForNotificationInput{
+		subscribersOutput, err := conn.DescribeSubscribersForNotification(&budgets.DescribeSubscribersForNotificationInput{
 			BudgetName:   aws.String(budgetName),
 			AccountId:    aws.String(accountID),
 			Notification: notificationOutput,
@@ -426,13 +426,13 @@ func resourceAwsBudgetsBudgetUpdate(d *schema.ResourceData, meta interface{}) er
 		return err
 	}
 
-	client := meta.(*AWSClient).budgetconn
+	conn := meta.(*AWSClient).budgetconn
 	budget, err := expandBudgetsBudgetUnmarshal(d)
 	if err != nil {
 		return fmt.Errorf("could not create budget: %v", err)
 	}
 
-	_, err = client.UpdateBudget(&budgets.UpdateBudgetInput{
+	_, err = conn.UpdateBudget(&budgets.UpdateBudgetInput{
 		AccountId: aws.String(accountID),
 		NewBudget: budget,
 	})
@@ -449,7 +449,7 @@ func resourceAwsBudgetsBudgetUpdate(d *schema.ResourceData, meta interface{}) er
 	return resourceAwsBudgetsBudgetRead(d, meta)
 }
 func resourceAwsBudgetsBudgetNotificationsUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*AWSClient).budgetconn
+	conn := meta.(*AWSClient).budgetconn
 	accountID, budgetName, err := decodeBudgetsBudgetID(d.Id())
 
 	if err != nil {
@@ -471,7 +471,7 @@ func resourceAwsBudgetsBudgetNotificationsUpdate(d *schema.ResourceData, meta in
 				Notification: notification,
 			}
 
-			_, err := client.DeleteNotification(input)
+			_, err := conn.DeleteNotification(input)
 
 			if err != nil {
 				return fmt.Errorf("error deleting Budget (%s) Notification: %s", d.Id(), err)
@@ -494,8 +494,8 @@ func resourceAwsBudgetsBudgetDelete(d *schema.ResourceData, meta interface{}) er
 		return err
 	}
 
-	client := meta.(*AWSClient).budgetconn
-	_, err = client.DeleteBudget(&budgets.DeleteBudgetInput{
+	conn := meta.(*AWSClient).budgetconn
+	_, err = conn.DeleteBudget(&budgets.DeleteBudgetInput{
 		BudgetName: aws.String(budgetName),
 		AccountId:  aws.String(accountID),
 	})
