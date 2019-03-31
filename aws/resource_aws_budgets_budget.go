@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/budgets"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsBudgetsBudget() *schema.Resource {
@@ -138,6 +139,11 @@ func resourceAwsBudgetsBudget() *schema.Resource {
 						"comparison_operator": {
 							Type:     schema.TypeString,
 							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								budgets.ComparisonOperatorEqualTo,
+								budgets.ComparisonOperatorGreaterThan,
+								budgets.ComparisonOperatorLessThan,
+							}, false),
 						},
 						"threshold": {
 							Type:     schema.TypeFloat,
@@ -146,10 +152,18 @@ func resourceAwsBudgetsBudget() *schema.Resource {
 						"threshold_type": {
 							Type:     schema.TypeString,
 							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								budgets.ThresholdTypeAbsoluteValue,
+								budgets.ThresholdTypePercentage,
+							}, false),
 						},
 						"notification_type": {
 							Type:     schema.TypeString,
 							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								budgets.NotificationTypeActual,
+								budgets.NotificationTypeForecasted,
+							}, false),
 						},
 						"subscriber_email_addresses": {
 							Type:     schema.TypeSet,
