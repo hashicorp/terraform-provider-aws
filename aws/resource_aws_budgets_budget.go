@@ -357,6 +357,10 @@ func resourceAwsBudgetsBudgetNotificationRead(d *schema.ResourceData, meta inter
 
 	accountID, budgetName, err := decodeBudgetsBudgetID(d.Id())
 
+	if err != nil {
+		return fmt.Errorf("error decoding Budget (%s) ID: %s", d.Id(), err)
+	}
+
 	describeNotificationsForBudgetOutput, err := conn.DescribeNotificationsForBudget(&budgets.DescribeNotificationsForBudgetInput{
 		BudgetName: aws.String(budgetName),
 		AccountId:  aws.String(accountID),
