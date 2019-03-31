@@ -371,10 +371,10 @@ func resourceAwsBudgetsBudgetNotificationRead(d *schema.ResourceData, meta inter
 	for _, notificationOutput := range describeNotificationsForBudgetOutput.Notifications {
 		setNotificationDefaults(notificationOutput)
 		notification := make(map[string]interface{})
-		notification["comparison_operator"] = *notificationOutput.ComparisonOperator
-		notification["threshold_type"] = *notificationOutput.ThresholdType
-		notification["threshold"] = *notificationOutput.Threshold
-		notification["notification_type"] = *notificationOutput.NotificationType
+		notification["comparison_operator"] = aws.StringValue(notificationOutput.ComparisonOperator)
+		notification["threshold_type"] = aws.StringValue(notificationOutput.ThresholdType)
+		notification["threshold"] = aws.Float64Value(notificationOutput.Threshold)
+		notification["notification_type"] = aws.StringValue(notificationOutput.NotificationType)
 
 		subscribersOutput, err := conn.DescribeSubscribersForNotification(&budgets.DescribeSubscribersForNotificationInput{
 			BudgetName:   aws.String(budgetName),
