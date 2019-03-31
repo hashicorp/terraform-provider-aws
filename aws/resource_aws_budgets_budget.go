@@ -229,7 +229,7 @@ func resourceAwsBudgetsBudgetCreate(d *schema.ResourceData, meta interface{}) er
 	err = resourceAwsBudgetsBudgetNotificationsCreate(notifications, subscribers, *budget.BudgetName, accountID, meta)
 
 	if err != nil {
-		return fmt.Errorf("create budget notification failed: %v", err)
+		return fmt.Errorf("error creating Budget (%s) Notifications: %s", d.Id(), err)
 	}
 
 	return resourceAwsBudgetsBudgetRead(d, meta)
@@ -363,7 +363,7 @@ func resourceAwsBudgetsBudgetNotificationRead(d *schema.ResourceData, meta inter
 	})
 
 	if err != nil {
-		return err
+		return fmt.Errorf("error describing Budget (%s) Notifications: %s", d.Id(), err)
 	}
 
 	notifications := make([]map[string]interface{}, 0)
@@ -383,7 +383,7 @@ func resourceAwsBudgetsBudgetNotificationRead(d *schema.ResourceData, meta inter
 		})
 
 		if err != nil {
-			return err
+			return fmt.Errorf("error describing Budget (%s) Notification Subscribers: %s", d.Id(), err)
 		}
 
 		snsSubscribers := make([]interface{}, 0)
@@ -465,17 +465,23 @@ func resourceAwsBudgetsBudgetNotificationsUpdate(d *schema.ResourceData, meta in
 		addNotifications, addSubscribers := expandBudgetNotificationsUnmarshal(ns.Difference(os).List())
 
 		for _, notification := range removeNotifications {
-			client.DeleteNotification(&budgets.DeleteNotificationInput{
-				Notification: notification,
-				BudgetName:   aws.String(budgetName),
+			input := &budgets.DeleteNotificationInput{
 				AccountId:    aws.String(accountID),
-			})
+				BudgetName:   aws.String(budgetName),
+				Notification: notification,
+			}
+
+			_, err := client.DeleteNotification(input)
+
+			if err != nil {
+				return fmt.Errorf("error deleting Budget (%s) Notification: %s", d.Id(), err)
+			}
 		}
 
 		err = resourceAwsBudgetsBudgetNotificationsCreate(addNotifications, addSubscribers, budgetName, accountID, meta)
 
 		if err != nil {
-			return err
+			return fmt.Errorf("error creating Budget (%s) Notifications: %s", d.Id(), err)
 		}
 	}
 
