@@ -56,9 +56,9 @@ resource "aws_appautoscaling_target" "ecs_target" {
 resource "aws_appautoscaling_policy" "ecs_policy" {
   name               = "scale-down"
   policy_type        = "StepScaling"
-  resource_id        = "service/clusterName/serviceName"
-  scalable_dimension = "ecs:service:DesiredCount"
-  service_namespace  = "ecs"
+  resource_id        = "${aws_appautoscaling_target.ecs_target.resource_id}"
+  scalable_dimension = "${aws_appautoscaling_target.ecs_target.scalable_dimension}"
+  service_namespace  = "${aws_appautoscaling_target.ecs_target.service_namespace}"
 
   step_scaling_policy_configuration {
     adjustment_type         = "ChangeInCapacity"
@@ -70,8 +70,6 @@ resource "aws_appautoscaling_policy" "ecs_policy" {
       scaling_adjustment          = -1
     }
   }
-
-  depends_on = ["aws_appautoscaling_target.ecs_target"]
 }
 ```
 
@@ -195,3 +193,11 @@ resource "aws_appautoscaling_policy" "ecs_policy" {
 * `arn` - The ARN assigned by AWS to the scaling policy.
 * `name` - The scaling policy's name.
 * `policy_type` - The scaling policy's type.
+
+## Import
+
+Application AutoScaling Policy can be imported using the `service-namespace` , `resource-id`, `scalable-dimension` and `policy-name` separated by `/`.
+
+```
+$ terraform import aws_appautoscaling_policy.test-policy service-namespace/resource-id/scalable-dimension/policy-name
+```

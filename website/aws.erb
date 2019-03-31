@@ -152,6 +152,9 @@
                         <li<%= sidebar_current("docs-aws-datasource-ec2-transit-gateway-vpc-attachment") %>>
                           <a href="/docs/providers/aws/d/ec2_transit_gateway_vpc_attachment.html">aws_ec2_transit_gateway_vpc_attachment</a>
                         </li>
+                        <li<%= sidebar_current("docs-aws-datasource-ec2-transit-gateway-vpn-attachment") %>>
+                          <a href="/docs/providers/aws/d/ec2_transit_gateway_vpn_attachment.html">aws_ec2_transit_gateway_vpn_attachment</a>
+                        </li>
                         <li<%= sidebar_current("docs-aws-datasource-ecr-repository") %>>
                           <a href="/docs/providers/aws/d/ecr_repository.html">aws_ecr_repository</a>
                         </li>
@@ -381,6 +384,9 @@
                         <li<%= sidebar_current("docs-aws-datasource-subnet-ids") %>>
                             <a href="/docs/providers/aws/d/subnet_ids.html">aws_subnet_ids</a>
                         </li>
+                        <li<%= sidebar_current("docs-aws-datasource-transfer-server") %>>
+                            <a href="/docs/providers/aws/d/transfer_server.html">aws_transfer_server</a>
+                        </li>
                         <li<%= sidebar_current("docs-aws-datasource-vpc-x") %>>
                             <a href="/docs/providers/aws/d/vpc.html">aws_vpc</a>
                         </li>
@@ -552,6 +558,9 @@
                         <li<%= sidebar_current("docs-aws-resource-appsync-api-key") %>>
                             <a href="/docs/providers/aws/r/appsync_api_key.html">aws_appsync_api_key</a>
                         </li>
+                        <li<%= sidebar_current("docs-aws-resource-appsync-resolver") %>>
+                            <a href="/docs/providers/aws/r/appsync_resolver.html">aws_appsync_resolver</a>
+                        </li>
                     </ul>
                 </li>
 
@@ -570,6 +579,9 @@
                 <li<%= sidebar_current("docs-aws-resource-backup") %>>
                     <a href="#">Backup Resources</a>
                     <ul class="nav nav-visible">
+                        <li<%= sidebar_current("docs-aws-resource-backup-plan") %>>
+                            <a href="/docs/providers/aws/r/backup_plan.html">aws_backup_plan</a>
+                        </li>
                         <li<%= sidebar_current("docs-aws-resource-backup-vault") %>>
                             <a href="/docs/providers/aws/r/backup_vault.html">aws_backup_vault</a>
                         </li>
@@ -614,6 +626,12 @@
                     <ul class="nav nav-visible">
                         <li<%= sidebar_current("docs-aws-resource-cloudformation-stack") %>>
                             <a href="/docs/providers/aws/r/cloudformation_stack.html">aws_cloudformation_stack</a>
+                        </li>
+                        <li<%= sidebar_current("docs-aws-resource-cloudformation-stack-set") %>>
+                            <a href="/docs/providers/aws/r/cloudformation_stack_set.html">aws_cloudformation_stack_set</a>
+                        </li>
+                        <li<%= sidebar_current("docs-aws-resource-cloudformation-stack-set-instance") %>>
+                            <a href="/docs/providers/aws/r/cloudformation_stack_set_instance.html">aws_cloudformation_stack_set_instance</a>
                         </li>
                     </ul>
                 </li>
@@ -1718,8 +1736,16 @@
                     <a href="/docs/providers/aws/r/kms_alias.html">aws_kms_alias</a>
                   </li>
 
+                  <li<%= sidebar_current("docs-aws-resource-kms-external-key") %>>
+                    <a href="/docs/providers/aws/r/kms_external_key.html">aws_kms_external_key</a>
+                  </li>
+
                   <li<%= sidebar_current("docs-aws-resource-kms-grant") %>>
                     <a href="/docs/providers/aws/r/kms_grant.html">aws_kms_grant</a>
+                  </li>
+
+                  <li<%= sidebar_current("docs-aws-resource-kms-ciphertext") %>>
+                      <a href="/docs/providers/aws/r/kms_ciphertext.html">aws_kms_ciphertext</a>
                   </li>
 
                   <li<%= sidebar_current("docs-aws-resource-kms-key") %>>
@@ -2340,6 +2366,10 @@
                 <li<%= sidebar_current("docs-aws-resource-sagemaker") %>>
                     <a href="#">Sagemaker Resources</a>
                     <ul class="nav nav-visible">
+
+                        <li<%= sidebar_current("docs-aws-resource-sagemaker-endpoint-configuration") %>>
+                          <a href="/docs/providers/aws/r/sagemaker_endpoint_configuration.html">aws_sagemaker_endpoint_configuration</a>
+                        </li>
 
                         <li<%= sidebar_current("docs-aws-resource-sagemaker-model") %>>
                           <a href="/docs/providers/aws/r/sagemaker_model.html">aws_sagemaker_model</a>

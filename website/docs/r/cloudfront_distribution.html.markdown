@@ -144,7 +144,8 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
 }
 ```
 
-The following example below creates a Cloudfront distribution with an origin group for failover routing
+The following example below creates a Cloudfront distribution with an origin group for failover routing:
+
 ```hcl
 resource "aws_cloudfront_distribution" "s3_distribution" {
   origin_group {
@@ -157,14 +158,14 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
     member {
       origin_id = "primaryS3"
     }
-    
+
     member {
       origin_id = "failoverS3"
     }
   }
 
   origin {
-    domain_name = "${aws_s3_bucket.primary.bucket_domain_name}"
+    domain_name = "${aws_s3_bucket.primary.bucket_regional_domain_name}"
     origin_id   = "primaryS3"
 
     s3_origin_config {
@@ -173,7 +174,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
   }
 
   origin {
-    domain_name = "${aws_s3_bucket.failover.bucket_domain_name}"
+    domain_name = "${aws_s3_bucket.failover.bucket_regional_domain_name}"
     origin_id   = "failoverS3"
 
     s3_origin_config {
@@ -182,8 +183,11 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
   }
 
   default_cache_behavior {
+    # ... other configuration ...
     target_origin_id       = "groupS3"
   }
+
+  # ... other configuration ...
 }
 ```
 
@@ -448,19 +452,15 @@ argument is not required.
 
   * `failover_criteria` (Required) - The [failover criteria](#failover-criteria-arguments) for when to failover to the secondary origin
 
-  * `members` (Required) - The [members](#members-arguments) assigned to the origin group
+  * `member` (Required) - Ordered [member](#member-arguments) configuration blocks assigned to the origin group, where the first member is the primary origin. Minimum 2.
 
 ##### Failover Criteria Arguments
 
 * `status_codes` (Required) - A list of HTTP status codes for the origin group
 
-##### Members Arguments
+##### Member Arguments
 
-* `ordered_origin_group_member` (Required) - The [ordered_origin_group_member](#ordered-origin-group-member-arguments) that are in the group. There is a minimum of two ordered_origin_group_members, with the order determining failover priority
-
-##### Ordered Origin Group Member Criteria Arguments
-
-* `origin_id` (Required) - The unique identifier of the origin to failover to 
+* `origin_id` (Required) - The unique identifier of the member origin
 
 #### Restrictions Arguments
 

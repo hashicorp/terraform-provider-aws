@@ -22777,7 +22777,8 @@ func (c *EC2) ModifyNetworkInterfaceAttributeRequest(input *ModifyNetworkInterfa
 // ModifyNetworkInterfaceAttribute API operation for Amazon Elastic Compute Cloud.
 //
 // Modifies the specified network interface attribute. You can specify only
-// one attribute at a time.
+// one attribute at a time. You can use this action to attach and detach security
+// groups from an existing EC2 instance.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -45130,7 +45131,7 @@ type DescribeHostReservationOfferingsInput struct {
 	// The remaining results can be seen by sending another request with the returned
 	// nextToken value. This value can be between 5 and 500. If maxResults is given
 	// a larger value than 500, you receive an error.
-	MaxResults *int64 `type:"integer"`
+	MaxResults *int64 `min:"5" type:"integer"`
 
 	// This is the minimum duration of the reservation you'd like to purchase, specified
 	// in seconds. Reservations are available in one-year and three-year terms.
@@ -45154,6 +45155,19 @@ func (s DescribeHostReservationOfferingsInput) String() string {
 // GoString returns the string representation
 func (s DescribeHostReservationOfferingsInput) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeHostReservationOfferingsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeHostReservationOfferingsInput"}
+	if s.MaxResults != nil && *s.MaxResults < 5 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 5))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetFilter sets the Filter field's value.
@@ -45236,6 +45250,16 @@ type DescribeHostReservationsInput struct {
 	//
 	//    * state - The state of the reservation (payment-pending | payment-failed
 	//    | active | retired).
+	//
+	//    * tag:<key> - The key/value combination of a tag assigned to the resource.
+	//    Use the tag key in the filter name and the tag value as the filter value.
+	//    For example, to find all resources that have a tag with the key Owner
+	//    and the value TeamA, specify tag:Owner for the filter name and TeamA for
+	//    the filter value.
+	//
+	//    * tag-key - The key of a tag assigned to the resource. Use this filter
+	//    to find all resources assigned a tag with a specific key, regardless of
+	//    the tag value.
 	Filter []*Filter `locationNameList:"Filter" type:"list"`
 
 	// One or more host reservation IDs.
@@ -51281,9 +51305,10 @@ type DescribeTagsInput struct {
 	//
 	//    * resource-type - The resource type (customer-gateway | dedicated-host
 	//    | dhcp-options | elastic-ip | fleet | fpga-image | image | instance |
-	//    internet-gateway | launch-template | natgateway | network-acl | network-interface
-	//    | reserved-instances | route-table | security-group | snapshot | spot-instances-request
-	//    | subnet | volume | vpc | vpc-peering-connection | vpn-connection | vpn-gateway).
+	//    host-reservation | internet-gateway | launch-template | natgateway | network-acl
+	//    | network-interface | reserved-instances | route-table | security-group
+	//    | snapshot | spot-instances-request | subnet | volume | vpc | vpc-peering-connection
+	//    | vpn-connection | vpn-gateway).
 	//
 	//    * tag:<key> - The key/value combination of the tag. For example, specify
 	//    "tag:Owner" for the filter name and "TeamA" for the filter value to find
@@ -57647,6 +57672,9 @@ type FpgaImage struct {
 	// The date and time the AFI was created.
 	CreateTime *time.Time `locationName:"createTime" type:"timestamp"`
 
+	// Indicates whether data retention support is enabled for the AFI.
+	DataRetentionSupport *bool `locationName:"dataRetentionSupport" type:"boolean"`
+
 	// The description of the AFI.
 	Description *string `locationName:"description" type:"string"`
 
@@ -57700,6 +57728,12 @@ func (s FpgaImage) GoString() string {
 // SetCreateTime sets the CreateTime field's value.
 func (s *FpgaImage) SetCreateTime(v time.Time) *FpgaImage {
 	s.CreateTime = &v
+	return s
+}
+
+// SetDataRetentionSupport sets the DataRetentionSupport field's value.
+func (s *FpgaImage) SetDataRetentionSupport(v bool) *FpgaImage {
+	s.DataRetentionSupport = &v
 	return s
 }
 
@@ -59389,6 +59423,9 @@ type HostReservation struct {
 	// The state of the reservation.
 	State *string `locationName:"state" type:"string" enum:"ReservationState"`
 
+	// Any tags assigned to the Dedicated Host Reservation.
+	Tags []*Tag `locationName:"tagSet" locationNameList:"item" type:"list"`
+
 	// The upfront price of the reservation.
 	UpfrontPrice *string `locationName:"upfrontPrice" type:"string"`
 }
@@ -59472,6 +59509,12 @@ func (s *HostReservation) SetStart(v time.Time) *HostReservation {
 // SetState sets the State field's value.
 func (s *HostReservation) SetState(v string) *HostReservation {
 	s.State = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *HostReservation) SetTags(v []*Tag) *HostReservation {
+	s.Tags = v
 	return s
 }
 
@@ -85908,6 +85951,30 @@ const (
 	// InstanceTypeR5dMetal is a InstanceType enum value
 	InstanceTypeR5dMetal = "r5d.metal"
 
+	// InstanceTypeR5adLarge is a InstanceType enum value
+	InstanceTypeR5adLarge = "r5ad.large"
+
+	// InstanceTypeR5adXlarge is a InstanceType enum value
+	InstanceTypeR5adXlarge = "r5ad.xlarge"
+
+	// InstanceTypeR5ad2xlarge is a InstanceType enum value
+	InstanceTypeR5ad2xlarge = "r5ad.2xlarge"
+
+	// InstanceTypeR5ad4xlarge is a InstanceType enum value
+	InstanceTypeR5ad4xlarge = "r5ad.4xlarge"
+
+	// InstanceTypeR5ad8xlarge is a InstanceType enum value
+	InstanceTypeR5ad8xlarge = "r5ad.8xlarge"
+
+	// InstanceTypeR5ad12xlarge is a InstanceType enum value
+	InstanceTypeR5ad12xlarge = "r5ad.12xlarge"
+
+	// InstanceTypeR5ad16xlarge is a InstanceType enum value
+	InstanceTypeR5ad16xlarge = "r5ad.16xlarge"
+
+	// InstanceTypeR5ad24xlarge is a InstanceType enum value
+	InstanceTypeR5ad24xlarge = "r5ad.24xlarge"
+
 	// InstanceTypeX116xlarge is a InstanceType enum value
 	InstanceTypeX116xlarge = "x1.16xlarge"
 
@@ -86189,6 +86256,30 @@ const (
 
 	// InstanceTypeM5dMetal is a InstanceType enum value
 	InstanceTypeM5dMetal = "m5d.metal"
+
+	// InstanceTypeM5adLarge is a InstanceType enum value
+	InstanceTypeM5adLarge = "m5ad.large"
+
+	// InstanceTypeM5adXlarge is a InstanceType enum value
+	InstanceTypeM5adXlarge = "m5ad.xlarge"
+
+	// InstanceTypeM5ad2xlarge is a InstanceType enum value
+	InstanceTypeM5ad2xlarge = "m5ad.2xlarge"
+
+	// InstanceTypeM5ad4xlarge is a InstanceType enum value
+	InstanceTypeM5ad4xlarge = "m5ad.4xlarge"
+
+	// InstanceTypeM5ad8xlarge is a InstanceType enum value
+	InstanceTypeM5ad8xlarge = "m5ad.8xlarge"
+
+	// InstanceTypeM5ad12xlarge is a InstanceType enum value
+	InstanceTypeM5ad12xlarge = "m5ad.12xlarge"
+
+	// InstanceTypeM5ad16xlarge is a InstanceType enum value
+	InstanceTypeM5ad16xlarge = "m5ad.16xlarge"
+
+	// InstanceTypeM5ad24xlarge is a InstanceType enum value
+	InstanceTypeM5ad24xlarge = "m5ad.24xlarge"
 
 	// InstanceTypeH12xlarge is a InstanceType enum value
 	InstanceTypeH12xlarge = "h1.2xlarge"
@@ -86650,6 +86741,9 @@ const (
 
 	// ResourceTypeFpgaImage is a ResourceType enum value
 	ResourceTypeFpgaImage = "fpga-image"
+
+	// ResourceTypeHostReservation is a ResourceType enum value
+	ResourceTypeHostReservation = "host-reservation"
 
 	// ResourceTypeImage is a ResourceType enum value
 	ResourceTypeImage = "image"

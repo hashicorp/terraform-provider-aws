@@ -9,6 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/aws/aws-sdk-go/aws/request"
+	"github.com/aws/aws-sdk-go/private/protocol"
+	"github.com/aws/aws-sdk-go/private/protocol/restjson"
 )
 
 const opCreateMesh = "CreateMesh"
@@ -55,7 +57,7 @@ func (c *AppMesh) CreateMeshRequest(input *CreateMeshInput) (req *request.Reques
 
 // CreateMesh API operation for AWS App Mesh.
 //
-// Creates a new service mesh. A service mesh is a logical boundary for network
+// Creates a service mesh. A service mesh is a logical boundary for network
 // traffic between the services that reside within it.
 //
 // After you create your service mesh, you can create virtual services, virtual
@@ -167,12 +169,12 @@ func (c *AppMesh) CreateRouteRequest(input *CreateRouteInput) (req *request.Requ
 
 // CreateRoute API operation for AWS App Mesh.
 //
-// Creates a new route that is associated with a virtual router.
+// Creates a route that is associated with a virtual router.
 //
 // You can use the prefix parameter in your route specification for path-based
-// routing of requests. For example, if your virtual router service name is
-// my-service.local, and you want the route to match requests to my-service.local/metrics,
-// then your prefix should be /metrics.
+// routing of requests. For example, if your virtual service name is my-service.local
+// and you want the route to match requests to my-service.local/metrics, your
+// prefix should be /metrics.
 //
 // If your route matches a request, you can distribute traffic to one or more
 // target virtual nodes with relative weighting.
@@ -282,10 +284,10 @@ func (c *AppMesh) CreateVirtualNodeRequest(input *CreateVirtualNodeInput) (req *
 
 // CreateVirtualNode API operation for AWS App Mesh.
 //
-// Creates a new virtual node within a service mesh.
+// Creates a virtual node within a service mesh.
 //
-// A virtual node acts as logical pointer to a particular task group, such as
-// an Amazon ECS service or a Kubernetes deployment. When you create a virtual
+// A virtual node acts as a logical pointer to a particular task group, such
+// as an Amazon ECS service or a Kubernetes deployment. When you create a virtual
 // node, you must specify the DNS service discovery hostname for your task group.
 //
 // Any inbound traffic that your virtual node expects should be specified as
@@ -294,7 +296,7 @@ func (c *AppMesh) CreateVirtualNodeRequest(input *CreateVirtualNodeInput) (req *
 //
 // The response metadata for your new virtual node contains the arn that is
 // associated with the virtual node. Set this value (either the full ARN or
-// the truncated resource name, for example, mesh/default/virtualNode/simpleapp,
+// the truncated resource name: for example, mesh/default/virtualNode/simpleapp)
 // as the APPMESH_VIRTUAL_NODE_NAME environment variable for your task group's
 // Envoy proxy container in your task definition or pod spec. This is then mapped
 // to the node.id and node.cluster Envoy parameters.
@@ -408,12 +410,12 @@ func (c *AppMesh) CreateVirtualRouterRequest(input *CreateVirtualRouterInput) (r
 
 // CreateVirtualRouter API operation for AWS App Mesh.
 //
-// Creates a new virtual router within a service mesh.
+// Creates a virtual router within a service mesh.
 //
 // Any inbound traffic that your virtual router expects should be specified
 // as a listener.
 //
-// Virtual routers handle traffic for one or more service names within your
+// Virtual routers handle traffic for one or more virtual services within your
 // mesh. After you create your virtual router, create and associate routes for
 // your virtual router that direct incoming requests to different virtual nodes.
 //
@@ -524,8 +526,8 @@ func (c *AppMesh) CreateVirtualServiceRequest(input *CreateVirtualServiceInput) 
 //
 // Creates a virtual service within a service mesh.
 //
-// A virtual service is an abstraction of a real service that is either provided
-// by a virtual node directly, or indirectly by means of a virtual router. Dependent
+// A virtual service is an abstraction of a real service that is provided by
+// a virtual node directly or indirectly by means of a virtual router. Dependent
 // services call your virtual service by its virtualServiceName, and those requests
 // are routed to the virtual node or virtual router that is specified as the
 // provider for the virtual service.
@@ -638,7 +640,7 @@ func (c *AppMesh) DeleteMeshRequest(input *DeleteMeshInput) (req *request.Reques
 // Deletes an existing service mesh.
 //
 // You must delete all resources (virtual services, routes, virtual routers,
-// virtual nodes) in the service mesh before you can delete the mesh itself.
+// and virtual nodes) in the service mesh before you can delete the mesh itself.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1892,6 +1894,151 @@ func (c *AppMesh) ListRoutesPagesWithContext(ctx aws.Context, input *ListRoutesI
 	return p.Err()
 }
 
+const opListTagsForResource = "ListTagsForResource"
+
+// ListTagsForResourceRequest generates a "aws/request.Request" representing the
+// client's request for the ListTagsForResource operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListTagsForResource for more information on using the ListTagsForResource
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListTagsForResourceRequest method.
+//    req, resp := client.ListTagsForResourceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/appmesh-2019-01-25/ListTagsForResource
+func (c *AppMesh) ListTagsForResourceRequest(input *ListTagsForResourceInput) (req *request.Request, output *ListTagsForResourceOutput) {
+	op := &request.Operation{
+		Name:       opListTagsForResource,
+		HTTPMethod: "GET",
+		HTTPPath:   "/v20190125/tags",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "limit",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &ListTagsForResourceInput{}
+	}
+
+	output = &ListTagsForResourceOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListTagsForResource API operation for AWS App Mesh.
+//
+// List the tags for an App Mesh resource.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS App Mesh's
+// API operation ListTagsForResource for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//   The request syntax was malformed. Check your request syntax and try again.
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   The request processing has failed because of an unknown error, exception,
+//   or failure.
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//   The specified resource doesn't exist. Check your request syntax and try again.
+//
+//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   The request has failed due to a temporary failure of the service.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/appmesh-2019-01-25/ListTagsForResource
+func (c *AppMesh) ListTagsForResource(input *ListTagsForResourceInput) (*ListTagsForResourceOutput, error) {
+	req, out := c.ListTagsForResourceRequest(input)
+	return out, req.Send()
+}
+
+// ListTagsForResourceWithContext is the same as ListTagsForResource with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListTagsForResource for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *AppMesh) ListTagsForResourceWithContext(ctx aws.Context, input *ListTagsForResourceInput, opts ...request.Option) (*ListTagsForResourceOutput, error) {
+	req, out := c.ListTagsForResourceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// ListTagsForResourcePages iterates over the pages of a ListTagsForResource operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListTagsForResource method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListTagsForResource operation.
+//    pageNum := 0
+//    err := client.ListTagsForResourcePages(params,
+//        func(page *ListTagsForResourceOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *AppMesh) ListTagsForResourcePages(input *ListTagsForResourceInput, fn func(*ListTagsForResourceOutput, bool) bool) error {
+	return c.ListTagsForResourcePagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListTagsForResourcePagesWithContext same as ListTagsForResourcePages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *AppMesh) ListTagsForResourcePagesWithContext(ctx aws.Context, input *ListTagsForResourceInput, fn func(*ListTagsForResourceOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListTagsForResourceInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListTagsForResourceRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListTagsForResourceOutput), !p.HasNextPage())
+	}
+	return p.Err()
+}
+
 const opListVirtualNodes = "ListVirtualNodes"
 
 // ListVirtualNodesRequest generates a "aws/request.Request" representing the
@@ -2351,6 +2498,296 @@ func (c *AppMesh) ListVirtualServicesPagesWithContext(ctx aws.Context, input *Li
 	return p.Err()
 }
 
+const opTagResource = "TagResource"
+
+// TagResourceRequest generates a "aws/request.Request" representing the
+// client's request for the TagResource operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See TagResource for more information on using the TagResource
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the TagResourceRequest method.
+//    req, resp := client.TagResourceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/appmesh-2019-01-25/TagResource
+func (c *AppMesh) TagResourceRequest(input *TagResourceInput) (req *request.Request, output *TagResourceOutput) {
+	op := &request.Operation{
+		Name:       opTagResource,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/v20190125/tag",
+	}
+
+	if input == nil {
+		input = &TagResourceInput{}
+	}
+
+	output = &TagResourceOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// TagResource API operation for AWS App Mesh.
+//
+// Associates the specified tags to a resource with the specified resourceArn.
+// If existing tags on a resource aren't specified in the request parameters,
+// they aren't changed. When a resource is deleted, the tags associated with
+// that resource are also deleted.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS App Mesh's
+// API operation TagResource for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//   The request syntax was malformed. Check your request syntax and try again.
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   The request processing has failed because of an unknown error, exception,
+//   or failure.
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//   The specified resource doesn't exist. Check your request syntax and try again.
+//
+//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   The request has failed due to a temporary failure of the service.
+//
+//   * ErrCodeTooManyTagsException "TooManyTagsException"
+//   The request exceeds the maximum allowed number of tags allowed per resource.
+//   The current limit is 50 user tags per resource. You must reduce the number
+//   of tags in the request. None of the tags in this request were applied.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/appmesh-2019-01-25/TagResource
+func (c *AppMesh) TagResource(input *TagResourceInput) (*TagResourceOutput, error) {
+	req, out := c.TagResourceRequest(input)
+	return out, req.Send()
+}
+
+// TagResourceWithContext is the same as TagResource with the addition of
+// the ability to pass a context and additional request options.
+//
+// See TagResource for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *AppMesh) TagResourceWithContext(ctx aws.Context, input *TagResourceInput, opts ...request.Option) (*TagResourceOutput, error) {
+	req, out := c.TagResourceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUntagResource = "UntagResource"
+
+// UntagResourceRequest generates a "aws/request.Request" representing the
+// client's request for the UntagResource operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UntagResource for more information on using the UntagResource
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UntagResourceRequest method.
+//    req, resp := client.UntagResourceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/appmesh-2019-01-25/UntagResource
+func (c *AppMesh) UntagResourceRequest(input *UntagResourceInput) (req *request.Request, output *UntagResourceOutput) {
+	op := &request.Operation{
+		Name:       opUntagResource,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/v20190125/untag",
+	}
+
+	if input == nil {
+		input = &UntagResourceInput{}
+	}
+
+	output = &UntagResourceOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// UntagResource API operation for AWS App Mesh.
+//
+// Deletes specified tags from a resource.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS App Mesh's
+// API operation UntagResource for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//   The request syntax was malformed. Check your request syntax and try again.
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   The request processing has failed because of an unknown error, exception,
+//   or failure.
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//   The specified resource doesn't exist. Check your request syntax and try again.
+//
+//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   The request has failed due to a temporary failure of the service.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/appmesh-2019-01-25/UntagResource
+func (c *AppMesh) UntagResource(input *UntagResourceInput) (*UntagResourceOutput, error) {
+	req, out := c.UntagResourceRequest(input)
+	return out, req.Send()
+}
+
+// UntagResourceWithContext is the same as UntagResource with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UntagResource for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *AppMesh) UntagResourceWithContext(ctx aws.Context, input *UntagResourceInput, opts ...request.Option) (*UntagResourceOutput, error) {
+	req, out := c.UntagResourceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdateMesh = "UpdateMesh"
+
+// UpdateMeshRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateMesh operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateMesh for more information on using the UpdateMesh
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateMeshRequest method.
+//    req, resp := client.UpdateMeshRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/appmesh-2019-01-25/UpdateMesh
+func (c *AppMesh) UpdateMeshRequest(input *UpdateMeshInput) (req *request.Request, output *UpdateMeshOutput) {
+	op := &request.Operation{
+		Name:       opUpdateMesh,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/v20190125/meshes/{meshName}",
+	}
+
+	if input == nil {
+		input = &UpdateMeshInput{}
+	}
+
+	output = &UpdateMeshOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateMesh API operation for AWS App Mesh.
+//
+// Updates an existing service mesh.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS App Mesh's
+// API operation UpdateMesh for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//   The request syntax was malformed. Check your request syntax and try again.
+//
+//   * ErrCodeConflictException "ConflictException"
+//   The request contains a client token that was used for a previous update resource
+//   call with different specifications. Try the request again with a new client
+//   token.
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//   You don't have permissions to perform this action.
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   The request processing has failed because of an unknown error, exception,
+//   or failure.
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//   The specified resource doesn't exist. Check your request syntax and try again.
+//
+//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   The request has failed due to a temporary failure of the service.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   The maximum request rate permitted by the App Mesh APIs has been exceeded
+//   for your account. For best results, use an increasing or variable sleep interval
+//   between requests.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/appmesh-2019-01-25/UpdateMesh
+func (c *AppMesh) UpdateMesh(input *UpdateMeshInput) (*UpdateMeshOutput, error) {
+	req, out := c.UpdateMeshRequest(input)
+	return out, req.Send()
+}
+
+// UpdateMeshWithContext is the same as UpdateMesh with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateMesh for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *AppMesh) UpdateMeshWithContext(ctx aws.Context, input *UpdateMeshInput, opts ...request.Option) (*UpdateMeshOutput, error) {
+	req, out := c.UpdateMeshRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opUpdateRoute = "UpdateRoute"
 
 // UpdateRouteRequest generates a "aws/request.Request" representing the
@@ -2779,6 +3216,45 @@ func (c *AppMesh) UpdateVirtualServiceWithContext(ctx aws.Context, input *Update
 	return out, req.Send()
 }
 
+// An object representing the access logging information for a virtual node.
+type AccessLog struct {
+	_ struct{} `type:"structure"`
+
+	// The file object to send virtual node access logs to.
+	File *FileAccessLog `locationName:"file" type:"structure"`
+}
+
+// String returns the string representation
+func (s AccessLog) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AccessLog) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AccessLog) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AccessLog"}
+	if s.File != nil {
+		if err := s.File.Validate(); err != nil {
+			invalidParams.AddNested("File", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetFile sets the File field's value.
+func (s *AccessLog) SetFile(v *FileAccessLog) *AccessLog {
+	s.File = v
+	return s
+}
+
 // An object representing the backends that a virtual node is expected to send
 // outbound traffic to.
 type Backend struct {
@@ -2830,6 +3306,15 @@ type CreateMeshInput struct {
 	//
 	// MeshName is a required field
 	MeshName *string `locationName:"meshName" min:"1" type:"string" required:"true"`
+
+	// The service mesh specification to apply.
+	Spec *MeshSpec `locationName:"spec" type:"structure"`
+
+	// Optional metadata that you can apply to the service mesh to assist with categorization
+	// and organization. Each tag consists of a key and an optional value, both
+	// of which you define. Tag keys can have a maximum character length of 128
+	// characters, and tag values can have a maximum length of 256 characters.
+	Tags []*TagRef `locationName:"tags" type:"list"`
 }
 
 // String returns the string representation
@@ -2851,6 +3336,21 @@ func (s *CreateMeshInput) Validate() error {
 	if s.MeshName != nil && len(*s.MeshName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("MeshName", 1))
 	}
+	if s.Spec != nil {
+		if err := s.Spec.Validate(); err != nil {
+			invalidParams.AddNested("Spec", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -2867,6 +3367,18 @@ func (s *CreateMeshInput) SetClientToken(v string) *CreateMeshInput {
 // SetMeshName sets the MeshName field's value.
 func (s *CreateMeshInput) SetMeshName(v string) *CreateMeshInput {
 	s.MeshName = &v
+	return s
+}
+
+// SetSpec sets the Spec field's value.
+func (s *CreateMeshInput) SetSpec(v *MeshSpec) *CreateMeshInput {
+	s.Spec = v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateMeshInput) SetTags(v []*TagRef) *CreateMeshInput {
+	s.Tags = v
 	return s
 }
 
@@ -2902,7 +3414,7 @@ type CreateRouteInput struct {
 	// of therequest. Up to 36 letters, numbers, hyphens, and underscores are allowed.
 	ClientToken *string `locationName:"clientToken" type:"string" idempotencyToken:"true"`
 
-	// The name of the service mesh in which to create the route.
+	// The name of the service mesh to create the route in.
 	//
 	// MeshName is a required field
 	MeshName *string `location:"uri" locationName:"meshName" min:"1" type:"string" required:"true"`
@@ -2916,6 +3428,12 @@ type CreateRouteInput struct {
 	//
 	// Spec is a required field
 	Spec *RouteSpec `locationName:"spec" type:"structure" required:"true"`
+
+	// Optional metadata that you can apply to the route to assist with categorization
+	// and organization. Each tag consists of a key and an optional value, both
+	// of which you define. Tag keys can have a maximum character length of 128
+	// characters, and tag values can have a maximum length of 256 characters.
+	Tags []*TagRef `locationName:"tags" type:"list"`
 
 	// The name of the virtual router in which to create the route.
 	//
@@ -2962,6 +3480,16 @@ func (s *CreateRouteInput) Validate() error {
 			invalidParams.AddNested("Spec", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -2990,6 +3518,12 @@ func (s *CreateRouteInput) SetRouteName(v string) *CreateRouteInput {
 // SetSpec sets the Spec field's value.
 func (s *CreateRouteInput) SetSpec(v *RouteSpec) *CreateRouteInput {
 	s.Spec = v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateRouteInput) SetTags(v []*TagRef) *CreateRouteInput {
+	s.Tags = v
 	return s
 }
 
@@ -3031,7 +3565,7 @@ type CreateVirtualNodeInput struct {
 	// of therequest. Up to 36 letters, numbers, hyphens, and underscores are allowed.
 	ClientToken *string `locationName:"clientToken" type:"string" idempotencyToken:"true"`
 
-	// The name of the service mesh in which to create the virtual node.
+	// The name of the service mesh to create the virtual node in.
 	//
 	// MeshName is a required field
 	MeshName *string `location:"uri" locationName:"meshName" min:"1" type:"string" required:"true"`
@@ -3040,6 +3574,12 @@ type CreateVirtualNodeInput struct {
 	//
 	// Spec is a required field
 	Spec *VirtualNodeSpec `locationName:"spec" type:"structure" required:"true"`
+
+	// Optional metadata that you can apply to the virtual node to assist with categorization
+	// and organization. Each tag consists of a key and an optional value, both
+	// of which you define. Tag keys can have a maximum character length of 128
+	// characters, and tag values can have a maximum length of 256 characters.
+	Tags []*TagRef `locationName:"tags" type:"list"`
 
 	// The name to use for the virtual node.
 	//
@@ -3080,6 +3620,16 @@ func (s *CreateVirtualNodeInput) Validate() error {
 			invalidParams.AddNested("Spec", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -3102,6 +3652,12 @@ func (s *CreateVirtualNodeInput) SetMeshName(v string) *CreateVirtualNodeInput {
 // SetSpec sets the Spec field's value.
 func (s *CreateVirtualNodeInput) SetSpec(v *VirtualNodeSpec) *CreateVirtualNodeInput {
 	s.Spec = v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateVirtualNodeInput) SetTags(v []*TagRef) *CreateVirtualNodeInput {
+	s.Tags = v
 	return s
 }
 
@@ -3153,6 +3709,12 @@ type CreateVirtualRouterInput struct {
 	// Spec is a required field
 	Spec *VirtualRouterSpec `locationName:"spec" type:"structure" required:"true"`
 
+	// Optional metadata that you can apply to the virtual router to assist with
+	// categorization and organization. Each tag consists of a key and an optional
+	// value, both of which you define. Tag keys can have a maximum character length
+	// of 128 characters, and tag values can have a maximum length of 256 characters.
+	Tags []*TagRef `locationName:"tags" type:"list"`
+
 	// The name to use for the virtual router.
 	//
 	// VirtualRouterName is a required field
@@ -3192,6 +3754,16 @@ func (s *CreateVirtualRouterInput) Validate() error {
 			invalidParams.AddNested("Spec", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -3214,6 +3786,12 @@ func (s *CreateVirtualRouterInput) SetMeshName(v string) *CreateVirtualRouterInp
 // SetSpec sets the Spec field's value.
 func (s *CreateVirtualRouterInput) SetSpec(v *VirtualRouterSpec) *CreateVirtualRouterInput {
 	s.Spec = v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateVirtualRouterInput) SetTags(v []*TagRef) *CreateVirtualRouterInput {
+	s.Tags = v
 	return s
 }
 
@@ -3255,7 +3833,7 @@ type CreateVirtualServiceInput struct {
 	// of therequest. Up to 36 letters, numbers, hyphens, and underscores are allowed.
 	ClientToken *string `locationName:"clientToken" type:"string" idempotencyToken:"true"`
 
-	// The name of the service mesh in which to create the virtual service.
+	// The name of the service mesh to create the virtual service in.
 	//
 	// MeshName is a required field
 	MeshName *string `location:"uri" locationName:"meshName" min:"1" type:"string" required:"true"`
@@ -3264,6 +3842,12 @@ type CreateVirtualServiceInput struct {
 	//
 	// Spec is a required field
 	Spec *VirtualServiceSpec `locationName:"spec" type:"structure" required:"true"`
+
+	// Optional metadata that you can apply to the virtual service to assist with
+	// categorization and organization. Each tag consists of a key and an optional
+	// value, both of which you define. Tag keys can have a maximum character length
+	// of 128 characters, and tag values can have a maximum length of 256 characters.
+	Tags []*TagRef `locationName:"tags" type:"list"`
 
 	// The name to use for the virtual service.
 	//
@@ -3301,6 +3885,16 @@ func (s *CreateVirtualServiceInput) Validate() error {
 			invalidParams.AddNested("Spec", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -3323,6 +3917,12 @@ func (s *CreateVirtualServiceInput) SetMeshName(v string) *CreateVirtualServiceI
 // SetSpec sets the Spec field's value.
 func (s *CreateVirtualServiceInput) SetSpec(v *VirtualServiceSpec) *CreateVirtualServiceInput {
 	s.Spec = v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateVirtualServiceInput) SetTags(v []*TagRef) *CreateVirtualServiceInput {
+	s.Tags = v
 	return s
 }
 
@@ -4227,6 +4827,98 @@ func (s *DnsServiceDiscovery) SetHostname(v string) *DnsServiceDiscovery {
 	return s
 }
 
+// An object representing the egress filter rules for a service mesh.
+type EgressFilter struct {
+	_ struct{} `type:"structure"`
+
+	// The egress filter type. By default, the type is DROP_ALL, which allows egress
+	// only from virtual nodes to other defined resources in the service mesh (and
+	// any traffic to *.amazonaws.com for AWS API calls). You can set the egress
+	// filter type to ALLOW_ALL to allow egress to any endpoint inside or outside
+	// of the service mesh.
+	//
+	// Type is a required field
+	Type *string `locationName:"type" type:"string" required:"true" enum:"EgressFilterType"`
+}
+
+// String returns the string representation
+func (s EgressFilter) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s EgressFilter) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *EgressFilter) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "EgressFilter"}
+	if s.Type == nil {
+		invalidParams.Add(request.NewErrParamRequired("Type"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetType sets the Type field's value.
+func (s *EgressFilter) SetType(v string) *EgressFilter {
+	s.Type = &v
+	return s
+}
+
+// An object representing an access log file.
+type FileAccessLog struct {
+	_ struct{} `type:"structure"`
+
+	// The file path to write access logs to. You can use /dev/stdout to send access
+	// logs to standard out and configure your Envoy container to use a log driver,
+	// such as awslogs, to export the access logs to a log storage service such
+	// as Amazon CloudWatch Logs. You can also specify a path in the Envoy container's
+	// file system to write the files to disk.
+	//
+	// The Envoy process must have write permissions to the path that you specify
+	// here. Otherwise, Envoy fails to bootstrap properly.
+	//
+	// Path is a required field
+	Path *string `locationName:"path" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s FileAccessLog) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s FileAccessLog) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *FileAccessLog) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "FileAccessLog"}
+	if s.Path == nil {
+		invalidParams.Add(request.NewErrParamRequired("Path"))
+	}
+	if s.Path != nil && len(*s.Path) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Path", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetPath sets the Path field's value.
+func (s *FileAccessLog) SetPath(v string) *FileAccessLog {
+	s.Path = &v
+	return s
+}
+
 // An object representing the health check policy for a virtual node's listener.
 type HealthCheckPolicy struct {
 	_ struct{} `type:"structure"`
@@ -4434,7 +5126,7 @@ type HttpRouteAction struct {
 	// traffic with.
 	//
 	// WeightedTargets is a required field
-	WeightedTargets []*WeightedTarget `locationName:"weightedTargets" type:"list" required:"true"`
+	WeightedTargets []*WeightedTarget `locationName:"weightedTargets" min:"1" type:"list" required:"true"`
 }
 
 // String returns the string representation
@@ -4452,6 +5144,9 @@ func (s *HttpRouteAction) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "HttpRouteAction"}
 	if s.WeightedTargets == nil {
 		invalidParams.Add(request.NewErrParamRequired("WeightedTargets"))
+	}
+	if s.WeightedTargets != nil && len(s.WeightedTargets) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("WeightedTargets", 1))
 	}
 	if s.WeightedTargets != nil {
 		for i, v := range s.WeightedTargets {
@@ -4482,11 +5177,10 @@ type HttpRouteMatch struct {
 	_ struct{} `type:"structure"`
 
 	// Specifies the path to match requests with. This parameter must always start
-	// with /, which by itself matches all requests to the virtual router service
-	// name. You can also match for path-based routing of requests. For example,
-	// if your virtual router service name is my-service.local and you want the
-	// route to match requests to my-service.local/metrics, your prefix should be
-	// /metrics.
+	// with /, which by itself matches all requests to the virtual service name.
+	// You can also match for path-based routing of requests. For example, if your
+	// virtual service name is my-service.local and you want the route to match
+	// requests to my-service.local/metrics, your prefix should be /metrics.
 	//
 	// Prefix is a required field
 	Prefix *string `locationName:"prefix" type:"string" required:"true"`
@@ -4538,7 +5232,7 @@ type ListMeshesInput struct {
 	// Pagination continues from the end of the previous results that returned the
 	// nextToken value.
 	//
-	// This token should be treated as an opaque identifier that is only used to
+	// This token should be treated as an opaque identifier that is used only to
 	// retrieve the next items in a list and not for other programmatic purposes.
 	NextToken *string `location:"querystring" locationName:"nextToken" type:"string"`
 }
@@ -4627,7 +5321,7 @@ type ListRoutesInput struct {
 	// applicable.
 	Limit *int64 `location:"querystring" locationName:"limit" min:"1" type:"integer"`
 
-	// The name of the service mesh in which to list routes.
+	// The name of the service mesh to list routes in.
 	//
 	// MeshName is a required field
 	MeshName *string `location:"uri" locationName:"meshName" min:"1" type:"string" required:"true"`
@@ -4737,6 +5431,112 @@ func (s *ListRoutesOutput) SetNextToken(v string) *ListRoutesOutput {
 // SetRoutes sets the Routes field's value.
 func (s *ListRoutesOutput) SetRoutes(v []*RouteRef) *ListRoutesOutput {
 	s.Routes = v
+	return s
+}
+
+type ListTagsForResourceInput struct {
+	_ struct{} `type:"structure"`
+
+	// The maximum number of tag results returned by ListTagsForResource in paginated
+	// output. When this parameter is used, ListTagsForResource returns only limit
+	// results in a single page along with a nextToken response element. You can
+	// see the remaining results of the initial request by sending another ListTagsForResource
+	// request with the returned nextToken value. This value can be between 1 and
+	// 100. If you don't use this parameter, ListTagsForResource returns up to 100
+	// results and a nextToken value if applicable.
+	Limit *int64 `location:"querystring" locationName:"limit" min:"1" type:"integer"`
+
+	// The nextToken value returned from a previous paginated ListTagsForResource
+	// request where limit was used and the results exceeded the value of that parameter.
+	// Pagination continues from the end of the previous results that returned the
+	// nextToken value.
+	NextToken *string `location:"querystring" locationName:"nextToken" type:"string"`
+
+	// The Amazon Resource Name (ARN) that identifies the resource to list the tags
+	// for.
+	//
+	// ResourceArn is a required field
+	ResourceArn *string `location:"querystring" locationName:"resourceArn" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ListTagsForResourceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListTagsForResourceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListTagsForResourceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListTagsForResourceInput"}
+	if s.Limit != nil && *s.Limit < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("Limit", 1))
+	}
+	if s.ResourceArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceArn"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetLimit sets the Limit field's value.
+func (s *ListTagsForResourceInput) SetLimit(v int64) *ListTagsForResourceInput {
+	s.Limit = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListTagsForResourceInput) SetNextToken(v string) *ListTagsForResourceInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetResourceArn sets the ResourceArn field's value.
+func (s *ListTagsForResourceInput) SetResourceArn(v string) *ListTagsForResourceInput {
+	s.ResourceArn = &v
+	return s
+}
+
+type ListTagsForResourceOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The nextToken value to include in a future ListTagsForResource request. When
+	// the results of a ListTagsForResource request exceed limit, you can use this
+	// value to retrieve the next page of results. This value is null when there
+	// are no more results to return.
+	NextToken *string `locationName:"nextToken" type:"string"`
+
+	// The tags for the resource.
+	//
+	// Tags is a required field
+	Tags []*TagRef `locationName:"tags" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s ListTagsForResourceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListTagsForResourceOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListTagsForResourceOutput) SetNextToken(v string) *ListTagsForResourceOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *ListTagsForResourceOutput) SetTags(v []*TagRef) *ListTagsForResourceOutput {
+	s.Tags = v
 	return s
 }
 
@@ -5122,6 +5922,45 @@ func (s *Listener) SetPortMapping(v *PortMapping) *Listener {
 	return s
 }
 
+// An object representing the logging information for a virtual node.
+type Logging struct {
+	_ struct{} `type:"structure"`
+
+	// The access log configuration for a virtual node.
+	AccessLog *AccessLog `locationName:"accessLog" type:"structure"`
+}
+
+// String returns the string representation
+func (s Logging) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Logging) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *Logging) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "Logging"}
+	if s.AccessLog != nil {
+		if err := s.AccessLog.Validate(); err != nil {
+			invalidParams.AddNested("AccessLog", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAccessLog sets the AccessLog field's value.
+func (s *Logging) SetAccessLog(v *AccessLog) *Logging {
+	s.AccessLog = v
+	return s
+}
+
 // An object representing a service mesh returned by a describe operation.
 type MeshData struct {
 	_ struct{} `type:"structure"`
@@ -5135,6 +5974,11 @@ type MeshData struct {
 	//
 	// Metadata is a required field
 	Metadata *ResourceMetadata `locationName:"metadata" type:"structure" required:"true"`
+
+	// The associated specification for the service mesh.
+	//
+	// Spec is a required field
+	Spec *MeshSpec `locationName:"spec" type:"structure" required:"true"`
 
 	// The status of the service mesh.
 	//
@@ -5161,6 +6005,12 @@ func (s *MeshData) SetMeshName(v string) *MeshData {
 // SetMetadata sets the Metadata field's value.
 func (s *MeshData) SetMetadata(v *ResourceMetadata) *MeshData {
 	s.Metadata = v
+	return s
+}
+
+// SetSpec sets the Spec field's value.
+func (s *MeshData) SetSpec(v *MeshSpec) *MeshData {
+	s.Spec = v
 	return s
 }
 
@@ -5204,6 +6054,45 @@ func (s *MeshRef) SetArn(v string) *MeshRef {
 // SetMeshName sets the MeshName field's value.
 func (s *MeshRef) SetMeshName(v string) *MeshRef {
 	s.MeshName = &v
+	return s
+}
+
+// An object representing the specification of a service mesh.
+type MeshSpec struct {
+	_ struct{} `type:"structure"`
+
+	// The egress filter rules for the service mesh.
+	EgressFilter *EgressFilter `locationName:"egressFilter" type:"structure"`
+}
+
+// String returns the string representation
+func (s MeshSpec) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MeshSpec) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *MeshSpec) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "MeshSpec"}
+	if s.EgressFilter != nil {
+		if err := s.EgressFilter.Validate(); err != nil {
+			invalidParams.AddNested("EgressFilter", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetEgressFilter sets the EgressFilter field's value.
+func (s *MeshSpec) SetEgressFilter(v *EgressFilter) *MeshSpec {
+	s.EgressFilter = v
 	return s
 }
 
@@ -5292,16 +6181,6 @@ type ResourceMetadata struct {
 	_ struct{} `type:"structure"`
 
 	// The full Amazon Resource Name (ARN) for the resource.
-	//
-	// After you create a virtual node, set this value (either the full ARN or the
-	// truncated resource name, for example, mesh/default/virtualNode/simpleapp,
-	// as the APPMESH_VIRTUAL_NODE_NAME environment variable for your task group's
-	// Envoy proxy container in your task definition or pod spec. This is then mapped
-	// to the node.id and node.cluster Envoy parameters.
-	//
-	// If you require your Envoy stats or tracing to use a different name, you can
-	// override the node.cluster value that is set by APPMESH_VIRTUAL_NODE_NAME
-	// with the APPMESH_VIRTUAL_NODE_CLUSTER environment variable.
 	//
 	// Arn is a required field
 	Arn *string `locationName:"arn" type:"string" required:"true"`
@@ -5514,6 +6393,9 @@ type RouteSpec struct {
 
 	// The HTTP routing information for the route.
 	HttpRoute *HttpRoute `locationName:"httpRoute" type:"structure"`
+
+	// The TCP routing information for the route.
+	TcpRoute *TcpRoute `locationName:"tcpRoute" type:"structure"`
 }
 
 // String returns the string representation
@@ -5534,6 +6416,11 @@ func (s *RouteSpec) Validate() error {
 			invalidParams.AddNested("HttpRoute", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.TcpRoute != nil {
+		if err := s.TcpRoute.Validate(); err != nil {
+			invalidParams.AddNested("TcpRoute", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -5544,6 +6431,12 @@ func (s *RouteSpec) Validate() error {
 // SetHttpRoute sets the HttpRoute field's value.
 func (s *RouteSpec) SetHttpRoute(v *HttpRoute) *RouteSpec {
 	s.HttpRoute = v
+	return s
+}
+
+// SetTcpRoute sets the TcpRoute field's value.
+func (s *RouteSpec) SetTcpRoute(v *TcpRoute) *RouteSpec {
+	s.TcpRoute = v
 	return s
 }
 
@@ -5609,6 +6502,395 @@ func (s *ServiceDiscovery) Validate() error {
 // SetDns sets the Dns field's value.
 func (s *ServiceDiscovery) SetDns(v *DnsServiceDiscovery) *ServiceDiscovery {
 	s.Dns = v
+	return s
+}
+
+// Optional metadata that you apply to a resource to assist with categorization
+// and organization. Each tag consists of a key and an optional value, both
+// of which you define. Tag keys can have a maximum character length of 128
+// characters, and tag values can have a maximum length of 256 characters.
+type TagRef struct {
+	_ struct{} `type:"structure"`
+
+	// One part of a key-value pair that make up a tag. A key is a general label
+	// that acts like a category for more specific tag values.
+	//
+	// Key is a required field
+	Key *string `locationName:"key" min:"1" type:"string" required:"true"`
+
+	// The optional part of a key-value pair that make up a tag. A value acts as
+	// a descriptor within a tag category (key).
+	Value *string `locationName:"value" type:"string"`
+}
+
+// String returns the string representation
+func (s TagRef) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TagRef) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *TagRef) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "TagRef"}
+	if s.Key == nil {
+		invalidParams.Add(request.NewErrParamRequired("Key"))
+	}
+	if s.Key != nil && len(*s.Key) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Key", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetKey sets the Key field's value.
+func (s *TagRef) SetKey(v string) *TagRef {
+	s.Key = &v
+	return s
+}
+
+// SetValue sets the Value field's value.
+func (s *TagRef) SetValue(v string) *TagRef {
+	s.Value = &v
+	return s
+}
+
+type TagResourceInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the resource to add tags to.
+	//
+	// ResourceArn is a required field
+	ResourceArn *string `location:"querystring" locationName:"resourceArn" type:"string" required:"true"`
+
+	// The tags to add to the resource. A tag is an array of key-value pairs. Tag
+	// keys can have a maximum character length of 128 characters, and tag values
+	// can have a maximum length of 256 characters.
+	//
+	// Tags is a required field
+	Tags []*TagRef `locationName:"tags" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s TagResourceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TagResourceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *TagResourceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "TagResourceInput"}
+	if s.ResourceArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceArn"))
+	}
+	if s.Tags == nil {
+		invalidParams.Add(request.NewErrParamRequired("Tags"))
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetResourceArn sets the ResourceArn field's value.
+func (s *TagResourceInput) SetResourceArn(v string) *TagResourceInput {
+	s.ResourceArn = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *TagResourceInput) SetTags(v []*TagRef) *TagResourceInput {
+	s.Tags = v
+	return s
+}
+
+type TagResourceOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s TagResourceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TagResourceOutput) GoString() string {
+	return s.String()
+}
+
+// An object representing the TCP routing specification for a route.
+type TcpRoute struct {
+	_ struct{} `type:"structure"`
+
+	// The action to take if a match is determined.
+	//
+	// Action is a required field
+	Action *TcpRouteAction `locationName:"action" type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s TcpRoute) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TcpRoute) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *TcpRoute) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "TcpRoute"}
+	if s.Action == nil {
+		invalidParams.Add(request.NewErrParamRequired("Action"))
+	}
+	if s.Action != nil {
+		if err := s.Action.Validate(); err != nil {
+			invalidParams.AddNested("Action", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAction sets the Action field's value.
+func (s *TcpRoute) SetAction(v *TcpRouteAction) *TcpRoute {
+	s.Action = v
+	return s
+}
+
+// An object representing the traffic distribution requirements for matched
+// TCP requests.
+type TcpRouteAction struct {
+	_ struct{} `type:"structure"`
+
+	// The targets that traffic is routed to when a request matches the route. You
+	// can specify one or more targets and their relative weights to distribute
+	// traffic with.
+	//
+	// WeightedTargets is a required field
+	WeightedTargets []*WeightedTarget `locationName:"weightedTargets" min:"1" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s TcpRouteAction) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TcpRouteAction) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *TcpRouteAction) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "TcpRouteAction"}
+	if s.WeightedTargets == nil {
+		invalidParams.Add(request.NewErrParamRequired("WeightedTargets"))
+	}
+	if s.WeightedTargets != nil && len(s.WeightedTargets) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("WeightedTargets", 1))
+	}
+	if s.WeightedTargets != nil {
+		for i, v := range s.WeightedTargets {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "WeightedTargets", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetWeightedTargets sets the WeightedTargets field's value.
+func (s *TcpRouteAction) SetWeightedTargets(v []*WeightedTarget) *TcpRouteAction {
+	s.WeightedTargets = v
+	return s
+}
+
+type UntagResourceInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the resource to delete tags from.
+	//
+	// ResourceArn is a required field
+	ResourceArn *string `location:"querystring" locationName:"resourceArn" type:"string" required:"true"`
+
+	// The keys of the tags to be removed.
+	//
+	// TagKeys is a required field
+	TagKeys []*string `locationName:"tagKeys" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s UntagResourceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UntagResourceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UntagResourceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UntagResourceInput"}
+	if s.ResourceArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceArn"))
+	}
+	if s.TagKeys == nil {
+		invalidParams.Add(request.NewErrParamRequired("TagKeys"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetResourceArn sets the ResourceArn field's value.
+func (s *UntagResourceInput) SetResourceArn(v string) *UntagResourceInput {
+	s.ResourceArn = &v
+	return s
+}
+
+// SetTagKeys sets the TagKeys field's value.
+func (s *UntagResourceInput) SetTagKeys(v []*string) *UntagResourceInput {
+	s.TagKeys = v
+	return s
+}
+
+type UntagResourceOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s UntagResourceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UntagResourceOutput) GoString() string {
+	return s.String()
+}
+
+type UpdateMeshInput struct {
+	_ struct{} `type:"structure"`
+
+	// Unique, case-sensitive identifier that you provide to ensure the idempotency
+	// of therequest. Up to 36 letters, numbers, hyphens, and underscores are allowed.
+	ClientToken *string `locationName:"clientToken" type:"string" idempotencyToken:"true"`
+
+	// The name of the service mesh to update.
+	//
+	// MeshName is a required field
+	MeshName *string `location:"uri" locationName:"meshName" min:"1" type:"string" required:"true"`
+
+	// The service mesh specification to apply.
+	Spec *MeshSpec `locationName:"spec" type:"structure"`
+}
+
+// String returns the string representation
+func (s UpdateMeshInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateMeshInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateMeshInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateMeshInput"}
+	if s.MeshName == nil {
+		invalidParams.Add(request.NewErrParamRequired("MeshName"))
+	}
+	if s.MeshName != nil && len(*s.MeshName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("MeshName", 1))
+	}
+	if s.Spec != nil {
+		if err := s.Spec.Validate(); err != nil {
+			invalidParams.AddNested("Spec", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetClientToken sets the ClientToken field's value.
+func (s *UpdateMeshInput) SetClientToken(v string) *UpdateMeshInput {
+	s.ClientToken = &v
+	return s
+}
+
+// SetMeshName sets the MeshName field's value.
+func (s *UpdateMeshInput) SetMeshName(v string) *UpdateMeshInput {
+	s.MeshName = &v
+	return s
+}
+
+// SetSpec sets the Spec field's value.
+func (s *UpdateMeshInput) SetSpec(v *MeshSpec) *UpdateMeshInput {
+	s.Spec = v
+	return s
+}
+
+type UpdateMeshOutput struct {
+	_ struct{} `type:"structure" payload:"Mesh"`
+
+	// An object representing a service mesh returned by a describe operation.
+	//
+	// Mesh is a required field
+	Mesh *MeshData `locationName:"mesh" type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateMeshOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateMeshOutput) GoString() string {
+	return s.String()
+}
+
+// SetMesh sets the Mesh field's value.
+func (s *UpdateMeshOutput) SetMesh(v *MeshData) *UpdateMeshOutput {
+	s.Mesh = v
 	return s
 }
 
@@ -6251,7 +7533,11 @@ type VirtualNodeSpec struct {
 	// from. Currently only one listener is supported per virtual node.
 	Listeners []*Listener `locationName:"listeners" type:"list"`
 
-	// The service discovery information for the virtual node.
+	// The inbound and outbound access logging information for the virtual node.
+	Logging *Logging `locationName:"logging" type:"structure"`
+
+	// The service discovery information for the virtual node. If your virtual node
+	// does not expect ingress traffic, you can omit this parameter.
 	ServiceDiscovery *ServiceDiscovery `locationName:"serviceDiscovery" type:"structure"`
 }
 
@@ -6288,6 +7574,11 @@ func (s *VirtualNodeSpec) Validate() error {
 			}
 		}
 	}
+	if s.Logging != nil {
+		if err := s.Logging.Validate(); err != nil {
+			invalidParams.AddNested("Logging", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.ServiceDiscovery != nil {
 		if err := s.ServiceDiscovery.Validate(); err != nil {
 			invalidParams.AddNested("ServiceDiscovery", err.(request.ErrInvalidParams))
@@ -6309,6 +7600,12 @@ func (s *VirtualNodeSpec) SetBackends(v []*Backend) *VirtualNodeSpec {
 // SetListeners sets the Listeners field's value.
 func (s *VirtualNodeSpec) SetListeners(v []*Listener) *VirtualNodeSpec {
 	s.Listeners = v
+	return s
+}
+
+// SetLogging sets the Logging field's value.
+func (s *VirtualNodeSpec) SetLogging(v *Logging) *VirtualNodeSpec {
+	s.Logging = v
 	return s
 }
 
@@ -6556,7 +7853,7 @@ type VirtualRouterSpec struct {
 	// from. Currently only one listener is supported per virtual router.
 	//
 	// Listeners is a required field
-	Listeners []*VirtualRouterListener `locationName:"listeners" type:"list" required:"true"`
+	Listeners []*VirtualRouterListener `locationName:"listeners" min:"1" type:"list" required:"true"`
 }
 
 // String returns the string representation
@@ -6574,6 +7871,9 @@ func (s *VirtualRouterSpec) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "VirtualRouterSpec"}
 	if s.Listeners == nil {
 		invalidParams.Add(request.NewErrParamRequired("Listeners"))
+	}
+	if s.Listeners != nil && len(s.Listeners) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Listeners", 1))
 	}
 	if s.Listeners != nil {
 		for i, v := range s.Listeners {
@@ -6958,6 +8258,14 @@ func (s *WeightedTarget) SetWeight(v int64) *WeightedTarget {
 	s.Weight = &v
 	return s
 }
+
+const (
+	// EgressFilterTypeAllowAll is a EgressFilterType enum value
+	EgressFilterTypeAllowAll = "ALLOW_ALL"
+
+	// EgressFilterTypeDropAll is a EgressFilterType enum value
+	EgressFilterTypeDropAll = "DROP_ALL"
+)
 
 const (
 	// MeshStatusCodeActive is a MeshStatusCode enum value

@@ -107,6 +107,24 @@ func suppressAutoscalingGroupAvailabilityZoneDiffs(k, old, new string, d *schema
 	return false
 }
 
+func suppressCloudFormationTemplateBodyDiffs(k, old, new string, d *schema.ResourceData) bool {
+	normalizedOld, err := normalizeCloudFormationTemplate(old)
+
+	if err != nil {
+		log.Printf("[WARN] Unable to normalize Terraform state CloudFormation template body: %s", err)
+		return false
+	}
+
+	normalizedNew, err := normalizeCloudFormationTemplate(new)
+
+	if err != nil {
+		log.Printf("[WARN] Unable to normalize Terraform configuration CloudFormation template body: %s", err)
+		return false
+	}
+
+	return normalizedOld == normalizedNew
+}
+
 func suppressRoute53ZoneNameWithTrailingDot(k, old, new string, d *schema.ResourceData) bool {
 	// "." is different from "".
 	if old == "." || new == "." {
