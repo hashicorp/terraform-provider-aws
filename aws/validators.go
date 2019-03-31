@@ -915,16 +915,6 @@ func validateS3BucketGrantType(v interface{}, k string) (ws []string, errors []e
 	return
 }
 
-func validateS3BucketGrantPermission(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if value != s3.PermissionFullControl && value != s3.PermissionWrite &&
-		value != s3.PermissionWriteAcp && value != s3.PermissionRead && value != s3.PermissionReadAcp {
-		errors = append(errors, fmt.Errorf(
-			"%q must be '%q', '%q', '%q', '%q' or '%q'", k, s3.PermissionFullControl, s3.PermissionWrite, s3.PermissionWriteAcp, s3.PermissionRead, s3.PermissionReadAcp))
-	}
-	return
-}
-
 func validateDbEventSubscriptionName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !regexp.MustCompile(`^[0-9A-Za-z-]+$`).MatchString(value) {
