@@ -12,7 +12,7 @@ Provides an AWS App Mesh virtual node resource.
 
 ## Breaking Changes
 
-Because of backward incompatible API changes (read [here](https://github.com/awslabs/aws-app-mesh-examples/issues/92)), `aws_appmesh_virtual_node` resource definitions created with provider versions earlier than vX.Y.Z will need to be modified:
+Because of backward incompatible API changes (read [here](https://github.com/awslabs/aws-app-mesh-examples/issues/92)), `aws_appmesh_virtual_node` resource definitions created with provider versions earlier than v2.3.0 will need to be modified:
 
 * Rename the `service_name` attribute of the `dns` object to `hostname`.
 
@@ -92,6 +92,44 @@ resource "aws_appmesh_virtual_node" "serviceb1" {
 }
 ```
 
+### Logging
+
+```hcl
+resource "aws_appmesh_virtual_node" "serviceb1" {
+  name                = "serviceBv1"
+  mesh_name           = "${aws_appmesh_mesh.simple.id}"
+
+  spec {
+    backend {
+      virtual_service {
+        virtual_service_name = "servicea.simpleapp.local"
+      }
+    }
+
+    listener {
+      port_mapping {
+        port     = 8080
+        protocol = "http"
+      }
+    }
+
+    service_discovery {
+      dns {
+        hostname = "serviceb.simpleapp.local"
+      }
+    }
+
+    logging {
+      access_log {
+        file {
+          path = "/dev/stdout"
+        }
+      }
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -104,7 +142,8 @@ The `spec` object supports the following:
 
 * `backend` - (Optional) The backends to which the virtual node is expected to send outbound traffic.
 * `listener` - (Optional) The listeners from which the virtual node is expected to receive inbound traffic.
-* `service_discovery`- (Optional) The service discovery information for the virtual node.
+* `logging` - (Optional) The inbound and outbound access logging information for the virtual node.
+* `service_discovery` - (Optional) The service discovery information for the virtual node.
 
 The `backend` object supports the following:
 
@@ -118,6 +157,18 @@ The `listener` object supports the following:
 
 * `port_mapping` - (Required) The port mapping information for the listener.
 * `health_check` - (Optional) The health check information for the listener.
+
+The `logging` object supports the following:
+
+* `access_log` - (Optional) The access log configuration for a virtual node.
+
+The `access_log` object supports the following:
+
+* `file` - (Optional) The file object to send virtual node access logs to.
+
+The `file` object supports the following:
+
+* `path` - (Required) The file path to write access logs to. You can use `/dev/stdout` to send access logs to standard out.
 
 The `service_discovery` object supports the following:
 

@@ -4985,6 +4985,28 @@ func expandAppmeshVirtualNodeSpec(vSpec []interface{}) *appmesh.VirtualNodeSpec 
 		spec.Listeners = listeners
 	}
 
+	if vLogging, ok := mSpec["logging"].([]interface{}); ok && len(vLogging) > 0 && vLogging[0] != nil {
+		mLogging := vLogging[0].(map[string]interface{})
+
+		if vAccessLog, ok := mLogging["access_log"].([]interface{}); ok && len(vAccessLog) > 0 && vAccessLog[0] != nil {
+			mAccessLog := vAccessLog[0].(map[string]interface{})
+
+			if vFile, ok := mAccessLog["file"].([]interface{}); ok && len(vFile) > 0 && vFile[0] != nil {
+				mFile := vFile[0].(map[string]interface{})
+
+				if vPath, ok := mFile["path"].(string); ok && vPath != "" {
+					spec.Logging = &appmesh.Logging{
+						AccessLog: &appmesh.AccessLog{
+							File: &appmesh.FileAccessLog{
+								Path: aws.String(vPath),
+							},
+						},
+					}
+				}
+			}
+		}
+	}
+
 	if vServiceDiscovery, ok := mSpec["service_discovery"].([]interface{}); ok && len(vServiceDiscovery) > 0 && vServiceDiscovery[0] != nil {
 		mServiceDiscovery := vServiceDiscovery[0].(map[string]interface{})
 
@@ -5061,6 +5083,22 @@ func flattenAppmeshVirtualNodeSpec(spec *appmesh.VirtualNodeSpec) []interface{} 
 		}
 
 		mSpec["listener"] = schema.NewSet(appmeshVirtualNodeListenerHash, vListeners)
+	}
+
+	if spec.Logging != nil && spec.Logging.AccessLog != nil && spec.Logging.AccessLog.File != nil {
+		mSpec["logging"] = []interface{}{
+			map[string]interface{}{
+				"access_log": []interface{}{
+					map[string]interface{}{
+						"file": []interface{}{
+							map[string]interface{}{
+								"path": aws.StringValue(spec.Logging.AccessLog.File.Path),
+							},
+						},
+					},
+				},
+			},
+		}
 	}
 
 	if spec.ServiceDiscovery != nil && spec.ServiceDiscovery.Dns != nil {

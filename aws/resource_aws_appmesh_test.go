@@ -15,8 +15,9 @@ func TestAccAWSAppmesh(t *testing.T) {
 			"tcpRoute":  testAccAwsAppmeshRoute_tcpRoute,
 		},
 		"VirtualNode": {
-			"basic":         testAccAwsAppmeshVirtualNode_basic,
-			"allAttributes": testAccAwsAppmeshVirtualNode_allAttributes,
+			"basic":                testAccAwsAppmeshVirtualNode_basic,
+			"listenerHealthChecks": testAccAwsAppmeshVirtualNode_listenerHealthChecks,
+			"logging":              testAccAwsAppmeshVirtualNode_logging,
 		},
 		"VirtualRouter": {
 			"basic": testAccAwsAppmeshVirtualRouter_basic,
