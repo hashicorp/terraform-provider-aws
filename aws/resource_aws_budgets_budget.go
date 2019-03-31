@@ -276,15 +276,15 @@ func expandBudgetNotificationsUnmarshal(notificationsRaw []interface{}) ([]*budg
 			NotificationType:   aws.String(notificationType),
 		}
 
-		emailSubscribers := expandSubscribers(notificationRaw["subscriber_email_addresses"], budgets.SubscriptionTypeEmail)
-		snsSubscribers := expandSubscribers(notificationRaw["subscriber_sns_topic_arns"], budgets.SubscriptionTypeSns)
+		emailSubscribers := expandBudgetSubscribers(notificationRaw["subscriber_email_addresses"], budgets.SubscriptionTypeEmail)
+		snsSubscribers := expandBudgetSubscribers(notificationRaw["subscriber_sns_topic_arns"], budgets.SubscriptionTypeSns)
 
 		subscribersForNotifications[i] = append(emailSubscribers, snsSubscribers...)
 	}
 	return notifications, subscribersForNotifications
 }
 
-func expandSubscribers(rawList interface{}, subscriptionType string) []*budgets.Subscriber {
+func expandBudgetSubscribers(rawList interface{}, subscriptionType string) []*budgets.Subscriber {
 	result := make([]*budgets.Subscriber, 0)
 	addrs := expandStringSet(rawList.(*schema.Set))
 	for _, addr := range addrs {
