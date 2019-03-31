@@ -373,12 +373,19 @@ func resourceAwsBudgetsBudgetNotificationRead(d *schema.ResourceData, meta inter
 	notifications := make([]map[string]interface{}, 0)
 
 	for _, notificationOutput := range describeNotificationsForBudgetOutput.Notifications {
-		setNotificationDefaults(notificationOutput)
 		notification := make(map[string]interface{})
+
 		notification["comparison_operator"] = aws.StringValue(notificationOutput.ComparisonOperator)
-		notification["threshold_type"] = aws.StringValue(notificationOutput.ThresholdType)
 		notification["threshold"] = aws.Float64Value(notificationOutput.Threshold)
 		notification["notification_type"] = aws.StringValue(notificationOutput.NotificationType)
+
+		if notificationOutput.ThresholdType == nil {
+			// The AWS API doesn't seem to return a ThresholdType if it's set to PERCENTAGE
+			// Set it manually to make behavior more predictable
+			notification["threshold_type"] = budgets.ThresholdTypePercentage
+		} else {
+			notification["threshold_type"] = aws.StringValue(notificationOutput.ThresholdType)
+		}
 
 		subscribersOutput, err := conn.DescribeSubscribersForNotification(&budgets.DescribeSubscribersForNotificationInput{
 			BudgetName:   aws.String(budgetName),
@@ -414,14 +421,6 @@ func resourceAwsBudgetsBudgetNotificationRead(d *schema.ResourceData, meta inter
 	}
 
 	return nil
-}
-
-func setNotificationDefaults(notification *budgets.Notification) {
-	// The AWS API doesn't seem to return a ThresholdType if it's set to PERCENTAGE
-	// Set it manually to make behavior more predictable
-	if notification.ThresholdType == nil {
-		notification.ThresholdType = aws.String(budgets.ThresholdTypePercentage)
-	}
 }
 
 func resourceAwsBudgetsBudgetUpdate(d *schema.ResourceData, meta interface{}) error {
