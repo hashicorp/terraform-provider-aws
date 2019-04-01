@@ -11,6 +11,7 @@ linters:
     - gosimple
     - ineffassign
     - misspell
+    - staticcheck
     - structcheck
     - unconvert
     - unused
