@@ -174,7 +174,7 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
 * `shared_credentials_file` = (Optional) This is the path to the shared credentials file.
   If this is not set and a profile is specified, `~/.aws/credentials` will be used.
 
-* `token` - (Optional) Use this to set an MFA token. It can also be sourced
+* `token` - (Optional) Temporary session token retrieved from an MFA device. It can also be sourced
   from the `AWS_SESSION_TOKEN` environment variable.
 
 * `max_retries` - (Optional) This is the maximum number of times an API
