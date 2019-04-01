@@ -1,4 +1,9 @@
 ## 2.5.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_budgets_budget: Add `notification` configuration block (support notifications) [GH-4523]
+
 ## 2.4.0 (March 29, 2019)
 
 NOTES:
