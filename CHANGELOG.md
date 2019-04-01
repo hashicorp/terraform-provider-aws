@@ -3,6 +3,7 @@
 ENHANCEMENTS:
 
 * resource/aws_budgets_budget: Add `notification` configuration block (support notifications) [GH-4523]
+* resource/aws_cloudfront_distribution: Add `wait_for_deployment` argument [GH-8116]
 
 ## 2.4.0 (March 29, 2019)
 
