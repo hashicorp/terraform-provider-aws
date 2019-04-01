@@ -194,6 +194,10 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
+						"zone_awareness_count": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
 					},
 				},
 			},
