@@ -15,16 +15,16 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 )
 
-const SagemakerLifecycleConfigurationResourcePrefix = "tf-acc-test"
+const SagemakerNotebookInstanceLifecycleConfigurationResourcePrefix = "tf-acc-test"
 
 func init() {
-	resource.AddTestSweepers("aws_sagemaker_lifecycle_config", &resource.Sweeper{
-		Name: "aws_sagemaker_lifecycle_config",
-		F:    testSweepSagemakerLifecycleConfiguration,
+	resource.AddTestSweepers("aws_sagemaker_notebook_instance_lifecycle_configuration", &resource.Sweeper{
+		Name: "aws_sagemaker_notebook_instance_lifecycle_configuration",
+		F:    testSweepSagemakerNotebookInstanceLifecycleConfiguration,
 	})
 }
 
-func testSweepSagemakerLifecycleConfiguration(region string) error {
+func testSweepSagemakerNotebookInstanceLifecycleConfiguration(region string) error {
 	client, err := sharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -34,55 +34,56 @@ func testSweepSagemakerLifecycleConfiguration(region string) error {
 	input := &sagemaker.ListNotebookInstanceLifecycleConfigsInput{}
 	err = conn.ListNotebookInstanceLifecycleConfigsPages(input, func(page *sagemaker.ListNotebookInstanceLifecycleConfigsOutput, lastPage bool) bool {
 		if len(page.NotebookInstanceLifecycleConfigs) == 0 {
-			log.Printf("[INFO] No SageMaker notebook instance lifecycle configuration to sweep")
+			log.Printf("[INFO] No SageMaker Notebook Instance Lifecycle Configuration to sweep")
 			return false
 		}
 		for _, lifecycleConfig := range page.NotebookInstanceLifecycleConfigs {
 			name := aws.StringValue(lifecycleConfig.NotebookInstanceLifecycleConfigName)
-			if !strings.HasPrefix(name, SagemakerLifecycleConfigurationResourcePrefix) {
-				log.Printf("[INFO] Skipping SageMaker notebook instance lifecycle configuration: %s", name)
+			if !strings.HasPrefix(name, SagemakerNotebookInstanceLifecycleConfigurationResourcePrefix) {
+				log.Printf("[INFO] Skipping SageMaker Notebook Instance Lifecycle Configuration: %s", name)
 				continue
 			}
 
-			log.Printf("[INFO] Deleting SageMaker notebook instance lifecycle configuration: %s", name)
+			log.Printf("[INFO] Deleting SageMaker Notebook Instance Lifecycle Configuration: %s", name)
 			_, err := conn.DeleteNotebookInstanceLifecycleConfig(&sagemaker.DeleteNotebookInstanceLifecycleConfigInput{
 				NotebookInstanceLifecycleConfigName: aws.String(name),
 			})
 			if err != nil {
-				log.Printf("[ERROR] Failed to delete SageMaker notebook instance lifecycle configuration %s: %s", name, err)
+				log.Printf("[ERROR] Failed to delete SageMaker Notebook Instance Lifecycle Configuration %s: %s", name, err)
 			}
 		}
 		return !lastPage
 	})
 	if err != nil {
 		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] Skipping SageMaker notebook instance lifecycle configuration sweep for %s: %s", region, err)
+			log.Printf("[WARN] Skipping SageMaker Notebook Instance Lifecycle Configuration sweep for %s: %s", region, err)
 			return nil
 		}
-		return fmt.Errorf("error retrieving SageMaker notebook instance lifecycle configuration: %s", err)
+		return fmt.Errorf("error retrieving SageMaker Notebook Instance Lifecycle Configuration: %s", err)
 	}
 
 	return nil
 }
 
-func TestAccAWSSagemakerLifecycleConfiguration_Basic(t *testing.T) {
+func TestAccAWSSagemakerNotebookInstanceLifecycleConfiguration_Basic(t *testing.T) {
 	var lifecycleConfig sagemaker.DescribeNotebookInstanceLifecycleConfigOutput
-	rName := acctest.RandomWithPrefix(SagemakerLifecycleConfigurationResourcePrefix)
-	resourceName := "aws_sagemaker_lifecycle_config.test"
+	rName := acctest.RandomWithPrefix(SagemakerNotebookInstanceLifecycleConfigurationResourcePrefix)
+	resourceName := "aws_sagemaker_notebook_instance_lifecycle_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSSagemakerLifecycleConfigurationDestroy,
+		CheckDestroy: testAccCheckAWSSagemakerNotebookInstanceLifecycleConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSagemakerLifecycleConfigurationConfig_Basic(rName),
+				Config: testAccSagemakerNotebookInstanceLifecycleConfigurationConfig_Basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSagemakerLifecycleConfigurationExists(resourceName, &lifecycleConfig),
+					testAccCheckAWSSagemakerNotebookInstanceLifecycleConfigurationExists(resourceName, &lifecycleConfig),
 
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "on_create", base64Encode([]byte("echo foo"))),
-					resource.TestCheckResourceAttr(resourceName, "on_start", base64Encode([]byte("echo bar"))),
+					resource.TestCheckNoResourceAttr(resourceName, "on_create"),
+					resource.TestCheckNoResourceAttr(resourceName, "on_start"),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("notebook-instance-lifecycle-config/%s", rName)),
 				),
 			},
 			{
@@ -94,30 +95,28 @@ func TestAccAWSSagemakerLifecycleConfiguration_Basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerLifecycleConfiguration_Update(t *testing.T) {
+func TestAccAWSSagemakerNotebookInstanceLifecycleConfiguration_Update(t *testing.T) {
 	var lifecycleConfig sagemaker.DescribeNotebookInstanceLifecycleConfigOutput
-	rName := acctest.RandomWithPrefix(SagemakerLifecycleConfigurationResourcePrefix)
-	resourceName := "aws_sagemaker_lifecycle_config.test"
+	rName := acctest.RandomWithPrefix(SagemakerNotebookInstanceLifecycleConfigurationResourcePrefix)
+	resourceName := "aws_sagemaker_notebook_instance_lifecycle_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSSagemakerLifecycleConfigurationDestroy,
+		CheckDestroy: testAccCheckAWSSagemakerNotebookInstanceLifecycleConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSagemakerLifecycleConfigurationConfig_Basic(rName),
+				Config: testAccSagemakerNotebookInstanceLifecycleConfigurationConfig_Basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSagemakerLifecycleConfigurationExists(resourceName, &lifecycleConfig),
+					testAccCheckAWSSagemakerNotebookInstanceLifecycleConfigurationExists(resourceName, &lifecycleConfig),
 
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "on_create", base64Encode([]byte("echo foo"))),
-					resource.TestCheckResourceAttr(resourceName, "on_start", base64Encode([]byte("echo bar"))),
 				),
 			},
 			{
-				Config: testAccSagemakerLifecycleConfigurationConfig_Update(rName),
+				Config: testAccSagemakerNotebookInstanceLifecycleConfigurationConfig_Update(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSagemakerLifecycleConfigurationExists(resourceName, &lifecycleConfig),
+					testAccCheckAWSSagemakerNotebookInstanceLifecycleConfigurationExists(resourceName, &lifecycleConfig),
 
 					resource.TestCheckResourceAttr(resourceName, "on_create", base64Encode([]byte("echo bla"))),
 					resource.TestCheckResourceAttr(resourceName, "on_start", base64Encode([]byte("echo blub"))),
@@ -132,7 +131,7 @@ func TestAccAWSSagemakerLifecycleConfiguration_Update(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSSagemakerLifecycleConfigurationExists(resourceName string, lifecycleConfig *sagemaker.DescribeNotebookInstanceLifecycleConfigOutput) resource.TestCheckFunc {
+func testAccCheckAWSSagemakerNotebookInstanceLifecycleConfigurationExists(resourceName string, lifecycleConfig *sagemaker.DescribeNotebookInstanceLifecycleConfigOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -153,7 +152,7 @@ func testAccCheckAWSSagemakerLifecycleConfigurationExists(resourceName string, l
 		}
 
 		if output == nil {
-			return fmt.Errorf("no SageMaker notebook instance lifecycle configuration")
+			return fmt.Errorf("no SageMaker Notebook Instance Lifecycle Configuration")
 		}
 
 		*lifecycleConfig = *output
@@ -162,9 +161,9 @@ func testAccCheckAWSSagemakerLifecycleConfigurationExists(resourceName string, l
 	}
 }
 
-func testAccCheckAWSSagemakerLifecycleConfigurationDestroy(s *terraform.State) error {
+func testAccCheckAWSSagemakerNotebookInstanceLifecycleConfigurationDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_sagemaker_lifecycle_config" {
+		if rs.Type != "aws_sagemaker_notebook_instance_lifecycle_configuration" {
 			continue
 		}
 
@@ -175,34 +174,29 @@ func testAccCheckAWSSagemakerLifecycleConfigurationDestroy(s *terraform.State) e
 
 		if err != nil {
 			if isAWSErr(err, "ValidationException", "") {
-				return nil
+				continue
 			}
 			return err
 		}
 
 		if lifecycleConfig != nil && aws.StringValue(lifecycleConfig.NotebookInstanceLifecycleConfigName) == rs.Primary.ID {
-			return fmt.Errorf("SageMaker notebook instance lifecycle configuration %s still exists", rs.Primary.ID)
+			return fmt.Errorf("SageMaker Notebook Instance Lifecycle Configuration %s still exists", rs.Primary.ID)
 		}
-
-		return nil
 	}
-
 	return nil
 }
 
-func testAccSagemakerLifecycleConfigurationConfig_Basic(rName string) string {
+func testAccSagemakerNotebookInstanceLifecycleConfigurationConfig_Basic(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_sagemaker_lifecycle_config" "test" {
+resource "aws_sagemaker_notebook_instance_lifecycle_configuration" "test" {
   name = %q
-  on_create = "${base64encode("echo foo")}"
-  on_start = "${base64encode("echo bar")}"
 }
 `, rName)
 }
 
-func testAccSagemakerLifecycleConfigurationConfig_Update(rName string) string {
+func testAccSagemakerNotebookInstanceLifecycleConfigurationConfig_Update(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_sagemaker_lifecycle_config" "test" {
+resource "aws_sagemaker_notebook_instance_lifecycle_configuration" "test" {
   name = %q
   on_create = "${base64encode("echo bla")}"
   on_start = "${base64encode("echo blub")}"
