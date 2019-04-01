@@ -278,13 +278,14 @@ func (e *Executor) runAnalysis(ctx context.Context, args []string) (<-chan resul
 	}
 	lintCtx.Log = e.log.Child("linters context")
 
-	runner, err := lint.NewRunner(lintCtx.ASTCache, e.cfg, e.log.Child("runner"), e.goenv)
+	runner, err := lint.NewRunner(lintCtx.ASTCache, e.cfg, e.log.Child("runner"),
+		e.goenv, e.lineCache, e.DBManager)
 	if err != nil {
 		return nil, err
 	}
 
 	issuesCh := runner.Run(ctx, enabledLinters, lintCtx)
-	fixer := processors.NewFixer(e.cfg, e.log)
+	fixer := processors.NewFixer(e.cfg, e.log, e.fileCache)
 	return fixer.Process(issuesCh), nil
 }
 
@@ -349,6 +350,8 @@ func (e *Executor) runAndPrint(ctx context.Context, args []string) error {
 	if err = p.Print(ctx, issues); err != nil {
 		return fmt.Errorf("can't print %d issues: %s", len(issues), err)
 	}
+
+	e.fileCache.PrintStats(e.log)
 
 	return nil
 }
@@ -427,11 +430,21 @@ func watchResources(ctx context.Context, done chan struct{}, logger logutils.Log
 	ticker := time.NewTicker(100 * time.Millisecond)
 	defer ticker.Stop()
 
-	for {
+	logEveryRecord := os.Getenv("GL_MEM_LOG_EVERY") == "1"
+
+	track := func() {
 		var m runtime.MemStats
 		runtime.ReadMemStats(&m)
 
+		if logEveryRecord {
+			printMemStats(&m, logger)
+		}
+
 		rssValues = append(rssValues, m.Sys)
+	}
+
+	for {
+		track()
 
 		stop := false
 		select {
@@ -444,6 +457,7 @@ func watchResources(ctx context.Context, done chan struct{}, logger logutils.Log
 			break
 		}
 	}
+	track()
 
 	var avg, max uint64
 	for _, v := range rssValues {

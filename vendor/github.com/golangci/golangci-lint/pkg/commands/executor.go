@@ -1,8 +1,11 @@
 package commands
 
 import (
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+
+	"github.com/golangci/golangci-lint/pkg/fsutils"
 
 	"github.com/golangci/golangci-lint/pkg/config"
 	"github.com/golangci/golangci-lint/pkg/goutil"
@@ -26,6 +29,8 @@ type Executor struct {
 	EnabledLintersSet *lintersdb.EnabledSet
 	contextLoader     *lint.ContextLoader
 	goenv             *goutil.Env
+	fileCache         *fsutils.FileCache
+	lineCache         *fsutils.LineCache
 }
 
 func NewExecutor(version, commit, date string) *Executor {
@@ -34,7 +39,7 @@ func NewExecutor(version, commit, date string) *Executor {
 		version:   version,
 		commit:    commit,
 		date:      date,
-		DBManager: lintersdb.NewManager(),
+		DBManager: lintersdb.NewManager(nil),
 	}
 
 	e.log = report.NewLogWrapper(logutils.NewStderrLog(""), &e.reportData)
@@ -47,6 +52,17 @@ func NewExecutor(version, commit, date string) *Executor {
 	}
 	if commandLineCfg != nil {
 		logutils.SetupVerboseLog(e.log, commandLineCfg.Run.IsVerbose)
+
+		switch commandLineCfg.Output.Color {
+		case "always":
+			color.NoColor = false
+		case "never":
+			color.NoColor = true
+		case "auto":
+			// nothing
+		default:
+			e.log.Fatalf("invalid value %q for --color; must be 'always', 'auto', or 'never'", commandLineCfg.Output.Color)
+		}
 	}
 
 	// init of commands must be done before config file reading because
@@ -66,6 +82,9 @@ func NewExecutor(version, commit, date string) *Executor {
 		e.log.Fatalf("Can't read config: %s", err)
 	}
 
+	// recreate after getting config
+	e.DBManager = lintersdb.NewManager(e.cfg)
+
 	e.cfg.LintersSettings.Gocritic.InferEnabledChecks(e.log)
 	if err := e.cfg.LintersSettings.Gocritic.Validate(e.log); err != nil {
 		e.log.Fatalf("Invalid gocritic settings: %s", err)
@@ -78,6 +97,8 @@ func NewExecutor(version, commit, date string) *Executor {
 		lintersdb.NewValidator(e.DBManager), e.log.Child("lintersdb"), e.cfg)
 	e.goenv = goutil.NewEnv(e.log.Child("goenv"))
 	e.contextLoader = lint.NewContextLoader(e.cfg, e.log.Child("loader"), e.goenv)
+	e.fileCache = fsutils.NewFileCache()
+	e.lineCache = fsutils.NewLineCache(e.fileCache)
 
 	return e
 }
