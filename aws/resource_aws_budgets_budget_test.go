@@ -137,7 +137,7 @@ func TestAccAWSBudgetsBudget_notification(t *testing.T) {
 	noTopics := []string{}
 	oneTopic := []string{"${aws_sns_topic.budget_notifications.arn}"}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccAWSBudgetsBudgetDestroy,
