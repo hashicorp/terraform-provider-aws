@@ -1,5 +1,9 @@
 ## 2.5.0 (Unreleased)
 
+FEATURES:
+
+* **New Guide:** `Custom Service Endpoints` [GH-8092]
+
 ENHANCEMENTS:
 
 * provider: Support customization of all service endpoints [GH-8096]
