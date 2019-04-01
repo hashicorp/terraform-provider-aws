@@ -3,6 +3,8 @@ package aws
 import (
 	"fmt"
 	"log"
+	"strings"
+	"text/template"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eks"
@@ -45,6 +47,10 @@ func dataSourceAwsEksCluster() *schema.Resource {
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.NoZeroValues,
+			},
+			"kube_config": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"platform_version": {
 				Type:     schema.TypeString,
@@ -119,6 +125,12 @@ func dataSourceAwsEksClusterRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error setting certificate_authority: %s", err)
 	}
 
+	kubeconf, err := renderEksConfig(cluster)
+	if err != nil {
+		return err
+	}
+	d.Set("kube_config", kubeconf)
+
 	d.Set("created_at", aws.TimeValue(cluster.CreatedAt).String())
 	d.Set("endpoint", cluster.Endpoint)
 	d.Set("name", cluster.Name)
@@ -132,3 +144,57 @@ func dataSourceAwsEksClusterRead(d *schema.ResourceData, meta interface{}) error
 
 	return nil
 }
+
+type clusterInfo struct {
+	Arn                  string
+	Endpoint             string
+	CertificateAuthority string
+}
+
+func renderEksConfig(c *eks.Cluster) (string, error) {
+	info := clusterInfo{}
+	info.Arn = *c.Arn
+	info.Endpoint = *c.Endpoint
+	info.CertificateAuthority = *c.CertificateAuthority.Data
+
+	var dest strings.Builder
+
+	templ, err := template.New("kubeconfig").Parse(kubeconfigTemplate)
+	if err != nil {
+		return "", err
+	}
+
+	err = templ.Execute(&dest, info)
+	if err != nil {
+		return "", err
+	}
+
+	return dest.String(), nil
+}
+
+const kubeconfigTemplate = `
+apiVersion: v1
+clusters:
+- cluster:
+    certificate-authority-data: {{ .CertificateAuthority }}
+    server: {{ .Endpoint }}
+  name: {{ .Arn }}
+contexts:
+- context:
+    cluster: {{ .Arn }}
+    user: {{ .Arn }}
+  name: {{ .Arn }}
+current-context: {{ .Arn }}
+kind: Config
+preferences: {}
+users:
+- name: {{ .Arn }}
+  user:
+    exec:
+      apiVersion: client.authentication.k8s.io/v1alpha1
+      args:
+      - token
+      - -i
+      - stack-eks-cluster-dev
+      command: aws-iam-authenticator
+`
