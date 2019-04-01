@@ -79,7 +79,7 @@ The following arguments are supported:
 * `api_id` - (Required) The API ID for the GraphQL API.
 * `type` - (Required) The type name from the schema defined in the GraphQL API.
 * `field` - (Required) The field name from the schema defined in the GraphQL API.
-* `datasource` - (Required) The DataSource name.
+* `data_source` - (Required) The DataSource name.
 * `request_template` - (Required) The request mapping template for this resolver.
 * `response_template` - (Required) The response mapping template for this resolver.
 
