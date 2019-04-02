@@ -291,11 +291,16 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 				Default:  1,
 				ForceNew: true,
 			},
+			// Provided constants do not have the correct casing so going with hard-coded values.
 			"excess_capacity_termination_policy": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "Default",
 				ForceNew: false,
+				ValidateFunc: validation.StringInSlice([]string{
+					"Default",
+					"NoTermination",
+				}, false),
 			},
 			"instance_interruption_behaviour": {
 				Type:     schema.TypeString,
