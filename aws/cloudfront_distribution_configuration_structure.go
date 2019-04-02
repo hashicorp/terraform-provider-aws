@@ -418,7 +418,7 @@ func expandForwardedValues(m map[string]interface{}) *cloudfront.ForwardedValues
 		fv.Cookies = expandCookiePreference(v.([]interface{})[0].(map[string]interface{}))
 	}
 	if v, ok := m["headers"]; ok {
-		fv.Headers = expandHeaders(v.([]interface{}))
+		fv.Headers = expandHeaders(v.(*schema.Set).List())
 	}
 	if v, ok := m["query_string_cache_keys"]; ok {
 		fv.QueryStringCacheKeys = expandQueryStringCacheKeys(v.([]interface{}))
@@ -433,7 +433,7 @@ func flattenForwardedValues(fv *cloudfront.ForwardedValues) map[string]interface
 		m["cookies"] = []interface{}{flattenCookiePreference(fv.Cookies)}
 	}
 	if fv.Headers != nil {
-		m["headers"] = flattenHeaders(fv.Headers)
+		m["headers"] = schema.NewSet(schema.HashString, flattenHeaders(fv.Headers))
 	}
 	if fv.QueryStringCacheKeys != nil {
 		m["query_string_cache_keys"] = flattenQueryStringCacheKeys(fv.QueryStringCacheKeys)
@@ -474,7 +474,7 @@ func expandCookiePreference(m map[string]interface{}) *cloudfront.CookiePreferen
 		Forward: aws.String(m["forward"].(string)),
 	}
 	if v, ok := m["whitelisted_names"]; ok {
-		cp.WhitelistedNames = expandCookieNames(v.([]interface{}))
+		cp.WhitelistedNames = expandCookieNames(v.(*schema.Set).List())
 	}
 	return cp
 }
@@ -483,7 +483,7 @@ func flattenCookiePreference(cp *cloudfront.CookiePreference) map[string]interfa
 	m := make(map[string]interface{})
 	m["forward"] = *cp.Forward
 	if cp.WhitelistedNames != nil {
-		m["whitelisted_names"] = flattenCookieNames(cp.WhitelistedNames)
+		m["whitelisted_names"] = schema.NewSet(schema.HashString, flattenCookieNames(cp.WhitelistedNames))
 	}
 	return m
 }

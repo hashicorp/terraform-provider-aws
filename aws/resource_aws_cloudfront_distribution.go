@@ -83,7 +83,7 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 													Required: true,
 												},
 												"whitelisted_names": {
-													Type:     schema.TypeList,
+													Type:     schema.TypeSet,
 													Optional: true,
 													Elem:     &schema.Schema{Type: schema.TypeString},
 												},
@@ -91,7 +91,7 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 										},
 									},
 									"headers": {
-										Type:     schema.TypeList,
+										Type:     schema.TypeSet,
 										Optional: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
@@ -209,7 +209,7 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 													Required: true,
 												},
 												"whitelisted_names": {
-													Type:     schema.TypeList,
+													Type:     schema.TypeSet,
 													Optional: true,
 													Elem:     &schema.Schema{Type: schema.TypeString},
 												},
@@ -217,7 +217,7 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 										},
 									},
 									"headers": {
-										Type:     schema.TypeList,
+										Type:     schema.TypeSet,
 										Optional: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
@@ -366,7 +366,7 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 													Required: true,
 												},
 												"whitelisted_names": {
-													Type:     schema.TypeList,
+													Type:     schema.TypeSet,
 													Optional: true,
 													Elem:     &schema.Schema{Type: schema.TypeString},
 												},
@@ -374,7 +374,7 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 										},
 									},
 									"headers": {
-										Type:     schema.TypeList,
+										Type:     schema.TypeSet,
 										Optional: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
