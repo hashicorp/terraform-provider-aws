@@ -417,7 +417,7 @@ readable, and allows reuse of assertion functions across different tests of the
 same type of resource. The definition of a complete test looks like this:
 
 ```go
-func TestAccAWSCloudWatchDashboard_update(t *testing.T) {
+func TestAccAWSCloudWatchDashboard_basic(t *testing.T) {
 	var dashboard cloudwatch.GetDashboardOutput
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
@@ -429,7 +429,6 @@ func TestAccAWSCloudWatchDashboard_update(t *testing.T) {
 				Config: testAccAWSCloudWatchDashboardConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchDashboardExists("aws_cloudwatch_dashboard.foobar", &dashboard),
-					testAccCloudWatchCheckDashboardBodyIsExpected("aws_cloudwatch_dashboard.foobar", basicWidget),
 					resource.TestCheckResourceAttr("aws_cloudwatch_dashboard.foobar", "dashboard_name", testAccAWSCloudWatchDashboardName(rInt)),
 				),
 			},
@@ -442,27 +441,31 @@ When executing the test, the following steps are taken for each `TestStep`:
 
 1. The Terraform configuration required for the test is applied. This is
    responsible for configuring the resource under test, and any dependencies it
-   may have. For example, to test the `azurerm_public_ip` resource, an
-   `azurerm_resource_group` is required. This results in configuration which
-   looks like this:
+   may have. For example, to test the `aws_cloudwatch_dashboard` resource, a valid configuration with the requisite fields is required. This results in configuration which looks like this:
 
     ```hcl
-    resource "azurerm_resource_group" "test" {
-        name = "acceptanceTestResourceGroup1"
-        location = "West US"
+  resource "aws_cloudwatch_dashboard" "foobar" {
+    dashboard_name = "terraform-test-dashboard-%d"
+    dashboard_body = <<EOF
+    {
+      "widgets": [{
+        "type": "text",
+        "x": 0,
+        "y": 0,
+        "width": 6,
+        "height": 6,
+        "properties": {
+          "markdown": "Hi there from Terraform: CloudWatch"
+        }
+      }]
     }
-
-    resource "azurerm_public_ip" "test" {
-        name = "acceptanceTestPublicIp1"
-        location = "West US"
-        resource_group_name = "${azurerm_resource_group.test.name}"
-        public_ip_address_allocation = "static"
-    }
+    EOF
+  }
     ```
 
 1. Assertions are run using the provider API. These use the provider API
    directly rather than asserting against the resource state. For example, to
-   verify that the `azurerm_public_ip` described above was created
+   verify that the `aws_cloudwatch_dashboard` described above was created
    successfully, a test function like this is used:
 
     ```go
@@ -491,9 +494,7 @@ When executing the test, the following steps are taken for each `TestStep`:
     ```
 
    Notice that the only information used from the Terraform state is the ID of
-   the resource - though in this case it is necessary to split the ID into
-   constituent parts in order to use the provider API. For computed properties,
-   we instead assert that the value saved in the Terraform state was the
+   the resource. For computed properties, we instead assert that the value saved in the Terraform state was the
    expected value if possible. The testing framework provides helper functions
    for several common types of check - for example:
 
@@ -501,13 +502,13 @@ When executing the test, the following steps are taken for each `TestStep`:
     resource.TestCheckResourceAttr("aws_cloudwatch_dashboard.foobar", "dashboard_name", testAccAWSCloudWatchDashboardName(rInt)),
     ```
 
-1. The resources created by the test are destroyed. This step happens
+2. The resources created by the test are destroyed. This step happens
    automatically, and is the equivalent of calling `terraform destroy`.
 
-1. Assertions are made against the provider API to verify that the resources
+3. Assertions are made against the provider API to verify that the resources
    have indeed been removed. If these checks fail, the test fails and reports
-   "dangling resources". The code to ensure that the `azurerm_public_ip` shown
-   above looks like this:
+   "dangling resources". The code to ensure that the `aws_cloudwatch_dashboard` shown
+   above has been destroyed looks like this:
 
     ```go
     func testAccCheckAWSCloudWatchDashboardDestroy(s *terraform.State) error {
@@ -535,11 +536,7 @@ When executing the test, the following steps are taken for each `TestStep`:
     }
     ```
 
-   These functions usually test only for the resource directly under test: we
-   skip the check that the `azurerm_resource_group` has been destroyed when
-   testing `azurerm_resource_group`, under the assumption that
-   `azurerm_resource_group` is tested independently in its own acceptance
-   tests.
+   These functions usually test only for the resource directly under test.
 
 [website]: https://github.com/hashicorp/terraform/tree/master/website
 [acctests]: https://github.com/hashicorp/terraform#acceptance-tests
