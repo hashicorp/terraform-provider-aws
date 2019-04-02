@@ -27,7 +27,7 @@ func TestAccAWSEksClusterDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_authority.0.data", dataSourceResourceName, "certificate_authority.0.data"),
 					resource.TestCheckResourceAttrPair(resourceName, "created_at", dataSourceResourceName, "created_at"),
 					resource.TestCheckResourceAttrPair(resourceName, "endpoint", dataSourceResourceName, "endpoint"),
-					resource.TestMatchResourceAttr(resourceName, "kube_config", regexp.MustCompile(`kind: Config`)),
+					resource.TestMatchResourceAttr(dataSourceResourceName, "kube_config", regexp.MustCompile(`kind: Config`)),
 					resource.TestMatchResourceAttr(resourceName, "platform_version", regexp.MustCompile(`^eks\.\d+$`)),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", dataSourceResourceName, "role_arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "version", dataSourceResourceName, "version"),
