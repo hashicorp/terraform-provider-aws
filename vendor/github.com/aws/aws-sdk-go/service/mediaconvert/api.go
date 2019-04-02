@@ -2771,7 +2771,8 @@ func (s *Ac3Settings) SetSampleRate(v int64) *Ac3Settings {
 	return s
 }
 
-// Acceleration settings for job execution.
+// Accelerated transcoding is currently in private preview. Contact AWS for
+// more information.
 type AccelerationSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -4481,6 +4482,10 @@ type CmafGroupSettings struct {
 	// first input file.
 	Destination *string `locationName:"destination" type:"string"`
 
+	// Settings associated with the destination. Will vary based on the type of
+	// destination
+	DestinationSettings *DestinationSettings `locationName:"destinationSettings" type:"structure"`
+
 	// DRM settings.
 	Encryption *CmafEncryptionSettings `locationName:"encryption" type:"structure"`
 
@@ -4594,6 +4599,12 @@ func (s *CmafGroupSettings) SetCodecSpecification(v string) *CmafGroupSettings {
 // SetDestination sets the Destination field's value.
 func (s *CmafGroupSettings) SetDestination(v string) *CmafGroupSettings {
 	s.Destination = &v
+	return s
+}
+
+// SetDestinationSettings sets the DestinationSettings field's value.
+func (s *CmafGroupSettings) SetDestinationSettings(v *DestinationSettings) *CmafGroupSettings {
+	s.DestinationSettings = v
 	return s
 }
 
@@ -4901,7 +4912,7 @@ type CreateJobInput struct {
 	// Events. Set the interval, in seconds, between status updates. MediaConvert
 	// sends an update at this interval from the time the service begins processing
 	// your job to the time it completes the transcode or encounters an error.
-	StatusUpdateIntervalInSecs *int64 `locationName:"statusUpdateIntervalInSecs" min:"10" type:"long"`
+	StatusUpdateInterval *string `locationName:"statusUpdateInterval" type:"string" enum:"StatusUpdateInterval"`
 
 	// User-defined metadata that you want to associate with an MediaConvert job.
 	// You specify metadata in key/value pairs.
@@ -4926,9 +4937,6 @@ func (s *CreateJobInput) Validate() error {
 	}
 	if s.Settings == nil {
 		invalidParams.Add(request.NewErrParamRequired("Settings"))
-	}
-	if s.StatusUpdateIntervalInSecs != nil && *s.StatusUpdateIntervalInSecs < 10 {
-		invalidParams.Add(request.NewErrParamMinValue("StatusUpdateIntervalInSecs", 10))
 	}
 	if s.AccelerationSettings != nil {
 		if err := s.AccelerationSettings.Validate(); err != nil {
@@ -4989,9 +4997,9 @@ func (s *CreateJobInput) SetSettings(v *JobSettings) *CreateJobInput {
 	return s
 }
 
-// SetStatusUpdateIntervalInSecs sets the StatusUpdateIntervalInSecs field's value.
-func (s *CreateJobInput) SetStatusUpdateIntervalInSecs(v int64) *CreateJobInput {
-	s.StatusUpdateIntervalInSecs = &v
+// SetStatusUpdateInterval sets the StatusUpdateInterval field's value.
+func (s *CreateJobInput) SetStatusUpdateInterval(v string) *CreateJobInput {
+	s.StatusUpdateInterval = &v
 	return s
 }
 
@@ -5061,7 +5069,7 @@ type CreateJobTemplateInput struct {
 	// Events. Set the interval, in seconds, between status updates. MediaConvert
 	// sends an update at this interval from the time the service begins processing
 	// your job to the time it completes the transcode or encounters an error.
-	StatusUpdateIntervalInSecs *int64 `locationName:"statusUpdateIntervalInSecs" min:"10" type:"long"`
+	StatusUpdateInterval *string `locationName:"statusUpdateInterval" type:"string" enum:"StatusUpdateInterval"`
 
 	// The tags that you want to add to the resource. You can tag resources with
 	// a key-value pair or with only a key.
@@ -5086,9 +5094,6 @@ func (s *CreateJobTemplateInput) Validate() error {
 	}
 	if s.Settings == nil {
 		invalidParams.Add(request.NewErrParamRequired("Settings"))
-	}
-	if s.StatusUpdateIntervalInSecs != nil && *s.StatusUpdateIntervalInSecs < 10 {
-		invalidParams.Add(request.NewErrParamMinValue("StatusUpdateIntervalInSecs", 10))
 	}
 	if s.AccelerationSettings != nil {
 		if err := s.AccelerationSettings.Validate(); err != nil {
@@ -5143,9 +5148,9 @@ func (s *CreateJobTemplateInput) SetSettings(v *JobTemplateSettings) *CreateJobT
 	return s
 }
 
-// SetStatusUpdateIntervalInSecs sets the StatusUpdateIntervalInSecs field's value.
-func (s *CreateJobTemplateInput) SetStatusUpdateIntervalInSecs(v int64) *CreateJobTemplateInput {
-	s.StatusUpdateIntervalInSecs = &v
+// SetStatusUpdateInterval sets the StatusUpdateInterval field's value.
+func (s *CreateJobTemplateInput) SetStatusUpdateInterval(v string) *CreateJobTemplateInput {
+	s.StatusUpdateInterval = &v
 	return s
 }
 
@@ -5452,6 +5457,10 @@ type DashIsoGroupSettings struct {
 	// first input file.
 	Destination *string `locationName:"destination" type:"string"`
 
+	// Settings associated with the destination. Will vary based on the type of
+	// destination
+	DestinationSettings *DestinationSettings `locationName:"destinationSettings" type:"structure"`
+
 	// DRM settings.
 	Encryption *DashIsoEncryptionSettings `locationName:"encryption" type:"structure"`
 
@@ -5526,6 +5535,12 @@ func (s *DashIsoGroupSettings) SetBaseUrl(v string) *DashIsoGroupSettings {
 // SetDestination sets the Destination field's value.
 func (s *DashIsoGroupSettings) SetDestination(v string) *DashIsoGroupSettings {
 	s.Destination = &v
+	return s
+}
+
+// SetDestinationSettings sets the DestinationSettings field's value.
+func (s *DashIsoGroupSettings) SetDestinationSettings(v *DestinationSettings) *DashIsoGroupSettings {
+	s.DestinationSettings = v
 	return s
 }
 
@@ -5880,6 +5895,31 @@ func (s *DescribeEndpointsOutput) SetEndpoints(v []*Endpoint) *DescribeEndpoints
 // SetNextToken sets the NextToken field's value.
 func (s *DescribeEndpointsOutput) SetNextToken(v string) *DescribeEndpointsOutput {
 	s.NextToken = &v
+	return s
+}
+
+// Settings associated with the destination. Will vary based on the type of
+// destination
+type DestinationSettings struct {
+	_ struct{} `type:"structure"`
+
+	// Settings associated with S3 destination
+	S3Settings *S3DestinationSettings `locationName:"s3Settings" type:"structure"`
+}
+
+// String returns the string representation
+func (s DestinationSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DestinationSettings) GoString() string {
+	return s.String()
+}
+
+// SetS3Settings sets the S3Settings field's value.
+func (s *DestinationSettings) SetS3Settings(v *S3DestinationSettings) *DestinationSettings {
+	s.S3Settings = v
 	return s
 }
 
@@ -6913,6 +6953,10 @@ type FileGroupSettings struct {
 	// file. If your job has multiple inputs, the service uses the filename of the
 	// first input file.
 	Destination *string `locationName:"destination" type:"string"`
+
+	// Settings associated with the destination. Will vary based on the type of
+	// destination
+	DestinationSettings *DestinationSettings `locationName:"destinationSettings" type:"structure"`
 }
 
 // String returns the string representation
@@ -6928,6 +6972,12 @@ func (s FileGroupSettings) GoString() string {
 // SetDestination sets the Destination field's value.
 func (s *FileGroupSettings) SetDestination(v string) *FileGroupSettings {
 	s.Destination = &v
+	return s
+}
+
+// SetDestinationSettings sets the DestinationSettings field's value.
+func (s *FileGroupSettings) SetDestinationSettings(v *DestinationSettings) *FileGroupSettings {
+	s.DestinationSettings = v
 	return s
 }
 
@@ -8791,6 +8841,10 @@ type HlsGroupSettings struct {
 	// first input file.
 	Destination *string `locationName:"destination" type:"string"`
 
+	// Settings associated with the destination. Will vary based on the type of
+	// destination
+	DestinationSettings *DestinationSettings `locationName:"destinationSettings" type:"structure"`
+
 	// Indicates whether segments should be placed in subdirectories.
 	DirectoryStructure *string `locationName:"directoryStructure" type:"string" enum:"HlsDirectoryStructure"`
 
@@ -8948,6 +9002,12 @@ func (s *HlsGroupSettings) SetCodecSpecification(v string) *HlsGroupSettings {
 // SetDestination sets the Destination field's value.
 func (s *HlsGroupSettings) SetDestination(v string) *HlsGroupSettings {
 	s.Destination = &v
+	return s
+}
+
+// SetDestinationSettings sets the DestinationSettings field's value.
+func (s *HlsGroupSettings) SetDestinationSettings(v *DestinationSettings) *HlsGroupSettings {
+	s.DestinationSettings = v
 	return s
 }
 
@@ -9226,7 +9286,10 @@ type Input struct {
 	// video inputs.
 	DeblockFilter *string `locationName:"deblockFilter" type:"string" enum:"InputDeblockFilter"`
 
-	// Settings for decrypting any input files that are encrypted.
+	// Settings for decrypting any input files that you encrypt before you upload
+	// them to Amazon S3. MediaConvert can decrypt files only when you use AWS Key
+	// Management Service (KMS) to encrypt the data key that you use to encrypt
+	// your content.
 	DecryptionSettings *InputDecryptionSettings `locationName:"decryptionSettings" type:"structure"`
 
 	// Enable Denoise (InputDenoiseFilter) to filter noise from the input. Default
@@ -9508,20 +9571,33 @@ func (s *InputClipping) SetStartTimecode(v string) *InputClipping {
 	return s
 }
 
-// Specify the decryption settings used to decrypt encrypted input
+// Settings for decrypting any input files that you encrypt before you upload
+// them to Amazon S3. MediaConvert can decrypt files only when you use AWS Key
+// Management Service (KMS) to encrypt the data key that you use to encrypt
+// your content.
 type InputDecryptionSettings struct {
 	_ struct{} `type:"structure"`
 
-	// This specifies how the encrypted file needs to be decrypted.
+	// Specify the encryption mode that you used to encrypt your input files.
 	DecryptionMode *string `locationName:"decryptionMode" type:"string" enum:"DecryptionMode"`
 
-	// Decryption key either 128 or 192 or 256 bits encrypted with KMS
+	// Warning! Don't provide your encryption key in plaintext. Your job settings
+	// could be intercepted, making your encrypted content vulnerable. Specify the
+	// encrypted version of the data key that you used to encrypt your content.
+	// The data key must be encrypted by AWS Key Management Service (KMS). The key
+	// can be 128, 192, or 256 bits.
 	EncryptedDecryptionKey *string `locationName:"encryptedDecryptionKey" min:"24" type:"string"`
 
-	// Initialization Vector 96 bits (CTR/GCM mode only) or 128 bits.
+	// Specify the initialization vector that you used when you encrypted your content
+	// before uploading it to Amazon S3. You can use a 16-byte initialization vector
+	// with any encryption mode. Or, you can use a 12-byte initialization vector
+	// with GCM or CTR. MediaConvert accepts only initialization vectors that are
+	// base64-encoded.
 	InitializationVector *string `locationName:"initializationVector" min:"16" type:"string"`
 
-	// The AWS region in which decryption key was encrypted with KMS
+	// Specify the AWS Region for AWS Key Management Service (KMS) that you used
+	// to encrypt your data key, if that Region is different from the one you are
+	// using for AWS Elemental MediaConvert.
 	KmsKeyRegion *string `locationName:"kmsKeyRegion" min:"9" type:"string"`
 }
 
@@ -9945,7 +10021,8 @@ func (s *InsertableImage) SetWidth(v int64) *InsertableImage {
 type Job struct {
 	_ struct{} `type:"structure"`
 
-	// Acceleration settings for job execution.
+	// Accelerated transcoding is currently in private preview. Contact AWS for
+	// more information.
 	AccelerationSettings *AccelerationSettings `locationName:"accelerationSettings" type:"structure"`
 
 	// An identifier for this resource that is unique within all of AWS.
@@ -9961,6 +10038,9 @@ type Job struct {
 	// The time, in Unix epoch format in seconds, when the job got created.
 	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp" timestampFormat:"unixTimestamp"`
 
+	// A job's phase can be PROBING, TRANSCODING OR UPLOADING
+	CurrentPhase *string `locationName:"currentPhase" type:"string" enum:"JobPhase"`
+
 	// Error code for the job
 	ErrorCode *int64 `locationName:"errorCode" type:"integer"`
 
@@ -9970,6 +10050,17 @@ type Job struct {
 	// A portion of the job's ARN, unique within your AWS Elemental MediaConvert
 	// resources
 	Id *string `locationName:"id" type:"string"`
+
+	// An estimate of how far your job has progressed. This estimate is shown as
+	// a percentage of the total time from when your job leaves its queue to when
+	// your output files appear in your output Amazon S3 bucket. AWS Elemental MediaConvert
+	// provides jobPercentComplete in CloudWatch STATUS_UPDATE events and in the
+	// response to GetJob and ListJobs requests. The jobPercentComplete estimate
+	// is reliable for the following input containers: Quicktime, Transport Stream,
+	// MP4, and MXF. For some jobs, including audio-only jobs and jobs that use
+	// input clipping, the service can't provide information about job progress.
+	// In those cases, jobPercentComplete returns a null value.
+	JobPercentComplete *int64 `locationName:"jobPercentComplete" type:"integer"`
 
 	// The job template that the job is created from, if it is created from a job
 	// template.
@@ -9982,6 +10073,10 @@ type Job struct {
 	// you don't specify, the job will go to the default queue. For more about queues,
 	// see the User Guide topic at http://docs.aws.amazon.com/mediaconvert/latest/ug/what-is.html
 	Queue *string `locationName:"queue" type:"string"`
+
+	// The number of times that the service automatically attempted to process your
+	// job after encountering an error.
+	RetryCount *int64 `locationName:"retryCount" type:"integer"`
 
 	// The IAM role you use for creating this job. For details about permissions,
 	// see the User Guide topic at the User Guide at http://docs.aws.amazon.com/mediaconvert/latest/ug/iam-role.html
@@ -10001,7 +10096,7 @@ type Job struct {
 	// Events. Set the interval, in seconds, between status updates. MediaConvert
 	// sends an update at this interval from the time the service begins processing
 	// your job to the time it completes the transcode or encounters an error.
-	StatusUpdateIntervalInSecs *int64 `locationName:"statusUpdateIntervalInSecs" min:"10" type:"long"`
+	StatusUpdateInterval *string `locationName:"statusUpdateInterval" type:"string" enum:"StatusUpdateInterval"`
 
 	// Information about when jobs are submitted, started, and finished is specified
 	// in Unix epoch format in seconds.
@@ -10046,6 +10141,12 @@ func (s *Job) SetCreatedAt(v time.Time) *Job {
 	return s
 }
 
+// SetCurrentPhase sets the CurrentPhase field's value.
+func (s *Job) SetCurrentPhase(v string) *Job {
+	s.CurrentPhase = &v
+	return s
+}
+
 // SetErrorCode sets the ErrorCode field's value.
 func (s *Job) SetErrorCode(v int64) *Job {
 	s.ErrorCode = &v
@@ -10061,6 +10162,12 @@ func (s *Job) SetErrorMessage(v string) *Job {
 // SetId sets the Id field's value.
 func (s *Job) SetId(v string) *Job {
 	s.Id = &v
+	return s
+}
+
+// SetJobPercentComplete sets the JobPercentComplete field's value.
+func (s *Job) SetJobPercentComplete(v int64) *Job {
+	s.JobPercentComplete = &v
 	return s
 }
 
@@ -10082,6 +10189,12 @@ func (s *Job) SetQueue(v string) *Job {
 	return s
 }
 
+// SetRetryCount sets the RetryCount field's value.
+func (s *Job) SetRetryCount(v int64) *Job {
+	s.RetryCount = &v
+	return s
+}
+
 // SetRole sets the Role field's value.
 func (s *Job) SetRole(v string) *Job {
 	s.Role = &v
@@ -10100,9 +10213,9 @@ func (s *Job) SetStatus(v string) *Job {
 	return s
 }
 
-// SetStatusUpdateIntervalInSecs sets the StatusUpdateIntervalInSecs field's value.
-func (s *Job) SetStatusUpdateIntervalInSecs(v int64) *Job {
-	s.StatusUpdateIntervalInSecs = &v
+// SetStatusUpdateInterval sets the StatusUpdateInterval field's value.
+func (s *Job) SetStatusUpdateInterval(v string) *Job {
+	s.StatusUpdateInterval = &v
 	return s
 }
 
@@ -10278,7 +10391,8 @@ func (s *JobSettings) SetTimedMetadataInsertion(v *TimedMetadataInsertion) *JobS
 type JobTemplate struct {
 	_ struct{} `type:"structure"`
 
-	// Acceleration settings for job execution.
+	// Accelerated transcoding is currently in private preview. Contact AWS for
+	// more information.
 	AccelerationSettings *AccelerationSettings `locationName:"accelerationSettings" type:"structure"`
 
 	// An identifier for this resource that is unique within all of AWS.
@@ -10316,7 +10430,7 @@ type JobTemplate struct {
 	// Events. Set the interval, in seconds, between status updates. MediaConvert
 	// sends an update at this interval from the time the service begins processing
 	// your job to the time it completes the transcode or encounters an error.
-	StatusUpdateIntervalInSecs *int64 `locationName:"statusUpdateIntervalInSecs" min:"10" type:"long"`
+	StatusUpdateInterval *string `locationName:"statusUpdateInterval" type:"string" enum:"StatusUpdateInterval"`
 
 	// A job template can be of two types: system or custom. System or built-in
 	// job templates can't be modified or deleted by the user.
@@ -10387,9 +10501,9 @@ func (s *JobTemplate) SetSettings(v *JobTemplateSettings) *JobTemplate {
 	return s
 }
 
-// SetStatusUpdateIntervalInSecs sets the StatusUpdateIntervalInSecs field's value.
-func (s *JobTemplate) SetStatusUpdateIntervalInSecs(v int64) *JobTemplate {
-	s.StatusUpdateIntervalInSecs = &v
+// SetStatusUpdateInterval sets the StatusUpdateInterval field's value.
+func (s *JobTemplate) SetStatusUpdateInterval(v string) *JobTemplate {
+	s.StatusUpdateInterval = &v
 	return s
 }
 
@@ -12592,6 +12706,10 @@ type MsSmoothGroupSettings struct {
 	// first input file.
 	Destination *string `locationName:"destination" type:"string"`
 
+	// Settings associated with the destination. Will vary based on the type of
+	// destination
+	DestinationSettings *DestinationSettings `locationName:"destinationSettings" type:"structure"`
+
 	// If you are using DRM, set DRM System (MsSmoothEncryptionSettings) to specify
 	// the value SpekeKeyProvider.
 	Encryption *MsSmoothEncryptionSettings `locationName:"encryption" type:"structure"`
@@ -12637,6 +12755,12 @@ func (s *MsSmoothGroupSettings) SetAudioDeduplication(v string) *MsSmoothGroupSe
 // SetDestination sets the Destination field's value.
 func (s *MsSmoothGroupSettings) SetDestination(v string) *MsSmoothGroupSettings {
 	s.Destination = &v
+	return s
+}
+
+// SetDestinationSettings sets the DestinationSettings field's value.
+func (s *MsSmoothGroupSettings) SetDestinationSettings(v *DestinationSettings) *MsSmoothGroupSettings {
+	s.DestinationSettings = v
 	return s
 }
 
@@ -14094,6 +14218,80 @@ func (s *ResourceTags) SetTags(v map[string]*string) *ResourceTags {
 	return s
 }
 
+// Settings associated with S3 destination
+type S3DestinationSettings struct {
+	_ struct{} `type:"structure"`
+
+	// Settings for how your job outputs are encrypted as they are uploaded to Amazon
+	// S3.
+	Encryption *S3EncryptionSettings `locationName:"encryption" type:"structure"`
+}
+
+// String returns the string representation
+func (s S3DestinationSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s S3DestinationSettings) GoString() string {
+	return s.String()
+}
+
+// SetEncryption sets the Encryption field's value.
+func (s *S3DestinationSettings) SetEncryption(v *S3EncryptionSettings) *S3DestinationSettings {
+	s.Encryption = v
+	return s
+}
+
+// Settings for how your job outputs are encrypted as they are uploaded to Amazon
+// S3.
+type S3EncryptionSettings struct {
+	_ struct{} `type:"structure"`
+
+	// Specify how you want your data keys managed. AWS uses data keys to encrypt
+	// your content. AWS also encrypts the data keys themselves, using a customer
+	// master key (CMK), and then stores the encrypted data keys alongside your
+	// encrypted content. Use this setting to specify which AWS service manages
+	// the CMK. For simplest set up, choose Amazon S3 (SERVER_SIDE_ENCRYPTION_S3).
+	// If you want your master key to be managed by AWS Key Management Service (KMS),
+	// choose AWS KMS (SERVER_SIDE_ENCRYPTION_KMS). By default, when you choose
+	// AWS KMS, KMS uses the AWS managed customer master key (CMK) associated with
+	// Amazon S3 to encrypt your data keys. You can optionally choose to specify
+	// a different, customer managed CMK. Do so by specifying the Amazon Resource
+	// Name (ARN) of the key for the setting KMS ARN (kmsKeyArn).
+	EncryptionType *string `locationName:"encryptionType" type:"string" enum:"S3ServerSideEncryptionType"`
+
+	// Optionally, specify the customer master key (CMK) that you want to use to
+	// encrypt the data key that AWS uses to encrypt your output content. Enter
+	// the Amazon Resource Name (ARN) of the CMK. To use this setting, you must
+	// also set Server-side encryption (S3ServerSideEncryptionType) to AWS KMS (SERVER_SIDE_ENCRYPTION_KMS).
+	// If you set Server-side encryption to AWS KMS but don't specify a CMK here,
+	// AWS uses the AWS managed CMK associated with Amazon S3.
+	KmsKeyArn *string `locationName:"kmsKeyArn" type:"string"`
+}
+
+// String returns the string representation
+func (s S3EncryptionSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s S3EncryptionSettings) GoString() string {
+	return s.String()
+}
+
+// SetEncryptionType sets the EncryptionType field's value.
+func (s *S3EncryptionSettings) SetEncryptionType(v string) *S3EncryptionSettings {
+	s.EncryptionType = &v
+	return s
+}
+
+// SetKmsKeyArn sets the KmsKeyArn field's value.
+func (s *S3EncryptionSettings) SetKmsKeyArn(v string) *S3EncryptionSettings {
+	s.KmsKeyArn = &v
+	return s
+}
+
 // Settings for SCC caption output.
 type SccDestinationSettings struct {
 	_ struct{} `type:"structure"`
@@ -14766,7 +14964,7 @@ type UpdateJobTemplateInput struct {
 	// Events. Set the interval, in seconds, between status updates. MediaConvert
 	// sends an update at this interval from the time the service begins processing
 	// your job to the time it completes the transcode or encounters an error.
-	StatusUpdateIntervalInSecs *int64 `locationName:"statusUpdateIntervalInSecs" min:"10" type:"long"`
+	StatusUpdateInterval *string `locationName:"statusUpdateInterval" type:"string" enum:"StatusUpdateInterval"`
 }
 
 // String returns the string representation
@@ -14787,9 +14985,6 @@ func (s *UpdateJobTemplateInput) Validate() error {
 	}
 	if s.Name != nil && len(*s.Name) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
-	}
-	if s.StatusUpdateIntervalInSecs != nil && *s.StatusUpdateIntervalInSecs < 10 {
-		invalidParams.Add(request.NewErrParamMinValue("StatusUpdateIntervalInSecs", 10))
 	}
 	if s.AccelerationSettings != nil {
 		if err := s.AccelerationSettings.Validate(); err != nil {
@@ -14844,9 +15039,9 @@ func (s *UpdateJobTemplateInput) SetSettings(v *JobTemplateSettings) *UpdateJobT
 	return s
 }
 
-// SetStatusUpdateIntervalInSecs sets the StatusUpdateIntervalInSecs field's value.
-func (s *UpdateJobTemplateInput) SetStatusUpdateIntervalInSecs(v int64) *UpdateJobTemplateInput {
-	s.StatusUpdateIntervalInSecs = &v
+// SetStatusUpdateInterval sets the StatusUpdateInterval field's value.
+func (s *UpdateJobTemplateInput) SetStatusUpdateInterval(v string) *UpdateJobTemplateInput {
+	s.StatusUpdateInterval = &v
 	return s
 }
 
@@ -15214,8 +15409,9 @@ type VideoDescription struct {
 	// to calculate output AFD values based on the input AFD scaler data.
 	AfdSignaling *string `locationName:"afdSignaling" type:"string" enum:"AfdSignaling"`
 
-	// You no longer need to specify the anti-alias filter. It's now automatically
-	// applied to all outputs. This property is deprecated.
+	// The anti-alias filter is automatically applied to all outputs. The service
+	// no longer accepts the value DISABLED for AntiAlias. If you specify that in
+	// your job, the service will ignore the setting.
 	AntiAlias *string `locationName:"antiAlias" type:"string" enum:"AntiAlias"`
 
 	// Video codec settings, (CodecSettings) under (VideoDescription), contains
@@ -15967,8 +16163,9 @@ const (
 	AfdSignalingFixed = "FIXED"
 )
 
-// You no longer need to specify the anti-alias filter. It's now automatically
-// applied to all outputs. This property is deprecated.
+// The anti-alias filter is automatically applied to all outputs. The service
+// no longer accepts the value DISABLED for AntiAlias. If you specify that in
+// your job, the service will ignore the setting.
 const (
 	// AntiAliasDisabled is a AntiAlias enum value
 	AntiAliasDisabled = "DISABLED"
@@ -16536,7 +16733,7 @@ const (
 	DashIsoWriteSegmentTimelineInRepresentationDisabled = "DISABLED"
 )
 
-// This specifies how the encrypted file needs to be decrypted.
+// Specify the encryption mode that you used to encrypt your input files.
 const (
 	// DecryptionModeAesCtr is a DecryptionMode enum value
 	DecryptionModeAesCtr = "AES_CTR"
@@ -17961,6 +18158,18 @@ const (
 
 	// InputTimecodeSourceSpecifiedstart is a InputTimecodeSource enum value
 	InputTimecodeSourceSpecifiedstart = "SPECIFIEDSTART"
+)
+
+// A job's phase can be PROBING, TRANSCODING OR UPLOADING
+const (
+	// JobPhaseProbing is a JobPhase enum value
+	JobPhaseProbing = "PROBING"
+
+	// JobPhaseTranscoding is a JobPhase enum value
+	JobPhaseTranscoding = "TRANSCODING"
+
+	// JobPhaseUploading is a JobPhase enum value
+	JobPhaseUploading = "UPLOADING"
 )
 
 // A job's status can be SUBMITTED, PROGRESSING, COMPLETE, CANCELED, or ERROR.
@@ -19388,6 +19597,25 @@ const (
 	RespondToAfdPassthrough = "PASSTHROUGH"
 )
 
+// Specify how you want your data keys managed. AWS uses data keys to encrypt
+// your content. AWS also encrypts the data keys themselves, using a customer
+// master key (CMK), and then stores the encrypted data keys alongside your
+// encrypted content. Use this setting to specify which AWS service manages
+// the CMK. For simplest set up, choose Amazon S3 (SERVER_SIDE_ENCRYPTION_S3).
+// If you want your master key to be managed by AWS Key Management Service (KMS),
+// choose AWS KMS (SERVER_SIDE_ENCRYPTION_KMS). By default, when you choose
+// AWS KMS, KMS uses the AWS managed customer master key (CMK) associated with
+// Amazon S3 to encrypt your data keys. You can optionally choose to specify
+// a different, customer managed CMK. Do so by specifying the Amazon Resource
+// Name (ARN) of the key for the setting KMS ARN (kmsKeyArn).
+const (
+	// S3ServerSideEncryptionTypeServerSideEncryptionS3 is a S3ServerSideEncryptionType enum value
+	S3ServerSideEncryptionTypeServerSideEncryptionS3 = "SERVER_SIDE_ENCRYPTION_S3"
+
+	// S3ServerSideEncryptionTypeServerSideEncryptionKms is a S3ServerSideEncryptionType enum value
+	S3ServerSideEncryptionTypeServerSideEncryptionKms = "SERVER_SIDE_ENCRYPTION_KMS"
+)
+
 // Applies only if your input aspect ratio is different from your output aspect
 // ratio. Choose "Stretch to output" to have the service stretch your video
 // image to fit. Keep the setting "Default" to allow the service to letterbox
@@ -19419,6 +19647,57 @@ const (
 
 	// SccDestinationFramerateFramerate2997NonDropframe is a SccDestinationFramerate enum value
 	SccDestinationFramerateFramerate2997NonDropframe = "FRAMERATE_29_97_NON_DROPFRAME"
+)
+
+// Specify how often MediaConvert sends STATUS_UPDATE events to Amazon CloudWatch
+// Events. Set the interval, in seconds, between status updates. MediaConvert
+// sends an update at this interval from the time the service begins processing
+// your job to the time it completes the transcode or encounters an error.
+const (
+	// StatusUpdateIntervalSeconds10 is a StatusUpdateInterval enum value
+	StatusUpdateIntervalSeconds10 = "SECONDS_10"
+
+	// StatusUpdateIntervalSeconds12 is a StatusUpdateInterval enum value
+	StatusUpdateIntervalSeconds12 = "SECONDS_12"
+
+	// StatusUpdateIntervalSeconds15 is a StatusUpdateInterval enum value
+	StatusUpdateIntervalSeconds15 = "SECONDS_15"
+
+	// StatusUpdateIntervalSeconds20 is a StatusUpdateInterval enum value
+	StatusUpdateIntervalSeconds20 = "SECONDS_20"
+
+	// StatusUpdateIntervalSeconds30 is a StatusUpdateInterval enum value
+	StatusUpdateIntervalSeconds30 = "SECONDS_30"
+
+	// StatusUpdateIntervalSeconds60 is a StatusUpdateInterval enum value
+	StatusUpdateIntervalSeconds60 = "SECONDS_60"
+
+	// StatusUpdateIntervalSeconds120 is a StatusUpdateInterval enum value
+	StatusUpdateIntervalSeconds120 = "SECONDS_120"
+
+	// StatusUpdateIntervalSeconds180 is a StatusUpdateInterval enum value
+	StatusUpdateIntervalSeconds180 = "SECONDS_180"
+
+	// StatusUpdateIntervalSeconds240 is a StatusUpdateInterval enum value
+	StatusUpdateIntervalSeconds240 = "SECONDS_240"
+
+	// StatusUpdateIntervalSeconds300 is a StatusUpdateInterval enum value
+	StatusUpdateIntervalSeconds300 = "SECONDS_300"
+
+	// StatusUpdateIntervalSeconds360 is a StatusUpdateInterval enum value
+	StatusUpdateIntervalSeconds360 = "SECONDS_360"
+
+	// StatusUpdateIntervalSeconds420 is a StatusUpdateInterval enum value
+	StatusUpdateIntervalSeconds420 = "SECONDS_420"
+
+	// StatusUpdateIntervalSeconds480 is a StatusUpdateInterval enum value
+	StatusUpdateIntervalSeconds480 = "SECONDS_480"
+
+	// StatusUpdateIntervalSeconds540 is a StatusUpdateInterval enum value
+	StatusUpdateIntervalSeconds540 = "SECONDS_540"
+
+	// StatusUpdateIntervalSeconds600 is a StatusUpdateInterval enum value
+	StatusUpdateIntervalSeconds600 = "SECONDS_600"
 )
 
 // Use Position (Position) under under Timecode burn-in (TimecodeBurnIn) to

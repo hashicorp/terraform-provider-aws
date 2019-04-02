@@ -18,6 +18,10 @@
                             <a href="/docs/providers/aws/guides/version-2-upgrade.html">AWS Provider Version 2 Upgrade</a>
                         </li>
 
+                        <li<%= sidebar_current("docs-aws-guide-custom-service-endpoints") %>>
+                            <a href="/docs/providers/aws/guides/custom-service-endpoints.html">Custom Service Endpoints</a>
+                        </li>
+
                         <li<%= sidebar_current("learn-aws-guides") %>>
                             <a href="https://learn.hashicorp.com/terraform/?track=aws#aws">AWS Provider Track on HashiCorp Learn</a>
                         </li>
@@ -151,6 +155,9 @@
                         </li>
                         <li<%= sidebar_current("docs-aws-datasource-ec2-transit-gateway-vpc-attachment") %>>
                           <a href="/docs/providers/aws/d/ec2_transit_gateway_vpc_attachment.html">aws_ec2_transit_gateway_vpc_attachment</a>
+                        </li>
+                        <li<%= sidebar_current("docs-aws-datasource-ec2-transit-gateway-vpn-attachment") %>>
+                          <a href="/docs/providers/aws/d/ec2_transit_gateway_vpn_attachment.html">aws_ec2_transit_gateway_vpn_attachment</a>
                         </li>
                         <li<%= sidebar_current("docs-aws-datasource-ecr-repository") %>>
                           <a href="/docs/providers/aws/d/ecr_repository.html">aws_ecr_repository</a>
@@ -554,6 +561,9 @@
                         </li>
                         <li<%= sidebar_current("docs-aws-resource-appsync-api-key") %>>
                             <a href="/docs/providers/aws/r/appsync_api_key.html">aws_appsync_api_key</a>
+                        </li>
+                        <li<%= sidebar_current("docs-aws-resource-appsync-resolver") %>>
+                            <a href="/docs/providers/aws/r/appsync_resolver.html">aws_appsync_resolver</a>
                         </li>
                     </ul>
                 </li>
@@ -1730,8 +1740,16 @@
                     <a href="/docs/providers/aws/r/kms_alias.html">aws_kms_alias</a>
                   </li>
 
+                  <li<%= sidebar_current("docs-aws-resource-kms-external-key") %>>
+                    <a href="/docs/providers/aws/r/kms_external_key.html">aws_kms_external_key</a>
+                  </li>
+
                   <li<%= sidebar_current("docs-aws-resource-kms-grant") %>>
                     <a href="/docs/providers/aws/r/kms_grant.html">aws_kms_grant</a>
+                  </li>
+
+                  <li<%= sidebar_current("docs-aws-resource-kms-ciphertext") %>>
+                      <a href="/docs/providers/aws/r/kms_ciphertext.html">aws_kms_ciphertext</a>
                   </li>
 
                   <li<%= sidebar_current("docs-aws-resource-kms-key") %>>
@@ -2352,6 +2370,10 @@
                 <li<%= sidebar_current("docs-aws-resource-sagemaker") %>>
                     <a href="#">Sagemaker Resources</a>
                     <ul class="nav nav-visible">
+
+                        <li<%= sidebar_current("docs-aws-resource-sagemaker-endpoint-configuration") %>>
+                          <a href="/docs/providers/aws/r/sagemaker_endpoint_configuration.html">aws_sagemaker_endpoint_configuration</a>
+                        </li>
 
                         <li<%= sidebar_current("docs-aws-resource-sagemaker-model") %>>
                           <a href="/docs/providers/aws/r/sagemaker_model.html">aws_sagemaker_model</a>

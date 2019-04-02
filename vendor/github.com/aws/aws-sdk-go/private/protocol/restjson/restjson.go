@@ -33,6 +33,9 @@ func Build(r *request.Request) {
 	rest.Build(r)
 
 	if t := rest.PayloadType(r.Params); t == "structure" || t == "" {
+		if v := r.HTTPRequest.Header.Get("Content-Type"); len(v) == 0 {
+			r.HTTPRequest.Header.Set("Content-Type", "application/json")
+		}
 		jsonrpc.Build(r)
 	}
 }

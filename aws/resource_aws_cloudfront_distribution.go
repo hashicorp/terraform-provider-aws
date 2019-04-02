@@ -22,6 +22,8 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsCloudFrontDistributionImport,
 		},
+		MigrateState:  resourceAwsCloudFrontDistributionMigrateState,
+		SchemaVersion: 1,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -714,6 +716,11 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"wait_for_deployment": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
 			"is_ipv6_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -765,9 +772,11 @@ func resourceAwsCloudFrontDistributionCreate(d *schema.ResourceData, meta interf
 
 	d.SetId(*resp.Distribution.Id)
 
-	log.Printf("[DEBUG] Waiting until CloudFront Distribution (%s) is deployed", d.Id())
-	if err := resourceAwsCloudFrontDistributionWaitUntilDeployed(d.Id(), meta); err != nil {
-		return fmt.Errorf("error waiting until CloudFront Distribution (%s) is deployed: %s", d.Id(), err)
+	if d.Get("wait_for_deployment").(bool) {
+		log.Printf("[DEBUG] Waiting until CloudFront Distribution (%s) is deployed", d.Id())
+		if err := resourceAwsCloudFrontDistributionWaitUntilDeployed(d.Id(), meta); err != nil {
+			return fmt.Errorf("error waiting until CloudFront Distribution (%s) is deployed: %s", d.Id(), err)
+		}
 	}
 
 	return resourceAwsCloudFrontDistributionRead(d, meta)
@@ -858,9 +867,11 @@ func resourceAwsCloudFrontDistributionUpdate(d *schema.ResourceData, meta interf
 		return fmt.Errorf("error updating CloudFront Distribution (%s): %s", d.Id(), err)
 	}
 
-	log.Printf("[DEBUG] Waiting until CloudFront Distribution (%s) is deployed", d.Id())
-	if err := resourceAwsCloudFrontDistributionWaitUntilDeployed(d.Id(), meta); err != nil {
-		return fmt.Errorf("error waiting until CloudFront Distribution (%s) is deployed: %s", d.Id(), err)
+	if d.Get("wait_for_deployment").(bool) {
+		log.Printf("[DEBUG] Waiting until CloudFront Distribution (%s) is deployed", d.Id())
+		if err := resourceAwsCloudFrontDistributionWaitUntilDeployed(d.Id(), meta); err != nil {
+			return fmt.Errorf("error waiting until CloudFront Distribution (%s) is deployed: %s", d.Id(), err)
+		}
 	}
 
 	if err := setTagsCloudFront(conn, d, d.Get("arn").(string)); err != nil {

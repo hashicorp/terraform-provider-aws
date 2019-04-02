@@ -6073,6 +6073,80 @@ func (s *FixedResponseActionConfig) SetStatusCode(v string) *FixedResponseAction
 	return s
 }
 
+type HostHeaderConditionConfig struct {
+	_ struct{} `type:"structure"`
+
+	Values []*string `type:"list"`
+}
+
+// String returns the string representation
+func (s HostHeaderConditionConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s HostHeaderConditionConfig) GoString() string {
+	return s.String()
+}
+
+// SetValues sets the Values field's value.
+func (s *HostHeaderConditionConfig) SetValues(v []*string) *HostHeaderConditionConfig {
+	s.Values = v
+	return s
+}
+
+type HttpHeaderConditionConfig struct {
+	_ struct{} `type:"structure"`
+
+	HttpHeaderName *string `type:"string"`
+
+	Values []*string `type:"list"`
+}
+
+// String returns the string representation
+func (s HttpHeaderConditionConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s HttpHeaderConditionConfig) GoString() string {
+	return s.String()
+}
+
+// SetHttpHeaderName sets the HttpHeaderName field's value.
+func (s *HttpHeaderConditionConfig) SetHttpHeaderName(v string) *HttpHeaderConditionConfig {
+	s.HttpHeaderName = &v
+	return s
+}
+
+// SetValues sets the Values field's value.
+func (s *HttpHeaderConditionConfig) SetValues(v []*string) *HttpHeaderConditionConfig {
+	s.Values = v
+	return s
+}
+
+type HttpRequestMethodConditionConfig struct {
+	_ struct{} `type:"structure"`
+
+	Values []*string `type:"list"`
+}
+
+// String returns the string representation
+func (s HttpRequestMethodConditionConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s HttpRequestMethodConditionConfig) GoString() string {
+	return s.String()
+}
+
+// SetValues sets the Values field's value.
+func (s *HttpRequestMethodConditionConfig) SetValues(v []*string) *HttpRequestMethodConditionConfig {
+	s.Values = v
+	return s
+}
+
 // Information about an Elastic Load Balancing resource limit for your AWS account.
 type Limit struct {
 	_ struct{} `type:"structure"`
@@ -7121,6 +7195,80 @@ func (s *ModifyTargetGroupOutput) SetTargetGroups(v []*TargetGroup) *ModifyTarge
 	return s
 }
 
+type PathPatternConditionConfig struct {
+	_ struct{} `type:"structure"`
+
+	Values []*string `type:"list"`
+}
+
+// String returns the string representation
+func (s PathPatternConditionConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PathPatternConditionConfig) GoString() string {
+	return s.String()
+}
+
+// SetValues sets the Values field's value.
+func (s *PathPatternConditionConfig) SetValues(v []*string) *PathPatternConditionConfig {
+	s.Values = v
+	return s
+}
+
+type QueryStringConditionConfig struct {
+	_ struct{} `type:"structure"`
+
+	Values []*QueryStringKeyValuePair `type:"list"`
+}
+
+// String returns the string representation
+func (s QueryStringConditionConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s QueryStringConditionConfig) GoString() string {
+	return s.String()
+}
+
+// SetValues sets the Values field's value.
+func (s *QueryStringConditionConfig) SetValues(v []*QueryStringKeyValuePair) *QueryStringConditionConfig {
+	s.Values = v
+	return s
+}
+
+type QueryStringKeyValuePair struct {
+	_ struct{} `type:"structure"`
+
+	Key *string `type:"string"`
+
+	Value *string `type:"string"`
+}
+
+// String returns the string representation
+func (s QueryStringKeyValuePair) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s QueryStringKeyValuePair) GoString() string {
+	return s.String()
+}
+
+// SetKey sets the Key field's value.
+func (s *QueryStringKeyValuePair) SetKey(v string) *QueryStringKeyValuePair {
+	s.Key = &v
+	return s
+}
+
+// SetValue sets the Value field's value.
+func (s *QueryStringKeyValuePair) SetValue(v string) *QueryStringKeyValuePair {
+	s.Value = &v
+	return s
+}
+
 // Information about a redirect action.
 //
 // A URI consists of the following components: protocol://hostname:port/path?query.
@@ -7518,6 +7666,18 @@ type RuleCondition struct {
 	// The name of the field. The possible values are host-header and path-pattern.
 	Field *string `type:"string"`
 
+	HostHeaderConfig *HostHeaderConditionConfig `type:"structure"`
+
+	HttpHeaderConfig *HttpHeaderConditionConfig `type:"structure"`
+
+	HttpRequestMethodConfig *HttpRequestMethodConditionConfig `type:"structure"`
+
+	PathPatternConfig *PathPatternConditionConfig `type:"structure"`
+
+	QueryStringConfig *QueryStringConditionConfig `type:"structure"`
+
+	SourceIpConfig *SourceIpConditionConfig `type:"structure"`
+
 	// The condition value.
 	//
 	// If the field name is host-header, you can specify a single host name (for
@@ -7563,6 +7723,42 @@ func (s RuleCondition) GoString() string {
 // SetField sets the Field field's value.
 func (s *RuleCondition) SetField(v string) *RuleCondition {
 	s.Field = &v
+	return s
+}
+
+// SetHostHeaderConfig sets the HostHeaderConfig field's value.
+func (s *RuleCondition) SetHostHeaderConfig(v *HostHeaderConditionConfig) *RuleCondition {
+	s.HostHeaderConfig = v
+	return s
+}
+
+// SetHttpHeaderConfig sets the HttpHeaderConfig field's value.
+func (s *RuleCondition) SetHttpHeaderConfig(v *HttpHeaderConditionConfig) *RuleCondition {
+	s.HttpHeaderConfig = v
+	return s
+}
+
+// SetHttpRequestMethodConfig sets the HttpRequestMethodConfig field's value.
+func (s *RuleCondition) SetHttpRequestMethodConfig(v *HttpRequestMethodConditionConfig) *RuleCondition {
+	s.HttpRequestMethodConfig = v
+	return s
+}
+
+// SetPathPatternConfig sets the PathPatternConfig field's value.
+func (s *RuleCondition) SetPathPatternConfig(v *PathPatternConditionConfig) *RuleCondition {
+	s.PathPatternConfig = v
+	return s
+}
+
+// SetQueryStringConfig sets the QueryStringConfig field's value.
+func (s *RuleCondition) SetQueryStringConfig(v *QueryStringConditionConfig) *RuleCondition {
+	s.QueryStringConfig = v
+	return s
+}
+
+// SetSourceIpConfig sets the SourceIpConfig field's value.
+func (s *RuleCondition) SetSourceIpConfig(v *SourceIpConditionConfig) *RuleCondition {
+	s.SourceIpConfig = v
 	return s
 }
 
@@ -7923,6 +8119,28 @@ func (s SetSubnetsOutput) GoString() string {
 // SetAvailabilityZones sets the AvailabilityZones field's value.
 func (s *SetSubnetsOutput) SetAvailabilityZones(v []*AvailabilityZone) *SetSubnetsOutput {
 	s.AvailabilityZones = v
+	return s
+}
+
+type SourceIpConditionConfig struct {
+	_ struct{} `type:"structure"`
+
+	Values []*string `type:"list"`
+}
+
+// String returns the string representation
+func (s SourceIpConditionConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SourceIpConditionConfig) GoString() string {
+	return s.String()
+}
+
+// SetValues sets the Values field's value.
+func (s *SourceIpConditionConfig) SetValues(v []*string) *SourceIpConditionConfig {
+	s.Values = v
 	return s
 }
 

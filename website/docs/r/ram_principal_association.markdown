@@ -32,7 +32,7 @@ resource "aws_ram_principal_association" "example" {
 
 ```hcl
 resource "aws_ram_principal_association" "example" {
-  principal          = "${aws_organizations_organization.example.id}"
+  principal          = "${aws_organizations_organization.example.arn}"
   resource_share_arn = "${aws_ram_resource_share.example.arn}"
 }
 ```
@@ -41,7 +41,7 @@ resource "aws_ram_principal_association" "example" {
 
 The following arguments are supported:
 
-* `principal` - (Required) The principal to associate with the resource share. Possible values are an AWS account ID, an AWS Organizations Organization ID, or an AWS Organizations Organization Unit ID.
+* `principal` - (Required) The principal to associate with the resource share. Possible values are an AWS account ID, an AWS Organizations Organization ARN, or an AWS Organizations Organization Unit ARN.
 * `resource_share_arn` - (Required) The Amazon Resource Name (ARN) of the resource share.
 
 ## Attributes Reference

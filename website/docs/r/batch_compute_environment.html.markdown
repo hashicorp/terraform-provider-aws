@@ -131,6 +131,7 @@ resource "aws_batch_compute_environment" "sample" {
 * `image_id` - (Optional) The Amazon Machine Image (AMI) ID used for instances launched in the compute environment.
 * `instance_role` - (Required) The Amazon ECS instance role applied to Amazon EC2 instances in a compute environment.
 * `instance_type` - (Required) A list of instance types that may be launched.
+* `launch_template` - (Optional) The launch template to use for your compute resources. See details below.
 * `max_vcpus` - (Required) The maximum number of EC2 vCPUs that an environment can reach.
 * `min_vcpus` - (Required) The minimum number of EC2 vCPUs that an environment should maintain.
 * `security_group_ids` - (Required) A list of EC2 security group that are associated with instances launched in the compute environment.
@@ -138,6 +139,14 @@ resource "aws_batch_compute_environment" "sample" {
 * `subnets` - (Required) A list of VPC subnets into which the compute resources are launched.
 * `tags` - (Optional) Key-value pair tags to be applied to resources that are launched in the compute environment.
 * `type` - (Required) The type of compute environment. Valid items are `EC2` or `SPOT`.
+
+### launch_template
+
+`launch_template` supports the following:
+
+* `launch_template_id` - (Optional) ID of the launch template. You must specify either the launch template ID or launch template name in the request, but not both.
+* `launch_template_name` - (Optional) Name of the launch template.
+* `version` - (Optional) The version number of the launch template. Default: The default version of the launch template.
 
 ## Attributes Reference
 

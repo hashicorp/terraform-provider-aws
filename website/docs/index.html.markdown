@@ -171,11 +171,14 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
 * `assume_role` - (Optional) An `assume_role` block (documented below). Only one
   `assume_role` block may be in the configuration.
 
+* `endpoints` - (Optional) Configuration block for customizing service endpoints. See the
+[Custom Service Endpoints Guide](/docs/providers/aws/guides/custom-service-endpoints.html)
+for more information about connecting to alternate AWS endpoints or AWS compatible solutions.
+
 * `shared_credentials_file` = (Optional) This is the path to the shared credentials file.
   If this is not set and a profile is specified, `~/.aws/credentials` will be used.
 
-* `token` - (Optional) Use this to set an MFA token. It can also be sourced
-  from the `AWS_SESSION_TOKEN` environment variable.
+* `token` - (Optional) Session token for validating temporary credentials. Typically provided after successful identity federation or Multi-Factor Authentication (MFA) login. With MFA login, this is the session token provided afterwards, not the 6 digit MFA code used to get temporary credentials.  It can also be sourced from the `AWS_SESSION_TOKEN` environment variable.
 
 * `max_retries` - (Optional) This is the maximum number of times an API
   call is retried, in the case where requests are being throttled or
@@ -281,128 +284,6 @@ The nested `assume_role` block supports the following:
 This gives you a way to further restrict the permissions for the resulting temporary
 security credentials. You cannot use the passed policy to grant permissions that are
 in excess of those allowed by the access policy of the role that is being assumed.
-
-Nested `endpoints` block supports the following:
-
-* `acm` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`. It's typically used to connect to
-  custom ACM endpoints.
-
-* `apigateway` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`. It's typically used to connect to
-  custom API Gateway endpoints.
-
-* `cloudformation` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`. It's typically used to connect to
-  custom CloudFormation endpoints.
-
-* `cloudwatch` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`. It's typically used to connect to
-  custom CloudWatch endpoints.
-
-* `cloudwatchevents` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`. It's typically used to connect to
-  custom CloudWatchEvents endpoints.
-
-* `cloudwatchlogs` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`. It's typically used to connect to
-  custom CloudWatchLogs endpoints.
-
-* `devicefarm` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`. It's typically used to connect to
-  custom DeviceFarm endpoints.
-
-* `dynamodb` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`. It's typically used to connect to
-  `dynamodb-local`.
-
-* `ec2` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`. It's typically used to connect to
-  custom EC2 endpoints.
-
-* `autoscaling` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`. It's typically used to connect to
-  custom Autoscaling endpoints.
-
-* `ecr` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`. It's typically used to connect to
-  custom ECR endpoints.
-
-* `ecs` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`. It's typically used to connect to
-  custom ECS endpoints.
-
-* `elb` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`. It's typically used to connect to
-  custom ELB endpoints.
-
-* `efs` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`. It's typically used to connect to
-  custom EFS endpoints.
-
-* `es` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`.  It's typically used to connect to
-  custom Elasticsearch endpoints.
-
-* `firehose` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`.  It's typically used to connect to
-  custom Firehose endpoints.
-
-* `iam` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`. It's typically used to connect to
-  custom IAM endpoints.
-
-* `kinesis` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`. It's typically used to connect to
-  `kinesalite`.
-
-* `kms` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`. It's typically used to connect to
-  custom KMS endpoints.
-
-* `lambda` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`. It's typically used to connect to
-  custom Lambda endpoints.
-
-* `r53` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`. It's typically used to connect to
-  custom Route53 endpoints.
-
-* `rds` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`. It's typically used to connect to
-  custom RDS endpoints.
-
-* `redshift` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`. It's typically used to connect to
-  custom Redshift endpoints.
-
-* `s3` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`. It's typically used to connect to
-  custom S3 endpoints.
-
-* `s3control` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`. It's typically used to connect to
-  custom S3 Control endpoints (e.g. account-level public access block).
-
-* `ses` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`. It's typically used to connect to
-  custom SNS endpoints.
-
-* `sns` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`. It's typically used to connect to
-  custom SNS endpoints.
-
-* `sqs` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`. It's typically used to connect to
-  custom SQS endpoints.
-
-* `sts` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`. It's typically used to connect to
-  custom STS endpoints.
-
-* `ssm` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`. It's typically used to connect to
-  custom SSM endpoints.
 
 ## Getting the Account ID
 

@@ -121,9 +121,7 @@ type Run struct {
 }
 
 type LintersSettings struct {
-	Govet struct {
-		CheckShadowing bool `mapstructure:"check-shadowing"`
-	}
+	Govet  GovetSettings
 	Golint struct {
 		MinConfidence float64 `mapstructure:"min-confidence"`
 	}
@@ -171,6 +169,11 @@ type LintersSettings struct {
 	Prealloc PreallocSettings
 	Errcheck ErrcheckSettings
 	Gocritic GocriticSettings
+}
+
+type GovetSettings struct {
+	CheckShadowing bool `mapstructure:"check-shadowing"`
+	Settings       map[string]map[string]interface{}
 }
 
 type ErrcheckSettings struct {
@@ -235,6 +238,7 @@ type ExcludeRule struct {
 	Linters []string
 	Path    string
 	Text    string
+	Source  string
 }
 
 func validateOptionalRegex(value string) error {
@@ -252,6 +256,9 @@ func (e ExcludeRule) Validate() error {
 	if err := validateOptionalRegex(e.Text); err != nil {
 		return fmt.Errorf("invalid text regex: %v", err)
 	}
+	if err := validateOptionalRegex(e.Source); err != nil {
+		return fmt.Errorf("invalid source regex: %v", err)
+	}
 	nonBlank := 0
 	if len(e.Linters) > 0 {
 		nonBlank++
@@ -262,8 +269,11 @@ func (e ExcludeRule) Validate() error {
 	if e.Text != "" {
 		nonBlank++
 	}
+	if e.Source != "" {
+		nonBlank++
+	}
 	if nonBlank < 2 {
-		return errors.New("at least 2 of (text, path, linters) should be set")
+		return errors.New("at least 2 of (text, source, path, linters) should be set")
 	}
 	return nil
 }
@@ -288,6 +298,7 @@ type Config struct { //nolint:maligned
 
 	Output struct {
 		Format              string
+		Color               string
 		PrintIssuedLine     bool `mapstructure:"print-issued-lines"`
 		PrintLinterName     bool `mapstructure:"print-linter-name"`
 		PrintWelcomeMessage bool `mapstructure:"print-welcome"`
