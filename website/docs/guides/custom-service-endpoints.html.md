@@ -127,6 +127,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
 - `organizations`
 - `pinpoint`
 - `pricing`
+- `quicksight`
 - `r53` (**DEPRECATED** Use `route53` instead)
 - `ram`
 - `rds`

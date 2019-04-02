@@ -924,6 +924,7 @@ func init() {
 		"organizations",
 		"pinpoint",
 		"pricing",
+		"quicksight",
 		"r53",
 		"ram",
 		"rds",
