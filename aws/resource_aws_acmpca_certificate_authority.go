@@ -239,6 +239,11 @@ func resourceAwsAcmpcaCertificateAuthority() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"permanent_deletion_time_in_days ": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.IntBetween(7, 30),
+			},
 			"tags": tagsSchema(),
 			"type": {
 				Type:     schema.TypeString,
@@ -487,6 +492,9 @@ func resourceAwsAcmpcaCertificateAuthorityDelete(d *schema.ResourceData, meta in
 	}
 
 	log.Printf("[DEBUG] Deleting ACMPCA Certificate Authority: %s", input)
+	if v, exists := d.GetOk("permanent_deletion_time_in_days "); exists {
+		input.PermanentDeletionTimeInDays = aws.Int64(int64(v.(int)))
+	}
 	_, err := conn.DeleteCertificateAuthority(input)
 	if err != nil {
 		if isAWSErr(err, acmpca.ErrCodeResourceNotFoundException, "") {
