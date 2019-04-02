@@ -178,8 +178,7 @@ for more information about connecting to alternate AWS endpoints or AWS compatib
 * `shared_credentials_file` = (Optional) This is the path to the shared credentials file.
   If this is not set and a profile is specified, `~/.aws/credentials` will be used.
 
-* `token` - (Optional) Use this to set an MFA token. It can also be sourced
-  from the `AWS_SESSION_TOKEN` environment variable.
+* `token` - (Optional) Session token for validating temporary credentials. Typically provided after successful identity federation or Multi-Factor Authentication (MFA) login. With MFA login, this is the session token provided afterwards, not the 6 digit MFA code used to get temporary credentials.  It can also be sourced from the `AWS_SESSION_TOKEN` environment variable.
 
 * `max_retries` - (Optional) This is the maximum number of times an API
   call is retried, in the case where requests are being throttled or
