@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -33,7 +32,7 @@ func testSweepSagemakerEndpoints(region string) error {
 	conn := client.(*AWSClient).sagemakerconn
 
 	req := &sagemaker.ListEndpointsInput{
-		NameContains: aws.String("terraform-testacc-sagemaker-endpoint"),
+		NameContains: aws.String("tf-acc-test"),
 	}
 	resp, err := conn.ListEndpoints(req)
 	if err != nil {
@@ -41,7 +40,7 @@ func testSweepSagemakerEndpoints(region string) error {
 	}
 
 	if len(resp.Endpoints) == 0 {
-		log.Print("[DEBUG] No SageMaker endpoint to sweep")
+		log.Print("[DEBUG] No SageMaker Endpoint to sweep")
 		return nil
 	}
 
@@ -51,7 +50,7 @@ func testSweepSagemakerEndpoints(region string) error {
 		})
 		if err != nil {
 			return fmt.Errorf(
-				"error deleting sagemaker endpoint (%s): %s",
+				"error deleting SageMaker Endpoint (%s): %s",
 				*endpoint.EndpointName, err)
 		}
 	}
@@ -60,7 +59,8 @@ func testSweepSagemakerEndpoints(region string) error {
 }
 
 func TestAccAWSSagemakerEndpoint_basic(t *testing.T) {
-	rName := acctest.RandString(10)
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_sagemaker_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -70,22 +70,15 @@ func TestAccAWSSagemakerEndpoint_basic(t *testing.T) {
 			{
 				Config: testAccSagemakerEndpointConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSagemakerEndpointExists("aws_sagemaker_endpoint.foo"),
-
-					resource.TestCheckResourceAttr(
-						"aws_sagemaker_endpoint.foo",
-						"name",
-						fmt.Sprintf("terraform-testacc-sagemaker-endpoint-%s", rName)),
-					resource.TestCheckResourceAttr(
-						"aws_sagemaker_endpoint.foo",
-						"endpoint_config_name",
-						fmt.Sprintf("terraform-testacc-sagemaker-endpoint-config-%s", rName)),
+					testAccCheckSagemakerEndpointExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_config_name", rName),
 				),
-				ExpectError: regexp.MustCompile(`.*unexpected state 'Failed', wanted target 'InService'.*`),
+				ExpectError: regexp.MustCompile(`ResourceNotReady: failed waiting for successful resource state`),
 			},
 			// Does not work with failing resource
 			//{
-			//	ResourceName:      "aws_sagemaker_endpoint.foo",
+			//	ResourceName:      resourceName,
 			//	ImportState:       true,
 			//	ImportStateVerify: true,
 			//},
@@ -94,7 +87,8 @@ func TestAccAWSSagemakerEndpoint_basic(t *testing.T) {
 }
 
 func TestAccAWSSagemakerEndpoint_tags(t *testing.T) {
-	rName := acctest.RandString(10)
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_sagemaker_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -102,24 +96,24 @@ func TestAccAWSSagemakerEndpoint_tags(t *testing.T) {
 		CheckDestroy: testAccCheckSagemakerEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSagemakerEndpointConfigTags(rName),
+				Config: testAccSagemakerEndpointConfig_Tags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSagemakerEndpointExists("aws_sagemaker_endpoint.foo"),
-					resource.TestCheckResourceAttr("aws_sagemaker_endpoint.foo", "tags.%", "1"),
-					resource.TestCheckResourceAttr("aws_sagemaker_endpoint.foo", "tags.foo", "bar"),
+					testAccCheckSagemakerEndpointExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar"),
 				),
-				ExpectError: regexp.MustCompile(`.*unexpected state 'Failed', wanted target 'InService'.*`),
+				ExpectError: regexp.MustCompile(`ResourceNotReady: failed waiting for successful resource state`),
 			},
 			{
-				Config: testAccSagemakerEndpointConfigTagsUpdate(rName),
+				Config: testAccSagemakerEndpointConfig_Tags_Update(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSagemakerEndpointExists("aws_sagemaker_endpoint.foo"),
-					resource.TestCheckResourceAttr("aws_sagemaker_endpoint.foo", "tags.%", "1"),
-					resource.TestCheckResourceAttr("aws_sagemaker_endpoint.foo", "tags.bar", "baz"),
+					testAccCheckSagemakerEndpointExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.bar", "baz"),
 				),
 			},
 			{
-				ResourceName:      "aws_sagemaker_endpoint.foo",
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -131,7 +125,10 @@ func TestAccAWSSagemakerEndpoint_update(t *testing.T) {
 	// Cannot update failed endpoint
 	t.Skip()
 
-	rName := acctest.RandString(10)
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rNameUpdated := acctest.RandomWithPrefix("tf-acc-test")
+
+	resourceName := "aws_sagemaker_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -141,34 +138,20 @@ func TestAccAWSSagemakerEndpoint_update(t *testing.T) {
 			{
 				Config: testAccSagemakerEndpointConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSagemakerEndpointExists("aws_sagemaker_endpoint.foo"),
-					resource.TestCheckResourceAttr(
-						"aws_sagemaker_endpoint.foo",
-						"name",
-						fmt.Sprintf("terraform-testacc-sagemaker-endpoint-%s", rName)),
-					resource.TestCheckResourceAttr(
-						"aws_sagemaker_endpoint.foo",
-						"endpoint_config_name",
-						"terraform-testacc-sagemaker-endpoint-config-foo"),
+					testAccCheckSagemakerEndpointExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_config_name", rName),
 				),
-				ExpectError: regexp.MustCompile(`.*unexpected state 'Failed', wanted target 'InService'.*`),
+				ExpectError: regexp.MustCompile(`ResourceNotReady: failed waiting for successful resource state`),
 			},
 			{
-				Config: testAccSagemakerEndpointConfigUpdate(rName),
+				Config: testAccSagemakerEndpointConfig_Update(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSagemakerEndpointExists("aws_sagemaker_endpoint.foo"),
-					resource.TestCheckResourceAttr(
-						"aws_sagemaker_endpoint.foo",
-						"name",
-						"terraform-testacc-sagemaker-endpoint-foo"),
-					resource.TestCheckResourceAttr(
-						"aws_sagemaker_endpoint.foo",
-						"endpoint_config_name",
-						fmt.Sprintf("terraform-testacc-sagemaker-endpoint-updated-%s", rName)),
+					testAccCheckSagemakerEndpointExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_config_name", rNameUpdated),
 				),
 			},
 			{
-				ResourceName:      "aws_sagemaker_endpoint.foo",
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -184,26 +167,22 @@ func testAccCheckSagemakerEndpointDestroy(s *terraform.State) error {
 			continue
 		}
 
-		resp, err := conn.ListEndpoints(&sagemaker.ListEndpointsInput{
-			NameContains: aws.String(rs.Primary.ID),
-		})
-		if err == nil {
-			if len(resp.Endpoints) > 0 {
-				return fmt.Errorf("SageMaker endpoint still exists")
-			}
-
-			return nil
+		describeInput := &sagemaker.DescribeEndpointInput{
+			EndpointName: aws.String(rs.Primary.ID),
 		}
 
-		sagemakerErr, ok := err.(awserr.Error)
-		if !ok {
+		_, err := conn.DescribeEndpoint(describeInput)
+
+		if isAWSErr(err, "ValidationException", "") {
+			continue
+		}
+
+		if err != nil {
 			return err
 		}
-		if sagemakerErr.Code() != "ResourceNotFound" {
-			return err
-		}
+
+		return fmt.Errorf("SageMaker Endpoint (%s) still exists", rs.Primary.ID)
 	}
-
 	return nil
 }
 
@@ -215,7 +194,7 @@ func testAccCheckSagemakerEndpointExists(n string) resource.TestCheckFunc {
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("no SageMaker endpoint ID is set")
+			return fmt.Errorf("no SageMaker Endpoint ID is set")
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
@@ -230,241 +209,87 @@ func testAccCheckSagemakerEndpointExists(n string) resource.TestCheckFunc {
 	}
 }
 
+func testAccSagemakerEndpointConfig_Base(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_sagemaker_endpoint_configuration" "test" {
+	name = %q
+
+	production_variants {
+		variant_name = "variant-1"
+		model_name = "${aws_sagemaker_model.test.name}"
+		initial_instance_count = 1
+		instance_type = "ml.t2.medium"
+		initial_variant_weight = 1
+	}
+}
+
+resource "aws_sagemaker_model" "test" {
+	name = %q
+	execution_role_arn = "${aws_iam_role.test.arn}"
+
+	primary_container {
+		image = %q
+	}
+}
+
+resource "aws_iam_role" "test" {
+	name = %q
+	path = "/"
+	assume_role_policy = "${data.aws_iam_policy_document.assume_role.json}"
+}
+
+data "aws_iam_policy_document" "assume_role" {
+	statement {
+		actions = [ "sts:AssumeRole" ]
+		principals {
+			type = "Service"
+			identifiers = [ "sagemaker.amazonaws.com" ]
+		}
+	}
+}
+`, rName, rName, image, rName)
+}
+
 func testAccSagemakerEndpointConfig(rName string) string {
-	return fmt.Sprintf(`resource "aws_sagemaker_endpoint" "foo" {
-	name = "terraform-testacc-sagemaker-endpoint-%s"
-	endpoint_config_name = "${aws_sagemaker_endpoint_configuration.foo.name}"
+	return testAccSagemakerEndpointConfig_Base(rName) + fmt.Sprintf(`
+resource "aws_sagemaker_endpoint" "test" {
+	name = %q
+	endpoint_config_name = "${aws_sagemaker_endpoint_configuration.test.name}"
+}
+`, rName)
 }
 
-resource "aws_sagemaker_endpoint_configuration" "foo" {
-	name = "terraform-testacc-sagemaker-endpoint-config-%s"
-
-	production_variants {
-		variant_name = "variant-1"
-		model_name = "${aws_sagemaker_model.foo.name}"
-		initial_instance_count = 1
-		instance_type = "ml.t2.medium"
-		initial_variant_weight = 1
-	}
+func testAccSagemakerEndpointConfig_Update(rName string) string {
+	return testAccSagemakerEndpointConfig_Base(rName) + fmt.Sprintf(`
+resource "aws_sagemaker_endpoint" "test" {
+	name = %q
+	endpoint_config_name = "${aws_sagemaker_endpoint_configuration.test_updated.name}"
+}
+`, rName)
 }
 
-resource "aws_sagemaker_model" "foo" {
-	name = "terraform-testacc-sagemaker-model-%s"
-	execution_role_arn = "${aws_iam_role.foo.arn}"
+func testAccSagemakerEndpointConfig_Tags(rName string) string {
+	return testAccSagemakerEndpointConfig_Base(rName) + fmt.Sprintf(`
+resource "aws_sagemaker_endpoint" "test" {
+	name = %q
+	endpoint_config_name = "${aws_sagemaker_endpoint_configuration.test.name}"
 
-	primary_container {
-		image = "%s"
-	}
-}
-
-resource "aws_iam_role" "foo" {
-	name = "terraform-testacc-sagemaker-model-%s"
-	path = "/"
-	assume_role_policy = "${data.aws_iam_policy_document.assume_role.json}"
-}
-
-data "aws_iam_policy_document" "assume_role" {
-	statement {
-		actions = [ "sts:AssumeRole" ]
-		principals {
-			type = "Service"
-			identifiers = [ "sagemaker.amazonaws.com" ]
-		}
-	}
-}
-
-resource "aws_iam_policy" "foo" {
-  name = "terraform-testacc-sagemaker-endpoint-%s"
-  description = "Allow SageMaker to create endpoint"
-  policy = "${data.aws_iam_policy_document.foo.json}"
-}
-
-data "aws_iam_policy_document" "foo" {
-  statement {
-    effect = "Allow"
-    actions = [
-      "sagemaker:*"
-    ]
-    resources = [
-      "*"
-    ]
-  }
-  statement {
-    effect = "Allow"
-    actions = [
-      "cloudwatch:PutMetricData",
-      "logs:CreateLogStream",
-      "logs:PutLogEvents",
-      "logs:CreateLogGroup",
-      "logs:DescribeLogStreams",
-      "ecr:GetAuthorizationToken",
-      "ecr:BatchCheckLayerAvailability",
-      "ecr:GetDownloadUrlForLayer",
-      "ecr:BatchGetImage"
-    ]
-    resources = [
-      "*"]
-  }
-}
-
-resource "aws_iam_role_policy_attachment" "foo" {
-  role = "${aws_iam_role.foo.name}"
-  policy_arn = "${aws_iam_policy.foo.arn}"
-}
-`, rName, rName, rName, image, rName, rName)
-}
-
-func testAccSagemakerEndpointConfigUpdate(rName string) string {
-	return fmt.Sprintf(`resource "aws_sagemaker_endpoint" "foo" {
-	name = "terraform-testacc-sagemaker-endpoint-%s"
-	endpoint_config_name = "${aws_sagemaker_endpoint_configuration.foo_updated.name}"
-}
-
-resource "aws_sagemaker_endpoint_configuration" "foo_updated" {
-	name = "terraform-testacc-sagemaker-endpoint-config-updated-%s"
-
-	production_variants {
-		variant_name = "variant-2"
-		model_name = "${aws_sagemaker_model.foo.name}"
-		initial_instance_count = 2
-		instance_type = "ml.t2.medium"
-		initial_variant_weight = 1
-	}
-}
-
-resource "aws_sagemaker_endpoint_configuration" "foo" {
-	name = "terraform-testacc-sagemaker-endpoint-config-%s"
-
-	production_variants {
-		variant_name = "variant-1"
-		model_name = "${aws_sagemaker_model.foo.name}"
-		initial_instance_count = 1
-		instance_type = "ml.t2.medium"
-		initial_variant_weight = 1
-	}
-}
-
-resource "aws_sagemaker_model" "foo" {
-	name = "terraform-testacc-sagemaker-model-%s"
-	execution_role_arn = "${aws_iam_role.foo.arn}"
-
-	primary_container {
-		image = "%s"
-	}
-}
-
-resource "aws_iam_role" "foo" {
-	name = "terraform-testacc-sagemaker-model-%s"
-	path = "/"
-	assume_role_policy = "${data.aws_iam_policy_document.assume_role.json}"
-}
-
-data "aws_iam_policy_document" "assume_role" {
-	statement {
-		actions = [ "sts:AssumeRole" ]
-		principals {
-			type = "Service"
-			identifiers = [ "sagemaker.amazonaws.com" ]
-		}
-	}
-}
-`, rName, rName, rName, rName, image, rName)
-}
-
-func testAccSagemakerEndpointConfigTags(rName string) string {
-	return fmt.Sprintf(`resource "aws_sagemaker_endpoint" "foo" {
-	name = "terraform-testacc-sagemaker-endpoint-%s"
-	endpoint_config_name = "${aws_sagemaker_endpoint_configuration.foo.name}"
-
-	tags {
+	tags = {
 		foo = "bar"
 	}
 }
-
-resource "aws_sagemaker_endpoint_configuration" "foo" {
-	name = "terraform-testacc-sagemaker-endpoint-config-%s"
-
-	production_variants {
-		variant_name = "variant-1"
-		model_name = "${aws_sagemaker_model.foo.name}"
-		initial_instance_count = 1
-		instance_type = "ml.t2.medium"
-		initial_variant_weight = 1
-	}
+`, rName)
 }
 
-resource "aws_sagemaker_model" "foo" {
-	name = "terraform-testacc-sagemaker-model-%s"
-	execution_role_arn = "${aws_iam_role.foo.arn}"
+func testAccSagemakerEndpointConfig_Tags_Update(rName string) string {
+	return testAccSagemakerEndpointConfig_Base(rName) + fmt.Sprintf(`
+resource "aws_sagemaker_endpoint" "test" {
+	name = %q
+	endpoint_config_name = "${aws_sagemaker_endpoint_configuration.test.name}"
 
-	primary_container {
-		image = "%s"
-	}
-}
-
-resource "aws_iam_role" "foo" {
-	name = "terraform-testacc-sagemaker-model-%s"
-	path = "/"
-	assume_role_policy = "${data.aws_iam_policy_document.assume_role.json}"
-}
-
-data "aws_iam_policy_document" "assume_role" {
-	statement {
-		actions = [ "sts:AssumeRole" ]
-		principals {
-			type = "Service"
-			identifiers = [ "sagemaker.amazonaws.com" ]
-		}
-	}
-}
-`, rName, rName, rName, image, rName)
-}
-
-func testAccSagemakerEndpointConfigTagsUpdate(rName string) string {
-	return fmt.Sprintf(`resource "aws_sagemaker_endpoint" "foo" {
-	name = "terraform-testacc-sagemaker-endpoint-%s"
-	endpoint_config_name = "${aws_sagemaker_endpoint_configuration.foo.name}"
-
-	tags {
+	tags = {
 		bar = "baz"
 	}
 }
-
-resource "aws_sagemaker_endpoint_configuration" "foo" {
-	name = "terraform-testacc-sagemaker-endpoint-config-%s"
-
-	production_variants {
-		variant_name = "variant-1"
-		model_name = "${aws_sagemaker_model.foo.name}"
-		initial_instance_count = 1
-		instance_type = "ml.t2.medium"
-		initial_variant_weight = 1
-	}
-}
-
-resource "aws_sagemaker_model" "foo" {
-	name = "terraform-testacc-sagemaker-model-%s"
-	execution_role_arn = "${aws_iam_role.foo.arn}"
-
-	primary_container {
-		image = "%s"
-	}
-}
-
-resource "aws_iam_role" "foo" {
-	name = "terraform-testacc-sagemaker-model-%s"
-	path = "/"
-	assume_role_policy = "${data.aws_iam_policy_document.assume_role.json}"
-}
-
-data "aws_iam_policy_document" "assume_role" {
-	statement {
-		actions = [ "sts:AssumeRole" ]
-		principals {
-			type = "Service"
-			identifiers = [ "sagemaker.amazonaws.com" ]
-		}
-	}
-}
-`, rName, rName, rName, image, rName)
+`, rName)
 }

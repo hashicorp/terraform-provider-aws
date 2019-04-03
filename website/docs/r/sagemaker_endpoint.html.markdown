@@ -1,14 +1,14 @@
 ---
 layout: "aws"
-page_title: "AWS: sagemaker_endpoint"
+page_title: "AWS: aws_sagemaker_endpoint"
 sidebar_current: "docs-aws-resource-sagemaker-endpoint"
 description: |-
-  Provides a Sagemaker endpoint resource.
+  Provides a SageMaker Endpoint resource.
 ---
 
-# aws\_sagemaker\_endpoint
+# aws_sagemaker_endpoint
 
-Provides a Sagemaker endpoint resource.
+Provides a SageMaker Endpoint resource.
 
 ## Example Usage
 
@@ -19,7 +19,7 @@ resource "aws_sagemaker_endpoint" "e" {
     name = "my-endpoint"
     configuration_name = "${aws_sagemaker_endpoint_configuration.ec.name}"
 
-    tags {
+    tags = {
       Name = "foo"
     }
 }
@@ -29,16 +29,16 @@ resource "aws_sagemaker_endpoint" "e" {
 
 The following arguments are supported:
 
-* `name` - (Optional) The name of the endpoint. If omitted, Terraform will assign a random, unique name.
 * `configuration_name` - (Required) The name of the endpoint configuration to use.
+* `name` - (Optional) The name of the endpoint. If omitted, Terraform will assign a random, unique name.
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 
 ## Attributes Reference
 
 The following attributes are exported:
 
-* `name` - The name of the endpoint.
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this endpoint.
+* `name` - The name of the endpoint.
 
 ## Import
 

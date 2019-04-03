@@ -31,7 +31,7 @@ func testSweepSagemakerEndpointConfigurations(region string) error {
 	conn := client.(*AWSClient).sagemakerconn
 
 	req := &sagemaker.ListEndpointConfigsInput{
-		NameContains: aws.String("terraform-testacc-sagemaker-endpoint-config"),
+		NameContains: aws.String("tf-acc-test"),
 	}
 	resp, err := conn.ListEndpointConfigs(req)
 	if err != nil {
@@ -250,7 +250,7 @@ func testAccCheckSagemakerEndpointConfigurationExists(n string) resource.TestChe
 	}
 }
 
-func testAccSagemakerEndpointConfig_Base(rName string) string {
+func testAccSagemakerEndpointConfigurationConfig_Base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sagemaker_model" "foo" {
 	name = %q
@@ -281,7 +281,7 @@ data "aws_iam_policy_document" "assume_role" {
 }
 
 func testAccSagemakerEndpointConfigurationConfig_Basic(rName string) string {
-	return testAccSagemakerEndpointConfig_Base(rName) + fmt.Sprintf(`
+	return testAccSagemakerEndpointConfigurationConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_endpoint_configuration" "foo" {
 	name = %q
 
@@ -297,7 +297,7 @@ resource "aws_sagemaker_endpoint_configuration" "foo" {
 }
 
 func testAccSagemakerEndpointConfigurationConfig_ProductionVariants_InitialVariantWeight(rName string) string {
-	return testAccSagemakerEndpointConfig_Base(rName) + fmt.Sprintf(`
+	return testAccSagemakerEndpointConfigurationConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_endpoint_configuration" "foo" {
 	name = %q
 
@@ -320,7 +320,7 @@ resource "aws_sagemaker_endpoint_configuration" "foo" {
 }
 
 func testAccSagemakerEndpointConfigurationConfig_ProductionVariant_AcceleratorType(rName string) string {
-	return testAccSagemakerEndpointConfig_Base(rName) + fmt.Sprintf(`
+	return testAccSagemakerEndpointConfigurationConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_endpoint_configuration" "foo" {
 	name = %q
 
@@ -337,7 +337,7 @@ resource "aws_sagemaker_endpoint_configuration" "foo" {
 }
 
 func testAccSagemakerEndpointConfiguration_Config_KmsKeyId(rName string) string {
-	return testAccSagemakerEndpointConfig_Base(rName) + fmt.Sprintf(`
+	return testAccSagemakerEndpointConfigurationConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_endpoint_configuration" "foo" {
 	name = %q
 	kms_key_arn = "${aws_kms_key.foo.arn}"
@@ -359,7 +359,7 @@ resource "aws_kms_key" "foo" {
 }
 
 func testAccSagemakerEndpointConfigurationConfig_Tags(rName string) string {
-	return testAccSagemakerEndpointConfig_Base(rName) + fmt.Sprintf(`
+	return testAccSagemakerEndpointConfigurationConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_endpoint_configuration" "foo" {
 	name = %q
 
@@ -379,7 +379,7 @@ resource "aws_sagemaker_endpoint_configuration" "foo" {
 }
 
 func testAccSagemakerEndpointConfigurationConfig_Tags_Update(rName string) string {
-	return testAccSagemakerEndpointConfig_Base(rName) + fmt.Sprintf(`
+	return testAccSagemakerEndpointConfigurationConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_endpoint_configuration" "foo" {
 	name = %q
 

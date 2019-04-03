@@ -3,10 +3,8 @@ package aws
 import (
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -66,26 +64,20 @@ func resourceAwsSagemakerEndpointCreate(d *schema.ResourceData, meta interface{}
 		createOpts.Tags = tagsFromMapSagemaker(v.(map[string]interface{}))
 	}
 
-	log.Printf("[DEBUG] SageMaker endpoint create config: %#v", *createOpts)
+	log.Printf("[DEBUG] SageMaker Endpoint create config: %#v", *createOpts)
 	_, err := conn.CreateEndpoint(createOpts)
 	if err != nil {
-		return fmt.Errorf("error creating SageMaker endpoint: %s", err)
+		return fmt.Errorf("error creating SageMaker Endpoint: %s", err)
 	}
 
 	d.SetId(name)
-	log.Printf("[INFO] SageMaker endpoint ID: %s", d.Id())
 
-	log.Printf("[DEBUG] Waiting for SageMaker endpoint (%s) to become available", d.Id())
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{"Creating"},
-		Target:  []string{"InService"},
-		Refresh: SagemakerEndpointStateRefreshFunc(conn, d.Id()),
-		Timeout: 15 * time.Minute,
+	describeInput := &sagemaker.DescribeEndpointInput{
+		EndpointName: aws.String(name),
 	}
-	if _, err := stateConf.WaitForState(); err != nil {
-		return fmt.Errorf(
-			"error while waiting for SageMaker endpoint (%s) to become available: %s",
-			d.Id(), err)
+
+	if err := conn.WaitUntilEndpointInService(describeInput); err != nil {
+		return fmt.Errorf("error waiting for SageMaker Endpoint (%s) to be in service: %s", name, err)
 	}
 
 	return resourceAwsSagemakerEndpointRead(d, meta)
@@ -94,21 +86,24 @@ func resourceAwsSagemakerEndpointCreate(d *schema.ResourceData, meta interface{}
 func resourceAwsSagemakerEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).sagemakerconn
 
-	endpointRaw, _, err := SagemakerEndpointStateRefreshFunc(conn, d.Id())()
+	describeInput := &sagemaker.DescribeEndpointInput{
+		EndpointName: aws.String(d.Id()),
+	}
+
+	endpoint, err := conn.DescribeEndpoint(describeInput)
 	if err != nil {
-		if sagemakerErr, ok := err.(awserr.Error); ok && sagemakerErr.Code() == "ValidationException" {
-			log.Printf("[INFO] unable to find the sagemaker endpoint resource and therefore it is removed from the state: %s", d.Id())
+		if isAWSErr(err, "ValidationException", "") {
+			log.Printf("[INFO] unable to find the SageMaker Endpoint resource and therefore it is removed from the state: %s", d.Id())
 			d.SetId("")
 			return nil
 		}
 		return err
 	}
-	if endpointRaw == nil {
+	if aws.StringValue(endpoint.EndpointStatus) == sagemaker.EndpointStatusDeleting {
+		log.Printf("[WARN] SageMaker Endpoint (%s) is deleting, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
-
-	endpoint := endpointRaw.(*sagemaker.DescribeEndpointOutput)
 
 	if err := d.Set("name", endpoint.EndpointName); err != nil {
 		return err
@@ -124,6 +119,10 @@ func resourceAwsSagemakerEndpointRead(d *schema.ResourceData, meta interface{}) 
 	tagsOutput, err := conn.ListTags(&sagemaker.ListTagsInput{
 		ResourceArn: endpoint.EndpointArn,
 	})
+	if err != nil {
+		return fmt.Errorf("error listing tags for SageMaker Endpoint (%s): %s", d.Id(), err)
+	}
+
 	if err := d.Set("tags", tagsToMapSagemaker(tagsOutput.Tags)); err != nil {
 		return err
 	}
@@ -141,30 +140,25 @@ func resourceAwsSagemakerEndpointUpdate(d *schema.ResourceData, meta interface{}
 	}
 	d.SetPartial("tags")
 
-	if d.HasChange("endpoint_config_name") && !d.IsNewResource() {
+	if d.HasChange("endpoint_config_name") {
 		modifyOpts := &sagemaker.UpdateEndpointInput{
 			EndpointName:       aws.String(d.Id()),
 			EndpointConfigName: aws.String(d.Get("endpoint_config_name").(string)),
 		}
-		log.Printf(
-			"[INFO] Modifying endpoint_config_name attribute for %s: %#v",
-			d.Id(), modifyOpts)
+
+		log.Printf("[INFO] Modifying endpoint_config_name attribute for %s: %#v", d.Id(), modifyOpts)
 		if _, err := conn.UpdateEndpoint(modifyOpts); err != nil {
-			return err
+			return fmt.Errorf("error updating SageMaker Endpoint (%s): %s", d.Id(), err)
 		}
 		d.SetPartial("endpoint_config_name")
 
-		log.Printf("[DEBUG] Waiting for SageMaker endpoint (%s) to be updated", d.Id())
-		stateConf := &resource.StateChangeConf{
-			Pending: []string{"Updating"},
-			Target:  []string{"InService"},
-			Refresh: SagemakerEndpointStateRefreshFunc(conn, d.Id()),
-			Timeout: 15 * time.Minute,
+		describeInput := &sagemaker.DescribeEndpointInput{
+			EndpointName: aws.String(d.Id()),
 		}
-		if _, err := stateConf.WaitForState(); err != nil {
-			return fmt.Errorf(
-				"error updating SageMaker endpoint (%s): %s",
-				d.Id(), err)
+
+		err := conn.WaitUntilEndpointInService(describeInput)
+		if err != nil {
+			return fmt.Errorf("error waiting for SageMaker Endpoint (%s) to be in service: %s", d.Id(), err)
 		}
 	}
 
@@ -179,46 +173,25 @@ func resourceAwsSagemakerEndpointDelete(d *schema.ResourceData, meta interface{}
 	deleteEndpointOpts := &sagemaker.DeleteEndpointInput{
 		EndpointName: aws.String(d.Id()),
 	}
-	log.Printf("[INFO] Deleting Sagemaker endpoint: %s", d.Id())
+	log.Printf("[INFO] Deleting SageMaker Endpoint: %s", d.Id())
 
-	return resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteEndpoint(deleteEndpointOpts)
-		if err == nil {
-			return nil
-		}
+	_, err := conn.DeleteEndpoint(deleteEndpointOpts)
 
-		sagemakerErr, ok := err.(awserr.Error)
-		if !ok {
-			return resource.NonRetryableError(err)
-		}
-
-		if sagemakerErr.Code() == "ResourceNotFound" {
-			return resource.RetryableError(err)
-		}
-
-		return resource.NonRetryableError(fmt.Errorf("Error deleting Sagemaker endpoint: %s", err))
-	})
-}
-
-func SagemakerEndpointStateRefreshFunc(conn *sagemaker.SageMaker, name string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		describeEndpointOpts := &sagemaker.DescribeEndpointInput{
-			EndpointName: aws.String(name),
-		}
-		endpoint, err := conn.DescribeEndpoint(describeEndpointOpts)
-		if err != nil {
-			if sagemakerErr, ok := err.(awserr.Error); ok && sagemakerErr.Code() == "ResourceNotFound" {
-				endpoint = nil
-			} else {
-				log.Printf("Error on SagemakerEndpointStateRefresh: %s", err)
-				return nil, "", err
-			}
-		}
-
-		if endpoint == nil {
-			return nil, "", nil
-		}
-
-		return endpoint, *endpoint.EndpointStatus, nil
+	if isAWSErr(err, "ValidationException", "") {
+		return nil
 	}
+
+	if err != nil {
+		return fmt.Errorf("error deleting SageMaker Endpoint (%s): %s", d.Id(), err)
+	}
+
+	describeInput := &sagemaker.DescribeEndpointInput{
+		EndpointName: aws.String(d.Id()),
+	}
+
+	if err := conn.WaitUntilEndpointDeleted(describeInput); err != nil {
+		return fmt.Errorf("error waiting for SageMaker Endpoint (%s) to be deleted: %s", d.Id(), err)
+	}
+
+	return nil
 }
