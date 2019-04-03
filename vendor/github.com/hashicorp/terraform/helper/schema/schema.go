@@ -52,6 +52,26 @@ type Schema struct {
 	//
 	Type ValueType
 
+	// ConfigMode allows for overriding the default behaviors for mapping
+	// schema entries onto configuration constructs.
+	//
+	// By default, the Elem field is used to choose whether a particular
+	// schema is represented in configuration as an attribute or as a nested
+	// block; if Elem is a *schema.Resource then it's a block and it's an
+	// attribute otherwise.
+	//
+	// If Elem is *schema.Resource then setting ConfigMode to
+	// SchemaConfigModeAttr will force it to be represented in configuration
+	// as an attribute, which means that the Computed flag can be used to
+	// provide default elements when the argument isn't set at all, while still
+	// allowing the user to force zero elements by explicitly assigning an
+	// empty list.
+	//
+	// When Computed is set without Optional, the attribute is not settable
+	// in configuration at all and so SchemaConfigModeAttr is the automatic
+	// behavior, and SchemaConfigModeBlock is not permitted.
+	ConfigMode SchemaConfigMode
+
 	// If one of these is set, then this item can come from the configuration.
 	// Both cannot be set. If Optional is set, the value is optional. If
 	// Required is set, the value is required.
@@ -142,13 +162,30 @@ type Schema struct {
 	// used to wrap a complex structure, however less than one instance would
 	// cause instability.
 	//
-	// PromoteSingle, if true, will allow single elements to be standalone
-	// and promote them to a list. For example "foo" would be promoted to
-	// ["foo"] automatically. This is primarily for legacy reasons and the
-	// ambiguity is not recommended for new usage. Promotion is only allowed
-	// for primitive element types.
-	MaxItems      int
-	MinItems      int
+	// If the field Optional is set to true then MinItems is ignored and thus
+	// effectively zero.
+	//
+	// If MaxItems is 1, you may optionally also set AsSingle in order to have
+	// Terraform v0.12 or later treat a TypeList or TypeSet as if it were a
+	// single value. It will remain a list or set in Terraform v0.10 and v0.11.
+	// Enabling this for an existing attribute after you've made at least one
+	// v0.12-compatible provider release is a breaking change. AsSingle is
+	// likely to misbehave when used with deeply-nested set structures due to
+	// the imprecision of set diffs, so be sure to test it thoroughly,
+	// including updates that change the set members at all levels. AsSingle
+	// exists primarily to be used in conjunction with ConfigMode when forcing
+	// a nested resource to be treated as an attribute, so it can be considered
+	// an attribute of object type rather than of list/set of object.
+	MaxItems int
+	MinItems int
+	AsSingle bool
+
+	// PromoteSingle originally allowed for a single element to be assigned
+	// where a primitive list was expected, but this no longer works from
+	// Terraform v0.12 onwards (Terraform Core will require a list to be set
+	// regardless of what this is set to) and so only applies to Terraform v0.11
+	// and earlier, and so should be used only to retain this functionality
+	// for those still using v0.11 with a provider that formerly used this.
 	PromoteSingle bool
 
 	// The following fields are only valid for a TypeSet type.
@@ -199,6 +236,17 @@ type Schema struct {
 	// values.
 	Sensitive bool
 }
+
+// SchemaConfigMode is used to influence how a schema item is mapped into a
+// corresponding configuration construct, using the ConfigMode field of
+// Schema.
+type SchemaConfigMode int
+
+const (
+	SchemaConfigModeAuto SchemaConfigMode = iota
+	SchemaConfigModeAttr
+	SchemaConfigModeBlock
+)
 
 // SchemaDiffSuppressFunc is a function which can be used to determine
 // whether a detected diff on a schema element is "valid" or not, and
@@ -612,6 +660,10 @@ func (m schemaMap) Validate(c *terraform.ResourceConfig) ([]string, []error) {
 // from a unit test (and not in user-path code) to verify that a schema
 // is properly built.
 func (m schemaMap) InternalValidate(topSchemaMap schemaMap) error {
+	return m.internalValidate(topSchemaMap, false)
+}
+
+func (m schemaMap) internalValidate(topSchemaMap schemaMap, attrsOnly bool) error {
 	if topSchemaMap == nil {
 		topSchemaMap = m
 	}
@@ -630,6 +682,32 @@ func (m schemaMap) InternalValidate(topSchemaMap schemaMap) error {
 
 		if !v.Required && !v.Optional && !v.Computed {
 			return fmt.Errorf("%s: One of optional, required, or computed must be set", k)
+		}
+
+		computedOnly := v.Computed && !v.Optional
+
+		switch v.ConfigMode {
+		case SchemaConfigModeBlock:
+			if _, ok := v.Elem.(*Resource); !ok {
+				return fmt.Errorf("%s: ConfigMode of block is allowed only when Elem is *schema.Resource", k)
+			}
+			if attrsOnly {
+				return fmt.Errorf("%s: ConfigMode of block cannot be used in child of schema with ConfigMode of attribute", k)
+			}
+			if computedOnly {
+				return fmt.Errorf("%s: ConfigMode of block cannot be used for computed schema", k)
+			}
+		case SchemaConfigModeAttr:
+			// anything goes
+		case SchemaConfigModeAuto:
+			// Since "Auto" for Elem: *Resource would create a nested block,
+			// and that's impossible inside an attribute, we require it to be
+			// explicitly overridden as mode "Attr" for clarity.
+			if _, ok := v.Elem.(*Resource); ok && attrsOnly {
+				return fmt.Errorf("%s: in *schema.Resource with ConfigMode of attribute, so must also have ConfigMode of attribute", k)
+			}
+		default:
+			return fmt.Errorf("%s: invalid ConfigMode value", k)
 		}
 
 		if v.Computed && v.Default != nil {
@@ -696,7 +774,9 @@ func (m schemaMap) InternalValidate(topSchemaMap schemaMap) error {
 
 			switch t := v.Elem.(type) {
 			case *Resource:
-				if err := t.InternalValidate(topSchemaMap, true); err != nil {
+				attrsOnly := attrsOnly || v.ConfigMode == SchemaConfigModeAttr
+
+				if err := schemaMap(t.Schema).internalValidate(topSchemaMap, attrsOnly); err != nil {
 					return err
 				}
 			case *Schema:
@@ -709,6 +789,15 @@ func (m schemaMap) InternalValidate(topSchemaMap schemaMap) error {
 		} else {
 			if v.MaxItems > 0 || v.MinItems > 0 {
 				return fmt.Errorf("%s: MaxItems and MinItems are only supported on lists or sets", k)
+			}
+		}
+
+		if v.AsSingle {
+			if v.MaxItems != 1 {
+				return fmt.Errorf("%s: MaxItems must be 1 when AsSingle is set", k)
+			}
+			if v.Type != TypeList && v.Type != TypeSet {
+				return fmt.Errorf("%s: AsSingle can be used only with TypeList and TypeSet schemas", k)
 			}
 		}
 
