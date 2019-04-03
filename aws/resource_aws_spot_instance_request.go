@@ -104,6 +104,13 @@ func resourceAwsSpotInstanceRequest() *schema.Resource {
 				ValidateFunc: validation.ValidateRFC3339TimeString,
 				Computed:     true,
 			}
+			s["wait_for_ready_timeout"] = &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "1m",
+				ValidateFunc: validateDuration,
+			}
+
 			return s
 		}(),
 	}
@@ -172,11 +179,16 @@ func resourceAwsSpotInstanceRequestCreate(d *schema.ResourceData, meta interface
 		spotOpts.LaunchSpecification.Placement = instanceOpts.SpotPlacement
 	}
 
+	waitForReadyTimeOut, err := time.ParseDuration(d.Get("wait_for_ready_timeout").(string))
+	if err != nil {
+		return err
+	}
+
 	// Make the spot instance request
 	log.Printf("[DEBUG] Requesting spot bid opts: %s", spotOpts)
 
 	var resp *ec2.RequestSpotInstancesOutput
-	err = resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err = resource.Retry(waitForReadyTimeOut, func() *resource.RetryError {
 		var err error
 		resp, err = conn.RequestSpotInstances(spotOpts)
 		// IAM instance profiles can take ~10 seconds to propagate in AWS:
