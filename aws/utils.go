@@ -60,7 +60,7 @@ func validateDuration(v interface{}, k string) (ws []string, errors []error) {
 	duration, err := time.ParseDuration(value)
 	if err != nil {
 		errors = append(errors, fmt.Errorf(
-		"%q cannot be parsed as a duration: %s", k, err))
+			"%q cannot be parsed as a duration: %s", k, err))
 	}
 	if duration < 0 {
 		errors = append(errors, fmt.Errorf(

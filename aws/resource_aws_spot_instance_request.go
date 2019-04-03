@@ -105,9 +105,9 @@ func resourceAwsSpotInstanceRequest() *schema.Resource {
 				Computed:     true,
 			}
 			s["wait_for_ready_timeout"] = &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "1m",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "1m",
 				ValidateFunc: validateDuration,
 			}
 

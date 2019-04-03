@@ -74,22 +74,22 @@ func TestJsonBytesEqualWhitespaceAndNoWhitespace(t *testing.T) {
 }
 
 func TestValidateDuration(t *testing.T) {
-	for _, test := range []struct{
+	for _, test := range []struct {
 		duration string
-		valid bool
-	} {
-		{ "5s", true, },
-		{ "4m", true, },
-		{ "1h5m10s", true, },
-		{ "1", false, },
-		{ "bad", false, },
+		valid    bool
+	}{
+		{"5s", true},
+		{"4m", true},
+		{"1h5m10s", true},
+		{"1", false},
+		{"bad", false},
 	} {
 		t.Run(test.duration, func(t *testing.T) {
 			_, errors := validateDuration(test.duration, test.duration)
 			if test.valid && len(errors) > 0 {
 				t.Errorf("no validation errors should be returned for %s, got: %q", test.duration, errors)
 			}
-			if ! test.valid && len(errors) == 0 {
+			if !test.valid && len(errors) == 0 {
 				t.Errorf("expected validation errors, but did not get any for %s", test.duration)
 			}
 		})
