@@ -444,23 +444,23 @@ When executing the test, the following steps are taken for each `TestStep`:
    may have. For example, to test the `aws_cloudwatch_dashboard` resource, a valid configuration with the requisite fields is required. This results in configuration which looks like this:
 
     ```hcl
-  resource "aws_cloudwatch_dashboard" "foobar" {
-    dashboard_name = "terraform-test-dashboard-%d"
-    dashboard_body = <<EOF
-    {
-      "widgets": [{
-        "type": "text",
-        "x": 0,
-        "y": 0,
-        "width": 6,
-        "height": 6,
-        "properties": {
-          "markdown": "Hi there from Terraform: CloudWatch"
-        }
-      }]
+    resource "aws_cloudwatch_dashboard" "foobar" {
+      dashboard_name = "terraform-test-dashboard-%d"
+      dashboard_body = <<EOF
+      {
+        "widgets": [{
+          "type": "text",
+          "x": 0,
+          "y": 0,
+          "width": 6,
+          "height": 6,
+          "properties": {
+            "markdown": "Hi there from Terraform: CloudWatch"
+          }
+        }]
+      }
+      EOF
     }
-    EOF
-  }
     ```
 
 1. Assertions are run using the provider API. These use the provider API
