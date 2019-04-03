@@ -83,7 +83,7 @@ resource "aws_autoscaling_group" "bar" {
 
   launch_template {
     id      = "${aws_launch_template.foobar.id}"
-    version = "$$Latest"
+    version = "$Latest"
   }
 }
 ```
