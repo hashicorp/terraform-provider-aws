@@ -140,6 +140,40 @@ func TestAccAWSVpc_disappears(t *testing.T) {
 	})
 }
 
+func TestAccAWSVpc_AssignGeneratedIpv6CidrBlockFromFalse(t *testing.T) {
+	acl := `
+resource "aws_network_acl" "test" {
+  vpc_id = "${aws_vpc.test.id}"
+}
+`
+	rule := `
+resource "aws_network_acl_rule" "egress_internal_ipv6" { # allow internal traffic
+  network_acl_id = "${aws_network_acl.test.id}"
+  egress = true
+  rule_number = 2
+  rule_action = "allow"
+  protocol = "-1"
+  from_port = 0
+  to_port = 0
+  ipv6_cidr_block = "${aws_vpc.test.ipv6_cidr_block}"
+}
+`
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckVpcDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpcConfigAssignGeneratedIpv6CidrBlock(false) + acl,
+			},
+			{
+				Config: testAccVpcConfigAssignGeneratedIpv6CidrBlock(true) + acl + rule,
+			},
+		},
+	})
+}
+
 func TestAccAWSVpc_AssignGeneratedIpv6CidrBlock(t *testing.T) {
 	var vpc ec2.Vpc
 	resourceName := "aws_vpc.test"

@@ -508,6 +508,11 @@ func resourceAwsVpcCustomizeDiff(diff *schema.ResourceDiff, v interface{}) error
 		}
 	}
 
+	if diff.HasChange("assign_generated_ipv6_cidr_block") {
+		diff.SetNewComputed("ipv6_cidr_block")
+		diff.SetNewComputed("ipv6_association_id")
+	}
+
 	return nil
 }
 
