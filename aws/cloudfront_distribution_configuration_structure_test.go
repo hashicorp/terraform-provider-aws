@@ -57,8 +57,8 @@ func forwardedValuesConf() map[string]interface{} {
 	}
 }
 
-func headersConf() []interface{} {
-	return []interface{}{"X-Example1", "X-Example2"}
+func headersConf() *schema.Set {
+	return schema.NewSet(schema.HashString, []interface{}{"X-Example1", "X-Example2"})
 }
 
 func queryStringCacheKeysConf() []interface{} {
@@ -72,8 +72,8 @@ func cookiePreferenceConf() map[string]interface{} {
 	}
 }
 
-func cookieNamesConf() []interface{} {
-	return []interface{}{"Example1", "Example2"}
+func cookieNamesConf() *schema.Set {
+	return schema.NewSet(schema.HashString, []interface{}{"Example1", "Example2"})
 }
 
 func allowedMethodsConf() *schema.Set {
@@ -280,7 +280,7 @@ func TestCloudFrontStructure_expandCloudFrontDefaultCacheBehavior(t *testing.T) 
 	if *dcb.TargetOriginId != "myS3Origin" {
 		t.Fatalf("Expected TargetOriginId to be allow-all, got %v", *dcb.TargetOriginId)
 	}
-	if !reflect.DeepEqual(dcb.ForwardedValues.Headers.Items, expandStringList(headersConf())) {
+	if !reflect.DeepEqual(dcb.ForwardedValues.Headers.Items, expandStringSet(headersConf())) {
 		t.Fatalf("Expected Items to be %v, got %v", headersConf(), dcb.ForwardedValues.Headers.Items)
 	}
 	if *dcb.MinTTL != 0 {
@@ -394,10 +394,10 @@ func TestCloudFrontStructure_expandForwardedValues(t *testing.T) {
 	if !*fv.QueryString {
 		t.Fatalf("Expected QueryString to be true, got %v", *fv.QueryString)
 	}
-	if !reflect.DeepEqual(fv.Cookies.WhitelistedNames.Items, expandStringList(cookieNamesConf())) {
+	if !reflect.DeepEqual(fv.Cookies.WhitelistedNames.Items, expandStringSet(cookieNamesConf())) {
 		t.Fatalf("Expected Cookies.WhitelistedNames.Items to be %v, got %v", cookieNamesConf(), fv.Cookies.WhitelistedNames.Items)
 	}
-	if !reflect.DeepEqual(fv.Headers.Items, expandStringList(headersConf())) {
+	if !reflect.DeepEqual(fv.Headers.Items, expandStringSet(headersConf())) {
 		t.Fatalf("Expected Headers.Items to be %v, got %v", headersConf(), fv.Headers.Items)
 	}
 }
@@ -410,31 +410,25 @@ func TestCloudFrontStructure_flattenForwardedValues(t *testing.T) {
 	if !out["query_string"].(bool) {
 		t.Fatalf("Expected out[query_string] to be true, got %v", out["query_string"])
 	}
-	if !reflect.DeepEqual(out["cookies"], in["cookies"]) {
-		t.Fatalf("Expected out[cookies] to be %v, got %v", in["cookies"], out["cookies"])
-	}
-	if !reflect.DeepEqual(out["headers"], in["headers"]) {
-		t.Fatalf("Expected out[headers] to be %v, got %v", in["headers"], out["headers"])
-	}
 }
 
 func TestCloudFrontStructure_expandHeaders(t *testing.T) {
 	data := headersConf()
-	h := expandHeaders(data)
+	h := expandHeaders(data.List())
 	if *h.Quantity != 2 {
 		t.Fatalf("Expected Quantity to be 2, got %v", *h.Quantity)
 	}
-	if !reflect.DeepEqual(h.Items, expandStringList(data)) {
+	if !reflect.DeepEqual(h.Items, expandStringSet(data)) {
 		t.Fatalf("Expected Items to be %v, got %v", data, h.Items)
 	}
 }
 
 func TestCloudFrontStructure_flattenHeaders(t *testing.T) {
 	in := headersConf()
-	h := expandHeaders(in)
-	out := flattenHeaders(h)
+	h := expandHeaders(in.List())
+	out := schema.NewSet(schema.HashString, flattenHeaders(h))
 
-	if !reflect.DeepEqual(in, out) {
+	if !in.Equal(out) {
 		t.Fatalf("Expected out to be %v, got %v", in, out)
 	}
 }
@@ -466,7 +460,7 @@ func TestCloudFrontStructure_expandCookiePreference(t *testing.T) {
 	if *cp.Forward != "whitelist" {
 		t.Fatalf("Expected Forward to be whitelist, got %v", *cp.Forward)
 	}
-	if !reflect.DeepEqual(cp.WhitelistedNames.Items, expandStringList(cookieNamesConf())) {
+	if !reflect.DeepEqual(cp.WhitelistedNames.Items, expandStringSet(cookieNamesConf())) {
 		t.Fatalf("Expected WhitelistedNames.Items to be %v, got %v", cookieNamesConf(), cp.WhitelistedNames.Items)
 	}
 }
@@ -476,28 +470,28 @@ func TestCloudFrontStructure_flattenCookiePreference(t *testing.T) {
 	cp := expandCookiePreference(in)
 	out := flattenCookiePreference(cp)
 
-	if !reflect.DeepEqual(in, out) {
-		t.Fatalf("Expected out to be %v, got %v", in, out)
+	if e, a := in["forward"], out["forward"]; e != a {
+		t.Fatalf("Expected forward to be %v, got %v", e, a)
 	}
 }
 
 func TestCloudFrontStructure_expandCookieNames(t *testing.T) {
 	data := cookieNamesConf()
-	cn := expandCookieNames(data)
+	cn := expandCookieNames(data.List())
 	if *cn.Quantity != 2 {
 		t.Fatalf("Expected Quantity to be 2, got %v", *cn.Quantity)
 	}
-	if !reflect.DeepEqual(cn.Items, expandStringList(data)) {
+	if !reflect.DeepEqual(cn.Items, expandStringSet(data)) {
 		t.Fatalf("Expected Items to be %v, got %v", data, cn.Items)
 	}
 }
 
 func TestCloudFrontStructure_flattenCookieNames(t *testing.T) {
 	in := cookieNamesConf()
-	cn := expandCookieNames(in)
-	out := flattenCookieNames(cn)
+	cn := expandCookieNames(in.List())
+	out := schema.NewSet(schema.HashString, flattenCookieNames(cn))
 
-	if !reflect.DeepEqual(in, out) {
+	if !in.Equal(out) {
 		t.Fatalf("Expected out to be %v, got %v", in, out)
 	}
 }
