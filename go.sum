@@ -35,8 +35,8 @@ github.com/armon/go-radix v0.0.0-20160115234725-4239b77079c7/go.mod h1:ufUuZ+zHj
 github.com/armon/go-radix v1.0.0 h1:F4z6KzEeeQIMeLFa97iZU6vupzoecKdU5TX24SNppXI=
 github.com/armon/go-radix v1.0.0/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
 github.com/aws/aws-sdk-go v1.16.36/go.mod h1:KmX6BPdI08NWTb3/sm4ZGu5ShLoqVDhKgpiN924inxo=
-github.com/aws/aws-sdk-go v1.19.6 h1:q0NfR7x3yEWqKp2f5LWtm1ZqdXuA2WKnXRWUy17tiVc=
-github.com/aws/aws-sdk-go v1.19.6/go.mod h1:KmX6BPdI08NWTb3/sm4ZGu5ShLoqVDhKgpiN924inxo=
+github.com/aws/aws-sdk-go v1.19.10 h1:WHIaUrU98WsWIXxlxeMCmbuB5HowxuUnk8eBH4iGl/g=
+github.com/aws/aws-sdk-go v1.19.10/go.mod h1:KmX6BPdI08NWTb3/sm4ZGu5ShLoqVDhKgpiN924inxo=
 github.com/beevik/etree v1.0.1 h1:lWzdj5v/Pj1X360EV7bUudox5SRipy4qZLjY0rhb0ck=
 github.com/beevik/etree v1.0.1/go.mod h1:r8Aw8JqVegEf0w2fDnATrX9VpkMcyFeM0FhwO62wh+A=
 github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973/go.mod h1:Dwedo/Wpr24TaqPxmxbtue+5NUziq4I4S80YR8gNf3Q=

@@ -59,11 +59,8 @@ func (c *EKS) CreateClusterRequest(input *CreateClusterInput) (req *request.Requ
 // The Amazon EKS control plane consists of control plane instances that run
 // the Kubernetes software, like etcd and the API server. The control plane
 // runs in an account managed by AWS, and the Kubernetes API is exposed via
-// the Amazon EKS API server endpoint.
-//
-// Amazon EKS worker nodes run in your AWS account and connect to your cluster's
-// control plane via the Kubernetes API server endpoint and a certificate file
-// that is created for your cluster.
+// the Amazon EKS API server endpoint. Each Amazon EKS cluster control plane
+// is single-tenant and unique, and runs on its own set of Amazon EC2 instances.
 //
 // The cluster control plane is provisioned across multiple Availability Zones
 // and fronted by an Elastic Load Balancing Network Load Balancer. Amazon EKS
@@ -71,11 +68,33 @@ func (c *EKS) CreateClusterRequest(input *CreateClusterInput) (req *request.Requ
 // connectivity from the control plane instances to the worker nodes (for example,
 // to support kubectl exec, logs, and proxy data flows).
 //
-// After you create an Amazon EKS cluster, you must configure your Kubernetes
-// tooling to communicate with the API server and launch worker nodes into your
-// cluster. For more information, see Managing Cluster Authentication (https://docs.aws.amazon.com/eks/latest/userguide/managing-auth.html)
-// and Launching Amazon EKS Worker Nodes (https://docs.aws.amazon.com/eks/latest/userguide/launch-workers.html)in
-// the Amazon EKS User Guide.
+// Amazon EKS worker nodes run in your AWS account and connect to your cluster's
+// control plane via the Kubernetes API server endpoint and a certificate file
+// that is created for your cluster.
+//
+// You can use the endpointPublicAccess and endpointPrivateAccess parameters
+// to enable or disable public and private access to your cluster's Kubernetes
+// API server endpoint. By default, public access is enabled and private access
+// is disabled. For more information, see Amazon EKS Cluster Endpoint Access
+// Control (https://docs.aws.amazon.com/eks/latest/userguide/cluster-endpoint.html)
+// in the Amazon EKS User Guide.
+//
+// You can use the logging parameter to enable or disable exporting the Kubernetes
+// control plane logs for your cluster to CloudWatch Logs. By default, cluster
+// control plane logs are not exported to CloudWatch Logs. For more information,
+// see Amazon EKS Cluster Control Plane Logs (https://docs.aws.amazon.com/eks/latest/userguide/control-plane-logs.html)
+// in the Amazon EKS User Guide.
+//
+// CloudWatch Logs ingestion, archive storage, and data scanning rates apply
+// to exported control plane logs. For more information, see Amazon CloudWatch
+// Pricing (http://aws.amazon.com/cloudwatch/pricing/).
+//
+// Cluster creation typically takes between 10 and 15 minutes. After you create
+// an Amazon EKS cluster, you must configure your Kubernetes tooling to communicate
+// with the API server and launch worker nodes into your cluster. For more information,
+// see Managing Cluster Authentication (https://docs.aws.amazon.com/eks/latest/userguide/managing-auth.html)
+// and Launching Amazon EKS Worker Nodes (https://docs.aws.amazon.com/eks/latest/userguide/launch-workers.html)
+// in the Amazon EKS User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -663,10 +682,21 @@ func (c *EKS) UpdateClusterConfigRequest(input *UpdateClusterConfigInput) (req *
 // use to track the status of your cluster update with the DescribeUpdate API
 // operation.
 //
-// Currently, the only cluster configuration changes supported are to enable
-// or disable Amazon EKS public and private API server endpoints. For more information,
-// see Amazon EKS Cluster Endpoint Access Control (https://docs.aws.amazon.com/eks/latest/userguide/cluster-endpoint.html)
+// You can use this API operation to enable or disable public and private access
+// to your cluster's Kubernetes API server endpoint. By default, public access
+// is enabled and private access is disabled. For more information, see Amazon
+// EKS Cluster Endpoint Access Control (https://docs.aws.amazon.com/eks/latest/userguide/cluster-endpoint.html)
 // in the Amazon EKS User Guide.
+//
+// You can also use this API operation to enable or disable exporting the Kubernetes
+// control plane logs for your cluster to CloudWatch Logs. By default, cluster
+// control plane logs are not exported to CloudWatch Logs. For more information,
+// see Amazon EKS Cluster Control Plane Logs (https://docs.aws.amazon.com/eks/latest/userguide/control-plane-logs.html)
+// in the Amazon EKS User Guide.
+//
+// CloudWatch Logs ingestion, archive storage, and data scanning rates apply
+// to exported control plane logs. For more information, see Amazon CloudWatch
+// Pricing (http://aws.amazon.com/cloudwatch/pricing/).
 //
 // Cluster updates are asynchronous, and they should finish within a few minutes.
 // During an update, the cluster status moves to UPDATING (this status transition
@@ -879,6 +909,9 @@ type Cluster struct {
 	// The endpoint for your Kubernetes API server.
 	Endpoint *string `locationName:"endpoint" type:"string"`
 
+	// The logging configuration for your cluster.
+	Logging *Logging `locationName:"logging" type:"structure"`
+
 	// The name of the cluster.
 	Name *string `locationName:"name" type:"string"`
 
@@ -946,6 +979,12 @@ func (s *Cluster) SetEndpoint(v string) *Cluster {
 	return s
 }
 
+// SetLogging sets the Logging field's value.
+func (s *Cluster) SetLogging(v *Logging) *Cluster {
+	s.Logging = v
+	return s
+}
+
 // SetName sets the Name field's value.
 func (s *Cluster) SetName(v string) *Cluster {
 	s.Name = &v
@@ -988,6 +1027,17 @@ type CreateClusterInput struct {
 	// Unique, case-sensitive identifier that you provide to ensure the idempotency
 	// of the request.
 	ClientRequestToken *string `locationName:"clientRequestToken" type:"string" idempotencyToken:"true"`
+
+	// Enable or disable exporting the Kubernetes control plane logs for your cluster
+	// to CloudWatch Logs. By default, cluster control plane logs are not exported
+	// to CloudWatch Logs. For more information, see Amazon EKS Cluster Control
+	// Plane Logs (https://docs.aws.amazon.com/eks/latest/userguide/control-plane-logs.html)
+	// in the Amazon EKS User Guide.
+	//
+	// CloudWatch Logs ingestion, archive storage, and data scanning rates apply
+	// to exported control plane logs. For more information, see Amazon CloudWatch
+	// Pricing (http://aws.amazon.com/cloudwatch/pricing/).
+	Logging *Logging `locationName:"logging" type:"structure"`
 
 	// The unique name to give to your cluster.
 	//
@@ -1053,6 +1103,12 @@ func (s *CreateClusterInput) Validate() error {
 // SetClientRequestToken sets the ClientRequestToken field's value.
 func (s *CreateClusterInput) SetClientRequestToken(v string) *CreateClusterInput {
 	s.ClientRequestToken = &v
+	return s
+}
+
+// SetLogging sets the Logging field's value.
+func (s *CreateClusterInput) SetLogging(v *Logging) *CreateClusterInput {
+	s.Logging = v
 	return s
 }
 
@@ -1571,6 +1627,67 @@ func (s *ListUpdatesOutput) SetUpdateIds(v []*string) *ListUpdatesOutput {
 	return s
 }
 
+// An object representing the enabled or disabled Kubernetes control plane logs
+// for your cluster.
+type LogSetup struct {
+	_ struct{} `type:"structure"`
+
+	// If a log type is enabled, then that log type exports its control plane logs
+	// to CloudWatch Logs. If a log type is not enabled, then that log type does
+	// not export its control plane logs. Each individual log type can be enabled
+	// or disabled independently.
+	Enabled *bool `locationName:"enabled" type:"boolean"`
+
+	// The available cluster control plane log types.
+	Types []*string `locationName:"types" type:"list"`
+}
+
+// String returns the string representation
+func (s LogSetup) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LogSetup) GoString() string {
+	return s.String()
+}
+
+// SetEnabled sets the Enabled field's value.
+func (s *LogSetup) SetEnabled(v bool) *LogSetup {
+	s.Enabled = &v
+	return s
+}
+
+// SetTypes sets the Types field's value.
+func (s *LogSetup) SetTypes(v []*string) *LogSetup {
+	s.Types = v
+	return s
+}
+
+// An object representing the logging configuration for resources in your cluster.
+type Logging struct {
+	_ struct{} `type:"structure"`
+
+	// The cluster control plane logging configuration for your cluster.
+	ClusterLogging []*LogSetup `locationName:"clusterLogging" type:"list"`
+}
+
+// String returns the string representation
+func (s Logging) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Logging) GoString() string {
+	return s.String()
+}
+
+// SetClusterLogging sets the ClusterLogging field's value.
+func (s *Logging) SetClusterLogging(v []*LogSetup) *Logging {
+	s.ClusterLogging = v
+	return s
+}
+
 // An object representing an asynchronous update.
 type Update struct {
 	_ struct{} `type:"structure"`
@@ -1647,12 +1764,23 @@ type UpdateClusterConfigInput struct {
 	// of the request.
 	ClientRequestToken *string `locationName:"clientRequestToken" type:"string" idempotencyToken:"true"`
 
+	// Enable or disable exporting the Kubernetes control plane logs for your cluster
+	// to CloudWatch Logs. By default, cluster control plane logs are not exported
+	// to CloudWatch Logs. For more information, see Amazon EKS Cluster Control
+	// Plane Logs (https://docs.aws.amazon.com/eks/latest/userguide/control-plane-logs.html)
+	// in the Amazon EKS User Guide.
+	//
+	// CloudWatch Logs ingestion, archive storage, and data scanning rates apply
+	// to exported control plane logs. For more information, see Amazon CloudWatch
+	// Pricing (http://aws.amazon.com/cloudwatch/pricing/).
+	Logging *Logging `locationName:"logging" type:"structure"`
+
 	// The name of the Amazon EKS cluster to update.
 	//
 	// Name is a required field
 	Name *string `location:"uri" locationName:"name" type:"string" required:"true"`
 
-	// An object representing an Amazon EKS cluster VPC configuration request.
+	// An object representing the VPC configuration to use for an Amazon EKS cluster.
 	ResourcesVpcConfig *VpcConfigRequest `locationName:"resourcesVpcConfig" type:"structure"`
 }
 
@@ -1685,6 +1813,12 @@ func (s *UpdateClusterConfigInput) Validate() error {
 // SetClientRequestToken sets the ClientRequestToken field's value.
 func (s *UpdateClusterConfigInput) SetClientRequestToken(v string) *UpdateClusterConfigInput {
 	s.ClientRequestToken = &v
+	return s
+}
+
+// SetLogging sets the Logging field's value.
+func (s *UpdateClusterConfigInput) SetLogging(v *Logging) *UpdateClusterConfigInput {
+	s.Logging = v
 	return s
 }
 
@@ -1844,7 +1978,7 @@ func (s *UpdateParam) SetValue(v string) *UpdateParam {
 	return s
 }
 
-// An object representing an Amazon EKS cluster VPC configuration request.
+// An object representing the VPC configuration to use for an Amazon EKS cluster.
 type VpcConfigRequest struct {
 	_ struct{} `type:"structure"`
 
@@ -2021,6 +2155,23 @@ const (
 )
 
 const (
+	// LogTypeApi is a LogType enum value
+	LogTypeApi = "api"
+
+	// LogTypeAudit is a LogType enum value
+	LogTypeAudit = "audit"
+
+	// LogTypeAuthenticator is a LogType enum value
+	LogTypeAuthenticator = "authenticator"
+
+	// LogTypeControllerManager is a LogType enum value
+	LogTypeControllerManager = "controllerManager"
+
+	// LogTypeScheduler is a LogType enum value
+	LogTypeScheduler = "scheduler"
+)
+
+const (
 	// UpdateParamTypeVersion is a UpdateParamType enum value
 	UpdateParamTypeVersion = "Version"
 
@@ -2032,6 +2183,9 @@ const (
 
 	// UpdateParamTypeEndpointPublicAccess is a UpdateParamType enum value
 	UpdateParamTypeEndpointPublicAccess = "EndpointPublicAccess"
+
+	// UpdateParamTypeClusterLogging is a UpdateParamType enum value
+	UpdateParamTypeClusterLogging = "ClusterLogging"
 )
 
 const (
@@ -2054,4 +2208,7 @@ const (
 
 	// UpdateTypeEndpointAccessUpdate is a UpdateType enum value
 	UpdateTypeEndpointAccessUpdate = "EndpointAccessUpdate"
+
+	// UpdateTypeLoggingUpdate is a UpdateType enum value
+	UpdateTypeLoggingUpdate = "LoggingUpdate"
 )
