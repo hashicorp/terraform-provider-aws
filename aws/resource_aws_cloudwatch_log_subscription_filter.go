@@ -198,7 +198,7 @@ func resourceAwsCloudwatchLogSubscriptionFilterDelete(d *schema.ResourceData, me
 func resourceAwsCloudwatchLogSubscriptionFilterImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	idParts := strings.Split(d.Id(), "|")
 	if len(idParts) < 2 {
-		return nil, fmt.Errorf("unexpected format of ID (%q), expected <log-group-name>/<filter-name-prefix>", d.Id())
+		return nil, fmt.Errorf("unexpected format of ID (%q), expected <log-group-name>|<filter-name>", d.Id())
 	}
 
 	logGroupName := idParts[0]
