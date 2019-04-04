@@ -13,6 +13,10 @@ ENHANCEMENTS:
 * resource/aws_cloudfront_distribution: Add `wait_for_deployment` argument [GH-8116]
 * resource/aws_lb_target_group: Add `enabled` argument to target group health checks [GH-7570]  
 
+BUG FIXES:
+
+* resource/aws_cloudfront_distribution: Ignore attribute ordering of cache behavior forwarded values `headers` and cookies `whitelisted_names` arguments [GH-8150]
+
 ## 2.4.0 (March 29, 2019)
 
 NOTES:
