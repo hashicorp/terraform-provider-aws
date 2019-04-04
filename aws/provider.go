@@ -325,6 +325,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_autoscaling_policy":                           resourceAwsAutoscalingPolicy(),
 			"aws_autoscaling_schedule":                         resourceAwsAutoscalingSchedule(),
 			"aws_backup_plan":                                  resourceAwsBackupPlan(),
+			"aws_backup_selection":                             resourceAwsBackupSelection(),
 			"aws_backup_vault":                                 resourceAwsBackupVault(),
 			"aws_budgets_budget":                               resourceAwsBudgetsBudget(),
 			"aws_cloud9_environment_ec2":                       resourceAwsCloud9EnvironmentEc2(),
