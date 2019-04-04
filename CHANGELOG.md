@@ -12,6 +12,7 @@ ENHANCEMENTS:
 * resource/aws_budgets_budget: Add `notification` configuration block (support notifications) [GH-4523]
 * resource/aws_cloudfront_distribution: Add `wait_for_deployment` argument [GH-8116]
 * resource/aws_cloudwatch_log_subscription_filter: Support resource import [GH-8147]
+* resource/aws_cloudwatch_metric_alarm: Add `tags` argument [GH-8168]
 * resource/aws_ecr_repository: Tag on creation (support tag limiting IAM policies) [GH-8198]
 * resource/aws_lb_target_group: Add `enabled` argument to target group health checks [GH-7570]  
 
