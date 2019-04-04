@@ -156,6 +156,10 @@ func testAccBackupSelectionConfigBase(rInt int) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
+data "aws_partition" "current" {}
+
+data "aws_region" "current" {}
+
 resource "aws_backup_vault" "test" {
   name = "tf_acc_test_backup_vault_%d"
 }
@@ -178,7 +182,7 @@ resource "aws_backup_selection" "test" {
   plan_id      = "${aws_backup_plan.test.id}"
 
   name         = "tf_acc_test_backup_selection_%d"
-  iam_role_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/service-role/AWSBackupDefaultServiceRole"
+  iam_role_arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/service-role/AWSBackupDefaultServiceRole"
 
   selection_tag {
     type = "STRINGEQUALS"
@@ -187,7 +191,7 @@ resource "aws_backup_selection" "test" {
   }
 
   resources = [
-    "arn:aws:ec2:us-east-1:${data.aws_caller_identity.current.account_id}:volume/"
+    "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:volume/"
   ]
 }
 `, rInt)
@@ -199,7 +203,7 @@ resource "aws_backup_selection" "test" {
   plan_id      = "${aws_backup_plan.test.id}"
 
   name         = "tf_acc_test_backup_selection_%d"
-  iam_role_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/service-role/AWSBackupDefaultServiceRole"
+  iam_role_arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/service-role/AWSBackupDefaultServiceRole"
 
   selection_tag {
     type = "STRINGEQUALS"
@@ -214,7 +218,7 @@ resource "aws_backup_selection" "test" {
   }
 
   resources = [
-    "arn:aws:ec2:us-east-1:${data.aws_caller_identity.current.account_id}:volume/"
+    "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:volume/"
   ]
 }
 `, rInt)
@@ -226,7 +230,7 @@ resource "aws_backup_selection" "test" {
   plan_id      = "${aws_backup_plan.test.id}"
 
   name         = "tf_acc_test_backup_selection_%d"
-  iam_role_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/service-role/AWSBackupDefaultServiceRole"
+  iam_role_arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/service-role/AWSBackupDefaultServiceRole"
 
   selection_tag {
     type = "STRINGEQUALS"
@@ -235,8 +239,8 @@ resource "aws_backup_selection" "test" {
   }
 
   resources = [
-    "arn:aws:elasticfilesystem:us-east-1:${data.aws_caller_identity.current.account_id}:file-system/",
-    "arn:aws:ec2:us-east-1:${data.aws_caller_identity.current.account_id}:volume/"
+    "arn:${data.aws_partition.current.partition}:elasticfilesystem:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:file-system/",
+    "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:volume/"
   ]
 }
 `, rInt)

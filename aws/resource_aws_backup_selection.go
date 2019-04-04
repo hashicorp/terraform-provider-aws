@@ -63,7 +63,7 @@ func resourceAwsBackupSelection() *schema.Resource {
 				},
 			},
 			"resources": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -78,7 +78,7 @@ func resourceAwsBackupSelectionCreate(d *schema.ResourceData, meta interface{}) 
 	selection := &backup.Selection{
 		IamRoleArn:    aws.String(d.Get("iam_role_arn").(string)),
 		ListOfTags:    expandBackupConditionTags(d.Get("selection_tag").(*schema.Set).List()),
-		Resources:     expandStringList(d.Get("resources").([]interface{})),
+		Resources:     expandStringSet(d.Get("resources").(*schema.Set)),
 		SelectionName: aws.String(d.Get("name").(string)),
 	}
 
