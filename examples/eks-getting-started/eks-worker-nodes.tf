@@ -8,7 +8,7 @@
 #
 
 resource "aws_iam_role" "demo-node" {
-  name = "terraform-eks-demo-node"
+  name = "${var.cluster-name}-node"
 
   assume_role_policy = <<POLICY
 {
@@ -42,12 +42,12 @@ resource "aws_iam_role_policy_attachment" "demo-node-AmazonEC2ContainerRegistryR
 }
 
 resource "aws_iam_instance_profile" "demo-node" {
-  name = "terraform-eks-demo"
+  name = "${var.cluster-name}"
   role = "${aws_iam_role.demo-node.name}"
 }
 
 resource "aws_security_group" "demo-node" {
-  name        = "terraform-eks-demo-node"
+  name        = "${var.cluster-name}-node"
   description = "Security group for all nodes in the cluster"
   vpc_id      = "${aws_vpc.demo.id}"
 
@@ -60,7 +60,7 @@ resource "aws_security_group" "demo-node" {
 
   tags = "${
     map(
-     "Name", "terraform-eks-demo-node",
+     "Name", "${var.cluster-name}-node",
      "kubernetes.io/cluster/${var.cluster-name}", "owned",
     )
   }"
@@ -114,7 +114,7 @@ resource "aws_launch_configuration" "demo" {
   iam_instance_profile        = "${aws_iam_instance_profile.demo-node.name}"
   image_id                    = "${data.aws_ami.eks-worker.id}"
   instance_type               = "m4.large"
-  name_prefix                 = "terraform-eks-demo"
+  name_prefix                 = "${var.cluster-name}"
   security_groups             = ["${aws_security_group.demo-node.id}"]
   user_data_base64            = "${base64encode(local.demo-node-userdata)}"
 
@@ -124,16 +124,16 @@ resource "aws_launch_configuration" "demo" {
 }
 
 resource "aws_autoscaling_group" "demo" {
-  desired_capacity     = 2
+  desired_capacity     = "${var.desired-workers}"
   launch_configuration = "${aws_launch_configuration.demo.id}"
-  max_size             = 2
-  min_size             = 1
-  name                 = "terraform-eks-demo"
+  max_size             = "${var.max-workers}"
+  min_size             = "${var.min-workers}"
+  name                 = "${var.cluster-name}"
   vpc_zone_identifier  = ["${aws_subnet.demo.*.id}"]
 
   tag {
     key                 = "Name"
-    value               = "terraform-eks-demo"
+    value               = "${var.cluster-name}"
     propagate_at_launch = true
   }
 
