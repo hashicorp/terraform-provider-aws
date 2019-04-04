@@ -99,7 +99,7 @@ resource "aws_codepipeline" "codepipeline" {
       owner            = "ThirdParty"
       provider         = "GitHub"
       version          = "1"
-      output_artifacts = ["test"]
+      output_artifacts = ["source_output"]
 
       configuration = {
         Owner  = "my-organization"
@@ -117,11 +117,33 @@ resource "aws_codepipeline" "codepipeline" {
       category        = "Build"
       owner           = "AWS"
       provider        = "CodeBuild"
-      input_artifacts = ["test"]
+      input_artifacts = ["source_output"]
+      output_artifacts = ["build_output"]
       version         = "1"
 
       configuration = {
         ProjectName = "test"
+      }
+    }
+  }
+  
+  stage {
+    name = "Deploy"
+
+    action {
+      name             = "Deploy"
+      category         = "Deploy"
+      owner            = "AWS"
+      provider         = "CloudFormation"
+      input_artifacts  = ["build_output"]
+      version          = "1"
+
+      configuration {
+        ActionMode     = "REPLACE_ON_FAILURE"
+        Capabilities   = "CAPABILITY_AUTO_EXPAND,CAPABILITY_IAM"
+        OutputFileName = "CreateStackOutput.json"
+        StackName      = "MyStack"
+        TemplatePath   = "build_output::sam-templated.yaml"
       }
     }
   }
