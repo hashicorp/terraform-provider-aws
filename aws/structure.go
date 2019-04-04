@@ -1233,10 +1233,9 @@ func flattenESClusterConfig(c *elasticsearch.ElasticsearchClusterConfig) []map[s
 	if c.ZoneAwarenessEnabled != nil {
 		m["zone_awareness_enabled"] = *c.ZoneAwarenessEnabled
 	}
-	if c.ZoneAwarenessConfig.AvailabilityZoneCount != nil {
+	if c.ZoneAwarenessConfig != nil && c.ZoneAwarenessConfig.AvailabilityZoneCount != nil {
 		m["zone_awareness_count"] = *c.ZoneAwarenessConfig.AvailabilityZoneCount
 	}
-
 	return []map[string]interface{}{m}
 }
 
