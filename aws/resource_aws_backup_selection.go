@@ -1,14 +1,12 @@
 package aws
 
 import (
-	"bytes"
 	"fmt"
 	"log"
 	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/backup"
-	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 )
@@ -40,7 +38,7 @@ func resourceAwsBackupSelection() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validateArn,
 			},
-			"tag": {
+			"selection_tag": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: true,
@@ -63,7 +61,6 @@ func resourceAwsBackupSelection() *schema.Resource {
 						},
 					},
 				},
-				Set: resourceAwsConditionTagHash,
 			},
 			"resources": {
 				Type:     schema.TypeList,
@@ -80,7 +77,7 @@ func resourceAwsBackupSelectionCreate(d *schema.ResourceData, meta interface{}) 
 
 	selection := &backup.Selection{
 		IamRoleArn:    aws.String(d.Get("iam_role_arn").(string)),
-		ListOfTags:    expandBackupConditionTags(d.Get("tag").(*schema.Set).List()),
+		ListOfTags:    expandBackupConditionTags(d.Get("selection_tag").(*schema.Set).List()),
 		Resources:     expandStringList(d.Get("resources").([]interface{})),
 		SelectionName: aws.String(d.Get("name").(string)),
 	}
@@ -124,7 +121,7 @@ func resourceAwsBackupSelectionRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("iam_role_arn", resp.BackupSelection.IamRoleArn)
 
 	if resp.BackupSelection.ListOfTags != nil {
-		tag := &schema.Set{F: resourceAwsConditionTagHash}
+		tags := make([]map[string]interface{}, 0)
 
 		for _, r := range resp.BackupSelection.ListOfTags {
 			m := make(map[string]interface{})
@@ -133,11 +130,11 @@ func resourceAwsBackupSelectionRead(d *schema.ResourceData, meta interface{}) er
 			m["key"] = aws.StringValue(r.ConditionKey)
 			m["value"] = aws.StringValue(r.ConditionValue)
 
-			tag.Add(m)
+			tags = append(tags, m)
 		}
 
-		if err := d.Set("tag", tag); err != nil {
-			return fmt.Errorf("error setting tag: %s", err)
+		if err := d.Set("selection_tag", tags); err != nil {
+			return fmt.Errorf("error setting selection tag: %s", err)
 		}
 	}
 	if resp.BackupSelection.Resources != nil {
@@ -180,23 +177,4 @@ func expandBackupConditionTags(tagList []interface{}) []*backup.Condition {
 	}
 
 	return conditions
-}
-
-func resourceAwsConditionTagHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-
-	if v, ok := m["type"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	}
-
-	if v, ok := m["key"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	}
-
-	if v, ok := m["value"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	}
-
-	return hashcode.String(buf.String())
 }

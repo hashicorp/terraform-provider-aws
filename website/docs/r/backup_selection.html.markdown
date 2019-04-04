@@ -38,10 +38,10 @@ The following arguments are supported:
 * `name` - (Required) The display name of a resource selection document.
 * `plan_id` - (Required) The backup plan ID to be associated with the selection of resources.
 * `iam_role` - (Required) The ARN of the IAM role that AWS Backup uses to authenticate when restoring the target resource.
-* `tag` - (Optional) Tag-based conditions used to specify a set of resources to assign to a backup plan.
+* `selection_tag` - (Optional) Tag-based conditions used to specify a set of resources to assign to a backup plan.
 * `resources` - (Optional) An array of strings that either contain Amazon Resource Names (ARNs) or match patterns of resources to assign to a backup plan..
 
-Tag conditions (`tag`) support the following:
+Tag conditions (`selection_tag`) support the following:
 
 * `type` - (Required) An operation, such as `StringEquals`, that is applied to a key-value pair used to filter resources in a selection.
 * `key` - (Required) The key in a key-value pair.

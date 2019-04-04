@@ -61,7 +61,7 @@ func TestAccAwsBackupSelection_withTags(t *testing.T) {
 				Config: testAccBackupSelectionConfigWithTags(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBackupSelectionExists("aws_backup_selection.test", &selection1),
-					resource.TestCheckResourceAttr("aws_backup_selection.test", "tag.#", "2"),
+					resource.TestCheckResourceAttr("aws_backup_selection.test", "selection_tag.#", "2"),
 				),
 			},
 		},
@@ -180,7 +180,7 @@ resource "aws_backup_selection" "test" {
   name         = "tf_acc_test_backup_selection_%d"
   iam_role_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/service-role/AWSBackupDefaultServiceRole"
 
-  tag {
+  selection_tag {
     type = "STRINGEQUALS"
     key = "foo"
     value = "bar"
@@ -201,13 +201,13 @@ resource "aws_backup_selection" "test" {
   name         = "tf_acc_test_backup_selection_%d"
   iam_role_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/service-role/AWSBackupDefaultServiceRole"
 
-  tag {
+  selection_tag {
     type = "STRINGEQUALS"
     key = "foo"
     value = "bar"
   }
 
-  tag {
+  selection_tag {
     type = "STRINGEQUALS"
     key = "boo"
     value = "far"
@@ -228,7 +228,7 @@ resource "aws_backup_selection" "test" {
   name         = "tf_acc_test_backup_selection_%d"
   iam_role_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/service-role/AWSBackupDefaultServiceRole"
 
-  tag {
+  selection_tag {
     type = "STRINGEQUALS"
     key = "foo"
     value = "bar"
