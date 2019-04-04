@@ -106,7 +106,7 @@ func saveTagsCloudWatchEvents(conn *events.CloudWatchEvents, d *schema.ResourceD
 	})
 
 	if err != nil {
-		return fmt.Errorf("Error retreiving tags for ARN: %s", arn)
+		return fmt.Errorf("Error retreiving tags for %s: %s", arn, err)
 	}
 
 	var tagList []*events.Tag
