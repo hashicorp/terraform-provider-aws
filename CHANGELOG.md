@@ -11,6 +11,7 @@ ENHANCEMENTS:
 * resource/aws_acmpca_certificate_authority: Add `permanent_deletion_time_in_days` argument [GH-7366]
 * resource/aws_budgets_budget: Add `notification` configuration block (support notifications) [GH-4523]
 * resource/aws_cloudfront_distribution: Add `wait_for_deployment` argument [GH-8116]
+* resource/aws_ecr_repository: Tag on creation (support tag limiting IAM policies) [GH-8198]
 * resource/aws_lb_target_group: Add `enabled` argument to target group health checks [GH-7570]  
 
 BUG FIXES:
