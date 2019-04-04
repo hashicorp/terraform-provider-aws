@@ -6,6 +6,7 @@ import (
 	"log"
 	"regexp"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -16,6 +17,88 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/rds"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_rds_cluster", &resource.Sweeper{
+		Name: "aws_rds_cluster",
+		F:    testSweepRdsClusters,
+		Dependencies: []string{
+			"aws_db_instance",
+		},
+	})
+}
+
+func testSweepRdsClusters(region string) error {
+	client, err := sharedClientForRegion(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+
+	conn := client.(*AWSClient).rdsconn
+	input := &rds.DescribeDBClustersInput{}
+
+	err = conn.DescribeDBClustersPages(input, func(out *rds.DescribeDBClustersOutput, lastPage bool) bool {
+		for _, cluster := range out.DBClusters {
+			id := aws.StringValue(cluster.DBClusterIdentifier)
+
+			// Automatically remove from global cluster to bypass this error on deletion:
+			// InvalidDBClusterStateFault: This cluster is a part of a global cluster, please remove it from globalcluster first
+			if aws.StringValue(cluster.EngineMode) == "global" {
+				globalCluster, err := rdsDescribeGlobalClusterFromDbClusterARN(conn, aws.StringValue(cluster.DBClusterArn))
+
+				if err != nil {
+					log.Printf("[ERROR] Failure reading RDS Global Cluster information for DB Cluster (%s): %s", id, err)
+				}
+
+				if globalCluster != nil {
+					globalClusterID := aws.StringValue(globalCluster.GlobalClusterIdentifier)
+					input := &rds.RemoveFromGlobalClusterInput{
+						DbClusterIdentifier:     cluster.DBClusterArn,
+						GlobalClusterIdentifier: globalCluster.GlobalClusterIdentifier,
+					}
+
+					log.Printf("[INFO] Removing RDS Cluster (%s) from RDS Global Cluster: %s", id, globalClusterID)
+					_, err = conn.RemoveFromGlobalCluster(input)
+
+					if err != nil {
+						log.Printf("[ERROR] Failure removing RDS Cluster (%s) from RDS Global Cluster (%s): %s", id, globalClusterID, err)
+					}
+				}
+			}
+
+			input := &rds.DeleteDBClusterInput{
+				DBClusterIdentifier: cluster.DBClusterIdentifier,
+				SkipFinalSnapshot:   aws.Bool(true),
+			}
+
+			log.Printf("[INFO] Deleting RDS DB Cluster: %s", id)
+
+			_, err := conn.DeleteDBCluster(input)
+
+			if err != nil {
+				log.Printf("[ERROR] Failed to delete RDS DB Cluster (%s): %s", id, err)
+				continue
+			}
+
+			if err := waitForRDSClusterDeletion(conn, id, 40*time.Minute); err != nil {
+				log.Printf("[ERROR] Failure while waiting for RDS DB Cluster (%s) to be deleted: %s", id, err)
+			}
+		}
+		return !lastPage
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping RDS DB Cluster sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error retrieving RDS DB Clusters: %s", err)
+	}
+
+	return nil
+}
 
 func TestAccAWSRDSCluster_importBasic(t *testing.T) {
 	resourceName := "aws_rds_cluster.default"
