@@ -86,8 +86,10 @@ assign a random, unique name
   to classify your security groups in a way that can be updated, use `tags`.
 * `ingress` - (Optional) Can be specified multiple times for each
    ingress rule. Each ingress block supports fields documented below.
+   This argument is processed in [attribute-as-blocks mode](/docs/configuration/attr-as-blocks.html).
 * `egress` - (Optional, VPC only) Can be specified multiple times for each
       egress rule. Each egress block supports fields documented below.
+      This argument is processed in [attribute-as-blocks mode](/docs/configuration/attr-as-blocks.html).
 * `revoke_rules_on_delete` - (Optional) Instruct Terraform to revoke all of the
 Security Groups attached ingress and egress rules before deleting the rule
 itself. This is normally not needed, however certain AWS services such as
