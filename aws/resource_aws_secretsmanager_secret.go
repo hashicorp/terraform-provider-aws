@@ -128,8 +128,10 @@ func resourceAwsSecretsManagerSecretCreate(d *schema.ResourceData, meta interfac
 	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
 		var err error
 		output, err = conn.CreateSecret(input)
+		// Temporarily retry on these errors to support immediate secret recreation:
 		// InvalidRequestException: You can’t perform this operation on the secret because it was deleted.
-		if isAWSErr(err, secretsmanager.ErrCodeInvalidRequestException, "You can’t perform this operation on the secret because it was deleted") {
+		// InvalidRequestException: You can't create this secret because a secret with this name is already scheduled for deletion.
+		if isAWSErr(err, secretsmanager.ErrCodeInvalidRequestException, "scheduled for deletion") || isAWSErr(err, secretsmanager.ErrCodeInvalidRequestException, "was deleted") {
 			return resource.RetryableError(err)
 		}
 		if err != nil {
