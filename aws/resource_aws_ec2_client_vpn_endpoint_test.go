@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -10,6 +11,66 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_ec2_client_vpn_endpoint", &resource.Sweeper{
+		Name: "aws_ec2_client_vpn_endpoint",
+		F:    testSweepEc2ClientVpnEndpoints,
+		Dependencies: []string{
+			"aws_directory_service_directory",
+		},
+	})
+}
+
+func testSweepEc2ClientVpnEndpoints(region string) error {
+	client, err := sharedClientForRegion(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+
+	conn := client.(*AWSClient).ec2conn
+	input := &ec2.DescribeClientVpnEndpointsInput{}
+
+	for {
+		output, err := conn.DescribeClientVpnEndpoints(input)
+
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping Client VPN Endpoint sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error retrieving Client VPN Endpoints: %s", err)
+		}
+
+		for _, clientVpnEndpoint := range output.ClientVpnEndpoints {
+			if clientVpnEndpoint.Status != nil && aws.StringValue(clientVpnEndpoint.Status.Code) == ec2.ClientVpnEndpointStatusCodeDeleted {
+				continue
+			}
+
+			id := aws.StringValue(clientVpnEndpoint.ClientVpnEndpointId)
+			input := &ec2.DeleteClientVpnEndpointInput{
+				ClientVpnEndpointId: clientVpnEndpoint.ClientVpnEndpointId,
+			}
+
+			log.Printf("[INFO] Deleting Client VPN Endpoint: %s", id)
+			_, err := conn.DeleteClientVpnEndpoint(input)
+
+			if err != nil {
+				return fmt.Errorf("error deleting Client VPN Endpoint (%s): %s", id, err)
+			}
+		}
+
+		if aws.StringValue(output.NextToken) == "" {
+			break
+		}
+
+		input.NextToken = output.NextToken
+	}
+
+	return nil
+}
 
 func TestAccAwsEc2ClientVpnEndpoint_basic(t *testing.T) {
 	rStr := acctest.RandString(5)
