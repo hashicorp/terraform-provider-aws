@@ -13,6 +13,8 @@ import (
 	"github.com/hashicorp/terraform/helper/validation"
 )
 
+var defaultLoggingTypes = []string{"api", "audit", "authenticator", "controllerManager", "scheduler"}
+
 func resourceAwsEksCluster() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsEksClusterCreate,
@@ -114,6 +116,14 @@ func resourceAwsEksCluster() *schema.Resource {
 					},
 				},
 			},
+			"logging": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(defaultLoggingTypes, true),
+				},
+			},
 		},
 	}
 }
@@ -130,6 +140,10 @@ func resourceAwsEksClusterCreate(d *schema.ResourceData, meta interface{}) error
 
 	if v, ok := d.GetOk("version"); ok && v.(string) != "" {
 		input.Version = aws.String(v.(string))
+	}
+
+	if l, ok := d.GetOk("logging"); ok && l.([]interface{}) != nil {
+		input.Logging = expandEksLoggingTypes(l.([]interface{}))
 	}
 
 	log.Printf("[DEBUG] Creating EKS Cluster: %s", input)
@@ -218,6 +232,14 @@ func resourceAwsEksClusterRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting vpc_config: %s", err)
 	}
 
+	types := []string{}
+	if len(cluster.Logging.ClusterLogging) > 0 && *cluster.Logging.ClusterLogging[0].Enabled {
+		for _, logType := range cluster.Logging.ClusterLogging[0].Types {
+			types = append(types, *logType)
+		}
+	}
+	d.Set("logging", types)
+
 	return nil
 }
 
@@ -246,6 +268,32 @@ func resourceAwsEksClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		err = waitForUpdateEksCluster(conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate))
 		if err != nil {
 			return fmt.Errorf("error waiting for EKS Cluster (%s) version update (%s): %s", d.Id(), updateID, err)
+		}
+	}
+
+	if d.HasChange("logging") {
+		l := d.Get("logging")
+		input := &eks.UpdateClusterConfigInput{
+			Name:    aws.String(d.Id()),
+			Logging: expandEksLoggingTypes(l.([]interface{})),
+		}
+
+		log.Printf("[DEBUG] Updating EKS Cluster (%s) logging: %s", d.Id(), input)
+		output, err := conn.UpdateClusterConfig(input)
+
+		if err != nil {
+			return fmt.Errorf("error updating EKS Cluster (%s) logging: %s", d.Id(), err)
+		}
+
+		if output == nil || output.Update == nil || output.Update.Id == nil {
+			return fmt.Errorf("error determining EKS Cluster (%s) logging update ID: empty response", d.Id())
+		}
+
+		updateID := aws.StringValue(output.Update.Id)
+
+		err = waitForUpdateEksCluster(conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate))
+		if err != nil {
+			return fmt.Errorf("error waiting for EKS Cluster (%s) logging update (%s): %s", d.Id(), updateID, err)
 		}
 	}
 
@@ -340,6 +388,40 @@ func expandEksVpcConfigUpdateRequest(l []interface{}) *eks.VpcConfigRequest {
 	return &eks.VpcConfigRequest{
 		EndpointPrivateAccess: aws.Bool(m["endpoint_private_access"].(bool)),
 		EndpointPublicAccess:  aws.Bool(m["endpoint_public_access"].(bool)),
+	}
+}
+
+func expandEksLoggingTypes(logTypes []interface{}) *eks.Logging {
+	enabled := true
+	disabled := false
+	enabledTypes := []*string{}
+	for _, logType := range logTypes {
+		typeVal := logType.(string)
+		enabledTypes = append(enabledTypes, &typeVal)
+	}
+
+	disabledTypes := []*string{}
+	for _, defaultType := range defaultLoggingTypes {
+		logType := defaultType
+		if _, ok := sliceContainsString(logTypes, logType); ok == false {
+			disabledTypes = append(disabledTypes, &logType)
+		}
+	}
+
+	enabledLogs := &eks.LogSetup{
+		Enabled: &enabled,
+		Types:   enabledTypes,
+	}
+
+	disabledLogs := &eks.LogSetup{
+		Enabled: &disabled,
+		Types:   disabledTypes,
+	}
+
+	return &eks.Logging{
+		ClusterLogging: []*eks.LogSetup{
+			enabledLogs, disabledLogs,
+		},
 	}
 }
 
