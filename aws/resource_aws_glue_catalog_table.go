@@ -16,7 +16,6 @@ func resourceAwsGlueCatalogTable() *schema.Resource {
 		Read:   resourceAwsGlueCatalogTableRead,
 		Update: resourceAwsGlueCatalogTableUpdate,
 		Delete: resourceAwsGlueCatalogTableDelete,
-		Exists: resourceAwsGlueCatalogTableExists,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -337,33 +336,6 @@ func resourceAwsGlueCatalogTableDelete(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("Error deleting Glue Catalog Table: %s", err.Error())
 	}
 	return nil
-}
-
-func resourceAwsGlueCatalogTableExists(d *schema.ResourceData, meta interface{}) (bool, error) {
-	glueconn := meta.(*AWSClient).glueconn
-	catalogID, dbName, name, tableIdErr := readAwsGlueTableID(d.Id())
-	if tableIdErr != nil {
-		return false, tableIdErr
-	}
-
-	log.Printf("[DEBUG] Glue Catalog Table: %s:%s:%s", catalogID, dbName, name)
-
-	input := &glue.GetTableInput{
-		CatalogId:    aws.String(catalogID),
-		DatabaseName: aws.String(dbName),
-		Name:         aws.String(name),
-	}
-
-	_, err := glueconn.GetTable(input)
-
-	if err != nil {
-		if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
-			return false, nil
-		}
-		return false, err
-	}
-
-	return true, nil
 }
 
 func expandGlueTableInput(d *schema.ResourceData) *glue.TableInput {
