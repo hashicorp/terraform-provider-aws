@@ -1,4 +1,9 @@
 ## 2.6.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_glue_catalog_table: Properly trigger resource recreation when deleted outside Terraform [GH-8174]
+
 ## 2.5.0 (April 05, 2019)
 
 FEATURES:
