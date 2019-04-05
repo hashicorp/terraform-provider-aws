@@ -12,6 +12,8 @@ Associates a Direct Connect Gateway with a VGW.
 
 ## Example Usage
 
+### Basic
+
 ```hcl
 resource "aws_dx_gateway" "example" {
   name            = "example"
@@ -32,12 +34,47 @@ resource "aws_dx_gateway_association" "example" {
 }
 ```
 
+### Allowed Prefixes
+
+```hcl
+resource "aws_dx_gateway" "example" {
+  name            = "example"
+  amazon_side_asn = "64512"
+}
+
+resource "aws_vpc" "example" {
+  cidr_block = "10.255.255.0/28"
+}
+
+resource "aws_vpn_gateway" "example" {
+  vpc_id = "${aws_vpc.test.id}"
+}
+
+resource "aws_dx_gateway_association" "example" {
+  dx_gateway_id  = "${aws_dx_gateway.example.id}"
+  vpn_gateway_id = "${aws_vpn_gateway.example.id}"
+
+  allowed_prefixes = [
+    "210.52.109.0/24",
+    "175.45.176.0/22",
+  ]
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
 
-* `dx_gateway_id` - (Required) The ID of the Direct Connect Gateway.
+* `dx_gateway_id` - (Required) The ID of the Direct Connect gateway.
 * `vpn_gateway_id` - (Required) The ID of the VGW with which to associate the gateway.
+* `allowed_prefixes` - (Optional) The Amazon VPC prefixes to advertise to the Direct Connect gateway.
+
+## Attributes Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - The ID of the Direct Connect gateway association resource.
+* `dx_gateway_association_id` - The ID of the Direct Connect gateway association.
 
 ## Timeouts
 
@@ -45,4 +82,14 @@ The following arguments are supported:
 [Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
 
 - `create` - (Default `15 minutes`) Used for creating the association
+- `update` - (Default `10 minutes`) Used for updating the association
 - `delete` - (Default `10 minutes`) Used for destroying the association
+
+## Import
+
+Direct Connect gateway associations can be imported using `dx_gateway_id` together with `vpn_gateway_id`,
+e.g.
+
+```
+$ terraform import aws_dx_gateway_association.example dxgw-12345678/vgw-98765432
+```
