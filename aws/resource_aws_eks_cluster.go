@@ -403,7 +403,7 @@ func expandEksLoggingTypes(logTypes []interface{}) *eks.Logging {
 	disabledTypes := []*string{}
 	for _, defaultType := range defaultLoggingTypes {
 		logType := defaultType
-		if _, ok := sliceContainsString(logTypes, logType); ok == false {
+		if _, ok := sliceContainsString(logTypes, logType); !ok {
 			disabledTypes = append(disabledTypes, &logType)
 		}
 	}
