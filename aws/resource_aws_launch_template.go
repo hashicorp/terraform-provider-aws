@@ -23,7 +23,11 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 		Update: resourceAwsLaunchTemplateUpdate,
 		Delete: resourceAwsLaunchTemplateDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				d.Set("use_latest_version_as_default_version", false)
+
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -57,7 +61,15 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 
 			"default_version": {
 				Type:     schema.TypeInt,
+				Optional: true,
 				Computed: true,
+			},
+
+			"use_latest_version_as_default_version": {
+				Type:          schema.TypeBool,
+				Optional:      true,
+				Default:       false,
+				ConflictsWith: []string{"default_version"},
 			},
 
 			"latest_version": {
@@ -689,9 +701,30 @@ func resourceAwsLaunchTemplateUpdate(d *schema.ResourceData, meta interface{}) e
 			launchTemplateVersionOpts.VersionDescription = aws.String(v.(string))
 		}
 
-		_, createErr := conn.CreateLaunchTemplateVersion(launchTemplateVersionOpts)
+		resp, createErr := conn.CreateLaunchTemplateVersion(launchTemplateVersionOpts)
 		if createErr != nil {
-			return createErr
+			return fmt.Errorf("Error creating Launch Template Version for Launch Template(%s): %s", d.Id(), err)
+		}
+
+		if v, ok := d.GetOk("use_latest_version_as_default_version"); ok && v.(bool) {
+			latestVersion := strconv.FormatInt(aws.Int64Value(resp.LaunchTemplateVersion.VersionNumber), 10)
+			if _, err := conn.ModifyLaunchTemplate(&ec2.ModifyLaunchTemplateInput{
+				ClientToken:      aws.String(resource.UniqueId()),
+				LaunchTemplateId: aws.String(d.Id()),
+				DefaultVersion:   aws.String(latestVersion),
+			}); err != nil {
+				return fmt.Errorf("Error updating launch template (%s): %s", d.Id(), err)
+			}
+		} else if d.HasChange("default_version") {
+			if v, ok := d.GetOk("default_version"); ok && v.(int) != 0 {
+				if _, err := conn.ModifyLaunchTemplate(&ec2.ModifyLaunchTemplateInput{
+					ClientToken:      aws.String(resource.UniqueId()),
+					LaunchTemplateId: aws.String(d.Id()),
+					DefaultVersion:   aws.String(strconv.Itoa(v.(int))),
+				}); err != nil {
+					return fmt.Errorf("Error updating launch template (%s): %s", d.Id(), err)
+				}
+			}
 		}
 	}
 

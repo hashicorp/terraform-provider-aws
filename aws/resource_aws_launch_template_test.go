@@ -604,6 +604,79 @@ func TestAccAWSLaunchTemplate_licenseSpecification(t *testing.T) {
 	})
 }
 
+func TestAccAWSLaunchTemplate_modifyDefaultVersion(t *testing.T) {
+	var template ec2.LaunchTemplate
+	resourceName := "aws_launch_template.foo"
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLaunchTemplateConfig_basic(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
+				),
+			},
+			{
+				Config: testAccAWSLaunchTemplateConfig_defaultVersion(rInt, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "default_version", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSLaunchTemplate_useLatestVersion(t *testing.T) {
+	var template ec2.LaunchTemplate
+	resourceName := "aws_launch_template.foo"
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLaunchTemplateConfig_useLatestVersion(rInt, acctest.RandInt()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
+					resource.TestCheckResourceAttrPair(resourceName, "default_version", resourceName, "latest_version"),
+				),
+			},
+			{
+				Config: testAccAWSLaunchTemplateConfig_useLatestVersion(rInt, acctest.RandInt()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
+					resource.TestCheckResourceAttrPair(resourceName, "default_version", resourceName, "latest_version"),
+				),
+			},
+			{
+				Config: testAccAWSLaunchTemplateConfig_useLatestVersion(rInt, acctest.RandInt()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
+					resource.TestCheckResourceAttrPair(resourceName, "default_version", resourceName, "latest_version"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"use_latest_version_as_default_version"},
+			},
+		},
+	})
+}
+
 func testAccCheckAWSLaunchTemplateExists(n string, t *ec2.LaunchTemplate) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -1145,3 +1218,27 @@ resource "aws_autoscaling_group" "test" {
   }
 }
 `
+
+func testAccAWSLaunchTemplateConfig_defaultVersion(rInt, version int) string {
+	return fmt.Sprintf(`
+resource "aws_launch_template" "foo" {
+	name = "foo_%[1]d"
+	description = "Test for default Version"
+	default_version = %[2]d
+
+  tags = {
+    foo = "bar"
+  }
+}
+`, rInt, version)
+}
+
+func testAccAWSLaunchTemplateConfig_useLatestVersion(rInt, rInt2 int) string {
+	return fmt.Sprintf(`
+resource "aws_launch_template" "foo" {
+	name = "foo_%[1]d"
+	description = "Test for default Version %[2]d"
+	use_latest_version_as_default_version = true
+}
+`, rInt, rInt2)
+}
