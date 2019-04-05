@@ -500,6 +500,20 @@ func (c *Config) Client() (interface{}, error) {
 		}
 	})
 
+	client.ec2conn.Handlers.Retry.PushBack(func(r *request.Request) {
+		if r.Operation.Name == "CreateVpnConnection" {
+			if isAWSErr(r.Error, "VpnConnectionLimitExceeded", "maximum number of mutating objects has been reached") {
+				r.Retryable = aws.Bool(true)
+			}
+		}
+
+		if r.Operation.Name == "CreateVpnGateway" {
+			if isAWSErr(r.Error, "VpnGatewayLimitExceeded", "maximum number of mutating objects has been reached") {
+				r.Retryable = aws.Bool(true)
+			}
+		}
+	})
+
 	client.kinesisconn.Handlers.Retry.PushBack(func(r *request.Request) {
 		if r.Operation.Name == "CreateStream" {
 			if isAWSErr(r.Error, kinesis.ErrCodeLimitExceededException, "simultaneously be in CREATING or DELETING") {
