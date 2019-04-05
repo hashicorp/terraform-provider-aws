@@ -17,6 +17,7 @@ ENHANCEMENTS:
 * resource/aws_cloudwatch_metric_alarm: Add `tags` argument [GH-8168]
 * resource/aws_ecr_repository: Tag on creation (support tag limiting IAM policies) [GH-8198]
 * resource/aws_lb_target_group: Add `enabled` argument to target group health checks [GH-7570]  
+* resource/aws_sagemaker_notebook_instance: Add `lifecycle_config_name` argument [GH-7586]
 * service/ec2: Automatically retry `CreateVpnConnection` and `CreateVpnGateway` requests for concurrency errors [GH-8161]
 
 BUG FIXES:
