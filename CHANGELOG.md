@@ -5,6 +5,7 @@ FEATURES:
 * **New Guide:** `Custom Service Endpoints` [GH-8092]
 * **New Resource:** `aws_backup_selection` [GH-7382]
 * **New Resource:** `aws_sagemaker_endpoint` [GH-2479]
+* **New Resource:** `aws_sagemaker_notebook_instance_lifecycle_configuration` [GH-7585]
 
 ENHANCEMENTS:
 
