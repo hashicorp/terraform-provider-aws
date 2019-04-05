@@ -16,7 +16,7 @@ func TestAccAWSGlueCatalogTable_recreates(t *testing.T) {
 	resourceName := "aws_glue_catalog_table.test"
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlueTableDestroy,
