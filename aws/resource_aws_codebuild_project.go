@@ -99,11 +99,17 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 							ValidateFunc: validation.StringInSlice([]string{
 								codebuild.CacheTypeNoCache,
 								codebuild.CacheTypeS3,
+								codebuild.CacheTypeLocal,
 							}, false),
 						},
 						"location": {
 							Type:     schema.TypeString,
 							Optional: true,
+						},
+						"mode": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
 				},
@@ -614,6 +620,13 @@ func expandProjectCache(s []interface{}) *codebuild.ProjectCache {
 		projectCache.Location = aws.String(v.(string))
 	}
 
+	if cacheType := data["type"]; cacheType == codebuild.CacheTypeLocal {
+		if modes, modesOk := data["modes"]; modesOk {
+			modesStrings := modes.([]interface{})
+			projectCache.Modes = expandStringList(modesStrings)
+		}
+	}
+
 	return projectCache
 }
 
@@ -998,6 +1011,7 @@ func flattenAwsCodebuildProjectCache(cache *codebuild.ProjectCache) []interface{
 	values := map[string]interface{}{
 		"location": aws.StringValue(cache.Location),
 		"type":     aws.StringValue(cache.Type),
+		"modes":    aws.StringValueSlice(cache.Modes),
 	}
 
 	return []interface{}{values}
