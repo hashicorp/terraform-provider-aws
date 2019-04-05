@@ -1202,11 +1202,13 @@ func expandESClusterConfig(m map[string]interface{}) *elasticsearch.Elasticsearc
 	}
 
 	if v, ok := m["zone_awareness_enabled"]; ok {
-		config.ZoneAwarenessEnabled = aws.Bool(v.(bool))
-	}
-
-	if v, ok := m["zone_awareness_count"]; ok {
-		config.ZoneAwarenessConfig = &elasticsearch.ZoneAwarenessConfig{AvailabilityZoneCount: aws.Int64(int64(v.(int)))}
+		isEnabled := v.(bool)
+		config.ZoneAwarenessEnabled = aws.Bool(isEnabled)
+		if isEnabled {
+			if v, ok := m["zone_awareness_count"]; ok {
+				config.ZoneAwarenessConfig = &elasticsearch.ZoneAwarenessConfig{AvailabilityZoneCount: aws.Int64(int64(v.(int)))}
+			}
+		}
 	}
 
 	return &config
