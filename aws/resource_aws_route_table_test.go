@@ -270,6 +270,40 @@ func TestAccAWSRouteTable_panicEmptyRoute(t *testing.T) {
 	})
 }
 
+func TestAccAWSRouteTable_Route_ConfigMode(t *testing.T) {
+	var routeTable1, routeTable2, routeTable3 ec2.RouteTable
+	resourceName := "aws_route_table.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRouteTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRouteTableConfigRouteConfigModeBlocks(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRouteTableExists(resourceName, &routeTable1),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "2"),
+				),
+			},
+			{
+				Config: testAccAWSRouteTableConfigRouteConfigModeNoBlocks(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRouteTableExists(resourceName, &routeTable2),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "2"),
+				),
+			},
+			{
+				Config: testAccAWSRouteTableConfigRouteConfigModeZeroed(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRouteTableExists(resourceName, &routeTable3),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSRouteTable_Route_TransitGatewayID(t *testing.T) {
 	var routeTable1 ec2.RouteTable
 	resourceName := "aws_route_table.test"
@@ -666,6 +700,83 @@ resource "aws_route_table" "foo" {
   }
 }
 `
+
+func testAccAWSRouteTableConfigRouteConfigModeBlocks() string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+  tags       = {
+    Name = "tf-acc-test-ec2-route-table-config-mode"
+  }
+}
+
+resource "aws_internet_gateway" "test" {
+  tags   = {
+    Name = "tf-acc-test-ec2-route-table-config-mode"
+  }
+  vpc_id = "${aws_vpc.test.id}"
+}
+
+resource "aws_route_table" "test" {
+  vpc_id = "${aws_vpc.test.id}"
+
+  route {
+    cidr_block = "10.1.0.0/16"
+    gateway_id = "${aws_internet_gateway.test.id}"
+  }
+
+  route {
+    cidr_block = "10.2.0.0/16"
+    gateway_id = "${aws_internet_gateway.test.id}"
+  }
+}
+`)
+}
+
+func testAccAWSRouteTableConfigRouteConfigModeNoBlocks() string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+  tags       = {
+    Name = "tf-acc-test-ec2-route-table-config-mode"
+  }
+}
+
+resource "aws_internet_gateway" "test" {
+  tags   = {
+    Name = "tf-acc-test-ec2-route-table-config-mode"
+  }
+  vpc_id = "${aws_vpc.test.id}"
+}
+
+resource "aws_route_table" "test" {
+  vpc_id = "${aws_vpc.test.id}"
+}
+`)
+}
+
+func testAccAWSRouteTableConfigRouteConfigModeZeroed() string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+  tags       = {
+    Name = "tf-acc-test-ec2-route-table-config-mode"
+  }
+}
+
+resource "aws_internet_gateway" "test" {
+  tags   = {
+    Name = "tf-acc-test-ec2-route-table-config-mode"
+  }
+  vpc_id = "${aws_vpc.test.id}"
+}
+
+resource "aws_route_table" "test" {
+  route  = []
+  vpc_id = "${aws_vpc.test.id}"
+}
+`)
+}
 
 func testAccAWSRouteTableConfigRouteTransitGatewayID() string {
 	return fmt.Sprintf(`
