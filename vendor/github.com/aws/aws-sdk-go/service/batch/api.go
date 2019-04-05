@@ -150,7 +150,7 @@ func (c *Batch) CreateComputeEnvironmentRequest(input *CreateComputeEnvironmentI
 //
 // In a managed compute environment, AWS Batch manages the capacity and instance
 // types of the compute resources within the environment. This is based on the
-// compute resource specification that you define or the launch template (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-launch-templates.html)
+// compute resource specification that you define or the launch template (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-launch-templates.html)
 // that you specify when you create the compute environment. You can choose
 // to use Amazon EC2 On-Demand Instances or Spot Instances in your managed compute
 // environment. You can optionally set a maximum price so that Spot Instances
@@ -163,12 +163,12 @@ func (c *Batch) CreateComputeEnvironmentRequest(input *CreateComputeEnvironmentI
 // This provides more compute resource configuration options, such as using
 // a custom AMI, but you must ensure that your AMI meets the Amazon ECS container
 // instance AMI specification. For more information, see Container Instance
-// AMIs (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/container_instance_AMIs.html)
+// AMIs (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/container_instance_AMIs.html)
 // in the Amazon Elastic Container Service Developer Guide. After you have created
 // your unmanaged compute environment, you can use the DescribeComputeEnvironments
 // operation to find the Amazon ECS cluster that is associated with it. Then,
 // manually launch your container instances into that Amazon ECS cluster. For
-// more information, see Launching an Amazon ECS Container Instance (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/launch_container_instance.html)
+// more information, see Launching an Amazon ECS Container Instance (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/launch_container_instance.html)
 // in the Amazon Elastic Container Service Developer Guide.
 //
 // AWS Batch does not upgrade the AMIs in a compute environment after it is
@@ -1976,7 +1976,7 @@ type ComputeResource struct {
 	// you should consider creating a cluster placement group and associate it with
 	// your compute resources. This keeps your multi-node parallel job on a logical
 	// grouping of instances within a single Availability Zone with high network
-	// flow potential. For more information, see Placement Groups (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html)
+	// flow potential. For more information, see Placement Groups (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html)
 	// in the Amazon EC2 User Guide for Linux Instances.
 	PlacementGroup *string `locationName:"placementGroup" type:"string"`
 
@@ -2230,6 +2230,10 @@ type ContainerDetail struct {
 	// details about a running or stopped container.
 	Reason *string `locationName:"reason" type:"string"`
 
+	// The type and amount of a resource to assign to a container. Currently, the
+	// only supported resource is GPU.
+	ResourceRequirements []*ResourceRequirement `locationName:"resourceRequirements" type:"list"`
+
 	// The Amazon Resource Name (ARN) of the Amazon ECS task that is associated
 	// with the container job. Each container attempt receives a task ARN when they
 	// reach the STARTING status.
@@ -2342,6 +2346,12 @@ func (s *ContainerDetail) SetReason(v string) *ContainerDetail {
 	return s
 }
 
+// SetResourceRequirements sets the ResourceRequirements field's value.
+func (s *ContainerDetail) SetResourceRequirements(v []*ResourceRequirement) *ContainerDetail {
+	s.ResourceRequirements = v
+	return s
+}
+
 // SetTaskArn sets the TaskArn field's value.
 func (s *ContainerDetail) SetTaskArn(v string) *ContainerDetail {
 	s.TaskArn = &v
@@ -2396,6 +2406,11 @@ type ContainerOverrides struct {
 	// value set in the job definition.
 	Memory *int64 `locationName:"memory" type:"integer"`
 
+	// The type and amount of a resource to assign to a container. This value overrides
+	// the value set in the job definition. Currently, the only supported resource
+	// is GPU.
+	ResourceRequirements []*ResourceRequirement `locationName:"resourceRequirements" type:"list"`
+
 	// The number of vCPUs to reserve for the container. This value overrides the
 	// value set in the job definition.
 	Vcpus *int64 `locationName:"vcpus" type:"integer"`
@@ -2409,6 +2424,26 @@ func (s ContainerOverrides) String() string {
 // GoString returns the string representation
 func (s ContainerOverrides) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ContainerOverrides) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ContainerOverrides"}
+	if s.ResourceRequirements != nil {
+		for i, v := range s.ResourceRequirements {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "ResourceRequirements", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetCommand sets the Command field's value.
@@ -2432,6 +2467,12 @@ func (s *ContainerOverrides) SetInstanceType(v string) *ContainerOverrides {
 // SetMemory sets the Memory field's value.
 func (s *ContainerOverrides) SetMemory(v int64) *ContainerOverrides {
 	s.Memory = &v
+	return s
+}
+
+// SetResourceRequirements sets the ResourceRequirements field's value.
+func (s *ContainerOverrides) SetResourceRequirements(v []*ResourceRequirement) *ContainerOverrides {
+	s.ResourceRequirements = v
 	return s
 }
 
@@ -2531,6 +2572,10 @@ type ContainerProperties struct {
 	// and the --read-only option to docker run.
 	ReadonlyRootFilesystem *bool `locationName:"readonlyRootFilesystem" type:"boolean"`
 
+	// The type and amount of a resource to assign to a container. Currently, the
+	// only supported resource is GPU.
+	ResourceRequirements []*ResourceRequirement `locationName:"resourceRequirements" type:"list"`
+
 	// A list of ulimits to set in the container. This parameter maps to Ulimits
 	// in the Create a container (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.23/#create-a-container)
 	// section of the Docker Remote API (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.23/)
@@ -2568,6 +2613,16 @@ func (s ContainerProperties) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *ContainerProperties) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "ContainerProperties"}
+	if s.ResourceRequirements != nil {
+		for i, v := range s.ResourceRequirements {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "ResourceRequirements", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 	if s.Ulimits != nil {
 		for i, v := range s.Ulimits {
 			if v == nil {
@@ -2636,6 +2691,12 @@ func (s *ContainerProperties) SetPrivileged(v bool) *ContainerProperties {
 // SetReadonlyRootFilesystem sets the ReadonlyRootFilesystem field's value.
 func (s *ContainerProperties) SetReadonlyRootFilesystem(v bool) *ContainerProperties {
 	s.ReadonlyRootFilesystem = &v
+	return s
+}
+
+// SetResourceRequirements sets the ResourceRequirements field's value.
+func (s *ContainerProperties) SetResourceRequirements(v []*ResourceRequirement) *ContainerProperties {
+	s.ResourceRequirements = v
 	return s
 }
 
@@ -2732,7 +2793,7 @@ type CreateComputeEnvironmentInput struct {
 	State *string `locationName:"state" type:"string" enum:"CEState"`
 
 	// The type of the compute environment. For more information, see Compute Environments
-	// (http://docs.aws.amazon.com/batch/latest/userguide/compute_environments.html)
+	// (https://docs.aws.amazon.com/batch/latest/userguide/compute_environments.html)
 	// in the AWS Batch User Guide.
 	//
 	// Type is a required field
@@ -3529,7 +3590,9 @@ type JobDefinition struct {
 	// Default parameters or parameter substitution placeholders that are set in
 	// the job definition. Parameters are specified as a key-value pair mapping.
 	// Parameters in a SubmitJob request override any corresponding parameter defaults
-	// from the job definition.
+	// from the job definition. For more information about specifying parameters,
+	// see Job Definition Parameters (https://docs.aws.amazon.com/batch/latest/userguide/job_definition_parameters.html)
+	// in the AWS Batch User Guide.
 	Parameters map[string]*string `locationName:"parameters" type:"map"`
 
 	// The retry strategy to use for failed jobs that are submitted with this job
@@ -3725,7 +3788,7 @@ type JobDetail struct {
 
 	// The current status for the job.
 	//
-	// If your jobs do not progress to STARTING, see Jobs Stuck in  (http://docs.aws.amazon.com/batch/latest/userguide/troubleshooting.html#job_stuck_in_runnable)RUNNABLE
+	// If your jobs do not progress to STARTING, see Jobs Stuck in  (https://docs.aws.amazon.com/batch/latest/userguide/troubleshooting.html#job_stuck_in_runnable)RUNNABLE
 	// Status in the troubleshooting section of the AWS Batch User Guide.
 	//
 	// Status is a required field
@@ -4427,6 +4490,20 @@ type NodeOverrides struct {
 
 	// The node property overrides for the job.
 	NodePropertyOverrides []*NodePropertyOverride `locationName:"nodePropertyOverrides" type:"list"`
+
+	// The number of nodes to use with a multi-node parallel job. This value overrides
+	// the number of nodes that are specified in the job definition. To use this
+	// override:
+	//
+	//    * There must be at least one node range in your job definition that has
+	//    an open upper boundary (such as : or n:).
+	//
+	//    * The lower boundary of the node range specified in the job definition
+	//    must be fewer than the number of nodes specified in the override.
+	//
+	//    * The main node index specified in the job definition must be fewer than
+	//    the number of nodes specified in the override.
+	NumNodes *int64 `locationName:"numNodes" type:"integer"`
 }
 
 // String returns the string representation
@@ -4465,11 +4542,18 @@ func (s *NodeOverrides) SetNodePropertyOverrides(v []*NodePropertyOverride) *Nod
 	return s
 }
 
+// SetNumNodes sets the NumNodes field's value.
+func (s *NodeOverrides) SetNumNodes(v int64) *NodeOverrides {
+	s.NumNodes = &v
+	return s
+}
+
 // An object representing the node properties of a multi-node parallel job.
 type NodeProperties struct {
 	_ struct{} `type:"structure"`
 
 	// Specifies the node index for the main node of a multi-node parallel job.
+	// This node index value must be fewer than the number of nodes.
 	//
 	// MainNode is a required field
 	MainNode *int64 `locationName:"mainNode" type:"integer" required:"true"`
@@ -4623,6 +4707,11 @@ func (s *NodePropertyOverride) Validate() error {
 	if s.TargetNodes == nil {
 		invalidParams.Add(request.NewErrParamRequired("TargetNodes"))
 	}
+	if s.ContainerOverrides != nil {
+		if err := s.ContainerOverrides.Validate(); err != nil {
+			invalidParams.AddNested("ContainerOverrides", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -4739,7 +4828,7 @@ type RegisterJobDefinitionInput struct {
 	// a job is terminated due to a timeout, it is not retried. The minimum value
 	// for the timeout is 60 seconds. Any timeout configuration that is specified
 	// during a SubmitJob operation overrides the timeout configuration defined
-	// here. For more information, see Job Timeouts (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/job_timeouts.html)
+	// here. For more information, see Job Timeouts (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/job_timeouts.html)
 	// in the Amazon Elastic Container Service Developer Guide.
 	Timeout *JobTimeout `locationName:"timeout" type:"structure"`
 
@@ -4874,6 +4963,63 @@ func (s *RegisterJobDefinitionOutput) SetRevision(v int64) *RegisterJobDefinitio
 	return s
 }
 
+// The type and amount of a resource to assign to a container. Currently, the
+// only supported resource type is GPU.
+type ResourceRequirement struct {
+	_ struct{} `type:"structure"`
+
+	// The type of resource to assign to a container. Currently, the only supported
+	// resource type is GPU.
+	//
+	// Type is a required field
+	Type *string `locationName:"type" type:"string" required:"true" enum:"ResourceType"`
+
+	// The number of physical GPUs to reserve for the container. The number of GPUs
+	// reserved for all containers in a job should not exceed the number of available
+	// GPUs on the compute resource that the job is launched on.
+	//
+	// Value is a required field
+	Value *string `locationName:"value" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ResourceRequirement) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceRequirement) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ResourceRequirement) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ResourceRequirement"}
+	if s.Type == nil {
+		invalidParams.Add(request.NewErrParamRequired("Type"))
+	}
+	if s.Value == nil {
+		invalidParams.Add(request.NewErrParamRequired("Value"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetType sets the Type field's value.
+func (s *ResourceRequirement) SetType(v string) *ResourceRequirement {
+	s.Type = &v
+	return s
+}
+
+// SetValue sets the Value field's value.
+func (s *ResourceRequirement) SetValue(v string) *ResourceRequirement {
+	s.Value = &v
+	return s
+}
+
 // The retry strategy associated with a job.
 type RetryStrategy struct {
 	_ struct{} `type:"structure"`
@@ -4968,7 +5114,7 @@ type SubmitJobInput struct {
 	// The minimum value for the timeout is 60 seconds. This configuration overrides
 	// any timeout configuration specified in the job definition. For array jobs,
 	// child jobs have the same timeout configuration as the parent job. For more
-	// information, see Job Timeouts (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/job_timeouts.html)
+	// information, see Job Timeouts (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/job_timeouts.html)
 	// in the Amazon Elastic Container Service Developer Guide.
 	Timeout *JobTimeout `locationName:"timeout" type:"structure"`
 }
@@ -4994,6 +5140,11 @@ func (s *SubmitJobInput) Validate() error {
 	}
 	if s.JobQueue == nil {
 		invalidParams.Add(request.NewErrParamRequired("JobQueue"))
+	}
+	if s.ContainerOverrides != nil {
+		if err := s.ContainerOverrides.Validate(); err != nil {
+			invalidParams.AddNested("ContainerOverrides", err.(request.ErrInvalidParams))
+		}
 	}
 	if s.NodeOverrides != nil {
 		if err := s.NodeOverrides.Validate(); err != nil {
@@ -5611,4 +5762,9 @@ const (
 
 	// JobStatusFailed is a JobStatus enum value
 	JobStatusFailed = "FAILED"
+)
+
+const (
+	// ResourceTypeGpu is a ResourceType enum value
+	ResourceTypeGpu = "GPU"
 )
