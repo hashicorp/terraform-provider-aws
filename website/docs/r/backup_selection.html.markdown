@@ -14,14 +14,14 @@ Manages selection conditions for AWS Backup plan resources.
 
 ```hcl
 resource "aws_backup_selection" "example" {
-  plan_id  = "${aws_backup_plan.example.id}"
+  plan_id      = "${aws_backup_plan.example.id}"
 
   name         = "tf_example_backup_selection"
   iam_role_arn = "arn:aws:iam::123456789012:role/service-role/AWSBackupDefaultServiceRole"
 
   selection_tag {
-    type = "STRINGEQUALS"
-    key = "foo"
+    type  = "STRINGEQUALS"
+    key   = "foo"
     value = "bar"
   }
 
