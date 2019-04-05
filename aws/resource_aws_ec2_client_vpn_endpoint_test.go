@@ -155,7 +155,7 @@ func TestAccAwsEc2ClientVpnEndpoint_withLogGroup(t *testing.T) {
 	})
 }
 
-func TestAccAwsEc2ClientVpnEndpoint_withDNervers(t *testing.T) {
+func TestAccAwsEc2ClientVpnEndpoint_withDNSServers(t *testing.T) {
 	rStr := acctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
