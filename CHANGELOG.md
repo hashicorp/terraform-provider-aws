@@ -2,6 +2,7 @@
 
 BUG FIXES:
 
+* data-source/aws_lb_target_group: Add missing schema attributes [GH-8213]
 * resource/aws_glue_catalog_table: Properly trigger resource recreation when deleted outside Terraform [GH-8174]
 
 ## 2.5.0 (April 05, 2019)
