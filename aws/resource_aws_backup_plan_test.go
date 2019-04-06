@@ -27,6 +27,8 @@ func TestAccAwsBackupPlan_basic(t *testing.T) {
 					testAccCheckAwsBackupPlanExists("aws_backup_plan.test", &plan),
 					testAccMatchResourceAttrRegionalARN("aws_backup_plan.test", "arn", "backup", regexp.MustCompile(`backup-plan:.+`)),
 					resource.TestCheckResourceAttrSet("aws_backup_plan.test", "version"),
+					resource.TestCheckResourceAttr("aws_backup_plan.test", "rule.#", "1"),
+					resource.TestCheckNoResourceAttr("aws_backup_plan.test", "rule.712706565.lifecycle.#"),
 				),
 			},
 		},
@@ -165,6 +167,50 @@ func TestAccAwsBackupPlan_withLifecycle(t *testing.T) {
 	})
 }
 
+func TestAccAwsBackupPlan_withLifecycleDeleteAfterOnly(t *testing.T) {
+	var plan backup.GetBackupPlanOutput
+	rStr := "lifecycle_policy_two"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsBackupPlanDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBackupPlanWithLifecycleDeleteAfterOnly(rStr),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsBackupPlanExists("aws_backup_plan.test", &plan),
+					resource.TestCheckResourceAttr("aws_backup_plan.test", "rule.2156287050.lifecycle.#", "1"),
+					resource.TestCheckResourceAttr("aws_backup_plan.test", "rule.2156287050.lifecycle.0.delete_after", "7"),
+					resource.TestCheckResourceAttr("aws_backup_plan.test", "rule.2156287050.lifecycle.0.cold_storage_after", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAwsBackupPlan_withLifecycleColdStorageAfterOnly(t *testing.T) {
+	var plan backup.GetBackupPlanOutput
+	rStr := "lifecycle_policy_three"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsBackupPlanDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBackupPlanWithLifecycleColdStorageAfterOnly(rStr),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsBackupPlanExists("aws_backup_plan.test", &plan),
+					resource.TestCheckResourceAttr("aws_backup_plan.test", "rule.1300859512.lifecycle.#", "1"),
+					resource.TestCheckResourceAttr("aws_backup_plan.test", "rule.1300859512.lifecycle.0.delete_after", "0"),
+					resource.TestCheckResourceAttr("aws_backup_plan.test", "rule.1300859512.lifecycle.0.cold_storage_after", "7"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAwsBackupPlan_disappears(t *testing.T) {
 	var plan backup.GetBackupPlanOutput
 	rInt := acctest.RandInt()
@@ -256,32 +302,32 @@ func testAccCheckAwsBackupPlanExists(name string, plan *backup.GetBackupPlanOutp
 func testAccBackupPlanConfig(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_backup_vault" "test" {
-  name = "tf_acc_test_backup_vault_%d"
+  name = "tf_acc_test_backup_vault_%[1]d"
 }
 
 resource "aws_backup_plan" "test" {
-  name = "tf_acc_test_backup_plan_%d"
+  name = "tf_acc_test_backup_plan_%[1]d"
 
   rule {
-    rule_name          = "tf_acc_test_backup_rule_%d"
+    rule_name          = "tf_acc_test_backup_rule_%[1]d"
     target_vault_name  = "${aws_backup_vault.test.name}"
     schedule           = "cron(0 12 * * ? *)"
   }
 }
-`, randInt, randInt, randInt)
+`, randInt)
 }
 
 func testAccBackupPlanWithTag(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_backup_vault" "test" {
-  name = "tf_acc_test_backup_vault_%d"
+  name = "tf_acc_test_backup_vault_%[1]d"
 }
 
 resource "aws_backup_plan" "test" {
-  name = "tf_acc_test_backup_plan_%d"
+  name = "tf_acc_test_backup_plan_%[1]d"
 
   rule {
-    rule_name          = "tf_acc_test_backup_rule_%d"
+    rule_name          = "tf_acc_test_backup_rule_%[1]d"
     target_vault_name  = "${aws_backup_vault.test.name}"
     schedule           = "cron(0 12 * * ? *)"
   }
@@ -290,20 +336,20 @@ resource "aws_backup_plan" "test" {
 	  env = "test"
   }
 }
-`, randInt, randInt, randInt)
+`, randInt)
 }
 
 func testAccBackupPlanWithTags(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_backup_vault" "test" {
-  name = "tf_acc_test_backup_vault_%d"
+  name = "tf_acc_test_backup_vault_%[1]d"
 }
 
 resource "aws_backup_plan" "test" {
-  name = "tf_acc_test_backup_plan_%d"
+  name = "tf_acc_test_backup_plan_%[1]d"
 
   rule {
-    rule_name          = "tf_acc_test_backup_rule_%d"
+    rule_name          = "tf_acc_test_backup_rule_%[1]d"
     target_vault_name  = "${aws_backup_vault.test.name}"
     schedule           = "cron(0 12 * * ? *)"
   }
@@ -313,20 +359,20 @@ resource "aws_backup_plan" "test" {
 	  app = "widget"
   }
 }
-`, randInt, randInt, randInt)
+`, randInt)
 }
 
 func testAccBackupPlanWithLifecycle(stringID string) string {
 	return fmt.Sprintf(`
 resource "aws_backup_vault" "test" {
-  name = "tf_acc_test_backup_vault_%s"
+  name = "tf_acc_test_backup_vault_%[1]s"
 }
 
 resource "aws_backup_plan" "test" {
-  name = "tf_acc_test_backup_plan_%s"
+  name = "tf_acc_test_backup_plan_%[1]s"
 
   rule {
-    rule_name          = "tf_acc_test_backup_rule_%s"
+    rule_name          = "tf_acc_test_backup_rule_%[1]s"
     target_vault_name  = "${aws_backup_vault.test.name}"
     schedule           = "cron(0 12 * * ? *)"
     lifecycle {
@@ -335,29 +381,71 @@ resource "aws_backup_plan" "test" {
     }
   }
 }
-`, stringID, stringID, stringID)
+`, stringID)
+}
+
+func testAccBackupPlanWithLifecycleDeleteAfterOnly(stringID string) string {
+	return fmt.Sprintf(`
+resource "aws_backup_vault" "test" {
+  name = "tf_acc_test_backup_vault_%[1]s"
+}
+
+resource "aws_backup_plan" "test" {
+  name = "tf_acc_test_backup_plan_%[1]s"
+
+  rule {
+    rule_name          = "tf_acc_test_backup_rule_%[1]s"
+    target_vault_name  = "${aws_backup_vault.test.name}"
+    schedule           = "cron(0 12 * * ? *)"
+    lifecycle {
+        delete_after   = "7"
+    }
+  }
+}
+`, stringID)
+}
+
+func testAccBackupPlanWithLifecycleColdStorageAfterOnly(stringID string) string {
+	return fmt.Sprintf(`
+resource "aws_backup_vault" "test" {
+  name = "tf_acc_test_backup_vault_%[1]s"
+}
+
+resource "aws_backup_plan" "test" {
+  name = "tf_acc_test_backup_plan_%[1]s"
+
+  rule {
+    rule_name             = "tf_acc_test_backup_rule_%[1]s"
+    target_vault_name     = "${aws_backup_vault.test.name}"
+    schedule              = "cron(0 12 * * ? *)"
+    lifecycle {
+      cold_storage_after  = "7"
+    }
+  }
+}
+`, stringID)
 }
 
 func testAccBackupPlanWithRules(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_backup_vault" "test" {
-  name = "tf_acc_test_backup_vault_%d"
+  name = "tf_acc_test_backup_vault_%[1]d"
 }
 
 resource "aws_backup_plan" "test" {
-  name = "tf_acc_test_backup_plan_%d"
+  name = "tf_acc_test_backup_plan_%[1]d"
 
   rule {
-    rule_name          = "tf_acc_test_backup_rule_%d"
+    rule_name          = "tf_acc_test_backup_rule_%[1]d"
     target_vault_name  = "${aws_backup_vault.test.name}"
     schedule           = "cron(0 12 * * ? *)"
   }
 
   rule {
-    rule_name          = "tf_acc_test_backup_rule_%d_2"
+    rule_name          = "tf_acc_test_backup_rule_%[1]d_2"
     target_vault_name  = "${aws_backup_vault.test.name}"
     schedule           = "cron(0 6 * * ? *)"
   }
 }
-`, randInt, randInt, randInt, randInt)
+`, randInt)
 }

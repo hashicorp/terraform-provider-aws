@@ -297,11 +297,13 @@ func expandBackupPlanRules(l []interface{}) []*backup.RuleInput {
 			if len(lifecycleRaw) == 1 {
 				lifecycle = lifecycleRaw[0].(map[string]interface{})
 				lcValues := &backup.Lifecycle{}
-				if lifecycle["delete_after"] != nil {
-					lcValues.DeleteAfterDays = aws.Int64(int64(lifecycle["delete_after"].(int)))
+
+				if v, ok := lifecycle["delete_after"]; ok && v.(int) > 0 {
+					lcValues.DeleteAfterDays = aws.Int64(int64(v.(int)))
 				}
-				if lifecycle["cold_storage_after"] != nil {
-					lcValues.MoveToColdStorageAfterDays = aws.Int64(int64(lifecycle["cold_storage_after"].(int)))
+
+				if v, ok := lifecycle["cold_storage_after"]; ok && v.(int) > 0 {
+					lcValues.MoveToColdStorageAfterDays = aws.Int64(int64(v.(int)))
 				}
 				rule.Lifecycle = lcValues
 			}
