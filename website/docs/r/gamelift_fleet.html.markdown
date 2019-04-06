@@ -16,6 +16,7 @@ Provides a Gamelift Fleet resource.
 resource "aws_gamelift_fleet" "example" {
   build_id          = "${aws_gamelift_build.example.id}"
   ec2_instance_type = "t2.micro"
+  fleet_type        = "ON_DEMAND"
   name              = "example-fleet-name"
 
   runtime_configuration {
@@ -33,6 +34,7 @@ The following arguments are supported:
 
 * `build_id` - (Required) ID of the Gamelift Build to be deployed on the fleet.
 * `ec2_instance_type` - (Required) Name of an EC2 instance type. e.g. `t2.micro`
+* `fleet_type` - (Optional) Type of fleet. This value must be `ON_DEMAND` or `SPOT`. Defaults to `ON_DEMAND`.
 * `name` - (Required) The name of the fleet.
 * `description` - (Optional) Human-readable description of the fleet.
 * `ec2_inbound_permission` - (Optional) Range of IP addresses and port settings that permit inbound traffic to access server processes running on the fleet. See below.

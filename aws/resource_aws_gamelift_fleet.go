@@ -40,6 +40,11 @@ func resourceAwsGameliftFleet() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"fleet_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -187,6 +192,9 @@ func resourceAwsGameliftFleetCreate(d *schema.ResourceData, meta interface{}) er
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
+	if v, ok := d.GetOk("fleet_type"); ok {
+		input.FleetType = aws.String(v.(string))
+	}
 	if v, ok := d.GetOk("ec2_inbound_permission"); ok {
 		input.EC2InboundPermissions = expandGameliftIpPermissions(v.([]interface{}))
 	}
@@ -286,6 +294,7 @@ func resourceAwsGameliftFleetRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("log_paths", aws.StringValueSlice(fleet.LogPaths))
 	d.Set("metric_groups", flattenStringList(fleet.MetricGroups))
 	d.Set("name", fleet.Name)
+	d.Set("fleet_type", fleet.FleetType)
 	d.Set("new_game_session_protection_policy", fleet.NewGameSessionProtectionPolicy)
 	d.Set("operating_system", fleet.OperatingSystem)
 	d.Set("resource_creation_limit_policy", flattenGameliftResourceCreationLimitPolicy(fleet.ResourceCreationLimitPolicy))
