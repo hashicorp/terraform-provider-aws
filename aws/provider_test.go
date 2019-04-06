@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -354,4 +355,36 @@ func testSweepSkipSweepError(err error) bool {
 		return true
 	}
 	return false
+}
+
+func TestAccAWSProvider_Endpoints(t *testing.T) {
+	// Capture custom provider configuration so it
+	// does not interfere with other tests
+	var providers []*schema.Provider
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories(&providers),
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(`
+provider "aws" {
+  skip_credentials_validation = true
+  skip_get_ec2_platforms      = true
+  skip_metadata_api_check     = true
+  skip_requesting_account_id  = true
+
+  endpoints {
+%[1]s = "http://localhost"
+  }
+}
+
+# Required to initialize the provider
+data "aws_arn" "test" {
+  arn = "arn:aws:s3:::test"
+}
+`, strings.Join(endpointServiceNames, " = \"http://localhost\"\n")),
+			},
+		},
+	})
 }
