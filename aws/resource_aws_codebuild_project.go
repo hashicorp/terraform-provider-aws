@@ -106,7 +106,7 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"mode": {
+						"modes": {
 							Type:     schema.TypeList,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -442,7 +442,7 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 			func(diff *schema.ResourceDiff, v interface{}) error {
 				// Plan time validation for cache location
 				cacheType, cacheTypeOk := diff.GetOk("cache.0.type")
-				if !cacheTypeOk || cacheType.(string) == codebuild.CacheTypeNoCache {
+				if !cacheTypeOk || cacheType.(string) == codebuild.CacheTypeNoCache || cacheType.(string) == codebuild.CacheTypeLocal {
 					return nil
 				}
 				if v, ok := diff.GetOk("cache.0.location"); ok && v.(string) != "" {
