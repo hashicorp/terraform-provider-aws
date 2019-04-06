@@ -19,7 +19,7 @@ Basic usage:
 resource "aws_sagemaker_endpoint_configuration" "ec" {
     name = "my-endpoint-config"
 
-    production_variant {
+    production_variants {
         variant_name            = "variant-1"
         model_name              = "${aws_sagemaker_model.m.name}"
         initial_instance_count  = 1
@@ -41,7 +41,7 @@ The following arguments are supported:
 * `name` - (Optional) The name of the endpoint configuration. If omitted, Terraform will assign a random, unique name.
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 
-The `production_variant` block supports:
+The `production_variants` block supports:
 
 * `initial_instance_count` - (Required) Initial number of instances used for auto-scaling.
 * `instance_type` (Required) - The type of instance to start.
