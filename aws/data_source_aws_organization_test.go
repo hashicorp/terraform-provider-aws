@@ -7,8 +7,8 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 )
 
-func TestAccDataSourceAwsOrganization_basic(t *testing.T) {
-	resourceName := "data.aws_organization.test"
+func TestAccDataSourceAwsOrganizationsOrganization_basic(t *testing.T) {
+	resourceName := "data.aws_organizations_organization.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -44,5 +44,5 @@ func TestAccDataSourceAwsOrganization_basic(t *testing.T) {
 }
 
 const testAccCheckAwsOrganization = `
-data "aws_organization" "test" {}
+data "aws_organizations_organization" "test" {}
 `

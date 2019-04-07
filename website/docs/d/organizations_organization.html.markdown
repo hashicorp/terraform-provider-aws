@@ -1,12 +1,12 @@
 ---
 layout: "aws"
-page_title: "AWS: aws_organization"
-sidebar_current: "docs-aws-datasource-organization"
+page_title: "AWS: aws_organizations_organization"
+sidebar_current: "docs-aws-datasource-organizations-organization"
 description: |-
   Get information the organization that the user's account belongs to
 ---
 
-# Data Source: aws_organization
+# Data Source: aws_organizations_organization
 
 Get information the organization that the user's account belongs to
 
@@ -15,7 +15,7 @@ Get information the organization that the user's account belongs to
 ### SNS topic that can be interacted by the organization only
 
 ```hcl
-data "aws_organization" "my_org" {}
+data "aws_organizations_organization" "my_org" {}
 
 resource "aws_sns_topic" "sns_topic" {
   name = "my-sns-topic"
@@ -41,7 +41,7 @@ data "aws_iam_policy_document" "sns_topic_policy" {
       variable = "aws:PrincipalOrgID"
 
       values = [
-        "${data.aws_organization.my_org.id}",
+        "${data.aws_organizations_organization.my_org.id}",
       ]
     }
 

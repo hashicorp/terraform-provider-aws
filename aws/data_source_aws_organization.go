@@ -9,9 +9,9 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-func dataSourceAwsOrganization() *schema.Resource {
+func dataSourceAwsOrganizationsOrganization() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsOrganizationRead,
+		Read: dataSourceAwsOrganizationsOrganizationRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -55,7 +55,7 @@ func dataSourceAwsOrganization() *schema.Resource {
 	}
 }
 
-func dataSourceAwsOrganizationRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAwsOrganizationsOrganizationRead(d *schema.ResourceData, meta interface{}) error {
 	svc := meta.(*AWSClient).organizationsconn
 
 	log.Println("[DEBUG] Describing Organization")
