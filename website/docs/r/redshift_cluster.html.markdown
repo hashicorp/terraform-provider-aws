@@ -73,6 +73,15 @@ string.
 * `snapshot_copy` - (Optional) Configuration of automatic copy of snapshots from one region to another. Documented below.
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 
+### Timeouts
+
+`aws_redshift_cluster` provides the following
+[Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+
+- `create` - (Default `75 minutes`) Used for creating Clusters.
+- `update` - (Default `40 minutes`) Used for Cluster Argument changes.
+- `delete` - (Default `40 minutes`) Used for destroying Clusters.
+
 ### Nested Blocks
 
 #### `logging`
