@@ -1,0 +1,48 @@
+package aws
+
+import (
+	"regexp"
+	"testing"
+
+	"github.com/hashicorp/terraform/helper/resource"
+)
+
+func TestAccDataSourceAwsOrganization_basic(t *testing.T) {
+	resourceName := "data.aws_organization.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCheckAwsOrganization,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestMatchResourceAttr(resourceName, "arn",
+						regexp.MustCompile("^arn:aws:organizations::\\d{12}:organization\\/o-[a-z0-9]{10,32}$"),
+					),
+					resource.TestMatchResourceAttr(resourceName, "id",
+						regexp.MustCompile("^o-[a-z0-9]{10,32}$"),
+					),
+					resource.TestMatchResourceAttr(resourceName, "master_account_arn",
+						regexp.MustCompile("^arn:aws:organizations::\\d{12}:account\\/o-[a-z0-9]{10,32}\\/\\d{12}$"),
+					),
+					resource.TestMatchResourceAttr(resourceName, "master_account_email",
+						regexp.MustCompile("[^\\s@]+@[^\\s@]+\\.[^\\s@]+"),
+					),
+					resource.TestMatchResourceAttr(resourceName, "master_account_id",
+						regexp.MustCompile("^\\d{12}$"),
+					),
+					resource.TestCheckResourceAttrSet(resourceName, "available_policy_types.0.status"),
+					resource.TestCheckResourceAttrSet(resourceName, "available_policy_types.0.type"),
+					resource.TestCheckResourceAttrSet(resourceName, "feature_set"),
+				),
+			},
+		},
+	})
+}
+
+const testAccCheckAwsOrganization = `
+data "aws_organization" "test" {}
+`
