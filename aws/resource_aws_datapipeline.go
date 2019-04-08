@@ -1153,7 +1153,7 @@ func resourceAwsDataPipelineDefinitionRetrieve(id string, conn *datapipeline.Dat
 func flattenParameterObjects(objects []*datapipeline.ParameterObject) []map[string]interface{} {
 	parameterObjects := make([]map[string]interface{}, 0, len(objects))
 	for _, object := range objects {
-		var obj map[string]interface{}
+		obj := make(map[string]interface{})
 
 		obj["id"] = *object.Id
 		for _, attribute := range object.Attributes {
@@ -1184,7 +1184,7 @@ func flattenParameterValues(objects []*datapipeline.ParameterValue) []map[string
 	parameterValues := make([]map[string]interface{}, 0, len(objects))
 
 	for _, object := range objects {
-		var obj map[string]interface{}
+		obj := make(map[string]interface{})
 		obj["id"] = aws.StringValue(object.Id)
 		obj["string_value"] = aws.StringValue(object.StringValue)
 
