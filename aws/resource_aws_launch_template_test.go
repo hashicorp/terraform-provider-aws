@@ -73,6 +73,7 @@ func TestAccAWSLaunchTemplate_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resName, "latest_version", "1"),
 					resource.TestCheckResourceAttrSet(resName, "arn"),
 					resource.TestCheckResourceAttr(resName, "ebs_optimized", ""),
+					resource.TestCheckResourceAttr(resName, "elastic_inference_accelerator.#", "0"),
 				),
 			},
 		},
@@ -219,6 +220,41 @@ func TestAccAWSLaunchTemplate_EbsOptimized(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", ""),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLaunchTemplate_ElasticInferenceAccelerator(t *testing.T) {
+	var template1 ec2.LaunchTemplate
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_launch_template.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLaunchTemplateConfigElasticInferenceAccelerator(rName, "eia1.medium"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resourceName, &template1),
+					resource.TestCheckResourceAttr(resourceName, "elastic_inference_accelerator.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "elastic_inference_accelerator.0.type", "eia1.medium"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSLaunchTemplateConfigElasticInferenceAccelerator(rName, "eia1.large"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resourceName, &template1),
+					resource.TestCheckResourceAttr(resourceName, "elastic_inference_accelerator.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "elastic_inference_accelerator.0.type", "eia1.large"),
 				),
 			},
 		},
@@ -808,6 +844,18 @@ resource "aws_launch_template" "test" {
   name          = %q
 }
 `, ebsOptimized, rName)
+}
+
+func testAccAWSLaunchTemplateConfigElasticInferenceAccelerator(rName, elasticInferenceAcceleratorType string) string {
+	return fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name = %[1]q
+
+  elastic_inference_accelerator {
+    type = %[2]q
+  }
+}
+`, rName, elasticInferenceAcceleratorType)
 }
 
 func testAccAWSLaunchTemplateConfig_data(rInt int) string {
