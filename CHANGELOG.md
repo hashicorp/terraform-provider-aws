@@ -1,5 +1,9 @@
 ## 2.6.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_iam_user_group_membership: Support resource import [GH-6976]
+
 BUG FIXES:
 
 * data-source/aws_lb_target_group: Add missing schema attributes [GH-8213]
