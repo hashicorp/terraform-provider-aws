@@ -634,19 +634,19 @@ func buildParameterObject(rawParameterObject map[string]interface{}) (*datapipel
 func flattenDefaultPipelineObject(object *datapipeline.PipelineObject) (map[string]interface{}, error) {
 	pipelineObject := make(map[string]interface{})
 	for _, field := range object.Fields {
-		switch *field.Key {
+		switch aws.StringValue(field.Key) {
 		case "scheduleType":
-			pipelineObject["schedule_type"] = *field.StringValue
+			pipelineObject["schedule_type"] = aws.StringValue(field.StringValue)
 		case "failureAndRerunMode":
-			pipelineObject["failure_and_rerun_mode"] = *field.StringValue
+			pipelineObject["failure_and_rerun_mode"] = aws.StringValue(field.StringValue)
 		case "pipelineLogUri":
-			pipelineObject["pipeline_log_uri"] = *field.StringValue
+			pipelineObject["pipeline_log_uri"] = aws.StringValue(field.StringValue)
 		case "role":
-			pipelineObject["role"] = *field.StringValue
+			pipelineObject["role"] = aws.StringValue(field.StringValue)
 		case "resourceRole":
-			pipelineObject["resource_role"] = *field.StringValue
+			pipelineObject["resource_role"] = aws.StringValue(field.StringValue)
 		case "schedule":
-			pipelineObject["schedule"] = *field.RefValue
+			pipelineObject["schedule"] = aws.StringValue(field.RefValue)
 		}
 	}
 	return pipelineObject, nil
@@ -661,126 +661,126 @@ func flattenCommonPipelineObject(object *datapipeline.PipelineObject) (map[strin
 	pipelineObject["name"] = *object.Name
 
 	for _, field := range object.Fields {
-		switch *field.Key {
+		switch aws.StringValue(field.Key) {
 		case "attemptStatus":
-			pipelineObject["attempt_status"] = *field.StringValue
+			pipelineObject["attempt_status"] = aws.StringValue(field.StringValue)
 		case "attemptTimeout":
-			pipelineObject["attempt_timeout"] = *field.StringValue
+			pipelineObject["attempt_timeout"] = aws.StringValue(field.StringValue)
 		case "associatePublicIpAddress":
-			val, _ := strconv.ParseBool(*field.StringValue)
+			val, _ := strconv.ParseBool(aws.StringValue(field.StringValue))
 			pipelineObject["associate_public_ip_address"] = val
 		case "username":
-			pipelineObject["username"] = *field.StringValue
+			pipelineObject["username"] = aws.StringValue(field.StringValue)
 		case "*password":
-			pipelineObject["password"] = *field.StringValue
+			pipelineObject["password"] = aws.StringValue(field.StringValue)
 		case "rdsInstanceId":
-			pipelineObject["rds_instance_id"] = *field.StringValue
+			pipelineObject["rds_instance_id"] = aws.StringValue(field.StringValue)
 		case "databaseName":
-			pipelineObject["database_name"] = *field.StringValue
+			pipelineObject["database_name"] = aws.StringValue(field.StringValue)
 		case "jdbcProperties":
-			pipelineObject["jdbc_properties"] = *field.StringValue
+			pipelineObject["jdbc_properties"] = aws.StringValue(field.StringValue)
 		case "jdbcDriverJarUri":
-			pipelineObject["jdbc_driver_jar_uri"] = *field.StringValue
+			pipelineObject["jdbc_driver_jar_uri"] = aws.StringValue(field.StringValue)
 		case "createTableSql":
-			pipelineObject["create_table_sql"] = *field.StringValue
+			pipelineObject["create_table_sql"] = aws.StringValue(field.StringValue)
 		case "database":
-			pipelineObject["database"] = *field.RefValue
+			pipelineObject["database"] = aws.StringValue(field.RefValue)
 		case "insertQuery":
-			pipelineObject["insert_query"] = *field.StringValue
+			pipelineObject["insert_query"] = aws.StringValue(field.StringValue)
 		case "schemaName":
-			pipelineObject["schema_name"] = *field.StringValue
+			pipelineObject["schema_name"] = aws.StringValue(field.StringValue)
 		case "selectQuery":
-			pipelineObject["select_query"] = *field.StringValue
+			pipelineObject["select_query"] = aws.StringValue(field.StringValue)
 		case "availabilityZone":
-			pipelineObject["availability_zone"] = *field.StringValue
+			pipelineObject["availability_zone"] = aws.StringValue(field.StringValue)
 		case "httpProxy":
-			pipelineObject["http_proxy"] = *field.RefValue
+			pipelineObject["http_proxy"] = aws.StringValue(field.RefValue)
 		case "imageId":
-			pipelineObject["image_id"] = *field.StringValue
+			pipelineObject["image_id"] = aws.StringValue(field.StringValue)
 		case "instanceType":
-			pipelineObject["instance_type"] = *field.StringValue
+			pipelineObject["instance_type"] = aws.StringValue(field.StringValue)
 		case "keyPair":
-			pipelineObject["key_pair"] = *field.StringValue
+			pipelineObject["key_pair"] = aws.StringValue(field.StringValue)
 		case "maxActiveInstances":
-			val, _ := strconv.Atoi(*field.StringValue)
+			val, _ := strconv.Atoi(aws.StringValue(field.StringValue))
 			pipelineObject["max_active_instances"] = val
 		case "maximumRetries":
-			val, _ := strconv.Atoi(*field.StringValue)
+			val, _ := strconv.Atoi(aws.StringValue(field.StringValue))
 			pipelineObject["maximum_retries"] = val
 		case "onSuccess":
-			pipelineObject["on_success"] = *field.RefValue
+			pipelineObject["on_success"] = aws.StringValue(field.RefValue)
 		case "onFail":
-			pipelineObject["on_fail"] = *field.RefValue
+			pipelineObject["on_fail"] = aws.StringValue(field.RefValue)
 		case "onLateAction":
-			pipelineObject["on_late_action"] = *field.RefValue
+			pipelineObject["on_late_action"] = aws.StringValue(field.RefValue)
 		case "pipelineLogUri":
-			pipelineObject["pipeline_log_uri"] = *field.StringValue
+			pipelineObject["pipeline_log_uri"] = aws.StringValue(field.StringValue)
 		case "region":
-			pipelineObject["region"] = *field.StringValue
+			pipelineObject["region"] = aws.StringValue(field.StringValue)
 		case "scheduleType":
-			pipelineObject["schedule_type"] = *field.StringValue
+			pipelineObject["schedule_type"] = aws.StringValue(field.StringValue)
 		case "schedule":
-			pipelineObject["schedule"] = *field.RefValue
+			pipelineObject["schedule"] = aws.StringValue(field.RefValue)
 		case "securityGroupIds":
-			securityGroupIDObjects = append(securityGroupIDObjects, *field.StringValue)
+			securityGroupIDObjects = append(securityGroupIDObjects, aws.StringValue(field.StringValue))
 		case "securityGroups":
-			securityGroupObjects = append(securityGroupObjects, *field.StringValue)
+			securityGroupObjects = append(securityGroupObjects, aws.StringValue(field.StringValue))
 		case "subnetId":
-			pipelineObject["subnet_id"] = *field.StringValue
+			pipelineObject["subnet_id"] = aws.StringValue(field.StringValue)
 		case "table":
-			pipelineObject["table"] = *field.StringValue
+			pipelineObject["table"] = aws.StringValue(field.StringValue)
 		case "terminateAfter":
-			pipelineObject["terminate_after"] = *field.StringValue
+			pipelineObject["terminate_after"] = aws.StringValue(field.StringValue)
 		case "useOnDemandOnLastAttempt":
-			val, _ := strconv.ParseBool(*field.StringValue)
+			val, _ := strconv.ParseBool(aws.StringValue(field.StringValue))
 			pipelineObject["use_on_demand_on_last_attempt"] = val
 		case "compression":
-			pipelineObject["compression"] = *field.StringValue
+			pipelineObject["compression"] = aws.StringValue(field.StringValue)
 		case "dataFormat":
-			pipelineObject["data_format"] = *field.RefValue
+			pipelineObject["data_format"] = aws.StringValue(field.RefValue)
 		case "dependsOn":
-			pipelineObject["depends_on"] = *field.RefValue
+			pipelineObject["depends_on"] = aws.StringValue(field.RefValue)
 		case "directoryPath":
-			pipelineObject["directory_path"] = *field.StringValue
+			pipelineObject["directory_path"] = aws.StringValue(field.StringValue)
 		case "failureAndRerunMode":
-			pipelineObject["failure_and_rerun_mode"] = *field.StringValue
+			pipelineObject["failure_and_rerun_mode"] = aws.StringValue(field.StringValue)
 		case "input":
-			pipelineObject["input"] = *field.RefValue
+			pipelineObject["input"] = aws.StringValue(field.RefValue)
 		case "filePath":
-			pipelineObject["file_path"] = *field.StringValue
+			pipelineObject["file_path"] = aws.StringValue(field.StringValue)
 		case "output":
-			pipelineObject["output"] = *field.RefValue
+			pipelineObject["output"] = aws.StringValue(field.RefValue)
 		case "parent":
-			pipelineObject["parent"] = *field.RefValue
+			pipelineObject["parent"] = aws.StringValue(field.RefValue)
 		case "lateAfterTimeout":
-			pipelineObject["late_after_timeout"] = *field.StringValue
+			pipelineObject["late_after_timeout"] = aws.StringValue(field.StringValue)
 		case "manifestFilePath":
-			pipelineObject["manifest_file_path"] = *field.StringValue
+			pipelineObject["manifest_file_path"] = aws.StringValue(field.StringValue)
 		case "precondition":
-			pipelineObject["precondition"] = *field.RefValue
+			pipelineObject["precondition"] = aws.StringValue(field.RefValue)
 		case "reportProgressTimeout":
-			pipelineObject["report_progress_timeout"] = *field.StringValue
+			pipelineObject["report_progress_timeout"] = aws.StringValue(field.StringValue)
 		case "retryDelay":
-			pipelineObject["retry_delay"] = *field.StringValue
+			pipelineObject["retry_delay"] = aws.StringValue(field.StringValue)
 		case "runsOn":
-			pipelineObject["runs_on"] = *field.RefValue
+			pipelineObject["runs_on"] = aws.StringValue(field.RefValue)
 		case "s3EncryptionType":
-			pipelineObject["s3_encryption_type"] = *field.StringValue
+			pipelineObject["s3_encryption_type"] = aws.StringValue(field.StringValue)
 		case "workerGroup":
-			pipelineObject["worker_group"] = *field.StringValue
+			pipelineObject["worker_group"] = aws.StringValue(field.StringValue)
 		case "period":
-			pipelineObject["period"] = *field.StringValue
+			pipelineObject["period"] = aws.StringValue(field.StringValue)
 		case "spotBidPrice":
-			val, _ := strconv.ParseFloat(*field.StringValue, 64)
+			val, _ := strconv.ParseFloat(aws.StringValue(field.StringValue), 64)
 			pipelineObject["spot_bid_price"] = val
 		case "startAt":
-			pipelineObject["start_at"] = *field.StringValue
+			pipelineObject["start_at"] = aws.StringValue(field.StringValue)
 		case "startDateTime":
-			pipelineObject["start_date_time"] = *field.StringValue
+			pipelineObject["start_date_time"] = aws.StringValue(field.StringValue)
 		case "endDateTime":
-			pipelineObject["end_date_time"] = *field.StringValue
+			pipelineObject["end_date_time"] = aws.StringValue(field.StringValue)
 		case "occurrences":
-			val, err := strconv.Atoi(*field.StringValue)
+			val, err := strconv.Atoi(aws.StringValue(field.StringValue))
 			if err != nil {
 				return nil, err
 			}

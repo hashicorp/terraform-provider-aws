@@ -1157,20 +1157,21 @@ func flattenParameterObjects(objects []*datapipeline.ParameterObject) []map[stri
 
 		obj["id"] = *object.Id
 		for _, attribute := range object.Attributes {
-			if *attribute.Key == "description" {
-				obj["description"] = *attribute.StringValue
+			attributeKey := aws.StringValue(attribute.Key)
+			if attributeKey == "description" {
+				obj["description"] = aws.StringValue(attribute.StringValue)
 			}
-			if *attribute.Key == "optional" {
-				obj["optional"] = *attribute.StringValue
+			if attributeKey == "optional" {
+				obj["optional"] = aws.StringValue(attribute.StringValue)
 			}
-			if *attribute.Key == "allowed_values" {
-				obj["type"] = *attribute.StringValue
+			if attributeKey == "allowed_values" {
+				obj["allowed_values"] = aws.StringValue(attribute.StringValue)
 			}
-			if *attribute.Key == "default" {
-				obj["default"] = *attribute.StringValue
+			if attributeKey == "default" {
+				obj["default"] = aws.StringValue(attribute.StringValue)
 			}
-			if *attribute.Key == "is_array" {
-				obj["is_array"] = *attribute.StringValue
+			if attributeKey == "is_array" {
+				obj["is_array"] = aws.StringValue(attribute.StringValue)
 			}
 		}
 		parameterObjects = append(parameterObjects, obj)
@@ -1184,8 +1185,8 @@ func flattenParameterValues(objects []*datapipeline.ParameterValue) []map[string
 
 	for _, object := range objects {
 		var obj map[string]interface{}
-		obj["id"] = *object.Id
-		obj["string_value"] = *object.StringValue
+		obj["id"] = aws.StringValue(object.Id)
+		obj["string_value"] = aws.StringValue(object.StringValue)
 
 		parameterValues = append(parameterValues, obj)
 	}
@@ -1197,8 +1198,8 @@ func flattenPipelineObjects(d *schema.ResourceData, pipelineObjects []*datapipel
 
 	for _, pipelineObject := range pipelineObjects {
 		for _, field := range pipelineObject.Fields {
-			if *field.Key == "type" {
-				switch *field.StringValue {
+			if aws.StringValue(field.Key) == "type" {
+				switch aws.StringValue(field.StringValue) {
 				case "Default":
 					object, err := flattenDefaultPipelineObject(pipelineObject)
 					if err != nil {
