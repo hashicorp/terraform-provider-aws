@@ -1130,9 +1130,7 @@ func resourceAwsDataPipelineRetrieve(id string, conn *datapipeline.DataPipeline)
 
 	if len(resp.PipelineDescriptionList) != 1 ||
 		*resp.PipelineDescriptionList[0].PipelineId != id {
-		if err != nil {
-			return nil, nil
-		}
+		return nil, nil
 	}
 
 	return resp.PipelineDescriptionList[0], nil
