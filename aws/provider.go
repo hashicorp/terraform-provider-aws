@@ -633,6 +633,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_ram_principal_association":                           resourceAwsRamPrincipalAssociation(),
 			"aws_ram_resource_association":                            resourceAwsRamResourceAssociation(),
 			"aws_ram_resource_share":                                  resourceAwsRamResourceShare(),
+			"aws_ram_resource_share_accepter":                         resourceAwsRamResourceShareAccepter(),
 			"aws_rds_cluster":                                         resourceAwsRDSCluster(),
 			"aws_rds_cluster_endpoint":                                resourceAwsRDSClusterEndpoint(),
 			"aws_rds_cluster_instance":                                resourceAwsRDSClusterInstance(),
