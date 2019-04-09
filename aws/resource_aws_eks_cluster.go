@@ -14,11 +14,11 @@ import (
 )
 
 var eksLogTypes = []string{
-  eks.LogTypeApi,
-  eks.LogTypeAudit,
-  eks.LogTypeAuthenticator,
-  eks.LogTypeControllerManager,
-  eks.LogTypeScheduler,
+	eks.LogTypeApi,
+	eks.LogTypeAudit,
+	eks.LogTypeAuthenticator,
+	eks.LogTypeControllerManager,
+	eks.LogTypeScheduler,
 }
 
 func resourceAwsEksCluster() *schema.Resource {
@@ -122,12 +122,12 @@ func resourceAwsEksCluster() *schema.Resource {
 					},
 				},
 			},
-			"logging": {
+			"enabled_cluster_log_types": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(defaultLoggingTypes, true),
+					ValidateFunc: validation.StringInSlice(eksLogTypes, true),
 				},
 			},
 		},
@@ -142,14 +142,11 @@ func resourceAwsEksClusterCreate(d *schema.ResourceData, meta interface{}) error
 		Name:               aws.String(name),
 		RoleArn:            aws.String(d.Get("role_arn").(string)),
 		ResourcesVpcConfig: expandEksVpcConfigRequest(d.Get("vpc_config").([]interface{})),
+		Logging:            expandEksLoggingTypes(d.Get("enabled_cluster_log_types").([]interface{})),
 	}
 
 	if v, ok := d.GetOk("version"); ok && v.(string) != "" {
 		input.Version = aws.String(v.(string))
-	}
-
-	if l, ok := d.GetOk("logging"); ok && l.([]interface{}) != nil {
-		input.Logging = expandEksLoggingTypes(l.([]interface{}))
 	}
 
 	log.Printf("[DEBUG] Creating EKS Cluster: %s", input)
@@ -233,18 +230,13 @@ func resourceAwsEksClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("platform_version", cluster.PlatformVersion)
 	d.Set("role_arn", cluster.RoleArn)
 	d.Set("version", cluster.Version)
+	if err := d.Set("enabled_cluster_log_types", flattenEksEnabledLogTypes(cluster.Logging)); err != nil {
+		return fmt.Errorf("error setting logging: %s", err)
+	}
 
 	if err := d.Set("vpc_config", flattenEksVpcConfigResponse(cluster.ResourcesVpcConfig)); err != nil {
 		return fmt.Errorf("error setting vpc_config: %s", err)
 	}
-
-	types := []string{}
-	if len(cluster.Logging.ClusterLogging) > 0 && *cluster.Logging.ClusterLogging[0].Enabled {
-		for _, logType := range cluster.Logging.ClusterLogging[0].Types {
-			types = append(types, *logType)
-		}
-	}
-	d.Set("logging", types)
 
 	return nil
 }
@@ -277,8 +269,8 @@ func resourceAwsEksClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	if d.HasChange("logging") {
-		l := d.Get("logging")
+	if d.HasChange("enabled_cluster_log_types") {
+		l := d.Get("enabled_cluster_log_types")
 		input := &eks.UpdateClusterConfigInput{
 			Name:    aws.String(d.Id()),
 			Logging: expandEksLoggingTypes(l.([]interface{})),
@@ -398,16 +390,14 @@ func expandEksVpcConfigUpdateRequest(l []interface{}) *eks.VpcConfigRequest {
 }
 
 func expandEksLoggingTypes(logTypes []interface{}) *eks.Logging {
-	enabled := true
-	disabled := false
-	enabledTypes := []*string{}
-	for _, logType := range logTypes {
-		typeVal := logType.(string)
-		enabledTypes = append(enabledTypes, &typeVal)
+	if len(logTypes) == 0 {
+		return nil
 	}
 
+	enabledTypes := expandStringList(logTypes)
+
 	disabledTypes := []*string{}
-	for _, defaultType := range defaultLoggingTypes {
+	for _, defaultType := range eksLogTypes {
 		logType := defaultType
 		if _, ok := sliceContainsString(logTypes, logType); !ok {
 			disabledTypes = append(disabledTypes, &logType)
@@ -415,12 +405,12 @@ func expandEksLoggingTypes(logTypes []interface{}) *eks.Logging {
 	}
 
 	enabledLogs := &eks.LogSetup{
-		Enabled: &enabled,
+		Enabled: aws.Bool(true),
 		Types:   enabledTypes,
 	}
 
 	disabledLogs := &eks.LogSetup{
-		Enabled: &disabled,
+		Enabled: aws.Bool(false),
 		Types:   disabledTypes,
 	}
 
@@ -457,6 +447,25 @@ func flattenEksVpcConfigResponse(vpcConfig *eks.VpcConfigResponse) []map[string]
 	}
 
 	return []map[string]interface{}{m}
+}
+
+func flattenEksEnabledLogTypes(logging *eks.Logging) []string {
+	enabledLogTypes := []string{}
+
+	if logging != nil {
+		logSetups := logging.ClusterLogging
+		for _, logSetup := range logSetups {
+			if logSetup == nil || !aws.BoolValue(logSetup.Enabled) {
+				continue
+			}
+
+			for _, logType := range logSetup.Types {
+				enabledLogTypes = append(enabledLogTypes, *logType)
+			}
+		}
+	}
+
+	return enabledLogTypes
 }
 
 func refreshEksClusterStatus(conn *eks.EKS, clusterName string) resource.StateRefreshFunc {

@@ -161,8 +161,8 @@ func TestAccAWSEksCluster_Logging(t *testing.T) {
 				Config: testAccAWSEksClusterConfig_Logging(rName, []string{"api"}),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksClusterExists(resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "logging.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "logging.0", "api"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cluster_log_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cluster_log_types.0", "api"),
 				),
 			},
 			{
@@ -175,9 +175,9 @@ func TestAccAWSEksCluster_Logging(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksClusterExists(resourceName, &cluster2),
 					testAccCheckAWSEksClusterNotRecreated(&cluster1, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, "logging.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "logging.0", "api"),
-					resource.TestCheckResourceAttr(resourceName, "logging.1", "audit"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cluster_log_types.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cluster_log_types.0", "api"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cluster_log_types.1", "audit"),
 				),
 			},
 		},
@@ -480,7 +480,7 @@ func testAccAWSEksClusterConfig_Logging(rName string, logTypes []string) string 
 resource "aws_eks_cluster" "test" {
   name     = "%s"
   role_arn = "${aws_iam_role.test.arn}"
-  logging  = ["%v"]
+  enabled_cluster_log_types  = ["%v"]
 
   vpc_config {
     subnet_ids = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
