@@ -19,7 +19,7 @@ data "aws_api_gateway_rest_api" "my_rest_api" {
 }
 
 data "aws_api_gateway_resource" "my_resource" {
-  rest_api_id = "${aws_api_gateway_rest_api.my_rest_api.id}"
+  rest_api_id = "${data.aws_api_gateway_rest_api.my_rest_api.id}"
   path        = "/endpoint/path"
 }
 ```

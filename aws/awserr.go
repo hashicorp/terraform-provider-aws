@@ -19,22 +19,9 @@ func isAWSErr(err error, code string, message string) bool {
 	return false
 }
 
-// IsAWSErrExtended returns true if the error matches all conditions
-//  * err is of type awserr.Error
-//  * Error.Code() matches code
-//  * Error.Message() contains message
-//  * Error.OrigErr() contains origErrMessage
-// Note: This function will be moved out of the aws package in the future.
-func IsAWSErrExtended(err error, code string, message string, origErrMessage string) bool {
-	if !isAWSErr(err, code, message) {
-		return false
-	}
-	return strings.Contains(err.(awserr.Error).OrigErr().Error(), origErrMessage)
-}
-
 func retryOnAwsCode(code string, f func() (interface{}, error)) (interface{}, error) {
 	var resp interface{}
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
 		var err error
 		resp, err = f()
 		if err != nil {

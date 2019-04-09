@@ -45,6 +45,14 @@ resource "aws_secretsmanager_secret_version" "example" {
 }
 ```
 
+Reading key-value pairs from JSON back into a native Terraform map can be accomplished in Terraform 0.12 and later with the [`jsondecode()` function](https://www.terraform.io/docs/configuration/functions/jsondecode.html):
+
+```hcl
+output "example" {
+  value = jsondecode(aws_secretsmanager_secret_version.example.secret_string)["key1"]
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:

@@ -25,6 +25,8 @@ var redshiftServiceAccountPerRegionMap = map[string]string{
 	"eu-west-2":      "307160386991",
 	"eu-west-3":      "915173422425",
 	"sa-east-1":      "075028567923",
+	"us-gov-east-1":  "665727464434",
+	"us-gov-west-1":  "665727464434",
 }
 
 func dataSourceAwsRedshiftServiceAccount() *schema.Resource {

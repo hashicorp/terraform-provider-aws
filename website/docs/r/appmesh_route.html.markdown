@@ -15,8 +15,8 @@ Provides an AWS App Mesh route resource.
 ```hcl
 resource "aws_appmesh_route" "serviceb" {
   name                = "serviceB-route"
-  mesh_name           = "simpleapp"
-  virtual_router_name = "serviceB"
+  mesh_name           = "${aws_appmesh_mesh.simple.id}"
+  virtual_router_name = "${aws_appmesh_virtual_router.serviceb.name}"
 
   spec {
     http_route {
@@ -26,12 +26,12 @@ resource "aws_appmesh_route" "serviceb" {
 
       action {
         weighted_target {
-          virtual_node = "serviceBv1"
+          virtual_node = "${aws_appmesh_virtual_node.serviceb1.name}"
           weight       = 90
         }
 
         weighted_target {
-          virtual_node = "serviceBv2"
+          virtual_node = "${aws_appmesh_virtual_node.serviceb2.name}"
           weight       = 10
         }
       }
@@ -46,7 +46,7 @@ The following arguments are supported:
 
 * `name` - (Required) The name to use for the route.
 * `mesh_name` - (Required) The name of the service mesh in which to create the route.
-* `virtual_route_name` - (Required) The name of the virtual router in which to create the route.
+* `virtual_router_name` - (Required) The name of the virtual router in which to create the route.
 * `spec` - (Required) The route specification to apply.
 
 The `spec` object supports the following:
@@ -81,3 +81,12 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - The ARN of the route.
 * `created_date` - The creation date of the route.
 * `last_updated_date` - The last update date of the route.
+
+## Import
+
+App Mesh virtual routes can be imported using `mesh_name` and `virtual_router_name` together with the route's `name`,
+e.g.
+
+```
+$ terraform import aws_appmesh_virtual_route.serviceb simpleapp/serviceB/serviceB-route
+```

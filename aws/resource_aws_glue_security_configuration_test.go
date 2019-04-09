@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -43,11 +42,6 @@ func testSweepGlueSecurityConfigurations(region string) error {
 
 		for _, securityConfiguration := range output.SecurityConfigurations {
 			name := aws.StringValue(securityConfiguration.Name)
-
-			if !strings.HasPrefix(name, "tf-acc-test") {
-				log.Printf("[INFO] Skipping Glue Security Configuration: %s", name)
-				continue
-			}
 
 			log.Printf("[INFO] Deleting Glue Security Configuration: %s", name)
 			err := deleteGlueSecurityConfiguration(conn, name)

@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -44,9 +45,17 @@ func dataSourceAwsEip() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"private_dns": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"public_ip": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
+			},
+			"public_dns": {
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"public_ipv4_pool": {
@@ -86,7 +95,6 @@ func dataSourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 		req.Filters = nil
 	}
 
-	log.Printf("[DEBUG] Reading EIP: %s", req)
 	resp, err := conn.DescribeAddresses(req)
 	if err != nil {
 		return fmt.Errorf("error describing EC2 Address: %s", err)
@@ -112,8 +120,30 @@ func dataSourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("instance_id", eip.InstanceId)
 	d.Set("network_interface_id", eip.NetworkInterfaceId)
 	d.Set("network_interface_owner_id", eip.NetworkInterfaceOwnerId)
+
+	region := *conn.Config.Region
+
 	d.Set("private_ip", eip.PrivateIpAddress)
+	if eip.PrivateIpAddress != nil {
+		dashIP := strings.Replace(*eip.PrivateIpAddress, ".", "-", -1)
+
+		if region == "us-east-1" {
+			d.Set("private_dns", fmt.Sprintf("ip-%s.ec2.internal", dashIP))
+		} else {
+			d.Set("private_dns", fmt.Sprintf("ip-%s.%s.compute.internal", dashIP, region))
+		}
+	}
+
 	d.Set("public_ip", eip.PublicIp)
+	if eip.PublicIp != nil {
+		dashIP := strings.Replace(*eip.PublicIp, ".", "-", -1)
+
+		if region == "us-east-1" {
+			d.Set("public_dns", fmt.Sprintf("ec2-%s.compute-1.amazonaws.com", dashIP))
+		} else {
+			d.Set("public_dns", fmt.Sprintf("ec2-%s.%s.compute.amazonaws.com", dashIP, region))
+		}
+	}
 	d.Set("public_ipv4_pool", eip.PublicIpv4Pool)
 	d.Set("tags", tagsToMap(eip.Tags))
 

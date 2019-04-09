@@ -2,9 +2,9 @@ package aws
 
 import (
 	"fmt"
-	"testing"
-
+	"log"
 	"regexp"
+	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -12,6 +12,59 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_ebs_volume", &resource.Sweeper{
+		Name: "aws_ebs_volume",
+		Dependencies: []string{
+			"aws_instance",
+		},
+		F: testSweepEbsVolumes,
+	})
+}
+
+func testSweepEbsVolumes(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).ec2conn
+
+	err = conn.DescribeVolumesPages(&ec2.DescribeVolumesInput{}, func(page *ec2.DescribeVolumesOutput, lastPage bool) bool {
+		for _, volume := range page.Volumes {
+			id := aws.StringValue(volume.VolumeId)
+
+			if aws.StringValue(volume.State) != ec2.VolumeStateAvailable {
+				log.Printf("[INFO] Skipping unavailable EC2 EBS Volume: %s", id)
+				continue
+			}
+
+			input := &ec2.DeleteVolumeInput{
+				VolumeId: aws.String(id),
+			}
+
+			log.Printf("[INFO] Deleting EC2 EBS Volume: %s", id)
+			_, err := conn.DeleteVolume(input)
+
+			if err != nil {
+				log.Printf("[ERROR] Error deleting EC2 EBS Volume (%s): %s", id, err)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping EC2 EBS Volume sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("Error retrieving EC2 EBS Volumes: %s", err)
+	}
+
+	return nil
+}
 
 func TestAccAWSEBSVolume_basic(t *testing.T) {
 	var v ec2.Volume

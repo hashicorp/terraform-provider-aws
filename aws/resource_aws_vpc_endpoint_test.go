@@ -2,9 +2,11 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -14,6 +16,70 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_vpc_endpoint", &resource.Sweeper{
+		Name: "aws_vpc_endpoint",
+		F:    testSweepEc2VpcEndpoints,
+	})
+}
+
+func testSweepEc2VpcEndpoints(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).ec2conn
+	input := &ec2.DescribeVpcEndpointsInput{}
+
+	for {
+		output, err := conn.DescribeVpcEndpoints(input)
+
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping EC2 VPC Endpoint sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error retrieving EC2 VPC Endpoints: %s", err)
+		}
+
+		for _, vpcEndpoint := range output.VpcEndpoints {
+			if aws.StringValue(vpcEndpoint.State) != "available" {
+				continue
+			}
+
+			id := aws.StringValue(vpcEndpoint.VpcEndpointId)
+
+			input := &ec2.DeleteVpcEndpointsInput{
+				VpcEndpointIds: []*string{aws.String(id)},
+			}
+
+			log.Printf("[INFO] Deleting EC2 VPC Endpoint: %s", id)
+			_, err := conn.DeleteVpcEndpoints(input)
+
+			if isAWSErr(err, "InvalidVpcEndpointId.NotFound", "") {
+				continue
+			}
+
+			if err != nil {
+				return fmt.Errorf("error deleting EC2 VPC Endpoint (%s): %s", id, err)
+			}
+
+			if err := vpcEndpointWaitUntilDeleted(conn, id, 10*time.Minute); err != nil {
+				return fmt.Errorf("error waiting for VPC Endpoint (%s) to delete: %s", id, err)
+			}
+		}
+
+		if aws.StringValue(output.NextToken) == "" {
+			break
+		}
+
+		input.NextToken = output.NextToken
+	}
+
+	return nil
+}
 
 func TestAccAWSVpcEndpoint_importBasic(t *testing.T) {
 	resourceName := "aws_vpc_endpoint.s3"
@@ -96,6 +162,67 @@ func TestAccAWSVpcEndpoint_gatewayWithRouteTableAndPolicy(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_vpc_endpoint.s3", "network_interface_ids.#", "0"),
 					resource.TestCheckResourceAttr("aws_vpc_endpoint.s3", "security_group_ids.#", "0"),
 					resource.TestCheckResourceAttr("aws_vpc_endpoint.s3", "private_dns_enabled", "false"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSVpcEndpoint_Gateway_Policy(t *testing.T) {
+	var endpoint ec2.VpcEndpoint
+	// This policy checks the DiffSuppressFunc
+	policy1 := `
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AmazonLinux2AMIRepositoryAccess",
+      "Principal": "*",
+      "Action": [
+        "s3:GetObject"
+      ],
+      "Effect": "Allow",
+      "Resource": [
+        "arn:aws:s3:::amazonlinux.*.amazonaws.com/*"
+      ]
+    }
+  ]
+}
+`
+	policy2 := `
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Sid": "AllowAll",
+    "Effect": "Allow",
+    "Principal": {"AWS": "*" },
+    "Action": "*",
+    "Resource": "*"
+  }]
+}
+`
+	resourceName := "aws_vpc_endpoint.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckVpcEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpcEndpointConfigGatewayPolicy(policy1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpcEndpointExists(resourceName, &endpoint),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccVpcEndpointConfigGatewayPolicy(policy2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpcEndpointExists(resourceName, &endpoint),
 				),
 			},
 		},
@@ -440,6 +567,28 @@ resource "aws_vpc_endpoint" "ec2" {
   security_group_ids = ["${data.aws_security_group.default.id}"]
 }
 `
+
+func testAccVpcEndpointConfigGatewayPolicy(policy string) string {
+	return fmt.Sprintf(`
+data "aws_vpc_endpoint_service" "s3" {
+  service = "s3"
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-vpc-endpoint-gateway-policy"
+  }
+}
+
+resource "aws_vpc_endpoint" "test" {
+  policy       = <<POLICY%[1]sPOLICY
+  service_name = "${data.aws_vpc_endpoint_service.s3.service_name}"
+  vpc_id       = "${aws_vpc.test.id}"
+}
+`, policy)
+}
 
 const testAccVpcEndpointConfig_interfaceWithSubnet = `
 resource "aws_vpc" "foo" {

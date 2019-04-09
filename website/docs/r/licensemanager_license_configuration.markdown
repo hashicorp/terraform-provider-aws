@@ -26,7 +26,7 @@ resource "aws_licensemanager_license_configuration" "example" {
     "#minimumSockets=2"
   ]
 
-  tags {
+  tags = {
     foo = "barr"
   }
 }

@@ -266,7 +266,7 @@ resource "aws_api_gateway_stage" "test" {
   cache_cluster_enabled = true
   cache_cluster_size = "0.5"
   xray_tracing_enabled = true
-  variables {
+  variables = {
     one = "1"
     two = "2"
   }
@@ -286,7 +286,7 @@ resource "aws_api_gateway_stage" "test" {
   cache_cluster_enabled = false
   description = "Hello world"
   xray_tracing_enabled = false
-  variables {
+  variables = {
     one = "1"
     three = "3"
   }
@@ -310,7 +310,7 @@ resource "aws_api_gateway_stage" "test" {
   deployment_id = "${aws_api_gateway_deployment.dev.id}"
   cache_cluster_enabled = true
   cache_cluster_size = "0.5"
-  variables {
+  variables = {
     one = "1"
     two = "2"
   }

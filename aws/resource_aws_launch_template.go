@@ -519,6 +519,10 @@ func resourceAwsLaunchTemplateCreate(d *schema.ResourceData, meta interface{}) e
 		LaunchTemplateData: launchTemplateData,
 	}
 
+	if v, ok := d.GetOk("description"); ok && v.(string) != "" {
+		launchTemplateOpts.VersionDescription = aws.String(v.(string))
+	}
+
 	resp, err := conn.CreateLaunchTemplate(launchTemplateOpts)
 	if err != nil {
 		return err
@@ -596,6 +600,8 @@ func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	log.Printf("[DEBUG] Received launch template version %q (version %d)", d.Id(), *lt.LatestVersionNumber)
+
+	d.Set("description", dltv.LaunchTemplateVersions[0].VersionDescription)
 
 	ltData := dltv.LaunchTemplateVersions[0].LaunchTemplateData
 
@@ -677,6 +683,10 @@ func resourceAwsLaunchTemplateUpdate(d *schema.ResourceData, meta interface{}) e
 			ClientToken:        aws.String(resource.UniqueId()),
 			LaunchTemplateId:   aws.String(d.Id()),
 			LaunchTemplateData: launchTemplateData,
+		}
+
+		if v, ok := d.GetOk("description"); ok && v.(string) != "" {
+			launchTemplateVersionOpts.VersionDescription = aws.String(v.(string))
 		}
 
 		_, createErr := conn.CreateLaunchTemplateVersion(launchTemplateVersionOpts)
@@ -1008,6 +1018,9 @@ func buildLaunchTemplateData(d *schema.ResourceData) (*ec2.RequestLaunchTemplate
 		bdms := v.([]interface{})
 
 		for _, bdm := range bdms {
+			if bdm == nil {
+				continue
+			}
 			blockDeviceMapping, err := readBlockDeviceMappingFromConfig(bdm.(map[string]interface{}))
 			if err != nil {
 				return nil, err
@@ -1020,7 +1033,7 @@ func buildLaunchTemplateData(d *schema.ResourceData) (*ec2.RequestLaunchTemplate
 	if v, ok := d.GetOk("capacity_reservation_specification"); ok {
 		crs := v.([]interface{})
 
-		if len(crs) > 0 {
+		if len(crs) > 0 && crs[0] != nil {
 			opts.CapacityReservationSpecification = readCapacityReservationSpecificationFromConfig(crs[0].(map[string]interface{}))
 		}
 	}
@@ -1028,7 +1041,7 @@ func buildLaunchTemplateData(d *schema.ResourceData) (*ec2.RequestLaunchTemplate
 	if v, ok := d.GetOk("credit_specification"); ok && (strings.HasPrefix(instanceType, "t2") || strings.HasPrefix(instanceType, "t3")) {
 		cs := v.([]interface{})
 
-		if len(cs) > 0 {
+		if len(cs) > 0 && cs[0] != nil {
 			opts.CreditSpecification = readCreditSpecificationFromConfig(cs[0].(map[string]interface{}))
 		}
 	}
@@ -1046,7 +1059,7 @@ func buildLaunchTemplateData(d *schema.ResourceData) (*ec2.RequestLaunchTemplate
 	if v, ok := d.GetOk("iam_instance_profile"); ok {
 		iip := v.([]interface{})
 
-		if len(iip) > 0 {
+		if len(iip) > 0 && iip[0] != nil {
 			opts.IamInstanceProfile = readIamInstanceProfileFromConfig(iip[0].(map[string]interface{}))
 		}
 	}
@@ -1054,7 +1067,7 @@ func buildLaunchTemplateData(d *schema.ResourceData) (*ec2.RequestLaunchTemplate
 	if v, ok := d.GetOk("instance_market_options"); ok {
 		imo := v.([]interface{})
 
-		if len(imo) > 0 {
+		if len(imo) > 0 && imo[0] != nil {
 			instanceMarketOptions, err := readInstanceMarketOptionsFromConfig(imo[0].(map[string]interface{}))
 			if err != nil {
 				return nil, err
@@ -1068,6 +1081,9 @@ func buildLaunchTemplateData(d *schema.ResourceData) (*ec2.RequestLaunchTemplate
 		lsList := v.(*schema.Set).List()
 
 		for _, ls := range lsList {
+			if ls == nil {
+				continue
+			}
 			licenseSpecifications = append(licenseSpecifications, readLicenseSpecificationFromConfig(ls.(map[string]interface{})))
 		}
 		opts.LicenseSpecifications = licenseSpecifications
@@ -1075,7 +1091,7 @@ func buildLaunchTemplateData(d *schema.ResourceData) (*ec2.RequestLaunchTemplate
 
 	if v, ok := d.GetOk("monitoring"); ok {
 		m := v.([]interface{})
-		if len(m) > 0 {
+		if len(m) > 0 && m[0] != nil {
 			mData := m[0].(map[string]interface{})
 			monitoring := &ec2.LaunchTemplatesMonitoringRequest{
 				Enabled: aws.Bool(mData["enabled"].(bool)),
@@ -1089,6 +1105,9 @@ func buildLaunchTemplateData(d *schema.ResourceData) (*ec2.RequestLaunchTemplate
 		niList := v.([]interface{})
 
 		for _, ni := range niList {
+			if ni == nil {
+				continue
+			}
 			niData := ni.(map[string]interface{})
 			networkInterface := readNetworkInterfacesFromConfig(niData)
 			networkInterfaces = append(networkInterfaces, networkInterface)
@@ -1099,7 +1118,7 @@ func buildLaunchTemplateData(d *schema.ResourceData) (*ec2.RequestLaunchTemplate
 	if v, ok := d.GetOk("placement"); ok {
 		p := v.([]interface{})
 
-		if len(p) > 0 {
+		if len(p) > 0 && p[0] != nil {
 			opts.Placement = readPlacementFromConfig(p[0].(map[string]interface{}))
 		}
 	}
@@ -1109,6 +1128,9 @@ func buildLaunchTemplateData(d *schema.ResourceData) (*ec2.RequestLaunchTemplate
 		t := v.([]interface{})
 
 		for _, ts := range t {
+			if ts == nil {
+				continue
+			}
 			tsData := ts.(map[string]interface{})
 			tags := tagsFromMap(tsData["tags"].(map[string]interface{}))
 			tagSpecification := &ec2.LaunchTemplateTagSpecificationRequest{

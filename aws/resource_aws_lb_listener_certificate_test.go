@@ -197,7 +197,7 @@ resource "aws_lb_listener_certificate" "additional_2" {
 
 resource "aws_lb" "test" {
   name_prefix    = "%s"
-  subnets = ["${aws_subnet.test.*.id}"]
+  subnets = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
   internal = true
 }
 
@@ -211,7 +211,7 @@ resource "aws_lb_listener" "test" {
   load_balancer_arn = "${aws_lb.test.arn}"
   port              = "443"
   protocol          = "HTTPS"
-  ssl_policy        = "ELBSecurityPolicy-2015-05"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
   certificate_arn   = "${aws_iam_server_certificate.default.arn}"
 
   default_action {

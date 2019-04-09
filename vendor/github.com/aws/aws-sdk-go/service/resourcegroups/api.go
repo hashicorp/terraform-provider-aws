@@ -986,8 +986,8 @@ func (c *ResourceGroups) TagRequest(input *TagInput) (req *request.Request, outp
 
 // Tag API operation for AWS Resource Groups.
 //
-// Adds specified tags to a resource with the specified ARN. Existing tags on
-// a resource are not changed if they are not specified in the request parameters.
+// Adds tags to a resource group with the specified ARN. Existing tags on a
+// resource group are not changed if they are not specified in the request parameters.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about

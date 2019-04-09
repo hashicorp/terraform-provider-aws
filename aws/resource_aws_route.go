@@ -349,8 +349,6 @@ func resourceAwsRouteUpdate(d *schema.ResourceData, meta interface{}) error {
 		"transit_gateway_id",
 		"vpc_peering_connection_id",
 	}
-	replaceOpts := &ec2.ReplaceRouteInput{}
-
 	// Check if more than 1 target is specified
 	for _, target := range allowedTargets {
 		if len(d.Get(target).(string)) > 0 {
@@ -373,6 +371,7 @@ func resourceAwsRouteUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	var replaceOpts *ec2.ReplaceRouteInput
 	// Formulate ReplaceRouteInput based on the target type
 	switch setTarget {
 	case "gateway_id":
@@ -424,11 +423,7 @@ func resourceAwsRouteUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	// Replace the route
 	_, err := conn.ReplaceRoute(replaceOpts)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func resourceAwsRouteDelete(d *schema.ResourceData, meta interface{}) error {
@@ -445,8 +440,7 @@ func resourceAwsRouteDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 	log.Printf("[DEBUG] Route delete opts: %s", deleteOpts)
 
-	var err error
-	err = resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+	var err error = resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		log.Printf("[DEBUG] Trying to delete route with opts %s", deleteOpts)
 		resp, err := conn.DeleteRoute(deleteOpts)
 		log.Printf("[DEBUG] Route delete result: %s", resp)
@@ -468,11 +462,7 @@ func resourceAwsRouteDelete(d *schema.ResourceData, meta interface{}) error {
 		return resource.NonRetryableError(err)
 	})
 
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func resourceAwsRouteExists(d *schema.ResourceData, meta interface{}) (bool, error) {

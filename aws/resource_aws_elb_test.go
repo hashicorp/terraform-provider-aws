@@ -7,7 +7,6 @@ import (
 	"reflect"
 	"regexp"
 	"sort"
-	"strings"
 	"testing"
 	"time"
 
@@ -33,10 +32,6 @@ func testSweepELBs(region string) error {
 	}
 	conn := client.(*AWSClient).elbconn
 
-	prefixes := []string{
-		"test-elb-",
-	}
-
 	err = conn.DescribeLoadBalancersPages(&elb.DescribeLoadBalancersInput{}, func(out *elb.DescribeLoadBalancersOutput, isLast bool) bool {
 		if len(out.LoadBalancerDescriptions) == 0 {
 			log.Println("[INFO] No ELBs found for sweeping")
@@ -44,17 +39,6 @@ func testSweepELBs(region string) error {
 		}
 
 		for _, lb := range out.LoadBalancerDescriptions {
-			skip := true
-			for _, prefix := range prefixes {
-				if strings.HasPrefix(*lb.LoadBalancerName, prefix) {
-					skip = false
-					break
-				}
-			}
-			if skip {
-				log.Printf("[INFO] Skipping ELB: %s", *lb.LoadBalancerName)
-				continue
-			}
 			log.Printf("[INFO] Deleting ELB: %s", *lb.LoadBalancerName)
 
 			_, err := conn.DeleteLoadBalancer(&elb.DeleteLoadBalancerInput{
