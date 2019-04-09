@@ -2,6 +2,7 @@
 
 ENHANCEMENTS:
 
+* resource/aws_eks_cluster: Add `enabled_cluster_log_types` argument (support EKS control plane logging) [GH-8216]
 * resource/aws_iam_user_group_membership: Support resource import [GH-6976]
 
 BUG FIXES:
