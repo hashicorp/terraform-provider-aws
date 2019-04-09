@@ -17,7 +17,7 @@ Basic usage:
 ```hcl
 resource "aws_sagemaker_endpoint" "e" {
     name = "my-endpoint"
-    configuration_name = "${aws_sagemaker_endpoint_configuration.ec.name}"
+    endpoint_config_name = "${aws_sagemaker_endpoint_configuration.ec.name}"
 
     tags = {
       Name = "foo"
@@ -29,7 +29,7 @@ resource "aws_sagemaker_endpoint" "e" {
 
 The following arguments are supported:
 
-* `configuration_name` - (Required) The name of the endpoint configuration to use.
+* `endpoint_config_name` - (Required) The name of the endpoint configuration to use.
 * `name` - (Optional) The name of the endpoint. If omitted, Terraform will assign a random, unique name.
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 

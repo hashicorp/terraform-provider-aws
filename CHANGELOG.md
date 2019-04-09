@@ -1,9 +1,19 @@
 ## 2.6.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_iam_user_group_membership: Support resource import [GH-6976]
+
+BUG FIXES:
+
+* data-source/aws_lb_target_group: Add missing schema attributes [GH-8213]
+* resource/aws_glue_catalog_table: Properly trigger resource recreation when deleted outside Terraform [GH-8174]
+
 ## 2.5.0 (April 05, 2019)
 
 FEATURES:
 
-* **New Guide:** `Custom Service Endpoints` ([#8092](https://github.com/terraform-providers/terraform-provider-aws/issues/8092))
+* **New Guide:** [`Custom Service Endpoints`](https://www.terraform.io/docs/providers/aws/guides/custom-service-endpoints.html) ([#8092](https://github.com/terraform-providers/terraform-provider-aws/issues/8092))
 * **New Resource:** `aws_backup_selection` ([#7382](https://github.com/terraform-providers/terraform-provider-aws/issues/7382))
 * **New Resource:** `aws_sagemaker_endpoint` ([#2479](https://github.com/terraform-providers/terraform-provider-aws/issues/2479))
 * **New Resource:** `aws_sagemaker_notebook_instance_lifecycle_configuration` ([#7585](https://github.com/terraform-providers/terraform-provider-aws/issues/7585))
