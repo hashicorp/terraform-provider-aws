@@ -76,6 +76,13 @@ func resourceAwsLb() *schema.Resource {
 				Default:  "application",
 			},
 
+			"private_ips": {
+				Type:     schema.TypeSet,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Computed: true,
+				Set:      schema.HashString,
+			},
+
 			"security_groups": {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -657,6 +664,7 @@ func lbSuffixFromARN(arn *string) string {
 
 // flattenAwsLbResource takes a *elbv2.LoadBalancer and populates all respective resource fields.
 func flattenAwsLbResource(d *schema.ResourceData, meta interface{}, lb *elbv2.LoadBalancer) error {
+	ec2conn := meta.(*AWSClient).ec2conn
 	elbconn := meta.(*AWSClient).elbv2conn
 
 	d.Set("arn", lb.LoadBalancerArn)
@@ -677,6 +685,22 @@ func flattenAwsLbResource(d *schema.ResourceData, meta interface{}, lb *elbv2.Lo
 	if err := d.Set("subnet_mapping", flattenSubnetMappingsFromAvailabilityZones(lb.AvailabilityZones)); err != nil {
 		return fmt.Errorf("error setting subnet_mapping: %s", err)
 	}
+
+	privateIps := make([]string, 0)
+	networkInterfacesResp, err := ec2conn.DescribeNetworkInterfaces(&ec2.DescribeNetworkInterfacesInput{
+		Filters: buildEC2AttributeFilterList(
+			map[string]string{
+				"description": fmt.Sprintf("ELB %s", lbSuffixFromARN(lb.LoadBalancerArn)),
+			},
+		),
+	})
+	if err != nil {
+		return err
+	}
+	for _, eni := range networkInterfacesResp.NetworkInterfaces {
+		privateIps = append(privateIps, *eni.PrivateIpAddress)
+	}
+	d.Set("private_ips", privateIps)
 
 	respTags, err := elbconn.DescribeTags(&elbv2.DescribeTagsInput{
 		ResourceArns: []*string{lb.LoadBalancerArn},

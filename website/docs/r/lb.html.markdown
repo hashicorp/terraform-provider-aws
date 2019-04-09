@@ -121,6 +121,7 @@ The following attributes are exported in addition to the arguments listed above:
 * `arn_suffix` - The ARN suffix for use with CloudWatch Metrics.
 * `dns_name` - The DNS name of the load balancer.
 * `zone_id` - The canonical hosted zone ID of the load balancer (to be used in a Route 53 Alias record).
+* `private_ips` - Private IP addresses of the network interfaces attached to the load balancer.
 
 ## Timeouts
 
