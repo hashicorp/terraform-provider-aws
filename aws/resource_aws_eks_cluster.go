@@ -13,7 +13,13 @@ import (
 	"github.com/hashicorp/terraform/helper/validation"
 )
 
-var defaultLoggingTypes = []string{"api", "audit", "authenticator", "controllerManager", "scheduler"}
+var eksLogTypes = []string{
+  eks.LogTypeApi,
+  eks.LogTypeAudit,
+  eks.LogTypeAuthenticator,
+  eks.LogTypeControllerManager,
+  eks.LogTypeScheduler,
+}
 
 func resourceAwsEksCluster() *schema.Resource {
 	return &schema.Resource{
