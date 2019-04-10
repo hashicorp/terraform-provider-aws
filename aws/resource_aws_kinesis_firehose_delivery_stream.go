@@ -1367,6 +1367,7 @@ func expandS3BackupConfig(d map[string]interface{}) *firehose.S3DestinationConfi
 			SizeInMBs:         aws.Int64(int64(s3["buffer_size"].(int))),
 		},
 		Prefix:                  extractPrefixConfiguration(s3),
+		ErrorOutputPrefix:       extractErrorOutputPrefixConfiguration(s3),
 		CompressionFormat:       aws.String(s3["compression_format"].(string)),
 		EncryptionConfiguration: extractEncryptionConfiguration(s3),
 	}
@@ -1453,6 +1454,7 @@ func updateS3BackupConfig(d map[string]interface{}) *firehose.S3DestinationUpdat
 			SizeInMBs:         aws.Int64((int64)(s3["buffer_size"].(int))),
 		},
 		Prefix:                   extractPrefixConfiguration(s3),
+		ErrorOutputPrefix:        extractErrorOutputPrefixConfiguration(s3),
 		CompressionFormat:        aws.String(s3["compression_format"].(string)),
 		EncryptionConfiguration:  extractEncryptionConfiguration(s3),
 		CloudWatchLoggingOptions: extractCloudWatchLoggingConfiguration(s3),
@@ -1762,6 +1764,14 @@ func extractCloudWatchLoggingConfiguration(s3 map[string]interface{}) *firehose.
 
 func extractPrefixConfiguration(s3 map[string]interface{}) *string {
 	if v, ok := s3["prefix"]; ok {
+		return aws.String(v.(string))
+	}
+
+	return nil
+}
+
+func extractErrorOutputPrefixConfiguration(s3 map[string]interface{}) *string {
+	if v, ok := s3["error_output_prefix"]; ok {
 		return aws.String(v.(string))
 	}
 
