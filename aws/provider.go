@@ -968,6 +968,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		Profile:                 d.Get("profile").(string),
 		Token:                   d.Get("token").(string),
 		Region:                  d.Get("region").(string),
+		Endpoints:               make(map[string]string),
 		MaxRetries:              d.Get("max_retries").(int),
 		Insecure:                d.Get("insecure").(bool),
 		SkipCredsValidation:     d.Get("skip_credentials_validation").(bool),
