@@ -1,33 +1,33 @@
-## 2.6.0 (Unreleased)
+## 2.6.0 (April 10, 2019)
 
 NOTES:
 
-* resource/aws_route53_record: Remove deprecation from `allow_overwrite` argument as there are some use cases where it is helpful. We discourage its usage in most environments (in preference of using `terraform import`) as it can easily cause conflicting management of the same Route53 Record. [GH-8274]
+* resource/aws_route53_record: Remove deprecation from `allow_overwrite` argument as there are some use cases where it is helpful. We discourage its usage in most environments (in preference of using `terraform import`) as it can easily cause conflicting management of the same Route53 Record. ([#8274](https://github.com/terraform-providers/terraform-provider-aws/issues/8274))
 
 FEATURES:
 
-* **New Resource:** `aws_worklink_website_certificate_authority_association` [GH-7459]
+* **New Resource:** `aws_worklink_website_certificate_authority_association` ([#7459](https://github.com/terraform-providers/terraform-provider-aws/issues/7459))
 
 ENHANCEMENTS:
 
-* resource/aws_appmesh_mesh: Add `spec` configuration block (support egress filter rules) [GH-8119]
-* resource/aws_appmesh_route: Add `spec` configuration block `tcp_route` configuration block (support TCP routing) [GH-8119]
-* resource/aws_appmesh_virtual_node: Add `spec` configuration block `logging` configuration block (support access logging) [GH-8119]
-* resource/aws_eks_cluster: Add `enabled_cluster_log_types` argument (support EKS control plane logging) [GH-8216]
-* resource/aws_iam_user_group_membership: Support resource import [GH-6976]
-* resource/aws_launch_template: Add `elastic_inference_accelerator` configuration block [GH-8247]
-* resource/aws_redshift_cluster: Add configurable timeouts [GH-8241]
-* resource/aws_transfer_server: Add `endpoint_details` configuration block and `endpoint_type` argument (support Private Link) [GH-8121]
-* resource/aws_wafregional_web_acl_association: Support additional `resource_arn` types (e.g. API Gateway) [GH-7205]
+* resource/aws_appmesh_mesh: Add `spec` configuration block (support egress filter rules) ([#8119](https://github.com/terraform-providers/terraform-provider-aws/issues/8119))
+* resource/aws_appmesh_route: Add `spec` configuration block `tcp_route` configuration block (support TCP routing) ([#8119](https://github.com/terraform-providers/terraform-provider-aws/issues/8119))
+* resource/aws_appmesh_virtual_node: Add `spec` configuration block `logging` configuration block (support access logging) ([#8119](https://github.com/terraform-providers/terraform-provider-aws/issues/8119))
+* resource/aws_eks_cluster: Add `enabled_cluster_log_types` argument (support EKS control plane logging) ([#8216](https://github.com/terraform-providers/terraform-provider-aws/issues/8216))
+* resource/aws_iam_user_group_membership: Support resource import ([#6976](https://github.com/terraform-providers/terraform-provider-aws/issues/6976))
+* resource/aws_launch_template: Add `elastic_inference_accelerator` configuration block ([#8247](https://github.com/terraform-providers/terraform-provider-aws/issues/8247))
+* resource/aws_redshift_cluster: Add configurable timeouts ([#8241](https://github.com/terraform-providers/terraform-provider-aws/issues/8241))
+* resource/aws_transfer_server: Add `endpoint_details` configuration block and `endpoint_type` argument (support Private Link) ([#8121](https://github.com/terraform-providers/terraform-provider-aws/issues/8121))
+* resource/aws_wafregional_web_acl_association: Support additional `resource_arn` types (e.g. API Gateway) ([#7205](https://github.com/terraform-providers/terraform-provider-aws/issues/7205))
 
 BUG FIXES:
 
-* data-source/aws_lb_target_group: Add missing schema attributes [GH-8213]
-* resource/aws_appautoscaling_policy: Retry creation on `ObjectNotFound` errors for eventual consistency [GH-8273]
-* resource/aws_backup_plan: Prevent the sending of empty lifecycle attributes [GH-8236]
-* resource/aws_glue_catalog_table: Properly trigger resource recreation when deleted outside Terraform [GH-8174]
-* resource/aws_secretsmanager_secret: Handle additional scheduled for deletion error message on immediate secret recreation [GH-8219]
-* provider: Prevent panic when setting `endpoints` configuration [GH-8226]
+* data-source/aws_lb_target_group: Add missing schema attributes ([#8213](https://github.com/terraform-providers/terraform-provider-aws/issues/8213))
+* resource/aws_appautoscaling_policy: Retry creation on `ObjectNotFound` errors for eventual consistency ([#8273](https://github.com/terraform-providers/terraform-provider-aws/issues/8273))
+* resource/aws_backup_plan: Prevent the sending of empty lifecycle attributes ([#8236](https://github.com/terraform-providers/terraform-provider-aws/issues/8236))
+* resource/aws_glue_catalog_table: Properly trigger resource recreation when deleted outside Terraform ([#8174](https://github.com/terraform-providers/terraform-provider-aws/issues/8174))
+* resource/aws_secretsmanager_secret: Handle additional scheduled for deletion error message on immediate secret recreation ([#8219](https://github.com/terraform-providers/terraform-provider-aws/issues/8219))
+* provider: Prevent panic when setting `endpoints` configuration ([#8226](https://github.com/terraform-providers/terraform-provider-aws/issues/8226))
 
 ## 2.5.0 (April 05, 2019)
 
