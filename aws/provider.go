@@ -743,6 +743,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_wafregional_web_acl":                                 resourceAwsWafRegionalWebAcl(),
 			"aws_wafregional_web_acl_association":                     resourceAwsWafRegionalWebAclAssociation(),
 			"aws_worklink_fleet":                                      resourceAwsWorkLinkFleet(),
+			"aws_worklink_website_certificate_authority_association":  resourceAwsWorkLinkWebsiteCertificateAuthorityAssociation(),
 			"aws_batch_compute_environment":                           resourceAwsBatchComputeEnvironment(),
 			"aws_batch_job_definition":                                resourceAwsBatchJobDefinition(),
 			"aws_batch_job_queue":                                     resourceAwsBatchJobQueue(),
