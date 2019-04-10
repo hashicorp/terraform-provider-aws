@@ -18,6 +18,8 @@ func TestAccDataSourceAwsCognitoUserPools_basic(t *testing.T) {
 			{
 				Config: testAccDataSourceAwsCognitoUserPoolsConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.aws_cognito_user_pools.selected", "name", rName),
+					resource.TestMatchResourceAttr("data.aws_cognito_user_pools.selected", "id", regexp.MustCompile("^us-west-2_[a-zA-Z0-9]{9,}$")),
 					resource.TestCheckResourceAttr("data.aws_cognito_user_pools.selected", "ids.#", "2"),
 					resource.TestCheckResourceAttr("data.aws_cognito_user_pools.selected", "arns.#", "2"),
 				),
