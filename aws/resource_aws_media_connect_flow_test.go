@@ -22,7 +22,7 @@ func TestAccAWSMediaConnectFlowConfig_Base(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSEksClusterDestroy,
+		CheckDestroy: testAccCheckAWSMediaConnectFlowDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSMediaConnectFlowConfig_Base(rName, "rtp", "3010"),
@@ -69,7 +69,7 @@ func TestAccAWSMediaConnectFlowConfig_Decryption(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSEksClusterDestroy,
+		CheckDestroy: testAccCheckAWSMediaConnectFlowDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSMediaConnectFlowConfig_Decryption(rName, "aes128"),
@@ -113,7 +113,7 @@ func TestAccAWSMediaConnectFlowConfig_Options(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSEksClusterDestroy,
+		CheckDestroy: testAccCheckAWSMediaConnectFlowDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSMediaConnectFlowConfig_Options(rName, "us-west-2a", "Test Description1"),
