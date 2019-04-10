@@ -96,6 +96,63 @@ func s3ConfigurationSchema() *schema.Schema {
 	}
 }
 
+func s3BackupConfigurationSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		MaxItems: 1,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"bucket_arn": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+
+				"buffer_size": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Default:  5,
+				},
+
+				"buffer_interval": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Default:  300,
+				},
+
+				"compression_format": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  "UNCOMPRESSED",
+				},
+
+				"kms_key_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validateArn,
+				},
+
+				"role_arn": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+
+				"prefix": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+
+				"error_output_prefix": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+
+				"cloudwatch_logging_options": cloudWatchLoggingOptionsSchema(),
+			},
+		},
+	}
+}
+
 func processingConfigurationSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
@@ -1033,7 +1090,7 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 							},
 						},
 
-						"s3_backup_configuration": s3ConfigurationSchema(),
+						"s3_backup_configuration": s3BackupConfigurationSchema(),
 
 						"cloudwatch_logging_options": cloudWatchLoggingOptionsSchema(),
 
@@ -1085,7 +1142,7 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 							},
 						},
 
-						"s3_backup_configuration": s3ConfigurationSchema(),
+						"s3_backup_configuration": s3BackupConfigurationSchema(),
 
 						"retry_duration": {
 							Type:     schema.TypeInt,
