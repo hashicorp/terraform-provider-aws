@@ -64,7 +64,7 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
   alarm_name                = "terraform-test-foobar%d"
   comparison_operator       = "GreaterThanOrEqualToThreshold"
   evaluation_periods        = "2"
-	threshold                 = "10"
+  threshold                 = "10"
   alarm_description         = "Request error rate has exceeded 10%"
   insufficient_data_actions = []
 	metric_query {
@@ -140,6 +140,7 @@ If you specify `evaluate` or omit this parameter, the alarm will always be
 evaluated and possibly change state no matter how many data points are available.
 The following values are supported: `ignore`, and `evaluate`.
 * `metric_query` (Optional) Enables you to create an alarm based on a metric math expression. You may specify at most 20.
+* `tags` - (Optional) A mapping of tags to assign to the resource.
 
 ~> **NOTE:**  If you specify at least one `metric_query`, you may not specify a `metric_name`, `namespace`, `period` or `statistic`. If you do not specify a `metric_query`, you must specify each of these (although you may use `extended_statistic` instead of `statistic`).
 

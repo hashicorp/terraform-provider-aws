@@ -40,6 +40,10 @@ resource "aws_launch_template" "foo" {
     type = "test"
   }
 
+  elastic_interence_accelerator {
+    type = "eia1.medium"
+  }
+
   iam_instance_profile {
     name = "test"
   }
@@ -81,7 +85,7 @@ resource "aws_launch_template" "foo" {
   tag_specifications {
     resource_type = "instance"
 
-  tags = {
+    tags = {
       Name = "test"
     }
   }
@@ -107,6 +111,7 @@ The following arguments are supported:
 * `ebs_optimized` - If `true`, the launched EC2 instance will be EBS-optimized.
 * `elastic_gpu_specifications` - The elastic GPU to attach to the instance. See [Elastic GPU](#elastic-gpu)
   below for more details.
+* `elastic_inference_accelerator` - (Optional) Configuration block containing an Elastic Inference Accelerator to attach to the instance. See [Elastic Inference Accelerator](#elastic-inference-accelerator) below for more details.
 * `iam_instance_profile` - The IAM Instance Profile to launch the instance with. See [Instance Profile](#instance-profile)
   below for more details.
 * `image_id` - The AMI from which to launch the instance.
@@ -187,6 +192,14 @@ Attach an elastic GPU the instance.
 The `elastic_gpu_specifications` block supports the following:
 
 * `type` - The [Elastic GPU Type](https://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/elastic-gpus.html#elastic-gpus-basics)
+
+### Elastic Inference Accelerator
+
+Attach an Elastic Inference Accelerator to the instance. Additional information about Elastic Inference in EC2 can be found in the [EC2 User Guide](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-inference.html).
+
+The `elastic_inference_accelerator` configuration block supports the following:
+
+* `type` - (Required) Accelerator type.
 
 ### Instance Profile
 

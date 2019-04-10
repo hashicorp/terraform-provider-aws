@@ -68,6 +68,17 @@ resource "aws_load_balancer_policy" "wu-tang-ssl" {
   }
 }
 
+resource "aws_load_balancer_policy" "wu-tang-ssl-tls-1-1" {
+  load_balancer_name = "${aws_elb.wu-tang.name}"
+  policy_name        = "wu-tang-ssl"
+  policy_type_name   = "SSLNegotiationPolicyType"
+
+  policy_attribute {
+    name  = "Reference-Security-Policy"
+    value = "ELBSecurityPolicy-TLS-1-1-2017-01"
+  }
+}
+
 resource "aws_load_balancer_backend_server_policy" "wu-tang-backend-auth-policies-443" {
   load_balancer_name = "${aws_elb.wu-tang.name}"
   instance_port      = 443

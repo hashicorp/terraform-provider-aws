@@ -15,12 +15,12 @@ Provides a CodePipeline.
 ## Example Usage
 
 ```hcl
-resource "aws_s3_bucket" "foo" {
+resource "aws_s3_bucket" "codepipeline_bucket" {
   bucket = "test-bucket"
   acl    = "private"
 }
 
-resource "aws_iam_role" "foo" {
+resource "aws_iam_role" "codepipeline_role" {
   name = "test-role"
 
   assume_role_policy = <<EOF
@@ -55,8 +55,8 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
         "s3:GetBucketVersioning"
       ],
       "Resource": [
-        "${aws_s3_bucket.foo.arn}",
-        "${aws_s3_bucket.foo.arn}/*"
+        "${aws_s3_bucket.codepipeline_bucket.arn}",
+        "${aws_s3_bucket.codepipeline_bucket.arn}/*"
       ]
     },
     {
@@ -76,12 +76,12 @@ data "aws_kms_alias" "s3kmskey" {
   name = "alias/myKmsKey"
 }
 
-resource "aws_codepipeline" "foo" {
+resource "aws_codepipeline" "codepipeline" {
   name     = "tf-test-pipeline"
-  role_arn = "${aws_iam_role.foo.arn}"
+  role_arn = "${aws_iam_role.codepipeline_role.arn}"
 
   artifact_store {
-    location = "${aws_s3_bucket.foo.bucket}"
+    location = "${aws_s3_bucket.codepipeline_bucket.bucket}"
     type     = "S3"
 
     encryption_key {
@@ -99,7 +99,7 @@ resource "aws_codepipeline" "foo" {
       owner            = "ThirdParty"
       provider         = "GitHub"
       version          = "1"
-      output_artifacts = ["test"]
+      output_artifacts = ["source_output"]
 
       configuration = {
         Owner  = "my-organization"
@@ -117,11 +117,33 @@ resource "aws_codepipeline" "foo" {
       category        = "Build"
       owner           = "AWS"
       provider        = "CodeBuild"
-      input_artifacts = ["test"]
+      input_artifacts = ["source_output"]
+      output_artifacts = ["build_output"]
       version         = "1"
 
       configuration = {
         ProjectName = "test"
+      }
+    }
+  }
+  
+  stage {
+    name = "Deploy"
+
+    action {
+      name             = "Deploy"
+      category         = "Deploy"
+      owner            = "AWS"
+      provider         = "CloudFormation"
+      input_artifacts  = ["build_output"]
+      version          = "1"
+
+      configuration {
+        ActionMode     = "REPLACE_ON_FAILURE"
+        Capabilities   = "CAPABILITY_AUTO_EXPAND,CAPABILITY_IAM"
+        OutputFileName = "CreateStackOutput.json"
+        StackName      = "MyStack"
+        TemplatePath   = "build_output::sam-templated.yaml"
       }
     }
   }

@@ -380,6 +380,59 @@ func TestAccAWSEMRCluster_Step_Basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSEMRCluster_Step_ConfigMode(t *testing.T) {
+	var cluster1, cluster2, cluster3 emr.Cluster
+	rInt := acctest.RandInt()
+	resourceName := "aws_emr_cluster.tf-test-cluster"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEmrDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEmrClusterConfig_Step_Single(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEmrClusterExists(resourceName, &cluster1),
+					resource.TestCheckResourceAttr(resourceName, "step.#", "1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"cluster_state", "configurations", "keep_job_flow_alive_when_no_steps"},
+			},
+			{
+				Config: testAccAWSEmrClusterConfig_Step_NoBlocks(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEmrClusterExists(resourceName, &cluster2),
+					resource.TestCheckResourceAttr(resourceName, "step.#", "1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"cluster_state", "configurations", "keep_job_flow_alive_when_no_steps"},
+			},
+			{
+				Config: testAccAWSEmrClusterConfig_Step_Zeroed(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEmrClusterExists(resourceName, &cluster3),
+					resource.TestCheckResourceAttr(resourceName, "step.#", "0"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"cluster_state", "configurations", "keep_job_flow_alive_when_no_steps"},
+			},
+		},
+	})
+}
+
 func TestAccAWSEMRCluster_Step_Multiple(t *testing.T) {
 	var cluster emr.Cluster
 	rInt := acctest.RandInt()
@@ -2504,8 +2557,16 @@ func testAccAWSEmrClusterConfig_Step_Multiple(rInt int) string {
 	return testAccAWSEmrClusterConfig_Step(rInt, stepConfig)
 }
 
+func testAccAWSEmrClusterConfig_Step_NoBlocks(rInt int) string {
+	return testAccAWSEmrClusterConfig_Step(rInt, "")
+}
+
 func testAccAWSEmrClusterConfig_Step_Single(rInt int) string {
 	return testAccAWSEmrClusterConfig_Step(rInt, testAccAWSEmrClusterConfig_Step_DebugLoggingStep)
+}
+
+func testAccAWSEmrClusterConfig_Step_Zeroed(rInt int) string {
+	return testAccAWSEmrClusterConfig_Step(rInt, "step = []")
 }
 
 func testAccAWSEmrClusterConfig_Step(rInt int, stepConfig string) string {
