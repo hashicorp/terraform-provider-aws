@@ -13,6 +13,7 @@ ENHANCEMENTS:
 * resource/aws_iam_user_group_membership: Support resource import [GH-6976]
 * resource/aws_launch_template: Add `elastic_inference_accelerator` configuration block [GH-8247]
 * resource/aws_redshift_cluster: Add configurable timeouts [GH-8241]
+* resource/aws_transfer_server: Add `endpoint_details` configuration block and `endpoint_type` argument (support Private Link) [GH-8121]
 * resource/aws_wafregional_web_acl_association: Support additional `resource_arn` types (e.g. API Gateway) [GH-7205]
 
 BUG FIXES:
