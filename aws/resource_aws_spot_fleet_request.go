@@ -1191,15 +1191,25 @@ func deleteSpotFleetRequest(spotFleetRequestID string, terminateInstances bool, 
 		return nil
 	}
 
-	err = resource.Retry(timeout, func() *resource.RetryError {
+	activeInstances := func(fleetRequestID string) (int, error) {
 		resp, err := conn.DescribeSpotFleetInstances(&ec2.DescribeSpotFleetInstancesInput{
-			SpotFleetRequestId: aws.String(spotFleetRequestID),
+			SpotFleetRequestId: aws.String(fleetRequestID),
 		})
+
+		if err != nil || resp == nil {
+			return 0, fmt.Errorf("error reading Spot Fleet Instances (%s): %s", spotFleetRequestID, err)
+		}
+
+		return len(resp.ActiveInstances), nil
+	}
+
+	err = resource.Retry(timeout, func() *resource.RetryError {
+		n, err := activeInstances(spotFleetRequestID)
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
 
-		if n := len(resp.ActiveInstances); n > 0 {
+		if n > 0 {
 			log.Printf("[DEBUG] Active instance count in Spot Fleet Request (%s): %d", spotFleetRequestID, n)
 			return resource.RetryableError(fmt.Errorf("fleet still has (%d) running instances", n))
 		}
@@ -1209,14 +1219,19 @@ func deleteSpotFleetRequest(spotFleetRequestID string, terminateInstances bool, 
 	})
 
 	if isResourceTimeoutError(err) {
-		resp, _ := conn.DescribeSpotFleetInstances(&ec2.DescribeSpotFleetInstancesInput{
-			SpotFleetRequestId: aws.String(spotFleetRequestID),
-		})
+		n, err := activeInstances(spotFleetRequestID)
+		if err != nil {
+			return err
+		}
 
-		if n := len(resp.ActiveInstances); n > 0 {
+		if n > 0 {
 			log.Printf("[DEBUG] Active instance count in Spot Fleet Request (%s): %d", spotFleetRequestID, n)
 			return fmt.Errorf("fleet still has (%d) running instances", n)
 		}
+	}
+
+	if err != nil {
+		return fmt.Errorf("error reading Spot Fleet Instances (%s): %s", spotFleetRequestID, err)
 	}
 
 	return nil
