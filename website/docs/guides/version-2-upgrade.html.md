@@ -754,7 +754,7 @@ resource, with in-line routes, to the state.
 
 ### allow_overwrite Default Value Change
 
-The resource now requires existing Route 53 Records to be imported into the Terraform state for management unless the `allow_overwrite` argument is enabled. The `allow_overwrite` flag is considered deprecated for removal in a future major version of the Terraform AWS Provider.
+The resource now requires existing Route 53 Records to be imported into the Terraform state for management unless the `allow_overwrite` argument is enabled.
 
 For example, if the `www.example.com` Route 53 Record in the `example.com` Route 53 Hosted Zone existed previously and this new Terraform configuration was introduced:
 
@@ -767,7 +767,7 @@ resource "aws_route53_record" "www" {
 
 During resource creation in version 1.X and prior, it would silently perform an `UPSERT` changeset to the existing Route 53 Record and not report back an error. In version 2.0.0 of the Terraform AWS Provider, the resource now performs a `CREATE` changeset, which will error for existing Route 53 Records.
 
-The `allow_overwrite` argument provides a temporary workaround to keep the old behavior, but existing workflows should be updated to perform a `terraform import` command like the following instead:
+The `allow_overwrite` argument provides a workaround to keep the old behavior, but most existing workflows should be updated to perform a `terraform import` command like the following instead:
 
 ```console
 $ terraform import aws_route53_record.www ZONEID_www.example.com_TYPE
