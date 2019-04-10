@@ -61,7 +61,7 @@ func dataSourceAwsCognitoUserPoolsRead(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("No cognito user pool found with name: %s", name)
 	}
 
-	d.SetId(name)
+	d.SetId(ids[0])
 	d.Set("ids", ids)
 	d.Set("arns", arns)
 
