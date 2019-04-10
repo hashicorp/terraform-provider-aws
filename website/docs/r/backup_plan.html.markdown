@@ -46,12 +46,12 @@ For **rule** the following attributes are supported:
 ### Lifecycle Arguments
 For **lifecycle** the following attributes are supported:
 
-* `cold_storage_after` - (Required) Specifies the number of days after creation that a recovery point is moved to cold storage.
-* `delete_after` (Required) - Specifies the number of days after creation that a recovery point is deleted. Must be greater than `cold_storage_after`.
+* `cold_storage_after` - (Optional) Specifies the number of days after creation that a recovery point is moved to cold storage.
+* `delete_after` (Optional) - Specifies the number of days after creation that a recovery point is deleted. Must be 90 days greater than `cold_storage_after`.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The ARN of the backup plan.
-* `version` - Unique, randomly generated, Unicode, UTF-8 encoded string that serves as the version ID of the backup plan. 
+* `version` - Unique, randomly generated, Unicode, UTF-8 encoded string that serves as the version ID of the backup plan.
