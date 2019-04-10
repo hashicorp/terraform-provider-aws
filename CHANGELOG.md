@@ -1,5 +1,9 @@
 ## 2.6.0 (Unreleased)
 
+NOTES:
+
+* resource/aws_route53_record: Remove deprecation from `allow_overwrite` argument as there are some use cases where it is helpful. We discourage its usage in most environments (in preference of using `terraform import`) as it can easily cause conflicting management of the same Route53 Record. [GH-8274]
+
 ENHANCEMENTS:
 
 * resource/aws_eks_cluster: Add `enabled_cluster_log_types` argument (support EKS control plane logging) [GH-8216]
