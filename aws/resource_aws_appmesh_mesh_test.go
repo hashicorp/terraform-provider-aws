@@ -74,24 +74,58 @@ func testAccAwsAppmeshMesh_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAppmeshMeshDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppmeshMeshConfig(rName),
+				Config: testAccAppmeshMeshConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshMeshExists(
-						resourceName, &mesh),
-					resource.TestCheckResourceAttr(
-						resourceName, "name", rName),
-					resource.TestCheckResourceAttrSet(
-						resourceName, "created_date"),
-					resource.TestCheckResourceAttrSet(
-						resourceName, "last_updated_date"),
-					resource.TestMatchResourceAttr(
-						resourceName, "arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:appmesh:[^:]+:\\d{12}:mesh/%s", rName))),
+					testAccCheckAppmeshMeshExists(resourceName, &mesh),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
+					resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:appmesh:[^:]+:\\d{12}:mesh/%s", rName))),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccAwsAppmeshMesh_egressFilter(t *testing.T) {
+	var mesh appmesh.MeshData
+	resourceName := "aws_appmesh_mesh.foo"
+	rName := fmt.Sprintf("tf-test-%d", acctest.RandInt())
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAppmeshMeshDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppmeshMeshConfig_egressFilter(rName, "ALLOW_ALL"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppmeshMeshExists(resourceName, &mesh),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.egress_filter.0.type", "ALLOW_ALL"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAppmeshMeshConfig_egressFilter(rName, "DROP_ALL"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppmeshMeshExists(resourceName, &mesh),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.egress_filter.0.type", "DROP_ALL"),
+				),
+			},
+			{
+				PlanOnly: true,
+				Config:   testAccAppmeshMeshConfig_basic(rName),
 			},
 		},
 	})
@@ -145,10 +179,24 @@ func testAccCheckAppmeshMeshExists(name string, v *appmesh.MeshData) resource.Te
 	}
 }
 
-func testAccAppmeshMeshConfig(name string) string {
+func testAccAppmeshMeshConfig_basic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_appmesh_mesh" "foo" {
-  name = "%s"
+  name = %[1]q
 }
 `, name)
+}
+
+func testAccAppmeshMeshConfig_egressFilter(name, egressFilterType string) string {
+	return fmt.Sprintf(`
+resource "aws_appmesh_mesh" "foo" {
+  name = %[1]q
+
+  spec {
+    egress_filter {
+      type = %[2]q
+    }
+  }
+}
+`, name, egressFilterType)
 }
