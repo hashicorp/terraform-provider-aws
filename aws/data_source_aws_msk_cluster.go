@@ -1,6 +1,8 @@
 package aws
 
 import (
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/kafka"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -15,37 +17,34 @@ func dataSourceAwsMskCluster() *schema.Resource {
 			},
 			"broker_node_group_info": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Computed: true,
 			},
-			"encrypt_rest_key": {
+			"encryption_key": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Computed: true,
 			},
 			"enhanced_monitoring": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Computed: true,
 			},
 			"kafka_version": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Computed: true,
 			},
 			"broker_count": {
 				Type:     schema.TypeInt,
-				Optional: true,
+				Computed: true,
 			},
 			"arn": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 			"bootstrap_brokers": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 			"zookeeper_connect": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 		},
@@ -54,20 +53,28 @@ func dataSourceAwsMskCluster() *schema.Resource {
 
 func dataSourceAwsMskClusterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kafkaconn
-	name := d.Get("name").(string)
 
-	state, err := readMskClusterState(conn, name)
+	state, err := readMskClusterState(conn, d.Id())
 	if err != nil {
 		return err
 	}
-	d.SetId(state.arn)
-	d.Set("arn", state.arn)
-	d.Set("status", state.status)
-	d.Set("creation_timestamp", state.creationTimestamp)
-	d.Set("broker_count", state)
-	d.Set("encrypt_rest_key", state.encryptRestKey)
-	d.Set("bootstrap_brokers", state.bootstrapBrokers)
-	d.Set("zookeeper_connect", state.zookeeperConnect)
+
+	d.SetId(*state.ClusterArn)
+	d.Set("arn", *state.ClusterArn)
+	d.Set("status", *state.State)
+	d.Set("creation_timestamp", *state.CreationTime)
+	d.Set("broker_count", *state.NumberOfBrokerNodes)
+	d.Set("encryption_key", *state.EncryptionInfo.EncryptionAtRest.DataVolumeKMSKeyId)
+	d.Set("zookeeper_connect", *state.ZookeeperConnectString)
+
+	if *state.State == kafka.ClusterStateActive {
+		bb, err := conn.GetBootstrapBrokers(&kafka.GetBootstrapBrokersInput{ClusterArn: state.ClusterArn})
+		if err != nil {
+			return err
+		}
+
+		d.Set("bootstrap_brokers", aws.StringValue(bb.BootstrapBrokerString))
+	}
 
 	return nil
 }

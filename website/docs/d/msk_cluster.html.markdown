@@ -26,4 +26,10 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-See the [`aws_msk_cluster` resource](/docs/providers/aws/r/msk_cluster.html) for details on the returned attributes.
+In addition to all arguments above, the following attributes are exported:
+
+* `arn` - The Amazon Resource Name (ARN) of the cluster.
+* `status` - The status of the cluster. The possible states are CREATING, ACTIVE, and FAILED.
+* `encryption_key` - The AWS KMS key used for data encryption.
+* `zookeeper_connect` - Connection string for Zookeeper.
+* `bootstrap_brokers` - A list of brokers that a client application can use to bootstrap.

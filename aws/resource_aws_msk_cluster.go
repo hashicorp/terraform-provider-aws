@@ -23,14 +23,14 @@ func resourceAwsMskCluster() *schema.Resource {
 		},
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(60 * time.Minute),
-			Update: schema.DefaultTimeout(120 * time.Minute),
 			Delete: schema.DefaultTimeout(120 * time.Minute),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 64),
 			},
 			"client_subnets": {
 				Type:     schema.TypeList,
@@ -59,7 +59,7 @@ func resourceAwsMskCluster() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"encrypt_rest_arn": {
+			"encryption_key": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "",
@@ -83,38 +83,29 @@ func resourceAwsMskCluster() *schema.Resource {
 			},
 			"arn": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 			"status": {
 				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"encrypt_rest_key": {
-				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 			"zookeeper_connect": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 			"bootstrap_brokers": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 		},
 	}
 }
+
 func resourceAwsMskClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kafkaconn
 	cn := d.Get("name").(string)
-	encryptRestArn := d.Get("encrypt_rest_arn").(string)
-	clientSubnets, _ := d.GetOk("client_subnets")
-	securityGroups, _ := d.GetOk("broker_security_groups")
+	clientSubnets := d.Get("client_subnets")
+	securityGroups := d.Get("broker_security_groups")
 
 	createOpts := &kafka.CreateClusterInput{
 		ClusterName:         aws.String(cn),
@@ -134,87 +125,85 @@ func resourceAwsMskClusterCreate(d *schema.ResourceData, meta interface{}) error
 		KafkaVersion: aws.String(d.Get("kafka_version").(string)),
 	}
 
-	if encryptRestArn != "" {
-		createOpts.EncryptionInfo = &kafka.EncryptionInfo{}
-		createOpts.EncryptionInfo.EncryptionAtRest = &kafka.EncryptionAtRest{
-			DataVolumeKMSKeyId: aws.String(encryptRestArn),
+	if v, ok := d.GetOk("encryption_key"); ok {
+		createOpts.EncryptionInfo = &kafka.EncryptionInfo{
+			EncryptionAtRest: &kafka.EncryptionAtRest{
+				DataVolumeKMSKeyId: aws.String(v.(string)),
+			},
 		}
 	}
 
-	_, err := conn.CreateCluster(createOpts)
+	clusterOutput, err := conn.CreateCluster(createOpts)
 	if err != nil {
 		return fmt.Errorf("Unable to create cluster: %s", err)
 	}
+
+	d.SetId(*clusterOutput.ClusterArn)
 
 	// No error, wait for ACTIVE state
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{kafka.ClusterStateCreating},
 		Target:     []string{kafka.ClusterStateActive},
-		Refresh:    clusterStateRefreshFunc(conn, cn),
+		Refresh:    clusterStateRefreshFunc(conn, d.Id()),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
 
-	clusterRaw, err := stateConf.WaitForState()
-
+	_, err = stateConf.WaitForState()
 	if err != nil {
-		return fmt.Errorf(
-			"Error waiting for MSK cluster (%s) to become active: %s",
-			cn, err)
+		return fmt.Errorf("Error waiting for MSK cluster (%s) to become active: %s", cn, err)
 	}
 
-	c := clusterRaw.(*mskClusterState)
-	d.SetId(c.arn)
-	d.Set("arn", c.arn)
-	d.Set("status", c.status)
-	d.Set("zookeeper_connect", c.zookeeperConnect)
-	d.Set("bootstrap_brokers", c.bootstrapBrokers)
-
-	return nil
+	return resourceAwsMskClusterRead(d, meta)
 }
+
 func resourceAwsMskClusterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kafkaconn
-	name := d.Get("name").(string)
+	id := d.Id()
 
-	state, err := readMskClusterState(conn, name)
-	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == "ResourceNotFoundException" {
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("Error reading MSK cluster: \"%s\", code: \"%s\"", awsErr.Message(), awsErr.Code())
-		}
-		return err
-
+	state, err := readMskClusterState(conn, id)
+	if isAWSErr(err, kafka.ErrCodeNotFoundException, "") {
+		log.Printf("[WARN] MSK Cluster (%s) not found, removing from state", id)
+		d.SetId("")
+		return nil
 	}
-	d.SetId(state.arn)
-	d.Set("arn", state.arn)
-	d.Set("status", state.status)
-	d.Set("encrypt_rest_key", state.encryptRestKey)
-	d.Set("zookeeper_connect", state.zookeeperConnect)
-	d.Set("bootstrap_brokers", state.bootstrapBrokers)
+
+	if err != nil {
+		return fmt.Errorf("error reading MSK Cluster (%s): %s", id, err)
+	}
+
+	d.SetId(*state.ClusterArn)
+	d.Set("arn", *state.ClusterArn)
+	d.Set("status", *state.State)
+	d.Set("encryption_key", *state.EncryptionInfo.EncryptionAtRest.DataVolumeKMSKeyId)
+	d.Set("zookeeper_connect", *state.ZookeeperConnectString)
+
+	if *state.State == kafka.ClusterStateActive {
+		bb, err := conn.GetBootstrapBrokers(&kafka.GetBootstrapBrokersInput{ClusterArn: state.ClusterArn})
+		if err != nil {
+			return err
+		}
+
+		d.Set("bootstrap_brokers", aws.StringValue(bb.BootstrapBrokerString))
+	}
 
 	return nil
 }
 
 func resourceAwsMskClusterDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kafkaconn
-	arn := d.Get("arn").(string)
-	name := d.Get("name").(string)
+	id := d.Id()
 
-	_, err := conn.DeleteCluster(&kafka.DeleteClusterInput{
-		ClusterArn: aws.String(arn),
-	})
+	_, err := conn.DeleteCluster(&kafka.DeleteClusterInput{ClusterArn: aws.String(id)})
 	if err != nil {
-		return err
+		return fmt.Errorf("error deleting MSK Cluster (%s): %s", id, err)
 	}
 
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{kafka.ClusterStateDeleting},
 		Target:     []string{"DESTROYED"},
-		Refresh:    clusterStateRefreshFunc(conn, name),
+		Refresh:    clusterStateRefreshFunc(conn, id),
 		Timeout:    d.Timeout(schema.TimeoutDelete),
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -222,72 +211,24 @@ func resourceAwsMskClusterDelete(d *schema.ResourceData, meta interface{}) error
 
 	_, err = stateConf.WaitForState()
 	if err != nil {
-		return fmt.Errorf(
-			"Error waiting for MSK Cluster (%s) to be destroyed: %s",
-			arn, err)
+		return fmt.Errorf("error waiting for MSK Cluster (%s) to be destroyed: %s", id, err)
 	}
 
 	return nil
 }
 
-type mskClusterState struct {
-	arn               string
-	creationTimestamp int64
-	status            string
-	encryptRestKey    string
-	zookeeperConnect  string
-	bootstrapBrokers  string
-	brokerCount       int64
-	kafkaVersion      string
+func readMskClusterState(conn *kafka.Kafka, id string) (*kafka.ClusterInfo, error) {
+	clusterOutput, err := conn.DescribeCluster(&kafka.DescribeClusterInput{ClusterArn: &id})
+	if err != nil {
+		return &kafka.ClusterInfo{}, err
+	}
+
+	return clusterOutput.ClusterInfo, err
 }
 
-func readMskClusterState(conn *kafka.Kafka, name string) (*mskClusterState, error) {
-	listOpts := &kafka.ListClustersInput{
-		ClusterNameFilter: aws.String(name),
-	}
-
-	cluster_list, err := conn.ListClusters(listOpts)
-
-	if len(cluster_list.ClusterInfoList) == 0 {
-		return nil, awserr.New("NotFoundException", fmt.Sprintf("MSK Cluster (%s) not found", name), nil)
-	}
-
-	if len(cluster_list.ClusterInfoList) > 1 {
-		return nil, fmt.Errorf("Ambiguous MSK Cluster name (%s)", name)
-	}
-
-	cluster := cluster_list.ClusterInfoList[0]
-	state := &mskClusterState{}
-
-	if cluster != nil {
-		state.arn = aws.StringValue(cluster.ClusterArn)
-		state.creationTimestamp = aws.TimeValue(cluster.CreationTime).Unix()
-		state.status = aws.StringValue(cluster.State)
-		state.encryptRestKey = aws.StringValue(cluster.EncryptionInfo.EncryptionAtRest.DataVolumeKMSKeyId)
-		state.brokerCount = aws.Int64Value(cluster.NumberOfBrokerNodes)
-		state.zookeeperConnect = aws.StringValue(cluster.ZookeeperConnectString)
-		state.kafkaVersion = aws.StringValue(cluster.CurrentBrokerSoftwareInfo.KafkaVersion)
-
-		if state.status == kafka.ClusterStateActive {
-			bb, bb_err := conn.GetBootstrapBrokers(
-				&kafka.GetBootstrapBrokersInput{
-					ClusterArn: cluster.ClusterArn,
-				})
-
-			if bb_err == nil {
-				state.bootstrapBrokers = aws.StringValue(bb.BootstrapBrokerString)
-			} else {
-				log.Println(bb_err)
-			}
-		}
-	}
-
-	return state, err
-}
-
-func clusterStateRefreshFunc(conn *kafka.Kafka, name string) resource.StateRefreshFunc {
+func clusterStateRefreshFunc(conn *kafka.Kafka, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		state, err := readMskClusterState(conn, name)
+		state, err := readMskClusterState(conn, id)
 		if err != nil {
 			if awsErr, ok := err.(awserr.Error); ok {
 				if awsErr.Code() == "NotFoundException" {
@@ -298,10 +239,10 @@ func clusterStateRefreshFunc(conn *kafka.Kafka, name string) resource.StateRefre
 			return nil, "failed", err
 		}
 
-		if state.status == kafka.ClusterStateFailed {
+		if *state.State == kafka.ClusterStateFailed {
 			return nil, "failed", errors.New("MSK Cluster in FAILED state")
 		}
 
-		return state, state.status, nil
+		return state, *state.State, nil
 	}
 }

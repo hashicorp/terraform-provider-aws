@@ -24,10 +24,10 @@ func TestAccAWSMskClusterDataSource(t *testing.T) {
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMskClusterExists("aws_msk_cluster.test_cluster", &cluster),
-					resource.TestCheckResourceAttrSet("data.aws_msk_cluster.test_cluster", "arn"),
 					resource.TestCheckResourceAttr("data.aws_msk_cluster.test_cluster", "name", sn),
-					resource.TestCheckResourceAttrSet("data.aws_msk_cluster.test_cluster", "zookeeper_connect"),
-					resource.TestCheckResourceAttrSet("data.aws_msk_cluster.test_cluster", "bootstrap_brokers"),
+					resource.TestCheckResourceAttrPair("data.aws_msk_cluster.test_cluster", "arn", "aws_msk_cluster.test_cluster", "arn"),
+					resource.TestCheckResourceAttrPair("data.aws_msk_cluster.test_cluster", "zookeeper_connect", "aws_msk_cluster.test_cluster", "zookeeper_connect"),
+					resource.TestCheckResourceAttrPair("data.aws_msk_cluster.test_cluster", "bootstrap_brokers", "aws_msk_cluster.test_cluster", "bootstrap_brokers"),
 				),
 			},
 		},
@@ -41,37 +41,39 @@ resource "aws_vpc" "test_vpc" {
 		Name = "test_vpc-%s"
 	}
 }
-	
+
+data "aws_availability_zones" "available" {}
+
 resource "aws_subnet" "test_subnet_a" {
 	vpc_id = "${aws_vpc.test_vpc.id}"
 	cidr_block = "10.1.1.0/24"
-	availability_zone = "us-east-1a"
+	availability_zone = "${data.aws_availability_zones.available.names[0]}"
 }
 
 resource "aws_subnet" "test_subnet_b" {
 	vpc_id = "${aws_vpc.test_vpc.id}"
 	cidr_block = "10.1.2.0/24"
-	availability_zone = "us-east-1b"
+	availability_zone = "${data.aws_availability_zones.available.names[1]}"
 }
 
 resource "aws_subnet" "test_subnet_c" {
 	vpc_id = "${aws_vpc.test_vpc.id}"
 	cidr_block = "10.1.3.0/24"
-	availability_zone = "us-east-1c"
+	availability_zone = "${data.aws_availability_zones.available.names[2]}"
 }
 
 resource "aws_security_group" "test_sg_a" {
 	name        = "allow_all"
 	description = "Allow all inbound traffic"
 	vpc_id      = "${aws_vpc.test_vpc.id}"
-	
+
 	ingress {
 		from_port   = 0
 		to_port     = 0
 		protocol    = "-1"
 		cidr_blocks = ["0.0.0.0/0"]
 	}
-} 
+}
 
 resource "aws_msk_cluster" "test_cluster" {
 	name = "%s"

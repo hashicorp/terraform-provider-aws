@@ -31,7 +31,7 @@ resource "aws_msk_cluster" "test_cluster" {
 * `broker_instance_type` - (Required) Instance type for brokers from the m5 family. e.g. kafka.m5.large
 * `broker_volume_size` - (Required) The size of the drive in GiBs.
 * `broker_security_groups` - (Required) Security groups to attach to broker nodes.
-* `encrypt_rest_arn` - (Optional) 
+* `encryption_key` - (Optional) The AWS KMS key used for data encryption.
 * `enhanced_monitoring` - (Optional) Level of monitoring for the cluster. Possible values are DEFAULT, PER_BROKER, and PER_TOPIC_PER_BROKER.
 
 ## Attributes Reference
@@ -40,9 +40,15 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The Amazon Resource Name (ARN) of the cluster.
 * `status` - The status of the cluster. The possible states are CREATING, ACTIVE, and FAILED.
-* `encrypt_rest_key` - The AWS KMS key used for data encryption.
 * `zookeeper_connect` - Connection string for Zookeeper.
 * `bootstrap_brokers` - A list of brokers that a client application can use to bootstrap.
+
+## Timeouts
+
+`aws_msk_cluster` provides the following [Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+
+* `create` - (Default `60m`) How long to wait for cluster creation.
+* `delete` - (Default `120m`) How long to wait for cluster deletion.
 
 ## Import
 

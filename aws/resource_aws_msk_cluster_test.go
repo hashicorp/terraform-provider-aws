@@ -2,8 +2,7 @@ package aws
 
 import (
 	"fmt"
-	"strconv"
-	"strings"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -27,11 +26,19 @@ func TestAccAWSMskCluster_basic(t *testing.T) {
 				Config: testMskClusterConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMskClusterExists("aws_msk_cluster.test_cluster", &cluster),
-					testAccCheckAWSMskClusterAttributes(&cluster),
+					testAccMatchResourceAttrRegionalARN("aws_msk_cluster.test_cluster", "arn", "kafka", regexp.MustCompile(`cluster/.+`)),
+					resource.TestCheckResourceAttr("aws_msk_cluster.test_cluster", "broker_count", "3"),
+					resource.TestCheckResourceAttr("aws_msk_cluster.test_cluster", "broker_volume_size", "10"),
 					resource.TestCheckResourceAttr("aws_msk_cluster.test_cluster", "broker_security_groups.#", "1"),
 					resource.TestCheckResourceAttrSet("aws_msk_cluster.test_cluster", "zookeeper_connect"),
 					resource.TestCheckResourceAttrSet("aws_msk_cluster.test_cluster", "bootstrap_brokers"),
 				),
+			},
+
+			{
+				ResourceName:      "aws_msk_cluster.test_cluster",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -51,10 +58,18 @@ func TestAccAWSMskCluster_encryptAtRest(t *testing.T) {
 				Config: testMskClusterConfigWithEncryption(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMskClusterExists("aws_msk_cluster.test_cluster", &cluster),
-					testAccCheckAWSMskClusterAttributes(&cluster),
+					testAccMatchResourceAttrRegionalARN("aws_msk_cluster.test_cluster", "arn", "kafka", regexp.MustCompile(`cluster/.+`)),
+					resource.TestCheckResourceAttr("aws_msk_cluster.test_cluster", "broker_count", "3"),
+					resource.TestCheckResourceAttr("aws_msk_cluster.test_cluster", "broker_volume_size", "10"),
 					resource.TestCheckResourceAttrSet("aws_msk_cluster.test_cluster", "zookeeper_connect"),
 					resource.TestCheckResourceAttrSet("aws_msk_cluster.test_cluster", "bootstrap_brokers"),
 				),
+			},
+
+			{
+				ResourceName:      "aws_msk_cluster.test_cluster",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -76,11 +91,19 @@ func TestAccAWSMskCluster_brokerMonitoring(t *testing.T) {
 				Config: testMskClusterConfigBrokerMonitoring(rInt, monitoring_type),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMskClusterExists("aws_msk_cluster.test_cluster", &cluster),
-					testAccCheckAWSMskClusterAttributes(&cluster),
+					testAccMatchResourceAttrRegionalARN("aws_msk_cluster.test_cluster", "arn", "kafka", regexp.MustCompile(`cluster/.+`)),
+					resource.TestCheckResourceAttr("aws_msk_cluster.test_cluster", "broker_count", "3"),
+					resource.TestCheckResourceAttr("aws_msk_cluster.test_cluster", "broker_volume_size", "10"),
 					resource.TestCheckResourceAttrSet("aws_msk_cluster.test_cluster", "zookeeper_connect"),
 					resource.TestCheckResourceAttrSet("aws_msk_cluster.test_cluster", "bootstrap_brokers"),
 					resource.TestCheckResourceAttr("aws_msk_cluster.test_cluster", "enhanced_monitoring", "PER_BROKER"),
 				),
+			},
+
+			{
+				ResourceName:      "aws_msk_cluster.test_cluster",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -102,11 +125,19 @@ func TestAccAWSMskCluster_topicMonitoring(t *testing.T) {
 				Config: testMskClusterConfigBrokerMonitoring(rInt, monitoring_type),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMskClusterExists("aws_msk_cluster.test_cluster", &cluster),
-					testAccCheckAWSMskClusterAttributes(&cluster),
+					testAccMatchResourceAttrRegionalARN("aws_msk_cluster.test_cluster", "arn", "kafka", regexp.MustCompile(`cluster/.+`)),
+					resource.TestCheckResourceAttr("aws_msk_cluster.test_cluster", "broker_count", "3"),
+					resource.TestCheckResourceAttr("aws_msk_cluster.test_cluster", "broker_volume_size", "10"),
 					resource.TestCheckResourceAttrSet("aws_msk_cluster.test_cluster", "zookeeper_connect"),
 					resource.TestCheckResourceAttrSet("aws_msk_cluster.test_cluster", "bootstrap_brokers"),
 					resource.TestCheckResourceAttr("aws_msk_cluster.test_cluster", "enhanced_monitoring", monitoring_type),
 				),
+			},
+
+			{
+				ResourceName:      "aws_msk_cluster.test_cluster",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -120,7 +151,7 @@ resource "aws_vpc" "test_vpc" {
 		Name = "test_vpc-%d"
 	}
 }
-	
+
 resource "aws_subnet" "test_subnet_a" {
 	vpc_id = "${aws_vpc.test_vpc.id}"
 	cidr_block = "10.1.1.0/24"
@@ -143,14 +174,14 @@ resource "aws_security_group" "test_sg_a" {
 	name        = "allow_all"
 	description = "Allow all inbound traffic"
 	vpc_id      = "${aws_vpc.test_vpc.id}"
-	
+
 	ingress {
 		from_port   = 0
 		to_port     = 0
 		protocol    = "-1"
 		cidr_blocks = ["0.0.0.0/0"]
 	}
-}  
+}
 
 `, rInt)
 }
@@ -176,7 +207,7 @@ resource "aws_kms_key" "test_key" {
 	description             = "KMS key 1"
 	deletion_window_in_days = 10
 }
-  
+
 resource "aws_msk_cluster" "test_cluster" {
 	name = "terraform-msk-test-%d"
 	broker_count = 3
@@ -185,7 +216,7 @@ resource "aws_msk_cluster" "test_cluster" {
 	broker_security_groups =["${aws_security_group.test_sg_a.id}"]
 	kafka_version = "1.1.1"
 	client_subnets = ["${aws_subnet.test_subnet_a.id}", "${aws_subnet.test_subnet_b.id}", "${aws_subnet.test_subnet_c.id}"]
-	encrypt_rest_arn = "${aws_kms_key.test_key.arn}"
+	encryption_key = "${aws_kms_key.test_key.arn}"
 }`, rInt)
 }
 
@@ -230,38 +261,6 @@ func testAccCheckMskClusterExists(n string, cluster *kafka.ClusterInfo) resource
 	}
 }
 
-func testAccCheckAWSMskClusterAttributes(cluster *kafka.ClusterInfo) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if !strings.HasPrefix(*cluster.ClusterName, "terraform-msk-test") {
-			return fmt.Errorf("Bad Cluster name: %s", *cluster.ClusterName)
-		}
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_msk_cluster" {
-				continue
-			}
-			if *cluster.ClusterArn != rs.Primary.Attributes["arn"] {
-				return fmt.Errorf("Bad Cluster ARN\n\t expected: %s\n\tgot: %s\n", rs.Primary.Attributes["arn"], *cluster.ClusterArn)
-			}
-			brokerCount := strconv.Itoa(int(aws.Int64Value(cluster.NumberOfBrokerNodes)))
-			if brokerCount != rs.Primary.Attributes["broker_count"] {
-				return fmt.Errorf("Bad Cluster Broker Count\n\t expected: %s\n\tgot: %s\n", rs.Primary.Attributes["broker_count"], brokerCount)
-			}
-			volumeSize := strconv.Itoa(int(aws.Int64Value(cluster.BrokerNodeGroupInfo.StorageInfo.EbsStorageInfo.VolumeSize)))
-			if volumeSize != rs.Primary.Attributes["broker_volume_size"] {
-				return fmt.Errorf("Bad Broker Volume Size\n\t expected: %s\n\tgot: %s\n", rs.Primary.Attributes["broker_volume_size"], volumeSize)
-			}
-			encryptRestKey := *cluster.EncryptionInfo.EncryptionAtRest.DataVolumeKMSKeyId
-			if !strings.Contains(encryptRestKey, rs.Primary.Attributes["encrypt_rest_key"]) {
-				return fmt.Errorf("Bad Encrypt Rest Key\n\t expected: %s\n\tgot: %s\n", rs.Primary.Attributes["encrypt_rest_key"], encryptRestKey)
-			}
-			if *cluster.ZookeeperConnectString == "" {
-				return fmt.Errorf("empty zookeeper_connect")
-			}
-		}
-		return nil
-	}
-}
-
 func testAccCheckMskClusterDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_msk_cluster" {
@@ -277,9 +276,6 @@ func testAccCheckMskClusterDestroy(s *terraform.State) error {
 				return fmt.Errorf("Error: Cluster still exists")
 			}
 		}
-
-		return nil
-
 	}
 
 	return nil
