@@ -4,6 +4,10 @@ NOTES:
 
 * resource/aws_route53_record: Remove deprecation from `allow_overwrite` argument as there are some use cases where it is helpful. We discourage its usage in most environments (in preference of using `terraform import`) as it can easily cause conflicting management of the same Route53 Record. [GH-8274]
 
+FEATURES:
+
+* **New Resource:** `aws_worklink_website_certificate_authority_association` [GH-7459]
+
 ENHANCEMENTS:
 
 * resource/aws_appmesh_mesh: Add `spec` configuration block (support egress filter rules) [GH-8119]
