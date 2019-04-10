@@ -637,7 +637,6 @@ func TestAccAWSCodeBuildProject_Source_Type_S3(t *testing.T) {
 				Config: testAccAWSCodeBuildProjectConfig_Source_Type_S3(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "source.2751363124.type", "S3"),
 				),
 			},
 		},
@@ -1609,8 +1608,18 @@ resource "aws_codebuild_project" "test" {
 
 func testAccAWSCodeBuildProjectConfig_Source_Type_S3(rName string) string {
 	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_bucket_object" "test" {
+  bucket  = "${aws_s3_bucket.test.bucket}"
+  content = "test"
+  key     = "test.txt"
+}
+
 resource "aws_codebuild_project" "test" {
-  name         = %q
+  name         = %[1]q
   service_role = "${aws_iam_role.test.arn}"
 
   artifacts {
@@ -1624,7 +1633,7 @@ resource "aws_codebuild_project" "test" {
   }
 
   source {
-    location = "bucket-name/object-name.zip"
+    location = "${aws_s3_bucket.test.bucket}/${aws_s3_bucket_object.test.key}"
     type     = "S3"
   }
 }
