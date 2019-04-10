@@ -16,6 +16,7 @@ BUG FIXES:
 
 * data-source/aws_lb_target_group: Add missing schema attributes [GH-8213]
 * resource/aws_appautoscaling_policy: Retry creation on `ObjectNotFound` errors for eventual consistency [GH-8273]
+* resource/aws_backup_plan: Prevent the sending of empty lifecycle attributes [GH-8236]
 * resource/aws_glue_catalog_table: Properly trigger resource recreation when deleted outside Terraform [GH-8174]
 * resource/aws_secretsmanager_secret: Handle additional scheduled for deletion error message on immediate secret recreation [GH-8219]
 * provider: Prevent panic when setting `endpoints` configuration [GH-8226]
