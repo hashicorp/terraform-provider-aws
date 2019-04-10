@@ -299,7 +299,7 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 								"source-ip",
 							}, true),
 						},
-						"host_header_config": {
+						"host_header": {
 							Type:     schema.TypeList,
 							MaxItems: 1,
 							Optional: true,
@@ -319,7 +319,7 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 								},
 							},
 						},
-						"http_header_config": {
+						"http_header": {
 							Type:             schema.TypeList,
 							MaxItems:         1,
 							Optional:         true,
@@ -342,7 +342,7 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 								},
 							},
 						},
-						"http_request_method_config": {
+						"http_request_method": {
 							Type:             schema.TypeList,
 							MaxItems:         1,
 							Optional:         true,
@@ -360,7 +360,7 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 								},
 							},
 						},
-						"path_pattern_config": {
+						"path_pattern": {
 							Type:     schema.TypeList,
 							MaxItems: 1,
 							Optional: true,
@@ -380,7 +380,7 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 								},
 							},
 						},
-						"query_string_config": {
+						"query_string": {
 							Type:             schema.TypeList,
 							MaxItems:         1,
 							Optional:         true,
@@ -406,7 +406,7 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 								},
 							},
 						},
-						"source_ip_config": {
+						"source_ip": {
 							Type:             schema.TypeList,
 							MaxItems:         1,
 							Optional:         true,
@@ -434,7 +434,7 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 							Optional:         true,
 							Computed:         true,
 							DiffSuppressFunc: suppressIfConditionFieldNotIn([]string{"host-header", "path-pattern"}),
-							Deprecated:       "use 'host_header_config' or 'path_pattern_config' attribute instead",
+							Deprecated:       "use 'host_header' or 'path_pattern' attribute instead",
 						},
 					},
 				},
@@ -443,7 +443,7 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 	}
 }
 
-/* Backwards compatibility: This primarily exists to set a hash that handles the values to host_header_config or path_pattern_config migration.
+/* Backwards compatibility: This primarily exists to set a hash that handles the values to host_header or path_pattern migration.
 Can probably be removed on the next major version of the provider.
 */
 func lbListenerRuleConditionSetHash(v interface{}) int {
@@ -452,7 +452,7 @@ func lbListenerRuleConditionSetHash(v interface{}) int {
 	fmt.Fprint(&buf, m["field"].(string), "-")
 
 	if m["field"].(string) == "host-header" {
-		hostHeader := m["host_header_config"].([]interface{})
+		hostHeader := m["host_header"].([]interface{})
 		if len(hostHeader) > 0 {
 			hostHeaderMap := hostHeader[0].(map[string]interface{})
 			hostHeaderValues := hostHeaderMap["values"].([]interface{})
@@ -468,7 +468,7 @@ func lbListenerRuleConditionSetHash(v interface{}) int {
 	}
 
 	if m["field"].(string) == "http-header" {
-		httpHeader := m["http_header_config"].([]interface{})
+		httpHeader := m["http_header"].([]interface{})
 		if len(httpHeader) > 0 {
 			httpHeaderMap := httpHeader[0].(map[string]interface{})
 			fmt.Fprint(&buf, httpHeaderMap["http_header_name"].(string), "-")
@@ -480,7 +480,7 @@ func lbListenerRuleConditionSetHash(v interface{}) int {
 	}
 
 	if m["field"].(string) == "http-request-method" {
-		httpRequestMethod := m["http_request_method_config"].([]interface{})
+		httpRequestMethod := m["http_request_method"].([]interface{})
 		if len(httpRequestMethod) > 0 {
 			httpRequestMethodMap := httpRequestMethod[0].(map[string]interface{})
 			httpRequestMethodValues := httpRequestMethodMap["values"].([]interface{})
@@ -491,7 +491,7 @@ func lbListenerRuleConditionSetHash(v interface{}) int {
 	}
 
 	if m["field"].(string) == "path-pattern" {
-		pathPattern := m["path_pattern_config"].([]interface{})
+		pathPattern := m["path_pattern"].([]interface{})
 		if len(pathPattern) > 0 {
 			pathPatternMap := pathPattern[0].(map[string]interface{})
 			pathPatternValues := pathPatternMap["values"].([]interface{})
@@ -507,7 +507,7 @@ func lbListenerRuleConditionSetHash(v interface{}) int {
 	}
 
 	if m["field"].(string) == "query-string" {
-		queryString := m["query_string_config"].([]interface{})
+		queryString := m["query_string"].([]interface{})
 		if len(queryString) > 0 {
 			queryStringMap := queryString[0].(map[string]interface{})
 			queryStringValues := queryStringMap["values"].([]interface{})
@@ -519,7 +519,7 @@ func lbListenerRuleConditionSetHash(v interface{}) int {
 	}
 
 	if m["field"].(string) == "source-ip" {
-		sourceIp := m["source_ip_config"].([]interface{})
+		sourceIp := m["source_ip"].([]interface{})
 		if len(sourceIp) > 0 {
 			sourceIpMap := sourceIp[0].(map[string]interface{})
 			sourceIpValues := sourceIpMap["values"].([]interface{})
@@ -901,7 +901,7 @@ func resourceAwsLbListenerRuleRead(d *schema.ResourceData, meta interface{}) err
 			for k, value := range condition.HostHeaderConfig.Values {
 				values[k] = aws.StringValue(value)
 			}
-			conditionMap["host_header_config"] = []interface{}{
+			conditionMap["host_header"] = []interface{}{
 				map[string]interface{}{
 					"values": values,
 				},
@@ -913,7 +913,7 @@ func resourceAwsLbListenerRuleRead(d *schema.ResourceData, meta interface{}) err
 			for k, value := range condition.HttpHeaderConfig.Values {
 				values[k] = aws.StringValue(value)
 			}
-			conditionMap["http_header_config"] = []interface{}{
+			conditionMap["http_header"] = []interface{}{
 				map[string]interface{}{
 					"http_header_name": aws.StringValue(condition.HttpHeaderConfig.HttpHeaderName),
 					"values":           values,
@@ -926,7 +926,7 @@ func resourceAwsLbListenerRuleRead(d *schema.ResourceData, meta interface{}) err
 			for k, value := range condition.HttpRequestMethodConfig.Values {
 				values[k] = aws.StringValue(value)
 			}
-			conditionMap["http_request_method_config"] = []interface{}{
+			conditionMap["http_request_method"] = []interface{}{
 				map[string]interface{}{
 					"values": values,
 				},
@@ -938,7 +938,7 @@ func resourceAwsLbListenerRuleRead(d *schema.ResourceData, meta interface{}) err
 			for k, value := range condition.PathPatternConfig.Values {
 				values[k] = aws.StringValue(value)
 			}
-			conditionMap["path_pattern_config"] = []interface{}{
+			conditionMap["path_pattern"] = []interface{}{
 				map[string]interface{}{
 					"values": values,
 				},
@@ -953,7 +953,7 @@ func resourceAwsLbListenerRuleRead(d *schema.ResourceData, meta interface{}) err
 					"value": aws.StringValue(value.Value),
 				}
 			}
-			conditionMap["query_string_config"] = []interface{}{
+			conditionMap["query_string"] = []interface{}{
 				map[string]interface{}{
 					"values": values,
 				},
@@ -965,7 +965,7 @@ func resourceAwsLbListenerRuleRead(d *schema.ResourceData, meta interface{}) err
 			for k, value := range condition.SourceIpConfig.Values {
 				values[k] = aws.StringValue(value)
 			}
-			conditionMap["source_ip_config"] = []interface{}{
+			conditionMap["source_ip"] = []interface{}{
 				map[string]interface{}{
 					"values": values,
 				},
@@ -1246,7 +1246,7 @@ func lbListenerRuleConditions(conditions []interface{}) ([]*elbv2.RuleCondition,
 		}
 		switch conditionMap["field"].(string) {
 		case "host-header":
-			hostHeader := conditionMap["host_header_config"].([]interface{})
+			hostHeader := conditionMap["host_header"].([]interface{})
 			var values []interface{}
 			if len(hostHeader) > 0 {
 				values = hostHeader[0].(map[string]interface{})["values"].([]interface{})
@@ -1254,7 +1254,7 @@ func lbListenerRuleConditions(conditions []interface{}) ([]*elbv2.RuleCondition,
 				// Backwards compatibility
 				values = conditionValues
 			} else {
-				return nil, errors.New("host_header_config must be set when condition field is host-header")
+				return nil, errors.New("host_header must be set when condition field is host-header")
 			}
 
 			elbConditions[i].HostHeaderConfig = &elbv2.HostHeaderConditionConfig{
@@ -1264,9 +1264,9 @@ func lbListenerRuleConditions(conditions []interface{}) ([]*elbv2.RuleCondition,
 				elbConditions[i].HostHeaderConfig.Values[j] = aws.String(value.(string))
 			}
 		case "http-header":
-			httpHeader := conditionMap["http_header_config"].([]interface{})
+			httpHeader := conditionMap["http_header"].([]interface{})
 			if len(httpHeader) == 0 {
-				return nil, errors.New("http_header_config must be set when condition field is http-header")
+				return nil, errors.New("http_header must be set when condition field is http-header")
 			}
 			httpHeaderMap := httpHeader[0].(map[string]interface{})
 			values := httpHeaderMap["values"].([]interface{})
@@ -1279,9 +1279,9 @@ func lbListenerRuleConditions(conditions []interface{}) ([]*elbv2.RuleCondition,
 				elbConditions[i].HttpHeaderConfig.Values[j] = aws.String(value.(string))
 			}
 		case "http-request-method":
-			httpRequestMethod := conditionMap["http_request_method_config"].([]interface{})
+			httpRequestMethod := conditionMap["http_request_method"].([]interface{})
 			if len(httpRequestMethod) == 0 {
-				return nil, errors.New("http_request_method_config must be set when condition field is http-request-method")
+				return nil, errors.New("http_request_method must be set when condition field is http-request-method")
 			}
 			values := httpRequestMethod[0].(map[string]interface{})["values"].([]interface{})
 
@@ -1292,7 +1292,7 @@ func lbListenerRuleConditions(conditions []interface{}) ([]*elbv2.RuleCondition,
 				elbConditions[i].HttpRequestMethodConfig.Values[j] = aws.String(value.(string))
 			}
 		case "path-pattern":
-			pathPattern := conditionMap["path_pattern_config"].([]interface{})
+			pathPattern := conditionMap["path_pattern"].([]interface{})
 			var values []interface{}
 			if len(pathPattern) > 0 {
 				values = pathPattern[0].(map[string]interface{})["values"].([]interface{})
@@ -1300,7 +1300,7 @@ func lbListenerRuleConditions(conditions []interface{}) ([]*elbv2.RuleCondition,
 				// Backwards compatibility
 				values = conditionValues
 			} else {
-				return nil, errors.New("path_pattern_config must be set when condition field is path-pattern")
+				return nil, errors.New("path_pattern must be set when condition field is path-pattern")
 			}
 
 			elbConditions[i].PathPatternConfig = &elbv2.PathPatternConditionConfig{
@@ -1310,9 +1310,9 @@ func lbListenerRuleConditions(conditions []interface{}) ([]*elbv2.RuleCondition,
 				elbConditions[i].PathPatternConfig.Values[j] = aws.String(value.(string))
 			}
 		case "query-string":
-			queryString := conditionMap["query_string_config"].([]interface{})
+			queryString := conditionMap["query_string"].([]interface{})
 			if len(queryString) == 0 {
-				return nil, errors.New("query_string_config must be set when condition field is query-string-method")
+				return nil, errors.New("query_string must be set when condition field is query-string-method")
 			}
 			values := queryString[0].(map[string]interface{})["values"].([]interface{})
 
@@ -1330,9 +1330,9 @@ func lbListenerRuleConditions(conditions []interface{}) ([]*elbv2.RuleCondition,
 				elbConditions[i].QueryStringConfig.Values[j] = elbValuePair
 			}
 		case "source-ip":
-			sourceIp := conditionMap["source_ip_config"].([]interface{})
+			sourceIp := conditionMap["source_ip"].([]interface{})
 			if len(sourceIp) == 0 {
-				return nil, errors.New("source_ip_config must be set when condition field is source-ip")
+				return nil, errors.New("source_ip must be set when condition field is source-ip")
 			}
 			values := sourceIp[0].(map[string]interface{})["values"].([]interface{})
 
