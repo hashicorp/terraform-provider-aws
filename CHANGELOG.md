@@ -6,6 +6,9 @@ NOTES:
 
 ENHANCEMENTS:
 
+* resource/aws_appmesh_mesh: Add `spec` configuration block (support egress filter rules) [GH-8119]
+* resource/aws_appmesh_route: Add `spec` configuration block `tcp_route` configuration block (support TCP routing) [GH-8119]
+* resource/aws_appmesh_virtual_node: Add `spec` configuration block `logging` configuration block (support access logging) [GH-8119]
 * resource/aws_eks_cluster: Add `enabled_cluster_log_types` argument (support EKS control plane logging) [GH-8216]
 * resource/aws_iam_user_group_membership: Support resource import [GH-6976]
 * resource/aws_launch_template: Add `elastic_inference_accelerator` configuration block [GH-8247]
