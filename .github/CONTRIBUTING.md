@@ -30,7 +30,7 @@ we need to be able to review and respond quickly.
         - [Documentation Update](#documentation-update)
         - [Enhancement/Bugfix to a Resource](#enhancementbugfix-to-a-resource)
         - [New Resource](#new-resource)
-        - [New Provider](#new-provider)
+        - [New Service](#new-service)
         - [New Region](#new-region)
         - [Terraform Schema and Code Idiosyncracies](#terraform-schema-and-code-idiosyncracies)
     - [Writing Acceptance Tests](#writing-acceptance-tests)
@@ -260,31 +260,50 @@ existing resources, but you still get to implement something completely new.
    folder. This is to avoid conflicts as the vendor versions tend to be fast
    moving targets.
 
-#### New Provider
+#### New Service
 
-Implementing a new provider gives Terraform the ability to manage resources in
+Implementing a new AWS service gives Terraform the ability to manage resources in
 a whole new API. It's a larger undertaking, but brings major new functionality
 into Terraform.
 
- - [ ] __Minimal initial LOC__: Some providers may be big and it can be
-   inefficient for both reviewer & author to go through long feedback cycles
-   on a big PR with many resources. We encourage you to only submit
-   the necessary minimum in a single PR, ideally **just the first resource**
-   of the provider.
- - [ ] __Acceptance tests__: Each provider should include an acceptance test
-   suite with tests for each resource should include acceptance tests covering
-   its behavior. See [Writing Acceptance Tests](#writing-acceptance-tests) below
-   for a detailed guide on how to approach these.
- - [ ] __Documentation__: Each provider has a section in the Terraform
-   documentation. The [Terraform website][website] source is in this repo and
-   includes instructions for getting a local copy of the site up and running if
-   you'd like to preview your changes. For a provider, you'll want to add new
-   index file and individual pages for each resource.
- - [ ] __Well-formed Code__: Do your best to follow existing conventions you
-   see in the codebase, and ensure your code is formatted with `go fmt`. (The
-   Travis CI build will fail if `go fmt` has not been run on incoming code.)
-   The PR reviewers can help out on this front, and may provide comments with
-   suggestions on how to improve the code.
+- [ ] __Service Client__: Before new resources are submitted, we encourage
+  a separate pull request containing just the new AWS Go SDK service client.
+  Doing so will pull in the AWS Go SDK service code into the project at the
+  current version. Since the AWS Go SDK is updated frequently, these pull
+  requests can easily have merge conflicts or be out of date. The maintainers
+  prioritize reviewing and merging these quickly to prevent those situations.
+
+  To add the AWS Go SDK service client:
+
+  - In `aws/provider.go` Add a new service entry to `endpointServiceNames`.
+    This service name should match the AWS Go SDK or AWS CLI service name.
+  - In `aws/config.go`: Add a new import for the AWS Go SDK code. e.g.
+    `github.com/aws/aws-sdk-go/service/quicksight`
+  - In `aws/config.go`: Add a new `{SERVICE}conn` field to the `AWSClient`
+    struct for the service client. The service name should match the name
+    in `endpointServiceNames`. e.g. `quicksightconn *quicksight.QuickSight`
+  - In `aws/config.go`: Create the new service client in the `{SERVICE}conn`
+    field in the `AWSClient` instantiation within `Client()`. e.g.
+    `quicksightconn: quicksight.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["quicksight"])})),`
+  - In `website/docs/guides/custom-service-endpoints.html.md`: Add the service
+    name in the list of customizable endpoints.
+  - Run the following then submit the pull request:
+
+  ```sh
+  go test ./aws
+  go mod tidy
+  go mod vendor
+  ```
+
+- [ ] __Initial Resource__: Some services may be big and it can be
+  inefficient for both reviewer & author to go through long feedback cycles
+  on a big PR with many resources. Often feedback items in one resource
+  will also need to be applied in other resources. We encourage you to submit
+  the necessary minimum in a single PR, ideally **just the first resource**
+  of the service.
+
+The initial resource and changes afterwards should follow the other sections
+of this guide as appropriate.
 
 #### New Region
 
