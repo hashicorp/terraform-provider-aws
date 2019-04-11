@@ -910,6 +910,7 @@ func init() {
 		"kinesis_analytics",
 		"kinesis",
 		"kinesisanalytics",
+		"kinesisvideo",
 		"kms",
 		"lambda",
 		"lexmodels",
