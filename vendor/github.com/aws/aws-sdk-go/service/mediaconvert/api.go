@@ -5932,7 +5932,7 @@ type DisassociateCertificateInput struct {
 	// resource.
 	//
 	// Arn is a required field
-	Arn *string `locationName:"arn" type:"string" required:"true"`
+	Arn *string `location:"uri" locationName:"arn" type:"string" required:"true"`
 }
 
 // String returns the string representation
@@ -5950,6 +5950,9 @@ func (s *DisassociateCertificateInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DisassociateCertificateInput"}
 	if s.Arn == nil {
 		invalidParams.Add(request.NewErrParamRequired("Arn"))
+	}
+	if s.Arn != nil && len(*s.Arn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Arn", 1))
 	}
 
 	if invalidParams.Len() > 0 {

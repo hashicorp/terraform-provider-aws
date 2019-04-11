@@ -2856,6 +2856,98 @@ func (c *MediaLive) UpdateInputSecurityGroupWithContext(ctx aws.Context, input *
 	return out, req.Send()
 }
 
+const opUpdateReservation = "UpdateReservation"
+
+// UpdateReservationRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateReservation operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateReservation for more information on using the UpdateReservation
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateReservationRequest method.
+//    req, resp := client.UpdateReservationRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/UpdateReservation
+func (c *MediaLive) UpdateReservationRequest(input *UpdateReservationInput) (req *request.Request, output *UpdateReservationOutput) {
+	op := &request.Operation{
+		Name:       opUpdateReservation,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/prod/reservations/{reservationId}",
+	}
+
+	if input == nil {
+		input = &UpdateReservationInput{}
+	}
+
+	output = &UpdateReservationOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateReservation API operation for AWS Elemental MediaLive.
+//
+// Update reservation.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaLive's
+// API operation UpdateReservation for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//
+//   * ErrCodeBadGatewayException "BadGatewayException"
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//
+//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//
+//   * ErrCodeConflictException "ConflictException"
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/UpdateReservation
+func (c *MediaLive) UpdateReservation(input *UpdateReservationInput) (*UpdateReservationOutput, error) {
+	req, out := c.UpdateReservationRequest(input)
+	return out, req.Send()
+}
+
+// UpdateReservationWithContext is the same as UpdateReservation with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateReservation for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaLive) UpdateReservationWithContext(ctx aws.Context, input *UpdateReservationInput, opts ...request.Option) (*UpdateReservationOutput, error) {
+	req, out := c.UpdateReservationRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 // Aac Settings
 type AacSettings struct {
 	_ struct{} `type:"structure"`
@@ -5052,6 +5144,10 @@ type Channel struct {
 	// The unique arn of the channel.
 	Arn *string `locationName:"arn" type:"string"`
 
+	// The class for this channel. STANDARD for a channel with two pipelines or
+	// SINGLE_PIPELINE for a channel with one pipeline.
+	ChannelClass *string `locationName:"channelClass" type:"string" enum:"ChannelClass"`
+
 	// A list of destinations of the channel. For UDP outputs, there is onedestination
 	// per output. For other types (HLS, for example), there isone destination per
 	// packager.
@@ -5102,6 +5198,12 @@ func (s Channel) GoString() string {
 // SetArn sets the Arn field's value.
 func (s *Channel) SetArn(v string) *Channel {
 	s.Arn = &v
+	return s
+}
+
+// SetChannelClass sets the ChannelClass field's value.
+func (s *Channel) SetChannelClass(v string) *Channel {
+	s.ChannelClass = &v
 	return s
 }
 
@@ -5206,6 +5308,10 @@ type ChannelSummary struct {
 	// The unique arn of the channel.
 	Arn *string `locationName:"arn" type:"string"`
 
+	// The class for this channel. STANDARD for a channel with two pipelines or
+	// SINGLE_PIPELINE for a channel with one pipeline.
+	ChannelClass *string `locationName:"channelClass" type:"string" enum:"ChannelClass"`
+
 	// A list of destinations of the channel. For UDP outputs, there is onedestination
 	// per output. For other types (HLS, for example), there isone destination per
 	// packager.
@@ -5253,6 +5359,12 @@ func (s ChannelSummary) GoString() string {
 // SetArn sets the Arn field's value.
 func (s *ChannelSummary) SetArn(v string) *ChannelSummary {
 	s.Arn = &v
+	return s
+}
+
+// SetChannelClass sets the ChannelClass field's value.
+func (s *ChannelSummary) SetChannelClass(v string) *ChannelSummary {
+	s.ChannelClass = &v
 	return s
 }
 
@@ -5325,6 +5437,10 @@ func (s *ChannelSummary) SetTags(v map[string]*string) *ChannelSummary {
 type CreateChannelInput struct {
 	_ struct{} `type:"structure"`
 
+	// A standard channel has two encoding pipelines and a single pipeline channel
+	// only has one.
+	ChannelClass *string `locationName:"channelClass" type:"string" enum:"ChannelClass"`
+
 	Destinations []*OutputDestination `locationName:"destinations" type:"list"`
 
 	// Encoder Settings
@@ -5391,6 +5507,12 @@ func (s *CreateChannelInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetChannelClass sets the ChannelClass field's value.
+func (s *CreateChannelInput) SetChannelClass(v string) *CreateChannelInput {
+	s.ChannelClass = &v
+	return s
 }
 
 // SetDestinations sets the Destinations field's value.
@@ -5768,6 +5890,10 @@ type DeleteChannelOutput struct {
 
 	Arn *string `locationName:"arn" type:"string"`
 
+	// A standard channel has two encoding pipelines and a single pipeline channel
+	// only has one.
+	ChannelClass *string `locationName:"channelClass" type:"string" enum:"ChannelClass"`
+
 	Destinations []*OutputDestination `locationName:"destinations" type:"list"`
 
 	EgressEndpoints []*ChannelEgressEndpoint `locationName:"egressEndpoints" type:"list"`
@@ -5808,6 +5934,12 @@ func (s DeleteChannelOutput) GoString() string {
 // SetArn sets the Arn field's value.
 func (s *DeleteChannelOutput) SetArn(v string) *DeleteChannelOutput {
 	s.Arn = &v
+	return s
+}
+
+// SetChannelClass sets the ChannelClass field's value.
+func (s *DeleteChannelOutput) SetChannelClass(v string) *DeleteChannelOutput {
+	s.ChannelClass = &v
 	return s
 }
 
@@ -6067,6 +6199,8 @@ type DeleteReservationOutput struct {
 	// Current reservation state
 	State *string `locationName:"state" type:"string" enum:"ReservationState"`
 
+	Tags map[string]*string `locationName:"tags" type:"map"`
+
 	UsagePrice *float64 `locationName:"usagePrice" type:"double"`
 }
 
@@ -6173,6 +6307,12 @@ func (s *DeleteReservationOutput) SetStart(v string) *DeleteReservationOutput {
 // SetState sets the State field's value.
 func (s *DeleteReservationOutput) SetState(v string) *DeleteReservationOutput {
 	s.State = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *DeleteReservationOutput) SetTags(v map[string]*string) *DeleteReservationOutput {
+	s.Tags = v
 	return s
 }
 
@@ -6291,6 +6431,10 @@ type DescribeChannelOutput struct {
 
 	Arn *string `locationName:"arn" type:"string"`
 
+	// A standard channel has two encoding pipelines and a single pipeline channel
+	// only has one.
+	ChannelClass *string `locationName:"channelClass" type:"string" enum:"ChannelClass"`
+
 	Destinations []*OutputDestination `locationName:"destinations" type:"list"`
 
 	EgressEndpoints []*ChannelEgressEndpoint `locationName:"egressEndpoints" type:"list"`
@@ -6331,6 +6475,12 @@ func (s DescribeChannelOutput) GoString() string {
 // SetArn sets the Arn field's value.
 func (s *DescribeChannelOutput) SetArn(v string) *DescribeChannelOutput {
 	s.Arn = &v
+	return s
+}
+
+// SetChannelClass sets the ChannelClass field's value.
+func (s *DescribeChannelOutput) SetChannelClass(v string) *DescribeChannelOutput {
+	s.ChannelClass = &v
 	return s
 }
 
@@ -6456,6 +6606,9 @@ type DescribeInputOutput struct {
 
 	Id *string `locationName:"id" type:"string"`
 
+	// A standard input has two sources and a single pipeline input only has one.
+	InputClass *string `locationName:"inputClass" type:"string" enum:"InputClass"`
+
 	MediaConnectFlows []*MediaConnectFlow `locationName:"mediaConnectFlows" type:"list"`
 
 	Name *string `locationName:"name" type:"string"`
@@ -6504,6 +6657,12 @@ func (s *DescribeInputOutput) SetDestinations(v []*InputDestination) *DescribeIn
 // SetId sets the Id field's value.
 func (s *DescribeInputOutput) SetId(v string) *DescribeInputOutput {
 	s.Id = &v
+	return s
+}
+
+// SetInputClass sets the InputClass field's value.
+func (s *DescribeInputOutput) SetInputClass(v string) *DescribeInputOutput {
+	s.InputClass = &v
 	return s
 }
 
@@ -6878,6 +7037,8 @@ type DescribeReservationOutput struct {
 	// Current reservation state
 	State *string `locationName:"state" type:"string" enum:"ReservationState"`
 
+	Tags map[string]*string `locationName:"tags" type:"map"`
+
 	UsagePrice *float64 `locationName:"usagePrice" type:"double"`
 }
 
@@ -6984,6 +7145,12 @@ func (s *DescribeReservationOutput) SetStart(v string) *DescribeReservationOutpu
 // SetState sets the State field's value.
 func (s *DescribeReservationOutput) SetState(v string) *DescribeReservationOutput {
 	s.State = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *DescribeReservationOutput) SetTags(v map[string]*string) *DescribeReservationOutput {
+	s.Tags = v
 	return s
 }
 
@@ -9871,6 +10038,15 @@ type Input struct {
 	// The generated ID of the input (unique for user account, immutable).
 	Id *string `locationName:"id" type:"string"`
 
+	// STANDARD - MediaLive expects two sources to be connected to this input. If
+	// the channel is also STANDARD, both sources will be ingested. If the channel
+	// is SINGLE_PIPELINE, only the first source will be ingested; the second source
+	// will always be ignored, even if the first source fails.SINGLE_PIPELINE -
+	// You can connect only one source to this input. If the ChannelClass is also
+	// SINGLE_PIPELINE, this value is valid. If the ChannelClass is STANDARD, this
+	// value is not valid because the channel requires two sources in the input.
+	InputClass *string `locationName:"inputClass" type:"string" enum:"InputClass"`
+
 	// A list of MediaConnect Flows for this input.
 	MediaConnectFlows []*MediaConnectFlow `locationName:"mediaConnectFlows" type:"list"`
 
@@ -9926,6 +10102,12 @@ func (s *Input) SetDestinations(v []*InputDestination) *Input {
 // SetId sets the Id field's value.
 func (s *Input) SetId(v string) *Input {
 	s.Id = &v
+	return s
+}
+
+// SetInputClass sets the InputClass field's value.
+func (s *Input) SetInputClass(v string) *Input {
+	s.InputClass = &v
 	return s
 }
 
@@ -11078,6 +11260,8 @@ func (s *ListInputsOutput) SetNextToken(v string) *ListInputsOutput {
 type ListOfferingsInput struct {
 	_ struct{} `type:"structure"`
 
+	ChannelClass *string `location:"querystring" locationName:"channelClass" type:"string"`
+
 	ChannelConfiguration *string `location:"querystring" locationName:"channelConfiguration" type:"string"`
 
 	Codec *string `location:"querystring" locationName:"codec" type:"string"`
@@ -11120,6 +11304,12 @@ func (s *ListOfferingsInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetChannelClass sets the ChannelClass field's value.
+func (s *ListOfferingsInput) SetChannelClass(v string) *ListOfferingsInput {
+	s.ChannelClass = &v
+	return s
 }
 
 // SetChannelConfiguration sets the ChannelConfiguration field's value.
@@ -11215,6 +11405,8 @@ func (s *ListOfferingsOutput) SetOfferings(v []*Offering) *ListOfferingsOutput {
 type ListReservationsInput struct {
 	_ struct{} `type:"structure"`
 
+	ChannelClass *string `location:"querystring" locationName:"channelClass" type:"string"`
+
 	Codec *string `location:"querystring" locationName:"codec" type:"string"`
 
 	MaxResults *int64 `location:"querystring" locationName:"maxResults" min:"1" type:"integer"`
@@ -11255,6 +11447,12 @@ func (s *ListReservationsInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetChannelClass sets the ChannelClass field's value.
+func (s *ListReservationsInput) SetChannelClass(v string) *ListReservationsInput {
+	s.ChannelClass = &v
+	return s
 }
 
 // SetCodec sets the Codec field's value.
@@ -13337,6 +13535,8 @@ type PurchaseOfferingInput struct {
 	RequestId *string `locationName:"requestId" type:"string" idempotencyToken:"true"`
 
 	Start *string `locationName:"start" type:"string"`
+
+	Tags map[string]*string `locationName:"tags" type:"map"`
 }
 
 // String returns the string representation
@@ -13398,6 +13598,12 @@ func (s *PurchaseOfferingInput) SetRequestId(v string) *PurchaseOfferingInput {
 // SetStart sets the Start field's value.
 func (s *PurchaseOfferingInput) SetStart(v string) *PurchaseOfferingInput {
 	s.Start = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *PurchaseOfferingInput) SetTags(v map[string]*string) *PurchaseOfferingInput {
+	s.Tags = v
 	return s
 }
 
@@ -13550,6 +13756,9 @@ type Reservation struct {
 	// Current state of reservation, e.g. 'ACTIVE'
 	State *string `locationName:"state" type:"string" enum:"ReservationState"`
 
+	// A collection of key-value pairs
+	Tags map[string]*string `locationName:"tags" type:"map"`
+
 	// Recurring usage charge for each reserved resource, e.g. '157.0'
 	UsagePrice *float64 `locationName:"usagePrice" type:"double"`
 }
@@ -13660,6 +13869,12 @@ func (s *Reservation) SetState(v string) *Reservation {
 	return s
 }
 
+// SetTags sets the Tags field's value.
+func (s *Reservation) SetTags(v map[string]*string) *Reservation {
+	s.Tags = v
+	return s
+}
+
 // SetUsagePrice sets the UsagePrice field's value.
 func (s *Reservation) SetUsagePrice(v float64) *Reservation {
 	s.UsagePrice = &v
@@ -13669,6 +13884,9 @@ func (s *Reservation) SetUsagePrice(v float64) *Reservation {
 // Resource configuration (codec, resolution, bitrate, ...)
 type ReservationResourceSpecification struct {
 	_ struct{} `type:"structure"`
+
+	// Channel class, e.g. 'STANDARD'
+	ChannelClass *string `locationName:"channelClass" type:"string" enum:"ChannelClass"`
 
 	// Codec, e.g. 'AVC'
 	Codec *string `locationName:"codec" type:"string" enum:"ReservationCodec"`
@@ -13700,6 +13918,12 @@ func (s ReservationResourceSpecification) String() string {
 // GoString returns the string representation
 func (s ReservationResourceSpecification) GoString() string {
 	return s.String()
+}
+
+// SetChannelClass sets the ChannelClass field's value.
+func (s *ReservationResourceSpecification) SetChannelClass(v string) *ReservationResourceSpecification {
+	s.ChannelClass = &v
+	return s
 }
 
 // SetCodec sets the Codec field's value.
@@ -15012,6 +15236,10 @@ type StartChannelOutput struct {
 
 	Arn *string `locationName:"arn" type:"string"`
 
+	// A standard channel has two encoding pipelines and a single pipeline channel
+	// only has one.
+	ChannelClass *string `locationName:"channelClass" type:"string" enum:"ChannelClass"`
+
 	Destinations []*OutputDestination `locationName:"destinations" type:"list"`
 
 	EgressEndpoints []*ChannelEgressEndpoint `locationName:"egressEndpoints" type:"list"`
@@ -15052,6 +15280,12 @@ func (s StartChannelOutput) GoString() string {
 // SetArn sets the Arn field's value.
 func (s *StartChannelOutput) SetArn(v string) *StartChannelOutput {
 	s.Arn = &v
+	return s
+}
+
+// SetChannelClass sets the ChannelClass field's value.
+func (s *StartChannelOutput) SetChannelClass(v string) *StartChannelOutput {
+	s.ChannelClass = &v
 	return s
 }
 
@@ -15412,6 +15646,10 @@ type StopChannelOutput struct {
 
 	Arn *string `locationName:"arn" type:"string"`
 
+	// A standard channel has two encoding pipelines and a single pipeline channel
+	// only has one.
+	ChannelClass *string `locationName:"channelClass" type:"string" enum:"ChannelClass"`
+
 	Destinations []*OutputDestination `locationName:"destinations" type:"list"`
 
 	EgressEndpoints []*ChannelEgressEndpoint `locationName:"egressEndpoints" type:"list"`
@@ -15452,6 +15690,12 @@ func (s StopChannelOutput) GoString() string {
 // SetArn sets the Arn field's value.
 func (s *StopChannelOutput) SetArn(v string) *StopChannelOutput {
 	s.Arn = &v
+	return s
+}
+
+// SetChannelClass sets the ChannelClass field's value.
+func (s *StopChannelOutput) SetChannelClass(v string) *StopChannelOutput {
+	s.ChannelClass = &v
 	return s
 }
 
@@ -16153,6 +16397,76 @@ func (s UpdateInputSecurityGroupOutput) GoString() string {
 // SetSecurityGroup sets the SecurityGroup field's value.
 func (s *UpdateInputSecurityGroupOutput) SetSecurityGroup(v *InputSecurityGroup) *UpdateInputSecurityGroupOutput {
 	s.SecurityGroup = v
+	return s
+}
+
+type UpdateReservationInput struct {
+	_ struct{} `type:"structure"`
+
+	Name *string `locationName:"name" type:"string"`
+
+	// ReservationId is a required field
+	ReservationId *string `location:"uri" locationName:"reservationId" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateReservationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateReservationInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateReservationInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateReservationInput"}
+	if s.ReservationId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ReservationId"))
+	}
+	if s.ReservationId != nil && len(*s.ReservationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ReservationId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetName sets the Name field's value.
+func (s *UpdateReservationInput) SetName(v string) *UpdateReservationInput {
+	s.Name = &v
+	return s
+}
+
+// SetReservationId sets the ReservationId field's value.
+func (s *UpdateReservationInput) SetReservationId(v string) *UpdateReservationInput {
+	s.ReservationId = &v
+	return s
+}
+
+type UpdateReservationOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Reserved resources available to use
+	Reservation *Reservation `locationName:"reservation" type:"structure"`
+}
+
+// String returns the string representation
+func (s UpdateReservationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateReservationOutput) GoString() string {
+	return s.String()
+}
+
+// SetReservation sets the Reservation field's value.
+func (s *UpdateReservationOutput) SetReservation(v *Reservation) *UpdateReservationOutput {
+	s.Reservation = v
 	return s
 }
 
@@ -16860,6 +17174,16 @@ const (
 
 	// BurnInTeletextGridControlScaled is a BurnInTeletextGridControl enum value
 	BurnInTeletextGridControlScaled = "SCALED"
+)
+
+// A standard channel has two encoding pipelines and a single pipeline channel
+// only has one.
+const (
+	// ChannelClassStandard is a ChannelClass enum value
+	ChannelClassStandard = "STANDARD"
+
+	// ChannelClassSinglePipeline is a ChannelClass enum value
+	ChannelClassSinglePipeline = "SINGLE_PIPELINE"
 )
 
 const (
@@ -17725,6 +18049,15 @@ const (
 
 	// IFrameOnlyPlaylistTypeStandard is a IFrameOnlyPlaylistType enum value
 	IFrameOnlyPlaylistTypeStandard = "STANDARD"
+)
+
+// A standard input has two sources and a single pipeline input only has one.
+const (
+	// InputClassStandard is a InputClass enum value
+	InputClassStandard = "STANDARD"
+
+	// InputClassSinglePipeline is a InputClass enum value
+	InputClassSinglePipeline = "SINGLE_PIPELINE"
 )
 
 // codec in increasing order of complexity
