@@ -17,27 +17,27 @@ we need to be able to review and respond quickly.
 
 <!-- TOC depthFrom:2 -->
 
-- [Contributing to Terraform - AWS Provider](#contributing-to-terraform---aws-provider)
-  - [HashiCorp vs. Community Providers](#hashicorp-vs-community-providers)
-  - [Issues](#issues)
+- [HashiCorp vs. Community Providers](#hashicorp-vs-community-providers)
+- [Issues](#issues)
     - [Issue Reporting Checklists](#issue-reporting-checklists)
-      - [Bug Reports](#bug-reports)
-      - [Feature Requests](#feature-requests)
-      - [Questions](#questions)
+        - [Bug Reports](#bug-reports)
+        - [Feature Requests](#feature-requests)
+        - [Questions](#questions)
     - [Issue Lifecycle](#issue-lifecycle)
-  - [Pull Requests](#pull-requests)
+- [Pull Requests](#pull-requests)
     - [Pull Request Lifecycle](#pull-request-lifecycle)
     - [Checklists for Contribution](#checklists-for-contribution)
-      - [Documentation Update](#documentation-update)
-      - [Enhancement/Bugfix to a Resource](#enhancementbugfix-to-a-resource)
-      - [New Resource](#new-resource)
-      - [New Provider](#new-provider)
-      - [New Region](#new-region)
-      - [Terraform Schema and Code Idiosyncracies](#terraform-schema-and-code-idiosyncracies)
+        - [Documentation Update](#documentation-update)
+        - [Enhancement/Bugfix to a Resource](#enhancementbugfix-to-a-resource)
+        - [New Resource](#new-resource)
+        - [New Provider](#new-provider)
+        - [New Region](#new-region)
+        - [Terraform Schema and Code Idiosyncracies](#terraform-schema-and-code-idiosyncracies)
     - [Writing Acceptance Tests](#writing-acceptance-tests)
-      - [Acceptance Tests Often Cost Money to Run](#acceptance-tests-often-cost-money-to-run)
-      - [Running an Acceptance Test](#running-an-acceptance-test)
-      - [Writing an Acceptance Test](#writing-an-acceptance-test)
+        - [Acceptance Tests Often Cost Money to Run](#acceptance-tests-often-cost-money-to-run)
+        - [Running an Acceptance Test](#running-an-acceptance-test)
+        - [Writing an Acceptance Test](#writing-an-acceptance-test)
+        - [Writing and running Cross-Account Acceptance Tests](#writing-and-running-cross-account-acceptance-tests)
 
 <!-- /TOC -->
 
@@ -327,7 +327,8 @@ and style
 ### Writing Acceptance Tests
 
 Terraform includes an acceptance test harness that does most of the repetitive
-work involved in testing a resource.
+work involved in testing a resource. For additional information about testing
+Terraform Providers, see the [Extending Terraform documentation](https://www.terraform.io/docs/extend/testing/index.html).
 
 #### Acceptance Tests Often Cost Money to Run
 
@@ -536,6 +537,79 @@ When executing the test, the following steps are taken for each `TestStep`:
     ```
 
    These functions usually test only for the resource directly under test.
+
+#### Writing and running Cross-Account Acceptance Tests
+
+When testing requires AWS infrastructure in a second AWS account, the below changes to the normal setup will allow the management or reference of resources and data sources across accounts:
+
+- In the `PreCheck` function, include `testAccAlternateAccountPreCheck(t)` to ensure a standardized set of information is required for cross-account testing credentials
+- Declare a `providers` variable at the top of the test function: `var providers []*schema.Provider`
+- Switch usage of `Providers: testAccProviders` to `ProviderFactories: testAccProviderFactories(&providers)`
+- Add `testAccAlternateAccountProviderConfig()` to the test configuration and use `provider = "aws.alternate"` for cross-account resources. The resource that is the focus of the acceptance test should _not_ use the provider alias to simplify the testing setup.
+- For any `TestStep` that includes `ImportState: true`, add the `Config` that matches the previous `TestStep` `Config`
+
+An example acceptance test implementation can be seen below:
+
+```go
+func TestAccAwsExample_basic(t *testing.T) {
+  var providers []*schema.Provider
+  resourceName := "aws_example.test"
+
+  resource.ParallelTest(t, resource.TestCase{
+    PreCheck: func() {
+      testAccPreCheck(t)
+      testAccAlternateAccountPreCheck(t)
+    },
+    ProviderFactories: testAccProviderFactories(&providers),
+    CheckDestroy:      testAccCheckAwsExampleDestroy,
+    Steps: []resource.TestStep{
+      {
+        Config: testAccAwsExampleConfig(),
+        Check: resource.ComposeTestCheckFunc(
+          testAccCheckAwsExampleExists(resourceName),
+          // ... additional checks ...
+        ),
+      },
+      {
+        Config:            testAccAwsExampleConfig(),
+        ResourceName:      resourceName,
+        ImportState:       true,
+        ImportStateVerify: true,
+      },
+    },
+  })
+}
+
+func testAccAwsExampleConfig() string {
+  return testAccAlternateAccountProviderConfig() + fmt.Sprintf(`
+# Cross account resources should be handled by the cross account provider.
+# The standardized provider alias is aws.alternate as seen below.
+resource "aws_cross_account_example" "test" {
+  provider = "aws.alternate"
+
+  # ... configuration ...
+}
+
+# The resource that is the focus of the testing should be handled by the default provider,
+# which is automatically done by not specifying the provider configuration in the resource.
+resource "aws_example" "test" {
+  # ... configuration ...
+}
+`)
+}
+```
+
+Searching for usage of `testAccAlternateAccountPreCheck` in the codebase will yield real world examples of this setup in action.
+
+Running these acceptance tests is the same as before, except the following additional credential information is required:
+
+```sh
+# Using a profile
+export AWS_ALTERNATE_PROFILE=...
+# Otherwise
+export AWS_ALTERNATE_ACCESS_KEY_ID=...
+export AWS_ALTERNATE_SECRET_ACCESS_KEY=...
+```
 
 [website]: https://github.com/hashicorp/terraform/tree/master/website
 [acctests]: https://github.com/hashicorp/terraform#acceptance-tests
