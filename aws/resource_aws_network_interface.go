@@ -179,7 +179,7 @@ func resourceAwsNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) e
 	// Tags
 	d.Set("tags", tagsToMap(eni.TagSet))
 
-	if eni.Attachment != nil {
+	if eni.Attachment != nil && eni.Attachment.DeviceIndex != nil && eni.Attachment.AttachmentId != nil {
 		attachment := []map[string]interface{}{flattenAttachment(eni.Attachment)}
 		d.Set("attachment", attachment)
 	} else {
