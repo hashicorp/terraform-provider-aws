@@ -46,6 +46,11 @@ func TestAccDataSourceAwsDxConnection_Basic(t *testing.T) {
 
 func testAccDataSourceAwsDxConnectionConfig_Name(rName, location string) string {
 	return fmt.Sprintf(`
+resource "aws_dx_connection" "wrong" {
+	name            = "%s-wrong"
+	bandwidth       = "1Gbps"
+	location        = "%s"
+}
 resource "aws_dx_connection" "test" {
 	name            = "%s"
 	bandwidth       = "1Gbps"
@@ -55,7 +60,7 @@ resource "aws_dx_connection" "test" {
 data "aws_dx_connection" "test" {
   name = "${aws_dx_connection.test.name}"
 }
-`, rName, location)
+`, rName, location, rName, location)
 }
 
 const testAccDataSourceAwsDxConnectionConfig_NonExistent = `
