@@ -1963,6 +1963,19 @@ func validateDxConnectionBandWidth() schema.SchemaValidateFunc {
 		"500Mbps"}, false)
 }
 
+// https://docs.aws.amazon.com/ja_jp/kinesisvideostreams/latest/dg/API_StreamInfo.html
+func validateAwsKinesisVideoStreamDeviceName(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if (len(value) > 128) || (len(value) < 1) {
+		errors = append(errors, fmt.Errorf("%s length must be between 1 and 128 characters: %q", k, value))
+	}
+	pattern := `^[a-zA-Z0-9_.-]+$`
+	if !regexp.MustCompile(pattern).MatchString(value) {
+		errors = append(errors, fmt.Errorf("%s must only include alphanumeric, underscore, period, or hyphen characters: %q", k, value))
+	}
+	return
+}
+
 func validateKmsKey(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	arnPrefixPattern := `arn:[^:]+:kms:[^:]+:[^:]+:`
