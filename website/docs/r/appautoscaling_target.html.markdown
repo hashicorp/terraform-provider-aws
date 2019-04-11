@@ -74,3 +74,11 @@ The following arguments are supported:
 AutoScaling to modify your scalable target on your behalf.
 * `scalable_dimension` - (Required) The scalable dimension of the scalable target. Documentation can be found in the `ScalableDimension` parameter at: [AWS Application Auto Scaling API Reference](https://docs.aws.amazon.com/autoscaling/application/APIReference/API_RegisterScalableTarget.html#API_RegisterScalableTarget_RequestParameters)
 * `service_namespace` - (Required) The AWS service namespace of the scalable target. Documentation can be found in the `ServiceNamespace` parameter at: [AWS Application Auto Scaling API Reference](https://docs.aws.amazon.com/autoscaling/application/APIReference/API_RegisterScalableTarget.html#API_RegisterScalableTarget_RequestParameters)
+
+## Import
+
+Application AutoScaling Target can be imported using the `service-namespace` , `resource-id` and `scalable-dimension` separated by `/`.
+
+```
+$ terraform import aws_appautoscaling_target.test-target service-namespace/resource-id/scalable-dimension
+```

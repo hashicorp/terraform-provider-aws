@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/acctest"
@@ -26,6 +27,7 @@ func TestAccAwsRamResourceShare_basic(t *testing.T) {
 				Config: testAccAwsRamResourceShareConfigName(shareName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsRamResourceShareExists(resourceName, &resourceShare),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ram", regexp.MustCompile(`resource-share/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "allow_external_principals", "false"),
 					resource.TestCheckResourceAttr(resourceName, "name", shareName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),

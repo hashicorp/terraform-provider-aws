@@ -76,6 +76,12 @@ const (
 	// One or more fields in the certificate are invalid.
 	ErrCodeMalformedCertificateException = "MalformedCertificateException"
 
+	// ErrCodePermissionAlreadyExistsException for service response error code
+	// "PermissionAlreadyExistsException".
+	//
+	// The designated permission has already been given to the user.
+	ErrCodePermissionAlreadyExistsException = "PermissionAlreadyExistsException"
+
 	// ErrCodeRequestAlreadyProcessedException for service response error code
 	// "RequestAlreadyProcessedException".
 	//

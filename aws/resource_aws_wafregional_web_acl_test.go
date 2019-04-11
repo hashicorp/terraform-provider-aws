@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/resource"
@@ -27,6 +28,7 @@ func TestAccAWSWafRegionalWebAcl_basic(t *testing.T) {
 				Config: testAccAWSWafRegionalWebAclConfig(wafAclName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafRegionalWebAclExists("aws_wafregional_web_acl.waf_acl", &v),
+					testAccMatchResourceAttrRegionalARN("aws_wafregional_web_acl.waf_acl", "arn", "waf-regional", regexp.MustCompile(`webacl/.+`)),
 					resource.TestCheckResourceAttr(
 						"aws_wafregional_web_acl.waf_acl", "default_action.#", "1"),
 					resource.TestCheckResourceAttr(
@@ -37,6 +39,8 @@ func TestAccAWSWafRegionalWebAcl_basic(t *testing.T) {
 						"aws_wafregional_web_acl.waf_acl", "rule.#", "1"),
 					resource.TestCheckResourceAttr(
 						"aws_wafregional_web_acl.waf_acl", "metric_name", wafAclName),
+					resource.TestCheckResourceAttr(
+						"aws_wafregional_web_acl.waf_acl", "logging_configuration.#", "0"),
 				),
 			},
 		},
@@ -281,6 +285,46 @@ func TestAccAWSWafRegionalWebAcl_changeRules(t *testing.T) {
 						"aws_wafregional_web_acl.waf_acl", "name", wafAclName),
 					resource.TestCheckResourceAttr(
 						"aws_wafregional_web_acl.waf_acl", "rule.#", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSWafRegionalWebAcl_LoggingConfiguration(t *testing.T) {
+	var webACL1, webACL2, webACL3 waf.WebACL
+	rName := fmt.Sprintf("wafacl%s", acctest.RandString(5))
+	resourceName := "aws_wafregional_web_acl.waf_acl"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSWafRegionalWebAclDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSWafRegionalWebAclConfigLoggingConfiguration(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSWafRegionalWebAclExists(resourceName, &webACL1),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.redacted_fields.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.redacted_fields.0.field_to_match.#", "2"),
+				),
+			},
+			// Test logging configuration update
+			{
+				Config: testAccAWSWafRegionalWebAclConfigLoggingConfigurationUpdate(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSWafRegionalWebAclExists(resourceName, &webACL2),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.redacted_fields.#", "0"),
+				),
+			},
+			// Test logging configuration removal
+			{
+				Config: testAccAWSWafRegionalWebAclConfig_noRules(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSWafRegionalWebAclExists(resourceName, &webACL3),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "0"),
 				),
 			},
 		},
@@ -573,4 +617,121 @@ resource "aws_wafregional_web_acl" "waf_acl" {
     rule_id = "${aws_wafregional_rule.wafrule.id}"
   }
 }`, name, name, name, name)
+}
+
+func testAccAWSWafRegionalWebAclConfigLoggingConfiguration(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafregional_web_acl" "waf_acl" {
+  name        = %[1]q
+  metric_name = %[1]q
+
+  default_action {
+    type = "ALLOW"
+  }
+
+  logging_configuration {
+    log_destination = "${aws_kinesis_firehose_delivery_stream.test.arn}"
+
+    redacted_fields {
+      field_to_match {
+        type = "URI"
+      }
+
+      field_to_match {
+        data = "referer"
+        type = "HEADER"
+      }
+    }
+  }
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+  acl    = "private"
+}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "firehose.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  # the name must begin with aws-waf-logs-
+  name        = "aws-waf-logs-%[1]s"
+  destination = "s3"
+
+  s3_configuration {
+    role_arn   = "${aws_iam_role.test.arn}"
+    bucket_arn = "${aws_s3_bucket.test.arn}"
+  }
+}
+`, rName)
+}
+
+func testAccAWSWafRegionalWebAclConfigLoggingConfigurationUpdate(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafregional_web_acl" "waf_acl" {
+  name        = %[1]q
+  metric_name = %[1]q
+
+  default_action {
+    type = "ALLOW"
+  }
+
+  logging_configuration {
+    log_destination = "${aws_kinesis_firehose_delivery_stream.test.arn}"
+  }
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+  acl    = "private"
+}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "firehose.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  # the name must begin with aws-waf-logs-
+  name        = "aws-waf-logs-%[1]s"
+  destination = "s3"
+
+  s3_configuration {
+    role_arn   = "${aws_iam_role.test.arn}"
+    bucket_arn = "${aws_s3_bucket.test.arn}"
+  }
+}
+`, rName)
 }

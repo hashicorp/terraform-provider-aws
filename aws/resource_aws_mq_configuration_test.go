@@ -223,7 +223,7 @@ resource "aws_mq_configuration" "test" {
 </broker>
 DATA
 
-	tags {
+	tags = {
 		env = "test"
 	}
 }`, configurationName)
@@ -242,7 +242,7 @@ resource "aws_mq_configuration" "test" {
 </broker>
 DATA
 
-	tags {
+	tags = {
 		env = "test2"
 		role = "test-role"
 	}
@@ -262,7 +262,7 @@ resource "aws_mq_configuration" "test" {
 </broker>
 DATA
 
-	tags {
+	tags = {
 		role = "test-role"
 	}
 }`, configurationName)

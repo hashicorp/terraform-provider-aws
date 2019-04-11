@@ -83,12 +83,6 @@ func resourceAwsRoute53Record() *schema.Resource {
 				ConflictsWith: []string{"alias"},
 			},
 
-			"weight": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Removed:  "Now implemented as weighted_routing_policy; Please see https://www.terraform.io/docs/providers/aws/r/route53_record.html",
-			},
-
 			"set_identifier": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -101,8 +95,9 @@ func resourceAwsRoute53Record() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"zone_id": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringLenBetween(1, 32),
 						},
 
 						"name": {
@@ -112,6 +107,7 @@ func resourceAwsRoute53Record() *schema.Resource {
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 								return strings.EqualFold(old, new)
 							},
+							ValidateFunc: validation.StringLenBetween(1, 1024),
 						},
 
 						"evaluate_target_health": {
@@ -121,12 +117,6 @@ func resourceAwsRoute53Record() *schema.Resource {
 					},
 				},
 				Set: resourceAwsRoute53AliasRecordHash,
-			},
-
-			"failover": { // PRIMARY | SECONDARY
-				Type:     schema.TypeString,
-				Optional: true,
-				Removed:  "Now implemented as failover_routing_policy; see docs",
 			},
 
 			"failover_routing_policy": {
@@ -247,7 +237,7 @@ func resourceAwsRoute53Record() *schema.Resource {
 			"allow_overwrite": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  true,
+				Computed: true,
 			},
 		},
 	}

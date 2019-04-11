@@ -25,6 +25,14 @@ resource "aws_budgets_budget" "ec2" {
   cost_filters = {
     Service = "Amazon Elastic Compute Cloud - Compute"
   }
+
+  notification {
+    comparison_operator = "GREATER_THAN"
+    threshold = 100
+    threshold_type = "PERCENTAGE"
+    notification_type = "FORECASTED"
+    subscriber_email_addresses = ["test@example.com"]
+  }
 }
 ```
 
@@ -68,6 +76,7 @@ The following arguments are supported:
 * `time_period_end` - (Optional) The end of the time period covered by the budget. There are no restrictions on the end date. Format: `2017-01-01_12:00`.
 * `time_period_start` - (Required) The start of the time period covered by the budget. The start date must come before the end date. Format: `2017-01-01_12:00`.
 * `time_unit` - (Required) The length of time until a budget resets the actual and forecasted spend. Valid values: `MONTHLY`, `QUARTERLY`, `ANNUALLY`.
+* `notification` - (Optional) Object containing [Budget Notifications](#BudgetNotification). Can be used multiple times to define more than one budget notification
 
 ## Attributes Reference
 
@@ -113,6 +122,18 @@ Valid keys for `cost_filters` parameter vary depending on the `budget_type` valu
   * `TagKeyValue`
 
 Refer to [AWS CostFilter documentation](http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/data-type-filter.html) for further detail.
+
+### BudgetNotification
+
+Valid keys for `notification` parameter.
+
+* `comparison_operator` - (Required) Comparison operator to use to evaluate the condition. Can be `LESS_THAN`, `EQUAL_TO` or `GREATER_THAN`.
+* `threshold` - (Required) Threshold when the notification should be sent.
+* `threshold_type` - (Required) What kind of threshold is defined. Can be `PERCENTAGE` OR `ABSOLUTE_VALUE`.
+* `notification_type` - (Required) What kind of budget value to notify on. Can be `ACTUAL` or `FORECASTED`
+* `subscriber_email_addresses` - (Optional) E-Mail addresses to notify. Either this or `subscriber_sns_topic_arns` is required.
+* `subscriber_sns_topic_arns` - (Optional) SNS topics to notify. Either this or `subscriber_email_addresses` is required.
+
 
 ## Import
 

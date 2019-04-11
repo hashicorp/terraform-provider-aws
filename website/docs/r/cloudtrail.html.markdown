@@ -137,7 +137,7 @@ The following arguments are supported:
 
 * `name` - (Required) Specifies the name of the trail.
 * `s3_bucket_name` - (Required) Specifies the name of the S3 bucket designated for publishing log files.
-* `s3_key_prefix` - (Optional) Specifies the S3 key prefix that precedes
+* `s3_key_prefix` - (Optional) Specifies the S3 key prefix that follows
     the name of the bucket you have designated for log file delivery.
 * `cloud_watch_logs_role_arn` - (Optional) Specifies the role for the CloudWatch Logs
     endpoint to assume to write to a user’s log group.

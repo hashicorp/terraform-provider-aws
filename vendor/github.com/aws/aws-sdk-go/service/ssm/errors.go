@@ -598,6 +598,13 @@ const (
 	// Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 	ErrCodeResourceLimitExceededException = "ResourceLimitExceededException"
 
+	// ErrCodeServiceSettingNotFound for service response error code
+	// "ServiceSettingNotFound".
+	//
+	// The specified service setting was not found. Either the service name or the
+	// setting has not been provisioned by the AWS service team.
+	ErrCodeServiceSettingNotFound = "ServiceSettingNotFound"
+
 	// ErrCodeStatusUnchanged for service response error code
 	// "StatusUnchanged".
 	//

@@ -126,7 +126,7 @@ EOF
       "Properties": {}
     }
   ]
-EOF  
+EOF
   service_role        = "${aws_iam_role.iam_emr_service_role.arn}"
 }
 ```
@@ -217,7 +217,7 @@ EOF
 
 * `visible_to_all_users` - (Optional) Whether the job flow is visible to all IAM users of the AWS account associated with the job flow. Default `true`
 * `autoscaling_role` - (Optional) An IAM role for automatic scaling policies. The IAM role provides permissions that the automatic scaling feature requires to launch and terminate EC2 instances in an instance group.
-* `step` - (Optional) List of steps to run when creating the cluster. Defined below. It is highly recommended to utilize the [lifecycle configuration block](/docs/configuration/resources.html) with `ignore_changes` if other steps are being managed outside of Terraform.
+* `step` - (Optional) List of steps to run when creating the cluster. Defined below. It is highly recommended to utilize the [lifecycle configuration block](/docs/configuration/resources.html) with `ignore_changes` if other steps are being managed outside of Terraform. This argument is processed in [attribute-as-blocks mode](/docs/configuration/attr-as-blocks.html).
 * `tags` - (Optional) list of tags to apply to the EMR Cluster
 
 ## ec2_attributes
@@ -266,7 +266,7 @@ Attributes for each task instance group in the cluster
 * `instance_type` - (Required) The EC2 instance type for all instances in the instance group
 * `instance_count` - (Optional) Target number of instances for the instance group
 * `name` - (Optional) Friendly name given to the instance group
-* `bid_price` - (Optional) If set, the bid price for each EC2 instance in the instance group, expressed in USD. By setting this attribute, the instance group is being declared as a Spot Instance, and will implicitly create a Spot request. Leave this blank to use On-Demand Instances. `bid_price` can not be set for the `MASTER` instance group, since that group must always be On-Demand
+* `bid_price` - (Optional) If set, the bid price for each EC2 instance in the instance group, expressed in USD. By setting this attribute, the instance group is being declared as a Spot Instance, and will implicitly create a Spot request. Leave this blank to use On-Demand Instances.
 * `ebs_config` - (Optional) A list of attributes for the EBS volumes attached to each instance in the instance group. Each `ebs_config` defined will result in additional EBS volumes being attached to _each_ instance in the instance group. Defined below
 * `autoscaling_policy` - (Optional) The autoscaling policy document. This is a JSON formatted string. See [EMR Auto Scaling](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-automatic-scaling.html)
 
@@ -396,16 +396,19 @@ EOF
   service_role = "${aws_iam_role.iam_emr_service_role.arn}"
 }
 
-resource "aws_security_group" "allow_all" {
-  name        = "allow_all"
-  description = "Allow all inbound traffic"
+resource "aws_security_group" "allow_access" {
+  name        = "allow_access"
+  description = "Allow inbound traffic"
   vpc_id      = "${aws_vpc.main.id}"
 
   ingress {
+    # these ports should be locked down
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+
+    # we do not recommend opening your cluster to 0.0.0.0/0
+    cidr_blocks = # add your IP address here
   }
 
   egress {

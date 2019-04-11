@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -48,10 +47,6 @@ func testSweepLightsailStaticIps(region string) error {
 
 		for _, staticIp := range output.StaticIps {
 			name := aws.StringValue(staticIp.Name)
-
-			if !strings.HasPrefix(name, "tf-test-") {
-				continue
-			}
 
 			log.Printf("[INFO] Deleting Lightsail Static IP %s", name)
 			_, err := conn.ReleaseStaticIp(&lightsail.ReleaseStaticIpInput{

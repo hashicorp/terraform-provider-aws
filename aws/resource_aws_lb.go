@@ -263,7 +263,7 @@ func resourceAwsLbCreate(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := elbconn.CreateLoadBalancer(elbOpts)
 	if err != nil {
-		return fmt.Errorf("Error creating Application Load Balancer: %s", err)
+		return fmt.Errorf("Error creating %s Load Balancer: %s", d.Get("load_balancer_type").(string), err)
 	}
 
 	if len(resp.LoadBalancers) != 1 {

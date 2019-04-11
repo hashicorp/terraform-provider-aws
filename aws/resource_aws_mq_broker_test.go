@@ -95,10 +95,6 @@ func testSweepMqBrokers(region string) error {
 	log.Printf("[DEBUG] %d MQ brokers found", len(resp.BrokerSummaries))
 
 	for _, bs := range resp.BrokerSummaries {
-		if !strings.HasPrefix(*bs.BrokerName, "tf-acc-test-") {
-			continue
-		}
-
 		log.Printf("[INFO] Deleting MQ broker %s", *bs.BrokerId)
 		_, err := conn.DeleteBroker(&mq.DeleteBrokerInput{
 			BrokerId: bs.BrokerId,
@@ -896,7 +892,7 @@ resource "aws_mq_broker" "test" {
     password = "TestTest1234"
 	}
 
-  tags {
+  tags = {
     env = "test"
   }
 }`, sgName, brokerName)
@@ -920,7 +916,7 @@ resource "aws_mq_broker" "test" {
     password = "TestTest1234"
 	}
 
-  tags {
+  tags = {
 		env = "test2"
 		role = "test-role"
   }
@@ -945,7 +941,7 @@ resource "aws_mq_broker" "test" {
     password = "TestTest1234"
 	}
 
-  tags {
+  tags = {
 		role = "test-role"
   }
 }`, sgName, brokerName)
