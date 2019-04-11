@@ -13167,6 +13167,8 @@ type CreateJobInput struct {
 	// consists of 4 vCPUs of compute capacity and 16 GB of memory. For more information,
 	// see the AWS Glue pricing page (https://aws.amazon.com/glue/pricing/).
 	//
+	// Do not set Max Capacity if using WorkerType and NumberOfWorkers.
+	//
 	// The value that can be allocated for MaxCapacity depends on whether you are
 	// running a python shell job, or an Apache Spark ETL job:
 	//
@@ -13189,6 +13191,13 @@ type CreateJobInput struct {
 	// Specifies configuration properties of a job notification.
 	NotificationProperty *NotificationProperty `type:"structure"`
 
+	// The number of workers of a defined workerType that are allocated when a job
+	// runs.
+	//
+	// The maximum number of workers you can define are 299 for G.1X, and 149 for
+	// G.2X.
+	NumberOfWorkers *int64 `type:"integer"`
+
 	// The name or ARN of the IAM role associated with this job.
 	//
 	// Role is a required field
@@ -13206,6 +13215,19 @@ type CreateJobInput struct {
 	// resources before it is terminated and enters TIMEOUT status. The default
 	// is 2,880 minutes (48 hours).
 	Timeout *int64 `min:"1" type:"integer"`
+
+	// The type of predefined worker that is allocated when a job runs. Accepts
+	// a value of Standard, G.1X, or G.2X.
+	//
+	//    * For the Standard worker type, each worker provides 4 vCPU, 16 GB of
+	//    memory and a 50GB disk, and 2 executors per worker.
+	//
+	//    * For the G.1X worker type, each worker provides 4 vCPU, 16 GB of memory
+	//    and a 64GB disk, and 1 executor per worker.
+	//
+	//    * For the G.2X worker type, each worker provides 8 vCPU, 32 GB of memory
+	//    and a 128GB disk, and 1 executor per worker.
+	WorkerType *string `type:"string" enum:"WorkerType"`
 }
 
 // String returns the string representation
@@ -13317,6 +13339,12 @@ func (s *CreateJobInput) SetNotificationProperty(v *NotificationProperty) *Creat
 	return s
 }
 
+// SetNumberOfWorkers sets the NumberOfWorkers field's value.
+func (s *CreateJobInput) SetNumberOfWorkers(v int64) *CreateJobInput {
+	s.NumberOfWorkers = &v
+	return s
+}
+
 // SetRole sets the Role field's value.
 func (s *CreateJobInput) SetRole(v string) *CreateJobInput {
 	s.Role = &v
@@ -13338,6 +13366,12 @@ func (s *CreateJobInput) SetTags(v map[string]*string) *CreateJobInput {
 // SetTimeout sets the Timeout field's value.
 func (s *CreateJobInput) SetTimeout(v int64) *CreateJobInput {
 	s.Timeout = &v
+	return s
+}
+
+// SetWorkerType sets the WorkerType field's value.
+func (s *CreateJobInput) SetWorkerType(v string) *CreateJobInput {
+	s.WorkerType = &v
 	return s
 }
 
@@ -19094,6 +19128,8 @@ type Job struct {
 	// consists of 4 vCPUs of compute capacity and 16 GB of memory. For more information,
 	// see the AWS Glue pricing page (https://aws.amazon.com/glue/pricing/).
 	//
+	// Do not set Max Capacity if using WorkerType and NumberOfWorkers.
+	//
 	// The value that can be allocated for MaxCapacity depends on whether you are
 	// running a python shell job, or an Apache Spark ETL job:
 	//
@@ -19114,6 +19150,13 @@ type Job struct {
 	// Specifies configuration properties of a job notification.
 	NotificationProperty *NotificationProperty `type:"structure"`
 
+	// The number of workers of a defined workerType that are allocated when a job
+	// runs.
+	//
+	// The maximum number of workers you can define are 299 for G.1X, and 149 for
+	// G.2X.
+	NumberOfWorkers *int64 `type:"integer"`
+
 	// The name or ARN of the IAM role associated with this job.
 	Role *string `type:"string"`
 
@@ -19124,6 +19167,19 @@ type Job struct {
 	// resources before it is terminated and enters TIMEOUT status. The default
 	// is 2,880 minutes (48 hours).
 	Timeout *int64 `min:"1" type:"integer"`
+
+	// The type of predefined worker that is allocated when a job runs. Accepts
+	// a value of Standard, G.1X, or G.2X.
+	//
+	//    * For the Standard worker type, each worker provides 4 vCPU, 16 GB of
+	//    memory and a 50GB disk, and 2 executors per worker.
+	//
+	//    * For the G.1X worker type, each worker provides 4 vCPU, 16 GB of memory
+	//    and a 64GB disk, and 1 executor per worker.
+	//
+	//    * For the G.2X worker type, each worker provides 8 vCPU, 32 GB of memory
+	//    and a 128GB disk, and 1 executor per worker.
+	WorkerType *string `type:"string" enum:"WorkerType"`
 }
 
 // String returns the string representation
@@ -19214,6 +19270,12 @@ func (s *Job) SetNotificationProperty(v *NotificationProperty) *Job {
 	return s
 }
 
+// SetNumberOfWorkers sets the NumberOfWorkers field's value.
+func (s *Job) SetNumberOfWorkers(v int64) *Job {
+	s.NumberOfWorkers = &v
+	return s
+}
+
 // SetRole sets the Role field's value.
 func (s *Job) SetRole(v string) *Job {
 	s.Role = &v
@@ -19229,6 +19291,12 @@ func (s *Job) SetSecurityConfiguration(v string) *Job {
 // SetTimeout sets the Timeout field's value.
 func (s *Job) SetTimeout(v int64) *Job {
 	s.Timeout = &v
+	return s
+}
+
+// SetWorkerType sets the WorkerType field's value.
+func (s *Job) SetWorkerType(v string) *Job {
+	s.WorkerType = &v
 	return s
 }
 
@@ -19425,6 +19493,8 @@ type JobRun struct {
 	// consists of 4 vCPUs of compute capacity and 16 GB of memory. For more information,
 	// see the AWS Glue pricing page (https://aws.amazon.com/glue/pricing/).
 	//
+	// Do not set Max Capacity if using WorkerType and NumberOfWorkers.
+	//
 	// The value that can be allocated for MaxCapacity depends on whether you are
 	// running a python shell job, or an Apache Spark ETL job:
 	//
@@ -19438,6 +19508,13 @@ type JobRun struct {
 
 	// Specifies configuration properties of a job run notification.
 	NotificationProperty *NotificationProperty `type:"structure"`
+
+	// The number of workers of a defined workerType that are allocated when a job
+	// runs.
+	//
+	// The maximum number of workers you can define are 299 for G.1X, and 149 for
+	// G.2X.
+	NumberOfWorkers *int64 `type:"integer"`
 
 	// A list of predecessors to this job run.
 	PredecessorRuns []*Predecessor `type:"list"`
@@ -19461,6 +19538,19 @@ type JobRun struct {
 
 	// The name of the trigger that started this job run.
 	TriggerName *string `min:"1" type:"string"`
+
+	// The type of predefined worker that is allocated when a job runs. Accepts
+	// a value of Standard, G.1X, or G.2X.
+	//
+	//    * For the Standard worker type, each worker provides 4 vCPU, 16 GB of
+	//    memory and a 50GB disk, and 2 executors per worker.
+	//
+	//    * For the G.1X worker type, each worker provides 4 vCPU, 16 GB of memory
+	//    and a 64GB disk, and 1 executor per worker.
+	//
+	//    * For the G.2X worker type, each worker provides 8 vCPU, 32 GB of memory
+	//    and a 128GB disk, and 1 executor per worker.
+	WorkerType *string `type:"string" enum:"WorkerType"`
 }
 
 // String returns the string representation
@@ -19551,6 +19641,12 @@ func (s *JobRun) SetNotificationProperty(v *NotificationProperty) *JobRun {
 	return s
 }
 
+// SetNumberOfWorkers sets the NumberOfWorkers field's value.
+func (s *JobRun) SetNumberOfWorkers(v int64) *JobRun {
+	s.NumberOfWorkers = &v
+	return s
+}
+
 // SetPredecessorRuns sets the PredecessorRuns field's value.
 func (s *JobRun) SetPredecessorRuns(v []*Predecessor) *JobRun {
 	s.PredecessorRuns = v
@@ -19584,6 +19680,12 @@ func (s *JobRun) SetTimeout(v int64) *JobRun {
 // SetTriggerName sets the TriggerName field's value.
 func (s *JobRun) SetTriggerName(v string) *JobRun {
 	s.TriggerName = &v
+	return s
+}
+
+// SetWorkerType sets the WorkerType field's value.
+func (s *JobRun) SetWorkerType(v string) *JobRun {
+	s.WorkerType = &v
 	return s
 }
 
@@ -19638,6 +19740,8 @@ type JobUpdate struct {
 	// consists of 4 vCPUs of compute capacity and 16 GB of memory. For more information,
 	// see the AWS Glue pricing page (https://aws.amazon.com/glue/pricing/).
 	//
+	// Do not set Max Capacity if using WorkerType and NumberOfWorkers.
+	//
 	// The value that can be allocated for MaxCapacity depends on whether you are
 	// running a python shell job, or an Apache Spark ETL job:
 	//
@@ -19655,6 +19759,13 @@ type JobUpdate struct {
 	// Specifies configuration properties of a job notification.
 	NotificationProperty *NotificationProperty `type:"structure"`
 
+	// The number of workers of a defined workerType that are allocated when a job
+	// runs.
+	//
+	// The maximum number of workers you can define are 299 for G.1X, and 149 for
+	// G.2X.
+	NumberOfWorkers *int64 `type:"integer"`
+
 	// The name or ARN of the IAM role associated with this job (required).
 	Role *string `type:"string"`
 
@@ -19665,6 +19776,19 @@ type JobUpdate struct {
 	// resources before it is terminated and enters TIMEOUT status. The default
 	// is 2,880 minutes (48 hours).
 	Timeout *int64 `min:"1" type:"integer"`
+
+	// The type of predefined worker that is allocated when a job runs. Accepts
+	// a value of Standard, G.1X, or G.2X.
+	//
+	//    * For the Standard worker type, each worker provides 4 vCPU, 16 GB of
+	//    memory and a 50GB disk, and 2 executors per worker.
+	//
+	//    * For the G.1X worker type, each worker provides 4 vCPU, 16 GB of memory
+	//    and a 64GB disk, and 1 executor per worker.
+	//
+	//    * For the G.2X worker type, each worker provides 8 vCPU, 32 GB of memory
+	//    and a 128GB disk, and 1 executor per worker.
+	WorkerType *string `type:"string" enum:"WorkerType"`
 }
 
 // String returns the string representation
@@ -19758,6 +19882,12 @@ func (s *JobUpdate) SetNotificationProperty(v *NotificationProperty) *JobUpdate 
 	return s
 }
 
+// SetNumberOfWorkers sets the NumberOfWorkers field's value.
+func (s *JobUpdate) SetNumberOfWorkers(v int64) *JobUpdate {
+	s.NumberOfWorkers = &v
+	return s
+}
+
 // SetRole sets the Role field's value.
 func (s *JobUpdate) SetRole(v string) *JobUpdate {
 	s.Role = &v
@@ -19773,6 +19903,12 @@ func (s *JobUpdate) SetSecurityConfiguration(v string) *JobUpdate {
 // SetTimeout sets the Timeout field's value.
 func (s *JobUpdate) SetTimeout(v int64) *JobUpdate {
 	s.Timeout = &v
+	return s
+}
+
+// SetWorkerType sets the WorkerType field's value.
+func (s *JobUpdate) SetWorkerType(v string) *JobUpdate {
+	s.WorkerType = &v
 	return s
 }
 
@@ -21663,6 +21799,8 @@ type StartJobRunInput struct {
 	// consists of 4 vCPUs of compute capacity and 16 GB of memory. For more information,
 	// see the AWS Glue pricing page (https://aws.amazon.com/glue/pricing/).
 	//
+	// Do not set Max Capacity if using WorkerType and NumberOfWorkers.
+	//
 	// The value that can be allocated for MaxCapacity depends on whether you are
 	// running a python shell job, or an Apache Spark ETL job:
 	//
@@ -21677,6 +21815,13 @@ type StartJobRunInput struct {
 	// Specifies configuration properties of a job run notification.
 	NotificationProperty *NotificationProperty `type:"structure"`
 
+	// The number of workers of a defined workerType that are allocated when a job
+	// runs.
+	//
+	// The maximum number of workers you can define are 299 for G.1X, and 149 for
+	// G.2X.
+	NumberOfWorkers *int64 `type:"integer"`
+
 	// The name of the SecurityConfiguration structure to be used with this job
 	// run.
 	SecurityConfiguration *string `min:"1" type:"string"`
@@ -21686,6 +21831,19 @@ type StartJobRunInput struct {
 	// default is 2,880 minutes (48 hours). This overrides the timeout value set
 	// in the parent job.
 	Timeout *int64 `min:"1" type:"integer"`
+
+	// The type of predefined worker that is allocated when a job runs. Accepts
+	// a value of Standard, G.1X, or G.2X.
+	//
+	//    * For the Standard worker type, each worker provides 4 vCPU, 16 GB of
+	//    memory and a 50GB disk, and 2 executors per worker.
+	//
+	//    * For the G.1X worker type, each worker provides 4 vCPU, 16 GB of memory
+	//    and a 64GB disk, and 1 executor per worker.
+	//
+	//    * For the G.2X worker type, each worker provides 8 vCPU, 32 GB of memory
+	//    and a 128GB disk, and 1 executor per worker.
+	WorkerType *string `type:"string" enum:"WorkerType"`
 }
 
 // String returns the string representation
@@ -21764,6 +21922,12 @@ func (s *StartJobRunInput) SetNotificationProperty(v *NotificationProperty) *Sta
 	return s
 }
 
+// SetNumberOfWorkers sets the NumberOfWorkers field's value.
+func (s *StartJobRunInput) SetNumberOfWorkers(v int64) *StartJobRunInput {
+	s.NumberOfWorkers = &v
+	return s
+}
+
 // SetSecurityConfiguration sets the SecurityConfiguration field's value.
 func (s *StartJobRunInput) SetSecurityConfiguration(v string) *StartJobRunInput {
 	s.SecurityConfiguration = &v
@@ -21773,6 +21937,12 @@ func (s *StartJobRunInput) SetSecurityConfiguration(v string) *StartJobRunInput 
 // SetTimeout sets the Timeout field's value.
 func (s *StartJobRunInput) SetTimeout(v int64) *StartJobRunInput {
 	s.Timeout = &v
+	return s
+}
+
+// SetWorkerType sets the WorkerType field's value.
+func (s *StartJobRunInput) SetWorkerType(v string) *StartJobRunInput {
+	s.WorkerType = &v
 	return s
 }
 
@@ -24851,4 +25021,15 @@ const (
 
 	// UpdateBehaviorUpdateInDatabase is a UpdateBehavior enum value
 	UpdateBehaviorUpdateInDatabase = "UPDATE_IN_DATABASE"
+)
+
+const (
+	// WorkerTypeStandard is a WorkerType enum value
+	WorkerTypeStandard = "Standard"
+
+	// WorkerTypeG1x is a WorkerType enum value
+	WorkerTypeG1x = "G.1X"
+
+	// WorkerTypeG2x is a WorkerType enum value
+	WorkerTypeG2x = "G.2X"
 )
