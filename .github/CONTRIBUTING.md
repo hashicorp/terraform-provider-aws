@@ -17,27 +17,28 @@ we need to be able to review and respond quickly.
 
 <!-- TOC depthFrom:2 -->
 
-- [Contributing to Terraform - AWS Provider](#contributing-to-terraform---aws-provider)
-  - [HashiCorp vs. Community Providers](#hashicorp-vs-community-providers)
-  - [Issues](#issues)
+- [HashiCorp vs. Community Providers](#hashicorp-vs-community-providers)
+- [Issues](#issues)
     - [Issue Reporting Checklists](#issue-reporting-checklists)
-      - [Bug Reports](#bug-reports)
-      - [Feature Requests](#feature-requests)
-      - [Questions](#questions)
+        - [Bug Reports](#bug-reports)
+        - [Feature Requests](#feature-requests)
+        - [Questions](#questions)
     - [Issue Lifecycle](#issue-lifecycle)
-  - [Pull Requests](#pull-requests)
+- [Pull Requests](#pull-requests)
     - [Pull Request Lifecycle](#pull-request-lifecycle)
     - [Checklists for Contribution](#checklists-for-contribution)
-      - [Documentation Update](#documentation-update)
-      - [Enhancement/Bugfix to a Resource](#enhancementbugfix-to-a-resource)
-      - [New Resource](#new-resource)
-      - [New Provider](#new-provider)
-      - [New Region](#new-region)
-      - [Terraform Schema and Code Idiosyncracies](#terraform-schema-and-code-idiosyncracies)
+        - [Documentation Update](#documentation-update)
+        - [Enhancement/Bugfix to a Resource](#enhancementbugfix-to-a-resource)
+        - [New Resource](#new-resource)
+        - [New Service](#new-service)
+        - [New Region](#new-region)
+        - [Terraform Schema and Code Idiosyncracies](#terraform-schema-and-code-idiosyncracies)
     - [Writing Acceptance Tests](#writing-acceptance-tests)
-      - [Acceptance Tests Often Cost Money to Run](#acceptance-tests-often-cost-money-to-run)
-      - [Running an Acceptance Test](#running-an-acceptance-test)
-      - [Writing an Acceptance Test](#writing-an-acceptance-test)
+        - [Acceptance Tests Often Cost Money to Run](#acceptance-tests-often-cost-money-to-run)
+        - [Running an Acceptance Test](#running-an-acceptance-test)
+        - [Writing an Acceptance Test](#writing-an-acceptance-test)
+        - [Writing and running Cross-Account Acceptance Tests](#writing-and-running-cross-account-acceptance-tests)
+        - [Acceptance Testing Guidelines](#acceptance-testing-guidelines)
 
 <!-- /TOC -->
 
@@ -259,31 +260,50 @@ existing resources, but you still get to implement something completely new.
    folder. This is to avoid conflicts as the vendor versions tend to be fast
    moving targets.
 
-#### New Provider
+#### New Service
 
-Implementing a new provider gives Terraform the ability to manage resources in
+Implementing a new AWS service gives Terraform the ability to manage resources in
 a whole new API. It's a larger undertaking, but brings major new functionality
 into Terraform.
 
- - [ ] __Minimal initial LOC__: Some providers may be big and it can be
-   inefficient for both reviewer & author to go through long feedback cycles
-   on a big PR with many resources. We encourage you to only submit
-   the necessary minimum in a single PR, ideally **just the first resource**
-   of the provider.
- - [ ] __Acceptance tests__: Each provider should include an acceptance test
-   suite with tests for each resource should include acceptance tests covering
-   its behavior. See [Writing Acceptance Tests](#writing-acceptance-tests) below
-   for a detailed guide on how to approach these.
- - [ ] __Documentation__: Each provider has a section in the Terraform
-   documentation. The [Terraform website][website] source is in this repo and
-   includes instructions for getting a local copy of the site up and running if
-   you'd like to preview your changes. For a provider, you'll want to add new
-   index file and individual pages for each resource.
- - [ ] __Well-formed Code__: Do your best to follow existing conventions you
-   see in the codebase, and ensure your code is formatted with `go fmt`. (The
-   Travis CI build will fail if `go fmt` has not been run on incoming code.)
-   The PR reviewers can help out on this front, and may provide comments with
-   suggestions on how to improve the code.
+- [ ] __Service Client__: Before new resources are submitted, we encourage
+  a separate pull request containing just the new AWS Go SDK service client.
+  Doing so will pull in the AWS Go SDK service code into the project at the
+  current version. Since the AWS Go SDK is updated frequently, these pull
+  requests can easily have merge conflicts or be out of date. The maintainers
+  prioritize reviewing and merging these quickly to prevent those situations.
+
+  To add the AWS Go SDK service client:
+
+  - In `aws/provider.go` Add a new service entry to `endpointServiceNames`.
+    This service name should match the AWS Go SDK or AWS CLI service name.
+  - In `aws/config.go`: Add a new import for the AWS Go SDK code. e.g.
+    `github.com/aws/aws-sdk-go/service/quicksight`
+  - In `aws/config.go`: Add a new `{SERVICE}conn` field to the `AWSClient`
+    struct for the service client. The service name should match the name
+    in `endpointServiceNames`. e.g. `quicksightconn *quicksight.QuickSight`
+  - In `aws/config.go`: Create the new service client in the `{SERVICE}conn`
+    field in the `AWSClient` instantiation within `Client()`. e.g.
+    `quicksightconn: quicksight.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["quicksight"])})),`
+  - In `website/docs/guides/custom-service-endpoints.html.md`: Add the service
+    name in the list of customizable endpoints.
+  - Run the following then submit the pull request:
+
+  ```sh
+  go test ./aws
+  go mod tidy
+  go mod vendor
+  ```
+
+- [ ] __Initial Resource__: Some services may be big and it can be
+  inefficient for both reviewer & author to go through long feedback cycles
+  on a big PR with many resources. Often feedback items in one resource
+  will also need to be applied in other resources. We encourage you to submit
+  the necessary minimum in a single PR, ideally **just the first resource**
+  of the service.
+
+The initial resource and changes afterwards should follow the other sections
+of this guide as appropriate.
 
 #### New Region
 
@@ -327,7 +347,8 @@ and style
 ### Writing Acceptance Tests
 
 Terraform includes an acceptance test harness that does most of the repetitive
-work involved in testing a resource.
+work involved in testing a resource. For additional information about testing
+Terraform Providers, see the [Extending Terraform documentation](https://www.terraform.io/docs/extend/testing/index.html).
 
 #### Acceptance Tests Often Cost Money to Run
 
@@ -536,6 +557,130 @@ When executing the test, the following steps are taken for each `TestStep`:
     ```
 
    These functions usually test only for the resource directly under test.
+
+#### Writing and running Cross-Account Acceptance Tests
+
+When testing requires AWS infrastructure in a second AWS account, the below changes to the normal setup will allow the management or reference of resources and data sources across accounts:
+
+- In the `PreCheck` function, include `testAccAlternateAccountPreCheck(t)` to ensure a standardized set of information is required for cross-account testing credentials
+- Declare a `providers` variable at the top of the test function: `var providers []*schema.Provider`
+- Switch usage of `Providers: testAccProviders` to `ProviderFactories: testAccProviderFactories(&providers)`
+- Add `testAccAlternateAccountProviderConfig()` to the test configuration and use `provider = "aws.alternate"` for cross-account resources. The resource that is the focus of the acceptance test should _not_ use the provider alias to simplify the testing setup.
+- For any `TestStep` that includes `ImportState: true`, add the `Config` that matches the previous `TestStep` `Config`
+
+An example acceptance test implementation can be seen below:
+
+```go
+func TestAccAwsExample_basic(t *testing.T) {
+  var providers []*schema.Provider
+  resourceName := "aws_example.test"
+
+  resource.ParallelTest(t, resource.TestCase{
+    PreCheck: func() {
+      testAccPreCheck(t)
+      testAccAlternateAccountPreCheck(t)
+    },
+    ProviderFactories: testAccProviderFactories(&providers),
+    CheckDestroy:      testAccCheckAwsExampleDestroy,
+    Steps: []resource.TestStep{
+      {
+        Config: testAccAwsExampleConfig(),
+        Check: resource.ComposeTestCheckFunc(
+          testAccCheckAwsExampleExists(resourceName),
+          // ... additional checks ...
+        ),
+      },
+      {
+        Config:            testAccAwsExampleConfig(),
+        ResourceName:      resourceName,
+        ImportState:       true,
+        ImportStateVerify: true,
+      },
+    },
+  })
+}
+
+func testAccAwsExampleConfig() string {
+  return testAccAlternateAccountProviderConfig() + fmt.Sprintf(`
+# Cross account resources should be handled by the cross account provider.
+# The standardized provider alias is aws.alternate as seen below.
+resource "aws_cross_account_example" "test" {
+  provider = "aws.alternate"
+
+  # ... configuration ...
+}
+
+# The resource that is the focus of the testing should be handled by the default provider,
+# which is automatically done by not specifying the provider configuration in the resource.
+resource "aws_example" "test" {
+  # ... configuration ...
+}
+`)
+}
+```
+
+Searching for usage of `testAccAlternateAccountPreCheck` in the codebase will yield real world examples of this setup in action.
+
+Running these acceptance tests is the same as before, except the following additional credential information is required:
+
+```sh
+# Using a profile
+export AWS_ALTERNATE_PROFILE=...
+# Otherwise
+export AWS_ALTERNATE_ACCESS_KEY_ID=...
+export AWS_ALTERNATE_SECRET_ACCESS_KEY=...
+```
+
+#### Acceptance Testing Guidelines
+
+The Terraform AWS Provider follows common practices to ensure consistent and reliable testing across all resources in the project. While there may be older testing present that predates these guidelines, new submissions are generally expected to adhere to these items to maintain Terraform Provider quality. For any guidelines listed, contributors are encouraged to ask any questions and community reviewers are encouraged to provide review suggestions based on these guidelines to speed up the review and merge process.
+
+The below are required items that will be noted during submission review and prevent immediate merging:
+
+- [ ] __Implements CheckDestroy__: Resource testing should include a `CheckDestroy` function (typically named `testAccCheckAws{SERVICE}{RESOURCE}Destroy`) that calls the API to verify that the Terraform resource has been deleted or disassociated as appropriate. More information about `CheckDestroy` functions can be found in the [Extending Terraform TestCase documentation](https://www.terraform.io/docs/extend/testing/acceptance-tests/testcase.html#checkdestroy).
+- [ ] __Implements Exists Check Function__: Resource testing should include a `TestCheckFunc` function (typically named `testAccCheckAws{SERVICE}{RESOURCE}Exists`) that calls the API to verify that the Terraform resource has been created or associated as appropriate. Preferably, this function will also accept a pointer to an API object representing the Terraform resource from the API response that can be set for potential usage in later `TestCheckFunc`. More information about these functions can be found in the [Extending Terraform Custom Check Functions documentation](https://www.terraform.io/docs/extend/testing/acceptance-tests/testcase.html#checkdestroy).
+- [ ] __Excludes Provider Declarations__: Test configurations should not include `provider "aws" {...}` declarations. If necessary, only the provider declarations in `provider_test.go` should be used for multiple account/region or otherwise specialized testing.
+- [ ] __Passes in us-west-2 Region__: Tests default to running in `us-west-2` and at a minimum should pass in that region or include necessary `PreCheck` functions to skip the test when ran outside an expected environment.
+- [ ] __Uses resource.ParallelTest__: Tests should utilize [`resource.ParallelTest()`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#ParallelTest) instead of [`resource.Test()`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#Test) except where serialized testing is absolutely required.
+- [ ] __Uses fmt.Sprintf()__: Test configurations preferably should to be separated into their own functions (typically named `testAccAws{SERVICE}{RESOURCE}Config{PURPOSE}`) that call [`fmt.Sprintf()`](https://golang.org/pkg/fmt/#Sprintf) for variable injection or a string `const` for completely static configurations. Test configurations should avoid `var` or other variable injection functionality such as [`text/template`](https://golang.org/pkg/text/template/).
+- [ ] __Uses Randomized Infrastructure Naming__: Test configurations that utilize resources where a unique name is required should generate a random name. Typically this is created via `rName := acctest.RandomWithPrefix("tf-acc-test")` in the acceptance test function before generating the configuration.
+
+For resources that support import, the additional item below is required that will be noted during submission review and prevent immediate merging:
+
+- [ ] __Implements ImportState Testing__: Tests should include an additional `TestStep` configuration that verifies resource import via `ImportState: true` and `ImportStateVerify: true`. This `TestStep` should be added to all possible tests for the resource to ensure that all infrastructure configurations are properly imported into Terraform.
+
+The below are style-based items that _may_ be noted during review and are recommended for simplicity, consistency, and quality assurance:
+
+- [ ] __Uses Builtin Check Functions__: Tests should utilize already available check functions, e.g. `resource.TestCheckResourceAttr()`, to verify values in the Terraform state over creating custom `TestCheckFunc`. More information about these functions can be found in the [Extending Terraform Builtin Check Functions documentation](https://www.terraform.io/docs/extend/testing/acceptance-tests/teststep.html#builtin-check-functions).
+- [ ] __Uses TestCheckResoureAttrPair() for Data Sources__: Tests should utilize [`resource.TestCheckResourceAttrPair()`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#TestCheckResourceAttrPair) to verify values in the Terraform state for data sources attributes to compare them with their expected resource attributes.
+- [ ] __Excludes Timeouts Configurations__: Test configurations should not include `timeouts {...}` configuration blocks except for explicit testing of customizable timeouts (typically very short timeouts with `ExpectError`).
+- [ ] __Implements Default and Zero Value Validation__: The basic test for a resource (typically named `TestAccAws{SERVICE}{RESOURCE}_basic`) should utilize available check functions, e.g. `resource.TestCheckResourceAttr()`, to verify default and zero values in the Terraform state for all attributes. Empty/missing configuration blocks can be verified with `resource.TestCheckResourceAttr(resourceName, "{ATTRIBUTE}.#", "0")` and empty maps with `resource.TestCheckResourceAttr(resourceName, "{ATTRIBUTE}.%", "0")`
+
+The below are location-based items that _may_ be noted during review and are recommended for consistency with testing flexibility. Resource testing is expected to pass across multiple AWS environments supported by the Terraform AWS Provider (e.g. AWS Standard and AWS GovCloud (US)). Contributors are not expected or required to perform testing outside of AWS Standard, e.g. running only in the `us-west-2` region is perfectly acceptable, however these are provided for reference:
+
+- [ ] __Uses aws_ami Data Source__: Any hardcoded AMI ID configuration, e.g. `ami-12345678`, should be replaced with the [`aws_ami` data source](https://www.terraform.io/docs/providers/aws/d/ami.html) pointing to an Amazon Linux image. A common pattern is a configuration like the below, which will likely be moved into a common configuration function in the future:
+
+  ```hcl
+  data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
+    most_recent = true
+    owners      = ["amazon"]
+
+    filter {
+      name = "name"
+      values = ["amzn-ami-minimal-hvm-*"]
+    }
+    filter {
+      name = "root-device-type"
+      values = ["ebs"]
+    }
+  }
+  ```
+
+- [ ] __Uses aws_availability_zones Data Source__: Any hardcoded AWS Availability Zone configuration, e.g. `us-west-2a`, should be replaced with the [`aws_availability_zones` data source](https://www.terraform.io/docs/providers/aws/d/availability_zones.html). A common pattern is declaring `data "aws_availability_zones" "current" {}` and referencing it via `data.aws_availability_zones.current.names[0]` or `data.aws_availability_zones.current.names[count.index]` in resources utilizing `count`.
+- [ ] __Uses aws_region Data Source__: Any hardcoded AWS Region configuration, e.g. `us-west-2`, should be replaced with the [`aws_region` data source](https://www.terraform.io/docs/providers/aws/d/region.html). A common pattern is declaring `data "aws_region" "cname}` and referencing it via `data.aws_region.current.name`
+- [ ] __Uses aws_partition Data Source__: Any hardcoded AWS Partition configuration, e.g. the `aws` in a `arn:aws:SERVICE:REGION:ACCOUNT:RESOURCE` ARN, should be replaced with the [`aws_partition` data source](https://www.terraform.io/docs/providers/aws/d/partition.html). A common pattern is declaring `data "aws_partition" "current" {}` and referencing it via `data.aws_partition.current.partition`
+- [ ] __Uses Builtin ARN Check Functions__: Tests should utilize available ARN check functions, e.g. `testAccMatchResourceAttrRegionalARN()`, to validate ARN attribute values in the Terraform state over `resource.TestCheckResourceAttrSet()` and `resource.TestMatchResourceAttr()`
+- [ ] __Uses testAccCheckResourceAttrAccountID()__: Tests should utilize the available AWS Account ID check function, `testAccCheckResourceAttrAccountID()` to validate account ID attribute values in the Terraform state over `resource.TestCheckResourceAttrSet()` and `resource.TestMatchResourceAttr()`
 
 [website]: https://github.com/hashicorp/terraform/tree/master/website
 [acctests]: https://github.com/hashicorp/terraform#acceptance-tests
