@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 	"time"
 
@@ -28,6 +29,47 @@ func TestAccAWSAutoscalingSchedule_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScalingScheduleExists("aws_autoscaling_schedule.foobar", &schedule),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSAutoscalingSchedule_basicImport(t *testing.T) {
+	var schedule autoscaling.ScheduledUpdateGroupAction
+	rName := fmt.Sprintf("tf-test-%d", acctest.RandInt())
+	start := testAccAWSAutoscalingScheduleValidStart(t)
+	end := testAccAWSAutoscalingScheduleValidEnd(t)
+
+	scheduledActionName := "foobar"
+	resourceName := "aws_autoscaling_schedule.foobar"
+	importInput := fmt.Sprintf("%s/%s", rName, scheduledActionName)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAutoscalingScheduleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAutoscalingScheduleConfig(rName, start, end),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScalingScheduleExists("aws_autoscaling_schedule.foobar", &schedule),
+				),
+			},
+			// Test existent resource import
+			{
+				ResourceName:      resourceName,
+				ImportStateId:     importInput,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			// Test non-existent resource import
+			{
+				ResourceName:      resourceName,
+				ImportStateId:     fmt.Sprintf("%s/nonexistent", rName),
+				ImportState:       true,
+				ImportStateVerify: false,
+				ExpectError: regexp.MustCompile(
+					`(Please verify the ID is correct|You cannot import non-existent resources using Terraform import)`),
 			},
 		},
 	})
