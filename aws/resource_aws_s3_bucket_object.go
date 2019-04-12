@@ -108,6 +108,7 @@ func resourceAwsS3BucketObject() *schema.Resource {
 					s3.StorageClassReducedRedundancy,
 					s3.StorageClassOnezoneIa,
 					s3.StorageClassStandardIa,
+					"INTELLIGENT_TIERING",
 				}, false),
 			},
 
