@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -31,21 +30,10 @@ func resourceAwsGlueCatalogDatabase() *schema.Resource {
 				Computed: true,
 			},
 			"name": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(string)
-					if !regexp.MustCompile(`^[0-9a-z-_]+$`).MatchString(value) {
-						errors = append(errors, fmt.Errorf(
-							"only lowercase alphanumeric characters, underscores, and hyphens allowed in %q", k))
-					}
-					if len(value) > 255 {
-						errors = append(errors, fmt.Errorf(
-							"%q cannot be longer than 255 characters", k))
-					}
-					return
-				},
+				Type:         schema.TypeString,
+				ForceNew:     true,
+				Required:     true,
+				ValidateFunc: validateGlueCatalogDatabaseName,
 			},
 			"description": {
 				Type:     schema.TypeString,
