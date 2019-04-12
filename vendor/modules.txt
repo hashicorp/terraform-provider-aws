@@ -334,7 +334,7 @@ github.com/hashicorp/go-plugin
 github.com/hashicorp/go-safetemp
 # github.com/hashicorp/go-uuid v1.0.0
 github.com/hashicorp/go-uuid
-# github.com/hashicorp/go-version v1.0.0
+# github.com/hashicorp/go-version v1.1.0
 github.com/hashicorp/go-version
 # github.com/hashicorp/hcl v0.0.0-20180404174102-ef8a98b0bbce
 github.com/hashicorp/hcl
