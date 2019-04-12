@@ -125,6 +125,32 @@ func TestAccAWSTransferUser_disappears(t *testing.T) {
 	})
 }
 
+func TestAccAWSTransferUserName_validation(t *testing.T) {
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSTransferUserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSTransferUserName_validation("!@#$%^"),
+				ExpectError: regexp.MustCompile(`"user_name" can only contain alphanumeric characters, underscores, and hyphens`),
+			},
+			{
+				Config:      testAccAWSTransferUserName_validation(acctest.RandString(2)),
+				ExpectError: regexp.MustCompile(`"user_name" must be at least 3 characters`),
+			},
+			{
+				Config:      testAccAWSTransferUserName_validation(acctest.RandString(33)),
+				ExpectError: regexp.MustCompile(`"user_name" cannot be more than 32 characters`),
+			},
+			{
+				Config:      testAccAWSTransferUserName_validation("-abcdef"),
+				ExpectError: regexp.MustCompile(`"user_name" cannot begin with a hyphen`),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSTransferUserExists(n string, res *transfer.DescribedUser) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -258,6 +284,16 @@ resource "aws_transfer_user" "foo" {
 }
 	
 `, rName, rName)
+}
+
+func testAccAWSTransferUserName_validation(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_transfer_user" "foo" {
+    server_id      = "s-123456abcdeffffff"
+    user_name      = "%s"
+    role           = "arn:aws:iam::123456789012:role/foo"
+}
+`, rName)
 }
 
 func testAccAWSTransferUserConfig_options(rName string) string {
