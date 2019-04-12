@@ -87,3 +87,11 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The Amazon Resource Name (ARN) of the scheduled action.
+
+## Import
+
+AutoScaling ScheduledAction can be imported using the `auto-scaling-group-name` and `scheduled-action-name`, e.g.
+
+```
+$ terraform import aws_autoscaling_schedule.resource-name auto-scaling-group-name/scheduled-action-name
+```
