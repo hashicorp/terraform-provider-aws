@@ -19,7 +19,7 @@ require (
 	github.com/golangci/gosec v0.0.0-20180901114220-8afd9cbb6cfb // indirect
 	github.com/google/gofuzz v0.0.0-20170612174753-24818f796faf // indirect
 	github.com/hashicorp/aws-sdk-go-base v0.3.0
-	github.com/hashicorp/go-cleanhttp v0.5.0
+	github.com/hashicorp/go-cleanhttp v0.5.1
 	github.com/hashicorp/go-hclog v0.0.0-20171005151751-ca137eb4b438 // indirect
 	github.com/hashicorp/go-multierror v1.0.0
 	github.com/hashicorp/go-safetemp v1.0.0 // indirect
