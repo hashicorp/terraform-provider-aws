@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -93,6 +94,28 @@ func TestAccAWSGlueCatalogTable_basic(t *testing.T) {
 						fmt.Sprintf("my_test_catalog_database_%d", rInt),
 					),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSGlueCatalogTable_validation(t *testing.T) {
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckGlueTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccGlueCatalogTable_validation(acctest.RandString(256)),
+				ExpectError: regexp.MustCompile(`"database_name" cannot be more than 255 characters long`),
+			},
+			{
+				Config:      testAccGlueCatalogTable_validation(""),
+				ExpectError: regexp.MustCompile(`"database_name" must be at least 1 character long`),
+			},
+			{
+				Config:      testAccGlueCatalogTable_validation("ABCDEFG"),
+				ExpectError: regexp.MustCompile(`"database_name" can only contain lowercase alphanumeric characters`),
 			},
 		},
 	})
@@ -350,6 +373,15 @@ resource "aws_glue_catalog_table" "test" {
   database_name = "${aws_glue_catalog_database.test.name}"
 }
 `, rInt, rInt)
+}
+
+func testAccGlueCatalogTable_validation(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_glue_catalog_table" "test" {
+  name          = "MyCatalogTable"
+  database_name = "%s"
+}
+`, rName)
 }
 
 func testAccGlueCatalogTable_full(rInt int, desc string) string {

@@ -42,15 +42,15 @@ func TestAccAWSGlueCatalogDatabase_validation(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccGlueCatalogDatabase_validation(acctest.RandString(256)),
-				ExpectError: regexp.MustCompile(`"name" cannot be longer than 255 characters`),
+				ExpectError: regexp.MustCompile(`"name" cannot be more than 255 characters long`),
 			},
 			{
 				Config:      testAccGlueCatalogDatabase_validation(""),
-				ExpectError: regexp.MustCompile(`"name" cannot be shorter than 1 character`),
+				ExpectError: regexp.MustCompile(`"name" must be at least 1 character long`),
 			},
 			{
 				Config:      testAccGlueCatalogDatabase_validation("ABCDEFG"),
-				ExpectError: regexp.MustCompile(`"name" cannot contain uppercase alphanumeric characters`),
+				ExpectError: regexp.MustCompile(`"name" can only contain lowercase alphanumeric characters`),
 			},
 		},
 	})
