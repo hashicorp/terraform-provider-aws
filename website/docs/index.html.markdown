@@ -17,15 +17,11 @@ Use the navigation to the left to read about the available resources.
 ## Example Usage
 
 ```hcl
-# Configure the AWS Provider
-provider "aws" {
-  access_key = "${var.aws_access_key}"
-  secret_key = "${var.aws_secret_key}"
-  region     = "us-east-1"
-}
-
 # Create a web server
 resource "aws_instance" "web" {
+  ami           = "ami-2757f631"
+  instance_type = "t2.micro"
+
   # ...
 }
 ```
@@ -36,25 +32,10 @@ The AWS provider offers a flexible means of providing credentials for
 authentication. The following methods are supported, in this order, and
 explained below:
 
-- Static credentials
 - Environment variables
 - Shared credentials file
 - EC2 Role
-
-### Static credentials ###
-
-Static credentials can be provided by adding an `access_key` and `secret_key` in-line in the
-AWS provider block:
-
-Usage:
-
-```hcl
-provider "aws" {
-  region     = "us-west-2"
-  access_key = "anaccesskey"
-  secret_key = "asecretkey"
-}
-```
+- Static credentials
 
 ### Environment variables
 
@@ -144,6 +125,23 @@ provider "aws" {
     session_name = "SESSION_NAME"
     external_id  = "EXTERNAL_ID"
   }
+}
+```
+
+### Static credentials ###
+
+!> WARNING: Hard-coding credentials into any Terraform file is not recommended and risks secret leakage should this file ever be committed to a public source code control system.
+
+Static credentials can be provided by adding an `access_key` and `secret_key` in-line in the
+AWS provider block:
+
+Usage:
+
+```hcl
+provider "aws" {
+  region     = "us-west-2"
+  access_key = "anaccesskey"
+  secret_key = "asecretkey"
 }
 ```
 
