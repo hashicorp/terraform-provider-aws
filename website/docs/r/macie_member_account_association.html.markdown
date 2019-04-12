@@ -6,7 +6,7 @@ description: |-
   Associates an AWS account with Amazon Macie as a member account.
 ---
 
-# aws_macie_member_account_association
+# Resource: aws_macie_member_account_association
 
 Associates an AWS account with Amazon Macie as a member account.
 

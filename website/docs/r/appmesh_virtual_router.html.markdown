@@ -6,7 +6,7 @@ description: |-
   Provides an AWS App Mesh virtual router resource.
 ---
 
-# aws_appmesh_virtual_router
+# Resource: aws_appmesh_virtual_router
 
 Provides an AWS App Mesh virtual router resource.
 

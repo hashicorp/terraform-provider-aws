@@ -6,7 +6,7 @@ description: |-
   Attach an Elastic network interface (ENI) resource with EC2 instance.
 ---
 
-# aws_network_interface_attachment
+# Resource: aws_network_interface_attachment
 
 Attach an Elastic network interface (ENI) resource with EC2 instance.
 

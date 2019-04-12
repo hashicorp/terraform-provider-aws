@@ -6,7 +6,7 @@ description: |-
   Provides a Load Balancer Listener resource.
 ---
 
-# aws_lb_listener
+# Resource: aws_lb_listener
 
 Provides a Load Balancer Listener resource.
 

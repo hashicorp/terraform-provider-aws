@@ -6,7 +6,7 @@ description: |-
   Provides a resource to create a member account in the current AWS Organization.
 ---
 
-# aws_organizations_account
+# Resource: aws_organizations_account
 
 Provides a resource to create a member account in the current organization.
 

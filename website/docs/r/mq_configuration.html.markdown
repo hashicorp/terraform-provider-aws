@@ -6,7 +6,7 @@ description: |-
   Provides an MQ configuration Resource
 ---
 
-# aws_mq_configuration
+# Resource: aws_mq_configuration
 
 Provides an MQ Configuration Resource. 
 

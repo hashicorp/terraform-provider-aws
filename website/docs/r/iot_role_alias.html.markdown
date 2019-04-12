@@ -6,7 +6,7 @@ description: |-
   Provides an IoT role alias.
 ---
 
-# aws_iot_role_alias
+# Resource: aws_iot_role_alias
 
 Provides an IoT role alias.
 

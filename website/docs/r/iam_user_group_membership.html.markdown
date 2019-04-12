@@ -7,7 +7,7 @@ description: |-
   with itself.
 ---
 
-# aws_iam_user_group_membership
+# Resource: aws_iam_user_group_membership
 
 Provides a resource for adding an [IAM User][2] to [IAM Groups][1]. This
 resource can be used multiple times with the same user for non-overlapping

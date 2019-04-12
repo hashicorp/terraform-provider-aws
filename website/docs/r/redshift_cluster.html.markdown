@@ -6,7 +6,7 @@ description: |-
   Provides a Redshift Cluster resource.
 ---
 
-# aws_redshift_cluster
+# Resource: aws_redshift_cluster
 
 Provides a Redshift Cluster Resource.
 

@@ -6,7 +6,7 @@ description: |-
   Provides an API Gateway REST API.
 ---
 
-# aws_api_gateway_rest_api
+# Resource: aws_api_gateway_rest_api
 
 Provides an API Gateway REST API.
 

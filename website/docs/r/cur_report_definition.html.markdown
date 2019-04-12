@@ -6,7 +6,7 @@ description: |-
   Provides a Cost and Usage Report Definition.
 ---
 
-# aws_cur_report_definition
+# Resource: aws_cur_report_definition
 
 Manages Cost and Usage Report Definitions.
 

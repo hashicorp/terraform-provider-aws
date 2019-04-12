@@ -6,7 +6,7 @@ description: |-
   Provides a S3 bucket resource.
 ---
 
-# aws_s3_bucket
+# Resource: aws_s3_bucket
 
 Provides a S3 bucket resource.
 

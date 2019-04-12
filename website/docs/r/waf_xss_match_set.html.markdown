@@ -6,7 +6,7 @@ description: |-
   Provides a AWS WAF XssMatchSet resource.
 ---
 
-# aws_waf_xss_match_set
+# Resource: aws_waf_xss_match_set
 
 Provides a WAF XSS Match Set Resource
 

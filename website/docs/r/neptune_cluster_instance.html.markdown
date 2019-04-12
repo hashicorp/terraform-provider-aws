@@ -6,7 +6,7 @@ description: |-
   Provides an Neptune Cluster Resource Instance
 ---
 
-# aws_neptune_cluster_instance
+# Resource: aws_neptune_cluster_instance
 
 A Cluster Instance Resource defines attributes that are specific to a single instance in a Neptune Cluster.
 

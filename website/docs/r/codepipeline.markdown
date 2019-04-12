@@ -6,7 +6,7 @@ description: |-
   Provides a CodePipeline
 ---
 
-# aws_codepipeline
+# Resource: aws_codepipeline
 
 Provides a CodePipeline.
 

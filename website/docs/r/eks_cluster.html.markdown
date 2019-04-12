@@ -6,7 +6,7 @@ description: |-
   Manages an EKS Cluster
 ---
 
-# aws_eks_cluster
+# Resource: aws_eks_cluster
 
 Manages an EKS Cluster.
 

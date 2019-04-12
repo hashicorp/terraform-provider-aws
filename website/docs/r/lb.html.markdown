@@ -6,7 +6,7 @@ description: |-
   Provides a Load Balancer resource.
 ---
 
-# aws_lb
+# Resource: aws_lb
 
 Provides a Load Balancer resource.
 

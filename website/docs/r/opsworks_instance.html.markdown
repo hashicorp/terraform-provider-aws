@@ -6,7 +6,7 @@ description: |-
   Provides an OpsWorks instance resource.
 ---
 
-# aws_opsworks_instance
+# Resource: aws_opsworks_instance
 
 Provides an OpsWorks instance resource.
 

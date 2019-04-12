@@ -6,7 +6,7 @@ description: |-
   Provides a CloudTrail resource.
 ---
 
-# aws_cloudtrail
+# Resource: aws_cloudtrail
 
 Provides a CloudTrail resource.
 

@@ -6,7 +6,7 @@ description: |-
   Manages selection conditions for AWS Backup plan resources.
 ---
 
-# aws_backup_selection
+# Resource: aws_backup_selection
 
 Manages selection conditions for AWS Backup plan resources.
 

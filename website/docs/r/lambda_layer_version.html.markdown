@@ -6,7 +6,7 @@ description: |-
   Provides a Lambda Layer Version resource. Lambda Layers allow you to reuse shared bits of code across multiple lambda functions.
 ---
 
-# aws_lambda_layer_version
+# Resource: aws_lambda_layer_version
 
 Provides a Lambda Layer Version resource. Lambda Layers allow you to reuse shared bits of code across multiple lambda functions.
 

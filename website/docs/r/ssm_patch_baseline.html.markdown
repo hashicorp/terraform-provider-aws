@@ -6,7 +6,7 @@ description: |-
   Provides an SSM Patch Baseline resource
 ---
 
-# aws_ssm_patch_baseline
+# Resource: aws_ssm_patch_baseline
 
 Provides an SSM Patch Baseline resource
 

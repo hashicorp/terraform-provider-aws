@@ -6,7 +6,7 @@ description: |-
   Provides a resource to accept a pending GuardDuty invite on creation, ensure the detector has the correct master account on read, and disassociate with the master account upon removal.
 ---
 
-# aws_guardduty_invite_accepter
+# Resource: aws_guardduty_invite_accepter
 
 Provides a resource to accept a pending GuardDuty invite on creation, ensure the detector has the correct master account on read, and disassociate with the master account upon removal.
 

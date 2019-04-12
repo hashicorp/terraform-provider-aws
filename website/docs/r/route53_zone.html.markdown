@@ -6,7 +6,7 @@ description: |-
   Manages a Route53 Hosted Zone
 ---
 
-# aws_route53_zone
+# Resource: aws_route53_zone
 
 Manages a Route53 Hosted Zone.
 

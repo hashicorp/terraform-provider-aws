@@ -6,7 +6,7 @@ description: |-
   Provides a Global Accelerator listener.
 ---
 
-# aws_globalaccelerator_listener
+# Resource: aws_globalaccelerator_listener
 
 Provides a Global Accelerator listener.
 

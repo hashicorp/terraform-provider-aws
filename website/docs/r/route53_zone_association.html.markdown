@@ -6,7 +6,7 @@ description: |-
   Manages a Route53 Hosted Zone VPC association
 ---
 
-# aws_route53_zone_association
+# Resource: aws_route53_zone_association
 
 Manages a Route53 Hosted Zone VPC association. VPC associations can only be made on private zones.
 

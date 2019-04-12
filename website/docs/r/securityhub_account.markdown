@@ -6,7 +6,7 @@ description: |-
   Enables Security Hub for an AWS account.
 ---
 
-# aws_securityhub_account
+# Resource: aws_securityhub_account
 
 Enables Security Hub for this AWS account.
 

@@ -6,7 +6,7 @@ description: |-
   Provides a Service Discovery HTTP Namespace resource.
 ---
 
-# aws_service_discovery_http_namespace
+# Resource: aws_service_discovery_http_namespace
 
 
 ## Example Usage

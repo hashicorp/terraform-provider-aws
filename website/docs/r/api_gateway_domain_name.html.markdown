@@ -6,7 +6,7 @@ description: |-
   Registers a custom domain name for use with AWS API Gateway.
 ---
 
-# aws_api_gateway_domain_name
+# Resource: aws_api_gateway_domain_name
 
 Registers a custom domain name for use with AWS API Gateway. Additional information about this functionality
 can be found in the [API Gateway Developer Guide](https://docs.aws.amazon.com/apigateway/latest/developerguide/how-to-custom-domains.html).

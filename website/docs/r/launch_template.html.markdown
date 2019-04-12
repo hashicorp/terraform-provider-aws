@@ -6,7 +6,7 @@ description: |-
   Provides an EC2 launch template resource. Can be used to create instances or auto scaling groups.
 ---
 
-# aws_launch_template
+# Resource: aws_launch_template
 
 Provides an EC2 launch template resource. Can be used to create instances or auto scaling groups.
 

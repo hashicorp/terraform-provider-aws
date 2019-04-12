@@ -6,7 +6,7 @@ description: |-
   Provides a CloudWatch Metric Alarm resource.
 ---
 
-# aws_cloudwatch_metric_alarm
+# Resource: aws_cloudwatch_metric_alarm
 
 Provides a CloudWatch Metric Alarm resource.
 

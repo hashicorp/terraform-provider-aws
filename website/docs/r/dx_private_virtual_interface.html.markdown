@@ -6,7 +6,7 @@ description: |-
   Provides a Direct Connect private virtual interface resource.
 ---
 
-# aws_dx_private_virtual_interface
+# Resource: aws_dx_private_virtual_interface
 
 Provides a Direct Connect private virtual interface resource.
 

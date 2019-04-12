@@ -6,7 +6,7 @@ description: |-
   Provides a CodeBuild Project resource.
 ---
 
-# aws_codebuild_project
+# Resource: aws_codebuild_project
 
 Provides a CodeBuild Project resource. See also the [`aws_codebuild_webhook` resource](/docs/providers/aws/r/codebuild_webhook.html), which manages the webhook to the source (e.g. the "rebuild every time a code change is pushed" option in the CodeBuild web console).
 

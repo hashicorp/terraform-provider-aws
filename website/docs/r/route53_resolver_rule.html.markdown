@@ -6,7 +6,7 @@ description: |-
   Provides a Route53 Resolver rule.
 ---
 
-# aws_route53_resolver_rule
+# Resource: aws_route53_resolver_rule
 
 Provides a Route53 Resolver rule.
 

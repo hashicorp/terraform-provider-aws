@@ -6,7 +6,7 @@ description: |-
   Provides an AWS App Mesh virtual service resource.
 ---
 
-# aws_appmesh_virtual_service
+# Resource: aws_appmesh_virtual_service
 
 Provides an AWS App Mesh virtual service resource.
 

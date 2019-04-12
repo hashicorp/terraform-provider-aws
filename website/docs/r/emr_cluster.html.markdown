@@ -6,7 +6,7 @@ description: |-
   Provides an Elastic MapReduce Cluster
 ---
 
-# aws_emr_cluster
+# Resource: aws_emr_cluster
 
 Provides an Elastic MapReduce Cluster, a web service that makes it easy to
 process large amounts of data efficiently. See [Amazon Elastic MapReduce Documentation](https://aws.amazon.com/documentation/elastic-mapreduce/)

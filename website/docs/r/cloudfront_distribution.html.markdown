@@ -6,7 +6,7 @@ description: |-
   Provides a CloudFront web distribution resource.
 ---
 
-# aws_cloudfront_distribution
+# Resource: aws_cloudfront_distribution
 
 Creates an Amazon CloudFront web distribution.
 

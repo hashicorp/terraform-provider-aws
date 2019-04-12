@@ -6,7 +6,7 @@ description: |-
   Subscribes to a Security Hub standard.
 ---
 
-# aws_securityhub_standards_subscription
+# Resource: aws_securityhub_standards_subscription
 
 Subscribes to a Security Hub standard.
 

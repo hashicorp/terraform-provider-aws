@@ -6,7 +6,7 @@ description: |-
   Provides a resource to manage EC2 Fleets
 ---
 
-# aws_ec2_fleet
+# Resource: aws_ec2_fleet
 
 Provides a resource to manage EC2 Fleets.
 
