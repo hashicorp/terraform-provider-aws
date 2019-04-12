@@ -136,9 +136,9 @@ func resourceAwsInstance() *schema.Resource {
 					return false
 				},
 				StateFunc: func(v interface{}) string {
-					switch v.(type) {
+					switch v := v.(type) {
 					case string:
-						return userDataHashSum(v.(string))
+						return userDataHashSum(v)
 					default:
 						return ""
 					}
