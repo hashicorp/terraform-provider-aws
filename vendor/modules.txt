@@ -465,7 +465,7 @@ github.com/posener/complete
 github.com/posener/complete/cmd/install
 github.com/posener/complete/cmd
 github.com/posener/complete/match
-# github.com/pquerna/otp v0.0.0-20180813144649-be78767b3e39
+# github.com/pquerna/otp v1.1.0
 github.com/pquerna/otp/totp
 github.com/pquerna/otp
 github.com/pquerna/otp/hotp
