@@ -391,6 +391,7 @@ func resourceAwsS3Bucket() *schema.Resource {
 														s3.StorageClassOnezoneIa,
 														s3.StorageClassStandardIa,
 														s3.StorageClassReducedRedundancy,
+														"INTELLIGENT_TIERING",
 													}, false),
 												},
 												"replica_kms_key_id": {
