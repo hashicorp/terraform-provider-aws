@@ -33,8 +33,11 @@ resource "aws_lb_listener_rule" "static" {
   }
 
   condition {
-    field  = "path-pattern"
-    values = ["/static/*"]
+    field = "path-pattern"
+
+    path_pattern {
+      values = ["/static/*"]
+    }
   }
 }
 
@@ -50,8 +53,11 @@ resource "aws_lb_listener_rule" "host_based_routing" {
   }
 
   condition {
-    field  = "host-header"
-    values = ["my-service.*.terraform.io"]
+    field = "host-header"
+
+    host_header {
+      values = ["my-service.*.terraform.io"]
+    }
   }
 }
 
@@ -71,8 +77,12 @@ resource "aws_lb_listener_rule" "redirect_http_to_https" {
   }
 
   condition {
-    field  = "host-header"
-    values = ["my-service.*.terraform.io"]
+    field  = "http-header"
+
+    http_header {
+      http_header_name = "X-Forwarded-For"
+      values           = ["192.168.1.*"]
+    }
   }
 }
 
@@ -92,8 +102,16 @@ resource "aws_lb_listener_rule" "health_check" {
   }
 
   condition {
-    field  = "path-pattern"
-    values = ["/health"]
+    field  = "query-string"
+
+    query_string {
+      values = [
+        {
+          key   = "health"
+          value = "check"
+        },
+      ]
+    }
   }
 }
 
@@ -162,7 +180,9 @@ The following arguments are supported:
 * `listener_arn` - (Required, Forces New Resource) The ARN of the listener to which to attach the rule.
 * `priority` - (Optional) The priority for the rule between `1` and `50000`. Leaving it unset will automatically set the rule with next available priority after currently existing highest rule. A listener can't have multiple rules with the same priority.
 * `action` - (Required) An Action block. Action blocks are documented below.
-* `condition` - (Required) A Condition block. Condition blocks are documented below.
+* `condition` - (Required) A Condition block. Multiple condition blocks of different types can be set and all must be satisfied for the rule to match. Condition blocks are documented below.
+
+### Action Blocks
 
 Action Blocks (for `action`) support the following:
 
@@ -220,10 +240,50 @@ Authentication Request Extra Params Blocks (for `authentication_request_extra_pa
 * `key` - (Required) The key of query parameter
 * `value` - (Required) The value of query parameter
 
+### Condition Blocks
+
+One of more condition blocks can be set per rule. Most condition types can only be specified once per rule except for `http-header` and `query-string` which can be specified multiple times.
+
 Condition Blocks (for `condition`) support the following:
 
-* `field` - (Required) The name of the field. Must be one of `path-pattern` for path based routing or `host-header` for host based routing.
-* `values` - (Required) The path patterns to match. A maximum of 1 can be defined.
+* `field` - (Required) The type of condition. Valid values are `host-header`, `http-header`, `http-request-method`, `path-pattern`, `query-string` and `source-ip`.
+* `host_header` - (Optional) Host headers to match. Host Header block fields documented below. Required if `field` is `host-header` and `values` is empty.
+* `http_header` - (Optional) HTTP headers to match. HTTP Header block fields documented below. Required if `field` is `http-header`.
+* `http_request_method` - (Optional) HTTP request methods to match. HTTP Request Method block fields documented below. Required if `field` is `http-request-method`.
+* `path_pattern` - (Optional) Path patterns to match. Path Pattern block fields documented below. Required if `field` is `path-pattern` and `values` is empty.
+* `query_string` - (Optional) Query strings to match. Query String block fields documented below. Required if `field` is `query-string`.
+* `source_ip` - (Optional) Source IPs to match. Source IP block fields documented below. Required if `field` is `source-ip`.
+* `values` - (Optional, **DEPRECATED**) List of exactly one pattern to match. Only valid when `field` is `host-header` or `path-pattern`, and the `host_header` and `path_pattern` blocks have not been set.
+
+Host Header Blocks (for `host_header`) support the following:
+
+* `values` - (Required) List of host patterns to match. Only one needs to match for the condition to be satisfied.
+
+HTTP Header Blocks (for `http_header`) support the following:
+
+* `http_header_name` - (Required) Name of HTTP header to search.
+* `values` - (Required) List of header value patterns to match. Only one needs to match for the condition to be satisfied.
+
+HTTP Request Method Blocks (for `http_request_method`) support the following:
+
+* `values` - (Required) List of HTTP request methods to match. Only one needs to match for the condition to be satisfied.
+
+Path Pattern Blocks (for `path_pattern`) support the following:
+
+* `values` - (Required) List of path patterns to match. Only one needs to match for the condition to be satisfied.
+
+Query String Blocks (for `query_string`) support the following:
+
+* `values` - (Required) List of query string pairs or values to match. Query String Value blocks documented below. Only one pair needs to match for the condition to be satisfied.
+
+Query String Value Blocks (for `query_string.values`) support the following:
+
+* `key` - (Optional) Query string key pattern to match.
+* `value` - (Required) Query string value pattern to match.
+
+Source IP Blocks (for `source_ip`) support the following:
+
+* `values` - (Required) List of CIDR notations to match. Only one needs to match for the condition to be satisfied.
 
 ## Attributes Reference
 
