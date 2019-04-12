@@ -109,6 +109,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
 - `kinesis_analytics` (**DEPRECATED** Use `kinesisanalytics` instead)
 - `kinesis`
 - `kinesisanalytics`
+- `kinesisvideo`
 - `kms`
 - `lambda`
 - `lexmodels`
