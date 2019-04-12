@@ -18,6 +18,7 @@ require (
 	github.com/golangci/golangci-lint v1.16.0
 	github.com/golangci/gosec v0.0.0-20180901114220-8afd9cbb6cfb // indirect
 	github.com/google/gofuzz v0.0.0-20170612174753-24818f796faf // indirect
+	github.com/google/uuid v1.1.1
 	github.com/hashicorp/aws-sdk-go-base v0.3.0
 	github.com/hashicorp/go-cleanhttp v0.5.1
 	github.com/hashicorp/go-hclog v0.0.0-20171005151751-ca137eb4b438 // indirect
@@ -39,9 +40,16 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.1 // indirect
 	github.com/pquerna/otp v1.1.0
+	github.com/opentracing-contrib/go-aws-sdk v0.0.0-20190205132030-9c29407076c0
+	github.com/opentracing/opentracing-go v1.1.0
 	github.com/spf13/pflag v1.0.3 // indirect
 	github.com/terraform-providers/terraform-provider-template v1.0.0
 	github.com/terraform-providers/terraform-provider-tls v1.2.0
+	github.com/uber/jaeger-client-go v2.16.0+incompatible
+	github.com/uber/jaeger-lib v2.0.0+incompatible
+	go.uber.org/atomic v1.3.2 // indirect
+	go.uber.org/multierr v1.1.0 // indirect
+	go.uber.org/zap v1.9.1
 	google.golang.org/grpc v0.0.0-20171025225919-b5eab4ccac6d // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.2.2
