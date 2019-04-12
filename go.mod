@@ -8,7 +8,7 @@ require (
 	github.com/beevik/etree v1.0.1
 	github.com/bgentry/speakeasy v0.1.0 // indirect
 	github.com/blang/semver v3.5.1+incompatible // indirect
-	github.com/boombuler/barcode v0.0.0-20180809052337-34fff276c74e // indirect
+	github.com/boombuler/barcode v1.0.0 // indirect
 	github.com/client9/misspell v0.3.4
 	github.com/go-toolsmith/pkgload v0.0.0-20181120203407-5122569a890b // indirect
 	github.com/gogo/protobuf v1.2.0 // indirect
