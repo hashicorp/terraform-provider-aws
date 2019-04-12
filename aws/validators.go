@@ -2427,13 +2427,14 @@ func validateRoute53ResolverName(v interface{}, k string) (ws []string, errors [
 
 func validateGlueCatalogDatabaseName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-	if !regexp.MustCompile(`^[0-9a-z-_]+$`).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"only lowercase alphanumeric characters, underscores, and hyphens allowed in %q", k))
+	if regexp.MustCompile(`[A-Z]`).MatchString(value) {
+		errors = append(errors, fmt.Errorf("%q can only contain lowercase alphanumeric characters", k))
+	}
+	if len(value) < 1 {
+		errors = append(errors, fmt.Errorf("%q must be at least 1 character long", k))
 	}
 	if len(value) > 255 {
-		errors = append(errors, fmt.Errorf(
-			"%q cannot be longer than 255 characters", k))
+		errors = append(errors, fmt.Errorf("%q cannot be more than 255 characters long", k))
 	}
 	return
 }
