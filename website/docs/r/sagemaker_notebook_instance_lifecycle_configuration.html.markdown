@@ -6,7 +6,7 @@ description: |-
   Provides a lifecycle configuration for SageMaker Notebook Instances.
 ---
 
-# aws_sagemaker_notebook_instance_lifecycle_configuration
+# Resource: aws_sagemaker_notebook_instance_lifecycle_configuration
 
 Provides a lifecycle configuration for SageMaker Notebook Instances.
 

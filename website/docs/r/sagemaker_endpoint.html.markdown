@@ -6,7 +6,7 @@ description: |-
   Provides a SageMaker Endpoint resource.
 ---
 
-# aws_sagemaker_endpoint
+# Resource: aws_sagemaker_endpoint
 
 Provides a SageMaker Endpoint resource.
 

@@ -6,7 +6,7 @@ description: |-
   Provides an AWS App Mesh route resource.
 ---
 
-# aws_appmesh_route
+# Resource: aws_appmesh_route
 
 Provides an AWS App Mesh route resource.
 

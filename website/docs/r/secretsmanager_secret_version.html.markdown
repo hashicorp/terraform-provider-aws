@@ -6,7 +6,7 @@ description: |-
   Provides a resource to manage AWS Secrets Manager secret version including its secret value
 ---
 
-# aws_secretsmanager_secret_version
+# Resource: aws_secretsmanager_secret_version
 
 Provides a resource to manage AWS Secrets Manager secret version including its secret value. To manage secret metadata, see the [`aws_secretsmanager_secret` resource](/docs/providers/aws/r/secretsmanager_secret.html).
 

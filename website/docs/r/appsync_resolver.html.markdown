@@ -6,7 +6,7 @@ description: |-
   Provides an AppSync Resolver.
 ---
 
-# aws_appsync_resolver
+# Resource: aws_appsync_resolver
 
 Provides an AppSync Resolver.
 

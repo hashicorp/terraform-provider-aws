@@ -6,7 +6,7 @@ description: |-
   Provides an AWS Backup plan resource.
 ---
 
-# aws_backup_plan
+# Resource: aws_backup_plan
 
 Provides an AWS Backup plan resource.
 

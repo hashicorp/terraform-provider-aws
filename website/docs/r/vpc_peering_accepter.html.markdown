@@ -6,7 +6,7 @@ description: |-
   Manage the accepter's side of a VPC Peering Connection.
 ---
 
-# aws_vpc_peering_connection_accepter
+# Resource: aws_vpc_peering_connection_accepter
 
 Provides a resource to manage the accepter's side of a VPC Peering Connection.
 

@@ -6,7 +6,7 @@ description: |-
   Provides an SWF Domain resource
 ---
 
-# aws_swf_domain
+# Resource: aws_swf_domain
 
 Provides an SWF Domain resource.
 

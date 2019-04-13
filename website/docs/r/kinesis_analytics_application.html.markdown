@@ -6,7 +6,7 @@ description: |-
   Provides a AWS Kinesis Analytics Application
 ---
 
-# aws_kinesis_analytics_application
+# Resource: aws_kinesis_analytics_application
 
 Provides a Kinesis Analytics Application resource. Kinesis Analytics is a managed service that
 allows processing and analyzing streaming data using standard SQL.

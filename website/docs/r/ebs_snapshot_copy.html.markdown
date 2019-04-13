@@ -6,7 +6,7 @@ description: |-
   Duplicates an existing Amazon snapshot
 ---
 
-# aws_ebs_snapshot_copy
+# Resource: aws_ebs_snapshot_copy
 
 Creates a Snapshot of a snapshot.
 

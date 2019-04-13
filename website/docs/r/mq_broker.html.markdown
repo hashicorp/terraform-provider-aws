@@ -6,7 +6,7 @@ description: |-
   Provides an MQ Broker Resource
 ---
 
-# aws_mq_broker
+# Resource: aws_mq_broker
 
 Provides an MQ Broker Resource. This resources also manages users for the broker.
 

@@ -6,7 +6,7 @@ description: |-
   Provides a Lambda Function resource. Lambda allows you to trigger execution of code in response to events in AWS. The Lambda Function itself includes source code and runtime configuration.
 ---
 
-# aws_lambda_function
+# Resource: aws_lambda_function
 
 Provides a Lambda Function resource. Lambda allows you to trigger execution of code in response to events in AWS. The Lambda Function itself includes source code and runtime configuration.
 

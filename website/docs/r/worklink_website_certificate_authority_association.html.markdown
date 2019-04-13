@@ -6,7 +6,7 @@ description: |-
   Provides a AWS WorkLink Website Certificate Authority Association resource.
 ---
 
-# aws_worklink_website_certificate_authority_association
+# Resource: aws_worklink_website_certificate_authority_association
 
 ## Example Usage
 

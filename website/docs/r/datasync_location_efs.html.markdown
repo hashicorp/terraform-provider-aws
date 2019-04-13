@@ -6,7 +6,7 @@ description: |-
   Manages an EFS Location within AWS DataSync.
 ---
 
-# aws_datasync_location_efs
+# Resource: aws_datasync_location_efs
 
 Manages an AWS DataSync EFS Location.
 

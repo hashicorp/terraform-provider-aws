@@ -6,7 +6,7 @@ description: |-
   Provides a Direct Connect Gateway.
 ---
 
-# aws_dx_gateway
+# Resource: aws_dx_gateway
 
 Provides a Direct Connect Gateway.
 

@@ -6,7 +6,7 @@ description: |-
   Provides a Sagemaker Notebook Instance resource.
 ---
 
-# aws_sagemaker_notebook_instance
+# Resource: aws_sagemaker_notebook_instance
 
 Provides a Sagemaker Notebook Instance resource.
 

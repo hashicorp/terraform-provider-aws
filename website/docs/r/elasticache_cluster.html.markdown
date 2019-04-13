@@ -6,7 +6,7 @@ description: |-
   Provides an ElastiCache Cluster resource.
 ---
 
-# aws_elasticache_cluster
+# Resource: aws_elasticache_cluster
 
 Provides an ElastiCache Cluster resource, which manages a Memcached cluster or Redis instance.
 For working with Redis (Cluster Mode Enabled) replication groups, see the

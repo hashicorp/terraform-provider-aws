@@ -6,7 +6,7 @@ description: |-
   Provides an API Gateway Authorizer.
 ---
 
-# aws_api_gateway_authorizer
+# Resource: aws_api_gateway_authorizer
 
 Provides an API Gateway Authorizer.
 

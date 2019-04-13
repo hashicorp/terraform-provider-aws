@@ -6,7 +6,7 @@ description: |-
   Provides a Resource Access Manager (RAM) principal association.
 ---
 
-# aws_ram_principal_association
+# Resource: aws_ram_principal_association
 
 Provides a Resource Access Manager (RAM) principal association.
 

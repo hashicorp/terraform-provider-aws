@@ -6,7 +6,7 @@ description: |-
   Terraform resource for managing an AWS Elasticsearch Domain.
 ---
 
-# aws_elasticsearch_domain
+# Resource: aws_elasticsearch_domain
 
 Manages an AWS Elasticsearch Domain.
 

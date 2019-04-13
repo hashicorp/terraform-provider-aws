@@ -6,7 +6,7 @@ description: |-
   Provides an SES event destination
 ---
 
-# aws_ses_event_destination
+# Resource: aws_ses_event_destination
 
 Provides an SES event destination
 

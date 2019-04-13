@@ -6,7 +6,7 @@ description: |-
   Duplicates an existing Amazon Machine Image (AMI)
 ---
 
-# aws_ami_copy
+# Resource: aws_ami_copy
 
 The "AMI copy" resource allows duplication of an Amazon Machine Image (AMI),
 including cross-region copies.

@@ -6,7 +6,7 @@ description: |-
   Manages an AWS Storage Gateway working storage
 ---
 
-# aws_storagegateway_working_storage
+# Resource: aws_storagegateway_working_storage
 
 Manages an AWS Storage Gateway working storage.
 

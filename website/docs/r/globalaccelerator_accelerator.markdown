@@ -6,7 +6,7 @@ description: |-
   Provides a Global Accelerator accelerator.
 ---
 
-# aws_globalaccelerator_accelerator
+# Resource: aws_globalaccelerator_accelerator
 
 Provides a Global Accelerator accelerator.
 

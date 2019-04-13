@@ -6,7 +6,7 @@ description: |-
   Provides an AppSync GraphQL API.
 ---
 
-# aws_appsync_graphql_api
+# Resource: aws_appsync_graphql_api
 
 Provides an AppSync GraphQL API.
 

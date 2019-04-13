@@ -6,7 +6,7 @@ description: |-
   Provides a AWS Transfer Server resource.
 ---
 
-# aws_transfer_server
+# Resource: aws_transfer_server
 
 Provides a AWS Transfer Server resource.
 

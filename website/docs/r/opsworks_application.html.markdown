@@ -6,7 +6,7 @@ description: |-
   Provides an OpsWorks application resource.
 ---
 
-# aws_opsworks_application
+# Resource: aws_opsworks_application
 
 Provides an OpsWorks application resource.
 

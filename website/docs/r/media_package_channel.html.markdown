@@ -6,7 +6,7 @@ description: |-
   Provides an AWS Elemental MediaPackage Channel.
 ---
 
-# aws_media_package_channel
+# Resource: aws_media_package_channel
 
 Provides an AWS Elemental MediaPackage Channel.
 

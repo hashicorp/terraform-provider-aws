@@ -6,7 +6,7 @@ description: |-
   Provides a security group resource.
 ---
 
-# aws_security_group
+# Resource: aws_security_group
 
 Provides a security group resource.
 

@@ -6,7 +6,7 @@ description: |-
   Manages an EC2 Transit Gateway VPC Attachment
 ---
 
-# aws_ec2_transit_gateway_vpc_attachment
+# Resource: aws_ec2_transit_gateway_vpc_attachment
 
 Manages an EC2 Transit Gateway VPC Attachment. For examples of custom route table association and propagation, see the EC2 Transit Gateway Networking Examples Guide.
 

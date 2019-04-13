@@ -6,7 +6,7 @@ description: |-
   Manages a CloudFormation Stack Set Instance.
 ---
 
-# aws_cloudformation_stack_set_instance
+# Resource: aws_cloudformation_stack_set_instance
 
 Manages a CloudFormation Stack Set Instance. Instances are managed in the account and region of the Stack Set after the target account permissions have been configured. Additional information about Stack Sets can be found in the [AWS CloudFormation User Guide](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/what-is-cfnstacksets.html).
 

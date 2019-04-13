@@ -6,7 +6,7 @@ description: |-
   Manages a RDS Aurora Cluster
 ---
 
-# aws_rds_cluster
+# Resource: aws_rds_cluster
 
 Manages a [RDS Aurora Cluster][2]. To manage cluster instances that inherit configuration from the cluster (when not running the cluster in `serverless` engine mode), see the [`aws_rds_cluster_instance` resource](/docs/providers/aws/r/rds_cluster_instance.html). To manage non-Aurora databases (e.g. MySQL, PostgreSQL, SQL Server, etc.), see the [`aws_db_instance` resource](/docs/providers/aws/r/db_instance.html).
 

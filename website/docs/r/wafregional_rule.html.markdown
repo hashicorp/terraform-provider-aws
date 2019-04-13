@@ -6,7 +6,7 @@ description: |-
   Provides an AWS WAF Regional rule resource for use with ALB.
 ---
 
-# aws_wafregional_rule
+# Resource: aws_wafregional_rule
 
 Provides an WAF Regional Rule Resource for use with Application Load Balancer.
 

@@ -6,7 +6,7 @@ description: |-
   Manages an IAM User Login Profile
 ---
 
-# aws_iam_user_login_profile
+# Resource: aws_iam_user_login_profile
 
 Manages an IAM User Login Profile with limited support for password creation during Terraform resource creation. Uses PGP to encrypt the password for safe transport to the user. PGP keys can be obtained from Keybase.
 

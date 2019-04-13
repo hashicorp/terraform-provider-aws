@@ -6,7 +6,7 @@ description: |-
   Provides a resource to manage a GuardDuty detector
 ---
 
-# aws_guardduty_detector
+# Resource: aws_guardduty_detector
 
 Provides a resource to manage a GuardDuty detector.
 

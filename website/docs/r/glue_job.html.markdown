@@ -6,7 +6,7 @@ description: |-
   Provides an Glue Job resource.
 ---
 
-# aws_glue_job
+# Resource: aws_glue_job
 
 Provides a Glue Job resource.
 

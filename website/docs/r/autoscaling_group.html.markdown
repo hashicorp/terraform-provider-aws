@@ -6,7 +6,7 @@ description: |-
   Provides an AutoScaling Group resource.
 ---
 
-# aws_autoscaling_group
+# Resource: aws_autoscaling_group
 
 Provides an AutoScaling Group resource.
 

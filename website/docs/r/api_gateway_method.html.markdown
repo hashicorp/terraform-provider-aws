@@ -6,7 +6,7 @@ description: |-
   Provides a HTTP Method for an API Gateway Resource.
 ---
 
-# aws_api_gateway_method
+# Resource: aws_api_gateway_method
 
 Provides a HTTP Method for an API Gateway Resource.
 

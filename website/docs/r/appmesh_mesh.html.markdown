@@ -6,7 +6,7 @@ description: |-
   Provides an AWS App Mesh service mesh resource.
 ---
 
-# aws_appmesh_mesh
+# Resource: aws_appmesh_mesh
 
 Provides an AWS App Mesh service mesh resource.
 

@@ -6,7 +6,7 @@ description: |-
   Setting AWS SES Identity Notification Topic
 ---
 
-# ses_identity_notification_topic
+# Resource: ses_identity_notification_topic
 
 Resource for managing SES Identity Notification Topics
 

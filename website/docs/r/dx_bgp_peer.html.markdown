@@ -6,7 +6,7 @@ description: |-
   Provides a Direct Connect BGP peer resource.
 ---
 
-# aws_dx_bgp_peer
+# Resource: aws_dx_bgp_peer
 
 Provides a Direct Connect BGP peer resource.
 

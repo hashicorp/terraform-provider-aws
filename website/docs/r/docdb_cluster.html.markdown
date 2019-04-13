@@ -6,7 +6,7 @@ description: |-
   Manages a DocDB Aurora Cluster
 ---
 
-# aws_docdb_cluster
+# Resource: aws_docdb_cluster
 
 Manages a DocDB Cluster.
 

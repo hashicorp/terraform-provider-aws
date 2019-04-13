@@ -6,7 +6,7 @@ description: |-
   Provides a proxy protocol policy, which allows an ELB to carry a client connection information to a backend.
 ---
 
-# aws_proxy_protocol_policy
+# Resource: aws_proxy_protocol_policy
 
 Provides a proxy protocol policy, which allows an ELB to carry a client connection information to a backend.
 

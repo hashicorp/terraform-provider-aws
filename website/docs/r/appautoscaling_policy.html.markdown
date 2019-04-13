@@ -6,7 +6,7 @@ description: |-
   Provides an Application AutoScaling Policy resource.
 ---
 
-# aws_appautoscaling_policy
+# Resource: aws_appautoscaling_policy
 
 Provides an Application AutoScaling Policy resource.
 
