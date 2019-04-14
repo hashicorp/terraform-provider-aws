@@ -147,6 +147,11 @@ func TestAccAWSTransferUserName_validation(t *testing.T) {
 				Config:      testAccAWSTransferUserName_validation("-abcdef"),
 				ExpectError: regexp.MustCompile(`"user_name" cannot begin with a hyphen`),
 			},
+			{
+				Config:             testAccAWSTransferUserName_validation("valid_username"),
+				ExpectNonEmptyPlan: true,
+				PlanOnly:           true,
+			},
 		},
 	})
 }
