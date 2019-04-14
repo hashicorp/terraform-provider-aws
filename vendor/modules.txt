@@ -174,7 +174,7 @@ github.com/beevik/etree
 github.com/bgentry/go-netrc/netrc
 # github.com/bgentry/speakeasy v0.1.0
 github.com/bgentry/speakeasy
-# github.com/blang/semver v3.5.1+incompatible
+# github.com/blang/semver v0.0.0-20190414102917-ba2c2ddd8906
 github.com/blang/semver
 # github.com/boombuler/barcode v1.0.0
 github.com/boombuler/barcode
