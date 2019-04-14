@@ -16,8 +16,8 @@ Provides a Glue Catalog Table Resource. You can refer to the [Glue Developer Gui
 
 ```hcl
 resource "aws_glue_catalog_table" "aws_glue_catalog_table" {
-  name          = "MyCatalogTable"
-  database_name = "MyCatalogDatabase"
+  name          = "my_catalog_table"
+  database_name = "my_datalog_database"
 }
 ```
 
@@ -25,8 +25,8 @@ resource "aws_glue_catalog_table" "aws_glue_catalog_table" {
 
 ```hcl
 resource "aws_glue_catalog_table" "aws_glue_catalog_table" {
-  name          = "MyCatalogTable"
-  database_name = "MyCatalogDatabase"
+  name          = "my_datalog_table"
+  database_name = "my_datalog_database"
 
   table_type  = "EXTERNAL_TABLE"
 
@@ -138,5 +138,5 @@ The following arguments are supported:
 Glue Tables can be imported with their catalog ID (usually AWS account ID), database name, and table name, e.g.
 
 ```
-$ terraform import aws_glue_catalog_table.MyTable 123456789012:MyDatabase:MyTable
+$ terraform import aws_glue_catalog_table.my_table 123456789012:my_database:my_table
 ```
