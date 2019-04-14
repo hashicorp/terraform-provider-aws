@@ -2438,3 +2438,17 @@ func validateGlueCatalogDatabaseName(v interface{}, k string) (ws []string, erro
 	}
 	return
 }
+
+func validateGlueCatalogTableName(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if regexp.MustCompile(`[A-Z]`).MatchString(value) {
+		errors = append(errors, fmt.Errorf("%q can only contain lowercase alphanumeric characters", k))
+	}
+	if len(value) < 1 {
+		errors = append(errors, fmt.Errorf("%q must be at least 1 character long", k))
+	}
+	if len(value) > 255 {
+		errors = append(errors, fmt.Errorf("%q cannot be more than 255 characters long", k))
+	}
+	return
+}

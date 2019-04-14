@@ -100,22 +100,41 @@ func TestAccAWSGlueCatalogTable_basic(t *testing.T) {
 }
 
 func TestAccAWSGlueCatalogTable_validation(t *testing.T) {
+	validDbName := "my_database"
+	validTableName := "my_table"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlueTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccGlueCatalogTable_validation(acctest.RandString(256)),
+				Config:      testAccGlueCatalogTable_validation(validTableName, acctest.RandString(256)),
 				ExpectError: regexp.MustCompile(`"database_name" cannot be more than 255 characters long`),
 			},
 			{
-				Config:      testAccGlueCatalogTable_validation(""),
+				Config:      testAccGlueCatalogTable_validation(validTableName, ""),
 				ExpectError: regexp.MustCompile(`"database_name" must be at least 1 character long`),
 			},
 			{
-				Config:      testAccGlueCatalogTable_validation("ABCDEFG"),
+				Config:      testAccGlueCatalogTable_validation(validTableName, "ABCDEFG"),
 				ExpectError: regexp.MustCompile(`"database_name" can only contain lowercase alphanumeric characters`),
+			},
+			{
+				Config:      testAccGlueCatalogTable_validation(acctest.RandString(256), validDbName),
+				ExpectError: regexp.MustCompile(`"name" cannot be more than 255 characters long`),
+			},
+			{
+				Config:      testAccGlueCatalogTable_validation("", validDbName),
+				ExpectError: regexp.MustCompile(`"name" must be at least 1 character long`),
+			},
+			{
+				Config:      testAccGlueCatalogTable_validation("ABCDEFG", validDbName),
+				ExpectError: regexp.MustCompile(`"name" can only contain lowercase alphanumeric characters`),
+			},
+			{
+				Config:             testAccGlueCatalogTable_validation(validTableName, validDbName),
+				ExpectNonEmptyPlan: true,
+				PlanOnly:           true,
 			},
 		},
 	})
@@ -375,13 +394,13 @@ resource "aws_glue_catalog_table" "test" {
 `, rInt, rInt)
 }
 
-func testAccGlueCatalogTable_validation(rName string) string {
+func testAccGlueCatalogTable_validation(tableName string, dbName string) string {
 	return fmt.Sprintf(`
 resource "aws_glue_catalog_table" "test" {
-  name          = "MyCatalogTable"
+  name          = "%s"
   database_name = "%s"
 }
-`, rName)
+`, tableName, dbName)
 }
 
 func testAccGlueCatalogTable_full(rInt int, desc string) string {

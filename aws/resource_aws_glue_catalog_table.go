@@ -38,9 +38,10 @@ func resourceAwsGlueCatalogTable() *schema.Resource {
 				Optional: true,
 			},
 			"name": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
+				Type:         schema.TypeString,
+				ForceNew:     true,
+				Required:     true,
+				ValidateFunc: validateGlueCatalogTableName,
 			},
 			"owner": {
 				Type:     schema.TypeString,
