@@ -52,6 +52,11 @@ func TestAccAWSGlueCatalogDatabase_validation(t *testing.T) {
 				Config:      testAccGlueCatalogDatabase_validation("ABCDEFG"),
 				ExpectError: regexp.MustCompile(`"name" can only contain lowercase alphanumeric characters`),
 			},
+			{
+				Config:             testAccGlueCatalogDatabase_validation("valid_dbname"),
+				ExpectNonEmptyPlan: true,
+				PlanOnly:           true,
+			},
 		},
 	})
 }
