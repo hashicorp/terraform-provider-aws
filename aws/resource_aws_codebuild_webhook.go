@@ -175,12 +175,22 @@ func resourceAwsCodeBuildWebhookRead(d *schema.ResourceData, meta interface{}) e
 func resourceAwsCodeBuildWebhookUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).codebuildconn
 
-	_, err := conn.UpdateWebhook(&codebuild.UpdateWebhookInput{
-		ProjectName:  aws.String(d.Id()),
-		BranchFilter: aws.String(d.Get("branch_filter").(string)),
-		FilterGroups: expandWebhookFilterGroup(d),
-		RotateSecret: aws.Bool(false),
-	})
+	var err error
+	filterGroups := expandWebhookFilterGroup(d)
+
+	if len(filterGroups) >= 1 {
+		_, err = conn.UpdateWebhook(&codebuild.UpdateWebhookInput{
+			ProjectName:  aws.String(d.Id()),
+			FilterGroups: filterGroups,
+			RotateSecret: aws.Bool(false),
+		})
+	} else {
+		_, err = conn.UpdateWebhook(&codebuild.UpdateWebhookInput{
+			ProjectName:  aws.String(d.Id()),
+			BranchFilter: aws.String(d.Get("branch_filter").(string)),
+			RotateSecret: aws.Bool(false),
+		})
+	}
 
 	if err != nil {
 		return err
