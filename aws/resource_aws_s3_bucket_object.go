@@ -22,12 +22,12 @@ import (
 
 func resourceAwsS3BucketObject() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsS3BucketObjectPut,
+		Create: resourceAwsS3BucketObjectCreate,
 		Read:   resourceAwsS3BucketObjectRead,
-		Update: resourceAwsS3BucketObjectPut,
+		Update: resourceAwsS3BucketObjectUpdate,
 		Delete: resourceAwsS3BucketObjectDelete,
 
-		CustomizeDiff: updateComputedAttributes,
+		CustomizeDiff: resourceAwsS3BucketObjectCustomizeDiff,
 
 		Schema: map[string]*schema.Schema{
 			"bucket": {
@@ -36,9 +36,15 @@ func resourceAwsS3BucketObject() *schema.Resource {
 				ForceNew: true,
 			},
 
+			"key": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+
 			"acl": {
 				Type:     schema.TypeString,
-				Default:  "private",
+				Default:  s3.ObjectCannedACLPrivate,
 				Optional: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					s3.ObjectCannedACLPrivate,
@@ -77,12 +83,6 @@ func resourceAwsS3BucketObject() *schema.Resource {
 				Computed: true,
 			},
 
-			"key": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-
 			"source": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -112,6 +112,7 @@ func resourceAwsS3BucketObject() *schema.Resource {
 					s3.ObjectStorageClassStandardIa,
 					s3.ObjectStorageClassOnezoneIa,
 					s3.ObjectStorageClassIntelligentTiering,
+					s3.ObjectStorageClassDeepArchive,
 				}, false),
 			},
 
@@ -156,17 +157,8 @@ func resourceAwsS3BucketObject() *schema.Resource {
 	}
 }
 
-func updateComputedAttributes(d *schema.ResourceDiff, meta interface{}) error {
-	if d.HasChange("etag") {
-		d.SetNewComputed("version_id")
-	}
-	return nil
-}
-
 func resourceAwsS3BucketObjectPut(d *schema.ResourceData, meta interface{}) error {
 	s3conn := meta.(*AWSClient).s3conn
-
-	restricted := meta.(*AWSClient).IsChinaCloud()
 
 	var body io.ReadSeeker
 
@@ -178,10 +170,16 @@ func resourceAwsS3BucketObjectPut(d *schema.ResourceData, meta interface{}) erro
 		}
 		file, err := os.Open(path)
 		if err != nil {
-			return fmt.Errorf("Error opening S3 bucket object source (%s): %s", source, err)
+			return fmt.Errorf("Error opening S3 bucket object source (%s): %s", path, err)
 		}
 
 		body = file
+		defer func() {
+			err := file.Close()
+			if err != nil {
+				log.Printf("[WARN] Error closing S3 bucket object source (%s): %s", path, err)
+			}
+		}()
 	} else if v, ok := d.GetOk("content"); ok {
 		content := v.(string)
 		body = bytes.NewReader([]byte(content))
@@ -242,10 +240,6 @@ func resourceAwsS3BucketObjectPut(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if v, ok := d.GetOk("tags"); ok {
-		if restricted {
-			return fmt.Errorf("This region does not allow for tags on S3 objects")
-		}
-
 		// The tag-set must be encoded as URL Query parameters.
 		values := url.Values{}
 		for k, v := range v.(map[string]interface{}) {
@@ -258,23 +252,20 @@ func resourceAwsS3BucketObjectPut(d *schema.ResourceData, meta interface{}) erro
 		putInput.WebsiteRedirectLocation = aws.String(v.(string))
 	}
 
-	resp, err := s3conn.PutObject(putInput)
-	if err != nil {
+	if _, err := s3conn.PutObject(putInput); err != nil {
 		return fmt.Errorf("Error putting object in S3 bucket (%s): %s", bucket, err)
 	}
 
-	// See https://forums.aws.amazon.com/thread.jspa?threadID=44003
-	d.Set("etag", strings.Trim(*resp.ETag, `"`))
-
-	d.Set("version_id", resp.VersionId)
 	d.SetId(key)
 	return resourceAwsS3BucketObjectRead(d, meta)
 }
 
+func resourceAwsS3BucketObjectCreate(d *schema.ResourceData, meta interface{}) error {
+	return resourceAwsS3BucketObjectPut(d, meta)
+}
+
 func resourceAwsS3BucketObjectRead(d *schema.ResourceData, meta interface{}) error {
 	s3conn := meta.(*AWSClient).s3conn
-
-	restricted := meta.(*AWSClient).IsChinaCloud()
 
 	bucket := d.Get("bucket").(string)
 	key := d.Get("key").(string)
@@ -321,7 +312,8 @@ func resourceAwsS3BucketObjectRead(d *schema.ResourceData, meta interface{}) err
 			d.Set("kms_key_id", resp.SSEKMSKeyId)
 		}
 	}
-	d.Set("etag", strings.Trim(*resp.ETag, `"`))
+	// See https://forums.aws.amazon.com/thread.jspa?threadID=44003
+	d.Set("etag", strings.Trim(aws.StringValue(resp.ETag), `"`))
 
 	// The "STANDARD" (which is also the default) storage
 	// class when set would not be included in the results.
@@ -330,19 +322,53 @@ func resourceAwsS3BucketObjectRead(d *schema.ResourceData, meta interface{}) err
 		d.Set("storage_class", resp.StorageClass)
 	}
 
-	if !restricted {
-		tagResp, err := s3conn.GetObjectTagging(
-			&s3.GetObjectTaggingInput{
-				Bucket: aws.String(bucket),
-				Key:    aws.String(key),
-			})
-		if err != nil {
-			return fmt.Errorf("Failed to get object tags (bucket: %s, key: %s): %s", bucket, key, err)
-		}
-		d.Set("tags", tagsToMapS3(tagResp.TagSet))
+	if err := getTagsS3Object(s3conn, d); err != nil {
+		return fmt.Errorf("error getting S3 object tags (bucket: %s, key: %s): %s", bucket, key, err)
 	}
 
 	return nil
+}
+
+func resourceAwsS3BucketObjectUpdate(d *schema.ResourceData, meta interface{}) error {
+	// Changes to any of these attributes requires creation of a new object version (if bucket is versioned):
+	for _, key := range []string{
+		"cache_control",
+		"content_disposition",
+		"content_encoding",
+		"content_language",
+		"content_type",
+		"source",
+		"content",
+		"content_base64",
+		"storage_class",
+		"server_side_encryption",
+		"kms_key_id",
+		"etag",
+		"website_redirect",
+	} {
+		if d.HasChange(key) {
+			return resourceAwsS3BucketObjectPut(d, meta)
+		}
+	}
+
+	conn := meta.(*AWSClient).s3conn
+
+	if d.HasChange("acl") {
+		_, err := conn.PutObjectAcl(&s3.PutObjectAclInput{
+			Bucket: aws.String(d.Get("bucket").(string)),
+			Key:    aws.String(d.Get("key").(string)),
+			ACL:    aws.String(d.Get("acl").(string)),
+		})
+		if err != nil {
+			return fmt.Errorf("error putting S3 object ACL: %s", err)
+		}
+	}
+
+	if err := setTagsS3Object(conn, d); err != nil {
+		return fmt.Errorf("error setting S3 object tags: %s", err)
+	}
+
+	return resourceAwsS3BucketObjectRead(d, meta)
 }
 
 func resourceAwsS3BucketObjectDelete(d *schema.ResourceData, meta interface{}) error {
@@ -350,6 +376,8 @@ func resourceAwsS3BucketObjectDelete(d *schema.ResourceData, meta interface{}) e
 
 	bucket := d.Get("bucket").(string)
 	key := d.Get("key").(string)
+	// We are effectively ignoring any leading '/' in the key name as aws.Config.DisableRestProtocolURICleaning is false
+	key = strings.TrimPrefix(key, "/")
 
 	if _, ok := d.GetOk("version_id"); ok {
 		// Bucket is versioned, we need to delete all versions
@@ -384,6 +412,14 @@ func resourceAwsS3BucketObjectDelete(d *schema.ResourceData, meta interface{}) e
 		if err != nil {
 			return fmt.Errorf("Error deleting S3 bucket object: %s  Bucket: %q Object: %q", err, bucket, key)
 		}
+	}
+
+	return nil
+}
+
+func resourceAwsS3BucketObjectCustomizeDiff(d *schema.ResourceDiff, meta interface{}) error {
+	if d.HasChange("etag") {
+		d.SetNewComputed("version_id")
 	}
 
 	return nil

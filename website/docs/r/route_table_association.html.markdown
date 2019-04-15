@@ -6,7 +6,7 @@ description: |-
   Provides a resource to create an association between a subnet and routing table.
 ---
 
-# aws_route_table_association
+# Resource: aws_route_table_association
 
 Provides a resource to create an association between a subnet and routing table.
 

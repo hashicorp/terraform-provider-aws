@@ -6,7 +6,7 @@ description: |-
   Associates a Direct Connect Gateway with a VGW.
 ---
 
-# aws_dx_gateway_association
+# Resource: aws_dx_gateway_association
 
 Associates a Direct Connect Gateway with a VGW.
 

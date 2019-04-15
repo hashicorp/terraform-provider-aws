@@ -25,8 +25,8 @@ func TestAccAwsGlobalAcceleratorListener_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "client_affinity", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "TCP"),
 					resource.TestCheckResourceAttr(resourceName, "port_range.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "port_range.0.from_port", "80"),
-					resource.TestCheckResourceAttr(resourceName, "port_range.0.to_port", "81"),
+					resource.TestCheckResourceAttr(resourceName, "port_range.3309144275.from_port", "80"),
+					resource.TestCheckResourceAttr(resourceName, "port_range.3309144275.to_port", "81"),
 				),
 			},
 			{
@@ -57,8 +57,8 @@ func TestAccAwsGlobalAcceleratorListener_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "client_affinity", "SOURCE_IP"),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "UDP"),
 					resource.TestCheckResourceAttr(resourceName, "port_range.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "port_range.0.from_port", "443"),
-					resource.TestCheckResourceAttr(resourceName, "port_range.0.to_port", "444"),
+					resource.TestCheckResourceAttr(resourceName, "port_range.3922064764.from_port", "443"),
+					resource.TestCheckResourceAttr(resourceName, "port_range.3922064764.to_port", "444"),
 				),
 			},
 			{

@@ -6,7 +6,7 @@ description: |-
   Provides a Service Discovery Public DNS Namespace resource.
 ---
 
-# aws_service_discovery_public_dns_namespace
+# Resource: aws_service_discovery_public_dns_namespace
 
 Provides a Service Discovery Public DNS Namespace resource.
 

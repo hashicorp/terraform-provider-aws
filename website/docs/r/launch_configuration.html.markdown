@@ -6,7 +6,7 @@ description: |-
   Provides a resource to create a new launch configuration, used for autoscaling groups.
 ---
 
-# aws_launch_configuration
+# Resource: aws_launch_configuration
 
 Provides a resource to create a new launch configuration, used for autoscaling groups.
 

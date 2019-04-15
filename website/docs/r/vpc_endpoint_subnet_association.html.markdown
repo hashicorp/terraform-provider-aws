@@ -6,7 +6,7 @@ description: |-
   Provides a resource to create an association between a VPC endpoint and a subnet.
 ---
 
-# aws_vpc_endpoint_subnet_association
+# Resource: aws_vpc_endpoint_subnet_association
 
 Provides a resource to create an association between a VPC endpoint and a subnet.
 

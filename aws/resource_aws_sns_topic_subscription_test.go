@@ -354,11 +354,7 @@ func testAccCheckAWSSNSTopicSubscriptionExists(n string, attributes map[string]s
 			attributes[k] = aws.StringValue(v)
 		}
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -497,7 +493,7 @@ resource "aws_api_gateway_method_response" "test" {
   http_method = "${aws_api_gateway_method.test.http_method}"
   status_code = "200"
 
-  response_parameters {
+  response_parameters = {
     "method.response.header.Access-Control-Allow-Origin" = true
   }
 }
@@ -518,7 +514,7 @@ resource "aws_api_gateway_integration_response" "test" {
   http_method = "${aws_api_gateway_method.test.http_method}"
   status_code = "${aws_api_gateway_method_response.test.status_code}"
 
-  response_parameters {
+  response_parameters = {
     "method.response.header.Access-Control-Allow-Origin" = "'*'"
   }
 }
@@ -576,7 +572,7 @@ resource "aws_lambda_function" "lambda" {
   function_name    = "tf-acc-test-sns-%d"
   role             = "${aws_iam_role.iam_for_lambda.arn}"
   handler          = "main.confirm_subscription"
-  source_code_hash = "${base64sha256(file("test-fixtures/lambda_confirm_sns.zip"))}"
+  source_code_hash = "${filebase64sha256("test-fixtures/lambda_confirm_sns.zip")}"
   runtime          = "python3.6"
 }
 
@@ -621,7 +617,7 @@ resource "aws_api_gateway_method_response" "test" {
   http_method = "${aws_api_gateway_method.test.http_method}"
   status_code = "200"
 
-  response_parameters {
+  response_parameters = {
     "method.response.header.Access-Control-Allow-Origin" = true
   }
 }
@@ -642,7 +638,7 @@ resource "aws_api_gateway_integration_response" "test" {
   http_method = "${aws_api_gateway_method.test.http_method}"
   status_code = "${aws_api_gateway_method_response.test.status_code}"
 
-  response_parameters {
+  response_parameters = {
     "method.response.header.Access-Control-Allow-Origin" = "'*'"
   }
 }
@@ -700,7 +696,7 @@ resource "aws_lambda_function" "lambda" {
   function_name    = "tf-acc-test-sns-%d"
   role             = "${aws_iam_role.iam_for_lambda.arn}"
   handler          = "main.confirm_subscription"
-  source_code_hash = "${base64sha256(file("test-fixtures/lambda_confirm_sns.zip"))}"
+  source_code_hash = "${filebase64sha256("test-fixtures/lambda_confirm_sns.zip")}"
   runtime          = "python3.6"
 }
 
@@ -759,14 +755,14 @@ resource "aws_api_gateway_authorizer" "test" {
 
 resource "aws_lambda_function" "authorizer" {
   filename         = "test-fixtures/lambda_basic_authorizer.zip"
-  source_code_hash = "${base64sha256(file("test-fixtures/lambda_basic_authorizer.zip"))}"
+  source_code_hash = "${filebase64sha256("test-fixtures/lambda_basic_authorizer.zip")}"
   function_name    = "tf-acc-test-authorizer-%d"
   role             = "${aws_iam_role.iam_for_lambda.arn}"
   handler          = "main.authenticate"
   runtime          = "nodejs6.10"
 
   environment {
-    variables {
+    variables = {
         AUTH_USER="%s"
         AUTH_PASS="%s"
     }

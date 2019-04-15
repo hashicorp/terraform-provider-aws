@@ -12,7 +12,8 @@ import (
 
 func TestAccAwsGlobalAcceleratorAccelerator_basic(t *testing.T) {
 	resourceName := "aws_globalaccelerator_accelerator.example"
-	rInt := acctest.RandInt()
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	ipRegex := regexp.MustCompile(`\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}`)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -20,12 +21,21 @@ func TestAccAwsGlobalAcceleratorAccelerator_basic(t *testing.T) {
 		CheckDestroy: testAccCheckGlobalAcceleratorAcceleratorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalAcceleratorAccelerator_basic(rInt),
+				Config: testAccGlobalAcceleratorAccelerator_basic(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalAcceleratorAcceleratorExists(resourceName),
-					resource.TestMatchResourceAttr(resourceName, "name", regexp.MustCompile("tf-.*")),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "IPV4"),
+					resource.TestCheckResourceAttr(resourceName, "attributes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "attributes.0.flow_logs_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "attributes.0.flow_logs_s3_bucket", ""),
+					resource.TestCheckResourceAttr(resourceName, "attributes.0.flow_logs_s3_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "ip_sets.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ip_sets.0.ip_addresses.#", "2"),
+					resource.TestMatchResourceAttr(resourceName, "ip_sets.0.ip_addresses.0", ipRegex),
+					resource.TestMatchResourceAttr(resourceName, "ip_sets.0.ip_addresses.1", ipRegex),
+					resource.TestCheckResourceAttr(resourceName, "ip_sets.0.ip_family", "IPv4"),
 				),
 			},
 			{
@@ -39,7 +49,8 @@ func TestAccAwsGlobalAcceleratorAccelerator_basic(t *testing.T) {
 
 func TestAccAwsGlobalAcceleratorAccelerator_update(t *testing.T) {
 	resourceName := "aws_globalaccelerator_accelerator.example"
-	rInt := acctest.RandInt()
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	newName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -47,13 +58,19 @@ func TestAccAwsGlobalAcceleratorAccelerator_update(t *testing.T) {
 		CheckDestroy: testAccCheckGlobalAcceleratorAcceleratorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalAcceleratorAccelerator_basic(rInt),
-			},
-			{
-				Config: testAccGlobalAcceleratorAccelerator_update(rInt),
+				Config: testAccGlobalAcceleratorAccelerator_basic(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalAcceleratorAcceleratorExists(resourceName),
-					resource.TestMatchResourceAttr(resourceName, "name", regexp.MustCompile("tfx-.*")),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+				),
+			},
+			{
+				Config: testAccGlobalAcceleratorAccelerator_basic(newName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGlobalAcceleratorAcceleratorExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", newName),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
 				),
 			},
 			{
@@ -67,7 +84,8 @@ func TestAccAwsGlobalAcceleratorAccelerator_update(t *testing.T) {
 
 func TestAccAwsGlobalAcceleratorAccelerator_attributes(t *testing.T) {
 	resourceName := "aws_globalaccelerator_accelerator.example"
-	rInt := acctest.RandInt()
+	s3BucketResourceName := "aws_s3_bucket.example"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -75,12 +93,12 @@ func TestAccAwsGlobalAcceleratorAccelerator_attributes(t *testing.T) {
 		CheckDestroy: testAccCheckGlobalAcceleratorAcceleratorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalAcceleratorAccelerator_attributes(rInt),
+				Config: testAccGlobalAcceleratorAccelerator_attributes(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalAcceleratorAcceleratorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "attributes.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "attributes.0.flow_logs_enabled", "true"),
-					resource.TestMatchResourceAttr(resourceName, "attributes.0.flow_logs_s3_bucket", regexp.MustCompile("tf-.*")),
+					resource.TestCheckResourceAttrPair(resourceName, "attributes.0.flow_logs_s3_bucket", s3BucketResourceName, "bucket"),
 					resource.TestCheckResourceAttr(resourceName, "attributes.0.flow_logs_s3_prefix", "flow-logs/"),
 				),
 			},
@@ -139,34 +157,24 @@ func testAccCheckGlobalAcceleratorAcceleratorDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccGlobalAcceleratorAccelerator_basic(rInt int) string {
+func testAccGlobalAcceleratorAccelerator_basic(rName string, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_globalaccelerator_accelerator" "example" {
-  name            = "tf-%d"
+  name            = "%s"
   ip_address_type = "IPV4"
-  enabled         = false
+  enabled         = %t
 }
-`, rInt)
+`, rName, enabled)
 }
 
-func testAccGlobalAcceleratorAccelerator_update(rInt int) string {
-	return fmt.Sprintf(`
-resource "aws_globalaccelerator_accelerator" "example" {
-  name            = "tfx-%d"
-  ip_address_type = "IPV4"
-  enabled         = false
-}
-`, rInt)
-}
-
-func testAccGlobalAcceleratorAccelerator_attributes(rInt int) string {
+func testAccGlobalAcceleratorAccelerator_attributes(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "example" {
   bucket_prefix = "tf-globalaccelerator-accelerator-"
 }
 
 resource "aws_globalaccelerator_accelerator" "example" {
-  name            = "tf-%d"
+  name            = "%s"
   ip_address_type = "IPV4"
   enabled         = false
 
@@ -176,5 +184,5 @@ resource "aws_globalaccelerator_accelerator" "example" {
     flow_logs_s3_prefix = "flow-logs/"
   }
 }
-`, rInt)
+`, rName)
 }

@@ -6,7 +6,7 @@ description: |-
   Manages a Glue Trigger resource.
 ---
 
-# aws_glue_trigger
+# Resource: aws_glue_trigger
 
 Manages a Glue Trigger resource.
 

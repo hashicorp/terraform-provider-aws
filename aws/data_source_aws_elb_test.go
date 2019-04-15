@@ -41,7 +41,7 @@ resource "aws_elb" "elb_test" {
   name            = "%[1]s"
   internal        = true
   security_groups = ["${aws_security_group.elb_test.id}"]
-  subnets         = ["${aws_subnet.elb_test.*.id}"]
+  subnets         = ["${aws_subnet.elb_test.0.id}", "${aws_subnet.elb_test.1.id}"]
 
   idle_timeout = 30
 
@@ -93,7 +93,7 @@ resource "aws_security_group" "elb_test" {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    self        = true
   }
 
   egress {

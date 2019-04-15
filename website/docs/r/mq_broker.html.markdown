@@ -6,7 +6,7 @@ description: |-
   Provides an MQ Broker Resource
 ---
 
-# aws_mq_broker
+# Resource: aws_mq_broker
 
 Provides an MQ Broker Resource. This resources also manages users for the broker.
 
@@ -67,6 +67,7 @@ The following arguments are supported:
 * `maintenance_window_start_time` - (Optional) Maintenance window start time. See below.
 * `logs` - (Optional) Logging configuration of the broker. See below.
 * `user` - (Optional) The list of all ActiveMQ usernames for the specified broker. See below.
+* `tags` - (Optional) A mapping of tags to assign to the resource.
 
 ### Nested Fields
 

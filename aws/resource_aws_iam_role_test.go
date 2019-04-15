@@ -2,10 +2,10 @@ package aws
 
 import (
 	"fmt"
+	"log"
+	"regexp"
 	"strings"
 	"testing"
-
-	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -14,6 +14,112 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_iam_role", &resource.Sweeper{
+		Name: "aws_iam_role",
+		Dependencies: []string{
+			"aws_batch_compute_environment",
+			"aws_cognito_user_pool",
+			"aws_config_configuration_aggregator",
+			"aws_config_configuration_recorder",
+			"aws_datasync_location_s3",
+			"aws_dax_cluster",
+			"aws_db_instance",
+			"aws_db_option_group",
+			"aws_eks_cluster",
+			"aws_elastic_beanstalk_application",
+			"aws_elastic_beanstalk_environment",
+			"aws_elasticsearch_domain",
+			"aws_glue_crawler",
+			"aws_glue_job",
+			"aws_instance",
+			"aws_lambda_function",
+			"aws_launch_configuration",
+			"aws_redshift_cluster",
+			"aws_spot_fleet_request",
+		},
+		F: testSweepIamRoles,
+	})
+}
+
+func testSweepIamRoles(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).iamconn
+	prefixes := []string{
+		"ecs_instance_role",
+		"ecs_tf",
+		"EMR_AutoScaling_DefaultRole",
+		"iam_emr",
+		"terraform-",
+		"test_role",
+		"tf",
+	}
+	roles := make([]*iam.Role, 0)
+
+	err = conn.ListRolesPages(&iam.ListRolesInput{}, func(page *iam.ListRolesOutput, lastPage bool) bool {
+		for _, role := range page.Roles {
+			for _, prefix := range prefixes {
+				if strings.HasPrefix(aws.StringValue(role.RoleName), prefix) {
+					roles = append(roles, role)
+					break
+				}
+			}
+		}
+
+		return !lastPage
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping IAM Role sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("Error retrieving IAM Roles: %s", err)
+	}
+
+	if len(roles) == 0 {
+		log.Print("[DEBUG] No IAM Roles to sweep")
+		return nil
+	}
+
+	for _, role := range roles {
+		rolename := aws.StringValue(role.RoleName)
+		log.Printf("[DEBUG] Deleting IAM Role: %s", rolename)
+
+		if err := deleteAwsIamRoleInstanceProfiles(conn, rolename); err != nil {
+			return fmt.Errorf("error deleting IAM Role (%s) instance profiles: %s", rolename, err)
+		}
+
+		if err := deleteAwsIamRolePolicyAttachments(conn, rolename); err != nil {
+			return fmt.Errorf("error deleting IAM Role (%s) policy attachments: %s", rolename, err)
+		}
+
+		if err := deleteAwsIamRolePolicies(conn, rolename); err != nil {
+			return fmt.Errorf("error deleting IAM Role (%s) policies: %s", rolename, err)
+		}
+
+		input := &iam.DeleteRoleInput{
+			RoleName: aws.String(rolename),
+		}
+
+		_, err := conn.DeleteRole(input)
+
+		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+			continue
+		}
+
+		if err != nil {
+			return fmt.Errorf("Error deleting IAM Role (%s): %s", rolename, err)
+		}
+	}
+
+	return nil
+}
 
 func TestAccAWSIAMRole_importBasic(t *testing.T) {
 	resourceName := "aws_iam_role.role"

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -49,10 +48,7 @@ func testSweepDataSyncAgents(region string) error {
 
 		for _, agent := range output.Agents {
 			name := aws.StringValue(agent.Name)
-			if !strings.HasPrefix(name, "tf-acc-test-") {
-				log.Printf("[INFO] Skipping DataSync Agent: %s", name)
-				continue
-			}
+
 			log.Printf("[INFO] Deleting DataSync Agent: %s", name)
 			input := &datasync.DeleteAgentInput{
 				AgentArn: agent.AgentArn,
@@ -84,7 +80,7 @@ func TestAccAWSDataSyncAgent_basic(t *testing.T) {
 	resourceName := "aws_datasync_agent.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataSync(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDataSyncAgentDestroy,
 		Steps: []resource.TestStep{
@@ -112,7 +108,7 @@ func TestAccAWSDataSyncAgent_disappears(t *testing.T) {
 	resourceName := "aws_datasync_agent.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataSync(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDataSyncAgentDestroy,
 		Steps: []resource.TestStep{
@@ -135,7 +131,7 @@ func TestAccAWSDataSyncAgent_AgentName(t *testing.T) {
 	resourceName := "aws_datasync_agent.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataSync(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDataSyncAgentDestroy,
 		Steps: []resource.TestStep{
@@ -168,7 +164,7 @@ func TestAccAWSDataSyncAgent_Tags(t *testing.T) {
 	resourceName := "aws_datasync_agent.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataSync(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDataSyncAgentDestroy,
 		Steps: []resource.TestStep{

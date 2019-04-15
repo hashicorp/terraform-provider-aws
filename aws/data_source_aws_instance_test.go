@@ -22,6 +22,7 @@ func TestAccAWSInstanceDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.aws_instance.web-instance", "tags.%", "1"),
 					resource.TestCheckResourceAttr("data.aws_instance.web-instance", "instance_type", "m1.small"),
 					resource.TestMatchResourceAttr("data.aws_instance.web-instance", "arn", regexp.MustCompile(`^arn:[^:]+:ec2:[^:]+:\d{12}:instance/i-.+`)),
+					resource.TestCheckNoResourceAttr("data.aws_instance.web-instance", "user_data_base64"),
 				),
 			},
 		},
@@ -285,6 +286,70 @@ func TestAccAWSInstanceDataSource_getPasswordData_falseToTrue(t *testing.T) {
 	})
 }
 
+func TestAccAWSInstanceDataSource_GetUserData(t *testing.T) {
+	dataSourceName := "data.aws_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceDataSourceConfigGetUserData(true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "get_user_data", "true"),
+					resource.TestCheckResourceAttr(dataSourceName, "user_data_base64", "IyEvYmluL2Jhc2gKCmVjaG8gImhlbGxvIHdvcmxkIgo="),
+				),
+			},
+			{
+				Config: testAccInstanceDataSourceConfigGetUserData(false),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "get_user_data", "false"),
+					resource.TestCheckNoResourceAttr(dataSourceName, "user_data_base64"),
+				),
+			},
+			{
+				Config: testAccInstanceDataSourceConfigGetUserData(true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "get_user_data", "true"),
+					resource.TestCheckResourceAttr(dataSourceName, "user_data_base64", "IyEvYmluL2Jhc2gKCmVjaG8gImhlbGxvIHdvcmxkIgo="),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSInstanceDataSource_GetUserData_NoUserData(t *testing.T) {
+	dataSourceName := "data.aws_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceDataSourceConfigGetUserDataNoUserData(true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "get_user_data", "true"),
+					resource.TestCheckNoResourceAttr(dataSourceName, "user_data_base64"),
+				),
+			},
+			{
+				Config: testAccInstanceDataSourceConfigGetUserDataNoUserData(false),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "get_user_data", "false"),
+					resource.TestCheckNoResourceAttr(dataSourceName, "user_data_base64"),
+				),
+			},
+			{
+				Config: testAccInstanceDataSourceConfigGetUserDataNoUserData(true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "get_user_data", "true"),
+					resource.TestCheckNoResourceAttr(dataSourceName, "user_data_base64"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSInstanceDataSource_creditSpecification(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -336,7 +401,7 @@ resource "aws_instance" "web" {
 }
 
 data "aws_instance" "web-instance" {
-  instance_tags {
+  instance_tags = {
     Name = "${aws_instance.web.tags["Name"]}"
     TestSeed = "%d"
   }
@@ -576,7 +641,7 @@ resource "aws_security_group" "tf_test_foo" {
     protocol = "icmp"
     from_port = -1
     to_port = -1
-    cidr_blocks = ["0.0.0.0/0"]
+    self = true
   }
 }
 
@@ -618,7 +683,7 @@ resource "aws_security_group" "tf_test_foo" {
     protocol = "icmp"
     from_port = -1
     to_port = -1
-    cidr_blocks = ["0.0.0.0/0"]
+    self = true
   }
 }
 
@@ -648,11 +713,7 @@ func testAccInstanceDataSourceConfig_getPasswordData(val bool, rInt int) string 
 	# Find latest Microsoft Windows Server 2016 Core image (Amazon deletes old ones)
 	data "aws_ami" "win2016core" {
 		most_recent = true
-
-		filter {
-			name = "owner-alias"
-			values = ["amazon"]
-		}
+		owners      = ["amazon"]
 
 		filter {
 			name = "name"
@@ -677,6 +738,103 @@ func testAccInstanceDataSourceConfig_getPasswordData(val bool, rInt int) string 
 		get_password_data = %t
 	}
 	`, rInt, val)
+}
+
+func testAccInstanceDataSourceConfigGetUserData(getUserData bool) string {
+	return fmt.Sprintf(`
+data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name = "name"
+    values = ["amzn-ami-minimal-hvm-*"]
+  }
+  filter {
+    name = "root-device-type"
+    values = ["ebs"]
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "172.16.0.0/16"
+
+  tags = {
+    Name = "tf-acc-test-instance-datasource-get-user-data"
+  }
+}
+
+resource "aws_subnet" "test" {
+  cidr_block = "172.16.0.0/24"
+  vpc_id     = "${aws_vpc.test.id}"
+
+  tags = {
+    Name = "tf-acc-test-instance-datasource-get-user-data"
+  }
+}
+
+resource "aws_instance" "test" {
+  ami           = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+  instance_type = "t2.micro"
+  subnet_id     = "${aws_subnet.test.id}"
+  user_data     = <<EUD
+#!/bin/bash
+
+echo "hello world"
+EUD
+}
+
+data "aws_instance" "test" {
+  get_user_data = %t
+  instance_id   = "${aws_instance.test.id}"
+}
+`, getUserData)
+}
+
+func testAccInstanceDataSourceConfigGetUserDataNoUserData(getUserData bool) string {
+	return fmt.Sprintf(`
+data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name = "name"
+    values = ["amzn-ami-minimal-hvm-*"]
+  }
+  filter {
+    name = "root-device-type"
+    values = ["ebs"]
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "172.16.0.0/16"
+
+  tags = {
+    Name = "tf-acc-test-instance-datasource-get-user-data"
+  }
+}
+
+resource "aws_subnet" "test" {
+  cidr_block = "172.16.0.0/24"
+  vpc_id     = "${aws_vpc.test.id}"
+
+  tags = {
+    Name = "tf-acc-test-instance-datasource-get-user-data"
+  }
+}
+
+resource "aws_instance" "test" {
+  ami           = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+  instance_type = "t2.micro"
+  subnet_id     = "${aws_subnet.test.id}"
+}
+
+data "aws_instance" "test" {
+  get_user_data = %t
+  instance_id   = "${aws_instance.test.id}"
+}
+`, getUserData)
 }
 
 const testAccInstanceDataSourceConfig_creditSpecification = `

@@ -71,9 +71,10 @@ func resourceAwsSecurityGroup() *schema.Resource {
 			},
 
 			"ingress": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
+				Type:       schema.TypeSet,
+				Optional:   true,
+				Computed:   true,
+				ConfigMode: schema.SchemaConfigModeAttr,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"from_port": {
@@ -140,9 +141,10 @@ func resourceAwsSecurityGroup() *schema.Resource {
 			},
 
 			"egress": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
+				Type:       schema.TypeSet,
+				Optional:   true,
+				Computed:   true,
+				ConfigMode: schema.SchemaConfigModeAttr,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"from_port": {
@@ -1137,7 +1139,7 @@ func matchRules(rType string, local []interface{}, remote []map[string]interface
 		}
 
 		if _, ok := r["self"]; ok {
-			if r["self"].(bool) == true {
+			if r["self"].(bool) {
 				lenSGs++
 			}
 		}

@@ -6,7 +6,7 @@ description: |-
   Provides an IAM role.
 ---
 
-# aws_iam_role
+# Resource: aws_iam_role
 
 Provides an IAM role.
 
@@ -63,9 +63,10 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The Amazon Resource Name (ARN) specifying the role.
 * `create_date` - The creation date of the IAM role.
-* `unique_id` - The stable and unique string identifying the role.
-* `name` - The name of the role.
 * `description` - The description of the role.
+* `id` - The name of the role.
+* `name` - The name of the role.
+* `unique_id` - The stable and unique string identifying the role.
 
 ## Example of Using Data Source for Assume Role Policy
 

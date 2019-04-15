@@ -6,7 +6,7 @@ description: |-
   Provides a resource to create a VPC Internet Gateway.
 ---
 
-# aws_internet_gateway
+# Resource: aws_internet_gateway
 
 Provides a resource to create a VPC Internet Gateway.
 

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -19,6 +20,15 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 		Read:   resourceAwsKinesisAnalyticsApplicationRead,
 		Update: resourceAwsKinesisAnalyticsApplicationUpdate,
 		Delete: resourceAwsKinesisAnalyticsApplicationDelete,
+
+		Importer: &schema.ResourceImporter{
+			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				arns := strings.Split(d.Id(), ":")
+				name := strings.Replace(arns[len(arns)-1], "application/", "", 1)
+				d.Set("name", name)
+				return []*schema.ResourceData{d}, nil
+			},
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -569,16 +579,29 @@ func resourceAwsKinesisAnalyticsApplicationCreate(d *schema.ResourceData, meta i
 		createOpts.Inputs = []*kinesisanalytics.Input{inputs}
 	}
 
-	if v, ok := d.GetOk("outputs"); ok {
-		o := v.([]interface{})[0].(map[string]interface{})
-		outputs := expandKinesisAnalyticsOutputs(o)
-		createOpts.Outputs = []*kinesisanalytics.Output{outputs}
+	if v := d.Get("outputs").([]interface{}); len(v) > 0 {
+		outputs := make([]*kinesisanalytics.Output, 0)
+		for _, o := range v {
+			output := expandKinesisAnalyticsOutputs(o.(map[string]interface{}))
+			outputs = append(outputs, output)
+		}
+		createOpts.Outputs = outputs
 	}
 
+	// Retry for IAM eventual consistency
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		output, err := conn.CreateApplication(createOpts)
 		if err != nil {
+			// Kinesis Stream: https://github.com/terraform-providers/terraform-provider-aws/issues/7032
 			if isAWSErr(err, kinesisanalytics.ErrCodeInvalidArgumentException, "Kinesis Analytics service doesn't have sufficient privileges") {
+				return resource.RetryableError(err)
+			}
+			// Kinesis Firehose: https://github.com/terraform-providers/terraform-provider-aws/issues/7394
+			if isAWSErr(err, kinesisanalytics.ErrCodeInvalidArgumentException, "Kinesis Analytics doesn't have sufficient privileges") {
+				return resource.RetryableError(err)
+			}
+			// InvalidArgumentException: Given IAM role arn : arn:aws:iam::123456789012:role/xxx does not provide Invoke permissions on the Lambda resource : arn:aws:lambda:us-west-2:123456789012:function:yyy
+			if isAWSErr(err, kinesisanalytics.ErrCodeInvalidArgumentException, "does not provide Invoke permissions on the Lambda resource") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -679,6 +702,7 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 					CurrentApplicationVersionId: aws.Int64(int64(version)),
 					CloudWatchLoggingOption:     cloudwatchLoggingOption,
 				}
+				// Retry for IAM eventual consistency
 				err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 					_, err := conn.AddApplicationCloudWatchLoggingOption(addOpts)
 					if err != nil {
@@ -706,10 +730,15 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 					CurrentApplicationVersionId: aws.Int64(int64(version)),
 					Input:                       input,
 				}
+				// Retry for IAM eventual consistency
 				err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 					_, err := conn.AddApplicationInput(addOpts)
 					if err != nil {
 						if isAWSErr(err, kinesisanalytics.ErrCodeInvalidArgumentException, "Kinesis Analytics service doesn't have sufficient privileges") {
+							return resource.RetryableError(err)
+						}
+						// InvalidArgumentException: Given IAM role arn : arn:aws:iam::123456789012:role/xxx does not provide Invoke permissions on the Lambda resource : arn:aws:lambda:us-west-2:123456789012:function:yyy
+						if isAWSErr(err, kinesisanalytics.ErrCodeInvalidArgumentException, "does not provide Invoke permissions on the Lambda resource") {
 							return resource.RetryableError(err)
 						}
 						return resource.NonRetryableError(err)
@@ -733,10 +762,15 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 					CurrentApplicationVersionId: aws.Int64(int64(version)),
 					Output:                      output,
 				}
+				// Retry for IAM eventual consistency
 				err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 					_, err := conn.AddApplicationOutput(addOpts)
 					if err != nil {
 						if isAWSErr(err, kinesisanalytics.ErrCodeInvalidArgumentException, "Kinesis Analytics service doesn't have sufficient privileges") {
+							return resource.RetryableError(err)
+						}
+						// InvalidArgumentException: Given IAM role arn : arn:aws:iam::123456789012:role/xxx does not provide Invoke permissions on the Lambda resource : arn:aws:lambda:us-west-2:123456789012:function:yyy
+						if isAWSErr(err, kinesisanalytics.ErrCodeInvalidArgumentException, "does not provide Invoke permissions on the Lambda resource") {
 							return resource.RetryableError(err)
 						}
 						return resource.NonRetryableError(err)
@@ -762,6 +796,7 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 					CurrentApplicationVersionId: aws.Int64(int64(version)),
 					ReferenceDataSource:         referenceData,
 				}
+				// Retry for IAM eventual consistency
 				err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 					_, err := conn.AddApplicationReferenceDataSource(addOpts)
 					if err != nil {
@@ -1387,45 +1422,43 @@ func flattenKinesisAnalyticsInputs(inputs []*kinesisanalytics.InputDescription) 
 func flattenKinesisAnalyticsOutputs(outputs []*kinesisanalytics.OutputDescription) []interface{} {
 	s := []interface{}{}
 
-	if len(outputs) > 0 {
-		id := outputs[0]
-
+	for _, o := range outputs {
 		output := map[string]interface{}{
-			"id":   aws.StringValue(id.OutputId),
-			"name": aws.StringValue(id.Name),
+			"id":   aws.StringValue(o.OutputId),
+			"name": aws.StringValue(o.Name),
 		}
 
-		if id.KinesisFirehoseOutputDescription != nil {
+		if o.KinesisFirehoseOutputDescription != nil {
 			output["kinesis_firehose"] = []interface{}{
 				map[string]interface{}{
-					"resource_arn": aws.StringValue(id.KinesisFirehoseOutputDescription.ResourceARN),
-					"role_arn":     aws.StringValue(id.KinesisFirehoseOutputDescription.RoleARN),
+					"resource_arn": aws.StringValue(o.KinesisFirehoseOutputDescription.ResourceARN),
+					"role_arn":     aws.StringValue(o.KinesisFirehoseOutputDescription.RoleARN),
 				},
 			}
 		}
 
-		if id.KinesisStreamsOutputDescription != nil {
+		if o.KinesisStreamsOutputDescription != nil {
 			output["kinesis_stream"] = []interface{}{
 				map[string]interface{}{
-					"resource_arn": aws.StringValue(id.KinesisStreamsOutputDescription.ResourceARN),
-					"role_arn":     aws.StringValue(id.KinesisStreamsOutputDescription.RoleARN),
+					"resource_arn": aws.StringValue(o.KinesisStreamsOutputDescription.ResourceARN),
+					"role_arn":     aws.StringValue(o.KinesisStreamsOutputDescription.RoleARN),
 				},
 			}
 		}
 
-		if id.LambdaOutputDescription != nil {
+		if o.LambdaOutputDescription != nil {
 			output["lambda"] = []interface{}{
 				map[string]interface{}{
-					"resource_arn": aws.StringValue(id.LambdaOutputDescription.ResourceARN),
-					"role_arn":     aws.StringValue(id.LambdaOutputDescription.RoleARN),
+					"resource_arn": aws.StringValue(o.LambdaOutputDescription.ResourceARN),
+					"role_arn":     aws.StringValue(o.LambdaOutputDescription.RoleARN),
 				},
 			}
 		}
 
-		if id.DestinationSchema != nil {
+		if o.DestinationSchema != nil {
 			output["schema"] = []interface{}{
 				map[string]interface{}{
-					"record_format_type": aws.StringValue(id.DestinationSchema.RecordFormatType),
+					"record_format_type": aws.StringValue(o.DestinationSchema.RecordFormatType),
 				},
 			}
 		}

@@ -6,7 +6,7 @@ description: |-
   Manages a Glue Security Configuration
 ---
 
-# aws_glue_security_configuration
+# Resource: aws_glue_security_configuration
 
 Manages a Glue Security Configuration.
 

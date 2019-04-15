@@ -6,7 +6,7 @@ description: |-
   Provides a Cognito User Group resource.
 ---
 
-# aws_cognito_user_group
+# Resource: aws_cognito_user_group
 
 Provides a Cognito User Group resource.
 

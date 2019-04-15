@@ -6,7 +6,7 @@ description: |-
   Provides an RDS Cluster Resource Instance
 ---
 
-# aws_rds_cluster_instance
+# Resource: aws_rds_cluster_instance
 
 Provides an RDS Cluster Resource Instance. A Cluster Instance Resource defines
 attributes that are specific to a single instance in a [RDS Cluster][3],
@@ -50,7 +50,7 @@ the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/referenc
 The following arguments are supported:
 
 * `identifier` - (Optional, Forces new resource) The indentifier for the RDS instance, if omitted, Terraform will assign a random, unique identifier.
-* `identifier_prefix` - (Optional, Forces new resource) Creates a unique identifier beginning with the specified prefix. Conflicts with `identifer`.
+* `identifier_prefix` - (Optional, Forces new resource) Creates a unique identifier beginning with the specified prefix. Conflicts with `identifier`.
 * `cluster_identifier` - (Required) The identifier of the [`aws_rds_cluster`](/docs/providers/aws/r/rds_cluster.html) in which to launch this instance.
 * `engine` - (Optional) The name of the database engine to be used for the RDS instance. Defaults to `aurora`. Valid Values: `aurora`, `aurora-mysql`, `aurora-postgresql`.
 For information on the difference between the available Aurora MySQL engines

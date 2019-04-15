@@ -89,7 +89,7 @@ func TestAccDataSourceAWSLBListener_https(t *testing.T) {
 					resource.TestCheckResourceAttr("data.aws_lb_listener.front_end", "port", "443"),
 					resource.TestCheckResourceAttr("data.aws_lb_listener.front_end", "default_action.#", "1"),
 					resource.TestCheckResourceAttr("data.aws_lb_listener.front_end", "default_action.0.type", "forward"),
-					resource.TestCheckResourceAttr("data.aws_lb_listener.front_end", "ssl_policy", "ELBSecurityPolicy-2015-05"),
+					resource.TestCheckResourceAttr("data.aws_lb_listener.front_end", "ssl_policy", "ELBSecurityPolicy-2016-08"),
 					resource.TestCheckResourceAttrSet("data.aws_lb_listener.from_lb_and_port", "load_balancer_arn"),
 					resource.TestCheckResourceAttrSet("data.aws_lb_listener.from_lb_and_port", "arn"),
 					resource.TestCheckResourceAttrSet("data.aws_lb_listener.from_lb_and_port", "default_action.0.target_group_arn"),
@@ -98,7 +98,7 @@ func TestAccDataSourceAWSLBListener_https(t *testing.T) {
 					resource.TestCheckResourceAttr("data.aws_lb_listener.from_lb_and_port", "port", "443"),
 					resource.TestCheckResourceAttr("data.aws_lb_listener.from_lb_and_port", "default_action.#", "1"),
 					resource.TestCheckResourceAttr("data.aws_lb_listener.from_lb_and_port", "default_action.0.type", "forward"),
-					resource.TestCheckResourceAttr("data.aws_lb_listener.from_lb_and_port", "ssl_policy", "ELBSecurityPolicy-2015-05"),
+					resource.TestCheckResourceAttr("data.aws_lb_listener.from_lb_and_port", "ssl_policy", "ELBSecurityPolicy-2016-08"),
 				),
 			},
 		},
@@ -122,7 +122,7 @@ resource "aws_lb" "alb_test" {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id}"]
+  subnets         = ["${aws_subnet.alb_test.0.id}", "${aws_subnet.alb_test.1.id}"]
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -186,7 +186,7 @@ resource "aws_security_group" "alb_test" {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    self        = true
   }
 
   egress {
@@ -241,7 +241,7 @@ resource "aws_alb" "alb_test" {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id}"]
+  subnets         = ["${aws_subnet.alb_test.0.id}", "${aws_subnet.alb_test.1.id}"]
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -305,7 +305,7 @@ resource "aws_security_group" "alb_test" {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    self        = true
   }
 
   egress {
@@ -336,7 +336,7 @@ resource "aws_lb_listener" "front_end" {
   load_balancer_arn = "${aws_lb.alb_test.id}"
   protocol          = "HTTPS"
   port              = "443"
-  ssl_policy        = "ELBSecurityPolicy-2015-05"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
   certificate_arn   = "${aws_iam_server_certificate.test_cert.arn}"
 
   default_action {
@@ -349,7 +349,7 @@ resource "aws_lb" "alb_test" {
   name            = "%s"
   internal        = false
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id}"]
+  subnets         = ["${aws_subnet.alb_test.0.id}", "${aws_subnet.alb_test.1.id}"]
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -424,7 +424,7 @@ resource "aws_security_group" "alb_test" {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    self        = true
   }
 
   egress {

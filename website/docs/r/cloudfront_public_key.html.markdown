@@ -6,7 +6,7 @@ description: |-
   Provides a CloudFront Public Key which you add to CloudFront to use with features like field-level encryption.
 ---
 
-# aws_cloudfront_public_key
+# Resource: aws_cloudfront_public_key
 
 ## Example Usage
 

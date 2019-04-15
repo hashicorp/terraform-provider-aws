@@ -6,7 +6,7 @@ description: |-
   Provides a Pinpoint APNs Channel resource.
 ---
 
-# aws_pinpoint_apns_channel
+# Resource: aws_pinpoint_apns_channel
 
 Provides a Pinpoint APNs Channel resource.
 

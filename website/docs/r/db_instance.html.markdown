@@ -6,7 +6,7 @@ description: |-
   Provides an RDS instance resource.
 ---
 
-# aws_db_instance
+# Resource: aws_db_instance
 
 Provides an RDS instance resource.  A DB instance is an isolated database
 environment in the cloud.  A DB instance can contain multiple user-created
@@ -38,7 +38,7 @@ about [DB Instance Class Types](https://docs.aws.amazon.com/AmazonRDS/latest/Use
 
 ```hcl
 resource "aws_db_instance" "default" {
-  allocated_storage    = 10
+  allocated_storage    = 20
   storage_type         = "gp2"
   engine               = "mysql"
   engine_version       = "5.7"
@@ -66,7 +66,6 @@ the change is asynchronously applied as soon as possible.
 are applied immediately, or during the next maintenance window. Default is
 `false`. See [Amazon RDS Documentation for more
 information.](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.DBInstance.Modifying.html)
-for more information.
 * `auto_minor_version_upgrade` - (Optional) Indicates that minor engine upgrades
 will be applied automatically to the DB instance during the maintenance window.
 Defaults to true.
@@ -81,9 +80,7 @@ encoding in Oracle instances. This can't be changed. See [Oracle Character Sets
 Supported in Amazon
 RDS](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Appendix.OracleCharacterSets.html)
 for more information.
-* `copy_tags_to_snapshot` – (Optional, boolean) On delete, copy all Instance
-`tags` to the final snapshot (if `final_snapshot_identifier` is specified).
-Default is `false`.
+* `copy_tags_to_snapshot` – (Optional, boolean) Copy all Instance `tags` to snapshots. Default is `false`.
 * `db_subnet_group_name` - (Optional) Name of [DB subnet group](/docs/providers/aws/r/db_subnet_group.html). DB instance will
 be created in the VPC associated with the DB subnet group. If unspecified, will
 be created in the `default` VPC, or in EC2 Classic, if available. When working
@@ -114,7 +111,7 @@ accounts is enabled.
 * `identifier` - (Optional, Forces new resource) The name of the RDS instance,
 if omitted, Terraform will assign a random, unique identifier.
 * `identifier_prefix` - (Optional, Forces new resource) Creates a unique
-identifier beginning with the specified prefix. Conflicts with `identifer`.
+identifier beginning with the specified prefix. Conflicts with `identifier`.
 * `instance_class` - (Required) The instance type of the RDS instance.
 * `iops` - (Optional) The amount of provisioned IOPS. Setting this implies a
 storage_type of "io1".

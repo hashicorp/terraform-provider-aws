@@ -6,7 +6,7 @@ description: |-
   Provides a VPC DHCP Options resource.
 ---
 
-# aws_vpc_dhcp_options
+# Resource: aws_vpc_dhcp_options
 
 Provides a VPC DHCP Options resource.
 

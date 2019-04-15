@@ -6,7 +6,7 @@ description: |-
   Provides an API Gateway Method Settings, e.g. logging or monitoring.
 ---
 
-# aws_api_gateway_method_settings
+# Resource: aws_api_gateway_method_settings
 
 Provides an API Gateway Method Settings, e.g. logging or monitoring.
 
@@ -60,7 +60,7 @@ resource "aws_api_gateway_integration" "test" {
   http_method = "${aws_api_gateway_method.test.http_method}"
   type        = "MOCK"
 
-  request_templates {
+  request_templates = {
     "application/xml" = <<EOF
 {
    "body" : $input.json('$')

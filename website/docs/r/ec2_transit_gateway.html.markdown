@@ -6,7 +6,7 @@ description: |-
   Manages an EC2 Transit Gateway
 ---
 
-# aws_ec2_transit_gateway
+# Resource: aws_ec2_transit_gateway
 
 Manages an EC2 Transit Gateway.
 
