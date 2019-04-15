@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
 )
 
@@ -719,13 +720,14 @@ func TestAccAWSCloudFrontDistribution_OrderedCacheBehavior_ForwardedValues_Heade
 
 func TestAccAWSCloudFrontDistribution_ViewerCertificate_AcmCertificateArn(t *testing.T) {
 	var distribution cloudfront.Distribution
+	var providers []*schema.Provider
 	resourceName := "aws_cloudfront_distribution.test"
 	retainOnDelete := testAccAWSCloudFrontDistributionRetainOnDeleteFromEnv()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProvidersWithTLS,
-		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories(&providers),
+		CheckDestroy:      testAccCheckCloudFrontDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCloudFrontDistributionConfigViewerCertificateAcmCertificateArn(retainOnDelete),
@@ -734,6 +736,7 @@ func TestAccAWSCloudFrontDistribution_ViewerCertificate_AcmCertificateArn(t *tes
 				),
 			},
 			{
+				Config:            testAccAWSCloudFrontDistributionConfigViewerCertificateAcmCertificateArn(retainOnDelete),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -749,13 +752,14 @@ func TestAccAWSCloudFrontDistribution_ViewerCertificate_AcmCertificateArn(t *tes
 // Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/7773
 func TestAccAWSCloudFrontDistribution_ViewerCertificate_AcmCertificateArn_ConflictsWithCloudFrontDefaultCertificate(t *testing.T) {
 	var distribution cloudfront.Distribution
+	var providers []*schema.Provider
 	resourceName := "aws_cloudfront_distribution.test"
 	retainOnDelete := testAccAWSCloudFrontDistributionRetainOnDeleteFromEnv()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProvidersWithTLS,
-		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories(&providers),
+		CheckDestroy:      testAccCheckCloudFrontDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCloudFrontDistributionConfigViewerCertificateAcmCertificateArnConflictsWithCloudFrontDefaultCertificate(retainOnDelete),
@@ -764,6 +768,7 @@ func TestAccAWSCloudFrontDistribution_ViewerCertificate_AcmCertificateArn_Confli
 				),
 			},
 			{
+				Config:            testAccAWSCloudFrontDistributionConfigViewerCertificateAcmCertificateArnConflictsWithCloudFrontDefaultCertificate(retainOnDelete),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -1093,7 +1098,6 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
 		bucket = "${aws_s3_bucket.s3_bucket_logs.id}.s3.amazonaws.com"
 		prefix = "myprefix"
 	}
-	aliases = [ "mysite.${var.rand_id}.example.com", "yoursite.${var.rand_id}.example.com" ]
 	default_cache_behavior {
 		allowed_methods = [ "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT" ]
 		cached_methods = [ "GET", "HEAD" ]
@@ -1141,7 +1145,6 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
 	}
 	enabled = true
 	default_root_object = "index.html"
-	aliases = [ "mysite.${var.rand_id}.example.com", "yoursite.${var.rand_id}.example.com" ]
 	default_cache_behavior {
 		allowed_methods = [ "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT" ]
 		cached_methods = [ "GET", "HEAD" ]
@@ -1193,7 +1196,6 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
 	}
 	enabled = true
 	default_root_object = "index.html"
-	aliases = [ "mysite.${var.rand_id}.example.com", "yoursite.${var.rand_id}.example.com" ]
 	default_cache_behavior {
 		allowed_methods = [ "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT" ]
 		cached_methods = [ "GET", "HEAD" ]
@@ -1255,7 +1257,6 @@ resource "aws_cloudfront_distribution" "custom_distribution" {
 		bucket = "${aws_s3_bucket.s3_bucket_logs.id}.s3.amazonaws.com"
 		prefix = "myprefix"
 	}
-	aliases = [ "mysite.${var.rand_id}.example.com", "*.yoursite.${var.rand_id}.example.com" ]
 	default_cache_behavior {
 		allowed_methods = [ "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT" ]
 		cached_methods = [ "GET", "HEAD" ]
@@ -1321,7 +1322,6 @@ resource "aws_cloudfront_distribution" "multi_origin_distribution" {
 		bucket = "${aws_s3_bucket.s3_bucket_logs.id}.s3.amazonaws.com"
 		prefix = "myprefix"
 	}
-	aliases = [ "mysite.${var.rand_id}.example.com", "*.yoursite.${var.rand_id}.example.com" ]
 	default_cache_behavior {
 		allowed_methods = [ "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT" ]
 		cached_methods = [ "GET", "HEAD" ]
@@ -1677,7 +1677,6 @@ resource "aws_cloudfront_distribution" "main" {
 	}
 	enabled = true
 	comment = "Some comment"
-	aliases = []
 	default_cache_behavior {
 		allowed_methods = [ "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT" ]
 		cached_methods = [ "GET", "HEAD" ]
@@ -2297,12 +2296,9 @@ resource "aws_cloudfront_distribution" "test" {
 `, retainOnDelete)
 }
 
+// CloudFront Distribution ACM Certificates must be created in us-east-1
 func testAccAWSCloudFrontDistributionConfigViewerCertificateAcmCertificateArnBase(commonName string) string {
-	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
-
+	return testAccUsEast1RegionProviderConfig() + fmt.Sprintf(`
 resource "tls_private_key" "test" {
   algorithm = "RSA"
 }
@@ -2325,6 +2321,8 @@ resource "tls_self_signed_cert" "test" {
 }
 
 resource "aws_acm_certificate" "test" {
+  provider = "aws.us-east-1"
+
   certificate_body = "${tls_self_signed_cert.test.cert_pem}"
   private_key      = "${tls_private_key.test.private_key_pem}"
 }
