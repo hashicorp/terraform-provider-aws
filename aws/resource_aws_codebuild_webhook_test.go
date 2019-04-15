@@ -156,6 +156,38 @@ func TestAccAWSCodeBuildWebhook_BranchFilter(t *testing.T) {
 	})
 }
 
+func TestAccAWSCodeBuildWebhook_FilterGroup(t *testing.T) {
+	var webhook codebuild.Webhook
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_codebuild_webhook.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildWebhookDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodeBuildWebhookConfig_FilterGroup(rName, "EVENT", "PUSH"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildWebhookExists(resourceName, &webhook),
+				),
+			},
+			{
+				Config: testAccAWSCodeBuildWebhookConfig_FilterGroup(rName, "EVENT", "PULL_REQUEST_CREATED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildWebhookExists(resourceName, &webhook),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"secret"},
+			},
+		},
+	})
+}
+
 func testAccCheckAWSCodeBuildWebhookDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).codebuildconn
 
@@ -272,4 +304,17 @@ resource "aws_codebuild_webhook" "test" {
   project_name  = "${aws_codebuild_project.test.name}"
 }
 `, branchFilter)
+}
+
+func testAccAWSCodeBuildWebhookConfig_FilterGroup(rName, filterType string, filterPattern string) string {
+	return fmt.Sprintf(testAccAWSCodeBuildProjectConfig_basic(rName)+`
+resource "aws_codebuild_webhook" "test" {
+	project_name = "${aws_codebuild_project.test.name}"
+
+	filter_group {
+		type  = "%s"
+		pattern = "%s"
+	}
+}
+`, filterType, filterPattern)
 }
