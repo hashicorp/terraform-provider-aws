@@ -3,7 +3,7 @@ package aws
 import (
 	"context"
 	"errors"
-	otaws "github.com/opentracing-contrib/go-aws-sdk"
+	"github.com/opentracing-contrib/go-aws-sdk"
 	"github.com/opentracing/opentracing-go"
 	"github.com/uber/jaeger-client-go"
 	"github.com/uber/jaeger-client-go/transport/zipkin"

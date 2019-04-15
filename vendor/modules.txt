@@ -456,6 +456,12 @@ github.com/nbutton23/zxcvbn-go/frequency
 github.com/nbutton23/zxcvbn-go/data
 # github.com/oklog/run v1.0.0
 github.com/oklog/run
+# github.com/opentracing-contrib/go-aws-sdk v0.0.0-20190205132030-9c29407076c0
+github.com/opentracing-contrib/go-aws-sdk
+# github.com/opentracing/opentracing-go v1.1.0
+github.com/opentracing/opentracing-go
+github.com/opentracing/opentracing-go/ext
+github.com/opentracing/opentracing-go/log
 # github.com/pelletier/go-toml v1.1.0
 github.com/pelletier/go-toml
 # github.com/pkg/errors v0.8.0
@@ -488,6 +494,21 @@ github.com/spf13/viper
 github.com/terraform-providers/terraform-provider-template/template
 # github.com/terraform-providers/terraform-provider-tls v1.2.0
 github.com/terraform-providers/terraform-provider-tls/tls
+# github.com/uber/jaeger-client-go v2.16.0+incompatible
+github.com/uber/jaeger-client-go
+github.com/uber/jaeger-client-go/transport/zipkin
+github.com/uber/jaeger-client-go/internal/baggage
+github.com/uber/jaeger-client-go/internal/spanlog
+github.com/uber/jaeger-client-go/internal/throttler
+github.com/uber/jaeger-client-go/log
+github.com/uber/jaeger-client-go/thrift
+github.com/uber/jaeger-client-go/thrift-gen/jaeger
+github.com/uber/jaeger-client-go/thrift-gen/sampling
+github.com/uber/jaeger-client-go/thrift-gen/zipkincore
+github.com/uber/jaeger-client-go/utils
+github.com/uber/jaeger-client-go/thrift-gen/agent
+# github.com/uber/jaeger-lib v2.0.0+incompatible
+github.com/uber/jaeger-lib/metrics
 # github.com/ulikunitz/xz v0.5.4
 github.com/ulikunitz/xz
 github.com/ulikunitz/xz/internal/xlog
