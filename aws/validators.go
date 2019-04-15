@@ -118,17 +118,8 @@ func validateTransferServerID(v interface{}, k string) (ws []string, errors []er
 func validateTransferUserName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	// https://docs.aws.amazon.com/transfer/latest/userguide/API_CreateUser.html
-	if regexp.MustCompile(`[^0-9a-zA-Z_-]`).MatchString(value) {
-		errors = append(errors, fmt.Errorf("%q can only contain alphanumeric characters, underscores, and hyphens", k))
-	}
-	if len(value) < 3 {
-		errors = append(errors, fmt.Errorf("%q must be at least 3 characters", k))
-	}
-	if len(value) > 32 {
-		errors = append(errors, fmt.Errorf("%q cannot be more than 32 characters", k))
-	}
-	if regexp.MustCompile(`^-`).MatchString(value) {
-		errors = append(errors, fmt.Errorf("%q cannot begin with a hyphen", k))
+	if !regexp.MustCompile(`^[a-zA-Z0-9_][a-zA-Z0-9_-]{2,31}$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf("Invalid %q: must be between 3 and 32 alphanumeric or special characters hyphen and underscore. However, %q cannot begin with a hyphen", k, k))
 	}
 	return
 }

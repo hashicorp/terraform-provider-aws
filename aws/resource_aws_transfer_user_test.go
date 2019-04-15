@@ -133,19 +133,19 @@ func TestAccAWSTransferUserName_validation(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAWSTransferUserName_validation("!@#$%^"),
-				ExpectError: regexp.MustCompile(`"user_name" can only contain alphanumeric characters, underscores, and hyphens`),
+				ExpectError: regexp.MustCompile(`Invalid "user_name": must be between 3 and 32 alphanumeric or special characters hyphen and underscore. However, "user_name" cannot begin with a hyphen`),
 			},
 			{
 				Config:      testAccAWSTransferUserName_validation(acctest.RandString(2)),
-				ExpectError: regexp.MustCompile(`"user_name" must be at least 3 characters`),
+				ExpectError: regexp.MustCompile(`Invalid "user_name": must be between 3 and 32 alphanumeric or special characters hyphen and underscore. However, "user_name" cannot begin with a hyphen`),
 			},
 			{
 				Config:      testAccAWSTransferUserName_validation(acctest.RandString(33)),
-				ExpectError: regexp.MustCompile(`"user_name" cannot be more than 32 characters`),
+				ExpectError: regexp.MustCompile(`Invalid "user_name": must be between 3 and 32 alphanumeric or special characters hyphen and underscore. However, "user_name" cannot begin with a hyphen`),
 			},
 			{
 				Config:      testAccAWSTransferUserName_validation("-abcdef"),
-				ExpectError: regexp.MustCompile(`"user_name" cannot begin with a hyphen`),
+				ExpectError: regexp.MustCompile(`Invalid "user_name": must be between 3 and 32 alphanumeric or special characters hyphen and underscore. However, "user_name" cannot begin with a hyphen`),
 			},
 			{
 				Config:             testAccAWSTransferUserName_validation("valid_username"),
@@ -293,10 +293,34 @@ resource "aws_transfer_user" "foo" {
 
 func testAccAWSTransferUserName_validation(rName string) string {
 	return fmt.Sprintf(`
+resource "aws_transfer_server" "foo" {
+	identity_provider_type = "SERVICE_MANAGED"
+	tags = {
+		NAME     = "tf-acc-test-transfer-server"
+	}
+}
 resource "aws_transfer_user" "foo" {
-    server_id      = "s-123456abcdeffffff"
+    server_id      = "${aws_transfer_server.foo.id}"
     user_name      = "%s"
-    role           = "arn:aws:iam::123456789012:role/foo"
+    role           = "${aws_iam_role.foo.arn}"
+}
+resource "aws_iam_role" "foo" {
+	name = "tf-test-transfer-user-iam-role"
+
+	assume_role_policy = <<EOF
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+		"Effect": "Allow",
+		"Principal": {
+			"Service": "transfer.amazonaws.com"
+		},
+		"Action": "sts:AssumeRole"
+		}
+	]
+}
+EOF
 }
 `, rName)
 }
