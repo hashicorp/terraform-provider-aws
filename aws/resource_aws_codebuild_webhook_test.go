@@ -170,19 +170,27 @@ func TestAccAWSCodeBuildWebhook_FilterGroup(t *testing.T) {
 				Config: testAccAWSCodeBuildWebhookConfig_FilterGroup(rName, "EVENT", "PUSH"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildWebhookExists(resourceName, &webhook),
+					resource.TestCheckResourceAttr(resourceName, "filter_group.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "filter_group.3033132000.exclude_matched_pattern", "false"),
+					resource.TestCheckResourceAttr(resourceName, "filter_group.3033132000.pattern", "PUSH"),
+					resource.TestCheckResourceAttr(resourceName, "filter_group.3033132000.type", "EVENT"),
+					resource.TestCheckResourceAttr(resourceName, "filter_group.178477371.exclude_matched_pattern", "false"),
+					resource.TestCheckResourceAttr(resourceName, "filter_group.178477371.pattern", "refs/heads/master"),
+					resource.TestCheckResourceAttr(resourceName, "filter_group.178477371.type", "HEAD_REF"),
 				),
 			},
 			{
 				Config: testAccAWSCodeBuildWebhookConfig_FilterGroup(rName, "EVENT", "PULL_REQUEST_CREATED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildWebhookExists(resourceName, &webhook),
+					resource.TestCheckResourceAttr(resourceName, "filter_group.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "filter_group.2768903781.exclude_matched_pattern", "false"),
+					resource.TestCheckResourceAttr(resourceName, "filter_group.2768903781.pattern", "PULL_REQUEST_CREATED"),
+					resource.TestCheckResourceAttr(resourceName, "filter_group.2768903781.type", "EVENT"),
+					resource.TestCheckResourceAttr(resourceName, "filter_group.178477371.exclude_matched_pattern", "false"),
+					resource.TestCheckResourceAttr(resourceName, "filter_group.178477371.pattern", "refs/heads/master"),
+					resource.TestCheckResourceAttr(resourceName, "filter_group.178477371.type", "HEAD_REF"),
 				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"secret"},
 			},
 		},
 	})
@@ -314,6 +322,11 @@ resource "aws_codebuild_webhook" "test" {
 	filter_group {
 		type  = "%s"
 		pattern = "%s"
+	}
+
+	filter_group {
+		type = "HEAD_REF"
+		pattern = "refs/heads/master"
 	}
 }
 `, filterType, filterPattern)
