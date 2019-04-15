@@ -3,7 +3,6 @@ package aws
 import (
 	"context"
 	"errors"
-	"github.com/google/uuid"
 	otaws "github.com/opentracing-contrib/go-aws-sdk"
 	"github.com/opentracing/opentracing-go"
 	"github.com/uber/jaeger-client-go"
@@ -151,9 +150,7 @@ func NewScriptTracer() (*ScriptTracer, error) {
 		return nil, err
 	}
 
-	opts := []jaeger.TracerOption{
-		jaeger.TracerOptions.Tag("run", uuid.New().String()),
-	}
+	opts := []jaeger.TracerOption{}
 
 	tagStr := os.Getenv("TRACE_TAGS")
 	if tagStr != "" {

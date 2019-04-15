@@ -39,9 +39,9 @@ require (
 	github.com/mitchellh/hashstructure v1.0.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.1 // indirect
-	github.com/pquerna/otp v1.1.0
 	github.com/opentracing-contrib/go-aws-sdk v0.0.0-20190205132030-9c29407076c0
 	github.com/opentracing/opentracing-go v1.1.0
+	github.com/pquerna/otp v1.1.0
 	github.com/spf13/pflag v1.0.3 // indirect
 	github.com/terraform-providers/terraform-provider-template v1.0.0
 	github.com/terraform-providers/terraform-provider-tls v1.2.0
