@@ -3,14 +3,14 @@ package aws
 import (
 	"context"
 	"errors"
-	"os"
-	"io"
-	"strings"
+	"github.com/google/uuid"
 	otaws "github.com/opentracing-contrib/go-aws-sdk"
 	"github.com/opentracing/opentracing-go"
 	"github.com/uber/jaeger-client-go"
 	"github.com/uber/jaeger-client-go/transport/zipkin"
-	"github.com/google/uuid"
+	"io"
+	"os"
+	"strings"
 )
 
 func injectTracer(client *AWSClient) {
@@ -133,10 +133,10 @@ func injectTracer(client *AWSClient) {
 // Tracer optimized for tracing a single script (e.g., a terraform run). All spans generated are grouped into a global
 // span.
 type ScriptTracer struct {
-	tracer opentracing.Tracer
-	closer io.Closer
+	tracer        opentracing.Tracer
+	closer        io.Closer
 	globalContext context.Context
-	globalSpan opentracing.Span
+	globalSpan    opentracing.Span
 }
 
 // Initialize a new tracer that sends traces to Zipkin and groups all spans into a global parent span for analysis.
@@ -171,10 +171,10 @@ func NewScriptTracer() (*ScriptTracer, error) {
 	globalSpan, globalContext := opentracing.StartSpanFromContextWithTracer(context.TODO(), tracer, "terraform")
 
 	s := &ScriptTracer{
-		tracer: tracer,
-		closer: closer,
+		tracer:        tracer,
+		closer:        closer,
 		globalContext: globalContext,
-		globalSpan: globalSpan,
+		globalSpan:    globalSpan,
 	}
 
 	opentracing.SetGlobalTracer(s)

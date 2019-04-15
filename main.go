@@ -1,9 +1,9 @@
 package main
 
 import (
-	"log"
 	"github.com/hashicorp/terraform/plugin"
 	"github.com/terraform-providers/terraform-provider-aws/aws"
+	"log"
 )
 
 func main() {
