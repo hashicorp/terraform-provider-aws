@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"fmt"
 	"log"
 	"regexp"
 
@@ -100,6 +101,24 @@ func tagsToMapSSM(ts []*ssm.Tag) map[string]string {
 	}
 
 	return result
+}
+
+func saveTagsSSM(conn *ssm.SSM, d *schema.ResourceData, id string, resourceType string) error {
+	resp, err := conn.ListTagsForResource(&ssm.ListTagsForResourceInput{
+		ResourceId:   aws.String(id),
+		ResourceType: aws.String(resourceType),
+	})
+
+	if err != nil {
+		return fmt.Errorf("Error retreiving tags for ResourceId(%s): %s", id, err)
+	}
+
+	var tagList []*ssm.Tag
+	if len(resp.TagList) > 0 {
+		tagList = resp.TagList
+	}
+
+	return d.Set("tags", tagsToMapSSM(tagList))
 }
 
 // compare a tag against a list of strings and checks if it should
