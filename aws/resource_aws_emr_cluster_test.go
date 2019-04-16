@@ -3031,46 +3031,6 @@ resource "aws_iam_role_policy_attachment" "emr-autoscaling-role" {
 
 func testAccAWSEmrClusterConfigInstanceGroupsName(r int) string {
 	return fmt.Sprintf(`
-variable "instance_groups" {
-  type = "list"
-  default = [
-      {
-          name = "MasterInstanceGroup"
-          instance_role = "MASTER"
-          instance_type = "m3.xlarge"
-          instance_count = 1
-      },
-      {
-          name = "CoreInstanceGroup"
-          instance_role = "CORE"
-          instance_type = "r4.xlarge"
-          instance_count = 2
-          ebs_config = [
-              {
-                  iops = 0
-                  size = 100
-                  type = "gp2"
-                  volumes_per_instance = 1
-              }
-          ]
-      },
-      {
-          name = "TaskInstanceGroup"
-          instance_role = "TASK"
-          instance_type = "r4.xlarge"
-          instance_count = 3
-          ebs_config = [
-              {
-                  iops = 0
-                  size = 100
-                  type = "gp2"
-                  volumes_per_instance = 1
-              }
-          ]
-      },
-  ]
-}
-
 resource "aws_emr_cluster" "tf-test-cluster" {
   name          = "emr-test-%[1]d"
   release_label = "emr-4.6.0"
@@ -3083,7 +3043,40 @@ resource "aws_emr_cluster" "tf-test-cluster" {
     instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
   }
 
-  instance_group = "${var.instance_groups}"
+  instance_group {
+    instance_count = 1
+    instance_role  = "MASTER"
+    instance_type  = "m3.xlarge"
+    name           = "MasterInstanceGroup"
+  }
+
+  instance_group {
+    instance_count = 2
+    instance_role  = "CORE"
+    instance_type  = "r4.xlarge"
+    name           = "CoreInstanceGroup"
+
+    ebs_config {
+      iops                 = 0
+      size                 = 100
+      type                 = "gp2"
+      volumes_per_instance = 1
+    }
+  }
+
+  instance_group {
+    instance_count = 3
+    instance_role  = "TASK"
+    instance_type  = "r4.xlarge"
+    name           = "TaskInstanceGroup"
+
+    ebs_config {
+      iops                 = 0
+      size                 = 100
+      type                 = "gp2"
+      volumes_per_instance = 1
+    }
+  }
 
   tags = {
     role     = "rolename"
