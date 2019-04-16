@@ -151,7 +151,7 @@ resource "aws_emr_cluster" "example" {
   # ... other configuration ...
 
   step {
-    action = "TERMINATE_CLUSTER"
+    action_on_failure  = "TERMINATE_CLUSTER"
     name   = "Setup Hadoop Debugging"
 
     hadoop_jar_step {
