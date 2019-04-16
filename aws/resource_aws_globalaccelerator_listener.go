@@ -34,7 +34,6 @@ func resourceAwsGlobalAcceleratorListener() *schema.Resource {
 			"client_affinity": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
 				Default:  globalaccelerator.ClientAffinityNone,
 				ValidateFunc: validation.StringInSlice([]string{
 					globalaccelerator.ClientAffinityNone,
