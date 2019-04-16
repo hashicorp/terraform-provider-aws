@@ -118,7 +118,12 @@ func TestAccAWSRDSCluster_importBasic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"master_password", "skip_final_snapshot"},
+					"apply_immediately",
+					"cluster_identifier_prefix",
+					"master_password",
+					"skip_final_snapshot",
+					"snapshot_identifier",
+				},
 			},
 		},
 	})
