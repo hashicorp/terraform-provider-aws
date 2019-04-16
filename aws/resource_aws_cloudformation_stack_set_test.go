@@ -204,7 +204,7 @@ func TestAccAWSCloudFormationStackSet_Name(t *testing.T) {
 			},
 			{
 				Config:      testAccAWSCloudFormationStackSetConfigName(acctest.RandStringFromCharSet(129, acctest.CharSetAlpha)),
-				ExpectError: regexp.MustCompile(`expected length`),
+				ExpectError: regexp.MustCompile(`(cannot be longer|expected length)`),
 			},
 			{
 				Config:      testAccAWSCloudFormationStackSetConfigName("1"),
