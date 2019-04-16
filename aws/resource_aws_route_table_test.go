@@ -141,7 +141,11 @@ func TestAccAWSRouteTable_basic(t *testing.T) {
 					testAccCheckResourceAttrAccountID("aws_route_table.foo", "owner_id"),
 				),
 			},
-
+			{
+				ResourceName:      "aws_route_table.foo",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 			{
 				Config: testAccRouteTableConfigChange,
 				Check: resource.ComposeTestCheckFunc(
@@ -192,6 +196,11 @@ func TestAccAWSRouteTable_instance(t *testing.T) {
 					testCheck,
 				),
 			},
+			{
+				ResourceName:      "aws_route_table.foo",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -221,6 +230,11 @@ func TestAccAWSRouteTable_ipv6(t *testing.T) {
 					testCheck,
 				),
 			},
+			{
+				ResourceName:      "aws_route_table.foo",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -241,7 +255,11 @@ func TestAccAWSRouteTable_tags(t *testing.T) {
 					testAccCheckTags(&route_table.Tags, "foo", "bar"),
 				),
 			},
-
+			{
+				ResourceName:      "aws_route_table.foo",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 			{
 				Config: testAccRouteTableConfigTagsUpdate,
 				Check: resource.ComposeTestCheckFunc(
@@ -287,6 +305,11 @@ func TestAccAWSRouteTable_Route_ConfigMode(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccAWSRouteTableConfigRouteConfigModeNoBlocks(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(resourceName, &routeTable2),
@@ -294,11 +317,21 @@ func TestAccAWSRouteTable_Route_ConfigMode(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccAWSRouteTableConfigRouteConfigModeZeroed(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(resourceName, &routeTable3),
 					resource.TestCheckResourceAttr(resourceName, "route.#", "0"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -318,6 +351,11 @@ func TestAccAWSRouteTable_Route_TransitGatewayID(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(resourceName, &routeTable1),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -421,6 +459,11 @@ func TestAccAWSRouteTable_vpcPeering(t *testing.T) {
 					testCheck,
 				),
 			},
+			{
+				ResourceName:      "aws_route_table.foo",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -463,6 +506,11 @@ func TestAccAWSRouteTable_vgwRoutePropagation(t *testing.T) {
 						"aws_vpn_gateway.foo", &vgw),
 					testCheck,
 				),
+			},
+			{
+				ResourceName:      "aws_route_table.foo",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
