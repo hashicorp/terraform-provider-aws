@@ -57,35 +57,23 @@ func dataAwsSsmParametersRead(d *schema.ResourceData, meta interface{}) error {
 	path := d.Get("path").(string)
 
 	parameters := make([]ssm.Parameter, 0)
-	var nextToken string
+	paramInput := &ssm.GetParametersByPathInput{
+		Path:           &path,
+		MaxResults:     aws.Int64(10),
+		Recursive:      aws.Bool(false),
+		WithDecryption: aws.Bool(false),
+	}
 
-	for {
-		paramInput := &ssm.GetParametersByPathInput{
-			Path:           &path,
-			MaxResults:     aws.Int64(10),
-			Recursive:      aws.Bool(false),
-			WithDecryption: aws.Bool(false),
-		}
-
-		if nextToken != "" {
-			paramInput.NextToken = aws.String(nextToken)
-		}
-
-		log.Printf("[DEBUG] Reading SSM Parameters: %s", paramInput)
-		resp, err := ssmconn.GetParametersByPath(paramInput)
-
-		if err != nil {
-			return fmt.Errorf("error describing SSM parameters: %s", err)
-		}
-
+	log.Printf("[DEBUG] Reading SSM Parameters: %s", paramInput)
+	err := ssmconn.GetParametersByPathPages(paramInput, func(resp *ssm.GetParametersByPathOutput, isLast bool) bool {
 		for _, parameter := range resp.Parameters {
 			parameters = append(parameters, *parameter)
 		}
+		return !isLast
+	})
 
-		if resp.NextToken == nil {
-			break
-		}
-		nextToken = *resp.NextToken
+	if err != nil {
+		return fmt.Errorf("error describing SSM parameters: %s", err)
 	}
 
 	parsedParameters := make([]*map[string]string, len(parameters))
