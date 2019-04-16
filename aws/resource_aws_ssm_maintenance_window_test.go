@@ -360,6 +360,55 @@ func TestAccAWSSSMMaintenanceWindow_StartDate(t *testing.T) {
 	})
 }
 
+func TestAccAWSSSMMaintenanceWindow_Tags(t *testing.T) {
+	var maintenanceWindow1, maintenanceWindow2, maintenanceWindow3 ssm.MaintenanceWindowIdentity
+	resourceName := "aws_ssm_maintenance_window.tf-test"
+	rInt := acctest.RandInt()
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMMaintenanceWindowConfigTags(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMMaintenanceWindowExists(resourceName, &maintenanceWindow1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", fmt.Sprintf("terraform-test-foobar%d", rInt)),
+					resource.TestCheckResourceAttr(resourceName, "tags.fizz", "buzz"),
+					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar"),
+				),
+			},
+			{
+				Config: testAccAWSSSMMaintenanceWindowConfigUpdateTags(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMMaintenanceWindowExists(resourceName, &maintenanceWindow2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "4"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", fmt.Sprintf("terraform-test-foobar%d", rInt)),
+					resource.TestCheckResourceAttr(resourceName, "tags.fizz", "buzz"),
+					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.good", "bad"),
+				),
+			},
+			{
+				Config: testAccAWSSSMMaintenanceWindowConfigRemoveTags(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMMaintenanceWindowExists(resourceName, &maintenanceWindow3),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", fmt.Sprintf("terraform-test-foobar%d", rInt)),
+					resource.TestCheckResourceAttr(resourceName, "tags.fizz", "buzz"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+
+}
+
 func testAccCheckAWSSSMMaintenanceWindowExists(n string, res *ssm.MaintenanceWindowIdentity) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -544,4 +593,49 @@ resource "aws_ssm_maintenance_window" "test" {
   start_date = %q
 }
 `, rName, startDate)
+}
+
+func testAccAWSSSMMaintenanceWindowConfigTags(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_maintenance_window" "tf-test" {
+	name     = "terraform-test-foobar%[1]d"
+	schedule = "cron(0 16 ? * TUE *)"
+	duration = 3
+	cutoff   = 1
+	tags = {
+		Name	= "terraform-test-foobar%[1]d"
+		fizz 	= "buzz"
+		foo		= "bar"
+	}
+}`, rInt)
+}
+
+func testAccAWSSSMMaintenanceWindowConfigUpdateTags(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_maintenance_window" "tf-test" {
+	name     = "terraform-test-foobar%[1]d"
+	schedule = "cron(0 16 ? * TUE *)"
+	duration = 3
+	cutoff   = 1
+	tags = {
+		Name	= "terraform-test-foobar%[1]d"
+		fizz 	= "buzz"
+		foo		= "bar2"
+		good	= "bad"
+	}
+}`, rInt)
+}
+
+func testAccAWSSSMMaintenanceWindowConfigRemoveTags(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_maintenance_window" "tf-test" {
+	name     = "terraform-test-foobar%[1]d"
+	schedule = "cron(0 16 ? * TUE *)"
+	duration = 3
+	cutoff   = 1
+	tags = {
+		Name	= "terraform-test-foobar%[1]d"
+		fizz 	= "buzz"
+	}
+}`, rInt)
 }
