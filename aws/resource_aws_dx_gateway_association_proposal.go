@@ -32,9 +32,9 @@ func resourceAwsDxGatewayAssociationProposal() *schema.Resource {
 				ForceNew: true,
 			},
 			"dx_gateway_owner_account_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: validateAwsAccountId,
 			},
 			"vpn_gateway_id": {
@@ -51,9 +51,9 @@ func resourceAwsDxGatewayAssociationProposalCreate(d *schema.ResourceData, meta 
 
 	input := &directconnect.CreateDirectConnectGatewayAssociationProposalInput{
 		AddAllowedPrefixesToDirectConnectGateway: expandDirectConnectGatewayAssociationProposalAllowedPrefixes(d.Get("allowed_prefixes").(*schema.Set).List()),
-		DirectConnectGatewayId: aws.String(d.Get("dx_gateway_id").(string)),
-		DirectConnectGatewayOwnerAccount: aws.String(d.Get("dx_gateway_owner_account_id").(string)),
-		GatewayId:       aws.String(d.Get("vpn_gateway_id").(string)),
+		DirectConnectGatewayId:                   aws.String(d.Get("dx_gateway_id").(string)),
+		DirectConnectGatewayOwnerAccount:         aws.String(d.Get("dx_gateway_owner_account_id").(string)),
+		GatewayId:                                aws.String(d.Get("vpn_gateway_id").(string)),
 	}
 
 	log.Printf("[DEBUG] Creating Direct Connect Gateway Association Proposal: %s", input)

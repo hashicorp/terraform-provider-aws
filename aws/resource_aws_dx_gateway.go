@@ -34,8 +34,8 @@ func resourceAwsDxGateway() *schema.Resource {
 				ValidateFunc: validateAmazonSideAsn,
 			},
 			"owner_account_id": {
-				Type:         schema.TypeString,
-				Computed:     true,
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 		},
 
