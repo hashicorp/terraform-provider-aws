@@ -96,21 +96,21 @@ resource "aws_vpc" "example" {
   cidr_block = "10.6.0.0/16"
   enable_dns_hostnames = true
   enable_dns_support = true
-  tags {
-    Name = %q
+  tags = {
+    Name = %[1]q
   }
 }
 
 resource "aws_route53_resolver_rule" "example" {
   domain_name = "example.com"
-  name        = %q
+  name        = %[1]q
   rule_type   = "SYSTEM"
 }
 
 resource "aws_route53_resolver_rule_association" "example" {
-  name             = %q
+  name             = %[1]q
   resolver_rule_id = "${aws_route53_resolver_rule.example.id}"
   vpc_id           = "${aws_vpc.example.id}"
 }
-`, name, name, name)
+`, name)
 }
