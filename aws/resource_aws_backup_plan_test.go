@@ -332,7 +332,7 @@ resource "aws_backup_plan" "test" {
     schedule           = "cron(0 12 * * ? *)"
   }
 
-  tags {
+  tags = {
 	  env = "test"
   }
 }
@@ -354,7 +354,7 @@ resource "aws_backup_plan" "test" {
     schedule           = "cron(0 12 * * ? *)"
   }
 
-  tags {
+  tags = {
 	  env = "test"
 	  app = "widget"
   }
