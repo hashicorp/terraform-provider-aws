@@ -16,7 +16,7 @@ func dataSourceAwsAcmCertificate() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"domain": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -37,6 +37,7 @@ func dataSourceAwsAcmCertificate() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -45,7 +46,7 @@ func dataSourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) e
 	conn := meta.(*AWSClient).acmconn
 
 	params := &acm.ListCertificatesInput{}
-	target := d.Get("domain")
+	domain, domainOk := d.GetOk("domain")
 	statuses, ok := d.GetOk("statuses")
 	if ok {
 		statusStrings := statuses.([]interface{})
@@ -58,7 +59,7 @@ func dataSourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) e
 	log.Printf("[DEBUG] Reading ACM Certificate: %s", params)
 	err := conn.ListCertificatesPages(params, func(page *acm.ListCertificatesOutput, lastPage bool) bool {
 		for _, cert := range page.CertificateSummaryList {
-			if *cert.DomainName == target {
+			if !domainOk || *cert.DomainName == domain {
 				arns = append(arns, cert.CertificateArn)
 			}
 		}
@@ -69,8 +70,44 @@ func dataSourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("Error listing certificates: %q", err)
 	}
 
+	if len(arns) == 0 && domainOk {
+		return fmt.Errorf("No certificates for domain %q found in this region", domain)
+	}
 	if len(arns) == 0 {
-		return fmt.Errorf("No certificate for domain %q found in this region", target)
+		return fmt.Errorf("No certificates found in this region")
+	}
+
+	// If tag filters are set, filter out any certificates that don't match
+	tags := d.Get("tags").(map[string]interface{})
+	if len(tags) > 0 {
+		taggedArns := make([]*string, 0)
+	CertLoop:
+		for _, arn := range arns {
+			var err error
+
+			input := &acm.ListTagsForCertificateInput{
+				CertificateArn: aws.String(*arn),
+			}
+			log.Printf("[DEBUG] Listing ACM Certificate Tags: %s", input)
+			output, err := conn.ListTagsForCertificate(input)
+			if err != nil {
+				return fmt.Errorf("Error listing ACM certificate tags: %q", err)
+			}
+			certTags := make(map[string]string, len(output.Tags))
+			for _, tag := range output.Tags {
+				certTags[*tag.Key] = *tag.Value
+			}
+
+			for key, value := range tags {
+				if certTags[key] != value {
+					continue CertLoop
+				}
+			}
+
+			taggedArns = append(taggedArns, arn)
+		}
+
+		arns = taggedArns
 	}
 
 	filterMostRecent := d.Get("most_recent").(bool)
@@ -80,7 +117,7 @@ func dataSourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) e
 
 	if !filterMostRecent && !filterTypesOk && len(arns) > 1 {
 		// Multiple certificates have been found and no additional filtering set
-		return fmt.Errorf("Multiple certificates for domain %q found in this region", target)
+		return fmt.Errorf("Multiple certificates for domain %q found in this region", domain)
 	}
 
 	typesStrings := expandStringList(filterTypes.([]interface{}))
@@ -116,7 +153,7 @@ func dataSourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) e
 						break
 					}
 					// Now we have multiple candidate certificates and we only allow one certificate
-					return fmt.Errorf("Multiple certificates for domain %q found in this region", target)
+					return fmt.Errorf("Multiple matching certificates found in this region")
 				}
 			}
 			continue
@@ -136,11 +173,11 @@ func dataSourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) e
 			continue
 		}
 		// Now we have multiple candidate certificates and we only allow one certificate
-		return fmt.Errorf("Multiple certificates for domain %q found in this region", target)
+		return fmt.Errorf("Multiple matching certificates found in this region")
 	}
 
 	if matchedCertificate == nil {
-		return fmt.Errorf("No certificate for domain %q found in this region", target)
+		return fmt.Errorf("No matching certificate found in this region")
 	}
 
 	d.SetId(time.Now().UTC().String())

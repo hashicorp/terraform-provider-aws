@@ -8,9 +8,11 @@ description: |-
 
 # Data Source: aws_acm_certificate
 
+~> **Note:** When not specifying `domain` terraform needs to iterate over all certificates in the region. 
+
 Use this data source to get the ARN of a certificate in AWS Certificate
-Manager (ACM), you can reference
-it by domain without having to hard code the ARNs as input.
+Manager (ACM), you can reference certificates by domain, type, status or 
+tags without having to hard code the ARNs as input.
 
 ## Example Usage
 
@@ -25,16 +27,33 @@ data "aws_acm_certificate" "example" {
   types       = ["AMAZON_ISSUED"]
   most_recent = true
 }
+
+data "aws_acm_certificate_arns" "example" {
+  domain   = "tf.example.com"
+  statuses = ["ISSUED"]
+  tags {
+    Foo = "BAR"
+  }
+}
+
+data "aws_acm_certificate_arns" "example" {
+  tags {
+    Name = "dev-cert"
+    TerraformWorkspace = "${terraform.workspace}"
+  }
+}
 ```
 
 ## Argument Reference
 
- * `domain` - (Required) The domain of the certificate to look up. If no certificate is found with this name, an error will be returned.
+ * `domain` - (Optional) The domain of the certificate to look up. If set and no certificate is found with this name, an error will be returned.
  * `statuses` - (Optional) A list of statuses on which to filter the returned list. Valid values are `PENDING_VALIDATION`, `ISSUED`,
    `INACTIVE`, `EXPIRED`, `VALIDATION_TIMED_OUT`, `REVOKED` and `FAILED`. If no value is specified, only certificates in the `ISSUED` state
    are returned.
  * `types` - (Optional) A list of types on which to filter the returned list. Valid values are `AMAZON_ISSUED` and `IMPORTED`.
  * `most_recent` - (Optional) If set to true, it sorts the certificates matched by previous criteria by the NotBefore field, returning only the most recent one. If set to false, it returns an error if more than one certificate is found. Defaults to false.
+ * `tags` - (Optional) A mapping of tags, each pair of which must exactly match
+    a pair on the desired certificates.
 
 ## Attributes Reference
 
