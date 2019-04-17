@@ -96,6 +96,9 @@ func TestAccAWSElasticacheCluster_Engine_Memcached_Ec2Classic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+				},
 			},
 		},
 	})
@@ -128,6 +131,9 @@ func TestAccAWSElasticacheCluster_Engine_Redis_Ec2Classic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+				},
 			},
 		},
 	})
@@ -156,6 +162,9 @@ func TestAccAWSElasticacheCluster_ParameterGroupName_Default(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+				},
 			},
 		},
 	})
@@ -191,6 +200,9 @@ func TestAccAWSElasticacheCluster_Port_Ec2Classic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+				},
 			},
 		},
 	})
