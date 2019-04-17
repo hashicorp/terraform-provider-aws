@@ -556,15 +556,6 @@ resource "aws_sqs_queue" "queue" {
 `, r)
 }
 
-func testAccAWSSQSFifoConfigWithDefaults(r string) string {
-	return fmt.Sprintf(`
-resource "aws_sqs_queue" "queue" {
-  name = "%s.fifo"
-  fifo_queue = true
-}
-`, r)
-}
-
 func testAccAWSSQSConfigWithOverrides(r string) string {
 	return fmt.Sprintf(`
 resource "aws_sqs_queue" "queue" {
