@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_rds_cluster_instance
 
-Provides an RDS Cluster Resource Instance. A Cluster Instance Resource defines
+Provides an RDS Cluster Instance Resource. A Cluster Instance Resource defines
 attributes that are specific to a single instance in a [RDS Cluster][3],
 specifically running Amazon Aurora.
 
