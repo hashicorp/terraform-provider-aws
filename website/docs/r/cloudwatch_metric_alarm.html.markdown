@@ -58,7 +58,7 @@ resource "aws_cloudwatch_metric_alarm" "bat" {
 ```
 
 ## Example for Alarms per Resource
-```
+```hcl
 resource "aws_cloudwatch_metric_alarm" "nat_gateway_egress" {
   alarm_name          = "${format("terraform-test-nat-gateway-egress-%d", count.index)}"
   comparison_operator = "LessThanOrEqualToThreshold"
