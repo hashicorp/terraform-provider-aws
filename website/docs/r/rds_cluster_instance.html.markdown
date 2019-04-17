@@ -73,6 +73,12 @@ and memory, see [Scaling Aurora DB Instances][4]. Aurora currently
   - db.r4.4xlarge
   - db.r4.8xlarge
   - db.r4.16xlarge
+  - db.r5.large
+  - db.r5.xlarge
+  - db.r5.2xlarge
+  - db.r5.4xlarge
+  - db.r5.12xlarge
+  - db.r5.24xlarge
 * `publicly_accessible` - (Optional) Bool to control if instance is publicly accessible.
 Default `false`. See the documentation on [Creating DB Instances][6] for more
 details on controlling this property.
