@@ -1,8 +1,8 @@
-## 2.7.0 (Unreleased)
+## 2.7.0 (April 18, 2019)
 
 NOTES:
 
-* provider: This release includes only a Terraform SDK upgrade with compatibility for Terraform v0.12. The provider remains backwards compatible with Terraform v0.11 and this update should have no significant changes in behavior for the provider. Please report any unexpected behavior in new GitHub issues (Terraform core: https://github.com/hashicorp/terraform/issues or Terraform AWS Provider: https://github.com/terraform-providers/terraform-provider-aws/issues) [GH-8366]
+* provider: This release includes only a Terraform SDK upgrade with compatibility for Terraform v0.12. The provider remains backwards compatible with Terraform v0.11 and this update should have no significant changes in behavior for the provider. Please report any unexpected behavior in new GitHub issues (Terraform core: https://github.com/hashicorp/terraform/issues or Terraform AWS Provider: https://github.com/terraform-providers/terraform-provider-aws/issues) ([#8366](https://github.com/terraform-providers/terraform-provider-aws/issues/8366))
 
 ## 2.6.0 (April 10, 2019)
 
