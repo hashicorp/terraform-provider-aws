@@ -25,8 +25,8 @@ const (
 	// "AccessDeniedForDependencyException".
 	//
 	// The operation that you attempted requires you to have the iam:CreateServiceLinkedRole
-	// so that AWS Organizations can create the required service-linked role. You
-	// don't have that permission.
+	// for organizations.amazonaws.com permission so that AWS Organizations can
+	// create the required service-linked role. You don't have that permission.
 	ErrCodeAccessDeniedForDependencyException = "AccessDeniedForDependencyException"
 
 	// ErrCodeAccountNotFoundException for service response error code
@@ -135,14 +135,14 @@ const (
 	//    in the AWS Organizations User Guide.
 	//
 	//    * MASTER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To create an organization
-	//    with this master account, you first must associate a payment instrument,
+	//    with this master account, you first must associate a valid payment instrument,
 	//    such as a credit card, with the account. Follow the steps at To leave
 	//    an organization when all required account information has not yet been
 	//    provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
 	//    in the AWS Organizations User Guide.
 	//
 	//    * MEMBER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To complete this operation
-	//    with this member account, you first must associate a payment instrument,
+	//    with this member account, you first must associate a valid payment instrument,
 	//    such as a credit card, with the account. Follow the steps at To leave
 	//    an organization when all required account information has not yet been
 	//    provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)

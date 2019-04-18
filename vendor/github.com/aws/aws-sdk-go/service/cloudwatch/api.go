@@ -5020,8 +5020,8 @@ type PutMetricAlarmInput struct {
 	// but not both.
 	Statistic *string `type:"string" enum:"Statistic"`
 
-	// A list of key-value pairs to associate with the alarm or dashboard. You can
-	// associate as many as 50 tags with an alarm.
+	// A list of key-value pairs to associate with the alarm. You can associate
+	// as many as 50 tags with an alarm.
 	//
 	// Tags can help you organize and categorize your resources. You can also use
 	// them to scope user permissions, by granting a user permission to access or
