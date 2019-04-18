@@ -12424,6 +12424,13 @@ type AdminGetUserOutput struct {
 	//    * COMPROMISED - User is disabled due to a potential security threat.
 	//
 	//    * UNKNOWN - User status is not known.
+	//
+	//    * RESET_REQUIRED - User is confirmed, but the user must request a code
+	//    and reset his or her password before he or she can sign in.
+	//
+	//    * FORCE_CHANGE_PASSWORD - The user is confirmed and the user can sign
+	//    in using a temporary password, but on first sign-in, the user must change
+	//    his or her password to a new value before doing anything else.
 	UserStatus *string `type:"string" enum:"UserStatusType"`
 
 	// The user name of the user about whom you are receiving information.
@@ -15837,7 +15844,7 @@ type CreateUserPoolClientInput struct {
 	RefreshTokenValidity *int64 `type:"integer"`
 
 	// A list of provider names for the identity providers that are supported on
-	// this client.
+	// this client. The following are supported: COGNITO, Facebook, Google and LoginWithAmazon.
 	SupportedIdentityProviders []*string `type:"list"`
 
 	// The user pool ID for the user pool where you want to create a user pool client.
@@ -23630,9 +23637,6 @@ type UpdateUserPoolClientInput struct {
 	// Set to code to initiate a code grant flow, which provides an authorization
 	// code as the response. This code can be exchanged for access tokens with the
 	// token endpoint.
-	//
-	// Set to token to specify that the client should get the access token (and,
-	// optionally, ID token, based on scopes) directly.
 	AllowedOAuthFlows []*string `type:"list"`
 
 	// Set to TRUE if the client is allowed to follow the OAuth protocol when interacting
@@ -25152,6 +25156,13 @@ type UserType struct {
 	//    * COMPROMISED - User is disabled due to a potential security threat.
 	//
 	//    * UNKNOWN - User status is not known.
+	//
+	//    * RESET_REQUIRED - User is confirmed, but the user must request a code
+	//    and reset his or her password before he or she can sign in.
+	//
+	//    * FORCE_CHANGE_PASSWORD - The user is confirmed and the user can sign
+	//    in using a temporary password, but on first sign-in, the user must change
+	//    his or her password to a new value before doing anything else.
 	UserStatus *string `type:"string" enum:"UserStatusType"`
 
 	// The user name of the user you wish to describe.

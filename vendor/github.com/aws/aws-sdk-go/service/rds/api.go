@@ -1797,8 +1797,8 @@ func (c *RDS) CreateDBInstanceReadReplicaRequest(input *CreateDBInstanceReadRepl
 //
 // Creates a new DB instance that acts as a Read Replica for an existing source
 // DB instance. You can create a Read Replica for a DB instance running MySQL,
-// MariaDB, or PostgreSQL. For more information, see Working with PostgreSQL,
-// MySQL, and MariaDB Read Replicas (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_ReadRepl.html)
+// MariaDB, Oracle, or PostgreSQL. For more information, see Working with Read
+// Replicas (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_ReadRepl.html)
 // in the Amazon RDS User Guide.
 //
 // Amazon Aurora doesn't support this action. You must call the CreateDBInstance
@@ -11854,7 +11854,7 @@ type ApplyPendingMaintenanceActionInput struct {
 
 	// The pending maintenance action to apply to this resource.
 	//
-	// Valid values: system-update, db-upgrade
+	// Valid values: system-update, db-upgrade, hardware-maintenance
 	//
 	// ApplyAction is a required field
 	ApplyAction *string `type:"string" required:"true"`
@@ -15360,7 +15360,7 @@ type CreateDBInstanceReadReplicaInput struct {
 	// Default: false
 	EnableIAMDatabaseAuthentication *bool `type:"boolean"`
 
-	// True to enable Performance Insights for the read replica, and otherwise false.
+	// True to enable Performance Insights for the Read Replica, and otherwise false.
 	//
 	// For more information, see Using Amazon Performance Insights (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_PerfInsights.html)
 	// in the Amazon RDS User Guide.
@@ -15414,8 +15414,8 @@ type CreateDBInstanceReadReplicaInput struct {
 	// of whether the source database is a Multi-AZ DB instance.
 	MultiAZ *bool `type:"boolean"`
 
-	// The option group the DB instance is associated with. If omitted, the default
-	// option group for the engine specified is used.
+	// The option group the DB instance is associated with. If omitted, the option
+	// group associated with the source instance is used.
 	OptionGroupName *string `type:"string"`
 
 	// The AWS KMS key identifier for encryption of Performance Insights data. The
@@ -15493,11 +15493,15 @@ type CreateDBInstanceReadReplicaInput struct {
 	//
 	// Constraints:
 	//
-	//    * Must be the identifier of an existing MySQL, MariaDB, or PostgreSQL
+	//    * Must be the identifier of an existing MySQL, MariaDB, Oracle, or PostgreSQL
 	//    DB instance.
 	//
 	//    * Can specify a DB instance that is a MySQL Read Replica only if the source
 	//    is running MySQL 5.6 or later.
+	//
+	//    * For the limitations of Oracle Read Replicas, see Read Replica Limitations
+	//    with Oracle (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/oracle-read-replicas.html)
+	//    in the Amazon RDS User Guide.
 	//
 	//    * Can specify a DB instance that is a PostgreSQL DB instance only if the
 	//    source is running PostgreSQL 9.3.5 or later (9.4.7 and higher for cross-region
@@ -17776,7 +17780,7 @@ type DBEngineVersion struct {
 	// log types specified by ExportableLogTypes to CloudWatch Logs.
 	SupportsLogExportsToCloudwatchLogs *bool `type:"boolean"`
 
-	// Indicates whether the database engine version supports read replicas.
+	// Indicates whether the database engine version supports Read Replicas.
 	SupportsReadReplica *bool `type:"boolean"`
 
 	// A list of engine versions that this database engine version can be upgraded
@@ -17935,9 +17939,7 @@ type DBInstance struct {
 	DBInstanceStatus *string `type:"string"`
 
 	// The meaning of this parameter differs according to the database engine you
-	// use. For example, this value returns MySQL, MariaDB, or PostgreSQL information
-	// when returning values from CreateDBInstanceReadReplica since Read Replicas
-	// are only supported for these engines.
+	// use.
 	//
 	// MySQL, MariaDB, SQL Server, PostgreSQL
 	//
@@ -18803,7 +18805,7 @@ type DBInstanceStatusInfo struct {
 	// if the instance is in an error state.
 	Normal *bool `type:"boolean"`
 
-	// Status of the DB instance. For a StatusType of read replica, the values can
+	// Status of the DB instance. For a StatusType of Read Replica, the values can
 	// be replicating, replication stop point set, replication stop point reached,
 	// error, stopped, or terminated.
 	Status *string `type:"string"`
@@ -25894,6 +25896,9 @@ type ModifyCurrentDBClusterCapacityInput struct {
 
 	// The DB cluster capacity.
 	//
+	// When you change the capacity of a paused Aurora Serverless DB cluster, it
+	// automatically resumes.
+	//
 	// Constraints:
 	//
 	//    * Value must be 2, 4, 8, 16, 32, 64, 128, or 256.
@@ -28302,7 +28307,7 @@ func (s *Option) SetVpcSecurityGroupMemberships(v []*VpcSecurityGroupMembership)
 type OptionConfiguration struct {
 	_ struct{} `type:"structure"`
 
-	// A list of DBSecurityGroupMemebrship name strings used for this option.
+	// A list of DBSecurityGroupMembership name strings used for this option.
 	DBSecurityGroupMemberships []*string `locationNameList:"DBSecurityGroupName" type:"list"`
 
 	// The configuration of options to include in a group.
@@ -28319,7 +28324,7 @@ type OptionConfiguration struct {
 	// The optional port for the option.
 	Port *int64 `type:"integer"`
 
-	// A list of VpcSecurityGroupMemebrship name strings used for this option.
+	// A list of VpcSecurityGroupMembership name strings used for this option.
 	VpcSecurityGroupMemberships []*string `locationNameList:"VpcSecurityGroupId" type:"list"`
 }
 
@@ -29282,7 +29287,7 @@ type PendingMaintenanceAction struct {
 	_ struct{} `type:"structure"`
 
 	// The type of pending maintenance action that is available for the resource.
-	// Valid actions are system-update and db-upgrade.
+	// Valid actions are system-update, db-upgrade, and hardware-maintenance.
 	Action *string `type:"string"`
 
 	// The date of the maintenance window when the action is applied. The maintenance
@@ -33659,6 +33664,19 @@ type ScalingConfiguration struct {
 
 	// The time, in seconds, before an Aurora DB cluster in serverless mode is paused.
 	SecondsUntilAutoPause *int64 `type:"integer"`
+
+	// The action to take when the timeout is reached, either ForceApplyCapacityChange
+	// or RollbackCapacityChange.
+	//
+	// ForceApplyCapacityChange, the default, sets the capacity to the specified
+	// value as soon as possible.
+	//
+	// RollbackCapacityChange ignores the capacity change if a scaling point is
+	// not found in the timeout period.
+	//
+	// For more information, see  Autoscaling for Aurora Serverless (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless.how-it-works.html#aurora-serverless.how-it-works.auto-scaling)
+	// in the Amazon Aurora User Guide.
+	TimeoutAction *string `type:"string"`
 }
 
 // String returns the string representation
@@ -33695,6 +33713,12 @@ func (s *ScalingConfiguration) SetSecondsUntilAutoPause(v int64) *ScalingConfigu
 	return s
 }
 
+// SetTimeoutAction sets the TimeoutAction field's value.
+func (s *ScalingConfiguration) SetTimeoutAction(v string) *ScalingConfiguration {
+	s.TimeoutAction = &v
+	return s
+}
+
 // Shows the scaling configuration for an Aurora DB cluster in serverless DB
 // engine mode.
 //
@@ -33705,6 +33729,9 @@ type ScalingConfigurationInfo struct {
 
 	// A value that indicates whether automatic pause is allowed for the Aurora
 	// DB cluster in serverless DB engine mode.
+	//
+	// When the value is set to false for an Aurora Serverless DB cluster, the DB
+	// cluster automatically resumes.
 	AutoPause *bool `type:"boolean"`
 
 	// The maximum capacity for an Aurora DB cluster in serverless DB engine mode.
@@ -33717,6 +33744,10 @@ type ScalingConfigurationInfo struct {
 	// serverless mode is paused. A DB cluster can be paused only when it's idle
 	// (it has no connections).
 	SecondsUntilAutoPause *int64 `type:"integer"`
+
+	// The timeout action of a call to ModifyCurrentDBClusterCapacity, either ForceApplyCapacityChange
+	// or RollbackCapacityChange.
+	TimeoutAction *string `type:"string"`
 }
 
 // String returns the string representation
@@ -33750,6 +33781,12 @@ func (s *ScalingConfigurationInfo) SetMinCapacity(v int64) *ScalingConfiguration
 // SetSecondsUntilAutoPause sets the SecondsUntilAutoPause field's value.
 func (s *ScalingConfigurationInfo) SetSecondsUntilAutoPause(v int64) *ScalingConfigurationInfo {
 	s.SecondsUntilAutoPause = &v
+	return s
+}
+
+// SetTimeoutAction sets the TimeoutAction field's value.
+func (s *ScalingConfigurationInfo) SetTimeoutAction(v string) *ScalingConfigurationInfo {
+	s.TimeoutAction = &v
 	return s
 }
 
