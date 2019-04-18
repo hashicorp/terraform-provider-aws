@@ -57,22 +57,6 @@ resource "aws_cloudwatch_metric_alarm" "bat" {
 }
 ```
 
-## Example for Alarms per Resource
-```hcl
-resource "aws_cloudwatch_metric_alarm" "nat_gateway_egress" {
-  alarm_name          = "${format("terraform-test-nat-gateway-egress-%d", count.index)}"
-  comparison_operator = "LessThanOrEqualToThreshold"
-  evaluation_periods  = "2"
-  metric_name         = "BytesOutToDestination"
-  namespace           = "AWS/NATGateway"
-  period              = "120"
-  statistic           = "Average"
-  threshold           = "0"
-  count               = "${length(aws_nat_gateway.gateways.*.id)}"
-}
-```
-
-
 ## Example with an Expression
 
 ```hcl
