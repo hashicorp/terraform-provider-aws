@@ -71,7 +71,7 @@ const (
 	// "ConstraintViolationException".
 	//
 	// Performing this operation violates a minimum or maximum value limit. For
-	// example, attempting to removing the last service control policy (SCP) from
+	// example, attempting to remove the last service control policy (SCP) from
 	// an OU or root, inviting or creating too many accounts to the organization,
 	// or attaching too many policies to an account, OU, or root. This exception
 	// includes a reason that contains additional information about the violated
@@ -82,7 +82,7 @@ const (
 	//
 	//    * ACCOUNT_NUMBER_LIMIT_EXCEEDED: You attempted to exceed the limit on
 	//    the number of accounts in an organization. If you need more accounts,
-	//    contactAWS Support (https://console.aws.amazon.com/support/home#/) to
+	//    contact AWS Support (https://console.aws.amazon.com/support/home#/) to
 	//    request an increase in your limit.
 	//
 	// Or the number of invitations that you tried to send would cause you to exceed
@@ -161,6 +161,11 @@ const (
 	//    * MASTER_ACCOUNT_MISSING_CONTACT_INFO: To complete this operation, you
 	//    must first provide contact a valid address and phone number for the master
 	//    account. Then try the operation again.
+	//
+	//    * MASTER_ACCOUNT_NOT_GOVCLOUD_ENABLED: To complete this operation, the
+	//    master account must have an associated account in the AWS GovCloud (US-West)
+	//    Region. For more information, see AWS Organizations (http://docs.aws.amazon.com/govcloud-us/latest/UserGuide/govcloud-organizations.html)
+	//    in the AWS GovCloud User Guide.
 	ErrCodeConstraintViolationException = "ConstraintViolationException"
 
 	// ErrCodeCreateAccountStatusNotFoundException for service response error code
@@ -471,4 +476,10 @@ const (
 	// (https://docs.aws.amazon.com/organizations/latest/userguide/orgs_reference_limits.html)
 	// in the AWS Organizations User Guide.
 	ErrCodeTooManyRequestsException = "TooManyRequestsException"
+
+	// ErrCodeUnsupportedAPIEndpointException for service response error code
+	// "UnsupportedAPIEndpointException".
+	//
+	// This action isn't available in the current Region.
+	ErrCodeUnsupportedAPIEndpointException = "UnsupportedAPIEndpointException"
 )
