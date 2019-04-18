@@ -415,7 +415,7 @@ resource "aws_redshift_snapshot_schedule" "default" {
 		"rate(12 hours)",
 	]
 
-	tags {
+	tags = {
 		foo = "bar"
 		fizz = "buzz"
 	}
@@ -431,7 +431,7 @@ resource "aws_redshift_snapshot_schedule" "default" {
 		"rate(12 hours)",
 	]
 
-	tags {
+	tags = {
 		foo = "bar2"
 		good = "bad"
 	}
