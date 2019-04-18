@@ -1706,6 +1706,12 @@ func (c *CognitoIdentityProvider) AdminListGroupsForUserRequest(input *AdminList
 		Name:       opAdminListGroupsForUser,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "Limit",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -1774,6 +1780,56 @@ func (c *CognitoIdentityProvider) AdminListGroupsForUserWithContext(ctx aws.Cont
 	return out, req.Send()
 }
 
+// AdminListGroupsForUserPages iterates over the pages of a AdminListGroupsForUser operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See AdminListGroupsForUser method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a AdminListGroupsForUser operation.
+//    pageNum := 0
+//    err := client.AdminListGroupsForUserPages(params,
+//        func(page *AdminListGroupsForUserOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *CognitoIdentityProvider) AdminListGroupsForUserPages(input *AdminListGroupsForUserInput, fn func(*AdminListGroupsForUserOutput, bool) bool) error {
+	return c.AdminListGroupsForUserPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// AdminListGroupsForUserPagesWithContext same as AdminListGroupsForUserPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CognitoIdentityProvider) AdminListGroupsForUserPagesWithContext(ctx aws.Context, input *AdminListGroupsForUserInput, fn func(*AdminListGroupsForUserOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *AdminListGroupsForUserInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.AdminListGroupsForUserRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*AdminListGroupsForUserOutput), !p.HasNextPage())
+	}
+	return p.Err()
+}
+
 const opAdminListUserAuthEvents = "AdminListUserAuthEvents"
 
 // AdminListUserAuthEventsRequest generates a "aws/request.Request" representing the
@@ -1805,6 +1861,12 @@ func (c *CognitoIdentityProvider) AdminListUserAuthEventsRequest(input *AdminLis
 		Name:       opAdminListUserAuthEvents,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -1873,6 +1935,56 @@ func (c *CognitoIdentityProvider) AdminListUserAuthEventsWithContext(ctx aws.Con
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// AdminListUserAuthEventsPages iterates over the pages of a AdminListUserAuthEvents operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See AdminListUserAuthEvents method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a AdminListUserAuthEvents operation.
+//    pageNum := 0
+//    err := client.AdminListUserAuthEventsPages(params,
+//        func(page *AdminListUserAuthEventsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *CognitoIdentityProvider) AdminListUserAuthEventsPages(input *AdminListUserAuthEventsInput, fn func(*AdminListUserAuthEventsOutput, bool) bool) error {
+	return c.AdminListUserAuthEventsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// AdminListUserAuthEventsPagesWithContext same as AdminListUserAuthEventsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CognitoIdentityProvider) AdminListUserAuthEventsPagesWithContext(ctx aws.Context, input *AdminListUserAuthEventsInput, fn func(*AdminListUserAuthEventsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *AdminListUserAuthEventsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.AdminListUserAuthEventsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*AdminListUserAuthEventsOutput), !p.HasNextPage())
+	}
+	return p.Err()
 }
 
 const opAdminRemoveUserFromGroup = "AdminRemoveUserFromGroup"
@@ -2775,6 +2887,20 @@ func (c *CognitoIdentityProvider) AdminUpdateUserAttributesRequest(input *AdminU
 //
 //   * ErrCodeInternalErrorException "InternalErrorException"
 //   This exception is thrown when Amazon Cognito encounters an internal error.
+//
+//   * ErrCodeInvalidSmsRoleAccessPolicyException "InvalidSmsRoleAccessPolicyException"
+//   This exception is returned when the role provided for SMS configuration does
+//   not have permission to publish using Amazon SNS.
+//
+//   * ErrCodeInvalidEmailRoleAccessPolicyException "InvalidEmailRoleAccessPolicyException"
+//   This exception is thrown when Amazon Cognito is not allowed to use your email
+//   identity. HTTP status code: 400.
+//
+//   * ErrCodeInvalidSmsRoleTrustRelationshipException "InvalidSmsRoleTrustRelationshipException"
+//   This exception is thrown when the trust relationship is invalid for the role
+//   provided for SMS configuration. This can happen if you do not trust cognito-idp.amazonaws.com
+//   or the external ID provided in the role does not match what is provided in
+//   the SMS configuration for the user pool.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/cognito-idp-2016-04-18/AdminUpdateUserAttributes
 func (c *CognitoIdentityProvider) AdminUpdateUserAttributes(input *AdminUpdateUserAttributesInput) (*AdminUpdateUserAttributesOutput, error) {
@@ -7163,6 +7289,12 @@ func (c *CognitoIdentityProvider) ListGroupsRequest(input *ListGroupsInput) (req
 		Name:       opListGroups,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "Limit",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -7228,6 +7360,56 @@ func (c *CognitoIdentityProvider) ListGroupsWithContext(ctx aws.Context, input *
 	return out, req.Send()
 }
 
+// ListGroupsPages iterates over the pages of a ListGroups operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListGroups method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListGroups operation.
+//    pageNum := 0
+//    err := client.ListGroupsPages(params,
+//        func(page *ListGroupsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *CognitoIdentityProvider) ListGroupsPages(input *ListGroupsInput, fn func(*ListGroupsOutput, bool) bool) error {
+	return c.ListGroupsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListGroupsPagesWithContext same as ListGroupsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CognitoIdentityProvider) ListGroupsPagesWithContext(ctx aws.Context, input *ListGroupsInput, fn func(*ListGroupsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListGroupsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListGroupsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListGroupsOutput), !p.HasNextPage())
+	}
+	return p.Err()
+}
+
 const opListIdentityProviders = "ListIdentityProviders"
 
 // ListIdentityProvidersRequest generates a "aws/request.Request" representing the
@@ -7259,6 +7441,12 @@ func (c *CognitoIdentityProvider) ListIdentityProvidersRequest(input *ListIdenti
 		Name:       opListIdentityProviders,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -7322,6 +7510,56 @@ func (c *CognitoIdentityProvider) ListIdentityProvidersWithContext(ctx aws.Conte
 	return out, req.Send()
 }
 
+// ListIdentityProvidersPages iterates over the pages of a ListIdentityProviders operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListIdentityProviders method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListIdentityProviders operation.
+//    pageNum := 0
+//    err := client.ListIdentityProvidersPages(params,
+//        func(page *ListIdentityProvidersOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *CognitoIdentityProvider) ListIdentityProvidersPages(input *ListIdentityProvidersInput, fn func(*ListIdentityProvidersOutput, bool) bool) error {
+	return c.ListIdentityProvidersPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListIdentityProvidersPagesWithContext same as ListIdentityProvidersPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CognitoIdentityProvider) ListIdentityProvidersPagesWithContext(ctx aws.Context, input *ListIdentityProvidersInput, fn func(*ListIdentityProvidersOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListIdentityProvidersInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListIdentityProvidersRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListIdentityProvidersOutput), !p.HasNextPage())
+	}
+	return p.Err()
+}
+
 const opListResourceServers = "ListResourceServers"
 
 // ListResourceServersRequest generates a "aws/request.Request" representing the
@@ -7353,6 +7591,12 @@ func (c *CognitoIdentityProvider) ListResourceServersRequest(input *ListResource
 		Name:       opListResourceServers,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -7414,6 +7658,56 @@ func (c *CognitoIdentityProvider) ListResourceServersWithContext(ctx aws.Context
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// ListResourceServersPages iterates over the pages of a ListResourceServers operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListResourceServers method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListResourceServers operation.
+//    pageNum := 0
+//    err := client.ListResourceServersPages(params,
+//        func(page *ListResourceServersOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *CognitoIdentityProvider) ListResourceServersPages(input *ListResourceServersInput, fn func(*ListResourceServersOutput, bool) bool) error {
+	return c.ListResourceServersPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListResourceServersPagesWithContext same as ListResourceServersPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CognitoIdentityProvider) ListResourceServersPagesWithContext(ctx aws.Context, input *ListResourceServersInput, fn func(*ListResourceServersOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListResourceServersInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListResourceServersRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListResourceServersOutput), !p.HasNextPage())
+	}
+	return p.Err()
 }
 
 const opListTagsForResource = "ListTagsForResource"
@@ -7641,6 +7935,12 @@ func (c *CognitoIdentityProvider) ListUserPoolClientsRequest(input *ListUserPool
 		Name:       opListUserPoolClients,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -7704,6 +8004,56 @@ func (c *CognitoIdentityProvider) ListUserPoolClientsWithContext(ctx aws.Context
 	return out, req.Send()
 }
 
+// ListUserPoolClientsPages iterates over the pages of a ListUserPoolClients operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListUserPoolClients method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListUserPoolClients operation.
+//    pageNum := 0
+//    err := client.ListUserPoolClientsPages(params,
+//        func(page *ListUserPoolClientsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *CognitoIdentityProvider) ListUserPoolClientsPages(input *ListUserPoolClientsInput, fn func(*ListUserPoolClientsOutput, bool) bool) error {
+	return c.ListUserPoolClientsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListUserPoolClientsPagesWithContext same as ListUserPoolClientsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CognitoIdentityProvider) ListUserPoolClientsPagesWithContext(ctx aws.Context, input *ListUserPoolClientsInput, fn func(*ListUserPoolClientsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListUserPoolClientsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListUserPoolClientsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListUserPoolClientsOutput), !p.HasNextPage())
+	}
+	return p.Err()
+}
+
 const opListUserPools = "ListUserPools"
 
 // ListUserPoolsRequest generates a "aws/request.Request" representing the
@@ -7735,6 +8085,12 @@ func (c *CognitoIdentityProvider) ListUserPoolsRequest(input *ListUserPoolsInput
 		Name:       opListUserPools,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -7792,6 +8148,56 @@ func (c *CognitoIdentityProvider) ListUserPoolsWithContext(ctx aws.Context, inpu
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// ListUserPoolsPages iterates over the pages of a ListUserPools operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListUserPools method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListUserPools operation.
+//    pageNum := 0
+//    err := client.ListUserPoolsPages(params,
+//        func(page *ListUserPoolsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *CognitoIdentityProvider) ListUserPoolsPages(input *ListUserPoolsInput, fn func(*ListUserPoolsOutput, bool) bool) error {
+	return c.ListUserPoolsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListUserPoolsPagesWithContext same as ListUserPoolsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CognitoIdentityProvider) ListUserPoolsPagesWithContext(ctx aws.Context, input *ListUserPoolsInput, fn func(*ListUserPoolsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListUserPoolsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListUserPoolsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListUserPoolsOutput), !p.HasNextPage())
+	}
+	return p.Err()
 }
 
 const opListUsers = "ListUsers"
@@ -7919,6 +8325,12 @@ func (c *CognitoIdentityProvider) ListUsersInGroupRequest(input *ListUsersInGrou
 		Name:       opListUsersInGroup,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "Limit",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -7982,6 +8394,56 @@ func (c *CognitoIdentityProvider) ListUsersInGroupWithContext(ctx aws.Context, i
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// ListUsersInGroupPages iterates over the pages of a ListUsersInGroup operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListUsersInGroup method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListUsersInGroup operation.
+//    pageNum := 0
+//    err := client.ListUsersInGroupPages(params,
+//        func(page *ListUsersInGroupOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *CognitoIdentityProvider) ListUsersInGroupPages(input *ListUsersInGroupInput, fn func(*ListUsersInGroupOutput, bool) bool) error {
+	return c.ListUsersInGroupPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListUsersInGroupPagesWithContext same as ListUsersInGroupPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CognitoIdentityProvider) ListUsersInGroupPagesWithContext(ctx aws.Context, input *ListUsersInGroupInput, fn func(*ListUsersInGroupOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListUsersInGroupInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListUsersInGroupRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListUsersInGroupOutput), !p.HasNextPage())
+	}
+	return p.Err()
 }
 
 const opResendConfirmationCode = "ResendConfirmationCode"
@@ -11010,6 +11472,10 @@ type AdminCreateUserConfigType struct {
 	// longer usable. To reset the account after that time limit, you must call
 	// AdminCreateUser again, specifying "RESEND" for the MessageAction parameter.
 	// The default value for this parameter is 7.
+	//
+	// If you set a value for TemporaryPasswordValidityDays in PasswordPolicy, that
+	// value will be used and UnusedAccountValidityDays will be deprecated for that
+	// user pool.
 	UnusedAccountValidityDays *int64 `type:"integer"`
 }
 
@@ -17300,10 +17766,57 @@ func (s *DomainDescriptionType) SetVersion(v string) *DomainDescriptionType {
 type EmailConfigurationType struct {
 	_ struct{} `type:"structure"`
 
+	// Specifies whether Amazon Cognito emails your users by using its built-in
+	// email functionality or your Amazon SES email configuration. Specify one of
+	// the following values:
+	//
+	// COGNITO_DEFAULTWhen Amazon Cognito emails your users, it uses its built-in
+	// email functionality. When you use the default option, Amazon Cognito allows
+	// only a limited number of emails each day for your user pool. For typical
+	// production environments, the default email limit is below the required delivery
+	// volume. To achieve a higher delivery volume, specify DEVELOPER to use your
+	// Amazon SES email configuration.
+	//
+	// To look up the email delivery limit for the default option, see Limits in
+	// Amazon Cognito (https://docs.aws.amazon.com/cognito/latest/developerguide/limits.html)
+	// in the Amazon Cognito Developer Guide.
+	//
+	// The default FROM address is no-reply@verificationemail.com. To customize
+	// the FROM address, provide the ARN of an Amazon SES verified email address
+	// for the SourceArn parameter.
+	//
+	// DEVELOPERWhen Amazon Cognito emails your users, it uses your Amazon SES configuration.
+	// Amazon Cognito calls Amazon SES on your behalf to send email from your verified
+	// email address. When you use this option, the email delivery limits are the
+	// same limits that apply to your Amazon SES verified email address in your
+	// AWS account.
+	//
+	// If you use this option, you must provide the ARN of an Amazon SES verified
+	// email address for the SourceArn parameter.
+	//
+	// Before Amazon Cognito can email your users, it requires additional permissions
+	// to call Amazon SES on your behalf. When you update your user pool with this
+	// option, Amazon Cognito creates a service-linked role, which is a type of
+	// IAM role, in your AWS account. This role contains the permissions that allow
+	// Amazon Cognito to access Amazon SES and send email messages with your address.
+	// For more information about the service-linked role that Amazon Cognito creates,
+	// see Using Service-Linked Roles for Amazon Cognito (https://docs.aws.amazon.com/cognito/latest/developerguide/using-service-linked-roles.html)
+	// in the Amazon Cognito Developer Guide.
+	EmailSendingAccount *string `type:"string" enum:"EmailSendingAccountType"`
+
 	// The destination to which the receiver of the email should reply to.
 	ReplyToEmailAddress *string `type:"string"`
 
-	// The Amazon Resource Name (ARN) of the email source.
+	// The Amazon Resource Name (ARN) of a verified email address in Amazon SES.
+	// This email address is used in one of the following ways, depending on the
+	// value that you specify for the EmailSendingAccount parameter:
+	//
+	//    * If you specify COGNITO_DEFAULT, Amazon Cognito uses this address as
+	//    the custom FROM address when it emails your users by using its built-in
+	//    email account.
+	//
+	//    * If you specify DEVELOPER, Amazon Cognito emails your users with this
+	//    address by calling Amazon SES on your behalf.
 	SourceArn *string `min:"20" type:"string"`
 }
 
@@ -17328,6 +17841,12 @@ func (s *EmailConfigurationType) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetEmailSendingAccount sets the EmailSendingAccount field's value.
+func (s *EmailConfigurationType) SetEmailSendingAccount(v string) *EmailConfigurationType {
+	s.EmailSendingAccount = &v
+	return s
 }
 
 // SetReplyToEmailAddress sets the ReplyToEmailAddress field's value.
@@ -19228,7 +19747,7 @@ type ListIdentityProvidersInput struct {
 	_ struct{} `type:"structure"`
 
 	// The maximum number of identity providers to return.
-	MaxResults *int64 `min:"1" type:"integer"`
+	MaxResults *int64 `type:"integer"`
 
 	// A pagination token.
 	NextToken *string `min:"1" type:"string"`
@@ -19252,9 +19771,6 @@ func (s ListIdentityProvidersInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *ListIdentityProvidersInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "ListIdentityProvidersInput"}
-	if s.MaxResults != nil && *s.MaxResults < 1 {
-		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
-	}
 	if s.NextToken != nil && len(*s.NextToken) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
 	}
@@ -25148,6 +25664,14 @@ const (
 
 	// DomainStatusTypeFailed is a DomainStatusType enum value
 	DomainStatusTypeFailed = "FAILED"
+)
+
+const (
+	// EmailSendingAccountTypeCognitoDefault is a EmailSendingAccountType enum value
+	EmailSendingAccountTypeCognitoDefault = "COGNITO_DEFAULT"
+
+	// EmailSendingAccountTypeDeveloper is a EmailSendingAccountType enum value
+	EmailSendingAccountTypeDeveloper = "DEVELOPER"
 )
 
 const (

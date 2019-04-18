@@ -235,8 +235,8 @@ func (c *Organizations) AcceptHandshakeRequest(input *AcceptHandshakeInput) (req
 //
 //   * ErrCodeAccessDeniedForDependencyException "AccessDeniedForDependencyException"
 //   The operation that you attempted requires you to have the iam:CreateServiceLinkedRole
-//   so that AWS Organizations can create the required service-linked role. You
-//   don't have that permission.
+//   for organizations.amazonaws.com permission so that AWS Organizations can
+//   create the required service-linked role. You don't have that permission.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/AcceptHandshake
 func (c *Organizations) AcceptHandshake(input *AcceptHandshakeInput) (*AcceptHandshakeOutput, error) {
@@ -435,14 +435,14 @@ func (c *Organizations) AttachPolicyRequest(input *AttachPolicyInput) (req *requ
 //      in the AWS Organizations User Guide.
 //
 //      * MASTER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To create an organization
-//      with this master account, you first must associate a payment instrument,
+//      with this master account, you first must associate a valid payment instrument,
 //      such as a credit card, with the account. Follow the steps at To leave
 //      an organization when all required account information has not yet been
 //      provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
 //      in the AWS Organizations User Guide.
 //
 //      * MEMBER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To complete this operation
-//      with this member account, you first must associate a payment instrument,
+//      with this member account, you first must associate a valid payment instrument,
 //      such as a credit card, with the account. Follow the steps at To leave
 //      an organization when all required account information has not yet been
 //      provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
@@ -942,14 +942,14 @@ func (c *Organizations) CreateAccountRequest(input *CreateAccountInput) (req *re
 //      in the AWS Organizations User Guide.
 //
 //      * MASTER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To create an organization
-//      with this master account, you first must associate a payment instrument,
+//      with this master account, you first must associate a valid payment instrument,
 //      such as a credit card, with the account. Follow the steps at To leave
 //      an organization when all required account information has not yet been
 //      provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
 //      in the AWS Organizations User Guide.
 //
 //      * MEMBER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To complete this operation
-//      with this member account, you first must associate a payment instrument,
+//      with this member account, you first must associate a valid payment instrument,
 //      such as a credit card, with the account. Follow the steps at To leave
 //      an organization when all required account information has not yet been
 //      provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
@@ -1216,14 +1216,14 @@ func (c *Organizations) CreateOrganizationRequest(input *CreateOrganizationInput
 //      in the AWS Organizations User Guide.
 //
 //      * MASTER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To create an organization
-//      with this master account, you first must associate a payment instrument,
+//      with this master account, you first must associate a valid payment instrument,
 //      such as a credit card, with the account. Follow the steps at To leave
 //      an organization when all required account information has not yet been
 //      provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
 //      in the AWS Organizations User Guide.
 //
 //      * MEMBER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To complete this operation
-//      with this member account, you first must associate a payment instrument,
+//      with this member account, you first must associate a valid payment instrument,
 //      such as a credit card, with the account. Follow the steps at To leave
 //      an organization when all required account information has not yet been
 //      provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
@@ -1316,8 +1316,8 @@ func (c *Organizations) CreateOrganizationRequest(input *CreateOrganizationInput
 //
 //   * ErrCodeAccessDeniedForDependencyException "AccessDeniedForDependencyException"
 //   The operation that you attempted requires you to have the iam:CreateServiceLinkedRole
-//   so that AWS Organizations can create the required service-linked role. You
-//   don't have that permission.
+//   for organizations.amazonaws.com permission so that AWS Organizations can
+//   create the required service-linked role. You don't have that permission.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/CreateOrganization
 func (c *Organizations) CreateOrganization(input *CreateOrganizationInput) (*CreateOrganizationOutput, error) {
@@ -1485,14 +1485,14 @@ func (c *Organizations) CreateOrganizationalUnitRequest(input *CreateOrganizatio
 //      in the AWS Organizations User Guide.
 //
 //      * MASTER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To create an organization
-//      with this master account, you first must associate a payment instrument,
+//      with this master account, you first must associate a valid payment instrument,
 //      such as a credit card, with the account. Follow the steps at To leave
 //      an organization when all required account information has not yet been
 //      provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
 //      in the AWS Organizations User Guide.
 //
 //      * MEMBER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To complete this operation
-//      with this member account, you first must associate a payment instrument,
+//      with this member account, you first must associate a valid payment instrument,
 //      such as a credit card, with the account. Follow the steps at To leave
 //      an organization when all required account information has not yet been
 //      provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
@@ -1752,14 +1752,14 @@ func (c *Organizations) CreatePolicyRequest(input *CreatePolicyInput) (req *requ
 //      in the AWS Organizations User Guide.
 //
 //      * MASTER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To create an organization
-//      with this master account, you first must associate a payment instrument,
+//      with this master account, you first must associate a valid payment instrument,
 //      such as a credit card, with the account. Follow the steps at To leave
 //      an organization when all required account information has not yet been
 //      provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
 //      in the AWS Organizations User Guide.
 //
 //      * MEMBER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To complete this operation
-//      with this member account, you first must associate a payment instrument,
+//      with this member account, you first must associate a valid payment instrument,
 //      such as a credit card, with the account. Follow the steps at To leave
 //      an organization when all required account information has not yet been
 //      provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
@@ -3666,14 +3666,14 @@ func (c *Organizations) DetachPolicyRequest(input *DetachPolicyInput) (req *requ
 //      in the AWS Organizations User Guide.
 //
 //      * MASTER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To create an organization
-//      with this master account, you first must associate a payment instrument,
+//      with this master account, you first must associate a valid payment instrument,
 //      such as a credit card, with the account. Follow the steps at To leave
 //      an organization when all required account information has not yet been
 //      provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
 //      in the AWS Organizations User Guide.
 //
 //      * MEMBER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To complete this operation
-//      with this member account, you first must associate a payment instrument,
+//      with this member account, you first must associate a valid payment instrument,
 //      such as a credit card, with the account. Follow the steps at To leave
 //      an organization when all required account information has not yet been
 //      provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
@@ -3953,14 +3953,14 @@ func (c *Organizations) DisableAWSServiceAccessRequest(input *DisableAWSServiceA
 //      in the AWS Organizations User Guide.
 //
 //      * MASTER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To create an organization
-//      with this master account, you first must associate a payment instrument,
+//      with this master account, you first must associate a valid payment instrument,
 //      such as a credit card, with the account. Follow the steps at To leave
 //      an organization when all required account information has not yet been
 //      provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
 //      in the AWS Organizations User Guide.
 //
 //      * MEMBER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To complete this operation
-//      with this member account, you first must associate a payment instrument,
+//      with this member account, you first must associate a valid payment instrument,
 //      such as a credit card, with the account. Follow the steps at To leave
 //      an organization when all required account information has not yet been
 //      provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
@@ -4219,14 +4219,14 @@ func (c *Organizations) DisablePolicyTypeRequest(input *DisablePolicyTypeInput) 
 //      in the AWS Organizations User Guide.
 //
 //      * MASTER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To create an organization
-//      with this master account, you first must associate a payment instrument,
+//      with this master account, you first must associate a valid payment instrument,
 //      such as a credit card, with the account. Follow the steps at To leave
 //      an organization when all required account information has not yet been
 //      provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
 //      in the AWS Organizations User Guide.
 //
 //      * MEMBER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To complete this operation
-//      with this member account, you first must associate a payment instrument,
+//      with this member account, you first must associate a valid payment instrument,
 //      such as a credit card, with the account. Follow the steps at To leave
 //      an organization when all required account information has not yet been
 //      provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
@@ -4504,14 +4504,14 @@ func (c *Organizations) EnableAWSServiceAccessRequest(input *EnableAWSServiceAcc
 //      in the AWS Organizations User Guide.
 //
 //      * MASTER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To create an organization
-//      with this master account, you first must associate a payment instrument,
+//      with this master account, you first must associate a valid payment instrument,
 //      such as a credit card, with the account. Follow the steps at To leave
 //      an organization when all required account information has not yet been
 //      provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
 //      in the AWS Organizations User Guide.
 //
 //      * MEMBER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To complete this operation
-//      with this member account, you first must associate a payment instrument,
+//      with this member account, you first must associate a valid payment instrument,
 //      such as a credit card, with the account. Follow the steps at To leave
 //      an organization when all required account information has not yet been
 //      provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
@@ -5003,14 +5003,14 @@ func (c *Organizations) EnablePolicyTypeRequest(input *EnablePolicyTypeInput) (r
 //      in the AWS Organizations User Guide.
 //
 //      * MASTER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To create an organization
-//      with this master account, you first must associate a payment instrument,
+//      with this master account, you first must associate a valid payment instrument,
 //      such as a credit card, with the account. Follow the steps at To leave
 //      an organization when all required account information has not yet been
 //      provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
 //      in the AWS Organizations User Guide.
 //
 //      * MEMBER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To complete this operation
-//      with this member account, you first must associate a payment instrument,
+//      with this member account, you first must associate a valid payment instrument,
 //      such as a credit card, with the account. Follow the steps at To leave
 //      an organization when all required account information has not yet been
 //      provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
@@ -5545,14 +5545,14 @@ func (c *Organizations) LeaveOrganizationRequest(input *LeaveOrganizationInput) 
 //      in the AWS Organizations User Guide.
 //
 //      * MASTER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To create an organization
-//      with this master account, you first must associate a payment instrument,
+//      with this master account, you first must associate a valid payment instrument,
 //      such as a credit card, with the account. Follow the steps at To leave
 //      an organization when all required account information has not yet been
 //      provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
 //      in the AWS Organizations User Guide.
 //
 //      * MEMBER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To complete this operation
-//      with this member account, you first must associate a payment instrument,
+//      with this member account, you first must associate a valid payment instrument,
 //      such as a credit card, with the account. Follow the steps at To leave
 //      an organization when all required account information has not yet been
 //      provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
@@ -5817,14 +5817,14 @@ func (c *Organizations) ListAWSServiceAccessForOrganizationRequest(input *ListAW
 //      in the AWS Organizations User Guide.
 //
 //      * MASTER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To create an organization
-//      with this master account, you first must associate a payment instrument,
+//      with this master account, you first must associate a valid payment instrument,
 //      such as a credit card, with the account. Follow the steps at To leave
 //      an organization when all required account information has not yet been
 //      provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
 //      in the AWS Organizations User Guide.
 //
 //      * MEMBER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To complete this operation
-//      with this member account, you first must associate a payment instrument,
+//      with this member account, you first must associate a valid payment instrument,
 //      such as a credit card, with the account. Follow the steps at To leave
 //      an organization when all required account information has not yet been
 //      provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
@@ -8522,7 +8522,7 @@ func (c *Organizations) ListTargetsForPolicyRequest(input *ListTargetsForPolicyI
 
 // ListTargetsForPolicy API operation for AWS Organizations.
 //
-// Lists all the roots, organizaitonal units (OUs), and accounts to which the
+// Lists all the roots, organizational units (OUs), and accounts to which the
 // specified policy is attached.
 //
 // Always check the NextToken response parameter for a null value when calling
@@ -9043,14 +9043,14 @@ func (c *Organizations) RemoveAccountFromOrganizationRequest(input *RemoveAccoun
 //      in the AWS Organizations User Guide.
 //
 //      * MASTER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To create an organization
-//      with this master account, you first must associate a payment instrument,
+//      with this master account, you first must associate a valid payment instrument,
 //      such as a credit card, with the account. Follow the steps at To leave
 //      an organization when all required account information has not yet been
 //      provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
 //      in the AWS Organizations User Guide.
 //
 //      * MEMBER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To complete this operation
-//      with this member account, you first must associate a payment instrument,
+//      with this member account, you first must associate a valid payment instrument,
 //      such as a credit card, with the account. Follow the steps at To leave
 //      an organization when all required account information has not yet been
 //      provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
@@ -9479,14 +9479,14 @@ func (c *Organizations) UpdatePolicyRequest(input *UpdatePolicyInput) (req *requ
 //      in the AWS Organizations User Guide.
 //
 //      * MASTER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To create an organization
-//      with this master account, you first must associate a payment instrument,
+//      with this master account, you first must associate a valid payment instrument,
 //      such as a credit card, with the account. Follow the steps at To leave
 //      an organization when all required account information has not yet been
 //      provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
 //      in the AWS Organizations User Guide.
 //
 //      * MEMBER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To complete this operation
-//      with this member account, you first must associate a payment instrument,
+//      with this member account, you first must associate a valid payment instrument,
 //      such as a credit card, with the account. Follow the steps at To leave
 //      an organization when all required account information has not yet been
 //      provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
@@ -13456,7 +13456,7 @@ type Organization struct {
 	// If set to "ALL", then all features are enabled and policies can be applied
 	// to accounts in the organization. If set to "CONSOLIDATED_BILLING", then only
 	// consolidated billing functionality is available. For more information, see
-	// Enabling All Features in Your Organization (https://docs.aws.amazon.com/IAM/latest/UserGuide/orgs_manage_org_support-all-features.html)
+	// Enabling All Features in Your Organization (https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_org_support-all-features.html)
 	// in the AWS Organizations User Guide.
 	FeatureSet *string `type:"string" enum:"OrganizationFeatureSet"`
 
