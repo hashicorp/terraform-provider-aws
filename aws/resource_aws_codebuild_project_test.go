@@ -1171,7 +1171,7 @@ resource "aws_codebuild_project" "test" {
 
   cache {
 		type     = "LOCAL"
-		modes		 = ["%s"]
+		modes    = ["%s"]
   }
 
   environment {
