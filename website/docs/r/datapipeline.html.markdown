@@ -189,7 +189,7 @@ POLICY
 resource "aws_datapipeline" "foo" {
 	name      = "tf-datapipeline-%s"
 
-	default {
+	default = {
 		schedule_type          = "ondemand"
 		failure_and_rerun_mode = "cascade"
 		role                   = "${aws_iam_role.role.arn}"
@@ -375,7 +375,7 @@ POLICY
 resource "aws_datapipeline" "foo" {
 	name      = "tf-datapipeline"
 
-	default {
+	default = {
 		schedule_type          = "cron"
 		schedule			   = "TestHourlySchedule"
 		failure_and_rerun_mode = "cascade"
@@ -433,7 +433,7 @@ resource "aws_datapipeline" "foo" {
 		end_date_time 	= "2019-09-01T00:00:00"
 	}
 
-	tags {
+	tags = {
 		NAME = "tf-datapipeline-test"
 		ENV  = "test"
 	}
@@ -622,3 +622,11 @@ For more information, see the [AWS Data Pipeline User Guide](https://docs.aws.am
 
 * `id` - (Required) The ID of a parameter object.
 * `string_value` - (Required) A value to associate with the parameter object.
+
+## Import
+
+`aws_datapipeline` can be imported by using the id (Pipeline ID), e.g.
+
+```
+$ terraform import aws_datapipeline.example df-1234567890
+```

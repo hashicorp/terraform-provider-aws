@@ -22,7 +22,7 @@ func TestAccAWSDataPipeline_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSDataPipelineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDataPipelineConfig_basic(rName),
+				Config: testAccAWSDataPipelineConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDataPipelineExists("aws_datapipeline.foo", &conf),
 					resource.TestCheckResourceAttrPair(
@@ -50,7 +50,7 @@ func TestAccAWSDataPipeline_copyActivity(t *testing.T) {
 		CheckDestroy: testAccCheckAWSDataPipelineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDataPipelineConfig_copyActivity(rName),
+				Config: testAccAWSDataPipelineConfigCopyActivity(rName, "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDataPipelineExists("aws_datapipeline.foo", &conf),
 					resource.TestCheckResourceAttrPair(
@@ -67,9 +67,17 @@ func TestAccAWSDataPipeline_copyActivity(t *testing.T) {
 						"aws_datapipeline.foo", "copy_activity.0.output", "aws_datapipeline.foo", "s3_data_node.0.id"),
 					resource.TestCheckResourceAttr("aws_datapipeline.foo", "tags.%", "2"),
 					resource.TestCheckResourceAttr(
-						"aws_datapipeline.foo", "tags.NAME", "tf-datapipeline-test"),
+						"aws_datapipeline.foo", "tags.NAME", fmt.Sprintf("tf-datapipeline-test-%s", rName)),
 					resource.TestCheckResourceAttr(
 						"aws_datapipeline.foo", "tags.ENV", "test"),
+				),
+			},
+			{
+				Config: testAccAWSDataPipelineConfigCopyActivity(rName, "test2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDataPipelineExists("aws_datapipeline.foo", &conf),
+					resource.TestCheckResourceAttr(
+						"aws_datapipeline.foo", "tags.ENV", "test2"),
 				),
 			},
 			{
@@ -91,7 +99,7 @@ func TestAccAWSDataPipeline_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckAWSDataPipelineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDataPipelineConfig_basic(rName),
+				Config: testAccAWSDataPipelineConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDataPipelineExists("aws_datapipeline.foo", &conf),
 					testAccCheckAWSDataPipelineDisappears(&conf),
@@ -179,10 +187,10 @@ func testAccCheckAWSDataPipelineExists(n string, v *datapipeline.PipelineDescrip
 	}
 }
 
-func testAccAWSDataPipelineConfig_basic(rName string) string {
+func testAccAWSDataPipelineConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "role" {
-	name = "tf-test-datapipeline-role-%s"
+	name = "tf-test-datapipeline-role-%[1]s"
 	  
 	assume_role_policy = <<EOF
 {
@@ -204,7 +212,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "role" {
-	name = "tf-test-transfer-user-iam-policy-%s"
+	name = "tf-test-transfer-user-iam-policy-%[1]s"
 	role = "${aws_iam_role.role.id}"
 	policy = <<POLICY
 {
@@ -293,7 +301,7 @@ POLICY
 
 
 resource "aws_iam_role" "resource_role" {
-	name = "tf-test-datapipeline-resource-role-%s"
+	name = "tf-test-datapipeline-resource-role-%[1]s"
 	  
 	assume_role_policy = <<EOF
 {
@@ -314,12 +322,12 @@ EOF
 }
 
 resource "aws_iam_instance_profile" "resource_role" {
-	name = "tf-test-datapipeline-resource-role-profile-%s"
+	name = "tf-test-datapipeline-resource-role-profile-%[1]s"
 	role = "${aws_iam_role.resource_role.name}"
 }
 
 resource "aws_iam_role_policy" "resource_role" {
-	name = "tf-test-transfer-user-iam-policy-%s"
+	name = "tf-test-transfer-user-iam-policy-%[1]s"
 	role = "${aws_iam_role.resource_role.id}"
 	policy = <<POLICY
 {
@@ -353,23 +361,23 @@ POLICY
 
 
 resource "aws_datapipeline" "foo" {
-	name      = "tf-datapipeline-%s"
+	name      = "tf-datapipeline-%[1]s"
 
-	default {
+	default = {
 		schedule_type          = "ondemand"
 		failure_and_rerun_mode = "cascade"
 		role                   = "${aws_iam_role.role.arn}"
 		resource_role          = "${aws_iam_instance_profile.resource_role.arn}"
 	}
-}`, rName, rName, rName, rName, rName, rName)
+}`, rName)
 
 }
 
-func testAccAWSDataPipelineConfig_copyActivity(rName string) string {
+func testAccAWSDataPipelineConfigCopyActivity(rName, envTag string) string {
 	return fmt.Sprintf(`
 
 resource "aws_iam_role" "role" {
-	name = "tf-test-datapipeline-role-%s"
+	name = "tf-test-datapipeline-role-%[1]s"
 	  
 	assume_role_policy = <<EOF
 {
@@ -391,7 +399,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "role" {
-	name = "tf-test-transfer-user-iam-policy-%s"
+	name = "tf-test-transfer-user-iam-policy-%[1]s"
 	role = "${aws_iam_role.role.id}"
 	policy = <<POLICY
 {
@@ -480,7 +488,7 @@ POLICY
 
 
 resource "aws_iam_role" "resource_role" {
-	name = "tf-test-datapipeline-resource-role-%s"
+	name = "tf-test-datapipeline-resource-role-%[1]s"
 	  
 	assume_role_policy = <<EOF
 {
@@ -501,12 +509,12 @@ EOF
 }
 
 resource "aws_iam_instance_profile" "resource_role" {
-	name = "tf-test-datapipeline-resource-role-profile-%s"
+	name = "tf-test-datapipeline-resource-role-profile-%[1]s"
 	role = "${aws_iam_role.resource_role.name}"
 }
 
 resource "aws_iam_role_policy" "resource_role" {
-	name = "tf-test-transfer-user-iam-policy-%s"
+	name = "tf-test-transfer-user-iam-policy-%[1]s"
 	role = "${aws_iam_role.resource_role.id}"
 	policy = <<POLICY
 {
@@ -540,9 +548,9 @@ POLICY
 
 
 resource "aws_datapipeline" "foo" {
-	name      = "tf-datapipeline-%s"
+	name      = "tf-datapipeline-%[1]s"
 
-	default {
+	default = {
 		schedule_type          = "cron"
 		schedule			   = "TestHourlySchedule"
 		failure_and_rerun_mode = "cascade"
@@ -600,10 +608,10 @@ resource "aws_datapipeline" "foo" {
 		end_date_time 	= "2019-09-01T00:00:00"
 	}
 
-	tags {
-		NAME = "tf-datapipeline-test"
-		ENV  = "test"
+	tags = {
+		NAME = "tf-datapipeline-test-%[1]s"
+		ENV  = "%[2]s"
 	}
 }
-	`, rName, rName, rName, rName, rName, rName)
+	`, rName, envTag)
 }
