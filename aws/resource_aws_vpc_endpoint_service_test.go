@@ -80,32 +80,11 @@ func testSweepEc2VpcEndpointServices(region string) error {
 	return nil
 }
 
-func TestAccAWSVpcEndpointService_importBasic(t *testing.T) {
-	lbName := fmt.Sprintf("testaccawsnlb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
-	resourceName := "aws_vpc_endpoint_service.foo"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckVpcEndpointServiceDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccVpcEndpointServiceBasicConfig(lbName),
-			},
-
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
 func TestAccAWSVpcEndpointService_basic(t *testing.T) {
 	var svcCfg ec2.ServiceConfiguration
-	lb1Name := fmt.Sprintf("testaccawsnlb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
-	lb2Name := fmt.Sprintf("testaccawsnlb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	resourceName := "aws_vpc_endpoint_service.foo"
+	rName1 := fmt.Sprintf("tf-testacc-vpcesvc-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
+	rName2 := fmt.Sprintf("tf-testacc-vpcesvc-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
@@ -114,21 +93,27 @@ func TestAccAWSVpcEndpointService_basic(t *testing.T) {
 		CheckDestroy:  testAccCheckVpcEndpointServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcEndpointServiceBasicConfig(lb1Name),
+				Config: testAccVpcEndpointServiceBasicConfig(rName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcEndpointServiceExists("aws_vpc_endpoint_service.foo", &svcCfg),
-					resource.TestCheckResourceAttr("aws_vpc_endpoint_service.foo", "acceptance_required", "false"),
-					resource.TestCheckResourceAttr("aws_vpc_endpoint_service.foo", "network_load_balancer_arns.#", "1"),
-					resource.TestCheckResourceAttr("aws_vpc_endpoint_service.foo", "allowed_principals.#", "1"),
+					testAccCheckVpcEndpointServiceExists(resourceName, &svcCfg),
+					resource.TestCheckResourceAttr(resourceName, "acceptance_required", "false"),
+					resource.TestCheckResourceAttr(resourceName, "network_load_balancer_arns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "allowed_principals.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "manages_vpc_endpoints", "false"),
 				),
 			},
 			{
-				Config: testAccVpcEndpointServiceModifiedConfig(lb1Name, lb2Name),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccVpcEndpointServiceModifiedConfig(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcEndpointServiceExists("aws_vpc_endpoint_service.foo", &svcCfg),
-					resource.TestCheckResourceAttr("aws_vpc_endpoint_service.foo", "acceptance_required", "true"),
-					resource.TestCheckResourceAttr("aws_vpc_endpoint_service.foo", "network_load_balancer_arns.#", "2"),
-					resource.TestCheckResourceAttr("aws_vpc_endpoint_service.foo", "allowed_principals.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "acceptance_required", "true"),
+					resource.TestCheckResourceAttr(resourceName, "network_load_balancer_arns.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "allowed_principals.#", "0"),
 				),
 			},
 		},
@@ -137,7 +122,8 @@ func TestAccAWSVpcEndpointService_basic(t *testing.T) {
 
 func TestAccAWSVpcEndpointService_removed(t *testing.T) {
 	var svcCfg ec2.ServiceConfiguration
-	lbName := fmt.Sprintf("testaccawsnlb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	resourceName := "aws_vpc_endpoint_service.foo"
+	rName := fmt.Sprintf("tf-testacc-vpcesvc-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
 
 	testDestroy := func(*terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
@@ -155,9 +141,9 @@ func TestAccAWSVpcEndpointService_removed(t *testing.T) {
 		CheckDestroy: testAccCheckVpcEndpointServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcEndpointServiceBasicConfig(lbName),
+				Config: testAccVpcEndpointServiceBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcEndpointServiceExists("aws_vpc_endpoint_service.foo", &svcCfg),
+					testAccCheckVpcEndpointServiceExists(resourceName, &svcCfg),
 					testDestroy,
 				),
 				ExpectNonEmptyPlan: true,
@@ -223,19 +209,19 @@ func testAccCheckVpcEndpointServiceExists(n string, svcCfg *ec2.ServiceConfigura
 	}
 }
 
-func testAccVpcEndpointServiceBasicConfig(lb1Name string) string {
+func testAccVpcEndpointServiceBasicConfig(rName string) string {
 	return fmt.Sprintf(
 		`
 resource "aws_vpc" "nlb_test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-vpc-endpoint-service"
+    Name = %[1]q
   }
 }
 
 resource "aws_lb" "nlb_test_1" {
-  name = "%s"
+  name =  %[1]q
 
   subnets = [
     "${aws_subnet.nlb_test_1.id}",
@@ -248,7 +234,7 @@ resource "aws_lb" "nlb_test_1" {
   enable_deletion_protection = false
 
   tags = {
-    Name = "testAccVpcEndpointServiceBasicConfig_nlb1"
+    Name =  %[1]q
   }
 }
 
@@ -258,7 +244,7 @@ resource "aws_subnet" "nlb_test_1" {
   availability_zone = "us-west-2a"
 
   tags = {
-    Name = "tf-acc-vpc-endpoint-service-1"
+    Name =  %[1]q
   }
 }
 
@@ -268,7 +254,7 @@ resource "aws_subnet" "nlb_test_2" {
   availability_zone = "us-west-2b"
 
   tags = {
-    Name = "tf-acc-vpc-endpoint-service-2"
+    Name =  %[1]q
   }
 }
 
@@ -285,22 +271,22 @@ resource "aws_vpc_endpoint_service" "foo" {
     "${data.aws_caller_identity.current.arn}"
   ]
 }
-`, lb1Name)
+`, rName)
 }
 
-func testAccVpcEndpointServiceModifiedConfig(lb1Name, lb2Name string) string {
+func testAccVpcEndpointServiceModifiedConfig(rName1, rName2 string) string {
 	return fmt.Sprintf(
 		`
 resource "aws_vpc" "nlb_test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-vpc-endpoint-service"
+    Name = %[1]q
   }
 }
 
 resource "aws_lb" "nlb_test_1" {
-  name = "%s"
+  name = %[1]q
 
   subnets = [
     "${aws_subnet.nlb_test_1.id}",
@@ -313,27 +299,27 @@ resource "aws_lb" "nlb_test_1" {
   enable_deletion_protection = false
 
   tags = {
-    Name = "testAccVpcEndpointServiceBasicConfig_nlb1"
+    Name = %[1]q
   }
 }
 
 resource "aws_lb" "nlb_test_2" {
-	name = "%s"
+  name = %[2]q
 
-	subnets = [
-	  "${aws_subnet.nlb_test_1.id}",
-	  "${aws_subnet.nlb_test_2.id}",
-	]
+  subnets = [
+    "${aws_subnet.nlb_test_1.id}",
+    "${aws_subnet.nlb_test_2.id}",
+  ]
 
-	load_balancer_type         = "network"
-	internal                   = true
-	idle_timeout               = 60
-	enable_deletion_protection = false
+  load_balancer_type         = "network"
+  internal                   = true
+  idle_timeout               = 60
+  enable_deletion_protection = false
 
-	tags = {
-	  Name = "testAccVpcEndpointServiceBasicConfig_nlb2"
-	}
+  tags = {
+    Name = %[2]q
   }
+}
 
 resource "aws_subnet" "nlb_test_1" {
   vpc_id            = "${aws_vpc.nlb_test.id}"
@@ -341,7 +327,7 @@ resource "aws_subnet" "nlb_test_1" {
   availability_zone = "us-west-2a"
 
   tags = {
-    Name = "tf-acc-vpc-endpoint-service-1"
+    Name = %[1]q
   }
 }
 
@@ -351,7 +337,7 @@ resource "aws_subnet" "nlb_test_2" {
   availability_zone = "us-west-2b"
 
   tags = {
-    Name = "tf-acc-vpc-endpoint-service-2"
+    Name = %[1]q
   }
 }
 
@@ -361,11 +347,11 @@ resource "aws_vpc_endpoint_service" "foo" {
   acceptance_required = true
 
   network_load_balancer_arns = [
-	"${aws_lb.nlb_test_1.id}",
-	"${aws_lb.nlb_test_2.id}",
+    "${aws_lb.nlb_test_1.id}",
+    "${aws_lb.nlb_test_2.id}",
   ]
 
   allowed_principals = []
 }
-`, lb1Name, lb2Name)
+`, rName1, rName2)
 }
