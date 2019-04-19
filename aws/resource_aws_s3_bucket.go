@@ -65,15 +65,15 @@ func resourceAwsS3Bucket() *schema.Resource {
 			},
 
 			"acl": {
-				Type:          schema.TypeString,
-				Default:       "private",
-				Optional:      true,
+				Type:     schema.TypeString,
+				Default:  "private",
+				Optional: true,
 			},
 
 			"grant": {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				Set:           grantHash,
+				Type:     schema.TypeSet,
+				Optional: true,
+				Set:      grantHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
