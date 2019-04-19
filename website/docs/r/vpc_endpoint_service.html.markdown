@@ -41,12 +41,13 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the VPC endpoint service.
-* `state` - The state of the VPC endpoint service.
+* `availability_zones` - The Availability Zones in which the service is available.
+* `base_endpoint_dns_names` - The DNS names for the service.
+* `manages_vpc_endpoints` - Whether or not the service manages its VPC endpoints - `true` or `false`.
+* `private_dns_name` - The private DNS name for the service.
 * `service_name` - The service name.
 * `service_type` - The service type, `Gateway` or `Interface`.
-* `availability_zones` - The Availability Zones in which the service is available.
-* `private_dns_name` - The private DNS name for the service.
-* `base_endpoint_dns_names` - The DNS names for the service.
+* `state` - The state of the VPC endpoint service.
 
 ## Import
 
