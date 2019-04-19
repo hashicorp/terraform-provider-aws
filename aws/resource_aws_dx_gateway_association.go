@@ -30,6 +30,7 @@ func resourceAwsDxGatewayAssociation() *schema.Resource {
 			"allowed_prefixes": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 
@@ -54,7 +55,7 @@ func resourceAwsDxGatewayAssociation() *schema.Resource {
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(15 * time.Minute),
 			Update: schema.DefaultTimeout(10 * time.Minute),
-			Delete: schema.DefaultTimeout(10 * time.Minute),
+			Delete: schema.DefaultTimeout(15 * time.Minute),
 		},
 	}
 }
@@ -91,7 +92,7 @@ func resourceAwsDxGatewayAssociationCreate(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("error waiting for Direct Connect gateway association (%s) to become available: %s", d.Id(), err)
 	}
 
-	return nil
+	return resourceAwsDxGatewayAssociationRead(d, meta)
 }
 
 func resourceAwsDxGatewayAssociationRead(d *schema.ResourceData, meta interface{}) error {

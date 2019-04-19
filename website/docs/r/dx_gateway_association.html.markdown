@@ -83,7 +83,7 @@ In addition to all arguments above, the following attributes are exported:
 
 - `create` - (Default `15 minutes`) Used for creating the association
 - `update` - (Default `10 minutes`) Used for updating the association
-- `delete` - (Default `10 minutes`) Used for destroying the association
+- `delete` - (Default `15 minutes`) Used for destroying the association
 
 ## Import
 

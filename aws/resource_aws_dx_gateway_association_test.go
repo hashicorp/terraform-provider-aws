@@ -114,11 +114,14 @@ func TestAccAwsDxGatewayAssociation_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAwsDxGatewayAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxGatewayAssociationConfig(rName, rBgpAsn),
+				Config: testAccDxGatewayAssociationConfig_basic(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDxGatewayAssociationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "dx_gateway_id", resourceNameDxGw, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "vpn_gateway_id", resourceNameVgw, "id"),
+					resource.TestCheckResourceAttrSet(resourceName, "dx_gateway_association_id"),
+					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.1216997074", "10.255.255.0/28"),
 				),
 			},
 			{
@@ -155,6 +158,48 @@ func TestAccAwsDxGatewayAssociation_multiVgws(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDxGatewayAssociationExists(resourceName1),
 					testAccCheckAwsDxGatewayAssociationExists(resourceName2),
+					resource.TestCheckResourceAttrSet(resourceName1, "dx_gateway_association_id"),
+					resource.TestCheckResourceAttr(resourceName1, "allowed_prefixes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName1, "allowed_prefixes.704201654", "10.255.255.16/28"),
+					resource.TestCheckResourceAttrSet(resourceName2, "dx_gateway_association_id"),
+					resource.TestCheckResourceAttr(resourceName2, "allowed_prefixes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName2, "allowed_prefixes.2444313725", "10.255.255.32/28"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAwsDxGatewayAssociation_allowedPrefixes(t *testing.T) {
+	resourceName := "aws_dx_gateway_association.test"
+	resourceNameDxGw := "aws_dx_gateway.test"
+	resourceNameVgw := "aws_vpn_gateway.test"
+	rName := fmt.Sprintf("terraform-testacc-dxgwassoc-%d", acctest.RandInt())
+	rBgpAsn := randIntRange(64512, 65534)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsDxGatewayAssociationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDxGatewayAssociationConfig_allowedPrefixes(rName, rBgpAsn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsDxGatewayAssociationExists(resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "dx_gateway_id", resourceNameDxGw, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "vpn_gateway_id", resourceNameVgw, "id"),
+					resource.TestCheckResourceAttrSet(resourceName, "dx_gateway_association_id"),
+					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.2173830893", "10.255.255.0/30"),
+					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.2984398124", "10.255.255.8/30"),
+				),
+			},
+			{
+				Config: testAccDxGatewayAssociationConfig_allowedPrefixesUpdated(rName, rBgpAsn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsDxGatewayAssociationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.1642241106", "10.255.255.8/29"),
 				),
 			},
 		},
@@ -195,7 +240,7 @@ func testAccCheckAwsDxGatewayAssociationExists(name string) resource.TestCheckFu
 	}
 }
 
-func testAccDxGatewayAssociationConfig(rName string, rBgpAsn int) string {
+func testAccDxGatewayAssociationConfig_basic(rName string, rBgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_dx_gateway" "test" {
   name = %[1]q
@@ -280,4 +325,75 @@ resource "aws_dx_gateway_association" "test2" {
   vpn_gateway_id = "${aws_vpn_gateway_attachment.test2.vpn_gateway_id}"
 }
 `, rName1, rName2, rBgpAsn)
+}
+
+func testAccDxGatewayAssociationConfig_allowedPrefixes(rName string, rBgpAsn int) string {
+	return fmt.Sprintf(`
+resource "aws_dx_gateway" "test" {
+  name = %[1]q
+  amazon_side_asn = "%[2]d"
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.255.255.0/28"
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpn_gateway" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpn_gateway_attachment" "test" {
+  vpc_id = "${aws_vpc.test.id}"
+  vpn_gateway_id = "${aws_vpn_gateway.test.id}"
+}
+
+resource "aws_dx_gateway_association" "test" {
+  dx_gateway_id = "${aws_dx_gateway.test.id}"
+  vpn_gateway_id = "${aws_vpn_gateway_attachment.test.vpn_gateway_id}"
+  allowed_prefixes = [
+    "10.255.255.0/30",
+    "10.255.255.8/30",
+  ]
+}
+`, rName, rBgpAsn)
+}
+
+func testAccDxGatewayAssociationConfig_allowedPrefixesUpdated(rName string, rBgpAsn int) string {
+	return fmt.Sprintf(`
+resource "aws_dx_gateway" "test" {
+  name = %[1]q
+  amazon_side_asn = "%[2]d"
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.255.255.0/28"
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpn_gateway" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpn_gateway_attachment" "test" {
+  vpc_id = "${aws_vpc.test.id}"
+  vpn_gateway_id = "${aws_vpn_gateway.test.id}"
+}
+
+resource "aws_dx_gateway_association" "test" {
+  dx_gateway_id = "${aws_dx_gateway.test.id}"
+  vpn_gateway_id = "${aws_vpn_gateway_attachment.test.vpn_gateway_id}"
+  allowed_prefixes = [
+    "10.255.255.8/29",
+  ]
+}
+`, rName, rBgpAsn)
 }
