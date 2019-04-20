@@ -1,14 +1,14 @@
 package aws
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccDataSourceAwsVpcEndpoint_gatewayBasic(t *testing.T) {
+	datasourceName := "data.aws_vpc_endpoint.s3"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
@@ -16,15 +16,15 @@ func TestAccDataSourceAwsVpcEndpoint_gatewayBasic(t *testing.T) {
 			{
 				Config: testAccDataSourceAwsVpcEndpointConfig_gatewayBasic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccDataSourceAwsVpcEndpointCheckExists("data.aws_vpc_endpoint.s3", "aws_vpc_endpoint.s3"),
-					resource.TestCheckResourceAttr(
-						"data.aws_vpc_endpoint.s3", "vpc_endpoint_type", "Gateway"),
-					resource.TestCheckResourceAttrSet("data.aws_vpc_endpoint.s3", "prefix_list_id"),
-					resource.TestCheckResourceAttrSet("data.aws_vpc_endpoint.s3", "cidr_blocks.#"),
-					resource.TestCheckResourceAttr("data.aws_vpc_endpoint.s3", "route_table_ids.#", "0"),
-					resource.TestCheckResourceAttr("data.aws_vpc_endpoint.s3", "subnet_ids.#", "0"),
-					resource.TestCheckResourceAttr("data.aws_vpc_endpoint.s3", "network_interface_ids.#", "0"),
-					resource.TestCheckResourceAttr("data.aws_vpc_endpoint.s3", "security_group_ids.#", "0"),
+					resource.TestCheckResourceAttr(datasourceName, "vpc_endpoint_type", "Gateway"),
+					resource.TestCheckResourceAttrSet(datasourceName, "prefix_list_id"),
+					resource.TestCheckResourceAttrSet(datasourceName, "cidr_blocks.#"),
+					resource.TestCheckResourceAttr(datasourceName, "route_table_ids.#", "0"),
+					resource.TestCheckResourceAttr(datasourceName, "subnet_ids.#", "0"),
+					resource.TestCheckResourceAttr(datasourceName, "network_interface_ids.#", "0"),
+					resource.TestCheckResourceAttr(datasourceName, "security_group_ids.#", "0"),
+					resource.TestCheckResourceAttr(datasourceName, "private_dns_enabled", "false"),
+					resource.TestCheckResourceAttr(datasourceName, "requester_managed", "false"),
 				),
 			},
 		},
@@ -32,6 +32,8 @@ func TestAccDataSourceAwsVpcEndpoint_gatewayBasic(t *testing.T) {
 }
 
 func TestAccDataSourceAwsVpcEndpoint_byId(t *testing.T) {
+	datasourceName := "data.aws_vpc_endpoint.s3"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
@@ -39,7 +41,15 @@ func TestAccDataSourceAwsVpcEndpoint_byId(t *testing.T) {
 			{
 				Config: testAccDataSourceAwsVpcEndpointConfig_byId,
 				Check: resource.ComposeTestCheckFunc(
-					testAccDataSourceAwsVpcEndpointCheckExists("data.aws_vpc_endpoint.by_id", "aws_vpc_endpoint.s3"),
+					resource.TestCheckResourceAttr(datasourceName, "vpc_endpoint_type", "Gateway"),
+					resource.TestCheckResourceAttrSet(datasourceName, "prefix_list_id"),
+					resource.TestCheckResourceAttrSet(datasourceName, "cidr_blocks.#"),
+					resource.TestCheckResourceAttr(datasourceName, "route_table_ids.#", "0"),
+					resource.TestCheckResourceAttr(datasourceName, "subnet_ids.#", "0"),
+					resource.TestCheckResourceAttr(datasourceName, "network_interface_ids.#", "0"),
+					resource.TestCheckResourceAttr(datasourceName, "security_group_ids.#", "0"),
+					resource.TestCheckResourceAttr(datasourceName, "private_dns_enabled", "false"),
+					resource.TestCheckResourceAttr(datasourceName, "requester_managed", "false"),
 				),
 			},
 		},
@@ -47,6 +57,8 @@ func TestAccDataSourceAwsVpcEndpoint_byId(t *testing.T) {
 }
 
 func TestAccDataSourceAwsVpcEndpoint_gatewayWithRouteTable(t *testing.T) {
+	datasourceName := "data.aws_vpc_endpoint.s3"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
@@ -54,11 +66,15 @@ func TestAccDataSourceAwsVpcEndpoint_gatewayWithRouteTable(t *testing.T) {
 			{
 				Config: testAccDataSourceAwsVpcEndpointConfig_gatewayWithRouteTable,
 				Check: resource.ComposeTestCheckFunc(
-					testAccDataSourceAwsVpcEndpointCheckExists("data.aws_vpc_endpoint.s3", "aws_vpc_endpoint.s3"),
-					resource.TestCheckResourceAttr(
-						"data.aws_vpc_endpoint.s3", "vpc_endpoint_type", "Gateway"),
-					resource.TestCheckResourceAttr(
-						"data.aws_vpc_endpoint.s3", "route_table_ids.#", "1"),
+					resource.TestCheckResourceAttr(datasourceName, "vpc_endpoint_type", "Gateway"),
+					resource.TestCheckResourceAttrSet(datasourceName, "prefix_list_id"),
+					resource.TestCheckResourceAttrSet(datasourceName, "cidr_blocks.#"),
+					resource.TestCheckResourceAttr(datasourceName, "route_table_ids.#", "1"),
+					resource.TestCheckResourceAttr(datasourceName, "subnet_ids.#", "0"),
+					resource.TestCheckResourceAttr(datasourceName, "network_interface_ids.#", "0"),
+					resource.TestCheckResourceAttr(datasourceName, "security_group_ids.#", "0"),
+					resource.TestCheckResourceAttr(datasourceName, "private_dns_enabled", "false"),
+					resource.TestCheckResourceAttr(datasourceName, "requester_managed", "false"),
 				),
 			},
 		},
@@ -66,6 +82,8 @@ func TestAccDataSourceAwsVpcEndpoint_gatewayWithRouteTable(t *testing.T) {
 }
 
 func TestAccDataSourceAwsVpcEndpoint_interface(t *testing.T) {
+	datasourceName := "data.aws_vpc_endpoint.ec2"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
@@ -73,45 +91,19 @@ func TestAccDataSourceAwsVpcEndpoint_interface(t *testing.T) {
 			{
 				Config: testAccDataSourceAwsVpcEndpointConfig_interface,
 				Check: resource.ComposeTestCheckFunc(
-					testAccDataSourceAwsVpcEndpointCheckExists("data.aws_vpc_endpoint.ec2", "aws_vpc_endpoint.ec2"),
-					resource.TestCheckResourceAttr(
-						"data.aws_vpc_endpoint.ec2", "vpc_endpoint_type", "Interface"),
-					resource.TestCheckNoResourceAttr("data.aws_vpc_endpoint.ec2", "prefix_list_id"),
-					resource.TestCheckResourceAttr("data.aws_vpc_endpoint.ec2", "cidr_blocks.#", "0"),
-					resource.TestCheckResourceAttr("data.aws_vpc_endpoint.ec2", "route_table_ids.#", "0"),
-					resource.TestCheckResourceAttr("data.aws_vpc_endpoint.ec2", "subnet_ids.#", "1"),
-					resource.TestCheckResourceAttr("data.aws_vpc_endpoint.ec2", "security_group_ids.#", "1"),
-					resource.TestCheckResourceAttr("data.aws_vpc_endpoint.ec2", "private_dns_enabled", "false"),
+					resource.TestCheckResourceAttr(datasourceName, "vpc_endpoint_type", "Interface"),
+					resource.TestCheckNoResourceAttr(datasourceName, "prefix_list_id"),
+					resource.TestCheckResourceAttr(datasourceName, "cidr_blocks.#", "0"),
+					resource.TestCheckResourceAttr(datasourceName, "route_table_ids.#", "0"),
+					resource.TestCheckResourceAttr(datasourceName, "subnet_ids.#", "1"),
+					resource.TestCheckResourceAttr(datasourceName, "network_interface_ids.#", "1"),
+					resource.TestCheckResourceAttr(datasourceName, "security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(datasourceName, "private_dns_enabled", "false"),
+					resource.TestCheckResourceAttr(datasourceName, "requester_managed", "false"),
 				),
 			},
 		},
 	})
-}
-
-func testAccDataSourceAwsVpcEndpointCheckExists(dsName, rsName string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[dsName]
-		if !ok {
-			return fmt.Errorf("root module has no resource called %s", dsName)
-		}
-
-		vpceRs, ok := s.RootModule().Resources[rsName]
-		if !ok {
-			return fmt.Errorf("can't find %s in state", rsName)
-		}
-
-		attr := rs.Primary.Attributes
-
-		if attr["id"] != vpceRs.Primary.Attributes["id"] {
-			return fmt.Errorf(
-				"id is %s; want %s",
-				attr["id"],
-				vpceRs.Primary.Attributes["id"],
-			)
-		}
-
-		return nil
-	}
 }
 
 const testAccDataSourceAwsVpcEndpointConfig_gatewayBasic = `
@@ -157,7 +149,7 @@ resource "aws_vpc_endpoint" "s3" {
   service_name = "com.amazonaws.us-west-2.s3"
 }
 
-data "aws_vpc_endpoint" "by_id" {
+data "aws_vpc_endpoint" "s3" {
   id = "${aws_vpc_endpoint.s3.id}"
 }
 `
