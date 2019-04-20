@@ -105,6 +105,14 @@ func TestIgnoringTags(t *testing.T) {
 		Key:   aws.String("aws:foo:bar"),
 		Value: aws.String("baz"),
 	})
+	ignoredTags = append(ignoredTags, &ec2.Tag{
+		Key:   aws.String("kubernetes.io/cluster/foo"),
+		Value: aws.String("owned"),
+	})
+	ignoredTags = append(ignoredTags, &ec2.Tag{
+		Key:   aws.String("kubernetes.io/cluster/bar"),
+		Value: aws.String("shared"),
+	})
 	for _, tag := range ignoredTags {
 		if !tagIgnored(tag) {
 			t.Fatalf("Tag %v with value %v not ignored, but should be!", *tag.Key, *tag.Value)
