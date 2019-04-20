@@ -335,7 +335,7 @@ func tagsFromMapELBv2(m map[string]interface{}) []*elbv2.Tag {
 // tagIgnored compares a tag against a list of strings and checks if it should
 // be ignored or not
 func tagIgnored(t *ec2.Tag) bool {
-	filter := []string{"^aws:"}
+	filter := []string{"^aws:", "^kubernetes.io/cluster/"}
 	for _, v := range filter {
 		log.Printf("[DEBUG] Matching %v with %v\n", v, *t.Key)
 		r, _ := regexp.MatchString(v, *t.Key)
