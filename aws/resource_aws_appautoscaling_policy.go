@@ -407,15 +407,24 @@ func resourceAwsAppautoscalingPolicyDelete(d *schema.ResourceData, meta interfac
 
 func resourceAwsAppautoscalingPolicyImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	idParts := strings.Split(d.Id(), "/")
+	var serviceNamespace, resourceId, scalableDimension, policyName string
 
 	if len(idParts) < 4 {
 		return nil, fmt.Errorf("unexpected format (%q), expected <service-namespace>/<resource-id>/<scalable-dimension>/<policy-name>", d.Id())
 	}
 
-	serviceNamespace := idParts[0]
-	resourceId := strings.Join(idParts[1:len(idParts)-2], "/")
-	scalableDimension := idParts[len(idParts)-2]
-	policyName := idParts[len(idParts)-1]
+	switch idParts[0] {
+	case "ecs", "rds":
+		serviceNamespace = idParts[0]
+		resourceId = strings.Join(idParts[1:len(idParts)-2], "/")
+		scalableDimension = idParts[len(idParts)-2]
+		policyName = idParts[len(idParts)-1]
+	case "dynamodb":
+		serviceNamespace = idParts[0]
+		resourceId = strings.Join(idParts[1:len(idParts)-3], "/")
+		scalableDimension = idParts[len(idParts)-3]
+		policyName = strings.Join(idParts[4:], "/")
+	}
 
 	if serviceNamespace == "" || resourceId == "" || scalableDimension == "" || policyName == "" {
 		return nil, fmt.Errorf("unexpected format (%q), expected <service-namespace>/<resource-id>/<scalable-dimension>/<policy-name>", d.Id())
