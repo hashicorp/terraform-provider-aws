@@ -50,7 +50,7 @@ func dataSourceAwsElbHostedZoneId() *schema.Resource {
 			},
 			"elb_type": {
 				Type:         schema.TypeString,
-				Required:     true,
+				Optional:     true,
 				ValidateFunc: validation.StringInSlice(validElbTypes, false),
 			},
 		},
@@ -69,6 +69,8 @@ func dataSourceAwsElbHostedZoneIdRead(d *schema.ResourceData, meta interface{}) 
 		} else if v.(string) == "network" {
 			i = 1
 		}
+	} else {
+		i = 0
 	}
 	if zoneId, ok := elbHostedZoneIdPerRegionMap[region]; ok {
 		d.SetId(zoneId[i])
