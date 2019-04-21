@@ -1232,16 +1232,16 @@ func TestNormalizeCloudFormationTemplate(t *testing.T) {
 
 func TestFlattenOrgRoots(t *testing.T) {
 	roots := []*organizations.Root{
-		&organizations.Root{
+		{
 			Name: aws.String("Root1"),
 			Arn:  aws.String("arn:1"),
 			Id:   aws.String("r-1"),
 			PolicyTypes: []*organizations.PolicyTypeSummary{
-				&organizations.PolicyTypeSummary{
+				{
 					Status: aws.String("ENABLED"),
 					Type:   aws.String("SERVICE_CONTROL_POLICY"),
 				},
-				&organizations.PolicyTypeSummary{
+				{
 					Status: aws.String("DISABLED"),
 					Type:   aws.String("SERVICE_CONTROL_POLICY"),
 				},
