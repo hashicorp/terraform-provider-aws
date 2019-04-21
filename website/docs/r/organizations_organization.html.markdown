@@ -39,6 +39,13 @@ In addition to all arguments above, the following attributes are exported:
 * `master_account_arn` - ARN of the master account
 * `master_account_email` - Email address of the master account
 * `master_account_id` - Identifier of the master account
+* `roots` - List of organization roots. All elements have these attributes:
+  * `arn` - ARN of the root
+  * `id` - Identifier of the root
+  * `name` - Name of the root
+  * `policy_types` - List of policy types enabled for this root. All elements have these attributes:
+    * `name` - The name of the policy type
+    * `status` - The status of the policy type as it relates to the associated root
 
 ## Import
 

@@ -42,6 +42,42 @@ func resourceAwsOrganizationsOrganization() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"roots": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"policy_types": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"status": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"type": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"feature_set": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -106,7 +142,18 @@ func resourceAwsOrganizationsOrganizationRead(d *schema.ResourceData, meta inter
 		return fmt.Errorf("error describing Organization: %s", err)
 	}
 
+	log.Printf("[INFO] Listing Roots for Organization: %s", d.Id())
+	var roots []*organizations.Root
+	err = conn.ListRootsPages(&organizations.ListRootsInput{}, func(page *organizations.ListRootsOutput, lastPage bool) bool {
+		roots = append(roots, page.Roots...)
+		return !lastPage
+	})
+	if err != nil {
+		return err
+	}
+
 	d.Set("arn", org.Organization.Arn)
+	d.Set("roots", flattenOrgRoots(roots))
 	d.Set("feature_set", org.Organization.FeatureSet)
 	d.Set("master_account_arn", org.Organization.MasterAccountArn)
 	d.Set("master_account_email", org.Organization.MasterAccountEmail)
