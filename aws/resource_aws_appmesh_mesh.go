@@ -107,7 +107,7 @@ func resourceAwsAppmeshMeshRead(d *schema.ResourceData, meta interface{}) error 
 	resp, err := conn.DescribeMesh(&appmesh.DescribeMeshInput{
 		MeshName: aws.String(d.Id()),
 	})
-	if isAWSErr(err, "NotFoundException", "") {
+	if isAWSErr(err, appmesh.ErrCodeNotFoundException, "") {
 		log.Printf("[WARN] App Mesh service mesh (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -130,12 +130,13 @@ func resourceAwsAppmeshMeshRead(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error setting spec: %s", err)
 	}
 
-	if err := saveTagsAppmesh(conn, d, aws.StringValue(resp.Mesh.Metadata.Arn)); err != nil {
-		if isAWSErr(err, appmesh.ErrCodeNotFoundException, "") {
-			log.Printf("[WARN] App Mesh service mesh (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
+	err = saveTagsAppmesh(conn, d, aws.StringValue(resp.Mesh.Metadata.Arn))
+	if isAWSErr(err, appmesh.ErrCodeNotFoundException, "") {
+		log.Printf("[WARN] App Mesh service mesh (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+	if err != nil {
 		return fmt.Errorf("error saving tags: %s", err)
 	}
 
@@ -159,12 +160,13 @@ func resourceAwsAppmeshMeshUpdate(d *schema.ResourceData, meta interface{}) erro
 		}
 	}
 
-	if err := setTagsAppmesh(conn, d, d.Get("arn").(string)); err != nil {
-		if isAWSErr(err, appmesh.ErrCodeNotFoundException, "") {
-			log.Printf("[WARN] App Mesh service mesh (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
+	err := setTagsAppmesh(conn, d, d.Get("arn").(string))
+	if isAWSErr(err, appmesh.ErrCodeNotFoundException, "") {
+		log.Printf("[WARN] App Mesh service mesh (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+	if err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -178,7 +180,7 @@ func resourceAwsAppmeshMeshDelete(d *schema.ResourceData, meta interface{}) erro
 	_, err := conn.DeleteMesh(&appmesh.DeleteMeshInput{
 		MeshName: aws.String(d.Id()),
 	})
-	if isAWSErr(err, "NotFoundException", "") {
+	if isAWSErr(err, appmesh.ErrCodeNotFoundException, "") {
 		return nil
 	}
 	if err != nil {
