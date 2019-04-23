@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -308,6 +309,44 @@ func TestAccAWSAppautoScalingPolicy_ResourceId_ForceNew(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestValidateAppautoscalingPolicyImportInput(t *testing.T) {
+	testCases := []struct {
+		input                     string
+		expectedServiceNamespace  string
+		expectedResourceId        string
+		expectedScalableDimension string
+		expectedPolicyName        string
+	}{
+		{
+			"rds/cluster:id/rds:cluster:ReadReplicaCount/cpu-auto-scaling",
+			"rds", "cluster:id", "rds:cluster:ReadReplicaCount", "cpu-auto-scaling"},
+		{
+			"ecs/service/clusterName/serviceName/ecs:service:DesiredCount/scale-down",
+			"ecs", "service/clusterName/serviceName", "ecs:service:DesiredCount", "scale-down"},
+		{
+			"dynamodb/table/cmp_dev_rcs_content/dynamodb:table:ReadCapacityUnits/DynamoDBReadCapacityUtilization:table/cmp_dev_rcs_content",
+			"dynamodb", "table/cmp_dev_rcs_content", "dynamodb:table:ReadCapacityUnits", "DynamoDBReadCapacityUtilization:table/cmp_dev_rcs_content"},
+	}
+
+	for _, test := range testCases {
+		idParts := strings.Split(test.input, "/")
+		serviceNamespace, resourceId, scalableDimension, policyName := validateAppautoscalingPolicyImportInput(idParts)
+
+		if serviceNamespace != test.expectedServiceNamespace {
+			t.Errorf("serviceNamespace interpolation error -> %s != %s", test.expectedServiceNamespace, serviceNamespace)
+		}
+		if resourceId != test.expectedResourceId {
+			t.Errorf("resourceId interpolation error -> %s != %s", test.expectedResourceId, resourceId)
+		}
+		if scalableDimension != test.expectedScalableDimension {
+			t.Errorf("scalableDimension interpolation error -> %s != %s", test.expectedScalableDimension, scalableDimension)
+		}
+		if policyName != test.expectedPolicyName {
+			t.Errorf("policyName interpolation error -> %s != %s", test.expectedPolicyName, policyName)
+		}
+	}
 }
 
 func testAccCheckAWSAppautoscalingPolicyExists(n string, policy *applicationautoscaling.ScalingPolicy) resource.TestCheckFunc {

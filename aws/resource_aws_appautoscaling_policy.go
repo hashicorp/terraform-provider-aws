@@ -413,18 +413,7 @@ func resourceAwsAppautoscalingPolicyImport(d *schema.ResourceData, meta interfac
 		return nil, fmt.Errorf("unexpected format (%q), expected <service-namespace>/<resource-id>/<scalable-dimension>/<policy-name>", d.Id())
 	}
 
-	switch idParts[0] {
-	case "ecs", "rds":
-		serviceNamespace = idParts[0]
-		resourceId = strings.Join(idParts[1:len(idParts)-2], "/")
-		scalableDimension = idParts[len(idParts)-2]
-		policyName = idParts[len(idParts)-1]
-	case "dynamodb":
-		serviceNamespace = idParts[0]
-		resourceId = strings.Join(idParts[1:len(idParts)-3], "/")
-		scalableDimension = idParts[len(idParts)-3]
-		policyName = strings.Join(idParts[4:], "/")
-	}
+	serviceNamespace, resourceId, scalableDimension, policyName = validateAppautoscalingPolicyImportInput(idParts)
 
 	if serviceNamespace == "" || resourceId == "" || scalableDimension == "" || policyName == "" {
 		return nil, fmt.Errorf("unexpected format (%q), expected <service-namespace>/<resource-id>/<scalable-dimension>/<policy-name>", d.Id())
@@ -437,6 +426,25 @@ func resourceAwsAppautoscalingPolicyImport(d *schema.ResourceData, meta interfac
 	d.SetId(policyName)
 
 	return []*schema.ResourceData{d}, nil
+}
+
+func validateAppautoscalingPolicyImportInput(idParts []string) (string, string, string, string) {
+	var serviceNamespace, resourceId, scalableDimension, policyName string
+
+	switch idParts[0] {
+	case "ecs", "rds":
+		serviceNamespace = idParts[0]
+		resourceId = strings.Join(idParts[1:len(idParts)-2], "/")
+		scalableDimension = idParts[len(idParts)-2]
+		policyName = idParts[len(idParts)-1]
+	case "dynamodb":
+		serviceNamespace = idParts[len(idParts)-6]
+		resourceId = strings.Join(idParts[1:3], "/")
+		scalableDimension = idParts[len(idParts)-3]
+		policyName = strings.Join(idParts[4:], "/")
+	}
+
+	return serviceNamespace, resourceId, scalableDimension, policyName
 }
 
 // Takes the result of flatmap.Expand for an array of step adjustments and
