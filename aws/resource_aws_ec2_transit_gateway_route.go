@@ -77,7 +77,7 @@ func resourceAwsEc2TransitGatewayRouteRead(d *schema.ResourceData, meta interfac
 
 	// Handle EC2 eventual consistency
 	var transitGatewayRoute *ec2.TransitGatewayRoute
-	err = resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
 		var err error
 		transitGatewayRoute, err = ec2DescribeTransitGatewayRoute(conn, transitGatewayRouteTableID, destination)
 
