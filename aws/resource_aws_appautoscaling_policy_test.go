@@ -326,8 +326,8 @@ func TestValidateAppautoscalingPolicyImportInput(t *testing.T) {
 			"ecs/service/clusterName/serviceName/ecs:service:DesiredCount/scale-down",
 			"ecs", "service/clusterName/serviceName", "ecs:service:DesiredCount", "scale-down"},
 		{
-			"dynamodb/table/cmp_dev_rcs_content/dynamodb:table:ReadCapacityUnits/DynamoDBReadCapacityUtilization:table/cmp_dev_rcs_content",
-			"dynamodb", "table/cmp_dev_rcs_content", "dynamodb:table:ReadCapacityUnits", "DynamoDBReadCapacityUtilization:table/cmp_dev_rcs_content"},
+			"dynamodb/table/tableName/dynamodb:table:ReadCapacityUnits/DynamoDBReadCapacityUtilization:table/tableName",
+			"dynamodb", "table/tableName", "dynamodb:table:ReadCapacityUnits", "DynamoDBReadCapacityUtilization:table/tableName"},
 	}
 
 	for _, test := range testCases {
