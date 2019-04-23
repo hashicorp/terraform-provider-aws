@@ -40,7 +40,7 @@ resource "aws_launch_template" "foo" {
     type = "test"
   }
 
-  elastic_interence_accelerator {
+  elastic_inference_accelerator {
     type = "eia1.medium"
   }
 
