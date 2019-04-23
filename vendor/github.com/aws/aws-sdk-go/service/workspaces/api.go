@@ -351,7 +351,7 @@ func (c *WorkSpaces) CreateTagsRequest(input *CreateTagsInput) (req *request.Req
 
 // CreateTags API operation for Amazon WorkSpaces.
 //
-// Creates the specified tags for the specified WorkSpaces resource.
+// Creates the specified tags for the specified WorkSpace.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -612,7 +612,7 @@ func (c *WorkSpaces) DeleteTagsRequest(input *DeleteTagsInput) (req *request.Req
 
 // DeleteTags API operation for Amazon WorkSpaces.
 //
-// Deletes the specified tags from the specified WorkSpaces resource.
+// Deletes the specified tags from the specified WorkSpace.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1108,7 +1108,7 @@ func (c *WorkSpaces) DescribeTagsRequest(input *DescribeTagsInput) (req *request
 
 // DescribeTags API operation for Amazon WorkSpaces.
 //
-// Describes the specified tags for the specified WorkSpaces resource.
+// Describes the specified tags for the specified WorkSpace.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1875,6 +1875,9 @@ func (c *WorkSpaces) ImportWorkspaceImageRequest(input *ImportWorkspaceImageInpu
 //
 //   * ErrCodeAccessDeniedException "AccessDeniedException"
 //   The user is not authorized to access a resource.
+//
+//   * ErrCodeInvalidParameterValuesException "InvalidParameterValuesException"
+//   One or more parameter values are not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/ImportWorkspaceImage
 func (c *WorkSpaces) ImportWorkspaceImage(input *ImportWorkspaceImageInput) (*ImportWorkspaceImageOutput, error) {
@@ -3324,14 +3327,12 @@ func (s *CreateIpGroupOutput) SetGroupId(v string) *CreateIpGroupOutput {
 type CreateTagsInput struct {
 	_ struct{} `type:"structure"`
 
-	// The identifier of the WorkSpaces resource. The supported resource types are
-	// WorkSpaces, registered directories, images, custom bundles, and IP access
-	// control groups.
+	// The identifier of the WorkSpace. To find this ID, use DescribeWorkspaces.
 	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
 
-	// The tags. Each WorkSpaces resource can have a maximum of 50 tags.
+	// The tags. Each WorkSpace can have a maximum of 50 tags.
 	//
 	// Tags is a required field
 	Tags []*Tag `type:"list" required:"true"`
@@ -3605,9 +3606,7 @@ func (s DeleteIpGroupOutput) GoString() string {
 type DeleteTagsInput struct {
 	_ struct{} `type:"structure"`
 
-	// The identifier of the WorkSpaces resource. The supported resource types are
-	// WorkSpaces, registered directories, images, custom bundles, and IP access
-	// control groups.
+	// The identifier of the WorkSpace. To find this ID, use DescribeWorkspaces.
 	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
@@ -4005,9 +4004,7 @@ func (s *DescribeIpGroupsOutput) SetResult(v []*IpGroup) *DescribeIpGroupsOutput
 type DescribeTagsInput struct {
 	_ struct{} `type:"structure"`
 
-	// The identifier of the WorkSpaces resource. The supported resource types are
-	// WorkSpaces, registered directories, images, custom bundles, and IP access
-	// control groups.
+	// The identifier of the WorkSpace. To find this ID, use DescribeWorkspaces.
 	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
@@ -5487,6 +5484,9 @@ func (s *RebuildRequest) SetWorkspaceId(v string) *RebuildRequest {
 type RebuildWorkspacesInput struct {
 	_ struct{} `type:"structure"`
 
+	// Reserved.
+	AdditionalInfo *string `type:"string"`
+
 	// The WorkSpace to rebuild. You can specify a single WorkSpace.
 	//
 	// RebuildWorkspaceRequests is a required field
@@ -5527,6 +5527,12 @@ func (s *RebuildWorkspacesInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetAdditionalInfo sets the AdditionalInfo field's value.
+func (s *RebuildWorkspacesInput) SetAdditionalInfo(v string) *RebuildWorkspacesInput {
+	s.AdditionalInfo = &v
+	return s
 }
 
 // SetRebuildWorkspaceRequests sets the RebuildWorkspaceRequests field's value.
