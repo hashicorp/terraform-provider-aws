@@ -111,13 +111,17 @@ func TestAccAwsDxGateway_importComplex(t *testing.T) {
 		return nil
 	}
 
+	rName1 := fmt.Sprintf("terraform-testacc-dxgwassoc-%d", acctest.RandInt())
+	rName2 := fmt.Sprintf("terraform-testacc-dxgwassoc-%d", acctest.RandInt())
+	rBgpAsn := randIntRange(64512, 65534)
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDxGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxGatewayAssociationConfig_multiVgws(acctest.RandString(5), randIntRange(64512, 65534)),
+				Config: testAccDxGatewayAssociationConfig_multiVgws(rName1, rName2, rBgpAsn),
 			},
 
 			{
