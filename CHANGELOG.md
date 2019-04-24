@@ -1,7 +1,13 @@
 ## 2.8.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_dx_gateway_association_proposal` [GH-8320]
+
 ENHANCEMENTS:
 
+* data-source/aws_dx_gateway: Add `owner_account_id` attribute [GH-8320]
+* resource/aws_dx_gateway: Add `owner_account_id` attribute [GH-8320]
 * resource/aws_dx_gateway_association: Support resource import [GH-8222]
 * resource/aws_dx_gateway_association: Add `allowed_prefixes` argument [GH-8222]
 * resource/aws_lb: Support Network Load Balancer (NLB) access logs [GH-8282]
