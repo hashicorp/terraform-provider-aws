@@ -4,11 +4,14 @@ ENHANCEMENTS:
 
 * resource/aws_dx_gateway_association: Support resource import [GH-8222]
 * resource/aws_dx_gateway_association: Add `allowed_prefixes` argument [GH-8222]
+* resource/aws_lb: Support Network Load Balancer (NLB) access logs [GH-8282]
 * resource/aws_transfer_user: Support `user_name` containing uppercase letters, hyphens, and underscores [GH-8304]
 
 BUG FIXES:
 
 * resource/aws_emr_cluster: Increase deletion timeout from 10 to 20 minutes to match AWS documentation [GH-8428]
+* resource/aws_lb: Prevent difference when `subnet_mapping` configuration block `allocation_id` argument was omitted [GH-8282]
+* resource/aws_lb: Properly disable access logs with `access_logs` configuration block `enabled` argument set to `false` [GH-8282]
 
 ## 2.7.0 (April 18, 2019)
 
