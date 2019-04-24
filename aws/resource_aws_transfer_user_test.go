@@ -125,7 +125,7 @@ func TestAccAWSTransferUser_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSTransferUserName_validation(t *testing.T) {
+func TestAccAWSTransferUser_UserName_Validation(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
