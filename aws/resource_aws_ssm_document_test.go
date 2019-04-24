@@ -27,7 +27,9 @@ func TestAccAWSSSMDocument_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_ssm_document.foo", "document_format", "JSON"),
 					resource.TestMatchResourceAttr("aws_ssm_document.foo", "arn",
 						regexp.MustCompile(`^arn:aws:ssm:[a-z]{2}-[a-z]+-\d{1}:\d{12}:document/.*$`)),
-					resource.TestCheckResourceAttr("aws_ssm_document.foo", "tags.%", "0"),
+					resource.TestCheckResourceAttr("aws_ssm_document.foo", "tags.%", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_ssm_document.foo", "tags.Name", "My Document"),
 				),
 			},
 		},
@@ -382,14 +384,16 @@ func testAccAWSSSMDocumentBasicConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_document" "foo" {
   name = "test_document-%s"
-	document_type = "Command"
+  document_type = "Command"
+  tags = {
+    Name = "My Document"
+  }
 
   content = <<DOC
     {
       "schemaVersion": "1.2",
       "description": "Check ip configuration of a Linux instance.",
       "parameters": {
-
       },
       "runtimeConfig": {
         "aws:runShellScript": {
