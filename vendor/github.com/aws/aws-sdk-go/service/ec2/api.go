@@ -88297,6 +88297,27 @@ const (
 	// InstanceTypeT32xlarge is a InstanceType enum value
 	InstanceTypeT32xlarge = "t3.2xlarge"
 
+	// InstanceTypeT3aNano is a InstanceType enum value
+	InstanceTypeT3aNano = "t3a.nano"
+
+	// InstanceTypeT3aMicro is a InstanceType enum value
+	InstanceTypeT3aMicro = "t3a.micro"
+
+	// InstanceTypeT3aSmall is a InstanceType enum value
+	InstanceTypeT3aSmall = "t3a.small"
+
+	// InstanceTypeT3aMedium is a InstanceType enum value
+	InstanceTypeT3aMedium = "t3a.medium"
+
+	// InstanceTypeT3aLarge is a InstanceType enum value
+	InstanceTypeT3aLarge = "t3a.large"
+
+	// InstanceTypeT3aXlarge is a InstanceType enum value
+	InstanceTypeT3aXlarge = "t3a.xlarge"
+
+	// InstanceTypeT3a2xlarge is a InstanceType enum value
+	InstanceTypeT3a2xlarge = "t3a.2xlarge"
+
 	// InstanceTypeM1Small is a InstanceType enum value
 	InstanceTypeM1Small = "m1.small"
 
