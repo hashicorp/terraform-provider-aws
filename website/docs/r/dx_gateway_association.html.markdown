@@ -25,7 +25,7 @@ resource "aws_vpc" "example" {
 }
 
 resource "aws_vpn_gateway" "example" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = "${aws_vpc.example.id}"
 }
 
 resource "aws_dx_gateway_association" "example" {
@@ -47,7 +47,7 @@ resource "aws_vpc" "example" {
 }
 
 resource "aws_vpn_gateway" "example" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = "${aws_vpc.example.id}"
 }
 
 resource "aws_dx_gateway_association" "example" {
@@ -67,7 +67,7 @@ The following arguments are supported:
 
 * `dx_gateway_id` - (Required) The ID of the Direct Connect gateway.
 * `vpn_gateway_id` - (Required) The ID of the VGW with which to associate the gateway.
-* `allowed_prefixes` - (Optional) The Amazon VPC prefixes to advertise to the Direct Connect gateway.
+* `allowed_prefixes` - (Optional) VPC prefixes (CIDRs) to advertise to the Direct Connect gateway. Defaults to the CIDR block of the VPC associated with the Virtual Gateway. To enable drift detection, must be configured.
 
 ## Attributes Reference
 
