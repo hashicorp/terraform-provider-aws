@@ -117,15 +117,10 @@ func validateTransferServerID(v interface{}, k string) (ws []string, errors []er
 
 func validateTransferUserName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-
 	// https://docs.aws.amazon.com/transfer/latest/userguide/API_CreateUser.html
-	pattern := `^[a-z0-9]{3,32}$`
-	if !regexp.MustCompile(pattern).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"%q isn't a valid transfer user name (only lowercase alphanumeric characters are allowed): %q",
-			k, value))
+	if !regexp.MustCompile(`^[a-zA-Z0-9_][a-zA-Z0-9_-]{2,31}$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf("Invalid %q: must be between 3 and 32 alphanumeric or special characters hyphen and underscore. However, %q cannot begin with a hyphen", k, k))
 	}
-
 	return
 }
 
