@@ -235,7 +235,7 @@ func resourceAwsEksClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("role_arn", cluster.RoleArn)
 	d.Set("version", cluster.Version)
 	if err := d.Set("enabled_cluster_log_types", flattenEksEnabledLogTypes(cluster.Logging)); err != nil {
-		return fmt.Errorf("error setting logging: %s", err)
+		return fmt.Errorf("error setting enabled_cluster_log_types: %s", err)
 	}
 
 	if err := d.Set("vpc_config", flattenEksVpcConfigResponse(cluster.ResourcesVpcConfig)); err != nil {
