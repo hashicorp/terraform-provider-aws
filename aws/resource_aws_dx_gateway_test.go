@@ -144,6 +144,7 @@ func TestAccAwsDxGateway_basic(t *testing.T) {
 				Config: testAccDxGatewayConfig(acctest.RandString(5), randIntRange(64512, 65534)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDxGatewayExists("aws_dx_gateway.test"),
+					testAccCheckResourceAttrAccountID("aws_dx_gateway.test", "owner_account_id"),
 				),
 			},
 		},
