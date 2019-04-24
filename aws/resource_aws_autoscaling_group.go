@@ -538,7 +538,7 @@ func resourceAwsAutoscalingGroupCreate(d *schema.ResourceData, meta interface{})
 		createOpts.Tags = append(createOpts.Tags, tags...)
 	}
 
-	if v, ok := d.GetOk("default_cooldown"); ok {
+	if v, ok := d.GetOkExists("default_cooldown"); ok {
 		createOpts.DefaultCooldown = aws.Int64(int64(v.(int)))
 	}
 
