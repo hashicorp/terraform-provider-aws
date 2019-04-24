@@ -25,7 +25,8 @@ func TestAccAWSSSMActivation_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMActivationExists("aws_ssm_activation.foo"),
 					resource.TestCheckResourceAttrSet("aws_ssm_activation.foo", "activation_code"),
-				),
+					resource.TestCheckResourceAttr("aws_ssm_activation.foo", "tags.%", "1"),
+					resource.TestCheckResourceAttr("aws_ssm_activation.foo", "tags.Name", "My Activation")),
 			},
 		},
 	})
@@ -155,6 +156,9 @@ resource "aws_ssm_activation" "foo" {
   iam_role           = "${aws_iam_role.test_role.name}"
   registration_limit = "5"
   depends_on         = ["aws_iam_role_policy_attachment.test_attach"]
+  tags               = {
+    Name = "My Activation"
+  }
 }
 `, rName, rName)
 }
