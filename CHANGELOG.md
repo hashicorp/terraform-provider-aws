@@ -4,7 +4,7 @@ ENHANCEMENTS:
 
 * resource/aws_dx_gateway_association: Support resource import [GH-8222]
 * resource/aws_dx_gateway_association: Add `allowed_prefixes` argument [GH-8222]
-* resource/aws_transfer_user: Support `user_name` containing underscores [GH-8304]
+* resource/aws_transfer_user: Support `user_name` containing uppercase letters, hyphens, and underscores [GH-8304]
 
 ## 2.7.0 (April 18, 2019)
 
