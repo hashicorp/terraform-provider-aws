@@ -4240,6 +4240,12 @@ func (c *StorageGateway) ListFileSharesRequest(input *ListFileSharesInput) (req 
 		Name:       opListFileShares,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"Marker"},
+			OutputTokens:    []string{"NextMarker"},
+			LimitToken:      "Limit",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -4293,6 +4299,56 @@ func (c *StorageGateway) ListFileSharesWithContext(ctx aws.Context, input *ListF
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// ListFileSharesPages iterates over the pages of a ListFileShares operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListFileShares method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListFileShares operation.
+//    pageNum := 0
+//    err := client.ListFileSharesPages(params,
+//        func(page *ListFileSharesOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *StorageGateway) ListFileSharesPages(input *ListFileSharesInput, fn func(*ListFileSharesOutput, bool) bool) error {
+	return c.ListFileSharesPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListFileSharesPagesWithContext same as ListFileSharesPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *StorageGateway) ListFileSharesPagesWithContext(ctx aws.Context, input *ListFileSharesInput, fn func(*ListFileSharesOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListFileSharesInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListFileSharesRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListFileSharesOutput), !p.HasNextPage())
+	}
+	return p.Err()
 }
 
 const opListGateways = "ListGateways"
@@ -4569,6 +4625,12 @@ func (c *StorageGateway) ListTagsForResourceRequest(input *ListTagsForResourceIn
 		Name:       opListTagsForResource,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"Marker"},
+			OutputTokens:    []string{"Marker"},
+			LimitToken:      "Limit",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -4623,6 +4685,56 @@ func (c *StorageGateway) ListTagsForResourceWithContext(ctx aws.Context, input *
 	return out, req.Send()
 }
 
+// ListTagsForResourcePages iterates over the pages of a ListTagsForResource operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListTagsForResource method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListTagsForResource operation.
+//    pageNum := 0
+//    err := client.ListTagsForResourcePages(params,
+//        func(page *ListTagsForResourceOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *StorageGateway) ListTagsForResourcePages(input *ListTagsForResourceInput, fn func(*ListTagsForResourceOutput, bool) bool) error {
+	return c.ListTagsForResourcePagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListTagsForResourcePagesWithContext same as ListTagsForResourcePages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *StorageGateway) ListTagsForResourcePagesWithContext(ctx aws.Context, input *ListTagsForResourceInput, fn func(*ListTagsForResourceOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListTagsForResourceInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListTagsForResourceRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListTagsForResourceOutput), !p.HasNextPage())
+	}
+	return p.Err()
+}
+
 const opListTapes = "ListTapes"
 
 // ListTapesRequest generates a "aws/request.Request" representing the
@@ -4654,6 +4766,12 @@ func (c *StorageGateway) ListTapesRequest(input *ListTapesInput) (req *request.R
 		Name:       opListTapes,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"Marker"},
+			OutputTokens:    []string{"Marker"},
+			LimitToken:      "Limit",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -4715,6 +4833,56 @@ func (c *StorageGateway) ListTapesWithContext(ctx aws.Context, input *ListTapesI
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// ListTapesPages iterates over the pages of a ListTapes operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListTapes method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListTapes operation.
+//    pageNum := 0
+//    err := client.ListTapesPages(params,
+//        func(page *ListTapesOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *StorageGateway) ListTapesPages(input *ListTapesInput, fn func(*ListTapesOutput, bool) bool) error {
+	return c.ListTapesPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListTapesPagesWithContext same as ListTapesPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *StorageGateway) ListTapesPagesWithContext(ctx aws.Context, input *ListTapesInput, fn func(*ListTapesOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListTapesInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListTapesRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListTapesOutput), !p.HasNextPage())
+	}
+	return p.Err()
 }
 
 const opListVolumeInitiators = "ListVolumeInitiators"
@@ -7582,7 +7750,12 @@ type CachediSCSIVolume struct {
 	// One of the VolumeType enumeration values that describes the type of the volume.
 	VolumeType *string `min:"3" type:"string"`
 
-	// The size of the data stored on the volume in bytes.
+	// The size of the data stored on the volume in bytes. This value is calculated
+	// based on the number of blocks that are touched, instead of the actual amount
+	// of data written. This value can be useful for sequential write patterns but
+	// less accurate for random write patterns. VolumeUsedInBytes is different from
+	// the compressed size of the volume, which is the value that is used to calculate
+	// your bill.
 	//
 	// This value is not available for volumes created prior to May 13, 2015, until
 	// you store data on the volume.
@@ -8481,6 +8654,11 @@ type CreateSMBFileShareInput struct {
 	// Role is a required field
 	Role *string `min:"20" type:"string" required:"true"`
 
+	// Set this value to "true to enable ACL (access control list) on the SMB file
+	// share. Set it to "false" to map file and directory permissions to the POSIX
+	// permissions.
+	SMBACLEnabled *bool `type:"boolean"`
+
 	// A list of up to 50 tags that can be assigned to the NFS file share. Each
 	// tag is a key-value pair.
 	//
@@ -8634,6 +8812,12 @@ func (s *CreateSMBFileShareInput) SetRequesterPays(v bool) *CreateSMBFileShareIn
 // SetRole sets the Role field's value.
 func (s *CreateSMBFileShareInput) SetRole(v string) *CreateSMBFileShareInput {
 	s.Role = &v
+	return s
+}
+
+// SetSMBACLEnabled sets the SMBACLEnabled field's value.
+func (s *CreateSMBFileShareInput) SetSMBACLEnabled(v bool) *CreateSMBFileShareInput {
+	s.SMBACLEnabled = &v
 	return s
 }
 
@@ -14170,6 +14354,11 @@ type SMBFileShareInfo struct {
 	// storage.
 	Role *string `min:"20" type:"string"`
 
+	// If this value is set to "true", indicates that ACL (access control list)
+	// is enabled on the SMB file share. If it is set to "false", it indicates that
+	// file and directory permissions are mapped to the POSIX permission.
+	SMBACLEnabled *bool `type:"boolean"`
+
 	// A list of up to 50 tags assigned to the SMB file share, sorted alphabetically
 	// by key name. Each tag is a key-value pair. For a gateway with more than 10
 	// tags assigned, you can view all tags using the ListTagsForResource API operation.
@@ -14284,6 +14473,12 @@ func (s *SMBFileShareInfo) SetRequesterPays(v bool) *SMBFileShareInfo {
 // SetRole sets the Role field's value.
 func (s *SMBFileShareInfo) SetRole(v string) *SMBFileShareInfo {
 	s.Role = &v
+	return s
+}
+
+// SetSMBACLEnabled sets the SMBACLEnabled field's value.
+func (s *SMBFileShareInfo) SetSMBACLEnabled(v bool) *SMBFileShareInfo {
+	s.SMBACLEnabled = &v
 	return s
 }
 
@@ -14663,7 +14858,12 @@ type StorediSCSIVolume struct {
 	// One of the VolumeType enumeration values describing the type of the volume.
 	VolumeType *string `min:"3" type:"string"`
 
-	// The size of the data stored on the volume in bytes.
+	// The size of the data stored on the volume in bytes. This value is calculated
+	// based on the number of blocks that are touched, instead of the actual amount
+	// of data written. This value can be useful for sequential write patterns but
+	// less accurate for random write patterns. VolumeUsedInBytes is different from
+	// the compressed size of the volume, which is the value that is used to calculate
+	// your bill.
 	//
 	// This value is not available for volumes created prior to May 13, 2015, until
 	// you store data on the volume.
@@ -15983,6 +16183,11 @@ type UpdateSMBFileShareInput struct {
 	// S3 bucket configuration.
 	RequesterPays *bool `type:"boolean"`
 
+	// Set this value to "true to enable ACL (access control list) on the SMB file
+	// share. Set it to "false" to map file and directory permissions to the POSIX
+	// permissions.
+	SMBACLEnabled *bool `type:"boolean"`
+
 	// A list of users or groups in the Active Directory that are allowed to access
 	// the file share. A group must be prefixed with the @ character. For example
 	// @group1. Can only be set if Authentication is set to ActiveDirectory.
@@ -16072,6 +16277,12 @@ func (s *UpdateSMBFileShareInput) SetReadOnly(v bool) *UpdateSMBFileShareInput {
 // SetRequesterPays sets the RequesterPays field's value.
 func (s *UpdateSMBFileShareInput) SetRequesterPays(v bool) *UpdateSMBFileShareInput {
 	s.RequesterPays = &v
+	return s
+}
+
+// SetSMBACLEnabled sets the SMBACLEnabled field's value.
+func (s *UpdateSMBFileShareInput) SetSMBACLEnabled(v bool) *UpdateSMBFileShareInput {
+	s.SMBACLEnabled = &v
 	return s
 }
 

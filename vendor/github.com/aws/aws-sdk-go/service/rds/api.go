@@ -156,6 +156,8 @@ func (c *RDS) AddRoleToDBInstanceRequest(input *AddRoleToDBInstanceInput) (req *
 //
 // Associates an AWS Identity and Access Management (IAM) role with a DB instance.
 //
+// To add a role to a DB instance, the status of the DB instance must be available.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -11549,6 +11551,10 @@ type AddRoleToDBClusterInput struct {
 	// DBClusterIdentifier is a required field
 	DBClusterIdentifier *string `type:"string" required:"true"`
 
+	// The name of the feature for the DB cluster that the IAM role is to be associated
+	// with. For the list of supported feature names, see DBEngineVersion.
+	FeatureName *string `type:"string"`
+
 	// The Amazon Resource Name (ARN) of the IAM role to associate with the Aurora
 	// DB cluster, for example arn:aws:iam::123456789012:role/AuroraAccessRole.
 	//
@@ -11585,6 +11591,12 @@ func (s *AddRoleToDBClusterInput) Validate() error {
 // SetDBClusterIdentifier sets the DBClusterIdentifier field's value.
 func (s *AddRoleToDBClusterInput) SetDBClusterIdentifier(v string) *AddRoleToDBClusterInput {
 	s.DBClusterIdentifier = &v
+	return s
+}
+
+// SetFeatureName sets the FeatureName field's value.
+func (s *AddRoleToDBClusterInput) SetFeatureName(v string) *AddRoleToDBClusterInput {
+	s.FeatureName = &v
 	return s
 }
 
@@ -17391,6 +17403,8 @@ func (s *DBClusterParameterGroupNameMessage) SetDBClusterParameterGroupName(v st
 type DBClusterRole struct {
 	_ struct{} `type:"structure"`
 
+	// The name of the feature associated with the AWS Identity and Access Management
+	// (IAM) role. For the list of supported feature names, see DBEngineVersion.
 	FeatureName *string `type:"string"`
 
 	// The Amazon Resource Name (ARN) of the IAM role that is associated with the
@@ -30088,6 +30102,10 @@ type RemoveRoleFromDBClusterInput struct {
 	// DBClusterIdentifier is a required field
 	DBClusterIdentifier *string `type:"string" required:"true"`
 
+	// The name of the feature for the DB cluster that the IAM role is to be disassociated
+	// from. For the list of supported feature names, see DBEngineVersion.
+	FeatureName *string `type:"string"`
+
 	// The Amazon Resource Name (ARN) of the IAM role to disassociate from the Aurora
 	// DB cluster, for example arn:aws:iam::123456789012:role/AuroraAccessRole.
 	//
@@ -30124,6 +30142,12 @@ func (s *RemoveRoleFromDBClusterInput) Validate() error {
 // SetDBClusterIdentifier sets the DBClusterIdentifier field's value.
 func (s *RemoveRoleFromDBClusterInput) SetDBClusterIdentifier(v string) *RemoveRoleFromDBClusterInput {
 	s.DBClusterIdentifier = &v
+	return s
+}
+
+// SetFeatureName sets the FeatureName field's value.
+func (s *RemoveRoleFromDBClusterInput) SetFeatureName(v string) *RemoveRoleFromDBClusterInput {
+	s.FeatureName = &v
 	return s
 }
 

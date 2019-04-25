@@ -8832,6 +8832,22 @@ func (c *SSM) PutParameterRequest(input *PutParameterInput) (req *request.Reques
 //   * ErrCodeUnsupportedParameterType "UnsupportedParameterType"
 //   The parameter type is not supported.
 //
+//   * ErrCodePoliciesLimitExceededException "PoliciesLimitExceededException"
+//   You specified more than the maximum number of allowed policies for the parameter.
+//   The maximum is 10.
+//
+//   * ErrCodeInvalidPolicyTypeException "InvalidPolicyTypeException"
+//   The policy type is not supported. Parameter Store supports the following
+//   policy types: Expiration, ExpirationNotification, and NoChangeNotification.
+//
+//   * ErrCodeInvalidPolicyAttributeException "InvalidPolicyAttributeException"
+//   A policy attribute or its value is invalid.
+//
+//   * ErrCodeIncompatiblePolicyException "IncompatiblePolicyException"
+//   There is a conflict in the policies specified for this parameter. You can't,
+//   for example, specify two Expiration policies for a parameter. Review your
+//   policies, and try again.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/PutParameter
 func (c *SSM) PutParameter(input *PutParameterInput) (*PutParameterOutput, error) {
 	req, out := c.PutParameterRequest(input)
@@ -11774,9 +11790,7 @@ type AssociationExecution struct {
 	// Detailed status information about the execution.
 	DetailedStatus *string `type:"string"`
 
-	// The execution ID for the association. If the association does not run at
-	// intervals or according to a schedule, then the ExecutionID is the same as
-	// the AssociationID.
+	// The execution ID for the association.
 	ExecutionId *string `type:"string"`
 
 	// The date of the last execution.
@@ -11931,8 +11945,7 @@ type AssociationExecutionTarget struct {
 	// Detailed information about the execution status.
 	DetailedStatus *string `type:"string"`
 
-	// The execution ID. If the association does not run at intervals or according
-	// to a schedule, then the ExecutionID is the same as the AssociationID.
+	// The execution ID.
 	ExecutionId *string `type:"string"`
 
 	// The date of the last execution.
@@ -14937,7 +14950,7 @@ type CreateAssociationInput struct {
 	// An Amazon S3 bucket where you want to store the output details of the request.
 	OutputLocation *InstanceAssociationOutputLocation `type:"structure"`
 
-	// The parameters for the documents runtime configuration.
+	// The parameters for the runtime configuration of the document.
 	Parameters map[string][]*string `type:"map"`
 
 	// A cron expression when the association will be applied to the target(s).
@@ -15508,7 +15521,7 @@ type CreatePatchBaselineInput struct {
 	//
 	// For information about accepted formats for lists of approved patches and
 	// rejected patches, see Package Name Formats for Approved and Rejected Patch
-	// Lists (http://docs.aws.amazon.com/systems-manager/latest/userguide/patch-manager-approved-rejected-package-name-formats.html)
+	// Lists (https://docs.aws.amazon.com/systems-manager/latest/userguide/patch-manager-approved-rejected-package-name-formats.html)
 	// in the AWS Systems Manager User Guide.
 	ApprovedPatches []*string `type:"list"`
 
@@ -15544,7 +15557,7 @@ type CreatePatchBaselineInput struct {
 	//
 	// For information about accepted formats for lists of approved patches and
 	// rejected patches, see Package Name Formats for Approved and Rejected Patch
-	// Lists (http://docs.aws.amazon.com/systems-manager/latest/userguide/patch-manager-approved-rejected-package-name-formats.html)
+	// Lists (https://docs.aws.amazon.com/systems-manager/latest/userguide/patch-manager-approved-rejected-package-name-formats.html)
 	// in the AWS Systems Manager User Guide.
 	RejectedPatches []*string `type:"list"`
 
@@ -27456,24 +27469,31 @@ func (s *MaintenanceWindowStepFunctionsParameters) SetName(v string) *Maintenanc
 type MaintenanceWindowTarget struct {
 	_ struct{} `type:"structure"`
 
-	// A description of the target.
+	// A description for the target.
 	Description *string `min:"1" type:"string" sensitive:"true"`
 
 	// The target name.
 	Name *string `min:"3" type:"string"`
 
-	// User-provided value that will be included in any CloudWatch events raised
-	// while running tasks for these targets in this Maintenance Window.
+	// A user-provided value that will be included in any CloudWatch events that
+	// are raised while running tasks for these targets in this Maintenance Window.
 	OwnerInformation *string `min:"1" type:"string" sensitive:"true"`
 
-	// The type of target.
+	// The type of target that is being registered with the Maintenance Window.
 	ResourceType *string `type:"string" enum:"MaintenanceWindowResourceType"`
 
-	// The targets (either instances or tags). Instances are specified using Key=instanceids,Values=<instanceid1>,<instanceid2>.
-	// Tags are specified using Key=<tag name>,Values=<tag value>.
+	// The targets, either instances or tags.
+	//
+	// Specify instances using the following format:
+	//
+	// Key=instanceids,Values=<instanceid1>,<instanceid2>
+	//
+	// Tags are specified using the following format:
+	//
+	// Key=<tag name>,Values=<tag value>.
 	Targets []*Target `type:"list"`
 
-	// The Maintenance Window ID where the target is registered.
+	// The ID of the Maintenance Window to register the target with.
 	WindowId *string `min:"20" type:"string"`
 
 	// The ID of the target.
@@ -27547,7 +27567,7 @@ type MaintenanceWindowTask struct {
 	// for the supported Maintenance Window task types, see MaintenanceWindowTaskInvocationParameters.
 	LoggingInfo *LoggingInfo `type:"structure"`
 
-	// The maximum number of targets this task can be run for in parallel.
+	// The maximum number of targets this task can be run for, in parallel.
 	MaxConcurrency *string `min:"1" type:"string"`
 
 	// The maximum number of errors allowed before this task stops being scheduled.
@@ -27586,7 +27606,7 @@ type MaintenanceWindowTask struct {
 	// LAMBDA, or STEP_FUNCTION.
 	Type *string `type:"string" enum:"MaintenanceWindowTaskType"`
 
-	// The Maintenance Window ID where the task is registered.
+	// The ID of the Maintenance Window where the task is registered.
 	WindowId *string `min:"20" type:"string"`
 
 	// The task ID.
@@ -28024,7 +28044,7 @@ type Parameter struct {
 	Type *string `type:"string" enum:"ParameterType"`
 
 	// The parameter value.
-	Value *string `min:"1" type:"string"`
+	Value *string `type:"string"`
 
 	// The parameter version.
 	Version *int64 `type:"long"`
@@ -28115,11 +28135,17 @@ type ParameterHistory struct {
 	// The name of the parameter.
 	Name *string `min:"1" type:"string"`
 
+	// Information about the policies assigned to a parameter.
+	Policies []*ParameterInlinePolicy `type:"list"`
+
+	// The parameter tier.
+	Tier *string `type:"string" enum:"ParameterTier"`
+
 	// The type of parameter used.
 	Type *string `type:"string" enum:"ParameterType"`
 
 	// The parameter value.
-	Value *string `min:"1" type:"string"`
+	Value *string `type:"string"`
 
 	// The parameter version.
 	Version *int64 `type:"long"`
@@ -28177,6 +28203,18 @@ func (s *ParameterHistory) SetName(v string) *ParameterHistory {
 	return s
 }
 
+// SetPolicies sets the Policies field's value.
+func (s *ParameterHistory) SetPolicies(v []*ParameterInlinePolicy) *ParameterHistory {
+	s.Policies = v
+	return s
+}
+
+// SetTier sets the Tier field's value.
+func (s *ParameterHistory) SetTier(v string) *ParameterHistory {
+	s.Tier = &v
+	return s
+}
+
 // SetType sets the Type field's value.
 func (s *ParameterHistory) SetType(v string) *ParameterHistory {
 	s.Type = &v
@@ -28192,6 +28230,52 @@ func (s *ParameterHistory) SetValue(v string) *ParameterHistory {
 // SetVersion sets the Version field's value.
 func (s *ParameterHistory) SetVersion(v int64) *ParameterHistory {
 	s.Version = &v
+	return s
+}
+
+// One or more policies assigned to a parameter.
+type ParameterInlinePolicy struct {
+	_ struct{} `type:"structure"`
+
+	// The status of the policy. Policies report the following statuses: Pending
+	// (the policy has not been enforced or applied yet), Finished (the policy was
+	// applied), Failed (the policy was not applied), or InProgress (the policy
+	// is being applied now).
+	PolicyStatus *string `type:"string"`
+
+	// The JSON text of the policy.
+	PolicyText *string `type:"string"`
+
+	// The type of policy. Parameter Store supports the following policy types:
+	// Expiration, ExpirationNotification, and NoChangeNotification.
+	PolicyType *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ParameterInlinePolicy) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ParameterInlinePolicy) GoString() string {
+	return s.String()
+}
+
+// SetPolicyStatus sets the PolicyStatus field's value.
+func (s *ParameterInlinePolicy) SetPolicyStatus(v string) *ParameterInlinePolicy {
+	s.PolicyStatus = &v
+	return s
+}
+
+// SetPolicyText sets the PolicyText field's value.
+func (s *ParameterInlinePolicy) SetPolicyText(v string) *ParameterInlinePolicy {
+	s.PolicyText = &v
+	return s
+}
+
+// SetPolicyType sets the PolicyType field's value.
+func (s *ParameterInlinePolicy) SetPolicyType(v string) *ParameterInlinePolicy {
+	s.PolicyType = &v
 	return s
 }
 
@@ -28219,6 +28303,12 @@ type ParameterMetadata struct {
 
 	// The parameter name.
 	Name *string `min:"1" type:"string"`
+
+	// A list of policies associated with a parameter.
+	Policies []*ParameterInlinePolicy `type:"list"`
+
+	// The parameter tier.
+	Tier *string `type:"string" enum:"ParameterTier"`
 
 	// The type of parameter. Valid parameter types include the following: String,
 	// String list, Secure string.
@@ -28274,6 +28364,18 @@ func (s *ParameterMetadata) SetName(v string) *ParameterMetadata {
 	return s
 }
 
+// SetPolicies sets the Policies field's value.
+func (s *ParameterMetadata) SetPolicies(v []*ParameterInlinePolicy) *ParameterMetadata {
+	s.Policies = v
+	return s
+}
+
+// SetTier sets the Tier field's value.
+func (s *ParameterMetadata) SetTier(v string) *ParameterMetadata {
+	s.Tier = &v
+	return s
+}
+
 // SetType sets the Type field's value.
 func (s *ParameterMetadata) SetType(v string) *ParameterMetadata {
 	s.Type = &v
@@ -28288,7 +28390,9 @@ func (s *ParameterMetadata) SetVersion(v int64) *ParameterMetadata {
 
 // One or more filters. Use a filter to return a more specific list of results.
 //
-// The Name field can't be used with the GetParametersByPath API action.
+// The Name and Tier filter keys can't be used with the GetParametersByPath
+// API action. Also, the Label filter key can't be used with the DescribeParameters
+// API action.
 type ParameterStringFilter struct {
 	_ struct{} `type:"structure"`
 
@@ -29927,6 +30031,30 @@ type PutParameterInput struct {
 	// Overwrite an existing parameter. If not specified, will default to "false".
 	Overwrite *bool `type:"boolean"`
 
+	// One or more policies to apply to a parameter. This action takes a JSON array.
+	// Parameter Store supports the following policy types:
+	//
+	// Expiration: This policy deletes the parameter after it expires. When you
+	// create the policy, you specify the expiration date. You can update the expiration
+	// date and time by updating the policy. Updating the parameter does not affect
+	// the expiration date and time. When the expiration time is reached, Parameter
+	// Store deletes the parameter.
+	//
+	// ExpirationNotification: This policy triggers an event in Amazon CloudWatch
+	// Events that notifies you about the expiration. By using this policy, you
+	// can receive notification before or after the expiration time is reached,
+	// in units of days or hours.
+	//
+	// NoChangeNotification: This policy triggers a CloudWatch event if a parameter
+	// has not been modified for a specified period of time. This policy type is
+	// useful when, for example, a secret needs to be changed within a period of
+	// time, but it has not been changed.
+	//
+	// All existing policies are preserved until you send new policies or an empty
+	// policy. For more information about parameter policies, see Working with Parameter
+	// Policies (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-paramstore-su-policies.html).
+	Policies *string `min:"1" type:"string"`
+
 	// Optional metadata that you assign to a resource. Tags enable you to categorize
 	// a resource in different ways, such as by purpose, owner, or environment.
 	// For example, you might want to tag a Systems Manager parameter to identify
@@ -29944,6 +30072,32 @@ type PutParameterInput struct {
 	// action.
 	Tags []*Tag `type:"list"`
 
+	// Parameter Store offers a standard tier and an advanced tier for parameters.
+	// Standard parameters have a value limit of 4 KB and can't be configured to
+	// use parameter policies. You can create a maximum of 10,000 standard parameters
+	// per account and per Region. Standard parameters are offered at no additional
+	// cost.
+	//
+	// Advanced parameters have a value limit of 8 KB and can be configured to use
+	// parameter policies. You can create a maximum of 100,000 advanced parameters
+	// per account and per Region. Advanced parameters incur a charge.
+	//
+	// If you don't specify a parameter tier when you create a new parameter, the
+	// parameter defaults to using the standard tier. You can change a standard
+	// parameter to an advanced parameter at any time. But you can't revert an advanced
+	// parameter to a standard parameter. Reverting an advanced parameter to a standard
+	// parameter would result in data loss because the system would truncate the
+	// size of the parameter from 8 KB to 4 KB. Reverting would also remove any
+	// policies attached to the parameter. Lastly, advanced parameters use a different
+	// form of encryption than standard parameters.
+	//
+	// If you no longer need an advanced parameter, or if you no longer want to
+	// incur charges for an advanced parameter, you must delete it and recreate
+	// it as a new standard parameter. For more information, see About Advanced
+	// Parameters (http://docs.aws.amazon.com/systems-manager/latest/userguide/parameter-store-advanced-parameters.html)
+	// in the AWS Systems Manager User Guide.
+	Tier *string `type:"string" enum:"ParameterTier"`
+
 	// The type of parameter that you want to add to the system.
 	//
 	// Items in a StringList must be separated by a comma (,). You can't use other
@@ -29956,10 +30110,11 @@ type PutParameterInput struct {
 	// Type is a required field
 	Type *string `type:"string" required:"true" enum:"ParameterType"`
 
-	// The parameter value that you want to add to the system.
+	// The parameter value that you want to add to the system. Standard parameters
+	// have a value limit of 4 KB. Advanced parameters have a value limit of 8 KB.
 	//
 	// Value is a required field
-	Value *string `min:"1" type:"string" required:"true"`
+	Value *string `type:"string" required:"true"`
 }
 
 // String returns the string representation
@@ -29984,14 +30139,14 @@ func (s *PutParameterInput) Validate() error {
 	if s.Name != nil && len(*s.Name) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
 	}
+	if s.Policies != nil && len(*s.Policies) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Policies", 1))
+	}
 	if s.Type == nil {
 		invalidParams.Add(request.NewErrParamRequired("Type"))
 	}
 	if s.Value == nil {
 		invalidParams.Add(request.NewErrParamRequired("Value"))
-	}
-	if s.Value != nil && len(*s.Value) < 1 {
-		invalidParams.Add(request.NewErrParamMinLen("Value", 1))
 	}
 	if s.Tags != nil {
 		for i, v := range s.Tags {
@@ -30040,9 +30195,21 @@ func (s *PutParameterInput) SetOverwrite(v bool) *PutParameterInput {
 	return s
 }
 
+// SetPolicies sets the Policies field's value.
+func (s *PutParameterInput) SetPolicies(v string) *PutParameterInput {
+	s.Policies = &v
+	return s
+}
+
 // SetTags sets the Tags field's value.
 func (s *PutParameterInput) SetTags(v []*Tag) *PutParameterInput {
 	s.Tags = v
+	return s
+}
+
+// SetTier sets the Tier field's value.
+func (s *PutParameterInput) SetTier(v string) *PutParameterInput {
+	s.Tier = &v
 	return s
 }
 
@@ -32954,15 +33121,15 @@ type Target struct {
 	// User-defined criteria for sending commands that target instances that meet
 	// the criteria. Key can be tag:<Amazon EC2 tag> or InstanceIds. For more information
 	// about how to send commands that target instances using Key,Value parameters,
-	// see Targeting Multiple Instances (http://docs.aws.amazon.com/systems-manager/latest/userguide/send-commands-multiple.html#send-commands-targeting)
+	// see Using Targets and Rate Controls to Send Commands to a Fleet (https://docs.aws.amazon.com/systems-manager/latest/userguide/send-commands-multiple.html#send-commands-targeting)
 	// in the AWS Systems Manager User Guide.
 	Key *string `min:"1" type:"string"`
 
 	// User-defined criteria that maps to Key. For example, if you specified tag:ServerRole,
 	// you could specify value:WebServer to run a command on instances that include
 	// Amazon EC2 tags of ServerRole,WebServer. For more information about how to
-	// send commands that target instances using Key,Value parameters, see Sending
-	// Commands to a Fleet (http://docs.aws.amazon.com/systems-manager/latest/userguide/send-commands-multiple.html)
+	// send commands that target instances using Key,Value parameters, see Using
+	// Targets and Rate Controls to Send Commands to a Fleet (https://docs.aws.amazon.com/systems-manager/latest/userguide/send-commands-multiple.html)
 	// in the AWS Systems Manager User Guide.
 	Values []*string `type:"list"`
 }
@@ -34632,7 +34799,7 @@ type UpdatePatchBaselineInput struct {
 	//
 	// For information about accepted formats for lists of approved patches and
 	// rejected patches, see Package Name Formats for Approved and Rejected Patch
-	// Lists (http://docs.aws.amazon.com/systems-manager/latest/userguide/patch-manager-approved-rejected-package-name-formats.html)
+	// Lists (https://docs.aws.amazon.com/systems-manager/latest/userguide/patch-manager-approved-rejected-package-name-formats.html)
 	// in the AWS Systems Manager User Guide.
 	ApprovedPatches []*string `type:"list"`
 
@@ -34662,7 +34829,7 @@ type UpdatePatchBaselineInput struct {
 	//
 	// For information about accepted formats for lists of approved patches and
 	// rejected patches, see Package Name Formats for Approved and Rejected Patch
-	// Lists (http://docs.aws.amazon.com/systems-manager/latest/userguide/patch-manager-approved-rejected-package-name-formats.html)
+	// Lists (https://docs.aws.amazon.com/systems-manager/latest/userguide/patch-manager-approved-rejected-package-name-formats.html)
 	// in the AWS Systems Manager User Guide.
 	RejectedPatches []*string `type:"list"`
 
@@ -35625,6 +35792,14 @@ const (
 
 	// OperatingSystemCentos is a OperatingSystem enum value
 	OperatingSystemCentos = "CENTOS"
+)
+
+const (
+	// ParameterTierStandard is a ParameterTier enum value
+	ParameterTierStandard = "Standard"
+
+	// ParameterTierAdvanced is a ParameterTier enum value
+	ParameterTierAdvanced = "Advanced"
 )
 
 const (
