@@ -1,5 +1,9 @@
 ## 2.8.0 (Unreleased)
 
+NOTES:
+
+* provider: Region validation now automatically supports the new `ap-east-1` Asia Pacific (Hong Kong) region. For AWS operations to work in the new region, the region must be explicitly enabled as outlined in the [announcement blog post](https://aws.amazon.com/blogs/aws/now-open-aws-asia-pacific-hong-kong-region/). When the region is not enabled, the Terraform AWS Provider will return errors during credential validation (e.g. `provider.aws: error validating provider credentials: error calling sts:GetCallerIdentity: InvalidClientTokenId: The security token included in the request is invalid`) or AWS operations will throw their own errors (e.g. `data.aws_availability_zones.current: Error fetching Availability Zones: AuthFailure: AWS was not able to validate the provided access credentials`).
+
 FEATURES:
 
 * **New Resource:** `aws_dx_gateway_association_proposal` [GH-8320]
@@ -8,6 +12,7 @@ ENHANCEMENTS:
 
 * data-source/aws_dx_gateway: Add `owner_account_id` attribute [GH-8320]
 * data-source/aws_eks_cluster: Add `enabled_cluster_log_types` attribute [GH-8402]
+* provider: Support automatic region validation for `ap-east-1` [GH-8440]
 * resource/aws_dx_gateway: Add `owner_account_id` attribute [GH-8320]
 * resource/aws_dx_gateway_association: Support resource import [GH-8222]
 * resource/aws_dx_gateway_association: Add `allowed_prefixes` argument [GH-8222]
