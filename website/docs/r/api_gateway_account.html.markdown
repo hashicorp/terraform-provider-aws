@@ -6,7 +6,7 @@ description: |-
   Provides a settings of an API Gateway Account.
 ---
 
-# aws_api_gateway_account
+# Resource: aws_api_gateway_account
 
 Provides a settings of an API Gateway Account. Settings is applied region-wide per `provider` block.
 

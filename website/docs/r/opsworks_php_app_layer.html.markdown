@@ -6,7 +6,7 @@ description: |-
   Provides an OpsWorks PHP application layer resource.
 ---
 
-# aws_opsworks_php_app_layer
+# Resource: aws_opsworks_php_app_layer
 
 Provides an OpsWorks PHP application layer resource.
 

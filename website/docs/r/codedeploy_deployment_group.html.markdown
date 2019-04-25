@@ -6,7 +6,7 @@ description: |-
   Provides a CodeDeploy deployment group.
 ---
 
-# aws_codedeploy_deployment_group
+# Resource: aws_codedeploy_deployment_group
 
 Provides a CodeDeploy Deployment Group for a CodeDeploy Application
 

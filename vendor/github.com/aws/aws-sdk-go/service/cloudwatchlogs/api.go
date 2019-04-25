@@ -3014,7 +3014,7 @@ func (c *CloudWatchLogs) PutDestinationPolicyRequest(input *PutDestinationPolicy
 // PutDestinationPolicy API operation for Amazon CloudWatch Logs.
 //
 // Creates or updates an access policy associated with an existing destination.
-// An access policy is an IAM policy document (http://docs.aws.amazon.com/IAM/latest/UserGuide/policies_overview.html)
+// An access policy is an IAM policy document (https://docs.aws.amazon.com/IAM/latest/UserGuide/policies_overview.html)
 // that is used to authorize claims to register a subscription filter against
 // a given destination.
 //
@@ -3615,9 +3615,9 @@ func (c *CloudWatchLogs) StartQueryRequest(input *StartQueryInput) (req *request
 // StartQuery API operation for Amazon CloudWatch Logs.
 //
 // Schedules a query of a log group using CloudWatch Logs Insights. You specify
-// the log group to query, the query string to use, and the time to query.
+// the log group and time range to query, and the query string to use.
 //
-// For more information, see CloudWatch Logs Insights Query Syntax (http://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CWL_QuerySyntax.html).
+// For more information, see CloudWatch Logs Insights Query Syntax (https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CWL_QuerySyntax.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3632,7 +3632,7 @@ func (c *CloudWatchLogs) StartQueryRequest(input *StartQueryInput) (req *request
 //   a QueryCompileError object. For more information, see .
 //
 //   For more information about valid query syntax, see CloudWatch Logs Insights
-//   Query Syntax (http://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CWL_QuerySyntax.html).
+//   Query Syntax (https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CWL_QuerySyntax.html).
 //
 //   * ErrCodeInvalidParameterException "InvalidParameterException"
 //   A parameter is specified incorrectly.
@@ -3806,7 +3806,7 @@ func (c *CloudWatchLogs) TagLogGroupRequest(input *TagLogGroupInput) (req *reque
 // UntagLogGroup.
 //
 // For more information about tags, see Tag Log Groups in Amazon CloudWatch
-// Logs (http://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/log-group-tagging.html)
+// Logs (https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/log-group-tagging.html)
 // in the Amazon CloudWatch Logs User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -4017,7 +4017,7 @@ type AssociateKmsKeyInput struct {
 
 	// The Amazon Resource Name (ARN) of the CMK to use when encrypting log data.
 	// For more information, see Amazon Resource Names - AWS Key Management Service
-	// (AWS KMS) (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#arn-syntax-kms).
+	// (AWS KMS) (https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#arn-syntax-kms).
 	//
 	// KmsKeyId is a required field
 	KmsKeyId *string `locationName:"kmsKeyId" type:"string" required:"true"`
@@ -4292,7 +4292,7 @@ type CreateLogGroupInput struct {
 
 	// The Amazon Resource Name (ARN) of the CMK to use when encrypting log data.
 	// For more information, see Amazon Resource Names - AWS Key Management Service
-	// (AWS KMS) (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#arn-syntax-kms).
+	// (AWS KMS) (https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#arn-syntax-kms).
 	KmsKeyId *string `locationName:"kmsKeyId" type:"string"`
 
 	// The name of the log group.
@@ -6026,7 +6026,7 @@ type FilterLogEventsInput struct {
 	EndTime *int64 `locationName:"endTime" type:"long"`
 
 	// The filter pattern to use. For more information, see Filter and Pattern Syntax
-	// (http://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/FilterAndPatternSyntax.html).
+	// (https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/FilterAndPatternSyntax.html).
 	//
 	// If not provided, all the events are matched.
 	FilterPattern *string `locationName:"filterPattern" type:"string"`
@@ -8265,8 +8265,9 @@ func (s *SearchedLogStream) SetSearchedCompletely(v bool) *SearchedLogStream {
 type StartQueryInput struct {
 	_ struct{} `type:"structure"`
 
-	// The time to end this query, if it is still running. Specified as epoch time,
-	// the number of seconds since January 1, 1970, 00:00:00 UTC.
+	// The end of the time range to query. The range is inclusive, so the specified
+	// end time is included in the query. Specified as epoch time, the number of
+	// seconds since January 1, 1970, 00:00:00 UTC.
 	//
 	// EndTime is a required field
 	EndTime *int64 `locationName:"endTime" type:"long" required:"true"`
@@ -8281,13 +8282,14 @@ type StartQueryInput struct {
 	LogGroupName *string `locationName:"logGroupName" min:"1" type:"string" required:"true"`
 
 	// The query string to use. For more information, see CloudWatch Logs Insights
-	// Query Syntax (http://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CWL_QuerySyntax.html).
+	// Query Syntax (https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CWL_QuerySyntax.html).
 	//
 	// QueryString is a required field
 	QueryString *string `locationName:"queryString" type:"string" required:"true"`
 
-	// The time to start the query. Specified as epoch time, the number of seconds
-	// since January 1, 1970, 00:00:00 UTC.
+	// The beginning of the time range to query. The range is inclusive, so the
+	// specified start time is included in the query. Specified as epoch time, the
+	// number of seconds since January 1, 1970, 00:00:00 UTC.
 	//
 	// StartTime is a required field
 	StartTime *int64 `locationName:"startTime" type:"long" required:"true"`

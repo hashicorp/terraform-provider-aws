@@ -8392,6 +8392,13 @@ type CreateConstraintInput struct {
 	//
 	// {"NotificationArns" : ["arn:aws:sns:us-east-1:123456789012:Topic"]}
 	//
+	// RESOUCE_UPDATESpecify the TagUpdatesOnProvisionedProduct property as follows:
+	//
+	// {"Version":"2.0","Properties":{"TagUpdateOnProvisionedProduct":"String"}}
+	//
+	// The TagUpdatesOnProvisionedProduct property accepts a string value of ALLOWED
+	// or NOT_ALLOWED.
+	//
 	// STACKSETSpecify the Parameters property as follows:
 	//
 	// {"Version": "String", "Properties": {"AccountList": [ "String" ], "RegionList":
@@ -8425,6 +8432,8 @@ type CreateConstraintInput struct {
 	//    * LAUNCH
 	//
 	//    * NOTIFICATION
+	//
+	//    * RESOURCE_UPDATE
 	//
 	//    * STACKSET
 	//
@@ -14773,7 +14782,7 @@ type ProvisionedProductAttribute struct {
 	//    * AVAILABLE - Stable state, ready to perform any operation. The most recent
 	//    operation succeeded and completed.
 	//
-	//    * UNDER_CHANGE - Transitive state, operations performed might not have
+	//    * UNDER_CHANGE - Transitive state. Operations performed might not have
 	//    valid results. Wait for an AVAILABLE status before performing operations.
 	//
 	//    * TAINTED - Stable state, ready to perform any operation. The stack has
@@ -14781,9 +14790,14 @@ type ProvisionedProductAttribute struct {
 	//    For example, a request to update to a new version failed and the stack
 	//    rolled back to the current version.
 	//
-	//    * ERROR - An unexpected error occurred, the provisioned product exists
+	//    * ERROR - An unexpected error occurred. The provisioned product exists
 	//    but the stack is not running. For example, CloudFormation received a parameter
 	//    value that was not valid and could not launch the stack.
+	//
+	//    * PLAN_IN_PROGRESS - Transitive state. The plan operations were performed
+	//    to provision a new product, but resources have not yet been created. After
+	//    reviewing the list of resources to be created, execute the plan. Wait
+	//    for an AVAILABLE status before performing operations.
 	Status *string `type:"string" enum:"ProvisionedProductStatus"`
 
 	// The current status message of the provisioned product.
@@ -14938,7 +14952,7 @@ type ProvisionedProductDetail struct {
 	//    * AVAILABLE - Stable state, ready to perform any operation. The most recent
 	//    operation succeeded and completed.
 	//
-	//    * UNDER_CHANGE - Transitive state, operations performed might not have
+	//    * UNDER_CHANGE - Transitive state. Operations performed might not have
 	//    valid results. Wait for an AVAILABLE status before performing operations.
 	//
 	//    * TAINTED - Stable state, ready to perform any operation. The stack has
@@ -14946,9 +14960,14 @@ type ProvisionedProductDetail struct {
 	//    For example, a request to update to a new version failed and the stack
 	//    rolled back to the current version.
 	//
-	//    * ERROR - An unexpected error occurred, the provisioned product exists
+	//    * ERROR - An unexpected error occurred. The provisioned product exists
 	//    but the stack is not running. For example, CloudFormation received a parameter
 	//    value that was not valid and could not launch the stack.
+	//
+	//    * PLAN_IN_PROGRESS - Transitive state. The plan operations were performed
+	//    to provision a new product, but resources have not yet been created. After
+	//    reviewing the list of resources to be created, execute the plan. Wait
+	//    for an AVAILABLE status before performing operations.
 	Status *string `type:"string" enum:"ProvisionedProductStatus"`
 
 	// The current status message of the provisioned product.
@@ -17900,6 +17919,10 @@ type UpdateProvisionedProductInput struct {
 	// a stack set.
 	ProvisioningPreferences *UpdateProvisioningPreferences `type:"structure"`
 
+	// One or more tags. Requires the product to have RESOURCE_UPDATE constraint
+	// with TagUpdatesOnProvisionedProduct set to ALLOWED to allow tag updates.
+	Tags []*Tag `type:"list"`
+
 	// The idempotency token that uniquely identifies the provisioning update request.
 	UpdateToken *string `min:"1" type:"string" idempotencyToken:"true"`
 }
@@ -17948,6 +17971,16 @@ func (s *UpdateProvisionedProductInput) Validate() error {
 	if s.ProvisioningPreferences != nil {
 		if err := s.ProvisioningPreferences.Validate(); err != nil {
 			invalidParams.AddNested("ProvisioningPreferences", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
 		}
 	}
 
@@ -18002,6 +18035,12 @@ func (s *UpdateProvisionedProductInput) SetProvisioningParameters(v []*UpdatePro
 // SetProvisioningPreferences sets the ProvisioningPreferences field's value.
 func (s *UpdateProvisionedProductInput) SetProvisioningPreferences(v *UpdateProvisioningPreferences) *UpdateProvisionedProductInput {
 	s.ProvisioningPreferences = v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *UpdateProvisionedProductInput) SetTags(v []*Tag) *UpdateProvisionedProductInput {
+	s.Tags = v
 	return s
 }
 

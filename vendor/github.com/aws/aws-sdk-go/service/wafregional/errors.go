@@ -115,7 +115,7 @@ const (
 	//
 	// The operation exceeds a resource limit, for example, the maximum number of
 	// WebACL objects that you can create for an AWS account. For more information,
-	// see Limits (http://docs.aws.amazon.com/waf/latest/developerguide/limits.html)
+	// see Limits (https://docs.aws.amazon.com/waf/latest/developerguide/limits.html)
 	// in the AWS WAF Developer Guide.
 	ErrCodeWAFLimitsExceededException = "WAFLimitsExceededException"
 

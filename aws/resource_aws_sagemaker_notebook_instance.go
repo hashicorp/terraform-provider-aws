@@ -66,6 +66,12 @@ func resourceAwsSagemakerNotebookInstance() *schema.Resource {
 				ForceNew: true,
 			},
 
+			"lifecycle_config_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+
 			"tags": tagsSchema(),
 		},
 	}
@@ -89,6 +95,10 @@ func resourceAwsSagemakerNotebookInstanceCreate(d *schema.ResourceData, meta int
 
 	if k, ok := d.GetOk("kms_key_id"); ok {
 		createOpts.KmsKeyId = aws.String(k.(string))
+	}
+
+	if l, ok := d.GetOk("lifecycle_config_name"); ok {
+		createOpts.LifecycleConfigName = aws.String(l.(string))
 	}
 
 	if v, ok := d.GetOk("tags"); ok {
@@ -158,6 +168,10 @@ func resourceAwsSagemakerNotebookInstanceRead(d *schema.ResourceData, meta inter
 
 	if err := d.Set("kms_key_id", notebookInstance.KmsKeyId); err != nil {
 		return fmt.Errorf("error setting kms_key_id for sagemaker notebook instance (%s): %s", d.Id(), err)
+	}
+
+	if err := d.Set("lifecycle_config_name", notebookInstance.NotebookInstanceLifecycleConfigName); err != nil {
+		return fmt.Errorf("error setting lifecycle_config_name for sagemaker notebook instance (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("arn", notebookInstance.NotebookInstanceArn); err != nil {

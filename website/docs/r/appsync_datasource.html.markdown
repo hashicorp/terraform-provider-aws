@@ -6,7 +6,7 @@ description: |-
   Provides an AppSync DataSource.
 ---
 
-# aws_appsync_datasource
+# Resource: aws_appsync_datasource
 
 Provides an AppSync DataSource.
 

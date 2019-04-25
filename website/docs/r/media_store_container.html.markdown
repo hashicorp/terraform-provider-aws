@@ -6,7 +6,7 @@ description: |-
   Provides a MediaStore Container.
 ---
 
-# aws_media_store_container
+# Resource: aws_media_store_container
 
 Provides a MediaStore Container.
 

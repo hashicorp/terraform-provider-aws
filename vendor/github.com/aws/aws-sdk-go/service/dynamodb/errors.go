@@ -79,15 +79,16 @@ const (
 	//
 	// There is no limit to the number of daily on-demand backups that can be taken.
 	//
-	// Up to 10 simultaneous table operations are allowed per account. These operations
+	// Up to 50 simultaneous table operations are allowed per account. These operations
 	// include CreateTable, UpdateTable, DeleteTable,UpdateTimeToLive, RestoreTableFromBackup,
 	// and RestoreTableToPointInTime.
 	//
-	// For tables with secondary indexes, only one of those tables can be in the
-	// CREATING state at any point in time. Do not attempt to create more than one
-	// such table simultaneously.
+	// The only exception is when you are creating a table with one or more secondary
+	// indexes. You can have up to 25 such requests running at a time; however,
+	// if the table or index specifications are complex, DynamoDB might temporarily
+	// reduce the number of concurrent operations.
 	//
-	// The total limit of tables in the ACTIVE state is 250.
+	// There is a soft account limit of 256 tables.
 	ErrCodeLimitExceededException = "LimitExceededException"
 
 	// ErrCodePointInTimeRecoveryUnavailableException for service response error code
@@ -103,7 +104,7 @@ const (
 	// requests that receive this exception. Your request is eventually successful,
 	// unless your retry queue is too large to finish. Reduce the frequency of requests
 	// and use exponential backoff. For more information, go to Error Retries and
-	// Exponential Backoff (http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Programming.Errors.html#Programming.Errors.RetryAndBackoff)
+	// Exponential Backoff (https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Programming.Errors.html#Programming.Errors.RetryAndBackoff)
 	// in the Amazon DynamoDB Developer Guide.
 	ErrCodeProvisionedThroughputExceededException = "ProvisionedThroughputExceededException"
 
@@ -123,7 +124,7 @@ const (
 	// "RequestLimitExceeded".
 	//
 	// Throughput exceeds the current throughput limit for your account. Please
-	// contact AWS Support at AWS Support (http://docs.aws.amazon.com/https:/aws.amazon.com/support)
+	// contact AWS Support at AWS Support (https://docs.aws.amazon.com/https:/aws.amazon.com/support)
 	// to request a limit increase.
 	ErrCodeRequestLimitExceeded = "RequestLimitExceeded"
 
@@ -166,29 +167,38 @@ const (
 	//
 	// The entire transaction request was rejected.
 	//
-	// DynamoDB will reject the entire TransactWriteItems request if any of the
-	// following is true:
+	// DynamoDB rejects a TransactWriteItems request under the following circumstances:
 	//
-	//    *  A table in the TransactWriteItems request does not exist.
+	//    * A condition in one of the condition expressions is not met.
 	//
-	//    *  A table in the TransactWriteItems request is on a different account
+	//    * A table in the TransactWriteItems request is in a different account
 	//    or region.
 	//
-	//    *  Operations contain item schema violations.
+	//    * More than one action in the TransactWriteItems operation targets the
+	//    same item.
 	//
-	//    *  More than one write operation (UpdateItem, PutItem, DeleteItem) operates
-	//    on the same item.
+	//    * There is insufficient provisioned capacity for the transaction to be
+	//    completed.
 	//
-	//    *  More than one check operation operates on the same item.
+	//    * An item size becomes too large (larger than 400 KB), or a local secondary
+	//    index (LSI) becomes too large, or a similar validation error occurs because
+	//    of changes made by the transaction.
 	//
-	//    *  The number of operations sent in the TransactWriteItems request is
-	//    0 or greater than 10.
+	//    * There is a user error, such as an invalid data format.
 	//
-	//    *  A TransactWriteItems request exceeds the maximum 4 MB request size.
+	// DynamoDB rejects a TransactGetItems request under the following circumstances:
 	//
+	//    * There is an ongoing TransactGetItems operation that conflicts with a
+	//    concurrent PutItem, UpdateItem, DeleteItem or TransactWriteItems request.
+	//    In this case the TransactGetItems operation fails with a TransactionCanceledException.
 	//
-	//    *  Any operation in the TransactWriteItems request would cause an item
-	//    to become larger than 400KB.
+	//    * A table in the TransactGetItems request is in a different account or
+	//    region.
+	//
+	//    * There is insufficient provisioned capacity for the transaction to be
+	//    completed.
+	//
+	//    * There is a user error, such as an invalid data format.
 	ErrCodeTransactionCanceledException = "TransactionCanceledException"
 
 	// ErrCodeTransactionConflictException for service response error code

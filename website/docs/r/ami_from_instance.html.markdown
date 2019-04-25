@@ -6,7 +6,7 @@ description: |-
   Creates an Amazon Machine Image (AMI) from an EBS-backed EC2 instance
 ---
 
-# aws_ami_from_instance
+# Resource: aws_ami_from_instance
 
 The "AMI from instance" resource allows the creation of an Amazon Machine
 Image (AMI) modelled after an existing EBS-backed EC2 instance.

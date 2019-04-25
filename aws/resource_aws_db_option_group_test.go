@@ -42,14 +42,7 @@ func testSweepDbOptionGroups(region string) error {
 	}
 
 	for _, og := range resp.OptionGroupsList {
-		var testOptGroup bool
-		for _, testName := range []string{"option-group-test-terraform-", "tf-test", "tf-acc-test", "tf-option-test"} {
-			if strings.HasPrefix(*og.OptionGroupName, testName) {
-				testOptGroup = true
-			}
-		}
-
-		if !testOptGroup {
+		if strings.HasPrefix(aws.StringValue(og.OptionGroupName), "default") {
 			continue
 		}
 

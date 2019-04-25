@@ -6,7 +6,7 @@ description: |-
   Provides a resource to allow a principal to discover a VPC endpoint service.
 ---
 
-# aws_vpc_endpoint_service_allowed_principal
+# Resource: aws_vpc_endpoint_service_allowed_principal
 
 Provides a resource to allow a principal to discover a VPC endpoint service.
 

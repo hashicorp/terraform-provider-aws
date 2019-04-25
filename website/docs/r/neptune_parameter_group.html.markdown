@@ -6,7 +6,7 @@ description: |-
   Manages a Neptune Parameter Group
 ---
 
-# aws_neptune_parameter_group
+# Resource: aws_neptune_parameter_group
 
 Manages a Neptune Parameter Group
 

@@ -6,7 +6,7 @@ description: |-
   Provides an IoT policy.
 ---
 
-# aws_iot_policy
+# Resource: aws_iot_policy
 
 Provides an IoT policy.
 

@@ -6,7 +6,7 @@ description: |-
   Provides a AWS Kinesis Stream
 ---
 
-# aws_kinesis_stream
+# Resource: aws_kinesis_stream
 
 Provides a Kinesis Stream resource. Amazon Kinesis is a managed service that
 scales elastically for real-time processing of streaming big data.

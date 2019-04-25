@@ -6,7 +6,7 @@ description: |-
   Provides a VPC Endpoint connection notification resource.
 ---
 
-# aws_vpc_endpoint_connection_notification
+# Resource: aws_vpc_endpoint_connection_notification
 
 Provides a VPC Endpoint connection notification resource.
 Connection notifications notify subscribers of VPC Endpoint events.

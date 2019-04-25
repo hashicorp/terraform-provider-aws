@@ -1708,6 +1708,10 @@ func (c *Transfer) UpdateUserWithContext(ctx aws.Context, input *UpdateUserInput
 type CreateServerInput struct {
 	_ struct{} `type:"structure"`
 
+	EndpointDetails *EndpointDetails `type:"structure"`
+
+	EndpointType *string `type:"string" enum:"EndpointType"`
+
 	// An array containing all of the information required to call a customer-supplied
 	// authentication API. This parameter is not required when the IdentityProviderType
 	// value of server that is created uses the SERVICE_MANAGED authentication method.
@@ -1720,7 +1724,7 @@ type CreateServerInput struct {
 	// by you to integrate an identity provider of your choice.
 	IdentityProviderType *string `type:"string" enum:"IdentityProviderType"`
 
-	// A value that allows the service to write your SFTP users’ activity to your
+	// A value that allows the service to write your SFTP users' activity to your
 	// Amazon CloudWatch logs for monitoring and auditing purposes.
 	LoggingRole *string `type:"string"`
 
@@ -1759,6 +1763,18 @@ func (s *CreateServerInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetEndpointDetails sets the EndpointDetails field's value.
+func (s *CreateServerInput) SetEndpointDetails(v *EndpointDetails) *CreateServerInput {
+	s.EndpointDetails = v
+	return s
+}
+
+// SetEndpointType sets the EndpointType field's value.
+func (s *CreateServerInput) SetEndpointType(v string) *CreateServerInput {
+	s.EndpointType = &v
+	return s
 }
 
 // SetIdentityProviderDetails sets the IdentityProviderDetails field's value.
@@ -1823,12 +1839,12 @@ type CreateUserInput struct {
 	// ${Transfer:HomeDirectory}, and ${Transfer:HomeBucket}.
 	Policy *string `type:"string"`
 
-	// The IAM role that controls your user’s access to your Amazon S3 bucket. The
+	// The IAM role that controls your user's access to your Amazon S3 bucket. The
 	// policies attached to this role will determine the level of access you want
 	// to provide your users when transferring files into and out of your Amazon
 	// S3 bucket or buckets. The IAM role should also contain a trust relationship
 	// that allows the SFTP server to access your resources when servicing your
-	// SFTP user’s transfer requests.
+	// SFTP user's transfer requests.
 	//
 	// Role is a required field
 	Role *string `type:"string" required:"true"`
@@ -2035,7 +2051,7 @@ type DeleteSshPublicKeyInput struct {
 	// ServerId is a required field
 	ServerId *string `type:"string" required:"true"`
 
-	// A unique identifier used to reference your user’s specific SSH key.
+	// A unique identifier used to reference your user's specific SSH key.
 	//
 	// SshPublicKeyId is a required field
 	SshPublicKeyId *string `type:"string" required:"true"`
@@ -2341,6 +2357,10 @@ type DescribedServer struct {
 	// Arn is a required field
 	Arn *string `min:"20" type:"string" required:"true"`
 
+	EndpointDetails *EndpointDetails `type:"structure"`
+
+	EndpointType *string `type:"string" enum:"EndpointType"`
+
 	// Specifies information to call a customer-supplied authentication API. This
 	// field is not populated when the IdentityProviderType of the server is SERVICE_MANAGED>.
 	IdentityProviderDetails *IdentityProviderDetails `type:"structure"`
@@ -2393,6 +2413,18 @@ func (s DescribedServer) GoString() string {
 // SetArn sets the Arn field's value.
 func (s *DescribedServer) SetArn(v string) *DescribedServer {
 	s.Arn = &v
+	return s
+}
+
+// SetEndpointDetails sets the EndpointDetails field's value.
+func (s *DescribedServer) SetEndpointDetails(v *EndpointDetails) *DescribedServer {
+	s.EndpointDetails = v
+	return s
+}
+
+// SetEndpointType sets the EndpointType field's value.
+func (s *DescribedServer) SetEndpointType(v string) *DescribedServer {
+	s.EndpointType = &v
 	return s
 }
 
@@ -2456,12 +2488,12 @@ type DescribedUser struct {
 	// Specifies the name of the policy in use for the described user.
 	Policy *string `type:"string"`
 
-	// This property specifies the IAM role that controls your user’s access to
+	// This property specifies the IAM role that controls your user's access to
 	// your Amazon S3 bucket. The policies attached to this role will determine
 	// the level of access you want to provide your users when transferring files
 	// into and out of your Amazon S3 bucket or buckets. The IAM role should also
 	// contain a trust relationship that allows the SFTP server to access your resources
-	// when servicing your SFTP user’s transfer requests.
+	// when servicing your SFTP user's transfer requests.
 	Role *string `type:"string"`
 
 	// This property contains the public key portion of the Secure Shell (SSH) keys
@@ -2527,6 +2559,28 @@ func (s *DescribedUser) SetTags(v []*Tag) *DescribedUser {
 // SetUserName sets the UserName field's value.
 func (s *DescribedUser) SetUserName(v string) *DescribedUser {
 	s.UserName = &v
+	return s
+}
+
+type EndpointDetails struct {
+	_ struct{} `type:"structure"`
+
+	VpcEndpointId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s EndpointDetails) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s EndpointDetails) GoString() string {
+	return s.String()
+}
+
+// SetVpcEndpointId sets the VpcEndpointId field's value.
+func (s *EndpointDetails) SetVpcEndpointId(v string) *EndpointDetails {
+	s.VpcEndpointId = &v
 	return s
 }
 
@@ -2780,8 +2834,13 @@ type ListTagsForResourceInput struct {
 	// Arn is a required field
 	Arn *string `min:"20" type:"string" required:"true"`
 
+	// Specifies the number of tags to return as a response to the ListTagsForResource
+	// request.
 	MaxResults *int64 `min:"1" type:"integer"`
 
+	// When you request additional results from the ListTagsForResource call, a
+	// NextToken parameter is returned in the input. You can then pass in a subsequent
+	// command the NextToken parameter to continue listing additional tags.
 	NextToken *string `min:"1" type:"string"`
 }
 
@@ -2841,6 +2900,9 @@ type ListTagsForResourceOutput struct {
 	// This value is the ARN you specified to list the tags of.
 	Arn *string `min:"20" type:"string"`
 
+	// When you can get additional results from the ListTagsForResource call, a
+	// NextToken parameter is returned in the output. You can then pass in a subsequent
+	// command the NextToken parameter to continue listing additional tags.
 	NextToken *string `min:"1" type:"string"`
 
 	// Key-value pairs that are assigned to a resource, usually for the purpose
@@ -2883,7 +2945,7 @@ type ListUsersInput struct {
 	// Specifies the number of users to return as a response to the ListUsers request.
 	MaxResults *int64 `min:"1" type:"integer"`
 
-	// When you can get additional results from the ListUsersListUsers call, a NextToken
+	// When you can get additional results from the ListUsers call, a NextToken
 	// parameter is returned in the output. You can then pass in a subsequent command
 	// the NextToken parameter to continue listing additional users.
 	NextToken *string `min:"1" type:"string"`
@@ -3000,6 +3062,8 @@ type ListedServer struct {
 	// Arn is a required field
 	Arn *string `min:"20" type:"string" required:"true"`
 
+	EndpointType *string `type:"string" enum:"EndpointType"`
+
 	// The authentication method used to validate a user for the server that was
 	// specified. listed. This can include Secure Shell (SSH), user name and password
 	// combinations, or your own custom authentication method. Valid values include
@@ -3042,6 +3106,12 @@ func (s ListedServer) GoString() string {
 // SetArn sets the Arn field's value.
 func (s *ListedServer) SetArn(v string) *ListedServer {
 	s.Arn = &v
+	return s
+}
+
+// SetEndpointType sets the EndpointType field's value.
+func (s *ListedServer) SetEndpointType(v string) *ListedServer {
+	s.EndpointType = &v
 	return s
 }
 
@@ -3629,6 +3699,10 @@ func (s UntagResourceOutput) GoString() string {
 type UpdateServerInput struct {
 	_ struct{} `type:"structure"`
 
+	EndpointDetails *EndpointDetails `type:"structure"`
+
+	EndpointType *string `type:"string" enum:"EndpointType"`
+
 	// This response parameter is an array containing all of the information required
 	// to call a customer's authentication API method.
 	IdentityProviderDetails *IdentityProviderDetails `type:"structure"`
@@ -3665,6 +3739,18 @@ func (s *UpdateServerInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetEndpointDetails sets the EndpointDetails field's value.
+func (s *UpdateServerInput) SetEndpointDetails(v *EndpointDetails) *UpdateServerInput {
+	s.EndpointDetails = v
+	return s
+}
+
+// SetEndpointType sets the EndpointType field's value.
+func (s *UpdateServerInput) SetEndpointType(v string) *UpdateServerInput {
+	s.EndpointType = &v
+	return s
 }
 
 // SetIdentityProviderDetails sets the IdentityProviderDetails field's value.
@@ -3726,12 +3812,12 @@ type UpdateUserInput struct {
 	// and ${Transfer:HomeBucket}.
 	Policy *string `type:"string"`
 
-	// The IAM role that controls your user’s access to your Amazon S3 bucket. The
+	// The IAM role that controls your user's access to your Amazon S3 bucket. The
 	// policies attached to this role will determine the level of access you want
 	// to provide your users when transferring files into and out of your Amazon
 	// S3 bucket or buckets. The IAM role should also contain a trust relationship
 	// that allows the Secure File Transfer Protocol (SFTP) server to access your
-	// resources when servicing your SFTP user’s transfer requests.
+	// resources when servicing your SFTP user's transfer requests.
 	Role *string `type:"string"`
 
 	// A system-assigned unique identifier for an SFTP server instance that the
@@ -3843,6 +3929,14 @@ func (s *UpdateUserOutput) SetUserName(v string) *UpdateUserOutput {
 	s.UserName = &v
 	return s
 }
+
+const (
+	// EndpointTypePublic is a EndpointType enum value
+	EndpointTypePublic = "PUBLIC"
+
+	// EndpointTypeVpcEndpoint is a EndpointType enum value
+	EndpointTypeVpcEndpoint = "VPC_ENDPOINT"
+)
 
 // Returns information related to the type of user authentication that is in
 // use for a server's users. For SERVICE_MANAGED authentication, the Secure

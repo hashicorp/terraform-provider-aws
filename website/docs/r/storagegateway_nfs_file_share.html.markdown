@@ -6,7 +6,7 @@ description: |-
   Manages an AWS Storage Gateway NFS File Share
 ---
 
-# aws_storagegateway_nfs_file_share
+# Resource: aws_storagegateway_nfs_file_share
 
 Manages an AWS Storage Gateway NFS File Share.
 
