@@ -10,13 +10,19 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_cloudtrail_service_account: Support new `ap-east-1` region [GH-8437]
 * data-source/aws_dx_gateway: Add `owner_account_id` attribute [GH-8320]
 * data-source/aws_eks_cluster: Add `enabled_cluster_log_types` attribute [GH-8402]
+* data-source/aws_elb_hosted_zone_id: Support new `ap-east-1` region [GH-8437]
+* data-source/aws_elb_service_account: Support new `ap-east-1` region [GH-8437]
+* data-source/aws_redshift_service_account: Support new `ap-east-1` region [GH-8437]
+* data-source/aws_s3_bucket: Support new `ap-east-1` region in `hosted_zone_id` attribute [GH-8437]
 * provider: Support automatic region validation for `ap-east-1` [GH-8440]
 * resource/aws_dx_gateway: Add `owner_account_id` attribute [GH-8320]
 * resource/aws_dx_gateway_association: Support resource import [GH-8222]
 * resource/aws_dx_gateway_association: Add `allowed_prefixes` argument [GH-8222]
 * resource/aws_lb: Support Network Load Balancer (NLB) access logs [GH-8282]
+* resource/aws_s3_bucket: Support new `ap-east-1` region in `hosted_zone_id` attribute [GH-8437]
 * resource/aws_transfer_user: Support `user_name` containing uppercase letters, hyphens, and underscores [GH-8304]
 
 BUG FIXES:
