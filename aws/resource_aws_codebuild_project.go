@@ -172,6 +172,15 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 								codebuild.EnvironmentTypeWindowsContainer,
 							}, false),
 						},
+						"image_pull_credentials_type": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  codebuild.ImagePullCredentialsTypeCodebuild,
+							ValidateFunc: validation.StringInSlice([]string{
+								codebuild.ImagePullCredentialsTypeCodebuild,
+								codebuild.ImagePullCredentialsTypeServiceRole,
+							}, false),
+						},
 						"privileged_mode": {
 							Type:     schema.TypeBool,
 							Optional: true,
@@ -377,12 +386,6 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 				Required: true,
 				MaxItems: 1,
 				Set:      resourceAwsCodeBuildProjectSourceHash,
-			},
-			"timeout": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(5, 480),
-				Removed:      "This field has been removed. Please use build_timeout instead",
 			},
 			"build_timeout": {
 				Type:         schema.TypeInt,
@@ -637,6 +640,10 @@ func expandProjectEnvironment(d *schema.ResourceData) *codebuild.ProjectEnvironm
 
 	if v, ok := envConfig["certificate"]; ok && v.(string) != "" {
 		projectEnv.Certificate = aws.String(v.(string))
+	}
+
+	if v := envConfig["image_pull_credentials_type"]; v != nil {
+		projectEnv.ImagePullCredentialsType = aws.String(v.(string))
 	}
 
 	if v := envConfig["environment_variable"]; v != nil {
@@ -1004,6 +1011,7 @@ func flattenAwsCodeBuildProjectEnvironment(environment *codebuild.ProjectEnviron
 	envConfig["image"] = *environment.Image
 	envConfig["certificate"] = aws.StringValue(environment.Certificate)
 	envConfig["privileged_mode"] = *environment.PrivilegedMode
+	envConfig["image_pull_credentials_type"] = *environment.ImagePullCredentialsType
 
 	if environment.EnvironmentVariables != nil {
 		envConfig["environment_variable"] = environmentVariablesToMap(environment.EnvironmentVariables)
@@ -1085,11 +1093,13 @@ func resourceAwsCodeBuildProjectEnvironmentHash(v interface{}) int {
 	computeType := m["compute_type"].(string)
 	image := m["image"].(string)
 	privilegedMode := m["privileged_mode"].(bool)
+	imagePullCredentialsType := m["image_pull_credentials_type"].(string)
 	environmentVariables := m["environment_variable"].([]interface{})
 	buf.WriteString(fmt.Sprintf("%s-", environmentType))
 	buf.WriteString(fmt.Sprintf("%s-", computeType))
 	buf.WriteString(fmt.Sprintf("%s-", image))
 	buf.WriteString(fmt.Sprintf("%t-", privilegedMode))
+	buf.WriteString(fmt.Sprintf("%s-", imagePullCredentialsType))
 	if v, ok := m["certificate"]; ok && v.(string) != "" {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}

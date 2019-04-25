@@ -6,7 +6,7 @@ description: |-
   Provides a resource to manage AWS Secrets Manager secret version including its secret value
 ---
 
-# aws_secretsmanager_secret_version
+# Resource: aws_secretsmanager_secret_version
 
 Provides a resource to manage AWS Secrets Manager secret version including its secret value. To manage secret metadata, see the [`aws_secretsmanager_secret` resource](/docs/providers/aws/r/secretsmanager_secret.html).
 
@@ -42,6 +42,14 @@ variable "example" {
 resource "aws_secretsmanager_secret_version" "example" {
   secret_id     = "${aws_secretsmanager_secret.example.id}"
   secret_string = "${jsonencode(var.example)}"
+}
+```
+
+Reading key-value pairs from JSON back into a native Terraform map can be accomplished in Terraform 0.12 and later with the [`jsondecode()` function](https://www.terraform.io/docs/configuration/functions/jsondecode.html):
+
+```hcl
+output "example" {
+  value = jsondecode(aws_secretsmanager_secret_version.example.secret_string)["key1"]
 }
 ```
 

@@ -1449,7 +1449,7 @@ type ApplicationPolicyStatement struct {
 	// Actions is a required field
 	Actions []*string `locationName:"actions" type:"list" required:"true"`
 
-	// An AWS account ID, or * to make the application public.
+	// An array of AWS account IDs, or * to make the application public.
 	//
 	// Principals is a required field
 	Principals []*string `locationName:"principals" type:"list" required:"true"`
@@ -1741,6 +1741,8 @@ type CreateApplicationRequest struct {
 
 	SemanticVersion *string `locationName:"semanticVersion" type:"string"`
 
+	SourceCodeArchiveUrl *string `locationName:"sourceCodeArchiveUrl" type:"string"`
+
 	SourceCodeUrl *string `locationName:"sourceCodeUrl" type:"string"`
 
 	SpdxLicenseId *string `locationName:"spdxLicenseId" type:"string"`
@@ -1839,6 +1841,12 @@ func (s *CreateApplicationRequest) SetSemanticVersion(v string) *CreateApplicati
 	return s
 }
 
+// SetSourceCodeArchiveUrl sets the SourceCodeArchiveUrl field's value.
+func (s *CreateApplicationRequest) SetSourceCodeArchiveUrl(v string) *CreateApplicationRequest {
+	s.SourceCodeArchiveUrl = &v
+	return s
+}
+
 // SetSourceCodeUrl sets the SourceCodeUrl field's value.
 func (s *CreateApplicationRequest) SetSourceCodeUrl(v string) *CreateApplicationRequest {
 	s.SourceCodeUrl = &v
@@ -1877,6 +1885,8 @@ type CreateApplicationVersionOutput struct {
 	ResourcesSupported *bool `locationName:"resourcesSupported" type:"boolean"`
 
 	SemanticVersion *string `locationName:"semanticVersion" type:"string"`
+
+	SourceCodeArchiveUrl *string `locationName:"sourceCodeArchiveUrl" type:"string"`
 
 	SourceCodeUrl *string `locationName:"sourceCodeUrl" type:"string"`
 
@@ -1929,6 +1939,12 @@ func (s *CreateApplicationVersionOutput) SetSemanticVersion(v string) *CreateApp
 	return s
 }
 
+// SetSourceCodeArchiveUrl sets the SourceCodeArchiveUrl field's value.
+func (s *CreateApplicationVersionOutput) SetSourceCodeArchiveUrl(v string) *CreateApplicationVersionOutput {
+	s.SourceCodeArchiveUrl = &v
+	return s
+}
+
 // SetSourceCodeUrl sets the SourceCodeUrl field's value.
 func (s *CreateApplicationVersionOutput) SetSourceCodeUrl(v string) *CreateApplicationVersionOutput {
 	s.SourceCodeUrl = &v
@@ -1949,6 +1965,8 @@ type CreateApplicationVersionRequest struct {
 
 	// SemanticVersion is a required field
 	SemanticVersion *string `location:"uri" locationName:"semanticVersion" type:"string" required:"true"`
+
+	SourceCodeArchiveUrl *string `locationName:"sourceCodeArchiveUrl" type:"string"`
 
 	SourceCodeUrl *string `locationName:"sourceCodeUrl" type:"string"`
 
@@ -1998,6 +2016,12 @@ func (s *CreateApplicationVersionRequest) SetApplicationId(v string) *CreateAppl
 // SetSemanticVersion sets the SemanticVersion field's value.
 func (s *CreateApplicationVersionRequest) SetSemanticVersion(v string) *CreateApplicationVersionRequest {
 	s.SemanticVersion = &v
+	return s
+}
+
+// SetSourceCodeArchiveUrl sets the SourceCodeArchiveUrl field's value.
+func (s *CreateApplicationVersionRequest) SetSourceCodeArchiveUrl(v string) *CreateApplicationVersionRequest {
+	s.SourceCodeArchiveUrl = &v
 	return s
 }
 
@@ -3705,7 +3729,8 @@ type Version struct {
 	// (IAM) users. For those applications, you must explicitly acknowledge their
 	// capabilities by specifying this parameter.
 	//
-	// The only valid values are CAPABILITY_IAM, CAPABILITY_NAMED_IAM, and CAPABILITY_RESOURCE_POLICY.
+	// The only valid values are CAPABILITY_IAM, CAPABILITY_NAMED_IAM, CAPABILITY_RESOURCE_POLICY,
+	// and CAPABILITY_AUTO_EXPAND.
 	//
 	// The following resources require you to specify CAPABILITY_IAM or CAPABILITY_NAMED_IAM:
 	// AWS::IAM::Group (https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-iam-group.html),
@@ -3724,12 +3749,13 @@ type Version struct {
 	// AWS::SQS::QueuePolicy (https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-sqs-policy.html),
 	// and AWS::SNS::TopicPolicy (https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-sns-policy.html).
 	//
+	// Applications that contain one or more nested applications require you to
+	// specify CAPABILITY_AUTO_EXPAND.
+	//
 	// If your application template contains any of the above resources, we recommend
 	// that you review all permissions associated with the application before deploying.
 	// If you don't specify this parameter for an application that requires capabilities,
 	// the call will fail.
-	//
-	// Valid values: CAPABILITY_IAM | CAPABILITY_NAMED_IAM | CAPABILITY_RESOURCE_POLICY
 	//
 	// RequiredCapabilities is a required field
 	RequiredCapabilities []*string `locationName:"requiredCapabilities" type:"list" required:"true"`
@@ -3747,7 +3773,14 @@ type Version struct {
 	// SemanticVersion is a required field
 	SemanticVersion *string `locationName:"semanticVersion" type:"string" required:"true"`
 
-	// A link to a public repository for the source code of your application.
+	// A link to the S3 object that contains the ZIP archive of the source code
+	// for this version of your application.
+	//
+	// Maximum size 50 MB
+	SourceCodeArchiveUrl *string `locationName:"sourceCodeArchiveUrl" type:"string"`
+
+	// A link to a public repository for the source code of your application, for
+	// example the URL of a specific GitHub commit.
 	SourceCodeUrl *string `locationName:"sourceCodeUrl" type:"string"`
 
 	// A link to the packaged AWS SAM template of your application.
@@ -3802,6 +3835,12 @@ func (s *Version) SetSemanticVersion(v string) *Version {
 	return s
 }
 
+// SetSourceCodeArchiveUrl sets the SourceCodeArchiveUrl field's value.
+func (s *Version) SetSourceCodeArchiveUrl(v string) *Version {
+	s.SourceCodeArchiveUrl = &v
+	return s
+}
+
 // SetSourceCodeUrl sets the SourceCodeUrl field's value.
 func (s *Version) SetSourceCodeUrl(v string) *Version {
 	s.SourceCodeUrl = &v
@@ -3835,7 +3874,8 @@ type VersionSummary struct {
 	// SemanticVersion is a required field
 	SemanticVersion *string `locationName:"semanticVersion" type:"string" required:"true"`
 
-	// A link to a public repository for the source code of your application.
+	// A link to a public repository for the source code of your application, for
+	// example the URL of a specific GitHub commit.
 	SourceCodeUrl *string `locationName:"sourceCodeUrl" type:"string"`
 }
 

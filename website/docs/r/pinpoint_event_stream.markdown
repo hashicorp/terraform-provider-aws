@@ -6,7 +6,7 @@ description: |-
   Provides a Pinpoint Event Stream resource.
 ---
 
-# aws_pinpoint_event_stream
+# Resource: aws_pinpoint_event_stream
 
 Provides a Pinpoint Event Stream resource.
 

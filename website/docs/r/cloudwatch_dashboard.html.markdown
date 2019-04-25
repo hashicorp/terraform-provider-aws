@@ -6,7 +6,7 @@ description: |-
   Provides a CloudWatch Dashboard resource.
 ---
 
-# aws_cloudwatch_dashboard
+# Resource: aws_cloudwatch_dashboard
 
 Provides a CloudWatch Dashboard resource.
 

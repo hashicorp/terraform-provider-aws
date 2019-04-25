@@ -6,7 +6,7 @@ description: |-
   Provides an elastic block storage resource.
 ---
 
-# aws_ebs_volume
+# Resource: aws_ebs_volume
 
 Manages a single EBS volume.
 

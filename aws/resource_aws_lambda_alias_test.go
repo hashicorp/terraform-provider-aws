@@ -269,7 +269,7 @@ resource "aws_lambda_function" "lambda_function_test_create" {
   role             = "${aws_iam_role.iam_for_lambda.arn}"
   handler          = "exports.example"
   runtime          = "nodejs8.10"
-  source_code_hash = "${base64sha256(file("test-fixtures/lambdatest.zip"))}"
+  source_code_hash = "${filebase64sha256("test-fixtures/lambdatest.zip")}"
   publish          = "true"
 }
 
@@ -336,7 +336,7 @@ resource "aws_lambda_function" "lambda_function_test_create" {
   role             = "${aws_iam_role.iam_for_lambda.arn}"
   handler          = "exports.example"
   runtime          = "nodejs8.10"
-  source_code_hash = "${base64sha256(file("test-fixtures/lambdatest_modified.zip"))}"
+  source_code_hash = "${filebase64sha256("test-fixtures/lambdatest_modified.zip")}"
   publish          = "true"
 }
 
@@ -345,7 +345,8 @@ resource "aws_lambda_alias" "lambda_alias_test" {
   description      = "a sample description"
   function_name    = "${aws_lambda_function.lambda_function_test_create.arn}"
   function_version = "1"
-  routing_config   = {
+
+  routing_config {
     additional_version_weights = {
       "2" = 0.5
     }

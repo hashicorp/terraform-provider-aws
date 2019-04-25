@@ -3,6 +3,7 @@ package aws
 import (
 	"errors"
 	"fmt"
+	"log"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -10,6 +11,73 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_ec2_transit_gateway", &resource.Sweeper{
+		Name: "aws_ec2_transit_gateway",
+		F:    testSweepEc2TransitGateways,
+		Dependencies: []string{
+			"aws_ec2_transit_gateway_vpc_attachment",
+		},
+	})
+}
+
+func testSweepEc2TransitGateways(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).ec2conn
+	input := &ec2.DescribeTransitGatewaysInput{}
+
+	for {
+		output, err := conn.DescribeTransitGateways(input)
+
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping EC2 Transit Gateway sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error retrieving EC2 Transit Gateways: %s", err)
+		}
+
+		for _, transitGateway := range output.TransitGateways {
+			if aws.StringValue(transitGateway.State) == ec2.TransitGatewayStateDeleted {
+				continue
+			}
+
+			id := aws.StringValue(transitGateway.TransitGatewayId)
+
+			input := &ec2.DeleteTransitGatewayInput{
+				TransitGatewayId: aws.String(id),
+			}
+
+			log.Printf("[INFO] Deleting EC2 Transit Gateway: %s", id)
+			_, err := conn.DeleteTransitGateway(input)
+
+			if isAWSErr(err, "InvalidTransitGatewayID.NotFound", "") {
+				continue
+			}
+
+			if err != nil {
+				return fmt.Errorf("error deleting EC2 Transit Gateway (%s): %s", id, err)
+			}
+
+			if err := waitForEc2TransitGatewayDeletion(conn, id); err != nil {
+				return fmt.Errorf("error waiting for EC2 Transit Gateway (%s) deletion: %s", id, err)
+			}
+		}
+
+		if aws.StringValue(output.NextToken) == "" {
+			break
+		}
+
+		input.NextToken = output.NextToken
+	}
+
+	return nil
+}
 
 func TestAccAWSEc2TransitGateway_basic(t *testing.T) {
 	var transitGateway1 ec2.TransitGateway

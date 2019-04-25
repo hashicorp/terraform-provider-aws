@@ -6,7 +6,7 @@ description: |-
   Provides an Elastic Beanstalk Application Resource
 ---
 
-# aws_elastic_beanstalk_application
+# Resource: aws_elastic_beanstalk_application
 
 Provides an Elastic Beanstalk Application Resource. Elastic Beanstalk allows
 you to deploy and manage applications in the AWS cloud without worrying about

@@ -203,6 +203,7 @@ func resourceAwsMqBroker() *schema.Resource {
 					},
 				},
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -236,6 +237,9 @@ func resourceAwsMqBrokerCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 	if v, ok := d.GetOk("subnet_ids"); ok {
 		input.SubnetIds = expandStringList(v.(*schema.Set).List())
+	}
+	if v, ok := d.GetOk("tags"); ok {
+		input.Tags = tagsFromMapGeneric(v.(map[string]interface{}))
 	}
 
 	log.Printf("[INFO] Creating MQ Broker: %s", input)
@@ -338,8 +342,11 @@ func resourceAwsMqBrokerRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	users := flattenMqUsers(rawUsers, d.Get("user").(*schema.Set).List())
-	err = d.Set("user", users)
-	return err
+	if err = d.Set("user", users); err != nil {
+		return err
+	}
+
+	return getTagsMQ(conn, d, aws.StringValue(out.BrokerArn))
 }
 
 func resourceAwsMqBrokerUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -395,6 +402,10 @@ func resourceAwsMqBrokerUpdate(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return err
 		}
+	}
+
+	if tagErr := setTagsMQ(conn, d, d.Get("arn").(string)); tagErr != nil {
+		return fmt.Errorf("error setting mq broker tags: %s", tagErr)
 	}
 
 	return nil

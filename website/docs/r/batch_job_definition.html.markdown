@@ -6,7 +6,7 @@ description: |-
   Provides a Batch Job Definition resource.
 ---
 
-# aws_batch_job_definition
+# Resource: aws_batch_job_definition
 
 Provides a Batch Job Definition resource.
 

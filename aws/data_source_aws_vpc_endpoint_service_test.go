@@ -28,13 +28,15 @@ func TestAccDataSourceAwsVpcEndpointService_gateway(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"data.aws_vpc_endpoint_service.s3", "acceptance_required", "false"),
 					resource.TestCheckResourceAttr(
-						"data.aws_vpc_endpoint_service.s3", "availability_zones.#", "3"),
+						"data.aws_vpc_endpoint_service.s3", "availability_zones.#", "4"),
 					resource.TestCheckResourceAttr(
 						"data.aws_vpc_endpoint_service.s3", "availability_zones.2487133097", "us-west-2a"),
 					resource.TestCheckResourceAttr(
 						"data.aws_vpc_endpoint_service.s3", "availability_zones.221770259", "us-west-2b"),
 					resource.TestCheckResourceAttr(
 						"data.aws_vpc_endpoint_service.s3", "availability_zones.2050015877", "us-west-2c"),
+					resource.TestCheckResourceAttr(
+						"data.aws_vpc_endpoint_service.s3", "availability_zones.3830732582", "us-west-2d"),
 					resource.TestCheckResourceAttr(
 						"data.aws_vpc_endpoint_service.s3", "private_dns_name", ""),
 					resource.TestCheckResourceAttr(

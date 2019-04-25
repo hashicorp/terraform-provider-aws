@@ -44,12 +44,6 @@ func testSweepDirectoryServiceDirectories(region string) error {
 
 		for _, directory := range resp.DirectoryDescriptions {
 			id := aws.StringValue(directory.DirectoryId)
-			name := aws.StringValue(directory.Name)
-
-			if name != "corp.notexample.com" && name != "terraformtesting.com" {
-				log.Printf("[INFO] Skipping Directory Service Directory: %s / %s", id, name)
-				continue
-			}
 
 			deleteDirectoryInput := directoryservice.DeleteDirectoryInput{
 				DirectoryId: directory.DirectoryId,
@@ -230,6 +224,7 @@ func TestAccAWSDirectoryServiceDirectory_connector(t *testing.T) {
 				Config: testAccDirectoryServiceDirectoryConfig_connector,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists("aws_directory_service_directory.connector"),
+					resource.TestCheckResourceAttrSet("aws_directory_service_directory.connector", "security_group_id"),
 				),
 			},
 		},

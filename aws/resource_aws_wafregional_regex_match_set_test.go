@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -44,10 +43,6 @@ func testSweepWafRegionalRegexMatchSet(region string) error {
 	}
 
 	for _, s := range resp.RegexMatchSets {
-		if !strings.HasPrefix(*s.Name, "tfacc") {
-			continue
-		}
-
 		resp, err := conn.GetRegexMatchSet(&waf.GetRegexMatchSetInput{
 			RegexMatchSetId: s.RegexMatchSetId,
 		})

@@ -6,7 +6,7 @@ description: |-
   Provides a DynamoDB table item resource
 ---
 
-# aws_dynamodb_table_item
+# Resource: aws_dynamodb_table_item
 
 Provides a DynamoDB table item resource
 

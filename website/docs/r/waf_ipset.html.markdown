@@ -6,7 +6,7 @@ description: |-
   Provides a AWS WAF IPSet resource.
 ---
 
-# aws_waf_ipset
+# Resource: aws_waf_ipset
 
 Provides a WAF IPSet Resource
 
