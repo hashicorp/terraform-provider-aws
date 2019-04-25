@@ -7,6 +7,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_dx_gateway: Add `owner_account_id` attribute [GH-8320]
+* data-source/aws_eks_cluster: Add `enabled_cluster_log_types` attribute [GH
 * resource/aws_dx_gateway: Add `owner_account_id` attribute [GH-8320]
 * resource/aws_dx_gateway_association: Support resource import [GH-8222]
 * resource/aws_dx_gateway_association: Add `allowed_prefixes` argument [GH-8222]
@@ -15,6 +16,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_eks_cluster: Ignore ordering and properly handle removals with `enabled_cluster_log_types` argument [GH-8402]
 * resource/aws_emr_cluster: Increase deletion timeout from 10 to 20 minutes to match AWS documentation [GH-8428]
 * resource/aws_lb: Prevent difference when `subnet_mapping` configuration block `allocation_id` argument was omitted [GH-8282]
 * resource/aws_lb: Properly disable access logs with `access_logs` configuration block `enabled` argument set to `false` [GH-8282]
