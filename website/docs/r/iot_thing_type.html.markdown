@@ -6,7 +6,7 @@ description: |-
     Creates and manages an AWS IoT Thing Type.
 ---
 
-# aws_iot_thing_type
+# Resource: aws_iot_thing_type
 
 Creates and manages an AWS IoT Thing Type.
 

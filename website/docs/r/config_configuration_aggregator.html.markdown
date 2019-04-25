@@ -6,7 +6,7 @@ description: |-
   Manages an AWS Config Configuration Aggregator.
 ---
 
-# aws_config_configuration_aggregator
+# Resource: aws_config_configuration_aggregator
 
 Manages an AWS Config Configuration Aggregator
 

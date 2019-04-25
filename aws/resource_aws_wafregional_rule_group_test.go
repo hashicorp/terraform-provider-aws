@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -44,10 +43,6 @@ func testSweepWafRegionalRuleGroups(region string) error {
 	}
 
 	for _, group := range resp.RuleGroups {
-		if !strings.HasPrefix(*group.Name, "tfacc") {
-			continue
-		}
-
 		rResp, err := conn.ListActivatedRulesInRuleGroup(&waf.ListActivatedRulesInRuleGroupInput{
 			RuleGroupId: group.RuleGroupId,
 		})

@@ -6,7 +6,7 @@ description: |-
   Provides a Spot Fleet Request resource.
 ---
 
-# aws_spot_fleet_request
+# Resource: aws_spot_fleet_request
 
 Provides an EC2 Spot Fleet Request resource. This allows a fleet of Spot
 instances to be requested on the Spot market.
@@ -75,8 +75,6 @@ resource "aws_spot_fleet_request" "foo" {
     key_name          = "my-key"
     availability_zone = "us-west-2a"
   }
-
-  depends_on = ["aws_iam_policy_attachment.test-attach"]
 }
 ```
 

@@ -175,6 +175,26 @@ func TestAccAWSDBClusterParameterGroup_namePrefix(t *testing.T) {
 	})
 }
 
+func TestAccAWSDBClusterParameterGroup_namePrefix_Parameter(t *testing.T) {
+	var v rds.DBClusterParameterGroup
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBClusterParameterGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBClusterParameterGroupConfig_namePrefix_Parameter,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBClusterParameterGroupExists("aws_rds_cluster_parameter_group.test", &v),
+					resource.TestMatchResourceAttr(
+						"aws_rds_cluster_parameter_group.test", "name", regexp.MustCompile("^tf-test-")),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSDBClusterParameterGroup_generatedName(t *testing.T) {
 	var v rds.DBClusterParameterGroup
 
@@ -185,6 +205,24 @@ func TestAccAWSDBClusterParameterGroup_generatedName(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSDBClusterParameterGroupConfig_generatedName,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBClusterParameterGroupExists("aws_rds_cluster_parameter_group.test", &v),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDBClusterParameterGroup_generatedName_Parameter(t *testing.T) {
+	var v rds.DBClusterParameterGroup
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBClusterParameterGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBClusterParameterGroupConfig_generatedName_Parameter,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBClusterParameterGroupExists("aws_rds_cluster_parameter_group.test", &v),
 				),
@@ -460,8 +498,32 @@ resource "aws_rds_cluster_parameter_group" "test" {
   family = "aurora5.6"
 }
 `
+
+const testAccAWSDBClusterParameterGroupConfig_namePrefix_Parameter = `
+resource "aws_rds_cluster_parameter_group" "test" {
+  name_prefix = "tf-test-"
+  family = "aurora5.6"
+
+  parameter {
+    name  = "character_set_server"
+    value = "utf8"
+  }
+}
+`
+
 const testAccAWSDBClusterParameterGroupConfig_generatedName = `
 resource "aws_rds_cluster_parameter_group" "test" {
   family = "aurora5.6"
+}
+`
+
+const testAccAWSDBClusterParameterGroupConfig_generatedName_Parameter = `
+resource "aws_rds_cluster_parameter_group" "test" {
+  family = "aurora5.6"
+
+  parameter {
+    name  = "character_set_server"
+    value = "utf8"
+  }
 }
 `

@@ -6,7 +6,7 @@ description: |-
   Provides an Elastic Beanstalk Application Version Resource
 ---
 
-# aws_elastic_beanstalk_application_version
+# Resource: aws_elastic_beanstalk_application_version
 
 Provides an Elastic Beanstalk Application Version Resource. Elastic Beanstalk allows
 you to deploy and manage applications in the AWS cloud without worrying about

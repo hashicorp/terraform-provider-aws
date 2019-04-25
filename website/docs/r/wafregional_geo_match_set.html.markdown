@@ -6,7 +6,7 @@ description: |-
   Provides a AWS WAF Regional Geo Match Set resource.
 ---
 
-# aws_wafregional_geo_match_set
+# Resource: aws_wafregional_geo_match_set
 
 Provides a WAF Regional Geo Match Set Resource
 

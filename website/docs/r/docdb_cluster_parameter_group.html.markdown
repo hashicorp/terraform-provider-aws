@@ -6,7 +6,7 @@ description: |-
   Manages a DocumentDB Cluster Parameter Group
 ---
 
-# aws_docdb_cluster_parameter_group
+# Resource: aws_docdb_cluster_parameter_group
 
 Manages a DocumentDB Cluster Parameter Group
 

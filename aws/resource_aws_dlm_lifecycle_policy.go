@@ -66,6 +66,11 @@ func resourceAwsDlmLifecyclePolicy() *schema.Resource {
 													Type:     schema.TypeInt,
 													Required: true,
 													ValidateFunc: validateIntegerInSlice([]int{
+														2,
+														3,
+														4,
+														6,
+														8,
 														12,
 														24,
 													}),

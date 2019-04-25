@@ -9,7 +9,6 @@ import (
 	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/iam"
@@ -70,7 +69,24 @@ func TestAccAWSUserLoginProfile_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSUserLoginProfileExists("aws_iam_user_login_profile.user", &conf),
 					testDecryptPasswordAndTest("aws_iam_user_login_profile.user", "aws_iam_access_key.user", testPrivKey1),
+					resource.TestCheckResourceAttrSet("aws_iam_user_login_profile.user", "encrypted_password"),
+					resource.TestCheckResourceAttrSet("aws_iam_user_login_profile.user", "key_fingerprint"),
+					resource.TestCheckResourceAttr("aws_iam_user_login_profile.user", "password_length", "20"),
+					resource.TestCheckResourceAttr("aws_iam_user_login_profile.user", "password_reset_required", "true"),
+					resource.TestCheckResourceAttr("aws_iam_user_login_profile.user", "pgp_key", testPubKey1+"\n"),
 				),
+			},
+			{
+				ResourceName:      "aws_iam_user_login_profile.user",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"encrypted_password",
+					"key_fingerprint",
+					"password_length",
+					"password_reset_required",
+					"pgp_key",
+				},
 			},
 		},
 	})
@@ -92,7 +108,22 @@ func TestAccAWSUserLoginProfile_keybase(t *testing.T) {
 					testAccCheckAWSUserLoginProfileExists("aws_iam_user_login_profile.user", &conf),
 					resource.TestCheckResourceAttrSet("aws_iam_user_login_profile.user", "encrypted_password"),
 					resource.TestCheckResourceAttrSet("aws_iam_user_login_profile.user", "key_fingerprint"),
+					resource.TestCheckResourceAttr("aws_iam_user_login_profile.user", "password_length", "20"),
+					resource.TestCheckResourceAttr("aws_iam_user_login_profile.user", "password_reset_required", "true"),
+					resource.TestCheckResourceAttr("aws_iam_user_login_profile.user", "pgp_key", "keybase:terraformacctest\n"),
 				),
+			},
+			{
+				ResourceName:      "aws_iam_user_login_profile.user",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"encrypted_password",
+					"key_fingerprint",
+					"password_length",
+					"password_reset_required",
+					"pgp_key",
+				},
 			},
 		},
 	})
@@ -149,6 +180,18 @@ func TestAccAWSUserLoginProfile_PasswordLength(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_iam_user_login_profile.user", "password_length", "128"),
 				),
 			},
+			{
+				ResourceName:      "aws_iam_user_login_profile.user",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"encrypted_password",
+					"key_fingerprint",
+					"password_length",
+					"password_reset_required",
+					"pgp_key",
+				},
+			},
 		},
 	})
 }
@@ -161,22 +204,15 @@ func testAccCheckAWSUserLoginProfileDestroy(s *terraform.State) error {
 			continue
 		}
 
-		// Try to get user
 		_, err := iamconn.GetLoginProfile(&iam.GetLoginProfileInput{
 			UserName: aws.String(rs.Primary.ID),
 		})
-		if err == nil {
-			return fmt.Errorf("still exists.")
+
+		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+			continue
 		}
 
-		// Verify the error is what we want
-		ec2err, ok := err.(awserr.Error)
-		if !ok {
-			return err
-		}
-		if ec2err.Code() != "NoSuchEntity" {
-			return err
-		}
+		return fmt.Errorf("IAM User Login Profile (%s) still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -310,7 +346,8 @@ resource "aws_iam_user_login_profile" "user" {
   user            = "${aws_iam_user.user.name}"
   password_length = %d
   pgp_key         = <<EOF
-%sEOF
+%s
+EOF
 }
 `, testAccAWSUserLoginProfileConfig_base(rName, path), passwordLength, pgpKey)
 }
@@ -322,7 +359,8 @@ func testAccAWSUserLoginProfileConfig_Required(rName, path, pgpKey string) strin
 resource "aws_iam_user_login_profile" "user" {
   user    = "${aws_iam_user.user.name}"
   pgp_key = <<EOF
-%sEOF
+%s
+EOF
 }
 `, testAccAWSUserLoginProfileConfig_base(rName, path), pgpKey)
 }

@@ -88,6 +88,10 @@ func resourceAwsDxHostedPrivateVirtualInterface() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"aws_device": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -172,6 +176,7 @@ func resourceAwsDxHostedPrivateVirtualInterfaceRead(d *schema.ResourceData, meta
 	d.Set("owner_account_id", vif.OwnerAccount)
 	d.Set("mtu", vif.Mtu)
 	d.Set("jumbo_frame_capable", vif.JumboFrameCapable)
+	d.Set("aws_device", vif.AwsDeviceV2)
 
 	return nil
 }

@@ -44,6 +44,9 @@ func resourceAwsEbsVolume() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return d.Get("type").(string) != ec2.VolumeTypeIo1 && new == "0"
+				},
 			},
 			"kms_key_id": {
 				Type:         schema.TypeString,
@@ -244,7 +247,34 @@ func resourceAwsEbsVolumeRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error reading EC2 volume %s: %s", d.Id(), err)
 	}
 
-	return readVolume(d, meta.(*AWSClient), response.Volumes[0])
+	if response == nil || len(response.Volumes) == 0 || response.Volumes[0] == nil {
+		return fmt.Errorf("error reading EC2 Volume (%s): empty response", d.Id())
+	}
+
+	volume := response.Volumes[0]
+
+	arn := arn.ARN{
+		AccountID: meta.(*AWSClient).accountid,
+		Partition: meta.(*AWSClient).partition,
+		Region:    meta.(*AWSClient).region,
+		Resource:  fmt.Sprintf("volume/%s", d.Id()),
+		Service:   "ec2",
+	}
+	d.Set("arn", arn.String())
+	d.Set("availability_zone", aws.StringValue(volume.AvailabilityZone))
+	d.Set("encrypted", aws.BoolValue(volume.Encrypted))
+	d.Set("iops", aws.Int64Value(volume.Iops))
+	d.Set("kms_key_id", aws.StringValue(volume.KmsKeyId))
+	d.Set("size", aws.Int64Value(volume.Size))
+	d.Set("snapshot_id", aws.StringValue(volume.SnapshotId))
+
+	if err := d.Set("tags", tagsToMap(volume.Tags)); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
+	d.Set("type", aws.StringValue(volume.VolumeType))
+
+	return nil
 }
 
 func resourceAwsEbsVolumeDelete(d *schema.ResourceData, meta interface{}) error {
@@ -271,48 +301,4 @@ func resourceAwsEbsVolumeDelete(d *schema.ResourceData, meta interface{}) error 
 		return resource.NonRetryableError(err)
 	})
 
-}
-
-func readVolume(d *schema.ResourceData, client *AWSClient, volume *ec2.Volume) error {
-	d.SetId(*volume.VolumeId)
-
-	arn := arn.ARN{
-		Partition: client.partition,
-		Region:    client.region,
-		Service:   "ec2",
-		AccountID: client.accountid,
-		Resource:  fmt.Sprintf("volume/%s", d.Id()),
-	}
-	d.Set("arn", arn.String())
-
-	d.Set("availability_zone", *volume.AvailabilityZone)
-	if volume.Encrypted != nil {
-		d.Set("encrypted", *volume.Encrypted)
-	}
-	if volume.KmsKeyId != nil {
-		d.Set("kms_key_id", *volume.KmsKeyId)
-	}
-	if volume.Size != nil {
-		d.Set("size", *volume.Size)
-	}
-	if volume.SnapshotId != nil {
-		d.Set("snapshot_id", *volume.SnapshotId)
-	}
-	if volume.VolumeType != nil {
-		d.Set("type", *volume.VolumeType)
-	}
-
-	if volume.VolumeType != nil && *volume.VolumeType == "io1" {
-		// Only set the iops attribute if the volume type is io1. Setting otherwise
-		// can trigger a refresh/plan loop based on the computed value that is given
-		// from AWS, and prevent us from specifying 0 as a valid iops.
-		//   See https://github.com/hashicorp/terraform/pull/4146
-		if volume.Iops != nil {
-			d.Set("iops", *volume.Iops)
-		}
-	}
-
-	d.Set("tags", tagsToMap(volume.Tags))
-
-	return nil
 }

@@ -6,7 +6,7 @@ description: |-
   Provides a Pinpoint SMS Channel resource.
 ---
 
-# aws_pinpoint_sms_channel
+# Resource: aws_pinpoint_sms_channel
 
 Provides a Pinpoint SMS Channel resource.
 

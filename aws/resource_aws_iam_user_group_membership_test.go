@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -34,6 +35,21 @@ func TestAccAWSUserGroupMembership_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_iam_user_group_membership.user1_test1", "user", userName1),
 					testAccAWSUserGroupMembershipCheckGroupListForUser(userName1, []string{groupName1}, []string{groupName2, groupName3}),
 				),
+			},
+			{
+				ResourceName:      "aws_iam_user_group_membership.user1_test1",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSUserGroupMembershipImportStateIdFunc("aws_iam_user_group_membership.user1_test1"),
+				// We do not have a way to align IDs since the Create function uses resource.UniqueId()
+				// Failed state verification, resource with ID USER/GROUP not found
+				//ImportStateVerify: true,
+				ImportStateCheck: func(s []*terraform.InstanceState) error {
+					if len(s) != 1 {
+						return fmt.Errorf("expected 1 state: %#v", s)
+					}
+
+					return nil
+				},
 			},
 			// test adding an additional group to an existing resource
 			{
@@ -158,6 +174,23 @@ func testAccAWSUserGroupMembershipCheckGroupListForUser(userName string, groups 
 		}
 
 		return nil
+	}
+}
+
+func testAccAWSUserGroupMembershipImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		groupCount, _ := strconv.Atoi(rs.Primary.Attributes["groups.#"])
+		stateId := rs.Primary.Attributes["user"]
+		for i := 0; i < groupCount; i++ {
+			groupName := rs.Primary.Attributes[fmt.Sprintf("group.%d", i)]
+			stateId = fmt.Sprintf("%s/%s", stateId, groupName)
+		}
+		return stateId, nil
 	}
 }
 

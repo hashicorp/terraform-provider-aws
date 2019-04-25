@@ -6,7 +6,7 @@ description: |-
   Provides an ElastiCache Replication Group resource.
 ---
 
-# aws_elasticache_replication_group
+# Resource: aws_elasticache_replication_group
 
 Provides an ElastiCache Replication Group resource.
 For working with Memcached or single primary Redis instances (Cluster Mode Disabled), see the

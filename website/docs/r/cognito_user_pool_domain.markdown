@@ -6,7 +6,7 @@ description: |-
   Provides a Cognito User Pool Domain resource.
 ---
 
-# aws_cognito_user_pool_domain
+# Resource: aws_cognito_user_pool_domain
 
 Provides a Cognito User Pool Domain resource.
 

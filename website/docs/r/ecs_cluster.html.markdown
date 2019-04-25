@@ -6,7 +6,7 @@ description: |-
   Provides an ECS cluster.
 ---
 
-# aws_ecs_cluster
+# Resource: aws_ecs_cluster
 
 Provides an ECS cluster.
 

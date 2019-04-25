@@ -35,6 +35,9 @@ func resourceAwsSsmPatchBaseline() *schema.Resource {
 		Read:   resourceAwsSsmPatchBaselineRead,
 		Update: resourceAwsSsmPatchBaselineUpdate,
 		Delete: resourceAwsSsmPatchBaselineDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {
