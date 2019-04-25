@@ -351,7 +351,7 @@ func (c *WorkSpaces) CreateTagsRequest(input *CreateTagsInput) (req *request.Req
 
 // CreateTags API operation for Amazon WorkSpaces.
 //
-// Creates the specified tags for the specified WorkSpace.
+// Creates the specified tags for the specified WorkSpaces resource.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -612,7 +612,7 @@ func (c *WorkSpaces) DeleteTagsRequest(input *DeleteTagsInput) (req *request.Req
 
 // DeleteTags API operation for Amazon WorkSpaces.
 //
-// Deletes the specified tags from the specified WorkSpace.
+// Deletes the specified tags from the specified WorkSpaces resource.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1108,7 +1108,7 @@ func (c *WorkSpaces) DescribeTagsRequest(input *DescribeTagsInput) (req *request
 
 // DescribeTags API operation for Amazon WorkSpaces.
 //
-// Describes the specified tags for the specified WorkSpace.
+// Describes the specified tags for the specified WorkSpaces resource.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3327,12 +3327,14 @@ func (s *CreateIpGroupOutput) SetGroupId(v string) *CreateIpGroupOutput {
 type CreateTagsInput struct {
 	_ struct{} `type:"structure"`
 
-	// The identifier of the WorkSpace. To find this ID, use DescribeWorkspaces.
+	// The identifier of the WorkSpaces resource. The supported resource types are
+	// WorkSpaces, registered directories, images, custom bundles, and IP access
+	// control groups.
 	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
 
-	// The tags. Each WorkSpace can have a maximum of 50 tags.
+	// The tags. Each WorkSpaces resource can have a maximum of 50 tags.
 	//
 	// Tags is a required field
 	Tags []*Tag `type:"list" required:"true"`
@@ -3606,7 +3608,9 @@ func (s DeleteIpGroupOutput) GoString() string {
 type DeleteTagsInput struct {
 	_ struct{} `type:"structure"`
 
-	// The identifier of the WorkSpace. To find this ID, use DescribeWorkspaces.
+	// The identifier of the WorkSpaces resource. The supported resource types are
+	// WorkSpaces, registered directories, images, custom bundles, and IP access
+	// control groups.
 	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
@@ -4004,7 +4008,9 @@ func (s *DescribeIpGroupsOutput) SetResult(v []*IpGroup) *DescribeIpGroupsOutput
 type DescribeTagsInput struct {
 	_ struct{} `type:"structure"`
 
-	// The identifier of the WorkSpace. To find this ID, use DescribeWorkspaces.
+	// The identifier of the WorkSpaces resource. The supported resource types are
+	// WorkSpaces, registered directories, images, custom bundles, and IP access
+	// control groups.
 	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
