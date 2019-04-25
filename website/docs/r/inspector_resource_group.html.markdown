@@ -6,7 +6,7 @@ description: |-
   Provides a Inspector resource group.
 ---
 
-# aws_inspector_resource_group
+# Resource: aws_inspector_resource_group
 
 Provides a Inspector resource group
 

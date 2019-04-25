@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -51,10 +50,6 @@ func testSweepCognitoUserPools(region string) error {
 
 		for _, userPool := range output.UserPools {
 			name := aws.StringValue(userPool.Name)
-
-			if !strings.HasPrefix(name, "tf_acc_") {
-				continue
-			}
 
 			log.Printf("[INFO] Deleting Cognito User Pool %s", name)
 			_, err := conn.DeleteUserPool(&cognitoidentityprovider.DeleteUserPoolInput{
@@ -1160,11 +1155,8 @@ resource "aws_cognito_user_pool" "pool" {
   # attributes.
   verification_message_template {
     default_email_option  = "CONFIRM_WITH_LINK"
-    email_message         = "Foo {####} Bar"
     email_message_by_link = "{##foobar##}"
-    email_subject         = "FooBar {####}"
     email_subject_by_link = "foobar"
-    sms_message           = "{####} Baz"
   }
 }`, name)
 }

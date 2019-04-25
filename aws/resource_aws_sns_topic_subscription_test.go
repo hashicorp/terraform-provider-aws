@@ -572,7 +572,7 @@ resource "aws_lambda_function" "lambda" {
   function_name    = "tf-acc-test-sns-%d"
   role             = "${aws_iam_role.iam_for_lambda.arn}"
   handler          = "main.confirm_subscription"
-  source_code_hash = "${base64sha256(file("test-fixtures/lambda_confirm_sns.zip"))}"
+  source_code_hash = "${filebase64sha256("test-fixtures/lambda_confirm_sns.zip")}"
   runtime          = "python3.6"
 }
 
@@ -696,7 +696,7 @@ resource "aws_lambda_function" "lambda" {
   function_name    = "tf-acc-test-sns-%d"
   role             = "${aws_iam_role.iam_for_lambda.arn}"
   handler          = "main.confirm_subscription"
-  source_code_hash = "${base64sha256(file("test-fixtures/lambda_confirm_sns.zip"))}"
+  source_code_hash = "${filebase64sha256("test-fixtures/lambda_confirm_sns.zip")}"
   runtime          = "python3.6"
 }
 
@@ -755,7 +755,7 @@ resource "aws_api_gateway_authorizer" "test" {
 
 resource "aws_lambda_function" "authorizer" {
   filename         = "test-fixtures/lambda_basic_authorizer.zip"
-  source_code_hash = "${base64sha256(file("test-fixtures/lambda_basic_authorizer.zip"))}"
+  source_code_hash = "${filebase64sha256("test-fixtures/lambda_basic_authorizer.zip")}"
   function_name    = "tf-acc-test-authorizer-%d"
   role             = "${aws_iam_role.iam_for_lambda.arn}"
   handler          = "main.authenticate"

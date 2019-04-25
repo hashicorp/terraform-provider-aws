@@ -13,6 +13,89 @@ import (
 	"github.com/aws/aws-sdk-go/private/protocol/jsonrpc"
 )
 
+const opAcceptDirectConnectGatewayAssociationProposal = "AcceptDirectConnectGatewayAssociationProposal"
+
+// AcceptDirectConnectGatewayAssociationProposalRequest generates a "aws/request.Request" representing the
+// client's request for the AcceptDirectConnectGatewayAssociationProposal operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See AcceptDirectConnectGatewayAssociationProposal for more information on using the AcceptDirectConnectGatewayAssociationProposal
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the AcceptDirectConnectGatewayAssociationProposalRequest method.
+//    req, resp := client.AcceptDirectConnectGatewayAssociationProposalRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/directconnect-2012-10-25/AcceptDirectConnectGatewayAssociationProposal
+func (c *DirectConnect) AcceptDirectConnectGatewayAssociationProposalRequest(input *AcceptDirectConnectGatewayAssociationProposalInput) (req *request.Request, output *AcceptDirectConnectGatewayAssociationProposalOutput) {
+	op := &request.Operation{
+		Name:       opAcceptDirectConnectGatewayAssociationProposal,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &AcceptDirectConnectGatewayAssociationProposalInput{}
+	}
+
+	output = &AcceptDirectConnectGatewayAssociationProposalOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// AcceptDirectConnectGatewayAssociationProposal API operation for AWS Direct Connect.
+//
+// Accepts a proposal request to attach a virtual private gateway to a Direct
+// Connect gateway.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Direct Connect's
+// API operation AcceptDirectConnectGatewayAssociationProposal for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeServerException "DirectConnectServerException"
+//   A server-side error occurred.
+//
+//   * ErrCodeClientException "DirectConnectClientException"
+//   One or more parameters are not valid.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/directconnect-2012-10-25/AcceptDirectConnectGatewayAssociationProposal
+func (c *DirectConnect) AcceptDirectConnectGatewayAssociationProposal(input *AcceptDirectConnectGatewayAssociationProposalInput) (*AcceptDirectConnectGatewayAssociationProposalOutput, error) {
+	req, out := c.AcceptDirectConnectGatewayAssociationProposalRequest(input)
+	return out, req.Send()
+}
+
+// AcceptDirectConnectGatewayAssociationProposalWithContext is the same as AcceptDirectConnectGatewayAssociationProposal with the addition of
+// the ability to pass a context and additional request options.
+//
+// See AcceptDirectConnectGatewayAssociationProposal for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DirectConnect) AcceptDirectConnectGatewayAssociationProposalWithContext(ctx aws.Context, input *AcceptDirectConnectGatewayAssociationProposalInput, opts ...request.Option) (*AcceptDirectConnectGatewayAssociationProposalOutput, error) {
+	req, out := c.AcceptDirectConnectGatewayAssociationProposalRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opAllocateConnectionOnInterconnect = "AllocateConnectionOnInterconnect"
 
 // AllocateConnectionOnInterconnectRequest generates a "aws/request.Request" representing the
@@ -69,7 +152,7 @@ func (c *DirectConnect) AllocateConnectionOnInterconnectRequest(input *AllocateC
 // Allocates a VLAN number and a specified amount of bandwidth for use by a
 // hosted connection on the specified interconnect.
 //
-// Intended for use by AWS Direct Connect partners only.
+// Intended for use by AWS Direct Connect Partners only.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -156,12 +239,15 @@ func (c *DirectConnect) AllocateHostedConnectionRequest(input *AllocateHostedCon
 // AllocateHostedConnection API operation for AWS Direct Connect.
 //
 // Creates a hosted connection on the specified interconnect or a link aggregation
-// group (LAG).
+// group (LAG) of interconnects.
 //
-// Allocates a VLAN number and a specified amount of bandwidth for use by a
-// hosted connection on the specified interconnect or LAG.
+// Allocates a VLAN number and a specified amount of capacity (bandwidth) for
+// use by a hosted connection on the specified interconnect or LAG of interconnects.
+// AWS polices the hosted connection for the specified capacity and the AWS
+// Direct Connect Partner must also police the hosted connection for the specified
+// capacity.
 //
-// Intended for use by AWS Direct Connect partners only.
+// Intended for use by AWS Direct Connect Partners only.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -527,7 +613,7 @@ func (c *DirectConnect) AssociateHostedConnectionRequest(input *AssociateHostedC
 // fails. This action temporarily interrupts the hosted connection's connectivity
 // to AWS as it is being migrated.
 //
-// Intended for use by AWS Direct Connect partners only.
+// Intended for use by AWS Direct Connect Partners only.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1280,6 +1366,93 @@ func (c *DirectConnect) CreateDirectConnectGatewayAssociationWithContext(ctx aws
 	return out, req.Send()
 }
 
+const opCreateDirectConnectGatewayAssociationProposal = "CreateDirectConnectGatewayAssociationProposal"
+
+// CreateDirectConnectGatewayAssociationProposalRequest generates a "aws/request.Request" representing the
+// client's request for the CreateDirectConnectGatewayAssociationProposal operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateDirectConnectGatewayAssociationProposal for more information on using the CreateDirectConnectGatewayAssociationProposal
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateDirectConnectGatewayAssociationProposalRequest method.
+//    req, resp := client.CreateDirectConnectGatewayAssociationProposalRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/directconnect-2012-10-25/CreateDirectConnectGatewayAssociationProposal
+func (c *DirectConnect) CreateDirectConnectGatewayAssociationProposalRequest(input *CreateDirectConnectGatewayAssociationProposalInput) (req *request.Request, output *CreateDirectConnectGatewayAssociationProposalOutput) {
+	op := &request.Operation{
+		Name:       opCreateDirectConnectGatewayAssociationProposal,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &CreateDirectConnectGatewayAssociationProposalInput{}
+	}
+
+	output = &CreateDirectConnectGatewayAssociationProposalOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateDirectConnectGatewayAssociationProposal API operation for AWS Direct Connect.
+//
+// Creates a proposal to associate the specified virtual private gateway with
+// the specified Direct Connect gateway.
+//
+// You can only associate a Direct Connect gateway and virtual private gateway
+// when the account that owns the Direct Connect gateway and the account that
+// owns the virtual private gateway have the same payer ID.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Direct Connect's
+// API operation CreateDirectConnectGatewayAssociationProposal for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeServerException "DirectConnectServerException"
+//   A server-side error occurred.
+//
+//   * ErrCodeClientException "DirectConnectClientException"
+//   One or more parameters are not valid.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/directconnect-2012-10-25/CreateDirectConnectGatewayAssociationProposal
+func (c *DirectConnect) CreateDirectConnectGatewayAssociationProposal(input *CreateDirectConnectGatewayAssociationProposalInput) (*CreateDirectConnectGatewayAssociationProposalOutput, error) {
+	req, out := c.CreateDirectConnectGatewayAssociationProposalRequest(input)
+	return out, req.Send()
+}
+
+// CreateDirectConnectGatewayAssociationProposalWithContext is the same as CreateDirectConnectGatewayAssociationProposal with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateDirectConnectGatewayAssociationProposal for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DirectConnect) CreateDirectConnectGatewayAssociationProposalWithContext(ctx aws.Context, input *CreateDirectConnectGatewayAssociationProposalInput, opts ...request.Option) (*CreateDirectConnectGatewayAssociationProposalOutput, error) {
+	req, out := c.CreateDirectConnectGatewayAssociationProposalRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opCreateInterconnect = "CreateInterconnect"
 
 // CreateInterconnectRequest generates a "aws/request.Request" representing the
@@ -1324,16 +1497,16 @@ func (c *DirectConnect) CreateInterconnectRequest(input *CreateInterconnectInput
 
 // CreateInterconnect API operation for AWS Direct Connect.
 //
-// Creates an interconnect between an AWS Direct Connect partner's network and
+// Creates an interconnect between an AWS Direct Connect Partner's network and
 // a specific AWS Direct Connect location.
 //
-// An interconnect is a connection which is capable of hosting other connections.
-// The partner can use an interconnect to provide sub-1Gbps AWS Direct Connect
-// service to tier 2 customers who do not have their own connections. Like a
-// standard connection, an interconnect links the partner's network to an AWS
-// Direct Connect location over a standard Ethernet fiber-optic cable. One end
-// is connected to the partner's router, the other to an AWS Direct Connect
-// router.
+// An interconnect is a connection that is capable of hosting other connections.
+// The AWS Direct Connect partner can use an interconnect to provide AWS Direct
+// Connect hosted connections to customers through their own network services.
+// Like a standard connection, an interconnect links the partner's network to
+// an AWS Direct Connect location over a standard Ethernet fiber-optic cable.
+// One end is connected to the partner's router, the other to an AWS Direct
+// Connect router.
 //
 // You can automatically add the new interconnect to a link aggregation group
 // (LAG) by specifying a LAG ID in the request. This ensures that the new interconnect
@@ -1341,12 +1514,12 @@ func (c *DirectConnect) CreateInterconnectRequest(input *CreateInterconnectInput
 // LAG. If there are no available ports on the endpoint, the request fails and
 // no interconnect is created.
 //
-// For each end customer, the AWS Direct Connect partner provisions a connection
-// on their interconnect by calling AllocateConnectionOnInterconnect. The end
-// customer can then connect to AWS resources by creating a virtual interface
-// on their connection, using the VLAN assigned to them by the partner.
+// For each end customer, the AWS Direct Connect Partner provisions a connection
+// on their interconnect by calling AllocateHostedConnection. The end customer
+// can then connect to AWS resources by creating a virtual interface on their
+// connection, using the VLAN assigned to them by the AWS Direct Connect Partner.
 //
-// Intended for use by AWS Direct Connect partners only.
+// Intended for use by AWS Direct Connect Partners only.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1450,7 +1623,7 @@ func (c *DirectConnect) CreateLagRequest(input *CreateLagInput) (req *request.Re
 // and re-associated with the LAG. The connection ID does not change.
 //
 // If the AWS account used to create a LAG is a registered AWS Direct Connect
-// partner, the LAG is automatically enabled to host sub-connections. For a
+// Partner, the LAG is automatically enabled to host sub-connections. For a
 // LAG owned by a partner, any associated virtual interfaces cannot be directly
 // configured.
 //
@@ -2006,6 +2179,89 @@ func (c *DirectConnect) DeleteDirectConnectGatewayAssociationWithContext(ctx aws
 	return out, req.Send()
 }
 
+const opDeleteDirectConnectGatewayAssociationProposal = "DeleteDirectConnectGatewayAssociationProposal"
+
+// DeleteDirectConnectGatewayAssociationProposalRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteDirectConnectGatewayAssociationProposal operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteDirectConnectGatewayAssociationProposal for more information on using the DeleteDirectConnectGatewayAssociationProposal
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteDirectConnectGatewayAssociationProposalRequest method.
+//    req, resp := client.DeleteDirectConnectGatewayAssociationProposalRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/directconnect-2012-10-25/DeleteDirectConnectGatewayAssociationProposal
+func (c *DirectConnect) DeleteDirectConnectGatewayAssociationProposalRequest(input *DeleteDirectConnectGatewayAssociationProposalInput) (req *request.Request, output *DeleteDirectConnectGatewayAssociationProposalOutput) {
+	op := &request.Operation{
+		Name:       opDeleteDirectConnectGatewayAssociationProposal,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteDirectConnectGatewayAssociationProposalInput{}
+	}
+
+	output = &DeleteDirectConnectGatewayAssociationProposalOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeleteDirectConnectGatewayAssociationProposal API operation for AWS Direct Connect.
+//
+// Deletes the association proposal request between the specified Direct Connect
+// gateway and virtual private gateway.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Direct Connect's
+// API operation DeleteDirectConnectGatewayAssociationProposal for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeServerException "DirectConnectServerException"
+//   A server-side error occurred.
+//
+//   * ErrCodeClientException "DirectConnectClientException"
+//   One or more parameters are not valid.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/directconnect-2012-10-25/DeleteDirectConnectGatewayAssociationProposal
+func (c *DirectConnect) DeleteDirectConnectGatewayAssociationProposal(input *DeleteDirectConnectGatewayAssociationProposalInput) (*DeleteDirectConnectGatewayAssociationProposalOutput, error) {
+	req, out := c.DeleteDirectConnectGatewayAssociationProposalRequest(input)
+	return out, req.Send()
+}
+
+// DeleteDirectConnectGatewayAssociationProposalWithContext is the same as DeleteDirectConnectGatewayAssociationProposal with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteDirectConnectGatewayAssociationProposal for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DirectConnect) DeleteDirectConnectGatewayAssociationProposalWithContext(ctx aws.Context, input *DeleteDirectConnectGatewayAssociationProposalInput, opts ...request.Option) (*DeleteDirectConnectGatewayAssociationProposalOutput, error) {
+	req, out := c.DeleteDirectConnectGatewayAssociationProposalRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDeleteInterconnect = "DeleteInterconnect"
 
 // DeleteInterconnectRequest generates a "aws/request.Request" representing the
@@ -2052,7 +2308,7 @@ func (c *DirectConnect) DeleteInterconnectRequest(input *DeleteInterconnectInput
 //
 // Deletes the specified interconnect.
 //
-// Intended for use by AWS Direct Connect partners only.
+// Intended for use by AWS Direct Connect Partners only.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2311,7 +2567,7 @@ func (c *DirectConnect) DescribeConnectionLoaRequest(input *DescribeConnectionLo
 // The Letter of Authorization - Connecting Facility Assignment (LOA-CFA) is
 // a document that your APN partner or service provider uses when establishing
 // your cross connect to AWS at the colocation facility. For more information,
-// see Requesting Cross Connects at AWS Direct Connect Locations (http://docs.aws.amazon.com/directconnect/latest/UserGuide/Colocation.html)
+// see Requesting Cross Connects at AWS Direct Connect Locations (https://docs.aws.amazon.com/directconnect/latest/UserGuide/Colocation.html)
 // in the AWS Direct Connect User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -2489,7 +2745,7 @@ func (c *DirectConnect) DescribeConnectionsOnInterconnectRequest(input *Describe
 //
 // Lists the connections that have been provisioned on the specified interconnect.
 //
-// Intended for use by AWS Direct Connect partners only.
+// Intended for use by AWS Direct Connect Partners only.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2526,6 +2782,89 @@ func (c *DirectConnect) DescribeConnectionsOnInterconnect(input *DescribeConnect
 // Deprecated: DescribeConnectionsOnInterconnectWithContext has been deprecated
 func (c *DirectConnect) DescribeConnectionsOnInterconnectWithContext(ctx aws.Context, input *DescribeConnectionsOnInterconnectInput, opts ...request.Option) (*Connections, error) {
 	req, out := c.DescribeConnectionsOnInterconnectRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeDirectConnectGatewayAssociationProposals = "DescribeDirectConnectGatewayAssociationProposals"
+
+// DescribeDirectConnectGatewayAssociationProposalsRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeDirectConnectGatewayAssociationProposals operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeDirectConnectGatewayAssociationProposals for more information on using the DescribeDirectConnectGatewayAssociationProposals
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeDirectConnectGatewayAssociationProposalsRequest method.
+//    req, resp := client.DescribeDirectConnectGatewayAssociationProposalsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/directconnect-2012-10-25/DescribeDirectConnectGatewayAssociationProposals
+func (c *DirectConnect) DescribeDirectConnectGatewayAssociationProposalsRequest(input *DescribeDirectConnectGatewayAssociationProposalsInput) (req *request.Request, output *DescribeDirectConnectGatewayAssociationProposalsOutput) {
+	op := &request.Operation{
+		Name:       opDescribeDirectConnectGatewayAssociationProposals,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeDirectConnectGatewayAssociationProposalsInput{}
+	}
+
+	output = &DescribeDirectConnectGatewayAssociationProposalsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeDirectConnectGatewayAssociationProposals API operation for AWS Direct Connect.
+//
+// Describes one or more association proposals for connection between a virtual
+// private gateway and a Direct Connect gateway.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Direct Connect's
+// API operation DescribeDirectConnectGatewayAssociationProposals for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeServerException "DirectConnectServerException"
+//   A server-side error occurred.
+//
+//   * ErrCodeClientException "DirectConnectClientException"
+//   One or more parameters are not valid.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/directconnect-2012-10-25/DescribeDirectConnectGatewayAssociationProposals
+func (c *DirectConnect) DescribeDirectConnectGatewayAssociationProposals(input *DescribeDirectConnectGatewayAssociationProposalsInput) (*DescribeDirectConnectGatewayAssociationProposalsOutput, error) {
+	req, out := c.DescribeDirectConnectGatewayAssociationProposalsRequest(input)
+	return out, req.Send()
+}
+
+// DescribeDirectConnectGatewayAssociationProposalsWithContext is the same as DescribeDirectConnectGatewayAssociationProposals with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeDirectConnectGatewayAssociationProposals for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DirectConnect) DescribeDirectConnectGatewayAssociationProposalsWithContext(ctx aws.Context, input *DescribeDirectConnectGatewayAssociationProposalsInput, opts ...request.Option) (*DescribeDirectConnectGatewayAssociationProposalsOutput, error) {
+	req, out := c.DescribeDirectConnectGatewayAssociationProposalsRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -2838,7 +3177,7 @@ func (c *DirectConnect) DescribeHostedConnectionsRequest(input *DescribeHostedCo
 // Lists the hosted connections that have been provisioned on the specified
 // interconnect or link aggregation group (LAG).
 //
-// Intended for use by AWS Direct Connect partners only.
+// Intended for use by AWS Direct Connect Partners only.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2932,7 +3271,7 @@ func (c *DirectConnect) DescribeInterconnectLoaRequest(input *DescribeInterconne
 // The Letter of Authorization - Connecting Facility Assignment (LOA-CFA) is
 // a document that is used when establishing your cross connect to AWS at the
 // colocation facility. For more information, see Requesting Cross Connects
-// at AWS Direct Connect Locations (http://docs.aws.amazon.com/directconnect/latest/UserGuide/Colocation.html)
+// at AWS Direct Connect Locations (https://docs.aws.amazon.com/directconnect/latest/UserGuide/Colocation.html)
 // in the AWS Direct Connect User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -3189,7 +3528,7 @@ func (c *DirectConnect) DescribeLoaRequest(input *DescribeLoaInput) (req *reques
 // The Letter of Authorization - Connecting Facility Assignment (LOA-CFA) is
 // a document that is used when establishing your cross connect to AWS at the
 // colocation facility. For more information, see Requesting Cross Connects
-// at AWS Direct Connect Locations (http://docs.aws.amazon.com/directconnect/latest/UserGuide/Colocation.html)
+// at AWS Direct Connect Locations (https://docs.aws.amazon.com/directconnect/latest/UserGuide/Colocation.html)
 // in the AWS Direct Connect User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -3616,7 +3955,7 @@ func (c *DirectConnect) DisassociateConnectionFromLagRequest(input *Disassociate
 // is not deleted; to delete the connection, use the DeleteConnection request).
 // If the LAG has associated virtual interfaces or hosted connections, they
 // remain associated with the LAG. A disassociated connection owned by an AWS
-// Direct Connect partner is automatically converted to an interconnect.
+// Direct Connect Partner is automatically converted to an interconnect.
 //
 // If disassociating the connection would cause the LAG to fall below its setting
 // for minimum number of operational connections, the request fails, except
@@ -3835,6 +4174,90 @@ func (c *DirectConnect) UntagResourceWithContext(ctx aws.Context, input *UntagRe
 	return out, req.Send()
 }
 
+const opUpdateDirectConnectGatewayAssociation = "UpdateDirectConnectGatewayAssociation"
+
+// UpdateDirectConnectGatewayAssociationRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateDirectConnectGatewayAssociation operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateDirectConnectGatewayAssociation for more information on using the UpdateDirectConnectGatewayAssociation
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateDirectConnectGatewayAssociationRequest method.
+//    req, resp := client.UpdateDirectConnectGatewayAssociationRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/directconnect-2012-10-25/UpdateDirectConnectGatewayAssociation
+func (c *DirectConnect) UpdateDirectConnectGatewayAssociationRequest(input *UpdateDirectConnectGatewayAssociationInput) (req *request.Request, output *UpdateDirectConnectGatewayAssociationOutput) {
+	op := &request.Operation{
+		Name:       opUpdateDirectConnectGatewayAssociation,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &UpdateDirectConnectGatewayAssociationInput{}
+	}
+
+	output = &UpdateDirectConnectGatewayAssociationOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateDirectConnectGatewayAssociation API operation for AWS Direct Connect.
+//
+// Updates the specified attributes of the Direct Connect gateway association.
+//
+// Add or remove prefixes from the association.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Direct Connect's
+// API operation UpdateDirectConnectGatewayAssociation for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeServerException "DirectConnectServerException"
+//   A server-side error occurred.
+//
+//   * ErrCodeClientException "DirectConnectClientException"
+//   One or more parameters are not valid.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/directconnect-2012-10-25/UpdateDirectConnectGatewayAssociation
+func (c *DirectConnect) UpdateDirectConnectGatewayAssociation(input *UpdateDirectConnectGatewayAssociationInput) (*UpdateDirectConnectGatewayAssociationOutput, error) {
+	req, out := c.UpdateDirectConnectGatewayAssociationRequest(input)
+	return out, req.Send()
+}
+
+// UpdateDirectConnectGatewayAssociationWithContext is the same as UpdateDirectConnectGatewayAssociation with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateDirectConnectGatewayAssociation for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DirectConnect) UpdateDirectConnectGatewayAssociationWithContext(ctx aws.Context, input *UpdateDirectConnectGatewayAssociationInput, opts ...request.Option) (*UpdateDirectConnectGatewayAssociationOutput, error) {
+	req, out := c.UpdateDirectConnectGatewayAssociationRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opUpdateLag = "UpdateLag"
 
 // UpdateLagRequest generates a "aws/request.Request" representing the
@@ -4020,11 +4443,112 @@ func (c *DirectConnect) UpdateVirtualInterfaceAttributesWithContext(ctx aws.Cont
 	return out, req.Send()
 }
 
+type AcceptDirectConnectGatewayAssociationProposalInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the AWS account that owns the virtual private gateway.
+	//
+	// AssociatedGatewayOwnerAccount is a required field
+	AssociatedGatewayOwnerAccount *string `locationName:"associatedGatewayOwnerAccount" type:"string" required:"true"`
+
+	// The ID of the Direct Connect gateway.
+	//
+	// DirectConnectGatewayId is a required field
+	DirectConnectGatewayId *string `locationName:"directConnectGatewayId" type:"string" required:"true"`
+
+	// Overrides the Amazon VPC prefixes advertised to the Direct Connect gateway.
+	OverrideAllowedPrefixesToDirectConnectGateway []*RouteFilterPrefix `locationName:"overrideAllowedPrefixesToDirectConnectGateway" type:"list"`
+
+	// The ID of the request proposal.
+	//
+	// ProposalId is a required field
+	ProposalId *string `locationName:"proposalId" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s AcceptDirectConnectGatewayAssociationProposalInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AcceptDirectConnectGatewayAssociationProposalInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AcceptDirectConnectGatewayAssociationProposalInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AcceptDirectConnectGatewayAssociationProposalInput"}
+	if s.AssociatedGatewayOwnerAccount == nil {
+		invalidParams.Add(request.NewErrParamRequired("AssociatedGatewayOwnerAccount"))
+	}
+	if s.DirectConnectGatewayId == nil {
+		invalidParams.Add(request.NewErrParamRequired("DirectConnectGatewayId"))
+	}
+	if s.ProposalId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ProposalId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAssociatedGatewayOwnerAccount sets the AssociatedGatewayOwnerAccount field's value.
+func (s *AcceptDirectConnectGatewayAssociationProposalInput) SetAssociatedGatewayOwnerAccount(v string) *AcceptDirectConnectGatewayAssociationProposalInput {
+	s.AssociatedGatewayOwnerAccount = &v
+	return s
+}
+
+// SetDirectConnectGatewayId sets the DirectConnectGatewayId field's value.
+func (s *AcceptDirectConnectGatewayAssociationProposalInput) SetDirectConnectGatewayId(v string) *AcceptDirectConnectGatewayAssociationProposalInput {
+	s.DirectConnectGatewayId = &v
+	return s
+}
+
+// SetOverrideAllowedPrefixesToDirectConnectGateway sets the OverrideAllowedPrefixesToDirectConnectGateway field's value.
+func (s *AcceptDirectConnectGatewayAssociationProposalInput) SetOverrideAllowedPrefixesToDirectConnectGateway(v []*RouteFilterPrefix) *AcceptDirectConnectGatewayAssociationProposalInput {
+	s.OverrideAllowedPrefixesToDirectConnectGateway = v
+	return s
+}
+
+// SetProposalId sets the ProposalId field's value.
+func (s *AcceptDirectConnectGatewayAssociationProposalInput) SetProposalId(v string) *AcceptDirectConnectGatewayAssociationProposalInput {
+	s.ProposalId = &v
+	return s
+}
+
+type AcceptDirectConnectGatewayAssociationProposalOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Information about an association between a Direct Connect gateway and a virtual
+	// private gateway.
+	DirectConnectGatewayAssociation *GatewayAssociation `locationName:"directConnectGatewayAssociation" type:"structure"`
+}
+
+// String returns the string representation
+func (s AcceptDirectConnectGatewayAssociationProposalOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AcceptDirectConnectGatewayAssociationProposalOutput) GoString() string {
+	return s.String()
+}
+
+// SetDirectConnectGatewayAssociation sets the DirectConnectGatewayAssociation field's value.
+func (s *AcceptDirectConnectGatewayAssociationProposalOutput) SetDirectConnectGatewayAssociation(v *GatewayAssociation) *AcceptDirectConnectGatewayAssociationProposalOutput {
+	s.DirectConnectGatewayAssociation = v
+	return s
+}
+
 type AllocateConnectionOnInterconnectInput struct {
 	_ struct{} `type:"structure"`
 
-	// The bandwidth of the connection, in Mbps. The possible values are 50Mbps,
-	// 100Mbps, 200Mbps, 300Mbps, 400Mbps, and 500Mbps.
+	// The bandwidth of the connection. The possible values are 50Mbps, 100Mbps,
+	// 200Mbps, 300Mbps, 400Mbps, 500Mbps, 1Gbps, 2Gbps, 5Gbps, and 10Gbps. Note
+	// that only those AWS Direct Connect Partners who have met specific requirements
+	// are allowed to create a 1Gbps, 2Gbps, 5Gbps or 10Gbps hosted connection.
 	//
 	// Bandwidth is a required field
 	Bandwidth *string `locationName:"bandwidth" type:"string" required:"true"`
@@ -4034,8 +4558,7 @@ type AllocateConnectionOnInterconnectInput struct {
 	// ConnectionName is a required field
 	ConnectionName *string `locationName:"connectionName" type:"string" required:"true"`
 
-	// The ID of the interconnect on which the connection will be provisioned. For
-	// example, dxcon-456abc78.
+	// The ID of the interconnect on which the connection will be provisioned.
 	//
 	// InterconnectId is a required field
 	InterconnectId *string `locationName:"interconnectId" type:"string" required:"true"`
@@ -4120,8 +4643,10 @@ func (s *AllocateConnectionOnInterconnectInput) SetVlan(v int64) *AllocateConnec
 type AllocateHostedConnectionInput struct {
 	_ struct{} `type:"structure"`
 
-	// The bandwidth of the hosted connection, in Mbps. The possible values are
-	// 50Mbps, 100Mbps, 200Mbps, 300Mbps, 400Mbps, and 500Mbps.
+	// The bandwidth of the connection. The possible values are 50Mbps, 100Mbps,
+	// 200Mbps, 300Mbps, 400Mbps, 500Mbps, 1Gbps, 2Gbps, 5Gbps, and 10Gbps. Note
+	// that only those AWS Direct Connect Partners who have met specific requirements
+	// are allowed to create a 1Gbps, 2Gbps, 5Gbps or 10Gbps hosted connection.
 	//
 	// Bandwidth is a required field
 	Bandwidth *string `locationName:"bandwidth" type:"string" required:"true"`
@@ -4357,12 +4882,12 @@ func (s *AllocatePublicVirtualInterfaceInput) SetOwnerAccount(v string) *Allocat
 type AssociateConnectionWithLagInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ID of the connection. For example, dxcon-abc123.
+	// The ID of the connection.
 	//
 	// ConnectionId is a required field
 	ConnectionId *string `locationName:"connectionId" type:"string" required:"true"`
 
-	// The ID of the LAG with which to associate the connection. For example, dxlag-abc123.
+	// The ID of the LAG with which to associate the connection.
 	//
 	// LagId is a required field
 	LagId *string `locationName:"lagId" type:"string" required:"true"`
@@ -4510,6 +5035,57 @@ func (s *AssociateVirtualInterfaceInput) SetVirtualInterfaceId(v string) *Associ
 	return s
 }
 
+// Information about the associated gateway.
+type AssociatedGateway struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the associated gateway.
+	Id *string `locationName:"id" type:"string"`
+
+	// The ID of the AWS account that owns the associated virtual private gateway.
+	OwnerAccount *string `locationName:"ownerAccount" type:"string"`
+
+	// The Region where the associated gateway is located.
+	Region *string `locationName:"region" type:"string"`
+
+	// The type of associated gateway.
+	Type *string `locationName:"type" type:"string" enum:"GatewayType"`
+}
+
+// String returns the string representation
+func (s AssociatedGateway) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AssociatedGateway) GoString() string {
+	return s.String()
+}
+
+// SetId sets the Id field's value.
+func (s *AssociatedGateway) SetId(v string) *AssociatedGateway {
+	s.Id = &v
+	return s
+}
+
+// SetOwnerAccount sets the OwnerAccount field's value.
+func (s *AssociatedGateway) SetOwnerAccount(v string) *AssociatedGateway {
+	s.OwnerAccount = &v
+	return s
+}
+
+// SetRegion sets the Region field's value.
+func (s *AssociatedGateway) SetRegion(v string) *AssociatedGateway {
+	s.Region = &v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *AssociatedGateway) SetType(v string) *AssociatedGateway {
+	s.Type = &v
+	return s
+}
+
 // Information about a BGP peer.
 type BGPPeer struct {
 	_ struct{} `type:"structure"`
@@ -4556,7 +5132,7 @@ type BGPPeer struct {
 	//
 	//    * down: The BGP peer is down.
 	//
-	//    * unknown: The BGP peer status is unknown.
+	//    * unknown: The BGP peer status is not available.
 	BgpStatus *string `locationName:"bgpStatus" type:"string" enum:"BGPStatus"`
 
 	// The IP address assigned to the customer interface.
@@ -4690,6 +5266,8 @@ type ConfirmConnectionOutput struct {
 	//
 	//    * rejected: A hosted connection in the ordering state enters the rejected
 	//    state if it is deleted by the customer.
+	//
+	//    * unknown: The state of the connection is not available.
 	ConnectionState *string `locationName:"connectionState" type:"string" enum:"ConnectionState"`
 }
 
@@ -4716,7 +5294,7 @@ type ConfirmPrivateVirtualInterfaceInput struct {
 	DirectConnectGatewayId *string `locationName:"directConnectGatewayId" type:"string"`
 
 	// The ID of the virtual private gateway.
-	VirtualGatewayId *string `locationName:"virtualGatewayId" type:"string"`
+	VirtualGatewayId *string `locationName:"virtualGatewayId" deprecated:"true" type:"string"`
 
 	// The ID of the virtual interface.
 	//
@@ -4796,6 +5374,8 @@ type ConfirmPrivateVirtualInterfaceOutput struct {
 	//    interface. If a virtual interface in the Confirming state is deleted by
 	//    the virtual interface owner, the virtual interface enters the Rejected
 	//    state.
+	//
+	//    * unknown: The state of the virtual interface is not available.
 	VirtualInterfaceState *string `locationName:"virtualInterfaceState" type:"string" enum:"VirtualInterfaceState"`
 }
 
@@ -4884,6 +5464,8 @@ type ConfirmPublicVirtualInterfaceOutput struct {
 	//    interface. If a virtual interface in the Confirming state is deleted by
 	//    the virtual interface owner, the virtual interface enters the Rejected
 	//    state.
+	//
+	//    * unknown: The state of the virtual interface is not available.
 	VirtualInterfaceState *string `locationName:"virtualInterfaceState" type:"string" enum:"VirtualInterfaceState"`
 }
 
@@ -4944,6 +5526,8 @@ type Connection struct {
 	//
 	//    * rejected: A hosted connection in the ordering state enters the rejected
 	//    state if it is deleted by the customer.
+	//
+	//    * unknown: The state of the connection is not available.
 	ConnectionState *string `locationName:"connectionState" type:"string" enum:"ConnectionState"`
 
 	// Indicates whether the connection supports a secondary BGP peer in the same
@@ -5231,15 +5815,19 @@ func (s *CreateConnectionInput) SetLocation(v string) *CreateConnectionInput {
 type CreateDirectConnectGatewayAssociationInput struct {
 	_ struct{} `type:"structure"`
 
+	// The Amazon VPC prefixes to advertise to the Direct Connect gateway
+	AddAllowedPrefixesToDirectConnectGateway []*RouteFilterPrefix `locationName:"addAllowedPrefixesToDirectConnectGateway" type:"list"`
+
 	// The ID of the Direct Connect gateway.
 	//
 	// DirectConnectGatewayId is a required field
 	DirectConnectGatewayId *string `locationName:"directConnectGatewayId" type:"string" required:"true"`
 
 	// The ID of the virtual private gateway.
-	//
-	// VirtualGatewayId is a required field
-	VirtualGatewayId *string `locationName:"virtualGatewayId" type:"string" required:"true"`
+	GatewayId *string `locationName:"gatewayId" type:"string"`
+
+	// The ID of the virtual private gateway.
+	VirtualGatewayId *string `locationName:"virtualGatewayId" deprecated:"true" type:"string"`
 }
 
 // String returns the string representation
@@ -5258,9 +5846,6 @@ func (s *CreateDirectConnectGatewayAssociationInput) Validate() error {
 	if s.DirectConnectGatewayId == nil {
 		invalidParams.Add(request.NewErrParamRequired("DirectConnectGatewayId"))
 	}
-	if s.VirtualGatewayId == nil {
-		invalidParams.Add(request.NewErrParamRequired("VirtualGatewayId"))
-	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -5268,9 +5853,21 @@ func (s *CreateDirectConnectGatewayAssociationInput) Validate() error {
 	return nil
 }
 
+// SetAddAllowedPrefixesToDirectConnectGateway sets the AddAllowedPrefixesToDirectConnectGateway field's value.
+func (s *CreateDirectConnectGatewayAssociationInput) SetAddAllowedPrefixesToDirectConnectGateway(v []*RouteFilterPrefix) *CreateDirectConnectGatewayAssociationInput {
+	s.AddAllowedPrefixesToDirectConnectGateway = v
+	return s
+}
+
 // SetDirectConnectGatewayId sets the DirectConnectGatewayId field's value.
 func (s *CreateDirectConnectGatewayAssociationInput) SetDirectConnectGatewayId(v string) *CreateDirectConnectGatewayAssociationInput {
 	s.DirectConnectGatewayId = &v
+	return s
+}
+
+// SetGatewayId sets the GatewayId field's value.
+func (s *CreateDirectConnectGatewayAssociationInput) SetGatewayId(v string) *CreateDirectConnectGatewayAssociationInput {
+	s.GatewayId = &v
 	return s
 }
 
@@ -5300,6 +5897,113 @@ func (s CreateDirectConnectGatewayAssociationOutput) GoString() string {
 // SetDirectConnectGatewayAssociation sets the DirectConnectGatewayAssociation field's value.
 func (s *CreateDirectConnectGatewayAssociationOutput) SetDirectConnectGatewayAssociation(v *GatewayAssociation) *CreateDirectConnectGatewayAssociationOutput {
 	s.DirectConnectGatewayAssociation = v
+	return s
+}
+
+type CreateDirectConnectGatewayAssociationProposalInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon VPC prefixes to advertise to the Direct Connect gateway.
+	AddAllowedPrefixesToDirectConnectGateway []*RouteFilterPrefix `locationName:"addAllowedPrefixesToDirectConnectGateway" type:"list"`
+
+	// The ID of the Direct Connect gateway.
+	//
+	// DirectConnectGatewayId is a required field
+	DirectConnectGatewayId *string `locationName:"directConnectGatewayId" type:"string" required:"true"`
+
+	// The ID of the AWS account that owns the Direct Connect gateway.
+	//
+	// DirectConnectGatewayOwnerAccount is a required field
+	DirectConnectGatewayOwnerAccount *string `locationName:"directConnectGatewayOwnerAccount" type:"string" required:"true"`
+
+	// The ID of the virtual private gateway.
+	//
+	// GatewayId is a required field
+	GatewayId *string `locationName:"gatewayId" type:"string" required:"true"`
+
+	// The Amazon VPC prefixes to no longer advertise to the Direct Connect gateway.
+	RemoveAllowedPrefixesToDirectConnectGateway []*RouteFilterPrefix `locationName:"removeAllowedPrefixesToDirectConnectGateway" type:"list"`
+}
+
+// String returns the string representation
+func (s CreateDirectConnectGatewayAssociationProposalInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateDirectConnectGatewayAssociationProposalInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateDirectConnectGatewayAssociationProposalInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateDirectConnectGatewayAssociationProposalInput"}
+	if s.DirectConnectGatewayId == nil {
+		invalidParams.Add(request.NewErrParamRequired("DirectConnectGatewayId"))
+	}
+	if s.DirectConnectGatewayOwnerAccount == nil {
+		invalidParams.Add(request.NewErrParamRequired("DirectConnectGatewayOwnerAccount"))
+	}
+	if s.GatewayId == nil {
+		invalidParams.Add(request.NewErrParamRequired("GatewayId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAddAllowedPrefixesToDirectConnectGateway sets the AddAllowedPrefixesToDirectConnectGateway field's value.
+func (s *CreateDirectConnectGatewayAssociationProposalInput) SetAddAllowedPrefixesToDirectConnectGateway(v []*RouteFilterPrefix) *CreateDirectConnectGatewayAssociationProposalInput {
+	s.AddAllowedPrefixesToDirectConnectGateway = v
+	return s
+}
+
+// SetDirectConnectGatewayId sets the DirectConnectGatewayId field's value.
+func (s *CreateDirectConnectGatewayAssociationProposalInput) SetDirectConnectGatewayId(v string) *CreateDirectConnectGatewayAssociationProposalInput {
+	s.DirectConnectGatewayId = &v
+	return s
+}
+
+// SetDirectConnectGatewayOwnerAccount sets the DirectConnectGatewayOwnerAccount field's value.
+func (s *CreateDirectConnectGatewayAssociationProposalInput) SetDirectConnectGatewayOwnerAccount(v string) *CreateDirectConnectGatewayAssociationProposalInput {
+	s.DirectConnectGatewayOwnerAccount = &v
+	return s
+}
+
+// SetGatewayId sets the GatewayId field's value.
+func (s *CreateDirectConnectGatewayAssociationProposalInput) SetGatewayId(v string) *CreateDirectConnectGatewayAssociationProposalInput {
+	s.GatewayId = &v
+	return s
+}
+
+// SetRemoveAllowedPrefixesToDirectConnectGateway sets the RemoveAllowedPrefixesToDirectConnectGateway field's value.
+func (s *CreateDirectConnectGatewayAssociationProposalInput) SetRemoveAllowedPrefixesToDirectConnectGateway(v []*RouteFilterPrefix) *CreateDirectConnectGatewayAssociationProposalInput {
+	s.RemoveAllowedPrefixesToDirectConnectGateway = v
+	return s
+}
+
+type CreateDirectConnectGatewayAssociationProposalOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Information about the Direct Connect gateway proposal.
+	DirectConnectGatewayAssociationProposal *GatewayAssociationProposal `locationName:"directConnectGatewayAssociationProposal" type:"structure"`
+}
+
+// String returns the string representation
+func (s CreateDirectConnectGatewayAssociationProposalOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateDirectConnectGatewayAssociationProposalOutput) GoString() string {
+	return s.String()
+}
+
+// SetDirectConnectGatewayAssociationProposal sets the DirectConnectGatewayAssociationProposal field's value.
+func (s *CreateDirectConnectGatewayAssociationProposalOutput) SetDirectConnectGatewayAssociationProposal(v *GatewayAssociationProposal) *CreateDirectConnectGatewayAssociationProposalOutput {
+	s.DirectConnectGatewayAssociationProposal = v
 	return s
 }
 
@@ -5458,7 +6162,8 @@ type CreateLagInput struct {
 	ConnectionId *string `locationName:"connectionId" type:"string"`
 
 	// The bandwidth of the individual physical connections bundled by the LAG.
-	// The possible values are 1Gbps and 10Gbps.
+	// The possible values are 50Mbps, 100Mbps, 200Mbps, 300Mbps, 400Mbps, 500Mbps,
+	// 1Gbps, 2Gbps, 5Gbps, and 10Gbps.
 	//
 	// ConnectionsBandwidth is a required field
 	ConnectionsBandwidth *string `locationName:"connectionsBandwidth" type:"string" required:"true"`
@@ -5770,15 +6475,14 @@ func (s *DeleteConnectionInput) SetConnectionId(v string) *DeleteConnectionInput
 type DeleteDirectConnectGatewayAssociationInput struct {
 	_ struct{} `type:"structure"`
 
+	// The ID of the Direct Connect gateway association.
+	AssociationId *string `locationName:"associationId" type:"string"`
+
 	// The ID of the Direct Connect gateway.
-	//
-	// DirectConnectGatewayId is a required field
-	DirectConnectGatewayId *string `locationName:"directConnectGatewayId" type:"string" required:"true"`
+	DirectConnectGatewayId *string `locationName:"directConnectGatewayId" type:"string"`
 
 	// The ID of the virtual private gateway.
-	//
-	// VirtualGatewayId is a required field
-	VirtualGatewayId *string `locationName:"virtualGatewayId" type:"string" required:"true"`
+	VirtualGatewayId *string `locationName:"virtualGatewayId" deprecated:"true" type:"string"`
 }
 
 // String returns the string representation
@@ -5791,20 +6495,10 @@ func (s DeleteDirectConnectGatewayAssociationInput) GoString() string {
 	return s.String()
 }
 
-// Validate inspects the fields of the type to determine if they are valid.
-func (s *DeleteDirectConnectGatewayAssociationInput) Validate() error {
-	invalidParams := request.ErrInvalidParams{Context: "DeleteDirectConnectGatewayAssociationInput"}
-	if s.DirectConnectGatewayId == nil {
-		invalidParams.Add(request.NewErrParamRequired("DirectConnectGatewayId"))
-	}
-	if s.VirtualGatewayId == nil {
-		invalidParams.Add(request.NewErrParamRequired("VirtualGatewayId"))
-	}
-
-	if invalidParams.Len() > 0 {
-		return invalidParams
-	}
-	return nil
+// SetAssociationId sets the AssociationId field's value.
+func (s *DeleteDirectConnectGatewayAssociationInput) SetAssociationId(v string) *DeleteDirectConnectGatewayAssociationInput {
+	s.AssociationId = &v
+	return s
 }
 
 // SetDirectConnectGatewayId sets the DirectConnectGatewayId field's value.
@@ -5822,7 +6516,7 @@ func (s *DeleteDirectConnectGatewayAssociationInput) SetVirtualGatewayId(v strin
 type DeleteDirectConnectGatewayAssociationOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The association to be deleted.
+	// Information about the deleted association.
 	DirectConnectGatewayAssociation *GatewayAssociation `locationName:"directConnectGatewayAssociation" type:"structure"`
 }
 
@@ -5839,6 +6533,67 @@ func (s DeleteDirectConnectGatewayAssociationOutput) GoString() string {
 // SetDirectConnectGatewayAssociation sets the DirectConnectGatewayAssociation field's value.
 func (s *DeleteDirectConnectGatewayAssociationOutput) SetDirectConnectGatewayAssociation(v *GatewayAssociation) *DeleteDirectConnectGatewayAssociationOutput {
 	s.DirectConnectGatewayAssociation = v
+	return s
+}
+
+type DeleteDirectConnectGatewayAssociationProposalInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the proposal.
+	//
+	// ProposalId is a required field
+	ProposalId *string `locationName:"proposalId" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteDirectConnectGatewayAssociationProposalInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteDirectConnectGatewayAssociationProposalInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteDirectConnectGatewayAssociationProposalInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteDirectConnectGatewayAssociationProposalInput"}
+	if s.ProposalId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ProposalId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetProposalId sets the ProposalId field's value.
+func (s *DeleteDirectConnectGatewayAssociationProposalInput) SetProposalId(v string) *DeleteDirectConnectGatewayAssociationProposalInput {
+	s.ProposalId = &v
+	return s
+}
+
+type DeleteDirectConnectGatewayAssociationProposalOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the virtual private gateway.
+	DirectConnectGatewayAssociationProposal *GatewayAssociationProposal `locationName:"directConnectGatewayAssociationProposal" type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteDirectConnectGatewayAssociationProposalOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteDirectConnectGatewayAssociationProposalOutput) GoString() string {
+	return s.String()
+}
+
+// SetDirectConnectGatewayAssociationProposal sets the DirectConnectGatewayAssociationProposal field's value.
+func (s *DeleteDirectConnectGatewayAssociationProposalOutput) SetDirectConnectGatewayAssociationProposal(v *GatewayAssociationProposal) *DeleteDirectConnectGatewayAssociationProposalOutput {
+	s.DirectConnectGatewayAssociationProposal = v
 	return s
 }
 
@@ -5960,6 +6715,8 @@ type DeleteInterconnectOutput struct {
 	//    * deleting: The interconnect is being deleted.
 	//
 	//    * deleted: The interconnect is deleted.
+	//
+	//    * unknown: The state of the interconnect is not available.
 	InterconnectState *string `locationName:"interconnectState" type:"string" enum:"InterconnectState"`
 }
 
@@ -6086,6 +6843,8 @@ type DeleteVirtualInterfaceOutput struct {
 	//    interface. If a virtual interface in the Confirming state is deleted by
 	//    the virtual interface owner, the virtual interface enters the Rejected
 	//    state.
+	//
+	//    * unknown: The state of the virtual interface is not available.
 	VirtualInterfaceState *string `locationName:"virtualInterfaceState" type:"string" enum:"VirtualInterfaceState"`
 }
 
@@ -6248,20 +7007,124 @@ func (s *DescribeConnectionsOnInterconnectInput) SetInterconnectId(v string) *De
 	return s
 }
 
-type DescribeDirectConnectGatewayAssociationsInput struct {
+type DescribeDirectConnectGatewayAssociationProposalsInput struct {
 	_ struct{} `type:"structure"`
+
+	// The ID of the associated virtual private gateway.
+	AssociatedGatewayId *string `locationName:"associatedGatewayId" type:"string"`
 
 	// The ID of the Direct Connect gateway.
 	DirectConnectGatewayId *string `locationName:"directConnectGatewayId" type:"string"`
 
-	// The maximum number of associations to return per page.
+	// The maximum number of results to return with a single call. To retrieve the
+	// remaining results, make another call with the returned nextToken value.
+	//
+	// If MaxResults is given a value larger than 100, only 100 results are returned.
+	MaxResults *int64 `locationName:"maxResults" type:"integer"`
+
+	// The token for the next page of results.
+	NextToken *string `locationName:"nextToken" type:"string"`
+
+	// The ID of the proposal.
+	ProposalId *string `locationName:"proposalId" type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeDirectConnectGatewayAssociationProposalsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeDirectConnectGatewayAssociationProposalsInput) GoString() string {
+	return s.String()
+}
+
+// SetAssociatedGatewayId sets the AssociatedGatewayId field's value.
+func (s *DescribeDirectConnectGatewayAssociationProposalsInput) SetAssociatedGatewayId(v string) *DescribeDirectConnectGatewayAssociationProposalsInput {
+	s.AssociatedGatewayId = &v
+	return s
+}
+
+// SetDirectConnectGatewayId sets the DirectConnectGatewayId field's value.
+func (s *DescribeDirectConnectGatewayAssociationProposalsInput) SetDirectConnectGatewayId(v string) *DescribeDirectConnectGatewayAssociationProposalsInput {
+	s.DirectConnectGatewayId = &v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *DescribeDirectConnectGatewayAssociationProposalsInput) SetMaxResults(v int64) *DescribeDirectConnectGatewayAssociationProposalsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeDirectConnectGatewayAssociationProposalsInput) SetNextToken(v string) *DescribeDirectConnectGatewayAssociationProposalsInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetProposalId sets the ProposalId field's value.
+func (s *DescribeDirectConnectGatewayAssociationProposalsInput) SetProposalId(v string) *DescribeDirectConnectGatewayAssociationProposalsInput {
+	s.ProposalId = &v
+	return s
+}
+
+type DescribeDirectConnectGatewayAssociationProposalsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Describes the Direct Connect gateway association proposals.
+	DirectConnectGatewayAssociationProposals []*GatewayAssociationProposal `locationName:"directConnectGatewayAssociationProposals" type:"list"`
+
+	// The token to use to retrieve the next page of results. This value is null
+	// when there are no more results to return.
+	NextToken *string `locationName:"nextToken" type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeDirectConnectGatewayAssociationProposalsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeDirectConnectGatewayAssociationProposalsOutput) GoString() string {
+	return s.String()
+}
+
+// SetDirectConnectGatewayAssociationProposals sets the DirectConnectGatewayAssociationProposals field's value.
+func (s *DescribeDirectConnectGatewayAssociationProposalsOutput) SetDirectConnectGatewayAssociationProposals(v []*GatewayAssociationProposal) *DescribeDirectConnectGatewayAssociationProposalsOutput {
+	s.DirectConnectGatewayAssociationProposals = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeDirectConnectGatewayAssociationProposalsOutput) SetNextToken(v string) *DescribeDirectConnectGatewayAssociationProposalsOutput {
+	s.NextToken = &v
+	return s
+}
+
+type DescribeDirectConnectGatewayAssociationsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the associated gateway.
+	AssociatedGatewayId *string `locationName:"associatedGatewayId" type:"string"`
+
+	// The ID of the Direct Connect gateway association.
+	AssociationId *string `locationName:"associationId" type:"string"`
+
+	// The ID of the Direct Connect gateway.
+	DirectConnectGatewayId *string `locationName:"directConnectGatewayId" type:"string"`
+
+	// The maximum number of results to return with a single call. To retrieve the
+	// remaining results, make another call with the returned nextToken value.
+	//
+	// If MaxResults is given a value larger than 100, only 100 results are returned.
 	MaxResults *int64 `locationName:"maxResults" type:"integer"`
 
 	// The token provided in the previous call to retrieve the next page.
 	NextToken *string `locationName:"nextToken" type:"string"`
 
 	// The ID of the virtual private gateway.
-	VirtualGatewayId *string `locationName:"virtualGatewayId" type:"string"`
+	VirtualGatewayId *string `locationName:"virtualGatewayId" deprecated:"true" type:"string"`
 }
 
 // String returns the string representation
@@ -6272,6 +7135,18 @@ func (s DescribeDirectConnectGatewayAssociationsInput) String() string {
 // GoString returns the string representation
 func (s DescribeDirectConnectGatewayAssociationsInput) GoString() string {
 	return s.String()
+}
+
+// SetAssociatedGatewayId sets the AssociatedGatewayId field's value.
+func (s *DescribeDirectConnectGatewayAssociationsInput) SetAssociatedGatewayId(v string) *DescribeDirectConnectGatewayAssociationsInput {
+	s.AssociatedGatewayId = &v
+	return s
+}
+
+// SetAssociationId sets the AssociationId field's value.
+func (s *DescribeDirectConnectGatewayAssociationsInput) SetAssociationId(v string) *DescribeDirectConnectGatewayAssociationsInput {
+	s.AssociationId = &v
+	return s
 }
 
 // SetDirectConnectGatewayId sets the DirectConnectGatewayId field's value.
@@ -6301,7 +7176,7 @@ func (s *DescribeDirectConnectGatewayAssociationsInput) SetVirtualGatewayId(v st
 type DescribeDirectConnectGatewayAssociationsOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The associations.
+	// Information about the associations.
 	DirectConnectGatewayAssociations []*GatewayAssociation `locationName:"directConnectGatewayAssociations" type:"list"`
 
 	// The token to retrieve the next page.
@@ -6336,7 +7211,10 @@ type DescribeDirectConnectGatewayAttachmentsInput struct {
 	// The ID of the Direct Connect gateway.
 	DirectConnectGatewayId *string `locationName:"directConnectGatewayId" type:"string"`
 
-	// The maximum number of attachments to return per page.
+	// The maximum number of results to return with a single call. To retrieve the
+	// remaining results, make another call with the returned nextToken value.
+	//
+	// If MaxResults is given a value larger than 100, only 100 results are returned.
 	MaxResults *int64 `locationName:"maxResults" type:"integer"`
 
 	// The token provided in the previous call to retrieve the next page.
@@ -6418,7 +7296,10 @@ type DescribeDirectConnectGatewaysInput struct {
 	// The ID of the Direct Connect gateway.
 	DirectConnectGatewayId *string `locationName:"directConnectGatewayId" type:"string"`
 
-	// The maximum number of Direct Connect gateways to return per page.
+	// The maximum number of results to return with a single call. To retrieve the
+	// remaining results, make another call with the returned nextToken value.
+	//
+	// If MaxResults is given a value larger than 100, only 100 results are returned.
 	MaxResults *int64 `locationName:"maxResults" type:"integer"`
 
 	// The token provided in the previous call to retrieve the next page.
@@ -6949,12 +7830,12 @@ func (s *DescribeVirtualInterfacesOutput) SetVirtualInterfaces(v []*VirtualInter
 type DisassociateConnectionFromLagInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ID of the connection. For example, dxcon-abc123.
+	// The ID of the connection.
 	//
 	// ConnectionId is a required field
 	ConnectionId *string `locationName:"connectionId" type:"string" required:"true"`
 
-	// The ID of the LAG. For example, dxlag-abc123.
+	// The ID of the LAG.
 	//
 	// LagId is a required field
 	LagId *string `locationName:"lagId" type:"string" required:"true"`
@@ -7081,6 +7962,15 @@ func (s *Gateway) SetStateChangeError(v string) *Gateway {
 type GatewayAssociation struct {
 	_ struct{} `type:"structure"`
 
+	// The Amazon VPC prefixes to advertise to the Direct Connect gateway.
+	AllowedPrefixesToDirectConnectGateway []*RouteFilterPrefix `locationName:"allowedPrefixesToDirectConnectGateway" type:"list"`
+
+	// Information about the associated virtual private gateway.
+	AssociatedGateway *AssociatedGateway `locationName:"associatedGateway" type:"structure"`
+
+	// The ID of the Direct Connect gateway association.
+	AssociationId *string `locationName:"associationId" type:"string"`
+
 	// The state of the association. The following are the possible values:
 	//
 	//    * associating: The initial state after calling CreateDirectConnectGatewayAssociation.
@@ -7098,17 +7988,20 @@ type GatewayAssociation struct {
 	// The ID of the Direct Connect gateway.
 	DirectConnectGatewayId *string `locationName:"directConnectGatewayId" type:"string"`
 
+	// The ID of the AWS account that owns the associated gateway.
+	DirectConnectGatewayOwnerAccount *string `locationName:"directConnectGatewayOwnerAccount" type:"string"`
+
 	// The error message if the state of an object failed to advance.
 	StateChangeError *string `locationName:"stateChangeError" type:"string"`
 
 	// The ID of the virtual private gateway. Applies only to private virtual interfaces.
-	VirtualGatewayId *string `locationName:"virtualGatewayId" type:"string"`
+	VirtualGatewayId *string `locationName:"virtualGatewayId" deprecated:"true" type:"string"`
 
 	// The ID of the AWS account that owns the virtual private gateway.
 	VirtualGatewayOwnerAccount *string `locationName:"virtualGatewayOwnerAccount" type:"string"`
 
 	// The AWS Region where the virtual private gateway is located.
-	VirtualGatewayRegion *string `locationName:"virtualGatewayRegion" type:"string"`
+	VirtualGatewayRegion *string `locationName:"virtualGatewayRegion" deprecated:"true" type:"string"`
 }
 
 // String returns the string representation
@@ -7121,6 +8014,24 @@ func (s GatewayAssociation) GoString() string {
 	return s.String()
 }
 
+// SetAllowedPrefixesToDirectConnectGateway sets the AllowedPrefixesToDirectConnectGateway field's value.
+func (s *GatewayAssociation) SetAllowedPrefixesToDirectConnectGateway(v []*RouteFilterPrefix) *GatewayAssociation {
+	s.AllowedPrefixesToDirectConnectGateway = v
+	return s
+}
+
+// SetAssociatedGateway sets the AssociatedGateway field's value.
+func (s *GatewayAssociation) SetAssociatedGateway(v *AssociatedGateway) *GatewayAssociation {
+	s.AssociatedGateway = v
+	return s
+}
+
+// SetAssociationId sets the AssociationId field's value.
+func (s *GatewayAssociation) SetAssociationId(v string) *GatewayAssociation {
+	s.AssociationId = &v
+	return s
+}
+
 // SetAssociationState sets the AssociationState field's value.
 func (s *GatewayAssociation) SetAssociationState(v string) *GatewayAssociation {
 	s.AssociationState = &v
@@ -7130,6 +8041,12 @@ func (s *GatewayAssociation) SetAssociationState(v string) *GatewayAssociation {
 // SetDirectConnectGatewayId sets the DirectConnectGatewayId field's value.
 func (s *GatewayAssociation) SetDirectConnectGatewayId(v string) *GatewayAssociation {
 	s.DirectConnectGatewayId = &v
+	return s
+}
+
+// SetDirectConnectGatewayOwnerAccount sets the DirectConnectGatewayOwnerAccount field's value.
+func (s *GatewayAssociation) SetDirectConnectGatewayOwnerAccount(v string) *GatewayAssociation {
+	s.DirectConnectGatewayOwnerAccount = &v
 	return s
 }
 
@@ -7154,6 +8071,94 @@ func (s *GatewayAssociation) SetVirtualGatewayOwnerAccount(v string) *GatewayAss
 // SetVirtualGatewayRegion sets the VirtualGatewayRegion field's value.
 func (s *GatewayAssociation) SetVirtualGatewayRegion(v string) *GatewayAssociation {
 	s.VirtualGatewayRegion = &v
+	return s
+}
+
+// Information about the proposal request to attach a virtual private gateway
+// to a DDirect Connect gateway.
+type GatewayAssociationProposal struct {
+	_ struct{} `type:"structure"`
+
+	// Information about the associated virtual private gateway.
+	AssociatedGateway *AssociatedGateway `locationName:"associatedGateway" type:"structure"`
+
+	// The ID of the Direct Connect gateway.
+	DirectConnectGatewayId *string `locationName:"directConnectGatewayId" type:"string"`
+
+	// The ID of the AWS account that owns the Direct Connect gateway.
+	DirectConnectGatewayOwnerAccount *string `locationName:"directConnectGatewayOwnerAccount" type:"string"`
+
+	// The existing Amazon VPC prefixes advertised to the Direct Connect gateway.
+	ExistingAllowedPrefixesToDirectConnectGateway []*RouteFilterPrefix `locationName:"existingAllowedPrefixesToDirectConnectGateway" type:"list"`
+
+	// The ID of the association proposal.
+	ProposalId *string `locationName:"proposalId" type:"string"`
+
+	// The state of the proposal. The following are possible values:
+	//
+	//    * accepted: The proposal has been accepted. The Direct Connect gateway
+	//    association is available to use in this state.
+	//
+	//    * deleted: The proposal has been deleted by the owner that made the proposal.
+	//    The Direct Connect gateway association cannot be used in this state.
+	//
+	//    * requested: The proposal has been requested. The Direct Connect gateway
+	//    association cannot be used in this state.
+	ProposalState *string `locationName:"proposalState" type:"string" enum:"GatewayAssociationProposalState"`
+
+	// The Amazon VPC prefixes to advertise to the Direct Connect gateway.
+	RequestedAllowedPrefixesToDirectConnectGateway []*RouteFilterPrefix `locationName:"requestedAllowedPrefixesToDirectConnectGateway" type:"list"`
+}
+
+// String returns the string representation
+func (s GatewayAssociationProposal) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GatewayAssociationProposal) GoString() string {
+	return s.String()
+}
+
+// SetAssociatedGateway sets the AssociatedGateway field's value.
+func (s *GatewayAssociationProposal) SetAssociatedGateway(v *AssociatedGateway) *GatewayAssociationProposal {
+	s.AssociatedGateway = v
+	return s
+}
+
+// SetDirectConnectGatewayId sets the DirectConnectGatewayId field's value.
+func (s *GatewayAssociationProposal) SetDirectConnectGatewayId(v string) *GatewayAssociationProposal {
+	s.DirectConnectGatewayId = &v
+	return s
+}
+
+// SetDirectConnectGatewayOwnerAccount sets the DirectConnectGatewayOwnerAccount field's value.
+func (s *GatewayAssociationProposal) SetDirectConnectGatewayOwnerAccount(v string) *GatewayAssociationProposal {
+	s.DirectConnectGatewayOwnerAccount = &v
+	return s
+}
+
+// SetExistingAllowedPrefixesToDirectConnectGateway sets the ExistingAllowedPrefixesToDirectConnectGateway field's value.
+func (s *GatewayAssociationProposal) SetExistingAllowedPrefixesToDirectConnectGateway(v []*RouteFilterPrefix) *GatewayAssociationProposal {
+	s.ExistingAllowedPrefixesToDirectConnectGateway = v
+	return s
+}
+
+// SetProposalId sets the ProposalId field's value.
+func (s *GatewayAssociationProposal) SetProposalId(v string) *GatewayAssociationProposal {
+	s.ProposalId = &v
+	return s
+}
+
+// SetProposalState sets the ProposalState field's value.
+func (s *GatewayAssociationProposal) SetProposalState(v string) *GatewayAssociationProposal {
+	s.ProposalState = &v
+	return s
+}
+
+// SetRequestedAllowedPrefixesToDirectConnectGateway sets the RequestedAllowedPrefixesToDirectConnectGateway field's value.
+func (s *GatewayAssociationProposal) SetRequestedAllowedPrefixesToDirectConnectGateway(v []*RouteFilterPrefix) *GatewayAssociationProposal {
+	s.RequestedAllowedPrefixesToDirectConnectGateway = v
 	return s
 }
 
@@ -7278,6 +8283,8 @@ type Interconnect struct {
 	//    * deleting: The interconnect is being deleted.
 	//
 	//    * deleted: The interconnect is deleted.
+	//
+	//    * unknown: The state of the interconnect is not available.
 	InterconnectState *string `locationName:"interconnectState" type:"string" enum:"InterconnectState"`
 
 	// Indicates whether jumbo frames (9001 MTU) are supported.
@@ -7385,10 +8392,10 @@ type Lag struct {
 	// Indicates whether the LAG can host other connections.
 	AllowsHostedConnections *bool `locationName:"allowsHostedConnections" type:"boolean"`
 
-	// The Direct Connect endpoint that hosts the LAG.
+	// The AWS Direct Connect endpoint that hosts the LAG.
 	AwsDevice *string `locationName:"awsDevice" deprecated:"true" type:"string"`
 
-	// The Direct Connect endpoint that hosts the LAG.
+	// The AWS Direct Connect endpoint that hosts the LAG.
 	AwsDeviceV2 *string `locationName:"awsDeviceV2" type:"string"`
 
 	// The connections bundled by the LAG.
@@ -7426,6 +8433,8 @@ type Lag struct {
 	//    * deleting: The LAG is being deleted.
 	//
 	//    * deleted: The LAG is deleted.
+	//
+	//    * unknown: The state of the LAG is not available.
 	LagState *string `locationName:"lagState" type:"string" enum:"LagState"`
 
 	// The location of the LAG.
@@ -7587,6 +8596,9 @@ func (s *Loa) SetLoaContentType(v string) *Loa {
 type Location struct {
 	_ struct{} `type:"structure"`
 
+	// The available port speeds for the location.
+	AvailablePortSpeeds []*string `locationName:"availablePortSpeeds" type:"list"`
+
 	// The code for the location.
 	LocationCode *string `locationName:"locationCode" type:"string"`
 
@@ -7606,6 +8618,12 @@ func (s Location) String() string {
 // GoString returns the string representation
 func (s Location) GoString() string {
 	return s.String()
+}
+
+// SetAvailablePortSpeeds sets the AvailablePortSpeeds field's value.
+func (s *Location) SetAvailablePortSpeeds(v []*string) *Location {
+	s.AvailablePortSpeeds = v
+	return s
 }
 
 // SetLocationCode sets the LocationCode field's value.
@@ -7715,7 +8733,7 @@ type NewPrivateVirtualInterface struct {
 	Mtu *int64 `locationName:"mtu" type:"integer"`
 
 	// The ID of the virtual private gateway.
-	VirtualGatewayId *string `locationName:"virtualGatewayId" type:"string"`
+	VirtualGatewayId *string `locationName:"virtualGatewayId" deprecated:"true" type:"string"`
 
 	// The name of the virtual interface assigned by the customer network.
 	//
@@ -8411,6 +9429,71 @@ func (s UntagResourceOutput) GoString() string {
 	return s.String()
 }
 
+type UpdateDirectConnectGatewayAssociationInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon VPC prefixes to advertise to the Direct Connect gateway.
+	AddAllowedPrefixesToDirectConnectGateway []*RouteFilterPrefix `locationName:"addAllowedPrefixesToDirectConnectGateway" type:"list"`
+
+	// The ID of the Direct Connect gateway association.
+	AssociationId *string `locationName:"associationId" type:"string"`
+
+	// The Amazon VPC prefixes to no longer advertise to the Direct Connect gateway.
+	RemoveAllowedPrefixesToDirectConnectGateway []*RouteFilterPrefix `locationName:"removeAllowedPrefixesToDirectConnectGateway" type:"list"`
+}
+
+// String returns the string representation
+func (s UpdateDirectConnectGatewayAssociationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateDirectConnectGatewayAssociationInput) GoString() string {
+	return s.String()
+}
+
+// SetAddAllowedPrefixesToDirectConnectGateway sets the AddAllowedPrefixesToDirectConnectGateway field's value.
+func (s *UpdateDirectConnectGatewayAssociationInput) SetAddAllowedPrefixesToDirectConnectGateway(v []*RouteFilterPrefix) *UpdateDirectConnectGatewayAssociationInput {
+	s.AddAllowedPrefixesToDirectConnectGateway = v
+	return s
+}
+
+// SetAssociationId sets the AssociationId field's value.
+func (s *UpdateDirectConnectGatewayAssociationInput) SetAssociationId(v string) *UpdateDirectConnectGatewayAssociationInput {
+	s.AssociationId = &v
+	return s
+}
+
+// SetRemoveAllowedPrefixesToDirectConnectGateway sets the RemoveAllowedPrefixesToDirectConnectGateway field's value.
+func (s *UpdateDirectConnectGatewayAssociationInput) SetRemoveAllowedPrefixesToDirectConnectGateway(v []*RouteFilterPrefix) *UpdateDirectConnectGatewayAssociationInput {
+	s.RemoveAllowedPrefixesToDirectConnectGateway = v
+	return s
+}
+
+type UpdateDirectConnectGatewayAssociationOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Information about an association between a Direct Connect gateway and a virtual
+	// private gateway.
+	DirectConnectGatewayAssociation *GatewayAssociation `locationName:"directConnectGatewayAssociation" type:"structure"`
+}
+
+// String returns the string representation
+func (s UpdateDirectConnectGatewayAssociationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateDirectConnectGatewayAssociationOutput) GoString() string {
+	return s.String()
+}
+
+// SetDirectConnectGatewayAssociation sets the DirectConnectGatewayAssociation field's value.
+func (s *UpdateDirectConnectGatewayAssociationOutput) SetDirectConnectGatewayAssociation(v *GatewayAssociation) *UpdateDirectConnectGatewayAssociationOutput {
+	s.DirectConnectGatewayAssociation = v
+	return s
+}
+
 type UpdateLagInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8574,7 +9657,7 @@ type UpdateVirtualInterfaceAttributesOutput struct {
 	RouteFilterPrefixes []*RouteFilterPrefix `locationName:"routeFilterPrefixes" type:"list"`
 
 	// The ID of the virtual private gateway. Applies only to private virtual interfaces.
-	VirtualGatewayId *string `locationName:"virtualGatewayId" type:"string"`
+	VirtualGatewayId *string `locationName:"virtualGatewayId" deprecated:"true" type:"string"`
 
 	// The ID of the virtual interface.
 	VirtualInterfaceId *string `locationName:"virtualInterfaceId" type:"string"`
@@ -8610,6 +9693,8 @@ type UpdateVirtualInterfaceAttributesOutput struct {
 	//    interface. If a virtual interface in the Confirming state is deleted by
 	//    the virtual interface owner, the virtual interface enters the Rejected
 	//    state.
+	//
+	//    * unknown: The state of the virtual interface is not available.
 	VirtualInterfaceState *string `locationName:"virtualInterfaceState" type:"string" enum:"VirtualInterfaceState"`
 
 	// The type of virtual interface. The possible values are private and public.
@@ -8772,7 +9857,7 @@ type VirtualGateway struct {
 	_ struct{} `type:"structure"`
 
 	// The ID of the virtual private gateway.
-	VirtualGatewayId *string `locationName:"virtualGatewayId" type:"string"`
+	VirtualGatewayId *string `locationName:"virtualGatewayId" deprecated:"true" type:"string"`
 
 	// The state of the virtual private gateway. The following are the possible
 	// values:
@@ -8868,7 +9953,7 @@ type VirtualInterface struct {
 	RouteFilterPrefixes []*RouteFilterPrefix `locationName:"routeFilterPrefixes" type:"list"`
 
 	// The ID of the virtual private gateway. Applies only to private virtual interfaces.
-	VirtualGatewayId *string `locationName:"virtualGatewayId" type:"string"`
+	VirtualGatewayId *string `locationName:"virtualGatewayId" deprecated:"true" type:"string"`
 
 	// The ID of the virtual interface.
 	VirtualInterfaceId *string `locationName:"virtualInterfaceId" type:"string"`
@@ -8904,6 +9989,8 @@ type VirtualInterface struct {
 	//    interface. If a virtual interface in the Confirming state is deleted by
 	//    the virtual interface owner, the virtual interface enters the Rejected
 	//    state.
+	//
+	//    * unknown: The state of the virtual interface is not available.
 	VirtualInterfaceState *string `locationName:"virtualInterfaceState" type:"string" enum:"VirtualInterfaceState"`
 
 	// The type of virtual interface. The possible values are private and public.
@@ -9092,6 +10179,9 @@ const (
 
 	// BGPStatusDown is a BGPStatus enum value
 	BGPStatusDown = "down"
+
+	// BGPStatusUnknown is a BGPStatus enum value
+	BGPStatusUnknown = "unknown"
 )
 
 const (
@@ -9118,6 +10208,20 @@ const (
 
 	// ConnectionStateRejected is a ConnectionState enum value
 	ConnectionStateRejected = "rejected"
+
+	// ConnectionStateUnknown is a ConnectionState enum value
+	ConnectionStateUnknown = "unknown"
+)
+
+const (
+	// GatewayAssociationProposalStateRequested is a GatewayAssociationProposalState enum value
+	GatewayAssociationProposalStateRequested = "requested"
+
+	// GatewayAssociationProposalStateAccepted is a GatewayAssociationProposalState enum value
+	GatewayAssociationProposalStateAccepted = "accepted"
+
+	// GatewayAssociationProposalStateDeleted is a GatewayAssociationProposalState enum value
+	GatewayAssociationProposalStateDeleted = "deleted"
 )
 
 const (
@@ -9132,6 +10236,9 @@ const (
 
 	// GatewayAssociationStateDisassociated is a GatewayAssociationState enum value
 	GatewayAssociationStateDisassociated = "disassociated"
+
+	// GatewayAssociationStateUpdating is a GatewayAssociationState enum value
+	GatewayAssociationStateUpdating = "updating"
 )
 
 const (
@@ -9163,6 +10270,11 @@ const (
 )
 
 const (
+	// GatewayTypeVirtualPrivateGateway is a GatewayType enum value
+	GatewayTypeVirtualPrivateGateway = "virtualPrivateGateway"
+)
+
+const (
 	// HasLogicalRedundancyUnknown is a HasLogicalRedundancy enum value
 	HasLogicalRedundancyUnknown = "unknown"
 
@@ -9191,6 +10303,9 @@ const (
 
 	// InterconnectStateDeleted is a InterconnectState enum value
 	InterconnectStateDeleted = "deleted"
+
+	// InterconnectStateUnknown is a InterconnectState enum value
+	InterconnectStateUnknown = "unknown"
 )
 
 const (
@@ -9211,6 +10326,9 @@ const (
 
 	// LagStateDeleted is a LagState enum value
 	LagStateDeleted = "deleted"
+
+	// LagStateUnknown is a LagState enum value
+	LagStateUnknown = "unknown"
 )
 
 const (
@@ -9242,4 +10360,7 @@ const (
 
 	// VirtualInterfaceStateRejected is a VirtualInterfaceState enum value
 	VirtualInterfaceStateRejected = "rejected"
+
+	// VirtualInterfaceStateUnknown is a VirtualInterfaceState enum value
+	VirtualInterfaceStateUnknown = "unknown"
 )

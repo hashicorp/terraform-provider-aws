@@ -6,7 +6,7 @@ description: |-
   Provides a resource to manage an API Gateway Documentation Version.
 ---
 
-# aws_api_gateway_documentation_version
+# Resource: aws_api_gateway_documentation_version
 
 Provides a resource to manage an API Gateway Documentation Version.
 

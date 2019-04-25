@@ -395,11 +395,11 @@ func TestAccAWSRoute53Record_weighted_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53Record_alias(t *testing.T) {
+func TestAccAWSRoute53Record_Alias_Elb(t *testing.T) {
 	var record1 route53.ResourceRecordSet
 
 	rs := acctest.RandString(10)
-	config := fmt.Sprintf(testAccRoute53ElbAliasRecord, rs)
+	config := fmt.Sprintf(testAccRoute53RecordConfigAliasElb, rs)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_route53_record.alias",
@@ -416,28 +416,7 @@ func TestAccAWSRoute53Record_alias(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53Record_aliasUppercase(t *testing.T) {
-	var record1 route53.ResourceRecordSet
-
-	rs := acctest.RandString(10)
-	config := fmt.Sprintf(testAccRoute53ElbAliasRecordUppercase, rs)
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_route53_record.alias",
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckRoute53RecordDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: config,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53RecordExists("aws_route53_record.alias", &record1),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSRoute53Record_s3_alias(t *testing.T) {
+func TestAccAWSRoute53Record_Alias_S3(t *testing.T) {
 	var record1 route53.ResourceRecordSet
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
@@ -447,7 +426,52 @@ func TestAccAWSRoute53Record_s3_alias(t *testing.T) {
 		CheckDestroy: testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53S3AliasRecord(rName),
+				Config: testAccRoute53RecordConfigAliasS3(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoute53RecordExists("aws_route53_record.alias", &record1),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSRoute53Record_Alias_VpcEndpoint(t *testing.T) {
+	var record1 route53.ResourceRecordSet
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_route53_record.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRoute53RecordDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccRoute53RecordConfigAliasCustomVpcEndpointSwappedAliasAttributes(rName),
+				ExpectError: regexp.MustCompile(`expected length of`),
+			},
+			{
+				Config: testAccRoute53RecordConfigCustomVpcEndpoint(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoute53RecordExists(resourceName, &record1),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSRoute53Record_Alias_Uppercase(t *testing.T) {
+	var record1 route53.ResourceRecordSet
+
+	rs := acctest.RandString(10)
+	config := fmt.Sprintf(testAccRoute53RecordConfigAliasElbUppercase, rs)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_route53_record.alias",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckRoute53RecordDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53RecordExists("aws_route53_record.alias", &record1),
 				),
@@ -1182,7 +1206,7 @@ resource "aws_route53_record" "ap-northeast-1" {
 }
 `
 
-const testAccRoute53ElbAliasRecord = `
+const testAccRoute53RecordConfigAliasElb = `
 resource "aws_route53_zone" "main" {
   name = "notexample.com"
 }
@@ -1212,7 +1236,7 @@ resource "aws_elb" "main" {
 }
 `
 
-const testAccRoute53ElbAliasRecordUppercase = `
+const testAccRoute53RecordConfigAliasElbUppercase = `
 resource "aws_route53_zone" "main" {
   name = "notexample.com"
 }
@@ -1242,7 +1266,7 @@ resource "aws_elb" "main" {
 }
 `
 
-func testAccRoute53S3AliasRecord(rName string) string {
+func testAccRoute53RecordConfigAliasS3(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_route53_zone" "main" {
   name = "notexample.com"
@@ -1268,6 +1292,92 @@ resource "aws_route53_record" "alias" {
   }
 }
 `, rName)
+}
+
+func testAccRoute53CustomVpcEndpointBase(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  cidr_block = "10.0.0.0/24"
+  vpc_id     = "${aws_vpc.test.id}"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_lb" "test" {
+  internal           = true
+  load_balancer_type = "network"
+  name               = %[1]q
+  subnets            = ["${aws_subnet.test.id}"]
+}
+
+resource "aws_default_security_group" "test" {
+  vpc_id = "${aws_vpc.test.id}"
+}
+
+resource "aws_vpc_endpoint_service" "test" {
+  acceptance_required        = false
+  network_load_balancer_arns = ["${aws_lb.test.id}"]
+}
+
+resource "aws_vpc_endpoint" "test" {
+  private_dns_enabled = false
+  security_group_ids  = ["${aws_default_security_group.test.id}"]
+  service_name        = "${aws_vpc_endpoint_service.test.service_name}"
+  subnet_ids          = ["${aws_subnet.test.id}"]
+  vpc_endpoint_type   = "Interface"
+  vpc_id              = "${aws_vpc.test.id}"
+}
+
+resource "aws_route53_zone" "test" {
+  name = "notexample.com"
+
+  vpc {
+    vpc_id = "${aws_vpc.test.id}"
+  }
+}
+`, rName)
+}
+
+func testAccRoute53RecordConfigAliasCustomVpcEndpointSwappedAliasAttributes(rName string) string {
+	return testAccRoute53CustomVpcEndpointBase(rName) + fmt.Sprintf(`
+resource "aws_route53_record" "test" {
+  name    = "test"
+  type    = "A"
+  zone_id = "${aws_route53_zone.test.zone_id}"
+
+  alias {
+    evaluate_target_health = false
+    name                   = "${lookup(aws_vpc_endpoint.test.dns_entry[0], "hosted_zone_id")}"
+    zone_id                = "${lookup(aws_vpc_endpoint.test.dns_entry[0], "dns_name")}"
+  }
+}
+`)
+}
+
+func testAccRoute53RecordConfigCustomVpcEndpoint(rName string) string {
+	return testAccRoute53CustomVpcEndpointBase(rName) + fmt.Sprintf(`
+resource "aws_route53_record" "test" {
+  name    = "test"
+  type    = "A"
+  zone_id = "${aws_route53_zone.test.zone_id}"
+
+  alias {
+    evaluate_target_health = false
+    name                   = "${lookup(aws_vpc_endpoint.test.dns_entry[0], "dns_name")}"
+    zone_id                = "${lookup(aws_vpc_endpoint.test.dns_entry[0], "hosted_zone_id")}"
+  }
+}
+`)
 }
 
 const testAccRoute53WeightedElbAliasRecord = `

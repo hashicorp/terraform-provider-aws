@@ -6,7 +6,7 @@ description: |-
   Associate additional IPv4 CIDR blocks with a VPC
 ---
 
-# aws_vpc_ipv4_cidr_block_association
+# Resource: aws_vpc_ipv4_cidr_block_association
 
 Provides a resource to associate additional IPv4 CIDR blocks with a VPC.
 

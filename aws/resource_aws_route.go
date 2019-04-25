@@ -349,8 +349,6 @@ func resourceAwsRouteUpdate(d *schema.ResourceData, meta interface{}) error {
 		"transit_gateway_id",
 		"vpc_peering_connection_id",
 	}
-	replaceOpts := &ec2.ReplaceRouteInput{}
-
 	// Check if more than 1 target is specified
 	for _, target := range allowedTargets {
 		if len(d.Get(target).(string)) > 0 {
@@ -373,6 +371,7 @@ func resourceAwsRouteUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	var replaceOpts *ec2.ReplaceRouteInput
 	// Formulate ReplaceRouteInput based on the target type
 	switch setTarget {
 	case "gateway_id":

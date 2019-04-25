@@ -148,7 +148,7 @@ func testAccCheckAwsSecretsManagerSecretVersionDestroy(s *terraform.State) error
 			if isAWSErr(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
 				return nil
 			}
-			if isAWSErr(err, secretsmanager.ErrCodeInvalidRequestException, "You can’t perform this operation on the secret because it was deleted") {
+			if isAWSErr(err, secretsmanager.ErrCodeInvalidRequestException, "was deleted") || isAWSErr(err, secretsmanager.ErrCodeInvalidRequestException, "was marked for deletion") {
 				return nil
 			}
 			return err

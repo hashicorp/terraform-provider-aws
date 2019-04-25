@@ -6,7 +6,7 @@ description: |-
   Provides an AWS Elemental MediaPackage Channel.
 ---
 
-# aws_media_package_channel
+# Resource: aws_media_package_channel
 
 Provides an AWS Elemental MediaPackage Channel.
 
@@ -25,6 +25,7 @@ The following arguments are supported:
 
 * `channel_id` - (Required) A unique identifier describing the channel
 * `description` - (Optional) A description of the channel
+* `tags` - (Optional) A mapping of tags to assign to the resource.
 
 ## Attributes Reference
 

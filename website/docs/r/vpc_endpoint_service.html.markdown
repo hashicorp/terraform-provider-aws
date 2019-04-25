@@ -6,7 +6,7 @@ description: |-
   Provides a VPC Endpoint Service resource.
 ---
 
-# aws_vpc_endpoint_service
+# Resource: aws_vpc_endpoint_service
 
 Provides a VPC Endpoint Service resource.
 Service consumers can create an _Interface_ [VPC Endpoint](vpc_endpoint.html) to connect to the service.

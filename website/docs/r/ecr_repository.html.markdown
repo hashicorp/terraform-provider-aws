@@ -6,7 +6,7 @@ description: |-
   Provides an EC2 Container Registry Repository.
 ---
 
-# aws_ecr_repository
+# Resource: aws_ecr_repository
 
 Provides an EC2 Container Registry Repository.
 

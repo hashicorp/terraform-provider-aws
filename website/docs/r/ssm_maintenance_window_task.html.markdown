@@ -6,7 +6,7 @@ description: |-
   Provides an SSM Maintenance Window Task resource
 ---
 
-# aws_ssm_maintenance_window_task
+# Resource: aws_ssm_maintenance_window_task
 
 Provides an SSM Maintenance Window Task resource
 

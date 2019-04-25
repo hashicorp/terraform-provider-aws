@@ -6,7 +6,7 @@ description: |-
   Provides a resource to create a VPC routing table.
 ---
 
-# aws_route_table
+# Resource: aws_route_table
 
 Provides a resource to create a VPC routing table.
 
@@ -56,7 +56,7 @@ resource "aws_route_table" "r" {
 The following arguments are supported:
 
 * `vpc_id` - (Required) The VPC ID.
-* `route` - (Optional) A list of route objects. Their keys are documented below.
+* `route` - (Optional) A list of route objects. Their keys are documented below. This argument is processed in [attribute-as-blocks mode](/docs/configuration/attr-as-blocks.html).
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 * `propagating_vgws` - (Optional) A list of virtual gateways for propagation.
 
@@ -65,7 +65,7 @@ The following arguments are supported:
 One of the following destination arguments must be supplied:
 
 * `cidr_block` - (Required) The CIDR block of the route.
-* `ipv6_cidr_block` - Optional) The Ipv6 CIDR block of the route
+* `ipv6_cidr_block` - (Optional) The Ipv6 CIDR block of the route
 
 One of the following target arguments must be supplied:
 
@@ -89,8 +89,6 @@ attribute once the route resource is created.
 * `owner_id` - The ID of the AWS account that owns the route table
 
 ## Import
-
-~> **NOTE:** Importing this resource currently adds an `aws_route` resource to the state for each route, in addition to adding the `aws_route_table` resource. If you plan to apply the imported state, avoid the deletion of actual routes by not using in-line routes in your configuration and by naming `aws_route` resources after the `aws_route_table`. For example, if your route table is `aws_route_table.rt`, name routes as `aws_route.rt`, `aws_route.rt-1` and so forth. The behavior of adding `aws_route` resources with the `aws_route_table` resource will be removed in the next major version.
 
 Route Tables can be imported using the route table `id`. For example, to import
 route table `rtb-4e616f6d69`, use this command:

@@ -380,6 +380,59 @@ func TestAccAWSEMRCluster_Step_Basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSEMRCluster_Step_ConfigMode(t *testing.T) {
+	var cluster1, cluster2, cluster3 emr.Cluster
+	rInt := acctest.RandInt()
+	resourceName := "aws_emr_cluster.tf-test-cluster"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEmrDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEmrClusterConfig_Step_Single(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEmrClusterExists(resourceName, &cluster1),
+					resource.TestCheckResourceAttr(resourceName, "step.#", "1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"cluster_state", "configurations", "keep_job_flow_alive_when_no_steps"},
+			},
+			{
+				Config: testAccAWSEmrClusterConfig_Step_NoBlocks(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEmrClusterExists(resourceName, &cluster2),
+					resource.TestCheckResourceAttr(resourceName, "step.#", "1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"cluster_state", "configurations", "keep_job_flow_alive_when_no_steps"},
+			},
+			{
+				Config: testAccAWSEmrClusterConfig_Step_Zeroed(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEmrClusterExists(resourceName, &cluster3),
+					resource.TestCheckResourceAttr(resourceName, "step.#", "0"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"cluster_state", "configurations", "keep_job_flow_alive_when_no_steps"},
+			},
+		},
+	})
+}
+
 func TestAccAWSEMRCluster_Step_Multiple(t *testing.T) {
 	var cluster emr.Cluster
 	rInt := acctest.RandInt()
@@ -2504,8 +2557,16 @@ func testAccAWSEmrClusterConfig_Step_Multiple(rInt int) string {
 	return testAccAWSEmrClusterConfig_Step(rInt, stepConfig)
 }
 
+func testAccAWSEmrClusterConfig_Step_NoBlocks(rInt int) string {
+	return testAccAWSEmrClusterConfig_Step(rInt, "")
+}
+
 func testAccAWSEmrClusterConfig_Step_Single(rInt int) string {
 	return testAccAWSEmrClusterConfig_Step(rInt, testAccAWSEmrClusterConfig_Step_DebugLoggingStep)
+}
+
+func testAccAWSEmrClusterConfig_Step_Zeroed(rInt int) string {
+	return testAccAWSEmrClusterConfig_Step(rInt, "step = []")
 }
 
 func testAccAWSEmrClusterConfig_Step(rInt int, stepConfig string) string {
@@ -2970,46 +3031,6 @@ resource "aws_iam_role_policy_attachment" "emr-autoscaling-role" {
 
 func testAccAWSEmrClusterConfigInstanceGroupsName(r int) string {
 	return fmt.Sprintf(`
-variable "instance_groups" {
-  type = "list"
-  default = [
-      {
-          name = "MasterInstanceGroup"
-          instance_role = "MASTER"
-          instance_type = "m3.xlarge"
-          instance_count = 1
-      },
-      {
-          name = "CoreInstanceGroup"
-          instance_role = "CORE"
-          instance_type = "r4.xlarge"
-          instance_count = 2
-          ebs_config = [
-              {
-                  iops = 0
-                  size = 100
-                  type = "gp2"
-                  volumes_per_instance = 1
-              }
-          ]
-      },
-      {
-          name = "TaskInstanceGroup"
-          instance_role = "TASK"
-          instance_type = "r4.xlarge"
-          instance_count = 3
-          ebs_config = [
-              {
-                  iops = 0
-                  size = 100
-                  type = "gp2"
-                  volumes_per_instance = 1
-              }
-          ]
-      },
-  ]
-}
-
 resource "aws_emr_cluster" "tf-test-cluster" {
   name          = "emr-test-%[1]d"
   release_label = "emr-4.6.0"
@@ -3022,7 +3043,40 @@ resource "aws_emr_cluster" "tf-test-cluster" {
     instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
   }
 
-  instance_group = "${var.instance_groups}"
+  instance_group {
+    instance_count = 1
+    instance_role  = "MASTER"
+    instance_type  = "m3.xlarge"
+    name           = "MasterInstanceGroup"
+  }
+
+  instance_group {
+    instance_count = 2
+    instance_role  = "CORE"
+    instance_type  = "r4.xlarge"
+    name           = "CoreInstanceGroup"
+
+    ebs_config {
+      iops                 = 0
+      size                 = 100
+      type                 = "gp2"
+      volumes_per_instance = 1
+    }
+  }
+
+  instance_group {
+    instance_count = 3
+    instance_role  = "TASK"
+    instance_type  = "r4.xlarge"
+    name           = "TaskInstanceGroup"
+
+    ebs_config {
+      iops                 = 0
+      size                 = 100
+      type                 = "gp2"
+      volumes_per_instance = 1
+    }
+  }
 
   tags = {
     role     = "rolename"

@@ -465,6 +465,270 @@ func (c *Glue) BatchDeleteTableVersionWithContext(ctx aws.Context, input *BatchD
 	return out, req.Send()
 }
 
+const opBatchGetCrawlers = "BatchGetCrawlers"
+
+// BatchGetCrawlersRequest generates a "aws/request.Request" representing the
+// client's request for the BatchGetCrawlers operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See BatchGetCrawlers for more information on using the BatchGetCrawlers
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the BatchGetCrawlersRequest method.
+//    req, resp := client.BatchGetCrawlersRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchGetCrawlers
+func (c *Glue) BatchGetCrawlersRequest(input *BatchGetCrawlersInput) (req *request.Request, output *BatchGetCrawlersOutput) {
+	op := &request.Operation{
+		Name:       opBatchGetCrawlers,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &BatchGetCrawlersInput{}
+	}
+
+	output = &BatchGetCrawlersOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// BatchGetCrawlers API operation for AWS Glue.
+//
+// Returns a list of resource metadata for a given list of crawler names. After
+// calling the ListCrawlers operation, you can call this operation to access
+// the data to which you have been granted permissions. This operation supports
+// all IAM permissions, including permission conditions that uses tags.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Glue's
+// API operation BatchGetCrawlers for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   The input provided was not valid.
+//
+//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   The operation timed out.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchGetCrawlers
+func (c *Glue) BatchGetCrawlers(input *BatchGetCrawlersInput) (*BatchGetCrawlersOutput, error) {
+	req, out := c.BatchGetCrawlersRequest(input)
+	return out, req.Send()
+}
+
+// BatchGetCrawlersWithContext is the same as BatchGetCrawlers with the addition of
+// the ability to pass a context and additional request options.
+//
+// See BatchGetCrawlers for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Glue) BatchGetCrawlersWithContext(ctx aws.Context, input *BatchGetCrawlersInput, opts ...request.Option) (*BatchGetCrawlersOutput, error) {
+	req, out := c.BatchGetCrawlersRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opBatchGetDevEndpoints = "BatchGetDevEndpoints"
+
+// BatchGetDevEndpointsRequest generates a "aws/request.Request" representing the
+// client's request for the BatchGetDevEndpoints operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See BatchGetDevEndpoints for more information on using the BatchGetDevEndpoints
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the BatchGetDevEndpointsRequest method.
+//    req, resp := client.BatchGetDevEndpointsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchGetDevEndpoints
+func (c *Glue) BatchGetDevEndpointsRequest(input *BatchGetDevEndpointsInput) (req *request.Request, output *BatchGetDevEndpointsOutput) {
+	op := &request.Operation{
+		Name:       opBatchGetDevEndpoints,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &BatchGetDevEndpointsInput{}
+	}
+
+	output = &BatchGetDevEndpointsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// BatchGetDevEndpoints API operation for AWS Glue.
+//
+// Returns a list of resource metadata for a given list of DevEndpoint names.
+// After calling the ListDevEndpoints operation, you can call this operation
+// to access the data to which you have been granted permissions. This operation
+// supports all IAM permissions, including permission conditions that uses tags.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Glue's
+// API operation BatchGetDevEndpoints for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   Access to a resource was denied.
+//
+//   * ErrCodeInternalServiceException "InternalServiceException"
+//   An internal service error occurred.
+//
+//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   The operation timed out.
+//
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   The input provided was not valid.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchGetDevEndpoints
+func (c *Glue) BatchGetDevEndpoints(input *BatchGetDevEndpointsInput) (*BatchGetDevEndpointsOutput, error) {
+	req, out := c.BatchGetDevEndpointsRequest(input)
+	return out, req.Send()
+}
+
+// BatchGetDevEndpointsWithContext is the same as BatchGetDevEndpoints with the addition of
+// the ability to pass a context and additional request options.
+//
+// See BatchGetDevEndpoints for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Glue) BatchGetDevEndpointsWithContext(ctx aws.Context, input *BatchGetDevEndpointsInput, opts ...request.Option) (*BatchGetDevEndpointsOutput, error) {
+	req, out := c.BatchGetDevEndpointsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opBatchGetJobs = "BatchGetJobs"
+
+// BatchGetJobsRequest generates a "aws/request.Request" representing the
+// client's request for the BatchGetJobs operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See BatchGetJobs for more information on using the BatchGetJobs
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the BatchGetJobsRequest method.
+//    req, resp := client.BatchGetJobsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchGetJobs
+func (c *Glue) BatchGetJobsRequest(input *BatchGetJobsInput) (req *request.Request, output *BatchGetJobsOutput) {
+	op := &request.Operation{
+		Name:       opBatchGetJobs,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &BatchGetJobsInput{}
+	}
+
+	output = &BatchGetJobsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// BatchGetJobs API operation for AWS Glue.
+//
+// Returns a list of resource metadata for a given list of job names. After
+// calling the ListJobs operation, you can call this operation to access the
+// data to which you have been granted permissions. This operation supports
+// all IAM permissions, including permission conditions that uses tags.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Glue's
+// API operation BatchGetJobs for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInternalServiceException "InternalServiceException"
+//   An internal service error occurred.
+//
+//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   The operation timed out.
+//
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   The input provided was not valid.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchGetJobs
+func (c *Glue) BatchGetJobs(input *BatchGetJobsInput) (*BatchGetJobsOutput, error) {
+	req, out := c.BatchGetJobsRequest(input)
+	return out, req.Send()
+}
+
+// BatchGetJobsWithContext is the same as BatchGetJobs with the addition of
+// the ability to pass a context and additional request options.
+//
+// See BatchGetJobs for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Glue) BatchGetJobsWithContext(ctx aws.Context, input *BatchGetJobsInput, opts ...request.Option) (*BatchGetJobsOutput, error) {
+	req, out := c.BatchGetJobsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opBatchGetPartition = "BatchGetPartition"
 
 // BatchGetPartitionRequest generates a "aws/request.Request" representing the
@@ -551,6 +815,94 @@ func (c *Glue) BatchGetPartition(input *BatchGetPartitionInput) (*BatchGetPartit
 // for more information on using Contexts.
 func (c *Glue) BatchGetPartitionWithContext(ctx aws.Context, input *BatchGetPartitionInput, opts ...request.Option) (*BatchGetPartitionOutput, error) {
 	req, out := c.BatchGetPartitionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opBatchGetTriggers = "BatchGetTriggers"
+
+// BatchGetTriggersRequest generates a "aws/request.Request" representing the
+// client's request for the BatchGetTriggers operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See BatchGetTriggers for more information on using the BatchGetTriggers
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the BatchGetTriggersRequest method.
+//    req, resp := client.BatchGetTriggersRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchGetTriggers
+func (c *Glue) BatchGetTriggersRequest(input *BatchGetTriggersInput) (req *request.Request, output *BatchGetTriggersOutput) {
+	op := &request.Operation{
+		Name:       opBatchGetTriggers,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &BatchGetTriggersInput{}
+	}
+
+	output = &BatchGetTriggersOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// BatchGetTriggers API operation for AWS Glue.
+//
+// Returns a list of resource metadata for a given list of trigger names. After
+// calling the ListTriggers operation, you can call this operation to access
+// the data to which you have been granted permissions. This operation supports
+// all IAM permissions, including permission conditions that uses tags.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Glue's
+// API operation BatchGetTriggers for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInternalServiceException "InternalServiceException"
+//   An internal service error occurred.
+//
+//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   The operation timed out.
+//
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   The input provided was not valid.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchGetTriggers
+func (c *Glue) BatchGetTriggers(input *BatchGetTriggersInput) (*BatchGetTriggersOutput, error) {
+	req, out := c.BatchGetTriggersRequest(input)
+	return out, req.Send()
+}
+
+// BatchGetTriggersWithContext is the same as BatchGetTriggers with the addition of
+// the ability to pass a context and additional request options.
+//
+// See BatchGetTriggers for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Glue) BatchGetTriggersWithContext(ctx aws.Context, input *BatchGetTriggersInput, opts ...request.Option) (*BatchGetTriggersOutput, error) {
+	req, out := c.BatchGetTriggersRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -687,8 +1039,8 @@ func (c *Glue) CreateClassifierRequest(input *CreateClassifierInput) (req *reque
 // CreateClassifier API operation for AWS Glue.
 //
 // Creates a classifier in the user's account. This may be a GrokClassifier,
-// an XMLClassifier, or abbrev JsonClassifier, depending on which field of the
-// request is present.
+// an XMLClassifier, a JsonClassifier, or a CsvClassifier, depending on which
+// field of the request is present.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -5549,6 +5901,12 @@ func (c *Glue) GetSecurityConfigurationsRequest(input *GetSecurityConfigurations
 		Name:       opGetSecurityConfigurations,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -5604,6 +5962,56 @@ func (c *Glue) GetSecurityConfigurationsWithContext(ctx aws.Context, input *GetS
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// GetSecurityConfigurationsPages iterates over the pages of a GetSecurityConfigurations operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See GetSecurityConfigurations method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a GetSecurityConfigurations operation.
+//    pageNum := 0
+//    err := client.GetSecurityConfigurationsPages(params,
+//        func(page *GetSecurityConfigurationsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *Glue) GetSecurityConfigurationsPages(input *GetSecurityConfigurationsInput, fn func(*GetSecurityConfigurationsOutput, bool) bool) error {
+	return c.GetSecurityConfigurationsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// GetSecurityConfigurationsPagesWithContext same as GetSecurityConfigurationsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Glue) GetSecurityConfigurationsPagesWithContext(ctx aws.Context, input *GetSecurityConfigurationsInput, fn func(*GetSecurityConfigurationsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *GetSecurityConfigurationsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.GetSecurityConfigurationsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*GetSecurityConfigurationsOutput), !p.HasNextPage())
+	}
+	return p.Err()
 }
 
 const opGetTable = "GetTable"
@@ -6081,6 +6489,94 @@ func (c *Glue) GetTablesPagesWithContext(ctx aws.Context, input *GetTablesInput,
 		cont = fn(p.Page().(*GetTablesOutput), !p.HasNextPage())
 	}
 	return p.Err()
+}
+
+const opGetTags = "GetTags"
+
+// GetTagsRequest generates a "aws/request.Request" representing the
+// client's request for the GetTags operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetTags for more information on using the GetTags
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetTagsRequest method.
+//    req, resp := client.GetTagsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTags
+func (c *Glue) GetTagsRequest(input *GetTagsInput) (req *request.Request, output *GetTagsOutput) {
+	op := &request.Operation{
+		Name:       opGetTags,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetTagsInput{}
+	}
+
+	output = &GetTagsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetTags API operation for AWS Glue.
+//
+// Retrieves a list of tags associated with a resource.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Glue's
+// API operation GetTags for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   The input provided was not valid.
+//
+//   * ErrCodeInternalServiceException "InternalServiceException"
+//   An internal service error occurred.
+//
+//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   The operation timed out.
+//
+//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+//   A specified entity does not exist
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTags
+func (c *Glue) GetTags(input *GetTagsInput) (*GetTagsOutput, error) {
+	req, out := c.GetTagsRequest(input)
+	return out, req.Send()
+}
+
+// GetTagsWithContext is the same as GetTags with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetTags for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Glue) GetTagsWithContext(ctx aws.Context, input *GetTagsInput, opts ...request.Option) (*GetTagsOutput, error) {
+	req, out := c.GetTagsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opGetTrigger = "GetTrigger"
@@ -6636,6 +7132,597 @@ func (c *Glue) ImportCatalogToGlueWithContext(ctx aws.Context, input *ImportCata
 	return out, req.Send()
 }
 
+const opListCrawlers = "ListCrawlers"
+
+// ListCrawlersRequest generates a "aws/request.Request" representing the
+// client's request for the ListCrawlers operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListCrawlers for more information on using the ListCrawlers
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListCrawlersRequest method.
+//    req, resp := client.ListCrawlersRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/ListCrawlers
+func (c *Glue) ListCrawlersRequest(input *ListCrawlersInput) (req *request.Request, output *ListCrawlersOutput) {
+	op := &request.Operation{
+		Name:       opListCrawlers,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &ListCrawlersInput{}
+	}
+
+	output = &ListCrawlersOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListCrawlers API operation for AWS Glue.
+//
+// Retrieves the names of all crawler resources in this AWS account, or the
+// resources with the specified tag. This operation allows you to see which
+// resources are available in your account, and their names.
+//
+// This operation takes the optional Tags field which you can use as a filter
+// on the response so that tagged resources can be retrieved as a group. If
+// you choose to use tags filtering, only resources with the tag will be retrieved.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Glue's
+// API operation ListCrawlers for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   The operation timed out.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/ListCrawlers
+func (c *Glue) ListCrawlers(input *ListCrawlersInput) (*ListCrawlersOutput, error) {
+	req, out := c.ListCrawlersRequest(input)
+	return out, req.Send()
+}
+
+// ListCrawlersWithContext is the same as ListCrawlers with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListCrawlers for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Glue) ListCrawlersWithContext(ctx aws.Context, input *ListCrawlersInput, opts ...request.Option) (*ListCrawlersOutput, error) {
+	req, out := c.ListCrawlersRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// ListCrawlersPages iterates over the pages of a ListCrawlers operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListCrawlers method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListCrawlers operation.
+//    pageNum := 0
+//    err := client.ListCrawlersPages(params,
+//        func(page *ListCrawlersOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *Glue) ListCrawlersPages(input *ListCrawlersInput, fn func(*ListCrawlersOutput, bool) bool) error {
+	return c.ListCrawlersPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListCrawlersPagesWithContext same as ListCrawlersPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Glue) ListCrawlersPagesWithContext(ctx aws.Context, input *ListCrawlersInput, fn func(*ListCrawlersOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListCrawlersInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListCrawlersRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListCrawlersOutput), !p.HasNextPage())
+	}
+	return p.Err()
+}
+
+const opListDevEndpoints = "ListDevEndpoints"
+
+// ListDevEndpointsRequest generates a "aws/request.Request" representing the
+// client's request for the ListDevEndpoints operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListDevEndpoints for more information on using the ListDevEndpoints
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListDevEndpointsRequest method.
+//    req, resp := client.ListDevEndpointsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/ListDevEndpoints
+func (c *Glue) ListDevEndpointsRequest(input *ListDevEndpointsInput) (req *request.Request, output *ListDevEndpointsOutput) {
+	op := &request.Operation{
+		Name:       opListDevEndpoints,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &ListDevEndpointsInput{}
+	}
+
+	output = &ListDevEndpointsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListDevEndpoints API operation for AWS Glue.
+//
+// Retrieves the names of all DevEndpoint resources in this AWS account, or
+// the resources with the specified tag. This operation allows you to see which
+// resources are available in your account, and their names.
+//
+// This operation takes the optional Tags field which you can use as a filter
+// on the response so that tagged resources can be retrieved as a group. If
+// you choose to use tags filtering, only resources with the tag will be retrieved.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Glue's
+// API operation ListDevEndpoints for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   The input provided was not valid.
+//
+//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+//   A specified entity does not exist
+//
+//   * ErrCodeInternalServiceException "InternalServiceException"
+//   An internal service error occurred.
+//
+//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   The operation timed out.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/ListDevEndpoints
+func (c *Glue) ListDevEndpoints(input *ListDevEndpointsInput) (*ListDevEndpointsOutput, error) {
+	req, out := c.ListDevEndpointsRequest(input)
+	return out, req.Send()
+}
+
+// ListDevEndpointsWithContext is the same as ListDevEndpoints with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListDevEndpoints for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Glue) ListDevEndpointsWithContext(ctx aws.Context, input *ListDevEndpointsInput, opts ...request.Option) (*ListDevEndpointsOutput, error) {
+	req, out := c.ListDevEndpointsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// ListDevEndpointsPages iterates over the pages of a ListDevEndpoints operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListDevEndpoints method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListDevEndpoints operation.
+//    pageNum := 0
+//    err := client.ListDevEndpointsPages(params,
+//        func(page *ListDevEndpointsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *Glue) ListDevEndpointsPages(input *ListDevEndpointsInput, fn func(*ListDevEndpointsOutput, bool) bool) error {
+	return c.ListDevEndpointsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListDevEndpointsPagesWithContext same as ListDevEndpointsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Glue) ListDevEndpointsPagesWithContext(ctx aws.Context, input *ListDevEndpointsInput, fn func(*ListDevEndpointsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListDevEndpointsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListDevEndpointsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListDevEndpointsOutput), !p.HasNextPage())
+	}
+	return p.Err()
+}
+
+const opListJobs = "ListJobs"
+
+// ListJobsRequest generates a "aws/request.Request" representing the
+// client's request for the ListJobs operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListJobs for more information on using the ListJobs
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListJobsRequest method.
+//    req, resp := client.ListJobsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/ListJobs
+func (c *Glue) ListJobsRequest(input *ListJobsInput) (req *request.Request, output *ListJobsOutput) {
+	op := &request.Operation{
+		Name:       opListJobs,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &ListJobsInput{}
+	}
+
+	output = &ListJobsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListJobs API operation for AWS Glue.
+//
+// Retrieves the names of all job resources in this AWS account, or the resources
+// with the specified tag. This operation allows you to see which resources
+// are available in your account, and their names.
+//
+// This operation takes the optional Tags field which you can use as a filter
+// on the response so that tagged resources can be retrieved as a group. If
+// you choose to use tags filtering, only resources with the tag will be retrieved.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Glue's
+// API operation ListJobs for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   The input provided was not valid.
+//
+//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+//   A specified entity does not exist
+//
+//   * ErrCodeInternalServiceException "InternalServiceException"
+//   An internal service error occurred.
+//
+//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   The operation timed out.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/ListJobs
+func (c *Glue) ListJobs(input *ListJobsInput) (*ListJobsOutput, error) {
+	req, out := c.ListJobsRequest(input)
+	return out, req.Send()
+}
+
+// ListJobsWithContext is the same as ListJobs with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListJobs for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Glue) ListJobsWithContext(ctx aws.Context, input *ListJobsInput, opts ...request.Option) (*ListJobsOutput, error) {
+	req, out := c.ListJobsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// ListJobsPages iterates over the pages of a ListJobs operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListJobs method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListJobs operation.
+//    pageNum := 0
+//    err := client.ListJobsPages(params,
+//        func(page *ListJobsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *Glue) ListJobsPages(input *ListJobsInput, fn func(*ListJobsOutput, bool) bool) error {
+	return c.ListJobsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListJobsPagesWithContext same as ListJobsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Glue) ListJobsPagesWithContext(ctx aws.Context, input *ListJobsInput, fn func(*ListJobsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListJobsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListJobsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListJobsOutput), !p.HasNextPage())
+	}
+	return p.Err()
+}
+
+const opListTriggers = "ListTriggers"
+
+// ListTriggersRequest generates a "aws/request.Request" representing the
+// client's request for the ListTriggers operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListTriggers for more information on using the ListTriggers
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListTriggersRequest method.
+//    req, resp := client.ListTriggersRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/ListTriggers
+func (c *Glue) ListTriggersRequest(input *ListTriggersInput) (req *request.Request, output *ListTriggersOutput) {
+	op := &request.Operation{
+		Name:       opListTriggers,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &ListTriggersInput{}
+	}
+
+	output = &ListTriggersOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListTriggers API operation for AWS Glue.
+//
+// Retrieves the names of all trigger resources in this AWS account, or the
+// resources with the specified tag. This operation allows you to see which
+// resources are available in your account, and their names.
+//
+// This operation takes the optional Tags field which you can use as a filter
+// on the response so that tagged resources can be retrieved as a group. If
+// you choose to use tags filtering, only resources with the tag will be retrieved.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Glue's
+// API operation ListTriggers for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+//   A specified entity does not exist
+//
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   The input provided was not valid.
+//
+//   * ErrCodeInternalServiceException "InternalServiceException"
+//   An internal service error occurred.
+//
+//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   The operation timed out.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/ListTriggers
+func (c *Glue) ListTriggers(input *ListTriggersInput) (*ListTriggersOutput, error) {
+	req, out := c.ListTriggersRequest(input)
+	return out, req.Send()
+}
+
+// ListTriggersWithContext is the same as ListTriggers with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListTriggers for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Glue) ListTriggersWithContext(ctx aws.Context, input *ListTriggersInput, opts ...request.Option) (*ListTriggersOutput, error) {
+	req, out := c.ListTriggersRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// ListTriggersPages iterates over the pages of a ListTriggers operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListTriggers method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListTriggers operation.
+//    pageNum := 0
+//    err := client.ListTriggersPages(params,
+//        func(page *ListTriggersOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *Glue) ListTriggersPages(input *ListTriggersInput, fn func(*ListTriggersOutput, bool) bool) error {
+	return c.ListTriggersPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListTriggersPagesWithContext same as ListTriggersPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Glue) ListTriggersPagesWithContext(ctx aws.Context, input *ListTriggersInput, fn func(*ListTriggersOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListTriggersInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListTriggersRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListTriggersOutput), !p.HasNextPage())
+	}
+	return p.Err()
+}
+
 const opPutDataCatalogEncryptionSettings = "PutDataCatalogEncryptionSettings"
 
 // PutDataCatalogEncryptionSettingsRequest generates a "aws/request.Request" representing the
@@ -6681,7 +7768,7 @@ func (c *Glue) PutDataCatalogEncryptionSettingsRequest(input *PutDataCatalogEncr
 
 // PutDataCatalogEncryptionSettings API operation for AWS Glue.
 //
-// Sets the security configuration for a specified catalog. Once the configuration
+// Sets the security configuration for a specified catalog. After the configuration
 // has been set, the specified encryption is applied to every catalog write
 // thereafter.
 //
@@ -7542,6 +8629,186 @@ func (c *Glue) StopTriggerWithContext(ctx aws.Context, input *StopTriggerInput, 
 	return out, req.Send()
 }
 
+const opTagResource = "TagResource"
+
+// TagResourceRequest generates a "aws/request.Request" representing the
+// client's request for the TagResource operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See TagResource for more information on using the TagResource
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the TagResourceRequest method.
+//    req, resp := client.TagResourceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/TagResource
+func (c *Glue) TagResourceRequest(input *TagResourceInput) (req *request.Request, output *TagResourceOutput) {
+	op := &request.Operation{
+		Name:       opTagResource,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &TagResourceInput{}
+	}
+
+	output = &TagResourceOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// TagResource API operation for AWS Glue.
+//
+// Adds tags to a resource. A tag is a label you can assign to an AWS resource.
+// In AWS Glue, you can tag only certain resources. For information about what
+// resources you can tag, see AWS Tags in AWS Glue (http://docs.aws.amazon.com/glue/latest/dg/monitor-tags.html).
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Glue's
+// API operation TagResource for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   The input provided was not valid.
+//
+//   * ErrCodeInternalServiceException "InternalServiceException"
+//   An internal service error occurred.
+//
+//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   The operation timed out.
+//
+//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+//   A specified entity does not exist
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/TagResource
+func (c *Glue) TagResource(input *TagResourceInput) (*TagResourceOutput, error) {
+	req, out := c.TagResourceRequest(input)
+	return out, req.Send()
+}
+
+// TagResourceWithContext is the same as TagResource with the addition of
+// the ability to pass a context and additional request options.
+//
+// See TagResource for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Glue) TagResourceWithContext(ctx aws.Context, input *TagResourceInput, opts ...request.Option) (*TagResourceOutput, error) {
+	req, out := c.TagResourceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUntagResource = "UntagResource"
+
+// UntagResourceRequest generates a "aws/request.Request" representing the
+// client's request for the UntagResource operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UntagResource for more information on using the UntagResource
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UntagResourceRequest method.
+//    req, resp := client.UntagResourceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UntagResource
+func (c *Glue) UntagResourceRequest(input *UntagResourceInput) (req *request.Request, output *UntagResourceOutput) {
+	op := &request.Operation{
+		Name:       opUntagResource,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &UntagResourceInput{}
+	}
+
+	output = &UntagResourceOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// UntagResource API operation for AWS Glue.
+//
+// Removes tags from a resource.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Glue's
+// API operation UntagResource for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   The input provided was not valid.
+//
+//   * ErrCodeInternalServiceException "InternalServiceException"
+//   An internal service error occurred.
+//
+//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   The operation timed out.
+//
+//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+//   A specified entity does not exist
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UntagResource
+func (c *Glue) UntagResource(input *UntagResourceInput) (*UntagResourceOutput, error) {
+	req, out := c.UntagResourceRequest(input)
+	return out, req.Send()
+}
+
+// UntagResourceWithContext is the same as UntagResource with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UntagResource for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Glue) UntagResourceWithContext(ctx aws.Context, input *UntagResourceInput, opts ...request.Option) (*UntagResourceOutput, error) {
+	req, out := c.UntagResourceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opUpdateClassifier = "UpdateClassifier"
 
 // UpdateClassifierRequest generates a "aws/request.Request" representing the
@@ -7587,8 +8854,8 @@ func (c *Glue) UpdateClassifierRequest(input *UpdateClassifierInput) (req *reque
 
 // UpdateClassifier API operation for AWS Glue.
 //
-// Modifies an existing classifier (a GrokClassifier, XMLClassifier, or JsonClassifier,
-// depending on which field is present).
+// Modifies an existing classifier (a GrokClassifier, an XMLClassifier, a JsonClassifier,
+// or a CsvClassifier, depending on which field is present).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -8561,7 +9828,8 @@ func (c *Glue) UpdateUserDefinedFunctionWithContext(ctx aws.Context, input *Upda
 type Action struct {
 	_ struct{} `type:"structure"`
 
-	// Arguments to be passed to the job run.
+	// The job arguments used when this trigger fires. For this job run, they replace
+	// the default arguments set in the job definition itself.
 	//
 	// You can specify arguments here that your own job-execution script consumes,
 	// as well as arguments that AWS Glue itself consumes.
@@ -8776,7 +10044,7 @@ func (s *BatchCreatePartitionOutput) SetErrors(v []*PartitionError) *BatchCreate
 type BatchDeleteConnectionInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ID of the Data Catalog in which the connections reside. If none is supplied,
+	// The ID of the Data Catalog in which the connections reside. If none is provided,
 	// the AWS account ID is used by default.
 	CatalogId *string `min:"1" type:"string"`
 
@@ -9177,6 +10445,221 @@ func (s *BatchDeleteTableVersionOutput) SetErrors(v []*TableVersionError) *Batch
 	return s
 }
 
+type BatchGetCrawlersInput struct {
+	_ struct{} `type:"structure"`
+
+	// A list of crawler names, which may be the names returned from the ListCrawlers
+	// operation.
+	//
+	// CrawlerNames is a required field
+	CrawlerNames []*string `type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s BatchGetCrawlersInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BatchGetCrawlersInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *BatchGetCrawlersInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "BatchGetCrawlersInput"}
+	if s.CrawlerNames == nil {
+		invalidParams.Add(request.NewErrParamRequired("CrawlerNames"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCrawlerNames sets the CrawlerNames field's value.
+func (s *BatchGetCrawlersInput) SetCrawlerNames(v []*string) *BatchGetCrawlersInput {
+	s.CrawlerNames = v
+	return s
+}
+
+type BatchGetCrawlersOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A list of crawler definitions.
+	Crawlers []*Crawler `type:"list"`
+
+	// A list of names of crawlers not found.
+	CrawlersNotFound []*string `type:"list"`
+}
+
+// String returns the string representation
+func (s BatchGetCrawlersOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BatchGetCrawlersOutput) GoString() string {
+	return s.String()
+}
+
+// SetCrawlers sets the Crawlers field's value.
+func (s *BatchGetCrawlersOutput) SetCrawlers(v []*Crawler) *BatchGetCrawlersOutput {
+	s.Crawlers = v
+	return s
+}
+
+// SetCrawlersNotFound sets the CrawlersNotFound field's value.
+func (s *BatchGetCrawlersOutput) SetCrawlersNotFound(v []*string) *BatchGetCrawlersOutput {
+	s.CrawlersNotFound = v
+	return s
+}
+
+type BatchGetDevEndpointsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The list of DevEndpoint names, which may be the names returned from the ListDevEndpoint
+	// operation.
+	//
+	// DevEndpointNames is a required field
+	DevEndpointNames []*string `min:"1" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s BatchGetDevEndpointsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BatchGetDevEndpointsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *BatchGetDevEndpointsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "BatchGetDevEndpointsInput"}
+	if s.DevEndpointNames == nil {
+		invalidParams.Add(request.NewErrParamRequired("DevEndpointNames"))
+	}
+	if s.DevEndpointNames != nil && len(s.DevEndpointNames) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DevEndpointNames", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDevEndpointNames sets the DevEndpointNames field's value.
+func (s *BatchGetDevEndpointsInput) SetDevEndpointNames(v []*string) *BatchGetDevEndpointsInput {
+	s.DevEndpointNames = v
+	return s
+}
+
+type BatchGetDevEndpointsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A list of DevEndpoint definitions.
+	DevEndpoints []*DevEndpoint `type:"list"`
+
+	// A list of DevEndpoints not found.
+	DevEndpointsNotFound []*string `min:"1" type:"list"`
+}
+
+// String returns the string representation
+func (s BatchGetDevEndpointsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BatchGetDevEndpointsOutput) GoString() string {
+	return s.String()
+}
+
+// SetDevEndpoints sets the DevEndpoints field's value.
+func (s *BatchGetDevEndpointsOutput) SetDevEndpoints(v []*DevEndpoint) *BatchGetDevEndpointsOutput {
+	s.DevEndpoints = v
+	return s
+}
+
+// SetDevEndpointsNotFound sets the DevEndpointsNotFound field's value.
+func (s *BatchGetDevEndpointsOutput) SetDevEndpointsNotFound(v []*string) *BatchGetDevEndpointsOutput {
+	s.DevEndpointsNotFound = v
+	return s
+}
+
+type BatchGetJobsInput struct {
+	_ struct{} `type:"structure"`
+
+	// A list of job names, which may be the names returned from the ListJobs operation.
+	//
+	// JobNames is a required field
+	JobNames []*string `type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s BatchGetJobsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BatchGetJobsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *BatchGetJobsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "BatchGetJobsInput"}
+	if s.JobNames == nil {
+		invalidParams.Add(request.NewErrParamRequired("JobNames"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetJobNames sets the JobNames field's value.
+func (s *BatchGetJobsInput) SetJobNames(v []*string) *BatchGetJobsInput {
+	s.JobNames = v
+	return s
+}
+
+type BatchGetJobsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A list of job definitions.
+	Jobs []*Job `type:"list"`
+
+	// A list of names of jobs not found.
+	JobsNotFound []*string `type:"list"`
+}
+
+// String returns the string representation
+func (s BatchGetJobsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BatchGetJobsOutput) GoString() string {
+	return s.String()
+}
+
+// SetJobs sets the Jobs field's value.
+func (s *BatchGetJobsOutput) SetJobs(v []*Job) *BatchGetJobsOutput {
+	s.Jobs = v
+	return s
+}
+
+// SetJobsNotFound sets the JobsNotFound field's value.
+func (s *BatchGetJobsOutput) SetJobsNotFound(v []*string) *BatchGetJobsOutput {
+	s.JobsNotFound = v
+	return s
+}
+
 type BatchGetPartitionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9302,6 +10785,77 @@ func (s *BatchGetPartitionOutput) SetPartitions(v []*Partition) *BatchGetPartiti
 // SetUnprocessedKeys sets the UnprocessedKeys field's value.
 func (s *BatchGetPartitionOutput) SetUnprocessedKeys(v []*PartitionValueList) *BatchGetPartitionOutput {
 	s.UnprocessedKeys = v
+	return s
+}
+
+type BatchGetTriggersInput struct {
+	_ struct{} `type:"structure"`
+
+	// A list of trigger names, which may be the names returned from the ListTriggers
+	// operation.
+	//
+	// TriggerNames is a required field
+	TriggerNames []*string `type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s BatchGetTriggersInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BatchGetTriggersInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *BatchGetTriggersInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "BatchGetTriggersInput"}
+	if s.TriggerNames == nil {
+		invalidParams.Add(request.NewErrParamRequired("TriggerNames"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetTriggerNames sets the TriggerNames field's value.
+func (s *BatchGetTriggersInput) SetTriggerNames(v []*string) *BatchGetTriggersInput {
+	s.TriggerNames = v
+	return s
+}
+
+type BatchGetTriggersOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A list of trigger definitions.
+	Triggers []*Trigger `type:"list"`
+
+	// A list of names of triggers not found.
+	TriggersNotFound []*string `type:"list"`
+}
+
+// String returns the string representation
+func (s BatchGetTriggersOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BatchGetTriggersOutput) GoString() string {
+	return s.String()
+}
+
+// SetTriggers sets the Triggers field's value.
+func (s *BatchGetTriggersOutput) SetTriggers(v []*Trigger) *BatchGetTriggersOutput {
+	s.Triggers = v
+	return s
+}
+
+// SetTriggersNotFound sets the TriggersNotFound field's value.
+func (s *BatchGetTriggersOutput) SetTriggersNotFound(v []*string) *BatchGetTriggersOutput {
+	s.TriggersNotFound = v
 	return s
 }
 
@@ -9579,10 +11133,13 @@ func (s *CatalogImportStatus) SetImportedBy(v string) *CatalogImportStatus {
 // You can use the standard classifiers that AWS Glue supplies, or you can write
 // your own classifiers to best categorize your data sources and specify the
 // appropriate schemas to use for them. A classifier can be a grok classifier,
-// an XML classifier, or a JSON classifier, as specified in one of the fields
-// in the Classifier object.
+// an XML classifier, a JSON classifier, or a custom CSV classifier as specified
+// in one of the fields in the Classifier object.
 type Classifier struct {
 	_ struct{} `type:"structure"`
+
+	// A CSVClassifier object.
+	CsvClassifier *CsvClassifier `type:"structure"`
 
 	// A GrokClassifier object.
 	GrokClassifier *GrokClassifier `type:"structure"`
@@ -9602,6 +11159,12 @@ func (s Classifier) String() string {
 // GoString returns the string representation
 func (s Classifier) GoString() string {
 	return s.String()
+}
+
+// SetCsvClassifier sets the CsvClassifier field's value.
+func (s *Classifier) SetCsvClassifier(v *CsvClassifier) *Classifier {
+	s.CsvClassifier = v
+	return s
 }
 
 // SetGrokClassifier sets the GrokClassifier field's value.
@@ -10010,10 +11573,10 @@ type Connection struct {
 	//
 	//    * ENCRYPTED_PASSWORD - When you enable connection password protection
 	//    by setting ConnectionPasswordEncryption in the Data Catalog encryption
-	//    settings, this field stores the key you designate to encrypt the password.
+	//    settings, this field stores the encrypted password.
 	//
-	//    * JDBC_DRIVER_JAR_URI - The S3 path of the a jar file that contains the
-	//    JDBC driver to use.
+	//    * JDBC_DRIVER_JAR_URI - The Amazon S3 path of the JAR file that contains
+	//    the JDBC driver to use.
 	//
 	//    * JDBC_DRIVER_CLASS_NAME - The class name of the JDBC driver to use.
 	//
@@ -10028,24 +11591,24 @@ type Connection struct {
 	//    * JDBC_CONNECTION_URL - The URL for the JDBC connection.
 	//
 	//    * JDBC_ENFORCE_SSL - A Boolean string (true, false) specifying whether
-	//    SSL with hostname matching will be enforced for the JDBC connection on
-	//    the client. The default is false.
+	//    Secure Sockets Layer (SSL) with hostname matching will be enforced for
+	//    the JDBC connection on the client. The default is false.
 	ConnectionProperties map[string]*string `type:"map"`
 
 	// The type of the connection. Currently, only JDBC is supported; SFTP is not
 	// supported.
 	ConnectionType *string `type:"string" enum:"ConnectionType"`
 
-	// The time this connection definition was created.
+	// The time that this connection definition was created.
 	CreationTime *time.Time `type:"timestamp"`
 
-	// Description of the connection.
+	// The description of the connection.
 	Description *string `type:"string"`
 
-	// The user, group or role that last updated this connection definition.
+	// The user, group, or role that last updated this connection definition.
 	LastUpdatedBy *string `min:"1" type:"string"`
 
-	// The last time this connection definition was updated.
+	// The last time that this connection definition was updated.
 	LastUpdatedTime *time.Time `type:"timestamp"`
 
 	// A list of criteria that can be used in selecting this connection.
@@ -10054,8 +11617,8 @@ type Connection struct {
 	// The name of the connection definition.
 	Name *string `min:"1" type:"string"`
 
-	// A map of physical connection requirements, such as VPC and SecurityGroup,
-	// needed for making this connection successfully.
+	// A map of physical connection requirements, such as virtual private cloud
+	// (VPC) and SecurityGroup, that are needed to make this connection successfully.
 	PhysicalConnectionRequirements *PhysicalConnectionRequirements `type:"structure"`
 }
 
@@ -10123,7 +11686,7 @@ func (s *Connection) SetPhysicalConnectionRequirements(v *PhysicalConnectionRequ
 	return s
 }
 
-// A structure used to specify a connection to create or update.
+// A structure that is used to specify a connection to create or update.
 type ConnectionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10138,7 +11701,7 @@ type ConnectionInput struct {
 	// ConnectionType is a required field
 	ConnectionType *string `type:"string" required:"true" enum:"ConnectionType"`
 
-	// Description of the connection.
+	// The description of the connection.
 	Description *string `type:"string"`
 
 	// A list of criteria that can be used in selecting this connection.
@@ -10149,8 +11712,8 @@ type ConnectionInput struct {
 	// Name is a required field
 	Name *string `min:"1" type:"string" required:"true"`
 
-	// A map of physical connection requirements, such as VPC and SecurityGroup,
-	// needed for making this connection successfully.
+	// A map of physical connection requirements, such as virtual private cloud
+	// (VPC) and SecurityGroup, that are needed to successfully make this connection.
 	PhysicalConnectionRequirements *PhysicalConnectionRequirements `type:"structure"`
 }
 
@@ -10233,24 +11796,24 @@ func (s *ConnectionInput) SetPhysicalConnectionRequirements(v *PhysicalConnectio
 // only password encryption.
 //
 // When a CreationConnection request arrives containing a password, the Data
-// Catalog first encrypts the password using your KMS key, and then encrypts
+// Catalog first encrypts the password using your AWS KMS key. It then encrypts
 // the whole connection object again if catalog encryption is also enabled.
 //
-// This encryption requires that you set KMS key permissions to enable or restrict
-// access on the password key according to your security requirements. For example,
-// you may want only admin users to have decrypt permission on the password
-// key.
+// This encryption requires that you set AWS KMS key permissions to enable or
+// restrict access on the password key according to your security requirements.
+// For example, you might want only admin users to have decrypt permission on
+// the password key.
 type ConnectionPasswordEncryption struct {
 	_ struct{} `type:"structure"`
 
-	// A KMS key used to protect access to the JDBC source.
+	// An AWS KMS key that is used to encrypt the connection password.
 	//
-	// All users in your account should be granted the kms:encrypt permission to
-	// encrypt passwords before storing them in the Data Catalog (through the AWS
-	// Glue CreateConnection operation).
+	// If connection password protection is enabled, the caller of CreateConnection
+	// and UpdateConnection needs at least kms:Encrypt permission on the specified
+	// AWS KMS key, to encrypt passwords before storing them in the Data Catalog.
 	//
-	// The decrypt permission should be granted only to KMS key admins and IAM roles
-	// designated for AWS Glue crawlers.
+	// You can set the decrypt permission to enable or restrict access on the password
+	// key according to your security requirements.
 	AwsKmsKeyId *string `min:"1" type:"string"`
 
 	// When the ReturnConnectionPasswordEncrypted flag is set to "true", passwords
@@ -10631,6 +12194,9 @@ func (s *CrawlerTargets) SetS3Targets(v []*S3Target) *CrawlerTargets {
 type CreateClassifierInput struct {
 	_ struct{} `type:"structure"`
 
+	// A CsvClassifier object specifying the classifier to create.
+	CsvClassifier *CreateCsvClassifierRequest `type:"structure"`
+
 	// A GrokClassifier object specifying the classifier to create.
 	GrokClassifier *CreateGrokClassifierRequest `type:"structure"`
 
@@ -10654,6 +12220,11 @@ func (s CreateClassifierInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *CreateClassifierInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CreateClassifierInput"}
+	if s.CsvClassifier != nil {
+		if err := s.CsvClassifier.Validate(); err != nil {
+			invalidParams.AddNested("CsvClassifier", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.GrokClassifier != nil {
 		if err := s.GrokClassifier.Validate(); err != nil {
 			invalidParams.AddNested("GrokClassifier", err.(request.ErrInvalidParams))
@@ -10674,6 +12245,12 @@ func (s *CreateClassifierInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetCsvClassifier sets the CsvClassifier field's value.
+func (s *CreateClassifierInput) SetCsvClassifier(v *CreateCsvClassifierRequest) *CreateClassifierInput {
+	s.CsvClassifier = v
+	return s
 }
 
 // SetGrokClassifier sets the GrokClassifier field's value.
@@ -10712,7 +12289,7 @@ type CreateConnectionInput struct {
 	_ struct{} `type:"structure"`
 
 	// The ID of the Data Catalog in which to create the connection. If none is
-	// supplied, the AWS account ID is used by default.
+	// provided, the AWS account ID is used by default.
 	CatalogId *string `min:"1" type:"string"`
 
 	// A ConnectionInput object defining the connection to create.
@@ -10825,6 +12402,12 @@ type CreateCrawlerInput struct {
 	// The table prefix used for catalog tables that are created.
 	TablePrefix *string `type:"string"`
 
+	// The tags to use with this crawler request. You may use tags to limit access
+	// to the crawler. For more information about tags in AWS Glue, see AWS Tags
+	// in AWS Glue (http://docs.aws.amazon.com/glue/latest/dg/monitor-tags.html)
+	// in the developer guide.
+	Tags map[string]*string `type:"map"`
+
 	// A list of collection of targets to crawl.
 	//
 	// Targets is a required field
@@ -10926,6 +12509,12 @@ func (s *CreateCrawlerInput) SetTablePrefix(v string) *CreateCrawlerInput {
 	return s
 }
 
+// SetTags sets the Tags field's value.
+func (s *CreateCrawlerInput) SetTags(v map[string]*string) *CreateCrawlerInput {
+	s.Tags = v
+	return s
+}
+
 // SetTargets sets the Targets field's value.
 func (s *CreateCrawlerInput) SetTargets(v *CrawlerTargets) *CreateCrawlerInput {
 	s.Targets = v
@@ -10944,6 +12533,110 @@ func (s CreateCrawlerOutput) String() string {
 // GoString returns the string representation
 func (s CreateCrawlerOutput) GoString() string {
 	return s.String()
+}
+
+// Specifies a custom CSV classifier for CreateClassifier to create.
+type CreateCsvClassifierRequest struct {
+	_ struct{} `type:"structure"`
+
+	// Enables the processing of files that contain only one column.
+	AllowSingleColumn *bool `type:"boolean"`
+
+	// Indicates whether the CSV file contains a header.
+	ContainsHeader *string `type:"string" enum:"CsvHeaderOption"`
+
+	// A custom symbol to denote what separates each column entry in the row.
+	Delimiter *string `min:"1" type:"string"`
+
+	// Specifies not to trim values before identifying the type of column values.
+	// The default value is true.
+	DisableValueTrimming *bool `type:"boolean"`
+
+	// A list of strings representing column names.
+	Header []*string `type:"list"`
+
+	// The name of the classifier.
+	//
+	// Name is a required field
+	Name *string `min:"1" type:"string" required:"true"`
+
+	// A custom symbol to denote what combines content into a single column value.
+	// Must be different from the column delimiter.
+	QuoteSymbol *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s CreateCsvClassifierRequest) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateCsvClassifierRequest) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateCsvClassifierRequest) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateCsvClassifierRequest"}
+	if s.Delimiter != nil && len(*s.Delimiter) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Delimiter", 1))
+	}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
+	}
+	if s.QuoteSymbol != nil && len(*s.QuoteSymbol) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("QuoteSymbol", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAllowSingleColumn sets the AllowSingleColumn field's value.
+func (s *CreateCsvClassifierRequest) SetAllowSingleColumn(v bool) *CreateCsvClassifierRequest {
+	s.AllowSingleColumn = &v
+	return s
+}
+
+// SetContainsHeader sets the ContainsHeader field's value.
+func (s *CreateCsvClassifierRequest) SetContainsHeader(v string) *CreateCsvClassifierRequest {
+	s.ContainsHeader = &v
+	return s
+}
+
+// SetDelimiter sets the Delimiter field's value.
+func (s *CreateCsvClassifierRequest) SetDelimiter(v string) *CreateCsvClassifierRequest {
+	s.Delimiter = &v
+	return s
+}
+
+// SetDisableValueTrimming sets the DisableValueTrimming field's value.
+func (s *CreateCsvClassifierRequest) SetDisableValueTrimming(v bool) *CreateCsvClassifierRequest {
+	s.DisableValueTrimming = &v
+	return s
+}
+
+// SetHeader sets the Header field's value.
+func (s *CreateCsvClassifierRequest) SetHeader(v []*string) *CreateCsvClassifierRequest {
+	s.Header = v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *CreateCsvClassifierRequest) SetName(v string) *CreateCsvClassifierRequest {
+	s.Name = &v
+	return s
+}
+
+// SetQuoteSymbol sets the QuoteSymbol field's value.
+func (s *CreateCsvClassifierRequest) SetQuoteSymbol(v string) *CreateCsvClassifierRequest {
+	s.QuoteSymbol = &v
+	return s
 }
 
 type CreateDatabaseInput struct {
@@ -11019,6 +12712,9 @@ func (s CreateDatabaseOutput) GoString() string {
 type CreateDevEndpointInput struct {
 	_ struct{} `type:"structure"`
 
+	// A map of arguments used to configure the DevEndpoint.
+	Arguments map[string]*string `type:"map"`
+
 	// The name to be assigned to the new DevEndpoint.
 	//
 	// EndpointName is a required field
@@ -11068,6 +12764,12 @@ type CreateDevEndpointInput struct {
 
 	// The subnet ID for the new DevEndpoint to use.
 	SubnetId *string `type:"string"`
+
+	// The tags to use with this DevEndpoint. You may use tags to limit access to
+	// the DevEndpoint. For more information about tags in AWS Glue, see AWS Tags
+	// in AWS Glue (http://docs.aws.amazon.com/glue/latest/dg/monitor-tags.html)
+	// in the developer guide.
+	Tags map[string]*string `type:"map"`
 }
 
 // String returns the string representation
@@ -11097,6 +12799,12 @@ func (s *CreateDevEndpointInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetArguments sets the Arguments field's value.
+func (s *CreateDevEndpointInput) SetArguments(v map[string]*string) *CreateDevEndpointInput {
+	s.Arguments = v
+	return s
 }
 
 // SetEndpointName sets the EndpointName field's value.
@@ -11159,8 +12867,17 @@ func (s *CreateDevEndpointInput) SetSubnetId(v string) *CreateDevEndpointInput {
 	return s
 }
 
+// SetTags sets the Tags field's value.
+func (s *CreateDevEndpointInput) SetTags(v map[string]*string) *CreateDevEndpointInput {
+	s.Tags = v
+	return s
+}
+
 type CreateDevEndpointOutput struct {
 	_ struct{} `type:"structure"`
+
+	// The map of arguments used to configure this DevEndpoint.
+	Arguments map[string]*string `type:"map"`
 
 	// The AWS availability zone where this DevEndpoint is located.
 	AvailabilityZone *string `type:"string"`
@@ -11218,6 +12935,12 @@ func (s CreateDevEndpointOutput) String() string {
 // GoString returns the string representation
 func (s CreateDevEndpointOutput) GoString() string {
 	return s.String()
+}
+
+// SetArguments sets the Arguments field's value.
+func (s *CreateDevEndpointOutput) SetArguments(v map[string]*string) *CreateDevEndpointOutput {
+	s.Arguments = v
+	return s
 }
 
 // SetAvailabilityZone sets the AvailabilityZone field's value.
@@ -11439,9 +13162,22 @@ type CreateJobInput struct {
 	// This field is reserved for future use.
 	LogUri *string `type:"string"`
 
-	// AWS Glue supports running jobs on a JobCommand.Name="pythonshell" with allocated
-	// processing as low as 0.0625 DPU, which can be specified using MaxCapacity.
-	// Glue ETL jobs running in any other way cannot have fractional DPU allocations.
+	// The number of AWS Glue data processing units (DPUs) that can be allocated
+	// when this job runs. A DPU is a relative measure of processing power that
+	// consists of 4 vCPUs of compute capacity and 16 GB of memory. For more information,
+	// see the AWS Glue pricing page (https://aws.amazon.com/glue/pricing/).
+	//
+	// Do not set Max Capacity if using WorkerType and NumberOfWorkers.
+	//
+	// The value that can be allocated for MaxCapacity depends on whether you are
+	// running a python shell job, or an Apache Spark ETL job:
+	//
+	//    * When you specify a python shell job (JobCommand.Name="pythonshell"),
+	//    you can allocate either 0.0625 or 1 DPU. The default is 0.0625 DPU.
+	//
+	//    * When you specify an Apache Spark ETL job (JobCommand.Name="glueetl"),
+	//    you can allocate from 2 to 100 DPUs. The default is 10 DPUs. This job
+	//    type cannot have a fractional DPU allocation.
 	MaxCapacity *float64 `type:"double"`
 
 	// The maximum number of times to retry this job if it fails.
@@ -11455,6 +13191,13 @@ type CreateJobInput struct {
 	// Specifies configuration properties of a job notification.
 	NotificationProperty *NotificationProperty `type:"structure"`
 
+	// The number of workers of a defined workerType that are allocated when a job
+	// runs.
+	//
+	// The maximum number of workers you can define are 299 for G.1X, and 149 for
+	// G.2X.
+	NumberOfWorkers *int64 `type:"integer"`
+
 	// The name or ARN of the IAM role associated with this job.
 	//
 	// Role is a required field
@@ -11463,10 +13206,28 @@ type CreateJobInput struct {
 	// The name of the SecurityConfiguration structure to be used with this job.
 	SecurityConfiguration *string `min:"1" type:"string"`
 
+	// The tags to use with this job. You may use tags to limit access to the job.
+	// For more information about tags in AWS Glue, see AWS Tags in AWS Glue (http://docs.aws.amazon.com/glue/latest/dg/monitor-tags.html)
+	// in the developer guide.
+	Tags map[string]*string `type:"map"`
+
 	// The job timeout in minutes. This is the maximum time that a job run can consume
 	// resources before it is terminated and enters TIMEOUT status. The default
 	// is 2,880 minutes (48 hours).
 	Timeout *int64 `min:"1" type:"integer"`
+
+	// The type of predefined worker that is allocated when a job runs. Accepts
+	// a value of Standard, G.1X, or G.2X.
+	//
+	//    * For the Standard worker type, each worker provides 4 vCPU, 16 GB of
+	//    memory and a 50GB disk, and 2 executors per worker.
+	//
+	//    * For the G.1X worker type, each worker provides 4 vCPU, 16 GB of memory
+	//    and a 64GB disk, and 1 executor per worker.
+	//
+	//    * For the G.2X worker type, each worker provides 8 vCPU, 32 GB of memory
+	//    and a 128GB disk, and 1 executor per worker.
+	WorkerType *string `type:"string" enum:"WorkerType"`
 }
 
 // String returns the string representation
@@ -11578,6 +13339,12 @@ func (s *CreateJobInput) SetNotificationProperty(v *NotificationProperty) *Creat
 	return s
 }
 
+// SetNumberOfWorkers sets the NumberOfWorkers field's value.
+func (s *CreateJobInput) SetNumberOfWorkers(v int64) *CreateJobInput {
+	s.NumberOfWorkers = &v
+	return s
+}
+
 // SetRole sets the Role field's value.
 func (s *CreateJobInput) SetRole(v string) *CreateJobInput {
 	s.Role = &v
@@ -11590,9 +13357,21 @@ func (s *CreateJobInput) SetSecurityConfiguration(v string) *CreateJobInput {
 	return s
 }
 
+// SetTags sets the Tags field's value.
+func (s *CreateJobInput) SetTags(v map[string]*string) *CreateJobInput {
+	s.Tags = v
+	return s
+}
+
 // SetTimeout sets the Timeout field's value.
 func (s *CreateJobInput) SetTimeout(v int64) *CreateJobInput {
 	s.Timeout = &v
+	return s
+}
+
+// SetWorkerType sets the WorkerType field's value.
+func (s *CreateJobInput) SetWorkerType(v string) *CreateJobInput {
+	s.WorkerType = &v
 	return s
 }
 
@@ -12092,6 +13871,12 @@ type CreateTriggerInput struct {
 	// not supported for ON_DEMAND triggers.
 	StartOnCreation *bool `type:"boolean"`
 
+	// The tags to use with this trigger. You may use tags to limit access to the
+	// trigger. For more information about tags in AWS Glue, see AWS Tags in AWS
+	// Glue (http://docs.aws.amazon.com/glue/latest/dg/monitor-tags.html) in the
+	// developer guide.
+	Tags map[string]*string `type:"map"`
+
 	// The type of the new trigger.
 	//
 	// Type is a required field
@@ -12178,6 +13963,12 @@ func (s *CreateTriggerInput) SetSchedule(v string) *CreateTriggerInput {
 // SetStartOnCreation sets the StartOnCreation field's value.
 func (s *CreateTriggerInput) SetStartOnCreation(v bool) *CreateTriggerInput {
 	s.StartOnCreation = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateTriggerInput) SetTags(v map[string]*string) *CreateTriggerInput {
+	s.Tags = v
 	return s
 }
 
@@ -12366,17 +14157,126 @@ func (s *CreateXMLClassifierRequest) SetRowTag(v string) *CreateXMLClassifierReq
 	return s
 }
 
+// A classifier for custom CSV content.
+type CsvClassifier struct {
+	_ struct{} `type:"structure"`
+
+	// Enables the processing of files that contain only one column.
+	AllowSingleColumn *bool `type:"boolean"`
+
+	// Indicates whether the CSV file contains a header.
+	ContainsHeader *string `type:"string" enum:"CsvHeaderOption"`
+
+	// The time this classifier was registered.
+	CreationTime *time.Time `type:"timestamp"`
+
+	// A custom symbol to denote what separates each column entry in the row.
+	Delimiter *string `min:"1" type:"string"`
+
+	// Specifies not to trim values before identifying the type of column values.
+	// The default value is true.
+	DisableValueTrimming *bool `type:"boolean"`
+
+	// A list of strings representing column names.
+	Header []*string `type:"list"`
+
+	// The time this classifier was last updated.
+	LastUpdated *time.Time `type:"timestamp"`
+
+	// The name of the classifier.
+	//
+	// Name is a required field
+	Name *string `min:"1" type:"string" required:"true"`
+
+	// A custom symbol to denote what combines content into a single column value.
+	// Must be different from the column delimiter.
+	QuoteSymbol *string `min:"1" type:"string"`
+
+	// The version of this classifier.
+	Version *int64 `type:"long"`
+}
+
+// String returns the string representation
+func (s CsvClassifier) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CsvClassifier) GoString() string {
+	return s.String()
+}
+
+// SetAllowSingleColumn sets the AllowSingleColumn field's value.
+func (s *CsvClassifier) SetAllowSingleColumn(v bool) *CsvClassifier {
+	s.AllowSingleColumn = &v
+	return s
+}
+
+// SetContainsHeader sets the ContainsHeader field's value.
+func (s *CsvClassifier) SetContainsHeader(v string) *CsvClassifier {
+	s.ContainsHeader = &v
+	return s
+}
+
+// SetCreationTime sets the CreationTime field's value.
+func (s *CsvClassifier) SetCreationTime(v time.Time) *CsvClassifier {
+	s.CreationTime = &v
+	return s
+}
+
+// SetDelimiter sets the Delimiter field's value.
+func (s *CsvClassifier) SetDelimiter(v string) *CsvClassifier {
+	s.Delimiter = &v
+	return s
+}
+
+// SetDisableValueTrimming sets the DisableValueTrimming field's value.
+func (s *CsvClassifier) SetDisableValueTrimming(v bool) *CsvClassifier {
+	s.DisableValueTrimming = &v
+	return s
+}
+
+// SetHeader sets the Header field's value.
+func (s *CsvClassifier) SetHeader(v []*string) *CsvClassifier {
+	s.Header = v
+	return s
+}
+
+// SetLastUpdated sets the LastUpdated field's value.
+func (s *CsvClassifier) SetLastUpdated(v time.Time) *CsvClassifier {
+	s.LastUpdated = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *CsvClassifier) SetName(v string) *CsvClassifier {
+	s.Name = &v
+	return s
+}
+
+// SetQuoteSymbol sets the QuoteSymbol field's value.
+func (s *CsvClassifier) SetQuoteSymbol(v string) *CsvClassifier {
+	s.QuoteSymbol = &v
+	return s
+}
+
+// SetVersion sets the Version field's value.
+func (s *CsvClassifier) SetVersion(v int64) *CsvClassifier {
+	s.Version = &v
+	return s
+}
+
 // Contains configuration information for maintaining Data Catalog security.
 type DataCatalogEncryptionSettings struct {
 	_ struct{} `type:"structure"`
 
-	// When password protection is enabled, the Data Catalog uses a customer-provided
+	// When connection password protection is enabled, the Data Catalog uses a customer-provided
 	// key to encrypt the password as part of CreateConnection or UpdateConnection
 	// and store it in the ENCRYPTED_PASSWORD field in the connection properties.
 	// You can enable catalog encryption or only password encryption.
 	ConnectionPasswordEncryption *ConnectionPasswordEncryption `type:"structure"`
 
-	// Specifies encryption-at-rest configuration for the Data Catalog.
+	// Specifies the encryption-at-rest configuration for the Data Catalog.
 	EncryptionAtRest *EncryptionAtRest `type:"structure"`
 }
 
@@ -12617,7 +14517,7 @@ func (s DeleteClassifierOutput) GoString() string {
 type DeleteConnectionInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ID of the Data Catalog in which the connection resides. If none is supplied,
+	// The ID of the Data Catalog in which the connection resides. If none is provided,
 	// the AWS account ID is used by default.
 	CatalogId *string `min:"1" type:"string"`
 
@@ -13470,6 +15370,12 @@ func (s DeleteUserDefinedFunctionOutput) GoString() string {
 type DevEndpoint struct {
 	_ struct{} `type:"structure"`
 
+	// A map of arguments used to configure the DevEndpoint.
+	//
+	// Note that currently, we only support "--enable-glue-datacatalog": "" as a
+	// valid argument.
+	Arguments map[string]*string `type:"map"`
+
 	// The AWS availability zone where this DevEndpoint is located.
 	AvailabilityZone *string `type:"string"`
 
@@ -13564,6 +15470,12 @@ func (s DevEndpoint) String() string {
 // GoString returns the string representation
 func (s DevEndpoint) GoString() string {
 	return s.String()
+}
+
+// SetArguments sets the Arguments field's value.
+func (s *DevEndpoint) SetArguments(v map[string]*string) *DevEndpoint {
+	s.Arguments = v
+	return s
 }
 
 // SetAvailabilityZone sets the AvailabilityZone field's value.
@@ -13759,7 +15671,7 @@ func (s *DynamoDBTarget) SetPath(v string) *DynamoDBTarget {
 	return s
 }
 
-// Specifies encryption-at-rest configuration for the Data Catalog.
+// Specifies the encryption-at-rest configuration for the Data Catalog.
 type EncryptionAtRest struct {
 	_ struct{} `type:"structure"`
 
@@ -14115,16 +16027,15 @@ func (s *GetClassifiersOutput) SetNextToken(v string) *GetClassifiersOutput {
 type GetConnectionInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ID of the Data Catalog in which the connection resides. If none is supplied,
+	// The ID of the Data Catalog in which the connection resides. If none is provided,
 	// the AWS account ID is used by default.
 	CatalogId *string `min:"1" type:"string"`
 
-	// Allow you to retrieve the connection metadata without displaying the password.
-	// For instance, the AWS Glue console uses this flag to retrieve connections,
-	// since the console does not display passwords. Set this parameter where the
-	// caller may not have permission to use the KMS key to decrypt the password,
-	// but does have permission to access the rest of the connection metadata (that
-	// is, the other connection properties).
+	// Allows you to retrieve the connection metadata without returning the password.
+	// For instance, the AWS Glue console uses this flag to retrieve the connection,
+	// and does not display the password. Set this parameter when the caller might
+	// not have permission to use the AWS KMS key to decrypt the password, but does
+	// have permission to access the rest of the connection properties.
 	HidePassword *bool `type:"boolean"`
 
 	// The name of the connection definition to retrieve.
@@ -14203,7 +16114,8 @@ func (s *GetConnectionOutput) SetConnection(v *Connection) *GetConnectionOutput 
 	return s
 }
 
-// Filters the connection definitions returned by the GetConnections API.
+// Filters the connection definitions that are returned by the GetConnections
+// API operation.
 type GetConnectionsFilter struct {
 	_ struct{} `type:"structure"`
 
@@ -14241,19 +16153,18 @@ func (s *GetConnectionsFilter) SetMatchCriteria(v []*string) *GetConnectionsFilt
 type GetConnectionsInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ID of the Data Catalog in which the connections reside. If none is supplied,
+	// The ID of the Data Catalog in which the connections reside. If none is provided,
 	// the AWS account ID is used by default.
 	CatalogId *string `min:"1" type:"string"`
 
 	// A filter that controls which connections will be returned.
 	Filter *GetConnectionsFilter `type:"structure"`
 
-	// Allow you to retrieve the connection metadata without displaying the password.
-	// For instance, the AWS Glue console uses this flag to retrieve connections,
-	// since the console does not display passwords. Set this parameter where the
-	// caller may not have permission to use the KMS key to decrypt the password,
-	// but does have permission to access the rest of the connection metadata (that
-	// is, the other connection properties).
+	// Allows you to retrieve the connection metadata without returning the password.
+	// For instance, the AWS Glue console uses this flag to retrieve the connection,
+	// and does not display the password. Set this parameter when the caller might
+	// not have permission to use the AWS KMS key to decrypt the password, but does
+	// have permission to access the rest of the connection properties.
 	HidePassword *bool `type:"boolean"`
 
 	// The maximum number of connections to return in one response.
@@ -14585,7 +16496,7 @@ type GetDataCatalogEncryptionSettingsInput struct {
 	_ struct{} `type:"structure"`
 
 	// The ID of the Data Catalog for which to retrieve the security configuration.
-	// If none is supplied, the AWS account ID is used by default.
+	// If none is provided, the AWS account ID is used by default.
 	CatalogId *string `min:"1" type:"string"`
 }
 
@@ -16541,6 +18452,70 @@ func (s *GetTablesOutput) SetTableList(v []*Table) *GetTablesOutput {
 	return s
 }
 
+type GetTagsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon ARN of the resource for which to retrieve tags.
+	//
+	// ResourceArn is a required field
+	ResourceArn *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetTagsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetTagsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetTagsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetTagsInput"}
+	if s.ResourceArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceArn"))
+	}
+	if s.ResourceArn != nil && len(*s.ResourceArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceArn", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetResourceArn sets the ResourceArn field's value.
+func (s *GetTagsInput) SetResourceArn(v string) *GetTagsInput {
+	s.ResourceArn = &v
+	return s
+}
+
+type GetTagsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The requested tags.
+	Tags map[string]*string `type:"map"`
+}
+
+// String returns the string representation
+func (s GetTagsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetTagsOutput) GoString() string {
+	return s.String()
+}
+
+// SetTags sets the Tags field's value.
+func (s *GetTagsOutput) SetTags(v map[string]*string) *GetTagsOutput {
+	s.Tags = v
+	return s
+}
+
 type GetTriggerInput struct {
 	_ struct{} `type:"structure"`
 
@@ -17148,9 +19123,22 @@ type Job struct {
 	// This field is reserved for future use.
 	LogUri *string `type:"string"`
 
-	// AWS Glue supports running jobs on a JobCommand.Name="pythonshell" with allocated
-	// processing as low as 0.0625 DPU, which can be specified using MaxCapacity.
-	// Glue ETL jobs running in any other way cannot have fractional DPU allocations.
+	// The number of AWS Glue data processing units (DPUs) that can be allocated
+	// when this job runs. A DPU is a relative measure of processing power that
+	// consists of 4 vCPUs of compute capacity and 16 GB of memory. For more information,
+	// see the AWS Glue pricing page (https://aws.amazon.com/glue/pricing/).
+	//
+	// Do not set Max Capacity if using WorkerType and NumberOfWorkers.
+	//
+	// The value that can be allocated for MaxCapacity depends on whether you are
+	// running a python shell job, or an Apache Spark ETL job:
+	//
+	//    * When you specify a python shell job (JobCommand.Name="pythonshell"),
+	//    you can allocate either 0.0625 or 1 DPU. The default is 0.0625 DPU.
+	//
+	//    * When you specify an Apache Spark ETL job (JobCommand.Name="glueetl"),
+	//    you can allocate from 2 to 100 DPUs. The default is 10 DPUs. This job
+	//    type cannot have a fractional DPU allocation.
 	MaxCapacity *float64 `type:"double"`
 
 	// The maximum number of times to retry this job after a JobRun fails.
@@ -17162,6 +19150,13 @@ type Job struct {
 	// Specifies configuration properties of a job notification.
 	NotificationProperty *NotificationProperty `type:"structure"`
 
+	// The number of workers of a defined workerType that are allocated when a job
+	// runs.
+	//
+	// The maximum number of workers you can define are 299 for G.1X, and 149 for
+	// G.2X.
+	NumberOfWorkers *int64 `type:"integer"`
+
 	// The name or ARN of the IAM role associated with this job.
 	Role *string `type:"string"`
 
@@ -17172,6 +19167,19 @@ type Job struct {
 	// resources before it is terminated and enters TIMEOUT status. The default
 	// is 2,880 minutes (48 hours).
 	Timeout *int64 `min:"1" type:"integer"`
+
+	// The type of predefined worker that is allocated when a job runs. Accepts
+	// a value of Standard, G.1X, or G.2X.
+	//
+	//    * For the Standard worker type, each worker provides 4 vCPU, 16 GB of
+	//    memory and a 50GB disk, and 2 executors per worker.
+	//
+	//    * For the G.1X worker type, each worker provides 4 vCPU, 16 GB of memory
+	//    and a 64GB disk, and 1 executor per worker.
+	//
+	//    * For the G.2X worker type, each worker provides 8 vCPU, 32 GB of memory
+	//    and a 128GB disk, and 1 executor per worker.
+	WorkerType *string `type:"string" enum:"WorkerType"`
 }
 
 // String returns the string representation
@@ -17262,6 +19270,12 @@ func (s *Job) SetNotificationProperty(v *NotificationProperty) *Job {
 	return s
 }
 
+// SetNumberOfWorkers sets the NumberOfWorkers field's value.
+func (s *Job) SetNumberOfWorkers(v int64) *Job {
+	s.NumberOfWorkers = &v
+	return s
+}
+
 // SetRole sets the Role field's value.
 func (s *Job) SetRole(v string) *Job {
 	s.Role = &v
@@ -17277,6 +19291,12 @@ func (s *Job) SetSecurityConfiguration(v string) *Job {
 // SetTimeout sets the Timeout field's value.
 func (s *Job) SetTimeout(v int64) *Job {
 	s.Timeout = &v
+	return s
+}
+
+// SetWorkerType sets the WorkerType field's value.
+func (s *Job) SetWorkerType(v string) *Job {
+	s.WorkerType = &v
 	return s
 }
 
@@ -17422,8 +19442,8 @@ type JobRun struct {
 	// Deprecated: This property is deprecated, use MaxCapacity instead.
 	AllocatedCapacity *int64 `deprecated:"true" type:"integer"`
 
-	// The job arguments associated with this run. These override equivalent default
-	// arguments set for the job.
+	// The job arguments associated with this run. For this job run, they replace
+	// the default arguments set in the job definition itself.
 	//
 	// You can specify arguments here that your own job-execution script consumes,
 	// as well as arguments that AWS Glue itself consumes.
@@ -17468,13 +19488,33 @@ type JobRun struct {
 	// then that security configuration will be used to encrypt the log group.
 	LogGroupName *string `type:"string"`
 
-	// AWS Glue supports running jobs on a JobCommand.Name="pythonshell" with allocated
-	// processing as low as 0.0625 DPU, which can be specified using MaxCapacity.
-	// Glue ETL jobs running in any other way cannot have fractional DPU allocations.
+	// The number of AWS Glue data processing units (DPUs) that can be allocated
+	// when this job runs. A DPU is a relative measure of processing power that
+	// consists of 4 vCPUs of compute capacity and 16 GB of memory. For more information,
+	// see the AWS Glue pricing page (https://aws.amazon.com/glue/pricing/).
+	//
+	// Do not set Max Capacity if using WorkerType and NumberOfWorkers.
+	//
+	// The value that can be allocated for MaxCapacity depends on whether you are
+	// running a python shell job, or an Apache Spark ETL job:
+	//
+	//    * When you specify a python shell job (JobCommand.Name="pythonshell"),
+	//    you can allocate either 0.0625 or 1 DPU. The default is 0.0625 DPU.
+	//
+	//    * When you specify an Apache Spark ETL job (JobCommand.Name="glueetl"),
+	//    you can allocate from 2 to 100 DPUs. The default is 10 DPUs. This job
+	//    type cannot have a fractional DPU allocation.
 	MaxCapacity *float64 `type:"double"`
 
 	// Specifies configuration properties of a job run notification.
 	NotificationProperty *NotificationProperty `type:"structure"`
+
+	// The number of workers of a defined workerType that are allocated when a job
+	// runs.
+	//
+	// The maximum number of workers you can define are 299 for G.1X, and 149 for
+	// G.2X.
+	NumberOfWorkers *int64 `type:"integer"`
 
 	// A list of predecessors to this job run.
 	PredecessorRuns []*Predecessor `type:"list"`
@@ -17498,6 +19538,19 @@ type JobRun struct {
 
 	// The name of the trigger that started this job run.
 	TriggerName *string `min:"1" type:"string"`
+
+	// The type of predefined worker that is allocated when a job runs. Accepts
+	// a value of Standard, G.1X, or G.2X.
+	//
+	//    * For the Standard worker type, each worker provides 4 vCPU, 16 GB of
+	//    memory and a 50GB disk, and 2 executors per worker.
+	//
+	//    * For the G.1X worker type, each worker provides 4 vCPU, 16 GB of memory
+	//    and a 64GB disk, and 1 executor per worker.
+	//
+	//    * For the G.2X worker type, each worker provides 8 vCPU, 32 GB of memory
+	//    and a 128GB disk, and 1 executor per worker.
+	WorkerType *string `type:"string" enum:"WorkerType"`
 }
 
 // String returns the string representation
@@ -17588,6 +19641,12 @@ func (s *JobRun) SetNotificationProperty(v *NotificationProperty) *JobRun {
 	return s
 }
 
+// SetNumberOfWorkers sets the NumberOfWorkers field's value.
+func (s *JobRun) SetNumberOfWorkers(v int64) *JobRun {
+	s.NumberOfWorkers = &v
+	return s
+}
+
 // SetPredecessorRuns sets the PredecessorRuns field's value.
 func (s *JobRun) SetPredecessorRuns(v []*Predecessor) *JobRun {
 	s.PredecessorRuns = v
@@ -17621,6 +19680,12 @@ func (s *JobRun) SetTimeout(v int64) *JobRun {
 // SetTriggerName sets the TriggerName field's value.
 func (s *JobRun) SetTriggerName(v string) *JobRun {
 	s.TriggerName = &v
+	return s
+}
+
+// SetWorkerType sets the WorkerType field's value.
+func (s *JobRun) SetWorkerType(v string) *JobRun {
+	s.WorkerType = &v
 	return s
 }
 
@@ -17670,9 +19735,22 @@ type JobUpdate struct {
 	// This field is reserved for future use.
 	LogUri *string `type:"string"`
 
-	// AWS Glue supports running jobs on a JobCommand.Name="pythonshell" with allocated
-	// processing as low as 0.0625 DPU, which can be specified using MaxCapacity.
-	// Glue ETL jobs running in any other way cannot have fractional DPU allocations.
+	// The number of AWS Glue data processing units (DPUs) that can be allocated
+	// when this job runs. A DPU is a relative measure of processing power that
+	// consists of 4 vCPUs of compute capacity and 16 GB of memory. For more information,
+	// see the AWS Glue pricing page (https://aws.amazon.com/glue/pricing/).
+	//
+	// Do not set Max Capacity if using WorkerType and NumberOfWorkers.
+	//
+	// The value that can be allocated for MaxCapacity depends on whether you are
+	// running a python shell job, or an Apache Spark ETL job:
+	//
+	//    * When you specify a python shell job (JobCommand.Name="pythonshell"),
+	//    you can allocate either 0.0625 or 1 DPU. The default is 0.0625 DPU.
+	//
+	//    * When you specify an Apache Spark ETL job (JobCommand.Name="glueetl"),
+	//    you can allocate from 2 to 100 DPUs. The default is 10 DPUs. This job
+	//    type cannot have a fractional DPU allocation.
 	MaxCapacity *float64 `type:"double"`
 
 	// The maximum number of times to retry this job if it fails.
@@ -17680,6 +19758,13 @@ type JobUpdate struct {
 
 	// Specifies configuration properties of a job notification.
 	NotificationProperty *NotificationProperty `type:"structure"`
+
+	// The number of workers of a defined workerType that are allocated when a job
+	// runs.
+	//
+	// The maximum number of workers you can define are 299 for G.1X, and 149 for
+	// G.2X.
+	NumberOfWorkers *int64 `type:"integer"`
 
 	// The name or ARN of the IAM role associated with this job (required).
 	Role *string `type:"string"`
@@ -17691,6 +19776,19 @@ type JobUpdate struct {
 	// resources before it is terminated and enters TIMEOUT status. The default
 	// is 2,880 minutes (48 hours).
 	Timeout *int64 `min:"1" type:"integer"`
+
+	// The type of predefined worker that is allocated when a job runs. Accepts
+	// a value of Standard, G.1X, or G.2X.
+	//
+	//    * For the Standard worker type, each worker provides 4 vCPU, 16 GB of
+	//    memory and a 50GB disk, and 2 executors per worker.
+	//
+	//    * For the G.1X worker type, each worker provides 4 vCPU, 16 GB of memory
+	//    and a 64GB disk, and 1 executor per worker.
+	//
+	//    * For the G.2X worker type, each worker provides 8 vCPU, 32 GB of memory
+	//    and a 128GB disk, and 1 executor per worker.
+	WorkerType *string `type:"string" enum:"WorkerType"`
 }
 
 // String returns the string representation
@@ -17784,6 +19882,12 @@ func (s *JobUpdate) SetNotificationProperty(v *NotificationProperty) *JobUpdate 
 	return s
 }
 
+// SetNumberOfWorkers sets the NumberOfWorkers field's value.
+func (s *JobUpdate) SetNumberOfWorkers(v int64) *JobUpdate {
+	s.NumberOfWorkers = &v
+	return s
+}
+
 // SetRole sets the Role field's value.
 func (s *JobUpdate) SetRole(v string) *JobUpdate {
 	s.Role = &v
@@ -17799,6 +19903,12 @@ func (s *JobUpdate) SetSecurityConfiguration(v string) *JobUpdate {
 // SetTimeout sets the Timeout field's value.
 func (s *JobUpdate) SetTimeout(v int64) *JobUpdate {
 	s.Timeout = &v
+	return s
+}
+
+// SetWorkerType sets the WorkerType field's value.
+func (s *JobUpdate) SetWorkerType(v string) *JobUpdate {
+	s.WorkerType = &v
 	return s
 }
 
@@ -17934,6 +20044,371 @@ func (s *LastCrawlInfo) SetStartTime(v time.Time) *LastCrawlInfo {
 // SetStatus sets the Status field's value.
 func (s *LastCrawlInfo) SetStatus(v string) *LastCrawlInfo {
 	s.Status = &v
+	return s
+}
+
+type ListCrawlersInput struct {
+	_ struct{} `type:"structure"`
+
+	// The maximum size of a list to return.
+	MaxResults *int64 `min:"1" type:"integer"`
+
+	// A continuation token, if this is a continuation request.
+	NextToken *string `type:"string"`
+
+	// Specifies to return only these tagged resources.
+	Tags map[string]*string `type:"map"`
+}
+
+// String returns the string representation
+func (s ListCrawlersInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListCrawlersInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListCrawlersInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListCrawlersInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListCrawlersInput) SetMaxResults(v int64) *ListCrawlersInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListCrawlersInput) SetNextToken(v string) *ListCrawlersInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *ListCrawlersInput) SetTags(v map[string]*string) *ListCrawlersInput {
+	s.Tags = v
+	return s
+}
+
+type ListCrawlersOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The names of all crawlers in the account, or the crawlers with the specified
+	// tags.
+	CrawlerNames []*string `type:"list"`
+
+	// A continuation token, if the returned list does not contain the last metric
+	// available.
+	NextToken *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ListCrawlersOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListCrawlersOutput) GoString() string {
+	return s.String()
+}
+
+// SetCrawlerNames sets the CrawlerNames field's value.
+func (s *ListCrawlersOutput) SetCrawlerNames(v []*string) *ListCrawlersOutput {
+	s.CrawlerNames = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListCrawlersOutput) SetNextToken(v string) *ListCrawlersOutput {
+	s.NextToken = &v
+	return s
+}
+
+type ListDevEndpointsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The maximum size of a list to return.
+	MaxResults *int64 `min:"1" type:"integer"`
+
+	// A continuation token, if this is a continuation request.
+	NextToken *string `type:"string"`
+
+	// Specifies to return only these tagged resources.
+	Tags map[string]*string `type:"map"`
+}
+
+// String returns the string representation
+func (s ListDevEndpointsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListDevEndpointsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListDevEndpointsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListDevEndpointsInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListDevEndpointsInput) SetMaxResults(v int64) *ListDevEndpointsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListDevEndpointsInput) SetNextToken(v string) *ListDevEndpointsInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *ListDevEndpointsInput) SetTags(v map[string]*string) *ListDevEndpointsInput {
+	s.Tags = v
+	return s
+}
+
+type ListDevEndpointsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The names of all DevEndpoints in the account, or the DevEndpoints with the
+	// specified tags.
+	DevEndpointNames []*string `type:"list"`
+
+	// A continuation token, if the returned list does not contain the last metric
+	// available.
+	NextToken *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ListDevEndpointsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListDevEndpointsOutput) GoString() string {
+	return s.String()
+}
+
+// SetDevEndpointNames sets the DevEndpointNames field's value.
+func (s *ListDevEndpointsOutput) SetDevEndpointNames(v []*string) *ListDevEndpointsOutput {
+	s.DevEndpointNames = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListDevEndpointsOutput) SetNextToken(v string) *ListDevEndpointsOutput {
+	s.NextToken = &v
+	return s
+}
+
+type ListJobsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The maximum size of a list to return.
+	MaxResults *int64 `min:"1" type:"integer"`
+
+	// A continuation token, if this is a continuation request.
+	NextToken *string `type:"string"`
+
+	// Specifies to return only these tagged resources.
+	Tags map[string]*string `type:"map"`
+}
+
+// String returns the string representation
+func (s ListJobsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListJobsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListJobsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListJobsInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListJobsInput) SetMaxResults(v int64) *ListJobsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListJobsInput) SetNextToken(v string) *ListJobsInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *ListJobsInput) SetTags(v map[string]*string) *ListJobsInput {
+	s.Tags = v
+	return s
+}
+
+type ListJobsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The names of all jobs in the account, or the jobs with the specified tags.
+	JobNames []*string `type:"list"`
+
+	// A continuation token, if the returned list does not contain the last metric
+	// available.
+	NextToken *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ListJobsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListJobsOutput) GoString() string {
+	return s.String()
+}
+
+// SetJobNames sets the JobNames field's value.
+func (s *ListJobsOutput) SetJobNames(v []*string) *ListJobsOutput {
+	s.JobNames = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListJobsOutput) SetNextToken(v string) *ListJobsOutput {
+	s.NextToken = &v
+	return s
+}
+
+type ListTriggersInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the job for which to retrieve triggers. The trigger that can
+	// start this job will be returned, and if there is no such trigger, all triggers
+	// will be returned.
+	DependentJobName *string `min:"1" type:"string"`
+
+	// The maximum size of a list to return.
+	MaxResults *int64 `min:"1" type:"integer"`
+
+	// A continuation token, if this is a continuation request.
+	NextToken *string `type:"string"`
+
+	// Specifies to return only these tagged resources.
+	Tags map[string]*string `type:"map"`
+}
+
+// String returns the string representation
+func (s ListTriggersInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListTriggersInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListTriggersInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListTriggersInput"}
+	if s.DependentJobName != nil && len(*s.DependentJobName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DependentJobName", 1))
+	}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDependentJobName sets the DependentJobName field's value.
+func (s *ListTriggersInput) SetDependentJobName(v string) *ListTriggersInput {
+	s.DependentJobName = &v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListTriggersInput) SetMaxResults(v int64) *ListTriggersInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListTriggersInput) SetNextToken(v string) *ListTriggersInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *ListTriggersInput) SetTags(v map[string]*string) *ListTriggersInput {
+	s.Tags = v
+	return s
+}
+
+type ListTriggersOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A continuation token, if the returned list does not contain the last metric
+	// available.
+	NextToken *string `type:"string"`
+
+	// The names of all triggers in the account, or the triggers with the specified
+	// tags.
+	TriggerNames []*string `type:"list"`
+}
+
+// String returns the string representation
+func (s ListTriggersOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListTriggersOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListTriggersOutput) SetNextToken(v string) *ListTriggersOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetTriggerNames sets the TriggerNames field's value.
+func (s *ListTriggersOutput) SetTriggerNames(v []*string) *ListTriggersOutput {
+	s.TriggerNames = v
 	return s
 }
 
@@ -18319,7 +20794,8 @@ type PartitionInput struct {
 	// Provides information about the physical location where the partition is stored.
 	StorageDescriptor *StorageDescriptor `type:"structure"`
 
-	// The values of the partition.
+	// The values of the partition. Although this parameter is not required by the
+	// SDK, you must specify this parameter for a valid input.
 	Values []*string `type:"list"`
 }
 
@@ -18421,9 +20897,9 @@ func (s *PartitionValueList) SetValues(v []*string) *PartitionValueList {
 type PhysicalConnectionRequirements struct {
 	_ struct{} `type:"structure"`
 
-	// The connection's availability zone. This field is redundant, since the specified
-	// subnet implies the availability zone to be used. The field must be populated
-	// now, but will be deprecated in the future.
+	// The connection's Availability Zone. This field is redundant because the specified
+	// subnet implies the Availability Zone to be used. Currently the field must
+	// be populated, but it will be deprecated in the future.
 	AvailabilityZone *string `min:"1" type:"string"`
 
 	// The security group ID list used by the connection.
@@ -18569,7 +21045,7 @@ type PutDataCatalogEncryptionSettingsInput struct {
 	_ struct{} `type:"structure"`
 
 	// The ID of the Data Catalog for which to set the security configuration. If
-	// none is supplied, the AWS account ID is used by default.
+	// none is provided, the AWS account ID is used by default.
 	CatalogId *string `min:"1" type:"string"`
 
 	// The security configuration to set.
@@ -18643,7 +21119,7 @@ type PutResourcePolicyInput struct {
 	// the call will not depend on the existence of a policy.
 	PolicyExistsCondition *string `type:"string" enum:"ExistCondition"`
 
-	// This is the hash value returned when the previous policy was set using PutResourcePolicy.
+	// The hash value returned when the previous policy was set using PutResourcePolicy.
 	// Its purpose is to prevent concurrent modifications of a policy. Do not use
 	// this parameter if no previous policy has been set.
 	PolicyHashCondition *string `min:"1" type:"string"`
@@ -19295,8 +21771,8 @@ type StartJobRunInput struct {
 	// Deprecated: This property is deprecated, use MaxCapacity instead.
 	AllocatedCapacity *int64 `deprecated:"true" type:"integer"`
 
-	// The job arguments specifically for this run. They override the equivalent
-	// default arguments set for in the job definition itself.
+	// The job arguments specifically for this run. For this job run, they replace
+	// the default arguments set in the job definition itself.
 	//
 	// You can specify arguments here that your own job-execution script consumes,
 	// as well as arguments that AWS Glue itself consumes.
@@ -19318,13 +21794,33 @@ type StartJobRunInput struct {
 	// The ID of a previous JobRun to retry.
 	JobRunId *string `min:"1" type:"string"`
 
-	// AWS Glue supports running jobs on a JobCommand.Name="pythonshell" with allocated
-	// processing as low as 0.0625 DPU, which can be specified using MaxCapacity.
-	// Glue ETL jobs running in any other way cannot have fractional DPU allocations.
+	// The number of AWS Glue data processing units (DPUs) that can be allocated
+	// when this job runs. A DPU is a relative measure of processing power that
+	// consists of 4 vCPUs of compute capacity and 16 GB of memory. For more information,
+	// see the AWS Glue pricing page (https://aws.amazon.com/glue/pricing/).
+	//
+	// Do not set Max Capacity if using WorkerType and NumberOfWorkers.
+	//
+	// The value that can be allocated for MaxCapacity depends on whether you are
+	// running a python shell job, or an Apache Spark ETL job:
+	//
+	//    * When you specify a python shell job (JobCommand.Name="pythonshell"),
+	//    you can allocate either 0.0625 or 1 DPU. The default is 0.0625 DPU.
+	//
+	//    * When you specify an Apache Spark ETL job (JobCommand.Name="glueetl"),
+	//    you can allocate from 2 to 100 DPUs. The default is 10 DPUs. This job
+	//    type cannot have a fractional DPU allocation.
 	MaxCapacity *float64 `type:"double"`
 
 	// Specifies configuration properties of a job run notification.
 	NotificationProperty *NotificationProperty `type:"structure"`
+
+	// The number of workers of a defined workerType that are allocated when a job
+	// runs.
+	//
+	// The maximum number of workers you can define are 299 for G.1X, and 149 for
+	// G.2X.
+	NumberOfWorkers *int64 `type:"integer"`
 
 	// The name of the SecurityConfiguration structure to be used with this job
 	// run.
@@ -19335,6 +21831,19 @@ type StartJobRunInput struct {
 	// default is 2,880 minutes (48 hours). This overrides the timeout value set
 	// in the parent job.
 	Timeout *int64 `min:"1" type:"integer"`
+
+	// The type of predefined worker that is allocated when a job runs. Accepts
+	// a value of Standard, G.1X, or G.2X.
+	//
+	//    * For the Standard worker type, each worker provides 4 vCPU, 16 GB of
+	//    memory and a 50GB disk, and 2 executors per worker.
+	//
+	//    * For the G.1X worker type, each worker provides 4 vCPU, 16 GB of memory
+	//    and a 64GB disk, and 1 executor per worker.
+	//
+	//    * For the G.2X worker type, each worker provides 8 vCPU, 32 GB of memory
+	//    and a 128GB disk, and 1 executor per worker.
+	WorkerType *string `type:"string" enum:"WorkerType"`
 }
 
 // String returns the string representation
@@ -19413,6 +21922,12 @@ func (s *StartJobRunInput) SetNotificationProperty(v *NotificationProperty) *Sta
 	return s
 }
 
+// SetNumberOfWorkers sets the NumberOfWorkers field's value.
+func (s *StartJobRunInput) SetNumberOfWorkers(v int64) *StartJobRunInput {
+	s.NumberOfWorkers = &v
+	return s
+}
+
 // SetSecurityConfiguration sets the SecurityConfiguration field's value.
 func (s *StartJobRunInput) SetSecurityConfiguration(v string) *StartJobRunInput {
 	s.SecurityConfiguration = &v
@@ -19422,6 +21937,12 @@ func (s *StartJobRunInput) SetSecurityConfiguration(v string) *StartJobRunInput 
 // SetTimeout sets the Timeout field's value.
 func (s *StartJobRunInput) SetTimeout(v int64) *StartJobRunInput {
 	s.Timeout = &v
+	return s
+}
+
+// SetWorkerType sets the WorkerType field's value.
+func (s *StartJobRunInput) SetWorkerType(v string) *StartJobRunInput {
+	s.WorkerType = &v
 	return s
 }
 
@@ -20297,6 +22818,76 @@ func (s *TableVersionError) SetVersionId(v string) *TableVersionError {
 	return s
 }
 
+type TagResourceInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the AWS Glue resource to which to add the tags. For more information
+	// about AWS Glue resource ARNs, see the AWS Glue ARN string pattern (http://docs.aws.amazon.com/glue/latest/dg/aws-glue-api-common.html#aws-glue-api-regex-aws-glue-arn-id).
+	//
+	// ResourceArn is a required field
+	ResourceArn *string `min:"1" type:"string" required:"true"`
+
+	// Tags to add to this resource.
+	//
+	// TagsToAdd is a required field
+	TagsToAdd map[string]*string `type:"map" required:"true"`
+}
+
+// String returns the string representation
+func (s TagResourceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TagResourceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *TagResourceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "TagResourceInput"}
+	if s.ResourceArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceArn"))
+	}
+	if s.ResourceArn != nil && len(*s.ResourceArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceArn", 1))
+	}
+	if s.TagsToAdd == nil {
+		invalidParams.Add(request.NewErrParamRequired("TagsToAdd"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetResourceArn sets the ResourceArn field's value.
+func (s *TagResourceInput) SetResourceArn(v string) *TagResourceInput {
+	s.ResourceArn = &v
+	return s
+}
+
+// SetTagsToAdd sets the TagsToAdd field's value.
+func (s *TagResourceInput) SetTagsToAdd(v map[string]*string) *TagResourceInput {
+	s.TagsToAdd = v
+	return s
+}
+
+type TagResourceOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s TagResourceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TagResourceOutput) GoString() string {
+	return s.String()
+}
+
 // Information about a specific trigger.
 type Trigger struct {
 	_ struct{} `type:"structure"`
@@ -20479,8 +23070,80 @@ func (s *TriggerUpdate) SetSchedule(v string) *TriggerUpdate {
 	return s
 }
 
+type UntagResourceInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the resource from which to remove the tags.
+	//
+	// ResourceArn is a required field
+	ResourceArn *string `min:"1" type:"string" required:"true"`
+
+	// Tags to remove from this resource.
+	//
+	// TagsToRemove is a required field
+	TagsToRemove []*string `type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s UntagResourceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UntagResourceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UntagResourceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UntagResourceInput"}
+	if s.ResourceArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceArn"))
+	}
+	if s.ResourceArn != nil && len(*s.ResourceArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceArn", 1))
+	}
+	if s.TagsToRemove == nil {
+		invalidParams.Add(request.NewErrParamRequired("TagsToRemove"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetResourceArn sets the ResourceArn field's value.
+func (s *UntagResourceInput) SetResourceArn(v string) *UntagResourceInput {
+	s.ResourceArn = &v
+	return s
+}
+
+// SetTagsToRemove sets the TagsToRemove field's value.
+func (s *UntagResourceInput) SetTagsToRemove(v []*string) *UntagResourceInput {
+	s.TagsToRemove = v
+	return s
+}
+
+type UntagResourceOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s UntagResourceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UntagResourceOutput) GoString() string {
+	return s.String()
+}
+
 type UpdateClassifierInput struct {
 	_ struct{} `type:"structure"`
+
+	// A CsvClassifier object with updated fields.
+	CsvClassifier *UpdateCsvClassifierRequest `type:"structure"`
 
 	// A GrokClassifier object with updated fields.
 	GrokClassifier *UpdateGrokClassifierRequest `type:"structure"`
@@ -20505,6 +23168,11 @@ func (s UpdateClassifierInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *UpdateClassifierInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "UpdateClassifierInput"}
+	if s.CsvClassifier != nil {
+		if err := s.CsvClassifier.Validate(); err != nil {
+			invalidParams.AddNested("CsvClassifier", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.GrokClassifier != nil {
 		if err := s.GrokClassifier.Validate(); err != nil {
 			invalidParams.AddNested("GrokClassifier", err.(request.ErrInvalidParams))
@@ -20525,6 +23193,12 @@ func (s *UpdateClassifierInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetCsvClassifier sets the CsvClassifier field's value.
+func (s *UpdateClassifierInput) SetCsvClassifier(v *UpdateCsvClassifierRequest) *UpdateClassifierInput {
+	s.CsvClassifier = v
+	return s
 }
 
 // SetGrokClassifier sets the GrokClassifier field's value.
@@ -20562,7 +23236,7 @@ func (s UpdateClassifierOutput) GoString() string {
 type UpdateConnectionInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ID of the Data Catalog in which the connection resides. If none is supplied,
+	// The ID of the Data Catalog in which the connection resides. If none is provided,
 	// the AWS account ID is used by default.
 	CatalogId *string `min:"1" type:"string"`
 
@@ -20866,6 +23540,110 @@ func (s UpdateCrawlerScheduleOutput) GoString() string {
 	return s.String()
 }
 
+// Specifies a custom CSV classifier to be updated.
+type UpdateCsvClassifierRequest struct {
+	_ struct{} `type:"structure"`
+
+	// Enables the processing of files that contain only one column.
+	AllowSingleColumn *bool `type:"boolean"`
+
+	// Indicates whether the CSV file contains a header.
+	ContainsHeader *string `type:"string" enum:"CsvHeaderOption"`
+
+	// A custom symbol to denote what separates each column entry in the row.
+	Delimiter *string `min:"1" type:"string"`
+
+	// Specifies not to trim values before identifying the type of column values.
+	// The default value is true.
+	DisableValueTrimming *bool `type:"boolean"`
+
+	// A list of strings representing column names.
+	Header []*string `type:"list"`
+
+	// The name of the classifier.
+	//
+	// Name is a required field
+	Name *string `min:"1" type:"string" required:"true"`
+
+	// A custom symbol to denote what combines content into a single column value.
+	// Must be different from the column delimiter.
+	QuoteSymbol *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s UpdateCsvClassifierRequest) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateCsvClassifierRequest) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateCsvClassifierRequest) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateCsvClassifierRequest"}
+	if s.Delimiter != nil && len(*s.Delimiter) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Delimiter", 1))
+	}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
+	}
+	if s.QuoteSymbol != nil && len(*s.QuoteSymbol) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("QuoteSymbol", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAllowSingleColumn sets the AllowSingleColumn field's value.
+func (s *UpdateCsvClassifierRequest) SetAllowSingleColumn(v bool) *UpdateCsvClassifierRequest {
+	s.AllowSingleColumn = &v
+	return s
+}
+
+// SetContainsHeader sets the ContainsHeader field's value.
+func (s *UpdateCsvClassifierRequest) SetContainsHeader(v string) *UpdateCsvClassifierRequest {
+	s.ContainsHeader = &v
+	return s
+}
+
+// SetDelimiter sets the Delimiter field's value.
+func (s *UpdateCsvClassifierRequest) SetDelimiter(v string) *UpdateCsvClassifierRequest {
+	s.Delimiter = &v
+	return s
+}
+
+// SetDisableValueTrimming sets the DisableValueTrimming field's value.
+func (s *UpdateCsvClassifierRequest) SetDisableValueTrimming(v bool) *UpdateCsvClassifierRequest {
+	s.DisableValueTrimming = &v
+	return s
+}
+
+// SetHeader sets the Header field's value.
+func (s *UpdateCsvClassifierRequest) SetHeader(v []*string) *UpdateCsvClassifierRequest {
+	s.Header = v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *UpdateCsvClassifierRequest) SetName(v string) *UpdateCsvClassifierRequest {
+	s.Name = &v
+	return s
+}
+
+// SetQuoteSymbol sets the QuoteSymbol field's value.
+func (s *UpdateCsvClassifierRequest) SetQuoteSymbol(v string) *UpdateCsvClassifierRequest {
+	s.QuoteSymbol = &v
+	return s
+}
+
 type UpdateDatabaseInput struct {
 	_ struct{} `type:"structure"`
 
@@ -20958,11 +23736,18 @@ func (s UpdateDatabaseOutput) GoString() string {
 type UpdateDevEndpointInput struct {
 	_ struct{} `type:"structure"`
 
+	// The map of arguments to add the map of arguments used to configure the DevEndpoint.
+	AddArguments map[string]*string `type:"map"`
+
 	// The list of public keys for the DevEndpoint to use.
 	AddPublicKeys []*string `type:"list"`
 
 	// Custom Python or Java libraries to be loaded in the DevEndpoint.
 	CustomLibraries *DevEndpointCustomLibraries `type:"structure"`
+
+	// The list of argument keys to be deleted from the map of arguments used to
+	// configure the DevEndpoint.
+	DeleteArguments []*string `type:"list"`
 
 	// The list of public keys to be deleted from the DevEndpoint.
 	DeletePublicKeys []*string `type:"list"`
@@ -21003,6 +23788,12 @@ func (s *UpdateDevEndpointInput) Validate() error {
 	return nil
 }
 
+// SetAddArguments sets the AddArguments field's value.
+func (s *UpdateDevEndpointInput) SetAddArguments(v map[string]*string) *UpdateDevEndpointInput {
+	s.AddArguments = v
+	return s
+}
+
 // SetAddPublicKeys sets the AddPublicKeys field's value.
 func (s *UpdateDevEndpointInput) SetAddPublicKeys(v []*string) *UpdateDevEndpointInput {
 	s.AddPublicKeys = v
@@ -21012,6 +23803,12 @@ func (s *UpdateDevEndpointInput) SetAddPublicKeys(v []*string) *UpdateDevEndpoin
 // SetCustomLibraries sets the CustomLibraries field's value.
 func (s *UpdateDevEndpointInput) SetCustomLibraries(v *DevEndpointCustomLibraries) *UpdateDevEndpointInput {
 	s.CustomLibraries = v
+	return s
+}
+
+// SetDeleteArguments sets the DeleteArguments field's value.
+func (s *UpdateDevEndpointInput) SetDeleteArguments(v []*string) *UpdateDevEndpointInput {
+	s.DeleteArguments = v
 	return s
 }
 
@@ -22042,6 +24839,17 @@ const (
 )
 
 const (
+	// CsvHeaderOptionUnknown is a CsvHeaderOption enum value
+	CsvHeaderOptionUnknown = "UNKNOWN"
+
+	// CsvHeaderOptionPresent is a CsvHeaderOption enum value
+	CsvHeaderOptionPresent = "PRESENT"
+
+	// CsvHeaderOptionAbsent is a CsvHeaderOption enum value
+	CsvHeaderOptionAbsent = "ABSENT"
+)
+
+const (
 	// DeleteBehaviorLog is a DeleteBehavior enum value
 	DeleteBehaviorLog = "LOG"
 
@@ -22213,4 +25021,15 @@ const (
 
 	// UpdateBehaviorUpdateInDatabase is a UpdateBehavior enum value
 	UpdateBehaviorUpdateInDatabase = "UPDATE_IN_DATABASE"
+)
+
+const (
+	// WorkerTypeStandard is a WorkerType enum value
+	WorkerTypeStandard = "Standard"
+
+	// WorkerTypeG1x is a WorkerType enum value
+	WorkerTypeG1x = "G.1X"
+
+	// WorkerTypeG2x is a WorkerType enum value
+	WorkerTypeG2x = "G.2X"
 )

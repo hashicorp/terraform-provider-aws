@@ -6,7 +6,7 @@ description: |-
   Terraform resource for managing an AWS Elasticsearch Domain.
 ---
 
-# aws_elasticsearch_domain
+# Resource: aws_elasticsearch_domain
 
 Manages an AWS Elasticsearch Domain.
 
@@ -172,7 +172,7 @@ resource "aws_elasticsearch_domain" "es" {
     security_group_ids = ["${aws_security_group.elasticsearch.id}"]
   }
 
-  advanced_options {
+  advanced_options = {
     "rest.action.multi.allow_explicit_index" = "true"
   }
 

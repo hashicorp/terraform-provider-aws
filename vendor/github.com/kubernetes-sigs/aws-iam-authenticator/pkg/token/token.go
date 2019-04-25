@@ -20,10 +20,12 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -78,6 +80,7 @@ const (
 	// Format of the X-Amz-Date header used for expiration
 	// https://golang.org/pkg/time/#pkg-constants
 	dateHeaderFormat = "20060102T150405Z"
+	hostRegexp       = `^sts(\.[a-z1-9\-]+)?\.amazonaws\.com(\.cn)?$`
 )
 
 // Token is generated and used by Kubernetes client-go to authenticate with a Kubernetes cluster.
@@ -154,12 +157,14 @@ type Generator interface {
 
 type generator struct {
 	forwardSessionName bool
+	cache              bool
 }
 
 // NewGenerator creates a Generator and returns it.
-func NewGenerator(forwardSessionName bool) (Generator, error) {
+func NewGenerator(forwardSessionName bool, cache bool) (Generator, error) {
 	return generator{
 		forwardSessionName: forwardSessionName,
+		cache:              cache,
 	}, nil
 }
 
@@ -188,11 +193,26 @@ func (g generator) GetWithRole(clusterID string, roleARN string) (Token, error) 
 	if err != nil {
 		return Token{}, fmt.Errorf("could not create session: %v", err)
 	}
+	if g.cache {
+		// figure out what profile we're using
+		var profile string
+		if v := os.Getenv("AWS_PROFILE"); len(v) > 0 {
+			profile = v
+		} else {
+			profile = session.DefaultSharedConfigProfile
+		}
+		// create a cacheing Provider wrapper around the Credentials
+		if cacheProvider, err := NewFileCacheProvider(clusterID, profile, roleARN, sess.Config.Credentials); err == nil {
+			sess.Config.Credentials = credentials.NewCredentials(&cacheProvider)
+		} else {
+			_, _ = fmt.Fprintf(os.Stderr, "unable to use cache: %v\n", err)
+		}
+	}
 
 	return g.GetWithRoleForSession(clusterID, roleARN, sess)
 }
 
-// GetWithRole assumes the given AWS IAM role for the given session and behaves
+// GetWithRoleForSession assumes the given AWS IAM role for the given session and behaves
 // like GetWithRole.
 func (g generator) GetWithRoleForSession(clusterID string, roleARN string, sess *session.Session) (Token, error) {
 	// use an STS client based on the direct credentials
@@ -287,6 +307,15 @@ func NewVerifier(clusterID string) Verifier {
 	}
 }
 
+// verify a sts host, doc: http://docs.amazonaws.cn/en_us/general/latest/gr/rande.html#sts_region
+func (v tokenVerifier) verifyHost(host string) error {
+	if match, _ := regexp.MatchString(hostRegexp, host); !match {
+		return FormatError{fmt.Sprintf("unexpected hostname %q in pre-signed URL", host)}
+	}
+
+	return nil
+}
+
 // Verify a token is valid for the specified clusterID. On success, returns an
 // Identity that contains information about the AWS principal that created the
 // token. On failure, returns nil and a non-nil error.
@@ -314,8 +343,8 @@ func (v tokenVerifier) Verify(token string) (*Identity, error) {
 		return nil, FormatError{fmt.Sprintf("unexpected scheme %q in pre-signed URL", parsedURL.Scheme)}
 	}
 
-	if parsedURL.Host != "sts.amazonaws.com" {
-		return nil, FormatError{"unexpected hostname in pre-signed URL"}
+	if err = v.verifyHost(parsedURL.Host); err != nil {
+		return nil, err
 	}
 
 	if parsedURL.Path != "/" {

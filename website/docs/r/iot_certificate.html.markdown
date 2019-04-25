@@ -6,7 +6,7 @@ description: |-
     Creates and manages an AWS IoT certificate.
 ---
 
-# aws_iot_certificate
+# Resource: aws_iot_certificate
 
 Creates and manages an AWS IoT certificate.
 

@@ -6,7 +6,7 @@ description: |-
   Provides an OpsWorks RDS DB Instance resource.
 ---
 
-# aws_opsworks_rds_db_instance
+# Resource: aws_opsworks_rds_db_instance
 
 Provides an OpsWorks RDS DB Instance resource.
 
