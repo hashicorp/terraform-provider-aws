@@ -1939,7 +1939,7 @@ type ComputeResource struct {
 	// The Amazon ECS instance profile applied to Amazon EC2 instances in a compute
 	// environment. You can specify the short name or full Amazon Resource Name
 	// (ARN) of an instance profile. For example, ecsInstanceRole or arn:aws:iam::<aws_account_id>:instance-profile/ecsInstanceRole.
-	// For more information, see Amazon ECS Instance Role (http://docs.aws.amazon.com/batch/latest/userguide/instance_IAM_role.html)
+	// For more information, see Amazon ECS Instance Role (https://docs.aws.amazon.com/batch/latest/userguide/instance_IAM_role.html)
 	// in the AWS Batch User Guide.
 	//
 	// InstanceRole is a required field
@@ -1948,8 +1948,8 @@ type ComputeResource struct {
 	// The instances types that may be launched. You can specify instance families
 	// to launch any instance type within those families (for example, c4 or p3),
 	// or you can specify specific sizes within a family (such as c4.8xlarge). You
-	// can also choose optimal to pick instance types (from the latest C, M, and
-	// R instance families) on the fly that match the demand of your job queues.
+	// can also choose optimal to pick instance types (from the C, M, and R instance
+	// families) on the fly that match the demand of your job queues.
 	//
 	// InstanceTypes is a required field
 	InstanceTypes []*string `locationName:"instanceTypes" type:"list" required:"true"`
@@ -1958,6 +1958,8 @@ type ComputeResource struct {
 	// resource parameters that you specify in a CreateComputeEnvironment API operation
 	// override the same parameters in the launch template. You must specify either
 	// the launch template ID or launch template name in the request, but not both.
+	// For more information, see Launch Template Support (https://docs.aws.amazon.com/batch/latest/userguide/launch-templates.html)
+	// in the AWS Batch User Guide.
 	LaunchTemplate *LaunchTemplateSpecification `locationName:"launchTemplate" type:"structure"`
 
 	// The maximum number of EC2 vCPUs that an environment can reach.
@@ -1985,7 +1987,9 @@ type ComputeResource struct {
 	SecurityGroupIds []*string `locationName:"securityGroupIds" type:"list"`
 
 	// The Amazon Resource Name (ARN) of the Amazon EC2 Spot Fleet IAM role applied
-	// to a SPOT compute environment.
+	// to a SPOT compute environment. For more information, see Amazon EC2 Spot
+	// Fleet Role (https://docs.aws.amazon.com/batch/latest/userguide/spot_fleet_IAM_role.html)
+	// in the AWS Batch User Guide.
 	SpotIamFleetRole *string `locationName:"spotIamFleetRole" type:"string"`
 
 	// The VPC subnets into which the compute resources are launched.
@@ -1994,10 +1998,12 @@ type ComputeResource struct {
 	Subnets []*string `locationName:"subnets" type:"list" required:"true"`
 
 	// Key-value pair tags to be applied to resources that are launched in the compute
-	// environment.
+	// environment. For AWS Batch, these take the form of "String1": "String2",
+	// where String1 is the tag key and String2 is the tag value—for example, {
+	// "Name": "AWS Batch Instance - C4OnDemand" }.
 	Tags map[string]*string `locationName:"tags" type:"map"`
 
-	// The type of compute environment.
+	// The type of compute environment: EC2 or SPOT.
 	//
 	// Type is a required field
 	Type *string `locationName:"type" type:"string" required:"true" enum:"CRType"`
@@ -2488,16 +2494,16 @@ type ContainerProperties struct {
 	_ struct{} `type:"structure"`
 
 	// The command that is passed to the container. This parameter maps to Cmd in
-	// the Create a container (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.23/#create-a-container)
-	// section of the Docker Remote API (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.23/)
+	// the Create a container (https://docs.docker.com/engine/api/v1.23/#create-a-container)
+	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.23/)
 	// and the COMMAND parameter to docker run (https://docs.docker.com/engine/reference/run/).
 	// For more information, see https://docs.docker.com/engine/reference/builder/#cmd
 	// (https://docs.docker.com/engine/reference/builder/#cmd).
 	Command []*string `locationName:"command" type:"list"`
 
 	// The environment variables to pass to a container. This parameter maps to
-	// Env in the Create a container (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.23/#create-a-container)
-	// section of the Docker Remote API (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.23/)
+	// Env in the Create a container (https://docs.docker.com/engine/api/v1.23/#create-a-container)
+	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.23/)
 	// and the --env option to docker run (https://docs.docker.com/engine/reference/run/).
 	//
 	// We do not recommend using plaintext environment variables for sensitive information,
@@ -2512,13 +2518,12 @@ type ContainerProperties struct {
 	// Other repositories are specified with repository-url/image:tag. Up to 255
 	// letters (uppercase and lowercase), numbers, hyphens, underscores, colons,
 	// periods, forward slashes, and number signs are allowed. This parameter maps
-	// to Image in the Create a container (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.23/#create-a-container)
-	// section of the Docker Remote API (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.23/)
+	// to Image in the Create a container (https://docs.docker.com/engine/api/v1.23/#create-a-container)
+	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.23/)
 	// and the IMAGE parameter of docker run (https://docs.docker.com/engine/reference/run/).
 	//
 	//    * Images in Amazon ECR repositories use the full registry and repository
 	//    URI (for example, 012345678910.dkr.ecr.<region-name>.amazonaws.com/<repository-name>).
-	//
 	//
 	//    * Images in official repositories on Docker Hub use a single name (for
 	//    example, ubuntu or mongo).
@@ -2541,35 +2546,35 @@ type ContainerProperties struct {
 
 	// The hard limit (in MiB) of memory to present to the container. If your container
 	// attempts to exceed the memory specified here, the container is killed. This
-	// parameter maps to Memory in the Create a container (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.23/#create-a-container)
-	// section of the Docker Remote API (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.23/)
+	// parameter maps to Memory in the Create a container (https://docs.docker.com/engine/api/v1.23/#create-a-container)
+	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.23/)
 	// and the --memory option to docker run (https://docs.docker.com/engine/reference/run/).
 	// You must specify at least 4 MiB of memory for a job.
 	//
 	// If you are trying to maximize your resource utilization by providing your
 	// jobs as much memory as possible for a particular instance type, see Memory
-	// Management (http://docs.aws.amazon.com/batch/latest/userguide/memory-management.html)
+	// Management (https://docs.aws.amazon.com/batch/latest/userguide/memory-management.html)
 	// in the AWS Batch User Guide.
 	Memory *int64 `locationName:"memory" type:"integer"`
 
 	// The mount points for data volumes in your container. This parameter maps
-	// to Volumes in the Create a container (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.23/#create-a-container)
-	// section of the Docker Remote API (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.23/)
+	// to Volumes in the Create a container (https://docs.docker.com/engine/api/v1.23/#create-a-container)
+	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.23/)
 	// and the --volume option to docker run (https://docs.docker.com/engine/reference/run/).
 	MountPoints []*MountPoint `locationName:"mountPoints" type:"list"`
 
 	// When this parameter is true, the container is given elevated privileges on
 	// the host container instance (similar to the root user). This parameter maps
-	// to Privileged in the Create a container (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.23/#create-a-container)
-	// section of the Docker Remote API (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.23/)
+	// to Privileged in the Create a container (https://docs.docker.com/engine/api/v1.23/#create-a-container)
+	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.23/)
 	// and the --privileged option to docker run (https://docs.docker.com/engine/reference/run/).
 	Privileged *bool `locationName:"privileged" type:"boolean"`
 
 	// When this parameter is true, the container is given read-only access to its
 	// root file system. This parameter maps to ReadonlyRootfs in the Create a container
-	// (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.23/#create-a-container)
-	// section of the Docker Remote API (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.23/)
-	// and the --read-only option to docker run.
+	// (https://docs.docker.com/engine/api/v1.23/#create-a-container) section of
+	// the Docker Remote API (https://docs.docker.com/engine/api/v1.23/) and the
+	// --read-only option to docker run.
 	ReadonlyRootFilesystem *bool `locationName:"readonlyRootFilesystem" type:"boolean"`
 
 	// The type and amount of a resource to assign to a container. Currently, the
@@ -2577,20 +2582,20 @@ type ContainerProperties struct {
 	ResourceRequirements []*ResourceRequirement `locationName:"resourceRequirements" type:"list"`
 
 	// A list of ulimits to set in the container. This parameter maps to Ulimits
-	// in the Create a container (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.23/#create-a-container)
-	// section of the Docker Remote API (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.23/)
+	// in the Create a container (https://docs.docker.com/engine/api/v1.23/#create-a-container)
+	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.23/)
 	// and the --ulimit option to docker run (https://docs.docker.com/engine/reference/run/).
 	Ulimits []*Ulimit `locationName:"ulimits" type:"list"`
 
 	// The user name to use inside the container. This parameter maps to User in
-	// the Create a container (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.23/#create-a-container)
-	// section of the Docker Remote API (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.23/)
+	// the Create a container (https://docs.docker.com/engine/api/v1.23/#create-a-container)
+	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.23/)
 	// and the --user option to docker run (https://docs.docker.com/engine/reference/run/).
 	User *string `locationName:"user" type:"string"`
 
 	// The number of vCPUs reserved for the container. This parameter maps to CpuShares
-	// in the Create a container (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.23/#create-a-container)
-	// section of the Docker Remote API (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.23/)
+	// in the Create a container (https://docs.docker.com/engine/api/v1.23/#create-a-container)
+	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.23/)
 	// and the --cpu-shares option to docker run (https://docs.docker.com/engine/reference/run/).
 	// Each vCPU is equivalent to 1,024 CPU shares. You must specify at least one
 	// vCPU.
@@ -2768,7 +2773,9 @@ type CreateComputeEnvironmentInput struct {
 	ComputeEnvironmentName *string `locationName:"computeEnvironmentName" type:"string" required:"true"`
 
 	// Details of the compute resources managed by the compute environment. This
-	// parameter is required for managed compute environments.
+	// parameter is required for managed compute environments. For more information,
+	// see Compute Environments (https://docs.aws.amazon.com/batch/latest/userguide/compute_environments.html)
+	// in the AWS Batch User Guide.
 	ComputeResources *ComputeResource `locationName:"computeResources" type:"structure"`
 
 	// The full Amazon Resource Name (ARN) of the IAM role that allows AWS Batch
@@ -3280,8 +3287,8 @@ type DescribeJobDefinitionsInput struct {
 	// The name of the job definition to describe.
 	JobDefinitionName *string `locationName:"jobDefinitionName" type:"string"`
 
-	// A space-separated list of up to 100 job definition names or full Amazon Resource
-	// Name (ARN) entries.
+	// A list of up to 100 job definition names or full Amazon Resource Name (ARN)
+	// entries.
 	JobDefinitions []*string `locationName:"jobDefinitions" type:"list"`
 
 	// The maximum number of results returned by DescribeJobDefinitions in paginated
@@ -3475,7 +3482,7 @@ func (s *DescribeJobQueuesOutput) SetNextToken(v string) *DescribeJobQueuesOutpu
 type DescribeJobsInput struct {
 	_ struct{} `type:"structure"`
 
-	// A space-separated list of up to 100 job IDs.
+	// A list of up to 100 job IDs.
 	//
 	// Jobs is a required field
 	Jobs []*string `locationName:"jobs" type:"list" required:"true"`
@@ -3533,21 +3540,20 @@ func (s *DescribeJobsOutput) SetJobs(v []*JobDetail) *DescribeJobsOutput {
 	return s
 }
 
-// The contents of the host parameter determine whether your data volume persists
-// on the host container instance and where it is stored. If the host parameter
-// is empty, then the Docker daemon assigns a host path for your data volume,
-// but the data is not guaranteed to persist after the containers associated
-// with it stop running.
+// Determine whether your data volume persists on the host container instance
+// and where it is stored. If this parameter is empty, then the Docker daemon
+// assigns a host path for your data volume, but the data is not guaranteed
+// to persist after the containers associated with it stop running.
 type Host struct {
 	_ struct{} `type:"structure"`
 
 	// The path on the host container instance that is presented to the container.
 	// If this parameter is empty, then the Docker daemon has assigned a host path
-	// for you. If the host parameter contains a sourcePath file location, then
-	// the data volume persists at the specified location on the host container
-	// instance until you delete it manually. If the sourcePath value does not exist
-	// on the host container instance, the Docker daemon creates it. If the location
-	// does exist, the contents of the source path folder are exported.
+	// for you. If this parameter contains a file location, then the data volume
+	// persists at the specified location on the host container instance until you
+	// delete it manually. If the source path location does not exist on the host
+	// container instance, the Docker daemon creates it. If the location does exist,
+	// the contents of the source path folder are exported.
 	SourcePath *string `locationName:"sourcePath" type:"string"`
 }
 
@@ -4361,7 +4367,8 @@ func (s *ListJobsOutput) SetNextToken(v string) *ListJobsOutput {
 }
 
 // Details on a Docker volume mount point that is used in a job's container
-// properties.
+// properties. This parameter maps to Volumes in the Create a container (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.19/#create-a-container)
+// section of the Docker Remote API and the --volume option to docker run.
 type MountPoint struct {
 	_ struct{} `type:"structure"`
 
@@ -4807,7 +4814,7 @@ type RegisterJobDefinitionInput struct {
 
 	// An object with various properties specific to multi-node parallel jobs. If
 	// you specify node properties for a job, it becomes a multi-node parallel job.
-	// For more information, see Multi-node Parallel Jobs (http://docs.aws.amazon.com/batch/latest/userguide/multi-node-parallel-jobs.html)
+	// For more information, see Multi-node Parallel Jobs (https://docs.aws.amazon.com/batch/latest/userguide/multi-node-parallel-jobs.html)
 	// in the AWS Batch User Guide. If the job definition's type parameter is container,
 	// then you must specify either containerProperties or nodeProperties.
 	NodeProperties *NodeProperties `locationName:"nodeProperties" type:"structure"`
@@ -5052,7 +5059,7 @@ type SubmitJobInput struct {
 	// The array properties for the submitted job, such as the size of the array.
 	// The array size can be between 2 and 10,000. If you specify array properties
 	// for a job, it becomes an array job. For more information, see Array Jobs
-	// (http://docs.aws.amazon.com/batch/latest/userguide/array_jobs.html) in the
+	// (https://docs.aws.amazon.com/batch/latest/userguide/array_jobs.html) in the
 	// AWS Batch User Guide.
 	ArrayProperties *ArrayProperties `locationName:"arrayProperties" type:"structure"`
 
