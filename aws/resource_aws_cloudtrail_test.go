@@ -1178,7 +1178,7 @@ POLICY
 }
 
 func testAccAWSCloudTrailConfig_tags(cloudTrailRandInt int) string {
-	tagsString := `tags {
+	tagsString := `tags = {
 		Foo = "moo"
 		Pooh = "hi"
 	}`
@@ -1191,7 +1191,7 @@ func testAccAWSCloudTrailConfig_tags(cloudTrailRandInt int) string {
 }
 
 func testAccAWSCloudTrailConfig_tagsModified(cloudTrailRandInt int) string {
-	tagsString := `tags {
+	tagsString := `tags = {
 		Foo = "moo"
 		Pooh = "hi"
 		Moo = "boom"

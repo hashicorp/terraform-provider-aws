@@ -64,6 +64,30 @@ func resourceAwsBatchComputeEnvironment() *schema.Resource {
 							ForceNew: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
+						"launch_template": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"launch_template_id": {
+										Type:          schema.TypeString,
+										Optional:      true,
+										ConflictsWith: []string{"compute_resources.0.launch_template.0.launch_template_name"},
+									},
+									"launch_template_name": {
+										Type:          schema.TypeString,
+										Optional:      true,
+										ConflictsWith: []string{"compute_resources.0.launch_template.0.launch_template_id"},
+									},
+									"version": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
 						"max_vcpus": {
 							Type:     schema.TypeInt,
 							Required: true,
@@ -122,9 +146,9 @@ func resourceAwsBatchComputeEnvironment() *schema.Resource {
 				Computed: true,
 			},
 			"ecc_cluster_arn": {
-				Type:       schema.TypeString,
-				Computed:   true,
-				Deprecated: "Use ecs_cluster_arn instead",
+				Type:     schema.TypeString,
+				Computed: true,
+				Removed:  "Use `ecs_cluster_arn` attribute instead",
 			},
 			"ecs_cluster_arn": {
 				Type:     schema.TypeString,
@@ -215,6 +239,20 @@ func resourceAwsBatchComputeEnvironmentCreate(d *schema.ResourceData, meta inter
 		if v, ok := computeResource["tags"]; ok {
 			input.ComputeResources.Tags = tagsFromMapGeneric(v.(map[string]interface{}))
 		}
+
+		if raw, ok := computeResource["launch_template"]; ok && len(raw.([]interface{})) > 0 {
+			input.ComputeResources.LaunchTemplate = &batch.LaunchTemplateSpecification{}
+			launchTemplate := raw.([]interface{})[0].(map[string]interface{})
+			if v, ok := launchTemplate["launch_template_id"]; ok {
+				input.ComputeResources.LaunchTemplate.LaunchTemplateId = aws.String(v.(string))
+			}
+			if v, ok := launchTemplate["launch_template_name"]; ok {
+				input.ComputeResources.LaunchTemplate.LaunchTemplateName = aws.String(v.(string))
+			}
+			if v, ok := launchTemplate["version"]; ok {
+				input.ComputeResources.LaunchTemplate.Version = aws.String(v.(string))
+			}
+		}
 	}
 
 	log.Printf("[DEBUG] Create compute environment %s.\n", input)
@@ -273,7 +311,6 @@ func resourceAwsBatchComputeEnvironmentRead(d *schema.ResourceData, meta interfa
 	}
 
 	d.Set("arn", computeEnvironment.ComputeEnvironmentArn)
-	d.Set("ecc_cluster_arn", computeEnvironment.EcsClusterArn)
 	d.Set("ecs_cluster_arn", computeEnvironment.EcsClusterArn)
 	d.Set("status", computeEnvironment.Status)
 	d.Set("status_reason", computeEnvironment.StatusReason)
@@ -298,6 +335,14 @@ func flattenBatchComputeResources(computeResource *batch.ComputeResource) []map[
 	m["subnets"] = schema.NewSet(schema.HashString, flattenStringList(computeResource.Subnets))
 	m["tags"] = tagsToMapGeneric(computeResource.Tags)
 	m["type"] = aws.StringValue(computeResource.Type)
+
+	if launchTemplate := computeResource.LaunchTemplate; launchTemplate != nil {
+		lt := make(map[string]interface{})
+		lt["launch_template_id"] = aws.StringValue(launchTemplate.LaunchTemplateId)
+		lt["launch_template_name"] = aws.StringValue(launchTemplate.LaunchTemplateName)
+		lt["version"] = aws.StringValue(launchTemplate.Version)
+		m["launch_template"] = []map[string]interface{}{lt}
+	}
 
 	result = append(result, m)
 	return result

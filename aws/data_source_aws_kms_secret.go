@@ -1,20 +1,18 @@
 package aws
 
 import (
-	"encoding/base64"
-	"fmt"
-	"log"
-	"time"
+	"errors"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
+const dataSourceAwsKmsSecretRemovedMessage = "This data source has been replaced with the `aws_kms_secrets` data source. Upgrade information is available at: https://www.terraform.io/docs/providers/aws/guides/version-2-upgrade.html#data-source-aws_kms_secret"
+
 func dataSourceAwsKmsSecret() *schema.Resource {
 	return &schema.Resource{
-		DeprecationMessage: "This data source will be removed in Terraform AWS provider version 2.0. Please see migration information available in: https://www.terraform.io/docs/providers/aws/guides/version-2-upgrade.html#data-source-aws_kms_secret",
-		Read:               dataSourceAwsKmsSecretRead,
+		Read: func(d *schema.ResourceData, meta interface{}) error {
+			return errors.New(dataSourceAwsKmsSecretRemovedMessage)
+		},
 
 		Schema: map[string]*schema.Schema{
 			"secret": {
@@ -44,57 +42,6 @@ func dataSourceAwsKmsSecret() *schema.Resource {
 					},
 				},
 			},
-			"__has_dynamic_attributes": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
 		},
 	}
-}
-
-// dataSourceAwsKmsSecretRead decrypts the specified secrets
-func dataSourceAwsKmsSecretRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kmsconn
-	secrets := d.Get("secret").(*schema.Set)
-
-	d.SetId(time.Now().UTC().String())
-
-	for _, v := range secrets.List() {
-		secret := v.(map[string]interface{})
-
-		// base64 decode the payload
-		payload, err := base64.StdEncoding.DecodeString(secret["payload"].(string))
-		if err != nil {
-			return fmt.Errorf("Invalid base64 value for secret '%s': %v", secret["name"].(string), err)
-		}
-
-		// build the kms decrypt params
-		params := &kms.DecryptInput{
-			CiphertextBlob: payload,
-		}
-		if context, exists := secret["context"]; exists {
-			params.EncryptionContext = make(map[string]*string)
-			for k, v := range context.(map[string]interface{}) {
-				params.EncryptionContext[k] = aws.String(v.(string))
-			}
-		}
-		if grant_tokens, exists := secret["grant_tokens"]; exists {
-			params.GrantTokens = make([]*string, 0)
-			for _, v := range grant_tokens.([]interface{}) {
-				params.GrantTokens = append(params.GrantTokens, aws.String(v.(string)))
-			}
-		}
-
-		// decrypt
-		resp, err := conn.Decrypt(params)
-		if err != nil {
-			return fmt.Errorf("Failed to decrypt '%s': %s", secret["name"].(string), err)
-		}
-
-		// Set the secret via the name
-		log.Printf("[DEBUG] aws_kms_secret - successfully decrypted secret: %s", secret["name"].(string))
-		d.UnsafeSetFieldRaw(secret["name"].(string), string(resp.Plaintext))
-	}
-
-	return nil
 }

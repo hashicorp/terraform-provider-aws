@@ -6,7 +6,7 @@ description: |-
   Manage a default VPC subnet resource.
 ---
 
-# aws_default_subnet
+# Resource: aws_default_subnet
 
 Provides a resource to manage a [default AWS VPC subnet](http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/default-vpc.html#default-vpc-basics)
 in the current region.

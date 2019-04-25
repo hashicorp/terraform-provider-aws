@@ -6,7 +6,7 @@ description: |-
   Provides an AutoScaling Lifecycle Hooks resource.
 ---
 
-# aws_autoscaling_lifecycle_hook
+# Resource: aws_autoscaling_lifecycle_hook
 
 Provides an AutoScaling Lifecycle Hook resource.
 

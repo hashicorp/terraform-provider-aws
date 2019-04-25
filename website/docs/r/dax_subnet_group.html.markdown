@@ -6,7 +6,7 @@ description: |-
   Provides an DAX Subnet Group resource.
 ---
 
-# aws_dax_subnet_group
+# Resource: aws_dax_subnet_group
 
 Provides a DAX Subnet Group resource.
 

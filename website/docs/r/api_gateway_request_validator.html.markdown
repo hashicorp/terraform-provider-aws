@@ -6,7 +6,7 @@ description: |-
   Manages an API Gateway Request Validator.
 ---
 
-# aws_api_gateway_request_validator
+# Resource: aws_api_gateway_request_validator
 
 Manages an API Gateway Request Validator.
 

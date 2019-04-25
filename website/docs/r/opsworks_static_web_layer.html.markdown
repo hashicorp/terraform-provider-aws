@@ -6,7 +6,7 @@ description: |-
   Provides an OpsWorks static web server layer resource.
 ---
 
-# aws_opsworks_static_web_layer
+# Resource: aws_opsworks_static_web_layer
 
 Provides an OpsWorks static web server layer resource.
 

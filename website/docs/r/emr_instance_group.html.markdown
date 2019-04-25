@@ -6,7 +6,7 @@ description: |-
   Provides an Elastic MapReduce Cluster Instance Group
 ---
 
-# aws_emr_instance_group
+# Resource: aws_emr_instance_group
 
 Provides an Elastic MapReduce Cluster Instance Group configuration.
 See [Amazon Elastic MapReduce Documentation](https://aws.amazon.com/documentation/emr/) for more information.

@@ -213,6 +213,20 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 				},
 			},
 
+			"elastic_inference_accelerator": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"type": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
+
 			"iam_instance_profile": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -519,6 +533,10 @@ func resourceAwsLaunchTemplateCreate(d *schema.ResourceData, meta interface{}) e
 		LaunchTemplateData: launchTemplateData,
 	}
 
+	if v, ok := d.GetOk("description"); ok && v.(string) != "" {
+		launchTemplateOpts.VersionDescription = aws.String(v.(string))
+	}
+
 	resp, err := conn.CreateLaunchTemplate(launchTemplateOpts)
 	if err != nil {
 		return err
@@ -597,6 +615,8 @@ func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) err
 
 	log.Printf("[DEBUG] Received launch template version %q (version %d)", d.Id(), *lt.LatestVersionNumber)
 
+	d.Set("description", dltv.LaunchTemplateVersions[0].VersionDescription)
+
 	ltData := dltv.LaunchTemplateVersions[0].LaunchTemplateData
 
 	d.Set("disable_api_termination", ltData.DisableApiTermination)
@@ -631,6 +651,10 @@ func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) err
 
 	if err := d.Set("elastic_gpu_specifications", getElasticGpuSpecifications(ltData.ElasticGpuSpecifications)); err != nil {
 		return err
+	}
+
+	if err := d.Set("elastic_inference_accelerator", flattenEc2LaunchTemplateElasticInferenceAcceleratorResponse(ltData.ElasticInferenceAccelerators)); err != nil {
+		return fmt.Errorf("error setting elastic_inference_accelerator: %s", err)
 	}
 
 	if err := d.Set("iam_instance_profile", getIamInstanceProfile(ltData.IamInstanceProfile)); err != nil {
@@ -677,6 +701,10 @@ func resourceAwsLaunchTemplateUpdate(d *schema.ResourceData, meta interface{}) e
 			ClientToken:        aws.String(resource.UniqueId()),
 			LaunchTemplateId:   aws.String(d.Id()),
 			LaunchTemplateData: launchTemplateData,
+		}
+
+		if v, ok := d.GetOk("description"); ok && v.(string) != "" {
+			launchTemplateVersionOpts.VersionDescription = aws.String(v.(string))
 		}
 
 		_, createErr := conn.CreateLaunchTemplateVersion(launchTemplateVersionOpts)
@@ -798,6 +826,24 @@ func getElasticGpuSpecifications(e []*ec2.ElasticGpuSpecificationResponse) []int
 		})
 	}
 	return s
+}
+
+func flattenEc2LaunchTemplateElasticInferenceAcceleratorResponse(accelerators []*ec2.LaunchTemplateElasticInferenceAcceleratorResponse) []interface{} {
+	l := []interface{}{}
+
+	for _, accelerator := range accelerators {
+		if accelerator == nil {
+			continue
+		}
+
+		m := map[string]interface{}{
+			"type": aws.StringValue(accelerator.Type),
+		}
+
+		l = append(l, m)
+	}
+
+	return l
 }
 
 func getIamInstanceProfile(i *ec2.LaunchTemplateIamInstanceProfileSpecification) []interface{} {
@@ -1044,6 +1090,10 @@ func buildLaunchTemplateData(d *schema.ResourceData) (*ec2.RequestLaunchTemplate
 			elasticGpuSpecifications = append(elasticGpuSpecifications, readElasticGpuSpecificationsFromConfig(egs.(map[string]interface{})))
 		}
 		opts.ElasticGpuSpecifications = elasticGpuSpecifications
+	}
+
+	if v, ok := d.GetOk("elastic_inference_accelerator"); ok {
+		opts.ElasticInferenceAccelerators = expandEc2LaunchTemplateElasticInferenceAccelerators(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("iam_instance_profile"); ok {
@@ -1334,6 +1384,30 @@ func readElasticGpuSpecificationsFromConfig(egs map[string]interface{}) *ec2.Ela
 	}
 
 	return elasticGpuSpecification
+}
+
+func expandEc2LaunchTemplateElasticInferenceAccelerators(l []interface{}) []*ec2.LaunchTemplateElasticInferenceAccelerator {
+	if len(l) == 0 {
+		return nil
+	}
+
+	var accelerators []*ec2.LaunchTemplateElasticInferenceAccelerator
+
+	for _, lRaw := range l {
+		m, ok := lRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		accelerator := &ec2.LaunchTemplateElasticInferenceAccelerator{
+			Type: aws.String(m["type"].(string)),
+		}
+
+		accelerators = append(accelerators, accelerator)
+	}
+
+	return accelerators
 }
 
 func readInstanceMarketOptionsFromConfig(imo map[string]interface{}) (*ec2.LaunchTemplateInstanceMarketOptionsRequest, error) {

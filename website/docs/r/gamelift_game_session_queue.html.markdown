@@ -6,7 +6,7 @@ description: |-
   Provides a Gamelift Game Session Queue resource.
 ---
 
-# aws_gamelift_game_session_queue
+# Resource: aws_gamelift_game_session_queue
 
 Provides an Gamelift Game Session Queue resource.
 

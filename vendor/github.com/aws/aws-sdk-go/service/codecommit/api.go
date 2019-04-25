@@ -251,6 +251,241 @@ func (c *CodeCommit) CreateBranchWithContext(ctx aws.Context, input *CreateBranc
 	return out, req.Send()
 }
 
+const opCreateCommit = "CreateCommit"
+
+// CreateCommitRequest generates a "aws/request.Request" representing the
+// client's request for the CreateCommit operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateCommit for more information on using the CreateCommit
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateCommitRequest method.
+//    req, resp := client.CreateCommitRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/CreateCommit
+func (c *CodeCommit) CreateCommitRequest(input *CreateCommitInput) (req *request.Request, output *CreateCommitOutput) {
+	op := &request.Operation{
+		Name:       opCreateCommit,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &CreateCommitInput{}
+	}
+
+	output = &CreateCommitOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateCommit API operation for AWS CodeCommit.
+//
+// Creates a commit for a repository on the tip of a specified branch.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS CodeCommit's
+// API operation CreateCommit for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
+//   A repository name is required but was not specified.
+//
+//   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
+//   At least one specified repository name is not valid.
+//
+//   This exception only occurs when a specified repository name is not valid.
+//   Other exceptions occur when a required repository parameter is missing, or
+//   when a specified repository does not exist.
+//
+//   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
+//   The specified repository does not exist.
+//
+//   * ErrCodeParentCommitIdRequiredException "ParentCommitIdRequiredException"
+//   A parent commit ID is required. To view the full commit ID of a branch in
+//   a repository, use GetBranch or a Git command (for example, git pull or git
+//   log).
+//
+//   * ErrCodeInvalidParentCommitIdException "InvalidParentCommitIdException"
+//   The parent commit ID is not valid. The commit ID cannot be empty, and must
+//   match the head commit ID for the branch of the repository where you want
+//   to add or update a file.
+//
+//   * ErrCodeParentCommitDoesNotExistException "ParentCommitDoesNotExistException"
+//   The parent commit ID is not valid because it does not exist. The specified
+//   parent commit ID does not exist in the specified branch of the repository.
+//
+//   * ErrCodeParentCommitIdOutdatedException "ParentCommitIdOutdatedException"
+//   The file could not be added because the provided parent commit ID is not
+//   the current tip of the specified branch. To view the full commit ID of the
+//   current head of the branch, use GetBranch.
+//
+//   * ErrCodeBranchNameRequiredException "BranchNameRequiredException"
+//   A branch name is required but was not specified.
+//
+//   * ErrCodeInvalidBranchNameException "InvalidBranchNameException"
+//   The specified reference name is not valid.
+//
+//   * ErrCodeBranchDoesNotExistException "BranchDoesNotExistException"
+//   The specified branch does not exist.
+//
+//   * ErrCodeBranchNameIsTagNameException "BranchNameIsTagNameException"
+//   The specified branch name is not valid because it is a tag name. Type the
+//   name of a current branch in the repository. For a list of valid branch names,
+//   use ListBranches.
+//
+//   * ErrCodeFileEntryRequiredException "FileEntryRequiredException"
+//   The commit cannot be created because no files have been specified as added,
+//   updated, or changed (PutFile or DeleteFile) for the commit.
+//
+//   * ErrCodeMaximumFileEntriesExceededException "MaximumFileEntriesExceededException"
+//   The number of specified files to change as part of this commit exceeds the
+//   maximum number of files that can be changed in a single commit. Consider
+//   using a Git client for these changes.
+//
+//   * ErrCodePutFileEntryConflictException "PutFileEntryConflictException"
+//   The commit cannot be created because one or more files specified in the commit
+//   reference both a file and a folder.
+//
+//   * ErrCodeSourceFileOrContentRequiredException "SourceFileOrContentRequiredException"
+//   The commit cannot be created because no source files or file content have
+//   been specified for the commit.
+//
+//   * ErrCodeFileContentAndSourceFileSpecifiedException "FileContentAndSourceFileSpecifiedException"
+//   The commit cannot be created because both a source file and file content
+//   have been specified for the same file. You cannot provide both. Either specify
+//   a source file, or provide the file content directly.
+//
+//   * ErrCodePathRequiredException "PathRequiredException"
+//   The folderPath for a location cannot be null.
+//
+//   * ErrCodeInvalidPathException "InvalidPathException"
+//   The specified path is not valid.
+//
+//   * ErrCodeSamePathRequestException "SamePathRequestException"
+//   The commit cannot be created because one or more changes in this commit duplicate
+//   actions in the same file path. For example, you cannot make the same delete
+//   request to the same file in the same file path twice, or make a delete request
+//   and a move request to the same file as part of the same commit.
+//
+//   * ErrCodeFileDoesNotExistException "FileDoesNotExistException"
+//   The specified file does not exist. Verify that you have provided the correct
+//   name of the file, including its full path and extension.
+//
+//   * ErrCodeFileContentSizeLimitExceededException "FileContentSizeLimitExceededException"
+//   The file cannot be added because it is too large. The maximum file size that
+//   can be added using PutFile is 6 MB, and the combined file content change
+//   size is 7 MB. Consider making these changes using a Git client.
+//
+//   * ErrCodeFolderContentSizeLimitExceededException "FolderContentSizeLimitExceededException"
+//   The commit cannot be created because at least one of the overall changes
+//   in the commit result in a folder contents exceeding the limit of 6 MB. Either
+//   reduce the number and size of your changes, or split the changes across multiple
+//   folders.
+//
+//   * ErrCodeInvalidDeletionParameterException "InvalidDeletionParameterException"
+//   The specified deletion parameter is not valid.
+//
+//   * ErrCodeRestrictedSourceFileException "RestrictedSourceFileException"
+//   The commit cannot be created because one of the changes specifies copying
+//   or moving a .gitkeep file.
+//
+//   * ErrCodeFileModeRequiredException "FileModeRequiredException"
+//   The commit cannot be created because a file mode is required to update mode
+//   permissions for an existing file, but no file mode has been specified.
+//
+//   * ErrCodeInvalidFileModeException "InvalidFileModeException"
+//   The specified file mode permission is not valid. For a list of valid file
+//   mode permissions, see PutFile.
+//
+//   * ErrCodeNameLengthExceededException "NameLengthExceededException"
+//   The user name is not valid because it has exceeded the character limit for
+//   file names. File names, including the path to the file, cannot exceed the
+//   character limit.
+//
+//   * ErrCodeInvalidEmailException "InvalidEmailException"
+//   The specified email address either contains one or more characters that are
+//   not allowed, or it exceeds the maximum number of characters allowed for an
+//   email address.
+//
+//   * ErrCodeCommitMessageLengthExceededException "CommitMessageLengthExceededException"
+//   The commit message is too long. Provide a shorter string.
+//
+//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   An encryption integrity check failed.
+//
+//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   An encryption key could not be accessed.
+//
+//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   The encryption key is disabled.
+//
+//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   No encryption key was found.
+//
+//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   The encryption key is not available.
+//
+//   * ErrCodeNoChangeException "NoChangeException"
+//   The commit cannot be created because no changes will be made to the repository
+//   as a result of this commit. A commit must contain at least one change.
+//
+//   * ErrCodeFileNameConflictsWithDirectoryNameException "FileNameConflictsWithDirectoryNameException"
+//   A file cannot be added to the repository because the specified file name
+//   has the same name as a directory in this repository. Either provide another
+//   name for the file, or add the file in a directory that does not match the
+//   file name.
+//
+//   * ErrCodeDirectoryNameConflictsWithFileNameException "DirectoryNameConflictsWithFileNameException"
+//   A file cannot be added to the repository because the specified path name
+//   has the same name as a file that already exists in this repository. Either
+//   provide a different name for the file, or specify a different path for the
+//   file.
+//
+//   * ErrCodeFilePathConflictsWithSubmodulePathException "FilePathConflictsWithSubmodulePathException"
+//   The commit cannot be created because a specified file path points to a submodule.
+//   Verify that the destination files have valid file paths that do not point
+//   to a submodule.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/CreateCommit
+func (c *CodeCommit) CreateCommit(input *CreateCommitInput) (*CreateCommitOutput, error) {
+	req, out := c.CreateCommitRequest(input)
+	return out, req.Send()
+}
+
+// CreateCommitWithContext is the same as CreateCommit with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateCommit for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CodeCommit) CreateCommitWithContext(ctx aws.Context, input *CreateCommitInput, opts ...request.Option) (*CreateCommitOutput, error) {
+	req, out := c.CreateCommitRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opCreatePullRequest = "CreatePullRequest"
 
 // CreatePullRequestRequest generates a "aws/request.Request" representing the
@@ -1791,8 +2026,8 @@ func (c *CodeCommit) GetCommentsForPullRequestRequest(input *GetCommentsForPullR
 //
 //   * ErrCodeRepositoryNotAssociatedWithPullRequestException "RepositoryNotAssociatedWithPullRequestException"
 //   The repository does not contain any pull requests with that pull request
-//   ID. Check to make sure you have provided the correct repository name for
-//   the pull request.
+//   ID. Use GetPullRequest to verify the correct repository name for the pull
+//   request ID.
 //
 //   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
 //   An encryption integrity check failed.
@@ -3726,8 +3961,8 @@ func (c *CodeCommit) PostCommentForPullRequestRequest(input *PostCommentForPullR
 //
 //   * ErrCodeRepositoryNotAssociatedWithPullRequestException "RepositoryNotAssociatedWithPullRequestException"
 //   The repository does not contain any pull requests with that pull request
-//   ID. Check to make sure you have provided the correct repository name for
-//   the pull request.
+//   ID. Use GetPullRequest to verify the correct repository name for the pull
+//   request ID.
 //
 //   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
 //   A repository name is required but was not specified.
@@ -4040,8 +4275,14 @@ func (c *CodeCommit) PutFileRequest(input *PutFileInput) (req *request.Request, 
 //
 //   * ErrCodeFileContentSizeLimitExceededException "FileContentSizeLimitExceededException"
 //   The file cannot be added because it is too large. The maximum file size that
-//   can be added using PutFile is 6 MB. For files larger than 6 MB but smaller
-//   than 2 GB, add them using a Git client.
+//   can be added using PutFile is 6 MB, and the combined file content change
+//   size is 7 MB. Consider making these changes using a Git client.
+//
+//   * ErrCodeFolderContentSizeLimitExceededException "FolderContentSizeLimitExceededException"
+//   The commit cannot be created because at least one of the overall changes
+//   in the commit result in a folder contents exceeding the limit of 6 MB. Either
+//   reduce the number and size of your changes, or split the changes across multiple
+//   folders.
 //
 //   * ErrCodePathRequiredException "PathRequiredException"
 //   The folderPath for a location cannot be null.
@@ -4114,6 +4355,11 @@ func (c *CodeCommit) PutFileRequest(input *PutFileInput) (req *request.Request, 
 //   has the same name as a file that already exists in this repository. Either
 //   provide a different name for the file, or specify a different path for the
 //   file.
+//
+//   * ErrCodeFilePathConflictsWithSubmodulePathException "FilePathConflictsWithSubmodulePathException"
+//   The commit cannot be created because a specified file path points to a submodule.
+//   Verify that the destination files have valid file paths that do not point
+//   to a submodule.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/PutFile
 func (c *CodeCommit) PutFile(input *PutFileInput) (*PutFileOutput, error) {
@@ -5774,6 +6020,233 @@ func (s CreateBranchOutput) GoString() string {
 	return s.String()
 }
 
+type CreateCommitInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the author who created the commit. This information will be used
+	// as both the author and committer for the commit.
+	AuthorName *string `locationName:"authorName" type:"string"`
+
+	// The name of the branch where you will create the commit.
+	//
+	// BranchName is a required field
+	BranchName *string `locationName:"branchName" min:"1" type:"string" required:"true"`
+
+	// The commit message you want to include as part of creating the commit. Commit
+	// messages are limited to 256 KB. If no message is specified, a default message
+	// will be used.
+	CommitMessage *string `locationName:"commitMessage" type:"string"`
+
+	// The files to delete in this commit. These files will still exist in prior
+	// commits.
+	DeleteFiles []*DeleteFileEntry `locationName:"deleteFiles" type:"list"`
+
+	// The email address of the person who created the commit.
+	Email *string `locationName:"email" type:"string"`
+
+	// If the commit contains deletions, whether to keep a folder or folder structure
+	// if the changes leave the folders empty. If this is specified as true, a .gitkeep
+	// file will be created for empty folders.
+	KeepEmptyFolders *bool `locationName:"keepEmptyFolders" type:"boolean"`
+
+	// The ID of the commit that is the parent of the commit you will create. If
+	// this is an empty repository, this is not required.
+	ParentCommitId *string `locationName:"parentCommitId" type:"string"`
+
+	// The files to add or update in this commit.
+	PutFiles []*PutFileEntry `locationName:"putFiles" type:"list"`
+
+	// The name of the repository where you will create the commit.
+	//
+	// RepositoryName is a required field
+	RepositoryName *string `locationName:"repositoryName" min:"1" type:"string" required:"true"`
+
+	// The file modes to update for files in this commit.
+	SetFileModes []*SetFileModeEntry `locationName:"setFileModes" type:"list"`
+}
+
+// String returns the string representation
+func (s CreateCommitInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateCommitInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateCommitInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateCommitInput"}
+	if s.BranchName == nil {
+		invalidParams.Add(request.NewErrParamRequired("BranchName"))
+	}
+	if s.BranchName != nil && len(*s.BranchName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("BranchName", 1))
+	}
+	if s.RepositoryName == nil {
+		invalidParams.Add(request.NewErrParamRequired("RepositoryName"))
+	}
+	if s.RepositoryName != nil && len(*s.RepositoryName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RepositoryName", 1))
+	}
+	if s.DeleteFiles != nil {
+		for i, v := range s.DeleteFiles {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "DeleteFiles", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+	if s.PutFiles != nil {
+		for i, v := range s.PutFiles {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "PutFiles", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+	if s.SetFileModes != nil {
+		for i, v := range s.SetFileModes {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "SetFileModes", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAuthorName sets the AuthorName field's value.
+func (s *CreateCommitInput) SetAuthorName(v string) *CreateCommitInput {
+	s.AuthorName = &v
+	return s
+}
+
+// SetBranchName sets the BranchName field's value.
+func (s *CreateCommitInput) SetBranchName(v string) *CreateCommitInput {
+	s.BranchName = &v
+	return s
+}
+
+// SetCommitMessage sets the CommitMessage field's value.
+func (s *CreateCommitInput) SetCommitMessage(v string) *CreateCommitInput {
+	s.CommitMessage = &v
+	return s
+}
+
+// SetDeleteFiles sets the DeleteFiles field's value.
+func (s *CreateCommitInput) SetDeleteFiles(v []*DeleteFileEntry) *CreateCommitInput {
+	s.DeleteFiles = v
+	return s
+}
+
+// SetEmail sets the Email field's value.
+func (s *CreateCommitInput) SetEmail(v string) *CreateCommitInput {
+	s.Email = &v
+	return s
+}
+
+// SetKeepEmptyFolders sets the KeepEmptyFolders field's value.
+func (s *CreateCommitInput) SetKeepEmptyFolders(v bool) *CreateCommitInput {
+	s.KeepEmptyFolders = &v
+	return s
+}
+
+// SetParentCommitId sets the ParentCommitId field's value.
+func (s *CreateCommitInput) SetParentCommitId(v string) *CreateCommitInput {
+	s.ParentCommitId = &v
+	return s
+}
+
+// SetPutFiles sets the PutFiles field's value.
+func (s *CreateCommitInput) SetPutFiles(v []*PutFileEntry) *CreateCommitInput {
+	s.PutFiles = v
+	return s
+}
+
+// SetRepositoryName sets the RepositoryName field's value.
+func (s *CreateCommitInput) SetRepositoryName(v string) *CreateCommitInput {
+	s.RepositoryName = &v
+	return s
+}
+
+// SetSetFileModes sets the SetFileModes field's value.
+func (s *CreateCommitInput) SetSetFileModes(v []*SetFileModeEntry) *CreateCommitInput {
+	s.SetFileModes = v
+	return s
+}
+
+type CreateCommitOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The full commit ID of the commit that contains your committed file changes.
+	CommitId *string `locationName:"commitId" type:"string"`
+
+	// The files added as part of the committed file changes.
+	FilesAdded []*FileMetadata `locationName:"filesAdded" type:"list"`
+
+	// The files deleted as part of the committed file changes.
+	FilesDeleted []*FileMetadata `locationName:"filesDeleted" type:"list"`
+
+	// The files updated as part of the commited file changes.
+	FilesUpdated []*FileMetadata `locationName:"filesUpdated" type:"list"`
+
+	// The full SHA-1 pointer of the tree information for the commit that contains
+	// the commited file changes.
+	TreeId *string `locationName:"treeId" type:"string"`
+}
+
+// String returns the string representation
+func (s CreateCommitOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateCommitOutput) GoString() string {
+	return s.String()
+}
+
+// SetCommitId sets the CommitId field's value.
+func (s *CreateCommitOutput) SetCommitId(v string) *CreateCommitOutput {
+	s.CommitId = &v
+	return s
+}
+
+// SetFilesAdded sets the FilesAdded field's value.
+func (s *CreateCommitOutput) SetFilesAdded(v []*FileMetadata) *CreateCommitOutput {
+	s.FilesAdded = v
+	return s
+}
+
+// SetFilesDeleted sets the FilesDeleted field's value.
+func (s *CreateCommitOutput) SetFilesDeleted(v []*FileMetadata) *CreateCommitOutput {
+	s.FilesDeleted = v
+	return s
+}
+
+// SetFilesUpdated sets the FilesUpdated field's value.
+func (s *CreateCommitOutput) SetFilesUpdated(v []*FileMetadata) *CreateCommitOutput {
+	s.FilesUpdated = v
+	return s
+}
+
+// SetTreeId sets the TreeId field's value.
+func (s *CreateCommitOutput) SetTreeId(v string) *CreateCommitOutput {
+	s.TreeId = &v
+	return s
+}
+
 type CreatePullRequestInput struct {
 	_ struct{} `type:"structure"`
 
@@ -6119,6 +6592,46 @@ func (s DeleteCommentContentOutput) GoString() string {
 // SetComment sets the Comment field's value.
 func (s *DeleteCommentContentOutput) SetComment(v *Comment) *DeleteCommentContentOutput {
 	s.Comment = v
+	return s
+}
+
+// A file that will be deleted as part of a commit.
+type DeleteFileEntry struct {
+	_ struct{} `type:"structure"`
+
+	// The full path of the file that will be deleted, including the name of the
+	// file.
+	//
+	// FilePath is a required field
+	FilePath *string `locationName:"filePath" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteFileEntry) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteFileEntry) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteFileEntry) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteFileEntry"}
+	if s.FilePath == nil {
+		invalidParams.Add(request.NewErrParamRequired("FilePath"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetFilePath sets the FilePath field's value.
+func (s *DeleteFileEntry) SetFilePath(v string) *DeleteFileEntry {
+	s.FilePath = &v
 	return s
 }
 
@@ -6593,6 +7106,50 @@ func (s *File) SetFileMode(v string) *File {
 // SetRelativePath sets the RelativePath field's value.
 func (s *File) SetRelativePath(v string) *File {
 	s.RelativePath = &v
+	return s
+}
+
+// A file that will be added, updated, or deleted as part of a commit.
+type FileMetadata struct {
+	_ struct{} `type:"structure"`
+
+	// The full path to the file that will be added or updated, including the name
+	// of the file.
+	AbsolutePath *string `locationName:"absolutePath" type:"string"`
+
+	// The blob ID that contains the file information.
+	BlobId *string `locationName:"blobId" type:"string"`
+
+	// The extrapolated file mode permissions for the file. Valid values include
+	// EXECUTABLE and NORMAL.
+	FileMode *string `locationName:"fileMode" type:"string" enum:"FileModeTypeEnum"`
+}
+
+// String returns the string representation
+func (s FileMetadata) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s FileMetadata) GoString() string {
+	return s.String()
+}
+
+// SetAbsolutePath sets the AbsolutePath field's value.
+func (s *FileMetadata) SetAbsolutePath(v string) *FileMetadata {
+	s.AbsolutePath = &v
+	return s
+}
+
+// SetBlobId sets the BlobId field's value.
+func (s *FileMetadata) SetBlobId(v string) *FileMetadata {
+	s.BlobId = &v
+	return s
+}
+
+// SetFileMode sets the FileMode field's value.
+func (s *FileMetadata) SetFileMode(v string) *FileMetadata {
+	s.FileMode = &v
 	return s
 }
 
@@ -9366,6 +9923,81 @@ func (s *PullRequestTarget) SetSourceReference(v string) *PullRequestTarget {
 	return s
 }
 
+// Information about a file that will be added or updated as part of a commit.
+type PutFileEntry struct {
+	_ struct{} `type:"structure"`
+
+	// The content of the file, if a source file is not specified.
+	//
+	// FileContent is automatically base64 encoded/decoded by the SDK.
+	FileContent []byte `locationName:"fileContent" type:"blob"`
+
+	// The extrapolated file mode permissions for the file. Valid values include
+	// EXECUTABLE and NORMAL.
+	FileMode *string `locationName:"fileMode" type:"string" enum:"FileModeTypeEnum"`
+
+	// The full path to the file in the repository, including the name of the file.
+	//
+	// FilePath is a required field
+	FilePath *string `locationName:"filePath" type:"string" required:"true"`
+
+	// The name and full path of the file that contains the changes you want to
+	// make as part of the commit, if you are not providing the file content directly.
+	SourceFile *SourceFileSpecifier `locationName:"sourceFile" type:"structure"`
+}
+
+// String returns the string representation
+func (s PutFileEntry) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PutFileEntry) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *PutFileEntry) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "PutFileEntry"}
+	if s.FilePath == nil {
+		invalidParams.Add(request.NewErrParamRequired("FilePath"))
+	}
+	if s.SourceFile != nil {
+		if err := s.SourceFile.Validate(); err != nil {
+			invalidParams.AddNested("SourceFile", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetFileContent sets the FileContent field's value.
+func (s *PutFileEntry) SetFileContent(v []byte) *PutFileEntry {
+	s.FileContent = v
+	return s
+}
+
+// SetFileMode sets the FileMode field's value.
+func (s *PutFileEntry) SetFileMode(v string) *PutFileEntry {
+	s.FileMode = &v
+	return s
+}
+
+// SetFilePath sets the FilePath field's value.
+func (s *PutFileEntry) SetFilePath(v string) *PutFileEntry {
+	s.FilePath = &v
+	return s
+}
+
+// SetSourceFile sets the SourceFile field's value.
+func (s *PutFileEntry) SetSourceFile(v *SourceFileSpecifier) *PutFileEntry {
+	s.SourceFile = v
+	return s
+}
+
 type PutFileInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9914,6 +10546,107 @@ func (s *RepositoryTriggerExecutionFailure) SetFailureMessage(v string) *Reposit
 // SetTrigger sets the Trigger field's value.
 func (s *RepositoryTriggerExecutionFailure) SetTrigger(v string) *RepositoryTriggerExecutionFailure {
 	s.Trigger = &v
+	return s
+}
+
+// Information about the file mode changes.
+type SetFileModeEntry struct {
+	_ struct{} `type:"structure"`
+
+	// The file mode for the file.
+	//
+	// FileMode is a required field
+	FileMode *string `locationName:"fileMode" type:"string" required:"true" enum:"FileModeTypeEnum"`
+
+	// The full path to the file, including the name of the file.
+	//
+	// FilePath is a required field
+	FilePath *string `locationName:"filePath" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s SetFileModeEntry) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SetFileModeEntry) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *SetFileModeEntry) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "SetFileModeEntry"}
+	if s.FileMode == nil {
+		invalidParams.Add(request.NewErrParamRequired("FileMode"))
+	}
+	if s.FilePath == nil {
+		invalidParams.Add(request.NewErrParamRequired("FilePath"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetFileMode sets the FileMode field's value.
+func (s *SetFileModeEntry) SetFileMode(v string) *SetFileModeEntry {
+	s.FileMode = &v
+	return s
+}
+
+// SetFilePath sets the FilePath field's value.
+func (s *SetFileModeEntry) SetFilePath(v string) *SetFileModeEntry {
+	s.FilePath = &v
+	return s
+}
+
+// Information about a source file that is part of changes made in a commit.
+type SourceFileSpecifier struct {
+	_ struct{} `type:"structure"`
+
+	// The full path to the file, including the name of the file.
+	//
+	// FilePath is a required field
+	FilePath *string `locationName:"filePath" type:"string" required:"true"`
+
+	// Whether to remove the source file from the parent commit.
+	IsMove *bool `locationName:"isMove" type:"boolean"`
+}
+
+// String returns the string representation
+func (s SourceFileSpecifier) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SourceFileSpecifier) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *SourceFileSpecifier) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "SourceFileSpecifier"}
+	if s.FilePath == nil {
+		invalidParams.Add(request.NewErrParamRequired("FilePath"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetFilePath sets the FilePath field's value.
+func (s *SourceFileSpecifier) SetFilePath(v string) *SourceFileSpecifier {
+	s.FilePath = &v
+	return s
+}
+
+// SetIsMove sets the IsMove field's value.
+func (s *SourceFileSpecifier) SetIsMove(v bool) *SourceFileSpecifier {
+	s.IsMove = &v
 	return s
 }
 

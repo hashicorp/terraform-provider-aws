@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -32,6 +33,40 @@ func resourceAwsTransferServer() *schema.Resource {
 			"endpoint": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+
+			"endpoint_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  transfer.EndpointTypePublic,
+				ValidateFunc: validation.StringInSlice([]string{
+					transfer.EndpointTypePublic,
+					transfer.EndpointTypeVpcEndpoint,
+				}, false),
+			},
+
+			"endpoint_details": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"vpc_endpoint_id": {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
+								value := v.(string)
+								validNamePattern := "^vpce-[0-9a-f]{17}$"
+								validName, nameMatchErr := regexp.MatchString(validNamePattern, value)
+								if !validName || nameMatchErr != nil {
+									errors = append(errors, fmt.Errorf(
+										"%q must match regex '%v'", k, validNamePattern))
+								}
+								return
+							},
+						},
+					},
+				},
 			},
 
 			"invocation_role": {
@@ -103,6 +138,14 @@ func resourceAwsTransferServerCreate(d *schema.ResourceData, meta interface{}) e
 		createOpts.LoggingRole = aws.String(attr.(string))
 	}
 
+	if attr, ok := d.GetOk("endpoint_type"); ok {
+		createOpts.EndpointType = aws.String(attr.(string))
+	}
+
+	if attr, ok := d.GetOk("endpoint_details"); ok {
+		createOpts.EndpointDetails = expandTransferServerEndpointDetails(attr.([]interface{}))
+	}
+
 	log.Printf("[DEBUG] Create Transfer Server Option: %#v", createOpts)
 
 	resp, err := conn.CreateServer(createOpts)
@@ -144,6 +187,8 @@ func resourceAwsTransferServerRead(d *schema.ResourceData, meta interface{}) err
 		d.Set("invocation_role", aws.StringValue(resp.Server.IdentityProviderDetails.InvocationRole))
 		d.Set("url", aws.StringValue(resp.Server.IdentityProviderDetails.Url))
 	}
+	d.Set("endpoint_type", resp.Server.EndpointType)
+	d.Set("endpoint_details", flattenTransferServerEndpointDetails(resp.Server.EndpointDetails))
 	d.Set("identity_provider_type", resp.Server.IdentityProviderType)
 	d.Set("logging_role", resp.Server.LoggingRole)
 
@@ -176,6 +221,20 @@ func resourceAwsTransferServerUpdate(d *schema.ResourceData, meta interface{}) e
 			identityProviderDetails.Url = aws.String(attr.(string))
 		}
 		updateOpts.IdentityProviderDetails = identityProviderDetails
+	}
+
+	if d.HasChange("endpoint_type") {
+		updateFlag = true
+		if attr, ok := d.GetOk("endpoint_type"); ok {
+			updateOpts.EndpointType = aws.String(attr.(string))
+		}
+	}
+
+	if d.HasChange("endpoint_details") {
+		updateFlag = true
+		if attr, ok := d.GetOk("endpoint_details"); ok {
+			updateOpts.EndpointDetails = expandTransferServerEndpointDetails(attr.([]interface{}))
+		}
 	}
 
 	if updateFlag {
@@ -284,4 +343,27 @@ func deleteTransferUsers(conn *transfer.Transfer, serverID string, nextToken *st
 	}
 
 	return nil
+}
+
+func expandTransferServerEndpointDetails(l []interface{}) *transfer.EndpointDetails {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+	e := l[0].(map[string]interface{})
+
+	return &transfer.EndpointDetails{
+		VpcEndpointId: aws.String(e["vpc_endpoint_id"].(string)),
+	}
+}
+
+func flattenTransferServerEndpointDetails(endpointDetails *transfer.EndpointDetails) []interface{} {
+	if endpointDetails == nil {
+		return []interface{}{}
+	}
+
+	e := map[string]interface{}{
+		"vpc_endpoint_id": aws.StringValue(endpointDetails.VpcEndpointId),
+	}
+
+	return []interface{}{e}
 }

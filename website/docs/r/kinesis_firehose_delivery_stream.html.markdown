@@ -6,7 +6,7 @@ description: |-
   Provides a AWS Kinesis Firehose Delivery Stream
 ---
 
-# aws_kinesis_firehose_delivery_stream
+# Resource: aws_kinesis_firehose_delivery_stream
 
 Provides a Kinesis Firehose Delivery Stream resource. Amazon Kinesis Firehose is a fully managed, elastic service to easily deliver real-time data streams to destinations such as Amazon S3 and Amazon Redshift.
 
@@ -25,24 +25,18 @@ resource "aws_kinesis_firehose_delivery_stream" "extended_s3_stream" {
     role_arn   = "${aws_iam_role.firehose_role.arn}"
     bucket_arn = "${aws_s3_bucket.bucket.arn}"
 
-    processing_configuration = [
-      {
-        enabled = "true"
+    processing_configuration {
+      enabled = "true"
 
-        processors = [
-          {
-            type = "Lambda"
+      processors {
+        type = "Lambda"
 
-            parameters = [
-              {
-                parameter_name  = "LambdaArn"
-                parameter_value = "${aws_lambda_function.lambda_processor.arn}:$LATEST"
-              },
-            ]
-          },
-        ]
-      },
-    ]
+        parameters {
+          parameter_name  = "LambdaArn"
+          parameter_value = "${aws_lambda_function.lambda_processor.arn}:$LATEST"
+        }
+      }
+    }
   }
 }
 
@@ -209,24 +203,18 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
     index_name = "test"
     type_name  = "test"
 
-    processing_configuration = [
-      {
-        enabled = "true"
+    processing_configuration {
+      enabled = "true"
 
-        processors = [
-          {
-            type = "Lambda"
+      processors {
+        type = "Lambda"
 
-            parameters = [
-              {
-                parameter_name  = "LambdaArn"
-                parameter_value = "${aws_lambda_function.lambda_processor.arn}:$LATEST"
-              },
-            ]
-          },
-        ]
-      },
-    ]
+        parameters {
+          parameter_name  = "LambdaArn"
+          parameter_value = "${aws_lambda_function.lambda_processor.arn}:$LATEST"
+        }
+      }
+    }
   }
 }
 ```
@@ -266,7 +254,7 @@ AWS account and region the Stream is created in.
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 * `kinesis_source_configuration` - (Optional) Allows the ability to specify the kinesis stream that is used as the source of the firehose delivery stream.
 * `destination` – (Required) This is the destination to where the data is delivered. The only options are `s3` (Deprecated, use `extended_s3` instead), `extended_s3`, `redshift`, `elasticsearch`, and `splunk`.
-* `s3_configuration` - (Optional, Deprecated, see/use `extended_s3_configuration` unless `destination` is `redshift`) Configuration options for the s3 destination (or the intermediate bucket if the destination
+* `s3_configuration` - (Optional) Required for non-S3 destinations. For S3 destination, use `extended_s3_configuration` instead. Configuration options for the s3 destination (or the intermediate bucket if the destination
 is redshift). More details are given below.
 * `extended_s3_configuration` - (Optional, only Required when `destination` is `extended_s3`) Enhanced configuration options for the s3 destination. More details are given below.
 * `redshift_configuration` - (Optional) Configuration options if redshift is the destination.

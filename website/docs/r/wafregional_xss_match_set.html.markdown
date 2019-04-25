@@ -6,13 +6,13 @@ description: |-
   Provides an AWS WAF Regional XSS Match Set resource for use with ALB.
 ---
 
-# aws_wafregional_xss_match_set
+# Resource: aws_wafregional_xss_match_set
 
 Provides a WAF Regional XSS Match Set Resource for use with Application Load Balancer.
 
 ## Example Usage
 
-```
+```hcl
 resource "aws_wafregional_xss_match_set" "xss_match_set" {
   name = "xss_match_set"
   xss_match_tuple {

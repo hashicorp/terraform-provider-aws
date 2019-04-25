@@ -6,7 +6,6 @@ import (
 	"os"
 	"reflect"
 	"regexp"
-	"strings"
 	"testing"
 	"time"
 
@@ -43,23 +42,10 @@ func testSweepInstances(region string) error {
 
 		for _, reservation := range page.Reservations {
 			for _, instance := range reservation.Instances {
-				var nameTag string
 				id := aws.StringValue(instance.InstanceId)
 
 				if instance.State != nil && aws.StringValue(instance.State.Name) == ec2.InstanceStateNameTerminated {
 					log.Printf("[INFO] Skipping terminated EC2 Instance: %s", id)
-					continue
-				}
-
-				for _, instanceTag := range instance.Tags {
-					if aws.StringValue(instanceTag.Key) == "Name" {
-						nameTag = aws.StringValue(instanceTag.Value)
-						break
-					}
-				}
-
-				if !strings.HasPrefix(nameTag, "tf-acc-test-") {
-					log.Printf("[INFO] Skipping EC2 Instance: %s", id)
 					continue
 				}
 
@@ -2870,7 +2856,7 @@ resource "aws_instance" "foo" {
 		virtual_name = "ephemeral0"
 	}
 
-	volume_tags {
+	volume_tags = {
 		Name = "acceptance-test-volume-tag"
 	}
 }
@@ -2908,7 +2894,7 @@ resource "aws_instance" "foo" {
 		virtual_name = "ephemeral0"
 	}
 
-	volume_tags {
+	volume_tags = {
 		Name = "acceptance-test-volume-tag"
 		Environment = "dev"
 	}
@@ -3734,11 +3720,7 @@ func testAccInstanceConfig_getPasswordData(val bool, rInt int) string {
 	# Find latest Microsoft Windows Server 2016 Core image (Amazon deletes old ones)
 	data "aws_ami" "win2016core" {
 		most_recent = true
-
-		filter {
-			name = "owner-alias"
-			values = ["amazon"]
-		}
+		owners      = ["amazon"]
 
 		filter {
 			name = "name"

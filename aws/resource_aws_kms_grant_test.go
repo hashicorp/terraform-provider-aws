@@ -204,7 +204,7 @@ resource "aws_kms_grant" "%s" {
 	grantee_principal = "${aws_iam_role.tf-acc-test-role.arn}"
 	operations = [ "RetireGrant", "DescribeKey" ]
 	constraints {
-		%s {
+		%s = {
 			%s
 		}
 	}

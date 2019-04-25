@@ -6,7 +6,7 @@ description: |-
   Provides a AWS WAF Regional Regex Pattern Set resource.
 ---
 
-# aws_wafregional_regex_pattern_set
+# Resource: aws_wafregional_regex_pattern_set
 
 Provides a WAF Regional Regex Pattern Set Resource
 

@@ -6,7 +6,7 @@ description: |-
   Provides an Elastic Load Balancer resource.
 ---
 
-# aws_elb
+# Resource: aws_elb
 
 Provides an Elastic Load Balancer resource, also known as a "Classic
 Load Balancer" after the release of

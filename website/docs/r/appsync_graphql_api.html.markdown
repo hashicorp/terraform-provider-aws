@@ -6,7 +6,7 @@ description: |-
   Provides an AppSync GraphQL API.
 ---
 
-# aws_appsync_graphql_api
+# Resource: aws_appsync_graphql_api
 
 Provides an AppSync GraphQL API.
 
@@ -42,6 +42,22 @@ resource "aws_appsync_graphql_api" "example" {
 resource "aws_appsync_graphql_api" "example" {
   authentication_type = "AWS_IAM"
   name                = "example"
+}
+```
+
+### With Schema
+```hcl
+resource "aws_appsync_graphql_api" "example" {
+  authentication_type = "AWS_IAM"
+  name                = "example"
+  schema              = <<EOF
+schema {
+	query: Query
+}
+type Query {
+  test: Int
+}
+EOF
 }
 ```
 
@@ -104,6 +120,7 @@ The following arguments are supported:
 * `log_config` - (Optional) Nested argument containing logging configuration. Defined below.
 * `openid_connect_config` - (Optional) Nested argument containing OpenID Connect configuration. Defined below.
 * `user_pool_config` - (Optional) The Amazon Cognito User Pool configuration. Defined below.
+* `schema` - (Optional) The schema definition, in GraphQL schema language format. Terraform cannot perform drift detection of this configuration.
 
 ### log_config
 
