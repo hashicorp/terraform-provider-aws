@@ -6,7 +6,7 @@ description: |-
   Manage the default VPC DHCP Options resource.
 ---
 
-#  aws_default_vpc_dhcp_options
+# Resource: aws_default_vpc_dhcp_options
 
 Provides a resource to manage the [default AWS DHCP Options Set](http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_DHCP_Options.html#AmazonDNS)
 in the current region.

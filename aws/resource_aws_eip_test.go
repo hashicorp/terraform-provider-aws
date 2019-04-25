@@ -72,6 +72,7 @@ func TestAccAWSEIP_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEIPExists("aws_eip.bar", &conf),
 					testAccCheckAWSEIPAttributes(&conf),
+					testAccCheckAWSEIPPublicDNS("aws_eip.bar"),
 				),
 			},
 		},
@@ -121,6 +122,7 @@ func TestAccAWSEIP_network_interface(t *testing.T) {
 					testAccCheckAWSEIPExists("aws_eip.bar", &conf),
 					testAccCheckAWSEIPAttributes(&conf),
 					testAccCheckAWSEIPAssociated(&conf),
+					testAccCheckAWSEIPPrivateDNS("aws_eip.bar"),
 				),
 			},
 		},
@@ -488,6 +490,52 @@ func testAccCheckAWSEIPExists(n string, res *ec2.Address) resource.TestCheckFunc
 	}
 }
 
+func testAccCheckAWSEIPPrivateDNS(resourceName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		privateIPDashed := strings.Replace(rs.Primary.Attributes["private_ip"], ".", "-", -1)
+		privateDNS := rs.Primary.Attributes["private_dns"]
+		expectedPrivateDNS := fmt.Sprintf("ip-%s.%s.compute.internal", privateIPDashed, testAccGetRegion())
+
+		if testAccGetRegion() == "us-east-1" {
+			expectedPrivateDNS = fmt.Sprintf("ip-%s.ec2.internal", privateIPDashed)
+		}
+
+		if privateDNS != expectedPrivateDNS {
+			return fmt.Errorf("expected private_dns value (%s), received: %s", expectedPrivateDNS, privateDNS)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckAWSEIPPublicDNS(resourceName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		publicIPDashed := strings.Replace(rs.Primary.Attributes["public_ip"], ".", "-", -1)
+		publicDNS := rs.Primary.Attributes["public_dns"]
+		expectedPublicDNS := fmt.Sprintf("ec2-%s.%s.compute.amazonaws.com", publicIPDashed, testAccGetRegion())
+
+		if testAccGetRegion() == "us-east-1" {
+			expectedPublicDNS = fmt.Sprintf("ec2-%s.compute-1.amazonaws.com", publicIPDashed)
+		}
+
+		if publicDNS != expectedPublicDNS {
+			return fmt.Errorf("expected public_dns value (%s), received: %s", expectedPublicDNS, publicDNS)
+		}
+
+		return nil
+	}
+}
+
 const testAccAWSEIPConfig = `
 resource "aws_eip" "bar" {
 }
@@ -526,10 +574,8 @@ provider "aws" {
 
 data "aws_ami" "amzn-ami-minimal-pv" {
   most_recent = true
-  filter {
-    name = "owner-alias"
-    values = ["amazon"]
-  }
+  owners      = ["amazon"]
+
   filter {
     name = "name"
     values = ["amzn-ami-minimal-pv-*"]
@@ -556,10 +602,8 @@ resource "aws_eip" "bar" {
 const testAccAWSEIPInstanceConfig = `
 data "aws_ami" "amzn-ami-minimal-pv" {
   most_recent = true
-  filter {
-    name = "owner-alias"
-    values = ["amazon"]
-  }
+  owners      = ["amazon"]
+
   filter {
     name = "name"
     values = ["amzn-ami-minimal-pv-*"]
@@ -583,10 +627,8 @@ resource "aws_eip" "bar" {
 const testAccAWSEIPInstanceConfig2 = `
 data "aws_ami" "amzn-ami-minimal-pv" {
   most_recent = true
-  filter {
-    name = "owner-alias"
-    values = ["amazon"]
-  }
+  owners      = ["amazon"]
+
   filter {
     name = "name"
     values = ["amzn-ami-minimal-pv-*"]
@@ -610,10 +652,8 @@ resource "aws_eip" "bar" {
 const testAccAWSEIPInstanceConfig_associated = `
 data "aws_ami" "amzn-ami-minimal-hvm" {
   most_recent = true
-  filter {
-    name = "owner-alias"
-    values = ["amazon"]
-  }
+  owners      = ["amazon"]
+
   filter {
     name = "name"
     values = ["amzn-ami-minimal-hvm-*"]
@@ -688,10 +728,8 @@ resource "aws_eip" "bar" {
 const testAccAWSEIPInstanceConfig_associated_switch = `
 data "aws_ami" "amzn-ami-minimal-hvm" {
   most_recent = true
-  filter {
-    name = "owner-alias"
-    values = ["amazon"]
-  }
+  owners      = ["amazon"]
+
   filter {
     name = "name"
     values = ["amzn-ami-minimal-hvm-*"]
@@ -852,10 +890,8 @@ variable "server_count" {
 
 data "aws_ami" "amzn-ami-minimal-pv" {
   most_recent = true
-  filter {
-    name = "owner-alias"
-    values = ["amazon"]
-  }
+  owners      = ["amazon"]
+
   filter {
     name = "name"
     values = ["amzn-ami-minimal-pv-*"]
@@ -929,10 +965,8 @@ resource "aws_route_table_association" "us-east-1b-public" {
 const testAccAWSEIPAssociate_not_associated = `
 data "aws_ami" "amzn-ami-minimal-pv" {
   most_recent = true
-  filter {
-    name = "owner-alias"
-    values = ["amazon"]
-  }
+  owners      = ["amazon"]
+
   filter {
     name = "name"
     values = ["amzn-ami-minimal-pv-*"]
@@ -955,10 +989,8 @@ resource "aws_eip" "bar" {
 const testAccAWSEIPAssociate_associated = `
 data "aws_ami" "amzn-ami-minimal-pv" {
   most_recent = true
-  filter {
-    name = "owner-alias"
-    values = ["amazon"]
-  }
+  owners      = ["amazon"]
+
   filter {
     name = "name"
     values = ["amzn-ami-minimal-pv-*"]

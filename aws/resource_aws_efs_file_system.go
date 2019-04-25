@@ -40,11 +40,10 @@ func resourceAwsEfsFileSystem() *schema.Resource {
 			},
 
 			"reference_name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				Deprecated:   "Please use attribute `creation_token' instead. This attribute might be removed in future releases.",
-				ValidateFunc: validateReferenceName,
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				Removed:  "Use `creation_token` argument instead",
 			},
 
 			"performance_mode": {
@@ -105,12 +104,7 @@ func resourceAwsEfsFileSystemCreate(d *schema.ResourceData, meta interface{}) er
 	if v, ok := d.GetOk("creation_token"); ok {
 		creationToken = v.(string)
 	} else {
-		if v, ok := d.GetOk("reference_name"); ok {
-			creationToken = resource.PrefixedUniqueId(fmt.Sprintf("%s-", v.(string)))
-			log.Printf("[WARN] Using deprecated `reference_name' attribute.")
-		} else {
-			creationToken = resource.UniqueId()
-		}
+		creationToken = resource.UniqueId()
 	}
 	throughputMode := d.Get("throughput_mode").(string)
 
@@ -313,6 +307,9 @@ func resourceAwsEfsFileSystemDelete(d *schema.ResourceData, meta interface{}) er
 	_, err := conn.DeleteFileSystem(&efs.DeleteFileSystemInput{
 		FileSystemId: aws.String(d.Id()),
 	})
+	if err != nil {
+		return fmt.Errorf("Error delete file system: %s with err %s", d.Id(), err.Error())
+	}
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"available", "deleting"},
 		Target:  []string{},
@@ -350,16 +347,6 @@ func resourceAwsEfsFileSystemDelete(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[DEBUG] EFS file system %q deleted.", d.Id())
 
 	return nil
-}
-
-func validateReferenceName(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	creationToken := resource.PrefixedUniqueId(fmt.Sprintf("%s-", value))
-	if len(creationToken) > 64 {
-		errors = append(errors, fmt.Errorf(
-			"%q cannot take the Creation Token over the limit of 64 characters: %q", k, value))
-	}
-	return
 }
 
 func hasEmptyFileSystems(fs *efs.DescribeFileSystemsOutput) bool {

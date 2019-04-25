@@ -6,7 +6,7 @@ description: |-
   Provides a resource to manage a GuardDuty member
 ---
 
-# aws_guardduty_member
+# Resource: aws_guardduty_member
 
 Provides a resource to manage a GuardDuty member.
 

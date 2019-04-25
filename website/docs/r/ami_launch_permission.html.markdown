@@ -6,7 +6,7 @@ description: |-
   Adds launch permission to Amazon Machine Image (AMI).
 ---
 
-# aws_ami_launch_permission
+# Resource: aws_ami_launch_permission
 
 Adds launch permission to Amazon Machine Image (AMI) from another AWS account.
 

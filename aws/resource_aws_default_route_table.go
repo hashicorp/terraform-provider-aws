@@ -36,9 +36,10 @@ func resourceAwsDefaultRouteTable() *schema.Resource {
 			},
 
 			"route": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Optional: true,
+				Type:       schema.TypeSet,
+				ConfigMode: schema.SchemaConfigModeAttr,
+				Computed:   true,
+				Optional:   true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"cidr_block": {

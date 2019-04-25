@@ -6,7 +6,7 @@ description: |-
   Provides an IAM service-linked role.
 ---
 
-# aws_iam_service_linked_role
+# Resource: aws_iam_service_linked_role
 
 Provides an [IAM service-linked role](https://docs.aws.amazon.com/IAM/latest/UserGuide/using-service-linked-roles.html).
 

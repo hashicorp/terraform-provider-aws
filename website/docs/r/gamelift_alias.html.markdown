@@ -6,7 +6,7 @@ description: |-
   Provides a Gamelift Alias resource.
 ---
 
-# aws_gamelift_alias
+# Resource: aws_gamelift_alias
 
 Provides a Gamelift Alias resource.
 

@@ -352,10 +352,11 @@ func resourceAwsEMRCluster() *schema.Resource {
 				},
 			},
 			"step": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
+				Type:       schema.TypeList,
+				Optional:   true,
+				Computed:   true,
+				ForceNew:   true,
+				ConfigMode: schema.SchemaConfigModeAttr,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"action_on_failure": {
@@ -370,10 +371,11 @@ func resourceAwsEMRCluster() *schema.Resource {
 							}, false),
 						},
 						"hadoop_jar_step": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Required: true,
-							ForceNew: true,
+							Type:       schema.TypeList,
+							MaxItems:   1,
+							Required:   true,
+							ForceNew:   true,
+							ConfigMode: schema.SchemaConfigModeAttr,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"args": {
@@ -988,7 +990,7 @@ func resourceAwsEMRClusterDelete(d *schema.ResourceData, meta interface{}) error
 		return err
 	}
 
-	err = resource.Retry(10*time.Minute, func() *resource.RetryError {
+	err = resource.Retry(20*time.Minute, func() *resource.RetryError {
 		resp, err := conn.ListInstances(&emr.ListInstancesInput{
 			ClusterId: aws.String(d.Id()),
 		})
@@ -1177,6 +1179,9 @@ func flattenInstanceGroup(ig *emr.InstanceGroup) (map[string]interface{}, error)
 	attrs["instance_count"] = int(*ig.RequestedInstanceCount)
 	attrs["instance_role"] = *ig.InstanceGroupType
 	attrs["instance_type"] = *ig.InstanceType
+	if ig.Name != nil {
+		attrs["name"] = *ig.Name
+	}
 
 	if ig.AutoScalingPolicy != nil {
 		// AutoScalingPolicy has an additional Status field and null values that are causing a new hashcode to be generated
@@ -1628,7 +1633,7 @@ func resourceAwsEMRClusterStateRefreshFunc(d *schema.ResourceData, meta interfac
 
 		if err != nil {
 			if awsErr, ok := err.(awserr.Error); ok {
-				if "ClusterNotFound" == awsErr.Code() {
+				if awsErr.Code() == "ClusterNotFound" {
 					return 42, "destroyed", nil
 				}
 			}

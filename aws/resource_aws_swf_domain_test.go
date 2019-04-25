@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"os"
 	"regexp"
 	"testing"
 
@@ -12,6 +13,15 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func testAccPreCheckSwfDomainTestingEnabled(t *testing.T) {
+	if os.Getenv("SWF_DOMAIN_TESTING_ENABLED") == "" {
+		t.Skip(
+			"Environment variable SWF_DOMAIN_TESTING_ENABLED is not set. " +
+				"SWF limits domains per region and the API does not support " +
+				"deletions. Set the environment variable to any value to enable.")
+	}
+}
+
 func TestAccAWSSwfDomain_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_swf_domain.test"
@@ -19,6 +29,7 @@ func TestAccAWSSwfDomain_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
+			testAccPreCheckSwfDomainTestingEnabled(t)
 		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSwfDomainDestroy,
@@ -46,6 +57,7 @@ func TestAccAWSSwfDomain_NamePrefix(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
+			testAccPreCheckSwfDomainTestingEnabled(t)
 		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSwfDomainDestroy,
@@ -73,6 +85,7 @@ func TestAccAWSSwfDomain_GeneratedName(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
+			testAccPreCheckSwfDomainTestingEnabled(t)
 		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSwfDomainDestroy,
@@ -99,6 +112,7 @@ func TestAccAWSSwfDomain_Description(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
+			testAccPreCheckSwfDomainTestingEnabled(t)
 		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSwfDomainDestroy,

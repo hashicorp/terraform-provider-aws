@@ -20,10 +20,10 @@ func dataSourceAwsRegion() *schema.Resource {
 			},
 
 			"current": {
-				Type:       schema.TypeBool,
-				Optional:   true,
-				Computed:   true,
-				Deprecated: "Defaults to current provider region if no other filtering is enabled",
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+				Removed:  "Defaults to current provider region if no other filtering is enabled",
 			},
 
 			"endpoint": {
@@ -76,7 +76,6 @@ func dataSourceAwsRegionRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(region.ID())
-	d.Set("current", region.ID() == providerRegion)
 
 	regionEndpointEc2, err := region.ResolveEndpoint(endpoints.Ec2ServiceID)
 	if err != nil {

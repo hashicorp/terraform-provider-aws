@@ -6,7 +6,7 @@ description: |-
   Provides a AWS WAF Regex Match Set resource.
 ---
 
-# aws_waf_regex_match_set
+# Resource: aws_waf_regex_match_set
 
 Provides a WAF Regex Match Set Resource
 

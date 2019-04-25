@@ -6,7 +6,7 @@ description: |-
   Provides an SSM Maintenance Window resource
 ---
 
-# aws_ssm_maintenance_window
+# Resource: aws_ssm_maintenance_window
 
 Provides an SSM Maintenance Window resource
 

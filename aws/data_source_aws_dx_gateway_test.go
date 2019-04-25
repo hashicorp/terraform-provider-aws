@@ -28,6 +28,7 @@ func TestAccDataSourceAwsDxGateway_Basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "amazon_side_asn", resourceName, "amazon_side_asn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(datasourceName, "owner_account_id", resourceName, "owner_account_id"),
 				),
 			},
 		},

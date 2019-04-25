@@ -6,7 +6,7 @@ description: |-
   Provides an AutoScaling Schedule resource.
 ---
 
-# aws_autoscaling_schedule
+# Resource: aws_autoscaling_schedule
 
 Provides an AutoScaling Schedule resource.
 

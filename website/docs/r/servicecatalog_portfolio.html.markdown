@@ -6,7 +6,7 @@ description: |-
   Provides a resource to create a Service Catalog portfolio
 ---
 
-# aws_servicecatalog_portfolio
+# Resource: aws_servicecatalog_portfolio
 
 Provides a resource to create a Service Catalog Portfolio.
 

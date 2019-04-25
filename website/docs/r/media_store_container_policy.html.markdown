@@ -6,7 +6,7 @@ description: |-
   Provides a MediaStore Container Policy.
 ---
 
-# aws_media_store_container_policy
+# Resource: aws_media_store_container_policy
 
 Provides a MediaStore Container Policy.
 

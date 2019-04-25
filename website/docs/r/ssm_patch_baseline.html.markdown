@@ -6,7 +6,7 @@ description: |-
   Provides an SSM Patch Baseline resource
 ---
 
-# aws_ssm_patch_baseline
+# Resource: aws_ssm_patch_baseline
 
 Provides an SSM Patch Baseline resource
 
@@ -106,3 +106,11 @@ The `approval_rule` block supports:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the patch baseline.
+
+## Import
+
+SSM Patch Baselines can be imported by their baseline ID, e.g.
+
+```
+$ terraform import aws_ssm_patch_baseline.example pb-12345678
+```

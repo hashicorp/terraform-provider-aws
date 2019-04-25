@@ -39,10 +39,6 @@ func resourceAwsEgressOnlyInternetGatewayCreate(d *schema.ResourceData, meta int
 
 	d.SetId(*resp.EgressOnlyInternetGateway.EgressOnlyInternetGatewayId)
 
-	if err != nil {
-		return fmt.Errorf("%s", err)
-	}
-
 	return resourceAwsEgressOnlyInternetGatewayRead(d, meta)
 }
 

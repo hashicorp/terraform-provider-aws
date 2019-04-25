@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -12,6 +13,72 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_vpc_endpoint_service", &resource.Sweeper{
+		Name: "aws_vpc_endpoint_service",
+		F:    testSweepEc2VpcEndpointServices,
+		Dependencies: []string{
+			"aws_vpc_endpoint",
+		},
+	})
+}
+
+func testSweepEc2VpcEndpointServices(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).ec2conn
+	input := &ec2.DescribeVpcEndpointServiceConfigurationsInput{}
+
+	for {
+		output, err := conn.DescribeVpcEndpointServiceConfigurations(input)
+
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping EC2 VPC Endpoint Service sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error retrieving EC2 VPC Endpoint Services: %s", err)
+		}
+
+		for _, serviceConfiguration := range output.ServiceConfigurations {
+			if aws.StringValue(serviceConfiguration.ServiceState) == ec2.ServiceStateDeleted {
+				continue
+			}
+
+			id := aws.StringValue(serviceConfiguration.ServiceId)
+			input := &ec2.DeleteVpcEndpointServiceConfigurationsInput{
+				ServiceIds: []*string{serviceConfiguration.ServiceId},
+			}
+
+			log.Printf("[INFO] Deleting EC2 VPC Endpoint Service: %s", id)
+			_, err := conn.DeleteVpcEndpointServiceConfigurations(input)
+
+			if isAWSErr(err, "InvalidVpcEndpointServiceId.NotFound", "") {
+				continue
+			}
+
+			if err != nil {
+				return fmt.Errorf("error deleting EC2 VPC Endpoint Service (%s): %s", id, err)
+			}
+
+			if err := waitForVpcEndpointServiceDeletion(conn, id); err != nil {
+				return fmt.Errorf("error waiting for VPC Endpoint Service (%s) to delete: %s", id, err)
+			}
+		}
+
+		if aws.StringValue(output.NextToken) == "" {
+			break
+		}
+
+		input.NextToken = output.NextToken
+	}
+
+	return nil
+}
 
 func TestAccAWSVpcEndpointService_importBasic(t *testing.T) {
 	lbName := fmt.Sprintf("testaccawsnlb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
