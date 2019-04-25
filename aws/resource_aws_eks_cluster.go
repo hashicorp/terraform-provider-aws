@@ -38,9 +38,6 @@ func resourceAwsEksCluster() *schema.Resource {
 			Delete: schema.DefaultTimeout(15 * time.Minute),
 		},
 
-		SchemaVersion: 1,
-		MigrateState:  resourceAwsEksClusterMigrateState,
-
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
