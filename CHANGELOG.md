@@ -7,7 +7,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_dx_gateway: Add `owner_account_id` attribute [GH-8320]
-* data-source/aws_eks_cluster: Add `enabled_cluster_log_types` attribute [GH
+* data-source/aws_eks_cluster: Add `enabled_cluster_log_types` attribute [GH-8402]
 * resource/aws_dx_gateway: Add `owner_account_id` attribute [GH-8320]
 * resource/aws_dx_gateway_association: Support resource import [GH-8222]
 * resource/aws_dx_gateway_association: Add `allowed_prefixes` argument [GH-8222]
