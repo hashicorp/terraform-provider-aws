@@ -124,5 +124,9 @@ func resourceAwsEc2TagDelete(d *schema.ResourceData, meta interface{}) error {
 		},
 	})
 
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
