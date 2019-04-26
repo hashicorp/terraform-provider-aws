@@ -56,3 +56,11 @@ Set to -1 if you don't want to change the maximum size at the scheduled time.
 
 ## Attribute Reference
 * `arn` - The ARN assigned by AWS to the autoscaling schedule.
+
+## Import
+
+AutoScaling ScheduledAction can be imported using the `auto-scaling-group-name` and `scheduled-action-name`, e.g.
+
+```
+$ terraform import aws_autoscaling_schedule.resource-name auto-scaling-group-name/scheduled-action-name
+```
