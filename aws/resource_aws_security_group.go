@@ -1337,9 +1337,9 @@ func idHash(rType, protocol string, toPort, fromPort int64, self bool) string {
 
 // protocolStateFunc ensures we only store a string in any protocol field
 func protocolStateFunc(v interface{}) string {
-	switch v.(type) {
+	switch v := v.(type) {
 	case string:
-		p := protocolForValue(v.(string))
+		p := protocolForValue(v)
 		return p
 	default:
 		log.Printf("[WARN] Non String value given for Protocol: %#v", v)
