@@ -19,29 +19,8 @@ func TestAccAWSAutoscalingSchedule_basic(t *testing.T) {
 	start := testAccAWSAutoscalingScheduleValidStart(t)
 	end := testAccAWSAutoscalingScheduleValidEnd(t)
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAutoscalingScheduleDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSAutoscalingScheduleConfig(rName, start, end),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScalingScheduleExists("aws_autoscaling_schedule.foobar", &schedule),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSAutoscalingSchedule_basicImport(t *testing.T) {
-	var schedule autoscaling.ScheduledUpdateGroupAction
-	rName := fmt.Sprintf("tf-test-%d", acctest.RandInt())
-	start := testAccAWSAutoscalingScheduleValidStart(t)
-	end := testAccAWSAutoscalingScheduleValidEnd(t)
-
 	scheduledActionName := "foobar"
-	resourceName := "aws_autoscaling_schedule.foobar"
+	resourceName := fmt.Sprintf("aws_autoscaling_schedule.%s", scheduledActionName)
 	importInput := fmt.Sprintf("%s/%s", rName, scheduledActionName)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -52,24 +31,21 @@ func TestAccAWSAutoscalingSchedule_basicImport(t *testing.T) {
 			{
 				Config: testAccAWSAutoscalingScheduleConfig(rName, start, end),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScalingScheduleExists("aws_autoscaling_schedule.foobar", &schedule),
+					testAccCheckScalingScheduleExists(resourceName, &schedule),
 				),
 			},
-			// Test existent resource import
 			{
 				ResourceName:      resourceName,
 				ImportStateId:     importInput,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
-			// Test non-existent resource import
 			{
 				ResourceName:      resourceName,
 				ImportStateId:     fmt.Sprintf("%s/nonexistent", rName),
 				ImportState:       true,
 				ImportStateVerify: false,
-				ExpectError: regexp.MustCompile(
-					`(Please verify the ID is correct|You cannot import non-existent resources using Terraform import)`),
+				ExpectError:       regexp.MustCompile(`(Cannot import non-existent remote object)`),
 			},
 		},
 	})
@@ -114,6 +90,11 @@ func TestAccAWSAutoscalingSchedule_recurrence(t *testing.T) {
 	var schedule autoscaling.ScheduledUpdateGroupAction
 
 	rName := fmt.Sprintf("tf-test-%d", acctest.RandInt())
+
+	scheduledActionName := "foobar"
+	resourceName := fmt.Sprintf("aws_autoscaling_schedule.%s", scheduledActionName)
+	importInput := fmt.Sprintf("%s/%s", rName, scheduledActionName)
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -122,9 +103,15 @@ func TestAccAWSAutoscalingSchedule_recurrence(t *testing.T) {
 			{
 				Config: testAccAWSAutoscalingScheduleConfig_recurrence(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScalingScheduleExists("aws_autoscaling_schedule.foobar", &schedule),
-					resource.TestCheckResourceAttr("aws_autoscaling_schedule.foobar", "recurrence", "0 8 * * *"),
+					testAccCheckScalingScheduleExists(resourceName, &schedule),
+					resource.TestCheckResourceAttr(resourceName, "recurrence", "0 8 * * *"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateId:     importInput,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -137,6 +124,10 @@ func TestAccAWSAutoscalingSchedule_zeroValues(t *testing.T) {
 	start := testAccAWSAutoscalingScheduleValidStart(t)
 	end := testAccAWSAutoscalingScheduleValidEnd(t)
 
+	scheduledActionName := "foobar"
+	resourceName := fmt.Sprintf("aws_autoscaling_schedule.%s", scheduledActionName)
+	importInput := fmt.Sprintf("%s/%s", rName, scheduledActionName)
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -145,8 +136,14 @@ func TestAccAWSAutoscalingSchedule_zeroValues(t *testing.T) {
 			{
 				Config: testAccAWSAutoscalingScheduleConfig_zeroValues(rName, start, end),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScalingScheduleExists("aws_autoscaling_schedule.foobar", &schedule),
+					testAccCheckScalingScheduleExists(resourceName, &schedule),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateId:     importInput,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -159,6 +156,10 @@ func TestAccAWSAutoscalingSchedule_negativeOne(t *testing.T) {
 	start := testAccAWSAutoscalingScheduleValidStart(t)
 	end := testAccAWSAutoscalingScheduleValidEnd(t)
 
+	scheduledActionName := "foobar"
+	resourceName := fmt.Sprintf("aws_autoscaling_schedule.%s", scheduledActionName)
+	importInput := fmt.Sprintf("%s/%s", rName, scheduledActionName)
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -167,10 +168,16 @@ func TestAccAWSAutoscalingSchedule_negativeOne(t *testing.T) {
 			{
 				Config: testAccAWSAutoscalingScheduleConfig_negativeOne(rName, start, end),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScalingScheduleExists("aws_autoscaling_schedule.foobar", &schedule),
+					testAccCheckScalingScheduleExists(resourceName, &schedule),
 					testAccCheckScalingScheduleHasNoDesiredCapacity(&schedule),
-					resource.TestCheckResourceAttr("aws_autoscaling_schedule.foobar", "desired_capacity", "-1"),
+					resource.TestCheckResourceAttr(resourceName, "desired_capacity", "-1"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateId:     importInput,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
