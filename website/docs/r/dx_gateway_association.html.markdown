@@ -8,7 +8,12 @@ description: |-
 
 # Resource: aws_dx_gateway_association
 
-Associates a Direct Connect Gateway with a VGW. For creating cross-account association proposals, see the [`aws_dx_gateway_association_proposal` resource](/docs/providers/aws/r/dx_gateway_association_proposal.html).
+Associates a Direct Connect Gateway with a VGW.
+This resource manages a single account association.
+
+To create a cross-account association, create an [`aws_dx_gateway_association_proposal` resource](/docs/providers/aws/r/dx_gateway_association_proposal.html)
+in the AWS account that owns the VGW and then accept the proposal in the AWS account that owns the Direct Connect Gateway
+by creating an [`aws_dx_cross_account_gateway_association` resource](/docs/providers/aws/r/dx_cross_account_gateway_association.html).
 
 ## Example Usage
 
