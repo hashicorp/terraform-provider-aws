@@ -2,13 +2,10 @@ package aws
 
 import (
 	"fmt"
-	"log"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -38,36 +35,41 @@ func resourceAwsEc2Tag() *schema.Resource {
 	}
 }
 
-func extractResourceIdFromEc2TagId(d *schema.ResourceData) string {
+func extractResourceIdFromEc2TagId(d *schema.ResourceData) (string, error) {
 	i := d.Id()
 	parts := strings.Split(i, "-")
 
 	if len(parts) != 2 {
-		return fmt.Errorf("Invalid resource ID; cannot look up subnet: %s", i)
+		return "", fmt.Errorf("Invalid resource ID; cannot look up subnet: %s", i)
 	}
 
-	return parts[0]
+	return parts[0], nil
 }
 
 func resourceAwsEc2TagCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
 	d.SetId(fmt.Sprintf("%s-%s", d.Get("subnet_id"), d.Get("key")))
 	return resourceAwsEc2TagRead(d, meta)
 }
 
 func resourceAwsEc2TagRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
-	id := extractResourceIdFromEc2TagId(d)
+	id, err := extractResourceIdFromEc2TagId(d)
+
+	if err != nil {
+		return err
+	}
+
+	key := d.Get("key").(string)
 
 	tags, err := conn.DescribeTags(&ec2.DescribeTagsInput{
 		Filters: []*ec2.Filter{
-			ec2.Filter{
-				Name:   "resource-id",
+			{
+				Name:   aws.String("resource-id"),
 				Values: []*string{aws.String(id)},
 			},
-			ec2.Filter{
-				Name:   "key",
-				Values: []*string{d.Get("key").(string)},
+			{
+				Name:   aws.String("key"),
+				Values: []*string{aws.String(key)},
 			},
 		},
 	})
@@ -76,11 +78,11 @@ func resourceAwsEc2TagRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if len(tags) != 1 {
-		return fmt.Errorf("Expected exactly 1 tag, got %d tags", len(tags))
+	if len(tags.Tags) != 1 {
+		return fmt.Errorf("Expected exactly 1 tag, got %d tags for key %s", len(tags.Tags), key)
 	}
 
-	tag := tags[0]
+	tag := tags.Tags[0]
 	d.Set("value", aws.StringValue(tag.Value))
 
 	return nil
@@ -88,12 +90,16 @@ func resourceAwsEc2TagRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAwsEc2TagDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
-	subnetId := extractResourceIdFromEc2TagId(d)
+	id, err := extractResourceIdFromEc2TagId(d)
 
-	_, err := conn.DeleteTags(&ec2.DeleteTagsInput{
-		Resources: []*string{aws.String(d.Id())},
-		Tags: []*Tags{
-			Tag{
+	if err != nil {
+		return err
+	}
+
+	_, err = conn.DeleteTags(&ec2.DeleteTagsInput{
+		Resources: []*string{aws.String(id)},
+		Tags: []*ec2.Tag{
+			{
 				Key:   aws.String(d.Get("tag").(string)),
 				Value: aws.String(d.Get("value").(string)),
 			},
