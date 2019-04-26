@@ -39,6 +39,11 @@ func init() {
 				*providers = append(*providers, p.(*schema.Provider))
 				return p, nil
 			},
+			"tls": func() (terraform.ResourceProvider, error) {
+				p := tls.Provider()
+				*providers = append(*providers, p.(*schema.Provider))
+				return p, nil
+			},
 		}
 	}
 	testAccProvidersWithTLS = map[string]terraform.ResourceProvider{
@@ -252,6 +257,21 @@ provider "aws" {
   secret_key = %[3]q
 }
 `, os.Getenv("AWS_ALTERNATE_ACCESS_KEY_ID"), os.Getenv("AWS_ALTERNATE_PROFILE"), os.Getenv("AWS_ALTERNATE_SECRET_ACCESS_KEY"))
+}
+
+// Provider configuration hardcoded for us-east-1.
+// This should only be necessary for testing ACM Certificates with CloudFront
+// related infrastucture such as API Gateway Domain Names for EDGE endpoints,
+// CloudFront Distribution Viewer Certificates, and Cognito User Pool Domains.
+// Other valid usage is for services only available in us-east-1 such as the
+// Cost and Usage Reporting and Pricing services.
+func testAccUsEast1RegionProviderConfig() string {
+	return fmt.Sprintf(`
+provider "aws" {
+  alias  = "us-east-1"
+  region = "us-east-1"
+}
+`)
 }
 
 func testAccAwsRegionProviderFunc(region string, providers *[]*schema.Provider) func() *schema.Provider {
