@@ -50,7 +50,7 @@ func resourceAwsDxGatewayAssociationProposalCreate(d *schema.ResourceData, meta 
 	conn := meta.(*AWSClient).dxconn
 
 	input := &directconnect.CreateDirectConnectGatewayAssociationProposalInput{
-		AddAllowedPrefixesToDirectConnectGateway: expandDirectConnectGatewayAssociationProposalAllowedPrefixes(d.Get("allowed_prefixes").(*schema.Set).List()),
+		AddAllowedPrefixesToDirectConnectGateway: expandDxRouteFilterPrefixes(d.Get("allowed_prefixes").(*schema.Set)),
 		DirectConnectGatewayId:                   aws.String(d.Get("dx_gateway_id").(string)),
 		DirectConnectGatewayOwnerAccount:         aws.String(d.Get("dx_gateway_owner_account_id").(string)),
 		GatewayId:                                aws.String(d.Get("vpn_gateway_id").(string)),
@@ -93,7 +93,7 @@ func resourceAwsDxGatewayAssociationProposalRead(d *schema.ResourceData, meta in
 		return fmt.Errorf("error reading Direct Connect Gateway Association Proposal (%s): missing associated gateway information", d.Id())
 	}
 
-	if err := d.Set("allowed_prefixes", flattenDirectConnectGatewayAssociationProposalAllowedPrefixes(proposal.RequestedAllowedPrefixesToDirectConnectGateway)); err != nil {
+	if err := d.Set("allowed_prefixes", flattenDxRouteFilterPrefixes(proposal.RequestedAllowedPrefixesToDirectConnectGateway)); err != nil {
 		return fmt.Errorf("error setting allowed_prefixes: %s", err)
 	}
 
@@ -152,46 +152,4 @@ func describeDirectConnectGatewayAssociationProposal(conn *directconnect.DirectC
 	}
 
 	return nil, nil
-}
-
-func expandDirectConnectGatewayAssociationProposalAllowedPrefixes(allowedPrefixes []interface{}) []*directconnect.RouteFilterPrefix {
-	if len(allowedPrefixes) == 0 {
-		return nil
-	}
-
-	var routeFilterPrefixes []*directconnect.RouteFilterPrefix
-
-	for _, allowedPrefixRaw := range allowedPrefixes {
-		if allowedPrefixRaw == nil {
-			continue
-		}
-
-		routeFilterPrefix := &directconnect.RouteFilterPrefix{
-			Cidr: aws.String(allowedPrefixRaw.(string)),
-		}
-
-		routeFilterPrefixes = append(routeFilterPrefixes, routeFilterPrefix)
-	}
-
-	return routeFilterPrefixes
-}
-
-func flattenDirectConnectGatewayAssociationProposalAllowedPrefixes(routeFilterPrefixes []*directconnect.RouteFilterPrefix) []interface{} {
-	if len(routeFilterPrefixes) == 0 {
-		return []interface{}{}
-	}
-
-	var allowedPrefixes []interface{}
-
-	for _, routeFilterPrefix := range routeFilterPrefixes {
-		if routeFilterPrefix == nil {
-			continue
-		}
-
-		allowedPrefix := aws.StringValue(routeFilterPrefix.Cidr)
-
-		allowedPrefixes = append(allowedPrefixes, allowedPrefix)
-	}
-
-	return allowedPrefixes
 }

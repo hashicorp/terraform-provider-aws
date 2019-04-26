@@ -411,6 +411,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_dx_gateway":                                          resourceAwsDxGateway(),
 			"aws_dx_gateway_association":                              resourceAwsDxGatewayAssociation(),
 			"aws_dx_gateway_association_proposal":                     resourceAwsDxGatewayAssociationProposal(),
+			"aws_dx_gateway_association_proposal_accepter":            resourceAwsDxGatewayAssociationProposalAccepter(),
 			"aws_dx_hosted_private_virtual_interface":                 resourceAwsDxHostedPrivateVirtualInterface(),
 			"aws_dx_hosted_private_virtual_interface_accepter":        resourceAwsDxHostedPrivateVirtualInterfaceAccepter(),
 			"aws_dx_hosted_public_virtual_interface":                  resourceAwsDxHostedPublicVirtualInterface(),

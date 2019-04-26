@@ -71,7 +71,7 @@ func TestAccAwsDxGatewayAssociationProposal_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsDxGatewayAssociationProposal_AllowedPrefixes(t *testing.T) {
+func TestAccAwsDxGatewayAssociationProposal_allowedPrefixes(t *testing.T) {
 	var proposal1, proposal2 directconnect.GatewayAssociationProposal
 	var providers []*schema.Provider
 	rBgpAsn := randIntRange(64512, 65534)
