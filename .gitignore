@@ -1,9 +1,20 @@
+# Glob exclusions
+*~
+*.bak
+*.backup
 *.dll
 *.exe
+*.iml
+*.log
+.*.swp
+*.test
+./*.tfstate
+
+# Directory exclusions
 .DS_Store
-example.tf
-terraform.tfplan
-terraform.tfstate
+.idea
+.vagrant/
+.terraform/
 bin/
 modules-dev/
 /pkg/
@@ -11,21 +22,13 @@ website/.vagrant
 website/.bundle
 website/build
 website/node_modules
-.vagrant/
-*.backup
-./*.tfstate
-.terraform/
-*.log
-*.bak
-*~
-.*.swp
-.idea
-*.iml
-*.test
-*.iml
-log.txt
-
 website/vendor
+
+# File exclusions
+example.tf
+log.txt
+terraform.tfplan
+terraform.tfstate
 
 # Test exclusions
 !command/test-fixtures/**/*.tfstate
