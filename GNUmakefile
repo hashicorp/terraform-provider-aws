@@ -3,11 +3,21 @@ TEST?=./...
 GOFMT_FILES?=$$(find . -name '*.go' |grep -v vendor)
 PKG_NAME=aws
 WEBSITE_REPO=github.com/hashicorp/terraform-website
+BUILD_DIR=bin
 
 default: build
 
 build: fmtcheck
 	go install
+
+compile: fmtcheck
+			@echo "==> Cross compiling provider into ${BUILD_DIR}/"
+	    gox \
+	    	-parallel=2 \
+	    	-arch="amd64" \
+	    	-os="linux darwin windows freebsd openbsd solaris" \
+	    	-osarch="!darwin/arm !darwin/386" \
+	    	-output="$(BUILD_DIR)/{{.Dir}}_{{.OS}}_{{.Arch}}"
 
 sweep:
 	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
@@ -37,6 +47,7 @@ lint:
 tools:
 	GO111MODULE=on go install github.com/client9/misspell/cmd/misspell
 	GO111MODULE=on go install github.com/golangci/golangci-lint/cmd/golangci-lint
+	GO111MODULE=on go install github.com/mitchellh/gox
 
 test-compile:
 	@if [ "$(TEST)" = "./..." ]; then \
