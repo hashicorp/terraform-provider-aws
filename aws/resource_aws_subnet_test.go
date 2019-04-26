@@ -23,7 +23,7 @@ func init() {
 			"aws_autoscaling_group",
 			"aws_batch_compute_environment",
 			"aws_beanstalk_environment",
-			"aws_db_instance",
+			"aws_db_subnet_group",
 			"aws_directory_service_directory",
 			"aws_ec2_client_vpn_endpoint",
 			"aws_ec2_transit_gateway_vpc_attachment",
