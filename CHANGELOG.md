@@ -31,6 +31,7 @@ BUG FIXES:
 * resource/aws_emr_cluster: Increase deletion timeout from 10 to 20 minutes to match AWS documentation [GH-8428]
 * resource/aws_lb: Prevent difference when `subnet_mapping` configuration block `allocation_id` argument was omitted [GH-8282]
 * resource/aws_lb: Properly disable access logs with `access_logs` configuration block `enabled` argument set to `false` [GH-8282]
+* resource/aws_network_interface: Refresh private_ips_count into Terraform state and allow for updates from 0 to greater than 0 [GH-8353]
 * resource/aws_vpc: Set ipv6_association_id and ipv6_cidr_block attributes as updated for assign_generated_ipv6_cidr_block updates [GH-6721]
 
 ## 2.7.0 (April 18, 2019)
