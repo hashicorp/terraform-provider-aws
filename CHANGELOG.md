@@ -1,4 +1,4 @@
-## 2.8.0 (Unreleased)
+## 2.8.0 (April 26, 2019)
 
 NOTES:
 
@@ -6,33 +6,33 @@ NOTES:
 
 FEATURES:
 
-* **New Resource:** `aws_dx_gateway_association_proposal` [GH-8320]
+* **New Resource:** `aws_dx_gateway_association_proposal` ([#8320](https://github.com/terraform-providers/terraform-provider-aws/issues/8320))
 
 ENHANCEMENTS:
 
-* data-source/aws_cloudtrail_service_account: Support new `ap-east-1` region [GH-8437]
-* data-source/aws_dx_gateway: Add `owner_account_id` attribute [GH-8320]
-* data-source/aws_eks_cluster: Add `enabled_cluster_log_types` attribute [GH-8402]
-* data-source/aws_elb_hosted_zone_id: Support new `ap-east-1` region [GH-8437]
-* data-source/aws_elb_service_account: Support new `ap-east-1` region [GH-8437]
-* data-source/aws_redshift_service_account: Support new `ap-east-1` region [GH-8437]
-* data-source/aws_s3_bucket: Support new `ap-east-1` region in `hosted_zone_id` attribute [GH-8437]
-* provider: Support automatic region validation for `ap-east-1` [GH-8440]
-* resource/aws_dx_gateway: Add `owner_account_id` attribute [GH-8320]
-* resource/aws_dx_gateway_association: Support resource import [GH-8222]
-* resource/aws_dx_gateway_association: Add `allowed_prefixes` argument [GH-8222]
-* resource/aws_lb: Support Network Load Balancer (NLB) access logs [GH-8282]
-* resource/aws_s3_bucket: Support new `ap-east-1` region in `hosted_zone_id` attribute [GH-8437]
-* resource/aws_transfer_user: Support `user_name` containing uppercase letters, hyphens, and underscores [GH-8304]
+* data-source/aws_cloudtrail_service_account: Support new `ap-east-1` region ([#8437](https://github.com/terraform-providers/terraform-provider-aws/issues/8437))
+* data-source/aws_dx_gateway: Add `owner_account_id` attribute ([#8320](https://github.com/terraform-providers/terraform-provider-aws/issues/8320))
+* data-source/aws_eks_cluster: Add `enabled_cluster_log_types` attribute ([#8402](https://github.com/terraform-providers/terraform-provider-aws/issues/8402))
+* data-source/aws_elb_hosted_zone_id: Support new `ap-east-1` region ([#8437](https://github.com/terraform-providers/terraform-provider-aws/issues/8437))
+* data-source/aws_elb_service_account: Support new `ap-east-1` region ([#8437](https://github.com/terraform-providers/terraform-provider-aws/issues/8437))
+* data-source/aws_redshift_service_account: Support new `ap-east-1` region ([#8437](https://github.com/terraform-providers/terraform-provider-aws/issues/8437))
+* data-source/aws_s3_bucket: Support new `ap-east-1` region in `hosted_zone_id` attribute ([#8437](https://github.com/terraform-providers/terraform-provider-aws/issues/8437))
+* provider: Support automatic region validation for `ap-east-1` ([#8440](https://github.com/terraform-providers/terraform-provider-aws/issues/8440))
+* resource/aws_dx_gateway: Add `owner_account_id` attribute ([#8320](https://github.com/terraform-providers/terraform-provider-aws/issues/8320))
+* resource/aws_dx_gateway_association: Support resource import ([#8222](https://github.com/terraform-providers/terraform-provider-aws/issues/8222))
+* resource/aws_dx_gateway_association: Add `allowed_prefixes` argument ([#8222](https://github.com/terraform-providers/terraform-provider-aws/issues/8222))
+* resource/aws_lb: Support Network Load Balancer (NLB) access logs ([#8282](https://github.com/terraform-providers/terraform-provider-aws/issues/8282))
+* resource/aws_s3_bucket: Support new `ap-east-1` region in `hosted_zone_id` attribute ([#8437](https://github.com/terraform-providers/terraform-provider-aws/issues/8437))
+* resource/aws_transfer_user: Support `user_name` containing uppercase letters, hyphens, and underscores ([#8304](https://github.com/terraform-providers/terraform-provider-aws/issues/8304))
 
 BUG FIXES:
 
-* resource/aws_eks_cluster: Ignore ordering and properly handle removals with `enabled_cluster_log_types` argument [GH-8402]
-* resource/aws_emr_cluster: Increase deletion timeout from 10 to 20 minutes to match AWS documentation [GH-8428]
-* resource/aws_lb: Prevent difference when `subnet_mapping` configuration block `allocation_id` argument was omitted [GH-8282]
-* resource/aws_lb: Properly disable access logs with `access_logs` configuration block `enabled` argument set to `false` [GH-8282]
-* resource/aws_network_interface: Refresh private_ips_count into Terraform state and allow for updates from 0 to greater than 0 [GH-8353]
-* resource/aws_vpc: Set ipv6_association_id and ipv6_cidr_block attributes as updated for assign_generated_ipv6_cidr_block updates [GH-6721]
+* resource/aws_eks_cluster: Ignore ordering and properly handle removals with `enabled_cluster_log_types` argument ([#8402](https://github.com/terraform-providers/terraform-provider-aws/issues/8402))
+* resource/aws_emr_cluster: Increase deletion timeout from 10 to 20 minutes to match AWS documentation ([#8428](https://github.com/terraform-providers/terraform-provider-aws/issues/8428))
+* resource/aws_lb: Prevent difference when `subnet_mapping` configuration block `allocation_id` argument was omitted ([#8282](https://github.com/terraform-providers/terraform-provider-aws/issues/8282))
+* resource/aws_lb: Properly disable access logs with `access_logs` configuration block `enabled` argument set to `false` ([#8282](https://github.com/terraform-providers/terraform-provider-aws/issues/8282))
+* resource/aws_network_interface: Refresh private_ips_count into Terraform state and allow for updates from 0 to greater than 0 ([#8353](https://github.com/terraform-providers/terraform-provider-aws/issues/8353))
+* resource/aws_vpc: Set ipv6_association_id and ipv6_cidr_block attributes as updated for assign_generated_ipv6_cidr_block updates ([#6721](https://github.com/terraform-providers/terraform-provider-aws/issues/6721))
 
 ## 2.7.0 (April 18, 2019)
 
