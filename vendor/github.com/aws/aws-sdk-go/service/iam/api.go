@@ -1284,13 +1284,13 @@ func (c *IAM) CreateOpenIDConnectProviderRequest(input *CreateOpenIDConnectProvi
 //    * A list of client IDs (also known as audiences) that identify the application
 //    or applications that are allowed to authenticate using the OIDC provider
 //
-//    * A list of thumbprints of the server certificate(s) that the IdP uses.
+//    * A list of thumbprints of the server certificate(s) that the IdP uses
 //
 // You get all of this information from the OIDC IdP that you want to use to
 // access AWS.
 //
-// Because trust for the OIDC provider is derived from the IAM provider that
-// this operation creates, it is best to limit access to the CreateOpenIDConnectProvider
+// The trust for the OIDC provider is derived from the IAM provider that this
+// operation creates. Therefore, it is best to limit access to the CreateOpenIDConnectProvider
 // operation to highly privileged users.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -1705,7 +1705,7 @@ func (c *IAM) CreateSAMLProviderRequest(input *CreateSAMLProviderInput) (req *re
 //
 // The SAML provider resource that you create with this operation can be used
 // as a principal in an IAM role's trust policy. Such a policy can enable federated
-// users who sign-in using the SAML IdP to assume the role. You can create an
+// users who sign in using the SAML IdP to assume the role. You can create an
 // IAM role that supports Web-based single sign-on (SSO) to the AWS Management
 // Console or one that supports API access to AWS.
 //
@@ -2131,9 +2131,10 @@ func (c *IAM) CreateVirtualMFADeviceRequest(input *CreateVirtualMFADeviceInput) 
 // in the IAM User Guide.
 //
 // The seed information contained in the QR code and the Base32 string should
-// be treated like any other secret access information, such as your AWS access
-// keys or your passwords. After you provision your virtual device, you should
-// ensure that the information is destroyed following secure procedures.
+// be treated like any other secret access information. In other words, protect
+// the seed information as you would your AWS access keys or your passwords.
+// After you provision your virtual device, you should ensure that the information
+// is destroyed following secure procedures.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3421,9 +3422,9 @@ func (c *IAM) DeleteRolePermissionsBoundaryRequest(input *DeleteRolePermissionsB
 //
 // Deletes the permissions boundary for the specified IAM role.
 //
-// Deleting the permissions boundary for a role might increase its permissions
-// by allowing anyone who assumes the role to perform all the actions granted
-// in its permissions policies.
+// Deleting the permissions boundary for a role might increase its permissions.
+// For example, it might allow anyone who assumes the role to perform all the
+// actions granted in its permissions policies.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4193,9 +4194,29 @@ func (c *IAM) DeleteUserRequest(input *DeleteUserInput) (req *request.Request, o
 
 // DeleteUser API operation for AWS Identity and Access Management.
 //
-// Deletes the specified IAM user. The user must not belong to any groups or
-// have any access keys, signing certificates, MFA devices enabled for AWS,
-// or attached policies.
+// Deletes the specified IAM user. Unlike the AWS Management Console, when you
+// delete a user programmatically, you must delete the items attached to the
+// user manually, or the deletion fails. For more information, see Deleting
+// an IAM User (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_manage.html#id_users_deleting_cli).
+// Before attempting to delete a user, remove the following items:
+//
+//    * Password (DeleteLoginProfile)
+//
+//    * Access keys (DeleteAccessKey)
+//
+//    * Signing certificate (DeleteSigningCertificate)
+//
+//    * SSH public key (DeleteSSHPublicKey)
+//
+//    * Git credentials (DeleteServiceSpecificCredential)
+//
+//    * Multi-factor authentication (MFA) device (DeactivateMFADevice, DeleteVirtualMFADevice)
+//
+//    * Inline policies (DeleteUserPolicy)
+//
+//    * Attached managed policies (DetachUserPolicy)
+//
+//    * Group memberships (RemoveUserFromGroup)
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -5066,7 +5087,7 @@ func (c *IAM) GenerateServiceLastAccessedDetailsRequest(input *GenerateServiceLa
 // Generates a request for a report that includes details about when an IAM
 // resource (user, group, role, or policy) was last used in an attempt to access
 // AWS services. Recent activity usually appears within four hours. IAM reports
-// activity for the last 365 days, or less if your region began supporting this
+// activity for the last 365 days, or less if your Region began supporting this
 // feature within the last year. For more information, see Regions Where Data
 // Is Tracked (https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_access-advisor.html#access-advisor_tracking-period).
 //
@@ -5198,7 +5219,7 @@ func (c *IAM) GetAccessKeyLastUsedRequest(input *GetAccessKeyLastUsedInput) (req
 //
 // Retrieves information about when the specified access key was last used.
 // The information includes the date and time of last use, along with the AWS
-// service and region that were specified in the last request made with that
+// service and Region that were specified in the last request made with that
 // key.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -7078,8 +7099,8 @@ func (c *IAM) GetServiceLastAccessedDetailsRequest(input *GetServiceLastAccessed
 // attempt to access the service. If the operation fails, the GetServiceLastAccessedDetails
 // operation returns the reason that it failed.
 //
-// The GetServiceLastAccessedDetails operation returns a list of services that
-// includes the number of entities that have attempted to access the service
+// The GetServiceLastAccessedDetails operation returns a list of services. This
+// list includes the number of entities that have attempted to access the service
 // and the date and time of the last attempt. It also returns the ARN of the
 // following entity, depending on the resource ARN that you used to generate
 // the report:
@@ -7475,7 +7496,7 @@ func (c *IAM) GetUserPolicyRequest(input *GetUserPolicyInput) (req *request.Requ
 //
 // An IAM user can also have managed policies attached to it. To retrieve a
 // managed policy document that is attached to a user, use GetPolicy to determine
-// the policy's default version, then use GetPolicyVersion to retrieve the policy
+// the policy's default version. Then use GetPolicyVersion to retrieve the policy
 // document.
 //
 // For more information about policies, see Managed Policies and Inline Policies
@@ -10295,7 +10316,7 @@ func (c *IAM) ListSSHPublicKeysRequest(input *ListSSHPublicKeysInput) (req *requ
 // ListSSHPublicKeys API operation for AWS Identity and Access Management.
 //
 // Returns information about the SSH public keys associated with the specified
-// IAM user. If there none exists, the operation returns an empty list.
+// IAM user. If none exists, the operation returns an empty list.
 //
 // The SSH public keys returned by this operation are used only for authenticating
 // the IAM user to an AWS CodeCommit repository. For more information about
@@ -10674,7 +10695,7 @@ func (c *IAM) ListSigningCertificatesRequest(input *ListSigningCertificatesInput
 // ListSigningCertificates API operation for AWS Identity and Access Management.
 //
 // Returns information about the signing certificates associated with the specified
-// IAM user. If there none exists, the operation returns an empty list.
+// IAM user. If none exists, the operation returns an empty list.
 //
 // Although each user is limited to a small number of signing certificates,
 // you can still paginate the results using the MaxItems and Marker parameters.
@@ -12407,6 +12428,108 @@ func (c *IAM) SetDefaultPolicyVersionWithContext(ctx aws.Context, input *SetDefa
 	return out, req.Send()
 }
 
+const opSetSecurityTokenServicePreferences = "SetSecurityTokenServicePreferences"
+
+// SetSecurityTokenServicePreferencesRequest generates a "aws/request.Request" representing the
+// client's request for the SetSecurityTokenServicePreferences operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See SetSecurityTokenServicePreferences for more information on using the SetSecurityTokenServicePreferences
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the SetSecurityTokenServicePreferencesRequest method.
+//    req, resp := client.SetSecurityTokenServicePreferencesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/iam-2010-05-08/SetSecurityTokenServicePreferences
+func (c *IAM) SetSecurityTokenServicePreferencesRequest(input *SetSecurityTokenServicePreferencesInput) (req *request.Request, output *SetSecurityTokenServicePreferencesOutput) {
+	op := &request.Operation{
+		Name:       opSetSecurityTokenServicePreferences,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &SetSecurityTokenServicePreferencesInput{}
+	}
+
+	output = &SetSecurityTokenServicePreferencesOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(query.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// SetSecurityTokenServicePreferences API operation for AWS Identity and Access Management.
+//
+// Sets the specified version of the global endpoint token as the token version
+// used for the AWS account.
+//
+// By default, AWS Security Token Service (STS) is available as a global service,
+// and all STS requests go to a single endpoint at https://sts.amazonaws.com.
+// AWS recommends using Regional STS endpoints to reduce latency, build in redundancy,
+// and increase session token availability. For information about Regional endpoints
+// for STS, see AWS Regions and Endpoints (https://docs.aws.amazon.com/general/latest/gr/rande.html#sts_region)
+// in the AWS General Reference.
+//
+// If you make an STS call to the global endpoint, the resulting session tokens
+// might be valid in some Regions but not others. It depends on the version
+// that is set in this operation. Version 1 tokens are valid only in AWS Regions
+// that are available by default. These tokens do not work in manually enabled
+// Regions, such as Asia Pacific (Hong Kong). Version 2 tokens are valid in
+// all Regions. However, version 2 tokens are longer and might affect systems
+// where you temporarily store tokens. For information, see Activating and Deactivating
+// STS in an AWS Region (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_enable-regions.html)
+// in the IAM User Guide.
+//
+// To view the current session token version, see the GlobalEndpointTokenVersion
+// entry in the response of the GetAccountSummary operation.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Identity and Access Management's
+// API operation SetSecurityTokenServicePreferences for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeServiceFailureException "ServiceFailure"
+//   The request processing has failed because of an unknown error, exception
+//   or failure.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/iam-2010-05-08/SetSecurityTokenServicePreferences
+func (c *IAM) SetSecurityTokenServicePreferences(input *SetSecurityTokenServicePreferencesInput) (*SetSecurityTokenServicePreferencesOutput, error) {
+	req, out := c.SetSecurityTokenServicePreferencesRequest(input)
+	return out, req.Send()
+}
+
+// SetSecurityTokenServicePreferencesWithContext is the same as SetSecurityTokenServicePreferences with the addition of
+// the ability to pass a context and additional request options.
+//
+// See SetSecurityTokenServicePreferences for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IAM) SetSecurityTokenServicePreferencesWithContext(ctx aws.Context, input *SetSecurityTokenServicePreferencesInput, opts ...request.Option) (*SetSecurityTokenServicePreferencesOutput, error) {
+	req, out := c.SetSecurityTokenServicePreferencesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opSimulateCustomPolicy = "SimulateCustomPolicy"
 
 // SimulateCustomPolicyRequest generates a "aws/request.Request" representing the
@@ -12626,7 +12749,7 @@ func (c *IAM) SimulatePrincipalPolicyRequest(input *SimulatePrincipalPolicyInput
 // You can also optionally include one resource-based policy to be evaluated
 // with each of the resources included in the simulation.
 //
-// The simulation does not perform the API operations, it only checks the authorization
+// The simulation does not perform the API operations; it only checks the authorization
 // to determine if the simulated policies allow or deny the operations.
 //
 // Note: This API discloses information about the permissions granted to other
@@ -13227,7 +13350,7 @@ func (c *IAM) UpdateAccessKeyRequest(input *UpdateAccessKeyInput) (req *request.
 // vice versa. This operation can be used to disable a user's key as part of
 // a key rotation workflow.
 //
-// If the UserName field is not specified, the user name is determined implicitly
+// If the UserName is not specified, the user name is determined implicitly
 // based on the AWS access key ID used to sign the request. This operation works
 // for access keys under the AWS account. Consequently, you can use this operation
 // to manage AWS account root user credentials even if the AWS account has no
@@ -14720,7 +14843,7 @@ func (c *IAM) UploadServerCertificateRequest(input *UploadServerCertificateInput
 // entity includes a public key certificate, a private key, and an optional
 // certificate chain, which should all be PEM-encoded.
 //
-// We recommend that you use AWS Certificate Manager (https://docs.aws.amazon.com/certificate-manager/)
+// We recommend that you use AWS Certificate Manager (https://docs.aws.amazon.com/acm/)
 // to provision, manage, and deploy your server certificates. With ACM you can
 // request a certificate, deploy it to AWS resources, and let ACM handle certificate
 // renewals for you. Certificates provided by ACM are free. For more information
@@ -14842,7 +14965,7 @@ func (c *IAM) UploadSigningCertificateRequest(input *UploadSigningCertificateInp
 // that are signed with a corresponding private key. When you upload the certificate,
 // its default status is Active.
 //
-// If the UserName field is not specified, the IAM user name is determined implicitly
+// If the UserName is not specified, the IAM user name is determined implicitly
 // based on the AWS access key ID used to sign the request. This operation works
 // for access keys under the AWS account. Consequently, you can use this operation
 // to manage AWS account root user credentials even if the AWS account has no
@@ -16941,7 +17064,7 @@ type CreateServiceLinkedRoleInput struct {
 	// Service principals are unique and case-sensitive. To find the exact service
 	// principal for your service-linked role, see AWS Services That Work with IAM
 	// (https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_aws-services-that-work-with-iam.html)
-	// in the IAM User Guide and look for the services that have Yes in the Service-Linked
+	// in the IAM User Guide. Look for the services that have Yes in the Service-Linked
 	// Role column. Choose the Yes link to view the service-linked role documentation
 	// for that service.
 	//
@@ -17100,8 +17223,7 @@ type CreateServiceSpecificCredentialOutput struct {
 	// credential.
 	//
 	// This is the only time that the password for this credential set is available.
-	// It cannot be recovered later. Instead, you will have to reset the password
-	// with ResetServiceSpecificCredential.
+	// It cannot be recovered later. Instead, you must reset the password with ResetServiceSpecificCredential.
 	ServiceSpecificCredential *ServiceSpecificCredential `type:"structure"`
 }
 
@@ -19889,7 +20011,7 @@ type GetAccountAuthorizationDetailsOutput struct {
 
 	// When IsTruncated is true, this element is present and contains the value
 	// to use for the Marker parameter in a subsequent pagination request.
-	Marker *string `min:"1" type:"string"`
+	Marker *string `type:"string"`
 
 	// A list containing information about managed policies.
 	Policies []*ManagedPolicyDetail `type:"list"`
@@ -20335,7 +20457,7 @@ type GetGroupOutput struct {
 
 	// When IsTruncated is true, this element is present and contains the value
 	// to use for the Marker parameter in a subsequent pagination request.
-	Marker *string `min:"1" type:"string"`
+	Marker *string `type:"string"`
 
 	// A list of users in the group.
 	//
@@ -21455,7 +21577,7 @@ type GetServiceLastAccessedDetailsOutput struct {
 
 	// When IsTruncated is true, this element is present and contains the value
 	// to use for the Marker parameter in a subsequent pagination request.
-	Marker *string `min:"1" type:"string"`
+	Marker *string `type:"string"`
 
 	// A ServiceLastAccessed object that contains details about the most recent
 	// attempt to access the service.
@@ -21547,8 +21669,8 @@ type GetServiceLastAccessedDetailsWithEntitiesInput struct {
 	//
 	// To learn the service namespace for a service, go to Actions, Resources, and
 	// Condition Keys for AWS Services (https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_actions-resources-contextkeys.html)
-	// in the IAM User Guide and choose the name of the service to view details
-	// for that service. In the first paragraph, find the service prefix. For example,
+	// in the IAM User Guide. Choose the name of the service to view details for
+	// that service. In the first paragraph, find the service prefix. For example,
 	// (service prefix: a4b). For more information about service namespaces, see
 	// AWS Service Namespaces (https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
 	// in the AWS General Reference.
@@ -21659,7 +21781,7 @@ type GetServiceLastAccessedDetailsWithEntitiesOutput struct {
 
 	// When IsTruncated is true, this element is present and contains the value
 	// to use for the Marker parameter in a subsequent pagination request.
-	Marker *string `min:"1" type:"string"`
+	Marker *string `type:"string"`
 }
 
 // String returns the string representation
@@ -22355,7 +22477,7 @@ type ListAccessKeysOutput struct {
 
 	// When IsTruncated is true, this element is present and contains the value
 	// to use for the Marker parameter in a subsequent pagination request.
-	Marker *string `min:"1" type:"string"`
+	Marker *string `type:"string"`
 }
 
 // String returns the string representation
@@ -22465,7 +22587,7 @@ type ListAccountAliasesOutput struct {
 
 	// When IsTruncated is true, this element is present and contains the value
 	// to use for the Marker parameter in a subsequent pagination request.
-	Marker *string `min:"1" type:"string"`
+	Marker *string `type:"string"`
 }
 
 // String returns the string representation
@@ -22611,7 +22733,7 @@ type ListAttachedGroupPoliciesOutput struct {
 
 	// When IsTruncated is true, this element is present and contains the value
 	// to use for the Marker parameter in a subsequent pagination request.
-	Marker *string `min:"1" type:"string"`
+	Marker *string `type:"string"`
 }
 
 // String returns the string representation
@@ -22756,7 +22878,7 @@ type ListAttachedRolePoliciesOutput struct {
 
 	// When IsTruncated is true, this element is present and contains the value
 	// to use for the Marker parameter in a subsequent pagination request.
-	Marker *string `min:"1" type:"string"`
+	Marker *string `type:"string"`
 }
 
 // String returns the string representation
@@ -22901,7 +23023,7 @@ type ListAttachedUserPoliciesOutput struct {
 
 	// When IsTruncated is true, this element is present and contains the value
 	// to use for the Marker parameter in a subsequent pagination request.
-	Marker *string `min:"1" type:"string"`
+	Marker *string `type:"string"`
 }
 
 // String returns the string representation
@@ -23075,7 +23197,7 @@ type ListEntitiesForPolicyOutput struct {
 
 	// When IsTruncated is true, this element is present and contains the value
 	// to use for the Marker parameter in a subsequent pagination request.
-	Marker *string `min:"1" type:"string"`
+	Marker *string `type:"string"`
 
 	// A list of IAM groups that the policy is attached to.
 	PolicyGroups []*PolicyGroup `type:"list"`
@@ -23221,7 +23343,7 @@ type ListGroupPoliciesOutput struct {
 
 	// When IsTruncated is true, this element is present and contains the value
 	// to use for the Marker parameter in a subsequent pagination request.
-	Marker *string `min:"1" type:"string"`
+	Marker *string `type:"string"`
 
 	// A list of policy names.
 	//
@@ -23360,7 +23482,7 @@ type ListGroupsForUserOutput struct {
 
 	// When IsTruncated is true, this element is present and contains the value
 	// to use for the Marker parameter in a subsequent pagination request.
-	Marker *string `min:"1" type:"string"`
+	Marker *string `type:"string"`
 }
 
 // String returns the string representation
@@ -23490,7 +23612,7 @@ type ListGroupsOutput struct {
 
 	// When IsTruncated is true, this element is present and contains the value
 	// to use for the Marker parameter in a subsequent pagination request.
-	Marker *string `min:"1" type:"string"`
+	Marker *string `type:"string"`
 }
 
 // String returns the string representation
@@ -23620,7 +23742,7 @@ type ListInstanceProfilesForRoleOutput struct {
 
 	// When IsTruncated is true, this element is present and contains the value
 	// to use for the Marker parameter in a subsequent pagination request.
-	Marker *string `min:"1" type:"string"`
+	Marker *string `type:"string"`
 }
 
 // String returns the string representation
@@ -23750,7 +23872,7 @@ type ListInstanceProfilesOutput struct {
 
 	// When IsTruncated is true, this element is present and contains the value
 	// to use for the Marker parameter in a subsequent pagination request.
-	Marker *string `min:"1" type:"string"`
+	Marker *string `type:"string"`
 }
 
 // String returns the string representation
@@ -23875,7 +23997,7 @@ type ListMFADevicesOutput struct {
 
 	// When IsTruncated is true, this element is present and contains the value
 	// to use for the Marker parameter in a subsequent pagination request.
-	Marker *string `min:"1" type:"string"`
+	Marker *string `type:"string"`
 }
 
 // String returns the string representation
@@ -24083,7 +24205,7 @@ type ListPoliciesGrantingServiceAccessOutput struct {
 
 	// When IsTruncated is true, this element is present and contains the value
 	// to use for the Marker parameter in a subsequent pagination request.
-	Marker *string `min:"1" type:"string"`
+	Marker *string `type:"string"`
 
 	// A ListPoliciesGrantingServiceAccess object that contains details about the
 	// permissions policies attached to the specified identity (user, group, or
@@ -24253,7 +24375,7 @@ type ListPoliciesOutput struct {
 
 	// When IsTruncated is true, this element is present and contains the value
 	// to use for the Marker parameter in a subsequent pagination request.
-	Marker *string `min:"1" type:"string"`
+	Marker *string `type:"string"`
 
 	// A list of policies.
 	Policies []*Policy `type:"list"`
@@ -24381,7 +24503,7 @@ type ListPolicyVersionsOutput struct {
 
 	// When IsTruncated is true, this element is present and contains the value
 	// to use for the Marker parameter in a subsequent pagination request.
-	Marker *string `min:"1" type:"string"`
+	Marker *string `type:"string"`
 
 	// A list of policy versions.
 	//
@@ -24513,7 +24635,7 @@ type ListRolePoliciesOutput struct {
 
 	// When IsTruncated is true, this element is present and contains the value
 	// to use for the Marker parameter in a subsequent pagination request.
-	Marker *string `min:"1" type:"string"`
+	Marker *string `type:"string"`
 
 	// A list of policy names.
 	//
@@ -24554,8 +24676,8 @@ type ListRoleTagsInput struct {
 
 	// Use this parameter only when paginating results and only after you receive
 	// a response indicating that the results are truncated. Set it to the value
-	// of the Marker element in the response to indicate where the next call should
-	// start.
+	// of the Marker element in the response that you received to indicate where
+	// the next call should start.
 	Marker *string `min:"1" type:"string"`
 
 	// (Optional) Use this only when paginating results to indicate the maximum
@@ -24643,7 +24765,7 @@ type ListRoleTagsOutput struct {
 
 	// When IsTruncated is true, this element is present and contains the value
 	// to use for the Marker parameter in a subsequent pagination request.
-	Marker *string `min:"1" type:"string"`
+	Marker *string `type:"string"`
 
 	// The list of tags currently that is attached to the role. Each tag consists
 	// of a key name and an associated value. If no tags are attached to the specified
@@ -24775,7 +24897,7 @@ type ListRolesOutput struct {
 
 	// When IsTruncated is true, this element is present and contains the value
 	// to use for the Marker parameter in a subsequent pagination request.
-	Marker *string `min:"1" type:"string"`
+	Marker *string `type:"string"`
 
 	// A list of roles.
 	//
@@ -24940,7 +25062,7 @@ type ListSSHPublicKeysOutput struct {
 
 	// When IsTruncated is true, this element is present and contains the value
 	// to use for the Marker parameter in a subsequent pagination request.
-	Marker *string `min:"1" type:"string"`
+	Marker *string `type:"string"`
 
 	// A list of the SSH public keys assigned to IAM user.
 	SSHPublicKeys []*SSHPublicKeyMetadata `type:"list"`
@@ -25068,7 +25190,7 @@ type ListServerCertificatesOutput struct {
 
 	// When IsTruncated is true, this element is present and contains the value
 	// to use for the Marker parameter in a subsequent pagination request.
-	Marker *string `min:"1" type:"string"`
+	Marker *string `type:"string"`
 
 	// A list of server certificates.
 	//
@@ -25273,7 +25395,7 @@ type ListSigningCertificatesOutput struct {
 
 	// When IsTruncated is true, this element is present and contains the value
 	// to use for the Marker parameter in a subsequent pagination request.
-	Marker *string `min:"1" type:"string"`
+	Marker *string `type:"string"`
 }
 
 // String returns the string representation
@@ -25398,7 +25520,7 @@ type ListUserPoliciesOutput struct {
 
 	// When IsTruncated is true, this element is present and contains the value
 	// to use for the Marker parameter in a subsequent pagination request.
-	Marker *string `min:"1" type:"string"`
+	Marker *string `type:"string"`
 
 	// A list of policy names.
 	//
@@ -25439,8 +25561,8 @@ type ListUserTagsInput struct {
 
 	// Use this parameter only when paginating results and only after you receive
 	// a response indicating that the results are truncated. Set it to the value
-	// of the Marker element in the response to indicate where the next call should
-	// start.
+	// of the Marker element in the response that you received to indicate where
+	// the next call should start.
 	Marker *string `min:"1" type:"string"`
 
 	// (Optional) Use this only when paginating results to indicate the maximum
@@ -25528,7 +25650,7 @@ type ListUserTagsOutput struct {
 
 	// When IsTruncated is true, this element is present and contains the value
 	// to use for the Marker parameter in a subsequent pagination request.
-	Marker *string `min:"1" type:"string"`
+	Marker *string `type:"string"`
 
 	// The list of tags that are currently attached to the user. Each tag consists
 	// of a key name and an associated value. If no tags are attached to the specified
@@ -25660,7 +25782,7 @@ type ListUsersOutput struct {
 
 	// When IsTruncated is true, this element is present and contains the value
 	// to use for the Marker parameter in a subsequent pagination request.
-	Marker *string `min:"1" type:"string"`
+	Marker *string `type:"string"`
 
 	// A list of users.
 	//
@@ -25780,7 +25902,7 @@ type ListVirtualMFADevicesOutput struct {
 
 	// When IsTruncated is true, this element is present and contains the value
 	// to use for the Marker parameter in a subsequent pagination request.
-	Marker *string `min:"1" type:"string"`
+	Marker *string `type:"string"`
 
 	// The list of virtual MFA devices in the current account that match the AssignmentStatus
 	// value that was passed in the request.
@@ -27789,7 +27911,7 @@ type Role struct {
 	// The ARN of the policy used to set the permissions boundary for the role.
 	//
 	// For more information about permissions boundaries, see Permissions Boundaries
-	// for IAM Identities  (IAM/latest/UserGuide/access_policies_boundaries.html)
+	// for IAM Identities  (https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_boundaries.html)
 	// in the IAM User Guide.
 	PermissionsBoundary *AttachedPermissionsBoundary `type:"structure"`
 
@@ -27917,7 +28039,7 @@ type RoleDetail struct {
 	// The ARN of the policy used to set the permissions boundary for the role.
 	//
 	// For more information about permissions boundaries, see Permissions Boundaries
-	// for IAM Identities  (IAM/latest/UserGuide/access_policies_boundaries.html)
+	// for IAM Identities  (https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_boundaries.html)
 	// in the IAM User Guide.
 	PermissionsBoundary *AttachedPermissionsBoundary `type:"structure"`
 
@@ -28727,6 +28849,65 @@ func (s SetDefaultPolicyVersionOutput) GoString() string {
 	return s.String()
 }
 
+type SetSecurityTokenServicePreferencesInput struct {
+	_ struct{} `type:"structure"`
+
+	// The version of the global endpoint token. Version 1 tokens are valid only
+	// in AWS Regions that are available by default. These tokens do not work in
+	// manually enabled Regions, such as Asia Pacific (Hong Kong). Version 2 tokens
+	// are valid in all Regions. However, version 2 tokens are longer and might
+	// affect systems where you temporarily store tokens.
+	//
+	// For information, see Activating and Deactivating STS in an AWS Region (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_enable-regions.html)
+	// in the IAM User Guide.
+	//
+	// GlobalEndpointTokenVersion is a required field
+	GlobalEndpointTokenVersion *string `type:"string" required:"true" enum:"globalEndpointTokenVersion"`
+}
+
+// String returns the string representation
+func (s SetSecurityTokenServicePreferencesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SetSecurityTokenServicePreferencesInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *SetSecurityTokenServicePreferencesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "SetSecurityTokenServicePreferencesInput"}
+	if s.GlobalEndpointTokenVersion == nil {
+		invalidParams.Add(request.NewErrParamRequired("GlobalEndpointTokenVersion"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetGlobalEndpointTokenVersion sets the GlobalEndpointTokenVersion field's value.
+func (s *SetSecurityTokenServicePreferencesInput) SetGlobalEndpointTokenVersion(v string) *SetSecurityTokenServicePreferencesInput {
+	s.GlobalEndpointTokenVersion = &v
+	return s
+}
+
+type SetSecurityTokenServicePreferencesOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s SetSecurityTokenServicePreferencesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SetSecurityTokenServicePreferencesOutput) GoString() string {
+	return s.String()
+}
+
 // Contains information about an X.509 signing certificate.
 //
 // This data type is used as a response element in the UploadSigningCertificate
@@ -28804,7 +28985,8 @@ type SimulateCustomPolicyInput struct {
 
 	// A list of names of API operations to evaluate in the simulation. Each operation
 	// is evaluated against each resource. Each operation must include the service
-	// identifier, such as iam:CreateUser.
+	// identifier, such as iam:CreateUser. This operation does not support using
+	// wildcards (*) in an action name.
 	//
 	// ActionNames is a required field
 	ActionNames []*string `type:"list" required:"true"`
@@ -28819,7 +29001,7 @@ type SimulateCustomPolicyInput struct {
 	CallerArn *string `min:"1" type:"string"`
 
 	// A list of context keys and corresponding values for the simulation to use.
-	// Whenever a context key is evaluated in one of the simulated IAM permission
+	// Whenever a context key is evaluated in one of the simulated IAM permissions
 	// policies, the corresponding value is supplied.
 	ContextEntries []*ContextEntry `type:"list"`
 
@@ -28925,14 +29107,14 @@ type SimulateCustomPolicyInput struct {
 	ResourceHandlingOption *string `min:"1" type:"string"`
 
 	// An ARN representing the AWS account ID that specifies the owner of any simulated
-	// resource that does not identify its owner in the resource ARN, such as an
-	// S3 bucket or object. If ResourceOwner is specified, it is also used as the
-	// account owner of any ResourcePolicy included in the simulation. If the ResourceOwner
-	// parameter is not specified, then the owner of the resources and the resource
-	// policy defaults to the account of the identity provided in CallerArn. This
-	// parameter is required only if you specify a resource-based policy and account
-	// that owns the resource is different from the account that owns the simulated
-	// calling user CallerArn.
+	// resource that does not identify its owner in the resource ARN. Examples of
+	// resource ARNs include an S3 bucket or object. If ResourceOwner is specified,
+	// it is also used as the account owner of any ResourcePolicy included in the
+	// simulation. If the ResourceOwner parameter is not specified, then the owner
+	// of the resources and the resource policy defaults to the account of the identity
+	// provided in CallerArn. This parameter is required only if you specify a resource-based
+	// policy and account that owns the resource is different from the account that
+	// owns the simulated calling user CallerArn.
 	//
 	// The ARN for an account uses the following syntax: arn:aws:iam::AWS-account-ID:root.
 	// For example, to represent the account with the 112233445566 ID, use the following
@@ -29089,7 +29271,7 @@ type SimulatePolicyResponse struct {
 
 	// When IsTruncated is true, this element is present and contains the value
 	// to use for the Marker parameter in a subsequent pagination request.
-	Marker *string `min:"1" type:"string"`
+	Marker *string `type:"string"`
 }
 
 // String returns the string representation
@@ -29259,14 +29441,14 @@ type SimulatePrincipalPolicyInput struct {
 	ResourceHandlingOption *string `min:"1" type:"string"`
 
 	// An AWS account ID that specifies the owner of any simulated resource that
-	// does not identify its owner in the resource ARN, such as an S3 bucket or
-	// object. If ResourceOwner is specified, it is also used as the account owner
-	// of any ResourcePolicy included in the simulation. If the ResourceOwner parameter
-	// is not specified, then the owner of the resources and the resource policy
-	// defaults to the account of the identity provided in CallerArn. This parameter
-	// is required only if you specify a resource-based policy and account that
-	// owns the resource is different from the account that owns the simulated calling
-	// user CallerArn.
+	// does not identify its owner in the resource ARN. Examples of resource ARNs
+	// include an S3 bucket or object. If ResourceOwner is specified, it is also
+	// used as the account owner of any ResourcePolicy included in the simulation.
+	// If the ResourceOwner parameter is not specified, then the owner of the resources
+	// and the resource policy defaults to the account of the identity provided
+	// in CallerArn. This parameter is required only if you specify a resource-based
+	// policy and account that owns the resource is different from the account that
+	// owns the simulated calling user CallerArn.
 	ResourceOwner *string `min:"1" type:"string"`
 
 	// A resource-based policy to include in the simulation provided as a string.
@@ -31631,7 +31813,7 @@ type User struct {
 	// The ARN of the policy used to set the permissions boundary for the user.
 	//
 	// For more information about permissions boundaries, see Permissions Boundaries
-	// for IAM Identities  (IAM/latest/UserGuide/access_policies_boundaries.html)
+	// for IAM Identities  (https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_boundaries.html)
 	// in the IAM User Guide.
 	PermissionsBoundary *AttachedPermissionsBoundary `type:"structure"`
 
@@ -31744,7 +31926,7 @@ type UserDetail struct {
 	// The ARN of the policy used to set the permissions boundary for the user.
 	//
 	// For more information about permissions boundaries, see Permissions Boundaries
-	// for IAM Identities  (IAM/latest/UserGuide/access_policies_boundaries.html)
+	// for IAM Identities  (https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_boundaries.html)
 	// in the IAM User Guide.
 	PermissionsBoundary *AttachedPermissionsBoundary `type:"structure"`
 
@@ -32063,6 +32245,14 @@ const (
 )
 
 const (
+	// GlobalEndpointTokenVersionV1token is a globalEndpointTokenVersion enum value
+	GlobalEndpointTokenVersionV1token = "v1Token"
+
+	// GlobalEndpointTokenVersionV2token is a globalEndpointTokenVersion enum value
+	GlobalEndpointTokenVersionV2token = "v2Token"
+)
+
+const (
 	// JobStatusTypeInProgress is a jobStatusType enum value
 	JobStatusTypeInProgress = "IN_PROGRESS"
 
@@ -32186,4 +32376,7 @@ const (
 
 	// SummaryKeyTypeVersionsPerPolicyQuota is a summaryKeyType enum value
 	SummaryKeyTypeVersionsPerPolicyQuota = "VersionsPerPolicyQuota"
+
+	// SummaryKeyTypeGlobalEndpointTokenVersion is a summaryKeyType enum value
+	SummaryKeyTypeGlobalEndpointTokenVersion = "GlobalEndpointTokenVersion"
 )
