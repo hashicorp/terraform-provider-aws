@@ -37,17 +37,35 @@ func resourceAwsEc2Tag() *schema.Resource {
 
 func extractResourceIdFromEc2TagId(d *schema.ResourceData) (string, error) {
 	i := d.Id()
-	parts := strings.Split(i, "-")
+	parts := strings.Split(i, ":")
 
 	if len(parts) != 2 {
-		return "", fmt.Errorf("Invalid resource ID; cannot look up subnet: %s", i)
+		return "", fmt.Errorf("Invalid resource ID; cannot look up resource: %s", i)
 	}
 
 	return parts[0], nil
 }
 
 func resourceAwsEc2TagCreate(d *schema.ResourceData, meta interface{}) error {
-	d.SetId(fmt.Sprintf("%s-%s", d.Get("subnet_id"), d.Get("key")))
+	conn := meta.(*AWSClient).ec2conn
+
+	resourceID := d.Get("resource_id").(string)
+
+	_, err := conn.CreateTags(&ec2.CreateTagsInput{
+		Resources: []*string{aws.String(resourceID)},
+		Tags: []*ec2.Tag{
+			{
+				Key:   aws.String(d.Get("key").(string)),
+				Value: aws.String(d.Get("value").(string)),
+			},
+		},
+	})
+
+	if err != nil {
+		return err
+	}
+
+	d.SetId(fmt.Sprintf("%s:%s", resourceID, d.Get("key").(string)))
 	return resourceAwsEc2TagRead(d, meta)
 }
 
@@ -100,7 +118,7 @@ func resourceAwsEc2TagDelete(d *schema.ResourceData, meta interface{}) error {
 		Resources: []*string{aws.String(id)},
 		Tags: []*ec2.Tag{
 			{
-				Key:   aws.String(d.Get("tag").(string)),
+				Key:   aws.String(d.Get("key").(string)),
 				Value: aws.String(d.Get("value").(string)),
 			},
 		},
