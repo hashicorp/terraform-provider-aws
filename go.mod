@@ -6,7 +6,6 @@ require (
 	github.com/boombuler/barcode v1.0.0 // indirect
 	github.com/client9/misspell v0.3.4
 	github.com/go-toolsmith/pkgload v0.0.0-20181120203407-5122569a890b // indirect
-	github.com/gofrs/flock v0.7.1 // indirect
 	github.com/golangci/go-tools v0.0.0-20190124090046-35a9f45a5db0 // indirect
 	github.com/golangci/golangci-lint v1.16.0
 	github.com/golangci/gosec v0.0.0-20180901114220-8afd9cbb6cfb // indirect
@@ -19,7 +18,7 @@ require (
 	github.com/hashicorp/vault v0.10.4
 	github.com/jen20/awspolicyequivalence v1.0.0
 	github.com/json-iterator/go v1.1.5 // indirect
-	github.com/kubernetes-sigs/aws-iam-authenticator v0.4.0
+	github.com/kubernetes-sigs/aws-iam-authenticator v0.3.1-0.20181019024009-82544ec86140
 	github.com/mitchellh/copystructure v1.0.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
