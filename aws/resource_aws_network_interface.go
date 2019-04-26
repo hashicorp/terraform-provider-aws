@@ -165,25 +165,36 @@ func resourceAwsNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	eni := describeResp.NetworkInterfaces[0]
-	d.Set("subnet_id", eni.SubnetId)
-	d.Set("private_ip", eni.PrivateIpAddress)
-	d.Set("private_dns_name", eni.PrivateDnsName)
-	d.Set("private_ips", flattenNetworkInterfacesPrivateIPAddresses(eni.PrivateIpAddresses))
-	d.Set("security_groups", flattenGroupIdentifiers(eni.Groups))
-	d.Set("source_dest_check", eni.SourceDestCheck)
 
-	if eni.Description != nil {
-		d.Set("description", eni.Description)
-	}
-
-	// Tags
-	d.Set("tags", tagsToMap(eni.TagSet))
+	attachment := []map[string]interface{}{}
 
 	if eni.Attachment != nil {
-		attachment := []map[string]interface{}{flattenAttachment(eni.Attachment)}
-		d.Set("attachment", attachment)
-	} else {
-		d.Set("attachment", nil)
+		attachment = []map[string]interface{}{flattenAttachment(eni.Attachment)}
+	}
+
+	if err := d.Set("attachment", attachment); err != nil {
+		return fmt.Errorf("error setting attachment: %s", err)
+	}
+
+	d.Set("description", eni.Description)
+	d.Set("private_dns_name", eni.PrivateDnsName)
+	d.Set("private_ip", eni.PrivateIpAddress)
+
+	if err := d.Set("private_ips", flattenNetworkInterfacesPrivateIPAddresses(eni.PrivateIpAddresses)); err != nil {
+		return fmt.Errorf("error setting private_ips: %s", err)
+	}
+
+	d.Set("private_ips_count", len(eni.PrivateIpAddresses)-1)
+
+	if err := d.Set("security_groups", flattenGroupIdentifiers(eni.Groups)); err != nil {
+		return fmt.Errorf("error setting security_groups: %s", err)
+	}
+
+	d.Set("source_dest_check", eni.SourceDestCheck)
+	d.Set("subnet_id", eni.SubnetId)
+
+	if err := d.Set("tags", tagsToMap(eni.TagSet)); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	return nil
@@ -324,7 +335,7 @@ func resourceAwsNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{})
 
 	d.SetPartial("source_dest_check")
 
-	if d.HasChange("private_ips_count") {
+	if d.HasChange("private_ips_count") && !d.IsNewResource() {
 		o, n := d.GetChange("private_ips_count")
 		private_ips := d.Get("private_ips").(*schema.Set).List()
 		private_ips_filtered := private_ips[:0]
@@ -336,7 +347,7 @@ func resourceAwsNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{})
 			}
 		}
 
-		if o != nil && o != 0 && n != nil && n != len(private_ips_filtered) {
+		if o != nil && n != nil && n != len(private_ips_filtered) {
 
 			diff := n.(int) - o.(int)
 
