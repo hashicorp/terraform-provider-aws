@@ -184,8 +184,12 @@ func resourceAwsSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("arn", subnet.SubnetArn)
-	d.Set("tags", tagsToMap(subnet.Tags))
 	d.Set("owner_id", subnet.OwnerId)
+
+	_, tagsAreDefined := d.GetOk("tags")
+	if tagsAreDefined {
+		d.Set("tags", tagsToMap(subnet.Tags))
+	}
 
 	return nil
 }
@@ -195,10 +199,12 @@ func resourceAwsSubnetUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	d.Partial(true)
 
-	if err := setTags(conn, d); err != nil {
-		return err
-	} else {
-		d.SetPartial("tags")
+	if d.HasChange("tags") {
+		if err := setTags(conn, d); err != nil {
+			return err
+		} else {
+			d.SetPartial("tags")
+		}
 	}
 
 	if d.HasChange("map_public_ip_on_launch") {

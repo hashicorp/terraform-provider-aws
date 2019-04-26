@@ -206,7 +206,10 @@ func resourceAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", arn)
 
 	// Tags
-	d.Set("tags", tagsToMap(vpc.Tags))
+	_, tagsAreDefined := d.GetOk("tags")
+	if tagsAreDefined {
+		d.Set("tags", tagsToMap(vpc.Tags))
+	}
 
 	d.Set("owner_id", vpc.OwnerId)
 
@@ -460,10 +463,12 @@ func resourceAwsVpcUpdate(d *schema.ResourceData, meta interface{}) error {
 		d.SetPartial("instance_tenancy")
 	}
 
-	if err := setTags(conn, d); err != nil {
-		return err
-	} else {
-		d.SetPartial("tags")
+	if d.HasChange("tags") {
+		if err := setTags(conn, d); err != nil {
+			return err
+		} else {
+			d.SetPartial("tags")
+		}
 	}
 
 	d.Partial(false)
