@@ -395,10 +395,6 @@ func resourceAwsDynamoDbTableCreate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	// if err := setTagsDynamoDb(conn, d); err != nil {
-	// 	return fmt.Errorf("error adding DynamoDB Table (%s) tags: %s", d.Id(), err)
-	// }
-
 	if d.Get("point_in_time_recovery.0.enabled").(bool) {
 		if err := updateDynamoDbPITR(d, conn); err != nil {
 			return fmt.Errorf("error enabling DynamoDB Table (%s) point in time recovery: %s", d.Id(), err)
