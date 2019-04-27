@@ -789,6 +789,7 @@ var awsPartition = partition{
 		"codedeploy": service{
 
 			Endpoints: endpoints{
+				"ap-east-1":      endpoint{},
 				"ap-northeast-1": endpoint{},
 				"ap-northeast-2": endpoint{},
 				"ap-south-1":     endpoint{},
@@ -1343,10 +1344,12 @@ var awsPartition = partition{
 		"email": service{
 
 			Endpoints: endpoints{
-				"eu-central-1": endpoint{},
-				"eu-west-1":    endpoint{},
-				"us-east-1":    endpoint{},
-				"us-west-2":    endpoint{},
+				"ap-south-1":     endpoint{},
+				"ap-southeast-2": endpoint{},
+				"eu-central-1":   endpoint{},
+				"eu-west-1":      endpoint{},
+				"us-east-1":      endpoint{},
+				"us-west-2":      endpoint{},
 			},
 		},
 		"entitlement.marketplace": service{
