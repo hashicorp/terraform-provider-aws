@@ -289,10 +289,13 @@ func resourceAwsDynamoDbTableCreate(d *schema.ResourceData, meta interface{}) er
 
 	log.Printf("[DEBUG] Creating DynamoDB table with key schema: %#v", keySchemaMap)
 
+	tags := tagsFromMapDynamoDb(d.Get("tags").(map[string]interface{}))
+
 	req := &dynamodb.CreateTableInput{
 		TableName:   aws.String(d.Get("name").(string)),
 		BillingMode: aws.String(d.Get("billing_mode").(string)),
 		KeySchema:   expandDynamoDbKeySchema(keySchemaMap),
+		Tags:        tags,
 	}
 
 	billingMode := d.Get("billing_mode").(string)
@@ -392,9 +395,9 @@ func resourceAwsDynamoDbTableCreate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	if err := setTagsDynamoDb(conn, d); err != nil {
-		return fmt.Errorf("error adding DynamoDB Table (%s) tags: %s", d.Id(), err)
-	}
+	// if err := setTagsDynamoDb(conn, d); err != nil {
+	// 	return fmt.Errorf("error adding DynamoDB Table (%s) tags: %s", d.Id(), err)
+	// }
 
 	if d.Get("point_in_time_recovery.0.enabled").(bool) {
 		if err := updateDynamoDbPITR(d, conn); err != nil {
@@ -550,10 +553,11 @@ func resourceAwsDynamoDbTableUpdate(d *schema.ResourceData, meta interface{}) er
 			return fmt.Errorf("error updating DynamoDB Table (%s) time to live: %s", d.Id(), err)
 		}
 	}
-
-	if d.HasChange("tags") {
-		if err := setTagsDynamoDb(conn, d); err != nil {
-			return fmt.Errorf("error updating DynamoDB Table (%s) tags: %s", d.Id(), err)
+	if !d.IsNewResource() {
+		if d.HasChange("tags") {
+			if err := setTagsDynamoDb(conn, d); err != nil {
+				return fmt.Errorf("error updating DynamoDB Table (%s) tags: %s", d.Id(), err)
+			}
 		}
 	}
 
