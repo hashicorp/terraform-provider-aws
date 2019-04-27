@@ -9,23 +9,6 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-// getTags is a helper to get the tags for a resource. It expects the
-// tags field to be named "tags" and the ARN field to be named "arn".
-func getTagsSNS(conn *sns.SNS, d *schema.ResourceData) error {
-	resp, err := conn.ListTagsForResource(&sns.ListTagsForResourceInput{
-		ResourceArn: aws.String(d.Get("arn").(string)),
-	})
-	if err != nil {
-		return err
-	}
-
-	if err := d.Set("tags", tagsToMapSNS(resp.Tags)); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // setTags is a helper to set the tags for a resource. It expects the
 // tags field to be named "tags" and the ARN field to be named "arn".
 func setTagsSNS(conn *sns.SNS, d *schema.ResourceData) error {
