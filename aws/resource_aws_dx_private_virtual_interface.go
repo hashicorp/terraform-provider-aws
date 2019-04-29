@@ -88,7 +88,7 @@ func resourceAwsDxPrivateVirtualInterface() *schema.Resource {
 				Type:         schema.TypeInt,
 				Default:      1500,
 				Optional:     true,
-				ValidateFunc: validateIntegerInSlice([]int{1500, 9001}),
+				ValidateFunc: validation.IntInSlice([]int{1500, 9001}),
 			},
 			"jumbo_frame_capable": {
 				Type:     schema.TypeBool,
