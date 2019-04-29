@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
+	"github.com/hashicorp/terraform/helper/customdiff"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -18,12 +19,29 @@ func resourceAwsDxGatewayAssociationProposal() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
+		CustomizeDiff: customdiff.Sequence(
+			customdiff.ForceNewIf("allowed_prefixes", func(d *schema.ResourceDiff, meta interface{}) bool {
+				conn := meta.(*AWSClient).dxconn
+
+				proposal, err := describeDirectConnectGatewayAssociationProposal(conn, d.Id())
+				if err != nil {
+					log.Printf("[ERROR] Error reading Direct Connect Gateway Association Proposal (%s): %s", d.Id(), err)
+					return false
+				}
+
+				if proposal != nil && aws.StringValue(proposal.ProposalState) == directconnect.GatewayAssociationProposalStateRequested {
+					return true
+				}
+
+				return false
+			}),
+		),
+
 		Schema: map[string]*schema.Schema{
 			"allowed_prefixes": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
-				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"dx_gateway_id": {

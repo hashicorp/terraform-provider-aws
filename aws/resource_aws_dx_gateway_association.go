@@ -79,7 +79,16 @@ func resourceAwsDxGatewayAssociationCreate(d *schema.ResourceData, meta interfac
 
 	d.SetId(dxGatewayAssociationId(dxgwId, vgwId))
 
-	if err := waitForDirectConnectGatewayAssociationAvailabilityOnCreate(conn, dxgwId, vgwId, d.Timeout(schema.TimeoutCreate)); err != nil {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{directconnect.GatewayAssociationStateAssociating},
+		Target:     []string{directconnect.GatewayAssociationStateAssociated},
+		Refresh:    dxGatewayAssociationStateRefresh(conn, dxgwId, vgwId),
+		Timeout:    d.Timeout(schema.TimeoutCreate),
+		Delay:      10 * time.Second,
+		MinTimeout: 5 * time.Second,
+	}
+	_, err = stateConf.WaitForState()
+	if err != nil {
 		return fmt.Errorf("error waiting for Direct Connect gateway association (%s) to become available: %s", d.Id(), err)
 	}
 
@@ -89,9 +98,11 @@ func resourceAwsDxGatewayAssociationCreate(d *schema.ResourceData, meta interfac
 func resourceAwsDxGatewayAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).dxconn
 
-	assocRaw, state, err := dxGatewayAssociationStateRefresh(conn, d.Get("dx_gateway_id").(string), d.Get("vpn_gateway_id").(string))()
+	dxgwId := d.Get("dx_gateway_id").(string)
+	vgwId := d.Get("vpn_gateway_id").(string)
+	assocRaw, state, err := dxGatewayAssociationStateRefresh(conn, dxgwId, vgwId)()
 	if err != nil {
-		return fmt.Errorf("error reading Direct Connect gateway association (%s): %s", d.Id(), err)
+		return fmt.Errorf("error reading Direct Connect gateway association: %s", err)
 	}
 	if state == gatewayAssociationStateDeleted {
 		log.Printf("[WARN] Direct Connect gateway association (%s) not found, removing from state", d.Id())
@@ -130,13 +141,22 @@ func resourceAwsDxGatewayAssociationUpdate(d *schema.ResourceData, meta interfac
 			RemoveAllowedPrefixesToDirectConnectGateway: expandDxRouteFilterPrefixes(del),
 		}
 
-		log.Printf("[DEBUG] Updating Direct Connect gateway association: %#v", req)
+		log.Printf("[DEBUG] Direct Connect gateway association: %#v", req)
 		_, err := conn.UpdateDirectConnectGatewayAssociation(req)
 		if err != nil {
 			return fmt.Errorf("error updating Direct Connect gateway association (%s): %s", d.Id(), err)
 		}
 
-		if err := waitForDirectConnectGatewayAssociationAvailabilityOnUpdate(conn, dxgwId, vgwId, d.Timeout(schema.TimeoutUpdate)); err != nil {
+		stateConf := &resource.StateChangeConf{
+			Pending:    []string{directconnect.GatewayAssociationStateUpdating},
+			Target:     []string{directconnect.GatewayAssociationStateAssociated},
+			Refresh:    dxGatewayAssociationStateRefresh(conn, dxgwId, vgwId),
+			Timeout:    d.Timeout(schema.TimeoutUpdate),
+			Delay:      10 * time.Second,
+			MinTimeout: 5 * time.Second,
+		}
+		_, err = stateConf.WaitForState()
+		if err != nil {
 			return fmt.Errorf("error waiting for Direct Connect gateway association (%s) to become available: %s", d.Id(), err)
 		}
 	}
@@ -163,7 +183,7 @@ func resourceAwsDxGatewayAssociationDelete(d *schema.ResourceData, meta interfac
 	}
 
 	if err := waitForDirectConnectGatewayAssociationDeletion(conn, dxgwId, vgwId, d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error waiting for Direct Connect gateway association (%s) to be deleted: %s", d.Id(), err)
+		return fmt.Errorf("error waiting for Direct Connect gateway association (%s) to be deleted: %s", d.Id(), err.Error())
 	}
 
 	return nil
@@ -215,41 +235,11 @@ func dxGatewayAssociationId(dxgwId, vgwId string) string {
 	return fmt.Sprintf("ga-%s%s", dxgwId, vgwId)
 }
 
-func waitForDirectConnectGatewayAssociationAvailabilityOnCreate(conn *directconnect.DirectConnect, dxgwId, vgwId string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{directconnect.GatewayAssociationStateAssociating},
-		Target:     []string{directconnect.GatewayAssociationStateAssociated},
-		Refresh:    dxGatewayAssociationStateRefresh(conn, dxgwId, vgwId),
-		Timeout:    timeout,
-		Delay:      10 * time.Second,
-		MinTimeout: 5 * time.Second,
-	}
-
-	_, err := stateConf.WaitForState()
-
-	return err
-}
-
-func waitForDirectConnectGatewayAssociationAvailabilityOnUpdate(conn *directconnect.DirectConnect, dxgwId, vgwId string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{directconnect.GatewayAssociationStateUpdating},
-		Target:     []string{directconnect.GatewayAssociationStateAssociated},
-		Refresh:    dxGatewayAssociationStateRefresh(conn, dxgwId, vgwId),
-		Timeout:    timeout,
-		Delay:      10 * time.Second,
-		MinTimeout: 5 * time.Second,
-	}
-
-	_, err := stateConf.WaitForState()
-
-	return err
-}
-
-func waitForDirectConnectGatewayAssociationDeletion(conn *directconnect.DirectConnect, dxgwId, vgwId string, timeout time.Duration) error {
+func waitForDirectConnectGatewayAssociationDeletion(conn *directconnect.DirectConnect, directConnectGatewayID, virtualGatewayID string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{directconnect.GatewayAssociationStateDisassociating},
 		Target:     []string{directconnect.GatewayAssociationStateDisassociated, gatewayAssociationStateDeleted},
-		Refresh:    dxGatewayAssociationStateRefresh(conn, dxgwId, vgwId),
+		Refresh:    dxGatewayAssociationStateRefresh(conn, directConnectGatewayID, virtualGatewayID),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 5 * time.Second,
