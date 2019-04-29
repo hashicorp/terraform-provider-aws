@@ -6,7 +6,7 @@ description: |-
   Provides an Glue Connection resource.
 ---
 
-# aws_glue_connection
+# Resource: aws_glue_connection
 
 Provides a Glue Connection resource.
 

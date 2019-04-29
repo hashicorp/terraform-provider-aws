@@ -6,7 +6,7 @@ description: |-
   Manages an EC2 Transit Gateway Route Table propagation
 ---
 
-# aws_ec2_transit_gateway_route_table_propagation
+# Resource: aws_ec2_transit_gateway_route_table_propagation
 
 Manages an EC2 Transit Gateway Route Table propagation.
 

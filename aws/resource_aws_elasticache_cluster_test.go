@@ -36,12 +36,6 @@ func testSweepElasticacheClusters(region string) error {
 	}
 	conn := client.(*AWSClient).elasticacheconn
 
-	prefixes := []string{
-		"tf-",
-		"tf-test-",
-		"tf-acc-test-",
-	}
-
 	err = conn.DescribeCacheClustersPages(&elasticache.DescribeCacheClustersInput{}, func(page *elasticache.DescribeCacheClustersOutput, isLast bool) bool {
 		if len(page.CacheClusters) == 0 {
 			log.Print("[DEBUG] No Elasticache Replicaton Groups to sweep")
@@ -50,17 +44,7 @@ func testSweepElasticacheClusters(region string) error {
 
 		for _, cluster := range page.CacheClusters {
 			id := aws.StringValue(cluster.CacheClusterId)
-			skip := true
-			for _, prefix := range prefixes {
-				if strings.HasPrefix(id, prefix) {
-					skip = false
-					break
-				}
-			}
-			if skip {
-				log.Printf("[INFO] Skipping Elasticache Cluster: %s", id)
-				continue
-			}
+
 			log.Printf("[INFO] Deleting Elasticache Cluster: %s", id)
 			err := deleteElasticacheCacheCluster(conn, id)
 			if err != nil {
@@ -112,6 +96,9 @@ func TestAccAWSElasticacheCluster_Engine_Memcached_Ec2Classic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+				},
 			},
 		},
 	})
@@ -144,6 +131,9 @@ func TestAccAWSElasticacheCluster_Engine_Redis_Ec2Classic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+				},
 			},
 		},
 	})
@@ -172,6 +162,9 @@ func TestAccAWSElasticacheCluster_ParameterGroupName_Default(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+				},
 			},
 		},
 	})
@@ -207,6 +200,9 @@ func TestAccAWSElasticacheCluster_Port_Ec2Classic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+				},
 			},
 		},
 	})
@@ -652,10 +648,6 @@ func TestAccAWSElasticacheCluster_ReplicationGroupID_InvalidAttributes(t *testin
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
 		Steps: []resource.TestStep{
-			{
-				Config:      testAccAWSElasticacheClusterConfig_ReplicationGroupID_InvalidAttribute(rName, "availability_zones", "${list(\"us-east-1a\", \"us-east-1c\")}"),
-				ExpectError: regexp.MustCompile(`"replication_group_id": conflicts with availability_zones`),
-			},
 			{
 				Config:      testAccAWSElasticacheClusterConfig_ReplicationGroupID_InvalidAttribute(rName, "az_mode", "single-az"),
 				ExpectError: regexp.MustCompile(`"replication_group_id": conflicts with az_mode`),

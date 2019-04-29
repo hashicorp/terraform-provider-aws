@@ -6,7 +6,7 @@ description: |-
   Manages a VPC Endpoint Route Table Association
 ---
 
-# aws_vpc_endpoint_route_table_association
+# Resource: aws_vpc_endpoint_route_table_association
 
 Manages a VPC Endpoint Route Table Association
 

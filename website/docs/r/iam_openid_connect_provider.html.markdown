@@ -6,7 +6,7 @@ description: |-
   Provides an IAM OpenID Connect provider.
 ---
 
-# aws_iam_openid_connect_provider
+# Resource: aws_iam_openid_connect_provider
 
 Provides an IAM OpenID Connect provider.
 

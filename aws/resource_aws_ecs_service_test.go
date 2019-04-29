@@ -2,6 +2,8 @@ package aws
 
 import (
 	"fmt"
+	"log"
+	"math"
 	"regexp"
 	"testing"
 	"time"
@@ -12,6 +14,95 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_ecs_service", &resource.Sweeper{
+		Name: "aws_ecs_service",
+		F:    testSweepEcsServices,
+	})
+}
+
+func testSweepEcsServices(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).ecsconn
+
+	err = conn.ListClustersPages(&ecs.ListClustersInput{}, func(page *ecs.ListClustersOutput, isLast bool) bool {
+		if page == nil {
+			return !isLast
+		}
+
+		for _, clusterARNPtr := range page.ClusterArns {
+			input := &ecs.ListServicesInput{
+				Cluster: clusterARNPtr,
+			}
+
+			err = conn.ListServicesPages(input, func(page *ecs.ListServicesOutput, isLast bool) bool {
+				if page == nil {
+					return !isLast
+				}
+
+				for _, serviceARNPtr := range page.ServiceArns {
+					describeServicesInput := &ecs.DescribeServicesInput{
+						Cluster:  clusterARNPtr,
+						Services: []*string{serviceARNPtr},
+					}
+					serviceARN := aws.StringValue(serviceARNPtr)
+
+					log.Printf("[DEBUG] Describing ECS Service: %s", serviceARN)
+					describeServicesOutput, err := conn.DescribeServices(describeServicesInput)
+
+					if isAWSErr(err, ecs.ErrCodeServiceNotFoundException, "") {
+						continue
+					}
+
+					if err != nil {
+						log.Printf("[ERROR] Error describing ECS Service (%s): %s", serviceARN, err)
+						continue
+					}
+
+					if describeServicesOutput == nil || len(describeServicesOutput.Services) == 0 {
+						continue
+					}
+
+					service := describeServicesOutput.Services[0]
+
+					if aws.StringValue(service.Status) == "INACTIVE" {
+						continue
+					}
+
+					deleteServiceInput := &ecs.DeleteServiceInput{
+						Cluster: service.ClusterArn,
+						Force:   aws.Bool(true),
+						Service: service.ServiceArn,
+					}
+
+					log.Printf("[INFO] Deleting ECS Service: %s", serviceARN)
+					_, err = conn.DeleteService(deleteServiceInput)
+
+					if err != nil {
+						log.Printf("[ERROR] Error deleting ECS Service (%s): %s", serviceARN, err)
+					}
+				}
+
+				return !isLast
+			})
+		}
+
+		return !isLast
+	})
+	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping ECS Service sweep for %s: %s", region, err)
+			return nil
+		}
+		return fmt.Errorf("error retrieving ECS Services: %s", err)
+	}
+
+	return nil
+}
 
 func TestAccAWSEcsService_withARN(t *testing.T) {
 	var service ecs.Service
@@ -233,7 +324,7 @@ func TestAccAWSEcsService_healthCheckGracePeriodSeconds(t *testing.T) {
 			},
 			{
 				Config: testAccAWSEcsService_healthCheckGracePeriodSeconds(vpcNameTag, clusterName, tdName,
-					roleName, policyName, lbName, svcName, 7201),
+					roleName, policyName, lbName, svcName, math.MaxInt32+1),
 				ExpectError: regexp.MustCompile(`expected health_check_grace_period_seconds to be in the range`),
 			},
 			{
@@ -250,6 +341,14 @@ func TestAccAWSEcsService_healthCheckGracePeriodSeconds(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "health_check_grace_period_seconds", "600"),
+				),
+			},
+			{
+				Config: testAccAWSEcsService_healthCheckGracePeriodSeconds(vpcNameTag, clusterName, tdName,
+					roleName, policyName, lbName, svcName, math.MaxInt32),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "health_check_grace_period_seconds", "2147483647"),
 				),
 			},
 		},
@@ -1101,7 +1200,7 @@ resource "aws_ecs_service" "mongo" {
   cluster = "${aws_ecs_cluster.default.id}"
   task_definition = "${aws_ecs_task_definition.mongo.arn}"
   desired_count = 1
-  placement_strategy {
+  ordered_placement_strategy {
     field = "host"
     type = "spread"
   }

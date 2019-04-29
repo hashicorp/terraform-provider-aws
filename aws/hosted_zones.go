@@ -6,6 +6,7 @@ import "fmt"
 // http://docs.aws.amazon.com/general/latest/gr/rande.html#s3_website_region_endpoints
 // It currently cannot be generated from the API json.
 var hostedZoneIDsMap = map[string]string{
+	"ap-east-1":      "ZNB98KWMFR0R6",
 	"ap-northeast-1": "Z2M4EHUR26P7ZW",
 	"ap-northeast-2": "Z3W03O7B5YMIYP",
 	"ap-northeast-3": "Z2YQB5RD63NC85",

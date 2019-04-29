@@ -6,7 +6,7 @@ description: |-
   Provides a Gamelift Build resource.
 ---
 
-# aws_gamelift_build
+# Resource: aws_gamelift_build
 
 Provides an Gamelift Build resource.
 

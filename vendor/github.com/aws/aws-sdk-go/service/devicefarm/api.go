@@ -6855,6 +6855,16 @@ type CreateDevicePoolInput struct {
 	// The device pool's description.
 	Description *string `locationName:"description" type:"string"`
 
+	// The number of devices that Device Farm can add to your device pool. Device
+	// Farm adds devices that are available and that meet the criteria that you
+	// assign for the rules parameter. Depending on how many devices meet these
+	// constraints, your device pool might contain fewer devices than the value
+	// for this parameter.
+	//
+	// By specifying the maximum number of devices, you can control the costs that
+	// you incur by running tests.
+	MaxDevices *int64 `locationName:"maxDevices" type:"integer"`
+
 	// The device pool's name.
 	//
 	// Name is a required field
@@ -6906,6 +6916,12 @@ func (s *CreateDevicePoolInput) Validate() error {
 // SetDescription sets the Description field's value.
 func (s *CreateDevicePoolInput) SetDescription(v string) *CreateDevicePoolInput {
 	s.Description = &v
+	return s
+}
+
+// SetMaxDevices sets the MaxDevices field's value.
+func (s *CreateDevicePoolInput) SetMaxDevices(v int64) *CreateDevicePoolInput {
+	s.MaxDevices = &v
 	return s
 }
 
@@ -8565,49 +8581,65 @@ type DeviceFilter struct {
 	// The aspect of a device such as platform or model used as the selection criteria
 	// in a device filter.
 	//
-	// Allowed values include:
+	// The supported operators for each attribute are provided in the following
+	// list.
 	//
-	//    * ARN: The Amazon Resource Name (ARN) of the device. For example, "arn:aws:devicefarm:us-west-2::device:12345Example".
+	// ARNThe Amazon Resource Name (ARN) of the device. For example, "arn:aws:devicefarm:us-west-2::device:12345Example".
 	//
-	//    * PLATFORM: The device platform. Valid values are "ANDROID" or "IOS".
+	// Supported operators: EQUALS, IN, NOT_IN
 	//
-	//    * OS_VERSION: The operating system version. For example, "10.3.2".
+	// PLATFORMThe device platform. Valid values are "ANDROID" or "IOS".
 	//
-	//    * MODEL: The device model. For example, "iPad 5th Gen".
+	// Supported operators: EQUALS
 	//
-	//    * AVAILABILITY: The current availability of the device. Valid values are
-	//    "AVAILABLE", "HIGHLY_AVAILABLE", "BUSY", or "TEMPORARY_NOT_AVAILABLE".
+	// OS_VERSIONThe operating system version. For example, "10.3.2".
 	//
-	//    * FORM_FACTOR: The device form factor. Valid values are "PHONE" or "TABLET".
+	// Supported operators: EQUALS, GREATER_THAN, GREATER_THAN_OR_EQUALS, IN, LESS_THAN,
+	// LESS_THAN_OR_EQUALS, NOT_IN
 	//
-	//    * MANUFACTURER: The device manufacturer. For example, "Apple".
+	// MODELThe device model. For example, "iPad 5th Gen".
 	//
-	//    * REMOTE_ACCESS_ENABLED: Whether the device is enabled for remote access.
-	//    Valid values are "TRUE" or "FALSE".
+	// Supported operators: CONTAINS, EQUALS, IN, NOT_IN
 	//
-	//    * REMOTE_DEBUG_ENABLED: Whether the device is enabled for remote debugging.
-	//    Valid values are "TRUE" or "FALSE".
+	// AVAILABILITYThe current availability of the device. Valid values are "AVAILABLE",
+	// "HIGHLY_AVAILABLE", "BUSY", or "TEMPORARY_NOT_AVAILABLE".
 	//
-	//    * INSTANCE_ARN: The Amazon Resource Name (ARN) of the device instance.
+	// Supported operators: EQUALS
 	//
-	//    * INSTANCE_LABELS: The label of the device instance.
+	// FORM_FACTORThe device form factor. Valid values are "PHONE" or "TABLET".
 	//
-	//    * FLEET_TYPE: The fleet type. Valid values are "PUBLIC" or "PRIVATE".
+	// Supported operators: EQUALS
+	//
+	// MANUFACTURERThe device manufacturer. For example, "Apple".
+	//
+	// Supported operators: EQUALS, IN, NOT_IN
+	//
+	// REMOTE_ACCESS_ENABLEDWhether the device is enabled for remote access. Valid
+	// values are "TRUE" or "FALSE".
+	//
+	// Supported operators: EQUALS
+	//
+	// REMOTE_DEBUG_ENABLEDWhether the device is enabled for remote debugging. Valid
+	// values are "TRUE" or "FALSE".
+	//
+	// Supported operators: EQUALS
+	//
+	// INSTANCE_ARNThe Amazon Resource Name (ARN) of the device instance.
+	//
+	// Supported operators: EQUALS, IN, NOT_IN
+	//
+	// INSTANCE_LABELSThe label of the device instance.
+	//
+	// Supported operators: CONTAINS
+	//
+	// FLEET_TYPEThe fleet type. Valid values are "PUBLIC" or "PRIVATE".
+	//
+	// Supported operators: EQUALS
 	Attribute *string `locationName:"attribute" type:"string" enum:"DeviceFilterAttribute"`
 
-	// The filter operator.
-	//
-	//    * The EQUALS operator is available for every attribute except INSTANCE_LABELS.
-	//
-	//    * The CONTAINS operator is available for the INSTANCE_LABELS and MODEL
-	//    attributes.
-	//
-	//    * The IN and NOT_IN operators are available for the ARN, OS_VERSION, MODEL,
-	//    MANUFACTURER, and INSTANCE_ARN attributes.
-	//
-	//    * The LESS_THAN, GREATER_THAN, LESS_THAN_OR_EQUALS, and GREATER_THAN_OR_EQUALS
-	//    operators are also available for the OS_VERSION attribute.
-	Operator *string `locationName:"operator" type:"string" enum:"DeviceFilterOperator"`
+	// Specifies how Device Farm compares the filter's attribute to the value. For
+	// the operators that are supported by each attribute, see the attribute descriptions.
+	Operator *string `locationName:"operator" type:"string" enum:"RuleOperator"`
 
 	// An array of one or more filter values used in a device filter.
 	//
@@ -8784,6 +8816,16 @@ type DevicePool struct {
 	// The device pool's description.
 	Description *string `locationName:"description" type:"string"`
 
+	// The number of devices that Device Farm can add to your device pool. Device
+	// Farm adds devices that are available and that meet the criteria that you
+	// assign for the rules parameter. Depending on how many devices meet these
+	// constraints, your device pool might contain fewer devices than the value
+	// for this parameter.
+	//
+	// By specifying the maximum number of devices, you can control the costs that
+	// you incur by running tests.
+	MaxDevices *int64 `locationName:"maxDevices" type:"integer"`
+
 	// The device pool's name.
 	Name *string `locationName:"name" type:"string"`
 
@@ -8820,6 +8862,12 @@ func (s *DevicePool) SetArn(v string) *DevicePool {
 // SetDescription sets the Description field's value.
 func (s *DevicePool) SetDescription(v string) *DevicePool {
 	s.Description = &v
+	return s
+}
+
+// SetMaxDevices sets the MaxDevices field's value.
+func (s *DevicePool) SetMaxDevices(v int64) *DevicePool {
+	s.MaxDevices = &v
 	return s
 }
 
@@ -13310,7 +13358,7 @@ type RemoteAccessSession struct {
 
 	// The billing method of the remote access session. Possible values include
 	// METERED or UNMETERED. For more information about metered devices, see AWS
-	// Device Farm terminology (http://docs.aws.amazon.com/devicefarm/latest/developerguide/welcome.html#welcome-terminology)."
+	// Device Farm terminology (https://docs.aws.amazon.com/devicefarm/latest/developerguide/welcome.html#welcome-terminology)."
 	BillingMethod *string `locationName:"billingMethod" type:"string" enum:"BillingMethod"`
 
 	// Unique identifier of your client for the remote access session. Only returned
@@ -13667,61 +13715,77 @@ func (s *Resolution) SetWidth(v int64) *Resolution {
 	return s
 }
 
-// Represents a condition for a device pool. It is passed in as the rules parameter
-// to CreateDevicePool and UpdateDevicePool.
+// Represents a condition for a device pool.
 type Rule struct {
 	_ struct{} `type:"structure"`
 
-	// The rule's attribute. It is the aspect of a device such as platform or model
-	// used as selection criteria to create or update a device pool.
+	// The rule's stringified attribute. For example, specify the value as "\"abc\"".
 	//
-	// Allowed values include:
+	// The supported operators for each attribute are provided in the following
+	// list.
 	//
-	//    * ARN: The Amazon Resource Name (ARN) of a device. For example, "arn:aws:devicefarm:us-west-2::device:12345Example".
+	// APPIUM_VERSIONThe Appium version for the test.
 	//
-	//    * PLATFORM: The device platform. Valid values are "ANDROID" or "IOS".
+	// Supported operators: CONTAINS
 	//
-	//    * FORM_FACTOR: The device form factor. Valid values are "PHONE" or "TABLET".
+	// ARNThe Amazon Resource Name (ARN) of the device. For example, "arn:aws:devicefarm:us-west-2::device:12345Example".
 	//
-	//    * MANUFACTURER: The device manufacturer. For example, "Apple".
+	// Supported operators: EQUALS, IN, NOT_IN
 	//
-	//    * REMOTE_ACCESS_ENABLED: Whether the device is enabled for remote access.
-	//    Valid values are "TRUE" or "FALSE".
+	// AVAILABILITYThe current availability of the device. Valid values are "AVAILABLE",
+	// "HIGHLY_AVAILABLE", "BUSY", or "TEMPORARY_NOT_AVAILABLE".
 	//
-	//    * REMOTE_DEBUG_ENABLED: Whether the device is enabled for remote debugging.
-	//    Valid values are "TRUE" or "FALSE".
+	// Supported operators: EQUALS
 	//
-	//    * APPIUM_VERSION: The Appium version for the test.
+	// FLEET_TYPEThe fleet type. Valid values are "PUBLIC" or "PRIVATE".
 	//
-	//    * INSTANCE_ARN: The Amazon Resource Name (ARN) of the device instance.
+	// Supported operators: EQUALS
 	//
-	//    * INSTANCE_LABELS: The label of the device instance.
+	// FORM_FACTORThe device form factor. Valid values are "PHONE" or "TABLET".
 	//
-	//    * FLEET_TYPE: The fleet type. Valid values are "PUBLIC" or "PRIVATE".
+	// Supported operators: EQUALS, IN, NOT_IN
+	//
+	// INSTANCE_ARNThe Amazon Resource Name (ARN) of the device instance.
+	//
+	// Supported operators: IN, NOT_IN
+	//
+	// INSTANCE_LABELSThe label of the device instance.
+	//
+	// Supported operators: CONTAINS
+	//
+	// MANUFACTURERThe device manufacturer. For example, "Apple".
+	//
+	// Supported operators: EQUALS, IN, NOT_IN
+	//
+	// MODELThe device model, such as "Apple iPad Air 2" or "Google Pixel".
+	//
+	// Supported operators: CONTAINS, EQUALS, IN, NOT_IN
+	//
+	// OS_VERSIONThe operating system version. For example, "10.3.2".
+	//
+	// Supported operators: EQUALS, GREATER_THAN, GREATER_THAN_OR_EQUALS, IN, LESS_THAN,
+	// LESS_THAN_OR_EQUALS, NOT_IN
+	//
+	// PLATFORMThe device platform. Valid values are "ANDROID" or "IOS".
+	//
+	// Supported operators: EQUALS, IN, NOT_IN
+	//
+	// REMOTE_ACCESS_ENABLEDWhether the device is enabled for remote access. Valid
+	// values are "TRUE" or "FALSE".
+	//
+	// Supported operators: EQUALS
+	//
+	// REMOTE_DEBUG_ENABLEDWhether the device is enabled for remote debugging. Valid
+	// values are "TRUE" or "FALSE".
+	//
+	// Supported operators: EQUALS
 	Attribute *string `locationName:"attribute" type:"string" enum:"DeviceAttribute"`
 
-	// The rule's operator.
-	//
-	//    * EQUALS: The equals operator.
-	//
-	//    * GREATER_THAN: The greater-than operator.
-	//
-	//    * IN: The in operator.
-	//
-	//    * LESS_THAN: The less-than operator.
-	//
-	//    * NOT_IN: The not-in operator.
-	//
-	//    * CONTAINS: The contains operator.
+	// Specifies how Device Farm compares the rule's attribute to the value. For
+	// the operators that are supported by each attribute, see the attribute descriptions.
 	Operator *string `locationName:"operator" type:"string" enum:"RuleOperator"`
 
 	// The rule's value.
-	//
-	// The value must be passed in as a string using escaped quotes.
-	//
-	// For example:
-	//
-	// "value": "\"ANDROID\""
 	Value *string `locationName:"value" type:"string"`
 }
 
@@ -14358,8 +14422,6 @@ type ScheduleRunInput struct {
 	Configuration *ScheduleRunConfiguration `locationName:"configuration" type:"structure"`
 
 	// The ARN of the device pool for the run to be scheduled.
-	//
-	// Either devicePoolArn or deviceSelectionConfiguration is required in a request.
 	DevicePoolArn *string `locationName:"devicePoolArn" min:"32" type:"string"`
 
 	// The filter criteria used to dynamically select a set of devices for a test
@@ -14508,8 +14570,9 @@ func (s *ScheduleRunOutput) SetRun(v *Run) *ScheduleRunOutput {
 	return s
 }
 
-// Represents test settings. This data structure is passed in as the test parameter
-// to ScheduleRun. For an example of the JSON request syntax, see ScheduleRun.
+// Represents test settings. This data structure is passed in as the "test"
+// parameter to ScheduleRun. For an example of the JSON request syntax, see
+// ScheduleRun.
 type ScheduleRunTest struct {
 	_ struct{} `type:"structure"`
 
@@ -15449,8 +15512,31 @@ type UpdateDevicePoolInput struct {
 	// Arn is a required field
 	Arn *string `locationName:"arn" min:"32" type:"string" required:"true"`
 
+	// Sets whether the maxDevices parameter applies to your device pool. If you
+	// set this parameter to true, the maxDevices parameter does not apply, and
+	// Device Farm does not limit the number of devices that it adds to your device
+	// pool. In this case, Device Farm adds all available devices that meet the
+	// criteria that are specified for the rules parameter.
+	//
+	// If you use this parameter in your request, you cannot use the maxDevices
+	// parameter in the same request.
+	ClearMaxDevices *bool `locationName:"clearMaxDevices" type:"boolean"`
+
 	// A description of the device pool you wish to update.
 	Description *string `locationName:"description" type:"string"`
+
+	// The number of devices that Device Farm can add to your device pool. Device
+	// Farm adds devices that are available and that meet the criteria that you
+	// assign for the rules parameter. Depending on how many devices meet these
+	// constraints, your device pool might contain fewer devices than the value
+	// for this parameter.
+	//
+	// By specifying the maximum number of devices, you can control the costs that
+	// you incur by running tests.
+	//
+	// If you use this parameter in your request, you cannot use the clearMaxDevices
+	// parameter in the same request.
+	MaxDevices *int64 `locationName:"maxDevices" type:"integer"`
 
 	// A string representing the name of the device pool you wish to update.
 	Name *string `locationName:"name" type:"string"`
@@ -15493,9 +15579,21 @@ func (s *UpdateDevicePoolInput) SetArn(v string) *UpdateDevicePoolInput {
 	return s
 }
 
+// SetClearMaxDevices sets the ClearMaxDevices field's value.
+func (s *UpdateDevicePoolInput) SetClearMaxDevices(v bool) *UpdateDevicePoolInput {
+	s.ClearMaxDevices = &v
+	return s
+}
+
 // SetDescription sets the Description field's value.
 func (s *UpdateDevicePoolInput) SetDescription(v string) *UpdateDevicePoolInput {
 	s.Description = &v
+	return s
+}
+
+// SetMaxDevices sets the MaxDevices field's value.
+func (s *UpdateDevicePoolInput) SetMaxDevices(v int64) *UpdateDevicePoolInput {
+	s.MaxDevices = &v
 	return s
 }
 
@@ -16502,6 +16600,15 @@ const (
 
 	// DeviceAttributeFleetType is a DeviceAttribute enum value
 	DeviceAttributeFleetType = "FLEET_TYPE"
+
+	// DeviceAttributeOsVersion is a DeviceAttribute enum value
+	DeviceAttributeOsVersion = "OS_VERSION"
+
+	// DeviceAttributeModel is a DeviceAttribute enum value
+	DeviceAttributeModel = "MODEL"
+
+	// DeviceAttributeAvailability is a DeviceAttribute enum value
+	DeviceAttributeAvailability = "AVAILABILITY"
 )
 
 const (
@@ -16554,32 +16661,6 @@ const (
 
 	// DeviceFilterAttributeFleetType is a DeviceFilterAttribute enum value
 	DeviceFilterAttributeFleetType = "FLEET_TYPE"
-)
-
-const (
-	// DeviceFilterOperatorEquals is a DeviceFilterOperator enum value
-	DeviceFilterOperatorEquals = "EQUALS"
-
-	// DeviceFilterOperatorLessThan is a DeviceFilterOperator enum value
-	DeviceFilterOperatorLessThan = "LESS_THAN"
-
-	// DeviceFilterOperatorLessThanOrEquals is a DeviceFilterOperator enum value
-	DeviceFilterOperatorLessThanOrEquals = "LESS_THAN_OR_EQUALS"
-
-	// DeviceFilterOperatorGreaterThan is a DeviceFilterOperator enum value
-	DeviceFilterOperatorGreaterThan = "GREATER_THAN"
-
-	// DeviceFilterOperatorGreaterThanOrEquals is a DeviceFilterOperator enum value
-	DeviceFilterOperatorGreaterThanOrEquals = "GREATER_THAN_OR_EQUALS"
-
-	// DeviceFilterOperatorIn is a DeviceFilterOperator enum value
-	DeviceFilterOperatorIn = "IN"
-
-	// DeviceFilterOperatorNotIn is a DeviceFilterOperator enum value
-	DeviceFilterOperatorNotIn = "NOT_IN"
-
-	// DeviceFilterOperatorContains is a DeviceFilterOperator enum value
-	DeviceFilterOperatorContains = "CONTAINS"
 )
 
 const (
@@ -16727,8 +16808,14 @@ const (
 	// RuleOperatorLessThan is a RuleOperator enum value
 	RuleOperatorLessThan = "LESS_THAN"
 
+	// RuleOperatorLessThanOrEquals is a RuleOperator enum value
+	RuleOperatorLessThanOrEquals = "LESS_THAN_OR_EQUALS"
+
 	// RuleOperatorGreaterThan is a RuleOperator enum value
 	RuleOperatorGreaterThan = "GREATER_THAN"
+
+	// RuleOperatorGreaterThanOrEquals is a RuleOperator enum value
+	RuleOperatorGreaterThanOrEquals = "GREATER_THAN_OR_EQUALS"
 
 	// RuleOperatorIn is a RuleOperator enum value
 	RuleOperatorIn = "IN"

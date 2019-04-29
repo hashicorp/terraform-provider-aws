@@ -589,6 +589,8 @@ func testAccAWSSSMDocumentTypeAutomationConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_ami" "ssm_ami" {
 	most_recent = true
+	owners      = ["099720109477"] # Canonical
+
 	filter {
 		name = "name"
 		values = ["*hvm-ssd/ubuntu-trusty-14.04*"]
@@ -597,7 +599,7 @@ data "aws_ami" "ssm_ami" {
 
 resource "aws_iam_instance_profile" "ssm_profile" {
   name = "ssm_profile-%s"
-  roles = ["${aws_iam_role.ssm_role.name}"]
+  role = "${aws_iam_role.ssm_role.name}"
 }
 
 resource "aws_iam_role" "ssm_role" {

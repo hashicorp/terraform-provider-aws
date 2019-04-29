@@ -6,7 +6,7 @@ description: |-
   Provides an Athena database.
 ---
 
-# aws_athena_database
+# Resource: aws_athena_database
 
 Provides an Athena database.
 

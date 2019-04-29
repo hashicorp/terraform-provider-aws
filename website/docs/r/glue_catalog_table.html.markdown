@@ -6,16 +6,75 @@ description: |-
   Provides a Glue Catalog Table.
 ---
 
-# aws_glue_catalog_table
+# Resource: aws_glue_catalog_table
 
 Provides a Glue Catalog Table Resource. You can refer to the [Glue Developer Guide](http://docs.aws.amazon.com/glue/latest/dg/populate-data-catalog.html) for a full explanation of the Glue Data Catalog functionality.
 
 ## Example Usage
 
+### Basic Table
+
 ```hcl
 resource "aws_glue_catalog_table" "aws_glue_catalog_table" {
   name          = "MyCatalogTable"
   database_name = "MyCatalogDatabase"
+}
+```
+
+### Parquet Table for Athena
+
+```hcl
+resource "aws_glue_catalog_table" "aws_glue_catalog_table" {
+  name          = "MyCatalogTable"
+  database_name = "MyCatalogDatabase"
+
+  table_type  = "EXTERNAL_TABLE"
+
+  parameters = {
+    EXTERNAL            = "TRUE"
+    parquet.compression = "SNAPPY"
+  }
+
+  storage_descriptor {
+    location      = "s3://my-bucket/event-streams/my-stream"
+    input_format  = "org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat"
+    output_format = "org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat"
+
+    ser_de_info {
+      name                  = "my-stream"
+      serialization_library = "org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe"
+
+      parameters {
+        serialization.format = 1
+      }
+    }
+
+    columns = [
+      {
+        name    = "my_string"
+        type    = "string"
+      },
+      {
+        name    = "my_double"
+        type    = "double"
+      },
+      {
+        name    = "my_date"
+        type    = "date"
+        comment = ""
+      },
+      {
+        name    = "my_bigint"
+        type    = "bigint"
+        comment = ""
+      },
+      {
+        name    = "my_struct"
+        type    = "struct<my_nested_string:string>"
+        comment = ""
+      },
+    ]
+  }
 }
 ```
 

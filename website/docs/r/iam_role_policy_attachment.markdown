@@ -6,7 +6,7 @@ description: |-
   Attaches a Managed IAM Policy to an IAM role
 ---
 
-# aws_iam_role_policy_attachment
+# Resource: aws_iam_role_policy_attachment
 
 Attaches a Managed IAM Policy to an IAM role
 

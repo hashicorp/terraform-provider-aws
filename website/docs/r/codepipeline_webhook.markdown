@@ -6,7 +6,7 @@ description: |-
   Provides a CodePipeline Webhook
 ---
 
-# aws_codepipeline_webhook
+# Resource: aws_codepipeline_webhook
 
 Provides a CodePipeline Webhook.
 

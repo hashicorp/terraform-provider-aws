@@ -63,6 +63,9 @@ func TestAccDataSourceAWSMqBroker_basic(t *testing.T) {
 						"data.aws_mq_broker.by_id", "subnet_ids.#",
 						"aws_mq_broker.acctest", "subnet_ids.#"),
 					resource.TestCheckResourceAttrPair(
+						"data.aws_mq_broker.by_id", "tags.%",
+						"aws_mq_broker.acctest", "tags.%"),
+					resource.TestCheckResourceAttrPair(
 						"data.aws_mq_broker.by_id", "user.#",
 						"aws_mq_broker.acctest", "user.#"),
 				),

@@ -6,7 +6,7 @@ description: |-
   Provides an AWS Config Delivery Channel.
 ---
 
-# aws_config_delivery_channel
+# Resource: aws_config_delivery_channel
 
 Provides an AWS Config Delivery Channel.
 

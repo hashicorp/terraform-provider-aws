@@ -215,11 +215,11 @@ func normalizeCert(cert interface{}) string {
 	}
 
 	var rawCert string
-	switch cert.(type) {
+	switch cert := cert.(type) {
 	case string:
-		rawCert = cert.(string)
+		rawCert = cert
 	case *string:
-		rawCert = *cert.(*string)
+		rawCert = *cert
 	default:
 		return ""
 	}

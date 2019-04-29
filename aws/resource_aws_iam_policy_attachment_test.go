@@ -353,6 +353,7 @@ EOF
 resource "aws_iam_policy_attachment" "test-paginated-attach" {
 	name = "%s"
 	policy_arn = "${aws_iam_policy.policy.arn}"
+	# TODO: Switch back to simple list reference when test configurations are upgraded to 0.12 syntax
 	users = [
 		"${aws_iam_user.user.*.name[0]}",
 		"${aws_iam_user.user.*.name[1]}",

@@ -6,7 +6,7 @@ description: |-
   Manages an AWS Config Aggregate Authorization.
 ---
 
-# aws_config_aggregate_authorization
+# Resource: aws_config_aggregate_authorization
 
 Manages an AWS Config Aggregate Authorization
 

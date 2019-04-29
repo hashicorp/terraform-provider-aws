@@ -6,7 +6,7 @@ description: |-
   Manages an AWS DataSync NFS Location
 ---
 
-# aws_datasync_location_nfs
+# Resource: aws_datasync_location_nfs
 
 Manages an NFS Location within AWS DataSync.
 
