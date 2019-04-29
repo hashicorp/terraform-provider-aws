@@ -42,7 +42,7 @@ func TestAccAwsSESIdentityNotificationTopic_basic(t *testing.T) {
 			{
 				Config: fmt.Sprintf(testAccAwsSESIdentityNotificationTopicConfig_headers, domain, topicName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSESIdentityNotificationTopicExists("aws_ses_identity_notification_topic.test"),
+					testAccCheckAwsSESIdentityNotificationTopicExists(resourceName),
 				),
 			},
 			{
