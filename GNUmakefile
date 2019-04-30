@@ -3,11 +3,19 @@ TEST?=./...
 GOFMT_FILES?=$$(find . -name '*.go' |grep -v vendor)
 PKG_NAME=aws
 WEBSITE_REPO=github.com/hashicorp/terraform-website
+DIR=~/.terraform.d/plugins
 
 default: build
 
 build: fmtcheck
 	go install
+
+install: fmtcheck
+	mkdir -vp $(DIR)
+	go build -o $(DIR)/terraform-provider-$(PKG_NAME)
+
+uninstall:
+	@rm -vf $(DIR)/terraform-provider-$(PKG_NAME)
 
 sweep:
 	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
