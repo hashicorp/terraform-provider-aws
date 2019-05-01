@@ -7,6 +7,10 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_availability_zones: Add blacklisted_names and blacklisted_zone_ids arguments [GH-8463]
+* resource/aws_ssm_activation: Add `tags` argument [GH-8426]
+* resource/aws_ssm_document: Add `tags` argument [GH-8426]
+* resource/aws_ssm_maintenance_window: Add `tags` argument [GH-8426]
+* resource/aws_ssm_patch_baseline: Add `tags` argument [GH-8426]
 
 ## 2.8.0 (April 26, 2019)
 
@@ -99,7 +103,7 @@ ENHANCEMENTS:
 * resource/aws_cloudwatch_log_subscription_filter: Support resource import ([#8147](https://github.com/terraform-providers/terraform-provider-aws/issues/8147))
 * resource/aws_cloudwatch_metric_alarm: Add `tags` argument ([#8168](https://github.com/terraform-providers/terraform-provider-aws/issues/8168))
 * resource/aws_ecr_repository: Tag on creation (support tag limiting IAM policies) ([#8198](https://github.com/terraform-providers/terraform-provider-aws/issues/8198))
-* resource/aws_lb_target_group: Add `enabled` argument to target group health checks [[#7570](https://github.com/terraform-providers/terraform-provider-aws/issues/7570)]  
+* resource/aws_lb_target_group: Add `enabled` argument to target group health checks [[#7570](https://github.com/terraform-providers/terraform-provider-aws/issues/7570)]
 * resource/aws_sagemaker_notebook_instance: Add `lifecycle_config_name` argument ([#7586](https://github.com/terraform-providers/terraform-provider-aws/issues/7586))
 * service/ec2: Automatically retry `CreateVpnConnection` and `CreateVpnGateway` requests for concurrency errors ([#8161](https://github.com/terraform-providers/terraform-provider-aws/issues/8161))
 
@@ -2365,7 +2369,7 @@ BUG FIXES:
 * resource/aws_batch_job_definition: `name` allows hyphens ([#2126](https://github.com/terraform-providers/terraform-provider-aws/issues/2126))
 * resource/aws_elasticache_parameter_group: Raise timeout for retry on pending changes ([#2134](https://github.com/terraform-providers/terraform-provider-aws/issues/2134))
 * resource/aws_kms_key: Retry GetKeyRotationStatus on NotFoundException ([#2133](https://github.com/terraform-providers/terraform-provider-aws/issues/2133))
-* resource/aws_lb_target_group: Fix issue that prevented using `aws_lb_target_group` with 
+* resource/aws_lb_target_group: Fix issue that prevented using `aws_lb_target_group` with
   Network type load balancers ([#2251](https://github.com/terraform-providers/terraform-provider-aws/issues/2251))
 * resource/aws_lb: mark subnets as `ForceNew` for network load balancers ([#2310](https://github.com/terraform-providers/terraform-provider-aws/issues/2310))
 * resource/aws_redshift_cluster: Make master_username ForceNew ([#2202](https://github.com/terraform-providers/terraform-provider-aws/issues/2202))
@@ -2406,7 +2410,7 @@ IMPROVEMENTS:
 * resource/aws_elasticsearch_domain: Support VPC configuration ([#1958](https://github.com/terraform-providers/terraform-provider-aws/issues/1958))
 * resource/aws_alb_target_group: Add support for `target_type` ([#1589](https://github.com/terraform-providers/terraform-provider-aws/issues/1589))
 * resource/aws_sqs_queue: Add support for `tags` ([#1987](https://github.com/terraform-providers/terraform-provider-aws/issues/1987))
-* resource/aws_security_group: Add `revoke_rules_on_delete` option to force a security group to revoke 
+* resource/aws_security_group: Add `revoke_rules_on_delete` option to force a security group to revoke
   rules before deleting the grou ([#2074](https://github.com/terraform-providers/terraform-provider-aws/issues/2074))
 * resource/aws_cloudwatch_log_metric_filter: Add support for DefaultValue ([#1578](https://github.com/terraform-providers/terraform-provider-aws/issues/1578))
 * resource/aws_emr_cluster: Expose error on `TERMINATED_WITH_ERRORS` ([#2081](https://github.com/terraform-providers/terraform-provider-aws/issues/2081))
