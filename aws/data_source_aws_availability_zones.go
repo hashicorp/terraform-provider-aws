@@ -17,6 +17,16 @@ func dataSourceAwsAvailabilityZones() *schema.Resource {
 		Read: dataSourceAwsAvailabilityZonesRead,
 
 		Schema: map[string]*schema.Schema{
+			"blacklisted_names": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"blacklisted_zone_ids": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"names": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -68,11 +78,24 @@ func dataSourceAwsAvailabilityZonesRead(d *schema.ResourceData, meta interface{}
 		return aws.StringValue(resp.AvailabilityZones[i].ZoneName) < aws.StringValue(resp.AvailabilityZones[j].ZoneName)
 	})
 
+	blacklistedNames := d.Get("blacklisted_names").(*schema.Set)
+	blacklistedZoneIDs := d.Get("blacklisted_zone_ids").(*schema.Set)
 	names := []string{}
 	zoneIds := []string{}
 	for _, v := range resp.AvailabilityZones {
-		names = append(names, aws.StringValue(v.ZoneName))
-		zoneIds = append(zoneIds, aws.StringValue(v.ZoneId))
+		name := aws.StringValue(v.ZoneName)
+		zoneID := aws.StringValue(v.ZoneId)
+
+		if blacklistedNames.Contains(name) {
+			continue
+		}
+
+		if blacklistedZoneIDs.Contains(zoneID) {
+			continue
+		}
+
+		names = append(names, name)
+		zoneIds = append(zoneIds, zoneID)
 	}
 
 	if err := d.Set("names", names); err != nil {
