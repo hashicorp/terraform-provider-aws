@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -47,18 +46,17 @@ func resourceAwsElbAttachmentCreate(d *schema.ResourceData, meta interface{}) er
 
 	log.Printf("[INFO] registering instance %s with ELB %s", instance, elbName)
 
-	err := resource.Retry(600*time.Second, func() *resource.RetryError {
+	err := resource.Retry(10*time.Minute, func() *resource.RetryError {
 		_, err := elbconn.RegisterInstancesWithLoadBalancer(&registerInstancesOpts)
 
+		if isAWSErr(err, "InvalidTarget", "") {
+			return resource.RetryableError(fmt.Errorf("Error attaching instance to ELB, retrying: %s", err))
+		}
+
 		if err != nil {
-			if awsErr, ok := err.(awserr.Error); ok {
-				if awsErr.Code() == "InvalidTarget" {
-					return resource.RetryableError(
-						fmt.Errorf("Error attaching instance to ELB, retrying: %s", err))
-				}
-			}
 			return resource.NonRetryableError(err)
 		}
+
 		return nil
 	})
 
