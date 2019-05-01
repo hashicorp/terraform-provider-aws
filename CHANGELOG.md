@@ -1,5 +1,9 @@
 ## 2.9.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** aws_db_instance_role_association [GH-8466]
+
 ENHANCEMENTS:
 
 * data-source/aws_availability_zones: Add blacklisted_names and blacklisted_zone_ids arguments [GH-8463]
