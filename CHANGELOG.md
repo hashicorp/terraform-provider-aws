@@ -1,4 +1,9 @@
 ## 2.9.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* data-source/aws_availability_zones: Add blacklisted_names and blacklisted_zone_ids arguments [GH-8463]
+
 ## 2.8.0 (April 26, 2019)
 
 NOTES:
