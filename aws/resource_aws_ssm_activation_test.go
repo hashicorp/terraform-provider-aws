@@ -65,15 +65,6 @@ func TestAccAWSSSMActivation_update(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSSSMActivationRecreated(t *testing.T, before, after *ssm.Activation) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if *before.ActivationId == *after.ActivationId {
-			t.Fatalf("expected SSM activation Ids to be different but got %v == %v", before.ActivationId, after.ActivationId)
-		}
-		return nil
-	}
-}
-
 func TestAccAWSSSMActivation_expirationDate(t *testing.T) {
 	var ssmActivation ssm.Activation
 	rName := acctest.RandString(10)
@@ -99,6 +90,15 @@ func TestAccAWSSSMActivation_expirationDate(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccCheckAWSSSMActivationRecreated(t *testing.T, before, after *ssm.Activation) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if *before.ActivationId == *after.ActivationId {
+			t.Fatalf("expected SSM activation Ids to be different but got %v == %v", before.ActivationId, after.ActivationId)
+		}
+		return nil
+	}
 }
 
 func testAccCheckAWSSSMActivationExists(n string, ssmActivation *ssm.Activation) resource.TestCheckFunc {
