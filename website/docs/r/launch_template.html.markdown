@@ -252,7 +252,7 @@ Check limitations for autoscaling group in [Creating an Auto Scaling Group Using
 Each `network_interfaces` block supports the following:
 
 * `associate_public_ip_address` - Associate a public ip address with the network interface.  Boolean value.
-* `delete_on_termination` - Whether the network interface should be destroyed on instance termination.
+* `delete_on_termination` - Whether the network interface should be destroyed on instance termination.  Defaults to `False`.
 * `description` - Description of the network interface.
 * `device_index` - The integer index of the network interface attachment.
 * `ipv6_addresses` - One or more specific IPv6 addresses from the IPv6 CIDR block range of your subnet. Conflicts with `ipv6_address_count`
