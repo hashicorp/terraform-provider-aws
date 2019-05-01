@@ -159,6 +159,10 @@ func resourceAwsSsmDocumentCreate(d *schema.ResourceData, meta interface{}) erro
 		DocumentType:   aws.String(d.Get("document_type").(string)),
 	}
 
+	if v, ok := d.GetOk("tags"); ok {
+		docInput.Tags = tagsFromMapSSM(v.(map[string]interface{}))
+	}
+
 	log.Printf("[DEBUG] Waiting for SSM Document %q to be created", d.Get("name").(string))
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		resp, err := ssmconn.CreateDocument(docInput)

@@ -34,6 +34,14 @@ func tagsSchemaComputed() *schema.Schema {
 	}
 }
 
+func tagsSchemaForceNew() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeMap,
+		Optional: true,
+		ForceNew: true,
+	}
+}
+
 func setElbV2Tags(conn *elbv2.ELBV2, d *schema.ResourceData) error {
 	if d.HasChange("tags") {
 		oraw, nraw := d.GetChange("tags")

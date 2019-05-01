@@ -66,6 +66,8 @@ func resourceAwsSsmMaintenanceWindow() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -79,6 +81,10 @@ func resourceAwsSsmMaintenanceWindowCreate(d *schema.ResourceData, meta interfac
 		Duration:                 aws.Int64(int64(d.Get("duration").(int))),
 		Name:                     aws.String(d.Get("name").(string)),
 		Schedule:                 aws.String(d.Get("schedule").(string)),
+	}
+
+	if v, ok := d.GetOk("tags"); ok {
+		params.Tags = tagsFromMapSSM(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("end_date"); ok {
@@ -153,6 +159,12 @@ func resourceAwsSsmMaintenanceWindowUpdate(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("error updating SSM Maintenance Window (%s): %s", d.Id(), err)
 	}
 
+	if d.HasChange("tags") {
+		if err := setTagsSSM(ssmconn, d, d.Id(), ssm.ResourceTypeForTaggingMaintenanceWindow); err != nil {
+			return fmt.Errorf("error setting tags for SSM Maintenance Window (%s): %s", d.Id(), err)
+		}
+	}
+
 	return resourceAwsSsmMaintenanceWindowRead(d, meta)
 }
 
@@ -182,6 +194,10 @@ func resourceAwsSsmMaintenanceWindowRead(d *schema.ResourceData, meta interface{
 	d.Set("schedule_timezone", resp.ScheduleTimezone)
 	d.Set("schedule", resp.Schedule)
 	d.Set("start_date", resp.StartDate)
+
+	if err := saveTagsSSM(ssmconn, d, d.Id(), ssm.ResourceTypeForTaggingMaintenanceWindow); err != nil {
+		return fmt.Errorf("error saving tags for SSM Maintenance Window (%s): %s", d.Id(), err)
+	}
 
 	return nil
 }
