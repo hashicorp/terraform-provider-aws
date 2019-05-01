@@ -39,7 +39,7 @@ The following Arguments are supported
 
 * `filter` - (Optional) A filter used to scope the list e.g. by tags. See [related docs] (https://docs.aws.amazon.com/ram/latest/APIReference/API_TagFilter.html).
   * `name` - (Required) The name of the tag key to filter on.
-  * `values` - (Required) The value of the tag ke.
+  * `values` - (Required) The value of the tag key.
 
 ## Attributes Reference
 
