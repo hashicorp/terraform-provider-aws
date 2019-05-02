@@ -52,6 +52,11 @@ func resourceAwsSnsTopicSubscription() *schema.Resource {
 					"lambda",
 					"sms",
 					"sqs",
+					// NOTE(jaspervdj): we need to support email and email-json
+					// since this will be in the tfstate if a customer has an
+					// email subscription.
+					"email",
+					"email-json",
 				}, true),
 			},
 			"endpoint": {
