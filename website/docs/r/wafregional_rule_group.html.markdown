@@ -6,7 +6,7 @@ description: |-
   Provides a AWS WAF Regional Rule Group resource.
 ---
 
-# aws_wafregional_rule_group
+# Resource: aws_wafregional_rule_group
 
 Provides a WAF Regional Rule Group Resource
 

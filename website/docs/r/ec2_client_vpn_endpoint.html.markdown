@@ -6,7 +6,7 @@ description: |-
   Provides an AWS Client VPN endpoint for OpenVPN clients.
 ---
 
-# aws_ec2_client_vpn_endpoint
+# Resource: aws_ec2_client_vpn_endpoint
 
 Provides an AWS Client VPN endpoint for OpenVPN clients. For more information on usage, please see the
 [AWS Client VPN Administrator's Guide](https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/what-is.html).

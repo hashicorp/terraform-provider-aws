@@ -136,6 +136,51 @@ func TestAccAWSCloudWatchEventRule_prefix(t *testing.T) {
 	})
 }
 
+func TestAccAWSCloudWatchEventRule_tags(t *testing.T) {
+	var rule events.DescribeRuleOutput
+	resourceName := "aws_cloudwatch_event_rule.default"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCloudWatchEventRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudWatchEventRuleConfig_tags,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchEventRuleExists(resourceName, &rule),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.fizz", "buzz"),
+					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar"),
+				),
+			},
+			{
+				Config: testAccAWSCloudWatchEventRuleConfig_updateTags,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchEventRuleExists(resourceName, &rule),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.fizz", "buzz"),
+					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.good", "bad"),
+				),
+			},
+			{
+				Config: testAccAWSCloudWatchEventRuleConfig_removeTags,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchEventRuleExists(resourceName, &rule),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.fizz", "buzz"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSCloudWatchEventRule_full(t *testing.T) {
 	var rule events.DescribeRuleOutput
 
@@ -154,6 +199,8 @@ func TestAccAWSCloudWatchEventRule_full(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_cloudwatch_event_rule.moobar", "description", "He's not dead, he's just resting!"),
 					resource.TestCheckResourceAttr("aws_cloudwatch_event_rule.moobar", "role_arn", ""),
 					testAccCheckCloudWatchEventRuleEnabled("aws_cloudwatch_event_rule.moobar", "DISABLED", &rule),
+					resource.TestCheckResourceAttr("aws_cloudwatch_event_rule.moobar", "tags.%", "1"),
+					resource.TestCheckResourceAttr("aws_cloudwatch_event_rule.moobar", "tags.Name", "tf-acc-cw-event-rule-full"),
 				),
 			},
 		},
@@ -356,6 +403,42 @@ PATTERN
 }
 `
 
+var testAccAWSCloudWatchEventRuleConfig_tags = `
+resource "aws_cloudwatch_event_rule" "default" {
+    name = "tf-acc-cw-event-rule-tags"
+	schedule_expression = "rate(1 hour)"
+	
+	tags = {
+		fizz 	= "buzz"
+		foo		= "bar"
+	}
+}
+`
+
+var testAccAWSCloudWatchEventRuleConfig_updateTags = `
+resource "aws_cloudwatch_event_rule" "default" {
+    name = "tf-acc-cw-event-rule-tags"
+	schedule_expression = "rate(1 hour)"
+	
+	tags = {
+		fizz 	= "buzz"
+		foo		= "bar2"
+		good	= "bad"
+	}
+}
+`
+
+var testAccAWSCloudWatchEventRuleConfig_removeTags = `
+resource "aws_cloudwatch_event_rule" "default" {
+    name = "tf-acc-cw-event-rule-tags"
+	schedule_expression = "rate(1 hour)"
+	
+	tags = {
+		fizz 	= "buzz"
+	}
+}
+`
+
 var testAccAWSCloudWatchEventRuleConfig_full = `
 resource "aws_cloudwatch_event_rule" "moobar" {
     name = "tf-acc-cw-event-rule-full"
@@ -365,6 +448,9 @@ resource "aws_cloudwatch_event_rule" "moobar" {
 PATTERN
 	description = "He's not dead, he's just resting!"
 	is_enabled = false
+	tags = {
+		Name = "tf-acc-cw-event-rule-full"
+	}
 }
 `
 

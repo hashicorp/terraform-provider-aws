@@ -330,7 +330,7 @@ func testAccAWSLambdaLayerVersionCreateBeforeDestroy(layerName string, filename 
 resource "aws_lambda_layer_version" "lambda_layer_test" {
   filename         = "%s"
   layer_name       = "%s"
-  source_code_hash = "${base64sha256(file("%s"))}"
+  source_code_hash = "${filebase64sha256("%s")}"
 
   lifecycle {
     create_before_destroy = true

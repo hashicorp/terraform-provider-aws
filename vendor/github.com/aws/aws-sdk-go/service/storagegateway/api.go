@@ -244,13 +244,13 @@ func (c *StorageGateway) AddTagsToResourceRequest(input *AddTagsToResourceInput)
 //
 //    * Storage gateways of all types
 //
-//    * Storage Volumes
+//    * Storage volumes
 //
-//    * Virtual Tapes
+//    * Virtual tapes
 //
-//    * NFS and SMB File Shares
+//    * NFS and SMB file shares
 //
-// You can create a maximum of 10 tags for each resource. Virtual tapes and
+// You can create a maximum of 50 tags for each resource. Virtual tapes and
 // storage volumes that are recovered to a new gateway maintain their tags.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -1077,7 +1077,7 @@ func (c *StorageGateway) CreateSnapshotRequest(input *CreateSnapshotInput) (req 
 // of your data to Amazon Simple Storage (S3) for durable off-site recovery,
 // as well as import the data to an Amazon Elastic Block Store (EBS) volume
 // in Amazon Elastic Compute Cloud (EC2). You can take snapshots of your gateway
-// volume on a scheduled or ad-hoc basis. This API enables you to take ad-hoc
+// volume on a scheduled or ad hoc basis. This API enables you to take ad-hoc
 // snapshot. For more information, see Editing a Snapshot Schedule (https://docs.aws.amazon.com/storagegateway/latest/userguide/managing-volumes.html#SchedulingSnapshot).
 //
 // In the CreateSnapshot request you identify the volume by providing its Amazon
@@ -4240,6 +4240,12 @@ func (c *StorageGateway) ListFileSharesRequest(input *ListFileSharesInput) (req 
 		Name:       opListFileShares,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"Marker"},
+			OutputTokens:    []string{"NextMarker"},
+			LimitToken:      "Limit",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -4293,6 +4299,56 @@ func (c *StorageGateway) ListFileSharesWithContext(ctx aws.Context, input *ListF
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// ListFileSharesPages iterates over the pages of a ListFileShares operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListFileShares method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListFileShares operation.
+//    pageNum := 0
+//    err := client.ListFileSharesPages(params,
+//        func(page *ListFileSharesOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *StorageGateway) ListFileSharesPages(input *ListFileSharesInput, fn func(*ListFileSharesOutput, bool) bool) error {
+	return c.ListFileSharesPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListFileSharesPagesWithContext same as ListFileSharesPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *StorageGateway) ListFileSharesPagesWithContext(ctx aws.Context, input *ListFileSharesInput, fn func(*ListFileSharesOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListFileSharesInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListFileSharesRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListFileSharesOutput), !p.HasNextPage())
+	}
+	return p.Err()
 }
 
 const opListGateways = "ListGateways"
@@ -4569,6 +4625,12 @@ func (c *StorageGateway) ListTagsForResourceRequest(input *ListTagsForResourceIn
 		Name:       opListTagsForResource,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"Marker"},
+			OutputTokens:    []string{"Marker"},
+			LimitToken:      "Limit",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -4623,6 +4685,56 @@ func (c *StorageGateway) ListTagsForResourceWithContext(ctx aws.Context, input *
 	return out, req.Send()
 }
 
+// ListTagsForResourcePages iterates over the pages of a ListTagsForResource operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListTagsForResource method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListTagsForResource operation.
+//    pageNum := 0
+//    err := client.ListTagsForResourcePages(params,
+//        func(page *ListTagsForResourceOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *StorageGateway) ListTagsForResourcePages(input *ListTagsForResourceInput, fn func(*ListTagsForResourceOutput, bool) bool) error {
+	return c.ListTagsForResourcePagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListTagsForResourcePagesWithContext same as ListTagsForResourcePages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *StorageGateway) ListTagsForResourcePagesWithContext(ctx aws.Context, input *ListTagsForResourceInput, fn func(*ListTagsForResourceOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListTagsForResourceInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListTagsForResourceRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListTagsForResourceOutput), !p.HasNextPage())
+	}
+	return p.Err()
+}
+
 const opListTapes = "ListTapes"
 
 // ListTapesRequest generates a "aws/request.Request" representing the
@@ -4654,6 +4766,12 @@ func (c *StorageGateway) ListTapesRequest(input *ListTapesInput) (req *request.R
 		Name:       opListTapes,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"Marker"},
+			OutputTokens:    []string{"Marker"},
+			LimitToken:      "Limit",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -4715,6 +4833,56 @@ func (c *StorageGateway) ListTapesWithContext(ctx aws.Context, input *ListTapesI
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// ListTapesPages iterates over the pages of a ListTapes operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListTapes method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListTapes operation.
+//    pageNum := 0
+//    err := client.ListTapesPages(params,
+//        func(page *ListTapesOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *StorageGateway) ListTapesPages(input *ListTapesInput, fn func(*ListTapesOutput, bool) bool) error {
+	return c.ListTapesPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListTapesPagesWithContext same as ListTapesPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *StorageGateway) ListTapesPagesWithContext(ctx aws.Context, input *ListTapesInput, fn func(*ListTapesOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListTapesInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListTapesRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListTapesOutput), !p.HasNextPage())
+	}
+	return p.Err()
 }
 
 const opListVolumeInitiators = "ListVolumeInitiators"
@@ -5192,6 +5360,13 @@ func (c *StorageGateway) RefreshCacheRequest(input *RefreshCacheInput) (req *req
 // is only supported in the file gateway type. You can subscribe to be notified
 // through an Amazon CloudWatch event when your RefreshCache operation completes.
 // For more information, see Getting Notified About File Operations (https://docs.aws.amazon.com/storagegateway/latest/userguide/monitoring-file-gateway.html#get-notification).
+//
+// When this API is called, it only initiates the refresh operation. When the
+// API call completes and returns a success code, it doesn't necessarily mean
+// that the file refresh has completed. You should use the refresh-complete
+// notification to determine that the operation has completed before you check
+// for new files on the gateway file share. You can subscribe to be notified
+// through an CloudWatch event when your RefreshCache operation completes.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -6875,8 +7050,8 @@ type ActivateGatewayInput struct {
 	// Valid Values: "STK-L700", "AWS-Gateway-VTL"
 	MediumChangerType *string `min:"2" type:"string"`
 
-	// A list of up to ten (10) tags assigned to the gateway may be specified. Every
-	// tag is a key-value pair.
+	// A list of up to 50 tags that can be assigned to the gateway. Each tag is
+	// a key-value pair.
 	//
 	// Valid characters for key and value are letters, spaces, and numbers representable
 	// in UTF-8 format, and the following special characters: + - = . _ : / @. The
@@ -7575,7 +7750,12 @@ type CachediSCSIVolume struct {
 	// One of the VolumeType enumeration values that describes the type of the volume.
 	VolumeType *string `min:"3" type:"string"`
 
-	// The size of the data stored on the volume in bytes.
+	// The size of the data stored on the volume in bytes. This value is calculated
+	// based on the number of blocks that are touched, instead of the actual amount
+	// of data written. This value can be useful for sequential write patterns but
+	// less accurate for random write patterns. VolumeUsedInBytes is different from
+	// the compressed size of the volume, which is the value that is used to calculate
+	// your bill.
 	//
 	// This value is not available for volumes created prior to May 13, 2015, until
 	// you store data on the volume.
@@ -7948,6 +8128,15 @@ type CreateCachediSCSIVolumeInput struct {
 	// than the size of the existing volume, in bytes.
 	SourceVolumeARN *string `min:"50" type:"string"`
 
+	// A list of up to 50 tags that can be assigned to a cached volume. Each tag
+	// is a key-value pair.
+	//
+	// Valid characters for key and value are letters, spaces, and numbers representable
+	// in UTF-8 format, and the following special characters: + - = . _ : / @. The
+	// maximum length of a tag's key is 128 characters, and the maximum length for
+	// a tag's value is 256.
+	Tags []*Tag `type:"list"`
+
 	// The name of the iSCSI target used by an initiator to connect to a volume
 	// and used as a suffix for the target ARN. For example, specifying TargetName
 	// as myvolume results in the target ARN of arn:aws:storagegateway:us-east-2:111122223333:gateway/sgw-12A3456B/target/iqn.1997-05.com.amazon:myvolume.
@@ -8008,6 +8197,16 @@ func (s *CreateCachediSCSIVolumeInput) Validate() error {
 	if s.VolumeSizeInBytes == nil {
 		invalidParams.Add(request.NewErrParamRequired("VolumeSizeInBytes"))
 	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -8054,6 +8253,12 @@ func (s *CreateCachediSCSIVolumeInput) SetSnapshotId(v string) *CreateCachediSCS
 // SetSourceVolumeARN sets the SourceVolumeARN field's value.
 func (s *CreateCachediSCSIVolumeInput) SetSourceVolumeARN(v string) *CreateCachediSCSIVolumeInput {
 	s.SourceVolumeARN = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateCachediSCSIVolumeInput) SetTags(v []*Tag) *CreateCachediSCSIVolumeInput {
+	s.Tags = v
 	return s
 }
 
@@ -8156,8 +8361,14 @@ type CreateNFSFileShareInput struct {
 	// the write status is read-only, and otherwise false.
 	ReadOnly *bool `type:"boolean"`
 
-	// A value that sets the access control list permission for objects in the Amazon
-	// S3 bucket that a file gateway puts objects into. The default value is private.
+	// A value that sets who pays the cost of the request and the cost associated
+	// with data download from the S3 bucket. If this value is set to true, the
+	// requester pays the costs. Otherwise the S3 bucket owner pays. However, the
+	// S3 bucket owner always pays the cost of storing data.
+	//
+	// RequesterPays is a configuration for the S3 bucket that backs the file share,
+	// so make sure that the configuration on the file share is the same as the
+	// S3 bucket configuration.
 	RequesterPays *bool `type:"boolean"`
 
 	// The ARN of the AWS Identity and Access Management (IAM) role that a file
@@ -8166,7 +8377,7 @@ type CreateNFSFileShareInput struct {
 	// Role is a required field
 	Role *string `min:"20" type:"string" required:"true"`
 
-	// Maps a user to anonymous user. Valid options are the following:
+	// A value that maps a user to anonymous user. Valid options are the following:
 	//
 	//    * RootSquash - Only root is mapped to anonymous user.
 	//
@@ -8175,7 +8386,7 @@ type CreateNFSFileShareInput struct {
 	//    * AllSquash - Everyone is mapped to anonymous user.
 	Squash *string `min:"5" type:"string"`
 
-	// A list of up to ten (10) tags can be assigned to the NFS file share. Every
+	// A list of up to 50 tags that can be assigned to the NFS file share. Each
 	// tag is a key-value pair.
 	//
 	// Valid characters for key and value are letters, spaces, and numbers representable
@@ -8427,8 +8638,14 @@ type CreateSMBFileShareInput struct {
 	// the write status is read-only, and otherwise false.
 	ReadOnly *bool `type:"boolean"`
 
-	// A value that sets the access control list permission for objects in the Amazon
-	// S3 bucket that a file gateway puts objects into. The default value is private.
+	// A value that sets who pays the cost of the request and the cost associated
+	// with data download from the S3 bucket. If this value is set to true, the
+	// requester pays the costs. Otherwise the S3 bucket owner pays. However, the
+	// S3 bucket owner always pays the cost of storing data.
+	//
+	// RequesterPays is a configuration for the S3 bucket that backs the file share,
+	// so make sure that the configuration on the file share is the same as the
+	// S3 bucket configuration.
 	RequesterPays *bool `type:"boolean"`
 
 	// The ARN of the AWS Identity and Access Management (IAM) role that a file
@@ -8437,7 +8654,12 @@ type CreateSMBFileShareInput struct {
 	// Role is a required field
 	Role *string `min:"20" type:"string" required:"true"`
 
-	// A list of up to ten (10) tags can be assigned to the NFS file share. Every
+	// Set this value to "true to enable ACL (access control list) on the SMB file
+	// share. Set it to "false" to map file and directory permissions to the POSIX
+	// permissions.
+	SMBACLEnabled *bool `type:"boolean"`
+
+	// A list of up to 50 tags that can be assigned to the NFS file share. Each
 	// tag is a key-value pair.
 	//
 	// Valid characters for key and value are letters, spaces, and numbers representable
@@ -8590,6 +8812,12 @@ func (s *CreateSMBFileShareInput) SetRequesterPays(v bool) *CreateSMBFileShareIn
 // SetRole sets the Role field's value.
 func (s *CreateSMBFileShareInput) SetRole(v string) *CreateSMBFileShareInput {
 	s.Role = &v
+	return s
+}
+
+// SetSMBACLEnabled sets the SMBACLEnabled field's value.
+func (s *CreateSMBFileShareInput) SetSMBACLEnabled(v bool) *CreateSMBFileShareInput {
+	s.SMBACLEnabled = &v
 	return s
 }
 
@@ -8892,6 +9120,15 @@ type CreateStorediSCSIVolumeInput struct {
 	// in the Amazon Elastic Compute Cloud API Reference.
 	SnapshotId *string `type:"string"`
 
+	// A list of up to 50 tags that can be assigned to a stored volume. Each tag
+	// is a key-value pair.
+	//
+	// Valid characters for key and value are letters, spaces, and numbers representable
+	// in UTF-8 format, and the following special characters: + - = . _ : / @. The
+	// maximum length of a tag's key is 128 characters, and the maximum length for
+	// a tag's value is 256.
+	Tags []*Tag `type:"list"`
+
 	// The name of the iSCSI target used by an initiator to connect to a volume
 	// and used as a suffix for the target ARN. For example, specifying TargetName
 	// as myvolume results in the target ARN of arn:aws:storagegateway:us-east-2:111122223333:gateway/sgw-12A3456B/target/iqn.1997-05.com.amazon:myvolume.
@@ -8944,6 +9181,16 @@ func (s *CreateStorediSCSIVolumeInput) Validate() error {
 	if s.TargetName != nil && len(*s.TargetName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("TargetName", 1))
 	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -8990,6 +9237,12 @@ func (s *CreateStorediSCSIVolumeInput) SetPreserveExistingData(v bool) *CreateSt
 // SetSnapshotId sets the SnapshotId field's value.
 func (s *CreateStorediSCSIVolumeInput) SetSnapshotId(v string) *CreateStorediSCSIVolumeInput {
 	s.SnapshotId = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateStorediSCSIVolumeInput) SetTags(v []*Tag) *CreateStorediSCSIVolumeInput {
+	s.Tags = v
 	return s
 }
 
@@ -9061,6 +9314,24 @@ type CreateTapeWithBarcodeInput struct {
 	// side encryption. This value can only be set when KMSEncrypted is true. Optional.
 	KMSKey *string `min:"7" type:"string"`
 
+	// The ID of the pool that you want to add your tape to for archiving. The tape
+	// in this pool is archived in the S3 storage class that is associated with
+	// the pool. When you use your backup application to eject the tape, the tape
+	// is archived directly into the storage class (Glacier or Deep Archive) that
+	// corresponds to the pool.
+	//
+	// Valid values: "GLACIER", "DEEP_ARCHIVE"
+	PoolId *string `min:"1" type:"string"`
+
+	// A list of up to 50 tags that can be assigned to a virtual tape that has a
+	// barcode. Each tag is a key-value pair.
+	//
+	// Valid characters for key and value are letters, spaces, and numbers representable
+	// in UTF-8 format, and the following special characters: + - = . _ : / @. The
+	// maximum length of a tag's key is 128 characters, and the maximum length for
+	// a tag's value is 256.
+	Tags []*Tag `type:"list"`
+
 	// The barcode that you want to assign to the tape.
 	//
 	// Barcodes cannot be reused. This includes barcodes used for tapes that have
@@ -9099,6 +9370,9 @@ func (s *CreateTapeWithBarcodeInput) Validate() error {
 	if s.KMSKey != nil && len(*s.KMSKey) < 7 {
 		invalidParams.Add(request.NewErrParamMinLen("KMSKey", 7))
 	}
+	if s.PoolId != nil && len(*s.PoolId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("PoolId", 1))
+	}
 	if s.TapeBarcode == nil {
 		invalidParams.Add(request.NewErrParamRequired("TapeBarcode"))
 	}
@@ -9107,6 +9381,16 @@ func (s *CreateTapeWithBarcodeInput) Validate() error {
 	}
 	if s.TapeSizeInBytes == nil {
 		invalidParams.Add(request.NewErrParamRequired("TapeSizeInBytes"))
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
 	}
 
 	if invalidParams.Len() > 0 {
@@ -9130,6 +9414,18 @@ func (s *CreateTapeWithBarcodeInput) SetKMSEncrypted(v bool) *CreateTapeWithBarc
 // SetKMSKey sets the KMSKey field's value.
 func (s *CreateTapeWithBarcodeInput) SetKMSKey(v string) *CreateTapeWithBarcodeInput {
 	s.KMSKey = &v
+	return s
+}
+
+// SetPoolId sets the PoolId field's value.
+func (s *CreateTapeWithBarcodeInput) SetPoolId(v string) *CreateTapeWithBarcodeInput {
+	s.PoolId = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateTapeWithBarcodeInput) SetTags(v []*Tag) *CreateTapeWithBarcodeInput {
+	s.Tags = v
 	return s
 }
 
@@ -9202,6 +9498,24 @@ type CreateTapesInput struct {
 	// NumTapesToCreate is a required field
 	NumTapesToCreate *int64 `min:"1" type:"integer" required:"true"`
 
+	// The ID of the pool that you want to add your tape to for archiving. The tape
+	// in this pool is archived in the S3 storage class that is associated with
+	// the pool. When you use your backup application to eject the tape, the tape
+	// is archived directly into the storage class (Glacier or Deep Archive) that
+	// corresponds to the pool.
+	//
+	// Valid values: "GLACIER", "DEEP_ARCHIVE"
+	PoolId *string `min:"1" type:"string"`
+
+	// A list of up to 50 tags that can be assigned to a virtual tape. Each tag
+	// is a key-value pair.
+	//
+	// Valid characters for key and value are letters, spaces, and numbers representable
+	// in UTF-8 format, and the following special characters: + - = . _ : / @. The
+	// maximum length of a tag's key is 128 characters, and the maximum length for
+	// a tag's value is 256.
+	Tags []*Tag `type:"list"`
+
 	// A prefix that you append to the barcode of the virtual tape you are creating.
 	// This prefix makes the barcode unique.
 	//
@@ -9253,6 +9567,9 @@ func (s *CreateTapesInput) Validate() error {
 	if s.NumTapesToCreate != nil && *s.NumTapesToCreate < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("NumTapesToCreate", 1))
 	}
+	if s.PoolId != nil && len(*s.PoolId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("PoolId", 1))
+	}
 	if s.TapeBarcodePrefix == nil {
 		invalidParams.Add(request.NewErrParamRequired("TapeBarcodePrefix"))
 	}
@@ -9261,6 +9578,16 @@ func (s *CreateTapesInput) Validate() error {
 	}
 	if s.TapeSizeInBytes == nil {
 		invalidParams.Add(request.NewErrParamRequired("TapeSizeInBytes"))
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
 	}
 
 	if invalidParams.Len() > 0 {
@@ -9296,6 +9623,18 @@ func (s *CreateTapesInput) SetKMSKey(v string) *CreateTapesInput {
 // SetNumTapesToCreate sets the NumTapesToCreate field's value.
 func (s *CreateTapesInput) SetNumTapesToCreate(v int64) *CreateTapesInput {
 	s.NumTapesToCreate = &v
+	return s
+}
+
+// SetPoolId sets the PoolId field's value.
+func (s *CreateTapesInput) SetPoolId(v string) *CreateTapesInput {
+	s.PoolId = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateTapesInput) SetTags(v []*Tag) *CreateTapesInput {
+	s.Tags = v
 	return s
 }
 
@@ -10100,6 +10439,8 @@ type DescribeCacheOutput struct {
 	// from cache. The sample is taken at the end of the reporting period.
 	CacheHitPercentage *float64 `type:"double"`
 
+	// Percent of application read operations from the file shares that are not
+	// served from cache. The sample is taken at the end of the reporting period.
 	CacheMissPercentage *float64 `type:"double"`
 
 	// Percent use of the gateway's cache storage. This metric applies only to the
@@ -10363,6 +10704,12 @@ func (s *DescribeGatewayInformationInput) SetGatewayARN(v string) *DescribeGatew
 type DescribeGatewayInformationOutput struct {
 	_ struct{} `type:"structure"`
 
+	// The ID of the Amazon EC2 instance that was used to launch the gateway.
+	Ec2InstanceId *string `type:"string"`
+
+	// The AWS Region where the Amazon EC2 instance is located.
+	Ec2InstanceRegion *string `type:"string"`
+
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
 	// to return a list of gateways for your account and region.
 	GatewayARN *string `min:"50" type:"string"`
@@ -10398,10 +10745,9 @@ type DescribeGatewayInformationOutput struct {
 	// this field is not returned in the response.
 	NextUpdateAvailabilityDate *string `min:"1" type:"string"`
 
-	// A list of up to ten (10) tags assigned to the gateway are returned, sorted
-	// alphabetically by key name. Every tag is a key-value pair. For a gateway
-	// with more than 10 tags assigned, you can view all tags using the ListTagsForResource
-	// API.
+	// A list of up to 50 tags assigned to the gateway, sorted alphabetically by
+	// key name. Each tag is a key-value pair. For a gateway with more than 10 tags
+	// assigned, you can view all tags using the ListTagsForResource API operation.
 	Tags []*Tag `type:"list"`
 }
 
@@ -10413,6 +10759,18 @@ func (s DescribeGatewayInformationOutput) String() string {
 // GoString returns the string representation
 func (s DescribeGatewayInformationOutput) GoString() string {
 	return s.String()
+}
+
+// SetEc2InstanceId sets the Ec2InstanceId field's value.
+func (s *DescribeGatewayInformationOutput) SetEc2InstanceId(v string) *DescribeGatewayInformationOutput {
+	s.Ec2InstanceId = &v
+	return s
+}
+
+// SetEc2InstanceRegion sets the Ec2InstanceRegion field's value.
+func (s *DescribeGatewayInformationOutput) SetEc2InstanceRegion(v string) *DescribeGatewayInformationOutput {
+	s.Ec2InstanceRegion = &v
+	return s
 }
 
 // SetGatewayARN sets the GatewayARN field's value.
@@ -10520,6 +10878,8 @@ func (s *DescribeMaintenanceStartTimeInput) SetGatewayARN(v string) *DescribeMai
 
 // A JSON object containing the following fields:
 //
+//    * DescribeMaintenanceStartTimeOutput$DayOfMonth
+//
 //    * DescribeMaintenanceStartTimeOutput$DayOfWeek
 //
 //    * DescribeMaintenanceStartTimeOutput$HourOfDay
@@ -10529,6 +10889,13 @@ func (s *DescribeMaintenanceStartTimeInput) SetGatewayARN(v string) *DescribeMai
 //    * DescribeMaintenanceStartTimeOutput$Timezone
 type DescribeMaintenanceStartTimeOutput struct {
 	_ struct{} `type:"structure"`
+
+	// The day of the month component of the maintenance start time represented
+	// as an ordinal number from 1 to 28, where 1 represents the first day of the
+	// month and 28 represents the last day of the month.
+	//
+	// This value is only available for tape and volume gateways.
+	DayOfMonth *int64 `min:"1" type:"integer"`
 
 	// An ordinal number between 0 and 6 that represents the day of the week, where
 	// 0 represents Sunday and 6 represents Saturday. The day of week is in the
@@ -10562,6 +10929,12 @@ func (s DescribeMaintenanceStartTimeOutput) String() string {
 // GoString returns the string representation
 func (s DescribeMaintenanceStartTimeOutput) GoString() string {
 	return s.String()
+}
+
+// SetDayOfMonth sets the DayOfMonth field's value.
+func (s *DescribeMaintenanceStartTimeOutput) SetDayOfMonth(v int64) *DescribeMaintenanceStartTimeOutput {
+	s.DayOfMonth = &v
+	return s
 }
 
 // SetDayOfWeek sets the DayOfWeek field's value.
@@ -12082,6 +12455,12 @@ func (s *FileShareInfo) SetGatewayARN(v string) *FileShareInfo {
 type GatewayInfo struct {
 	_ struct{} `type:"structure"`
 
+	// The ID of the Amazon EC2 instance that was used to launch the gateway.
+	Ec2InstanceId *string `type:"string"`
+
+	// The AWS Region where the Amazon EC2 instance is located.
+	Ec2InstanceRegion *string `type:"string"`
+
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
 	// to return a list of gateways for your account and region.
 	GatewayARN *string `min:"50" type:"string"`
@@ -12111,6 +12490,18 @@ func (s GatewayInfo) String() string {
 // GoString returns the string representation
 func (s GatewayInfo) GoString() string {
 	return s.String()
+}
+
+// SetEc2InstanceId sets the Ec2InstanceId field's value.
+func (s *GatewayInfo) SetEc2InstanceId(v string) *GatewayInfo {
+	s.Ec2InstanceId = &v
+	return s
+}
+
+// SetEc2InstanceRegion sets the Ec2InstanceRegion field's value.
+func (s *GatewayInfo) SetEc2InstanceRegion(v string) *GatewayInfo {
+	s.Ec2InstanceRegion = &v
+	return s
 }
 
 // SetGatewayARN sets the GatewayARN field's value.
@@ -13191,8 +13582,14 @@ type NFSFileShareInfo struct {
 	// the write status is read-only, and otherwise false.
 	ReadOnly *bool `type:"boolean"`
 
-	// A value that sets the access control list permission for objects in the Amazon
-	// S3 bucket that a file gateway puts objects into. The default value is private.
+	// A value that sets who pays the cost of the request and the cost associated
+	// with data download from the S3 bucket. If this value is set to true, the
+	// requester pays the costs. Otherwise the S3 bucket owner pays. However, the
+	// S3 bucket owner always pays the cost of storing data.
+	//
+	// RequesterPays is a configuration for the S3 bucket that backs the file share,
+	// so make sure that the configuration on the file share is the same as the
+	// S3 bucket configuration.
 	RequesterPays *bool `type:"boolean"`
 
 	// The ARN of the IAM role that file gateway assumes when it accesses the underlying
@@ -13208,10 +13605,9 @@ type NFSFileShareInfo struct {
 	//    * AllSquash - Everyone is mapped to anonymous user.
 	Squash *string `min:"5" type:"string"`
 
-	// A list of up to ten (10) tags assigned to the NFS file share are returned,
-	// sorted alphabetically by key name. Every tag is a key-value pair. For a gateway
-	// with more than 10 tags assigned, you can view all tags using the ListTagsForResource
-	// API.
+	// A list of up to 50 tags assigned to the NFS file share, sorted alphabetically
+	// by key name. Each tag is a key-value pair. For a gateway with more than 10
+	// tags assigned, you can view all tags using the ListTagsForResource API operation.
 	Tags []*Tag `type:"list"`
 }
 
@@ -13944,18 +14340,28 @@ type SMBFileShareInfo struct {
 	// the write status is read-only, and otherwise false.
 	ReadOnly *bool `type:"boolean"`
 
-	// A value that sets the access control list permission for objects in the Amazon
-	// S3 bucket that a file gateway puts objects into. The default value is private.
+	// A value that sets who pays the cost of the request and the cost associated
+	// with data download from the S3 bucket. If this value is set to true, the
+	// requester pays the costs. Otherwise the S3 bucket owner pays. However, the
+	// S3 bucket owner always pays the cost of storing data.
+	//
+	// RequesterPays is a configuration for the S3 bucket that backs the file share,
+	// so make sure that the configuration on the file share is the same as the
+	// S3 bucket configuration.
 	RequesterPays *bool `type:"boolean"`
 
 	// The ARN of the IAM role that file gateway assumes when it accesses the underlying
 	// storage.
 	Role *string `min:"20" type:"string"`
 
-	// A list of up to ten (10) tags assigned to the SMB file share are returned,
-	// sorted alphabetically by key name. Every tag is a key-value pair. For a gateway
-	// with more than 10 tags assigned, you can view all tags using the ListTagsForResource
-	// API.
+	// If this value is set to "true", indicates that ACL (access control list)
+	// is enabled on the SMB file share. If it is set to "false", it indicates that
+	// file and directory permissions are mapped to the POSIX permission.
+	SMBACLEnabled *bool `type:"boolean"`
+
+	// A list of up to 50 tags assigned to the SMB file share, sorted alphabetically
+	// by key name. Each tag is a key-value pair. For a gateway with more than 10
+	// tags assigned, you can view all tags using the ListTagsForResource API operation.
 	Tags []*Tag `type:"list"`
 
 	// A list of users or groups in the Active Directory that are allowed to access
@@ -14067,6 +14473,12 @@ func (s *SMBFileShareInfo) SetRequesterPays(v bool) *SMBFileShareInfo {
 // SetRole sets the Role field's value.
 func (s *SMBFileShareInfo) SetRole(v string) *SMBFileShareInfo {
 	s.Role = &v
+	return s
+}
+
+// SetSMBACLEnabled sets the SMBACLEnabled field's value.
+func (s *SMBFileShareInfo) SetSMBACLEnabled(v bool) *SMBFileShareInfo {
+	s.SMBACLEnabled = &v
 	return s
 }
 
@@ -14446,7 +14858,12 @@ type StorediSCSIVolume struct {
 	// One of the VolumeType enumeration values describing the type of the volume.
 	VolumeType *string `min:"3" type:"string"`
 
-	// The size of the data stored on the volume in bytes.
+	// The size of the data stored on the volume in bytes. This value is calculated
+	// based on the number of blocks that are touched, instead of the actual amount
+	// of data written. This value can be useful for sequential write patterns but
+	// less accurate for random write patterns. VolumeUsedInBytes is different from
+	// the compressed size of the volume, which is the value that is used to calculate
+	// your bill.
 	//
 	// This value is not available for volumes created prior to May 13, 2015, until
 	// you store data on the volume.
@@ -14623,6 +15040,15 @@ type Tape struct {
 	// side encryption. This value can only be set when KMSEncrypted is true. Optional.
 	KMSKey *string `min:"7" type:"string"`
 
+	// The ID of the pool that contains tapes that will be archived. The tapes in
+	// this pool are archived in the S3 storage class that is associated with the
+	// pool. When you use your backup application to eject the tape, the tape is
+	// archived directly into the storage class (Glacier or Deep Archive) that corresponds
+	// to the pool.
+	//
+	// Valid values: "GLACIER", "DEEP_ARCHIVE"
+	PoolId *string `min:"1" type:"string"`
+
 	// For archiving virtual tapes, indicates how much data remains to be uploaded
 	// before archiving is complete.
 	//
@@ -14667,6 +15093,12 @@ func (s Tape) GoString() string {
 // SetKMSKey sets the KMSKey field's value.
 func (s *Tape) SetKMSKey(v string) *Tape {
 	s.KMSKey = &v
+	return s
+}
+
+// SetPoolId sets the PoolId field's value.
+func (s *Tape) SetPoolId(v string) *Tape {
+	s.PoolId = &v
 	return s
 }
 
@@ -14732,6 +15164,12 @@ type TapeArchive struct {
 	// side encryption. This value can only be set when KMSEncrypted is true. Optional.
 	KMSKey *string `min:"7" type:"string"`
 
+	// The ID of the pool that was used to archive the tape. The tapes in this pool
+	// are archived in the S3 storage class that is associated with the pool.
+	//
+	// Valid values: "GLACIER", "DEEP_ARCHIVE"
+	PoolId *string `min:"1" type:"string"`
+
 	// The Amazon Resource Name (ARN) of the tape gateway that the virtual tape
 	// is being retrieved to.
 	//
@@ -14778,6 +15216,12 @@ func (s *TapeArchive) SetCompletionTime(v time.Time) *TapeArchive {
 // SetKMSKey sets the KMSKey field's value.
 func (s *TapeArchive) SetKMSKey(v string) *TapeArchive {
 	s.KMSKey = &v
+	return s
+}
+
+// SetPoolId sets the PoolId field's value.
+func (s *TapeArchive) SetPoolId(v string) *TapeArchive {
+	s.PoolId = &v
 	return s
 }
 
@@ -14831,6 +15275,15 @@ type TapeInfo struct {
 	// to return a list of gateways for your account and region.
 	GatewayARN *string `min:"50" type:"string"`
 
+	// The ID of the pool that you want to add your tape to for archiving. The tape
+	// in this pool is archived in the S3 storage class that is associated with
+	// the pool. When you use your backup application to eject the tape, the tape
+	// is archived directly into the storage class (Glacier or Deep Archive) that
+	// corresponds to the pool.
+	//
+	// Valid values: "GLACIER", "DEEP_ARCHIVE"
+	PoolId *string `min:"1" type:"string"`
+
 	// The Amazon Resource Name (ARN) of a virtual tape.
 	TapeARN *string `min:"50" type:"string"`
 
@@ -14857,6 +15310,12 @@ func (s TapeInfo) GoString() string {
 // SetGatewayARN sets the GatewayARN field's value.
 func (s *TapeInfo) SetGatewayARN(v string) *TapeInfo {
 	s.GatewayARN = &v
+	return s
+}
+
+// SetPoolId sets the PoolId field's value.
+func (s *TapeInfo) SetPoolId(v string) *TapeInfo {
+	s.PoolId = &v
 	return s
 }
 
@@ -15346,6 +15805,8 @@ func (s *UpdateGatewaySoftwareNowOutput) SetGatewayARN(v string) *UpdateGatewayS
 
 // A JSON object containing the following fields:
 //
+//    * UpdateMaintenanceStartTimeInput$DayOfMonth
+//
 //    * UpdateMaintenanceStartTimeInput$DayOfWeek
 //
 //    * UpdateMaintenanceStartTimeInput$HourOfDay
@@ -15354,11 +15815,16 @@ func (s *UpdateGatewaySoftwareNowOutput) SetGatewayARN(v string) *UpdateGatewayS
 type UpdateMaintenanceStartTimeInput struct {
 	_ struct{} `type:"structure"`
 
-	// The maintenance start time day of the week represented as an ordinal number
-	// from 0 to 6, where 0 represents Sunday and 6 Saturday.
+	// The day of the month component of the maintenance start time represented
+	// as an ordinal number from 1 to 28, where 1 represents the first day of the
+	// month and 28 represents the last day of the month.
 	//
-	// DayOfWeek is a required field
-	DayOfWeek *int64 `type:"integer" required:"true"`
+	// This value is only available for tape and volume gateways.
+	DayOfMonth *int64 `min:"1" type:"integer"`
+
+	// The day of the week component of the maintenance start time week represented
+	// as an ordinal number from 0 to 6, where 0 represents Sunday and 6 Saturday.
+	DayOfWeek *int64 `type:"integer"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
 	// to return a list of gateways for your account and region.
@@ -15394,8 +15860,8 @@ func (s UpdateMaintenanceStartTimeInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *UpdateMaintenanceStartTimeInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "UpdateMaintenanceStartTimeInput"}
-	if s.DayOfWeek == nil {
-		invalidParams.Add(request.NewErrParamRequired("DayOfWeek"))
+	if s.DayOfMonth != nil && *s.DayOfMonth < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("DayOfMonth", 1))
 	}
 	if s.GatewayARN == nil {
 		invalidParams.Add(request.NewErrParamRequired("GatewayARN"))
@@ -15414,6 +15880,12 @@ func (s *UpdateMaintenanceStartTimeInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetDayOfMonth sets the DayOfMonth field's value.
+func (s *UpdateMaintenanceStartTimeInput) SetDayOfMonth(v int64) *UpdateMaintenanceStartTimeInput {
+	s.DayOfMonth = &v
+	return s
 }
 
 // SetDayOfWeek sets the DayOfWeek field's value.
@@ -15508,8 +15980,14 @@ type UpdateNFSFileShareInput struct {
 	// the write status is read-only, and otherwise false.
 	ReadOnly *bool `type:"boolean"`
 
-	// A value that sets the access control list permission for objects in the Amazon
-	// S3 bucket that a file gateway puts objects into. The default value is private.
+	// A value that sets who pays the cost of the request and the cost associated
+	// with data download from the S3 bucket. If this value is set to true, the
+	// requester pays the costs. Otherwise the S3 bucket owner pays. However, the
+	// S3 bucket owner always pays the cost of storing data.
+	//
+	// RequesterPays is a configuration for the S3 bucket that backs the file share,
+	// so make sure that the configuration on the file share is the same as the
+	// S3 bucket configuration.
 	RequesterPays *bool `type:"boolean"`
 
 	// The user mapped to anonymous user. Valid options are the following:
@@ -15695,9 +16173,20 @@ type UpdateSMBFileShareInput struct {
 	// the write status is read-only, and otherwise false.
 	ReadOnly *bool `type:"boolean"`
 
-	// A value that sets the access control list permission for objects in the Amazon
-	// S3 bucket that a file gateway puts objects into. The default value is private.
+	// A value that sets who pays the cost of the request and the cost associated
+	// with data download from the S3 bucket. If this value is set to true, the
+	// requester pays the costs. Otherwise the S3 bucket owner pays. However, the
+	// S3 bucket owner always pays the cost of storing data.
+	//
+	// RequesterPays is a configuration for the S3 bucket that backs the file share,
+	// so make sure that the configuration on the file share is the same as the
+	// S3 bucket configuration.
 	RequesterPays *bool `type:"boolean"`
+
+	// Set this value to "true to enable ACL (access control list) on the SMB file
+	// share. Set it to "false" to map file and directory permissions to the POSIX
+	// permissions.
+	SMBACLEnabled *bool `type:"boolean"`
 
 	// A list of users or groups in the Active Directory that are allowed to access
 	// the file share. A group must be prefixed with the @ character. For example
@@ -15788,6 +16277,12 @@ func (s *UpdateSMBFileShareInput) SetReadOnly(v bool) *UpdateSMBFileShareInput {
 // SetRequesterPays sets the RequesterPays field's value.
 func (s *UpdateSMBFileShareInput) SetRequesterPays(v bool) *UpdateSMBFileShareInput {
 	s.RequesterPays = &v
+	return s
+}
+
+// SetSMBACLEnabled sets the SMBACLEnabled field's value.
+func (s *UpdateSMBFileShareInput) SetSMBACLEnabled(v bool) *UpdateSMBFileShareInput {
+	s.SMBACLEnabled = &v
 	return s
 }
 

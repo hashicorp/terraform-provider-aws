@@ -8,7 +8,9 @@
 // and best practices. Security Hub collects security data from across AWS accounts,
 // services, and supported third-party partners and helps you analyze your security
 // trends and identify the highest priority security issues. For more information,
-// see AWS Security Hub User Guide.
+// see AWS Security Hub User Guide (https://docs.aws.amazon.com/securityhub/latest/userguide/what-is-securityhub.html).
+//
+// Currently, AWS Security Hub is in Preview release.
 //
 // See https://docs.aws.amazon.com/goto/WebAPI/securityhub-2018-10-26 for more information on this service.
 //

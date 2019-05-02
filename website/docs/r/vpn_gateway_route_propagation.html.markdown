@@ -6,7 +6,7 @@ description: |-
   Requests automatic route propagation between a VPN gateway and a route table.
 ---
 
-# aws_vpn_gateway_route_propagation
+# Resource: aws_vpn_gateway_route_propagation
 
 Requests automatic route propagation between a VPN gateway and a route table.
 

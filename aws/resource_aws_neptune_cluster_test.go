@@ -40,10 +40,15 @@ func TestAccAWSNeptuneCluster_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_final_snapshot"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"cluster_identifier_prefix",
+					"final_snapshot_identifier",
+					"skip_final_snapshot",
+				},
 			},
 		},
 	})
@@ -66,10 +71,15 @@ func TestAccAWSNeptuneCluster_namePrefix(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            "aws_neptune_cluster.test",
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"cluster_identifier_prefix", "skip_final_snapshot"},
+				ResourceName:      "aws_neptune_cluster.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"cluster_identifier_prefix",
+					"final_snapshot_identifier",
+					"skip_final_snapshot",
+				},
 			},
 		},
 	})
@@ -91,10 +101,15 @@ func TestAccAWSNeptuneCluster_takeFinalSnapshot(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            "aws_neptune_cluster.default",
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"final_snapshot_identifier", "skip_final_snapshot"},
+				ResourceName:      "aws_neptune_cluster.default",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"cluster_identifier_prefix",
+					"final_snapshot_identifier",
+					"skip_final_snapshot",
+				},
 			},
 		},
 	})
@@ -126,10 +141,15 @@ func TestAccAWSNeptuneCluster_updateTags(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            "aws_neptune_cluster.default",
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_final_snapshot"},
+				ResourceName:      "aws_neptune_cluster.default",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"cluster_identifier_prefix",
+					"final_snapshot_identifier",
+					"skip_final_snapshot",
+				},
 			},
 		},
 	})
@@ -167,10 +187,15 @@ func TestAccAWSNeptuneCluster_updateIamRoles(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            "aws_neptune_cluster.default",
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_final_snapshot"},
+				ResourceName:      "aws_neptune_cluster.default",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"cluster_identifier_prefix",
+					"final_snapshot_identifier",
+					"skip_final_snapshot",
+				},
 			},
 		},
 	})
@@ -194,10 +219,15 @@ func TestAccAWSNeptuneCluster_kmsKey(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            "aws_neptune_cluster.default",
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_final_snapshot"},
+				ResourceName:      "aws_neptune_cluster.default",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"cluster_identifier_prefix",
+					"final_snapshot_identifier",
+					"skip_final_snapshot",
+				},
 			},
 		},
 	})
@@ -220,10 +250,15 @@ func TestAccAWSNeptuneCluster_encrypted(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            "aws_neptune_cluster.default",
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_final_snapshot"},
+				ResourceName:      "aws_neptune_cluster.default",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"cluster_identifier_prefix",
+					"final_snapshot_identifier",
+					"skip_final_snapshot",
+				},
 			},
 		},
 	})
@@ -263,10 +298,15 @@ func TestAccAWSNeptuneCluster_backupsUpdate(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            "aws_neptune_cluster.default",
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "skip_final_snapshot"},
+				ResourceName:      "aws_neptune_cluster.default",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"cluster_identifier_prefix",
+					"final_snapshot_identifier",
+					"skip_final_snapshot",
+				},
 			},
 		},
 	})
@@ -289,10 +329,15 @@ func TestAccAWSNeptuneCluster_iamAuth(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            "aws_neptune_cluster.default",
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_final_snapshot"},
+				ResourceName:      "aws_neptune_cluster.default",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"cluster_identifier_prefix",
+					"final_snapshot_identifier",
+					"skip_final_snapshot",
+				},
 			},
 		},
 	})

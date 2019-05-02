@@ -1381,8 +1381,9 @@ func (c *Lightsail) CreateDomainEntryRequest(input *CreateDomainEntryInput) (req
 
 // CreateDomainEntry API operation for Amazon Lightsail.
 //
-// Creates one of the following entry records associated with the domain: A
-// record, CNAME record, TXT record, or MX record.
+// Creates one of the following entry records associated with the domain: Address
+// (A), canonical name (CNAME), mail exchanger (MX), name server (NS), start
+// of authority (SOA), service locator (SRV), or text (TXT).
 //
 // The create domain entry operation supports tag-based access control via resource
 // tags applied to the resource identified by domainName. For more information,
@@ -3197,6 +3198,118 @@ func (c *Lightsail) DeleteKeyPair(input *DeleteKeyPairInput) (*DeleteKeyPairOutp
 // for more information on using Contexts.
 func (c *Lightsail) DeleteKeyPairWithContext(ctx aws.Context, input *DeleteKeyPairInput, opts ...request.Option) (*DeleteKeyPairOutput, error) {
 	req, out := c.DeleteKeyPairRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteKnownHostKeys = "DeleteKnownHostKeys"
+
+// DeleteKnownHostKeysRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteKnownHostKeys operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteKnownHostKeys for more information on using the DeleteKnownHostKeys
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteKnownHostKeysRequest method.
+//    req, resp := client.DeleteKnownHostKeysRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/DeleteKnownHostKeys
+func (c *Lightsail) DeleteKnownHostKeysRequest(input *DeleteKnownHostKeysInput) (req *request.Request, output *DeleteKnownHostKeysOutput) {
+	op := &request.Operation{
+		Name:       opDeleteKnownHostKeys,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteKnownHostKeysInput{}
+	}
+
+	output = &DeleteKnownHostKeysOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeleteKnownHostKeys API operation for Amazon Lightsail.
+//
+// Deletes the known host key or certificate used by the Amazon Lightsail browser-based
+// SSH or RDP clients to authenticate an instance. This operation enables the
+// Lightsail browser-based SSH or RDP clients to connect to the instance after
+// a host key mismatch.
+//
+// Perform this operation only if you were expecting the host key or certificate
+// mismatch or if you are familiar with the new host key or certificate on the
+// instance. For more information, see Troubleshooting connection issues when
+// using the Amazon Lightsail browser-based SSH or RDP client (https://lightsail.aws.amazon.com/ls/docs/en/articles/amazon-lightsail-troubleshooting-browser-based-ssh-rdp-client-connection).
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Lightsail's
+// API operation DeleteKnownHostKeys for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeServiceException "ServiceException"
+//   A general service exception.
+//
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   Lightsail throws this exception when user input does not conform to the validation
+//   rules of an input field.
+//
+//   Domain-related APIs are only available in the N. Virginia (us-east-1) Region.
+//   Please set your AWS Region configuration to us-east-1 to create, view, or
+//   edit these resources.
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//   Lightsail throws this exception when it cannot find a resource.
+//
+//   * ErrCodeOperationFailureException "OperationFailureException"
+//   Lightsail throws this exception when an operation fails to execute.
+//
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   Lightsail throws this exception when the user cannot be authenticated or
+//   uses invalid credentials to access a resource.
+//
+//   * ErrCodeAccountSetupInProgressException "AccountSetupInProgressException"
+//   Lightsail throws this exception when an account is still in the setup in
+//   progress state.
+//
+//   * ErrCodeUnauthenticatedException "UnauthenticatedException"
+//   Lightsail throws this exception when the user has not been authenticated.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/DeleteKnownHostKeys
+func (c *Lightsail) DeleteKnownHostKeys(input *DeleteKnownHostKeysInput) (*DeleteKnownHostKeysOutput, error) {
+	req, out := c.DeleteKnownHostKeysRequest(input)
+	return out, req.Send()
+}
+
+// DeleteKnownHostKeysWithContext is the same as DeleteKnownHostKeys with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteKnownHostKeys for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Lightsail) DeleteKnownHostKeysWithContext(ctx aws.Context, input *DeleteKnownHostKeysInput, opts ...request.Option) (*DeleteKnownHostKeysOutput, error) {
+	req, out := c.DeleteKnownHostKeysRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -14035,6 +14148,67 @@ func (s *DeleteKeyPairOutput) SetOperation(v *Operation) *DeleteKeyPairOutput {
 	return s
 }
 
+type DeleteKnownHostKeysInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the instance for which you want to reset the host key or certificate.
+	//
+	// InstanceName is a required field
+	InstanceName *string `locationName:"instanceName" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteKnownHostKeysInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteKnownHostKeysInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteKnownHostKeysInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteKnownHostKeysInput"}
+	if s.InstanceName == nil {
+		invalidParams.Add(request.NewErrParamRequired("InstanceName"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetInstanceName sets the InstanceName field's value.
+func (s *DeleteKnownHostKeysInput) SetInstanceName(v string) *DeleteKnownHostKeysInput {
+	s.InstanceName = &v
+	return s
+}
+
+type DeleteKnownHostKeysOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A list of objects describing the API operation.
+	Operations []*Operation `locationName:"operations" type:"list"`
+}
+
+// String returns the string representation
+func (s DeleteKnownHostKeysOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteKnownHostKeysOutput) GoString() string {
+	return s.String()
+}
+
+// SetOperations sets the Operations field's value.
+func (s *DeleteKnownHostKeysOutput) SetOperations(v []*Operation) *DeleteKnownHostKeysOutput {
+	s.Operations = v
+	return s
+}
+
 type DeleteLoadBalancerInput struct {
 	_ struct{} `type:"structure"`
 
@@ -15126,7 +15300,25 @@ type DomainEntry struct {
 	// balancer.
 	Target *string `locationName:"target" type:"string"`
 
-	// The type of domain entry (e.g., SOA or NS).
+	// The type of domain entry, such as address (A), canonical name (CNAME), mail
+	// exchanger (MX), name server (NS), start of authority (SOA), service locator
+	// (SRV), or text (TXT).
+	//
+	// The following domain entry types can be used:
+	//
+	//    * A
+	//
+	//    * CNAME
+	//
+	//    * MX
+	//
+	//    * NS
+	//
+	//    * SOA
+	//
+	//    * SRV
+	//
+	//    * TXT
 	Type *string `locationName:"type" type:"string"`
 }
 
@@ -18748,6 +18940,107 @@ func (s *GetStaticIpsOutput) SetStaticIps(v []*StaticIp) *GetStaticIpsOutput {
 	return s
 }
 
+// Describes the public SSH host keys or the RDP certificate.
+type HostKeyAttributes struct {
+	_ struct{} `type:"structure"`
+
+	// The SSH host key algorithm or the RDP certificate format.
+	//
+	// For SSH host keys, the algorithm may be ssh-rsa, ecdsa-sha2-nistp256, ssh-ed25519,
+	// etc. For RDP certificates, the algorithm is always x509-cert.
+	Algorithm *string `locationName:"algorithm" type:"string"`
+
+	// The SHA-1 fingerprint of the returned SSH host key or RDP certificate.
+	//
+	//    * Example of an SHA-1 SSH fingerprint:
+	//
+	// SHA1:1CHH6FaAaXjtFOsR/t83vf91SR0
+	//
+	//    * Example of an SHA-1 RDP fingerprint:
+	//
+	// af:34:51:fe:09:f0:e0:da:b8:4e:56:ca:60:c2:10:ff:38:06:db:45
+	FingerprintSHA1 *string `locationName:"fingerprintSHA1" type:"string"`
+
+	// The SHA-256 fingerprint of the returned SSH host key or RDP certificate.
+	//
+	//    * Example of an SHA-256 SSH fingerprint:
+	//
+	// SHA256:KTsMnRBh1IhD17HpdfsbzeGA4jOijm5tyXsMjKVbB8o
+	//
+	//    * Example of an SHA-256 RDP fingerprint:
+	//
+	// 03:9b:36:9f:4b:de:4e:61:70:fc:7c:c9:78:e7:d2:1a:1c:25:a8:0c:91:f6:7c:e4:d6:a0:85:c8:b4:53:99:68
+	FingerprintSHA256 *string `locationName:"fingerprintSHA256" type:"string"`
+
+	// The returned RDP certificate is not valid after this point in time.
+	//
+	// This value is listed only for RDP certificates.
+	NotValidAfter *time.Time `locationName:"notValidAfter" type:"timestamp"`
+
+	// The returned RDP certificate is valid after this point in time.
+	//
+	// This value is listed only for RDP certificates.
+	NotValidBefore *time.Time `locationName:"notValidBefore" type:"timestamp"`
+
+	// The public SSH host key or the RDP certificate.
+	PublicKey *string `locationName:"publicKey" type:"string"`
+
+	// The time that the SSH host key or RDP certificate was recorded by Lightsail.
+	WitnessedAt *time.Time `locationName:"witnessedAt" type:"timestamp"`
+}
+
+// String returns the string representation
+func (s HostKeyAttributes) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s HostKeyAttributes) GoString() string {
+	return s.String()
+}
+
+// SetAlgorithm sets the Algorithm field's value.
+func (s *HostKeyAttributes) SetAlgorithm(v string) *HostKeyAttributes {
+	s.Algorithm = &v
+	return s
+}
+
+// SetFingerprintSHA1 sets the FingerprintSHA1 field's value.
+func (s *HostKeyAttributes) SetFingerprintSHA1(v string) *HostKeyAttributes {
+	s.FingerprintSHA1 = &v
+	return s
+}
+
+// SetFingerprintSHA256 sets the FingerprintSHA256 field's value.
+func (s *HostKeyAttributes) SetFingerprintSHA256(v string) *HostKeyAttributes {
+	s.FingerprintSHA256 = &v
+	return s
+}
+
+// SetNotValidAfter sets the NotValidAfter field's value.
+func (s *HostKeyAttributes) SetNotValidAfter(v time.Time) *HostKeyAttributes {
+	s.NotValidAfter = &v
+	return s
+}
+
+// SetNotValidBefore sets the NotValidBefore field's value.
+func (s *HostKeyAttributes) SetNotValidBefore(v time.Time) *HostKeyAttributes {
+	s.NotValidBefore = &v
+	return s
+}
+
+// SetPublicKey sets the PublicKey field's value.
+func (s *HostKeyAttributes) SetPublicKey(v string) *HostKeyAttributes {
+	s.PublicKey = &v
+	return s
+}
+
+// SetWitnessedAt sets the WitnessedAt field's value.
+func (s *HostKeyAttributes) SetWitnessedAt(v time.Time) *HostKeyAttributes {
+	s.WitnessedAt = &v
+	return s
+}
+
 type ImportKeyPairInput struct {
 	_ struct{} `type:"structure"`
 
@@ -19026,6 +19319,9 @@ type InstanceAccessDetails struct {
 	// For SSH access, the date on which the temporary keys expire.
 	ExpiresAt *time.Time `locationName:"expiresAt" type:"timestamp"`
 
+	// Describes the public SSH host keys or the RDP certificate.
+	HostKeys []*HostKeyAttributes `locationName:"hostKeys" type:"list"`
+
 	// The name of this Amazon Lightsail instance.
 	InstanceName *string `locationName:"instanceName" type:"string"`
 
@@ -19082,6 +19378,12 @@ func (s *InstanceAccessDetails) SetCertKey(v string) *InstanceAccessDetails {
 // SetExpiresAt sets the ExpiresAt field's value.
 func (s *InstanceAccessDetails) SetExpiresAt(v time.Time) *InstanceAccessDetails {
 	s.ExpiresAt = &v
+	return s
+}
+
+// SetHostKeys sets the HostKeys field's value.
+func (s *InstanceAccessDetails) SetHostKeys(v []*HostKeyAttributes) *InstanceAccessDetails {
+	s.HostKeys = v
 	return s
 }
 
@@ -23725,6 +24027,9 @@ const (
 )
 
 const (
+	// OperationTypeDeleteKnownHostKeys is a OperationType enum value
+	OperationTypeDeleteKnownHostKeys = "DeleteKnownHostKeys"
+
 	// OperationTypeDeleteInstance is a OperationType enum value
 	OperationTypeDeleteInstance = "DeleteInstance"
 

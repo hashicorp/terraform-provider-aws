@@ -51,6 +51,7 @@ func TestAccAWSVpnConnection_basic(t *testing.T) {
 				Config: testAccAwsVpnConnectionConfig(rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccAwsVpnConnectionExists("aws_vpn_connection.foo", &vpn),
+					resource.TestCheckResourceAttr("aws_vpn_connection.foo", "transit_gateway_attachment_id", ""),
 				),
 			},
 			{
@@ -66,10 +67,14 @@ func TestAccAWSVpnConnection_basic(t *testing.T) {
 func TestAccAWSVpnConnection_TransitGatewayID(t *testing.T) {
 	var vpn ec2.VpnConnection
 	rBgpAsn := acctest.RandIntRange(64512, 65534)
+	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 	resourceName := "aws_vpn_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckAWSEc2TransitGateway(t)
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccAwsVpnConnectionDestroy,
 		Steps: []resource.TestStep{
@@ -77,6 +82,8 @@ func TestAccAWSVpnConnection_TransitGatewayID(t *testing.T) {
 				Config: testAccAwsVpnConnectionConfigTransitGatewayID(rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccAwsVpnConnectionExists(resourceName, &vpn),
+					resource.TestMatchResourceAttr(resourceName, "transit_gateway_attachment_id", regexp.MustCompile(`tgw-attach-.+`)),
+					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", transitGatewayResourceName, "id"),
 				),
 			},
 		},
@@ -222,13 +229,9 @@ func testAccAWSVpnConnectionDisappears(connection *ec2.VpnConnection) resource.T
 		_, err := conn.DeleteVpnConnection(&ec2.DeleteVpnConnectionInput{
 			VpnConnectionId: connection.VpnConnectionId,
 		})
+
 		if err != nil {
-			if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "InvalidVpnConnectionID.NotFound" {
-				return nil
-			}
-			if err != nil {
-				return err
-			}
+			return err
 		}
 
 		return resource.Retry(40*time.Minute, func() *resource.RetryError {

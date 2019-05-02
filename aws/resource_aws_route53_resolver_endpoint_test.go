@@ -151,11 +151,12 @@ func testAccCheckRoute53ResolverEndpointDestroy(s *terraform.State) error {
 		})
 		// Verify the error is what we want
 		if isAWSErr(err, route53resolver.ErrCodeResourceNotFoundException, "") {
-			return nil
+			continue
 		}
 		if err != nil {
 			return err
 		}
+		return fmt.Errorf("Route 53 Resolver endpoint still exists: %s", rs.Primary.ID)
 	}
 
 	return nil
@@ -169,7 +170,7 @@ func testAccCheckRoute53ResolverEndpointExists(n string, ep *route53resolver.Res
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Route 53 Resolver Endpoint ID is set")
+			return fmt.Errorf("No Route 53 Resolver endpoint ID is set")
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).route53resolverconn

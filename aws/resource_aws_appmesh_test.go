@@ -7,18 +7,24 @@ import (
 func TestAccAWSAppmesh(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Mesh": {
-			"basic": testAccAwsAppmeshMesh_basic,
+			"basic":        testAccAwsAppmeshMesh_basic,
+			"egressFilter": testAccAwsAppmeshMesh_egressFilter,
 		},
 		"Route": {
-			"basic":         testAccAwsAppmeshRoute_basic,
-			"allAttributes": testAccAwsAppmeshRoute_allAttributes,
+			"httpRoute": testAccAwsAppmeshRoute_httpRoute,
+			"tcpRoute":  testAccAwsAppmeshRoute_tcpRoute,
 		},
 		"VirtualNode": {
-			"basic":         testAccAwsAppmeshVirtualNode_basic,
-			"allAttributes": testAccAwsAppmeshVirtualNode_allAttributes,
+			"basic":                testAccAwsAppmeshVirtualNode_basic,
+			"listenerHealthChecks": testAccAwsAppmeshVirtualNode_listenerHealthChecks,
+			"logging":              testAccAwsAppmeshVirtualNode_logging,
 		},
 		"VirtualRouter": {
 			"basic": testAccAwsAppmeshVirtualRouter_basic,
+		},
+		"VirtualService": {
+			"virtualNode":   testAccAwsAppmeshVirtualService_virtualNode,
+			"virtualRouter": testAccAwsAppmeshVirtualService_virtualRouter,
 		},
 	}
 

@@ -6,7 +6,7 @@ description: |-
   Provides a Glacier Vault.
 ---
 
-# aws_glacier_vault
+# Resource: aws_glacier_vault
 
 Provides a Glacier Vault Resource. You can refer to the [Glacier Developer Guide](https://docs.aws.amazon.com/amazonglacier/latest/dev/working-with-vaults.html) for a full explanation of the Glacier Vault functionality
 

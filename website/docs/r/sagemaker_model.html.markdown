@@ -6,7 +6,7 @@ description: |-
   Provides a SageMaker model resource.
 ---
 
-# aws_sagemaker_model
+# Resource: aws_sagemaker_model
 
 Provides a SageMaker model resource.
 

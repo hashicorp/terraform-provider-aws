@@ -6,7 +6,7 @@ description: |-
   Provides a Lambda Function resource. Lambda allows you to trigger execution of code in response to events in AWS. The Lambda Function itself includes source code and runtime configuration.
 ---
 
-# aws_lambda_function
+# Resource: aws_lambda_function
 
 Provides a Lambda Function resource. Lambda allows you to trigger execution of code in response to events in AWS. The Lambda Function itself includes source code and runtime configuration.
 
@@ -42,7 +42,10 @@ resource "aws_lambda_function" "test_lambda" {
   function_name    = "lambda_function_name"
   role             = "${aws_iam_role.iam_for_lambda.arn}"
   handler          = "exports.test"
-  source_code_hash = "${base64sha256(file("lambda_function_payload.zip"))}"
+  # The filebase64sha256() function is available in Terraform 0.11.12 and later
+  # For Terraform 0.11.11 and earlier, use the base64sha256() function and the file() function:
+  # source_code_hash = "${base64sha256(file("lambda_function_payload.zip"))}"
+  source_code_hash = "${filebase64sha256("lambda_function_payload.zip")}"
   runtime          = "nodejs8.10"
 
   environment {

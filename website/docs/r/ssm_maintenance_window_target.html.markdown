@@ -6,7 +6,7 @@ description: |-
   Provides an SSM Maintenance Window Target resource
 ---
 
-# aws_ssm_maintenance_window_target
+# Resource: aws_ssm_maintenance_window_target
 
 Provides an SSM Maintenance Window Target resource
 

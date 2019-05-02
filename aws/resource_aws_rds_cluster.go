@@ -1237,23 +1237,17 @@ func resourceAwsRDSClusterDelete(d *schema.ResourceData, meta interface{}) error
 		}
 		return nil
 	})
-	if err != nil {
-		return fmt.Errorf("RDS Cluster cannot be deleted: %s", err)
+
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteDBCluster(&deleteOpts)
 	}
 
-	stateConf := &resource.StateChangeConf{
-		Pending:    resourceAwsRdsClusterDeletePendingStates,
-		Target:     []string{"destroyed"},
-		Refresh:    resourceAwsRDSClusterStateRefreshFunc(conn, d.Id()),
-		Timeout:    d.Timeout(schema.TimeoutDelete),
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second,
+	if err != nil {
+		return fmt.Errorf("error deleting RDS Cluster (%s): %s", d.Id(), err)
 	}
 
-	// Wait, catching any errors
-	_, err = stateConf.WaitForState()
-	if err != nil {
-		return fmt.Errorf("Error deleting RDS Cluster (%s): %s", d.Id(), err)
+	if err := waitForRDSClusterDeletion(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return fmt.Errorf("error waiting for RDS Cluster (%s) deletion: %s", d.Id(), err)
 	}
 
 	return nil
@@ -1344,5 +1338,20 @@ func waitForRDSClusterUpdate(conn *rds.RDS, id string, timeout time.Duration) er
 		Delay:      30 * time.Second, // Wait 30 secs before starting
 	}
 	_, err := stateConf.WaitForState()
+	return err
+}
+
+func waitForRDSClusterDeletion(conn *rds.RDS, id string, timeout time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending:    resourceAwsRdsClusterDeletePendingStates,
+		Target:     []string{"destroyed"},
+		Refresh:    resourceAwsRDSClusterStateRefreshFunc(conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	_, err := stateConf.WaitForState()
+
 	return err
 }

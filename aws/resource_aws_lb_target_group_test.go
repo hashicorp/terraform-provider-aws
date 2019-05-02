@@ -118,6 +118,7 @@ func TestAccAWSLBTargetGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "stickiness.0.cookie_duration", "10000"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.#", "1"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.path", "/health"),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.enabled", "true"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.interval", "60"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.port", "8081"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.protocol", "HTTP"),
@@ -127,6 +128,30 @@ func TestAccAWSLBTargetGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.matcher", "200-299"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "tags.%", "1"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "tags.TestName", "TestAccAWSLBTargetGroup_basic"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLBTargetGroup_withoutHealthcheck(t *testing.T) {
+	var conf elbv2.TargetGroup
+	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_lb_target_group.test",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSLBTargetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLBTargetGroupConfig_withoutHealthcheck(targetGroupName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBTargetGroupExists("aws_lb_target_group.test", &conf),
+					resource.TestCheckResourceAttrSet("aws_lb_target_group.test", "arn"),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "name", targetGroupName),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.#", "1"),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.enabled", "false"),
 				),
 			},
 		},
@@ -155,6 +180,7 @@ func TestAccAWSLBTargetGroup_networkLB_TargetGroup(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "deregistration_delay", "200"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "proxy_protocol_v2", "false"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.#", "1"),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.enabled", "true"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.interval", "10"),
 					testAccCheckAWSLBTargetGroupHealthCheckInterval(&confBefore, 10),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.port", "traffic-port"),
@@ -184,6 +210,7 @@ func TestAccAWSLBTargetGroup_networkLB_TargetGroup(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_lb_target_group.test", "vpc_id"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "deregistration_delay", "200"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.#", "1"),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.enabled", "true"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.interval", "10"),
 					testAccCheckAWSLBTargetGroupHealthCheckInterval(&confAfter, 10),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.port", "traffic-port"),
@@ -547,6 +574,42 @@ func TestAccAWSLBTargetGroup_tags(t *testing.T) {
 	})
 }
 
+func TestAccAWSLBTargetGroup_enableHealthCheck(t *testing.T) {
+	var conf elbv2.TargetGroup
+	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_lb_target_group.test",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSLBTargetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLBTargetGroupConfig_withoutHealthcheck(targetGroupName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBTargetGroupExists("aws_lb_target_group.test", &conf),
+					resource.TestCheckResourceAttrSet("aws_lb_target_group.test", "arn"),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "name", targetGroupName),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.#", "1"),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.enabled", "false"),
+					testAccCheckAWSLBTargetGroupHealthCheckEnabled(&conf, false),
+				),
+			},
+			{
+				Config: testAccAWSLBTargetGroupConfig_enableHealthcheck(targetGroupName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBTargetGroupExists("aws_lb_target_group.test", &conf),
+					resource.TestCheckResourceAttrSet("aws_lb_target_group.test", "arn"),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "name", targetGroupName),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.#", "1"),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.enabled", "true"),
+					testAccCheckAWSLBTargetGroupHealthCheckEnabled(&conf, true),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSLBTargetGroup_updateHealthCheck(t *testing.T) {
 	var conf elbv2.TargetGroup
 	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
@@ -571,6 +634,7 @@ func TestAccAWSLBTargetGroup_updateHealthCheck(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "stickiness.0.type", "lb_cookie"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "stickiness.0.cookie_duration", "10000"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.#", "1"),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.enabled", "true"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.path", "/health"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.interval", "60"),
 					testAccCheckAWSLBTargetGroupHealthCheckInterval(&conf, 60),
@@ -598,6 +662,8 @@ func TestAccAWSLBTargetGroup_updateHealthCheck(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "stickiness.0.type", "lb_cookie"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "stickiness.0.cookie_duration", "10000"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.#", "1"),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.enabled", "true"),
+					testAccCheckAWSLBTargetGroupHealthCheckEnabled(&conf, true),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.path", "/health2"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.interval", "30"),
 					testAccCheckAWSLBTargetGroupHealthCheckInterval(&conf, 30),
@@ -875,6 +941,20 @@ func testAccCheckAWSLBTargetGroupExists(n string, res *elbv2.TargetGroup) resour
 	}
 }
 
+func testAccCheckAWSLBTargetGroupHealthCheckEnabled(res *elbv2.TargetGroup, expected bool) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if res.HealthCheckEnabled == nil {
+			return fmt.Errorf("Expected HealthCheckEnabled to be %t, given %#v",
+				expected, res.HealthCheckEnabled)
+		}
+		if *res.HealthCheckEnabled != expected {
+			return fmt.Errorf("Expected HealthCheckEnabled to be %t, given %t",
+				expected, *res.HealthCheckEnabled)
+		}
+		return nil
+	}
+}
+
 func testAccCheckAWSLBTargetGroupHealthCheckInterval(res *elbv2.TargetGroup, expected int64) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if res.HealthCheckIntervalSeconds == nil {
@@ -1068,6 +1148,13 @@ resource "aws_vpc" "test" {
 }`, targetGroupName)
 }
 
+func testAccAWSLBTargetGroupConfig_withoutHealthcheck(targetGroupName string) string {
+	return fmt.Sprintf(`resource "aws_lb_target_group" "test" {
+  name = "%s"
+  target_type = "lambda"
+}`, targetGroupName)
+}
+
 func testAccAWSLBTargetGroupConfigBackwardsCompatibility(targetGroupName string) string {
 	return fmt.Sprintf(`resource "aws_alb_target_group" "test" {
   name = "%s"
@@ -1104,6 +1191,18 @@ resource "aws_vpc" "test" {
 
   tags = {
     TestName = "terraform-testacc-lb-target-group-bc"
+  }
+}`, targetGroupName)
+}
+
+func testAccAWSLBTargetGroupConfig_enableHealthcheck(targetGroupName string) string {
+	return fmt.Sprintf(`resource "aws_lb_target_group" "test" {
+  name = "%s"
+  target_type = "lambda"
+
+  health_check {
+    path = "/health"
+    interval = 60
   }
 }`, targetGroupName)
 }

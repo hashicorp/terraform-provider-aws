@@ -6,7 +6,7 @@ description: |-
   Provides an DocDB Cluster Resource Instance
 ---
 
-# aws_docdb_cluster_instance
+# Resource: aws_docdb_cluster_instance
 
 Provides an DocDB Cluster Resource Instance. A Cluster Instance Resource defines
 attributes that are specific to a single instance in a [DocDB Cluster][1].

@@ -6,7 +6,7 @@ description: |-
   Provides a SSM Parameter resource
 ---
 
-# aws_ssm_parameter
+# Resource: aws_ssm_parameter
 
 Provides an SSM Parameter resource.
 

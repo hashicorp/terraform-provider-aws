@@ -6,7 +6,7 @@ description: |-
   Provides an OpsWorks MySQL layer resource.
 ---
 
-# aws_opsworks_mysql_layer
+# Resource: aws_opsworks_mysql_layer
 
 Provides an OpsWorks MySQL layer resource.
 

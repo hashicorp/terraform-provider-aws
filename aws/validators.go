@@ -40,6 +40,25 @@ func validateAny(validators ...schema.SchemaValidateFunc) schema.SchemaValidateF
 	}
 }
 
+// FloatAtLeast returns a SchemaValidateFunc which tests if the provided value
+// is of type float and is at least min (inclusive)
+func FloatAtLeast(min float64) schema.SchemaValidateFunc {
+	return func(i interface{}, k string) (s []string, es []error) {
+		v, ok := i.(float64)
+		if !ok {
+			es = append(es, fmt.Errorf("expected type of %s to be float", k))
+			return
+		}
+
+		if v < min {
+			es = append(es, fmt.Errorf("expected %s to be at least (%f), got %f", k, min, v))
+			return
+		}
+
+		return
+	}
+}
+
 // validateTypeStringNullableBoolean provides custom error messaging for TypeString booleans
 // Some arguments require three values: true, false, and "" (unspecified).
 // This ValidateFunc returns a custom message since the message with
@@ -98,15 +117,10 @@ func validateTransferServerID(v interface{}, k string) (ws []string, errors []er
 
 func validateTransferUserName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-
 	// https://docs.aws.amazon.com/transfer/latest/userguide/API_CreateUser.html
-	pattern := `^[a-z0-9]{3,32}$`
-	if !regexp.MustCompile(pattern).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"%q isn't a valid transfer user name (only lowercase alphanumeric characters are allowed): %q",
-			k, value))
+	if !regexp.MustCompile(`^[a-zA-Z0-9_][a-zA-Z0-9_-]{2,31}$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf("Invalid %q: must be between 3 and 32 alphanumeric or special characters hyphen and underscore. However, %q cannot begin with a hyphen", k, k))
 	}
-
 	return
 }
 
@@ -884,6 +898,7 @@ func validateS3BucketLifecycleTransitionStorageClass() schema.SchemaValidateFunc
 		s3.TransitionStorageClassStandardIa,
 		s3.TransitionStorageClassOnezoneIa,
 		s3.TransitionStorageClassIntelligentTiering,
+		s3.TransitionStorageClassDeepArchive,
 	}, false)
 }
 
@@ -2382,7 +2397,7 @@ func validateWorklinkFleetName(v interface{}, k string) (ws []string, errors []e
 	return
 }
 
-func validateRoute53ResolverEndpointName(v interface{}, k string) (ws []string, errors []error) {
+func validateRoute53ResolverName(v interface{}, k string) (ws []string, errors []error) {
 	// Type: String
 	// Length Constraints: Maximum length of 64.
 	// Pattern: (?!^[0-9]+$)([a-zA-Z0-9-_' ']+)

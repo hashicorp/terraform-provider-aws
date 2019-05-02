@@ -93,7 +93,7 @@ func (c *Lambda) AddLayerVersionPermissionRequest(input *AddLayerVersionPermissi
 //   API, that AWS Lambda is unable to assume you will get this exception.
 //
 //   * ErrCodePolicyLengthExceededException "PolicyLengthExceededException"
-//   Lambda function access policy is limited to 20 KB.
+//   The permissions policy for the resource is too large. Learn more (https://docs.aws.amazon.com/lambda/latest/dg/limits.html)
 //
 //   * ErrCodePreconditionFailedException "PreconditionFailedException"
 //   The RevisionId provided does not match the latest RevisionId for the Lambda
@@ -208,7 +208,7 @@ func (c *Lambda) AddPermissionRequest(input *AddPermissionInput) (req *request.R
 //   API, that AWS Lambda is unable to assume you will get this exception.
 //
 //   * ErrCodePolicyLengthExceededException "PolicyLengthExceededException"
-//   Lambda function access policy is limited to 20 KB.
+//   The permissions policy for the resource is too large. Learn more (https://docs.aws.amazon.com/lambda/latest/dg/limits.html)
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //   Request throughput limit exceeded.
@@ -544,7 +544,7 @@ func (c *Lambda) CreateFunctionRequest(input *CreateFunctionInput) (req *request
 //   Request throughput limit exceeded.
 //
 //   * ErrCodeCodeStorageExceededException "CodeStorageExceededException"
-//   You have exceeded your maximum total code size per account. Limits (https://docs.aws.amazon.com/lambda/latest/dg/limits.html)
+//   You have exceeded your maximum total code size per account. Learn more (https://docs.aws.amazon.com/lambda/latest/dg/limits.html)
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/CreateFunction
 func (c *Lambda) CreateFunction(input *CreateFunctionInput) (*FunctionConfiguration, error) {
@@ -1578,6 +1578,98 @@ func (c *Lambda) GetLayerVersionWithContext(ctx aws.Context, input *GetLayerVers
 	return out, req.Send()
 }
 
+const opGetLayerVersionByArn = "GetLayerVersionByArn"
+
+// GetLayerVersionByArnRequest generates a "aws/request.Request" representing the
+// client's request for the GetLayerVersionByArn operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetLayerVersionByArn for more information on using the GetLayerVersionByArn
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetLayerVersionByArnRequest method.
+//    req, resp := client.GetLayerVersionByArnRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/GetLayerVersionByArn
+func (c *Lambda) GetLayerVersionByArnRequest(input *GetLayerVersionByArnInput) (req *request.Request, output *GetLayerVersionByArnOutput) {
+	op := &request.Operation{
+		Name:       opGetLayerVersionByArn,
+		HTTPMethod: "GET",
+		HTTPPath:   "/2018-10-31/layers?find=LayerVersion",
+	}
+
+	if input == nil {
+		input = &GetLayerVersionByArnInput{}
+	}
+
+	output = &GetLayerVersionByArnOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetLayerVersionByArn API operation for AWS Lambda.
+//
+// Returns information about a version of an AWS Lambda layer (https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html),
+// with a link to download the layer archive that's valid for 10 minutes.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Lambda's
+// API operation GetLayerVersionByArn for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeServiceException "ServiceException"
+//   The AWS Lambda service encountered an internal error.
+//
+//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   One of the parameters in the request is invalid. For example, if you provided
+//   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
+//   API, that AWS Lambda is unable to assume you will get this exception.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Request throughput limit exceeded.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The resource (for example, a Lambda function or access policy statement)
+//   specified in the request does not exist.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/GetLayerVersionByArn
+func (c *Lambda) GetLayerVersionByArn(input *GetLayerVersionByArnInput) (*GetLayerVersionByArnOutput, error) {
+	req, out := c.GetLayerVersionByArnRequest(input)
+	return out, req.Send()
+}
+
+// GetLayerVersionByArnWithContext is the same as GetLayerVersionByArn with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetLayerVersionByArn for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Lambda) GetLayerVersionByArnWithContext(ctx aws.Context, input *GetLayerVersionByArnInput, opts ...request.Option) (*GetLayerVersionByArnOutput, error) {
+	req, out := c.GetLayerVersionByArnRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opGetLayerVersionPolicy = "GetLayerVersionPolicy"
 
 // GetLayerVersionPolicyRequest generates a "aws/request.Request" representing the
@@ -1816,6 +1908,12 @@ func (c *Lambda) InvokeRequest(input *InvokeInput) (req *request.Request, output
 // and trace (https://docs.aws.amazon.com/lambda/latest/dg/dlq.html). To record
 // function errors for asynchronous invocations, configure your function with
 // a dead letter queue (https://docs.aws.amazon.com/lambda/latest/dg/dlq.html).
+//
+// When an error occurs, your function may be invoked multiple times. Retry
+// behavior varies by error type, client, event source, and invocation type.
+// For example, if you invoke a function asynchronously and it returns an error,
+// Lambda executes the function up to two more times. For more information,
+// see Retry Behavior (https://docs.aws.amazon.com/lambda/latest/dg/retries-on-errors.html).
 //
 // The status code in the API response doesn't reflect function errors. Error
 // codes are reserved for errors that prevent your function from executing,
@@ -2866,7 +2964,7 @@ func (c *Lambda) PublishLayerVersionRequest(input *PublishLayerVersionInput) (re
 //   API, that AWS Lambda is unable to assume you will get this exception.
 //
 //   * ErrCodeCodeStorageExceededException "CodeStorageExceededException"
-//   You have exceeded your maximum total code size per account. Limits (https://docs.aws.amazon.com/lambda/latest/dg/limits.html)
+//   You have exceeded your maximum total code size per account. Learn more (https://docs.aws.amazon.com/lambda/latest/dg/limits.html)
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/PublishLayerVersion
 func (c *Lambda) PublishLayerVersion(input *PublishLayerVersionInput) (*PublishLayerVersionOutput, error) {
@@ -2969,7 +3067,7 @@ func (c *Lambda) PublishVersionRequest(input *PublishVersionInput) (req *request
 //   Request throughput limit exceeded.
 //
 //   * ErrCodeCodeStorageExceededException "CodeStorageExceededException"
-//   You have exceeded your maximum total code size per account. Limits (https://docs.aws.amazon.com/lambda/latest/dg/limits.html)
+//   You have exceeded your maximum total code size per account. Learn more (https://docs.aws.amazon.com/lambda/latest/dg/limits.html)
 //
 //   * ErrCodePreconditionFailedException "PreconditionFailedException"
 //   The RevisionId provided does not match the latest RevisionId for the Lambda
@@ -3754,7 +3852,7 @@ func (c *Lambda) UpdateFunctionCodeRequest(input *UpdateFunctionCodeInput) (req 
 //   Request throughput limit exceeded.
 //
 //   * ErrCodeCodeStorageExceededException "CodeStorageExceededException"
-//   You have exceeded your maximum total code size per account. Limits (https://docs.aws.amazon.com/lambda/latest/dg/limits.html)
+//   You have exceeded your maximum total code size per account. Learn more (https://docs.aws.amazon.com/lambda/latest/dg/limits.html)
 //
 //   * ErrCodePreconditionFailedException "PreconditionFailedException"
 //   The RevisionId provided does not match the latest RevisionId for the Lambda
@@ -3827,7 +3925,7 @@ func (c *Lambda) UpdateFunctionConfigurationRequest(input *UpdateFunctionConfigu
 
 // UpdateFunctionConfiguration API operation for AWS Lambda.
 //
-// Modify the version-specifc settings of a Lambda function.
+// Modify the version-specific settings of a Lambda function.
 //
 // These settings can vary between versions of a function and are locked when
 // you publish a version. You can't modify the configuration of a published
@@ -6062,6 +6160,134 @@ func (s *GetFunctionOutput) SetConfiguration(v *FunctionConfiguration) *GetFunct
 // SetTags sets the Tags field's value.
 func (s *GetFunctionOutput) SetTags(v map[string]*string) *GetFunctionOutput {
 	s.Tags = v
+	return s
+}
+
+type GetLayerVersionByArnInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the layer version.
+	//
+	// Arn is a required field
+	Arn *string `location:"querystring" locationName:"Arn" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetLayerVersionByArnInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetLayerVersionByArnInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetLayerVersionByArnInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetLayerVersionByArnInput"}
+	if s.Arn == nil {
+		invalidParams.Add(request.NewErrParamRequired("Arn"))
+	}
+	if s.Arn != nil && len(*s.Arn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Arn", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetArn sets the Arn field's value.
+func (s *GetLayerVersionByArnInput) SetArn(v string) *GetLayerVersionByArnInput {
+	s.Arn = &v
+	return s
+}
+
+type GetLayerVersionByArnOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The layer's compatible runtimes.
+	CompatibleRuntimes []*string `type:"list"`
+
+	// Details about the layer version.
+	Content *LayerVersionContentOutput `type:"structure"`
+
+	// The date that the layer version was created, in ISO-8601 format (https://www.w3.org/TR/NOTE-datetime)
+	// (YYYY-MM-DDThh:mm:ss.sTZD).
+	CreatedDate *string `type:"string"`
+
+	// The description of the version.
+	Description *string `type:"string"`
+
+	// The ARN of the layer.
+	LayerArn *string `min:"1" type:"string"`
+
+	// The ARN of the layer version.
+	LayerVersionArn *string `min:"1" type:"string"`
+
+	// The layer's software license.
+	LicenseInfo *string `type:"string"`
+
+	// The version number.
+	Version *int64 `type:"long"`
+}
+
+// String returns the string representation
+func (s GetLayerVersionByArnOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetLayerVersionByArnOutput) GoString() string {
+	return s.String()
+}
+
+// SetCompatibleRuntimes sets the CompatibleRuntimes field's value.
+func (s *GetLayerVersionByArnOutput) SetCompatibleRuntimes(v []*string) *GetLayerVersionByArnOutput {
+	s.CompatibleRuntimes = v
+	return s
+}
+
+// SetContent sets the Content field's value.
+func (s *GetLayerVersionByArnOutput) SetContent(v *LayerVersionContentOutput) *GetLayerVersionByArnOutput {
+	s.Content = v
+	return s
+}
+
+// SetCreatedDate sets the CreatedDate field's value.
+func (s *GetLayerVersionByArnOutput) SetCreatedDate(v string) *GetLayerVersionByArnOutput {
+	s.CreatedDate = &v
+	return s
+}
+
+// SetDescription sets the Description field's value.
+func (s *GetLayerVersionByArnOutput) SetDescription(v string) *GetLayerVersionByArnOutput {
+	s.Description = &v
+	return s
+}
+
+// SetLayerArn sets the LayerArn field's value.
+func (s *GetLayerVersionByArnOutput) SetLayerArn(v string) *GetLayerVersionByArnOutput {
+	s.LayerArn = &v
+	return s
+}
+
+// SetLayerVersionArn sets the LayerVersionArn field's value.
+func (s *GetLayerVersionByArnOutput) SetLayerVersionArn(v string) *GetLayerVersionByArnOutput {
+	s.LayerVersionArn = &v
+	return s
+}
+
+// SetLicenseInfo sets the LicenseInfo field's value.
+func (s *GetLayerVersionByArnOutput) SetLicenseInfo(v string) *GetLayerVersionByArnOutput {
+	s.LicenseInfo = &v
+	return s
+}
+
+// SetVersion sets the Version field's value.
+func (s *GetLayerVersionByArnOutput) SetVersion(v int64) *GetLayerVersionByArnOutput {
+	s.Version = &v
 	return s
 }
 

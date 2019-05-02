@@ -352,10 +352,11 @@ func resourceAwsEMRCluster() *schema.Resource {
 				},
 			},
 			"step": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
+				Type:       schema.TypeList,
+				Optional:   true,
+				Computed:   true,
+				ForceNew:   true,
+				ConfigMode: schema.SchemaConfigModeAttr,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"action_on_failure": {
@@ -370,10 +371,11 @@ func resourceAwsEMRCluster() *schema.Resource {
 							}, false),
 						},
 						"hadoop_jar_step": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Required: true,
-							ForceNew: true,
+							Type:       schema.TypeList,
+							MaxItems:   1,
+							Required:   true,
+							ForceNew:   true,
+							ConfigMode: schema.SchemaConfigModeAttr,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"args": {
@@ -988,7 +990,7 @@ func resourceAwsEMRClusterDelete(d *schema.ResourceData, meta interface{}) error
 		return err
 	}
 
-	err = resource.Retry(10*time.Minute, func() *resource.RetryError {
+	err = resource.Retry(20*time.Minute, func() *resource.RetryError {
 		resp, err := conn.ListInstances(&emr.ListInstancesInput{
 			ClusterId: aws.String(d.Id()),
 		})

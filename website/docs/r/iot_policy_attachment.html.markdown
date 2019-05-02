@@ -6,7 +6,7 @@ description: |-
   Provides an IoT policy attachment.
 ---
 
-# aws_iot_policy_attachment
+# Resource: aws_iot_policy_attachment
 
 Provides an IoT policy attachment.
 

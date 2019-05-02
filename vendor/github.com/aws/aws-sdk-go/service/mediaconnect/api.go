@@ -586,6 +586,12 @@ func (c *MediaConnect) ListEntitlementsRequest(input *ListEntitlementsInput) (re
 		Name:       opListEntitlements,
 		HTTPMethod: "GET",
 		HTTPPath:   "/v1/entitlements",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -650,6 +656,56 @@ func (c *MediaConnect) ListEntitlementsWithContext(ctx aws.Context, input *ListE
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// ListEntitlementsPages iterates over the pages of a ListEntitlements operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListEntitlements method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListEntitlements operation.
+//    pageNum := 0
+//    err := client.ListEntitlementsPages(params,
+//        func(page *ListEntitlementsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *MediaConnect) ListEntitlementsPages(input *ListEntitlementsInput, fn func(*ListEntitlementsOutput, bool) bool) error {
+	return c.ListEntitlementsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListEntitlementsPagesWithContext same as ListEntitlementsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaConnect) ListEntitlementsPagesWithContext(ctx aws.Context, input *ListEntitlementsInput, fn func(*ListEntitlementsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListEntitlementsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListEntitlementsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListEntitlementsOutput), !p.HasNextPage())
+	}
+	return p.Err()
 }
 
 const opListFlows = "ListFlows"
@@ -849,7 +905,7 @@ func (c *MediaConnect) ListTagsForResourceRequest(input *ListTagsForResourceInpu
 
 // ListTagsForResource API operation for AWS MediaConnect.
 //
-// Lists all tags associated with the resource.
+// List all tags on an AWS Elemental MediaConnect resource
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1370,8 +1426,10 @@ func (c *MediaConnect) TagResourceRequest(input *TagResourceInput) (req *request
 
 // TagResource API operation for AWS MediaConnect.
 //
-// Associates the specified tags to a resource. If the request does not mention
-// an existing tag associated with the resource, that tag is not changed.
+// Associates the specified tags to a resource with the specified resourceArn.
+// If existing tags on a resource are not specified in the request parameters,
+// they are not changed. When a resource is deleted, the tags associated with
+// that resource are deleted as well.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1463,7 +1521,7 @@ func (c *MediaConnect) UntagResourceRequest(input *UntagResourceInput) (req *req
 
 // UntagResource API operation for AWS MediaConnect.
 //
-// Deletes the specified tags from a resource.
+// Deletes specified tags from a resource.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2970,7 +3028,7 @@ func (s *ListTagsForResourceInput) SetResourceArn(v string) *ListTagsForResource
 	return s
 }
 
-// AWS Elemental MediaConnect listed the tags associated with the resource.
+// The tags for the resource.
 type ListTagsForResourceOutput struct {
 	_ struct{} `type:"structure"`
 

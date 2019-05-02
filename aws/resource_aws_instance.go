@@ -136,9 +136,9 @@ func resourceAwsInstance() *schema.Resource {
 					return false
 				},
 				StateFunc: func(v interface{}) string {
-					switch v.(type) {
+					switch v := v.(type) {
 					case string:
-						return userDataHashSum(v.(string))
+						return userDataHashSum(v)
 					default:
 						return ""
 					}
@@ -770,9 +770,7 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		if primaryNetworkInterface.NetworkInterfaceId != nil {
 			d.Set("primary_network_interface_id", primaryNetworkInterface.NetworkInterfaceId)
 		}
-		if primaryNetworkInterface.Ipv6Addresses != nil {
-			d.Set("ipv6_address_count", len(primaryNetworkInterface.Ipv6Addresses))
-		}
+		d.Set("ipv6_address_count", len(primaryNetworkInterface.Ipv6Addresses))
 		if primaryNetworkInterface.SourceDestCheck != nil {
 			d.Set("source_dest_check", primaryNetworkInterface.SourceDestCheck)
 		}
@@ -784,8 +782,10 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		}
 
 	} else {
-		d.Set("subnet_id", instance.SubnetId)
+		d.Set("associate_public_ip_address", instance.PublicIpAddress != nil)
+		d.Set("ipv6_address_count", 0)
 		d.Set("primary_network_interface_id", "")
+		d.Set("subnet_id", instance.SubnetId)
 	}
 
 	if err := d.Set("ipv6_addresses", ipv6Addresses); err != nil {
@@ -862,11 +862,18 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 	}
-	{
+
+	// AWS Standard will return InstanceCreditSpecification.NotSupported errors for EC2 Instance IDs outside T2 and T3 instance types
+	// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/8055
+	if strings.HasPrefix(aws.StringValue(instance.InstanceType), "t2") || strings.HasPrefix(aws.StringValue(instance.InstanceType), "t3") {
 		creditSpecifications, err := getCreditSpecifications(conn, d.Id())
+
+		// Ignore UnsupportedOperation errors for AWS China and GovCloud (US)
+		// Reference: https://github.com/terraform-providers/terraform-provider-aws/pull/4362
 		if err != nil && !isAWSErr(err, "UnsupportedOperation", "") {
-			return err
+			return fmt.Errorf("error getting EC2 Instance (%s) Credit Specifications: %s", d.Id(), err)
 		}
+
 		if err := d.Set("credit_specification", creditSpecifications); err != nil {
 			return fmt.Errorf("error setting credit_specification: %s", err)
 		}

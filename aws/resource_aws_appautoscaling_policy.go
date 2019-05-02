@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
+	"strings"
 )
 
 func resourceAwsAppautoscalingPolicy() *schema.Resource {
@@ -19,6 +20,9 @@ func resourceAwsAppautoscalingPolicy() *schema.Resource {
 		Read:   resourceAwsAppautoscalingPolicyRead,
 		Update: resourceAwsAppautoscalingPolicyUpdate,
 		Delete: resourceAwsAppautoscalingPolicyDelete,
+		Importer: &schema.ResourceImporter{
+			State: resourceAwsAppautoscalingPolicyImport,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -40,6 +44,7 @@ func resourceAwsAppautoscalingPolicy() *schema.Resource {
 			"resource_id": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			"scalable_dimension": {
 				Type:     schema.TypeString,
@@ -256,13 +261,16 @@ func resourceAwsAppautoscalingPolicyCreate(d *schema.ResourceData, meta interfac
 		var err error
 		resp, err = conn.PutScalingPolicy(&params)
 		if err != nil {
-			if isAWSErr(err, "FailedResourceAccessException", "Rate exceeded") {
+			if isAWSErr(err, applicationautoscaling.ErrCodeFailedResourceAccessException, "Rate exceeded") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, "FailedResourceAccessException", "is not authorized to perform") {
+			if isAWSErr(err, applicationautoscaling.ErrCodeFailedResourceAccessException, "is not authorized to perform") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, "FailedResourceAccessException", "token included in the request is invalid") {
+			if isAWSErr(err, applicationautoscaling.ErrCodeFailedResourceAccessException, "token included in the request is invalid") {
+				return resource.RetryableError(err)
+			}
+			if isAWSErr(err, applicationautoscaling.ErrCodeObjectNotFoundException, "") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(fmt.Errorf("Error putting scaling policy: %s", err))
@@ -338,6 +346,9 @@ func resourceAwsAppautoscalingPolicyUpdate(d *schema.ResourceData, meta interfac
 			if isAWSErr(err, applicationautoscaling.ErrCodeFailedResourceAccessException, "") {
 				return resource.RetryableError(err)
 			}
+			if isAWSErr(err, applicationautoscaling.ErrCodeObjectNotFoundException, "") {
+				return resource.RetryableError(err)
+			}
 			return resource.NonRetryableError(err)
 		}
 		return nil
@@ -368,18 +379,55 @@ func resourceAwsAppautoscalingPolicyDelete(d *schema.ResourceData, meta interfac
 	log.Printf("[DEBUG] Deleting Application AutoScaling Policy opts: %#v", params)
 	err = resource.Retry(2*time.Minute, func() *resource.RetryError {
 		_, err = conn.DeleteScalingPolicy(&params)
+
+		if isAWSErr(err, applicationautoscaling.ErrCodeFailedResourceAccessException, "") {
+			return resource.RetryableError(err)
+		}
+
+		if isAWSErr(err, applicationautoscaling.ErrCodeObjectNotFoundException, "") {
+			return nil
+		}
+
 		if err != nil {
-			if isAWSErr(err, applicationautoscaling.ErrCodeFailedResourceAccessException, "") {
-				return resource.RetryableError(err)
-			}
 			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
+
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteScalingPolicy(&params)
+	}
+
 	if err != nil {
 		return fmt.Errorf("Failed to delete scaling policy: %s", err)
 	}
+
 	return nil
+}
+
+func resourceAwsAppautoscalingPolicyImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	idParts := strings.Split(d.Id(), "/")
+
+	if len(idParts) < 4 {
+		return nil, fmt.Errorf("unexpected format (%q), expected <service-namespace>/<resource-id>/<scalable-dimension>/<policy-name>", d.Id())
+	}
+
+	serviceNamespace := idParts[0]
+	resourceId := strings.Join(idParts[1:len(idParts)-2], "/")
+	scalableDimension := idParts[len(idParts)-2]
+	policyName := idParts[len(idParts)-1]
+
+	if serviceNamespace == "" || resourceId == "" || scalableDimension == "" || policyName == "" {
+		return nil, fmt.Errorf("unexpected format (%q), expected <service-namespace>/<resource-id>/<scalable-dimension>/<policy-name>", d.Id())
+	}
+
+	d.Set("service_namespace", serviceNamespace)
+	d.Set("resource_id", resourceId)
+	d.Set("scalable_dimension", scalableDimension)
+	d.Set("name", policyName)
+	d.SetId(policyName)
+
+	return []*schema.ResourceData{d}, nil
 }
 
 // Takes the result of flatmap.Expand for an array of step adjustments and

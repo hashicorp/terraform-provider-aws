@@ -6,7 +6,7 @@ description: |-
   Attaches a Managed IAM Policy to an IAM group
 ---
 
-# aws_iam_group_policy_attachment
+# Resource: aws_iam_group_policy_attachment
 
 Attaches a Managed IAM Policy to an IAM group
 

@@ -48,6 +48,7 @@ func TestAccAWSDocDBCluster_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
 					"cluster_identifier_prefix",
 					"final_snapshot_identifier",
 					"master_password",
@@ -79,6 +80,7 @@ func TestAccAWSDocDBCluster_namePrefix(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
 					"cluster_identifier_prefix",
 					"final_snapshot_identifier",
 					"master_password",
@@ -110,6 +112,7 @@ func TestAccAWSDocDBCluster_generatedName(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
 					"cluster_identifier_prefix",
 					"final_snapshot_identifier",
 					"master_password",
@@ -140,6 +143,7 @@ func TestAccAWSDocDBCluster_takeFinalSnapshot(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
 					"cluster_identifier_prefix",
 					"final_snapshot_identifier",
 					"master_password",
@@ -188,6 +192,7 @@ func TestAccAWSDocDBCluster_updateTags(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
 					"cluster_identifier_prefix",
 					"final_snapshot_identifier",
 					"master_password",
@@ -226,6 +231,7 @@ func TestAccAWSDocDBCluster_updateCloudwatchLogsExports(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
 					"cluster_identifier_prefix",
 					"final_snapshot_identifier",
 					"master_password",
@@ -264,6 +270,7 @@ func TestAccAWSDocDBCluster_kmsKey(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
 					"cluster_identifier_prefix",
 					"final_snapshot_identifier",
 					"master_password",
@@ -297,6 +304,7 @@ func TestAccAWSDocDBCluster_encrypted(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
 					"cluster_identifier_prefix",
 					"final_snapshot_identifier",
 					"master_password",
@@ -333,6 +341,7 @@ func TestAccAWSDocDBCluster_backupsUpdate(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
 					"cluster_identifier_prefix",
 					"final_snapshot_identifier",
 					"master_password",
@@ -377,6 +386,7 @@ func TestAccAWSDocDBCluster_Port(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
 					"cluster_identifier_prefix",
 					"final_snapshot_identifier",
 					"master_password",

@@ -43,6 +43,12 @@ func TestAccAWSAppautoScalingTarget_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_appautoscaling_target.bar", "max_capacity", "8"),
 				),
 			},
+			{
+				ResourceName:      "aws_appautoscaling_target.bar",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSAppautoscalingTargetImportStateIdFunc("aws_appautoscaling_target.bar"),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -64,6 +70,12 @@ func TestAccAWSAppautoScalingTarget_spotFleetRequest(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_appautoscaling_target.test", "scalable_dimension", "ec2:spot-fleet-request:TargetCapacity"),
 				),
 			},
+			{
+				ResourceName:      "aws_appautoscaling_target.test",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSAppautoscalingTargetImportStateIdFunc("aws_appautoscaling_target.test"),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -84,6 +96,12 @@ func TestAccAWSAppautoScalingTarget_emrCluster(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_appautoscaling_target.bar", "service_namespace", "elasticmapreduce"),
 					resource.TestCheckResourceAttr("aws_appautoscaling_target.bar", "scalable_dimension", "elasticmapreduce:instancegroup:InstanceCount"),
 				),
+			},
+			{
+				ResourceName:      "aws_appautoscaling_target.bar",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSAppautoscalingTargetImportStateIdFunc("aws_appautoscaling_target.bar"),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -709,4 +727,19 @@ resource "aws_appautoscaling_target" "read" {
   max_capacity = 15
 }
 `, tableName)
+}
+
+func testAccAWSAppautoscalingTargetImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		id := fmt.Sprintf("%s/%s/%s",
+			rs.Primary.Attributes["service_namespace"],
+			rs.Primary.Attributes["resource_id"],
+			rs.Primary.Attributes["scalable_dimension"])
+		return id, nil
+	}
 }

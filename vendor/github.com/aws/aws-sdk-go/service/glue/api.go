@@ -511,7 +511,8 @@ func (c *Glue) BatchGetCrawlersRequest(input *BatchGetCrawlersInput) (req *reque
 //
 // Returns a list of resource metadata for a given list of crawler names. After
 // calling the ListCrawlers operation, you can call this operation to access
-// the data to which you have been granted permissions to based on tags.
+// the data to which you have been granted permissions. This operation supports
+// all IAM permissions, including permission conditions that uses tags.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1038,8 +1039,8 @@ func (c *Glue) CreateClassifierRequest(input *CreateClassifierInput) (req *reque
 // CreateClassifier API operation for AWS Glue.
 //
 // Creates a classifier in the user's account. This may be a GrokClassifier,
-// an XMLClassifier, or abbrev JsonClassifier, depending on which field of the
-// request is present.
+// an XMLClassifier, a JsonClassifier, or a CsvClassifier, depending on which
+// field of the request is present.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -8853,8 +8854,8 @@ func (c *Glue) UpdateClassifierRequest(input *UpdateClassifierInput) (req *reque
 
 // UpdateClassifier API operation for AWS Glue.
 //
-// Modifies an existing classifier (a GrokClassifier, XMLClassifier, or JsonClassifier,
-// depending on which field is present).
+// Modifies an existing classifier (a GrokClassifier, an XMLClassifier, a JsonClassifier,
+// or a CsvClassifier, depending on which field is present).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -10489,7 +10490,7 @@ type BatchGetCrawlersOutput struct {
 	// A list of crawler definitions.
 	Crawlers []*Crawler `type:"list"`
 
-	// A list of crawlers not found.
+	// A list of names of crawlers not found.
 	CrawlersNotFound []*string `type:"list"`
 }
 
@@ -11132,10 +11133,13 @@ func (s *CatalogImportStatus) SetImportedBy(v string) *CatalogImportStatus {
 // You can use the standard classifiers that AWS Glue supplies, or you can write
 // your own classifiers to best categorize your data sources and specify the
 // appropriate schemas to use for them. A classifier can be a grok classifier,
-// an XML classifier, or a JSON classifier, as specified in one of the fields
-// in the Classifier object.
+// an XML classifier, a JSON classifier, or a custom CSV classifier as specified
+// in one of the fields in the Classifier object.
 type Classifier struct {
 	_ struct{} `type:"structure"`
+
+	// A CSVClassifier object.
+	CsvClassifier *CsvClassifier `type:"structure"`
 
 	// A GrokClassifier object.
 	GrokClassifier *GrokClassifier `type:"structure"`
@@ -11155,6 +11159,12 @@ func (s Classifier) String() string {
 // GoString returns the string representation
 func (s Classifier) GoString() string {
 	return s.String()
+}
+
+// SetCsvClassifier sets the CsvClassifier field's value.
+func (s *Classifier) SetCsvClassifier(v *CsvClassifier) *Classifier {
+	s.CsvClassifier = v
+	return s
 }
 
 // SetGrokClassifier sets the GrokClassifier field's value.
@@ -12184,6 +12194,9 @@ func (s *CrawlerTargets) SetS3Targets(v []*S3Target) *CrawlerTargets {
 type CreateClassifierInput struct {
 	_ struct{} `type:"structure"`
 
+	// A CsvClassifier object specifying the classifier to create.
+	CsvClassifier *CreateCsvClassifierRequest `type:"structure"`
+
 	// A GrokClassifier object specifying the classifier to create.
 	GrokClassifier *CreateGrokClassifierRequest `type:"structure"`
 
@@ -12207,6 +12220,11 @@ func (s CreateClassifierInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *CreateClassifierInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CreateClassifierInput"}
+	if s.CsvClassifier != nil {
+		if err := s.CsvClassifier.Validate(); err != nil {
+			invalidParams.AddNested("CsvClassifier", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.GrokClassifier != nil {
 		if err := s.GrokClassifier.Validate(); err != nil {
 			invalidParams.AddNested("GrokClassifier", err.(request.ErrInvalidParams))
@@ -12227,6 +12245,12 @@ func (s *CreateClassifierInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetCsvClassifier sets the CsvClassifier field's value.
+func (s *CreateClassifierInput) SetCsvClassifier(v *CreateCsvClassifierRequest) *CreateClassifierInput {
+	s.CsvClassifier = v
+	return s
 }
 
 // SetGrokClassifier sets the GrokClassifier field's value.
@@ -12511,6 +12535,110 @@ func (s CreateCrawlerOutput) GoString() string {
 	return s.String()
 }
 
+// Specifies a custom CSV classifier for CreateClassifier to create.
+type CreateCsvClassifierRequest struct {
+	_ struct{} `type:"structure"`
+
+	// Enables the processing of files that contain only one column.
+	AllowSingleColumn *bool `type:"boolean"`
+
+	// Indicates whether the CSV file contains a header.
+	ContainsHeader *string `type:"string" enum:"CsvHeaderOption"`
+
+	// A custom symbol to denote what separates each column entry in the row.
+	Delimiter *string `min:"1" type:"string"`
+
+	// Specifies not to trim values before identifying the type of column values.
+	// The default value is true.
+	DisableValueTrimming *bool `type:"boolean"`
+
+	// A list of strings representing column names.
+	Header []*string `type:"list"`
+
+	// The name of the classifier.
+	//
+	// Name is a required field
+	Name *string `min:"1" type:"string" required:"true"`
+
+	// A custom symbol to denote what combines content into a single column value.
+	// Must be different from the column delimiter.
+	QuoteSymbol *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s CreateCsvClassifierRequest) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateCsvClassifierRequest) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateCsvClassifierRequest) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateCsvClassifierRequest"}
+	if s.Delimiter != nil && len(*s.Delimiter) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Delimiter", 1))
+	}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
+	}
+	if s.QuoteSymbol != nil && len(*s.QuoteSymbol) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("QuoteSymbol", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAllowSingleColumn sets the AllowSingleColumn field's value.
+func (s *CreateCsvClassifierRequest) SetAllowSingleColumn(v bool) *CreateCsvClassifierRequest {
+	s.AllowSingleColumn = &v
+	return s
+}
+
+// SetContainsHeader sets the ContainsHeader field's value.
+func (s *CreateCsvClassifierRequest) SetContainsHeader(v string) *CreateCsvClassifierRequest {
+	s.ContainsHeader = &v
+	return s
+}
+
+// SetDelimiter sets the Delimiter field's value.
+func (s *CreateCsvClassifierRequest) SetDelimiter(v string) *CreateCsvClassifierRequest {
+	s.Delimiter = &v
+	return s
+}
+
+// SetDisableValueTrimming sets the DisableValueTrimming field's value.
+func (s *CreateCsvClassifierRequest) SetDisableValueTrimming(v bool) *CreateCsvClassifierRequest {
+	s.DisableValueTrimming = &v
+	return s
+}
+
+// SetHeader sets the Header field's value.
+func (s *CreateCsvClassifierRequest) SetHeader(v []*string) *CreateCsvClassifierRequest {
+	s.Header = v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *CreateCsvClassifierRequest) SetName(v string) *CreateCsvClassifierRequest {
+	s.Name = &v
+	return s
+}
+
+// SetQuoteSymbol sets the QuoteSymbol field's value.
+func (s *CreateCsvClassifierRequest) SetQuoteSymbol(v string) *CreateCsvClassifierRequest {
+	s.QuoteSymbol = &v
+	return s
+}
+
 type CreateDatabaseInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12583,6 +12711,9 @@ func (s CreateDatabaseOutput) GoString() string {
 
 type CreateDevEndpointInput struct {
 	_ struct{} `type:"structure"`
+
+	// A map of arguments used to configure the DevEndpoint.
+	Arguments map[string]*string `type:"map"`
 
 	// The name to be assigned to the new DevEndpoint.
 	//
@@ -12670,6 +12801,12 @@ func (s *CreateDevEndpointInput) Validate() error {
 	return nil
 }
 
+// SetArguments sets the Arguments field's value.
+func (s *CreateDevEndpointInput) SetArguments(v map[string]*string) *CreateDevEndpointInput {
+	s.Arguments = v
+	return s
+}
+
 // SetEndpointName sets the EndpointName field's value.
 func (s *CreateDevEndpointInput) SetEndpointName(v string) *CreateDevEndpointInput {
 	s.EndpointName = &v
@@ -12739,6 +12876,9 @@ func (s *CreateDevEndpointInput) SetTags(v map[string]*string) *CreateDevEndpoin
 type CreateDevEndpointOutput struct {
 	_ struct{} `type:"structure"`
 
+	// The map of arguments used to configure this DevEndpoint.
+	Arguments map[string]*string `type:"map"`
+
 	// The AWS availability zone where this DevEndpoint is located.
 	AvailabilityZone *string `type:"string"`
 
@@ -12795,6 +12935,12 @@ func (s CreateDevEndpointOutput) String() string {
 // GoString returns the string representation
 func (s CreateDevEndpointOutput) GoString() string {
 	return s.String()
+}
+
+// SetArguments sets the Arguments field's value.
+func (s *CreateDevEndpointOutput) SetArguments(v map[string]*string) *CreateDevEndpointOutput {
+	s.Arguments = v
+	return s
 }
 
 // SetAvailabilityZone sets the AvailabilityZone field's value.
@@ -13021,6 +13167,8 @@ type CreateJobInput struct {
 	// consists of 4 vCPUs of compute capacity and 16 GB of memory. For more information,
 	// see the AWS Glue pricing page (https://aws.amazon.com/glue/pricing/).
 	//
+	// Do not set Max Capacity if using WorkerType and NumberOfWorkers.
+	//
 	// The value that can be allocated for MaxCapacity depends on whether you are
 	// running a python shell job, or an Apache Spark ETL job:
 	//
@@ -13043,6 +13191,13 @@ type CreateJobInput struct {
 	// Specifies configuration properties of a job notification.
 	NotificationProperty *NotificationProperty `type:"structure"`
 
+	// The number of workers of a defined workerType that are allocated when a job
+	// runs.
+	//
+	// The maximum number of workers you can define are 299 for G.1X, and 149 for
+	// G.2X.
+	NumberOfWorkers *int64 `type:"integer"`
+
 	// The name or ARN of the IAM role associated with this job.
 	//
 	// Role is a required field
@@ -13060,6 +13215,19 @@ type CreateJobInput struct {
 	// resources before it is terminated and enters TIMEOUT status. The default
 	// is 2,880 minutes (48 hours).
 	Timeout *int64 `min:"1" type:"integer"`
+
+	// The type of predefined worker that is allocated when a job runs. Accepts
+	// a value of Standard, G.1X, or G.2X.
+	//
+	//    * For the Standard worker type, each worker provides 4 vCPU, 16 GB of
+	//    memory and a 50GB disk, and 2 executors per worker.
+	//
+	//    * For the G.1X worker type, each worker provides 4 vCPU, 16 GB of memory
+	//    and a 64GB disk, and 1 executor per worker.
+	//
+	//    * For the G.2X worker type, each worker provides 8 vCPU, 32 GB of memory
+	//    and a 128GB disk, and 1 executor per worker.
+	WorkerType *string `type:"string" enum:"WorkerType"`
 }
 
 // String returns the string representation
@@ -13171,6 +13339,12 @@ func (s *CreateJobInput) SetNotificationProperty(v *NotificationProperty) *Creat
 	return s
 }
 
+// SetNumberOfWorkers sets the NumberOfWorkers field's value.
+func (s *CreateJobInput) SetNumberOfWorkers(v int64) *CreateJobInput {
+	s.NumberOfWorkers = &v
+	return s
+}
+
 // SetRole sets the Role field's value.
 func (s *CreateJobInput) SetRole(v string) *CreateJobInput {
 	s.Role = &v
@@ -13192,6 +13366,12 @@ func (s *CreateJobInput) SetTags(v map[string]*string) *CreateJobInput {
 // SetTimeout sets the Timeout field's value.
 func (s *CreateJobInput) SetTimeout(v int64) *CreateJobInput {
 	s.Timeout = &v
+	return s
+}
+
+// SetWorkerType sets the WorkerType field's value.
+func (s *CreateJobInput) SetWorkerType(v string) *CreateJobInput {
+	s.WorkerType = &v
 	return s
 }
 
@@ -13974,6 +14154,115 @@ func (s *CreateXMLClassifierRequest) SetName(v string) *CreateXMLClassifierReque
 // SetRowTag sets the RowTag field's value.
 func (s *CreateXMLClassifierRequest) SetRowTag(v string) *CreateXMLClassifierRequest {
 	s.RowTag = &v
+	return s
+}
+
+// A classifier for custom CSV content.
+type CsvClassifier struct {
+	_ struct{} `type:"structure"`
+
+	// Enables the processing of files that contain only one column.
+	AllowSingleColumn *bool `type:"boolean"`
+
+	// Indicates whether the CSV file contains a header.
+	ContainsHeader *string `type:"string" enum:"CsvHeaderOption"`
+
+	// The time this classifier was registered.
+	CreationTime *time.Time `type:"timestamp"`
+
+	// A custom symbol to denote what separates each column entry in the row.
+	Delimiter *string `min:"1" type:"string"`
+
+	// Specifies not to trim values before identifying the type of column values.
+	// The default value is true.
+	DisableValueTrimming *bool `type:"boolean"`
+
+	// A list of strings representing column names.
+	Header []*string `type:"list"`
+
+	// The time this classifier was last updated.
+	LastUpdated *time.Time `type:"timestamp"`
+
+	// The name of the classifier.
+	//
+	// Name is a required field
+	Name *string `min:"1" type:"string" required:"true"`
+
+	// A custom symbol to denote what combines content into a single column value.
+	// Must be different from the column delimiter.
+	QuoteSymbol *string `min:"1" type:"string"`
+
+	// The version of this classifier.
+	Version *int64 `type:"long"`
+}
+
+// String returns the string representation
+func (s CsvClassifier) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CsvClassifier) GoString() string {
+	return s.String()
+}
+
+// SetAllowSingleColumn sets the AllowSingleColumn field's value.
+func (s *CsvClassifier) SetAllowSingleColumn(v bool) *CsvClassifier {
+	s.AllowSingleColumn = &v
+	return s
+}
+
+// SetContainsHeader sets the ContainsHeader field's value.
+func (s *CsvClassifier) SetContainsHeader(v string) *CsvClassifier {
+	s.ContainsHeader = &v
+	return s
+}
+
+// SetCreationTime sets the CreationTime field's value.
+func (s *CsvClassifier) SetCreationTime(v time.Time) *CsvClassifier {
+	s.CreationTime = &v
+	return s
+}
+
+// SetDelimiter sets the Delimiter field's value.
+func (s *CsvClassifier) SetDelimiter(v string) *CsvClassifier {
+	s.Delimiter = &v
+	return s
+}
+
+// SetDisableValueTrimming sets the DisableValueTrimming field's value.
+func (s *CsvClassifier) SetDisableValueTrimming(v bool) *CsvClassifier {
+	s.DisableValueTrimming = &v
+	return s
+}
+
+// SetHeader sets the Header field's value.
+func (s *CsvClassifier) SetHeader(v []*string) *CsvClassifier {
+	s.Header = v
+	return s
+}
+
+// SetLastUpdated sets the LastUpdated field's value.
+func (s *CsvClassifier) SetLastUpdated(v time.Time) *CsvClassifier {
+	s.LastUpdated = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *CsvClassifier) SetName(v string) *CsvClassifier {
+	s.Name = &v
+	return s
+}
+
+// SetQuoteSymbol sets the QuoteSymbol field's value.
+func (s *CsvClassifier) SetQuoteSymbol(v string) *CsvClassifier {
+	s.QuoteSymbol = &v
+	return s
+}
+
+// SetVersion sets the Version field's value.
+func (s *CsvClassifier) SetVersion(v int64) *CsvClassifier {
+	s.Version = &v
 	return s
 }
 
@@ -15081,6 +15370,12 @@ func (s DeleteUserDefinedFunctionOutput) GoString() string {
 type DevEndpoint struct {
 	_ struct{} `type:"structure"`
 
+	// A map of arguments used to configure the DevEndpoint.
+	//
+	// Note that currently, we only support "--enable-glue-datacatalog": "" as a
+	// valid argument.
+	Arguments map[string]*string `type:"map"`
+
 	// The AWS availability zone where this DevEndpoint is located.
 	AvailabilityZone *string `type:"string"`
 
@@ -15175,6 +15470,12 @@ func (s DevEndpoint) String() string {
 // GoString returns the string representation
 func (s DevEndpoint) GoString() string {
 	return s.String()
+}
+
+// SetArguments sets the Arguments field's value.
+func (s *DevEndpoint) SetArguments(v map[string]*string) *DevEndpoint {
+	s.Arguments = v
+	return s
 }
 
 // SetAvailabilityZone sets the AvailabilityZone field's value.
@@ -18827,6 +19128,8 @@ type Job struct {
 	// consists of 4 vCPUs of compute capacity and 16 GB of memory. For more information,
 	// see the AWS Glue pricing page (https://aws.amazon.com/glue/pricing/).
 	//
+	// Do not set Max Capacity if using WorkerType and NumberOfWorkers.
+	//
 	// The value that can be allocated for MaxCapacity depends on whether you are
 	// running a python shell job, or an Apache Spark ETL job:
 	//
@@ -18847,6 +19150,13 @@ type Job struct {
 	// Specifies configuration properties of a job notification.
 	NotificationProperty *NotificationProperty `type:"structure"`
 
+	// The number of workers of a defined workerType that are allocated when a job
+	// runs.
+	//
+	// The maximum number of workers you can define are 299 for G.1X, and 149 for
+	// G.2X.
+	NumberOfWorkers *int64 `type:"integer"`
+
 	// The name or ARN of the IAM role associated with this job.
 	Role *string `type:"string"`
 
@@ -18857,6 +19167,19 @@ type Job struct {
 	// resources before it is terminated and enters TIMEOUT status. The default
 	// is 2,880 minutes (48 hours).
 	Timeout *int64 `min:"1" type:"integer"`
+
+	// The type of predefined worker that is allocated when a job runs. Accepts
+	// a value of Standard, G.1X, or G.2X.
+	//
+	//    * For the Standard worker type, each worker provides 4 vCPU, 16 GB of
+	//    memory and a 50GB disk, and 2 executors per worker.
+	//
+	//    * For the G.1X worker type, each worker provides 4 vCPU, 16 GB of memory
+	//    and a 64GB disk, and 1 executor per worker.
+	//
+	//    * For the G.2X worker type, each worker provides 8 vCPU, 32 GB of memory
+	//    and a 128GB disk, and 1 executor per worker.
+	WorkerType *string `type:"string" enum:"WorkerType"`
 }
 
 // String returns the string representation
@@ -18947,6 +19270,12 @@ func (s *Job) SetNotificationProperty(v *NotificationProperty) *Job {
 	return s
 }
 
+// SetNumberOfWorkers sets the NumberOfWorkers field's value.
+func (s *Job) SetNumberOfWorkers(v int64) *Job {
+	s.NumberOfWorkers = &v
+	return s
+}
+
 // SetRole sets the Role field's value.
 func (s *Job) SetRole(v string) *Job {
 	s.Role = &v
@@ -18962,6 +19291,12 @@ func (s *Job) SetSecurityConfiguration(v string) *Job {
 // SetTimeout sets the Timeout field's value.
 func (s *Job) SetTimeout(v int64) *Job {
 	s.Timeout = &v
+	return s
+}
+
+// SetWorkerType sets the WorkerType field's value.
+func (s *Job) SetWorkerType(v string) *Job {
+	s.WorkerType = &v
 	return s
 }
 
@@ -19158,6 +19493,8 @@ type JobRun struct {
 	// consists of 4 vCPUs of compute capacity and 16 GB of memory. For more information,
 	// see the AWS Glue pricing page (https://aws.amazon.com/glue/pricing/).
 	//
+	// Do not set Max Capacity if using WorkerType and NumberOfWorkers.
+	//
 	// The value that can be allocated for MaxCapacity depends on whether you are
 	// running a python shell job, or an Apache Spark ETL job:
 	//
@@ -19171,6 +19508,13 @@ type JobRun struct {
 
 	// Specifies configuration properties of a job run notification.
 	NotificationProperty *NotificationProperty `type:"structure"`
+
+	// The number of workers of a defined workerType that are allocated when a job
+	// runs.
+	//
+	// The maximum number of workers you can define are 299 for G.1X, and 149 for
+	// G.2X.
+	NumberOfWorkers *int64 `type:"integer"`
 
 	// A list of predecessors to this job run.
 	PredecessorRuns []*Predecessor `type:"list"`
@@ -19194,6 +19538,19 @@ type JobRun struct {
 
 	// The name of the trigger that started this job run.
 	TriggerName *string `min:"1" type:"string"`
+
+	// The type of predefined worker that is allocated when a job runs. Accepts
+	// a value of Standard, G.1X, or G.2X.
+	//
+	//    * For the Standard worker type, each worker provides 4 vCPU, 16 GB of
+	//    memory and a 50GB disk, and 2 executors per worker.
+	//
+	//    * For the G.1X worker type, each worker provides 4 vCPU, 16 GB of memory
+	//    and a 64GB disk, and 1 executor per worker.
+	//
+	//    * For the G.2X worker type, each worker provides 8 vCPU, 32 GB of memory
+	//    and a 128GB disk, and 1 executor per worker.
+	WorkerType *string `type:"string" enum:"WorkerType"`
 }
 
 // String returns the string representation
@@ -19284,6 +19641,12 @@ func (s *JobRun) SetNotificationProperty(v *NotificationProperty) *JobRun {
 	return s
 }
 
+// SetNumberOfWorkers sets the NumberOfWorkers field's value.
+func (s *JobRun) SetNumberOfWorkers(v int64) *JobRun {
+	s.NumberOfWorkers = &v
+	return s
+}
+
 // SetPredecessorRuns sets the PredecessorRuns field's value.
 func (s *JobRun) SetPredecessorRuns(v []*Predecessor) *JobRun {
 	s.PredecessorRuns = v
@@ -19317,6 +19680,12 @@ func (s *JobRun) SetTimeout(v int64) *JobRun {
 // SetTriggerName sets the TriggerName field's value.
 func (s *JobRun) SetTriggerName(v string) *JobRun {
 	s.TriggerName = &v
+	return s
+}
+
+// SetWorkerType sets the WorkerType field's value.
+func (s *JobRun) SetWorkerType(v string) *JobRun {
+	s.WorkerType = &v
 	return s
 }
 
@@ -19371,6 +19740,8 @@ type JobUpdate struct {
 	// consists of 4 vCPUs of compute capacity and 16 GB of memory. For more information,
 	// see the AWS Glue pricing page (https://aws.amazon.com/glue/pricing/).
 	//
+	// Do not set Max Capacity if using WorkerType and NumberOfWorkers.
+	//
 	// The value that can be allocated for MaxCapacity depends on whether you are
 	// running a python shell job, or an Apache Spark ETL job:
 	//
@@ -19388,6 +19759,13 @@ type JobUpdate struct {
 	// Specifies configuration properties of a job notification.
 	NotificationProperty *NotificationProperty `type:"structure"`
 
+	// The number of workers of a defined workerType that are allocated when a job
+	// runs.
+	//
+	// The maximum number of workers you can define are 299 for G.1X, and 149 for
+	// G.2X.
+	NumberOfWorkers *int64 `type:"integer"`
+
 	// The name or ARN of the IAM role associated with this job (required).
 	Role *string `type:"string"`
 
@@ -19398,6 +19776,19 @@ type JobUpdate struct {
 	// resources before it is terminated and enters TIMEOUT status. The default
 	// is 2,880 minutes (48 hours).
 	Timeout *int64 `min:"1" type:"integer"`
+
+	// The type of predefined worker that is allocated when a job runs. Accepts
+	// a value of Standard, G.1X, or G.2X.
+	//
+	//    * For the Standard worker type, each worker provides 4 vCPU, 16 GB of
+	//    memory and a 50GB disk, and 2 executors per worker.
+	//
+	//    * For the G.1X worker type, each worker provides 4 vCPU, 16 GB of memory
+	//    and a 64GB disk, and 1 executor per worker.
+	//
+	//    * For the G.2X worker type, each worker provides 8 vCPU, 32 GB of memory
+	//    and a 128GB disk, and 1 executor per worker.
+	WorkerType *string `type:"string" enum:"WorkerType"`
 }
 
 // String returns the string representation
@@ -19491,6 +19882,12 @@ func (s *JobUpdate) SetNotificationProperty(v *NotificationProperty) *JobUpdate 
 	return s
 }
 
+// SetNumberOfWorkers sets the NumberOfWorkers field's value.
+func (s *JobUpdate) SetNumberOfWorkers(v int64) *JobUpdate {
+	s.NumberOfWorkers = &v
+	return s
+}
+
 // SetRole sets the Role field's value.
 func (s *JobUpdate) SetRole(v string) *JobUpdate {
 	s.Role = &v
@@ -19506,6 +19903,12 @@ func (s *JobUpdate) SetSecurityConfiguration(v string) *JobUpdate {
 // SetTimeout sets the Timeout field's value.
 func (s *JobUpdate) SetTimeout(v int64) *JobUpdate {
 	s.Timeout = &v
+	return s
+}
+
+// SetWorkerType sets the WorkerType field's value.
+func (s *JobUpdate) SetWorkerType(v string) *JobUpdate {
+	s.WorkerType = &v
 	return s
 }
 
@@ -21396,6 +21799,8 @@ type StartJobRunInput struct {
 	// consists of 4 vCPUs of compute capacity and 16 GB of memory. For more information,
 	// see the AWS Glue pricing page (https://aws.amazon.com/glue/pricing/).
 	//
+	// Do not set Max Capacity if using WorkerType and NumberOfWorkers.
+	//
 	// The value that can be allocated for MaxCapacity depends on whether you are
 	// running a python shell job, or an Apache Spark ETL job:
 	//
@@ -21410,6 +21815,13 @@ type StartJobRunInput struct {
 	// Specifies configuration properties of a job run notification.
 	NotificationProperty *NotificationProperty `type:"structure"`
 
+	// The number of workers of a defined workerType that are allocated when a job
+	// runs.
+	//
+	// The maximum number of workers you can define are 299 for G.1X, and 149 for
+	// G.2X.
+	NumberOfWorkers *int64 `type:"integer"`
+
 	// The name of the SecurityConfiguration structure to be used with this job
 	// run.
 	SecurityConfiguration *string `min:"1" type:"string"`
@@ -21419,6 +21831,19 @@ type StartJobRunInput struct {
 	// default is 2,880 minutes (48 hours). This overrides the timeout value set
 	// in the parent job.
 	Timeout *int64 `min:"1" type:"integer"`
+
+	// The type of predefined worker that is allocated when a job runs. Accepts
+	// a value of Standard, G.1X, or G.2X.
+	//
+	//    * For the Standard worker type, each worker provides 4 vCPU, 16 GB of
+	//    memory and a 50GB disk, and 2 executors per worker.
+	//
+	//    * For the G.1X worker type, each worker provides 4 vCPU, 16 GB of memory
+	//    and a 64GB disk, and 1 executor per worker.
+	//
+	//    * For the G.2X worker type, each worker provides 8 vCPU, 32 GB of memory
+	//    and a 128GB disk, and 1 executor per worker.
+	WorkerType *string `type:"string" enum:"WorkerType"`
 }
 
 // String returns the string representation
@@ -21497,6 +21922,12 @@ func (s *StartJobRunInput) SetNotificationProperty(v *NotificationProperty) *Sta
 	return s
 }
 
+// SetNumberOfWorkers sets the NumberOfWorkers field's value.
+func (s *StartJobRunInput) SetNumberOfWorkers(v int64) *StartJobRunInput {
+	s.NumberOfWorkers = &v
+	return s
+}
+
 // SetSecurityConfiguration sets the SecurityConfiguration field's value.
 func (s *StartJobRunInput) SetSecurityConfiguration(v string) *StartJobRunInput {
 	s.SecurityConfiguration = &v
@@ -21506,6 +21937,12 @@ func (s *StartJobRunInput) SetSecurityConfiguration(v string) *StartJobRunInput 
 // SetTimeout sets the Timeout field's value.
 func (s *StartJobRunInput) SetTimeout(v int64) *StartJobRunInput {
 	s.Timeout = &v
+	return s
+}
+
+// SetWorkerType sets the WorkerType field's value.
+func (s *StartJobRunInput) SetWorkerType(v string) *StartJobRunInput {
+	s.WorkerType = &v
 	return s
 }
 
@@ -22705,6 +23142,9 @@ func (s UntagResourceOutput) GoString() string {
 type UpdateClassifierInput struct {
 	_ struct{} `type:"structure"`
 
+	// A CsvClassifier object with updated fields.
+	CsvClassifier *UpdateCsvClassifierRequest `type:"structure"`
+
 	// A GrokClassifier object with updated fields.
 	GrokClassifier *UpdateGrokClassifierRequest `type:"structure"`
 
@@ -22728,6 +23168,11 @@ func (s UpdateClassifierInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *UpdateClassifierInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "UpdateClassifierInput"}
+	if s.CsvClassifier != nil {
+		if err := s.CsvClassifier.Validate(); err != nil {
+			invalidParams.AddNested("CsvClassifier", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.GrokClassifier != nil {
 		if err := s.GrokClassifier.Validate(); err != nil {
 			invalidParams.AddNested("GrokClassifier", err.(request.ErrInvalidParams))
@@ -22748,6 +23193,12 @@ func (s *UpdateClassifierInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetCsvClassifier sets the CsvClassifier field's value.
+func (s *UpdateClassifierInput) SetCsvClassifier(v *UpdateCsvClassifierRequest) *UpdateClassifierInput {
+	s.CsvClassifier = v
+	return s
 }
 
 // SetGrokClassifier sets the GrokClassifier field's value.
@@ -23089,6 +23540,110 @@ func (s UpdateCrawlerScheduleOutput) GoString() string {
 	return s.String()
 }
 
+// Specifies a custom CSV classifier to be updated.
+type UpdateCsvClassifierRequest struct {
+	_ struct{} `type:"structure"`
+
+	// Enables the processing of files that contain only one column.
+	AllowSingleColumn *bool `type:"boolean"`
+
+	// Indicates whether the CSV file contains a header.
+	ContainsHeader *string `type:"string" enum:"CsvHeaderOption"`
+
+	// A custom symbol to denote what separates each column entry in the row.
+	Delimiter *string `min:"1" type:"string"`
+
+	// Specifies not to trim values before identifying the type of column values.
+	// The default value is true.
+	DisableValueTrimming *bool `type:"boolean"`
+
+	// A list of strings representing column names.
+	Header []*string `type:"list"`
+
+	// The name of the classifier.
+	//
+	// Name is a required field
+	Name *string `min:"1" type:"string" required:"true"`
+
+	// A custom symbol to denote what combines content into a single column value.
+	// Must be different from the column delimiter.
+	QuoteSymbol *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s UpdateCsvClassifierRequest) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateCsvClassifierRequest) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateCsvClassifierRequest) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateCsvClassifierRequest"}
+	if s.Delimiter != nil && len(*s.Delimiter) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Delimiter", 1))
+	}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
+	}
+	if s.QuoteSymbol != nil && len(*s.QuoteSymbol) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("QuoteSymbol", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAllowSingleColumn sets the AllowSingleColumn field's value.
+func (s *UpdateCsvClassifierRequest) SetAllowSingleColumn(v bool) *UpdateCsvClassifierRequest {
+	s.AllowSingleColumn = &v
+	return s
+}
+
+// SetContainsHeader sets the ContainsHeader field's value.
+func (s *UpdateCsvClassifierRequest) SetContainsHeader(v string) *UpdateCsvClassifierRequest {
+	s.ContainsHeader = &v
+	return s
+}
+
+// SetDelimiter sets the Delimiter field's value.
+func (s *UpdateCsvClassifierRequest) SetDelimiter(v string) *UpdateCsvClassifierRequest {
+	s.Delimiter = &v
+	return s
+}
+
+// SetDisableValueTrimming sets the DisableValueTrimming field's value.
+func (s *UpdateCsvClassifierRequest) SetDisableValueTrimming(v bool) *UpdateCsvClassifierRequest {
+	s.DisableValueTrimming = &v
+	return s
+}
+
+// SetHeader sets the Header field's value.
+func (s *UpdateCsvClassifierRequest) SetHeader(v []*string) *UpdateCsvClassifierRequest {
+	s.Header = v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *UpdateCsvClassifierRequest) SetName(v string) *UpdateCsvClassifierRequest {
+	s.Name = &v
+	return s
+}
+
+// SetQuoteSymbol sets the QuoteSymbol field's value.
+func (s *UpdateCsvClassifierRequest) SetQuoteSymbol(v string) *UpdateCsvClassifierRequest {
+	s.QuoteSymbol = &v
+	return s
+}
+
 type UpdateDatabaseInput struct {
 	_ struct{} `type:"structure"`
 
@@ -23181,11 +23736,18 @@ func (s UpdateDatabaseOutput) GoString() string {
 type UpdateDevEndpointInput struct {
 	_ struct{} `type:"structure"`
 
+	// The map of arguments to add the map of arguments used to configure the DevEndpoint.
+	AddArguments map[string]*string `type:"map"`
+
 	// The list of public keys for the DevEndpoint to use.
 	AddPublicKeys []*string `type:"list"`
 
 	// Custom Python or Java libraries to be loaded in the DevEndpoint.
 	CustomLibraries *DevEndpointCustomLibraries `type:"structure"`
+
+	// The list of argument keys to be deleted from the map of arguments used to
+	// configure the DevEndpoint.
+	DeleteArguments []*string `type:"list"`
 
 	// The list of public keys to be deleted from the DevEndpoint.
 	DeletePublicKeys []*string `type:"list"`
@@ -23226,6 +23788,12 @@ func (s *UpdateDevEndpointInput) Validate() error {
 	return nil
 }
 
+// SetAddArguments sets the AddArguments field's value.
+func (s *UpdateDevEndpointInput) SetAddArguments(v map[string]*string) *UpdateDevEndpointInput {
+	s.AddArguments = v
+	return s
+}
+
 // SetAddPublicKeys sets the AddPublicKeys field's value.
 func (s *UpdateDevEndpointInput) SetAddPublicKeys(v []*string) *UpdateDevEndpointInput {
 	s.AddPublicKeys = v
@@ -23235,6 +23803,12 @@ func (s *UpdateDevEndpointInput) SetAddPublicKeys(v []*string) *UpdateDevEndpoin
 // SetCustomLibraries sets the CustomLibraries field's value.
 func (s *UpdateDevEndpointInput) SetCustomLibraries(v *DevEndpointCustomLibraries) *UpdateDevEndpointInput {
 	s.CustomLibraries = v
+	return s
+}
+
+// SetDeleteArguments sets the DeleteArguments field's value.
+func (s *UpdateDevEndpointInput) SetDeleteArguments(v []*string) *UpdateDevEndpointInput {
+	s.DeleteArguments = v
 	return s
 }
 
@@ -24265,6 +24839,17 @@ const (
 )
 
 const (
+	// CsvHeaderOptionUnknown is a CsvHeaderOption enum value
+	CsvHeaderOptionUnknown = "UNKNOWN"
+
+	// CsvHeaderOptionPresent is a CsvHeaderOption enum value
+	CsvHeaderOptionPresent = "PRESENT"
+
+	// CsvHeaderOptionAbsent is a CsvHeaderOption enum value
+	CsvHeaderOptionAbsent = "ABSENT"
+)
+
+const (
 	// DeleteBehaviorLog is a DeleteBehavior enum value
 	DeleteBehaviorLog = "LOG"
 
@@ -24436,4 +25021,15 @@ const (
 
 	// UpdateBehaviorUpdateInDatabase is a UpdateBehavior enum value
 	UpdateBehaviorUpdateInDatabase = "UPDATE_IN_DATABASE"
+)
+
+const (
+	// WorkerTypeStandard is a WorkerType enum value
+	WorkerTypeStandard = "Standard"
+
+	// WorkerTypeG1x is a WorkerType enum value
+	WorkerTypeG1x = "G.1X"
+
+	// WorkerTypeG2x is a WorkerType enum value
+	WorkerTypeG2x = "G.2X"
 )

@@ -6,7 +6,7 @@ description: |-
   Provides an AWS Backup vault resource.
 ---
 
-# aws_backup_vault
+# Resource: aws_backup_vault
 
 Provides an AWS Backup vault resource.
 
@@ -14,8 +14,8 @@ Provides an AWS Backup vault resource.
 
 ```hcl
 resource "aws_backup_vault" "example" {
-	name = "example_backup_vault"
-	kms_key_arn = "${aws_kms_key.example.arn}"
+  name        = "example_backup_vault"
+  kms_key_arn = "${aws_kms_key.example.arn}"
 }
 ```
 

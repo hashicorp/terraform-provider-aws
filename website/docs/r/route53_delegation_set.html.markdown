@@ -6,7 +6,7 @@ description: |-
   Provides a Route53 Delegation Set resource.
 ---
 
-# aws_route53_delegation_set
+# Resource: aws_route53_delegation_set
 
 Provides a [Route53 Delegation Set](https://docs.aws.amazon.com/Route53/latest/APIReference/actions-on-reusable-delegation-sets.html) resource.
 

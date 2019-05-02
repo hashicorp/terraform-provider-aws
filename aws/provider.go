@@ -1,11 +1,8 @@
 package aws
 
 import (
-	"bytes"
-	"fmt"
 	"log"
 
-	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/mutexkv"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
@@ -182,6 +179,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_ec2_transit_gateway":                dataSourceAwsEc2TransitGateway(),
 			"aws_ec2_transit_gateway_route_table":    dataSourceAwsEc2TransitGatewayRouteTable(),
 			"aws_ec2_transit_gateway_vpc_attachment": dataSourceAwsEc2TransitGatewayVpcAttachment(),
+			"aws_ec2_transit_gateway_vpn_attachment": dataSourceAwsEc2TransitGatewayVpnAttachment(),
 			"aws_ecr_repository":                     dataSourceAwsEcrRepository(),
 			"aws_ecs_cluster":                        dataSourceAwsEcsCluster(),
 			"aws_ecs_container_definition":           dataSourceAwsEcsContainerDefinition(),
@@ -254,6 +252,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_storagegateway_local_disk":          dataSourceAwsStorageGatewayLocalDisk(),
 			"aws_subnet":                             dataSourceAwsSubnet(),
 			"aws_subnet_ids":                         dataSourceAwsSubnetIDs(),
+			"aws_transfer_server":                    dataSourceAwsTransferServer(),
 			"aws_vpcs":                               dataSourceAwsVpcs(),
 			"aws_security_group":                     dataSourceAwsSecurityGroup(),
 			"aws_security_groups":                    dataSourceAwsSecurityGroups(),
@@ -786,6 +785,7 @@ func Provider() terraform.ResourceProvider {
 }
 
 var descriptions map[string]string
+var endpointServiceNames []string
 
 func init() {
 	descriptions = map[string]string{
@@ -811,53 +811,7 @@ func init() {
 			"being executed. If the API request still fails, an error is\n" +
 			"thrown.",
 
-		"apigateway_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
-
-		"cloudformation_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
-
-		"cloudwatch_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
-
-		"cloudwatchevents_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
-
-		"cloudwatchlogs_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
-
-		"devicefarm_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
-
-		"dynamodb_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n" +
-			"It's typically used to connect to dynamodb-local.",
-
-		"kinesis_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n" +
-			"It's typically used to connect to kinesalite.",
-
-		"kinesis_analytics_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
-
-		"kms_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
-
-		"iam_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
-
-		"lambda_endpoint": "Use this to override the default endpoint URL constructed from the `region`\n",
-
-		"ec2_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
-
-		"autoscaling_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
-
-		"efs_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
-
-		"elb_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
-
-		"es_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
-
-		"rds_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
-
-		"s3_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
-
-		"s3control_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
-
-		"sns_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
-
-		"sqs_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
-
-		"ssm_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
+		"endpoint": "Use this to override the default service endpoint URL",
 
 		"insecure": "Explicitly allow the provider to perform \"insecure\" SSL requests. If omitted," +
 			"default value is `false`",
@@ -894,6 +848,123 @@ func init() {
 			" this policy to grant further permissions that are in excess to those of the, " +
 			" role that is being assumed.",
 	}
+
+	endpointServiceNames = []string{
+		"acm",
+		"acmpca",
+		"apigateway",
+		"applicationautoscaling",
+		"appmesh",
+		"appsync",
+		"athena",
+		"autoscaling",
+		"backup",
+		"batch",
+		"budgets",
+		"cloud9",
+		"cloudformation",
+		"cloudfront",
+		"cloudhsm",
+		"cloudsearch",
+		"cloudtrail",
+		"cloudwatch",
+		"cloudwatchevents",
+		"cloudwatchlogs",
+		"codebuild",
+		"codecommit",
+		"codedeploy",
+		"codepipeline",
+		"cognitoidentity",
+		"cognitoidp",
+		"configservice",
+		"cur",
+		"datapipeline",
+		"datasync",
+		"dax",
+		"devicefarm",
+		"directconnect",
+		"dlm",
+		"dms",
+		"docdb",
+		"ds",
+		"dynamodb",
+		"ec2",
+		"ecr",
+		"ecs",
+		"efs",
+		"eks",
+		"elasticache",
+		"elasticbeanstalk",
+		"elastictranscoder",
+		"elb",
+		"emr",
+		"es",
+		"firehose",
+		"fms",
+		"fsx",
+		"gamelift",
+		"glacier",
+		"globalaccelerator",
+		"glue",
+		"guardduty",
+		"iam",
+		"inspector",
+		"iot",
+		"kafka",
+		"kinesis_analytics",
+		"kinesis",
+		"kinesisanalytics",
+		"kinesisvideo",
+		"kms",
+		"lambda",
+		"lexmodels",
+		"licensemanager",
+		"lightsail",
+		"macie",
+		"mediaconnect",
+		"mediaconvert",
+		"medialive",
+		"mediapackage",
+		"mediastore",
+		"mediastoredata",
+		"mq",
+		"neptune",
+		"opsworks",
+		"organizations",
+		"pinpoint",
+		"pricing",
+		"quicksight",
+		"r53",
+		"ram",
+		"rds",
+		"redshift",
+		"resourcegroups",
+		"route53",
+		"route53resolver",
+		"s3",
+		"s3control",
+		"sagemaker",
+		"sdb",
+		"secretsmanager",
+		"securityhub",
+		"serverlessrepo",
+		"servicecatalog",
+		"servicediscovery",
+		"ses",
+		"shield",
+		"sns",
+		"sqs",
+		"ssm",
+		"stepfunctions",
+		"storagegateway",
+		"sts",
+		"swf",
+		"transfer",
+		"waf",
+		"wafregional",
+		"worklink",
+		"workspaces",
+	}
 }
 
 func providerConfigure(d *schema.ResourceData) (interface{}, error) {
@@ -903,6 +974,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		Profile:                 d.Get("profile").(string),
 		Token:                   d.Get("token").(string),
 		Region:                  d.Get("region").(string),
+		Endpoints:               make(map[string]string),
 		MaxRetries:              d.Get("max_retries").(int),
 		Insecure:                d.Get("insecure").(bool),
 		SkipCredsValidation:     d.Get("skip_credentials_validation").(bool),
@@ -941,34 +1013,9 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 
 	for _, endpointsSetI := range endpointsSet.List() {
 		endpoints := endpointsSetI.(map[string]interface{})
-		config.AcmEndpoint = endpoints["acm"].(string)
-		config.ApigatewayEndpoint = endpoints["apigateway"].(string)
-		config.CloudFormationEndpoint = endpoints["cloudformation"].(string)
-		config.CloudWatchEndpoint = endpoints["cloudwatch"].(string)
-		config.CloudWatchEventsEndpoint = endpoints["cloudwatchevents"].(string)
-		config.CloudWatchLogsEndpoint = endpoints["cloudwatchlogs"].(string)
-		config.DeviceFarmEndpoint = endpoints["devicefarm"].(string)
-		config.DynamoDBEndpoint = endpoints["dynamodb"].(string)
-		config.Ec2Endpoint = endpoints["ec2"].(string)
-		config.AutoscalingEndpoint = endpoints["autoscaling"].(string)
-		config.EcrEndpoint = endpoints["ecr"].(string)
-		config.EcsEndpoint = endpoints["ecs"].(string)
-		config.EfsEndpoint = endpoints["efs"].(string)
-		config.ElbEndpoint = endpoints["elb"].(string)
-		config.EsEndpoint = endpoints["es"].(string)
-		config.IamEndpoint = endpoints["iam"].(string)
-		config.KinesisEndpoint = endpoints["kinesis"].(string)
-		config.KinesisAnalyticsEndpoint = endpoints["kinesis_analytics"].(string)
-		config.KmsEndpoint = endpoints["kms"].(string)
-		config.LambdaEndpoint = endpoints["lambda"].(string)
-		config.R53Endpoint = endpoints["r53"].(string)
-		config.RdsEndpoint = endpoints["rds"].(string)
-		config.S3Endpoint = endpoints["s3"].(string)
-		config.S3ControlEndpoint = endpoints["s3control"].(string)
-		config.SnsEndpoint = endpoints["sns"].(string)
-		config.SqsEndpoint = endpoints["sqs"].(string)
-		config.StsEndpoint = endpoints["sts"].(string)
-		config.SsmEndpoint = endpoints["ssm"].(string)
+		for _, endpointServiceName := range endpointServiceNames {
+			config.Endpoints[endpointServiceName] = endpoints[endpointServiceName].(string)
+		}
 	}
 
 	if v, ok := d.GetOk("allowed_account_ids"); ok {
@@ -1025,213 +1072,26 @@ func assumeRoleSchema() *schema.Schema {
 }
 
 func endpointsSchema() *schema.Schema {
+	endpointsAttributes := make(map[string]*schema.Schema)
+
+	for _, endpointServiceName := range endpointServiceNames {
+		endpointsAttributes[endpointServiceName] = &schema.Schema{
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "",
+			Description: descriptions["endpoint"],
+		}
+	}
+
+	// Since the endpoints attribute is a TypeSet we cannot use ConflictsWith
+	endpointsAttributes["kinesis_analytics"].Deprecated = "use `endpoints` configuration block `kinesisanalytics` argument instead"
+	endpointsAttributes["r53"].Deprecated = "use `endpoints` configuration block `route53` argument instead"
+
 	return &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,
 		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"acm": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Default:     "",
-					Description: descriptions["acm_endpoint"],
-				},
-				"apigateway": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Default:     "",
-					Description: descriptions["apigateway_endpoint"],
-				},
-				"cloudwatch": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Default:     "",
-					Description: descriptions["cloudwatch_endpoint"],
-				},
-				"cloudwatchevents": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Default:     "",
-					Description: descriptions["cloudwatchevents_endpoint"],
-				},
-				"cloudwatchlogs": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Default:     "",
-					Description: descriptions["cloudwatchlogs_endpoint"],
-				},
-				"cloudformation": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Default:     "",
-					Description: descriptions["cloudformation_endpoint"],
-				},
-				"devicefarm": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Default:     "",
-					Description: descriptions["devicefarm_endpoint"],
-				},
-				"dynamodb": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Default:     "",
-					Description: descriptions["dynamodb_endpoint"],
-				},
-				"iam": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Default:     "",
-					Description: descriptions["iam_endpoint"],
-				},
-
-				"ec2": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Default:     "",
-					Description: descriptions["ec2_endpoint"],
-				},
-
-				"autoscaling": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Default:     "",
-					Description: descriptions["autoscaling_endpoint"],
-				},
-
-				"ecr": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Default:     "",
-					Description: descriptions["ecr_endpoint"],
-				},
-
-				"ecs": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Default:     "",
-					Description: descriptions["ecs_endpoint"],
-				},
-
-				"efs": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Default:     "",
-					Description: descriptions["efs_endpoint"],
-				},
-
-				"elb": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Default:     "",
-					Description: descriptions["elb_endpoint"],
-				},
-				"es": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Default:     "",
-					Description: descriptions["es_endpoint"],
-				},
-				"kinesis": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Default:     "",
-					Description: descriptions["kinesis_endpoint"],
-				},
-				"kinesis_analytics": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Default:     "",
-					Description: descriptions["kinesis_analytics_endpoint"],
-				},
-				"kms": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Default:     "",
-					Description: descriptions["kms_endpoint"],
-				},
-				"lambda": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Default:     "",
-					Description: descriptions["lambda_endpoint"],
-				},
-				"r53": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Default:     "",
-					Description: descriptions["r53_endpoint"],
-				},
-				"rds": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Default:     "",
-					Description: descriptions["rds_endpoint"],
-				},
-				"s3": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Default:     "",
-					Description: descriptions["s3_endpoint"],
-				},
-				"s3control": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Default:     "",
-					Description: descriptions["s3control_endpoint"],
-				},
-				"sns": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Default:     "",
-					Description: descriptions["sns_endpoint"],
-				},
-				"sqs": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Default:     "",
-					Description: descriptions["sqs_endpoint"],
-				},
-				"sts": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Default:     "",
-					Description: descriptions["sts_endpoint"],
-				},
-				"ssm": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Default:     "",
-					Description: descriptions["ssm_endpoint"],
-				},
-			},
+			Schema: endpointsAttributes,
 		},
-		Set: endpointsToHash,
 	}
-}
-
-func endpointsToHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	buf.WriteString(fmt.Sprintf("%s-", m["apigateway"].(string)))
-	buf.WriteString(fmt.Sprintf("%s-", m["cloudwatch"].(string)))
-	buf.WriteString(fmt.Sprintf("%s-", m["cloudwatchevents"].(string)))
-	buf.WriteString(fmt.Sprintf("%s-", m["cloudwatchlogs"].(string)))
-	buf.WriteString(fmt.Sprintf("%s-", m["cloudformation"].(string)))
-	buf.WriteString(fmt.Sprintf("%s-", m["devicefarm"].(string)))
-	buf.WriteString(fmt.Sprintf("%s-", m["dynamodb"].(string)))
-	buf.WriteString(fmt.Sprintf("%s-", m["iam"].(string)))
-	buf.WriteString(fmt.Sprintf("%s-", m["ec2"].(string)))
-	buf.WriteString(fmt.Sprintf("%s-", m["autoscaling"].(string)))
-	buf.WriteString(fmt.Sprintf("%s-", m["efs"].(string)))
-	buf.WriteString(fmt.Sprintf("%s-", m["elb"].(string)))
-	buf.WriteString(fmt.Sprintf("%s-", m["kinesis"].(string)))
-	buf.WriteString(fmt.Sprintf("%s-", m["kms"].(string)))
-	buf.WriteString(fmt.Sprintf("%s-", m["lambda"].(string)))
-	buf.WriteString(fmt.Sprintf("%s-", m["rds"].(string)))
-	buf.WriteString(fmt.Sprintf("%s-", m["s3"].(string)))
-	buf.WriteString(fmt.Sprintf("%s-", m["sns"].(string)))
-	buf.WriteString(fmt.Sprintf("%s-", m["sqs"].(string)))
-
-	return hashcode.String(buf.String())
 }

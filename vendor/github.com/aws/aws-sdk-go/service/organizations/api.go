@@ -235,8 +235,8 @@ func (c *Organizations) AcceptHandshakeRequest(input *AcceptHandshakeInput) (req
 //
 //   * ErrCodeAccessDeniedForDependencyException "AccessDeniedForDependencyException"
 //   The operation that you attempted requires you to have the iam:CreateServiceLinkedRole
-//   so that AWS Organizations can create the required service-linked role. You
-//   don't have that permission.
+//   for organizations.amazonaws.com permission so that AWS Organizations can
+//   create the required service-linked role. You don't have that permission.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/AcceptHandshake
 func (c *Organizations) AcceptHandshake(input *AcceptHandshakeInput) (*AcceptHandshakeOutput, error) {
@@ -371,7 +371,7 @@ func (c *Organizations) AttachPolicyRequest(input *AttachPolicyInput) (req *requ
 //
 //   * ErrCodeConstraintViolationException "ConstraintViolationException"
 //   Performing this operation violates a minimum or maximum value limit. For
-//   example, attempting to removing the last service control policy (SCP) from
+//   example, attempting to remove the last service control policy (SCP) from
 //   an OU or root, inviting or creating too many accounts to the organization,
 //   or attaching too many policies to an account, OU, or root. This exception
 //   includes a reason that contains additional information about the violated
@@ -382,7 +382,7 @@ func (c *Organizations) AttachPolicyRequest(input *AttachPolicyInput) (req *requ
 //
 //      * ACCOUNT_NUMBER_LIMIT_EXCEEDED: You attempted to exceed the limit on
 //      the number of accounts in an organization. If you need more accounts,
-//      contactAWS Support (https://console.aws.amazon.com/support/home#/) to
+//      contact AWS Support (https://console.aws.amazon.com/support/home#/) to
 //      request an increase in your limit.
 //
 //   Or the number of invitations that you tried to send would cause you to exceed
@@ -435,14 +435,14 @@ func (c *Organizations) AttachPolicyRequest(input *AttachPolicyInput) (req *requ
 //      in the AWS Organizations User Guide.
 //
 //      * MASTER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To create an organization
-//      with this master account, you first must associate a payment instrument,
+//      with this master account, you first must associate a valid payment instrument,
 //      such as a credit card, with the account. Follow the steps at To leave
 //      an organization when all required account information has not yet been
 //      provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
 //      in the AWS Organizations User Guide.
 //
 //      * MEMBER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To complete this operation
-//      with this member account, you first must associate a payment instrument,
+//      with this member account, you first must associate a valid payment instrument,
 //      such as a credit card, with the account. Follow the steps at To leave
 //      an organization when all required account information has not yet been
 //      provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
@@ -461,6 +461,11 @@ func (c *Organizations) AttachPolicyRequest(input *AttachPolicyInput) (req *requ
 //      * MASTER_ACCOUNT_MISSING_CONTACT_INFO: To complete this operation, you
 //      must first provide contact a valid address and phone number for the master
 //      account. Then try the operation again.
+//
+//      * MASTER_ACCOUNT_NOT_GOVCLOUD_ENABLED: To complete this operation, the
+//      master account must have an associated account in the AWS GovCloud (US-West)
+//      Region. For more information, see AWS Organizations (http://docs.aws.amazon.com/govcloud-us/latest/UserGuide/govcloud-organizations.html)
+//      in the AWS GovCloud User Guide.
 //
 //   * ErrCodeDuplicatePolicyAttachmentException "DuplicatePolicyAttachmentException"
 //   The selected policy is already attached to the specified target.
@@ -878,7 +883,7 @@ func (c *Organizations) CreateAccountRequest(input *CreateAccountInput) (req *re
 //
 //   * ErrCodeConstraintViolationException "ConstraintViolationException"
 //   Performing this operation violates a minimum or maximum value limit. For
-//   example, attempting to removing the last service control policy (SCP) from
+//   example, attempting to remove the last service control policy (SCP) from
 //   an OU or root, inviting or creating too many accounts to the organization,
 //   or attaching too many policies to an account, OU, or root. This exception
 //   includes a reason that contains additional information about the violated
@@ -889,7 +894,7 @@ func (c *Organizations) CreateAccountRequest(input *CreateAccountInput) (req *re
 //
 //      * ACCOUNT_NUMBER_LIMIT_EXCEEDED: You attempted to exceed the limit on
 //      the number of accounts in an organization. If you need more accounts,
-//      contactAWS Support (https://console.aws.amazon.com/support/home#/) to
+//      contact AWS Support (https://console.aws.amazon.com/support/home#/) to
 //      request an increase in your limit.
 //
 //   Or the number of invitations that you tried to send would cause you to exceed
@@ -942,14 +947,14 @@ func (c *Organizations) CreateAccountRequest(input *CreateAccountInput) (req *re
 //      in the AWS Organizations User Guide.
 //
 //      * MASTER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To create an organization
-//      with this master account, you first must associate a payment instrument,
+//      with this master account, you first must associate a valid payment instrument,
 //      such as a credit card, with the account. Follow the steps at To leave
 //      an organization when all required account information has not yet been
 //      provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
 //      in the AWS Organizations User Guide.
 //
 //      * MEMBER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To complete this operation
-//      with this member account, you first must associate a payment instrument,
+//      with this member account, you first must associate a valid payment instrument,
 //      such as a credit card, with the account. Follow the steps at To leave
 //      an organization when all required account information has not yet been
 //      provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
@@ -968,6 +973,11 @@ func (c *Organizations) CreateAccountRequest(input *CreateAccountInput) (req *re
 //      * MASTER_ACCOUNT_MISSING_CONTACT_INFO: To complete this operation, you
 //      must first provide contact a valid address and phone number for the master
 //      account. Then try the operation again.
+//
+//      * MASTER_ACCOUNT_NOT_GOVCLOUD_ENABLED: To complete this operation, the
+//      master account must have an associated account in the AWS GovCloud (US-West)
+//      Region. For more information, see AWS Organizations (http://docs.aws.amazon.com/govcloud-us/latest/UserGuide/govcloud-organizations.html)
+//      in the AWS GovCloud User Guide.
 //
 //   * ErrCodeInvalidInputException "InvalidInputException"
 //   The requested operation failed because you provided invalid values for one
@@ -1046,6 +1056,9 @@ func (c *Organizations) CreateAccountRequest(input *CreateAccountInput) (req *re
 //   (https://docs.aws.amazon.com/organizations/latest/userguide/orgs_reference_limits.html)
 //   in the AWS Organizations User Guide.
 //
+//   * ErrCodeUnsupportedAPIEndpointException "UnsupportedAPIEndpointException"
+//   This action isn't available in the current Region.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/CreateAccount
 func (c *Organizations) CreateAccount(input *CreateAccountInput) (*CreateAccountOutput, error) {
 	req, out := c.CreateAccountRequest(input)
@@ -1063,6 +1076,371 @@ func (c *Organizations) CreateAccount(input *CreateAccountInput) (*CreateAccount
 // for more information on using Contexts.
 func (c *Organizations) CreateAccountWithContext(ctx aws.Context, input *CreateAccountInput, opts ...request.Option) (*CreateAccountOutput, error) {
 	req, out := c.CreateAccountRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opCreateGovCloudAccount = "CreateGovCloudAccount"
+
+// CreateGovCloudAccountRequest generates a "aws/request.Request" representing the
+// client's request for the CreateGovCloudAccount operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateGovCloudAccount for more information on using the CreateGovCloudAccount
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateGovCloudAccountRequest method.
+//    req, resp := client.CreateGovCloudAccountRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/CreateGovCloudAccount
+func (c *Organizations) CreateGovCloudAccountRequest(input *CreateGovCloudAccountInput) (req *request.Request, output *CreateGovCloudAccountOutput) {
+	op := &request.Operation{
+		Name:       opCreateGovCloudAccount,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &CreateGovCloudAccountInput{}
+	}
+
+	output = &CreateGovCloudAccountOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateGovCloudAccount API operation for AWS Organizations.
+//
+// This action is available if all of the following are true:
+//
+//    * You are authorized to create accounts in the AWS GovCloud (US) Region.
+//    For more information on the AWS GovCloud (US) Region, see the AWS GovCloud
+//    User Guide (http://docs.aws.amazon.com/govcloud-us/latest/UserGuide/welcome.html).
+//
+//    * You already have an account in the AWS GovCloud (US) Region that is
+//    associated with your master account in the commercial Region.
+//
+//    * You call this action from the master account of your organization in
+//    the commercial Region.
+//
+//    * You have the organizations:CreateGovCloudAccount permission. AWS Organizations
+//    creates the required service-linked role named AWSServiceRoleForOrganizations.
+//    For more information, see AWS Organizations and Service-Linked Roles (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_integrate_services.html#orgs_integrate_services-using_slrs)
+//    in the AWS Organizations User Guide.
+//
+// AWS automatically enables AWS CloudTrail for AWS GovCloud (US) accounts,
+// but you should also do the following:
+//
+//    * Verify that AWS CloudTrail is enabled to store logs.
+//
+//    * Create an S3 bucket for AWS CloudTrail log storage.
+//
+// For more information, see Verifying AWS CloudTrail Is Enabled (http://docs.aws.amazon.com/govcloud-us/latest/UserGuide/verifying-cloudtrail.html)
+//    in the AWS GovCloud User Guide.
+//
+// You call this action from the master account of your organization in the
+// commercial Region to create a standalone AWS account in the AWS GovCloud
+// (US) Region. After the account is created, the master account of an organization
+// in the AWS GovCloud (US) Region can invite it to that organization. For more
+// information on inviting standalone accounts in the AWS GovCloud (US) to join
+// an organization, see AWS Organizations (http://docs.aws.amazon.com/govcloud-us/latest/UserGuide/govcloud-organizations.html)
+// in the AWS GovCloud User Guide.
+//
+// Calling CreateGovCloudAccount is an asynchronous request that AWS performs
+// in the background. Because CreateGovCloudAccount operates asynchronously,
+// it can return a successful completion message even though account initialization
+// might still be in progress. You might need to wait a few minutes before you
+// can successfully access the account. To check the status of the request,
+// do one of the following:
+//
+//    * Use the OperationId response element from this operation to provide
+//    as a parameter to the DescribeCreateAccountStatus operation.
+//
+//    * Check the AWS CloudTrail log for the CreateAccountResult event. For
+//    information on using AWS CloudTrail with Organizations, see Monitoring
+//    the Activity in Your Organization (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_monitoring.html)
+//    in the AWS Organizations User Guide.
+//
+// When you call the CreateGovCloudAccountaction, you create two accounts: a standalone account in the AWS GovCloud
+// (US) Region and an associated account in the commercial Region for billing
+// and support purposes. The account in the commercial Region is automatically
+// a member of the organization whose credentials made the request. Both accounts
+// are associated with the same email address.
+//
+// A role is created in the new account in the commercial Region that allows
+// the master account in the organization in the commercial Region to assume
+// it. An AWS GovCloud (US) account is then created and associated with the
+// commercial account that you just created. A role is created in the new AWS
+// GovCloud (US) account that can be assumed by the AWS GovCloud (US) account
+// that is associated with the master account of the commercial organization.
+// For more information and to view a diagram that explains how account access
+// works, see AWS Organizations (http://docs.aws.amazon.com/govcloud-us/latest/UserGuide/govcloud-organizations.html)in the AWS GovCloud User Guide.
+//
+// For more information about creating accounts, see Creating an AWS Account
+// in Your Organization (https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_create.html)in the AWS Organizations User Guide.
+//
+// When you create an account in an organization using the AWS Organizations
+// console, API, or CLI commands, the information required for the account to
+// operate as a standalone account, such as a payment method and signing the
+// end user license agreement (EULA) is not automatically collected. If you
+// must remove an account from your organization later, you can do so only after
+// you provide the missing information. Follow the steps at  To leave an organization
+// as a member account (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
+// in the AWS Organizations User Guide.
+//
+// If you get an exception that indicates that you exceeded your account limits
+// for the organization, contact AWS Support (https://console.aws.amazon.com/support/home#/).
+//
+// If you get an exception that indicates that the operation failed because
+// your organization is still initializing, wait one hour and then try again.
+// If the error persists, contact AWS Support (https://console.aws.amazon.com/support/home#/).
+//
+// Using CreateGovCloudAccount to create multiple temporary accounts isn't recommended.
+// You can only close an account from the AWS Billing and Cost Management console,
+// and you must be signed in as the root user. For information on the requirements
+// and process for closing an account, see Closing an AWS Account (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_close.html)
+// in the AWS Organizations User Guide.
+//
+// When you create a member account with this operation, you can choose whether
+// to create the account with the IAM User and Role Access to Billing Information
+// switch enabled. If you enable it, IAM users and roles that have appropriate
+// permissions can view billing information for the account. If you disable
+// it, only the account root user can access billing information. For information
+// about how to disable this switch for an account, see Granting Access to Your
+// Billing Information and Tools (https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/grantaccess.html).
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Organizations's
+// API operation CreateGovCloudAccount for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   You don't have permissions to perform the requested operation. The user or
+//   role that is making the request must have at least one IAM permissions policy
+//   attached that grants the required permissions. For more information, see
+//   Access Management (https://docs.aws.amazon.com/IAM/latest/UserGuide/access.html)
+//   in the IAM User Guide.
+//
+//   * ErrCodeAWSOrganizationsNotInUseException "AWSOrganizationsNotInUseException"
+//   Your account isn't a member of an organization. To make this request, you
+//   must use the credentials of an account that belongs to an organization.
+//
+//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   The target of the operation is currently being modified by a different request.
+//   Try again later.
+//
+//   * ErrCodeConstraintViolationException "ConstraintViolationException"
+//   Performing this operation violates a minimum or maximum value limit. For
+//   example, attempting to remove the last service control policy (SCP) from
+//   an OU or root, inviting or creating too many accounts to the organization,
+//   or attaching too many policies to an account, OU, or root. This exception
+//   includes a reason that contains additional information about the violated
+//   limit.
+//
+//   Some of the reasons in the following list might not be applicable to this
+//   specific API or operation:
+//
+//      * ACCOUNT_NUMBER_LIMIT_EXCEEDED: You attempted to exceed the limit on
+//      the number of accounts in an organization. If you need more accounts,
+//      contact AWS Support (https://console.aws.amazon.com/support/home#/) to
+//      request an increase in your limit.
+//
+//   Or the number of invitations that you tried to send would cause you to exceed
+//      the limit of accounts in your organization. Send fewer invitations or
+//      contact AWS Support to request an increase in the number of accounts.
+//
+//   Deleted and closed accounts still count toward your limit.
+//
+//   If you get receive this exception when running a command immediately after
+//      creating the organization, wait one hour and try again. If after an hour
+//      it continues to fail with this error, contact AWS Support (https://console.aws.amazon.com/support/home#/).
+//
+//      * HANDSHAKE_RATE_LIMIT_EXCEEDED: You attempted to exceed the number of
+//      handshakes that you can send in one day.
+//
+//      * OU_NUMBER_LIMIT_EXCEEDED: You attempted to exceed the number of OUs
+//      that you can have in an organization.
+//
+//      * OU_DEPTH_LIMIT_EXCEEDED: You attempted to create an OU tree that is
+//      too many levels deep.
+//
+//      * ORGANIZATION_NOT_IN_ALL_FEATURES_MODE: You attempted to perform an operation
+//      that requires the organization to be configured to support all features.
+//      An organization that supports only consolidated billing features can't
+//      perform this operation.
+//
+//      * POLICY_NUMBER_LIMIT_EXCEEDED. You attempted to exceed the number of
+//      policies that you can have in an organization.
+//
+//      * MAX_POLICY_TYPE_ATTACHMENT_LIMIT_EXCEEDED: You attempted to exceed the
+//      number of policies of a certain type that can be attached to an entity
+//      at one time.
+//
+//      * MIN_POLICY_TYPE_ATTACHMENT_LIMIT_EXCEEDED: You attempted to detach a
+//      policy from an entity that would cause the entity to have fewer than the
+//      minimum number of policies of a certain type required.
+//
+//      * ACCOUNT_CANNOT_LEAVE_WITHOUT_EULA: You attempted to remove an account
+//      from the organization that doesn't yet have enough information to exist
+//      as a standalone account. This account requires you to first agree to the
+//      AWS Customer Agreement. Follow the steps at To leave an organization when
+//      all required account information has not yet been provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
+//      in the AWS Organizations User Guide.
+//
+//      * ACCOUNT_CANNOT_LEAVE_WITHOUT_PHONE_VERIFICATION: You attempted to remove
+//      an account from the organization that doesn't yet have enough information
+//      to exist as a standalone account. This account requires you to first complete
+//      phone verification. Follow the steps at To leave an organization when
+//      all required account information has not yet been provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
+//      in the AWS Organizations User Guide.
+//
+//      * MASTER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To create an organization
+//      with this master account, you first must associate a valid payment instrument,
+//      such as a credit card, with the account. Follow the steps at To leave
+//      an organization when all required account information has not yet been
+//      provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
+//      in the AWS Organizations User Guide.
+//
+//      * MEMBER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To complete this operation
+//      with this member account, you first must associate a valid payment instrument,
+//      such as a credit card, with the account. Follow the steps at To leave
+//      an organization when all required account information has not yet been
+//      provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
+//      in the AWS Organizations User Guide.
+//
+//      * ACCOUNT_CREATION_RATE_LIMIT_EXCEEDED: You attempted to exceed the number
+//      of accounts that you can create in one day.
+//
+//      * MASTER_ACCOUNT_ADDRESS_DOES_NOT_MATCH_MARKETPLACE: To create an account
+//      in this organization, you first must migrate the organization's master
+//      account to the marketplace that corresponds to the master account's address.
+//      For example, accounts with India addresses must be associated with the
+//      AISPL marketplace. All accounts in an organization must be associated
+//      with the same marketplace.
+//
+//      * MASTER_ACCOUNT_MISSING_CONTACT_INFO: To complete this operation, you
+//      must first provide contact a valid address and phone number for the master
+//      account. Then try the operation again.
+//
+//      * MASTER_ACCOUNT_NOT_GOVCLOUD_ENABLED: To complete this operation, the
+//      master account must have an associated account in the AWS GovCloud (US-West)
+//      Region. For more information, see AWS Organizations (http://docs.aws.amazon.com/govcloud-us/latest/UserGuide/govcloud-organizations.html)
+//      in the AWS GovCloud User Guide.
+//
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   The requested operation failed because you provided invalid values for one
+//   or more of the request parameters. This exception includes a reason that
+//   contains additional information about the violated limit:
+//
+//   Some of the reasons in the following list might not be applicable to this
+//   specific API or operation:
+//
+//      * IMMUTABLE_POLICY: You specified a policy that is managed by AWS and
+//      can't be modified.
+//
+//      * INPUT_REQUIRED: You must include a value for all required parameters.
+//
+//      * INVALID_ENUM: You specified a value that isn't valid for that parameter.
+//
+//      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
+//      characters.
+//
+//      * INVALID_LIST_MEMBER: You provided a list to a parameter that contains
+//      at least one invalid value.
+//
+//      * INVALID_PARTY_TYPE_TARGET: You specified the wrong type of entity (account,
+//      organization, or email) as a party.
+//
+//      * INVALID_PAGINATION_TOKEN: Get the value for the NextToken parameter
+//      from the response to a previous call of the operation.
+//
+//      * INVALID_PATTERN: You provided a value that doesn't match the required
+//      pattern.
+//
+//      * INVALID_PATTERN_TARGET_ID: You specified a policy target ID that doesn't
+//      match the required pattern.
+//
+//      * INVALID_ROLE_NAME: You provided a role name that isn't valid. A role
+//      name can't begin with the reserved prefix AWSServiceRoleFor.
+//
+//      * INVALID_SYNTAX_ORGANIZATION_ARN: You specified an invalid Amazon Resource
+//      Name (ARN) for the organization.
+//
+//      * INVALID_SYNTAX_POLICY_ID: You specified an invalid policy ID.
+//
+//      * MAX_FILTER_LIMIT_EXCEEDED: You can specify only one filter parameter
+//      for the operation.
+//
+//      * MAX_LENGTH_EXCEEDED: You provided a string parameter that is longer
+//      than allowed.
+//
+//      * MAX_VALUE_EXCEEDED: You provided a numeric parameter that has a larger
+//      value than allowed.
+//
+//      * MIN_LENGTH_EXCEEDED: You provided a string parameter that is shorter
+//      than allowed.
+//
+//      * MIN_VALUE_EXCEEDED: You provided a numeric parameter that has a smaller
+//      value than allowed.
+//
+//      * MOVING_ACCOUNT_BETWEEN_DIFFERENT_ROOTS: You can move an account only
+//      between entities in the same root.
+//
+//   * ErrCodeFinalizingOrganizationException "FinalizingOrganizationException"
+//   AWS Organizations couldn't perform the operation because your organization
+//   hasn't finished initializing. This can take up to an hour. Try again later.
+//   If after one hour you continue to receive this error, contact AWS Support
+//   (https://console.aws.amazon.com/support/home#/).
+//
+//   * ErrCodeServiceException "ServiceException"
+//   AWS Organizations can't complete your request because of an internal service
+//   error. Try again later.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   You've sent too many requests in too short a period of time. The limit helps
+//   protect against denial-of-service attacks. Try again later.
+//
+//   For information on limits that affect Organizations, see Limits of AWS Organizations
+//   (https://docs.aws.amazon.com/organizations/latest/userguide/orgs_reference_limits.html)
+//   in the AWS Organizations User Guide.
+//
+//   * ErrCodeUnsupportedAPIEndpointException "UnsupportedAPIEndpointException"
+//   This action isn't available in the current Region.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/CreateGovCloudAccount
+func (c *Organizations) CreateGovCloudAccount(input *CreateGovCloudAccountInput) (*CreateGovCloudAccountOutput, error) {
+	req, out := c.CreateGovCloudAccountRequest(input)
+	return out, req.Send()
+}
+
+// CreateGovCloudAccountWithContext is the same as CreateGovCloudAccount with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateGovCloudAccount for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Organizations) CreateGovCloudAccountWithContext(ctx aws.Context, input *CreateGovCloudAccountInput, opts ...request.Option) (*CreateGovCloudAccountOutput, error) {
+	req, out := c.CreateGovCloudAccountRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -1152,7 +1530,7 @@ func (c *Organizations) CreateOrganizationRequest(input *CreateOrganizationInput
 //
 //   * ErrCodeConstraintViolationException "ConstraintViolationException"
 //   Performing this operation violates a minimum or maximum value limit. For
-//   example, attempting to removing the last service control policy (SCP) from
+//   example, attempting to remove the last service control policy (SCP) from
 //   an OU or root, inviting or creating too many accounts to the organization,
 //   or attaching too many policies to an account, OU, or root. This exception
 //   includes a reason that contains additional information about the violated
@@ -1163,7 +1541,7 @@ func (c *Organizations) CreateOrganizationRequest(input *CreateOrganizationInput
 //
 //      * ACCOUNT_NUMBER_LIMIT_EXCEEDED: You attempted to exceed the limit on
 //      the number of accounts in an organization. If you need more accounts,
-//      contactAWS Support (https://console.aws.amazon.com/support/home#/) to
+//      contact AWS Support (https://console.aws.amazon.com/support/home#/) to
 //      request an increase in your limit.
 //
 //   Or the number of invitations that you tried to send would cause you to exceed
@@ -1216,14 +1594,14 @@ func (c *Organizations) CreateOrganizationRequest(input *CreateOrganizationInput
 //      in the AWS Organizations User Guide.
 //
 //      * MASTER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To create an organization
-//      with this master account, you first must associate a payment instrument,
+//      with this master account, you first must associate a valid payment instrument,
 //      such as a credit card, with the account. Follow the steps at To leave
 //      an organization when all required account information has not yet been
 //      provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
 //      in the AWS Organizations User Guide.
 //
 //      * MEMBER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To complete this operation
-//      with this member account, you first must associate a payment instrument,
+//      with this member account, you first must associate a valid payment instrument,
 //      such as a credit card, with the account. Follow the steps at To leave
 //      an organization when all required account information has not yet been
 //      provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
@@ -1242,6 +1620,11 @@ func (c *Organizations) CreateOrganizationRequest(input *CreateOrganizationInput
 //      * MASTER_ACCOUNT_MISSING_CONTACT_INFO: To complete this operation, you
 //      must first provide contact a valid address and phone number for the master
 //      account. Then try the operation again.
+//
+//      * MASTER_ACCOUNT_NOT_GOVCLOUD_ENABLED: To complete this operation, the
+//      master account must have an associated account in the AWS GovCloud (US-West)
+//      Region. For more information, see AWS Organizations (http://docs.aws.amazon.com/govcloud-us/latest/UserGuide/govcloud-organizations.html)
+//      in the AWS GovCloud User Guide.
 //
 //   * ErrCodeInvalidInputException "InvalidInputException"
 //   The requested operation failed because you provided invalid values for one
@@ -1316,8 +1699,8 @@ func (c *Organizations) CreateOrganizationRequest(input *CreateOrganizationInput
 //
 //   * ErrCodeAccessDeniedForDependencyException "AccessDeniedForDependencyException"
 //   The operation that you attempted requires you to have the iam:CreateServiceLinkedRole
-//   so that AWS Organizations can create the required service-linked role. You
-//   don't have that permission.
+//   for organizations.amazonaws.com permission so that AWS Organizations can
+//   create the required service-linked role. You don't have that permission.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/CreateOrganization
 func (c *Organizations) CreateOrganization(input *CreateOrganizationInput) (*CreateOrganizationOutput, error) {
@@ -1421,7 +1804,7 @@ func (c *Organizations) CreateOrganizationalUnitRequest(input *CreateOrganizatio
 //
 //   * ErrCodeConstraintViolationException "ConstraintViolationException"
 //   Performing this operation violates a minimum or maximum value limit. For
-//   example, attempting to removing the last service control policy (SCP) from
+//   example, attempting to remove the last service control policy (SCP) from
 //   an OU or root, inviting or creating too many accounts to the organization,
 //   or attaching too many policies to an account, OU, or root. This exception
 //   includes a reason that contains additional information about the violated
@@ -1432,7 +1815,7 @@ func (c *Organizations) CreateOrganizationalUnitRequest(input *CreateOrganizatio
 //
 //      * ACCOUNT_NUMBER_LIMIT_EXCEEDED: You attempted to exceed the limit on
 //      the number of accounts in an organization. If you need more accounts,
-//      contactAWS Support (https://console.aws.amazon.com/support/home#/) to
+//      contact AWS Support (https://console.aws.amazon.com/support/home#/) to
 //      request an increase in your limit.
 //
 //   Or the number of invitations that you tried to send would cause you to exceed
@@ -1485,14 +1868,14 @@ func (c *Organizations) CreateOrganizationalUnitRequest(input *CreateOrganizatio
 //      in the AWS Organizations User Guide.
 //
 //      * MASTER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To create an organization
-//      with this master account, you first must associate a payment instrument,
+//      with this master account, you first must associate a valid payment instrument,
 //      such as a credit card, with the account. Follow the steps at To leave
 //      an organization when all required account information has not yet been
 //      provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
 //      in the AWS Organizations User Guide.
 //
 //      * MEMBER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To complete this operation
-//      with this member account, you first must associate a payment instrument,
+//      with this member account, you first must associate a valid payment instrument,
 //      such as a credit card, with the account. Follow the steps at To leave
 //      an organization when all required account information has not yet been
 //      provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
@@ -1511,6 +1894,11 @@ func (c *Organizations) CreateOrganizationalUnitRequest(input *CreateOrganizatio
 //      * MASTER_ACCOUNT_MISSING_CONTACT_INFO: To complete this operation, you
 //      must first provide contact a valid address and phone number for the master
 //      account. Then try the operation again.
+//
+//      * MASTER_ACCOUNT_NOT_GOVCLOUD_ENABLED: To complete this operation, the
+//      master account must have an associated account in the AWS GovCloud (US-West)
+//      Region. For more information, see AWS Organizations (http://docs.aws.amazon.com/govcloud-us/latest/UserGuide/govcloud-organizations.html)
+//      in the AWS GovCloud User Guide.
 //
 //   * ErrCodeDuplicateOrganizationalUnitException "DuplicateOrganizationalUnitException"
 //   An OU with the same name already exists.
@@ -1688,7 +2076,7 @@ func (c *Organizations) CreatePolicyRequest(input *CreatePolicyInput) (req *requ
 //
 //   * ErrCodeConstraintViolationException "ConstraintViolationException"
 //   Performing this operation violates a minimum or maximum value limit. For
-//   example, attempting to removing the last service control policy (SCP) from
+//   example, attempting to remove the last service control policy (SCP) from
 //   an OU or root, inviting or creating too many accounts to the organization,
 //   or attaching too many policies to an account, OU, or root. This exception
 //   includes a reason that contains additional information about the violated
@@ -1699,7 +2087,7 @@ func (c *Organizations) CreatePolicyRequest(input *CreatePolicyInput) (req *requ
 //
 //      * ACCOUNT_NUMBER_LIMIT_EXCEEDED: You attempted to exceed the limit on
 //      the number of accounts in an organization. If you need more accounts,
-//      contactAWS Support (https://console.aws.amazon.com/support/home#/) to
+//      contact AWS Support (https://console.aws.amazon.com/support/home#/) to
 //      request an increase in your limit.
 //
 //   Or the number of invitations that you tried to send would cause you to exceed
@@ -1752,14 +2140,14 @@ func (c *Organizations) CreatePolicyRequest(input *CreatePolicyInput) (req *requ
 //      in the AWS Organizations User Guide.
 //
 //      * MASTER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To create an organization
-//      with this master account, you first must associate a payment instrument,
+//      with this master account, you first must associate a valid payment instrument,
 //      such as a credit card, with the account. Follow the steps at To leave
 //      an organization when all required account information has not yet been
 //      provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
 //      in the AWS Organizations User Guide.
 //
 //      * MEMBER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To complete this operation
-//      with this member account, you first must associate a payment instrument,
+//      with this member account, you first must associate a valid payment instrument,
 //      such as a credit card, with the account. Follow the steps at To leave
 //      an organization when all required account information has not yet been
 //      provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
@@ -1778,6 +2166,11 @@ func (c *Organizations) CreatePolicyRequest(input *CreatePolicyInput) (req *requ
 //      * MASTER_ACCOUNT_MISSING_CONTACT_INFO: To complete this operation, you
 //      must first provide contact a valid address and phone number for the master
 //      account. Then try the operation again.
+//
+//      * MASTER_ACCOUNT_NOT_GOVCLOUD_ENABLED: To complete this operation, the
+//      master account must have an associated account in the AWS GovCloud (US-West)
+//      Region. For more information, see AWS Organizations (http://docs.aws.amazon.com/govcloud-us/latest/UserGuide/govcloud-organizations.html)
+//      in the AWS GovCloud User Guide.
 //
 //   * ErrCodeDuplicatePolicyException "DuplicatePolicyException"
 //   A policy with the same name already exists.
@@ -2889,6 +3282,9 @@ func (c *Organizations) DescribeCreateAccountStatusRequest(input *DescribeCreate
 //   (https://docs.aws.amazon.com/organizations/latest/userguide/orgs_reference_limits.html)
 //   in the AWS Organizations User Guide.
 //
+//   * ErrCodeUnsupportedAPIEndpointException "UnsupportedAPIEndpointException"
+//   This action isn't available in the current Region.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/DescribeCreateAccountStatus
 func (c *Organizations) DescribeCreateAccountStatus(input *DescribeCreateAccountStatusInput) (*DescribeCreateAccountStatusOutput, error) {
 	req, out := c.DescribeCreateAccountStatusRequest(input)
@@ -3602,7 +3998,7 @@ func (c *Organizations) DetachPolicyRequest(input *DetachPolicyInput) (req *requ
 //
 //   * ErrCodeConstraintViolationException "ConstraintViolationException"
 //   Performing this operation violates a minimum or maximum value limit. For
-//   example, attempting to removing the last service control policy (SCP) from
+//   example, attempting to remove the last service control policy (SCP) from
 //   an OU or root, inviting or creating too many accounts to the organization,
 //   or attaching too many policies to an account, OU, or root. This exception
 //   includes a reason that contains additional information about the violated
@@ -3613,7 +4009,7 @@ func (c *Organizations) DetachPolicyRequest(input *DetachPolicyInput) (req *requ
 //
 //      * ACCOUNT_NUMBER_LIMIT_EXCEEDED: You attempted to exceed the limit on
 //      the number of accounts in an organization. If you need more accounts,
-//      contactAWS Support (https://console.aws.amazon.com/support/home#/) to
+//      contact AWS Support (https://console.aws.amazon.com/support/home#/) to
 //      request an increase in your limit.
 //
 //   Or the number of invitations that you tried to send would cause you to exceed
@@ -3666,14 +4062,14 @@ func (c *Organizations) DetachPolicyRequest(input *DetachPolicyInput) (req *requ
 //      in the AWS Organizations User Guide.
 //
 //      * MASTER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To create an organization
-//      with this master account, you first must associate a payment instrument,
+//      with this master account, you first must associate a valid payment instrument,
 //      such as a credit card, with the account. Follow the steps at To leave
 //      an organization when all required account information has not yet been
 //      provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
 //      in the AWS Organizations User Guide.
 //
 //      * MEMBER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To complete this operation
-//      with this member account, you first must associate a payment instrument,
+//      with this member account, you first must associate a valid payment instrument,
 //      such as a credit card, with the account. Follow the steps at To leave
 //      an organization when all required account information has not yet been
 //      provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
@@ -3692,6 +4088,11 @@ func (c *Organizations) DetachPolicyRequest(input *DetachPolicyInput) (req *requ
 //      * MASTER_ACCOUNT_MISSING_CONTACT_INFO: To complete this operation, you
 //      must first provide contact a valid address and phone number for the master
 //      account. Then try the operation again.
+//
+//      * MASTER_ACCOUNT_NOT_GOVCLOUD_ENABLED: To complete this operation, the
+//      master account must have an associated account in the AWS GovCloud (US-West)
+//      Region. For more information, see AWS Organizations (http://docs.aws.amazon.com/govcloud-us/latest/UserGuide/govcloud-organizations.html)
+//      in the AWS GovCloud User Guide.
 //
 //   * ErrCodeInvalidInputException "InvalidInputException"
 //   The requested operation failed because you provided invalid values for one
@@ -3889,7 +4290,7 @@ func (c *Organizations) DisableAWSServiceAccessRequest(input *DisableAWSServiceA
 //
 //   * ErrCodeConstraintViolationException "ConstraintViolationException"
 //   Performing this operation violates a minimum or maximum value limit. For
-//   example, attempting to removing the last service control policy (SCP) from
+//   example, attempting to remove the last service control policy (SCP) from
 //   an OU or root, inviting or creating too many accounts to the organization,
 //   or attaching too many policies to an account, OU, or root. This exception
 //   includes a reason that contains additional information about the violated
@@ -3900,7 +4301,7 @@ func (c *Organizations) DisableAWSServiceAccessRequest(input *DisableAWSServiceA
 //
 //      * ACCOUNT_NUMBER_LIMIT_EXCEEDED: You attempted to exceed the limit on
 //      the number of accounts in an organization. If you need more accounts,
-//      contactAWS Support (https://console.aws.amazon.com/support/home#/) to
+//      contact AWS Support (https://console.aws.amazon.com/support/home#/) to
 //      request an increase in your limit.
 //
 //   Or the number of invitations that you tried to send would cause you to exceed
@@ -3953,14 +4354,14 @@ func (c *Organizations) DisableAWSServiceAccessRequest(input *DisableAWSServiceA
 //      in the AWS Organizations User Guide.
 //
 //      * MASTER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To create an organization
-//      with this master account, you first must associate a payment instrument,
+//      with this master account, you first must associate a valid payment instrument,
 //      such as a credit card, with the account. Follow the steps at To leave
 //      an organization when all required account information has not yet been
 //      provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
 //      in the AWS Organizations User Guide.
 //
 //      * MEMBER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To complete this operation
-//      with this member account, you first must associate a payment instrument,
+//      with this member account, you first must associate a valid payment instrument,
 //      such as a credit card, with the account. Follow the steps at To leave
 //      an organization when all required account information has not yet been
 //      provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
@@ -3979,6 +4380,11 @@ func (c *Organizations) DisableAWSServiceAccessRequest(input *DisableAWSServiceA
 //      * MASTER_ACCOUNT_MISSING_CONTACT_INFO: To complete this operation, you
 //      must first provide contact a valid address and phone number for the master
 //      account. Then try the operation again.
+//
+//      * MASTER_ACCOUNT_NOT_GOVCLOUD_ENABLED: To complete this operation, the
+//      master account must have an associated account in the AWS GovCloud (US-West)
+//      Region. For more information, see AWS Organizations (http://docs.aws.amazon.com/govcloud-us/latest/UserGuide/govcloud-organizations.html)
+//      in the AWS GovCloud User Guide.
 //
 //   * ErrCodeInvalidInputException "InvalidInputException"
 //   The requested operation failed because you provided invalid values for one
@@ -4155,7 +4561,7 @@ func (c *Organizations) DisablePolicyTypeRequest(input *DisablePolicyTypeInput) 
 //
 //   * ErrCodeConstraintViolationException "ConstraintViolationException"
 //   Performing this operation violates a minimum or maximum value limit. For
-//   example, attempting to removing the last service control policy (SCP) from
+//   example, attempting to remove the last service control policy (SCP) from
 //   an OU or root, inviting or creating too many accounts to the organization,
 //   or attaching too many policies to an account, OU, or root. This exception
 //   includes a reason that contains additional information about the violated
@@ -4166,7 +4572,7 @@ func (c *Organizations) DisablePolicyTypeRequest(input *DisablePolicyTypeInput) 
 //
 //      * ACCOUNT_NUMBER_LIMIT_EXCEEDED: You attempted to exceed the limit on
 //      the number of accounts in an organization. If you need more accounts,
-//      contactAWS Support (https://console.aws.amazon.com/support/home#/) to
+//      contact AWS Support (https://console.aws.amazon.com/support/home#/) to
 //      request an increase in your limit.
 //
 //   Or the number of invitations that you tried to send would cause you to exceed
@@ -4219,14 +4625,14 @@ func (c *Organizations) DisablePolicyTypeRequest(input *DisablePolicyTypeInput) 
 //      in the AWS Organizations User Guide.
 //
 //      * MASTER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To create an organization
-//      with this master account, you first must associate a payment instrument,
+//      with this master account, you first must associate a valid payment instrument,
 //      such as a credit card, with the account. Follow the steps at To leave
 //      an organization when all required account information has not yet been
 //      provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
 //      in the AWS Organizations User Guide.
 //
 //      * MEMBER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To complete this operation
-//      with this member account, you first must associate a payment instrument,
+//      with this member account, you first must associate a valid payment instrument,
 //      such as a credit card, with the account. Follow the steps at To leave
 //      an organization when all required account information has not yet been
 //      provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
@@ -4245,6 +4651,11 @@ func (c *Organizations) DisablePolicyTypeRequest(input *DisablePolicyTypeInput) 
 //      * MASTER_ACCOUNT_MISSING_CONTACT_INFO: To complete this operation, you
 //      must first provide contact a valid address and phone number for the master
 //      account. Then try the operation again.
+//
+//      * MASTER_ACCOUNT_NOT_GOVCLOUD_ENABLED: To complete this operation, the
+//      master account must have an associated account in the AWS GovCloud (US-West)
+//      Region. For more information, see AWS Organizations (http://docs.aws.amazon.com/govcloud-us/latest/UserGuide/govcloud-organizations.html)
+//      in the AWS GovCloud User Guide.
 //
 //   * ErrCodeInvalidInputException "InvalidInputException"
 //   The requested operation failed because you provided invalid values for one
@@ -4440,7 +4851,7 @@ func (c *Organizations) EnableAWSServiceAccessRequest(input *EnableAWSServiceAcc
 //
 //   * ErrCodeConstraintViolationException "ConstraintViolationException"
 //   Performing this operation violates a minimum or maximum value limit. For
-//   example, attempting to removing the last service control policy (SCP) from
+//   example, attempting to remove the last service control policy (SCP) from
 //   an OU or root, inviting or creating too many accounts to the organization,
 //   or attaching too many policies to an account, OU, or root. This exception
 //   includes a reason that contains additional information about the violated
@@ -4451,7 +4862,7 @@ func (c *Organizations) EnableAWSServiceAccessRequest(input *EnableAWSServiceAcc
 //
 //      * ACCOUNT_NUMBER_LIMIT_EXCEEDED: You attempted to exceed the limit on
 //      the number of accounts in an organization. If you need more accounts,
-//      contactAWS Support (https://console.aws.amazon.com/support/home#/) to
+//      contact AWS Support (https://console.aws.amazon.com/support/home#/) to
 //      request an increase in your limit.
 //
 //   Or the number of invitations that you tried to send would cause you to exceed
@@ -4504,14 +4915,14 @@ func (c *Organizations) EnableAWSServiceAccessRequest(input *EnableAWSServiceAcc
 //      in the AWS Organizations User Guide.
 //
 //      * MASTER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To create an organization
-//      with this master account, you first must associate a payment instrument,
+//      with this master account, you first must associate a valid payment instrument,
 //      such as a credit card, with the account. Follow the steps at To leave
 //      an organization when all required account information has not yet been
 //      provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
 //      in the AWS Organizations User Guide.
 //
 //      * MEMBER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To complete this operation
-//      with this member account, you first must associate a payment instrument,
+//      with this member account, you first must associate a valid payment instrument,
 //      such as a credit card, with the account. Follow the steps at To leave
 //      an organization when all required account information has not yet been
 //      provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
@@ -4530,6 +4941,11 @@ func (c *Organizations) EnableAWSServiceAccessRequest(input *EnableAWSServiceAcc
 //      * MASTER_ACCOUNT_MISSING_CONTACT_INFO: To complete this operation, you
 //      must first provide contact a valid address and phone number for the master
 //      account. Then try the operation again.
+//
+//      * MASTER_ACCOUNT_NOT_GOVCLOUD_ENABLED: To complete this operation, the
+//      master account must have an associated account in the AWS GovCloud (US-West)
+//      Region. For more information, see AWS Organizations (http://docs.aws.amazon.com/govcloud-us/latest/UserGuide/govcloud-organizations.html)
+//      in the AWS GovCloud User Guide.
 //
 //   * ErrCodeInvalidInputException "InvalidInputException"
 //   The requested operation failed because you provided invalid values for one
@@ -4939,7 +5355,7 @@ func (c *Organizations) EnablePolicyTypeRequest(input *EnablePolicyTypeInput) (r
 //
 //   * ErrCodeConstraintViolationException "ConstraintViolationException"
 //   Performing this operation violates a minimum or maximum value limit. For
-//   example, attempting to removing the last service control policy (SCP) from
+//   example, attempting to remove the last service control policy (SCP) from
 //   an OU or root, inviting or creating too many accounts to the organization,
 //   or attaching too many policies to an account, OU, or root. This exception
 //   includes a reason that contains additional information about the violated
@@ -4950,7 +5366,7 @@ func (c *Organizations) EnablePolicyTypeRequest(input *EnablePolicyTypeInput) (r
 //
 //      * ACCOUNT_NUMBER_LIMIT_EXCEEDED: You attempted to exceed the limit on
 //      the number of accounts in an organization. If you need more accounts,
-//      contactAWS Support (https://console.aws.amazon.com/support/home#/) to
+//      contact AWS Support (https://console.aws.amazon.com/support/home#/) to
 //      request an increase in your limit.
 //
 //   Or the number of invitations that you tried to send would cause you to exceed
@@ -5003,14 +5419,14 @@ func (c *Organizations) EnablePolicyTypeRequest(input *EnablePolicyTypeInput) (r
 //      in the AWS Organizations User Guide.
 //
 //      * MASTER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To create an organization
-//      with this master account, you first must associate a payment instrument,
+//      with this master account, you first must associate a valid payment instrument,
 //      such as a credit card, with the account. Follow the steps at To leave
 //      an organization when all required account information has not yet been
 //      provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
 //      in the AWS Organizations User Guide.
 //
 //      * MEMBER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To complete this operation
-//      with this member account, you first must associate a payment instrument,
+//      with this member account, you first must associate a valid payment instrument,
 //      such as a credit card, with the account. Follow the steps at To leave
 //      an organization when all required account information has not yet been
 //      provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
@@ -5029,6 +5445,11 @@ func (c *Organizations) EnablePolicyTypeRequest(input *EnablePolicyTypeInput) (r
 //      * MASTER_ACCOUNT_MISSING_CONTACT_INFO: To complete this operation, you
 //      must first provide contact a valid address and phone number for the master
 //      account. Then try the operation again.
+//
+//      * MASTER_ACCOUNT_NOT_GOVCLOUD_ENABLED: To complete this operation, the
+//      master account must have an associated account in the AWS GovCloud (US-West)
+//      Region. For more information, see AWS Organizations (http://docs.aws.amazon.com/govcloud-us/latest/UserGuide/govcloud-organizations.html)
+//      in the AWS GovCloud User Guide.
 //
 //   * ErrCodeInvalidInputException "InvalidInputException"
 //   The requested operation failed because you provided invalid values for one
@@ -5481,7 +5902,7 @@ func (c *Organizations) LeaveOrganizationRequest(input *LeaveOrganizationInput) 
 //
 //   * ErrCodeConstraintViolationException "ConstraintViolationException"
 //   Performing this operation violates a minimum or maximum value limit. For
-//   example, attempting to removing the last service control policy (SCP) from
+//   example, attempting to remove the last service control policy (SCP) from
 //   an OU or root, inviting or creating too many accounts to the organization,
 //   or attaching too many policies to an account, OU, or root. This exception
 //   includes a reason that contains additional information about the violated
@@ -5492,7 +5913,7 @@ func (c *Organizations) LeaveOrganizationRequest(input *LeaveOrganizationInput) 
 //
 //      * ACCOUNT_NUMBER_LIMIT_EXCEEDED: You attempted to exceed the limit on
 //      the number of accounts in an organization. If you need more accounts,
-//      contactAWS Support (https://console.aws.amazon.com/support/home#/) to
+//      contact AWS Support (https://console.aws.amazon.com/support/home#/) to
 //      request an increase in your limit.
 //
 //   Or the number of invitations that you tried to send would cause you to exceed
@@ -5545,14 +5966,14 @@ func (c *Organizations) LeaveOrganizationRequest(input *LeaveOrganizationInput) 
 //      in the AWS Organizations User Guide.
 //
 //      * MASTER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To create an organization
-//      with this master account, you first must associate a payment instrument,
+//      with this master account, you first must associate a valid payment instrument,
 //      such as a credit card, with the account. Follow the steps at To leave
 //      an organization when all required account information has not yet been
 //      provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
 //      in the AWS Organizations User Guide.
 //
 //      * MEMBER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To complete this operation
-//      with this member account, you first must associate a payment instrument,
+//      with this member account, you first must associate a valid payment instrument,
 //      such as a credit card, with the account. Follow the steps at To leave
 //      an organization when all required account information has not yet been
 //      provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
@@ -5571,6 +5992,11 @@ func (c *Organizations) LeaveOrganizationRequest(input *LeaveOrganizationInput) 
 //      * MASTER_ACCOUNT_MISSING_CONTACT_INFO: To complete this operation, you
 //      must first provide contact a valid address and phone number for the master
 //      account. Then try the operation again.
+//
+//      * MASTER_ACCOUNT_NOT_GOVCLOUD_ENABLED: To complete this operation, the
+//      master account must have an associated account in the AWS GovCloud (US-West)
+//      Region. For more information, see AWS Organizations (http://docs.aws.amazon.com/govcloud-us/latest/UserGuide/govcloud-organizations.html)
+//      in the AWS GovCloud User Guide.
 //
 //   * ErrCodeInvalidInputException "InvalidInputException"
 //   The requested operation failed because you provided invalid values for one
@@ -5753,7 +6179,7 @@ func (c *Organizations) ListAWSServiceAccessForOrganizationRequest(input *ListAW
 //
 //   * ErrCodeConstraintViolationException "ConstraintViolationException"
 //   Performing this operation violates a minimum or maximum value limit. For
-//   example, attempting to removing the last service control policy (SCP) from
+//   example, attempting to remove the last service control policy (SCP) from
 //   an OU or root, inviting or creating too many accounts to the organization,
 //   or attaching too many policies to an account, OU, or root. This exception
 //   includes a reason that contains additional information about the violated
@@ -5764,7 +6190,7 @@ func (c *Organizations) ListAWSServiceAccessForOrganizationRequest(input *ListAW
 //
 //      * ACCOUNT_NUMBER_LIMIT_EXCEEDED: You attempted to exceed the limit on
 //      the number of accounts in an organization. If you need more accounts,
-//      contactAWS Support (https://console.aws.amazon.com/support/home#/) to
+//      contact AWS Support (https://console.aws.amazon.com/support/home#/) to
 //      request an increase in your limit.
 //
 //   Or the number of invitations that you tried to send would cause you to exceed
@@ -5817,14 +6243,14 @@ func (c *Organizations) ListAWSServiceAccessForOrganizationRequest(input *ListAW
 //      in the AWS Organizations User Guide.
 //
 //      * MASTER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To create an organization
-//      with this master account, you first must associate a payment instrument,
+//      with this master account, you first must associate a valid payment instrument,
 //      such as a credit card, with the account. Follow the steps at To leave
 //      an organization when all required account information has not yet been
 //      provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
 //      in the AWS Organizations User Guide.
 //
 //      * MEMBER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To complete this operation
-//      with this member account, you first must associate a payment instrument,
+//      with this member account, you first must associate a valid payment instrument,
 //      such as a credit card, with the account. Follow the steps at To leave
 //      an organization when all required account information has not yet been
 //      provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
@@ -5843,6 +6269,11 @@ func (c *Organizations) ListAWSServiceAccessForOrganizationRequest(input *ListAW
 //      * MASTER_ACCOUNT_MISSING_CONTACT_INFO: To complete this operation, you
 //      must first provide contact a valid address and phone number for the master
 //      account. Then try the operation again.
+//
+//      * MASTER_ACCOUNT_NOT_GOVCLOUD_ENABLED: To complete this operation, the
+//      master account must have an associated account in the AWS GovCloud (US-West)
+//      Region. For more information, see AWS Organizations (http://docs.aws.amazon.com/govcloud-us/latest/UserGuide/govcloud-organizations.html)
+//      in the AWS GovCloud User Guide.
 //
 //   * ErrCodeInvalidInputException "InvalidInputException"
 //   The requested operation failed because you provided invalid values for one
@@ -6814,6 +7245,9 @@ func (c *Organizations) ListCreateAccountStatusRequest(input *ListCreateAccountS
 //   For information on limits that affect Organizations, see Limits of AWS Organizations
 //   (https://docs.aws.amazon.com/organizations/latest/userguide/orgs_reference_limits.html)
 //   in the AWS Organizations User Guide.
+//
+//   * ErrCodeUnsupportedAPIEndpointException "UnsupportedAPIEndpointException"
+//   This action isn't available in the current Region.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/organizations-2016-11-28/ListCreateAccountStatus
 func (c *Organizations) ListCreateAccountStatus(input *ListCreateAccountStatusInput) (*ListCreateAccountStatusOutput, error) {
@@ -8522,7 +8956,7 @@ func (c *Organizations) ListTargetsForPolicyRequest(input *ListTargetsForPolicyI
 
 // ListTargetsForPolicy API operation for AWS Organizations.
 //
-// Lists all the roots, organizaitonal units (OUs), and accounts to which the
+// Lists all the roots, organizational units (OUs), and accounts to which the
 // specified policy is attached.
 //
 // Always check the NextToken response parameter for a null value when calling
@@ -8979,7 +9413,7 @@ func (c *Organizations) RemoveAccountFromOrganizationRequest(input *RemoveAccoun
 //
 //   * ErrCodeConstraintViolationException "ConstraintViolationException"
 //   Performing this operation violates a minimum or maximum value limit. For
-//   example, attempting to removing the last service control policy (SCP) from
+//   example, attempting to remove the last service control policy (SCP) from
 //   an OU or root, inviting or creating too many accounts to the organization,
 //   or attaching too many policies to an account, OU, or root. This exception
 //   includes a reason that contains additional information about the violated
@@ -8990,7 +9424,7 @@ func (c *Organizations) RemoveAccountFromOrganizationRequest(input *RemoveAccoun
 //
 //      * ACCOUNT_NUMBER_LIMIT_EXCEEDED: You attempted to exceed the limit on
 //      the number of accounts in an organization. If you need more accounts,
-//      contactAWS Support (https://console.aws.amazon.com/support/home#/) to
+//      contact AWS Support (https://console.aws.amazon.com/support/home#/) to
 //      request an increase in your limit.
 //
 //   Or the number of invitations that you tried to send would cause you to exceed
@@ -9043,14 +9477,14 @@ func (c *Organizations) RemoveAccountFromOrganizationRequest(input *RemoveAccoun
 //      in the AWS Organizations User Guide.
 //
 //      * MASTER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To create an organization
-//      with this master account, you first must associate a payment instrument,
+//      with this master account, you first must associate a valid payment instrument,
 //      such as a credit card, with the account. Follow the steps at To leave
 //      an organization when all required account information has not yet been
 //      provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
 //      in the AWS Organizations User Guide.
 //
 //      * MEMBER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To complete this operation
-//      with this member account, you first must associate a payment instrument,
+//      with this member account, you first must associate a valid payment instrument,
 //      such as a credit card, with the account. Follow the steps at To leave
 //      an organization when all required account information has not yet been
 //      provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
@@ -9069,6 +9503,11 @@ func (c *Organizations) RemoveAccountFromOrganizationRequest(input *RemoveAccoun
 //      * MASTER_ACCOUNT_MISSING_CONTACT_INFO: To complete this operation, you
 //      must first provide contact a valid address and phone number for the master
 //      account. Then try the operation again.
+//
+//      * MASTER_ACCOUNT_NOT_GOVCLOUD_ENABLED: To complete this operation, the
+//      master account must have an associated account in the AWS GovCloud (US-West)
+//      Region. For more information, see AWS Organizations (http://docs.aws.amazon.com/govcloud-us/latest/UserGuide/govcloud-organizations.html)
+//      in the AWS GovCloud User Guide.
 //
 //   * ErrCodeInvalidInputException "InvalidInputException"
 //   The requested operation failed because you provided invalid values for one
@@ -9415,7 +9854,7 @@ func (c *Organizations) UpdatePolicyRequest(input *UpdatePolicyInput) (req *requ
 //
 //   * ErrCodeConstraintViolationException "ConstraintViolationException"
 //   Performing this operation violates a minimum or maximum value limit. For
-//   example, attempting to removing the last service control policy (SCP) from
+//   example, attempting to remove the last service control policy (SCP) from
 //   an OU or root, inviting or creating too many accounts to the organization,
 //   or attaching too many policies to an account, OU, or root. This exception
 //   includes a reason that contains additional information about the violated
@@ -9426,7 +9865,7 @@ func (c *Organizations) UpdatePolicyRequest(input *UpdatePolicyInput) (req *requ
 //
 //      * ACCOUNT_NUMBER_LIMIT_EXCEEDED: You attempted to exceed the limit on
 //      the number of accounts in an organization. If you need more accounts,
-//      contactAWS Support (https://console.aws.amazon.com/support/home#/) to
+//      contact AWS Support (https://console.aws.amazon.com/support/home#/) to
 //      request an increase in your limit.
 //
 //   Or the number of invitations that you tried to send would cause you to exceed
@@ -9479,14 +9918,14 @@ func (c *Organizations) UpdatePolicyRequest(input *UpdatePolicyInput) (req *requ
 //      in the AWS Organizations User Guide.
 //
 //      * MASTER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To create an organization
-//      with this master account, you first must associate a payment instrument,
+//      with this master account, you first must associate a valid payment instrument,
 //      such as a credit card, with the account. Follow the steps at To leave
 //      an organization when all required account information has not yet been
 //      provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
 //      in the AWS Organizations User Guide.
 //
 //      * MEMBER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To complete this operation
-//      with this member account, you first must associate a payment instrument,
+//      with this member account, you first must associate a valid payment instrument,
 //      such as a credit card, with the account. Follow the steps at To leave
 //      an organization when all required account information has not yet been
 //      provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
@@ -9505,6 +9944,11 @@ func (c *Organizations) UpdatePolicyRequest(input *UpdatePolicyInput) (req *requ
 //      * MASTER_ACCOUNT_MISSING_CONTACT_INFO: To complete this operation, you
 //      must first provide contact a valid address and phone number for the master
 //      account. Then try the operation again.
+//
+//      * MASTER_ACCOUNT_NOT_GOVCLOUD_ENABLED: To complete this operation, the
+//      master account must have an associated account in the AWS GovCloud (US-West)
+//      Region. For more information, see AWS Organizations (http://docs.aws.amazon.com/govcloud-us/latest/UserGuide/govcloud-organizations.html)
+//      in the AWS GovCloud User Guide.
 //
 //   * ErrCodeDuplicatePolicyException "DuplicatePolicyException"
 //   A policy with the same name already exists.
@@ -10099,8 +10543,8 @@ func (s *CreateAccountOutput) SetCreateAccountStatus(v *CreateAccountStatus) *Cr
 	return s
 }
 
-// Contains the status about a CreateAccount request to create an AWS account
-// in an organization.
+// Contains the status about a CreateAccount or CreateGovCloudAccount request
+// to create an AWS account or an AWS GovCloud (US) account in an organization.
 type CreateAccountStatus struct {
 	_ struct{} `type:"structure"`
 
@@ -10134,6 +10578,8 @@ type CreateAccountStatus struct {
 	//    * INTERNAL_FAILURE: The account could not be created because of an internal
 	//    failure. Try again later. If the problem persists, contact Customer Support.
 	FailureReason *string `type:"string" enum:"CreateAccountFailureReason"`
+
+	GovCloudAccountId *string `type:"string"`
 
 	// The unique identifier (ID) that references this request. You get this value
 	// from the response of the initial CreateAccount request to create the account.
@@ -10184,6 +10630,12 @@ func (s *CreateAccountStatus) SetFailureReason(v string) *CreateAccountStatus {
 	return s
 }
 
+// SetGovCloudAccountId sets the GovCloudAccountId field's value.
+func (s *CreateAccountStatus) SetGovCloudAccountId(v string) *CreateAccountStatus {
+	s.GovCloudAccountId = &v
+	return s
+}
+
 // SetId sets the Id field's value.
 func (s *CreateAccountStatus) SetId(v string) *CreateAccountStatus {
 	s.Id = &v
@@ -10202,6 +10654,142 @@ func (s *CreateAccountStatus) SetState(v string) *CreateAccountStatus {
 	return s
 }
 
+type CreateGovCloudAccountInput struct {
+	_ struct{} `type:"structure"`
+
+	// The friendly name of the member account.
+	//
+	// AccountName is a required field
+	AccountName *string `min:"1" type:"string" required:"true" sensitive:"true"`
+
+	// The email address of the owner to assign to the new member account in the
+	// commercial Region. This email address must not already be associated with
+	// another AWS account. You must use a valid email address to complete account
+	// creation. You can't access the root user of the account or remove an account
+	// that was created with an invalid email address. Like all request parameters
+	// for CreateGovCloudAccount, the request for the email address for the AWS
+	// GovCloud (US) account originates from the commercial Region, not from the
+	// AWS GovCloud (US) Region.
+	//
+	// Email is a required field
+	Email *string `min:"6" type:"string" required:"true" sensitive:"true"`
+
+	// If set to ALLOW, the new linked account in the commercial Region enables
+	// IAM users to access account billing information if they have the required
+	// permissions. If set to DENY, only the root user of the new account can access
+	// account billing information. For more information, see Activating Access
+	// to the Billing and Cost Management Console (https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/grantaccess.html#ControllingAccessWebsite-Activate)
+	// in the AWS Billing and Cost Management User Guide.
+	//
+	// If you don't specify this parameter, the value defaults to ALLOW, and IAM
+	// users and roles with the required permissions can access billing information
+	// for the new account.
+	IamUserAccessToBilling *string `type:"string" enum:"IAMUserAccessToBilling"`
+
+	// (Optional)
+	//
+	// The name of an IAM role that AWS Organizations automatically preconfigures
+	// in the new member accounts in both the AWS GovCloud (US) Region and in the
+	// commercial Region. This role trusts the master account, allowing users in
+	// the master account to assume the role, as permitted by the master account
+	// administrator. The role has administrator permissions in the new member account.
+	//
+	// If you don't specify this parameter, the role name defaults to OrganizationAccountAccessRole.
+	//
+	// For more information about how to use this role to access the member account,
+	// see Accessing and Administering the Member Accounts in Your Organization
+	// (https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_access.html#orgs_manage_accounts_create-cross-account-role)
+	// in the AWS Organizations User Guide and steps 2 and 3 in Tutorial: Delegate
+	// Access Across AWS Accounts Using IAM Roles (https://docs.aws.amazon.com/IAM/latest/UserGuide/tutorial_cross-account-with-roles.html)
+	// in the IAM User Guide.
+	//
+	// The regex pattern (http://wikipedia.org/wiki/regex) that is used to validate
+	// this parameter is a string of characters that can consist of uppercase letters,
+	// lowercase letters, digits with no spaces, and any of the following characters:
+	// =,.@-
+	RoleName *string `type:"string"`
+}
+
+// String returns the string representation
+func (s CreateGovCloudAccountInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateGovCloudAccountInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateGovCloudAccountInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateGovCloudAccountInput"}
+	if s.AccountName == nil {
+		invalidParams.Add(request.NewErrParamRequired("AccountName"))
+	}
+	if s.AccountName != nil && len(*s.AccountName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AccountName", 1))
+	}
+	if s.Email == nil {
+		invalidParams.Add(request.NewErrParamRequired("Email"))
+	}
+	if s.Email != nil && len(*s.Email) < 6 {
+		invalidParams.Add(request.NewErrParamMinLen("Email", 6))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAccountName sets the AccountName field's value.
+func (s *CreateGovCloudAccountInput) SetAccountName(v string) *CreateGovCloudAccountInput {
+	s.AccountName = &v
+	return s
+}
+
+// SetEmail sets the Email field's value.
+func (s *CreateGovCloudAccountInput) SetEmail(v string) *CreateGovCloudAccountInput {
+	s.Email = &v
+	return s
+}
+
+// SetIamUserAccessToBilling sets the IamUserAccessToBilling field's value.
+func (s *CreateGovCloudAccountInput) SetIamUserAccessToBilling(v string) *CreateGovCloudAccountInput {
+	s.IamUserAccessToBilling = &v
+	return s
+}
+
+// SetRoleName sets the RoleName field's value.
+func (s *CreateGovCloudAccountInput) SetRoleName(v string) *CreateGovCloudAccountInput {
+	s.RoleName = &v
+	return s
+}
+
+type CreateGovCloudAccountOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Contains the status about a CreateAccount or CreateGovCloudAccount request
+	// to create an AWS account or an AWS GovCloud (US) account in an organization.
+	CreateAccountStatus *CreateAccountStatus `type:"structure"`
+}
+
+// String returns the string representation
+func (s CreateGovCloudAccountOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateGovCloudAccountOutput) GoString() string {
+	return s.String()
+}
+
+// SetCreateAccountStatus sets the CreateAccountStatus field's value.
+func (s *CreateGovCloudAccountOutput) SetCreateAccountStatus(v *CreateAccountStatus) *CreateGovCloudAccountOutput {
+	s.CreateAccountStatus = v
+	return s
+}
+
 type CreateOrganizationInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10212,6 +10800,9 @@ type CreateOrganizationInput struct {
 	//    to and paid by the master account. For more information, see Consolidated
 	//    billing (https://docs.aws.amazon.com/organizations/latest/userguide/orgs_getting-started_concepts.html#feature-set-cb-only)
 	//    in the AWS Organizations User Guide.
+	//
+	//  The consolidated billing feature subset isn't available for organizations
+	//    in the AWS GovCloud (US) Region.
 	//
 	//    * ALL: In addition to all the features supported by the consolidated billing
 	//    feature set, the master account can also apply any type of policy to any
@@ -13456,7 +14047,7 @@ type Organization struct {
 	// If set to "ALL", then all features are enabled and policies can be applied
 	// to accounts in the organization. If set to "CONSOLIDATED_BILLING", then only
 	// consolidated billing functionality is available. For more information, see
-	// Enabling All Features in Your Organization (https://docs.aws.amazon.com/IAM/latest/UserGuide/orgs_manage_org_support-all-features.html)
+	// Enabling All Features in Your Organization (https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_org_support-all-features.html)
 	// in the AWS Organizations User Guide.
 	FeatureSet *string `type:"string" enum:"OrganizationFeatureSet"`
 
@@ -14272,8 +14863,14 @@ const (
 	// ConstraintViolationExceptionReasonMasterAccountMissingContactInfo is a ConstraintViolationExceptionReason enum value
 	ConstraintViolationExceptionReasonMasterAccountMissingContactInfo = "MASTER_ACCOUNT_MISSING_CONTACT_INFO"
 
+	// ConstraintViolationExceptionReasonMasterAccountNotGovcloudEnabled is a ConstraintViolationExceptionReason enum value
+	ConstraintViolationExceptionReasonMasterAccountNotGovcloudEnabled = "MASTER_ACCOUNT_NOT_GOVCLOUD_ENABLED"
+
 	// ConstraintViolationExceptionReasonOrganizationNotInAllFeaturesMode is a ConstraintViolationExceptionReason enum value
 	ConstraintViolationExceptionReasonOrganizationNotInAllFeaturesMode = "ORGANIZATION_NOT_IN_ALL_FEATURES_MODE"
+
+	// ConstraintViolationExceptionReasonCreateOrganizationInBillingModeUnsupportedRegion is a ConstraintViolationExceptionReason enum value
+	ConstraintViolationExceptionReasonCreateOrganizationInBillingModeUnsupportedRegion = "CREATE_ORGANIZATION_IN_BILLING_MODE_UNSUPPORTED_REGION"
 
 	// ConstraintViolationExceptionReasonEmailVerificationCodeExpired is a ConstraintViolationExceptionReason enum value
 	ConstraintViolationExceptionReasonEmailVerificationCodeExpired = "EMAIL_VERIFICATION_CODE_EXPIRED"

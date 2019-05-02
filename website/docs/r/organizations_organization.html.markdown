@@ -6,7 +6,7 @@ description: |-
   Provides a resource to create an organization.
 ---
 
-# aws_organizations_organization
+# Resource: aws_organizations_organization
 
 Provides a resource to create an organization.
 

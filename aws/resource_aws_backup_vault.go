@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 
 	"github.com/hashicorp/terraform/helper/validation"
@@ -15,6 +16,7 @@ func resourceAwsBackupVault() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsBackupVaultCreate,
 		Read:   resourceAwsBackupVaultRead,
+		Update: resourceAwsBackupVaultUpdate,
 		Delete: resourceAwsBackupVaultDelete,
 
 		Schema: map[string]*schema.Schema{
@@ -27,7 +29,6 @@ func resourceAwsBackupVault() *schema.Resource {
 			"tags": {
 				Type:     schema.TypeMap,
 				Optional: true,
-				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"kms_key_arn": {
@@ -82,6 +83,11 @@ func resourceAwsBackupVaultRead(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	resp, err := conn.DescribeBackupVault(input)
+	if isAWSErr(err, backup.ErrCodeResourceNotFoundException, "") {
+		log.Printf("[WARN] Backup Vault %s not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
 	if err != nil {
 		return fmt.Errorf("error reading Backup Vault (%s): %s", d.Id(), err)
 	}
@@ -103,6 +109,54 @@ func resourceAwsBackupVaultRead(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	return nil
+}
+
+func resourceAwsBackupVaultUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).backupconn
+
+	if d.HasChange("tags") {
+		resourceArn := d.Get("arn").(string)
+		oraw, nraw := d.GetChange("tags")
+		create, remove := diffTagsGeneric(oraw.(map[string]interface{}), nraw.(map[string]interface{}))
+
+		if len(remove) > 0 {
+			log.Printf("[DEBUG] Removing tags: %#v", remove)
+			keys := make([]*string, 0, len(remove))
+			for k := range remove {
+				keys = append(keys, aws.String(k))
+			}
+
+			_, err := conn.UntagResource(&backup.UntagResourceInput{
+				ResourceArn: aws.String(resourceArn),
+				TagKeyList:  keys,
+			})
+			if isAWSErr(err, backup.ErrCodeResourceNotFoundException, "") {
+				log.Printf("[WARN] Backup Vault %s not found, removing from state", d.Id())
+				d.SetId("")
+				return nil
+			}
+			if err != nil {
+				return fmt.Errorf("Error removing tags for (%s): %s", d.Id(), err)
+			}
+		}
+		if len(create) > 0 {
+			log.Printf("[DEBUG] Creating tags: %#v", create)
+			_, err := conn.TagResource(&backup.TagResourceInput{
+				ResourceArn: aws.String(resourceArn),
+				Tags:        create,
+			})
+			if isAWSErr(err, backup.ErrCodeResourceNotFoundException, "") {
+				log.Printf("[WARN] Backup Vault %s not found, removing from state", d.Id())
+				d.SetId("")
+				return nil
+			}
+			if err != nil {
+				return fmt.Errorf("Error setting tags for (%s): %s", d.Id(), err)
+			}
+		}
+	}
+
+	return resourceAwsBackupVaultRead(d, meta)
 }
 
 func resourceAwsBackupVaultDelete(d *schema.ResourceData, meta interface{}) error {

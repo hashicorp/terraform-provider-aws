@@ -6,7 +6,7 @@ description: |-
   Provides an AutoScaling Group resource.
 ---
 
-# aws_autoscaling_group
+# Resource: aws_autoscaling_group
 
 Provides an AutoScaling Group resource.
 
@@ -83,7 +83,7 @@ resource "aws_autoscaling_group" "bar" {
 
   launch_template {
     id      = "${aws_launch_template.foobar.id}"
-    version = "$$Latest"
+    version = "$Latest"
   }
 }
 ```

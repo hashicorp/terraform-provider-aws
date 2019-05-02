@@ -6,7 +6,7 @@ description: |-
   Provides a resource to attach an AWS Organizations policy to an organization account, root, or unit.
 ---
 
-# aws_organizations_policy_attachment
+# Resource: aws_organizations_policy_attachment
 
 Provides a resource to attach an AWS Organizations policy to an organization account, root, or unit.
 

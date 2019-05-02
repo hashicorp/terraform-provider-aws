@@ -72,6 +72,7 @@ func TestAccAWSEIP_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEIPExists("aws_eip.bar", &conf),
 					testAccCheckAWSEIPAttributes(&conf),
+					testAccCheckAWSEIPPublicDNS("aws_eip.bar"),
 				),
 			},
 		},
@@ -121,6 +122,7 @@ func TestAccAWSEIP_network_interface(t *testing.T) {
 					testAccCheckAWSEIPExists("aws_eip.bar", &conf),
 					testAccCheckAWSEIPAttributes(&conf),
 					testAccCheckAWSEIPAssociated(&conf),
+					testAccCheckAWSEIPPrivateDNS("aws_eip.bar"),
 				),
 			},
 		},
@@ -482,6 +484,52 @@ func testAccCheckAWSEIPExists(n string, res *ec2.Address) resource.TestCheckFunc
 				return fmt.Errorf("EIP not found")
 			}
 			*res = *describe.Addresses[0]
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckAWSEIPPrivateDNS(resourceName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		privateIPDashed := strings.Replace(rs.Primary.Attributes["private_ip"], ".", "-", -1)
+		privateDNS := rs.Primary.Attributes["private_dns"]
+		expectedPrivateDNS := fmt.Sprintf("ip-%s.%s.compute.internal", privateIPDashed, testAccGetRegion())
+
+		if testAccGetRegion() == "us-east-1" {
+			expectedPrivateDNS = fmt.Sprintf("ip-%s.ec2.internal", privateIPDashed)
+		}
+
+		if privateDNS != expectedPrivateDNS {
+			return fmt.Errorf("expected private_dns value (%s), received: %s", expectedPrivateDNS, privateDNS)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckAWSEIPPublicDNS(resourceName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		publicIPDashed := strings.Replace(rs.Primary.Attributes["public_ip"], ".", "-", -1)
+		publicDNS := rs.Primary.Attributes["public_dns"]
+		expectedPublicDNS := fmt.Sprintf("ec2-%s.%s.compute.amazonaws.com", publicIPDashed, testAccGetRegion())
+
+		if testAccGetRegion() == "us-east-1" {
+			expectedPublicDNS = fmt.Sprintf("ec2-%s.compute-1.amazonaws.com", publicIPDashed)
+		}
+
+		if publicDNS != expectedPublicDNS {
+			return fmt.Errorf("expected public_dns value (%s), received: %s", expectedPublicDNS, publicDNS)
 		}
 
 		return nil

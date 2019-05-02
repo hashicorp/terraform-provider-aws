@@ -80,6 +80,30 @@ func TestAccAWSRoute53Zone_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSRoute53Zone_disappears(t *testing.T) {
+	var zone route53.GetHostedZoneOutput
+
+	rString := acctest.RandString(8)
+	resourceName := "aws_route53_zone.test"
+	zoneName := fmt.Sprintf("%s.terraformtest.com", rString)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRoute53ZoneDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoute53ZoneConfig(zoneName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoute53ZoneExists(resourceName, &zone),
+					testAccCheckRoute53ZoneDisappears(&zone),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSRoute53Zone_multiple(t *testing.T) {
 	var zone0, zone1, zone2, zone3, zone4 route53.GetHostedZoneOutput
 
@@ -494,6 +518,20 @@ func testAccCheckRoute53ZoneExistsWithProvider(n string, zone *route53.GetHosted
 
 		*zone = *resp
 		return nil
+	}
+}
+
+func testAccCheckRoute53ZoneDisappears(zone *route53.GetHostedZoneOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).r53conn
+
+		input := &route53.DeleteHostedZoneInput{
+			Id: zone.HostedZone.Id,
+		}
+
+		_, err := conn.DeleteHostedZone(input)
+
+		return err
 	}
 }
 

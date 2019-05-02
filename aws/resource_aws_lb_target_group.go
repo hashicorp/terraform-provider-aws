@@ -154,6 +154,12 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
+
 						"interval": {
 							Type:     schema.TypeInt,
 							Optional: true,
@@ -168,10 +174,11 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 						},
 
 						"port": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      "traffic-port",
-							ValidateFunc: validateAwsLbTargetGroupHealthCheckPort,
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          "traffic-port",
+							ValidateFunc:     validateAwsLbTargetGroupHealthCheckPort,
+							DiffSuppressFunc: suppressIfTargetType(elbv2.TargetTypeEnumLambda),
 						},
 
 						"protocol": {
@@ -186,6 +193,7 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 								elbv2.ProtocolEnumHttps,
 								elbv2.ProtocolEnumTcp,
 							}, true),
+							DiffSuppressFunc: suppressIfTargetType(elbv2.TargetTypeEnumLambda),
 						},
 
 						"timeout": {
@@ -220,6 +228,12 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 
 			"tags": tagsSchema(),
 		},
+	}
+}
+
+func suppressIfTargetType(t string) schema.SchemaDiffSuppressFunc {
+	return func(k string, old string, new string, d *schema.ResourceData) bool {
+		return d.Get("target_type").(string) == t
 	}
 }
 
@@ -259,6 +273,8 @@ func resourceAwsLbTargetGroupCreate(d *schema.ResourceData, meta interface{}) er
 
 	if healthChecks := d.Get("health_check").([]interface{}); len(healthChecks) == 1 {
 		healthCheck := healthChecks[0].(map[string]interface{})
+
+		params.HealthCheckEnabled = aws.Bool(healthCheck["enabled"].(bool))
 
 		params.HealthCheckIntervalSeconds = aws.Int64(int64(healthCheck["interval"].(int)))
 
@@ -341,6 +357,7 @@ func resourceAwsLbTargetGroupUpdate(d *schema.ResourceData, meta interface{}) er
 
 			params = &elbv2.ModifyTargetGroupInput{
 				TargetGroupArn:          aws.String(d.Id()),
+				HealthCheckEnabled:      aws.Bool(healthCheck["enabled"].(bool)),
 				HealthyThresholdCount:   aws.Int64(int64(healthCheck["healthy_threshold"].(int))),
 				UnhealthyThresholdCount: aws.Int64(int64(healthCheck["unhealthy_threshold"].(int))),
 			}
@@ -533,6 +550,7 @@ func flattenAwsLbTargetGroupResource(d *schema.ResourceData, meta interface{}, t
 	d.Set("target_type", targetGroup.TargetType)
 
 	healthCheck := make(map[string]interface{})
+	healthCheck["enabled"] = aws.BoolValue(targetGroup.HealthCheckEnabled)
 	healthCheck["interval"] = int(aws.Int64Value(targetGroup.HealthCheckIntervalSeconds))
 	healthCheck["port"] = aws.StringValue(targetGroup.HealthCheckPort)
 	healthCheck["protocol"] = aws.StringValue(targetGroup.HealthCheckProtocol)

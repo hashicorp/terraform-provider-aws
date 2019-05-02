@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -12,6 +13,109 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_wafregional_rate_based_rule", &resource.Sweeper{
+		Name: "aws_wafregional_rate_based_rule",
+		F:    testSweepWafRegionalRateBasedRules,
+		Dependencies: []string{
+			"aws_wafregional_web_acl",
+		},
+	})
+}
+
+func testSweepWafRegionalRateBasedRules(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).wafregionalconn
+
+	input := &waf.ListRateBasedRulesInput{}
+
+	for {
+		output, err := conn.ListRateBasedRules(input)
+
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping WAF Regional Rate-Based Rule sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing WAF Regional Rate-Based Rules: %s", err)
+		}
+
+		for _, rule := range output.Rules {
+			deleteInput := &waf.DeleteRateBasedRuleInput{
+				RuleId: rule.RuleId,
+			}
+			id := aws.StringValue(rule.RuleId)
+			wr := newWafRegionalRetryer(conn, region)
+
+			_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
+				deleteInput.ChangeToken = token
+				log.Printf("[INFO] Deleting WAF Regional Rate-Based Rule: %s", id)
+				return conn.DeleteRateBasedRule(deleteInput)
+			})
+
+			if isAWSErr(err, wafregional.ErrCodeWAFNonEmptyEntityException, "") {
+				getRateBasedRuleInput := &waf.GetRateBasedRuleInput{
+					RuleId: rule.RuleId,
+				}
+
+				getRateBasedRuleOutput, getRateBasedRuleErr := conn.GetRateBasedRule(getRateBasedRuleInput)
+
+				if getRateBasedRuleErr != nil {
+					return fmt.Errorf("error getting WAF Regional Rate-Based Rule (%s): %s", id, getRateBasedRuleErr)
+				}
+
+				var updates []*waf.RuleUpdate
+				updateRateBasedRuleInput := &waf.UpdateRateBasedRuleInput{
+					RateLimit: getRateBasedRuleOutput.Rule.RateLimit,
+					RuleId:    rule.RuleId,
+					Updates:   updates,
+				}
+
+				for _, predicate := range getRateBasedRuleOutput.Rule.MatchPredicates {
+					update := &waf.RuleUpdate{
+						Action:    aws.String(waf.ChangeActionDelete),
+						Predicate: predicate,
+					}
+
+					updateRateBasedRuleInput.Updates = append(updateRateBasedRuleInput.Updates, update)
+				}
+
+				_, updateWebACLErr := wr.RetryWithToken(func(token *string) (interface{}, error) {
+					updateRateBasedRuleInput.ChangeToken = token
+					log.Printf("[INFO] Removing Predicates from WAF Regional Rate-Based Rule: %s", id)
+					return conn.UpdateRateBasedRule(updateRateBasedRuleInput)
+				})
+
+				if updateWebACLErr != nil {
+					return fmt.Errorf("error removing predicates from WAF Regional Rate-Based Rule (%s): %s", id, updateWebACLErr)
+				}
+
+				_, err = wr.RetryWithToken(func(token *string) (interface{}, error) {
+					deleteInput.ChangeToken = token
+					log.Printf("[INFO] Deleting WAF Regional Rate-Based Rule: %s", id)
+					return conn.DeleteRateBasedRule(deleteInput)
+				})
+			}
+
+			if err != nil {
+				return fmt.Errorf("error deleting WAF Regional Rate-Based Rule (%s): %s", id, err)
+			}
+		}
+
+		if aws.StringValue(output.NextMarker) == "" {
+			break
+		}
+
+		input.NextMarker = output.NextMarker
+	}
+
+	return nil
+}
 
 func TestAccAWSWafRegionalRateBasedRule_basic(t *testing.T) {
 	var v waf.RateBasedRule

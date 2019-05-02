@@ -6,7 +6,7 @@ description: |-
   Manages a RDS Aurora Cluster Endpoint
 ---
 
-# aws_rds_cluster_endpoint
+# Resource: aws_rds_cluster_endpoint
 
 Manages a RDS Aurora Cluster Endpoint.
 You can refer to the [User Guide][1].

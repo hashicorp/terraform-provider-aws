@@ -1834,8 +1834,11 @@ type Build struct {
 	// The AWS Key Management Service (AWS KMS) customer master key (CMK) to be
 	// used for encrypting the build output artifacts.
 	//
-	// This is expressed either as the Amazon Resource Name (ARN) of the CMK or,
-	// if specified, the CMK's alias (using the format alias/alias-name).
+	// You can use a cross-account KMS key to encrypt the build output artifacts
+	// if your service role has permission to that key.
+	//
+	// You can specify either the Amazon Resource Name (ARN) of the CMK or, if available,
+	// the CMK's alias (using the format alias/alias-name).
 	EncryptionKey *string `locationName:"encryptionKey" min:"1" type:"string"`
 
 	// When the build process ended, expressed in Unix time format.
@@ -2414,6 +2417,9 @@ type CreateProjectInput struct {
 
 	// The AWS Key Management Service (AWS KMS) customer master key (CMK) to be
 	// used for encrypting the build output artifacts.
+	//
+	// You can use a cross-account KMS key to encrypt the build output artifacts
+	// if your service role has permission to that key.
 	//
 	// You can specify either the Amazon Resource Name (ARN) of the CMK or, if available,
 	// the CMK's alias (using the format alias/alias-name).
@@ -3147,6 +3153,46 @@ func (s *EnvironmentVariable) SetType(v string) *EnvironmentVariable {
 // SetValue sets the Value field's value.
 func (s *EnvironmentVariable) SetValue(v string) *EnvironmentVariable {
 	s.Value = &v
+	return s
+}
+
+// Information about the Git submodules configuration for an AWS CodeBuild build
+// project.
+type GitSubmodulesConfig struct {
+	_ struct{} `type:"structure"`
+
+	// Set to true to fetch Git submodules for your AWS CodeBuild build project.
+	//
+	// FetchSubmodules is a required field
+	FetchSubmodules *bool `locationName:"fetchSubmodules" type:"boolean" required:"true"`
+}
+
+// String returns the string representation
+func (s GitSubmodulesConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GitSubmodulesConfig) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GitSubmodulesConfig) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GitSubmodulesConfig"}
+	if s.FetchSubmodules == nil {
+		invalidParams.Add(request.NewErrParamRequired("FetchSubmodules"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetFetchSubmodules sets the FetchSubmodules field's value.
+func (s *GitSubmodulesConfig) SetFetchSubmodules(v bool) *GitSubmodulesConfig {
+	s.FetchSubmodules = &v
 	return s
 }
 
@@ -3899,8 +3945,11 @@ type Project struct {
 	// The AWS Key Management Service (AWS KMS) customer master key (CMK) to be
 	// used for encrypting the build output artifacts.
 	//
-	// This is expressed either as the Amazon Resource Name (ARN) of the CMK or,
-	// if specified, the CMK's alias (using the format alias/alias-name).
+	// You can use a cross-account KMS key to encrypt the build output artifacts
+	// if your service role has permission to that key.
+	//
+	// You can specify either the Amazon Resource Name (ARN) of the CMK or, if available,
+	// the CMK's alias (using the format alias/alias-name).
 	EncryptionKey *string `locationName:"encryptionKey" min:"1" type:"string"`
 
 	// Information about the build environment for this build project.
@@ -4344,27 +4393,27 @@ type ProjectCache struct {
 	//    * LOCAL_SOURCE_CACHE mode caches Git metadata for primary and secondary
 	//    sources. After the cache is created, subsequent builds pull only the change
 	//    between commits. This mode is a good choice for projects with a clean
-	//    working directory and a source that is a large Git repository. If your
-	//    project does not use a Git repository (GitHub, GitHub Enterprise, or Bitbucket)
-	//    and you choose this option, then it is ignored.
+	//    working directory and a source that is a large Git repository. If you
+	//    choose this option and your project does not use a Git repository (GitHub,
+	//    GitHub Enterprise, or Bitbucket), the option is ignored.
 	//
 	//    * LOCAL_DOCKER_LAYER_CACHE mode caches existing Docker layers. This mode
 	//    is a good choice for projects that build or pull large Docker images.
-	//    It can prevent the performance hit that would be caused by pulling large
-	//    Docker images down from the network.
+	//    It can prevent the performance issues caused by pulling large Docker images
+	//    down from the network.
 	//
-	//  You can only use a Docker layer cache in the Linux enviornment.
+	//  You can use a Docker layer cache in the Linux enviornment only.
 	//
-	//  The privileged flag must be set so that your project has the necessary Docker
-	//    privileges.
+	//  The privileged flag must be set so that your project has the required Docker
+	//    permissions.
 	//
-	//  You should consider the security implications before using a Docker layer
+	//  You should consider the security implications before you use a Docker layer
 	//    cache.
 	//
 	//    * LOCAL_CUSTOM_CACHE mode caches directories you specify in the buildspec
-	//    file. This mode is a good choice if your build scenario does not match
-	//    one that works well with one of the other three local cache modes. If
-	//    you use a custom cache:
+	//    file. This mode is a good choice if your build scenario is not suited
+	//    to one of the other three local cache modes. If you use a custom cache:
+	//
 	//
 	//  Only directories can be specified for caching. You cannot specify individual
 	//    files.
@@ -4626,8 +4675,11 @@ type ProjectSource struct {
 	// the source code to be built.
 	Buildspec *string `locationName:"buildspec" type:"string"`
 
-	// Information about the git clone depth for the build project.
+	// Information about the Git clone depth for the build project.
 	GitCloneDepth *int64 `locationName:"gitCloneDepth" type:"integer"`
+
+	// Information about the Git submodules configuration for the build project.
+	GitSubmodulesConfig *GitSubmodulesConfig `locationName:"gitSubmodulesConfig" type:"structure"`
 
 	// Enable this flag to ignore SSL warnings while connecting to the project source
 	// code.
@@ -4729,6 +4781,11 @@ func (s *ProjectSource) Validate() error {
 			invalidParams.AddNested("Auth", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.GitSubmodulesConfig != nil {
+		if err := s.GitSubmodulesConfig.Validate(); err != nil {
+			invalidParams.AddNested("GitSubmodulesConfig", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -4751,6 +4808,12 @@ func (s *ProjectSource) SetBuildspec(v string) *ProjectSource {
 // SetGitCloneDepth sets the GitCloneDepth field's value.
 func (s *ProjectSource) SetGitCloneDepth(v int64) *ProjectSource {
 	s.GitCloneDepth = &v
+	return s
+}
+
+// SetGitSubmodulesConfig sets the GitSubmodulesConfig field's value.
+func (s *ProjectSource) SetGitSubmodulesConfig(v *GitSubmodulesConfig) *ProjectSource {
+	s.GitSubmodulesConfig = v
 	return s
 }
 
@@ -4928,6 +4991,10 @@ func (s *RegistryCredential) SetCredentialProvider(v string) *RegistryCredential
 type S3LogsConfig struct {
 	_ struct{} `type:"structure"`
 
+	// Set to true if you do not want your S3 build log output encrypted. By default
+	// S3 build logs are encrypted.
+	EncryptionDisabled *bool `locationName:"encryptionDisabled" type:"boolean"`
+
 	// The ARN of an S3 bucket and the path prefix for S3 logs. If your Amazon S3
 	// bucket name is my-bucket, and your path prefix is build-log, then acceptable
 	// formats are my-bucket/build-log or arn:aws:s3:::my-bucket/build-log.
@@ -4964,6 +5031,12 @@ func (s *S3LogsConfig) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetEncryptionDisabled sets the EncryptionDisabled field's value.
+func (s *S3LogsConfig) SetEncryptionDisabled(v bool) *S3LogsConfig {
+	s.EncryptionDisabled = &v
+	return s
 }
 
 // SetLocation sets the Location field's value.
@@ -5112,6 +5185,10 @@ type StartBuildInput struct {
 	// The user-defined depth of history, with a minimum value of 0, that overrides,
 	// for this build only, any previous depth of history defined in the build project.
 	GitCloneDepthOverride *int64 `locationName:"gitCloneDepthOverride" type:"integer"`
+
+	// Information about the Git submodules configuration for this build of an AWS
+	// CodeBuild build project.
+	GitSubmodulesConfigOverride *GitSubmodulesConfig `locationName:"gitSubmodulesConfigOverride" type:"structure"`
 
 	// A unique, case sensitive identifier you provide to ensure the idempotency
 	// of the StartBuild request. The token is included in the StartBuild request
@@ -5272,6 +5349,11 @@ func (s *StartBuildInput) Validate() error {
 			}
 		}
 	}
+	if s.GitSubmodulesConfigOverride != nil {
+		if err := s.GitSubmodulesConfigOverride.Validate(); err != nil {
+			invalidParams.AddNested("GitSubmodulesConfigOverride", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.LogsConfigOverride != nil {
 		if err := s.LogsConfigOverride.Validate(); err != nil {
 			invalidParams.AddNested("LogsConfigOverride", err.(request.ErrInvalidParams))
@@ -5369,6 +5451,12 @@ func (s *StartBuildInput) SetEnvironmentVariablesOverride(v []*EnvironmentVariab
 // SetGitCloneDepthOverride sets the GitCloneDepthOverride field's value.
 func (s *StartBuildInput) SetGitCloneDepthOverride(v int64) *StartBuildInput {
 	s.GitCloneDepthOverride = &v
+	return s
+}
+
+// SetGitSubmodulesConfigOverride sets the GitSubmodulesConfigOverride field's value.
+func (s *StartBuildInput) SetGitSubmodulesConfigOverride(v *GitSubmodulesConfig) *StartBuildInput {
+	s.GitSubmodulesConfigOverride = v
 	return s
 }
 
@@ -5642,10 +5730,13 @@ type UpdateProjectInput struct {
 	// A new or replacement description of the build project.
 	Description *string `locationName:"description" type:"string"`
 
-	// The replacement AWS Key Management Service (AWS KMS) customer master key
-	// (CMK) to be used for encrypting the build output artifacts.
+	// The AWS Key Management Service (AWS KMS) customer master key (CMK) to be
+	// used for encrypting the build output artifacts.
 	//
-	// You can specify either the Amazon Resource Name (ARN)of the CMK or, if available,
+	// You can use a cross-account KMS key to encrypt the build output artifacts
+	// if your service role has permission to that key.
+	//
+	// You can specify either the Amazon Resource Name (ARN) of the CMK or, if available,
 	// the CMK's alias (using the format alias/alias-name).
 	EncryptionKey *string `locationName:"encryptionKey" min:"1" type:"string"`
 

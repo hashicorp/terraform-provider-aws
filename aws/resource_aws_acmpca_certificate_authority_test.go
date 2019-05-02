@@ -44,7 +44,8 @@ func testSweepAcmpcaCertificateAuthorities(region string) error {
 		arn := aws.StringValue(certificateAuthority.Arn)
 		log.Printf("[INFO] Deleting ACMPCA Certificate Authority: %s", arn)
 		input := &acmpca.DeleteCertificateAuthorityInput{
-			CertificateAuthorityArn: aws.String(arn),
+			CertificateAuthorityArn:     aws.String(arn),
+			PermanentDeletionTimeInDays: aws.Int64(int64(7)),
 		}
 
 		_, err := conn.DeleteCertificateAuthority(input)
@@ -84,6 +85,7 @@ func TestAccAwsAcmpcaCertificateAuthority_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "not_after", ""),
 					resource.TestCheckResourceAttr(resourceName, "not_before", ""),
+					resource.TestCheckResourceAttr(resourceName, "permanent_deletion_time_in_days", "30"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.enabled", "false"),
@@ -134,6 +136,9 @@ func TestAccAwsAcmpcaCertificateAuthority_Enabled(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"permanent_deletion_time_in_days",
+				},
 			},
 		},
 	})
@@ -167,6 +172,9 @@ func TestAccAwsAcmpcaCertificateAuthority_RevocationConfiguration_CrlConfigurati
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"permanent_deletion_time_in_days",
+				},
 			},
 			// Test updating revocation configuration
 			{
@@ -249,6 +257,9 @@ func TestAccAwsAcmpcaCertificateAuthority_RevocationConfiguration_CrlConfigurati
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"permanent_deletion_time_in_days",
+				},
 			},
 			// Test disabling revocation configuration
 			{
@@ -315,6 +326,9 @@ func TestAccAwsAcmpcaCertificateAuthority_RevocationConfiguration_CrlConfigurati
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"permanent_deletion_time_in_days",
+				},
 			},
 			// Test updating revocation configuration
 			{
@@ -388,6 +402,9 @@ func TestAccAwsAcmpcaCertificateAuthority_Tags(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"permanent_deletion_time_in_days",
+				},
 			},
 		},
 	})
@@ -473,7 +490,8 @@ func listAcmpcaCertificateAuthorities(conn *acmpca.ACMPCA) ([]*acmpca.Certificat
 func testAccAwsAcmpcaCertificateAuthorityConfig_Enabled(enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
-  enabled = %t
+  enabled                         = %[1]t
+  permanent_deletion_time_in_days = 7
 
   certificate_authority_configuration {
     key_algorithm     = "RSA_4096"
@@ -505,6 +523,8 @@ func testAccAwsAcmpcaCertificateAuthorityConfig_RevocationConfiguration_CrlConfi
 %s
 
 resource "aws_acmpca_certificate_authority" "test" {
+  permanent_deletion_time_in_days = 7
+
   certificate_authority_configuration {
     key_algorithm     = "RSA_4096"
     signing_algorithm = "SHA512WITHRSA"
@@ -533,6 +553,8 @@ func testAccAwsAcmpcaCertificateAuthorityConfig_RevocationConfiguration_CrlConfi
 %s
 
 resource "aws_acmpca_certificate_authority" "test" {
+  permanent_deletion_time_in_days = 7
+
   certificate_authority_configuration {
     key_algorithm     = "RSA_4096"
     signing_algorithm = "SHA512WITHRSA"
@@ -558,6 +580,8 @@ func testAccAwsAcmpcaCertificateAuthorityConfig_RevocationConfiguration_CrlConfi
 %s
 
 resource "aws_acmpca_certificate_authority" "test" {
+  permanent_deletion_time_in_days = 7
+
   certificate_authority_configuration {
     key_algorithm     = "RSA_4096"
     signing_algorithm = "SHA512WITHRSA"
@@ -615,6 +639,8 @@ resource "aws_s3_bucket_policy" "test" {
 
 const testAccAwsAcmpcaCertificateAuthorityConfig_Tags_Single = `
 resource "aws_acmpca_certificate_authority" "test" {
+  permanent_deletion_time_in_days = 7
+
   certificate_authority_configuration {
     key_algorithm     = "RSA_4096"
     signing_algorithm = "SHA512WITHRSA"
@@ -632,6 +658,8 @@ resource "aws_acmpca_certificate_authority" "test" {
 
 const testAccAwsAcmpcaCertificateAuthorityConfig_Tags_SingleUpdated = `
 resource "aws_acmpca_certificate_authority" "test" {
+  permanent_deletion_time_in_days = 7
+
   certificate_authority_configuration {
     key_algorithm     = "RSA_4096"
     signing_algorithm = "SHA512WITHRSA"
@@ -649,6 +677,8 @@ resource "aws_acmpca_certificate_authority" "test" {
 
 const testAccAwsAcmpcaCertificateAuthorityConfig_Tags_Multiple = `
 resource "aws_acmpca_certificate_authority" "test" {
+  permanent_deletion_time_in_days = 7
+
   certificate_authority_configuration {
     key_algorithm     = "RSA_4096"
     signing_algorithm = "SHA512WITHRSA"

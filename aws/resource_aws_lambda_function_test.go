@@ -1121,7 +1121,7 @@ func TestAccAWSLambdaFunction_runtimeValidation_noRuntime(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAWSLambdaConfigNoRuntime(funcName, policyName, roleName, sgName),
-				ExpectError: regexp.MustCompile(`"runtime": required field is not set`),
+				ExpectError: regexp.MustCompile(`("runtime": required field is not set|The argument "runtime" is required)`),
 			},
 		},
 	})
@@ -2287,7 +2287,7 @@ EOF
 }
 resource "aws_lambda_function" "lambda_function_local" {
     filename = "%s"
-    source_code_hash = "${base64sha256(file("%s"))}"
+    source_code_hash = "${filebase64sha256("%s")}"
     function_name = "%s"
     role = "${aws_iam_role.iam_for_lambda.arn}"
     handler = "exports.example"
@@ -2352,7 +2352,7 @@ resource "aws_s3_bucket_object" "o" {
     bucket = "${aws_s3_bucket.artifacts.bucket}"
     key = "%s"
     source = "%s"
-    etag = "${md5(file("%s"))}"
+    etag = "${filemd5("%s")}"
 }
 resource "aws_iam_role" "iam_for_lambda" {
     name = "%s"
@@ -2395,7 +2395,7 @@ resource "aws_s3_bucket_object" "o" {
     bucket = "${aws_s3_bucket.artifacts.bucket}"
     key = "%s"
     source = "%s"
-    etag = "${md5(file("%s"))}"
+    etag = "${filemd5("%s")}"
 }
 resource "aws_iam_role" "iam_for_lambda" {
 	name = "%s"
