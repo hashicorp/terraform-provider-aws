@@ -6,7 +6,7 @@ description: |-
   Provides an RDS instance resource.
 ---
 
-# aws_db_instance
+# Resource: aws_db_instance
 
 Provides an RDS instance resource.  A DB instance is an isolated database
 environment in the cloud.  A DB instance can contain multiple user-created
@@ -38,7 +38,7 @@ about [DB Instance Class Types](https://docs.aws.amazon.com/AmazonRDS/latest/Use
 
 ```hcl
 resource "aws_db_instance" "default" {
-  allocated_storage    = 10
+  allocated_storage    = 20
   storage_type         = "gp2"
   engine               = "mysql"
   engine_version       = "5.7"
@@ -66,13 +66,12 @@ the change is asynchronously applied as soon as possible.
 are applied immediately, or during the next maintenance window. Default is
 `false`. See [Amazon RDS Documentation for more
 information.](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.DBInstance.Modifying.html)
-for more information.
 * `auto_minor_version_upgrade` - (Optional) Indicates that minor engine upgrades
 will be applied automatically to the DB instance during the maintenance window.
 Defaults to true.
 * `availability_zone` - (Optional) The AZ for the RDS instance.
 * `backup_retention_period` - (Optional) The days to retain backups for. Must be
-`1` or greater to be a source for a [Read Replica][1].
+between `0` and `35`. When creating a Read Replica the value must be greater than `0`. [See Read Replica][1].
 * `backup_window` - (Optional) The daily time range (in UTC) during which
 automated backups are created if they are enabled. Example: "09:46-10:16". Must
 not overlap with `maintenance_window`.
@@ -81,18 +80,18 @@ encoding in Oracle instances. This can't be changed. See [Oracle Character Sets
 Supported in Amazon
 RDS](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Appendix.OracleCharacterSets.html)
 for more information.
-* `copy_tags_to_snapshot` – (Optional, boolean) On delete, copy all Instance
-`tags` to the final snapshot (if `final_snapshot_identifier` is specified).
-Default is `false`.
+* `copy_tags_to_snapshot` – (Optional, boolean) Copy all Instance `tags` to snapshots. Default is `false`.
 * `db_subnet_group_name` - (Optional) Name of [DB subnet group](/docs/providers/aws/r/db_subnet_group.html). DB instance will
 be created in the VPC associated with the DB subnet group. If unspecified, will
 be created in the `default` VPC, or in EC2 Classic, if available. When working
 with read replicas, it needs to be specified only if the source database
 specifies an instance in another AWS Region. See [DBSubnetGroupName in API
 action CreateDBInstanceReadReplica](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstanceReadReplica.html)
-for additonal read replica contraints.
-* `enabled_cloudwatch_logs_exports` - (Optional) Name list of enable log type for exporting to cloudwatch logs. If omitted, any logs will not be exported to cloudwatch logs.
-   Either of the following is supported: `audit`, `error`, `general`, `slowquery`.
+for additional read replica contraints.
+* `deletion_protection` - (Optional) If the DB instance should have deletion protection enabled. The database can't be deleted when this value is set to `true`. The default is `false`.
+* `domain` - (Optional) The ID of the Directory Service Active Directory domain to create the instance in.
+* `domain_iam_role_name` - (Optional, but required if domain is provided) The name of the IAM role to be used when making API calls to the Directory Service.
+* `enabled_cloudwatch_logs_exports` - (Optional) List of log types to enable for exporting to CloudWatch logs. If omitted, no logs will be exported. Valid values (depending on `engine`): `alert`, `audit`, `error`, `general`, `listener`, `slowquery`, `trace`, `postgresql` (PostgreSQL), `upgrade` (PostgreSQL).
 * `engine` - (Required unless a `snapshot_identifier` or `replicate_source_db`
 is provided) The database engine to use.  For supported values, see the Engine parameter in [API action CreateDBInstance](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html).
 Note that for Amazon Aurora instances the engine must match the [DB cluster](/docs/providers/aws/r/rds_cluster.html)'s engine'.
@@ -112,7 +111,7 @@ accounts is enabled.
 * `identifier` - (Optional, Forces new resource) The name of the RDS instance,
 if omitted, Terraform will assign a random, unique identifier.
 * `identifier_prefix` - (Optional, Forces new resource) Creates a unique
-identifier beginning with the specified prefix. Conflicts with `identifer`.
+identifier beginning with the specified prefix. Conflicts with `identifier`.
 * `instance_class` - (Required) The instance type of the RDS instance.
 * `iops` - (Optional) The amount of provisioned IOPS. Setting this implies a
 storage_type of "io1".
@@ -194,11 +193,11 @@ Full details on the core parameters and impacts are in the API Docs: [RestoreDBI
 ```hcl
 resource "aws_db_instance" "db" {
   s3_import {
-    source_engine = "mysql"
+    source_engine         = "mysql"
     source_engine_version = "5.6"
-    bucket_name = "mybucket"
-    bucket_prefix = "backups"
-    ingestion_role = "arn:aws:iam::1234567890:role/role-xtrabackup-rds-restore"
+    bucket_name           = "mybucket"
+    bucket_prefix         = "backups"
+    ingestion_role        = "arn:aws:iam::1234567890:role/role-xtrabackup-rds-restore"
   }
 }
 ```
@@ -231,7 +230,7 @@ https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_UpgradeDBInstance.Ma
 
 In addition to all arguments above, the following attributes are exported:
 
-* `address` - The address of the RDS instance.
+* `address` - The hostname of the RDS instance. See also `endpoint` and `port`.
 * `arn` - The ARN of the RDS instance.
 * `allocated_storage` - The amount of allocated storage.
 * `availability_zone` - The availability zone of the instance.
@@ -239,7 +238,9 @@ In addition to all arguments above, the following attributes are exported:
 * `backup_window` - The backup window.
 * `ca_cert_identifier` - Specifies the identifier of the CA certificate for the
 DB instance.
-* `endpoint` - The connection endpoint.
+* `domain` - The ID of the Directory Service Active Directory domain the instance is joined to
+* `domain_iam_role_name` - The name of the IAM role to be used when making API calls to the Directory Service.
+* `endpoint` - The connection endpoint in `address:port` format.
 * `engine` - The database engine.
 * `engine_version` - The database engine version.
 * `hosted_zone_id` - The canonical hosted zone ID of the DB instance (to be used

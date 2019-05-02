@@ -18,7 +18,7 @@ func TestAccAWSAppautoScalingTarget_basic(t *testing.T) {
 
 	randClusterName := fmt.Sprintf("cluster-%s", acctest.RandString(10))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_appautoscaling_target.bar",
 		Providers:     testAccProviders,
@@ -43,6 +43,12 @@ func TestAccAWSAppautoScalingTarget_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_appautoscaling_target.bar", "max_capacity", "8"),
 				),
 			},
+			{
+				ResourceName:      "aws_appautoscaling_target.bar",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSAppautoscalingTargetImportStateIdFunc("aws_appautoscaling_target.bar"),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -50,7 +56,7 @@ func TestAccAWSAppautoScalingTarget_basic(t *testing.T) {
 func TestAccAWSAppautoScalingTarget_spotFleetRequest(t *testing.T) {
 	var target applicationautoscaling.ScalableTarget
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_appautoscaling_target.test",
 		Providers:     testAccProviders,
@@ -64,6 +70,12 @@ func TestAccAWSAppautoScalingTarget_spotFleetRequest(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_appautoscaling_target.test", "scalable_dimension", "ec2:spot-fleet-request:TargetCapacity"),
 				),
 			},
+			{
+				ResourceName:      "aws_appautoscaling_target.test",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSAppautoscalingTargetImportStateIdFunc("aws_appautoscaling_target.test"),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -72,7 +84,7 @@ func TestAccAWSAppautoScalingTarget_emrCluster(t *testing.T) {
 	var target applicationautoscaling.ScalableTarget
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAppautoscalingTargetDestroy,
@@ -85,6 +97,12 @@ func TestAccAWSAppautoScalingTarget_emrCluster(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_appautoscaling_target.bar", "scalable_dimension", "elasticmapreduce:instancegroup:InstanceCount"),
 				),
 			},
+			{
+				ResourceName:      "aws_appautoscaling_target.bar",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSAppautoscalingTargetImportStateIdFunc("aws_appautoscaling_target.bar"),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -96,7 +114,7 @@ func TestAccAWSAppautoScalingTarget_multipleTargets(t *testing.T) {
 	rInt := acctest.RandInt()
 	tableName := fmt.Sprintf("tf_acc_test_table_%d", rInt)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAppautoscalingTargetDestroy,
@@ -131,7 +149,7 @@ func TestAccAWSAppautoScalingTarget_optionalRoleArn(t *testing.T) {
 
 	r, _ := regexp.Compile("arn:aws:iam::.*:role/aws-service-role/dynamodb.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_DynamoDBTable")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAppautoscalingTargetDestroy,
@@ -316,7 +334,7 @@ resource "aws_emr_cluster" "tf-test-cluster" {
   core_instance_type   = "m3.xlarge"
   core_instance_count  = 2
 
-  tags {
+  tags = {
     role     = "rolename"
     dns_zone = "env_zone"
     env      = "env"
@@ -354,7 +372,7 @@ resource "aws_security_group" "allow_all" {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    self        = true
   }
 
   egress {
@@ -370,7 +388,7 @@ resource "aws_security_group" "allow_all" {
     ignore_changes = ["ingress", "egress"]
   }
 
-  tags {
+  tags = {
     Name = "emr_test"
   }
 }
@@ -379,7 +397,7 @@ resource "aws_vpc" "main" {
   cidr_block           = "168.31.0.0/16"
   enable_dns_hostnames = true
 
-  tags {
+  tags = {
     Name = "terraform-testacc-appautoscaling-target-emr-cluster"
   }
 }
@@ -388,7 +406,7 @@ resource "aws_subnet" "main" {
   vpc_id     = "${aws_vpc.main.id}"
   cidr_block = "168.31.0.0/20"
 
-  tags {
+  tags = {
     Name = "tf-acc-appautoscaling-target-emr-cluster"
   }
 }
@@ -585,7 +603,7 @@ data "aws_iam_policy_document" "emr-autoscaling-role-policy" {
     effect  = "Allow"
     actions = ["sts:AssumeRole"]
 
-    principals = {
+    principals {
       type        = "Service"
       identifiers = ["elasticmapreduce.amazonaws.com","application-autoscaling.amazonaws.com"]
     }
@@ -709,4 +727,19 @@ resource "aws_appautoscaling_target" "read" {
   max_capacity = 15
 }
 `, tableName)
+}
+
+func testAccAWSAppautoscalingTargetImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		id := fmt.Sprintf("%s/%s/%s",
+			rs.Primary.Attributes["service_namespace"],
+			rs.Primary.Attributes["resource_id"],
+			rs.Primary.Attributes["scalable_dimension"])
+		return id, nil
+	}
 }

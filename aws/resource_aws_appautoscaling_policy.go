@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"bytes"
 	"fmt"
 	"log"
 	"strconv"
@@ -9,10 +8,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
-	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
+	"strings"
 )
 
 func resourceAwsAppautoscalingPolicy() *schema.Resource {
@@ -21,40 +20,45 @@ func resourceAwsAppautoscalingPolicy() *schema.Resource {
 		Read:   resourceAwsAppautoscalingPolicyRead,
 		Update: resourceAwsAppautoscalingPolicyUpdate,
 		Delete: resourceAwsAppautoscalingPolicyDelete,
+		Importer: &schema.ResourceImporter{
+			State: resourceAwsAppautoscalingPolicyImport,
+		},
 
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 				// https://github.com/boto/botocore/blob/9f322b1/botocore/data/autoscaling/2011-01-01/service-2.json#L1862-L1873
-				ValidateFunc: validateMaxLength(255),
+				ValidateFunc: validation.StringLenBetween(0, 255),
 			},
-			"arn": &schema.Schema{
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"policy_type": &schema.Schema{
+			"policy_type": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "StepScaling",
 			},
-			"resource_id": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"scalable_dimension": &schema.Schema{
+			"resource_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"service_namespace": &schema.Schema{
+			"scalable_dimension": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"service_namespace": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
 			"step_scaling_policy_configuration": {
 				Type:     schema.TypeList,
+				MaxItems: 1,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -62,34 +66,32 @@ func resourceAwsAppautoscalingPolicy() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"cooldown": &schema.Schema{
+						"cooldown": {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
-						"metric_aggregation_type": &schema.Schema{
+						"metric_aggregation_type": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"min_adjustment_magnitude": &schema.Schema{
+						"min_adjustment_magnitude": {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
-						"step_adjustment": &schema.Schema{
+						"step_adjustment": {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"metric_interval_lower_bound": &schema.Schema{
-										Type:     schema.TypeFloat,
+									"metric_interval_lower_bound": {
+										Type:     schema.TypeString,
 										Optional: true,
-										Default:  -1,
 									},
-									"metric_interval_upper_bound": &schema.Schema{
-										Type:     schema.TypeFloat,
+									"metric_interval_upper_bound": {
+										Type:     schema.TypeString,
 										Optional: true,
-										Default:  -1,
 									},
-									"scaling_adjustment": &schema.Schema{
+									"scaling_adjustment": {
 										Type:     schema.TypeInt,
 										Required: true,
 									},
@@ -99,49 +101,48 @@ func resourceAwsAppautoscalingPolicy() *schema.Resource {
 					},
 				},
 			},
-			"alarms": &schema.Schema{
+			"alarms": {
 				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 
-			"adjustment_type": &schema.Schema{
-				Type:       schema.TypeString,
-				Optional:   true,
-				Deprecated: "Use step_scaling_policy_configuration -> adjustment_type instead",
+			"adjustment_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Removed:  "Use `step_scaling_policy_configuration` configuration block `adjustment_type` argument instead",
 			},
-			"cooldown": &schema.Schema{
-				Type:       schema.TypeInt,
-				Optional:   true,
-				Deprecated: "Use step_scaling_policy_configuration -> cooldown instead",
+			"cooldown": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Removed:  "Use `step_scaling_policy_configuration` configuration block `cooldown` argument instead",
 			},
-			"metric_aggregation_type": &schema.Schema{
-				Type:       schema.TypeString,
-				Optional:   true,
-				Deprecated: "Use step_scaling_policy_configuration -> metric_aggregation_type instead",
+			"metric_aggregation_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Removed:  "Use `step_scaling_policy_configuration` configuration block `metric_aggregation_type` argument instead",
 			},
-			"min_adjustment_magnitude": &schema.Schema{
-				Type:       schema.TypeInt,
-				Optional:   true,
-				Deprecated: "Use step_scaling_policy_configuration -> min_adjustment_magnitude instead",
+			"min_adjustment_magnitude": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Removed:  "Use `step_scaling_policy_configuration` configuration block `min_adjustment_magnitude` argument instead",
 			},
-			"step_adjustment": &schema.Schema{
-				Type:       schema.TypeSet,
-				Optional:   true,
-				Deprecated: "Use step_scaling_policy_configuration -> step_adjustment instead",
-				Set:        resourceAwsAppautoscalingAdjustmentHash,
+			"step_adjustment": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Removed:  "Use `step_scaling_policy_configuration` configuration block `step_adjustment` configuration block instead",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"metric_interval_lower_bound": &schema.Schema{
+						"metric_interval_lower_bound": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"metric_interval_upper_bound": &schema.Schema{
+						"metric_interval_upper_bound": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"scaling_adjustment": &schema.Schema{
+						"scaling_adjustment": {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
@@ -154,14 +155,14 @@ func resourceAwsAppautoscalingPolicy() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"customized_metric_specification": &schema.Schema{
+						"customized_metric_specification": {
 							Type:          schema.TypeList,
 							MaxItems:      1,
 							Optional:      true,
 							ConflictsWith: []string{"target_tracking_scaling_policy_configuration.0.predefined_metric_specification"},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"dimensions": &schema.Schema{
+									"dimensions": {
 										Type:     schema.TypeSet,
 										Optional: true,
 										Elem: &schema.Resource{
@@ -177,15 +178,15 @@ func resourceAwsAppautoscalingPolicy() *schema.Resource {
 											},
 										},
 									},
-									"metric_name": &schema.Schema{
+									"metric_name": {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"namespace": &schema.Schema{
+									"namespace": {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"statistic": &schema.Schema{
+									"statistic": {
 										Type:     schema.TypeString,
 										Required: true,
 										ValidateFunc: validation.StringInSlice([]string{
@@ -196,46 +197,46 @@ func resourceAwsAppautoscalingPolicy() *schema.Resource {
 											applicationautoscaling.MetricStatisticSum,
 										}, false),
 									},
-									"unit": &schema.Schema{
+									"unit": {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
 								},
 							},
 						},
-						"predefined_metric_specification": &schema.Schema{
+						"predefined_metric_specification": {
 							Type:          schema.TypeList,
 							MaxItems:      1,
 							Optional:      true,
 							ConflictsWith: []string{"target_tracking_scaling_policy_configuration.0.customized_metric_specification"},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"predefined_metric_type": &schema.Schema{
+									"predefined_metric_type": {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"resource_label": &schema.Schema{
+									"resource_label": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validateMaxLength(1023),
+										ValidateFunc: validation.StringLenBetween(0, 1023),
 									},
 								},
 							},
 						},
-						"disable_scale_in": &schema.Schema{
+						"disable_scale_in": {
 							Type:     schema.TypeBool,
 							Default:  false,
 							Optional: true,
 						},
-						"scale_in_cooldown": &schema.Schema{
+						"scale_in_cooldown": {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
-						"scale_out_cooldown": &schema.Schema{
+						"scale_out_cooldown": {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
-						"target_value": &schema.Schema{
+						"target_value": {
 							Type:     schema.TypeFloat,
 							Required: true,
 						},
@@ -260,13 +261,16 @@ func resourceAwsAppautoscalingPolicyCreate(d *schema.ResourceData, meta interfac
 		var err error
 		resp, err = conn.PutScalingPolicy(&params)
 		if err != nil {
-			if isAWSErr(err, "FailedResourceAccessException", "Rate exceeded") {
+			if isAWSErr(err, applicationautoscaling.ErrCodeFailedResourceAccessException, "Rate exceeded") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, "FailedResourceAccessException", "is not authorized to perform") {
+			if isAWSErr(err, applicationautoscaling.ErrCodeFailedResourceAccessException, "is not authorized to perform") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, "FailedResourceAccessException", "token included in the request is invalid") {
+			if isAWSErr(err, applicationautoscaling.ErrCodeFailedResourceAccessException, "token included in the request is invalid") {
+				return resource.RetryableError(err)
+			}
+			if isAWSErr(err, applicationautoscaling.ErrCodeObjectNotFoundException, "") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(fmt.Errorf("Error putting scaling policy: %s", err))
@@ -317,9 +321,12 @@ func resourceAwsAppautoscalingPolicyRead(d *schema.ResourceData, meta interface{
 	d.Set("scalable_dimension", p.ScalableDimension)
 	d.Set("service_namespace", p.ServiceNamespace)
 	d.Set("alarms", p.Alarms)
-	d.Set("step_scaling_policy_configuration", flattenStepScalingPolicyConfiguration(p.StepScalingPolicyConfiguration))
-	d.Set("target_tracking_scaling_policy_configuration",
-		flattenTargetTrackingScalingPolicyConfiguration(p.TargetTrackingScalingPolicyConfiguration))
+	if err := d.Set("step_scaling_policy_configuration", flattenStepScalingPolicyConfiguration(p.StepScalingPolicyConfiguration)); err != nil {
+		return fmt.Errorf("error setting step_scaling_policy_configuration: %s", err)
+	}
+	if err := d.Set("target_tracking_scaling_policy_configuration", flattenTargetTrackingScalingPolicyConfiguration(p.TargetTrackingScalingPolicyConfiguration)); err != nil {
+		return fmt.Errorf("error setting target_tracking_scaling_policy_configuration: %s", err)
+	}
 
 	return nil
 }
@@ -337,6 +344,9 @@ func resourceAwsAppautoscalingPolicyUpdate(d *schema.ResourceData, meta interfac
 		_, err := conn.PutScalingPolicy(&params)
 		if err != nil {
 			if isAWSErr(err, applicationautoscaling.ErrCodeFailedResourceAccessException, "") {
+				return resource.RetryableError(err)
+			}
+			if isAWSErr(err, applicationautoscaling.ErrCodeObjectNotFoundException, "") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -369,18 +379,55 @@ func resourceAwsAppautoscalingPolicyDelete(d *schema.ResourceData, meta interfac
 	log.Printf("[DEBUG] Deleting Application AutoScaling Policy opts: %#v", params)
 	err = resource.Retry(2*time.Minute, func() *resource.RetryError {
 		_, err = conn.DeleteScalingPolicy(&params)
+
+		if isAWSErr(err, applicationautoscaling.ErrCodeFailedResourceAccessException, "") {
+			return resource.RetryableError(err)
+		}
+
+		if isAWSErr(err, applicationautoscaling.ErrCodeObjectNotFoundException, "") {
+			return nil
+		}
+
 		if err != nil {
-			if isAWSErr(err, applicationautoscaling.ErrCodeFailedResourceAccessException, "") {
-				return resource.RetryableError(err)
-			}
 			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
+
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteScalingPolicy(&params)
+	}
+
 	if err != nil {
 		return fmt.Errorf("Failed to delete scaling policy: %s", err)
 	}
+
 	return nil
+}
+
+func resourceAwsAppautoscalingPolicyImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	idParts := strings.Split(d.Id(), "/")
+
+	if len(idParts) < 4 {
+		return nil, fmt.Errorf("unexpected format (%q), expected <service-namespace>/<resource-id>/<scalable-dimension>/<policy-name>", d.Id())
+	}
+
+	serviceNamespace := idParts[0]
+	resourceId := strings.Join(idParts[1:len(idParts)-2], "/")
+	scalableDimension := idParts[len(idParts)-2]
+	policyName := idParts[len(idParts)-1]
+
+	if serviceNamespace == "" || resourceId == "" || scalableDimension == "" || policyName == "" {
+		return nil, fmt.Errorf("unexpected format (%q), expected <service-namespace>/<resource-id>/<scalable-dimension>/<policy-name>", d.Id())
+	}
+
+	d.Set("service_namespace", serviceNamespace)
+	d.Set("resource_id", resourceId)
+	d.Set("scalable_dimension", scalableDimension)
+	d.Set("name", policyName)
+	d.SetId(policyName)
+
+	return []*schema.ResourceData{d}, nil
 }
 
 // Takes the result of flatmap.Expand for an array of step adjustments and
@@ -402,10 +449,6 @@ func expandAppautoscalingStepAdjustments(configured []interface{}) ([]*applicati
 		if data["metric_interval_lower_bound"] != "" {
 			bound := data["metric_interval_lower_bound"]
 			switch bound := bound.(type) {
-			case float64:
-				if bound >= 0 {
-					a.MetricIntervalLowerBound = aws.Float64(bound)
-				}
 			case string:
 				f, err := strconv.ParseFloat(bound, 64)
 				if err != nil {
@@ -421,10 +464,6 @@ func expandAppautoscalingStepAdjustments(configured []interface{}) ([]*applicati
 		if data["metric_interval_upper_bound"] != "" {
 			bound := data["metric_interval_upper_bound"]
 			switch bound := bound.(type) {
-			case float64:
-				if bound >= 0 {
-					a.MetricIntervalUpperBound = aws.Float64(bound)
-				}
 			case string:
 				f, err := strconv.ParseFloat(bound, 64)
 				if err != nil {
@@ -465,7 +504,7 @@ func expandAppautoscalingCustomizedMetricSpecification(configured []interface{})
 		}
 
 		if s, ok := data["dimensions"].(*schema.Set); ok && s.Len() > 0 {
-			dimensions := make([]*applicationautoscaling.MetricDimension, s.Len(), s.Len())
+			dimensions := make([]*applicationautoscaling.MetricDimension, s.Len())
 			for i, d := range s.List() {
 				dimension := d.(map[string]interface{})
 				dimensions[i] = &applicationautoscaling.MetricDimension{
@@ -512,43 +551,6 @@ func getAwsAppautoscalingPutScalingPolicyInput(d *schema.ResourceData) (applicat
 
 	if v, ok := d.GetOk("scalable_dimension"); ok {
 		params.ScalableDimension = aws.String(v.(string))
-	}
-
-	// Deprecated fields
-	// TODO: Remove in next major version
-	at, atOk := d.GetOk("adjustment_type")
-	cd, cdOk := d.GetOk("cooldown")
-	mat, matOk := d.GetOk("metric_aggregation_type")
-	mam, mamOk := d.GetOk("min_adjustment_magnitude")
-	sa, saOk := d.GetOk("step_adjustment")
-	if atOk || cdOk || matOk || mamOk || saOk {
-		cfg := &applicationautoscaling.StepScalingPolicyConfiguration{}
-
-		if atOk {
-			cfg.AdjustmentType = aws.String(at.(string))
-		}
-
-		if cdOk {
-			cfg.Cooldown = aws.Int64(int64(cd.(int)))
-		}
-
-		if matOk {
-			cfg.MetricAggregationType = aws.String(mat.(string))
-		}
-
-		if saOk {
-			steps, err := expandAppautoscalingStepAdjustments(sa.(*schema.Set).List())
-			if err != nil {
-				return params, fmt.Errorf("metric_interval_lower_bound and metric_interval_upper_bound must be strings!")
-			}
-			cfg.StepAdjustments = steps
-		}
-
-		if mamOk {
-			cfg.MinAdjustmentMagnitude = aws.Int64(int64(mam.(int)))
-		}
-
-		params.StepScalingPolicyConfiguration = cfg
 	}
 
 	if v, ok := d.GetOk("step_scaling_policy_configuration"); ok {
@@ -645,40 +647,56 @@ func flattenStepScalingPolicyConfiguration(cfg *applicationautoscaling.StepScali
 		return []interface{}{}
 	}
 
-	m := make(map[string]interface{}, 0)
+	m := make(map[string]interface{})
 
 	if cfg.AdjustmentType != nil {
-		m["adjustment_type"] = *cfg.AdjustmentType
+		m["adjustment_type"] = aws.StringValue(cfg.AdjustmentType)
 	}
 	if cfg.Cooldown != nil {
-		m["cooldown"] = *cfg.Cooldown
+		m["cooldown"] = aws.Int64Value(cfg.Cooldown)
 	}
 	if cfg.MetricAggregationType != nil {
-		m["metric_aggregation_type"] = *cfg.MetricAggregationType
+		m["metric_aggregation_type"] = aws.StringValue(cfg.MetricAggregationType)
 	}
 	if cfg.MinAdjustmentMagnitude != nil {
-		m["min_adjustment_magnitude"] = *cfg.MinAdjustmentMagnitude
+		m["min_adjustment_magnitude"] = aws.Int64Value(cfg.MinAdjustmentMagnitude)
 	}
 	if cfg.StepAdjustments != nil {
-		m["step_adjustment"] = flattenAppautoscalingStepAdjustments(cfg.StepAdjustments)
+		stepAdjustmentsResource := &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"metric_interval_lower_bound": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"metric_interval_upper_bound": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"scaling_adjustment": {
+					Type:     schema.TypeInt,
+					Required: true,
+				},
+			},
+		}
+		m["step_adjustment"] = schema.NewSet(schema.HashResource(stepAdjustmentsResource), flattenAppautoscalingStepAdjustments(cfg.StepAdjustments))
 	}
 
 	return []interface{}{m}
 }
 
 func flattenAppautoscalingStepAdjustments(adjs []*applicationautoscaling.StepAdjustment) []interface{} {
-	out := make([]interface{}, len(adjs), len(adjs))
+	out := make([]interface{}, len(adjs))
 
 	for i, adj := range adjs {
-		m := make(map[string]interface{}, 0)
+		m := make(map[string]interface{})
 
-		m["scaling_adjustment"] = *adj.ScalingAdjustment
+		m["scaling_adjustment"] = int(aws.Int64Value(adj.ScalingAdjustment))
 
 		if adj.MetricIntervalLowerBound != nil {
-			m["metric_interval_lower_bound"] = *adj.MetricIntervalLowerBound
+			m["metric_interval_lower_bound"] = fmt.Sprintf("%g", aws.Float64Value(adj.MetricIntervalLowerBound))
 		}
 		if adj.MetricIntervalUpperBound != nil {
-			m["metric_interval_upper_bound"] = *adj.MetricIntervalUpperBound
+			m["metric_interval_upper_bound"] = fmt.Sprintf("%g", aws.Float64Value(adj.MetricIntervalUpperBound))
 		}
 
 		out[i] = m
@@ -692,7 +710,7 @@ func flattenTargetTrackingScalingPolicyConfiguration(cfg *applicationautoscaling
 		return []interface{}{}
 	}
 
-	m := make(map[string]interface{}, 0)
+	m := make(map[string]interface{})
 	m["target_value"] = *cfg.TargetValue
 
 	if cfg.DisableScaleIn != nil {
@@ -736,7 +754,7 @@ func flattenCustomizedMetricSpecification(cfg *applicationautoscaling.Customized
 }
 
 func flattenMetricDimensions(ds []*applicationautoscaling.MetricDimension) []interface{} {
-	l := make([]interface{}, len(ds), len(ds))
+	l := make([]interface{}, len(ds))
 	for i, d := range ds {
 		l[i] = map[string]interface{}{
 			"name":  *d.Name,
@@ -757,18 +775,4 @@ func flattenPredefinedMetricSpecification(cfg *applicationautoscaling.Predefined
 		m["resource_label"] = *cfg.ResourceLabel
 	}
 	return []interface{}{m}
-}
-
-func resourceAwsAppautoscalingAdjustmentHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	if v, ok := m["metric_interval_lower_bound"]; ok {
-		buf.WriteString(fmt.Sprintf("%f-", v))
-	}
-	if v, ok := m["metric_interval_upper_bound"]; ok {
-		buf.WriteString(fmt.Sprintf("%f-", v))
-	}
-	buf.WriteString(fmt.Sprintf("%d-", m["scaling_adjustment"].(int)))
-
-	return hashcode.String(buf.String())
 }

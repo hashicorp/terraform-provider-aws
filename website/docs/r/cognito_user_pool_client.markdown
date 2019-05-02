@@ -6,13 +6,13 @@ description: |-
   Provides a Cognito User Pool Client resource.
 ---
 
-# aws_cognito_user_pool_client
+# Resource: aws_cognito_user_pool_client
 
 Provides a Cognito User Pool Client resource.
 
 ## Example Usage
 
-### Create a basic user pool client client
+### Create a basic user pool client
 
 ```hcl
 resource "aws_cognito_user_pool" "pool" {
@@ -37,7 +37,7 @@ resource "aws_cognito_user_pool_client" "client" {
 
   user_pool_id = "${aws_cognito_user_pool.pool.id}"
 
-  generate_secret = true
+  generate_secret     = true
   explicit_auth_flows = ["ADMIN_NO_SRP_AUTH"]
 }
 ```
@@ -52,7 +52,7 @@ The following arguments are supported:
 * `callback_urls` - (Optional) List of allowed callback URLs for the identity providers.
 * `default_redirect_uri` - (Optional) The default redirect URI. Must be in the list of callback URLs.
 * `explicit_auth_flows` - (Optional) List of authentication flows (ADMIN_NO_SRP_AUTH, CUSTOM_AUTH_FLOW_ONLY, USER_PASSWORD_AUTH).
-* `generate_secret` - (Optional) Should an application secret be generated. AWS JavaScript SDK requires this to be false.
+* `generate_secret` - (Optional) Should an application secret be generated.
 * `logout_urls` - (Optional) List of allowed logout URLs for the identity providers.
 * `name` - (Required) The name of the application client.
 * `read_attributes` - (Optional) List of user pool attributes the application client can read from.
@@ -67,3 +67,11 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The id of the user pool client.
 * `client_secret` - The client secret of the user pool client.
+
+## Import
+
+Cognito User Pool Clients can be imported using the `id` of the Cognito User Pool, and the `id` of the Cognito User Pool Client, e.g.
+
+```
+$ terraform import aws_cognito_user_pool_client.client <user_pool_id>/<user_pool_client_id>
+```

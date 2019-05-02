@@ -6,7 +6,7 @@ description: |-
   Provides an ECR Repository Policy.
 ---
 
-# aws_ecr_repository_policy
+# Resource: aws_ecr_repository_policy
 
 Provides an ECR repository policy.
 
@@ -62,7 +62,7 @@ EOF
 The following arguments are supported:
 
 * `repository` - (Required) Name of the repository to apply the policy.
-* `policy` - (Required) The policy document. This is a JSON formatted string.
+* `policy` - (Required) The policy document. This is a JSON formatted string. For more information about building IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](/docs/providers/aws/guides/iam-policy-documents.html)
 
 ## Attributes Reference
 
@@ -70,3 +70,11 @@ In addition to all arguments above, the following attributes are exported:
 
 * `repository` - The name of the repository.
 * `registry_id` - The registry ID where the repository was created.
+
+## Import
+
+ECR Repository Policy can be imported using the repository name, e.g.
+
+```
+$ terraform import aws_ecr_repository_policy.example example
+```

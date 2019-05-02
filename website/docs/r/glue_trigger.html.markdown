@@ -6,7 +6,7 @@ description: |-
   Manages a Glue Trigger resource.
 ---
 
-# aws_glue_trigger
+# Resource: aws_glue_trigger
 
 Manages a Glue Trigger resource.
 
@@ -16,8 +16,8 @@ Manages a Glue Trigger resource.
 
 ```hcl
 resource "aws_glue_trigger" "example" {
-  name     = "example"
-  type     = "CONDITIONAL"
+  name = "example"
+  type = "CONDITIONAL"
 
   actions {
     job_name = "${aws_glue_job.example1.name}"
@@ -36,8 +36,8 @@ resource "aws_glue_trigger" "example" {
 
 ```hcl
 resource "aws_glue_trigger" "example" {
-  name     = "example"
-  type     = "ON_DEMAND"
+  name = "example"
+  type = "ON_DEMAND"
 
   actions {
     job_name = "${aws_glue_job.example.name}"

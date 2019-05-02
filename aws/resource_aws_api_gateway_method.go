@@ -1,16 +1,14 @@
 package aws
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"strconv"
-	"time"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -20,71 +18,85 @@ func resourceAwsApiGatewayMethod() *schema.Resource {
 		Read:   resourceAwsApiGatewayMethodRead,
 		Update: resourceAwsApiGatewayMethodUpdate,
 		Delete: resourceAwsApiGatewayMethodDelete,
+		Importer: &schema.ResourceImporter{
+			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				idParts := strings.Split(d.Id(), "/")
+				if len(idParts) != 3 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {
+					return nil, fmt.Errorf("Unexpected format of ID (%q), expected REST-API-ID/RESOURCE-ID/HTTP-METHOD", d.Id())
+				}
+				restApiID := idParts[0]
+				resourceID := idParts[1]
+				httpMethod := idParts[2]
+				d.Set("http_method", httpMethod)
+				d.Set("resource_id", resourceID)
+				d.Set("rest_api_id", restApiID)
+				d.SetId(fmt.Sprintf("agm-%s-%s-%s", restApiID, resourceID, httpMethod))
+				return []*schema.ResourceData{d}, nil
+			},
+		},
 
 		Schema: map[string]*schema.Schema{
-			"rest_api_id": &schema.Schema{
+			"rest_api_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
 
-			"resource_id": &schema.Schema{
+			"resource_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
 
-			"http_method": &schema.Schema{
+			"http_method": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validateHTTPMethod(),
 			},
 
-			"authorization": &schema.Schema{
+			"authorization": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
 
-			"authorizer_id": &schema.Schema{
+			"authorizer_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 
-			"authorization_scopes": &schema.Schema{
+			"authorization_scopes": {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 				Optional: true,
 			},
 
-			"api_key_required": &schema.Schema{
+			"api_key_required": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
 
-			"request_models": &schema.Schema{
+			"request_models": {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 
-			"request_parameters": &schema.Schema{
-				Type:          schema.TypeMap,
-				Elem:          &schema.Schema{Type: schema.TypeBool},
-				Optional:      true,
-				ConflictsWith: []string{"request_parameters_in_json"},
+			"request_parameters": {
+				Type:     schema.TypeMap,
+				Elem:     &schema.Schema{Type: schema.TypeBool},
+				Optional: true,
 			},
 
-			"request_parameters_in_json": &schema.Schema{
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"request_parameters"},
-				Deprecated:    "Use field request_parameters instead",
+			"request_parameters_in_json": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Removed:  "Use `request_parameters` argument instead",
 			},
 
-			"request_validator_id": &schema.Schema{
+			"request_validator_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -119,12 +131,6 @@ func resourceAwsApiGatewayMethodCreate(d *schema.ResourceData, meta interface{})
 				value, _ := strconv.ParseBool(v.(string))
 				parameters[k] = value
 			}
-		}
-		input.RequestParameters = aws.BoolMap(parameters)
-	}
-	if v, ok := d.GetOk("request_parameters_in_json"); ok {
-		if err := json.Unmarshal([]byte(v.(string)), &parameters); err != nil {
-			return fmt.Errorf("Error unmarshaling request_parameters_in_json: %s", err)
 		}
 		input.RequestParameters = aws.BoolMap(parameters)
 	}
@@ -170,18 +176,25 @@ func resourceAwsApiGatewayMethodRead(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 	log.Printf("[DEBUG] Received API Gateway Method: %s", out)
-	d.SetId(fmt.Sprintf("agm-%s-%s-%s", d.Get("rest_api_id").(string), d.Get("resource_id").(string), d.Get("http_method").(string)))
-	d.Set("request_parameters", aws.BoolValueMap(out.RequestParameters))
-	d.Set("request_parameters_in_json", aws.BoolValueMap(out.RequestParameters))
+
 	d.Set("api_key_required", out.ApiKeyRequired)
-	d.Set("authorization", out.AuthorizationType)
-	d.Set("authorizer_id", out.AuthorizerId)
-	d.Set("request_models", aws.StringValueMap(out.RequestModels))
-	d.Set("request_validator_id", out.RequestValidatorId)
 
 	if err := d.Set("authorization_scopes", flattenStringList(out.AuthorizationScopes)); err != nil {
 		return fmt.Errorf("error setting authorization_scopes: %s", err)
 	}
+
+	d.Set("authorization", out.AuthorizationType)
+	d.Set("authorizer_id", out.AuthorizerId)
+
+	if err := d.Set("request_models", aws.StringValueMap(out.RequestModels)); err != nil {
+		return fmt.Errorf("error setting request_models: %s", err)
+	}
+
+	if err := d.Set("request_parameters", aws.BoolValueMap(out.RequestParameters)); err != nil {
+		return fmt.Errorf("error setting request_parameters: %s", err)
+	}
+
+	d.Set("request_validator_id", out.RequestValidatorId)
 
 	return nil
 }
@@ -314,25 +327,19 @@ func resourceAwsApiGatewayMethodDelete(d *schema.ResourceData, meta interface{})
 	conn := meta.(*AWSClient).apigateway
 	log.Printf("[DEBUG] Deleting API Gateway Method: %s", d.Id())
 
-	return resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteMethod(&apigateway.DeleteMethodInput{
-			HttpMethod: aws.String(d.Get("http_method").(string)),
-			ResourceId: aws.String(d.Get("resource_id").(string)),
-			RestApiId:  aws.String(d.Get("rest_api_id").(string)),
-		})
-		if err == nil {
-			return nil
-		}
-
-		apigatewayErr, ok := err.(awserr.Error)
-		if apigatewayErr.Code() == "NotFoundException" {
-			return nil
-		}
-
-		if !ok {
-			return resource.NonRetryableError(err)
-		}
-
-		return resource.NonRetryableError(err)
+	_, err := conn.DeleteMethod(&apigateway.DeleteMethodInput{
+		HttpMethod: aws.String(d.Get("http_method").(string)),
+		ResourceId: aws.String(d.Get("resource_id").(string)),
+		RestApiId:  aws.String(d.Get("rest_api_id").(string)),
 	})
+
+	if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error deleting API Gateway Method (%s): %s", d.Id(), err)
+	}
+
+	return nil
 }

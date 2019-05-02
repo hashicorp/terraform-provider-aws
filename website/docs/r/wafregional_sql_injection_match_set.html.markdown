@@ -6,7 +6,7 @@ description: |-
   Provides a AWS WAF Regional SqlInjectionMatchSet resource for use with ALB.
 ---
 
-# aws_wafregional_sql_injection_match_set
+# Resource: aws_wafregional_sql_injection_match_set
 
 Provides a WAF Regional SQL Injection Match Set Resource for use with Application Load Balancer.
 
@@ -15,8 +15,10 @@ Provides a WAF Regional SQL Injection Match Set Resource for use with Applicatio
 ```hcl
 resource "aws_wafregional_sql_injection_match_set" "sql_injection_match_set" {
   name = "tf-sql_injection_match_set"
+
   sql_injection_match_tuple {
     text_transformation = "URL_DECODE"
+
     field_to_match {
       type = "QUERY_STRING"
     }

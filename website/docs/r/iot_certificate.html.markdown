@@ -6,7 +6,7 @@ description: |-
     Creates and manages an AWS IoT certificate.
 ---
 
-# aws_iot_certificate
+# Resource: aws_iot_certificate
 
 Creates and manages an AWS IoT certificate.
 
@@ -14,7 +14,7 @@ Creates and manages an AWS IoT certificate.
 
 ```hcl
 resource "aws_iot_certificate" "cert" {
-  csr = "${file("/my/csr.pem")}"
+  csr    = "${file("/my/csr.pem")}"
   active = true
 }
 ```

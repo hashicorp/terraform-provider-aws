@@ -6,7 +6,7 @@ description: |-
   Provides a AWS WAF Regex Pattern Set resource.
 ---
 
-# aws_waf_regex_pattern_set
+# Resource: aws_waf_regex_pattern_set
 
 Provides a WAF Regex Pattern Set Resource
 
@@ -14,7 +14,7 @@ Provides a WAF Regex Pattern Set Resource
 
 ```hcl
 resource "aws_waf_regex_pattern_set" "example" {
-  name = "tf_waf_regex_pattern_set"
+  name                  = "tf_waf_regex_pattern_set"
   regex_pattern_strings = ["one", "two"]
 }
 ```

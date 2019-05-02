@@ -38,34 +38,34 @@ type IAMPolicyStatementCondition struct {
 type IAMPolicyStatementPrincipalSet []IAMPolicyStatementPrincipal
 type IAMPolicyStatementConditionSet []IAMPolicyStatementCondition
 
-func (self *IAMPolicyDoc) Merge(newDoc *IAMPolicyDoc) {
+func (s *IAMPolicyDoc) Merge(newDoc *IAMPolicyDoc) {
 	// adopt newDoc's Id
 	if len(newDoc.Id) > 0 {
-		self.Id = newDoc.Id
+		s.Id = newDoc.Id
 	}
 
 	// let newDoc upgrade our Version
-	if newDoc.Version > self.Version {
-		self.Version = newDoc.Version
+	if newDoc.Version > s.Version {
+		s.Version = newDoc.Version
 	}
 
 	// merge in newDoc's statements, overwriting any existing Sids
 	var seen bool
 	for _, newStatement := range newDoc.Statements {
 		if len(newStatement.Sid) == 0 {
-			self.Statements = append(self.Statements, newStatement)
+			s.Statements = append(s.Statements, newStatement)
 			continue
 		}
 		seen = false
-		for i, existingStatement := range self.Statements {
+		for i, existingStatement := range s.Statements {
 			if existingStatement.Sid == newStatement.Sid {
-				self.Statements[i] = newStatement
+				s.Statements[i] = newStatement
 				seen = true
 				break
 			}
 		}
 		if !seen {
-			self.Statements = append(self.Statements, newStatement)
+			s.Statements = append(s.Statements, newStatement)
 		}
 	}
 }
@@ -177,12 +177,12 @@ func (cs *IAMPolicyStatementConditionSet) UnmarshalJSON(b []byte) error {
 
 	for test_key, test_value := range data {
 		for var_key, var_values := range test_value {
-			switch var_values.(type) {
+			switch var_values := var_values.(type) {
 			case string:
-				out = append(out, IAMPolicyStatementCondition{Test: test_key, Variable: var_key, Values: []string{var_values.(string)}})
+				out = append(out, IAMPolicyStatementCondition{Test: test_key, Variable: var_key, Values: []string{var_values}})
 			case []interface{}:
 				values := []string{}
-				for _, v := range var_values.([]interface{}) {
+				for _, v := range var_values {
 					values = append(values, v.(string))
 				}
 				out = append(out, IAMPolicyStatementCondition{Test: test_key, Variable: var_key, Values: values})

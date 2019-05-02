@@ -9,6 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/aws/aws-sdk-go/aws/request"
+	"github.com/aws/aws-sdk-go/private/protocol"
+	"github.com/aws/aws-sdk-go/private/protocol/restjson"
 )
 
 const opCreateLifecyclePolicy = "CreateLifecyclePolicy"
@@ -16,7 +18,7 @@ const opCreateLifecyclePolicy = "CreateLifecyclePolicy"
 // CreateLifecyclePolicyRequest generates a "aws/request.Request" representing the
 // client's request for the CreateLifecyclePolicy operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -102,7 +104,7 @@ const opDeleteLifecyclePolicy = "DeleteLifecyclePolicy"
 // DeleteLifecyclePolicyRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteLifecyclePolicy operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -136,6 +138,7 @@ func (c *DLM) DeleteLifecyclePolicyRequest(input *DeleteLifecyclePolicyInput) (r
 
 	output = &DeleteLifecyclePolicyOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -188,7 +191,7 @@ const opGetLifecyclePolicies = "GetLifecyclePolicies"
 // GetLifecyclePoliciesRequest generates a "aws/request.Request" representing the
 // client's request for the GetLifecyclePolicies operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -278,7 +281,7 @@ const opGetLifecyclePolicy = "GetLifecyclePolicy"
 // GetLifecyclePolicyRequest generates a "aws/request.Request" representing the
 // client's request for the GetLifecyclePolicy operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -363,7 +366,7 @@ const opUpdateLifecyclePolicy = "UpdateLifecyclePolicy"
 // UpdateLifecyclePolicyRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateLifecyclePolicy operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -397,6 +400,7 @@ func (c *DLM) UpdateLifecyclePolicyRequest(input *UpdateLifecyclePolicyInput) (r
 
 	output = &UpdateLifecyclePolicyOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -461,7 +465,7 @@ type CreateLifecyclePolicyInput struct {
 	// ExecutionRoleArn is a required field
 	ExecutionRoleArn *string `type:"string" required:"true"`
 
-	// The configuration of the lifecycle policy.
+	// The configuration details of the lifecycle policy.
 	//
 	// Target tags cannot be re-used across lifecycle policies.
 	//
@@ -650,6 +654,9 @@ func (s *DeleteLifecyclePolicyInput) Validate() error {
 	if s.PolicyId == nil {
 		invalidParams.Add(request.NewErrParamRequired("PolicyId"))
 	}
+	if s.PolicyId != nil && len(*s.PolicyId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("PolicyId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -689,16 +696,17 @@ type GetLifecyclePoliciesInput struct {
 	// The activation state.
 	State *string `location:"querystring" locationName:"state" type:"string" enum:"GettablePolicyStateValues"`
 
-	// The tags to add to the resources.
+	// The tags to add to objects created by the policy.
 	//
-	// Tags are strings in the format key:value.
+	// Tags are strings in the format key=value.
 	//
-	// These tags are added in addition to the AWS-added lifecycle tags.
+	// These user-defined tags are added in addition to the AWS-added lifecycle
+	// tags.
 	TagsToAdd []*string `location:"querystring" locationName:"tagsToAdd" type:"list"`
 
-	// The target tags.
+	// The target tag for a policy.
 	//
-	// Tags are strings in the format key:value.
+	// Tags are strings in the format key=value.
 	TargetTags []*string `location:"querystring" locationName:"targetTags" min:"1" type:"list"`
 }
 
@@ -806,6 +814,9 @@ func (s *GetLifecyclePolicyInput) Validate() error {
 	if s.PolicyId == nil {
 		invalidParams.Add(request.NewErrParamRequired("PolicyId"))
 	}
+	if s.PolicyId != nil && len(*s.PolicyId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("PolicyId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -847,10 +858,10 @@ type LifecyclePolicy struct {
 	_ struct{} `type:"structure"`
 
 	// The local date and time when the lifecycle policy was created.
-	DateCreated *time.Time `type:"timestamp"`
+	DateCreated *time.Time `type:"timestamp" timestampFormat:"iso8601"`
 
 	// The local date and time when the lifecycle policy was last modified.
-	DateModified *time.Time `type:"timestamp"`
+	DateModified *time.Time `type:"timestamp" timestampFormat:"iso8601"`
 
 	// The description of the lifecycle policy.
 	Description *string `type:"string"`
@@ -970,10 +981,10 @@ type PolicyDetails struct {
 	// The resource type.
 	ResourceTypes []*string `min:"1" type:"list"`
 
-	// The schedule.
+	// The schedule of policy-defined actions.
 	Schedules []*Schedule `min:"1" type:"list"`
 
-	// The target tags.
+	// The single tag that identifies targeted resources for this policy.
 	TargetTags []*Tag `min:"1" type:"list"`
 }
 
@@ -1090,6 +1101,8 @@ func (s *RetainRule) SetCount(v int64) *RetainRule {
 type Schedule struct {
 	_ struct{} `type:"structure"`
 
+	CopyTags *bool `type:"boolean"`
+
 	// The create rule.
 	CreateRule *CreateRule `type:"structure"`
 
@@ -1099,8 +1112,8 @@ type Schedule struct {
 	// The retain rule.
 	RetainRule *RetainRule `type:"structure"`
 
-	// The tags to add to policy-created resources. These tags are added in addition
-	// to the default lifecycle tags.
+	// The tags to apply to policy-created resources. These user-defined tags are
+	// in addition to the AWS-added lifecycle tags.
 	TagsToAdd []*Tag `type:"list"`
 }
 
@@ -1142,6 +1155,12 @@ func (s *Schedule) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetCopyTags sets the CopyTags field's value.
+func (s *Schedule) SetCopyTags(v bool) *Schedule {
+	s.CopyTags = &v
+	return s
 }
 
 // SetCreateRule sets the CreateRule field's value.
@@ -1260,6 +1279,9 @@ func (s *UpdateLifecyclePolicyInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "UpdateLifecyclePolicyInput"}
 	if s.PolicyId == nil {
 		invalidParams.Add(request.NewErrParamRequired("PolicyId"))
+	}
+	if s.PolicyId != nil && len(*s.PolicyId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("PolicyId", 1))
 	}
 	if s.PolicyDetails != nil {
 		if err := s.PolicyDetails.Validate(); err != nil {

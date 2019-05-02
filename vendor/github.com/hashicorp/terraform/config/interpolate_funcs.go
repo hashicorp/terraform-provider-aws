@@ -47,6 +47,20 @@ func stringSliceToVariableValue(values []string) []ast.Variable {
 	return output
 }
 
+// listVariableSliceToVariableValue converts a list of lists into the value
+// required to be returned from interpolation functions which return TypeList.
+func listVariableSliceToVariableValue(values [][]ast.Variable) []ast.Variable {
+	output := make([]ast.Variable, len(values))
+
+	for index, value := range values {
+		output[index] = ast.Variable{
+			Type:  ast.TypeList,
+			Value: value,
+		}
+	}
+	return output
+}
+
 func listVariableValueToStringSlice(values []ast.Variable) ([]string, error) {
 	output := make([]string, len(values))
 	for index, value := range values {
@@ -106,6 +120,7 @@ func Funcs() map[string]ast.Function {
 		"pow":          interpolationFuncPow(),
 		"uuid":         interpolationFuncUUID(),
 		"replace":      interpolationFuncReplace(),
+		"reverse":      interpolationFuncReverse(),
 		"rsadecrypt":   interpolationFuncRsaDecrypt(),
 		"sha1":         interpolationFuncSha1(),
 		"sha256":       interpolationFuncSha256(),
@@ -941,6 +956,25 @@ func interpolationFuncReplace() ast.Function {
 	}
 }
 
+// interpolationFuncReverse implements the "reverse" function that does list reversal
+func interpolationFuncReverse() ast.Function {
+	return ast.Function{
+		ArgTypes:   []ast.Type{ast.TypeList},
+		ReturnType: ast.TypeList,
+		Variadic:   false,
+		Callback: func(args []interface{}) (interface{}, error) {
+			inputList := args[0].([]ast.Variable)
+
+			reversedList := make([]ast.Variable, len(inputList))
+			for idx := range inputList {
+				reversedList[len(inputList)-1-idx] = inputList[idx]
+			}
+
+			return reversedList, nil
+		},
+	}
+}
+
 func interpolationFuncLength() ast.Function {
 	return ast.Function{
 		ArgTypes:   []ast.Type{ast.TypeAny},
@@ -1698,7 +1732,7 @@ func interpolationFuncRsaDecrypt() ast.Function {
 
 			b, err := base64.StdEncoding.DecodeString(s)
 			if err != nil {
-				return "", fmt.Errorf("Failed to decode input %q: cipher text must be base64-encoded", key)
+				return "", fmt.Errorf("Failed to decode input %q: cipher text must be base64-encoded", s)
 			}
 
 			block, _ := pem.Decode([]byte(key))

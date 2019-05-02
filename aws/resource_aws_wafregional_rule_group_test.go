@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -44,10 +43,6 @@ func testSweepWafRegionalRuleGroups(region string) error {
 	}
 
 	for _, group := range resp.RuleGroups {
-		if !strings.HasPrefix(*group.Name, "tfacc") {
-			continue
-		}
-
 		rResp, err := conn.ListActivatedRulesInRuleGroup(&waf.ListActivatedRulesInRuleGroupInput{
 			RuleGroupId: group.RuleGroupId,
 		})
@@ -72,12 +67,12 @@ func TestAccAWSWafRegionalRuleGroup_basic(t *testing.T) {
 	ruleName := fmt.Sprintf("tfacc%s", acctest.RandString(5))
 	groupName := fmt.Sprintf("tfacc%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalRuleGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSWafRegionalRuleGroupConfig(ruleName, groupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafRegionalRuleExists("aws_wafregional_rule.test", &rule),
@@ -102,7 +97,7 @@ func TestAccAWSWafRegionalRuleGroup_changeNameForceNew(t *testing.T) {
 	groupName := fmt.Sprintf("tfacc%s", acctest.RandString(5))
 	newGroupName := fmt.Sprintf("tfacc%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalRuleGroupDestroy,
@@ -134,7 +129,7 @@ func TestAccAWSWafRegionalRuleGroup_disappears(t *testing.T) {
 	ruleName := fmt.Sprintf("tfacc%s", acctest.RandString(5))
 	groupName := fmt.Sprintf("tfacc%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalRuleGroupDestroy,
@@ -161,7 +156,7 @@ func TestAccAWSWafRegionalRuleGroup_changeActivatedRules(t *testing.T) {
 	ruleName2 := fmt.Sprintf("tfacc%s", acctest.RandString(5))
 	ruleName3 := fmt.Sprintf("tfacc%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalRuleGroupDestroy,
@@ -213,7 +208,7 @@ func TestAccAWSWafRegionalRuleGroup_noActivatedRules(t *testing.T) {
 	var group waf.RuleGroup
 	groupName := fmt.Sprintf("tfacc%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalRuleGroupDestroy,
@@ -240,6 +235,9 @@ func testAccCheckAWSWafRegionalRuleGroupDisappears(group *waf.RuleGroup) resourc
 		rResp, err := conn.ListActivatedRulesInRuleGroup(&waf.ListActivatedRulesInRuleGroupInput{
 			RuleGroupId: group.RuleGroupId,
 		})
+		if err != nil {
+			return fmt.Errorf("error listing activated rules in WAF Regional Rule Group (%s): %s", aws.StringValue(group.RuleGroupId), err)
+		}
 
 		wr := newWafRegionalRetryer(conn, region)
 		_, err = wr.RetryWithToken(func(token *string) (interface{}, error) {

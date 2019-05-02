@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -33,12 +32,6 @@ func testSweepElasticacheCacheSecurityGroups(region string) error {
 	}
 	conn := client.(*AWSClient).elasticacheconn
 
-	prefixes := []string{
-		"tf-",
-		"tf-test-",
-		"tf-acc-test-",
-	}
-
 	err = conn.DescribeCacheSecurityGroupsPages(&elasticache.DescribeCacheSecurityGroupsInput{}, func(page *elasticache.DescribeCacheSecurityGroupsOutput, isLast bool) bool {
 		if len(page.CacheSecurityGroups) == 0 {
 			log.Print("[DEBUG] No Elasticache Cache Security Groups to sweep")
@@ -47,17 +40,12 @@ func testSweepElasticacheCacheSecurityGroups(region string) error {
 
 		for _, securityGroup := range page.CacheSecurityGroups {
 			name := aws.StringValue(securityGroup.CacheSecurityGroupName)
-			skip := true
-			for _, prefix := range prefixes {
-				if strings.HasPrefix(name, prefix) {
-					skip = false
-					break
-				}
-			}
-			if skip {
+
+			if name == "default" {
 				log.Printf("[INFO] Skipping Elasticache Cache Security Group: %s", name)
 				continue
 			}
+
 			log.Printf("[INFO] Deleting Elasticache Cache Security Group: %s", name)
 			_, err := conn.DeleteCacheSecurityGroup(&elasticache.DeleteCacheSecurityGroupInput{
 				CacheSecurityGroupName: aws.String(name),
@@ -79,12 +67,12 @@ func testSweepElasticacheCacheSecurityGroups(region string) error {
 }
 
 func TestAccAWSElasticacheSecurityGroup_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheSecurityGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSElasticacheSecurityGroupConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticacheSecurityGroupExists("aws_elasticache_security_group.bar"),
@@ -102,16 +90,16 @@ func TestAccAWSElasticacheSecurityGroup_Import(t *testing.T) {
 	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
 	defer os.Setenv("AWS_DEFAULT_REGION", oldRegion)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheSecurityGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSElasticacheSecurityGroupConfig,
 			},
 
-			resource.TestStep{
+			{
 				ResourceName:      "aws_elasticache_security_group.bar",
 				ImportState:       true,
 				ImportStateVerify: true,

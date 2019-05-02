@@ -6,7 +6,7 @@ description: |-
   Provides a Load Balancer resource.
 ---
 
-# aws_lb
+# Resource: aws_lb
 
 Provides a Load Balancer resource.
 
@@ -32,7 +32,7 @@ resource "aws_lb" "test" {
     enabled = true
   }
 
-  tags {
+  tags = {
     Environment = "production"
   }
 }
@@ -49,7 +49,7 @@ resource "aws_lb" "test" {
 
   enable_deletion_protection = true
 
-  tags {
+  tags = {
     Environment = "production"
   }
 }
@@ -63,12 +63,12 @@ resource "aws_lb" "example" {
   load_balancer_type = "network"
 
   subnet_mapping {
-    subnet_id    = "${aws_subnet.example1.id}"
+    subnet_id     = "${aws_subnet.example1.id}"
     allocation_id = "${aws_eip.example1.id}"
   }
 
   subnet_mapping {
-    subnet_id    = "${aws_subnet.example2.id}"
+    subnet_id     = "${aws_subnet.example2.id}"
     allocation_id = "${aws_eip.example2.id}"
   }
 }
@@ -85,7 +85,7 @@ Terraform will autogenerate a name beginning with `tf-lb`.
 * `internal` - (Optional) If true, the LB will be internal.
 * `load_balancer_type` - (Optional) The type of load balancer to create. Possible values are `application` or `network`. The default value is `application`.
 * `security_groups` - (Optional) A list of security group IDs to assign to the LB. Only valid for Load Balancers of type `application`.
-* `access_logs` - (Optional) An Access Logs block. Access Logs documented below. Only valid for Load Balancers of type `application`.
+* `access_logs` - (Optional) An Access Logs block. Access Logs documented below.
 * `subnets` - (Optional) A list of subnet IDs to attach to the LB. Subnets
 cannot be updated for Load Balancers of type `network`. Changing this value 
 for load balancers of type `network` will force a recreation of the resource. 
@@ -120,7 +120,6 @@ The following attributes are exported in addition to the arguments listed above:
 * `arn` - The ARN of the load balancer (matches `id`).
 * `arn_suffix` - The ARN suffix for use with CloudWatch Metrics.
 * `dns_name` - The DNS name of the load balancer.
-* `canonical_hosted_zone_id` - The canonical hosted zone ID of the load balancer.
 * `zone_id` - The canonical hosted zone ID of the load balancer (to be used in a Route 53 Alias record).
 
 ## Timeouts

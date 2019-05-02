@@ -6,7 +6,7 @@ description: |-
   Provides a Cognito Resource Server.
 ---
 
-# aws_cognito_resource_server
+# Resource: aws_cognito_resource_server
 
 Provides a Cognito Resource Server.
 
@@ -38,10 +38,10 @@ resource "aws_cognito_resource_server" "resource" {
   identifier = "https://example.com"
   name       = "example"
 
-  scope = [{
-    scope_name = "sample-scope"
+  scope {
+    scope_name        = "sample-scope"
     scope_description = "a Sample Scope Description"
-  }]
+  }
 
   user_pool_id = "${aws_cognito_user_pool.pool.id}"
 }

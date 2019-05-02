@@ -105,30 +105,26 @@ func resourceAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("value", param.Value)
 
 	describeParamsInput := &ssm.DescribeParametersInput{
-		Filters: []*ssm.ParametersFilter{
-			&ssm.ParametersFilter{
+		ParameterFilters: []*ssm.ParameterStringFilter{
+			{
 				Key:    aws.String("Name"),
+				Option: aws.String("Equals"),
 				Values: []*string{aws.String(d.Get("name").(string))},
 			},
 		},
-		MaxResults: aws.Int64(50),
 	}
-	detailedParameters := []*ssm.ParameterMetadata{}
-	err = ssmconn.DescribeParametersPages(describeParamsInput,
-		func(page *ssm.DescribeParametersOutput, lastPage bool) bool {
-			detailedParameters = append(detailedParameters, page.Parameters...)
-			return !lastPage
-		})
+	describeResp, err := ssmconn.DescribeParameters(describeParamsInput)
 	if err != nil {
 		return fmt.Errorf("error describing SSM parameter: %s", err)
 	}
-	if len(detailedParameters) == 0 {
-		log.Printf("[WARN] SSM Param %q not found, removing from state", d.Id())
+
+	if describeResp == nil || len(describeResp.Parameters) == 0 || describeResp.Parameters[0] == nil {
+		log.Printf("[WARN] SSM Parameter %q not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	detail := detailedParameters[0]
+	detail := describeResp.Parameters[0]
 	d.Set("key_id", detail.KeyId)
 	d.Set("description", detail.Description)
 	d.Set("allowed_pattern", detail.AllowedPattern)
@@ -163,7 +159,7 @@ func resourceAwsSsmParameterDelete(d *schema.ResourceData, meta interface{}) err
 		Name: aws.String(d.Get("name").(string)),
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("error deleting SSM Parameter (%s): %s", d.Id(), err)
 	}
 
 	return nil

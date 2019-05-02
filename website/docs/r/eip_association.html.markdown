@@ -6,7 +6,7 @@ description: |-
   Provides an AWS EIP Association
 ---
 
-# aws_eip_association
+# Resource: aws_eip_association
 
 Provides an AWS EIP Association as a top level resource, to associate and
 disassociate Elastic IPs from AWS Instances and Network Interfaces.
@@ -29,7 +29,7 @@ resource "aws_instance" "web" {
   availability_zone = "us-west-2a"
   instance_type     = "t1.micro"
 
-  tags {
+  tags = {
     Name = "HelloWorld"
   }
 }

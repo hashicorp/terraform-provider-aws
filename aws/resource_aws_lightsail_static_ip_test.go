@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -49,10 +48,6 @@ func testSweepLightsailStaticIps(region string) error {
 		for _, staticIp := range output.StaticIps {
 			name := aws.StringValue(staticIp.Name)
 
-			if !strings.HasPrefix(name, "tf-test-") {
-				continue
-			}
-
 			log.Printf("[INFO] Deleting Lightsail Static IP %s", name)
 			_, err := conn.ReleaseStaticIp(&lightsail.ReleaseStaticIpInput{
 				StaticIpName: aws.String(name),
@@ -75,7 +70,7 @@ func TestAccAWSLightsailStaticIp_basic(t *testing.T) {
 	var staticIp lightsail.StaticIp
 	staticIpName := fmt.Sprintf("tf-test-lightsail-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLightsailStaticIpDestroy,
@@ -107,7 +102,7 @@ func TestAccAWSLightsailStaticIp_disappears(t *testing.T) {
 		return nil
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLightsailStaticIpDestroy,

@@ -24,15 +24,14 @@ data "aws_lambda_invocation" "example" {
   "key2": "value2"
 }
 JSON
-
 }
 
 output "result_entry" {
-  value = "${data.aws_lambda_invocation.result_map["key1"]}"
+  value = "${data.aws_lambda_invocation.example.result_map["key1"]}"
 }
 
 output "result" {
-  value = "${data.aws_lambda_invocation.result}"
+  value = "${data.aws_lambda_invocation.example.result}"
 }
 ```
 

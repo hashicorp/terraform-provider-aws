@@ -21,7 +21,7 @@ func TestAccAWSNeptuneCluster_basic(t *testing.T) {
 	rInt := acctest.RandInt()
 	resourceName := "aws_neptune_cluster.default"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
@@ -39,6 +39,17 @@ func TestAccAWSNeptuneCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "hosted_zone_id"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"cluster_identifier_prefix",
+					"final_snapshot_identifier",
+					"skip_final_snapshot",
+				},
+			},
 		},
 	})
 }
@@ -46,7 +57,7 @@ func TestAccAWSNeptuneCluster_basic(t *testing.T) {
 func TestAccAWSNeptuneCluster_namePrefix(t *testing.T) {
 	var v neptune.DBCluster
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
@@ -59,6 +70,17 @@ func TestAccAWSNeptuneCluster_namePrefix(t *testing.T) {
 						"aws_neptune_cluster.test", "cluster_identifier", regexp.MustCompile("^tf-test-")),
 				),
 			},
+			{
+				ResourceName:      "aws_neptune_cluster.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"cluster_identifier_prefix",
+					"final_snapshot_identifier",
+					"skip_final_snapshot",
+				},
+			},
 		},
 	})
 }
@@ -67,7 +89,7 @@ func TestAccAWSNeptuneCluster_takeFinalSnapshot(t *testing.T) {
 	var v neptune.DBCluster
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterSnapshot(rInt),
@@ -78,6 +100,17 @@ func TestAccAWSNeptuneCluster_takeFinalSnapshot(t *testing.T) {
 					testAccCheckAWSNeptuneClusterExists("aws_neptune_cluster.default", &v),
 				),
 			},
+			{
+				ResourceName:      "aws_neptune_cluster.default",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"cluster_identifier_prefix",
+					"final_snapshot_identifier",
+					"skip_final_snapshot",
+				},
+			},
 		},
 	})
 }
@@ -86,7 +119,7 @@ func TestAccAWSNeptuneCluster_updateTags(t *testing.T) {
 	var v neptune.DBCluster
 	ri := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
@@ -107,6 +140,17 @@ func TestAccAWSNeptuneCluster_updateTags(t *testing.T) {
 						"aws_neptune_cluster.default", "tags.%", "2"),
 				),
 			},
+			{
+				ResourceName:      "aws_neptune_cluster.default",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"cluster_identifier_prefix",
+					"final_snapshot_identifier",
+					"skip_final_snapshot",
+				},
+			},
 		},
 	})
 }
@@ -115,7 +159,7 @@ func TestAccAWSNeptuneCluster_updateIamRoles(t *testing.T) {
 	var v neptune.DBCluster
 	ri := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
@@ -142,6 +186,17 @@ func TestAccAWSNeptuneCluster_updateIamRoles(t *testing.T) {
 						"aws_neptune_cluster.default", "iam_roles.#", "1"),
 				),
 			},
+			{
+				ResourceName:      "aws_neptune_cluster.default",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"cluster_identifier_prefix",
+					"final_snapshot_identifier",
+					"skip_final_snapshot",
+				},
+			},
 		},
 	})
 }
@@ -150,7 +205,7 @@ func TestAccAWSNeptuneCluster_kmsKey(t *testing.T) {
 	var v neptune.DBCluster
 	keyRegex := regexp.MustCompile("^arn:aws:kms:")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
@@ -163,6 +218,17 @@ func TestAccAWSNeptuneCluster_kmsKey(t *testing.T) {
 						"aws_neptune_cluster.default", "kms_key_arn", keyRegex),
 				),
 			},
+			{
+				ResourceName:      "aws_neptune_cluster.default",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"cluster_identifier_prefix",
+					"final_snapshot_identifier",
+					"skip_final_snapshot",
+				},
+			},
 		},
 	})
 }
@@ -170,7 +236,7 @@ func TestAccAWSNeptuneCluster_kmsKey(t *testing.T) {
 func TestAccAWSNeptuneCluster_encrypted(t *testing.T) {
 	var v neptune.DBCluster
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
@@ -183,6 +249,17 @@ func TestAccAWSNeptuneCluster_encrypted(t *testing.T) {
 						"aws_neptune_cluster.default", "storage_encrypted", "true"),
 				),
 			},
+			{
+				ResourceName:      "aws_neptune_cluster.default",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"cluster_identifier_prefix",
+					"final_snapshot_identifier",
+					"skip_final_snapshot",
+				},
+			},
 		},
 	})
 }
@@ -191,7 +268,7 @@ func TestAccAWSNeptuneCluster_backupsUpdate(t *testing.T) {
 	var v neptune.DBCluster
 
 	ri := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
@@ -208,8 +285,7 @@ func TestAccAWSNeptuneCluster_backupsUpdate(t *testing.T) {
 						"aws_neptune_cluster.default", "preferred_maintenance_window", "tue:04:00-tue:04:30"),
 				),
 			},
-
-			resource.TestStep{
+			{
 				Config: testAccAWSNeptuneClusterConfig_backupsUpdate(ri),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSNeptuneClusterExists("aws_neptune_cluster.default", &v),
@@ -221,6 +297,17 @@ func TestAccAWSNeptuneCluster_backupsUpdate(t *testing.T) {
 						"aws_neptune_cluster.default", "preferred_maintenance_window", "wed:01:00-wed:01:30"),
 				),
 			},
+			{
+				ResourceName:      "aws_neptune_cluster.default",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"cluster_identifier_prefix",
+					"final_snapshot_identifier",
+					"skip_final_snapshot",
+				},
+			},
 		},
 	})
 }
@@ -228,7 +315,7 @@ func TestAccAWSNeptuneCluster_backupsUpdate(t *testing.T) {
 func TestAccAWSNeptuneCluster_iamAuth(t *testing.T) {
 	var v neptune.DBCluster
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterDestroy,
@@ -240,6 +327,17 @@ func TestAccAWSNeptuneCluster_iamAuth(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_neptune_cluster.default", "iam_database_authentication_enabled", "true"),
 				),
+			},
+			{
+				ResourceName:      "aws_neptune_cluster.default",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"cluster_identifier_prefix",
+					"final_snapshot_identifier",
+					"skip_final_snapshot",
+				},
 			},
 		},
 	})
@@ -378,7 +476,7 @@ resource "aws_neptune_cluster" "default" {
   engine = "neptune"
   neptune_cluster_parameter_group_name = "default.neptune1"
   skip_final_snapshot = true
-  tags {
+  tags = {
     Environment = "production"
   }
 }`, n)
@@ -402,7 +500,7 @@ resource "aws_neptune_cluster" "default" {
   availability_zones = ["us-west-2a","us-west-2b","us-west-2c"]
   neptune_cluster_parameter_group_name = "default.neptune1"
   final_snapshot_identifier = "tf-acctest-neptunecluster-snapshot-%d"
-  tags {
+  tags = {
     Environment = "production"
   }
 }`, n, n)
@@ -415,7 +513,7 @@ resource "aws_neptune_cluster" "default" {
   availability_zones = ["us-west-2a","us-west-2b","us-west-2c"]
   neptune_cluster_parameter_group_name = "default.neptune1"
   skip_final_snapshot = true
-  tags {
+  tags = {
     Environment = "production"
     AnotherTag = "test"
   }
@@ -495,7 +593,7 @@ resource "aws_neptune_cluster" "default" {
   availability_zones = ["us-west-2a","us-west-2b","us-west-2c"]
   neptune_cluster_parameter_group_name = "default.neptune1"
   skip_final_snapshot = true
-  tags {
+  tags = {
     Environment = "production"
   }
   depends_on = ["aws_iam_role.another_neptune_sample_role", "aws_iam_role.neptune_sample_role"]
@@ -576,7 +674,7 @@ resource "aws_neptune_cluster" "default" {
   availability_zones = ["us-west-2a","us-west-2b","us-west-2c"]
   skip_final_snapshot = true
   iam_roles = ["${aws_iam_role.neptune_sample_role.arn}","${aws_iam_role.another_neptune_sample_role.arn}"]
-  tags {
+  tags = {
     Environment = "production"
   }
   depends_on = ["aws_iam_role.another_neptune_sample_role", "aws_iam_role.neptune_sample_role"]
@@ -624,7 +722,7 @@ resource "aws_neptune_cluster" "default" {
   availability_zones = ["us-west-2a","us-west-2b","us-west-2c"]
   skip_final_snapshot = true
   iam_roles = ["${aws_iam_role.another_neptune_sample_role.arn}"]
-  tags {
+  tags = {
     Environment = "production"
   }
 

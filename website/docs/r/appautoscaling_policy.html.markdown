@@ -6,7 +6,7 @@ description: |-
   Provides an Application AutoScaling Policy resource.
 ---
 
-# aws_appautoscaling_policy
+# Resource: aws_appautoscaling_policy
 
 Provides an Application AutoScaling Policy resource.
 
@@ -54,11 +54,11 @@ resource "aws_appautoscaling_target" "ecs_target" {
 }
 
 resource "aws_appautoscaling_policy" "ecs_policy" {
-  name                    = "scale-down"
-  policy_type             = "StepScaling"
-  resource_id             = "service/clusterName/serviceName"
-  scalable_dimension      = "ecs:service:DesiredCount"
-  service_namespace       = "ecs"
+  name               = "scale-down"
+  policy_type        = "StepScaling"
+  resource_id        = "${aws_appautoscaling_target.ecs_target.resource_id}"
+  scalable_dimension = "${aws_appautoscaling_target.ecs_target.scalable_dimension}"
+  service_namespace  = "${aws_appautoscaling_target.ecs_target.service_namespace}"
 
   step_scaling_policy_configuration {
     adjustment_type         = "ChangeInCapacity"
@@ -70,8 +70,6 @@ resource "aws_appautoscaling_policy" "ecs_policy" {
       scaling_adjustment          = -1
     }
   }
-
-  depends_on = ["aws_appautoscaling_target.ecs_target"]
 }
 ```
 
@@ -79,10 +77,10 @@ resource "aws_appautoscaling_policy" "ecs_policy" {
 
 ```hcl
 resource "aws_ecs_service" "ecs_service" {
-  name = "serviceName"
-  cluster = "clusterName"
+  name            = "serviceName"
+  cluster         = "clusterName"
   task_definition = "taskDefinitionFamily:1"
-  desired_count = 2
+  desired_count   = 2
 
   lifecycle {
     ignore_changes = ["desired_count"]
@@ -112,8 +110,9 @@ resource "aws_appautoscaling_policy" "replicas" {
     predefined_metric_specification {
       predefined_metric_type = "RDSReaderAverageCPUUtilization"
     }
-    target_value = 75
-    scale_in_cooldown = 300
+
+    target_value       = 75
+    scale_in_cooldown  = 300
     scale_out_cooldown = 300
   }
 }
@@ -141,18 +140,27 @@ The following arguments are supported:
 * `min_adjustment_magnitude` - (Optional) The minimum number to adjust your scalable dimension as a result of a scaling activity. If the adjustment type is PercentChangeInCapacity, the scaling policy changes the scalable dimension of the scalable target by this amount.
 * `step_adjustment` - (Optional) A set of adjustments that manage scaling. These have the following structure:
 
-  ```hcl
-  step_adjustment {
-    metric_interval_lower_bound = 1.0
-    metric_interval_upper_bound = 2.0
-    scaling_adjustment = -1
+ ```hcl
+resource "aws_appautoscaling_policy" "ecs_policy" {
+  # ...
+
+  step_scaling_policy_configuration {
+    # insert config here
+
+    step_adjustment {
+      metric_interval_lower_bound = 1.0
+      metric_interval_upper_bound = 2.0
+      scaling_adjustment          = -1
+    }
+
+    step_adjustment {
+      metric_interval_lower_bound = 2.0
+      metric_interval_upper_bound = 3.0
+      scaling_adjustment          = 1
+    }
   }
-  step_adjustment {
-    metric_interval_lower_bound = 2.0
-    metric_interval_upper_bound = 3.0
-    scaling_adjustment = 1
-  }
-  ```
+}
+```
 
   * `metric_interval_lower_bound` - (Optional) The lower bound for the difference between the alarm threshold and the CloudWatch metric. Without a value, AWS will treat this bound as negative infinity.
   * `metric_interval_upper_bound` - (Optional) The upper bound for the difference between the alarm threshold and the CloudWatch metric. Without a value, AWS will treat this bound as infinity. The upper bound must be greater than the lower bound.
@@ -181,7 +189,15 @@ The following arguments are supported:
 * `resource_label` - (Optional) Reserved for future use.
 
 ## Attribute Reference
-* `adjustment_type` - The scaling policy's adjustment type.
+
 * `arn` - The ARN assigned by AWS to the scaling policy.
 * `name` - The scaling policy's name.
 * `policy_type` - The scaling policy's type.
+
+## Import
+
+Application AutoScaling Policy can be imported using the `service-namespace` , `resource-id`, `scalable-dimension` and `policy-name` separated by `/`.
+
+```
+$ terraform import aws_appautoscaling_policy.test-policy service-namespace/resource-id/scalable-dimension/policy-name
+```

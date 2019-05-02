@@ -11,7 +11,6 @@ import (
 	getter "github.com/hashicorp/go-getter"
 	"github.com/hashicorp/terraform/registry"
 	"github.com/hashicorp/terraform/registry/regsrc"
-	"github.com/hashicorp/terraform/svchost/auth"
 	"github.com/hashicorp/terraform/svchost/disco"
 	"github.com/mitchellh/cli"
 )
@@ -64,22 +63,19 @@ type Storage struct {
 	// StorageDir is the full path to the directory where all modules will be
 	// stored.
 	StorageDir string
-	// Services is a required *disco.Disco, which may have services and
-	// credentials pre-loaded.
-	Services *disco.Disco
-	// Creds optionally provides credentials for communicating with service
-	// providers.
-	Creds auth.CredentialsSource
+
 	// Ui is an optional cli.Ui for user output
 	Ui cli.Ui
+
 	// Mode is the GetMode that will be used for various operations.
 	Mode GetMode
 
 	registry *registry.Client
 }
 
-func NewStorage(dir string, services *disco.Disco, creds auth.CredentialsSource) *Storage {
-	regClient := registry.NewClient(services, creds, nil)
+// NewStorage returns a new initialized Storage object.
+func NewStorage(dir string, services *disco.Disco) *Storage {
+	regClient := registry.NewClient(services, nil)
 
 	return &Storage{
 		StorageDir: dir,
@@ -316,7 +312,7 @@ func (s Storage) findRegistryModule(mSource, constraint string) (moduleRecord, e
 	// we need to lookup available versions
 	// Only on Get if it's not found, on unconditionally on Update
 	if (s.Mode == GetModeGet && !found) || (s.Mode == GetModeUpdate) {
-		resp, err := s.registry.Versions(mod)
+		resp, err := s.registry.ModuleVersions(mod)
 		if err != nil {
 			return rec, err
 		}
@@ -336,7 +332,7 @@ func (s Storage) findRegistryModule(mSource, constraint string) (moduleRecord, e
 
 		rec.Version = match.Version
 
-		rec.url, err = s.registry.Location(mod, rec.Version)
+		rec.url, err = s.registry.ModuleLocation(mod, rec.Version)
 		if err != nil {
 			return rec, err
 		}

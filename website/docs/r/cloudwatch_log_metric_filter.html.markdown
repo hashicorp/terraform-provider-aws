@@ -6,7 +6,7 @@ description: |-
   Provides a CloudWatch Log Metric Filter resource.
 ---
 
-# aws_cloudwatch_log_metric_filter
+# Resource: aws_cloudwatch_log_metric_filter
 
 Provides a CloudWatch Log Metric Filter resource.
 

@@ -6,7 +6,7 @@ description: |-
   Provides an Elastic MapReduce Cluster Instance Group
 ---
 
-# aws_emr_instance_group
+# Resource: aws_emr_instance_group
 
 Provides an Elastic MapReduce Cluster Instance Group configuration.
 See [Amazon Elastic MapReduce Documentation](https://aws.amazon.com/documentation/emr/) for more information.
@@ -21,7 +21,7 @@ Terraform will resize any Instance Group to zero when destroying the resource.
 resource "aws_emr_instance_group" "task" {
   cluster_id     = "${aws_emr_cluster.tf-test-cluster.id}"
   instance_count = 1
-  instance_type  = "m3.xlarge"
+  instance_type  = "m5.xlarge"
   name           = "my little instance group"
 }
 ```

@@ -17,6 +17,9 @@ func resourceAwsSesNotificationTopic() *schema.Resource {
 		Read:   resourceAwsSesNotificationTopicRead,
 		Update: resourceAwsSesNotificationTopicSet,
 		Delete: resourceAwsSesNotificationTopicDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"topic_arn": {
@@ -79,6 +82,9 @@ func resourceAwsSesNotificationTopicRead(d *schema.ResourceData, meta interface{
 		return err
 	}
 
+	d.Set("identity", identity)
+	d.Set("notification_type", notificationType)
+
 	getOpts := &ses.GetIdentityNotificationAttributesInput{
 		Identities: []*string{aws.String(identity)},
 	}
@@ -91,7 +97,16 @@ func resourceAwsSesNotificationTopicRead(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("Error reading SES Identity Notification Topic: %s", err)
 	}
 
-	notificationAttributes := response.NotificationAttributes[identity]
+	d.Set("topic_arn", "")
+	if response == nil {
+		return nil
+	}
+
+	notificationAttributes, notificationAttributesOk := response.NotificationAttributes[identity]
+	if !notificationAttributesOk {
+		return nil
+	}
+
 	switch notificationType {
 	case ses.NotificationTypeBounce:
 		d.Set("topic_arn", notificationAttributes.BounceTopic)

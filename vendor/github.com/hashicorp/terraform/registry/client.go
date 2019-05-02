@@ -15,16 +15,16 @@ import (
 	"github.com/hashicorp/terraform/registry/regsrc"
 	"github.com/hashicorp/terraform/registry/response"
 	"github.com/hashicorp/terraform/svchost"
-	"github.com/hashicorp/terraform/svchost/auth"
 	"github.com/hashicorp/terraform/svchost/disco"
 	"github.com/hashicorp/terraform/version"
 )
 
 const (
-	xTerraformGet     = "X-Terraform-Get"
-	xTerraformVersion = "X-Terraform-Version"
-	requestTimeout    = 10 * time.Second
-	serviceID         = "modules.v1"
+	xTerraformGet      = "X-Terraform-Get"
+	xTerraformVersion  = "X-Terraform-Version"
+	requestTimeout     = 10 * time.Second
+	modulesServiceID   = "modules.v1"
+	providersServiceID = "providers.v1"
 )
 
 var tfVersion = version.String()
@@ -37,18 +37,13 @@ type Client struct {
 	// services is a required *disco.Disco, which may have services and
 	// credentials pre-loaded.
 	services *disco.Disco
-
-	// Creds optionally provides credentials for communicating with service
-	// providers.
-	creds auth.CredentialsSource
 }
 
-func NewClient(services *disco.Disco, creds auth.CredentialsSource, client *http.Client) *Client {
+// NewClient returns a new initialized registry client.
+func NewClient(services *disco.Disco, client *http.Client) *Client {
 	if services == nil {
-		services = disco.NewDisco()
+		services = disco.New()
 	}
-
-	services.SetCredentialsSource(creds)
 
 	if client == nil {
 		client = httpclient.New()
@@ -60,32 +55,31 @@ func NewClient(services *disco.Disco, creds auth.CredentialsSource, client *http
 	return &Client{
 		client:   client,
 		services: services,
-		creds:    creds,
 	}
 }
 
-// Discover qeuries the host, and returns the url for the registry.
-func (c *Client) Discover(host svchost.Hostname) *url.URL {
-	service := c.services.DiscoverServiceURL(host, serviceID)
-	if service == nil {
-		return nil
+// Discover queries the host, and returns the url for the registry.
+func (c *Client) Discover(host svchost.Hostname, serviceID string) (*url.URL, error) {
+	service, err := c.services.DiscoverServiceURL(host, serviceID)
+	if err != nil {
+		return nil, &ServiceUnreachableError{err}
 	}
 	if !strings.HasSuffix(service.Path, "/") {
 		service.Path += "/"
 	}
-	return service
+	return service, nil
 }
 
-// Versions queries the registry for a module, and returns the available versions.
-func (c *Client) Versions(module *regsrc.Module) (*response.ModuleVersions, error) {
+// ModuleVersions queries the registry for a module, and returns the available versions.
+func (c *Client) ModuleVersions(module *regsrc.Module) (*response.ModuleVersions, error) {
 	host, err := module.SvcHost()
 	if err != nil {
 		return nil, err
 	}
 
-	service := c.Discover(host)
-	if service == nil {
-		return nil, fmt.Errorf("host %s does not provide Terraform modules", host)
+	service, err := c.Discover(host, modulesServiceID)
+	if err != nil {
+		return nil, err
 	}
 
 	p, err := url.Parse(path.Join(module.Module(), "versions"))
@@ -137,11 +131,7 @@ func (c *Client) Versions(module *regsrc.Module) (*response.ModuleVersions, erro
 }
 
 func (c *Client) addRequestCreds(host svchost.Hostname, req *http.Request) {
-	if c.creds == nil {
-		return
-	}
-
-	creds, err := c.creds.ForHost(host)
+	creds, err := c.services.CredentialsForHost(host)
 	if err != nil {
 		log.Printf("[WARN] Failed to get credentials for %s: %s (ignoring)", host, err)
 		return
@@ -152,17 +142,17 @@ func (c *Client) addRequestCreds(host svchost.Hostname, req *http.Request) {
 	}
 }
 
-// Location find the download location for a specific version module.
+// ModuleLocation find the download location for a specific version module.
 // This returns a string, because the final location may contain special go-getter syntax.
-func (c *Client) Location(module *regsrc.Module, version string) (string, error) {
+func (c *Client) ModuleLocation(module *regsrc.Module, version string) (string, error) {
 	host, err := module.SvcHost()
 	if err != nil {
 		return "", err
 	}
 
-	service := c.Discover(host)
-	if service == nil {
-		return "", fmt.Errorf("host %s does not provide Terraform modules", host.ForDisplay())
+	service, err := c.Discover(host, modulesServiceID)
+	if err != nil {
+		return "", err
 	}
 
 	var p *url.URL
@@ -235,4 +225,119 @@ func (c *Client) Location(module *regsrc.Module, version string) (string, error)
 	}
 
 	return location, nil
+}
+
+// TerraformProviderVersions queries the registry for a provider, and returns the available versions.
+func (c *Client) TerraformProviderVersions(provider *regsrc.TerraformProvider) (*response.TerraformProviderVersions, error) {
+	host, err := provider.SvcHost()
+	if err != nil {
+		return nil, err
+	}
+
+	service, err := c.Discover(host, providersServiceID)
+	if err != nil {
+		return nil, err
+	}
+
+	p, err := url.Parse(path.Join(provider.TerraformProvider(), "versions"))
+	if err != nil {
+		return nil, err
+	}
+
+	service = service.ResolveReference(p)
+
+	log.Printf("[DEBUG] fetching provider versions from %q", service)
+
+	req, err := http.NewRequest("GET", service.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	c.addRequestCreds(host, req)
+	req.Header.Set(xTerraformVersion, tfVersion)
+
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case http.StatusOK:
+		// OK
+	case http.StatusNotFound:
+		return nil, &errProviderNotFound{addr: provider}
+	default:
+		return nil, fmt.Errorf("error looking up provider versions: %s", resp.Status)
+	}
+
+	var versions response.TerraformProviderVersions
+
+	dec := json.NewDecoder(resp.Body)
+	if err := dec.Decode(&versions); err != nil {
+		return nil, err
+	}
+
+	return &versions, nil
+}
+
+// TerraformProviderLocation queries the registry for a provider download metadata
+func (c *Client) TerraformProviderLocation(provider *regsrc.TerraformProvider, version string) (*response.TerraformProviderPlatformLocation, error) {
+	host, err := provider.SvcHost()
+	if err != nil {
+		return nil, err
+	}
+
+	service, err := c.Discover(host, providersServiceID)
+	if err != nil {
+		return nil, err
+	}
+
+	p, err := url.Parse(path.Join(
+		provider.TerraformProvider(),
+		version,
+		"download",
+		provider.OS,
+		provider.Arch,
+	))
+	if err != nil {
+		return nil, err
+	}
+
+	service = service.ResolveReference(p)
+
+	log.Printf("[DEBUG] fetching provider location from %q", service)
+
+	req, err := http.NewRequest("GET", service.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	c.addRequestCreds(host, req)
+	req.Header.Set(xTerraformVersion, tfVersion)
+
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var loc response.TerraformProviderPlatformLocation
+
+	dec := json.NewDecoder(resp.Body)
+	if err := dec.Decode(&loc); err != nil {
+		return nil, err
+	}
+
+	switch resp.StatusCode {
+	case http.StatusOK, http.StatusNoContent:
+		// OK
+	case http.StatusNotFound:
+		return nil, fmt.Errorf("provider %q version %q not found", provider.TerraformProvider(), version)
+	default:
+		// anything else is an error:
+		return nil, fmt.Errorf("error getting download location for %q: %s", provider.TerraformProvider(), resp.Status)
+	}
+
+	return &loc, nil
 }

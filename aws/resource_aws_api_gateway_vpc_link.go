@@ -70,7 +70,7 @@ func resourceAwsApiGatewayVpcLinkCreate(d *schema.ResourceData, meta interface{}
 	_, err = stateConf.WaitForState()
 	if err != nil {
 		d.SetId("")
-		return fmt.Errorf("[WARN] Error waiting for APIGateway Vpc Link status to be \"%s\": %s", apigateway.VpcLinkStatusAvailable, err)
+		return fmt.Errorf("Error waiting for APIGateway Vpc Link status to be \"%s\": %s", apigateway.VpcLinkStatusAvailable, err)
 	}
 
 	return nil
@@ -145,7 +145,7 @@ func resourceAwsApiGatewayVpcLinkUpdate(d *schema.ResourceData, meta interface{}
 
 	_, err = stateConf.WaitForState()
 	if err != nil {
-		return fmt.Errorf("[WARN] Error waiting for APIGateway Vpc Link status to be \"%s\": %s", apigateway.VpcLinkStatusAvailable, err)
+		return fmt.Errorf("Error waiting for APIGateway Vpc Link status to be \"%s\": %s", apigateway.VpcLinkStatusAvailable, err)
 	}
 
 	return nil
@@ -159,36 +159,17 @@ func resourceAwsApiGatewayVpcLinkDelete(d *schema.ResourceData, meta interface{}
 	}
 
 	_, err := conn.DeleteVpcLink(input)
+
+	if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+		return nil
+	}
+
 	if err != nil {
-		if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
-			return nil
-		}
-		return err
+		return fmt.Errorf("error deleting API Gateway VPC Link (%s): %s", d.Id(), err)
 	}
 
-	stateConf := resource.StateChangeConf{
-		Pending: []string{apigateway.VpcLinkStatusPending,
-			apigateway.VpcLinkStatusAvailable,
-			apigateway.VpcLinkStatusDeleting},
-		Target:     []string{""},
-		Timeout:    5 * time.Minute,
-		MinTimeout: 1 * time.Second,
-		Refresh: func() (interface{}, string, error) {
-			resp, err := conn.GetVpcLink(&apigateway.GetVpcLinkInput{
-				VpcLinkId: aws.String(d.Id()),
-			})
-			if err != nil {
-				if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
-					return 1, "", nil
-				}
-				return nil, "failed", err
-			}
-			return resp, *resp.Status, nil
-		},
-	}
-
-	if _, err := stateConf.WaitForState(); err != nil {
-		return err
+	if err := waitForApiGatewayVpcLinkDeletion(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for API Gateway VPC Link (%s) deletion: %s", d.Id(), err)
 	}
 
 	return nil
@@ -205,4 +186,34 @@ func apigatewayVpcLinkRefreshStatusFunc(conn *apigateway.APIGateway, vl string) 
 		}
 		return resp, *resp.Status, nil
 	}
+}
+
+func waitForApiGatewayVpcLinkDeletion(conn *apigateway.APIGateway, vpcLinkID string) error {
+	stateConf := resource.StateChangeConf{
+		Pending: []string{apigateway.VpcLinkStatusPending,
+			apigateway.VpcLinkStatusAvailable,
+			apigateway.VpcLinkStatusDeleting},
+		Target:     []string{""},
+		Timeout:    5 * time.Minute,
+		MinTimeout: 1 * time.Second,
+		Refresh: func() (interface{}, string, error) {
+			resp, err := conn.GetVpcLink(&apigateway.GetVpcLinkInput{
+				VpcLinkId: aws.String(vpcLinkID),
+			})
+
+			if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+				return 1, "", nil
+			}
+
+			if err != nil {
+				return nil, apigateway.VpcLinkStatusFailed, err
+			}
+
+			return resp, aws.StringValue(resp.Status), nil
+		},
+	}
+
+	_, err := stateConf.WaitForState()
+
+	return err
 }

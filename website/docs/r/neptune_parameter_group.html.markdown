@@ -6,7 +6,7 @@ description: |-
   Manages a Neptune Parameter Group
 ---
 
-# aws_neptune_parameter_group
+# Resource: aws_neptune_parameter_group
 
 Manages a Neptune Parameter Group
 
@@ -18,8 +18,8 @@ resource "aws_neptune_parameter_group" "example" {
   name   = "example"
 
   parameter {
-    name         = "neptune_query_timeout"
-    value        = "25"
+    name  = "neptune_query_timeout"
+    value = "25"
   }
 }
 ```

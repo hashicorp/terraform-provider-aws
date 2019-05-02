@@ -12,7 +12,7 @@ func TestAccDataSourceAWSALBTargetGroup_basic(t *testing.T) {
 	lbName := fmt.Sprintf("testlb-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
 	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -69,7 +69,7 @@ func TestAccDataSourceAWSLBTargetGroupBackwardsCompatibility(t *testing.T) {
 	lbName := fmt.Sprintf("testlb-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
 	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -138,12 +138,12 @@ resource "aws_lb" "alb_test" {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id}"]
+  subnets         = ["${aws_subnet.alb_test.0.id}", "${aws_subnet.alb_test.1.id}"]
 
   idle_timeout = 30
   enable_deletion_protection = false
 
-  tags {
+  tags = {
     TestName = "TestAccDataSourceAWSALBTargetGroup_basic"
   }
 }
@@ -165,7 +165,7 @@ resource "aws_lb_target_group" "test" {
     matcher = "200-299"
   }
 
-  tags {
+  tags = {
     TestName = "TestAccDataSourceAWSALBTargetGroup_basic"
   }
 }
@@ -180,7 +180,7 @@ data "aws_availability_zones" "available" {}
 resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-lb-data-source-target-group-basic"
   }
 }
@@ -192,7 +192,7 @@ resource "aws_subnet" "alb_test" {
   map_public_ip_on_launch = true
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
-  tags {
+  tags = {
     Name = "tf-acc-lb-data-source-target-group-basic"
   }
 }
@@ -216,7 +216,7 @@ resource "aws_security_group" "alb_test" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags {
+  tags = {
     TestName = "TestAccDataSourceAWSALBTargetGroup_basic"
   }
 }
@@ -246,12 +246,12 @@ resource "aws_alb" "alb_test" {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id}"]
+  subnets         = ["${aws_subnet.alb_test.0.id}", "${aws_subnet.alb_test.1.id}"]
 
   idle_timeout = 30
   enable_deletion_protection = false
 
-  tags {
+  tags = {
     TestName = "TestAccDataSourceAWSALBTargetGroup_basic"
   }
 }
@@ -273,7 +273,7 @@ resource "aws_alb_target_group" "test" {
     matcher = "200-299"
   }
 
-  tags {
+  tags = {
     TestName = "TestAccDataSourceAWSALBTargetGroup_basic"
   }
 }
@@ -288,7 +288,7 @@ data "aws_availability_zones" "available" {}
 resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-lb-data-source-target-group-bc"
   }
 }
@@ -300,7 +300,7 @@ resource "aws_subnet" "alb_test" {
   map_public_ip_on_launch = true
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
-  tags {
+  tags = {
     Name = "tf-acc-lb-data-source-target-group-bc"
   }
 }
@@ -324,7 +324,7 @@ resource "aws_security_group" "alb_test" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags {
+  tags = {
     TestName = "TestAccDataSourceAWSALBTargetGroup_basic"
   }
 }

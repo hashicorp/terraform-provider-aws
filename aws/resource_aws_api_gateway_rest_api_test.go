@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
 	"testing"
 	"time"
 
@@ -28,27 +27,8 @@ func testSweepAPIGatewayRestApis(region string) error {
 	}
 	conn := client.(*AWSClient).apigateway
 
-	// https://github.com/terraform-providers/terraform-provider-aws/issues/3808
-	prefixes := []string{
-		"test",
-		"tf_acc_",
-		"tf-acc-",
-	}
-
 	err = conn.GetRestApisPages(&apigateway.GetRestApisInput{}, func(page *apigateway.GetRestApisOutput, lastPage bool) bool {
 		for _, item := range page.Items {
-			skip := true
-			for _, prefix := range prefixes {
-				if strings.HasPrefix(*item.Name, prefix) {
-					skip = false
-					break
-				}
-			}
-			if skip {
-				log.Printf("[INFO] Skipping API Gateway REST API: %s", *item.Name)
-				continue
-			}
-
 			input := &apigateway.DeleteRestApiInput{
 				RestApiId: item.Id,
 			}
@@ -85,7 +65,7 @@ func testSweepAPIGatewayRestApis(region string) error {
 func TestAccAWSAPIGatewayRestApi_basic(t *testing.T) {
 	var conf apigateway.RestApi
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
@@ -105,6 +85,11 @@ func TestAccAWSAPIGatewayRestApi_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr("aws_api_gateway_rest_api.test", "binary_media_types"),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "endpoint_configuration.#", "1"),
 				),
+			},
+			{
+				ResourceName:      "aws_api_gateway_rest_api.test",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 
 			{
@@ -140,7 +125,7 @@ func TestAccAWSAPIGatewayRestApi_EndpointConfiguration(t *testing.T) {
 	var restApi apigateway.RestApi
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
@@ -153,6 +138,11 @@ func TestAccAWSAPIGatewayRestApi_EndpointConfiguration(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "endpoint_configuration.0.types.#", "1"),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "endpoint_configuration.0.types.0", "REGIONAL"),
 				),
+			},
+			{
+				ResourceName:      "aws_api_gateway_rest_api.test",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			// For backwards compatibility, test removing endpoint_configuration, which should do nothing
 			{
@@ -209,7 +199,7 @@ func TestAccAWSAPIGatewayRestApi_EndpointConfiguration_Private(t *testing.T) {
 	var restApi apigateway.RestApi
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
@@ -248,6 +238,11 @@ func TestAccAWSAPIGatewayRestApi_EndpointConfiguration_Private(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "endpoint_configuration.0.types.0", "PRIVATE"),
 				),
 			},
+			{
+				ResourceName:      "aws_api_gateway_rest_api.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -255,7 +250,7 @@ func TestAccAWSAPIGatewayRestApi_EndpointConfiguration_Private(t *testing.T) {
 func TestAccAWSAPIGatewayRestApi_api_key_source(t *testing.T) {
 	expectedAPIKeySource := "HEADER"
 	expectedUpdateAPIKeySource := "AUTHORIZER"
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
@@ -265,6 +260,11 @@ func TestAccAWSAPIGatewayRestApi_api_key_source(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "api_key_source", expectedAPIKeySource),
 				),
+			},
+			{
+				ResourceName:      "aws_api_gateway_rest_api.test",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSAPIGatewayRestAPIConfigWithUpdateAPIKeySource,
@@ -285,7 +285,7 @@ func TestAccAWSAPIGatewayRestApi_api_key_source(t *testing.T) {
 func TestAccAWSAPIGatewayRestApi_policy(t *testing.T) {
 	expectedPolicyText := `{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"AWS":"*"},"Action":"execute-api:Invoke","Resource":"*","Condition":{"IpAddress":{"aws:SourceIp":"123.123.123.123/32"}}}]}`
 	expectedUpdatePolicyText := `{"Version":"2012-10-17","Statement":[{"Effect":"Deny","Principal":{"AWS":"*"},"Action":"execute-api:Invoke","Resource":"*"}]}`
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
@@ -295,6 +295,11 @@ func TestAccAWSAPIGatewayRestApi_policy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "policy", expectedPolicyText),
 				),
+			},
+			{
+				ResourceName:      "aws_api_gateway_rest_api.test",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSAPIGatewayRestAPIConfigUpdatePolicy,
@@ -315,7 +320,7 @@ func TestAccAWSAPIGatewayRestApi_policy(t *testing.T) {
 func TestAccAWSAPIGatewayRestApi_openapi(t *testing.T) {
 	var conf apigateway.RestApi
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
@@ -333,7 +338,12 @@ func TestAccAWSAPIGatewayRestApi_openapi(t *testing.T) {
 					resource.TestCheckNoResourceAttr("aws_api_gateway_rest_api.test", "binary_media_types"),
 				),
 			},
-
+			{
+				ResourceName:            "aws_api_gateway_rest_api.test",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"body"},
+			},
 			{
 				Config: testAccAWSAPIGatewayRestAPIUpdateConfigOpenAPI,
 				Check: resource.ComposeTestCheckFunc(

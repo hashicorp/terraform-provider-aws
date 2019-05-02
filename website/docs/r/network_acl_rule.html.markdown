@@ -6,7 +6,7 @@ description: |-
   Provides an network ACL Rule resource.
 ---
 
-# aws_network_acl_rule
+# Resource: aws_network_acl_rule
 
 Creates an entry (a rule) in a network ACL with the specified rule number.
 
@@ -29,7 +29,8 @@ resource "aws_network_acl_rule" "bar" {
   egress         = false
   protocol       = "tcp"
   rule_action    = "allow"
-  cidr_block     = "0.0.0.0/0"
+  # Opening to 0.0.0.0/0 can lead to security vulnerabilities.
+  cidr_block = # add a CIDR block here
   from_port      = 22
   to_port        = 22
 }
@@ -57,7 +58,7 @@ The following arguments are supported:
 
 ~> **NOTE:** If the value of `icmp_type` is `-1` (which results in a wildcard ICMP type), the `icmp_code` must also be set to `-1` (wildcard ICMP code).
 
-~> Note: For more information on ICMP types and codes, see here: http://www.nthelp.com/icmp.html
+~> Note: For more information on ICMP types and codes, see here: https://www.iana.org/assignments/icmp-parameters/icmp-parameters.xhtml
 
 ## Attributes Reference
 

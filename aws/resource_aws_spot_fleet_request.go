@@ -239,9 +239,9 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 							StateFunc: func(v interface{}) string {
-								switch v.(type) {
+								switch v := v.(type) {
 								case string:
-									return userDataHashSum(v.(string))
+									return userDataHashSum(v)
 								default:
 									return ""
 								}
@@ -285,11 +285,22 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 				Default:  "lowestPrice",
 				ForceNew: true,
 			},
+			"instance_pools_to_use_count": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  1,
+				ForceNew: true,
+			},
+			// Provided constants do not have the correct casing so going with hard-coded values.
 			"excess_capacity_termination_policy": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "Default",
 				ForceNew: false,
+				ValidateFunc: validation.StringInSlice([]string{
+					"Default",
+					"NoTermination",
+				}, false),
 			},
 			"instance_interruption_behaviour": {
 				Type:     schema.TypeString,
@@ -311,13 +322,13 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validateRFC3339TimeString,
+				ValidateFunc: validation.ValidateRFC3339TimeString,
 			},
 			"valid_until": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validateRFC3339TimeString,
+				ValidateFunc: validation.ValidateRFC3339TimeString,
 			},
 			"fleet_type": {
 				Type:     schema.TypeString,
@@ -445,7 +456,7 @@ func buildSpotFleetLaunchSpecification(d map[string]interface{}, meta interface{
 	}
 
 	associatePublicIpAddress, hasPublicIpAddress := d["associate_public_ip_address"]
-	if hasPublicIpAddress && associatePublicIpAddress.(bool) == true && hasSubnetId {
+	if hasPublicIpAddress && associatePublicIpAddress.(bool) && hasSubnetId {
 
 		// If we have a non-default VPC / Subnet specified, we can flag
 		// AssociatePublicIpAddress to get a Public IP assigned. By default these are not provided.
@@ -610,7 +621,7 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 		TerminateInstancesWithExpiration: aws.Bool(d.Get("terminate_instances_with_expiration").(bool)),
 		ReplaceUnhealthyInstances:        aws.Bool(d.Get("replace_unhealthy_instances").(bool)),
 		InstanceInterruptionBehavior:     aws.String(d.Get("instance_interruption_behaviour").(string)),
-		Type: aws.String(d.Get("fleet_type").(string)),
+		Type:                             aws.String(d.Get("fleet_type").(string)),
 	}
 
 	if v, ok := d.GetOk("excess_capacity_termination_policy"); ok {
@@ -621,6 +632,10 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 		spotFleetConfig.AllocationStrategy = aws.String(v.(string))
 	} else {
 		spotFleetConfig.AllocationStrategy = aws.String("lowestPrice")
+	}
+
+	if v, ok := d.GetOk("instance_pools_to_use_count"); ok && v.(int) != 1 {
+		spotFleetConfig.InstancePoolsToUseCount = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("spot_price"); ok && v.(string) != "" {
@@ -696,7 +711,7 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 				// IAM is eventually consistent :/
 				if awsErr.Code() == "InvalidSpotFleetRequestConfig" {
 					return resource.RetryableError(
-						fmt.Errorf("[WARN] Error creating Spot fleet request, retrying: %s", err))
+						fmt.Errorf("Error creating Spot fleet request, retrying: %s", err))
 				}
 			}
 			return resource.NonRetryableError(err)
@@ -877,6 +892,10 @@ func resourceAwsSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) e
 
 	if config.AllocationStrategy != nil {
 		d.Set("allocation_strategy", aws.StringValue(config.AllocationStrategy))
+	}
+
+	if config.InstancePoolsToUseCount != nil {
+		d.Set("instance_pools_to_use_count", aws.Int64Value(config.InstancePoolsToUseCount))
 	}
 
 	if config.ClientToken != nil {
@@ -1137,9 +1156,8 @@ func resourceAwsSpotFleetRequestUpdate(d *schema.ResourceData, meta interface{})
 		req.ExcessCapacityTerminationPolicy = aws.String(val.(string))
 	}
 
-	resp, err := conn.ModifySpotFleetRequest(req)
-	if err == nil && aws.BoolValue(resp.Return) {
-		// TODO: rollback to old values?
+	if _, err := conn.ModifySpotFleetRequest(req); err != nil {
+		return fmt.Errorf("error updating spot request (%s): %s", d.Id(), err)
 	}
 
 	return nil
@@ -1173,24 +1191,50 @@ func deleteSpotFleetRequest(spotFleetRequestID string, terminateInstances bool, 
 		return nil
 	}
 
-	return resource.Retry(timeout, func() *resource.RetryError {
+	activeInstances := func(fleetRequestID string) (int, error) {
 		resp, err := conn.DescribeSpotFleetInstances(&ec2.DescribeSpotFleetInstancesInput{
-			SpotFleetRequestId: aws.String(spotFleetRequestID),
+			SpotFleetRequestId: aws.String(fleetRequestID),
 		})
+
+		if err != nil || resp == nil {
+			return 0, fmt.Errorf("error reading Spot Fleet Instances (%s): %s", spotFleetRequestID, err)
+		}
+
+		return len(resp.ActiveInstances), nil
+	}
+
+	err = resource.Retry(timeout, func() *resource.RetryError {
+		n, err := activeInstances(spotFleetRequestID)
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
 
-		if len(resp.ActiveInstances) == 0 {
-			log.Printf("[DEBUG] Active instance count is 0 for Spot Fleet Request (%s), removing", spotFleetRequestID)
-			return nil
+		if n > 0 {
+			log.Printf("[DEBUG] Active instance count in Spot Fleet Request (%s): %d", spotFleetRequestID, n)
+			return resource.RetryableError(fmt.Errorf("fleet still has (%d) running instances", n))
 		}
 
-		log.Printf("[DEBUG] Active instance count in Spot Fleet Request (%s): %d", spotFleetRequestID, len(resp.ActiveInstances))
-
-		return resource.RetryableError(
-			fmt.Errorf("fleet still has (%d) running instances", len(resp.ActiveInstances)))
+		log.Printf("[DEBUG] Active instance count is 0 for Spot Fleet Request (%s), removing", spotFleetRequestID)
+		return nil
 	})
+
+	if isResourceTimeoutError(err) {
+		n, err := activeInstances(spotFleetRequestID)
+		if err != nil {
+			return err
+		}
+
+		if n > 0 {
+			log.Printf("[DEBUG] Active instance count in Spot Fleet Request (%s): %d", spotFleetRequestID, n)
+			return fmt.Errorf("fleet still has (%d) running instances", n)
+		}
+	}
+
+	if err != nil {
+		return fmt.Errorf("error reading Spot Fleet Instances (%s): %s", spotFleetRequestID, err)
+	}
+
+	return nil
 }
 
 func hashEphemeralBlockDevice(v interface{}) int {

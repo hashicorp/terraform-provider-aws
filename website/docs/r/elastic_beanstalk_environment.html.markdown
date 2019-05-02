@@ -6,7 +6,7 @@ description: |-
   Provides an Elastic Beanstalk Environment Resource
 ---
 
-# aws_elastic_beanstalk_environment
+# Resource: aws_elastic_beanstalk_environment
 
 Provides an Elastic Beanstalk Environment Resource. Elastic Beanstalk allows
 you to deploy and manage applications in the AWS cloud without worrying about
@@ -50,6 +50,8 @@ The following arguments are supported:
 off of. Example stacks can be found in the [Amazon API documentation][1]
 * `template_name` – (Optional) The name of the Elastic Beanstalk Configuration
   template to use in deployment
+* `platform_arn` – (Optional) The [ARN][2] of the Elastic Beanstalk [Platform][3]
+  to use in deployment
 * `wait_for_ready_timeout` - (Default: `20m`) The maximum
   [duration](https://golang.org/pkg/time/#ParseDuration) that Terraform should
   wait for an Elastic Beanstalk Environment to be in a ready state before timing
@@ -126,7 +128,8 @@ In addition to all arguments above, the following attributes are exported:
 
 
 [1]: https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/concepts.platforms.html
-
+[2]: https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html
+[3]: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-beanstalk-environment.html#cfn-beanstalk-environment-platformarn
 
 ## Import
 

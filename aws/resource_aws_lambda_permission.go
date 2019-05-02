@@ -30,6 +30,12 @@ func resourceAwsLambdaPermission() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validateLambdaPermissionAction,
 			},
+			"event_source_token": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validateLambdaPermissionEventSourceToken,
+			},
 			"function_name": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -105,6 +111,9 @@ func resourceAwsLambdaPermissionCreate(d *schema.ResourceData, meta interface{})
 		StatementId:  aws.String(statementId),
 	}
 
+	if v, ok := d.GetOk("event_source_token"); ok {
+		input.EventSourceToken = aws.String(v.(string))
+	}
 	if v, ok := d.GetOk("qualifier"); ok {
 		input.Qualifier = aws.String(v.(string))
 	}
@@ -117,26 +126,28 @@ func resourceAwsLambdaPermissionCreate(d *schema.ResourceData, meta interface{})
 
 	log.Printf("[DEBUG] Adding new Lambda permission: %s", input)
 	var out *lambda.AddPermissionOutput
+	// Retry for IAM and Lambda eventual consistency
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		var err error
 		out, err = conn.AddPermission(&input)
 
+		if isAWSErr(err, lambda.ErrCodeResourceConflictException, "") {
+			return resource.RetryableError(err)
+		}
+
+		if isAWSErr(err, lambda.ErrCodeResourceNotFoundException, "") {
+			return resource.RetryableError(err)
+		}
+
 		if err != nil {
-			if awsErr, ok := err.(awserr.Error); ok {
-				// IAM is eventually consistent :/
-				if awsErr.Code() == "ResourceConflictException" {
-					return resource.RetryableError(
-						fmt.Errorf("[WARN] Error adding new Lambda Permission for %s, retrying: %s",
-							*input.FunctionName, err))
-				}
-			}
 			return resource.NonRetryableError(err)
 		}
+
 		return nil
 	})
 
 	if err != nil {
-		return err
+		return fmt.Errorf("Error adding new Lambda Permission for %s: %s", functionName, err)
 	}
 
 	if out != nil && out.Statement != nil {
@@ -153,12 +164,12 @@ func resourceAwsLambdaPermissionCreate(d *schema.ResourceData, meta interface{})
 		if err != nil {
 			if strings.HasPrefix(err.Error(), "Error reading Lambda policy: ResourceNotFoundException") {
 				return resource.RetryableError(
-					fmt.Errorf("[WARN] Error reading newly created Lambda Permission for %s, retrying: %s",
+					fmt.Errorf("Error reading newly created Lambda Permission for %s, retrying: %s",
 						*input.FunctionName, err))
 			}
 			if strings.HasPrefix(err.Error(), "Failed to find statement \""+d.Id()) {
 				return resource.RetryableError(
-					fmt.Errorf("[WARN] Error reading newly created Lambda Permission statement for %s, retrying: %s",
+					fmt.Errorf("Error reading newly created Lambda Permission statement for %s, retrying: %s",
 						*input.FunctionName, err))
 			}
 
@@ -248,7 +259,7 @@ func resourceAwsLambdaPermissionRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	d.Set("action", statement.Action)
-	// Check if the pricipal is a cross-account IAM role
+	// Check if the principal is a cross-account IAM role
 	if _, ok := statement.Principal["AWS"]; ok {
 		d.Set("principal", statement.Principal["AWS"])
 	} else {
@@ -257,6 +268,7 @@ func resourceAwsLambdaPermissionRead(d *schema.ResourceData, meta interface{}) e
 
 	if stringEquals, ok := statement.Condition["StringEquals"]; ok {
 		d.Set("source_account", stringEquals["AWS:SourceAccount"])
+		d.Set("event_source_token", stringEquals["lambda:EventSourceToken"])
 	}
 
 	if arnLike, ok := statement.Condition["ArnLike"]; ok {
@@ -291,6 +303,13 @@ func resourceAwsLambdaPermissionDelete(d *schema.ResourceData, meta interface{})
 	log.Printf("[DEBUG] Removing Lambda permission: %s", input)
 	_, err := conn.RemovePermission(&input)
 	if err != nil {
+		// Missing whole policy or Lambda function (API error)
+		if awsErr, ok := err.(awserr.Error); ok {
+			if awsErr.Code() == "ResourceNotFoundException" {
+				log.Printf("[WARN] No Lambda Permission Policy found: %v", input)
+				return nil
+			}
+		}
 		return err
 	}
 

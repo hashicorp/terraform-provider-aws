@@ -1,12 +1,12 @@
 package aws
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"strconv"
 	"time"
 
-	"errors"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
@@ -220,7 +220,7 @@ func resourceAwsApiGatewayUsagePlanCreate(d *schema.ResourceData, meta interface
 			},
 		}
 
-		up, err = conn.UpdateUsagePlan(updateParameters)
+		_, err = conn.UpdateUsagePlan(updateParameters)
 		if err != nil {
 			return fmt.Errorf("Error creating the API Gateway Usage Plan product code: %s", err)
 		}
@@ -251,19 +251,19 @@ func resourceAwsApiGatewayUsagePlanRead(d *schema.ResourceData, meta interface{}
 
 	if up.ApiStages != nil {
 		if err := d.Set("api_stages", flattenApiGatewayUsageApiStages(up.ApiStages)); err != nil {
-			return fmt.Errorf("[DEBUG] Error setting api_stages error: %#v", err)
+			return fmt.Errorf("Error setting api_stages error: %#v", err)
 		}
 	}
 
 	if up.Throttle != nil {
 		if err := d.Set("throttle_settings", flattenApiGatewayUsagePlanThrottling(up.Throttle)); err != nil {
-			return fmt.Errorf("[DEBUG] Error setting throttle_settings error: %#v", err)
+			return fmt.Errorf("Error setting throttle_settings error: %#v", err)
 		}
 	}
 
 	if up.Quota != nil {
 		if err := d.Set("quota_settings", flattenApiGatewayUsagePlanQuota(up.Quota)); err != nil {
-			return fmt.Errorf("[DEBUG] Error setting quota_settings error: %#v", err)
+			return fmt.Errorf("Error setting quota_settings error: %#v", err)
 		}
 	}
 

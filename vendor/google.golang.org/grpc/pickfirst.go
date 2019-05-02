@@ -19,12 +19,16 @@
 package grpc
 
 import (
-	"golang.org/x/net/context"
+	"context"
+
 	"google.golang.org/grpc/balancer"
 	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/grpclog"
 	"google.golang.org/grpc/resolver"
 )
+
+// PickFirstBalancerName is the name of the pick_first balancer.
+const PickFirstBalancerName = "pick_first"
 
 func newPickfirstBuilder() balancer.Builder {
 	return &pickfirstBuilder{}
@@ -37,7 +41,7 @@ func (*pickfirstBuilder) Build(cc balancer.ClientConn, opt balancer.BuildOptions
 }
 
 func (*pickfirstBuilder) Name() string {
-	return "pickfirst"
+	return PickFirstBalancerName
 }
 
 type pickfirstBalancer struct {
@@ -53,6 +57,7 @@ func (b *pickfirstBalancer) HandleResolvedAddrs(addrs []resolver.Address, err er
 	if b.sc == nil {
 		b.sc, err = b.cc.NewSubConn(addrs, balancer.NewSubConnOptions{})
 		if err != nil {
+			//TODO(yuxuanli): why not change the cc state to Idle?
 			grpclog.Errorf("pickfirstBalancer: failed to NewSubConn: %v", err)
 			return
 		}

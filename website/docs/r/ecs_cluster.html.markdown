@@ -6,7 +6,7 @@ description: |-
   Provides an ECS cluster.
 ---
 
-# aws_ecs_cluster
+# Resource: aws_ecs_cluster
 
 Provides an ECS cluster.
 
@@ -23,6 +23,7 @@ resource "aws_ecs_cluster" "foo" {
 The following arguments are supported:
 
 * `name` - (Required) The name of the cluster (up to 255 letters, numbers, hyphens, and underscores)
+* `tags` - (Optional) Key-value mapping of resource tags
 
 ## Attributes Reference
 
