@@ -29,7 +29,7 @@ func TestAccAwsSesDomainIdentityVerification_basic(t *testing.T) {
 	rootDomain := testAccAwsSesDomainIdentityDomainFromEnv(t)
 	domain := fmt.Sprintf("tf-acc-%d.%s", acctest.RandInt(), rootDomain)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSESDomainIdentityDestroy,
@@ -47,7 +47,7 @@ func TestAccAwsSesDomainIdentityVerification_timeout(t *testing.T) {
 		"%s.terraformtesting.com",
 		acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSESDomainIdentityDestroy,
@@ -65,7 +65,7 @@ func TestAccAwsSesDomainIdentityVerification_nonexistent(t *testing.T) {
 		"%s.terraformtesting.com",
 		acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSESDomainIdentityDestroy,

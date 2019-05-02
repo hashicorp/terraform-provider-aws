@@ -19,7 +19,7 @@ import (
 func TestAccAWSRDSClusterInstance_basic(t *testing.T) {
 	var v rds.DBInstance
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSClusterDestroy,
@@ -31,6 +31,7 @@ func TestAccAWSRDSClusterInstance_basic(t *testing.T) {
 					testAccCheckAWSDBClusterInstanceAttributes(&v),
 					resource.TestMatchResourceAttr("aws_rds_cluster_instance.cluster_instances", "arn", regexp.MustCompile(`^arn:[^:]+:rds:[^:]+:[^:]+:db:.+`)),
 					resource.TestCheckResourceAttr("aws_rds_cluster_instance.cluster_instances", "auto_minor_version_upgrade", "true"),
+					resource.TestCheckResourceAttr("aws_rds_cluster_instance.cluster_instances", "copy_tags_to_snapshot", "false"),
 					resource.TestCheckResourceAttrSet("aws_rds_cluster_instance.cluster_instances", "preferred_maintenance_window"),
 					resource.TestCheckResourceAttrSet("aws_rds_cluster_instance.cluster_instances", "preferred_backup_window"),
 					resource.TestCheckResourceAttrSet("aws_rds_cluster_instance.cluster_instances", "dbi_resource_id"),
@@ -38,6 +39,15 @@ func TestAccAWSRDSClusterInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_rds_cluster_instance.cluster_instances", "engine_version"),
 					resource.TestCheckResourceAttr("aws_rds_cluster_instance.cluster_instances", "engine", "aurora"),
 				),
+			},
+			{
+				ResourceName:      "aws_rds_cluster_instance.cluster_instances",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"identifier_prefix",
+				},
 			},
 			{
 				Config: testAccAWSClusterInstanceConfigModified(acctest.RandInt()),
@@ -54,7 +64,7 @@ func TestAccAWSRDSClusterInstance_basic(t *testing.T) {
 func TestAccAWSRDSClusterInstance_az(t *testing.T) {
 	var v rds.DBInstance
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSClusterDestroy,
@@ -67,6 +77,15 @@ func TestAccAWSRDSClusterInstance_az(t *testing.T) {
 					resource.TestMatchResourceAttr("aws_rds_cluster_instance.cluster_instances", "availability_zone", regexp.MustCompile("^us-west-2[a-z]{1}$")),
 				),
 			},
+			{
+				ResourceName:      "aws_rds_cluster_instance.cluster_instances",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"identifier_prefix",
+				},
+			},
 		},
 	})
 }
@@ -75,7 +94,7 @@ func TestAccAWSRDSClusterInstance_namePrefix(t *testing.T) {
 	var v rds.DBInstance
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSClusterDestroy,
@@ -91,6 +110,15 @@ func TestAccAWSRDSClusterInstance_namePrefix(t *testing.T) {
 						"aws_rds_cluster_instance.test", "identifier", regexp.MustCompile("^tf-cluster-instance-")),
 				),
 			},
+			{
+				ResourceName:      "aws_rds_cluster_instance.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"identifier_prefix",
+				},
+			},
 		},
 	})
 }
@@ -98,7 +126,7 @@ func TestAccAWSRDSClusterInstance_namePrefix(t *testing.T) {
 func TestAccAWSRDSClusterInstance_generatedName(t *testing.T) {
 	var v rds.DBInstance
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSClusterDestroy,
@@ -112,6 +140,15 @@ func TestAccAWSRDSClusterInstance_generatedName(t *testing.T) {
 						"aws_rds_cluster_instance.test", "identifier", regexp.MustCompile("^tf-")),
 				),
 			},
+			{
+				ResourceName:      "aws_rds_cluster_instance.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"identifier_prefix",
+				},
+			},
 		},
 	})
 }
@@ -120,7 +157,7 @@ func TestAccAWSRDSClusterInstance_kmsKey(t *testing.T) {
 	var v rds.DBInstance
 	keyRegex := regexp.MustCompile("^arn:aws:kms:")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSClusterDestroy,
@@ -133,6 +170,15 @@ func TestAccAWSRDSClusterInstance_kmsKey(t *testing.T) {
 						"aws_rds_cluster_instance.cluster_instances", "kms_key_id", keyRegex),
 				),
 			},
+			{
+				ResourceName:      "aws_rds_cluster_instance.cluster_instances",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"identifier_prefix",
+				},
+			},
 		},
 	})
 }
@@ -141,7 +187,7 @@ func TestAccAWSRDSClusterInstance_kmsKey(t *testing.T) {
 func TestAccAWSRDSClusterInstance_disappears(t *testing.T) {
 	var v rds.DBInstance
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSClusterDestroy,
@@ -154,6 +200,81 @@ func TestAccAWSRDSClusterInstance_disappears(t *testing.T) {
 				),
 				// A non-empty plan is what we want. A crash is what we don't want. :)
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSRDSClusterInstance_PubliclyAccessible(t *testing.T) {
+	var dbInstance rds.DBInstance
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_rds_cluster_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRDSClusterInstanceConfig_PubliclyAccessible(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"identifier_prefix",
+				},
+			},
+			{
+				Config: testAccAWSRDSClusterInstanceConfig_PubliclyAccessible(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSRDSClusterInstance_CopyTagsToSnapshot(t *testing.T) {
+	var dbInstance rds.DBInstance
+	rNameSuffix := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSClusterInstanceConfig_CopyTagsToSnapshot(rNameSuffix, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterInstanceExists("aws_rds_cluster_instance.cluster_instances", &dbInstance),
+					resource.TestCheckResourceAttr(
+						"aws_rds_cluster_instance.cluster_instances", "copy_tags_to_snapshot", "true"),
+				),
+			},
+			{
+				ResourceName:      "aws_rds_cluster_instance.cluster_instances",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"identifier_prefix",
+				},
+			},
+			{
+				Config: testAccAWSClusterInstanceConfig_CopyTagsToSnapshot(rNameSuffix, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterInstanceExists("aws_rds_cluster_instance.cluster_instances", &dbInstance),
+					resource.TestCheckResourceAttr(
+						"aws_rds_cluster_instance.cluster_instances", "copy_tags_to_snapshot", "false"),
+				),
 			},
 		},
 	})
@@ -236,7 +357,7 @@ func testAccCheckAWSClusterInstanceExists(n string, v *rds.DBInstance) resource.
 func TestAccAWSRDSClusterInstance_withInstanceEnhancedMonitor(t *testing.T) {
 	var v rds.DBInstance
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSClusterDestroy,
@@ -248,6 +369,15 @@ func TestAccAWSRDSClusterInstance_withInstanceEnhancedMonitor(t *testing.T) {
 					testAccCheckAWSDBClusterInstanceAttributes(&v),
 				),
 			},
+			{
+				ResourceName:      "aws_rds_cluster_instance.cluster_instances",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"identifier_prefix",
+				},
+			},
 		},
 	})
 }
@@ -256,7 +386,7 @@ func TestAccAWSRDSClusterInstance_withInstancePerformanceInsights(t *testing.T) 
 	var v rds.DBInstance
 	keyRegex := regexp.MustCompile("^arn:aws:kms:")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSClusterDestroy,
@@ -271,6 +401,15 @@ func TestAccAWSRDSClusterInstance_withInstancePerformanceInsights(t *testing.T) 
 					resource.TestMatchResourceAttr(
 						"aws_rds_cluster_instance.cluster_instances", "performance_insights_kms_key_id", keyRegex),
 				),
+			},
+			{
+				ResourceName:      "aws_rds_cluster_instance.cluster_instances",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"identifier_prefix",
+				},
 			},
 		},
 	})
@@ -306,7 +445,7 @@ resource "aws_db_parameter_group" "bar" {
     apply_method = "pending-reboot"
   }
 
-  tags {
+  tags = {
     foo = "bar"
   }
 }
@@ -343,7 +482,7 @@ resource "aws_db_parameter_group" "bar" {
     apply_method = "pending-reboot"
   }
 
-  tags {
+  tags = {
     foo = "bar"
   }
 }
@@ -356,7 +495,7 @@ data "aws_availability_zones" "available" {}
 
 resource "aws_rds_cluster" "default" {
   cluster_identifier = "tf-aurora-cluster-test-%d"
-  availability_zones = ["${data.aws_availability_zones.available.names}"]
+  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
   database_name      = "mydb"
   master_username    = "foo"
   master_password    = "mustbeeightcharaters"
@@ -382,7 +521,7 @@ resource "aws_db_parameter_group" "bar" {
     apply_method = "pending-reboot"
   }
 
-  tags {
+  tags = {
     foo = "bar"
   }
 }
@@ -407,7 +546,7 @@ resource "aws_rds_cluster" "test" {
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-rds-cluster-instance-name-prefix"
 	}
 }
@@ -416,7 +555,7 @@ resource "aws_subnet" "a" {
   vpc_id = "${aws_vpc.test.id}"
   cidr_block = "10.0.0.0/24"
   availability_zone = "us-west-2a"
-  tags {
+  tags = {
     Name = "tf-acc-rds-cluster-instance-name-prefix-a"
   }
 }
@@ -425,7 +564,7 @@ resource "aws_subnet" "b" {
   vpc_id = "${aws_vpc.test.id}"
   cidr_block = "10.0.1.0/24"
   availability_zone = "us-west-2b"
-  tags {
+  tags = {
     Name = "tf-acc-rds-cluster-instance-name-prefix-b"
   }
 }
@@ -454,7 +593,7 @@ resource "aws_rds_cluster" "test" {
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-rds-cluster-instance-generated-name"
 	}
 }
@@ -463,7 +602,7 @@ resource "aws_subnet" "a" {
   vpc_id = "${aws_vpc.test.id}"
   cidr_block = "10.0.0.0/24"
   availability_zone = "us-west-2a"
-  tags {
+  tags = {
     Name = "tf-acc-rds-cluster-instance-generated-name-a"
   }
 }
@@ -472,7 +611,7 @@ resource "aws_subnet" "b" {
   vpc_id = "${aws_vpc.test.id}"
   cidr_block = "10.0.1.0/24"
   availability_zone = "us-west-2b"
-  tags {
+  tags = {
     Name = "tf-acc-rds-cluster-instance-generated-name-b"
   }
 }
@@ -536,7 +675,7 @@ resource "aws_db_parameter_group" "bar" {
     apply_method = "pending-reboot"
   }
 
-  tags {
+  tags = {
     foo = "bar"
   }
 }
@@ -633,7 +772,7 @@ resource "aws_db_parameter_group" "bar" {
     apply_method = "pending-reboot"
   }
 
-  tags {
+  tags = {
     foo = "bar"
   }
 }
@@ -694,9 +833,49 @@ resource "aws_db_parameter_group" "bar" {
     value = "10"
   }
 
-  tags {
+  tags = {
     foo = "bar"
   }
 }
 `, n, n, n, n)
+}
+
+func testAccAWSRDSClusterInstanceConfig_PubliclyAccessible(rName string, publiclyAccessible bool) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier  = %q
+  master_username     = "foo"
+  master_password     = "mustbeeightcharaters"
+  skip_final_snapshot = true
+}
+
+resource "aws_rds_cluster_instance" "test" {
+  apply_immediately       = true
+  cluster_identifier      = "${aws_rds_cluster.test.id}"
+  identifier              = %q
+  instance_class          = "db.t2.small"
+  publicly_accessible     = %t
+}
+`, rName, rName, publiclyAccessible)
+}
+
+func testAccAWSClusterInstanceConfig_CopyTagsToSnapshot(n int, f bool) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "default" {
+  cluster_identifier = "tf-aurora-cluster-test-%d"
+  availability_zones = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  database_name      = "mydb"
+  master_username    = "foo"
+  master_password    = "mustbeeightcharaters"
+  skip_final_snapshot = true
+}
+
+resource "aws_rds_cluster_instance" "cluster_instances" {
+  identifier              = "tf-cluster-instance-%d"
+  cluster_identifier      = "${aws_rds_cluster.default.id}"
+  instance_class          = "db.t2.small"
+  promotion_tier          = "3"
+  copy_tags_to_snapshot 	= %t
+}
+`, n, n, f)
 }

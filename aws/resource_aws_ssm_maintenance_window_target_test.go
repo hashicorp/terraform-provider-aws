@@ -14,7 +14,7 @@ import (
 
 func TestAccAWSSSMMaintenanceWindowTarget_basic(t *testing.T) {
 	name := acctest.RandString(10)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowTargetDestroy,
@@ -32,13 +32,18 @@ func TestAccAWSSSMMaintenanceWindowTarget_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_ssm_maintenance_window_target.target", "targets.1.values.1", "acceptance_test2"),
 				),
 			},
+			{
+				ResourceName:      "aws_ssm_maintenance_window.foo",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
 
 func TestAccAWSSSMMaintenanceWindowTarget_update(t *testing.T) {
 	name := acctest.RandString(10)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowTargetDestroy,

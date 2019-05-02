@@ -19,12 +19,12 @@ func resourceAwsWafRegionalWebAclAssociation() *schema.Resource {
 		Delete: resourceAwsWafRegionalWebAclAssociationDelete,
 
 		Schema: map[string]*schema.Schema{
-			"web_acl_id": &schema.Schema{
+			"web_acl_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"resource_arn": &schema.Schema{
+			"resource_arn": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -72,30 +72,30 @@ func resourceAwsWafRegionalWebAclAssociationCreate(d *schema.ResourceData, meta 
 func resourceAwsWafRegionalWebAclAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafregionalconn
 
-	webAclId, resourceArn := resourceAwsWafRegionalWebAclAssociationParseId(d.Id())
+	_, resourceArn := resourceAwsWafRegionalWebAclAssociationParseId(d.Id())
 
-	// List all resources for Web ACL and see if we get a match
-	params := &wafregional.ListResourcesForWebACLInput{
-		WebACLId: aws.String(webAclId),
+	input := &wafregional.GetWebACLForResourceInput{
+		ResourceArn: aws.String(resourceArn),
 	}
 
-	resp, err := conn.ListResourcesForWebACL(params)
-	if err != nil {
-		return err
-	}
+	output, err := conn.GetWebACLForResource(input)
 
-	// Find match
-	found := false
-	for _, listResourceArn := range resp.ResourceArns {
-		if resourceArn == *listResourceArn {
-			found = true
-			break
-		}
-	}
-	if !found {
-		log.Printf("[WARN] WAF Regional Web ACL association (%s) not found, removing from state", d.Id())
+	if isAWSErr(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+		log.Printf("[WARN] WAF Regional Web ACL for resource (%s) not found, removing from state", resourceArn)
 		d.SetId("")
+		return nil
 	}
+
+	if err != nil {
+		return fmt.Errorf("error getting WAF Regional Web ACL for resource (%s): %s", resourceArn, err)
+	}
+
+	if output == nil || output.WebACLSummary == nil {
+		return fmt.Errorf("error getting WAF Regional Web ACL for resource (%s): empty response", resourceArn)
+	}
+
+	d.Set("resource_arn", resourceArn)
+	d.Set("web_acl_id", output.WebACLSummary.WebACLId)
 
 	return nil
 }
@@ -113,11 +113,7 @@ func resourceAwsWafRegionalWebAclAssociationDelete(d *schema.ResourceData, meta 
 
 	// If action successful HTTP 200 response with an empty body
 	_, err := conn.DisassociateWebACL(params)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func resourceAwsWafRegionalWebAclAssociationParseId(id string) (webAclId, resourceArn string) {

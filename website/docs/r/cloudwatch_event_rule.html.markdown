@@ -6,7 +6,7 @@ description: |-
   Provides a CloudWatch Event Rule resource.
 ---
 
-# aws_cloudwatch_event_rule
+# Resource: aws_cloudwatch_event_rule
 
 Provides a CloudWatch Event Rule resource.
 
@@ -35,6 +35,25 @@ resource "aws_cloudwatch_event_target" "sns" {
 resource "aws_sns_topic" "aws_logins" {
   name = "aws-console-logins"
 }
+
+resource "aws_sns_topic_policy" "default" {
+  arn    = "${aws_sns_topic.aws_logins.arn}"
+  policy = "${data.aws_iam_policy_document.sns_topic_policy.json}"
+}
+
+data "aws_iam_policy_document" "sns_topic_policy" {
+  statement {
+    effect  = "Allow"
+    actions = ["SNS:Publish"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["events.amazonaws.com"]
+    }
+
+    resources = ["${aws_sns_topic.aws_logins.arn}"]
+  }
+}
 ```
 
 ## Argument Reference
@@ -51,6 +70,7 @@ The following arguments are supported:
 * `description` - (Optional) The description of the rule.
 * `role_arn` - (Optional) The Amazon Resource Name (ARN) associated with the role that is used for target invocation.
 * `is_enabled` - (Optional) Whether the rule should be enabled (defaults to `true`).
+* `tags` - (Optional) A mapping of tags to assign to the resource.
 
 ## Attributes Reference
 

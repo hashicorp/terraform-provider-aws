@@ -3,17 +3,17 @@ package aws
 import (
 	"fmt"
 	"log"
-	"os"
 	"strings"
 	"time"
 
-	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/terraform"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 )
@@ -385,14 +385,10 @@ func opsworksConnForRegion(region string, meta interface{}) (*opsworks.OpsWorks,
 	// Set up base session
 	sess, err := session.NewSession(&originalConn.Config)
 	if err != nil {
-		return nil, errwrap.Wrapf("Error creating AWS session: {{err}}", err)
+		return nil, fmt.Errorf("Error creating AWS session: %s", err)
 	}
 
-	sess.Handlers.Build.PushBackNamed(addTerraformVersionToUserAgent)
-
-	if extraDebug := os.Getenv("TERRAFORM_AWS_AUTHFAILURE_DEBUG"); extraDebug != "" {
-		sess.Handlers.UnmarshalError.PushFrontNamed(debugAuthFailure)
-	}
+	sess.Handlers.Build.PushBack(request.MakeAddToUserAgentHandler("APN/1.0 HashiCorp/1.0 Terraform", terraform.VersionString()))
 
 	newSession := sess.Copy(&aws.Config{Region: aws.String(region)})
 	newOpsworksconn := opsworks.New(newSession)

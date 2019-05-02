@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -44,10 +43,6 @@ func testSweepWafRegionalRegexMatchSet(region string) error {
 	}
 
 	for _, s := range resp.RegexMatchSets {
-		if !strings.HasPrefix(*s.Name, "tfacc") {
-			continue
-		}
-
 		resp, err := conn.GetRegexMatchSet(&waf.GetRegexMatchSetInput{
 			RegexMatchSetId: s.RegexMatchSetId,
 		})
@@ -67,11 +62,14 @@ func testSweepWafRegionalRegexMatchSet(region string) error {
 		_, err = wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.DeleteRegexMatchSetInput{
 				ChangeToken:     token,
-				RegexMatchSetId: aws.String(*set.RegexMatchSetId),
+				RegexMatchSetId: set.RegexMatchSetId,
 			}
 			log.Printf("[INFO] Deleting WAF Regional Regex Match Set: %s", req)
 			return conn.DeleteRegexMatchSet(req)
 		})
+		if err != nil {
+			return fmt.Errorf("error deleting WAF Regional Regex Match Set (%s): %s", aws.StringValue(set.RegexMatchSetId), err)
+		}
 	}
 
 	return nil
@@ -113,7 +111,7 @@ func testAccAWSWafRegionalRegexMatchSet_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalRegexMatchSetDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSWafRegionalRegexMatchSetConfig(matchSetName, patternSetName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafRegionalRegexMatchSetExists("aws_wafregional_regex_match_set.test", &matchSet),

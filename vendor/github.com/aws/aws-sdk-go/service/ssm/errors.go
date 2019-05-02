@@ -140,6 +140,13 @@ const (
 	// the content of the document and try again.
 	ErrCodeDuplicateDocumentContent = "DuplicateDocumentContent"
 
+	// ErrCodeDuplicateDocumentVersionName for service response error code
+	// "DuplicateDocumentVersionName".
+	//
+	// The version name has already been used in this document. Specify a different
+	// version name, and then try again.
+	ErrCodeDuplicateDocumentVersionName = "DuplicateDocumentVersionName"
+
 	// ErrCodeDuplicateInstanceId for service response error code
 	// "DuplicateInstanceId".
 	//
@@ -176,6 +183,14 @@ const (
 	// don't match the original call to the API with the same idempotency token.
 	ErrCodeIdempotentParameterMismatch = "IdempotentParameterMismatch"
 
+	// ErrCodeIncompatiblePolicyException for service response error code
+	// "IncompatiblePolicyException".
+	//
+	// There is a conflict in the policies specified for this parameter. You can't,
+	// for example, specify two Expiration policies for a parameter. Review your
+	// policies, and try again.
+	ErrCodeIncompatiblePolicyException = "IncompatiblePolicyException"
+
 	// ErrCodeInternalServerError for service response error code
 	// "InternalServerError".
 	//
@@ -195,6 +210,13 @@ const (
 	// The activation ID is not valid. Verify the you entered the correct ActivationId
 	// or ActivationCode and try again.
 	ErrCodeInvalidActivationId = "InvalidActivationId"
+
+	// ErrCodeInvalidAggregatorException for service response error code
+	// "InvalidAggregatorException".
+	//
+	// The specified aggregator is not valid for inventory groups. Verify that the
+	// aggregator uses a valid inventory type such as AWS:Application or AWS:InstanceInformation.
+	ErrCodeInvalidAggregatorException = "InvalidAggregatorException"
 
 	// ErrCodeInvalidAllowedPatternException for service response error code
 	// "InvalidAllowedPatternException".
@@ -335,6 +357,12 @@ const (
 	// The specified filter value is not valid.
 	ErrCodeInvalidInstanceInformationFilterValue = "InvalidInstanceInformationFilterValue"
 
+	// ErrCodeInvalidInventoryGroupException for service response error code
+	// "InvalidInventoryGroupException".
+	//
+	// The specified inventory group is not valid.
+	ErrCodeInvalidInventoryGroupException = "InvalidInventoryGroupException"
+
 	// ErrCodeInvalidInventoryItemContextException for service response error code
 	// "InvalidInventoryItemContextException".
 	//
@@ -412,6 +440,19 @@ const (
 	//
 	// The plugin name is not valid.
 	ErrCodeInvalidPluginName = "InvalidPluginName"
+
+	// ErrCodeInvalidPolicyAttributeException for service response error code
+	// "InvalidPolicyAttributeException".
+	//
+	// A policy attribute or its value is invalid.
+	ErrCodeInvalidPolicyAttributeException = "InvalidPolicyAttributeException"
+
+	// ErrCodeInvalidPolicyTypeException for service response error code
+	// "InvalidPolicyTypeException".
+	//
+	// The policy type is not supported. Parameter Store supports the following
+	// policy types: Expiration, ExpirationNotification, and NoChangeNotification.
+	ErrCodeInvalidPolicyTypeException = "InvalidPolicyTypeException"
 
 	// ErrCodeInvalidResourceId for service response error code
 	// "InvalidResourceId".
@@ -524,12 +565,25 @@ const (
 	// The parameter name is not valid.
 	ErrCodeParameterPatternMismatchException = "ParameterPatternMismatchException"
 
+	// ErrCodeParameterVersionLabelLimitExceeded for service response error code
+	// "ParameterVersionLabelLimitExceeded".
+	//
+	// A parameter version can have a maximum of ten labels.
+	ErrCodeParameterVersionLabelLimitExceeded = "ParameterVersionLabelLimitExceeded"
+
 	// ErrCodeParameterVersionNotFound for service response error code
 	// "ParameterVersionNotFound".
 	//
 	// The specified parameter version was not found. Verify the parameter name
 	// and version, and try again.
 	ErrCodeParameterVersionNotFound = "ParameterVersionNotFound"
+
+	// ErrCodePoliciesLimitExceededException for service response error code
+	// "PoliciesLimitExceededException".
+	//
+	// You specified more than the maximum number of allowed policies for the parameter.
+	// The maximum is 10.
+	ErrCodePoliciesLimitExceededException = "PoliciesLimitExceededException"
 
 	// ErrCodeResourceDataSyncAlreadyExistsException for service response error code
 	// "ResourceDataSyncAlreadyExistsException".
@@ -572,6 +626,13 @@ const (
 	// Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 	ErrCodeResourceLimitExceededException = "ResourceLimitExceededException"
 
+	// ErrCodeServiceSettingNotFound for service response error code
+	// "ServiceSettingNotFound".
+	//
+	// The specified service setting was not found. Either the service name or the
+	// setting has not been provisioned by the AWS service team.
+	ErrCodeServiceSettingNotFound = "ServiceSettingNotFound"
+
 	// ErrCodeStatusUnchanged for service response error code
 	// "StatusUnchanged".
 	//
@@ -590,6 +651,15 @@ const (
 	// You specified the Safe option for the DeregisterTargetFromMaintenanceWindow
 	// operation, but the target is still referenced in a task.
 	ErrCodeTargetInUseException = "TargetInUseException"
+
+	// ErrCodeTargetNotConnected for service response error code
+	// "TargetNotConnected".
+	//
+	// The specified target instance for the session is not fully configured for
+	// use with Session Manager. For more information, see Getting Started with
+	// Session Manager (http://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-getting-started.html)
+	// in the AWS Systems Manager User Guide.
+	ErrCodeTargetNotConnected = "TargetNotConnected"
 
 	// ErrCodeTooManyTagsError for service response error code
 	// "TooManyTagsError".

@@ -6,7 +6,7 @@ description: |-
   Provides an HTTP Method Integration Response for an API Gateway Resource.
 ---
 
-# aws_api_gateway_integration_response
+# Resource: aws_api_gateway_integration_response
 
 Provides an HTTP Method Integration Response for an API Gateway Resource.
 
@@ -81,6 +81,13 @@ The following arguments are supported:
   For all other `HTTP` and `AWS` backends, the HTTP status code is matched.
 * `response_templates` - (Optional) A map specifying the templates used to transform the integration response body
 * `response_parameters` - (Optional) A map of response parameters that can be read from the backend response.
-  For example: `response_parameters = { "method.response.header.X-Some-Header" = "integration.response.header.X-Some-Other-Header" }`,
-* `response_parameters_in_json` - **Deprecated**, use `response_parameters` instead.
+  For example: `response_parameters = { "method.response.header.X-Some-Header" = "integration.response.header.X-Some-Other-Header" }`
 * `content_handling` - (Optional) Specifies how to handle request payload content type conversions. Supported values are `CONVERT_TO_BINARY` and `CONVERT_TO_TEXT`. If this property is not defined, the response payload will be passed through from the integration response to the method response without modification.
+
+## Import
+
+`aws_api_gateway_integration_response` can be imported using `REST-API-ID/RESOURCE-ID/HTTP-METHOD/STATUS-CODE`, e.g.
+
+```
+$ terraform import aws_api_gateway_integration_response.example 12345abcde/67890fghij/GET/200
+```

@@ -10,7 +10,7 @@ import (
 
 func TestAccAWSDataSourceRedshiftCluster_basic(t *testing.T) {
 	rInt := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -43,7 +43,7 @@ func TestAccAWSDataSourceRedshiftCluster_basic(t *testing.T) {
 
 func TestAccAWSDataSourceRedshiftCluster_vpc(t *testing.T) {
 	rInt := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -62,7 +62,7 @@ func TestAccAWSDataSourceRedshiftCluster_vpc(t *testing.T) {
 
 func TestAccAWSDataSourceRedshiftCluster_logging(t *testing.T) {
 	rInt := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -148,48 +148,60 @@ data "aws_redshift_cluster" "test" {
 
 func testAccAWSDataSourceRedshiftClusterConfigWithLogging(rInt int) string {
 	return fmt.Sprintf(`
+data "aws_redshift_service_account" "test" {}
+
 resource "aws_s3_bucket" "test" {
-	bucket 				= "tf-redshift-logging-%d"
-	force_destroy = true
-	policy 				= <<EOF
-{
- "Version": "2008-10-17",
- "Statement": [
-	 {
-		 "Effect": "Allow",
-		 "Principal": {
-				"AWS": "*"
-		 },
-		 "Action": [
-				"s3:PutObject",
-				"s3:GetBucketAcl"
-		 ],
-		 "Resource": [
-				"arn:aws:s3:::tf-redshift-logging-%d",
-				"arn:aws:s3:::tf-redshift-logging-%d/*"
-		 ]
-	 }
- ]
+  bucket        = "tf-redshift-logging-%[1]d"
+  force_destroy = true
 }
-EOF
+
+data "aws_iam_policy_document" "test" {
+  statement {
+    actions   = ["s3:PutObject"]
+    resources = ["${aws_s3_bucket.test.arn}/*"]
+
+    principals {
+      identifiers = ["${data.aws_redshift_service_account.test.arn}"]
+      type        = "AWS"
+    }
+  }
+
+  statement {
+    actions   = ["s3:GetBucketAcl"]
+    resources = ["${aws_s3_bucket.test.arn}"]
+
+    principals {
+      identifiers = ["${data.aws_redshift_service_account.test.arn}"]
+      type        = "AWS"
+    }
+  }
+}
+
+resource "aws_s3_bucket_policy" "test" {
+  bucket = "${aws_s3_bucket.test.bucket}"
+  policy = "${data.aws_iam_policy_document.test.json}"
 }
 
 resource "aws_redshift_cluster" "test" {
-  cluster_identifier 		= "tf-redshift-cluster-%d"
+  depends_on = ["aws_s3_bucket_policy.test"]
 
-  database_name      		= "testdb"
-  master_username    		= "foo"
-  master_password    		= "Password1"
-  node_type          		= "dc1.large"
-  cluster_type       		= "single-node"
-	enable_logging 				= true
-	bucket_name 					= "${aws_s3_bucket.test.id}"
-	s3_key_prefix 				= "cluster-logging/"
-	skip_final_snapshot 	= true
+  cluster_identifier  = "tf-redshift-cluster-%[1]d"
+  cluster_type        = "single-node"
+  database_name       = "testdb"
+  master_password     = "Password1"
+  master_username     = "foo"
+  node_type           = "dc1.large"
+  skip_final_snapshot = true
+
+  logging {
+    bucket_name   = "${aws_s3_bucket.test.id}"
+    enable        = true
+    s3_key_prefix = "cluster-logging/"
+  }
 }
 
 data "aws_redshift_cluster" "test" {
-	cluster_identifier = "${aws_redshift_cluster.test.cluster_identifier}"
+  cluster_identifier = "${aws_redshift_cluster.test.cluster_identifier}"
 }
-`, rInt, rInt, rInt, rInt)
+`, rInt)
 }

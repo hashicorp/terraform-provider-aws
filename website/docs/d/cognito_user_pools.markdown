@@ -22,9 +22,9 @@ data "aws_cognito_user_pools" "selected" {
 }
 
 resource "aws_api_gateway_authorizer" "cognito" {
-  name = "cognito"
-  type = "COGNITO_USER_POOLS"
-  rest_api_id = "${data.aws_api_gateway_rest_api.selected.id}"
+  name          = "cognito"
+  type          = "COGNITO_USER_POOLS"
+  rest_api_id   = "${data.aws_api_gateway_rest_api.selected.id}"
   provider_arns = ["${data.aws_cognito_user_pools.selected.arns}"]
 }
 ```

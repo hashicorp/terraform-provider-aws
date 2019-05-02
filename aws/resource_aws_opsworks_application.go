@@ -30,6 +30,7 @@ func resourceAwsOpsworksApplication() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 				Optional: true,
+				ForceNew: true,
 			},
 			"type": {
 				Type:     schema.TypeString,
@@ -167,9 +168,9 @@ func resourceAwsOpsworksApplication() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 							StateFunc: func(v interface{}) string {
-								switch v.(type) {
+								switch v := v.(type) {
 								case string:
-									return strings.TrimSpace(v.(string))
+									return strings.TrimSpace(v)
 								default:
 									return ""
 								}
@@ -180,9 +181,9 @@ func resourceAwsOpsworksApplication() *schema.Resource {
 							Required:  true,
 							Sensitive: true,
 							StateFunc: func(v interface{}) string {
-								switch v.(type) {
+								switch v := v.(type) {
 								case string:
-									return strings.TrimSpace(v.(string))
+									return strings.TrimSpace(v)
 								default:
 									return ""
 								}
@@ -192,9 +193,9 @@ func resourceAwsOpsworksApplication() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							StateFunc: func(v interface{}) string {
-								switch v.(type) {
+								switch v := v.(type) {
 								case string:
-									return strings.TrimSpace(v.(string))
+									return strings.TrimSpace(v)
 								default:
 									return ""
 								}
@@ -415,7 +416,7 @@ func resourceAwsOpsworksSetApplicationEnvironmentVariable(d *schema.ResourceData
 		}
 		if config.Secure != nil {
 
-			if bool(*config.Secure) {
+			if aws.BoolValue(config.Secure) {
 				data["secure"] = &opsworksTrueString
 			} else {
 				data["secure"] = &opsworksFalseString
@@ -616,5 +617,4 @@ func resourceAwsOpsworksSetApplicationAttributes(d *schema.ResourceData, v map[s
 		return
 	}
 
-	return
 }

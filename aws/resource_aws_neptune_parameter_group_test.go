@@ -17,7 +17,7 @@ func TestAccAWSNeptuneParameterGroup_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_neptune_parameter_group.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneParameterGroupDestroy,
@@ -49,7 +49,7 @@ func TestAccAWSNeptuneParameterGroup_Description(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_neptune_parameter_group.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneParameterGroupDestroy,
@@ -76,7 +76,7 @@ func TestAccAWSNeptuneParameterGroup_Parameter(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_neptune_parameter_group.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneParameterGroupDestroy,
@@ -121,7 +121,7 @@ func TestAccAWSNeptuneParameterGroup_Tags(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_neptune_parameter_group.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneParameterGroupDestroy,
@@ -275,7 +275,7 @@ resource "aws_neptune_parameter_group" "test" {
   family = "neptune1"
   name   = %q
 
-  tags {
+  tags = {
     %s = %q
   }
 }
@@ -288,7 +288,7 @@ resource "aws_neptune_parameter_group" "test" {
   family = "neptune1"
   name   = %q
 
-  tags {
+  tags = {
     %s = %q
     %s = %q
   }

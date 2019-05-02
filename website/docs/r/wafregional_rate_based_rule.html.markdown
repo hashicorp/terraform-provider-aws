@@ -6,7 +6,7 @@ description: |-
   Provides a AWS WAF Regional rate based rule resource.
 ---
 
-# aws_wafregional_rate_based_rule
+# Resource: aws_wafregional_rate_based_rule
 
 Provides a WAF Rate Based Rule Resource
 
@@ -27,7 +27,7 @@ resource "aws_wafregional_rate_based_rule" "wafrule" {
   name        = "tfWAFRule"
   metric_name = "tfWAFRule"
 
-  rate_key = "IP"
+  rate_key   = "IP"
   rate_limit = 2000
 
   predicate {

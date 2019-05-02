@@ -30,6 +30,10 @@ func testSweepConfigConfigurationRecorder(region string) error {
 	req := &configservice.DescribeConfigurationRecordersInput{}
 	resp, err := conn.DescribeConfigurationRecorders(req)
 	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping Config Configuration Recorders sweep for %s: %s", region, err)
+			return nil
+		}
 		return fmt.Errorf("Error describing Configuration Recorders: %s", err)
 	}
 
@@ -126,11 +130,11 @@ func testAccConfigConfigurationRecorder_importBasic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigConfigurationRecorderDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccConfigConfigurationRecorderConfig_basic(rInt),
 			},
 
-			resource.TestStep{
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,

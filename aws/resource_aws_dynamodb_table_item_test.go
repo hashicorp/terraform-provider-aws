@@ -24,7 +24,7 @@ func TestAccAWSDynamoDbTableItem_basic(t *testing.T) {
 	"four": {"N": "44444"}
 }`
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDynamoDbItemDestroy,
@@ -58,7 +58,7 @@ func TestAccAWSDynamoDbTableItem_rangeKey(t *testing.T) {
 	"four": {"N": "44444"}
 }`
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDynamoDbItemDestroy,
@@ -101,7 +101,7 @@ func TestAccAWSDynamoDbTableItem_withMultipleItems(t *testing.T) {
 	"four": {"S": "four"}
 }`
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDynamoDbItemDestroy,
@@ -148,7 +148,7 @@ func TestAccAWSDynamoDbTableItem_update(t *testing.T) {
 	"new": {"S": "shiny new one"}
 }`
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDynamoDbItemDestroy,
@@ -195,7 +195,7 @@ func TestAccAWSDynamoDbTableItem_updateWithRangeKey(t *testing.T) {
 	"value": {"S": "valueAfter"}
 }`
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDynamoDbItemDestroy,
@@ -290,7 +290,7 @@ func testAccCheckAWSDynamoDbTableItemExists(n string, item *dynamodb.GetItemOutp
 			ExpressionAttributeNames: buildDynamoDbExpressionAttributeNames(attributes),
 		})
 		if err != nil {
-			return fmt.Errorf("[ERROR] Problem getting table item '%s': %s", rs.Primary.ID, err)
+			return fmt.Errorf("Problem getting table item '%s': %s", rs.Primary.ID, err)
 		}
 
 		*item = *result

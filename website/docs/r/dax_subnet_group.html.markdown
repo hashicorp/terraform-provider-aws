@@ -6,7 +6,7 @@ description: |-
   Provides an DAX Subnet Group resource.
 ---
 
-# aws_dax_subnet_group
+# Resource: aws_dax_subnet_group
 
 Provides a DAX Subnet Group resource.
 
@@ -14,7 +14,7 @@ Provides a DAX Subnet Group resource.
 
 ```hcl
 resource "aws_dax_subnet_group" "example" {
-  name = "example"
+  name       = "example"
   subnet_ids = ["${aws_subnet.example1.id}", "${aws_subnet.example2.id}"]
 }
 ```

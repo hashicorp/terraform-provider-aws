@@ -38,7 +38,7 @@ func testAccAWSWafRegexPatternSet_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegexPatternSetDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSWafRegexPatternSetConfig(patternSetName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafRegexPatternSetExists("aws_waf_regex_pattern_set.test", &v),
@@ -132,7 +132,7 @@ func testAccCheckAWSWafRegexPatternSetDisappears(set *waf.RegexPatternSet) resou
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).wafconn
 
-		wr := newWafRetryer(conn, "global")
+		wr := newWafRetryer(conn)
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.UpdateRegexPatternSetInput{
 				ChangeToken:       token,

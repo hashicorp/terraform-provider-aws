@@ -29,6 +29,10 @@ func testSweepConfigAggregateAuthorizations(region string) error {
 
 	aggregateAuthorizations, err := describeConfigAggregateAuthorizations(conn)
 	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping Config Aggregate Authorizations sweep for %s: %s", region, err)
+			return nil
+		}
 		return fmt.Errorf("Error retrieving config aggregate authorizations: %s", err)
 	}
 
@@ -56,7 +60,7 @@ func testSweepConfigAggregateAuthorizations(region string) error {
 func TestAccAWSConfigAggregateAuthorization_basic(t *testing.T) {
 	rString := acctest.RandStringFromCharSet(12, "0123456789")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSConfigAggregateAuthorizationDestroy,
@@ -66,7 +70,7 @@ func TestAccAWSConfigAggregateAuthorization_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("aws_config_aggregate_authorization.example", "account_id", rString),
 					resource.TestCheckResourceAttr("aws_config_aggregate_authorization.example", "region", "eu-west-1"),
-					resource.TestMatchResourceAttr("aws_config_aggregate_authorization.example", "arn", regexp.MustCompile("^arn:aws:config:[\\w-]+:\\d{12}:aggregation-authorization/\\d{12}/[\\w-]+$")),
+					resource.TestMatchResourceAttr("aws_config_aggregate_authorization.example", "arn", regexp.MustCompile(`^arn:aws:config:[\w-]+:\d{12}:aggregation-authorization/\d{12}/[\w-]+$`)),
 				),
 			},
 			{

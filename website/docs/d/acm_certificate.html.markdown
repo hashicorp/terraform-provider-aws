@@ -21,8 +21,8 @@ data "aws_acm_certificate" "example" {
 }
 
 data "aws_acm_certificate" "example" {
-  domain   = "tf.example.com"
-  types = ["AMAZON_ISSUED"]
+  domain      = "tf.example.com"
+  types       = ["AMAZON_ISSUED"]
   most_recent = true
 }
 ```

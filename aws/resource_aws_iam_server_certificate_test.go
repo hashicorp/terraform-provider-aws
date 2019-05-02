@@ -27,23 +27,8 @@ func testSweepIamServerCertificates(region string) error {
 	}
 	conn := client.(*AWSClient).iamconn
 
-	prefixes := []string{
-		"tf-acctest-",
-		"test_cert_",
-		"terraform-test-cert-",
-	}
-
 	err = conn.ListServerCertificatesPages(&iam.ListServerCertificatesInput{}, func(out *iam.ListServerCertificatesOutput, lastPage bool) bool {
 		for _, sc := range out.ServerCertificateMetadataList {
-			hasPrefix := false
-			for _, prefix := range prefixes {
-				if strings.HasPrefix(*sc.ServerCertificateName, prefix) {
-					hasPrefix = true
-				}
-			}
-			if !hasPrefix {
-				continue
-			}
 			log.Printf("[INFO] Deleting IAM Server Certificate: %s", *sc.ServerCertificateName)
 
 			_, err := conn.DeleteServerCertificate(&iam.DeleteServerCertificateInput{
@@ -68,12 +53,37 @@ func testSweepIamServerCertificates(region string) error {
 	return nil
 }
 
+func TestAccAWSIAMServerCertificate_importBasic(t *testing.T) {
+	resourceName := "aws_iam_server_certificate.test_cert"
+	rInt := acctest.RandInt()
+	resourceId := fmt.Sprintf("terraform-test-cert-%d", rInt)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProvidersWithTLS,
+		CheckDestroy: testAccCheckIAMServerCertificateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIAMServerCertConfig(rInt),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateId:     resourceId,
+				ImportStateVerifyIgnore: []string{
+					"private_key"},
+			},
+		},
+	})
+}
+
 func TestAccAWSIAMServerCertificate_basic(t *testing.T) {
 	var cert iam.ServerCertificate
 	rInt := acctest.RandInt()
 	var certBody string
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProvidersWithTLS,
 		CheckDestroy: testAccCheckIAMServerCertificateDestroy,
@@ -95,7 +105,7 @@ func TestAccAWSIAMServerCertificate_name_prefix(t *testing.T) {
 	var certBody string
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProvidersWithTLS,
 		CheckDestroy: testAccCheckIAMServerCertificateDestroy,
@@ -130,7 +140,7 @@ func TestAccAWSIAMServerCertificate_disappears(t *testing.T) {
 		return nil
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProvidersWithTLS,
 		CheckDestroy: testAccCheckIAMServerCertificateDestroy,
@@ -154,7 +164,7 @@ func TestAccAWSIAMServerCertificate_file(t *testing.T) {
 	unixFile := "test-fixtures/iam-ssl-unix-line-endings.pem"
 	winFile := "test-fixtures/iam-ssl-windows-line-endings.pem.winfile"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckIAMServerCertificateDestroy,

@@ -14,6 +14,8 @@ This is a data source which can be used to construct a JSON representation of
 an IAM policy document, for use with resources which expect policy documents,
 such as the `aws_iam_policy` resource.
 
+-> For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](/docs/providers/aws/guides/iam-policy-documents.html).
+
 ```hcl
 data "aws_iam_policy_document" "example" {
   statement {
@@ -86,10 +88,11 @@ The following arguments are supported:
   current policy document.  Statements with non-blank `sid`s in the override
   document will overwrite statements with the same `sid` in the current document.
   Statements without an `sid` cannot be overwritten.
-* `statement` (Required) - A nested configuration block (described below)
+* `statement` (Optional) - A nested configuration block (described below)
   configuring one *statement* to be included in the policy document.
+* `version` (Optional) - IAM policy document version. Valid values: `2008-10-17`, `2012-10-17`. Defaults to `2012-10-17`. For more information, see the [AWS IAM User Guide](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_version.html).
 
-Each document configuration must have one or more `statement` blocks, which
+Each document configuration may have one or more `statement` blocks, which
 each accept the following arguments:
 
 * `sid` (Optional) - An ID for the policy statement.
@@ -297,3 +300,46 @@ data "aws_iam_policy_document" "override_json_example" {
 ```
 
 You can also combine `source_json` and `override_json` in the same document.
+
+## Example without Statement
+
+Use without a `statement`:
+
+```hcl
+data "aws_iam_policy_document" "source" {
+  statement {
+    sid       = "OverridePlaceholder"
+    actions   = ["ec2:DescribeAccountAttributes"]
+    resources = ["*"]
+  }
+}
+
+data "aws_iam_policy_document" "override" {
+  statement {
+    sid       = "OverridePlaceholder"
+    actions   = ["s3:GetObject"]
+    resources = ["*"]
+  }
+}
+
+data "aws_iam_policy_document" "politik" {
+  source_json   = "${data.aws_iam_policy_document.source.json}"
+  override_json = "${data.aws_iam_policy_document.override.json}"
+}
+```
+
+`data.aws_iam_policy_document.politik.json` will evaluate to:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "OverridePlaceholder",
+      "Effect": "Allow",
+      "Action": "s3:GetObject",
+      "Resource": "*"
+    }
+  ]
+}
+```

@@ -6,7 +6,7 @@ description: |-
   Provides a Service Discovery Public DNS Namespace resource.
 ---
 
-# aws_service_discovery_public_dns_namespace
+# Resource: aws_service_discovery_public_dns_namespace
 
 Provides a Service Discovery Public DNS Namespace resource.
 
@@ -14,7 +14,7 @@ Provides a Service Discovery Public DNS Namespace resource.
 
 ```hcl
 resource "aws_service_discovery_public_dns_namespace" "example" {
-  name = "hoge.example.com"
+  name        = "hoge.example.com"
   description = "example"
 }
 ```

@@ -8,6 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/aws/aws-sdk-go/aws/request"
+	"github.com/aws/aws-sdk-go/private/protocol"
+	"github.com/aws/aws-sdk-go/private/protocol/restjson"
 )
 
 const opCreateChannel = "CreateChannel"
@@ -15,7 +17,7 @@ const opCreateChannel = "CreateChannel"
 // CreateChannelRequest generates a "aws/request.Request" representing the
 // client's request for the CreateChannel operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -103,7 +105,7 @@ const opCreateOriginEndpoint = "CreateOriginEndpoint"
 // CreateOriginEndpointRequest generates a "aws/request.Request" representing the
 // client's request for the CreateOriginEndpoint operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -191,7 +193,7 @@ const opDeleteChannel = "DeleteChannel"
 // DeleteChannelRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteChannel operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -225,6 +227,7 @@ func (c *MediaPackage) DeleteChannelRequest(input *DeleteChannelInput) (req *req
 
 	output = &DeleteChannelOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -279,7 +282,7 @@ const opDeleteOriginEndpoint = "DeleteOriginEndpoint"
 // DeleteOriginEndpointRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteOriginEndpoint operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -313,6 +316,7 @@ func (c *MediaPackage) DeleteOriginEndpointRequest(input *DeleteOriginEndpointIn
 
 	output = &DeleteOriginEndpointOutput{}
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -367,7 +371,7 @@ const opDescribeChannel = "DescribeChannel"
 // DescribeChannelRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeChannel operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -455,7 +459,7 @@ const opDescribeOriginEndpoint = "DescribeOriginEndpoint"
 // DescribeOriginEndpointRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeOriginEndpoint operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -543,7 +547,7 @@ const opListChannels = "ListChannels"
 // ListChannelsRequest generates a "aws/request.Request" representing the
 // client's request for the ListChannels operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -687,7 +691,7 @@ const opListOriginEndpoints = "ListOriginEndpoints"
 // ListOriginEndpointsRequest generates a "aws/request.Request" representing the
 // client's request for the ListOriginEndpoints operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -826,12 +830,84 @@ func (c *MediaPackage) ListOriginEndpointsPagesWithContext(ctx aws.Context, inpu
 	return p.Err()
 }
 
+const opListTagsForResource = "ListTagsForResource"
+
+// ListTagsForResourceRequest generates a "aws/request.Request" representing the
+// client's request for the ListTagsForResource operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListTagsForResource for more information on using the ListTagsForResource
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListTagsForResourceRequest method.
+//    req, resp := client.ListTagsForResourceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediapackage-2017-10-12/ListTagsForResource
+func (c *MediaPackage) ListTagsForResourceRequest(input *ListTagsForResourceInput) (req *request.Request, output *ListTagsForResourceOutput) {
+	op := &request.Operation{
+		Name:       opListTagsForResource,
+		HTTPMethod: "GET",
+		HTTPPath:   "/tags/{resource-arn}",
+	}
+
+	if input == nil {
+		input = &ListTagsForResourceInput{}
+	}
+
+	output = &ListTagsForResourceOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListTagsForResource API operation for AWS Elemental MediaPackage.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaPackage's
+// API operation ListTagsForResource for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediapackage-2017-10-12/ListTagsForResource
+func (c *MediaPackage) ListTagsForResource(input *ListTagsForResourceInput) (*ListTagsForResourceOutput, error) {
+	req, out := c.ListTagsForResourceRequest(input)
+	return out, req.Send()
+}
+
+// ListTagsForResourceWithContext is the same as ListTagsForResource with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListTagsForResource for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaPackage) ListTagsForResourceWithContext(ctx aws.Context, input *ListTagsForResourceInput, opts ...request.Option) (*ListTagsForResourceOutput, error) {
+	req, out := c.ListTagsForResourceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opRotateChannelCredentials = "RotateChannelCredentials"
 
 // RotateChannelCredentialsRequest generates a "aws/request.Request" representing the
 // client's request for the RotateChannelCredentials operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -852,7 +928,12 @@ const opRotateChannelCredentials = "RotateChannelCredentials"
 //    }
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediapackage-2017-10-12/RotateChannelCredentials
+//
+// Deprecated: This API is deprecated. Please use RotateIngestEndpointCredentials instead
 func (c *MediaPackage) RotateChannelCredentialsRequest(input *RotateChannelCredentialsInput) (req *request.Request, output *RotateChannelCredentialsOutput) {
+	if c.Client.Config.Logger != nil {
+		c.Client.Config.Logger.Log("This operation, RotateChannelCredentials, has been deprecated")
+	}
 	op := &request.Operation{
 		Name:       opRotateChannelCredentials,
 		HTTPMethod: "PUT",
@@ -870,7 +951,8 @@ func (c *MediaPackage) RotateChannelCredentialsRequest(input *RotateChannelCrede
 
 // RotateChannelCredentials API operation for AWS Elemental MediaPackage.
 //
-// Changes the Channel ingest username and password.
+// Changes the Channel's first IngestEndpoint's username and password. WARNING
+// - This API is deprecated. Please use RotateIngestEndpointCredentials instead
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -893,6 +975,8 @@ func (c *MediaPackage) RotateChannelCredentialsRequest(input *RotateChannelCrede
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/mediapackage-2017-10-12/RotateChannelCredentials
+//
+// Deprecated: This API is deprecated. Please use RotateIngestEndpointCredentials instead
 func (c *MediaPackage) RotateChannelCredentials(input *RotateChannelCredentialsInput) (*RotateChannelCredentialsOutput, error) {
 	req, out := c.RotateChannelCredentialsRequest(input)
 	return out, req.Send()
@@ -907,8 +991,245 @@ func (c *MediaPackage) RotateChannelCredentials(input *RotateChannelCredentialsI
 // the context is nil a panic will occur. In the future the SDK may create
 // sub-contexts for http.Requests. See https://golang.org/pkg/context/
 // for more information on using Contexts.
+//
+// Deprecated: This API is deprecated. Please use RotateIngestEndpointCredentials instead
 func (c *MediaPackage) RotateChannelCredentialsWithContext(ctx aws.Context, input *RotateChannelCredentialsInput, opts ...request.Option) (*RotateChannelCredentialsOutput, error) {
 	req, out := c.RotateChannelCredentialsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opRotateIngestEndpointCredentials = "RotateIngestEndpointCredentials"
+
+// RotateIngestEndpointCredentialsRequest generates a "aws/request.Request" representing the
+// client's request for the RotateIngestEndpointCredentials operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See RotateIngestEndpointCredentials for more information on using the RotateIngestEndpointCredentials
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the RotateIngestEndpointCredentialsRequest method.
+//    req, resp := client.RotateIngestEndpointCredentialsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediapackage-2017-10-12/RotateIngestEndpointCredentials
+func (c *MediaPackage) RotateIngestEndpointCredentialsRequest(input *RotateIngestEndpointCredentialsInput) (req *request.Request, output *RotateIngestEndpointCredentialsOutput) {
+	op := &request.Operation{
+		Name:       opRotateIngestEndpointCredentials,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/channels/{id}/ingest_endpoints/{ingest_endpoint_id}/credentials",
+	}
+
+	if input == nil {
+		input = &RotateIngestEndpointCredentialsInput{}
+	}
+
+	output = &RotateIngestEndpointCredentialsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// RotateIngestEndpointCredentials API operation for AWS Elemental MediaPackage.
+//
+// Rotate the IngestEndpoint's username and password, as specified by the IngestEndpoint's
+// id.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaPackage's
+// API operation RotateIngestEndpointCredentials for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeUnprocessableEntityException "UnprocessableEntityException"
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//
+//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediapackage-2017-10-12/RotateIngestEndpointCredentials
+func (c *MediaPackage) RotateIngestEndpointCredentials(input *RotateIngestEndpointCredentialsInput) (*RotateIngestEndpointCredentialsOutput, error) {
+	req, out := c.RotateIngestEndpointCredentialsRequest(input)
+	return out, req.Send()
+}
+
+// RotateIngestEndpointCredentialsWithContext is the same as RotateIngestEndpointCredentials with the addition of
+// the ability to pass a context and additional request options.
+//
+// See RotateIngestEndpointCredentials for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaPackage) RotateIngestEndpointCredentialsWithContext(ctx aws.Context, input *RotateIngestEndpointCredentialsInput, opts ...request.Option) (*RotateIngestEndpointCredentialsOutput, error) {
+	req, out := c.RotateIngestEndpointCredentialsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opTagResource = "TagResource"
+
+// TagResourceRequest generates a "aws/request.Request" representing the
+// client's request for the TagResource operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See TagResource for more information on using the TagResource
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the TagResourceRequest method.
+//    req, resp := client.TagResourceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediapackage-2017-10-12/TagResource
+func (c *MediaPackage) TagResourceRequest(input *TagResourceInput) (req *request.Request, output *TagResourceOutput) {
+	op := &request.Operation{
+		Name:       opTagResource,
+		HTTPMethod: "POST",
+		HTTPPath:   "/tags/{resource-arn}",
+	}
+
+	if input == nil {
+		input = &TagResourceInput{}
+	}
+
+	output = &TagResourceOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// TagResource API operation for AWS Elemental MediaPackage.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaPackage's
+// API operation TagResource for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediapackage-2017-10-12/TagResource
+func (c *MediaPackage) TagResource(input *TagResourceInput) (*TagResourceOutput, error) {
+	req, out := c.TagResourceRequest(input)
+	return out, req.Send()
+}
+
+// TagResourceWithContext is the same as TagResource with the addition of
+// the ability to pass a context and additional request options.
+//
+// See TagResource for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaPackage) TagResourceWithContext(ctx aws.Context, input *TagResourceInput, opts ...request.Option) (*TagResourceOutput, error) {
+	req, out := c.TagResourceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUntagResource = "UntagResource"
+
+// UntagResourceRequest generates a "aws/request.Request" representing the
+// client's request for the UntagResource operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UntagResource for more information on using the UntagResource
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UntagResourceRequest method.
+//    req, resp := client.UntagResourceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediapackage-2017-10-12/UntagResource
+func (c *MediaPackage) UntagResourceRequest(input *UntagResourceInput) (req *request.Request, output *UntagResourceOutput) {
+	op := &request.Operation{
+		Name:       opUntagResource,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/tags/{resource-arn}",
+	}
+
+	if input == nil {
+		input = &UntagResourceInput{}
+	}
+
+	output = &UntagResourceOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// UntagResource API operation for AWS Elemental MediaPackage.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaPackage's
+// API operation UntagResource for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediapackage-2017-10-12/UntagResource
+func (c *MediaPackage) UntagResource(input *UntagResourceInput) (*UntagResourceOutput, error) {
+	req, out := c.UntagResourceRequest(input)
+	return out, req.Send()
+}
+
+// UntagResourceWithContext is the same as UntagResource with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UntagResource for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaPackage) UntagResourceWithContext(ctx aws.Context, input *UntagResourceInput, opts ...request.Option) (*UntagResourceOutput, error) {
+	req, out := c.UntagResourceRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -919,7 +1240,7 @@ const opUpdateChannel = "UpdateChannel"
 // UpdateChannelRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateChannel operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1007,7 +1328,7 @@ const opUpdateOriginEndpoint = "UpdateOriginEndpoint"
 // UpdateOriginEndpointRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateOriginEndpoint operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1105,6 +1426,9 @@ type Channel struct {
 
 	// The ID of the Channel.
 	Id *string `locationName:"id" type:"string"`
+
+	// A collection of tags associated with a resource
+	Tags map[string]*string `locationName:"tags" type:"map"`
 }
 
 // String returns the string representation
@@ -1138,6 +1462,12 @@ func (s *Channel) SetHlsIngest(v *HlsIngest) *Channel {
 // SetId sets the Id field's value.
 func (s *Channel) SetId(v string) *Channel {
 	s.Id = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *Channel) SetTags(v map[string]*string) *Channel {
+	s.Tags = v
 	return s
 }
 
@@ -1351,6 +1681,9 @@ type CreateChannelInput struct {
 
 	// Id is a required field
 	Id *string `locationName:"id" type:"string" required:"true"`
+
+	// A collection of tags associated with a resource
+	Tags map[string]*string `locationName:"tags" type:"map"`
 }
 
 // String returns the string representation
@@ -1388,6 +1721,12 @@ func (s *CreateChannelInput) SetId(v string) *CreateChannelInput {
 	return s
 }
 
+// SetTags sets the Tags field's value.
+func (s *CreateChannelInput) SetTags(v map[string]*string) *CreateChannelInput {
+	s.Tags = v
+	return s
+}
+
 type CreateChannelOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -1399,6 +1738,9 @@ type CreateChannelOutput struct {
 	HlsIngest *HlsIngest `locationName:"hlsIngest" type:"structure"`
 
 	Id *string `locationName:"id" type:"string"`
+
+	// A collection of tags associated with a resource
+	Tags map[string]*string `locationName:"tags" type:"map"`
 }
 
 // String returns the string representation
@@ -1435,6 +1777,12 @@ func (s *CreateChannelOutput) SetId(v string) *CreateChannelOutput {
 	return s
 }
 
+// SetTags sets the Tags field's value.
+func (s *CreateChannelOutput) SetTags(v map[string]*string) *CreateChannelOutput {
+	s.Tags = v
+	return s
+}
+
 type CreateOriginEndpointInput struct {
 	_ struct{} `type:"structure"`
 
@@ -1461,6 +1809,9 @@ type CreateOriginEndpointInput struct {
 	MssPackage *MssPackage `locationName:"mssPackage" type:"structure"`
 
 	StartoverWindowSeconds *int64 `locationName:"startoverWindowSeconds" type:"integer"`
+
+	// A collection of tags associated with a resource
+	Tags map[string]*string `locationName:"tags" type:"map"`
 
 	TimeDelaySeconds *int64 `locationName:"timeDelaySeconds" type:"integer"`
 
@@ -1567,6 +1918,12 @@ func (s *CreateOriginEndpointInput) SetStartoverWindowSeconds(v int64) *CreateOr
 	return s
 }
 
+// SetTags sets the Tags field's value.
+func (s *CreateOriginEndpointInput) SetTags(v map[string]*string) *CreateOriginEndpointInput {
+	s.Tags = v
+	return s
+}
+
 // SetTimeDelaySeconds sets the TimeDelaySeconds field's value.
 func (s *CreateOriginEndpointInput) SetTimeDelaySeconds(v int64) *CreateOriginEndpointInput {
 	s.TimeDelaySeconds = &v
@@ -1605,6 +1962,9 @@ type CreateOriginEndpointOutput struct {
 	MssPackage *MssPackage `locationName:"mssPackage" type:"structure"`
 
 	StartoverWindowSeconds *int64 `locationName:"startoverWindowSeconds" type:"integer"`
+
+	// A collection of tags associated with a resource
+	Tags map[string]*string `locationName:"tags" type:"map"`
 
 	TimeDelaySeconds *int64 `locationName:"timeDelaySeconds" type:"integer"`
 
@@ -1680,6 +2040,12 @@ func (s *CreateOriginEndpointOutput) SetMssPackage(v *MssPackage) *CreateOriginE
 // SetStartoverWindowSeconds sets the StartoverWindowSeconds field's value.
 func (s *CreateOriginEndpointOutput) SetStartoverWindowSeconds(v int64) *CreateOriginEndpointOutput {
 	s.StartoverWindowSeconds = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateOriginEndpointOutput) SetTags(v map[string]*string) *CreateOriginEndpointOutput {
+	s.Tags = v
 	return s
 }
 
@@ -1762,6 +2128,12 @@ type DashPackage struct {
 	// A Dynamic Adaptive Streaming over HTTP (DASH) encryption configuration.
 	Encryption *DashEncryption `locationName:"encryption" type:"structure"`
 
+	// Determines the position of some tags in the Media Presentation Description
+	// (MPD). When set to FULL, elements like SegmentTemplate and ContentProtection
+	// are included in each Representation. When set to COMPACT, duplicate elements
+	// are combined and presented at the AdaptationSet level.
+	ManifestLayout *string `locationName:"manifestLayout" type:"string" enum:"ManifestLayout"`
+
 	// Time window (in seconds) contained in each manifest.
 	ManifestWindowSeconds *int64 `locationName:"manifestWindowSeconds" type:"integer"`
 
@@ -1787,6 +2159,12 @@ type DashPackage struct {
 	// Duration (in seconds) of each segment. Actual segments will berounded to
 	// the nearest multiple of the source segment duration.
 	SegmentDurationSeconds *int64 `locationName:"segmentDurationSeconds" type:"integer"`
+
+	// Determines the type of SegmentTimeline included in the Media Presentation
+	// Description (MPD). When set to NUMBER_WITH_TIMELINE, a full timeline is presented
+	// in each SegmentTemplate, with $Number$ media URLs. When set to TIME_WITH_TIMELINE,
+	// a full timeline is presented in each SegmentTemplate, with $Time$ media URLs.
+	SegmentTemplateFormat *string `locationName:"segmentTemplateFormat" type:"string" enum:"SegmentTemplateFormat"`
 
 	// A StreamSelection configuration.
 	StreamSelection *StreamSelection `locationName:"streamSelection" type:"structure"`
@@ -1826,6 +2204,12 @@ func (s *DashPackage) SetEncryption(v *DashEncryption) *DashPackage {
 	return s
 }
 
+// SetManifestLayout sets the ManifestLayout field's value.
+func (s *DashPackage) SetManifestLayout(v string) *DashPackage {
+	s.ManifestLayout = &v
+	return s
+}
+
 // SetManifestWindowSeconds sets the ManifestWindowSeconds field's value.
 func (s *DashPackage) SetManifestWindowSeconds(v int64) *DashPackage {
 	s.ManifestWindowSeconds = &v
@@ -1859,6 +2243,12 @@ func (s *DashPackage) SetProfile(v string) *DashPackage {
 // SetSegmentDurationSeconds sets the SegmentDurationSeconds field's value.
 func (s *DashPackage) SetSegmentDurationSeconds(v int64) *DashPackage {
 	s.SegmentDurationSeconds = &v
+	return s
+}
+
+// SetSegmentTemplateFormat sets the SegmentTemplateFormat field's value.
+func (s *DashPackage) SetSegmentTemplateFormat(v string) *DashPackage {
+	s.SegmentTemplateFormat = &v
 	return s
 }
 
@@ -1896,6 +2286,9 @@ func (s *DeleteChannelInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DeleteChannelInput"}
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
+	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -1947,6 +2340,9 @@ func (s *DeleteOriginEndpointInput) Validate() error {
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
 	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -1997,6 +2393,9 @@ func (s *DescribeChannelInput) Validate() error {
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
 	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -2021,6 +2420,9 @@ type DescribeChannelOutput struct {
 	HlsIngest *HlsIngest `locationName:"hlsIngest" type:"structure"`
 
 	Id *string `locationName:"id" type:"string"`
+
+	// A collection of tags associated with a resource
+	Tags map[string]*string `locationName:"tags" type:"map"`
 }
 
 // String returns the string representation
@@ -2057,6 +2459,12 @@ func (s *DescribeChannelOutput) SetId(v string) *DescribeChannelOutput {
 	return s
 }
 
+// SetTags sets the Tags field's value.
+func (s *DescribeChannelOutput) SetTags(v map[string]*string) *DescribeChannelOutput {
+	s.Tags = v
+	return s
+}
+
 type DescribeOriginEndpointInput struct {
 	_ struct{} `type:"structure"`
 
@@ -2079,6 +2487,9 @@ func (s *DescribeOriginEndpointInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DescribeOriginEndpointInput"}
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
+	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -2119,6 +2530,9 @@ type DescribeOriginEndpointOutput struct {
 	MssPackage *MssPackage `locationName:"mssPackage" type:"structure"`
 
 	StartoverWindowSeconds *int64 `locationName:"startoverWindowSeconds" type:"integer"`
+
+	// A collection of tags associated with a resource
+	Tags map[string]*string `locationName:"tags" type:"map"`
 
 	TimeDelaySeconds *int64 `locationName:"timeDelaySeconds" type:"integer"`
 
@@ -2194,6 +2608,12 @@ func (s *DescribeOriginEndpointOutput) SetMssPackage(v *MssPackage) *DescribeOri
 // SetStartoverWindowSeconds sets the StartoverWindowSeconds field's value.
 func (s *DescribeOriginEndpointOutput) SetStartoverWindowSeconds(v int64) *DescribeOriginEndpointOutput {
 	s.StartoverWindowSeconds = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *DescribeOriginEndpointOutput) SetTags(v map[string]*string) *DescribeOriginEndpointOutput {
+	s.Tags = v
 	return s
 }
 
@@ -2662,6 +3082,9 @@ func (s *HlsPackage) SetUseAudioRenditionGroup(v bool) *HlsPackage {
 type IngestEndpoint struct {
 	_ struct{} `type:"structure"`
 
+	// The system generated unique identifier for the IngestEndpoint
+	Id *string `locationName:"id" type:"string"`
+
 	// The system generated password for ingest authentication.
 	Password *string `locationName:"password" type:"string"`
 
@@ -2680,6 +3103,12 @@ func (s IngestEndpoint) String() string {
 // GoString returns the string representation
 func (s IngestEndpoint) GoString() string {
 	return s.String()
+}
+
+// SetId sets the Id field's value.
+func (s *IngestEndpoint) SetId(v string) *IngestEndpoint {
+	s.Id = &v
+	return s
 }
 
 // SetPassword sets the Password field's value.
@@ -2854,6 +3283,67 @@ func (s *ListOriginEndpointsOutput) SetOriginEndpoints(v []*OriginEndpoint) *Lis
 	return s
 }
 
+type ListTagsForResourceInput struct {
+	_ struct{} `type:"structure"`
+
+	// ResourceArn is a required field
+	ResourceArn *string `location:"uri" locationName:"resource-arn" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ListTagsForResourceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListTagsForResourceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListTagsForResourceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListTagsForResourceInput"}
+	if s.ResourceArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceArn"))
+	}
+	if s.ResourceArn != nil && len(*s.ResourceArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceArn", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetResourceArn sets the ResourceArn field's value.
+func (s *ListTagsForResourceInput) SetResourceArn(v string) *ListTagsForResourceInput {
+	s.ResourceArn = &v
+	return s
+}
+
+type ListTagsForResourceOutput struct {
+	_ struct{} `type:"structure"`
+
+	Tags map[string]*string `locationName:"tags" type:"map"`
+}
+
+// String returns the string representation
+func (s ListTagsForResourceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListTagsForResourceOutput) GoString() string {
+	return s.String()
+}
+
+// SetTags sets the Tags field's value.
+func (s *ListTagsForResourceOutput) SetTags(v map[string]*string) *ListTagsForResourceOutput {
+	s.Tags = v
+	return s
+}
+
 // A Microsoft Smooth Streaming (MSS) encryption configuration.
 type MssEncryption struct {
 	_ struct{} `type:"structure"`
@@ -3000,6 +3490,9 @@ type OriginEndpoint struct {
 	// not specified, startover playback will be disabled for the OriginEndpoint.
 	StartoverWindowSeconds *int64 `locationName:"startoverWindowSeconds" type:"integer"`
 
+	// A collection of tags associated with a resource
+	Tags map[string]*string `locationName:"tags" type:"map"`
+
 	// Amount of delay (seconds) to enforce on the playback of live content.If not
 	// specified, there will be no time delay in effect for the OriginEndpoint.
 	TimeDelaySeconds *int64 `locationName:"timeDelaySeconds" type:"integer"`
@@ -3081,6 +3574,12 @@ func (s *OriginEndpoint) SetStartoverWindowSeconds(v int64) *OriginEndpoint {
 	return s
 }
 
+// SetTags sets the Tags field's value.
+func (s *OriginEndpoint) SetTags(v map[string]*string) *OriginEndpoint {
+	s.Tags = v
+	return s
+}
+
 // SetTimeDelaySeconds sets the TimeDelaySeconds field's value.
 func (s *OriginEndpoint) SetTimeDelaySeconds(v int64) *OriginEndpoint {
 	s.TimeDelaySeconds = &v
@@ -3099,8 +3598,9 @@ func (s *OriginEndpoint) SetWhitelist(v []*string) *OriginEndpoint {
 	return s
 }
 
+// Deprecated: RotateChannelCredentialsInput has been deprecated
 type RotateChannelCredentialsInput struct {
-	_ struct{} `type:"structure"`
+	_ struct{} `deprecated:"true" type:"structure"`
 
 	// Id is a required field
 	Id *string `location:"uri" locationName:"id" type:"string" required:"true"`
@@ -3122,6 +3622,9 @@ func (s *RotateChannelCredentialsInput) Validate() error {
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
 	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -3135,8 +3638,9 @@ func (s *RotateChannelCredentialsInput) SetId(v string) *RotateChannelCredential
 	return s
 }
 
+// Deprecated: RotateChannelCredentialsOutput has been deprecated
 type RotateChannelCredentialsOutput struct {
-	_ struct{} `type:"structure"`
+	_ struct{} `deprecated:"true" type:"structure"`
 
 	Arn *string `locationName:"arn" type:"string"`
 
@@ -3146,6 +3650,9 @@ type RotateChannelCredentialsOutput struct {
 	HlsIngest *HlsIngest `locationName:"hlsIngest" type:"structure"`
 
 	Id *string `locationName:"id" type:"string"`
+
+	// A collection of tags associated with a resource
+	Tags map[string]*string `locationName:"tags" type:"map"`
 }
 
 // String returns the string representation
@@ -3182,10 +3689,131 @@ func (s *RotateChannelCredentialsOutput) SetId(v string) *RotateChannelCredentia
 	return s
 }
 
+// SetTags sets the Tags field's value.
+func (s *RotateChannelCredentialsOutput) SetTags(v map[string]*string) *RotateChannelCredentialsOutput {
+	s.Tags = v
+	return s
+}
+
+type RotateIngestEndpointCredentialsInput struct {
+	_ struct{} `type:"structure"`
+
+	// Id is a required field
+	Id *string `location:"uri" locationName:"id" type:"string" required:"true"`
+
+	// IngestEndpointId is a required field
+	IngestEndpointId *string `location:"uri" locationName:"ingest_endpoint_id" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s RotateIngestEndpointCredentialsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RotateIngestEndpointCredentialsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *RotateIngestEndpointCredentialsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "RotateIngestEndpointCredentialsInput"}
+	if s.Id == nil {
+		invalidParams.Add(request.NewErrParamRequired("Id"))
+	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
+	}
+	if s.IngestEndpointId == nil {
+		invalidParams.Add(request.NewErrParamRequired("IngestEndpointId"))
+	}
+	if s.IngestEndpointId != nil && len(*s.IngestEndpointId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("IngestEndpointId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetId sets the Id field's value.
+func (s *RotateIngestEndpointCredentialsInput) SetId(v string) *RotateIngestEndpointCredentialsInput {
+	s.Id = &v
+	return s
+}
+
+// SetIngestEndpointId sets the IngestEndpointId field's value.
+func (s *RotateIngestEndpointCredentialsInput) SetIngestEndpointId(v string) *RotateIngestEndpointCredentialsInput {
+	s.IngestEndpointId = &v
+	return s
+}
+
+type RotateIngestEndpointCredentialsOutput struct {
+	_ struct{} `type:"structure"`
+
+	Arn *string `locationName:"arn" type:"string"`
+
+	Description *string `locationName:"description" type:"string"`
+
+	// An HTTP Live Streaming (HLS) ingest resource configuration.
+	HlsIngest *HlsIngest `locationName:"hlsIngest" type:"structure"`
+
+	Id *string `locationName:"id" type:"string"`
+
+	// A collection of tags associated with a resource
+	Tags map[string]*string `locationName:"tags" type:"map"`
+}
+
+// String returns the string representation
+func (s RotateIngestEndpointCredentialsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RotateIngestEndpointCredentialsOutput) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *RotateIngestEndpointCredentialsOutput) SetArn(v string) *RotateIngestEndpointCredentialsOutput {
+	s.Arn = &v
+	return s
+}
+
+// SetDescription sets the Description field's value.
+func (s *RotateIngestEndpointCredentialsOutput) SetDescription(v string) *RotateIngestEndpointCredentialsOutput {
+	s.Description = &v
+	return s
+}
+
+// SetHlsIngest sets the HlsIngest field's value.
+func (s *RotateIngestEndpointCredentialsOutput) SetHlsIngest(v *HlsIngest) *RotateIngestEndpointCredentialsOutput {
+	s.HlsIngest = v
+	return s
+}
+
+// SetId sets the Id field's value.
+func (s *RotateIngestEndpointCredentialsOutput) SetId(v string) *RotateIngestEndpointCredentialsOutput {
+	s.Id = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *RotateIngestEndpointCredentialsOutput) SetTags(v map[string]*string) *RotateIngestEndpointCredentialsOutput {
+	s.Tags = v
+	return s
+}
+
 // A configuration for accessing an external Secure Packager and Encoder Key
 // Exchange (SPEKE) service that will provide encryption keys.
 type SpekeKeyProvider struct {
 	_ struct{} `type:"structure"`
+
+	// An Amazon Resource Name (ARN) of a Certificate Manager certificatethat MediaPackage
+	// will use for enforcing secure end-to-end datatransfer with the key provider
+	// service.
+	CertificateArn *string `locationName:"certificateArn" type:"string"`
 
 	// The resource ID to include in key requests.
 	//
@@ -3239,6 +3867,12 @@ func (s *SpekeKeyProvider) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetCertificateArn sets the CertificateArn field's value.
+func (s *SpekeKeyProvider) SetCertificateArn(v string) *SpekeKeyProvider {
+	s.CertificateArn = &v
+	return s
 }
 
 // SetResourceId sets the ResourceId field's value.
@@ -3307,6 +3941,136 @@ func (s *StreamSelection) SetStreamOrder(v string) *StreamSelection {
 	return s
 }
 
+type TagResourceInput struct {
+	_ struct{} `type:"structure"`
+
+	// ResourceArn is a required field
+	ResourceArn *string `location:"uri" locationName:"resource-arn" type:"string" required:"true"`
+
+	// Tags is a required field
+	Tags map[string]*string `locationName:"tags" type:"map" required:"true"`
+}
+
+// String returns the string representation
+func (s TagResourceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TagResourceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *TagResourceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "TagResourceInput"}
+	if s.ResourceArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceArn"))
+	}
+	if s.ResourceArn != nil && len(*s.ResourceArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceArn", 1))
+	}
+	if s.Tags == nil {
+		invalidParams.Add(request.NewErrParamRequired("Tags"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetResourceArn sets the ResourceArn field's value.
+func (s *TagResourceInput) SetResourceArn(v string) *TagResourceInput {
+	s.ResourceArn = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *TagResourceInput) SetTags(v map[string]*string) *TagResourceInput {
+	s.Tags = v
+	return s
+}
+
+type TagResourceOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s TagResourceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TagResourceOutput) GoString() string {
+	return s.String()
+}
+
+type UntagResourceInput struct {
+	_ struct{} `type:"structure"`
+
+	// ResourceArn is a required field
+	ResourceArn *string `location:"uri" locationName:"resource-arn" type:"string" required:"true"`
+
+	// TagKeys is a required field
+	TagKeys []*string `location:"querystring" locationName:"tagKeys" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s UntagResourceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UntagResourceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UntagResourceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UntagResourceInput"}
+	if s.ResourceArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceArn"))
+	}
+	if s.ResourceArn != nil && len(*s.ResourceArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceArn", 1))
+	}
+	if s.TagKeys == nil {
+		invalidParams.Add(request.NewErrParamRequired("TagKeys"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetResourceArn sets the ResourceArn field's value.
+func (s *UntagResourceInput) SetResourceArn(v string) *UntagResourceInput {
+	s.ResourceArn = &v
+	return s
+}
+
+// SetTagKeys sets the TagKeys field's value.
+func (s *UntagResourceInput) SetTagKeys(v []*string) *UntagResourceInput {
+	s.TagKeys = v
+	return s
+}
+
+type UntagResourceOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s UntagResourceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UntagResourceOutput) GoString() string {
+	return s.String()
+}
+
 type UpdateChannelInput struct {
 	_ struct{} `type:"structure"`
 
@@ -3331,6 +4095,9 @@ func (s *UpdateChannelInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "UpdateChannelInput"}
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
+	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -3362,6 +4129,9 @@ type UpdateChannelOutput struct {
 	HlsIngest *HlsIngest `locationName:"hlsIngest" type:"structure"`
 
 	Id *string `locationName:"id" type:"string"`
+
+	// A collection of tags associated with a resource
+	Tags map[string]*string `locationName:"tags" type:"map"`
 }
 
 // String returns the string representation
@@ -3395,6 +4165,12 @@ func (s *UpdateChannelOutput) SetHlsIngest(v *HlsIngest) *UpdateChannelOutput {
 // SetId sets the Id field's value.
 func (s *UpdateChannelOutput) SetId(v string) *UpdateChannelOutput {
 	s.Id = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *UpdateChannelOutput) SetTags(v map[string]*string) *UpdateChannelOutput {
+	s.Tags = v
 	return s
 }
 
@@ -3442,6 +4218,9 @@ func (s *UpdateOriginEndpointInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "UpdateOriginEndpointInput"}
 	if s.Id == nil {
 		invalidParams.Add(request.NewErrParamRequired("Id"))
+	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
 	}
 	if s.CmafPackage != nil {
 		if err := s.CmafPackage.Validate(); err != nil {
@@ -3557,6 +4336,9 @@ type UpdateOriginEndpointOutput struct {
 
 	StartoverWindowSeconds *int64 `locationName:"startoverWindowSeconds" type:"integer"`
 
+	// A collection of tags associated with a resource
+	Tags map[string]*string `locationName:"tags" type:"map"`
+
 	TimeDelaySeconds *int64 `locationName:"timeDelaySeconds" type:"integer"`
 
 	Url *string `locationName:"url" type:"string"`
@@ -3634,6 +4416,12 @@ func (s *UpdateOriginEndpointOutput) SetStartoverWindowSeconds(v int64) *UpdateO
 	return s
 }
 
+// SetTags sets the Tags field's value.
+func (s *UpdateOriginEndpointOutput) SetTags(v map[string]*string) *UpdateOriginEndpointOutput {
+	s.Tags = v
+	return s
+}
+
 // SetTimeDelaySeconds sets the TimeDelaySeconds field's value.
 func (s *UpdateOriginEndpointOutput) SetTimeDelaySeconds(v int64) *UpdateOriginEndpointOutput {
 	s.TimeDelaySeconds = &v
@@ -3672,6 +4460,14 @@ const (
 )
 
 const (
+	// ManifestLayoutFull is a ManifestLayout enum value
+	ManifestLayoutFull = "FULL"
+
+	// ManifestLayoutCompact is a ManifestLayout enum value
+	ManifestLayoutCompact = "COMPACT"
+)
+
+const (
 	// PlaylistTypeNone is a PlaylistType enum value
 	PlaylistTypeNone = "NONE"
 
@@ -3688,6 +4484,14 @@ const (
 
 	// ProfileHbbtv15 is a Profile enum value
 	ProfileHbbtv15 = "HBBTV_1_5"
+)
+
+const (
+	// SegmentTemplateFormatNumberWithTimeline is a SegmentTemplateFormat enum value
+	SegmentTemplateFormatNumberWithTimeline = "NUMBER_WITH_TIMELINE"
+
+	// SegmentTemplateFormatTimeWithTimeline is a SegmentTemplateFormat enum value
+	SegmentTemplateFormatTimeWithTimeline = "TIME_WITH_TIMELINE"
 )
 
 const (

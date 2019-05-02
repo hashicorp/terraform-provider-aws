@@ -10,11 +10,11 @@ import (
 )
 
 func TestAccDataSourceAwsVpcEndpointService_gateway(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDataSourceAwsVpcEndpointServiceGatewayConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
@@ -28,13 +28,15 @@ func TestAccDataSourceAwsVpcEndpointService_gateway(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"data.aws_vpc_endpoint_service.s3", "acceptance_required", "false"),
 					resource.TestCheckResourceAttr(
-						"data.aws_vpc_endpoint_service.s3", "availability_zones.#", "3"),
+						"data.aws_vpc_endpoint_service.s3", "availability_zones.#", "4"),
 					resource.TestCheckResourceAttr(
 						"data.aws_vpc_endpoint_service.s3", "availability_zones.2487133097", "us-west-2a"),
 					resource.TestCheckResourceAttr(
 						"data.aws_vpc_endpoint_service.s3", "availability_zones.221770259", "us-west-2b"),
 					resource.TestCheckResourceAttr(
 						"data.aws_vpc_endpoint_service.s3", "availability_zones.2050015877", "us-west-2c"),
+					resource.TestCheckResourceAttr(
+						"data.aws_vpc_endpoint_service.s3", "availability_zones.3830732582", "us-west-2d"),
 					resource.TestCheckResourceAttr(
 						"data.aws_vpc_endpoint_service.s3", "private_dns_name", ""),
 					resource.TestCheckResourceAttr(
@@ -48,11 +50,11 @@ func TestAccDataSourceAwsVpcEndpointService_gateway(t *testing.T) {
 }
 
 func TestAccDataSourceAwsVpcEndpointService_interface(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDataSourceAwsVpcEndpointServiceInterfaceConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
@@ -88,11 +90,11 @@ func TestAccDataSourceAwsVpcEndpointService_interface(t *testing.T) {
 func TestAccDataSourceAwsVpcEndpointService_custom(t *testing.T) {
 	lbName := fmt.Sprintf("testaccawsnlb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDataSourceAwsVpcEndpointServiceCustomConfig(lbName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
@@ -135,23 +137,13 @@ data "aws_vpc_endpoint_service" "ec2" {
 }
 `
 
-const testAccDataSourceAwsVpcEndpointServiceConfig_custom = `
-provider "aws" {
-  region = "us-west-2"
-}
-
-data "aws_vpc_endpoint_service" "ec2" {
-  service = "ec2"
-}
-`
-
 func testAccDataSourceAwsVpcEndpointServiceCustomConfig(lbName string) string {
 	return fmt.Sprintf(
 		`
 resource "aws_vpc" "nlb_test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-vpc-endpoint-service-custom"
   }
 }
@@ -169,7 +161,7 @@ resource "aws_lb" "nlb_test_1" {
   idle_timeout               = 60
   enable_deletion_protection = false
 
-  tags {
+  tags = {
     Name = "testAccVpcEndpointServiceBasicConfig_nlb1"
   }
 }
@@ -179,7 +171,7 @@ resource "aws_subnet" "nlb_test_1" {
   cidr_block        = "10.0.1.0/24"
   availability_zone = "us-west-2a"
 
-  tags {
+  tags = {
     Name = "tf-acc-vpc-endpoint-service-custom"
   }
 }
@@ -189,7 +181,7 @@ resource "aws_subnet" "nlb_test_2" {
   cidr_block        = "10.0.2.0/24"
   availability_zone = "us-west-2b"
 
-  tags {
+  tags = {
     Name = "tf-acc-vpc-endpoint-service-custom"
   }
 }

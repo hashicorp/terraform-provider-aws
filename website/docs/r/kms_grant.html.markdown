@@ -6,7 +6,7 @@ description: |-
   Provides a resource-based access control mechanism for KMS Customer Master Keys.
 ---
 
-# aws_kms_grant
+# Resource: aws_kms_grant
 
 Provides a resource-based access control mechanism for a KMS customer master key.
 
@@ -16,7 +16,7 @@ Provides a resource-based access control mechanism for a KMS customer master key
 resource "aws_kms_key" "a" {}
 
 resource "aws_iam_role" "a" {
-name = "iam-role-for-grant"
+  name = "iam-role-for-grant"
 
   assume_role_policy = <<EOF
 {
@@ -39,9 +39,10 @@ resource "aws_kms_grant" "a" {
   name              = "my-grant"
   key_id            = "${aws_kms_key.a.key_id}"
   grantee_principal = "${aws_iam_role.a.arn}"
-  operations        = [ "Encrypt", "Decrypt", "GenerateDataKey" ]
+  operations        = ["Encrypt", "Decrypt", "GenerateDataKey"]
+
   constraints {
-    encryption_context_equals {
+    encryption_context_equals = {
       Department = "Finance"
     }
   }
@@ -64,8 +65,8 @@ The following arguments are supported:
 
 The `constraints` block supports the following arguments:
 
-* `encryption_context_equals` - (Optional) A list of key-value pairs that must be present in the encryption context of certain subsequent operations that the grant allows. Conflicts with `encryption_context_subset`.
-* `encryption_context_subset` - (Optional) A list of key-value pairs, all of which must be present in the encryption context of certain subsequent operations that the grant allows. Conflicts with `encryption_context_equals`.
+* `encryption_context_equals` - (Optional) A list of key-value pairs that must match the encryption context in subsequent cryptographic operation requests. The grant allows the operation only when the encryption context in the request is the same as the encryption context specified in this constraint. Conflicts with `encryption_context_subset`.
+* `encryption_context_subset` - (Optional) A list of key-value pairs that must be included in the encryption context of subsequent cryptographic operation requests. The grant allows the cryptographic operation only when the encryption context in the request includes the key-value pairs specified in this constraint, although it can include additional key-value pairs. Conflicts with `encryption_context_equals`.
 
 ## Attributes Reference
 

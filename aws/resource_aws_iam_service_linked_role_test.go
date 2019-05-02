@@ -131,7 +131,7 @@ func TestAccAWSIAMServiceLinkedRole_basic(t *testing.T) {
 	name := "AWSServiceRoleForElasticBeanstalk"
 	path := fmt.Sprintf("/aws-service-role/%s/", awsServiceName)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 		},
@@ -182,7 +182,7 @@ func TestAccAWSIAMServiceLinkedRole_CustomSuffix(t *testing.T) {
 	name := fmt.Sprintf("AWSServiceRoleForAutoScaling_%s", customSuffix)
 	path := fmt.Sprintf("/aws-service-role/%s/", awsServiceName)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 		},
@@ -211,7 +211,7 @@ func TestAccAWSIAMServiceLinkedRole_Description(t *testing.T) {
 	awsServiceName := "autoscaling.amazonaws.com"
 	customSuffix := acctest.RandomWithPrefix("tf-acc-test")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 		},

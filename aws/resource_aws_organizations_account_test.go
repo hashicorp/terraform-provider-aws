@@ -25,7 +25,7 @@ func testAccAwsOrganizationsAccount_basic(t *testing.T) {
 	email := fmt.Sprintf("tf-acctest+%d@%s", rInt, orgsEmailDomain)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOrganizationsAccountDestroy,
 		Steps: []resource.TestStep{
@@ -64,14 +64,15 @@ func testAccCheckAwsOrganizationsAccountDestroy(s *terraform.State) error {
 
 		resp, err := conn.DescribeAccount(params)
 
+		if isAWSErr(err, organizations.ErrCodeAccountNotFoundException, "") {
+			return nil
+		}
+
 		if err != nil {
-			if isAWSErr(err, organizations.ErrCodeAccountNotFoundException, "") {
-				return nil
-			}
 			return err
 		}
 
-		if resp == nil && resp.Account != nil {
+		if resp != nil && resp.Account != nil {
 			return fmt.Errorf("Bad: Account still exists: %q", rs.Primary.ID)
 		}
 	}

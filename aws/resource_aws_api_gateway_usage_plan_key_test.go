@@ -18,7 +18,7 @@ func TestAccAWSAPIGatewayUsagePlanKey_basic(t *testing.T) {
 	name := acctest.RandString(10)
 	updatedName := acctest.RandString(10)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayUsagePlanKeyDestroy,
@@ -186,7 +186,10 @@ resource "aws_api_gateway_deployment" "test" {
 }
 
 resource "aws_api_gateway_deployment" "foo" {
-  depends_on = ["aws_api_gateway_integration.test"]
+  depends_on = [
+    "aws_api_gateway_deployment.test",
+    "aws_api_gateway_integration.test",
+  ]
 
   rest_api_id = "${aws_api_gateway_rest_api.test.id}"
   stage_name = "foo"
@@ -195,19 +198,24 @@ resource "aws_api_gateway_deployment" "foo" {
 
 resource "aws_api_gateway_usage_plan" "main" {
   name = "%s"
+
+  api_stages {
+    api_id = "${aws_api_gateway_rest_api.test.id}"
+    stage  = "${aws_api_gateway_deployment.test.stage_name}"
+  }
 }
 
 resource "aws_api_gateway_usage_plan" "secondary" {
   name = "secondary-%s"
+
+  api_stages {
+    api_id = "${aws_api_gateway_rest_api.test.id}"
+    stage  = "${aws_api_gateway_deployment.foo.stage_name}"
+  }
 }
 
 resource "aws_api_gateway_api_key" "mykey" {
   name = "demo-%s"
-
-  stage_key {
-    rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-    stage_name  = "${aws_api_gateway_deployment.foo.stage_name}"
-  }
 }
 `
 

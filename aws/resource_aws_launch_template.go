@@ -8,7 +8,9 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform/helper/customdiff"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
@@ -48,6 +50,11 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(0, 255),
 			},
 
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"default_version": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -82,12 +89,24 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"delete_on_termination": {
-										Type:     schema.TypeBool,
-										Optional: true,
+										// Use TypeString to allow an "unspecified" value,
+										// since TypeBool only has true/false with false default.
+										// The conversion from bare true/false values in
+										// configurations to TypeString value is currently safe.
+										Type:             schema.TypeString,
+										Optional:         true,
+										DiffSuppressFunc: suppressEquivalentTypeStringBoolean,
+										ValidateFunc:     validateTypeStringNullableBoolean,
 									},
 									"encrypted": {
-										Type:     schema.TypeBool,
-										Optional: true,
+										// Use TypeString to allow an "unspecified" value,
+										// since TypeBool only has true/false with false default.
+										// The conversion from bare true/false values in
+										// configurations to TypeString value is currently safe.
+										Type:             schema.TypeString,
+										Optional:         true,
+										DiffSuppressFunc: suppressEquivalentTypeStringBoolean,
+										ValidateFunc:     validateTypeStringNullableBoolean,
 									},
 									"iops": {
 										Type:     schema.TypeInt,
@@ -120,6 +139,37 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 				},
 			},
 
+			"capacity_reservation_specification": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"capacity_reservation_preference": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								ec2.CapacityReservationPreferenceOpen,
+								ec2.CapacityReservationPreferenceNone,
+							}, false),
+						},
+						"capacity_reservation_target": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"capacity_reservation_id": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+
 			"credit_specification": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -140,13 +190,33 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 			},
 
 			"ebs_optimized": {
-				Type:     schema.TypeBool,
-				Optional: true,
+				// Use TypeString to allow an "unspecified" value,
+				// since TypeBool only has true/false with false default.
+				// The conversion from bare true/false values in
+				// configurations to TypeString value is currently safe.
+				Type:             schema.TypeString,
+				Optional:         true,
+				DiffSuppressFunc: suppressEquivalentTypeStringBoolean,
+				ValidateFunc:     validateTypeStringNullableBoolean,
 			},
 
 			"elastic_gpu_specifications": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"type": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
+
+			"elastic_inference_accelerator": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"type": {
@@ -252,6 +322,20 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 				Optional: true,
 			},
 
+			"license_specification": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"license_configuration_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validateArn,
+						},
+					},
+				},
+			},
+
 			"monitoring": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -294,7 +378,7 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 						},
 						"ipv6_address_count": {
 							Type:     schema.TypeInt,
-							Computed: true,
+							Optional: true,
 						},
 						"ipv6_addresses": {
 							Type:     schema.TypeSet,
@@ -316,7 +400,7 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 						},
 						"ipv4_address_count": {
 							Type:     schema.TypeInt,
-							Computed: true,
+							Optional: true,
 						},
 						"subnet_id": {
 							Type:     schema.TypeString,
@@ -409,6 +493,20 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 
 			"tags": tagsSchema(),
 		},
+
+		CustomizeDiff: customdiff.Sequence(
+			customdiff.ComputedIf("latest_version", func(diff *schema.ResourceDiff, meta interface{}) bool {
+				for _, changedKey := range diff.GetChangedKeysPrefix("") {
+					switch changedKey {
+					case "name", "name_prefix", "description", "default_version", "latest_version":
+						continue
+					default:
+						return true
+					}
+				}
+				return false
+			}),
+		),
 	}
 }
 
@@ -424,7 +522,7 @@ func resourceAwsLaunchTemplateCreate(d *schema.ResourceData, meta interface{}) e
 		ltName = resource.UniqueId()
 	}
 
-	launchTemplateData, err := buildLaunchTemplateData(d, meta)
+	launchTemplateData, err := buildLaunchTemplateData(d)
 	if err != nil {
 		return err
 	}
@@ -433,6 +531,10 @@ func resourceAwsLaunchTemplateCreate(d *schema.ResourceData, meta interface{}) e
 		ClientToken:        aws.String(resource.UniqueId()),
 		LaunchTemplateName: aws.String(ltName),
 		LaunchTemplateData: launchTemplateData,
+	}
+
+	if v, ok := d.GetOk("description"); ok && v.(string) != "" {
+		launchTemplateOpts.VersionDescription = aws.String(v.(string))
 	}
 
 	resp, err := conn.CreateLaunchTemplate(launchTemplateOpts)
@@ -457,19 +559,30 @@ func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) err
 	dlt, err := conn.DescribeLaunchTemplates(&ec2.DescribeLaunchTemplatesInput{
 		LaunchTemplateIds: []*string{aws.String(d.Id())},
 	})
-	if err != nil {
-		if isAWSErr(err, ec2.LaunchTemplateErrorCodeLaunchTemplateIdDoesNotExist, "") {
-			log.Printf("[WARN] launch template (%s) not found - removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("Error getting launch template: %s", err)
-	}
-	if len(dlt.LaunchTemplates) == 0 {
+
+	if isAWSErr(err, ec2.LaunchTemplateErrorCodeLaunchTemplateIdDoesNotExist, "") {
 		log.Printf("[WARN] launch template (%s) not found - removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
+
+	// AWS SDK constant above is currently incorrect
+	if isAWSErr(err, "InvalidLaunchTemplateId.NotFound", "") {
+		log.Printf("[WARN] launch template (%s) not found - removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("Error getting launch template: %s", err)
+	}
+
+	if dlt == nil || len(dlt.LaunchTemplates) == 0 {
+		log.Printf("[WARN] launch template (%s) not found - removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if *dlt.LaunchTemplates[0].LaunchTemplateId != d.Id() {
 		return fmt.Errorf("Unable to find launch template: %#v", dlt.LaunchTemplates)
 	}
@@ -482,6 +595,15 @@ func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("default_version", lt.DefaultVersionNumber)
 	d.Set("tags", tagsToMap(lt.Tags))
 
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "ec2",
+		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("launch-template/%s", d.Id()),
+	}.String()
+	d.Set("arn", arn)
+
 	version := strconv.Itoa(int(*lt.LatestVersionNumber))
 	dltv, err := conn.DescribeLaunchTemplateVersions(&ec2.DescribeLaunchTemplateVersionsInput{
 		LaunchTemplateId: aws.String(d.Id()),
@@ -493,10 +615,11 @@ func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) err
 
 	log.Printf("[DEBUG] Received launch template version %q (version %d)", d.Id(), *lt.LatestVersionNumber)
 
+	d.Set("description", dltv.LaunchTemplateVersions[0].VersionDescription)
+
 	ltData := dltv.LaunchTemplateVersions[0].LaunchTemplateData
 
 	d.Set("disable_api_termination", ltData.DisableApiTermination)
-	d.Set("ebs_optimized", ltData.EbsOptimized)
 	d.Set("image_id", ltData.ImageId)
 	d.Set("instance_initiated_shutdown_behavior", ltData.InstanceInitiatedShutdownBehavior)
 	d.Set("instance_type", ltData.InstanceType)
@@ -506,12 +629,21 @@ func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("security_group_names", aws.StringValueSlice(ltData.SecurityGroups))
 	d.Set("user_data", ltData.UserData)
 	d.Set("vpc_security_group_ids", aws.StringValueSlice(ltData.SecurityGroupIds))
+	d.Set("ebs_optimized", "")
+
+	if ltData.EbsOptimized != nil {
+		d.Set("ebs_optimized", strconv.FormatBool(aws.BoolValue(ltData.EbsOptimized)))
+	}
 
 	if err := d.Set("block_device_mappings", getBlockDeviceMappings(ltData.BlockDeviceMappings)); err != nil {
 		return err
 	}
 
-	if strings.HasPrefix(aws.StringValue(ltData.InstanceType), "t2") {
+	if err := d.Set("capacity_reservation_specification", getCapacityReservationSpecification(ltData.CapacityReservationSpecification)); err != nil {
+		return err
+	}
+
+	if strings.HasPrefix(aws.StringValue(ltData.InstanceType), "t2") || strings.HasPrefix(aws.StringValue(ltData.InstanceType), "t3") {
 		if err := d.Set("credit_specification", getCreditSpecification(ltData.CreditSpecification)); err != nil {
 			return err
 		}
@@ -521,11 +653,19 @@ func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
+	if err := d.Set("elastic_inference_accelerator", flattenEc2LaunchTemplateElasticInferenceAcceleratorResponse(ltData.ElasticInferenceAccelerators)); err != nil {
+		return fmt.Errorf("error setting elastic_inference_accelerator: %s", err)
+	}
+
 	if err := d.Set("iam_instance_profile", getIamInstanceProfile(ltData.IamInstanceProfile)); err != nil {
 		return err
 	}
 
 	if err := d.Set("instance_market_options", getInstanceMarketOptions(ltData.InstanceMarketOptions)); err != nil {
+		return err
+	}
+
+	if err := d.Set("license_specification", getLicenseSpecifications(ltData.LicenseSpecifications)); err != nil {
 		return err
 	}
 
@@ -552,7 +692,7 @@ func resourceAwsLaunchTemplateUpdate(d *schema.ResourceData, meta interface{}) e
 	conn := meta.(*AWSClient).ec2conn
 
 	if !d.IsNewResource() {
-		launchTemplateData, err := buildLaunchTemplateData(d, meta)
+		launchTemplateData, err := buildLaunchTemplateData(d)
 		if err != nil {
 			return err
 		}
@@ -561,6 +701,10 @@ func resourceAwsLaunchTemplateUpdate(d *schema.ResourceData, meta interface{}) e
 			ClientToken:        aws.String(resource.UniqueId()),
 			LaunchTemplateId:   aws.String(d.Id()),
 			LaunchTemplateData: launchTemplateData,
+		}
+
+		if v, ok := d.GetOk("description"); ok && v.(string) != "" {
+			launchTemplateVersionOpts.VersionDescription = aws.String(v.(string))
 		}
 
 		_, createErr := conn.CreateLaunchTemplateVersion(launchTemplateVersionOpts)
@@ -589,10 +733,15 @@ func resourceAwsLaunchTemplateDelete(d *schema.ResourceData, meta interface{}) e
 	_, err := conn.DeleteLaunchTemplate(&ec2.DeleteLaunchTemplateInput{
 		LaunchTemplateId: aws.String(d.Id()),
 	})
+
+	if isAWSErr(err, ec2.LaunchTemplateErrorCodeLaunchTemplateIdDoesNotExist, "") {
+		return nil
+	}
+	// AWS SDK constant above is currently incorrect
+	if isAWSErr(err, "InvalidLaunchTemplateId.NotFound", "") {
+		return nil
+	}
 	if err != nil {
-		if isAWSErr(err, ec2.LaunchTemplateErrorCodeLaunchTemplateIdDoesNotExist, "") {
-			return nil
-		}
 		return err
 	}
 
@@ -608,14 +757,18 @@ func getBlockDeviceMappings(m []*ec2.LaunchTemplateBlockDeviceMapping) []interfa
 			"virtual_name": aws.StringValue(v.VirtualName),
 		}
 		if v.NoDevice != nil {
-			mapping["no_device"] = *v.NoDevice
+			mapping["no_device"] = aws.StringValue(v.NoDevice)
 		}
 		if v.Ebs != nil {
 			ebs := map[string]interface{}{
-				"delete_on_termination": aws.BoolValue(v.Ebs.DeleteOnTermination),
-				"encrypted":             aws.BoolValue(v.Ebs.Encrypted),
-				"volume_size":           int(aws.Int64Value(v.Ebs.VolumeSize)),
-				"volume_type":           aws.StringValue(v.Ebs.VolumeType),
+				"volume_size": int(aws.Int64Value(v.Ebs.VolumeSize)),
+				"volume_type": aws.StringValue(v.Ebs.VolumeType),
+			}
+			if v.Ebs.DeleteOnTermination != nil {
+				ebs["delete_on_termination"] = strconv.FormatBool(aws.BoolValue(v.Ebs.DeleteOnTermination))
+			}
+			if v.Ebs.Encrypted != nil {
+				ebs["encrypted"] = strconv.FormatBool(aws.BoolValue(v.Ebs.Encrypted))
 			}
 			if v.Ebs.Iops != nil {
 				ebs["iops"] = aws.Int64Value(v.Ebs.Iops)
@@ -630,6 +783,27 @@ func getBlockDeviceMappings(m []*ec2.LaunchTemplateBlockDeviceMapping) []interfa
 			mapping["ebs"] = []interface{}{ebs}
 		}
 		s = append(s, mapping)
+	}
+	return s
+}
+
+func getCapacityReservationSpecification(crs *ec2.LaunchTemplateCapacityReservationSpecificationResponse) []interface{} {
+	s := []interface{}{}
+	if crs != nil {
+		s = append(s, map[string]interface{}{
+			"capacity_reservation_preference": aws.StringValue(crs.CapacityReservationPreference),
+			"capacity_reservation_target":     getCapacityReservationTarget(crs.CapacityReservationTarget),
+		})
+	}
+	return s
+}
+
+func getCapacityReservationTarget(crt *ec2.CapacityReservationTargetResponse) []interface{} {
+	s := []interface{}{}
+	if crt != nil {
+		s = append(s, map[string]interface{}{
+			"capacity_reservation_id": aws.StringValue(crt.CapacityReservationId),
+		})
 	}
 	return s
 }
@@ -654,6 +828,24 @@ func getElasticGpuSpecifications(e []*ec2.ElasticGpuSpecificationResponse) []int
 	return s
 }
 
+func flattenEc2LaunchTemplateElasticInferenceAcceleratorResponse(accelerators []*ec2.LaunchTemplateElasticInferenceAcceleratorResponse) []interface{} {
+	l := []interface{}{}
+
+	for _, accelerator := range accelerators {
+		if accelerator == nil {
+			continue
+		}
+
+		m := map[string]interface{}{
+			"type": aws.StringValue(accelerator.Type),
+		}
+
+		l = append(l, m)
+	}
+
+	return l
+}
+
 func getIamInstanceProfile(i *ec2.LaunchTemplateIamInstanceProfileSpecification) []interface{} {
 	s := []interface{}{}
 	if i != nil {
@@ -671,19 +863,43 @@ func getInstanceMarketOptions(m *ec2.LaunchTemplateInstanceMarketOptions) []inte
 		mo := map[string]interface{}{
 			"market_type": aws.StringValue(m.MarketType),
 		}
-		spot := []interface{}{}
 		so := m.SpotOptions
 		if so != nil {
-			spot = append(spot, map[string]interface{}{
-				"block_duration_minutes":         aws.Int64Value(so.BlockDurationMinutes),
-				"instance_interruption_behavior": aws.StringValue(so.InstanceInterruptionBehavior),
-				"max_price":                      aws.StringValue(so.MaxPrice),
-				"spot_instance_type":             aws.StringValue(so.SpotInstanceType),
-				"valid_until":                    aws.TimeValue(so.ValidUntil).Format(time.RFC3339),
-			})
-			mo["spot_options"] = spot
+			spotOptions := map[string]interface{}{}
+
+			if so.BlockDurationMinutes != nil {
+				spotOptions["block_duration_minutes"] = aws.Int64Value(so.BlockDurationMinutes)
+			}
+
+			if so.InstanceInterruptionBehavior != nil {
+				spotOptions["instance_interruption_behavior"] = aws.StringValue(so.InstanceInterruptionBehavior)
+			}
+
+			if so.MaxPrice != nil {
+				spotOptions["max_price"] = aws.StringValue(so.MaxPrice)
+			}
+
+			if so.SpotInstanceType != nil {
+				spotOptions["spot_instance_type"] = aws.StringValue(so.SpotInstanceType)
+			}
+
+			if so.ValidUntil != nil {
+				spotOptions["valid_until"] = aws.TimeValue(so.ValidUntil).Format(time.RFC3339)
+			}
+
+			mo["spot_options"] = []interface{}{spotOptions}
 		}
 		s = append(s, mo)
+	}
+	return s
+}
+
+func getLicenseSpecifications(licenseSpecifications []*ec2.LaunchTemplateLicenseConfiguration) []map[string]interface{} {
+	var s []map[string]interface{}
+	for _, v := range licenseSpecifications {
+		s = append(s, map[string]interface{}{
+			"license_configuration_arn": aws.StringValue(v.LicenseConfigurationArn),
+		})
 	}
 	return s
 }
@@ -702,7 +918,6 @@ func getMonitoring(m *ec2.LaunchTemplatesMonitoring) []interface{} {
 func getNetworkInterfaces(n []*ec2.LaunchTemplateInstanceNetworkInterfaceSpecification) []interface{} {
 	s := []interface{}{}
 	for _, v := range n {
-		var ipv6Addresses []string
 		var ipv4Addresses []string
 
 		networkInterface := map[string]interface{}{
@@ -717,11 +932,19 @@ func getNetworkInterfaces(n []*ec2.LaunchTemplateInstanceNetworkInterfaceSpecifi
 			"subnet_id":                   aws.StringValue(v.SubnetId),
 		}
 
-		for _, address := range v.Ipv6Addresses {
-			ipv6Addresses = append(ipv6Addresses, aws.StringValue(address.Ipv6Address))
-		}
-		if len(ipv6Addresses) > 0 {
-			networkInterface["ipv6_addresses"] = ipv6Addresses
+		if len(v.Ipv6Addresses) > 0 {
+			raw, ok := networkInterface["ipv6_addresses"]
+			if !ok {
+				raw = schema.NewSet(schema.HashString, nil)
+			}
+
+			list := raw.(*schema.Set)
+
+			for _, address := range v.Ipv6Addresses {
+				list.Add(aws.StringValue(address.Ipv6Address))
+			}
+
+			networkInterface["ipv6_addresses"] = list
 		}
 
 		for _, address := range v.PrivateIpAddresses {
@@ -776,7 +999,7 @@ func getTagSpecifications(t []*ec2.LaunchTemplateTagSpecification) []interface{}
 	return s
 }
 
-func buildLaunchTemplateData(d *schema.ResourceData, meta interface{}) (*ec2.RequestLaunchTemplateData, error) {
+func buildLaunchTemplateData(d *schema.ResourceData) (*ec2.RequestLaunchTemplateData, error) {
 	opts := &ec2.RequestLaunchTemplateData{
 		UserData: aws.String(d.Get("user_data").(string)),
 	}
@@ -810,8 +1033,12 @@ func buildLaunchTemplateData(d *schema.ResourceData, meta interface{}) (*ec2.Req
 		opts.DisableApiTermination = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk("ebs_optimized"); ok {
-		opts.EbsOptimized = aws.Bool(v.(bool))
+	if v, ok := d.GetOk("ebs_optimized"); ok && v.(string) != "" {
+		vBool, err := strconv.ParseBool(v.(string))
+		if err != nil {
+			return nil, fmt.Errorf("error converting ebs_optimized %q from string to boolean: %s", v.(string), err)
+		}
+		opts.EbsOptimized = aws.Bool(vBool)
 	}
 
 	if v, ok := d.GetOk("security_group_names"); ok {
@@ -827,15 +1054,30 @@ func buildLaunchTemplateData(d *schema.ResourceData, meta interface{}) (*ec2.Req
 		bdms := v.([]interface{})
 
 		for _, bdm := range bdms {
-			blockDeviceMappings = append(blockDeviceMappings, readBlockDeviceMappingFromConfig(bdm.(map[string]interface{})))
+			if bdm == nil {
+				continue
+			}
+			blockDeviceMapping, err := readBlockDeviceMappingFromConfig(bdm.(map[string]interface{}))
+			if err != nil {
+				return nil, err
+			}
+			blockDeviceMappings = append(blockDeviceMappings, blockDeviceMapping)
 		}
 		opts.BlockDeviceMappings = blockDeviceMappings
 	}
 
-	if v, ok := d.GetOk("credit_specification"); ok && strings.HasPrefix(instanceType, "t2") {
+	if v, ok := d.GetOk("capacity_reservation_specification"); ok {
+		crs := v.([]interface{})
+
+		if len(crs) > 0 && crs[0] != nil {
+			opts.CapacityReservationSpecification = readCapacityReservationSpecificationFromConfig(crs[0].(map[string]interface{}))
+		}
+	}
+
+	if v, ok := d.GetOk("credit_specification"); ok && (strings.HasPrefix(instanceType, "t2") || strings.HasPrefix(instanceType, "t3")) {
 		cs := v.([]interface{})
 
-		if len(cs) > 0 {
+		if len(cs) > 0 && cs[0] != nil {
 			opts.CreditSpecification = readCreditSpecificationFromConfig(cs[0].(map[string]interface{}))
 		}
 	}
@@ -850,10 +1092,14 @@ func buildLaunchTemplateData(d *schema.ResourceData, meta interface{}) (*ec2.Req
 		opts.ElasticGpuSpecifications = elasticGpuSpecifications
 	}
 
+	if v, ok := d.GetOk("elastic_inference_accelerator"); ok {
+		opts.ElasticInferenceAccelerators = expandEc2LaunchTemplateElasticInferenceAccelerators(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("iam_instance_profile"); ok {
 		iip := v.([]interface{})
 
-		if len(iip) > 0 {
+		if len(iip) > 0 && iip[0] != nil {
 			opts.IamInstanceProfile = readIamInstanceProfileFromConfig(iip[0].(map[string]interface{}))
 		}
 	}
@@ -861,7 +1107,7 @@ func buildLaunchTemplateData(d *schema.ResourceData, meta interface{}) (*ec2.Req
 	if v, ok := d.GetOk("instance_market_options"); ok {
 		imo := v.([]interface{})
 
-		if len(imo) > 0 {
+		if len(imo) > 0 && imo[0] != nil {
 			instanceMarketOptions, err := readInstanceMarketOptionsFromConfig(imo[0].(map[string]interface{}))
 			if err != nil {
 				return nil, err
@@ -870,9 +1116,22 @@ func buildLaunchTemplateData(d *schema.ResourceData, meta interface{}) (*ec2.Req
 		}
 	}
 
+	if v, ok := d.GetOk("license_specification"); ok {
+		var licenseSpecifications []*ec2.LaunchTemplateLicenseConfigurationRequest
+		lsList := v.(*schema.Set).List()
+
+		for _, ls := range lsList {
+			if ls == nil {
+				continue
+			}
+			licenseSpecifications = append(licenseSpecifications, readLicenseSpecificationFromConfig(ls.(map[string]interface{})))
+		}
+		opts.LicenseSpecifications = licenseSpecifications
+	}
+
 	if v, ok := d.GetOk("monitoring"); ok {
 		m := v.([]interface{})
-		if len(m) > 0 {
+		if len(m) > 0 && m[0] != nil {
 			mData := m[0].(map[string]interface{})
 			monitoring := &ec2.LaunchTemplatesMonitoringRequest{
 				Enabled: aws.Bool(mData["enabled"].(bool)),
@@ -886,6 +1145,9 @@ func buildLaunchTemplateData(d *schema.ResourceData, meta interface{}) (*ec2.Req
 		niList := v.([]interface{})
 
 		for _, ni := range niList {
+			if ni == nil {
+				continue
+			}
 			niData := ni.(map[string]interface{})
 			networkInterface := readNetworkInterfacesFromConfig(niData)
 			networkInterfaces = append(networkInterfaces, networkInterface)
@@ -896,7 +1158,7 @@ func buildLaunchTemplateData(d *schema.ResourceData, meta interface{}) (*ec2.Req
 	if v, ok := d.GetOk("placement"); ok {
 		p := v.([]interface{})
 
-		if len(p) > 0 {
+		if len(p) > 0 && p[0] != nil {
 			opts.Placement = readPlacementFromConfig(p[0].(map[string]interface{}))
 		}
 	}
@@ -906,6 +1168,9 @@ func buildLaunchTemplateData(d *schema.ResourceData, meta interface{}) (*ec2.Req
 		t := v.([]interface{})
 
 		for _, ts := range t {
+			if ts == nil {
+				continue
+			}
 			tsData := ts.(map[string]interface{})
 			tags := tagsFromMap(tsData["tags"].(map[string]interface{}))
 			tagSpecification := &ec2.LaunchTemplateTagSpecificationRequest{
@@ -920,7 +1185,7 @@ func buildLaunchTemplateData(d *schema.ResourceData, meta interface{}) (*ec2.Req
 	return opts, nil
 }
 
-func readBlockDeviceMappingFromConfig(bdm map[string]interface{}) *ec2.LaunchTemplateBlockDeviceMappingRequest {
+func readBlockDeviceMappingFromConfig(bdm map[string]interface{}) (*ec2.LaunchTemplateBlockDeviceMappingRequest, error) {
 	blockDeviceMapping := &ec2.LaunchTemplateBlockDeviceMappingRequest{}
 
 	if v := bdm["device_name"].(string); v != "" {
@@ -937,24 +1202,36 @@ func readBlockDeviceMappingFromConfig(bdm map[string]interface{}) *ec2.LaunchTem
 
 	if v := bdm["ebs"]; len(v.([]interface{})) > 0 {
 		ebs := v.([]interface{})
-		if len(ebs) > 0 {
-			ebsData := ebs[0]
-			blockDeviceMapping.Ebs = readEbsBlockDeviceFromConfig(ebsData.(map[string]interface{}))
+		if len(ebs) > 0 && ebs[0] != nil {
+			ebsData := ebs[0].(map[string]interface{})
+			launchTemplateEbsBlockDeviceRequest, err := readEbsBlockDeviceFromConfig(ebsData)
+			if err != nil {
+				return nil, err
+			}
+			blockDeviceMapping.Ebs = launchTemplateEbsBlockDeviceRequest
 		}
 	}
 
-	return blockDeviceMapping
+	return blockDeviceMapping, nil
 }
 
-func readEbsBlockDeviceFromConfig(ebs map[string]interface{}) *ec2.LaunchTemplateEbsBlockDeviceRequest {
+func readEbsBlockDeviceFromConfig(ebs map[string]interface{}) (*ec2.LaunchTemplateEbsBlockDeviceRequest, error) {
 	ebsDevice := &ec2.LaunchTemplateEbsBlockDeviceRequest{}
 
-	if v := ebs["delete_on_termination"]; v != nil {
-		ebsDevice.DeleteOnTermination = aws.Bool(v.(bool))
+	if v, ok := ebs["delete_on_termination"]; ok && v.(string) != "" {
+		vBool, err := strconv.ParseBool(v.(string))
+		if err != nil {
+			return nil, fmt.Errorf("error converting delete_on_termination %q from string to boolean: %s", v.(string), err)
+		}
+		ebsDevice.DeleteOnTermination = aws.Bool(vBool)
 	}
 
-	if v := ebs["encrypted"]; v != nil {
-		ebsDevice.Encrypted = aws.Bool(v.(bool))
+	if v, ok := ebs["encrypted"]; ok && v.(string) != "" {
+		vBool, err := strconv.ParseBool(v.(string))
+		if err != nil {
+			return nil, fmt.Errorf("error converting encrypted %q from string to boolean: %s", v.(string), err)
+		}
+		ebsDevice.Encrypted = aws.Bool(vBool)
 	}
 
 	if v := ebs["iops"].(int); v > 0 {
@@ -977,16 +1254,17 @@ func readEbsBlockDeviceFromConfig(ebs map[string]interface{}) *ec2.LaunchTemplat
 		ebsDevice.VolumeType = aws.String(v)
 	}
 
-	return ebsDevice
+	return ebsDevice, nil
 }
 
 func readNetworkInterfacesFromConfig(ni map[string]interface{}) *ec2.LaunchTemplateInstanceNetworkInterfaceSpecificationRequest {
 	var ipv4Addresses []*ec2.PrivateIpAddressSpecification
 	var ipv6Addresses []*ec2.InstanceIpv6AddressRequest
 	var privateIpAddress string
-	networkInterface := &ec2.LaunchTemplateInstanceNetworkInterfaceSpecificationRequest{
-		AssociatePublicIpAddress: aws.Bool(ni["associate_public_ip_address"].(bool)),
-		DeleteOnTermination:      aws.Bool(ni["delete_on_termination"].(bool)),
+	networkInterface := &ec2.LaunchTemplateInstanceNetworkInterfaceSpecificationRequest{}
+
+	if v, ok := ni["delete_on_termination"]; ok {
+		networkInterface.DeleteOnTermination = aws.Bool(v.(bool))
 	}
 
 	if v, ok := ni["description"].(string); ok && v != "" {
@@ -999,6 +1277,8 @@ func readNetworkInterfacesFromConfig(ni map[string]interface{}) *ec2.LaunchTempl
 
 	if v, ok := ni["network_interface_id"].(string); ok && v != "" {
 		networkInterface.NetworkInterfaceId = aws.String(v)
+	} else if v, ok := ni["associate_public_ip_address"]; ok {
+		networkInterface.AssociatePublicIpAddress = aws.Bool(v.(bool))
 	}
 
 	if v, ok := ni["private_ip_address"].(string); ok && v != "" {
@@ -1028,18 +1308,17 @@ func readNetworkInterfacesFromConfig(ni map[string]interface{}) *ec2.LaunchTempl
 		networkInterface.Ipv6AddressCount = aws.Int64(int64(v))
 	}
 
-	ipv4AddressList := ni["ipv4_addresses"].(*schema.Set).List()
-	for _, address := range ipv4AddressList {
-		privateIp := &ec2.PrivateIpAddressSpecification{
-			Primary:          aws.Bool(address.(string) == privateIpAddress),
-			PrivateIpAddress: aws.String(address.(string)),
-		}
-		ipv4Addresses = append(ipv4Addresses, privateIp)
-	}
-	networkInterface.PrivateIpAddresses = ipv4Addresses
-
 	if v := ni["ipv4_address_count"].(int); v > 0 {
 		networkInterface.SecondaryPrivateIpAddressCount = aws.Int64(int64(v))
+	} else if v := ni["ipv4_addresses"].(*schema.Set); v.Len() > 0 {
+		for _, address := range v.List() {
+			privateIp := &ec2.PrivateIpAddressSpecification{
+				Primary:          aws.Bool(address.(string) == privateIpAddress),
+				PrivateIpAddress: aws.String(address.(string)),
+			}
+			ipv4Addresses = append(ipv4Addresses, privateIp)
+		}
+		networkInterface.PrivateIpAddresses = ipv4Addresses
 	}
 
 	return networkInterface
@@ -1057,6 +1336,34 @@ func readIamInstanceProfileFromConfig(iip map[string]interface{}) *ec2.LaunchTem
 	}
 
 	return iamInstanceProfile
+}
+
+func readCapacityReservationSpecificationFromConfig(crs map[string]interface{}) *ec2.LaunchTemplateCapacityReservationSpecificationRequest {
+	capacityReservationSpecification := &ec2.LaunchTemplateCapacityReservationSpecificationRequest{}
+
+	if v, ok := crs["capacity_reservation_preference"].(string); ok && v != "" {
+		capacityReservationSpecification.CapacityReservationPreference = aws.String(v)
+	}
+
+	if v, ok := crs["capacity_reservation_target"]; ok {
+		crt := v.([]interface{})
+
+		if len(crt) > 0 {
+			capacityReservationSpecification.CapacityReservationTarget = readCapacityReservationTargetFromConfig(crt[0].(map[string]interface{}))
+		}
+	}
+
+	return capacityReservationSpecification
+}
+
+func readCapacityReservationTargetFromConfig(crt map[string]interface{}) *ec2.CapacityReservationTarget {
+	capacityReservationTarget := &ec2.CapacityReservationTarget{}
+
+	if v, ok := crt["capacity_reservation_id"].(string); ok && v != "" {
+		capacityReservationTarget.CapacityReservationId = aws.String(v)
+	}
+
+	return capacityReservationTarget
 }
 
 func readCreditSpecificationFromConfig(cs map[string]interface{}) *ec2.CreditSpecificationRequest {
@@ -1077,6 +1384,30 @@ func readElasticGpuSpecificationsFromConfig(egs map[string]interface{}) *ec2.Ela
 	}
 
 	return elasticGpuSpecification
+}
+
+func expandEc2LaunchTemplateElasticInferenceAccelerators(l []interface{}) []*ec2.LaunchTemplateElasticInferenceAccelerator {
+	if len(l) == 0 {
+		return nil
+	}
+
+	var accelerators []*ec2.LaunchTemplateElasticInferenceAccelerator
+
+	for _, lRaw := range l {
+		m, ok := lRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		accelerator := &ec2.LaunchTemplateElasticInferenceAccelerator{
+			Type: aws.String(m["type"].(string)),
+		}
+
+		accelerators = append(accelerators, accelerator)
+	}
+
+	return accelerators
 }
 
 func readInstanceMarketOptionsFromConfig(imo map[string]interface{}) (*ec2.LaunchTemplateInstanceMarketOptionsRequest, error) {
@@ -1120,6 +1451,16 @@ func readInstanceMarketOptionsFromConfig(imo map[string]interface{}) (*ec2.Launc
 	}
 
 	return instanceMarketOptions, nil
+}
+
+func readLicenseSpecificationFromConfig(ls map[string]interface{}) *ec2.LaunchTemplateLicenseConfigurationRequest {
+	licenseSpecification := &ec2.LaunchTemplateLicenseConfigurationRequest{}
+
+	if v, ok := ls["license_configuration_arn"].(string); ok && v != "" {
+		licenseSpecification.LicenseConfigurationArn = aws.String(v)
+	}
+
+	return licenseSpecification
 }
 
 func readPlacementFromConfig(p map[string]interface{}) *ec2.LaunchTemplatePlacementRequest {

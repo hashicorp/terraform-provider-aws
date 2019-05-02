@@ -17,7 +17,7 @@ func TestAccAWSAPIGatewayMethod_basic(t *testing.T) {
 	var conf apigateway.Method
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayMethodDestroy,
@@ -35,6 +35,12 @@ func TestAccAWSAPIGatewayMethod_basic(t *testing.T) {
 						"aws_api_gateway_method.test", "request_models.application/json", "Error"),
 				),
 			},
+			{
+				ResourceName:      "aws_api_gateway_method.test",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSAPIGatewayMethodImportStateIdFunc("aws_api_gateway_method.test"),
+				ImportStateVerify: true,
+			},
 
 			{
 				Config: testAccAWSAPIGatewayMethodConfigUpdate(rInt),
@@ -51,7 +57,7 @@ func TestAccAWSAPIGatewayMethod_customauthorizer(t *testing.T) {
 	var conf apigateway.Method
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayMethodDestroy,
@@ -70,6 +76,12 @@ func TestAccAWSAPIGatewayMethod_customauthorizer(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_api_gateway_method.test", "request_models.application/json", "Error"),
 				),
+			},
+			{
+				ResourceName:      "aws_api_gateway_method.test",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSAPIGatewayMethodImportStateIdFunc("aws_api_gateway_method.test"),
+				ImportStateVerify: true,
 			},
 
 			{
@@ -91,7 +103,7 @@ func TestAccAWSAPIGatewayMethod_cognitoauthorizer(t *testing.T) {
 	var conf apigateway.Method
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayMethodDestroy,
@@ -129,6 +141,12 @@ func TestAccAWSAPIGatewayMethod_cognitoauthorizer(t *testing.T) {
 						"aws_api_gateway_method.test", "authorization_scopes.#", "3"),
 				),
 			},
+			{
+				ResourceName:      "aws_api_gateway_method.test",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSAPIGatewayMethodImportStateIdFunc("aws_api_gateway_method.test"),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -137,7 +155,7 @@ func TestAccAWSAPIGatewayMethod_customrequestvalidator(t *testing.T) {
 	var conf apigateway.Method
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayMethodDestroy,
@@ -156,6 +174,12 @@ func TestAccAWSAPIGatewayMethod_customrequestvalidator(t *testing.T) {
 					resource.TestMatchResourceAttr(
 						"aws_api_gateway_method.test", "request_validator_id", regexp.MustCompile("^[a-z0-9]{6}$")),
 				),
+			},
+			{
+				ResourceName:      "aws_api_gateway_method.test",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSAPIGatewayMethodImportStateIdFunc("aws_api_gateway_method.test"),
+				ImportStateVerify: true,
 			},
 
 			{
@@ -183,14 +207,14 @@ func testAccCheckAWSAPIGatewayMethodAttributes(conf *apigateway.Method) resource
 		if val, ok := conf.RequestParameters["method.request.header.Content-Type"]; !ok {
 			return fmt.Errorf("missing Content-Type RequestParameters")
 		} else {
-			if *val != false {
+			if *val {
 				return fmt.Errorf("wrong Content-Type RequestParameters value")
 			}
 		}
 		if val, ok := conf.RequestParameters["method.request.querystring.page"]; !ok {
 			return fmt.Errorf("missing page RequestParameters")
 		} else {
-			if *val != true {
+			if !*val {
 				return fmt.Errorf("wrong query string RequestParameters value")
 			}
 		}
@@ -210,7 +234,7 @@ func testAccCheckAWSAPIGatewayMethodAttributesUpdate(conf *apigateway.Method) re
 		if val, ok := conf.RequestParameters["method.request.querystring.page"]; !ok {
 			return fmt.Errorf("missing updated page RequestParameters")
 		} else {
-			if *val != false {
+			if *val {
 				return fmt.Errorf("wrong query string RequestParameters updated value")
 			}
 		}
@@ -281,6 +305,17 @@ func testAccCheckAWSAPIGatewayMethodDestroy(s *terraform.State) error {
 	return nil
 }
 
+func testAccAWSAPIGatewayMethodImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		return fmt.Sprintf("%s/%s/%s", rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes["resource_id"], rs.Primary.Attributes["http_method"]), nil
+	}
+}
+
 func testAccAWSAPIGatewayMethodConfigWithCustomAuthorizer(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
@@ -345,11 +380,11 @@ EOF
 
 resource "aws_lambda_function" "authorizer" {
   filename = "test-fixtures/lambdatest.zip"
-  source_code_hash = "${base64sha256(file("test-fixtures/lambdatest.zip"))}"
+  source_code_hash = "${filebase64sha256("test-fixtures/lambdatest.zip")}"
   function_name = "tf_acc_api_gateway_authorizer_%d"
   role = "${aws_iam_role.iam_for_lambda.arn}"
   handler = "exports.example"
-	runtime = "nodejs4.3"
+	runtime = "nodejs8.10"
 }
 
 resource "aws_api_gateway_authorizer" "test" {

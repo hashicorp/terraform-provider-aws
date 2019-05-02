@@ -20,7 +20,7 @@ func TestAccAWSCognitoResourceServer_basic(t *testing.T) {
 	poolName := fmt.Sprintf("tf-acc-test-pool-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 	resourceName := "aws_cognito_resource_server.main"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoResourceServerDestroy,
@@ -61,7 +61,7 @@ func TestAccAWSCognitoResourceServer_scope(t *testing.T) {
 	poolName := fmt.Sprintf("tf-acc-test-pool-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 	resourceName := "aws_cognito_resource_server.main"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoResourceServerDestroy,
@@ -186,12 +186,12 @@ resource "aws_cognito_resource_server" "main" {
   identifier = "%s"
   name = "%s"
 
-  scope = {
+  scope {
     scope_name = "scope_1_name"
     scope_description = "scope_1_description"
   }
 
-  scope = {
+  scope {
     scope_name = "scope_2_name"
     scope_description = "scope_2_description"
   }
@@ -211,7 +211,7 @@ resource "aws_cognito_resource_server" "main" {
   identifier = "%s"
   name = "%s"
 
-  scope = {
+  scope {
     scope_name = "scope_1_name_updated"
     scope_description = "scope_1_description"
   }

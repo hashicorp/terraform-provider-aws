@@ -41,7 +41,7 @@ func TestResourceSortByExpirationDate(t *testing.T) {
 func TestAccAWSDataSourceIAMServerCertificate_basic(t *testing.T) {
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProvidersWithTLS,
 		CheckDestroy: testAccCheckIAMServerCertificateDestroy,
@@ -64,7 +64,7 @@ func TestAccAWSDataSourceIAMServerCertificate_basic(t *testing.T) {
 }
 
 func TestAccAWSDataSourceIAMServerCertificate_matchNamePrefix(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckIAMServerCertificateDestroy,
@@ -82,7 +82,7 @@ func TestAccAWSDataSourceIAMServerCertificate_path(t *testing.T) {
 	path := "/test-path/"
 	pathPrefix := "/test-path/"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProvidersWithTLS,
 		CheckDestroy: testAccCheckIAMServerCertificateDestroy,

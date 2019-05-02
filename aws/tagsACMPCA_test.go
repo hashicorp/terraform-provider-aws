@@ -3,9 +3,6 @@ package aws
 import (
 	"reflect"
 	"testing"
-
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/acmpca"
 )
 
 func TestDiffTagsACMPCA(t *testing.T) {
@@ -55,23 +52,6 @@ func TestDiffTagsACMPCA(t *testing.T) {
 		}
 		if !reflect.DeepEqual(rm, tc.Remove) {
 			t.Fatalf("%d: bad remove: %#v", i, rm)
-		}
-	}
-}
-
-func TestIgnoringTagsACMPCA(t *testing.T) {
-	var ignoredTags []*acmpca.Tag
-	ignoredTags = append(ignoredTags, &acmpca.Tag{
-		Key:   aws.String("aws:cloudformation:logical-id"),
-		Value: aws.String("foo"),
-	})
-	ignoredTags = append(ignoredTags, &acmpca.Tag{
-		Key:   aws.String("aws:foo:bar"),
-		Value: aws.String("baz"),
-	})
-	for _, tag := range ignoredTags {
-		if !tagIgnoredACMPCA(tag) {
-			t.Fatalf("Tag %v with value %v not ignored, but should be!", *tag.Key, *tag.Value)
 		}
 	}
 }

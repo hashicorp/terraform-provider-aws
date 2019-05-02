@@ -117,7 +117,7 @@ func resourceAwsCloudWatchLogGroupRead(d *schema.ResourceData, meta interface{})
 	d.Set("kms_key_id", lg.KmsKeyId)
 	d.Set("retention_in_days", lg.RetentionInDays)
 
-	tags := make(map[string]string, 0)
+	tags := make(map[string]string)
 	tagsOutput, err := conn.ListTagsLogGroup(&cloudwatchlogs.ListTagsLogGroupInput{
 		LogGroupName: aws.String(d.Id()),
 	})
@@ -241,7 +241,7 @@ func diffCloudWatchTags(oldTags map[string]interface{}, newTags map[string]inter
 	}
 
 	var remove []*string
-	for t, _ := range oldTags {
+	for t := range oldTags {
 		_, ok := create[t]
 		if !ok {
 			remove = append(remove, aws.String(t))

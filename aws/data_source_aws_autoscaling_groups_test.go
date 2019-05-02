@@ -13,7 +13,7 @@ import (
 )
 
 func TestAccAWSAutoscalingGroups_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -25,6 +25,7 @@ func TestAccAWSAutoscalingGroups_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAutoscalingGroups("data.aws_autoscaling_groups.group_list"),
 					resource.TestCheckResourceAttr("data.aws_autoscaling_groups.group_list", "names.#", "3"),
+					resource.TestCheckResourceAttr("data.aws_autoscaling_groups.group_list", "arns.#", "3"),
 				),
 			},
 		},
@@ -49,7 +50,7 @@ func testAccCheckAwsAutoscalingGroups(n string) resource.TestCheckFunc {
 
 		expected := actual
 		sort.Strings(expected)
-		if reflect.DeepEqual(expected, actual) != true {
+		if !reflect.DeepEqual(expected, actual) {
 			return fmt.Errorf("ASG not sorted - expected %v, got %v", expected, actual)
 		}
 		return nil
@@ -83,11 +84,7 @@ func testAccCheckAwsAutoscalingGroupsConfig(rInt1, rInt2, rInt3 int) string {
 	return fmt.Sprintf(`
 data "aws_ami" "test_ami" {
   most_recent = true
-
-  filter {
-    name   = "owner-alias"
-    values = ["amazon"]
-  }
+  owners      = ["amazon"]
 
   filter {
     name   = "name"
@@ -161,11 +158,7 @@ func testAccCheckAwsAutoscalingGroupsConfigWithDataSource(rInt1, rInt2, rInt3 in
 	return fmt.Sprintf(`
 data "aws_ami" "test_ami" {
   most_recent = true
-
-  filter {
-    name   = "owner-alias"
-    values = ["amazon"]
-  }
+  owners      = ["amazon"]
 
   filter {
     name   = "name"

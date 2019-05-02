@@ -34,6 +34,12 @@ const (
 	// The specified delivery channel name is not valid.
 	ErrCodeInvalidDeliveryChannelNameException = "InvalidDeliveryChannelNameException"
 
+	// ErrCodeInvalidExpressionException for service response error code
+	// "InvalidExpressionException".
+	//
+	// The syntax of the query is incorrect.
+	ErrCodeInvalidExpressionException = "InvalidExpressionException"
+
 	// ErrCodeInvalidLimitException for service response error code
 	// "InvalidLimitException".
 	//
@@ -102,8 +108,12 @@ const (
 	// ErrCodeLimitExceededException for service response error code
 	// "LimitExceededException".
 	//
-	// This exception is thrown if an evaluation is in progress or if you call the
-	// StartConfigRulesEvaluation API more than once per minute.
+	// For StartConfigRulesEvaluation API, this exception is thrown if an evaluation
+	// is in progress or if you call the StartConfigRulesEvaluation API more than
+	// once per minute.
+	//
+	// For PutConfigurationAggregator API, this exception is thrown if the number
+	// of accounts and aggregators exceeds the limit.
 	ErrCodeLimitExceededException = "LimitExceededException"
 
 	// ErrCodeMaxNumberOfConfigRulesExceededException for service response error code
@@ -189,6 +199,12 @@ const (
 	// You have specified a delivery channel that does not exist.
 	ErrCodeNoSuchDeliveryChannelException = "NoSuchDeliveryChannelException"
 
+	// ErrCodeNoSuchRemediationConfigurationException for service response error code
+	// "NoSuchRemediationConfigurationException".
+	//
+	// You specified an AWS Config rule without a remediation configuration.
+	ErrCodeNoSuchRemediationConfigurationException = "NoSuchRemediationConfigurationException"
+
 	// ErrCodeNoSuchRetentionConfigurationException for service response error code
 	// "NoSuchRetentionConfigurationException".
 	//
@@ -208,6 +224,12 @@ const (
 	// not have all features enabled.
 	ErrCodeOrganizationAllFeaturesNotEnabledException = "OrganizationAllFeaturesNotEnabledException"
 
+	// ErrCodeOversizedConfigurationItemException for service response error code
+	// "OversizedConfigurationItemException".
+	//
+	// The configuration item size is outside the allowable range.
+	ErrCodeOversizedConfigurationItemException = "OversizedConfigurationItemException"
+
 	// ErrCodeResourceInUseException for service response error code
 	// "ResourceInUseException".
 	//
@@ -220,6 +242,19 @@ const (
 	//
 	// You have specified a resource that is either unknown or has not been discovered.
 	ErrCodeResourceNotDiscoveredException = "ResourceNotDiscoveredException"
+
+	// ErrCodeResourceNotFoundException for service response error code
+	// "ResourceNotFoundException".
+	//
+	// You have specified a resource that does not exist.
+	ErrCodeResourceNotFoundException = "ResourceNotFoundException"
+
+	// ErrCodeTooManyTagsException for service response error code
+	// "TooManyTagsException".
+	//
+	// You have reached the limit of the number of tags you can use. You have more
+	// than 50 tags.
+	ErrCodeTooManyTagsException = "TooManyTagsException"
 
 	// ErrCodeValidationException for service response error code
 	// "ValidationException".

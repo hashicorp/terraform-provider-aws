@@ -6,7 +6,7 @@ description: |-
   Provides an elastic block storage resource.
 ---
 
-# aws_ebs_volume
+# Resource: aws_ebs_volume
 
 Manages a single EBS volume.
 
@@ -14,11 +14,12 @@ Manages a single EBS volume.
 
 ```hcl
 resource "aws_ebs_volume" "example" {
-    availability_zone = "us-west-2a"
-    size = 40
-    tags {
-        Name = "HelloWorld"
-    }
+  availability_zone = "us-west-2a"
+  size              = 40
+
+  tags = {
+    Name = "HelloWorld"
+  }
 }
 ```
 

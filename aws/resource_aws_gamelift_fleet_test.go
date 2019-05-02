@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strings"
 	"testing"
 	"time"
 
@@ -50,10 +49,6 @@ func testSweepGameliftFleets(region string) error {
 		log.Printf("[INFO] Found %d Gamelift Fleets", len(out.FleetAttributes))
 
 		for _, attr := range out.FleetAttributes {
-			if !strings.HasPrefix(*attr.Name, testAccGameliftFleetPrefix) {
-				continue
-			}
-
 			log.Printf("[INFO] Deleting Gamelift Fleet %q", *attr.FleetId)
 			err := resource.Retry(60*time.Minute, func() *resource.RetryError {
 				_, err := conn.DeleteFleet(&gamelift.DeleteFleetInput{
@@ -263,7 +258,7 @@ func TestAccAWSGameliftFleet_basic(t *testing.T) {
 	launchPath := g.LaunchPath
 	params := g.Parameters(33435)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGameliftFleetDestroy,
@@ -340,7 +335,7 @@ func TestAccAWSGameliftFleet_allFields(t *testing.T) {
 		g.Parameters(33436),
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGameliftFleetDestroy,

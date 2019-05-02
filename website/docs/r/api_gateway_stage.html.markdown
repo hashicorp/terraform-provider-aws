@@ -6,7 +6,7 @@ description: |-
   Provides an API Gateway Stage.
 ---
 
-# aws_api_gateway_stage
+# Resource: aws_api_gateway_stage
 
 Provides an API Gateway Stage.
 
@@ -14,20 +14,20 @@ Provides an API Gateway Stage.
 
 ```hcl
 resource "aws_api_gateway_stage" "test" {
-  stage_name = "prod"
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
+  stage_name    = "prod"
+  rest_api_id   = "${aws_api_gateway_rest_api.test.id}"
   deployment_id = "${aws_api_gateway_deployment.test.id}"
 }
 
 resource "aws_api_gateway_rest_api" "test" {
-  name = "MyDemoAPI"
+  name        = "MyDemoAPI"
   description = "This is my API for demonstration purposes"
 }
 
 resource "aws_api_gateway_deployment" "test" {
-  depends_on = ["aws_api_gateway_integration.test"]
+  depends_on  = ["aws_api_gateway_integration.test"]
   rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  stage_name = "dev"
+  stage_name  = "dev"
 }
 
 resource "aws_api_gateway_resource" "test" {
@@ -50,7 +50,7 @@ resource "aws_api_gateway_method_settings" "s" {
 
   settings {
     metrics_enabled = true
-    logging_level = "INFO"
+    logging_level   = "INFO"
   }
 }
 
@@ -78,6 +78,7 @@ The following arguments are supported:
 * `documentation_version` - (Optional) The version of the associated API documentation
 * `variables` - (Optional) A map that defines the stage variables
 * `tags` - (Optional) A mapping of tags to assign to the resource.
+* `xray_tracing_enabled` - (Optional) Whether active tracing with X-ray is enabled. Defaults to `false`.
 
 ### Nested Blocks
 
@@ -97,3 +98,11 @@ In addition to all arguments above, the following attributes are exported:
 * `execution_arn` - The execution ARN to be used in [`lambda_permission`](/docs/providers/aws/r/lambda_permission.html)'s `source_arn`
   when allowing API Gateway to invoke a Lambda function,
   e.g. `arn:aws:execute-api:eu-west-2:123456789012:z4675bid1j/prod`
+
+## Import
+
+`aws_api_gateway_stage` can be imported using `REST-API-ID/STAGE-NAME`, e.g.
+
+```
+$ terraform import aws_api_gateway_stage.example 12345abcde/example
+```

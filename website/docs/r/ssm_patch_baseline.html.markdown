@@ -6,7 +6,7 @@ description: |-
   Provides an SSM Patch Baseline resource
 ---
 
-# aws_ssm_patch_baseline
+# Resource: aws_ssm_patch_baseline
 
 Provides an SSM Patch Baseline resource
 
@@ -20,7 +20,7 @@ Basic usage using `approved_patches` only
 
 ```hcl
 resource "aws_ssm_patch_baseline" "production" {
-  name  = "patch-baseline"
+  name             = "patch-baseline"
   approved_patches = ["KB123456"]
 }
 ```
@@ -29,42 +29,51 @@ Advanced usage, specifying patch filters
 
 ```hcl
 resource "aws_ssm_patch_baseline" "production" {
-  name  = "patch-baseline"
-  description = "Patch Baseline Description"
+  name             = "patch-baseline"
+  description      = "Patch Baseline Description"
   approved_patches = ["KB123456", "KB456789"]
   rejected_patches = ["KB987654"]
+
   global_filter {
-    key = "PRODUCT"
+    key    = "PRODUCT"
     values = ["WindowsServer2008"]
   }
+
   global_filter {
-    key = "CLASSIFICATION"
+    key    = "CLASSIFICATION"
     values = ["ServicePacks"]
   }
+
   global_filter {
-    key = "MSRC_SEVERITY"
+    key    = "MSRC_SEVERITY"
     values = ["Low"]
   }
+
   approval_rule {
     approve_after_days = 7
-    compliance_level = "HIGH"
+    compliance_level   = "HIGH"
+
     patch_filter {
-      key = "PRODUCT"
+      key    = "PRODUCT"
       values = ["WindowsServer2016"]
     }
+
     patch_filter {
-      key = "CLASSIFICATION"
+      key    = "CLASSIFICATION"
       values = ["CriticalUpdates", "SecurityUpdates", "Updates"]
     }
+
     patch_filter {
-      key = "MSRC_SEVERITY"
+      key    = "MSRC_SEVERITY"
       values = ["Critical", "Important", "Moderate"]
     }
   }
+
   approval_rule {
     approve_after_days = 7
+
     patch_filter {
-      key = "PRODUCT"
+      key    = "PRODUCT"
       values = ["WindowsServer2012"]
     }
   }
@@ -78,7 +87,7 @@ The following arguments are supported:
 
 * `name` - (Required) The name of the patch baseline.
 * `description` - (Optional) The description of the patch baseline.
-* `operating_system` - (Optional) Defines the operating system the patch baseline applies to. Supported operating systems include `WINDOWS`, `AMAZON_LINUX`, `UBUNTU`, `CENTOS`, and `REDHAT_ENTERPRISE_LINUX`. The Default value is `WINDOWS`.
+* `operating_system` - (Optional) Defines the operating system the patch baseline applies to. Supported operating systems include `WINDOWS`, `AMAZON_LINUX`, `AMAZON_LINUX_2`, `SUSE`, `UBUNTU`, `CENTOS`, and `REDHAT_ENTERPRISE_LINUX`. The Default value is `WINDOWS`.
 * `approved_patches_compliance_level` - (Optional) Defines the compliance level for approved patches. This means that if an approved patch is reported as missing, this is the severity of the compliance violation. Valid compliance levels include the following: `CRITICAL`, `HIGH`, `MEDIUM`, `LOW`, `INFORMATIONAL`, `UNSPECIFIED`. The default value is `UNSPECIFIED`.
 * `approved_patches` - (Optional) A list of explicitly approved patches for the baseline.
 * `rejected_patches` - (Optional) A list of rejected patches.
@@ -91,9 +100,18 @@ The `approval_rule` block supports:
 * `patch_filter` - (Required) The patch filter group that defines the criteria for the rule. Up to 4 patch filters can be specified per approval rule using Key/Value pairs. Valid Keys are `PRODUCT | CLASSIFICATION | MSRC_SEVERITY | PATCH_ID`.
 * `compliance_level` - (Optional) Defines the compliance level for patches approved by this rule. Valid compliance levels include the following: `CRITICAL`, `HIGH`, `MEDIUM`, `LOW`, `INFORMATIONAL`, `UNSPECIFIED`. The default value is `UNSPECIFIED`.
 * `enable_non_security` - (Optional) Boolean enabling the application of non-security updates. The default value is 'false'. Valid for Linux instances only.
+* `tags` - (Optional) A mapping of tags to assign to the resource.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the patch baseline.
+
+## Import
+
+SSM Patch Baselines can be imported by their baseline ID, e.g.
+
+```
+$ terraform import aws_ssm_patch_baseline.example pb-12345678
+```

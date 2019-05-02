@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/acctest"
@@ -13,7 +14,7 @@ func TestAccAWSEksClusterDataSource_basic(t *testing.T) {
 	dataSourceResourceName := "data.aws_eks_cluster.test"
 	resourceName := "aws_eks_cluster.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEksClusterDestroy,
@@ -25,10 +26,16 @@ func TestAccAWSEksClusterDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceResourceName, "certificate_authority.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_authority.0.data", dataSourceResourceName, "certificate_authority.0.data"),
 					resource.TestCheckResourceAttrPair(resourceName, "created_at", dataSourceResourceName, "created_at"),
+					resource.TestCheckResourceAttr(dataSourceResourceName, "enabled_cluster_log_types.#", "2"),
+					resource.TestCheckResourceAttr(dataSourceResourceName, "enabled_cluster_log_types.2902841359", "api"),
+					resource.TestCheckResourceAttr(dataSourceResourceName, "enabled_cluster_log_types.2451111801", "audit"),
 					resource.TestCheckResourceAttrPair(resourceName, "endpoint", dataSourceResourceName, "endpoint"),
+					resource.TestMatchResourceAttr(dataSourceResourceName, "platform_version", regexp.MustCompile(`^eks\.\d+$`)),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", dataSourceResourceName, "role_arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "version", dataSourceResourceName, "version"),
 					resource.TestCheckResourceAttr(dataSourceResourceName, "vpc_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_config.0.endpoint_private_access", dataSourceResourceName, "vpc_config.0.endpoint_private_access"),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_config.0.endpoint_public_access", dataSourceResourceName, "vpc_config.0.endpoint_public_access"),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_config.0.security_group_ids.#", dataSourceResourceName, "vpc_config.0.security_group_ids.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_config.0.subnet_ids.#", dataSourceResourceName, "vpc_config.0.subnet_ids.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_config.0.vpc_id", dataSourceResourceName, "vpc_config.0.vpc_id"),
@@ -40,10 +47,10 @@ func TestAccAWSEksClusterDataSource_basic(t *testing.T) {
 
 func testAccAWSEksClusterDataSourceConfig_Basic(rName string) string {
 	return fmt.Sprintf(`
-%s
+%[1]s
 
 data "aws_eks_cluster" "test" {
   name = "${aws_eks_cluster.test.name}"
 }
-`, testAccAWSEksClusterConfig_Required(rName))
+`, testAccAWSEksClusterConfig_Logging(rName, []string{"api", "audit"}))
 }

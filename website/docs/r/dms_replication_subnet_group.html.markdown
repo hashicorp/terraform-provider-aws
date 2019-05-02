@@ -6,7 +6,7 @@ description: |-
   Provides a DMS (Data Migration Service) subnet group resource.
 ---
 
-# aws_dms_replication_subnet_group
+# Resource: aws_dms_replication_subnet_group
 
 Provides a DMS (Data Migration Service) replication subnet group resource. DMS replication subnet groups can be created, updated, deleted, and imported.
 
@@ -22,7 +22,7 @@ resource "aws_dms_replication_subnet_group" "test" {
     "subnet-12345678",
   ]
 
-  tags {
+  tags = {
     Name = "test"
   }
 }

@@ -40,9 +40,6 @@ In addition to all arguments above, the following attributes are exported:
 
 * `name` - The name of the selected region.
 
-* `current` - `true` if the selected region is the one configured on the
-  provider, or `false` otherwise.
-
 * `endpoint` - The EC2 endpoint for the selected region.
 
 * `description` - The region's description in this format: "Location (Region name)".

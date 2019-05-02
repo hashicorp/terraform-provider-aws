@@ -6,7 +6,7 @@ description: |-
   Provides an SES domain identity resource
 ---
 
-# aws_ses_domain_identity
+# Resource: aws_ses_domain_identity
 
 Provides an SES domain identity resource
 
@@ -46,3 +46,10 @@ resource "aws_route53_record" "example_amazonses_verification_record" {
 }
 ```
 
+## Import
+
+SES domain identities can be imported using the domain name.
+
+```
+$ terraform import aws_ses_domain_identity.example example.com
+```

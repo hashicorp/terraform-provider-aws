@@ -14,17 +14,23 @@ import (
 
 func TestAccAWSEcrRepositoryPolicy_basic(t *testing.T) {
 	randString := acctest.RandString(10)
+	resourceName := "aws_ecr_repository_policy.default"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcrRepositoryPolicyDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSEcrRepositoryPolicy(randString),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcrRepositoryPolicyExists("aws_ecr_repository_policy.default"),
+					testAccCheckAWSEcrRepositoryPolicyExists(resourceName),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -32,17 +38,23 @@ func TestAccAWSEcrRepositoryPolicy_basic(t *testing.T) {
 
 func TestAccAWSEcrRepositoryPolicy_iam(t *testing.T) {
 	randString := acctest.RandString(10)
+	resourceName := "aws_ecr_repository_policy.default"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcrRepositoryPolicyDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSEcrRepositoryPolicyWithIAMRole(randString),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcrRepositoryPolicyExists("aws_ecr_repository_policy.default"),
+					testAccCheckAWSEcrRepositoryPolicyExists(resourceName),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -84,11 +96,6 @@ func testAccCheckAWSEcrRepositoryPolicyExists(name string) resource.TestCheckFun
 
 func testAccAWSEcrRepositoryPolicy(randString string) string {
 	return fmt.Sprintf(`
-# ECR initially only available in us-east-1
-# https://aws.amazon.com/blogs/aws/ec2-container-registry-now-generally-available/
-provider "aws" {
-	region = "us-east-1"
-}
 resource "aws_ecr_repository" "foo" {
 	name = "tf-acc-test-ecr-%s"
 }
@@ -120,10 +127,6 @@ EOF
 // exercise our retry logic, since we try to use the new resource instantly.
 func testAccAWSEcrRepositoryPolicyWithIAMRole(randString string) string {
 	return fmt.Sprintf(`
-provider "aws" {
-	region = "us-east-1"
-}
-
 resource "aws_ecr_repository" "foo" {
 	name = "tf-acc-test-ecr-%s"
 }
