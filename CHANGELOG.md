@@ -7,6 +7,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_availability_zones: Add blacklisted_names and blacklisted_zone_ids arguments [GH-8463]
+* resource/aws_elb_attachment: Retry ELB attachment on `InvalidTarget` error [GH-8483]
 * resource/aws_ssm_activation: Add `tags` argument [GH-8426]
 * resource/aws_ssm_document: Add `tags` argument [GH-8426]
 * resource/aws_ssm_maintenance_window: Add `tags` argument [GH-8426]
