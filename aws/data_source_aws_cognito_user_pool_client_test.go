@@ -7,11 +7,13 @@ import (
 
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccDataSourceAwsCognitoUserPoolClient_basic(t *testing.T) {
-	rPoolName := fmt.Sprintf("tf_acc_ds_cognito_user_pools_%s", acctest.RandString(7))
-	rClientName := fmt.Sprintf("tf_acc_ds_cognito_user_pools_%s", acctest.RandString(7))
+	rPoolName := fmt.Sprintf("tf_acc_ds_cognito_user_pool_%s", acctest.RandString(7))
+	rClientName := fmt.Sprintf("tf_acc_ds_cognito_user_pool_client_%s", acctest.RandString(7))
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
@@ -19,10 +21,7 @@ func TestAccDataSourceAwsCognitoUserPoolClient_basic(t *testing.T) {
 			{
 				Config: testAccDataSourceAwsCognitoUserPoolClientConfig_basic(rPoolName, rClientName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_cognito_user_pools.selected", "ids.#", "2"),
-					resource.TestCheckResourceAttr("data.aws_cognito_user_pools.selected", "arns.#", "2"),
-					// check that client_id is set
-					// check that client_secret is set
+					testAccDataSourceCognitoUserPoolClientHasExpectedValues("data.aws_cognito_user_pool_client.selected"),
 				),
 			},
 			{
@@ -41,20 +40,47 @@ resource "aws_cognito_user_pool" "main" {
 
 resource "aws_cognito_user_pool_client" "main" {
 	name         = "%s"
-  user_pool_id = "${aws_cognito_user_pool.pool.id}"
+  user_pool_id = "${aws_cognito_user_pool.main.id}"
 }
 
 data "aws_cognito_user_pool_client" "selected" {
 	user_pool_id = "${aws_cognito_user_pool.main.id}"
 	name         = "%s"
+
+	depends_on   = ["aws_cognito_user_pool_client.main"]
 }
 `, rPoolName, rClientName, rClientName)
 }
 
 func testAccDataSourceAwsCognitoUserPoolClientConfig_notFound(rPoolName string, rClientName string) string {
 	return fmt.Sprintf(`
-data "aws_cognito_user_pool_client" "selected" {
-	name = "%s-not-found"
+data "aws_region" "current" {}
+
+resource "aws_cognito_user_pool" "main" {
+        name  = "%s"
 }
-`, rPoolName)
+
+data "aws_cognito_user_pool_client" "selected" {
+	name         = "%s-not-found"
+	user_pool_id = "${aws_cognito_user_pool.main.id}"
+}
+`, rPoolName, rClientName)
+}
+
+func testAccDataSourceCognitoUserPoolClientHasExpectedValues(name string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return fmt.Errorf("Can't find resource: %s", name)
+		}
+
+		if rs.Primary.Attributes["client_id"] == "" {
+			return fmt.Errorf("Missing Client ID")
+		}
+		if rs.Primary.Attributes["client_secret"] == "" {
+			return fmt.Errorf("Missing Client Secret")
+		}
+
+		return nil
+	}
 }

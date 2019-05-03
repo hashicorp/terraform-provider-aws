@@ -39,15 +39,16 @@ func dataSourceAwsCognitoUserPoolClientRead(d *schema.ResourceData, meta interfa
 	name := d.Get("name").(string)
 	userPoolId := d.Get("user_pool_id").(string)
 
-	client, err := getCognitoUserPoolClient(conn, name, userPoolId)
+	client, err := getCognitoUserPoolClient(conn, userPoolId, name)
 	if err != nil {
 		return fmt.Errorf("Error getting cognito user pool client: %s", err)
 	}
 	if client == nil {
-		return fmt.Errorf("No cognito user pool client with name: %s", name)
+		return fmt.Errorf("No cognito user pool client found with name: %s", name)
 	}
 
 	d.SetId(*client.ClientId)
+	d.Set("client_id", client.ClientId)
 	d.Set("client_secret", client.ClientSecret)
 
 	return nil
@@ -70,22 +71,24 @@ func getCognitoUserPoolClient(conn *cognitoidentityprovider.CognitoIdentityProvi
 			return nil, err
 		}
 
-		for _, element := range out.UserPoolClients {
+		for _, client := range out.UserPoolClients {
 
-			if *element.ClientName == userPoolClientName {
+			clientName := aws.StringValue(client.ClientName)
+
+			if clientName == userPoolClientName {
 
 				input := &cognitoidentityprovider.DescribeUserPoolClientInput{
-					// MaxResults Valid Range: Minimum value of 1. Maximum value of 60
-					ClientId:   element.ClientId,
+					ClientId:   aws.String(*client.ClientId),
 					UserPoolId: aws.String(userPoolId),
 				}
 
-				out, err := conn.DescribeUserPoolClient(input)
+				describeClientResponse, err := conn.DescribeUserPoolClient(input)
+
 				if err != nil {
 					return nil, err
 				}
 
-				return out.UserPoolClient, nil
+				return describeClientResponse.UserPoolClient, nil
 			}
 		}
 
