@@ -33,6 +33,15 @@ func resourceAwsSsmParameter() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"tier": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  ssm.ParameterTierStandard,
+				ValidateFunc: validation.StringInSlice([]string{
+					ssm.ParameterTierStandard,
+					ssm.ParameterTierAdvanced,
+				}, false),
+			},
 			"type": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -127,6 +136,7 @@ func resourceAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error
 	detail := describeResp.Parameters[0]
 	d.Set("key_id", detail.KeyId)
 	d.Set("description", detail.Description)
+	d.Set("tier", detail.Tier)
 	d.Set("allowed_pattern", detail.AllowedPattern)
 
 	if tagList, err := ssmconn.ListTagsForResource(&ssm.ListTagsForResourceInput{
@@ -173,6 +183,7 @@ func resourceAwsSsmParameterPut(d *schema.ResourceData, meta interface{}) error 
 	paramInput := &ssm.PutParameterInput{
 		Name:           aws.String(d.Get("name").(string)),
 		Type:           aws.String(d.Get("type").(string)),
+		Tier:           aws.String(d.Get("tier").(string)),
 		Value:          aws.String(d.Get("value").(string)),
 		Overwrite:      aws.Bool(shouldUpdateSsmParameter(d)),
 		AllowedPattern: aws.String(d.Get("allowed_pattern").(string)),

@@ -53,6 +53,33 @@ func TestAccAWSSSMParameter_basic(t *testing.T) {
 						regexp.MustCompile(fmt.Sprintf("^arn:aws:ssm:[a-z0-9-]+:[0-9]{12}:parameter/%s$", name))),
 					resource.TestCheckResourceAttr("aws_ssm_parameter.foo", "value", "bar"),
 					resource.TestCheckResourceAttr("aws_ssm_parameter.foo", "type", "String"),
+					resource.TestCheckResourceAttr("aws_ssm_parameter.foo", "tier", "Basic"),
+					resource.TestCheckResourceAttr("aws_ssm_parameter.foo", "tags.%", "1"),
+					resource.TestCheckResourceAttr("aws_ssm_parameter.foo", "tags.Name", "My Parameter"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSSMAdvancedParameter(t *testing.T) {
+	var param ssm.Parameter
+	name := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(10))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMParameterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMAdvancedParameterConfig(name, "String", "bar"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMParameterExists("aws_ssm_parameter.foo", &param),
+					resource.TestMatchResourceAttr("aws_ssm_parameter.foo", "arn",
+						regexp.MustCompile(fmt.Sprintf("^arn:aws:ssm:[a-z0-9-]+:[0-9]{12}:parameter/%s$", name))),
+					resource.TestCheckResourceAttr("aws_ssm_parameter.foo", "value", "bar"),
+					resource.TestCheckResourceAttr("aws_ssm_parameter.foo", "type", "String"),
+					resource.TestCheckResourceAttr("aws_ssm_parameter.foo", "tier", "Advanced"),
 					resource.TestCheckResourceAttr("aws_ssm_parameter.foo", "tags.%", "1"),
 					resource.TestCheckResourceAttr("aws_ssm_parameter.foo", "tags.Name", "My Parameter"),
 				),
@@ -372,6 +399,20 @@ resource "aws_ssm_parameter" "foo" {
   name  = "%s"
   type  = "%s"
   value = "%s"
+  tags  = {
+    Name = "My Parameter"
+  }
+}
+`, rName, pType, value)
+}
+
+func testAccAWSSSMAdvancedParameterConfig(rName, pType, value string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_parameter" "foo" {
+  name  = "%s"
+  type  = "%s"
+  value = "%s"
+  tier  = "Advanced"
   tags  = {
     Name = "My Parameter"
   }
