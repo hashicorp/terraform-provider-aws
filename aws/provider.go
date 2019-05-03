@@ -441,6 +441,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_dx_lag":                                              resourceAwsDxLag(),
 			"aws_dx_private_virtual_interface":                        resourceAwsDxPrivateVirtualInterface(),
 			"aws_dx_public_virtual_interface":                         resourceAwsDxPublicVirtualInterface(),
+			"aws_dx_transit_virtual_interface":                        resourceAwsDxTransitVirtualInterface(),
 			"aws_dynamodb_table":                                      resourceAwsDynamoDbTable(),
 			"aws_dynamodb_table_item":                                 resourceAwsDynamoDbTableItem(),
 			"aws_dynamodb_global_table":                               resourceAwsDynamoDbGlobalTable(),
