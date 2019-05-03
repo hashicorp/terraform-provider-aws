@@ -168,6 +168,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_codecommit_repository":              dataSourceAwsCodeCommitRepository(),
 			"aws_cur_report_definition":              dataSourceAwsCurReportDefinition(),
 			"aws_db_cluster_snapshot":                dataSourceAwsDbClusterSnapshot(),
+			"aws_db_engine_version":                  dataSourceAwsDbEngineVersion(),
 			"aws_db_event_categories":                dataSourceAwsDbEventCategories(),
 			"aws_db_instance":                        dataSourceAwsDbInstance(),
 			"aws_db_snapshot":                        dataSourceAwsDbSnapshot(),
