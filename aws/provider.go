@@ -445,6 +445,8 @@ func Provider() terraform.ResourceProvider {
 			"aws_dx_hosted_private_virtual_interface_accepter":        resourceAwsDxHostedPrivateVirtualInterfaceAccepter(),
 			"aws_dx_hosted_public_virtual_interface":                  resourceAwsDxHostedPublicVirtualInterface(),
 			"aws_dx_hosted_public_virtual_interface_accepter":         resourceAwsDxHostedPublicVirtualInterfaceAccepter(),
+			"aws_dx_hosted_transit_virtual_interface":                 resourceAwsDxHostedTransitVirtualInterface(),
+			"aws_dx_hosted_transit_virtual_interface_accepter":        resourceAwsDxHostedTransitVirtualInterfaceAccepter(),
 			"aws_dx_lag":                                              resourceAwsDxLag(),
 			"aws_dx_private_virtual_interface":                        resourceAwsDxPrivateVirtualInterface(),
 			"aws_dx_public_virtual_interface":                         resourceAwsDxPublicVirtualInterface(),
