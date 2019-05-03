@@ -64,6 +64,14 @@ func testAccCheckAwsCallerIdentityAccountId(n string) resource.TestCheckFunc {
 			return fmt.Errorf("ARN expected to not be nil")
 		}
 
+		if rs.Primary.Attributes["access_key"] == "" {
+			return fmt.Errorf("Access Key expected to not be nil")
+		}
+
+		if rs.Primary.Attributes["secret_key"] == "" {
+			return fmt.Errorf("Secret Key expected to not be nil")
+		}
+
 		return nil
 	}
 }

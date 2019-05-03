@@ -28,6 +28,21 @@ func dataSourceAwsCallerIdentity() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+
+			"access_key": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"secret_key": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"session_token": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -44,10 +59,18 @@ func dataSourceAwsCallerIdentityRead(d *schema.ResourceData, meta interface{}) e
 
 	log.Printf("[DEBUG] Received Caller Identity: %s", res)
 
+	creds, err := client.Config.Credentials.Get()
+	if err != nil {
+		return fmt.Errorf("Error getting credentials: %v", err)
+	}
+
 	d.SetId(time.Now().UTC().String())
 	d.Set("account_id", res.Account)
 	d.Set("arn", res.Arn)
 	d.Set("user_id", res.UserId)
+	d.Set("access_key", creds.AccessKeyID)
+	d.Set("secret_key", creds.SecretAccessKey)
+	d.Set("session_token", creds.SessionToken)
 
 	return nil
 }
