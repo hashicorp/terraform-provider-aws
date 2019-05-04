@@ -3,16 +3,20 @@ layout: "aws"
 page_title: "AWS: aws_dx_gateway_association"
 sidebar_current: "docs-aws-resource-dx-gateway-association"
 description: |-
-  Associates a Direct Connect Gateway with a VGW.
+  Associates a Direct Connect Gateway with a VGW or transit gateway.
 ---
 
 # Resource: aws_dx_gateway_association
 
-Associates a Direct Connect Gateway with a VGW. For creating cross-account association proposals, see the [`aws_dx_gateway_association_proposal` resource](/docs/providers/aws/r/dx_gateway_association_proposal.html).
+Associates a Direct Connect Gateway with a VGW or transit gateway.
+
+To create a cross-account association, create an [`aws_dx_gateway_association_proposal` resource](/docs/providers/aws/r/dx_gateway_association_proposal.html)
+in the AWS account that owns the VGW or transit gateway and then accept the proposal in the AWS account that owns the Direct Connect Gateway
+by creating an `aws_dx_gateway_association` resource with the `proposal_id` and `associated_gateway_owner_account_id` attributes set.
 
 ## Example Usage
 
-### Basic
+### VGW Single Account
 
 ```hcl
 resource "aws_dx_gateway" "example" {
@@ -29,12 +33,12 @@ resource "aws_vpn_gateway" "example" {
 }
 
 resource "aws_dx_gateway_association" "example" {
-  dx_gateway_id  = "${aws_dx_gateway.example.id}"
-  vpn_gateway_id = "${aws_vpn_gateway.example.id}"
+  dx_gateway_id         = "${aws_dx_gateway.example.id}"
+  associated_gateway_id = "${aws_vpn_gateway.example.id}"
 }
 ```
 
-### Allowed Prefixes
+### Single Account VGW With Allowed Prefixes
 
 ```hcl
 resource "aws_dx_gateway" "example" {
@@ -51,8 +55,8 @@ resource "aws_vpn_gateway" "example" {
 }
 
 resource "aws_dx_gateway_association" "example" {
-  dx_gateway_id  = "${aws_dx_gateway.example.id}"
-  vpn_gateway_id = "${aws_vpn_gateway.example.id}"
+  dx_gateway_id         = "${aws_dx_gateway.example.id}"
+  associated_gateway_id = "${aws_vpn_gateway.example.id}"
 
   allowed_prefixes = [
     "210.52.109.0/24",
@@ -61,12 +65,36 @@ resource "aws_dx_gateway_association" "example" {
 }
 ```
 
+### Transit Gateway Single Account
+
+```hcl
+resource "aws_dx_gateway" "example" {
+  name            = "example"
+  amazon_side_asn = "64512"
+}
+
+resource "aws_ec2_transit_gateway" "example" {}
+
+resource "aws_dx_gateway_association" "example" {
+  dx_gateway_id         = "${aws_dx_gateway.example.id}"
+  associated_gateway_id = "${aws_ec2_transit_gateway.example.id}"
+
+  allowed_prefixes = [
+    "10.255.255.0/30",
+    "10.255.255.8/30",
+  ]
+}
+```
+
 ## Argument Reference
+
+~> **NOTE:** One of `associated_gateway_id`, or `vpn_gateway_id` must be specified.
 
 The following arguments are supported:
 
 * `dx_gateway_id` - (Required) The ID of the Direct Connect gateway.
-* `vpn_gateway_id` - (Required) The ID of the VGW with which to associate the gateway.
+* `associated_gateway_id` - (Optional) The ID of the VGW or transit gateway with which to associate the Direct Connect gateway.
+* `vpn_gateway_id` - (Optional) *Deprecated:* Use `associated_gateway_id` instead. The ID of the VGW with which to associate the gateway.
 * `allowed_prefixes` - (Optional) VPC prefixes (CIDRs) to advertise to the Direct Connect gateway. Defaults to the CIDR block of the VPC associated with the Virtual Gateway. To enable drift detection, must be configured.
 
 ## Attributes Reference
@@ -74,7 +102,9 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the Direct Connect gateway association resource.
+* `associated_gateway_type` - The type of the associated gateway, `transitGateway` or `virtualPrivateGateway`.
 * `dx_gateway_association_id` - The ID of the Direct Connect gateway association.
+* `transit_gateway_attachment_id` - The ID of the transit gateway attachment.
 
 ## Timeouts
 
@@ -87,7 +117,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Direct Connect gateway associations can be imported using `dx_gateway_id` together with `vpn_gateway_id`,
+Direct Connect gateway associations can be imported using `dx_gateway_id` together with `associated_gateway_id`,
 e.g.
 
 ```
