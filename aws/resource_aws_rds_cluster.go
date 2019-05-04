@@ -209,6 +209,8 @@ func resourceAwsRDSCluster() *schema.Resource {
 				MaxItems: 1,
 				ConflictsWith: []string{
 					"snapshot_identifier",
+					"replication_source_identifier",
+					"point_in_time_restore",
 				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -284,7 +286,11 @@ func resourceAwsRDSCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: false,
 				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				ConflictsWith: []string{
+					"s3_import",
+					"replication_source_identifier",
+					"point_in_time_restore",
+				},
 			},
 
 			"port": {
@@ -349,6 +355,11 @@ func resourceAwsRDSCluster() *schema.Resource {
 			"replication_source_identifier": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ConflictsWith: []string{
+					"s3_import",
+					"snapshot_identifier",
+					"point_in_time_restore",
+				},
 			},
 
 			"iam_roles": {
@@ -386,6 +397,54 @@ func resourceAwsRDSCluster() *schema.Resource {
 						"general",
 						"slowquery",
 					}, false),
+				},
+			},
+			"point_in_time_restore": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				ConflictsWith: []string{
+					"s3_import",
+					"snapshot_identifier",
+					"replication_source_identifier",
+					//  We can't set the following values when point-in-time restore nor modification after restore.
+					"availability_zones",
+					"database_name",
+					"engine",
+					"engine_mode",
+					"master_username",
+					"storage_encrypted",
+				},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"source_db_cluster_identifier": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+						"restore_type": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ForceNew: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"full-copy",
+								"copy-on-write",
+							}, false),
+							Default: "full-copy",
+						},
+						"use_latest_restorable_time": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							ForceNew: true,
+							Default:  false,
+						},
+						"restore_to_time": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.ValidateRFC3339TimeString,
+						},
+					},
 				},
 			},
 
@@ -512,6 +571,125 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 		if err != nil {
 			return fmt.Errorf("Error creating RDS Cluster: %s", err)
 		}
+	} else if v, ok := d.GetOk("point_in_time_restore"); ok {
+
+		pointInTimeRestore := v.([]interface{})[0].(map[string]interface{})
+
+		restoreOpts := &rds.RestoreDBClusterToPointInTimeInput{
+			DBClusterIdentifier:       aws.String(identifier),
+			DeletionProtection:        aws.Bool(d.Get("deletion_protection").(bool)),
+			SourceDBClusterIdentifier: aws.String(pointInTimeRestore["source_db_cluster_identifier"].(string)),
+			UseLatestRestorableTime:   aws.Bool(pointInTimeRestore["use_latest_restorable_time"].(bool)),
+			Tags:                      tags,
+		}
+
+		if v, ok := pointInTimeRestore["restore_type"].(string); ok && v != "" {
+			restoreOpts.RestoreType = aws.String(v)
+		}
+
+		if attr, ok := pointInTimeRestore["restore_to_time"].(string); ok && attr != "" {
+			if v, ok := pointInTimeRestore["use_latest_restorable_time"].(bool); ok && v {
+				return fmt.Errorf(`"point_in_time_restore.restore_to_time" can't be used when "point_in_time_restore.use_latest_restorable_time" is true`)
+			}
+			if v, ok := pointInTimeRestore["restore_type"].(string); ok && v == "copy-on-write" {
+				return fmt.Errorf(`"point_in_time_restore.restore_to_time" can't be used when "point_in_time_restore.restore_to_time" is "copy-on-write"`)
+			}
+
+			restoreToTime, _ := time.Parse(time.RFC3339, attr)
+			restoreOpts.RestoreToTime = aws.Time(restoreToTime)
+		} else if v, ok := pointInTimeRestore["use_latest_restorable_time"].(bool); !ok || !v {
+			return fmt.Errorf(`"point_in_time_restore.restore_to_time" must be set when "point_in_time_restore.use_latest_restorable_time" is false`)
+		}
+
+		// Need to check value > 0 due to:
+		// InvalidParameterValue: Backtrack is not enabled for the aurora-postgresql engine.
+		if v, ok := d.GetOk("backtrack_window"); ok && v.(int) > 0 {
+			restoreOpts.BacktrackWindow = aws.Int64(int64(v.(int)))
+		}
+
+		if attr, ok := d.GetOk("db_cluster_parameter_group_name"); ok {
+			restoreOpts.DBClusterParameterGroupName = aws.String(attr.(string))
+		}
+
+		if attr, ok := d.GetOk("db_subnet_group_name"); ok {
+			restoreOpts.DBSubnetGroupName = aws.String(attr.(string))
+		}
+
+		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && len(attr.([]interface{})) > 0 {
+			restoreOpts.EnableCloudwatchLogsExports = expandStringList(attr.([]interface{}))
+		}
+
+		if attr, ok := d.GetOk("iam_database_authentication_enabled"); ok {
+			restoreOpts.EnableIAMDatabaseAuthentication = aws.Bool(attr.(bool))
+		}
+
+		if attr, ok := d.GetOk("kms_key_id"); ok {
+			restoreOpts.KmsKeyId = aws.String(attr.(string))
+		}
+
+		if attr, ok := d.GetOk("option_group_name"); ok {
+			restoreOpts.OptionGroupName = aws.String(attr.(string))
+		}
+
+		if attr, ok := d.GetOk("port"); ok {
+			restoreOpts.Port = aws.Int64(int64(attr.(int)))
+		}
+
+		if attr := d.Get("vpc_security_group_ids").(*schema.Set); attr.Len() > 0 {
+			restoreOpts.VpcSecurityGroupIds = expandStringList(attr.List())
+		}
+
+		// modification options after restore
+
+		if attr, ok := d.GetOk("backup_retention_period"); ok {
+			modifyDbClusterInput.BackupRetentionPeriod = aws.Int64(int64(attr.(int)))
+			requiresModifyDbCluster = true
+		}
+
+		if attr, ok := d.GetOk("preferred_backup_window"); ok {
+			modifyDbClusterInput.PreferredBackupWindow = aws.String(attr.(string))
+			requiresModifyDbCluster = true
+		}
+
+		if attr, ok := d.GetOk("preferred_maintenance_window"); ok {
+			modifyDbClusterInput.PreferredMaintenanceWindow = aws.String(attr.(string))
+			requiresModifyDbCluster = true
+		}
+
+		if attr, ok := d.GetOk("engine_version"); ok {
+			modifyDbClusterInput.EngineVersion = aws.String(attr.(string))
+			requiresModifyDbCluster = true
+		}
+
+		if attr, ok := d.GetOk("master_password"); ok {
+			modifyDbClusterInput.MasterUserPassword = aws.String(attr.(string))
+			requiresModifyDbCluster = true
+		}
+
+		if scalingConfiguration := expandRdsScalingConfiguration(d.Get("scaling_configuration").([]interface{})); scalingConfiguration != nil {
+			modifyDbClusterInput.ScalingConfiguration = scalingConfiguration
+			requiresModifyDbCluster = true
+		}
+
+		log.Printf("[DEBUG] RDS Cluster restore to point in time: %s", restoreOpts)
+		var resp *rds.RestoreDBClusterToPointInTimeOutput
+		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+			var err error
+			resp, err = conn.RestoreDBClusterToPointInTime(restoreOpts)
+			if err != nil {
+				if isAWSErr(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
+					return resource.RetryableError(err)
+				}
+				return resource.NonRetryableError(err)
+			}
+			return nil
+		})
+		if err != nil {
+			return fmt.Errorf("error restoring RDS cluster: %s", err)
+		}
+
+		log.Printf("[DEBUG]: RDS Cluster restore point in time response: %s", resp)
+
 	} else if _, ok := d.GetOk("replication_source_identifier"); ok {
 		createOpts := &rds.CreateDBClusterInput{
 			DBClusterIdentifier:         aws.String(identifier),

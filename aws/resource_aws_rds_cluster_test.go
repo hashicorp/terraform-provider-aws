@@ -158,6 +158,7 @@ func TestAccAWSRDSCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName,
 						"enabled_cloudwatch_logs_exports.1", "error"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "point_in_time_restore.#", "0"),
 				),
 			},
 		},
@@ -1405,6 +1406,33 @@ func TestAccAWSRDSCluster_SnapshotIdentifier_EncryptedRestore(t *testing.T) {
 						"aws_rds_cluster.test", "kms_key_id", keyRegex),
 					resource.TestCheckResourceAttr(
 						"aws_rds_cluster.test", "storage_encrypted", "true"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSRDSCluster_pointInTimeRestore(t *testing.T) {
+	var srcCluster, dstCluster rds.DBCluster
+
+	rInt := acctest.RandInt()
+	srcClusterName := "aws_rds_cluster.src"
+	dstClusterName := "aws_rds_cluster.dst"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRDSClusterConfig_pointInTimeRestore(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterExists(srcClusterName, &srcCluster),
+					testAccCheckAWSClusterExists(dstClusterName, &dstCluster),
+					resource.TestCheckResourceAttr(dstClusterName, "point_in_time_restore.#", "1"),
+					resource.TestCheckResourceAttr(dstClusterName, "point_in_time_restore.0.restore_type", "full-copy"),
+					resource.TestCheckResourceAttr(dstClusterName, "point_in_time_restore.0.use_latest_restorable_time", "true"),
+					resource.TestCheckResourceAttr(dstClusterName, "backup_retention_period", "5"),
 				),
 			},
 		},
@@ -2660,4 +2688,50 @@ resource "aws_rds_cluster" "test" {
   kms_key_id = "${aws_kms_key.test.arn}"
 }
 `, rName, rName, rName)
+}
+
+func testAccAWSRDSClusterConfig_pointInTimeRestore(n int) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+  tags = {
+    Name = "pitr-%d"
+  }
+}
+
+resource "aws_subnet" "test" {
+  count = 2
+  cidr_block = "${cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)}"
+  availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
+  vpc_id = "${aws_vpc.test.id}"
+  tags = {
+    Name = "pitr-%d"
+  }
+}
+
+resource "aws_db_subnet_group" "test" {
+  name = "pitr-%d"
+  subnet_ids = "${aws_subnet.test.*.id}"
+}
+
+resource "aws_rds_cluster" "src" {
+  cluster_identifier = "pitr-src-%d"
+  master_username = "root"
+  master_password = "password"
+  skip_final_snapshot = true
+  db_subnet_group_name = "${aws_db_subnet_group.test.name}"
+}
+
+resource "aws_rds_cluster" "dst" {
+  cluster_identifier = "pitr-dest-%d"
+  skip_final_snapshot = true
+  backup_retention_period = 5
+  point_in_time_restore {
+    source_db_cluster_identifier = "${aws_rds_cluster.src.cluster_identifier}"
+    use_latest_restorable_time = true
+  }
+}
+`, n, n, n, n, n)
 }

@@ -121,6 +121,7 @@ Default: A 30-minute window selected at random from an 8-hour block of time per 
 * `enabled_cloudwatch_logs_exports` - (Optional) List of log types to export to cloudwatch. If omitted, no logs will be exported.
    The following log types are supported: `audit`, `error`, `general`, `slowquery`.
 * `scaling_configuration` - (Optional) Nested attribute with scaling properties. Only valid when `engine_mode` is set to `serverless`. More details below.
+* `point_in_time_restore` - (Optional) Restore to point in time. More details below.
 * `tags` - (Optional) A mapping of tags to assign to the DB cluster.
 
 ### S3 Import Options
@@ -150,6 +151,25 @@ resource "aws_rds_cluster" "db" {
 * `source_engine_version` - (Required) Version of the source engine used to make the backup
 
 This will not recreate the resource if the S3 object changes in some way. It's only used to initialize the database. This only works currently with the aurora engine. See AWS for currently supported engines and options. See [Aurora S3 Migration Docs](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/AuroraMySQL.Migrating.ExtMySQL.html#AuroraMySQL.Migrating.ExtMySQL.S3).
+
+### Point In Time Restore Options
+
+Full details on the core parameters and impacts are in the API Docs: [RestoreDBClusterToPointInTime](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_RestoreDBClusterToPointInTime.html).
+
+
+```hcl
+resource "aws_rds_cluster" "db" {
+  point_in_time_restore {
+    source_db_cluster_identifier = "source-cluster"
+    use_latest_restorable_time   = true
+  }
+}
+```
+
+* `source_db_cluster_identifier` - (Required) The identifier of the source DB cluster from which to restore.
+* `restore_type` - (Optional) The identifier of the source DB cluster from which to restore. Valid values: `full-copy`, `copy-on-write`. Defaults to: `full-copy`.
+* `use_latest_restorable_time` - (Optional) A value that is set to true to restore the DB cluster to the latest restorable backup time, and false otherwise. Defaults to: `false`.
+* `restore_to_time` - (Optional) The date and time to restore the DB cluster to, in UTC [RFC3339](https://tools.ietf.org/html/rfc3339#section-5.8) format(for example, YYYY-MM-DDTHH:MM:SSZ).
 
 ### scaling_configuration Argument Reference
 
