@@ -66,7 +66,6 @@ func resourceAwsS3Bucket() *schema.Resource {
 
 			"acl": {
 				Type:     schema.TypeString,
-				Default:  "private",
 				Optional: true,
 			},
 
@@ -760,6 +759,17 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 		}
 		log.Printf("[DEBUG] S3 bucket: %s, read ACL grants policy: %+v", d.Id(), apResponse)
 		grants := flattenGrants(apResponse.(*s3.GetBucketAclOutput))
+
+		// If there are no grants here then it is a private bucket with the
+		// default owner grant. Default the acl field to "private".
+		if grants == nil {
+			if _, ok := d.GetOk("acl"); !ok {
+				if err := d.Set("acl", "private"); err != nil {
+					return fmt.Errorf("error setting acl %s", err)
+				}
+			}
+		}
+
 		if err := d.Set("grant", schema.NewSet(grantHash, grants)); err != nil {
 			return fmt.Errorf("error setting grant %s", err)
 		}
