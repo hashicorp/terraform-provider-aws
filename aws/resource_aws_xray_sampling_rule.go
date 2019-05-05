@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -22,15 +23,10 @@ func resourceAwsXraySamplingRule() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ValidateFunc:  validation.StringLenBetween(1, 128),
-				ConflictsWith: []string{"rule_arn"},
-			},
-			"rule_arn": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"name"},
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
 			"resource_arn": {
 				Type:     schema.TypeString,
@@ -84,6 +80,10 @@ func resourceAwsXraySamplingRule() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -91,6 +91,7 @@ func resourceAwsXraySamplingRule() *schema.Resource {
 func resourceAwsXraySamplingRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).xrayconn
 	samplingRule := &xray.SamplingRule{
+		RuleName:      aws.String(d.Get("name").(string)),
 		ResourceARN:   aws.String(d.Get("resource_arn").(string)),
 		Priority:      aws.Int64(int64(d.Get("priority").(int))),
 		FixedRate:     aws.Float64(d.Get("fixed_rate").(float64)),
@@ -101,12 +102,6 @@ func resourceAwsXraySamplingRuleCreate(d *schema.ResourceData, meta interface{})
 		HTTPMethod:    aws.String(d.Get("http_method").(string)),
 		URLPath:       aws.String(d.Get("url_path").(string)),
 		Version:       aws.Int64(int64(d.Get("version").(int))),
-	}
-
-	if v, ok := d.GetOk("name"); ok {
-		samplingRule.RuleName = aws.String(v.(string))
-	} else {
-		samplingRule.RuleARN = aws.String(d.Get("rule_arn").(string))
 	}
 
 	if v, ok := d.GetOk("attributes"); ok {
@@ -139,21 +134,23 @@ func resourceAwsXraySamplingRuleRead(d *schema.ResourceData, meta interface{}) e
 			return err
 		}
 		for _, samplingRuleRecord := range out.SamplingRuleRecords {
-			sampingRule := samplingRuleRecord.SamplingRule
-			if aws.StringValue(sampingRule.RuleName) == d.Id() {
-				d.Set("name", sampingRule.RuleName)
-				d.Set("rule_arn", sampingRule.RuleARN)
-				d.Set("resource_arn", sampingRule.ResourceARN)
-				d.Set("priority", sampingRule.Priority)
-				d.Set("fixed_rate", sampingRule.FixedRate)
-				d.Set("reservoir_size", sampingRule.ReservoirSize)
-				d.Set("service_name", sampingRule.ServiceName)
-				d.Set("service_type", sampingRule.ServiceType)
-				d.Set("host", sampingRule.Host)
-				d.Set("http_method", sampingRule.HTTPMethod)
-				d.Set("url_path", sampingRule.URLPath)
-				d.Set("version", sampingRule.Version)
-				d.Set("attributes", aws.StringValueMap(sampingRule.Attributes))
+			samplingRule := samplingRuleRecord.SamplingRule
+			if aws.StringValue(samplingRule.RuleName) == d.Id() {
+				d.Set("name", samplingRule.RuleName)
+				d.Set("resource_arn", samplingRule.ResourceARN)
+				d.Set("priority", samplingRule.Priority)
+				d.Set("fixed_rate", samplingRule.FixedRate)
+				d.Set("reservoir_size", samplingRule.ReservoirSize)
+				d.Set("service_name", samplingRule.ServiceName)
+				d.Set("service_type", samplingRule.ServiceType)
+				d.Set("host", samplingRule.Host)
+				d.Set("http_method", samplingRule.HTTPMethod)
+				d.Set("url_path", samplingRule.URLPath)
+				d.Set("version", samplingRule.Version)
+				d.Set("attributes", aws.StringValueMap(samplingRule.Attributes))
+				d.Set("created_at", samplingRuleRecord.CreatedAt)
+				d.Set("modified_at", samplingRuleRecord.ModifiedAt)
+				d.Set("arn", samplingRule.RuleARN)
 				break
 			}
 		}
@@ -166,6 +163,42 @@ func resourceAwsXraySamplingRuleRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsXraySamplingRuleUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).xrayconn
+	samplingRuleUpdate := &xray.SamplingRuleUpdate{
+		RuleName:      aws.String(d.Get("name").(string)),
+		Priority:      aws.Int64(int64(d.Get("priority").(int))),
+		FixedRate:     aws.Float64(d.Get("fixed_rate").(float64)),
+		ReservoirSize: aws.Int64(int64(d.Get("reservoir_size").(int))),
+		ServiceName:   aws.String(d.Get("service_name").(string)),
+		ServiceType:   aws.String(d.Get("service_type").(string)),
+		Host:          aws.String(d.Get("host").(string)),
+		HTTPMethod:    aws.String(d.Get("http_method").(string)),
+		URLPath:       aws.String(d.Get("url_path").(string)),
+	}
+
+	if d.HasChange("version") {
+		return fmt.Errorf("Version cannot be modified")
+	}
+
+	if d.HasChange("attributes") {
+		attributes := map[string]*string{}
+		if v, ok := d.GetOk("attributes"); ok {
+			if m, ok := v.(map[string]interface{}); ok {
+				attributes = stringMapToPointers(m)
+			}
+		}
+		samplingRuleUpdate.Attributes = attributes
+	}
+
+	params := &xray.UpdateSamplingRuleInput{
+		SamplingRuleUpdate: samplingRuleUpdate,
+	}
+
+	_, err := conn.UpdateSamplingRule(params)
+	if err != nil {
+		return err
+	}
+
 	return resourceAwsXraySamplingRuleRead(d, meta)
 }
 
