@@ -79,9 +79,15 @@ The following arguments are supported:
 * `api_id` - (Required) The API ID for the GraphQL API.
 * `type` - (Required) The type name from the schema defined in the GraphQL API.
 * `field` - (Required) The field name from the schema defined in the GraphQL API.
-* `data_source` - (Required) The DataSource name.
 * `request_template` - (Required) The request mapping template for this resolver.
 * `response_template` - (Required) The response mapping template for this resolver.
+* `data_source` - (Optional) The DataSource name.
+* `kind`  - (Optional) The resolver type. Valid values are `UNIT` and `PIPELINE`.
+* `pipeline_config` - (Optional) The PipelineConfig. A `pipeline_config` block is documented below.
+
+An `pipeline_config` block supports the following arguments:
+
+* `functions` - (Required) The list of Function ID.
 
 ## Attributes Reference
 
