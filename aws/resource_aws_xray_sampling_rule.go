@@ -18,9 +18,63 @@ func resourceAwsXraySamplingRule() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 128),
+				Type:          schema.TypeString,
+				Required:      true,
+				ValidateFunc:  validation.StringLenBetween(1, 128),
+				ConflictsWith: []string{"rule_arn"},
+			},
+			"rule_arn": {
+				Type:          schema.TypeString,
+				Required:      true,
+				ConflictsWith: []string{"name"},
+			},
+			"resource_arn": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"priority": {
+				Type:     schema.TypeInt,
+				Required: true,
+			},
+			"fixed_rate": {
+				Type:     schema.TypeFloat,
+				Required: true,
+			},
+			"reservoir_size": {
+				Type:     schema.TypeInt,
+				Required: true,
+			},
+			"service_type": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"host": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"http_method": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"url_path": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"version": {
+				Type:     schema.TypeInt,
+				Required: true,
+			},
+			"attributes": {
+				Type:     schema.TypeMap,
+				Optional: true,
+			},
+			"created_at": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"modified_at": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 		},
 	}
