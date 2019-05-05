@@ -267,6 +267,49 @@ func TestAccAWSS3Bucket_UpdateAcl(t *testing.T) {
 	})
 }
 
+func TestAccAWSS3Bucket_UpdateGrant(t *testing.T) {
+	ri := acctest.RandInt()
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketConfigWithGrants(ri),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketExists("aws_s3_bucket.bucket"),
+					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "grant.#", "1"),
+					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "grant.2524447860.permissions.#", "2"),
+					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "grant.2524447860.permissions.3535167073", "FULL_CONTROL"),
+					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "grant.2524447860.permissions.2319431919", "WRITE"),
+					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "grant.2524447860.type", "CanonicalUser"),
+				),
+			},
+			{
+				Config: testAccAWSS3BucketConfigWithGrantsUpdate(ri),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketExists("aws_s3_bucket.bucket"),
+					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "grant.#", "2"),
+					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "grant.2344010500.permissions.#", "1"),
+					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "grant.2344010500.permissions.2931993811", "READ"),
+					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "grant.2344010500.type", "CanonicalUser"),
+					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "grant.986027168.permissions.#", "1"),
+					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "grant.986027168.permissions.1600971645", "READ_ACP"),
+					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "grant.986027168.type", "Group"),
+					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "grant.986027168.uri", "http://acs.amazonaws.com/groups/s3/LogDelivery"),
+				),
+			},
+			{
+				Config: testAccAWSS3BucketBasic(ri),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketExists("aws_s3_bucket.bucket"),
+					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "grant.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSS3Bucket_Website_Simple(t *testing.T) {
 	rInt := acctest.RandInt()
 	region := testAccGetRegion()
@@ -1484,6 +1527,14 @@ resource "aws_s3_bucket" "bucket" {
 `, randInt)
 }
 
+func testAccAWSS3BucketBasic(randInt int) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "bucket" {
+	bucket = "tf-test-bucket-%d"
+}
+`, randInt)
+}
+
 func testAccAWSS3MultiBucketConfigWithTags(randInt int) string {
 	t := template.Must(template.New("t1").
 		Parse(`
@@ -1841,6 +1892,39 @@ resource "aws_s3_bucket" "bucket" {
 	acl = "private"
 }
 `
+
+func testAccAWSS3BucketConfigWithGrants(randInt int) string {
+	return fmt.Sprintf(`
+data "aws_canonical_user_id" "current" {}
+resource "aws_s3_bucket" "bucket" {
+	bucket = "tf-test-bucket-%d"
+	grant {
+        id = "${data.aws_canonical_user_id.current.id}"
+        type = "CanonicalUser"
+        permissions = ["FULL_CONTROL", "WRITE"]
+    }
+}
+`, randInt)
+}
+
+func testAccAWSS3BucketConfigWithGrantsUpdate(randInt int) string {
+	return fmt.Sprintf(`
+data "aws_canonical_user_id" "current" {}
+resource "aws_s3_bucket" "bucket" {
+	bucket = "tf-test-bucket-%d"
+	grant {
+        id = "${data.aws_canonical_user_id.current.id}"
+        type = "CanonicalUser"
+        permissions = ["READ"]
+    }
+    grant {
+        type = "Group"
+        permissions = ["READ_ACP"]
+        uri = "http://acs.amazonaws.com/groups/s3/LogDelivery"
+    }
+}
+`, randInt)
+}
 
 func testAccAWSS3BucketConfigWithLogging(randInt int) string {
 	return fmt.Sprintf(`
