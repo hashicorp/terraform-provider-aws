@@ -16089,11 +16089,9 @@ type CreateGroupInput struct {
 
 	// The name of the group to create. Do not include the path in this value.
 	//
-	// This parameter allows (through its regex pattern (http://wikipedia.org/wiki/regex))
-	// a string of characters consisting of upper and lowercase alphanumeric characters
-	// with no spaces. You can also include any of the following characters: _+=,.@-.
-	// The group name must be unique within the account. Group names are not distinguished
-	// by case. For example, you cannot create groups named both "ADMINS" and "admins".
+	// IAM user, group, role, and policy names must be unique within the account.
+	// Names are not distinguished by case. For example, you cannot create resources
+	// named both "MyResource" and "myresource".
 	//
 	// GroupName is a required field
 	GroupName *string `min:"1" type:"string" required:"true"`
@@ -16539,6 +16537,11 @@ type CreatePolicyInput struct {
 	// The JSON policy document that you want to use as the content for the new
 	// policy.
 	//
+	// You must provide policies in JSON format in IAM. However, for AWS CloudFormation
+	// templates formatted in YAML, you can provide the policy in JSON or YAML format.
+	// AWS CloudFormation always converts a YAML policy to JSON format before submitting
+	// it to IAM.
+	//
 	// The regex pattern (http://wikipedia.org/wiki/regex) used to validate this
 	// parameter is a string of characters consisting of the following:
 	//
@@ -16556,9 +16559,9 @@ type CreatePolicyInput struct {
 
 	// The friendly name of the policy.
 	//
-	// This parameter allows (through its regex pattern (http://wikipedia.org/wiki/regex))
-	// a string of characters consisting of upper and lowercase alphanumeric characters
-	// with no spaces. You can also include any of the following characters: _+=,.@-
+	// IAM user, group, role, and policy names must be unique within the account.
+	// Names are not distinguished by case. For example, you cannot create resources
+	// named both "MyResource" and "myresource".
 	//
 	// PolicyName is a required field
 	PolicyName *string `min:"1" type:"string" required:"true"`
@@ -16659,6 +16662,11 @@ type CreatePolicyVersionInput struct {
 
 	// The JSON policy document that you want to use as the content for this new
 	// version of the policy.
+	//
+	// You must provide policies in JSON format in IAM. However, for AWS CloudFormation
+	// templates formatted in YAML, you can provide the policy in JSON or YAML format.
+	// AWS CloudFormation always converts a YAML policy to JSON format before submitting
+	// it to IAM.
 	//
 	// The regex pattern (http://wikipedia.org/wiki/regex) used to validate this
 	// parameter is a string of characters consisting of the following:
@@ -16767,6 +16775,11 @@ type CreateRoleInput struct {
 	// The trust relationship policy document that grants an entity permission to
 	// assume the role.
 	//
+	// You must provide policies in JSON format in IAM. However, for AWS CloudFormation
+	// templates formatted in YAML, you can provide the policy in JSON or YAML format.
+	// AWS CloudFormation always converts a YAML policy to JSON format before submitting
+	// it to IAM.
+	//
 	// The regex pattern (http://wikipedia.org/wiki/regex) used to validate this
 	// parameter is a string of characters consisting of the following:
 	//
@@ -16822,12 +16835,9 @@ type CreateRoleInput struct {
 
 	// The name of the role to create.
 	//
-	// This parameter allows (through its regex pattern (http://wikipedia.org/wiki/regex))
-	// a string of characters consisting of upper and lowercase alphanumeric characters
-	// with no spaces. You can also include any of the following characters: _+=,.@-
-	//
-	// Role names are not distinguished by case. For example, you cannot create
-	// roles named both "PRODROLE" and "prodrole".
+	// IAM user, group, role, and policy names must be unique within the account.
+	// Names are not distinguished by case. For example, you cannot create resources
+	// named both "MyResource" and "myresource".
 	//
 	// RoleName is a required field
 	RoleName *string `min:"1" type:"string" required:"true"`
@@ -17276,11 +17286,9 @@ type CreateUserInput struct {
 
 	// The name of the user to create.
 	//
-	// This parameter allows (through its regex pattern (http://wikipedia.org/wiki/regex))
-	// a string of characters consisting of upper and lowercase alphanumeric characters
-	// with no spaces. You can also include any of the following characters: _+=,.@-.
-	// User names are not distinguished by case. For example, you cannot create
-	// users named both "TESTUSER" and "testuser".
+	// IAM user, group, role, and policy names must be unique within the account.
+	// Names are not distinguished by case. For example, you cannot create resources
+	// named both "MyResource" and "myresource".
 	//
 	// UserName is a required field
 	UserName *string `min:"1" type:"string" required:"true"`
@@ -20576,6 +20584,10 @@ type GetGroupPolicyOutput struct {
 
 	// The policy document.
 	//
+	// IAM stores policies in JSON format. However, resources that were created
+	// using AWS CloudFormation templates can be formatted in YAML. AWS CloudFormation
+	// always converts a YAML policy to JSON format before submitting it to IAM.
+	//
 	// PolicyDocument is a required field
 	PolicyDocument *string `min:"1" type:"string" required:"true"`
 
@@ -21158,6 +21170,10 @@ type GetRolePolicyOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The policy document.
+	//
+	// IAM stores policies in JSON format. However, resources that were created
+	// using AWS CloudFormation templates can be formatted in YAML. AWS CloudFormation
+	// always converts a YAML policy to JSON format before submitting it to IAM.
 	//
 	// PolicyDocument is a required field
 	PolicyDocument *string `min:"1" type:"string" required:"true"`
@@ -22067,6 +22083,10 @@ type GetUserPolicyOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The policy document.
+	//
+	// IAM stores policies in JSON format. However, resources that were created
+	// using AWS CloudFormation templates can be formatted in YAML. AWS CloudFormation
+	// always converts a YAML policy to JSON format before submitting it to IAM.
 	//
 	// PolicyDocument is a required field
 	PolicyDocument *string `min:"1" type:"string" required:"true"`
@@ -26871,14 +26891,17 @@ type PutGroupPolicyInput struct {
 
 	// The name of the group to associate the policy with.
 	//
-	// This parameter allows (through its regex pattern (http://wikipedia.org/wiki/regex))
-	// a string of characters consisting of upper and lowercase alphanumeric characters
-	// with no spaces. You can also include any of the following characters: _+=,.@-
+	// ®ex-name;.
 	//
 	// GroupName is a required field
 	GroupName *string `min:"1" type:"string" required:"true"`
 
 	// The policy document.
+	//
+	// You must provide policies in JSON format in IAM. However, for AWS CloudFormation
+	// templates formatted in YAML, you can provide the policy in JSON or YAML format.
+	// AWS CloudFormation always converts a YAML policy to JSON format before submitting
+	// it to IAM.
 	//
 	// The regex pattern (http://wikipedia.org/wiki/regex) used to validate this
 	// parameter is a string of characters consisting of the following:
@@ -27053,6 +27076,11 @@ type PutRolePolicyInput struct {
 	_ struct{} `type:"structure"`
 
 	// The policy document.
+	//
+	// You must provide policies in JSON format in IAM. However, for AWS CloudFormation
+	// templates formatted in YAML, you can provide the policy in JSON or YAML format.
+	// AWS CloudFormation always converts a YAML policy to JSON format before submitting
+	// it to IAM.
 	//
 	// The regex pattern (http://wikipedia.org/wiki/regex) used to validate this
 	// parameter is a string of characters consisting of the following:
@@ -27236,6 +27264,11 @@ type PutUserPolicyInput struct {
 	_ struct{} `type:"structure"`
 
 	// The policy document.
+	//
+	// You must provide policies in JSON format in IAM. However, for AWS CloudFormation
+	// templates formatted in YAML, you can provide the policy in JSON or YAML format.
+	// AWS CloudFormation always converts a YAML policy to JSON format before submitting
+	// it to IAM.
 	//
 	// The regex pattern (http://wikipedia.org/wiki/regex) used to validate this
 	// parameter is a string of characters consisting of the following:
@@ -30300,6 +30333,11 @@ type UpdateAssumeRolePolicyInput struct {
 
 	// The policy that grants an entity permission to assume the role.
 	//
+	// You must provide policies in JSON format in IAM. However, for AWS CloudFormation
+	// templates formatted in YAML, you can provide the policy in JSON or YAML format.
+	// AWS CloudFormation always converts a YAML policy to JSON format before submitting
+	// it to IAM.
+	//
 	// The regex pattern (http://wikipedia.org/wiki/regex) used to validate this
 	// parameter is a string of characters consisting of the following:
 	//
@@ -30398,9 +30436,9 @@ type UpdateGroupInput struct {
 
 	// New name for the IAM group. Only include this if changing the group's name.
 	//
-	// This parameter allows (through its regex pattern (http://wikipedia.org/wiki/regex))
-	// a string of characters consisting of upper and lowercase alphanumeric characters
-	// with no spaces. You can also include any of the following characters: _+=,.@-
+	// IAM user, group, role, and policy names must be unique within the account.
+	// Names are not distinguished by case. For example, you cannot create resources
+	// named both "MyResource" and "myresource".
 	NewGroupName *string `min:"1" type:"string"`
 
 	// New path for the IAM group. Only include this if changing the group's path.
@@ -31300,9 +31338,9 @@ type UpdateUserInput struct {
 	// New name for the user. Include this parameter only if you're changing the
 	// user's name.
 	//
-	// This parameter allows (through its regex pattern (http://wikipedia.org/wiki/regex))
-	// a string of characters consisting of upper and lowercase alphanumeric characters
-	// with no spaces. You can also include any of the following characters: _+=,.@-
+	// IAM user, group, role, and policy names must be unique within the account.
+	// Names are not distinguished by case. For example, you cannot create resources
+	// named both "MyResource" and "myresource".
 	NewUserName *string `min:"1" type:"string"`
 
 	// Name of the user to update. If you're changing the name of the user, this
