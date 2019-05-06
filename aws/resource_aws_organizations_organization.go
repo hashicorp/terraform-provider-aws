@@ -149,11 +149,13 @@ func resourceAwsOrganizationsOrganizationRead(d *schema.ResourceData, meta inter
 		return !lastPage
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("error listing AWS Organization (%s) roots: %s", d.Id(), err)
 	}
 
 	d.Set("arn", org.Organization.Arn)
-	d.Set("roots", flattenOrgRoots(roots))
+	if err := d.Set("roots", flattenOrgRoots(roots)); err != nil {
+		return fmt.Errorf("error setting roots: %s", err)
+	}
 	d.Set("feature_set", org.Organization.FeatureSet)
 	d.Set("master_account_arn", org.Organization.MasterAccountArn)
 	d.Set("master_account_email", org.Organization.MasterAccountEmail)
