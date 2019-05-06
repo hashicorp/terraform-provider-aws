@@ -236,3 +236,33 @@ func resourceAwsOrganizationsOrganizationDelete(d *schema.ResourceData, meta int
 
 	return nil
 }
+
+func flattenOrgRoots(roots []*organizations.Root) []map[string]interface{} {
+	if len(roots) == 0 {
+		return nil
+	}
+	var result []map[string]interface{}
+	for _, r := range roots {
+		result = append(result, map[string]interface{}{
+			"id":           aws.StringValue(r.Id),
+			"name":         aws.StringValue(r.Name),
+			"arn":          aws.StringValue(r.Arn),
+			"policy_types": flattenOrgRootPolicyTypeSummaries(r.PolicyTypes),
+		})
+	}
+	return result
+}
+
+func flattenOrgRootPolicyTypeSummaries(summaries []*organizations.PolicyTypeSummary) []map[string]interface{} {
+	if len(summaries) == 0 {
+		return nil
+	}
+	var result []map[string]interface{}
+	for _, s := range summaries {
+		result = append(result, map[string]interface{}{
+			"status": aws.StringValue(s.Status),
+			"type":   aws.StringValue(s.Type),
+		})
+	}
+	return result
+}

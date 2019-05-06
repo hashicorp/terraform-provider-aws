@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/aws/aws-sdk-go/service/kinesis"
-	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/aws/aws-sdk-go/service/route53"
@@ -1227,65 +1226,6 @@ func TestNormalizeCloudFormationTemplate(t *testing.T) {
 	}
 	if actual != validNormalizedYaml {
 		t.Fatalf("Got:\n\n%s\n\nExpected:\n\n%s\n", actual, validNormalizedYaml)
-	}
-}
-
-func TestFlattenOrgRoots(t *testing.T) {
-	roots := []*organizations.Root{
-		{
-			Name: aws.String("Root1"),
-			Arn:  aws.String("arn:1"),
-			Id:   aws.String("r-1"),
-			PolicyTypes: []*organizations.PolicyTypeSummary{
-				{
-					Status: aws.String("ENABLED"),
-					Type:   aws.String("SERVICE_CONTROL_POLICY"),
-				},
-				{
-					Status: aws.String("DISABLED"),
-					Type:   aws.String("SERVICE_CONTROL_POLICY"),
-				},
-			},
-		},
-	}
-	result := flattenOrgRoots(roots)
-
-	if len(result) != len(roots) {
-		t.Fatalf("expected result to have %d elements, got %d", len(roots), len(result))
-	}
-
-	for i, r := range roots {
-		if aws.StringValue(r.Name) != result[i]["name"] {
-			t.Fatalf(`expected result[%d]["name"] to equal %q, got %q`, i, aws.StringValue(r.Name), result[i]["name"])
-		}
-		if aws.StringValue(r.Arn) != result[i]["arn"] {
-			t.Fatalf(`expected result[%d]["arn"] to equal %q, got %q`, i, aws.StringValue(r.Arn), result[i]["arn"])
-		}
-		if aws.StringValue(r.Id) != result[i]["id"] {
-			t.Fatalf(`expected result[%d]["id"] to equal %q, got %q`, i, aws.StringValue(r.Id), result[i]["id"])
-		}
-		if result[i]["policy_types"] == nil {
-			continue
-		}
-		if types, ok := result[i]["policy_types"].([]map[string]interface{}); ok {
-			testFlattenOrgRootPolicyTypes(t, i, types, r.PolicyTypes)
-			continue
-		}
-		t.Fatalf(`result[%d]["policy_types"] could not be converted to []map[string]interface{}`, i)
-	}
-}
-
-func testFlattenOrgRootPolicyTypes(t *testing.T, index int, result []map[string]interface{}, types []*organizations.PolicyTypeSummary) {
-	if len(result) != len(types) {
-		t.Fatalf(`expected result[%d]["policy_types"] to have %d elements, got %d`, index, len(types), len(result))
-	}
-	for i, v := range types {
-		if aws.StringValue(v.Status) != result[i]["status"] {
-			t.Fatalf(`expected result[%d]["policy_types"][%d]["status"] to equal %q, got %q`, index, i, aws.StringValue(v.Status), result[i]["status"])
-		}
-		if aws.StringValue(v.Type) != result[i]["type"] {
-			t.Fatalf(`expected result[%d]["policy_types"][%d]["type"] to equal %q, got %q`, index, i, aws.StringValue(v.Type), result[i]["type"])
-		}
 	}
 }
 
