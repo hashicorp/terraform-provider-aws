@@ -1,4 +1,9 @@
 ## 2.10.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_organizations_organization: Add `roots` attribute [GH-8399]
+
 ## 2.9.0 (May 06, 2019)
 
 FEATURES:
