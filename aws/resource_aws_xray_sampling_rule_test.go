@@ -23,32 +23,82 @@ func TestAccAWSXraySamplingRule_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSXraySamplingRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSXraySamplingRule_basic(ruleName, acctest.RandIntRange(0, 9999), acctest.RandIntRange(0, 2147483647)),
+				Config: testAccAWSXraySamplingRuleConfig_basic(ruleName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckXraySamplingRuleExists(resourceName, &samplingRule),
 					testAccCheckResourceAttrRegionalARN(resourceName, "rule_arn", "xray", fmt.Sprintf("sampling-rule/%s", ruleName)),
+					resource.TestCheckResourceAttrSet(resourceName, "priority"),
+					resource.TestCheckResourceAttrSet(resourceName, "version"),
+					resource.TestCheckResourceAttrSet(resourceName, "reservoir_size"),
+					resource.TestCheckResourceAttrSet(resourceName, "url_path"),
+					resource.TestCheckResourceAttrSet(resourceName, "host"),
+					resource.TestCheckResourceAttrSet(resourceName, "http_method"),
+					resource.TestCheckResourceAttrSet(resourceName, "fixed_rate"),
+					resource.TestCheckResourceAttrSet(resourceName, "resource_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "service_name"),
+					resource.TestCheckResourceAttrSet(resourceName, "service_type"),
+					resource.TestCheckResourceAttr(resourceName, "attributes.%", "1"),
 				),
 			},
 		},
 	})
 }
 
-func testAccAWSXraySamplingRule_basic(ruleName string, priority int, reservoirSize int) string {
-	return fmt.Sprintf(`
-resource "aws_xray_sampling_rule" "test" {
-	rule_name = "%s"
-	priority = %d
-	version = 1
-	reservoir_size = %d
-	url_path = "*"
-	host = "*"
-	http_method = "GET"
-	service_type = "*"
-	service_name = "*"
-	fixed_rate = 0.3
-	resource_arn = "*"
+func TestAccAWSXraySamplingRule_update(t *testing.T) {
+	var samplingRule xray.SamplingRule
+	resourceName := "aws_xray_sampling_rule.test"
+	rString := acctest.RandString(8)
+	ruleName := fmt.Sprintf("tf_acc_sampling_rule_%s", rString)
+	updatedPriority := acctest.RandIntRange(0, 9999)
+	updatedReservoirSize := acctest.RandIntRange(0, 2147483647)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSXraySamplingRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSXraySamplingRuleConfig_update(ruleName, acctest.RandIntRange(0, 9999), acctest.RandIntRange(0, 2147483647)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckXraySamplingRuleExists(resourceName, &samplingRule),
+					testAccCheckResourceAttrRegionalARN(resourceName, "rule_arn", "xray", fmt.Sprintf("sampling-rule/%s", ruleName)),
+					resource.TestCheckResourceAttr(resourceName, "attributes.%", "0"),
+				),
+			},
+			{ // Update attributes
+				Config: testAccAWSXraySamplingRuleConfig_update(ruleName, updatedPriority, updatedReservoirSize),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckXraySamplingRuleExists(resourceName, &samplingRule),
+					testAccCheckResourceAttrRegionalARN(resourceName, "rule_arn", "xray", fmt.Sprintf("sampling-rule/%s", ruleName)),
+					resource.TestCheckResourceAttr(resourceName, "priority", fmt.Sprintf("%d", updatedPriority)),
+					resource.TestCheckResourceAttr(resourceName, "reservoir_size", fmt.Sprintf("%d", updatedReservoirSize)),
+					resource.TestCheckResourceAttr(resourceName, "attributes.%", "0"),
+				),
+			},
+		},
+	})
 }
-`, ruleName, priority, reservoirSize)
+
+func TestAccAWSXraySamplingRule_import(t *testing.T) {
+	resourceName := "aws_xray_sampling_rule.test"
+	rString := acctest.RandString(8)
+	ruleName := fmt.Sprintf("tf_acc_sampling_rule_%s", rString)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSIotThingTypeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSXraySamplingRuleConfig_basic(ruleName),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
 }
 
 func testAccCheckXraySamplingRuleExists(n string, samplingRule *xray.SamplingRule) resource.TestCheckFunc {
@@ -110,4 +160,43 @@ func getSamplingRule(ruleName string) (*xray.SamplingRule, error) {
 		params.NextToken = out.NextToken
 	}
 	return nil, fmt.Errorf("XRay Sampling Rule: %s not found found", ruleName)
+}
+
+func testAccAWSXraySamplingRuleConfig_basic(ruleName string) string {
+	return fmt.Sprintf(`
+resource "aws_xray_sampling_rule" "test" {
+	rule_name = "%s"
+	priority = 5
+	version = 1
+	reservoir_size = 10
+	url_path = "*"
+	host = "*"
+	http_method = "GET"
+	service_type = "*"
+	service_name = "*"
+	fixed_rate = 0.3
+	resource_arn = "*"
+	attributes = {
+		Hello = "World"
+	}
+}
+`, ruleName)
+}
+
+func testAccAWSXraySamplingRuleConfig_update(ruleName string, priority int, reservoirSize int) string {
+	return fmt.Sprintf(`
+resource "aws_xray_sampling_rule" "test" {
+	rule_name = "%s"
+	priority = %d
+	version = 1
+	reservoir_size = %d
+	url_path = "*"
+	host = "*"
+	http_method = "GET"
+	service_type = "*"
+	service_name = "*"
+	fixed_rate = 0.3
+	resource_arn = "*"
+}
+`, ruleName, priority, reservoirSize)
 }
