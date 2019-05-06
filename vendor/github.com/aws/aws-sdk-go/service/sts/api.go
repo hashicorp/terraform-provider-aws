@@ -55,18 +55,17 @@ func (c *STS) AssumeRoleRequest(input *AssumeRoleInput) (req *request.Request, o
 
 // AssumeRole API operation for AWS Security Token Service.
 //
-// Returns a set of temporary security credentials (consisting of an access
-// key ID, a secret access key, and a security token) that you can use to access
-// AWS resources that you might not normally have access to. Typically, you
-// use AssumeRole for cross-account access or federation. For a comparison of
-// AssumeRole with the other APIs that produce temporary credentials, see Requesting
-// Temporary Security Credentials (http://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_request.html)
-// and Comparing the AWS STS APIs (http://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_request.html#stsapi_comparison)
+// Returns a set of temporary security credentials that you can use to access
+// AWS resources that you might not normally have access to. These temporary
+// credentials consist of an access key ID, a secret access key, and a security
+// token. Typically, you use AssumeRole for cross-account access or federation.
+// For a comparison of AssumeRole with other API operations that produce temporary
+// credentials, see Requesting Temporary Security Credentials (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_request.html)
+// and Comparing the AWS STS API operations (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_request.html#stsapi_comparison)
 // in the IAM User Guide.
 //
-// Important: You cannot call AssumeRole by using AWS root account credentials;
-// access is denied. You must use credentials for an IAM user or an IAM role
-// to call AssumeRole.
+// You cannot use AWS account root user credentials to call AssumeRole. You
+// must use credentials for an IAM user or an IAM role to call AssumeRole.
 //
 // For cross-account access, imagine that you own multiple accounts and need
 // to access resources in each account. You could create long-term credentials
@@ -75,18 +74,18 @@ func (c *STS) AssumeRoleRequest(input *AssumeRoleInput) (req *request.Request, o
 // Instead, you can create one set of long-term credentials in one account and
 // then use temporary security credentials to access all the other accounts
 // by assuming roles in those accounts. For more information about roles, see
-// IAM Roles (Delegation and Federation) (http://docs.aws.amazon.com/IAM/latest/UserGuide/roles-toplevel.html)
+// IAM Roles (Delegation and Federation) (https://docs.aws.amazon.com/IAM/latest/UserGuide/roles-toplevel.html)
 // in the IAM User Guide.
 //
 // For federation, you can, for example, grant single sign-on access to the
 // AWS Management Console. If you already have an identity and authentication
-// system in your corporate network, you don't have to recreate user identities
-// in AWS in order to grant those user identities access to AWS. Instead, after
-// a user has been authenticated, you call AssumeRole (and specify the role
-// with the appropriate permissions) to get temporary security credentials for
-// that user. With those temporary security credentials, you construct a sign-in
-// URL that users can use to access the console. For more information, see Common
-// Scenarios for Temporary Credentials (http://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp.html#sts-introduction)
+// system in your network, you don't have to recreate identities in AWS in order
+// to grant them access to AWS. Instead, after a user has been authenticated,
+// you call AssumeRole (and specify the role with the appropriate permissions)
+// to get temporary security credentials for that user. With those temporary
+// security credentials, you construct a sign-in URL from which users can access
+// the console. For more information, see Common Scenarios for Temporary Credentials
+// (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp.html#sts-introduction)
 // in the IAM User Guide.
 //
 // By default, the temporary security credentials created by AssumeRole last
@@ -95,29 +94,25 @@ func (c *STS) AssumeRoleRequest(input *AssumeRoleInput) (req *request.Request, o
 // seconds (15 minutes) up to the maximum session duration setting for the role.
 // This setting can have a value from 1 hour to 12 hours. To learn how to view
 // the maximum value for your role, see View the Maximum Session Duration Setting
-// for a Role (http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use.html#id_roles_use_view-role-max-session)
+// for a Role (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use.html#id_roles_use_view-role-max-session)
 // in the IAM User Guide. The maximum session duration limit applies when you
-// use the AssumeRole* API operations or the assume-role* CLI operations but
-// does not apply when you use those operations to create a console URL. For
-// more information, see Using IAM Roles (http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use.html)
+// use the AssumeRole* API operations or the assume-role* CLI commands. However
+// the limit does not apply when you use those operations to create a console
+// URL. For more information, see Using IAM Roles (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use.html)
 // in the IAM User Guide.
 //
 // The temporary security credentials created by AssumeRole can be used to make
-// API calls to any AWS service with the following exception: you cannot call
-// the STS service's GetFederationToken or GetSessionToken APIs.
+// API calls to any AWS service with the following exception: You cannot call
+// the AWS STS service's GetFederationToken or GetSessionToken API operations.
 //
-// Optionally, you can pass an IAM access policy to this operation. If you choose
-// not to pass a policy, the temporary security credentials that are returned
-// by the operation have the permissions that are defined in the access policy
-// of the role that is being assumed. If you pass a policy to this operation,
-// the temporary security credentials that are returned by the operation have
-// the permissions that are allowed by both the access policy of the role that
-// is being assumed, and the policy that you pass. This gives you a way to further
-// restrict the permissions for the resulting temporary security credentials.
-// You cannot use the passed policy to grant permissions that are in excess
-// of those allowed by the access policy of the role that is being assumed.
-// For more information, see Permissions for AssumeRole, AssumeRoleWithSAML,
-// and AssumeRoleWithWebIdentity (http://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_control-access_assumerole.html)
+// (Optional) You can pass an IAM permissions policy to this operation. If you
+// pass a policy to this operation, the resulting temporary credentials have
+// the permissions of the assumed role and the policy that you pass. This gives
+// you a way to further restrict the permissions for the resulting temporary
+// security credentials. You cannot use the passed policy to grant permissions
+// that are in excess of those allowed by the permissions policy of the role
+// that is being assumed. For more information, see  Permissions for AssumeRole,
+// AssumeRoleWithSAML, and AssumeRoleWithWebIdentity  (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_control-access_assumerole.html)
 // in the IAM User Guide.
 //
 // To assume a role, your AWS account must be trusted by the role. The trust
@@ -126,38 +121,43 @@ func (c *STS) AssumeRoleRequest(input *AssumeRoleInput) (req *request.Request, o
 // this account's role.
 //
 // The user who wants to access the role must also have permissions delegated
-// from the role's administrator. If the user is in a different account than
-// the role, then the user's administrator must attach a policy that allows
-// the user to call AssumeRole on the ARN of the role in the other account.
-// If the user is in the same account as the role, then you can either attach
-// a policy to the user (identical to the previous different account user),
-// or you can add the user as a principal directly in the role's trust policy.
+// from the role's administrator. If the user and the role are in a different
+// account, then the user's administrator must attach a policy. That attached
+// policy must allow the user to call AssumeRole for the ARN of the role in
+// the other account. If the user is in the same account as the role, then you
+// can do either of the following:
+//
+//    * Attach a policy to the user (identical to the previous user in a different
+//    account)
+//
+//    * Add the user as a principal directly in the role's trust policy.
+//
 // In this case, the trust policy acts as the only resource-based policy in
-// IAM, and users in the same account as the role do not need explicit permission
+// IAM. Users in the same account as the role do not need explicit permission
 // to assume the role. For more information about trust policies and resource-based
-// policies, see IAM Policies (http://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies.html)
+// policies, see IAM Policies (https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies.html)
 // in the IAM User Guide.
 //
 // Using MFA with AssumeRole
 //
-// You can optionally include multi-factor authentication (MFA) information
+// (Optional) You can include multi-factor authentication (MFA) information
 // when you call AssumeRole. This is useful for cross-account scenarios in which
 // you want to make sure that the user who is assuming the role has been authenticated
 // using an AWS MFA device. In that scenario, the trust policy of the role being
-// assumed includes a condition that tests for MFA authentication; if the caller
+// assumed includes a condition that tests for MFA authentication. If the caller
 // does not include valid MFA information, the request to assume the role is
 // denied. The condition in a trust policy that tests for MFA authentication
 // might look like the following example.
 //
 // "Condition": {"Bool": {"aws:MultiFactorAuthPresent": true}}
 //
-// For more information, see Configuring MFA-Protected API Access (http://docs.aws.amazon.com/IAM/latest/UserGuide/MFAProtectedAPI.html)
+// For more information, see Configuring MFA-Protected API Access (https://docs.aws.amazon.com/IAM/latest/UserGuide/MFAProtectedAPI.html)
 // in the IAM User Guide guide.
 //
 // To use MFA with AssumeRole, you pass values for the SerialNumber and TokenCode
 // parameters. The SerialNumber value identifies the user's hardware or virtual
 // MFA device. The TokenCode is the time-based one-time password (TOTP) that
-// the MFA devices produces.
+// the MFA device produces.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -180,7 +180,7 @@ func (c *STS) AssumeRoleRequest(input *AssumeRoleInput) (req *request.Request, o
 //   STS is not activated in the requested region for the account that is being
 //   asked to generate credentials. The account administrator must use the IAM
 //   console to activate STS in that region. For more information, see Activating
-//   and Deactivating AWS STS in an AWS Region (http://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_enable-regions.html)
+//   and Deactivating AWS STS in an AWS Region (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_enable-regions.html)
 //   in the IAM User Guide.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sts-2011-06-15/AssumeRole
@@ -254,9 +254,9 @@ func (c *STS) AssumeRoleWithSAMLRequest(input *AssumeRoleWithSAMLInput) (req *re
 // via a SAML authentication response. This operation provides a mechanism for
 // tying an enterprise identity store or directory to role-based AWS access
 // without user-specific credentials or configuration. For a comparison of AssumeRoleWithSAML
-// with the other APIs that produce temporary credentials, see Requesting Temporary
-// Security Credentials (http://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_request.html)
-// and Comparing the AWS STS APIs (http://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_request.html#stsapi_comparison)
+// with the other API operations that produce temporary credentials, see Requesting
+// Temporary Security Credentials (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_request.html)
+// and Comparing the AWS STS API operations (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_request.html#stsapi_comparison)
 // in the IAM User Guide.
 //
 // The temporary security credentials returned by this operation consist of
@@ -271,37 +271,32 @@ func (c *STS) AssumeRoleWithSAMLRequest(input *AssumeRoleWithSAMLInput) (req *re
 // a DurationSeconds value from 900 seconds (15 minutes) up to the maximum session
 // duration setting for the role. This setting can have a value from 1 hour
 // to 12 hours. To learn how to view the maximum value for your role, see View
-// the Maximum Session Duration Setting for a Role (http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use.html#id_roles_use_view-role-max-session)
+// the Maximum Session Duration Setting for a Role (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use.html#id_roles_use_view-role-max-session)
 // in the IAM User Guide. The maximum session duration limit applies when you
-// use the AssumeRole* API operations or the assume-role* CLI operations but
-// does not apply when you use those operations to create a console URL. For
-// more information, see Using IAM Roles (http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use.html)
+// use the AssumeRole* API operations or the assume-role* CLI commands. However
+// the limit does not apply when you use those operations to create a console
+// URL. For more information, see Using IAM Roles (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use.html)
 // in the IAM User Guide.
 //
 // The temporary security credentials created by AssumeRoleWithSAML can be used
 // to make API calls to any AWS service with the following exception: you cannot
-// call the STS service's GetFederationToken or GetSessionToken APIs.
+// call the STS service's GetFederationToken or GetSessionToken API operations.
 //
-// Optionally, you can pass an IAM access policy to this operation. If you choose
-// not to pass a policy, the temporary security credentials that are returned
-// by the operation have the permissions that are defined in the access policy
-// of the role that is being assumed. If you pass a policy to this operation,
-// the temporary security credentials that are returned by the operation have
-// the permissions that are allowed by the intersection of both the access policy
-// of the role that is being assumed, and the policy that you pass. This means
-// that both policies must grant the permission for the action to be allowed.
-// This gives you a way to further restrict the permissions for the resulting
-// temporary security credentials. You cannot use the passed policy to grant
-// permissions that are in excess of those allowed by the access policy of the
-// role that is being assumed. For more information, see Permissions for AssumeRole,
-// AssumeRoleWithSAML, and AssumeRoleWithWebIdentity (http://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_control-access_assumerole.html)
+// Optionally, you can pass an IAM permissions policy to this operation. If
+// you pass a policy to this operation, the resulting temporary credentials
+// have the permissions of the assumed role and the policy that you pass. This
+// gives you a way to further restrict the permissions for the resulting temporary
+// security credentials. You cannot use the passed policy to grant permissions
+// that are in excess of those allowed by the permissions policy of the role
+// that is being assumed. For more information, see  Permissions for AssumeRole,
+// AssumeRoleWithSAML, and AssumeRoleWithWebIdentity  (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_control-access_assumerole.html)
 // in the IAM User Guide.
 //
 // Before your application can call AssumeRoleWithSAML, you must configure your
 // SAML identity provider (IdP) to issue the claims required by AWS. Additionally,
 // you must use AWS Identity and Access Management (IAM) to create a SAML provider
-// entity in your AWS account that represents your identity provider, and create
-// an IAM role that specifies this SAML provider in its trust policy.
+// entity in your AWS account that represents your identity provider. You must
+// also create an IAM role that specifies this SAML provider in its trust policy.
 //
 // Calling AssumeRoleWithSAML does not require the use of AWS security credentials.
 // The identity of the caller is validated by using keys in the metadata document
@@ -315,16 +310,16 @@ func (c *STS) AssumeRoleWithSAMLRequest(input *AssumeRoleWithSAMLInput) (req *re
 //
 // For more information, see the following resources:
 //
-//    * About SAML 2.0-based Federation (http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_providers_saml.html)
+//    * About SAML 2.0-based Federation (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_providers_saml.html)
 //    in the IAM User Guide.
 //
-//    * Creating SAML Identity Providers (http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_providers_create_saml.html)
+//    * Creating SAML Identity Providers (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_providers_create_saml.html)
 //    in the IAM User Guide.
 //
-//    * Configuring a Relying Party and Claims (http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_providers_create_saml_relying-party.html)
+//    * Configuring a Relying Party and Claims (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_providers_create_saml_relying-party.html)
 //    in the IAM User Guide.
 //
-//    * Creating a Role for SAML 2.0 Federation (http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-idp_saml.html)
+//    * Creating a Role for SAML 2.0 Federation (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-idp_saml.html)
 //    in the IAM User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -363,7 +358,7 @@ func (c *STS) AssumeRoleWithSAMLRequest(input *AssumeRoleWithSAMLInput) (req *re
 //   STS is not activated in the requested region for the account that is being
 //   asked to generate credentials. The account administrator must use the IAM
 //   console to activate STS in that region. For more information, see Activating
-//   and Deactivating AWS STS in an AWS Region (http://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_enable-regions.html)
+//   and Deactivating AWS STS in an AWS Region (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_enable-regions.html)
 //   in the IAM User Guide.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sts-2011-06-15/AssumeRoleWithSAML
@@ -434,35 +429,36 @@ func (c *STS) AssumeRoleWithWebIdentityRequest(input *AssumeRoleWithWebIdentityI
 // AssumeRoleWithWebIdentity API operation for AWS Security Token Service.
 //
 // Returns a set of temporary security credentials for users who have been authenticated
-// in a mobile or web application with a web identity provider, such as Amazon
-// Cognito, Login with Amazon, Facebook, Google, or any OpenID Connect-compatible
-// identity provider.
+// in a mobile or web application with a web identity provider. Example providers
+// include Amazon Cognito, Login with Amazon, Facebook, Google, or any OpenID
+// Connect-compatible identity provider.
 //
 // For mobile applications, we recommend that you use Amazon Cognito. You can
-// use Amazon Cognito with the AWS SDK for iOS (http://aws.amazon.com/sdkforios/)
-// and the AWS SDK for Android (http://aws.amazon.com/sdkforandroid/) to uniquely
-// identify a user and supply the user with a consistent identity throughout
-// the lifetime of an application.
+// use Amazon Cognito with the AWS SDK for iOS Developer Guide (http://aws.amazon.com/sdkforios/)
+// and the AWS SDK for Android Developer Guide (http://aws.amazon.com/sdkforandroid/)
+// to uniquely identify a user. You can also supply the user with a consistent
+// identity throughout the lifetime of an application.
 //
-// To learn more about Amazon Cognito, see Amazon Cognito Overview (http://docs.aws.amazon.com/mobile/sdkforandroid/developerguide/cognito-auth.html#d0e840)
+// To learn more about Amazon Cognito, see Amazon Cognito Overview (https://docs.aws.amazon.com/mobile/sdkforandroid/developerguide/cognito-auth.html#d0e840)
 // in the AWS SDK for Android Developer Guide guide and Amazon Cognito Overview
-// (http://docs.aws.amazon.com/mobile/sdkforios/developerguide/cognito-auth.html#d0e664)
+// (https://docs.aws.amazon.com/mobile/sdkforios/developerguide/cognito-auth.html#d0e664)
 // in the AWS SDK for iOS Developer Guide.
 //
 // Calling AssumeRoleWithWebIdentity does not require the use of AWS security
 // credentials. Therefore, you can distribute an application (for example, on
 // mobile devices) that requests temporary security credentials without including
-// long-term AWS credentials in the application, and without deploying server-based
-// proxy services that use long-term AWS credentials. Instead, the identity
-// of the caller is validated by using a token from the web identity provider.
-// For a comparison of AssumeRoleWithWebIdentity with the other APIs that produce
-// temporary credentials, see Requesting Temporary Security Credentials (http://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_request.html)
-// and Comparing the AWS STS APIs (http://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_request.html#stsapi_comparison)
+// long-term AWS credentials in the application. You also don't need to deploy
+// server-based proxy services that use long-term AWS credentials. Instead,
+// the identity of the caller is validated by using a token from the web identity
+// provider. For a comparison of AssumeRoleWithWebIdentity with the other API
+// operations that produce temporary credentials, see Requesting Temporary Security
+// Credentials (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_request.html)
+// and Comparing the AWS STS API operations (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_request.html#stsapi_comparison)
 // in the IAM User Guide.
 //
 // The temporary security credentials returned by this API consist of an access
 // key ID, a secret access key, and a security token. Applications can use these
-// temporary security credentials to sign calls to AWS service APIs.
+// temporary security credentials to sign calls to AWS service API operations.
 //
 // By default, the temporary security credentials created by AssumeRoleWithWebIdentity
 // last for one hour. However, you can use the optional DurationSeconds parameter
@@ -470,29 +466,26 @@ func (c *STS) AssumeRoleWithWebIdentityRequest(input *AssumeRoleWithWebIdentityI
 // seconds (15 minutes) up to the maximum session duration setting for the role.
 // This setting can have a value from 1 hour to 12 hours. To learn how to view
 // the maximum value for your role, see View the Maximum Session Duration Setting
-// for a Role (http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use.html#id_roles_use_view-role-max-session)
+// for a Role (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use.html#id_roles_use_view-role-max-session)
 // in the IAM User Guide. The maximum session duration limit applies when you
-// use the AssumeRole* API operations or the assume-role* CLI operations but
-// does not apply when you use those operations to create a console URL. For
-// more information, see Using IAM Roles (http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use.html)
+// use the AssumeRole* API operations or the assume-role* CLI commands. However
+// the limit does not apply when you use those operations to create a console
+// URL. For more information, see Using IAM Roles (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use.html)
 // in the IAM User Guide.
 //
 // The temporary security credentials created by AssumeRoleWithWebIdentity can
 // be used to make API calls to any AWS service with the following exception:
-// you cannot call the STS service's GetFederationToken or GetSessionToken APIs.
+// you cannot call the STS service's GetFederationToken or GetSessionToken API
+// operations.
 //
-// Optionally, you can pass an IAM access policy to this operation. If you choose
-// not to pass a policy, the temporary security credentials that are returned
-// by the operation have the permissions that are defined in the access policy
-// of the role that is being assumed. If you pass a policy to this operation,
-// the temporary security credentials that are returned by the operation have
-// the permissions that are allowed by both the access policy of the role that
-// is being assumed, and the policy that you pass. This gives you a way to further
-// restrict the permissions for the resulting temporary security credentials.
-// You cannot use the passed policy to grant permissions that are in excess
-// of those allowed by the access policy of the role that is being assumed.
-// For more information, see Permissions for AssumeRole, AssumeRoleWithSAML,
-// and AssumeRoleWithWebIdentity (http://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_control-access_assumerole.html)
+// (Optional) You can pass an IAM permissions policy to this operation. If you
+// pass a policy to this operation, the resulting temporary credentials have
+// the permissions of the assumed role and the policy that you pass. This gives
+// you a way to further restrict the permissions for the resulting temporary
+// security credentials. You cannot use the passed policy to grant permissions
+// that are in excess of those allowed by the permissions policy of the role
+// that is being assumed. For more information, see  Permissions for AssumeRole,
+// AssumeRoleWithSAML, and AssumeRoleWithWebIdentity  (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_control-access_assumerole.html)
 // in the IAM User Guide.
 //
 // Before your application can call AssumeRoleWithWebIdentity, you must have
@@ -511,21 +504,20 @@ func (c *STS) AssumeRoleWithWebIdentityRequest(input *AssumeRoleWithWebIdentityI
 // For more information about how to use web identity federation and the AssumeRoleWithWebIdentity
 // API, see the following resources:
 //
-//    * Using Web Identity Federation APIs for Mobile Apps (http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_providers_oidc_manual.html)
-//    and Federation Through a Web-based Identity Provider (http://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_request.html#api_assumerolewithwebidentity).
+//    * Using Web Identity Federation API Operations for Mobile Apps (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_providers_oidc_manual.html)
+//    and Federation Through a Web-based Identity Provider (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_request.html#api_assumerolewithwebidentity).
 //
 //
 //    *  Web Identity Federation Playground (https://web-identity-federation-playground.s3.amazonaws.com/index.html).
-//    This interactive website lets you walk through the process of authenticating
-//    via Login with Amazon, Facebook, or Google, getting temporary security
-//    credentials, and then using those credentials to make a request to AWS.
+//    Walk through the process of authenticating through Login with Amazon,
+//    Facebook, or Google, getting temporary security credentials, and then
+//    using those credentials to make a request to AWS.
 //
-//
-//    * AWS SDK for iOS (http://aws.amazon.com/sdkforios/) and AWS SDK for Android
-//    (http://aws.amazon.com/sdkforandroid/). These toolkits contain sample
-//    apps that show how to invoke the identity providers, and then how to use
-//    the information from these providers to get and use temporary security
-//    credentials.
+//    * AWS SDK for iOS Developer Guide (http://aws.amazon.com/sdkforios/) and
+//    AWS SDK for Android Developer Guide (http://aws.amazon.com/sdkforandroid/).
+//    These toolkits contain sample apps that show how to invoke the identity
+//    providers, and then how to use the information from these providers to
+//    get and use temporary security credentials.
 //
 //    * Web Identity Federation with Mobile Applications (http://aws.amazon.com/articles/web-identity-federation-with-mobile-applications).
 //    This article discusses web identity federation and shows an example of
@@ -575,7 +567,7 @@ func (c *STS) AssumeRoleWithWebIdentityRequest(input *AssumeRoleWithWebIdentityI
 //   STS is not activated in the requested region for the account that is being
 //   asked to generate credentials. The account administrator must use the IAM
 //   console to activate STS in that region. For more information, see Activating
-//   and Deactivating AWS STS in an AWS Region (http://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_enable-regions.html)
+//   and Deactivating AWS STS in an AWS Region (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_enable-regions.html)
 //   in the IAM User Guide.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sts-2011-06-15/AssumeRoleWithWebIdentity
@@ -647,17 +639,17 @@ func (c *STS) DecodeAuthorizationMessageRequest(input *DecodeAuthorizationMessag
 // Decodes additional information about the authorization status of a request
 // from an encoded message returned in response to an AWS request.
 //
-// For example, if a user is not authorized to perform an action that he or
-// she has requested, the request returns a Client.UnauthorizedOperation response
-// (an HTTP 403 response). Some AWS actions additionally return an encoded message
-// that can provide details about this authorization failure.
+// For example, if a user is not authorized to perform an operation that he
+// or she has requested, the request returns a Client.UnauthorizedOperation
+// response (an HTTP 403 response). Some AWS operations additionally return
+// an encoded message that can provide details about this authorization failure.
 //
-// Only certain AWS actions return an encoded authorization message. The documentation
-// for an individual action indicates whether that action returns an encoded
-// message in addition to returning an HTTP code.
+// Only certain AWS operations return an encoded authorization message. The
+// documentation for an individual operation indicates whether that operation
+// returns an encoded message in addition to returning an HTTP code.
 //
 // The message is encoded because the details of the authorization status can
-// constitute privileged information that the user who requested the action
+// constitute privileged information that the user who requested the operation
 // should not see. To decode an authorization status message, a user must be
 // granted permissions via an IAM policy to request the DecodeAuthorizationMessage
 // (sts:DecodeAuthorizationMessage) action.
@@ -666,7 +658,7 @@ func (c *STS) DecodeAuthorizationMessageRequest(input *DecodeAuthorizationMessag
 //
 //    * Whether the request was denied due to an explicit deny or due to the
 //    absence of an explicit allow. For more information, see Determining Whether
-//    a Request is Allowed or Denied (http://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_evaluation-logic.html#policy-eval-denyallow)
+//    a Request is Allowed or Denied (https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_evaluation-logic.html#policy-eval-denyallow)
 //    in the IAM User Guide.
 //
 //    * The principal who made the request.
@@ -834,81 +826,58 @@ func (c *STS) GetFederationTokenRequest(input *GetFederationTokenInput) (req *re
 // Returns a set of temporary security credentials (consisting of an access
 // key ID, a secret access key, and a security token) for a federated user.
 // A typical use is in a proxy application that gets temporary security credentials
-// on behalf of distributed applications inside a corporate network. Because
-// you must call the GetFederationToken action using the long-term security
-// credentials of an IAM user, this call is appropriate in contexts where those
+// on behalf of distributed applications inside a corporate network. You must
+// call the GetFederationToken operation using the long-term security credentials
+// of an IAM user. As a result, this call is appropriate in contexts where those
 // credentials can be safely stored, usually in a server-based application.
-// For a comparison of GetFederationToken with the other APIs that produce temporary
-// credentials, see Requesting Temporary Security Credentials (http://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_request.html)
-// and Comparing the AWS STS APIs (http://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_request.html#stsapi_comparison)
+// For a comparison of GetFederationToken with the other API operations that
+// produce temporary credentials, see Requesting Temporary Security Credentials
+// (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_request.html)
+// and Comparing the AWS STS API operations (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_request.html#stsapi_comparison)
 // in the IAM User Guide.
 //
-// If you are creating a mobile-based or browser-based app that can authenticate
+// You can create a mobile-based or browser-based app that can authenticate
 // users using a web identity provider like Login with Amazon, Facebook, Google,
-// or an OpenID Connect-compatible identity provider, we recommend that you
-// use Amazon Cognito (http://aws.amazon.com/cognito/) or AssumeRoleWithWebIdentity.
+// or an OpenID Connect-compatible identity provider. In this case, we recommend
+// that you use Amazon Cognito (http://aws.amazon.com/cognito/) or AssumeRoleWithWebIdentity.
 // For more information, see Federation Through a Web-based Identity Provider
-// (http://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_request.html#api_assumerolewithwebidentity).
+// (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_request.html#api_assumerolewithwebidentity).
 //
-// The GetFederationToken action must be called by using the long-term AWS security
-// credentials of an IAM user. You can also call GetFederationToken using the
-// security credentials of an AWS root account, but we do not recommended it.
-// Instead, we recommend that you create an IAM user for the purpose of the
-// proxy application and then attach a policy to the IAM user that limits federated
-// users to only the actions and resources that they need access to. For more
-// information, see IAM Best Practices (http://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html)
+// You can also call GetFederationToken using the security credentials of an
+// AWS account root user, but we do not recommend it. Instead, we recommend
+// that you create an IAM user for the purpose of the proxy application. Then
+// attach a policy to the IAM user that limits federated users to only the actions
+// and resources that they need to access. For more information, see IAM Best
+// Practices (https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html)
 // in the IAM User Guide.
 //
-// The temporary security credentials that are obtained by using the long-term
-// credentials of an IAM user are valid for the specified duration, from 900
-// seconds (15 minutes) up to a maximium of 129600 seconds (36 hours). The default
-// is 43200 seconds (12 hours). Temporary credentials that are obtained by using
-// AWS root account credentials have a maximum duration of 3600 seconds (1 hour).
+// The temporary credentials are valid for the specified duration, from 900
+// seconds (15 minutes) up to a maximum of 129,600 seconds (36 hours). The default
+// is 43,200 seconds (12 hours). Temporary credentials that are obtained by
+// using AWS account root user credentials have a maximum duration of 3,600
+// seconds (1 hour).
 //
 // The temporary security credentials created by GetFederationToken can be used
 // to make API calls to any AWS service with the following exceptions:
 //
-//    * You cannot use these credentials to call any IAM APIs.
+//    * You cannot use these credentials to call any IAM API operations.
 //
-//    * You cannot call any STS APIs except GetCallerIdentity.
+//    * You cannot call any STS API operations except GetCallerIdentity.
 //
 // Permissions
 //
-// The permissions for the temporary security credentials returned by GetFederationToken
-// are determined by a combination of the following:
-//
-//    * The policy or policies that are attached to the IAM user whose credentials
-//    are used to call GetFederationToken.
-//
-//    * The policy that is passed as a parameter in the call.
-//
-// The passed policy is attached to the temporary security credentials that
-// result from the GetFederationToken API call--that is, to the federated user.
-// When the federated user makes an AWS request, AWS evaluates the policy attached
-// to the federated user in combination with the policy or policies attached
-// to the IAM user whose credentials were used to call GetFederationToken. AWS
-// allows the federated user's request only when both the federated user and
-// the IAM user are explicitly allowed to perform the requested action. The
-// passed policy cannot grant more permissions than those that are defined in
-// the IAM user policy.
-//
-// A typical use case is that the permissions of the IAM user whose credentials
-// are used to call GetFederationToken are designed to allow access to all the
-// actions and resources that any federated user will need. Then, for individual
-// users, you pass a policy to the operation that scopes down the permissions
-// to a level that's appropriate to that individual user, using a policy that
-// allows only a subset of permissions that are granted to the IAM user.
-//
-// If you do not pass a policy, the resulting temporary security credentials
-// have no effective permissions. The only exception is when the temporary security
-// credentials are used to access a resource that has a resource-based policy
-// that specifically allows the federated user to access the resource.
-//
-// For more information about how permissions work, see Permissions for GetFederationToken
-// (http://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_control-access_getfederationtoken.html).
+// You must pass an IAM permissions policy to GetFederationToken. When you pass
+// a policy to this operation, the resulting temporary credentials are defined
+// by the intersection of your IAM user policies and the passed policy . The
+// passed policy defines the permissions of the federated user. AWS allows the
+// federated user's request only when both the attached policy and the IAM user
+// policy explicitly allow the federated user to perform the requested action.
+// The passed policy cannot grant more permissions than those that are defined
+// in the IAM user policy. For more information about how permissions work,
+// see Permissions for GetFederationToken (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_control-access_getfederationtoken.html).
 // For information about using GetFederationToken to create temporary security
 // credentials, see GetFederationToken—Federation Through a Custom Identity
-// Broker (http://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_request.html#api_getfederationtoken).
+// Broker (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_request.html#api_getfederationtoken).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -931,7 +900,7 @@ func (c *STS) GetFederationTokenRequest(input *GetFederationTokenInput) (req *re
 //   STS is not activated in the requested region for the account that is being
 //   asked to generate credentials. The account administrator must use the IAM
 //   console to activate STS in that region. For more information, see Activating
-//   and Deactivating AWS STS in an AWS Region (http://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_enable-regions.html)
+//   and Deactivating AWS STS in an AWS Region (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_enable-regions.html)
 //   in the IAM User Guide.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sts-2011-06-15/GetFederationToken
@@ -1003,48 +972,48 @@ func (c *STS) GetSessionTokenRequest(input *GetSessionTokenInput) (req *request.
 // Returns a set of temporary credentials for an AWS account or IAM user. The
 // credentials consist of an access key ID, a secret access key, and a security
 // token. Typically, you use GetSessionToken if you want to use MFA to protect
-// programmatic calls to specific AWS APIs like Amazon EC2 StopInstances. MFA-enabled
-// IAM users would need to call GetSessionToken and submit an MFA code that
-// is associated with their MFA device. Using the temporary security credentials
-// that are returned from the call, IAM users can then make programmatic calls
-// to APIs that require MFA authentication. If you do not supply a correct MFA
-// code, then the API returns an access denied error. For a comparison of GetSessionToken
-// with the other APIs that produce temporary credentials, see Requesting Temporary
-// Security Credentials (http://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_request.html)
-// and Comparing the AWS STS APIs (http://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_request.html#stsapi_comparison)
+// programmatic calls to specific AWS API operations like Amazon EC2 StopInstances.
+// MFA-enabled IAM users would need to call GetSessionToken and submit an MFA
+// code that is associated with their MFA device. Using the temporary security
+// credentials that are returned from the call, IAM users can then make programmatic
+// calls to API operations that require MFA authentication. If you do not supply
+// a correct MFA code, then the API returns an access denied error. For a comparison
+// of GetSessionToken with the other API operations that produce temporary credentials,
+// see Requesting Temporary Security Credentials (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_request.html)
+// and Comparing the AWS STS API operations (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_request.html#stsapi_comparison)
 // in the IAM User Guide.
 //
-// The GetSessionToken action must be called by using the long-term AWS security
+// The GetSessionToken operation must be called by using the long-term AWS security
 // credentials of the AWS account or an IAM user. Credentials that are created
-// by IAM users are valid for the duration that you specify, from 900 seconds
-// (15 minutes) up to a maximum of 129600 seconds (36 hours), with a default
-// of 43200 seconds (12 hours); credentials that are created by using account
-// credentials can range from 900 seconds (15 minutes) up to a maximum of 3600
-// seconds (1 hour), with a default of 1 hour.
+// by IAM users are valid for the duration that you specify. This duration can
+// range from 900 seconds (15 minutes) up to a maximum of 129,600 seconds (36
+// hours), with a default of 43,200 seconds (12 hours). Credentials that are
+// created by using account credentials can range from 900 seconds (15 minutes)
+// up to a maximum of 3,600 seconds (1 hour), with a default of 1 hour.
 //
 // The temporary security credentials created by GetSessionToken can be used
 // to make API calls to any AWS service with the following exceptions:
 //
-//    * You cannot call any IAM APIs unless MFA authentication information is
-//    included in the request.
+//    * You cannot call any IAM API operations unless MFA authentication information
+//    is included in the request.
 //
 //    * You cannot call any STS API exceptAssumeRole or GetCallerIdentity.
 //
-// We recommend that you do not call GetSessionToken with root account credentials.
-// Instead, follow our best practices (http://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html#create-iam-users)
+// We recommend that you do not call GetSessionToken with AWS account root user
+// credentials. Instead, follow our best practices (https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html#create-iam-users)
 // by creating one or more IAM users, giving them the necessary permissions,
 // and using IAM users for everyday interaction with AWS.
 //
 // The permissions associated with the temporary security credentials returned
 // by GetSessionToken are based on the permissions associated with account or
-// IAM user whose credentials are used to call the action. If GetSessionToken
-// is called using root account credentials, the temporary credentials have
-// root account permissions. Similarly, if GetSessionToken is called using the
-// credentials of an IAM user, the temporary credentials have the same permissions
+// IAM user whose credentials are used to call the operation. If GetSessionToken
+// is called using AWS account root user credentials, the temporary credentials
+// have root user permissions. Similarly, if GetSessionToken is called using
+// the credentials of an IAM user, the temporary credentials have the same permissions
 // as the IAM user.
 //
 // For more information about using GetSessionToken to create temporary credentials,
-// go to Temporary Credentials for Users in Untrusted Environments (http://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_request.html#api_getsessiontoken)
+// go to Temporary Credentials for Users in Untrusted Environments (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_request.html#api_getsessiontoken)
 // in the IAM User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -1059,7 +1028,7 @@ func (c *STS) GetSessionTokenRequest(input *GetSessionTokenInput) (req *request.
 //   STS is not activated in the requested region for the account that is being
 //   asked to generate credentials. The account administrator must use the IAM
 //   console to activate STS in that region. For more information, see Activating
-//   and Deactivating AWS STS in an AWS Region (http://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_enable-regions.html)
+//   and Deactivating AWS STS in an AWS Region (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_enable-regions.html)
 //   in the IAM User Guide.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/sts-2011-06-15/GetSessionToken
@@ -1094,7 +1063,7 @@ type AssumeRoleInput struct {
 	// a session duration of 12 hours, but your administrator set the maximum session
 	// duration to 6 hours, your operation fails. To learn how to view the maximum
 	// value for your role, see View the Maximum Session Duration Setting for a
-	// Role (http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use.html#id_roles_use_view-role-max-session)
+	// Role (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use.html#id_roles_use_view-role-max-session)
 	// in the IAM User Guide.
 	//
 	// By default, the value is set to 3600 seconds.
@@ -1104,36 +1073,36 @@ type AssumeRoleInput struct {
 	// to the federation endpoint for a console sign-in token takes a SessionDuration
 	// parameter that specifies the maximum length of the console session. For more
 	// information, see Creating a URL that Enables Federated Users to Access the
-	// AWS Management Console (http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_providers_enable-console-custom-url.html)
+	// AWS Management Console (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_providers_enable-console-custom-url.html)
 	// in the IAM User Guide.
 	DurationSeconds *int64 `min:"900" type:"integer"`
 
-	// A unique identifier that is used by third parties when assuming roles in
-	// their customers' accounts. For each role that the third party can assume,
-	// they should instruct their customers to ensure the role's trust policy checks
-	// for the external ID that the third party generated. Each time the third party
-	// assumes the role, they should pass the customer's external ID. The external
-	// ID is useful in order to help third parties bind a role to the customer who
-	// created it. For more information about the external ID, see How to Use an
-	// External ID When Granting Access to Your AWS Resources to a Third Party (http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-user_externalid.html)
+	// A unique identifier that might be required when you assume a role in another
+	// account. If the administrator of the account to which the role belongs provided
+	// you with an external ID, then provide that value in the ExternalId parameter.
+	// This value can be any string, such as a passphrase or account number. Because
+	// a cross-account role is usually set up to trust everyone in an account, the
+	// administrator of the trusting account might send an external ID to the administrator
+	// of the trusted account. That way, only someone with the ID can assume the
+	// role, rather than everyone in the account. For more information about the
+	// external ID, see How to Use an External ID When Granting Access to Your AWS
+	// Resources to a Third Party (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-user_externalid.html)
 	// in the IAM User Guide.
 	//
-	// The regex used to validated this parameter is a string of characters consisting
+	// The regex used to validate this parameter is a string of characters consisting
 	// of upper- and lower-case alphanumeric characters with no spaces. You can
 	// also include underscores or any of the following characters: =,.@:/-
 	ExternalId *string `min:"2" type:"string"`
 
 	// An IAM policy in JSON format.
 	//
-	// This parameter is optional. If you pass a policy, the temporary security
-	// credentials that are returned by the operation have the permissions that
-	// are allowed by both (the intersection of) the access policy of the role that
-	// is being assumed, and the policy that you pass. This gives you a way to further
-	// restrict the permissions for the resulting temporary security credentials.
-	// You cannot use the passed policy to grant permissions that are in excess
-	// of those allowed by the access policy of the role that is being assumed.
-	// For more information, see Permissions for AssumeRole, AssumeRoleWithSAML,
-	// and AssumeRoleWithWebIdentity (http://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_control-access_assumerole.html)
+	// This parameter is optional. If you pass a policy to this operation, the resulting
+	// temporary credentials have the permissions of the assumed role and the policy
+	// that you pass. This gives you a way to further restrict the permissions for
+	// the resulting temporary security credentials. You cannot use the passed policy
+	// to grant permissions that are in excess of those allowed by the permissions
+	// policy of the role that is being assumed. For more information, see  Permissions
+	// for AssumeRole, AssumeRoleWithSAML, and AssumeRoleWithWebIdentity  (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_control-access_assumerole.html)
 	// in the IAM User Guide.
 	//
 	// The format for this parameter, as described by its regex pattern, is a string
@@ -1142,10 +1111,10 @@ type AssumeRoleInput struct {
 	// list (\u0020-\u00FF). It can also include the tab (\u0009), linefeed (\u000A),
 	// and carriage return (\u000D) characters.
 	//
-	// The policy plain text must be 2048 bytes or shorter. However, an internal
+	// The policy plaintext must be 2048 bytes or shorter. However, an internal
 	// conversion compresses it into a packed binary format with a separate limit.
 	// The PackedPolicySize response element indicates by percentage how close to
-	// the upper size limit the policy is, with 100% equaling the maximum allowed
+	// the upper size limit the policy is, where 100 percent is the maximum allowed
 	// size.
 	Policy *string `min:"1" type:"string"`
 
@@ -1161,8 +1130,8 @@ type AssumeRoleInput struct {
 	// scenarios, the role session name is visible to, and can be logged by the
 	// account that owns the role. The role session name is also used in the ARN
 	// of the assumed role principal. This means that subsequent cross-account API
-	// requests using the temporary security credentials will expose the role session
-	// name to the external account in their CloudTrail logs.
+	// requests that use the temporary security credentials will expose the role
+	// session name to the external account in their AWS CloudTrail logs.
 	//
 	// The regex used to validate this parameter is a string of characters consisting
 	// of upper- and lower-case alphanumeric characters with no spaces. You can
@@ -1296,10 +1265,10 @@ type AssumeRoleOutput struct {
 	// The temporary security credentials, which include an access key ID, a secret
 	// access key, and a security (or session) token.
 	//
-	// Note: The size of the security token that STS APIs return is not fixed. We
-	// strongly recommend that you make no assumptions about the maximum size. As
-	// of this writing, the typical size is less than 4096 bytes, but that can vary.
-	// Also, future updates to AWS might require larger sizes.
+	// The size of the security token that STS API operations return is not fixed.
+	// We strongly recommend that you make no assumptions about the maximum size.
+	// As of this writing, the typical size is less than 4096 bytes, but that can
+	// vary. Also, future updates to AWS might require larger sizes.
 	Credentials *Credentials `type:"structure"`
 
 	// A percentage value that indicates the size of the policy in packed form.
@@ -1349,7 +1318,7 @@ type AssumeRoleWithSAMLInput struct {
 	// specify a session duration of 12 hours, but your administrator set the maximum
 	// session duration to 6 hours, your operation fails. To learn how to view the
 	// maximum value for your role, see View the Maximum Session Duration Setting
-	// for a Role (http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use.html#id_roles_use_view-role-max-session)
+	// for a Role (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use.html#id_roles_use_view-role-max-session)
 	// in the IAM User Guide.
 	//
 	// By default, the value is set to 3600 seconds.
@@ -1359,21 +1328,20 @@ type AssumeRoleWithSAMLInput struct {
 	// to the federation endpoint for a console sign-in token takes a SessionDuration
 	// parameter that specifies the maximum length of the console session. For more
 	// information, see Creating a URL that Enables Federated Users to Access the
-	// AWS Management Console (http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_providers_enable-console-custom-url.html)
+	// AWS Management Console (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_providers_enable-console-custom-url.html)
 	// in the IAM User Guide.
 	DurationSeconds *int64 `min:"900" type:"integer"`
 
 	// An IAM policy in JSON format.
 	//
-	// The policy parameter is optional. If you pass a policy, the temporary security
-	// credentials that are returned by the operation have the permissions that
-	// are allowed by both the access policy of the role that is being assumed,
+	// The policy parameter is optional. If you pass a policy to this operation,
+	// the resulting temporary credentials have the permissions of the assumed role
 	// and the policy that you pass. This gives you a way to further restrict the
 	// permissions for the resulting temporary security credentials. You cannot
 	// use the passed policy to grant permissions that are in excess of those allowed
-	// by the access policy of the role that is being assumed. For more information,
-	// Permissions for AssumeRole, AssumeRoleWithSAML, and AssumeRoleWithWebIdentity
-	// (http://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_control-access_assumerole.html)
+	// by the permissions policy of the role that is being assumed. For more information,
+	// see  Permissions for AssumeRole, AssumeRoleWithSAML, and AssumeRoleWithWebIdentity
+	//  (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_control-access_assumerole.html)
 	// in the IAM User Guide.
 	//
 	// The format for this parameter, as described by its regex pattern, is a string
@@ -1382,10 +1350,10 @@ type AssumeRoleWithSAMLInput struct {
 	// list (\u0020-\u00FF). It can also include the tab (\u0009), linefeed (\u000A),
 	// and carriage return (\u000D) characters.
 	//
-	// The policy plain text must be 2048 bytes or shorter. However, an internal
+	// The policy plaintext must be 2048 bytes or shorter. However, an internal
 	// conversion compresses it into a packed binary format with a separate limit.
 	// The PackedPolicySize response element indicates by percentage how close to
-	// the upper size limit the policy is, with 100% equaling the maximum allowed
+	// the upper size limit the policy is, where 100 percent is the maximum allowed
 	// size.
 	Policy *string `min:"1" type:"string"`
 
@@ -1402,8 +1370,8 @@ type AssumeRoleWithSAMLInput struct {
 
 	// The base-64 encoded SAML authentication response provided by the IdP.
 	//
-	// For more information, see Configuring a Relying Party and Adding Claims (http://docs.aws.amazon.com/IAM/latest/UserGuide/create-role-saml-IdP-tasks.html)
-	// in the Using IAM guide.
+	// For more information, see Configuring a Relying Party and Adding Claims (https://docs.aws.amazon.com/IAM/latest/UserGuide/create-role-saml-IdP-tasks.html)
+	// in the IAM User Guide.
 	//
 	// SAMLAssertion is a required field
 	SAMLAssertion *string `min:"4" type:"string" required:"true"`
@@ -1499,10 +1467,10 @@ type AssumeRoleWithSAMLOutput struct {
 	// The temporary security credentials, which include an access key ID, a secret
 	// access key, and a security (or session) token.
 	//
-	// Note: The size of the security token that STS APIs return is not fixed. We
-	// strongly recommend that you make no assumptions about the maximum size. As
-	// of this writing, the typical size is less than 4096 bytes, but that can vary.
-	// Also, future updates to AWS might require larger sizes.
+	// The size of the security token that STS API operations return is not fixed.
+	// We strongly recommend that you make no assumptions about the maximum size.
+	// As of this writing, the typical size is less than 4096 bytes, but that can
+	// vary. Also, future updates to AWS might require larger sizes.
 	Credentials *Credentials `type:"structure"`
 
 	// The value of the Issuer element of the SAML assertion.
@@ -1606,7 +1574,7 @@ type AssumeRoleWithWebIdentityInput struct {
 	// a session duration of 12 hours, but your administrator set the maximum session
 	// duration to 6 hours, your operation fails. To learn how to view the maximum
 	// value for your role, see View the Maximum Session Duration Setting for a
-	// Role (http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use.html#id_roles_use_view-role-max-session)
+	// Role (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use.html#id_roles_use_view-role-max-session)
 	// in the IAM User Guide.
 	//
 	// By default, the value is set to 3600 seconds.
@@ -1616,20 +1584,20 @@ type AssumeRoleWithWebIdentityInput struct {
 	// to the federation endpoint for a console sign-in token takes a SessionDuration
 	// parameter that specifies the maximum length of the console session. For more
 	// information, see Creating a URL that Enables Federated Users to Access the
-	// AWS Management Console (http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_providers_enable-console-custom-url.html)
+	// AWS Management Console (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_providers_enable-console-custom-url.html)
 	// in the IAM User Guide.
 	DurationSeconds *int64 `min:"900" type:"integer"`
 
 	// An IAM policy in JSON format.
 	//
-	// The policy parameter is optional. If you pass a policy, the temporary security
-	// credentials that are returned by the operation have the permissions that
-	// are allowed by both the access policy of the role that is being assumed,
+	// The policy parameter is optional. If you pass a policy to this operation,
+	// the resulting temporary credentials have the permissions of the assumed role
 	// and the policy that you pass. This gives you a way to further restrict the
 	// permissions for the resulting temporary security credentials. You cannot
 	// use the passed policy to grant permissions that are in excess of those allowed
-	// by the access policy of the role that is being assumed. For more information,
-	// see Permissions for AssumeRoleWithWebIdentity (http://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_control-access_assumerole.html)
+	// by the permissions policy of the role that is being assumed. For more information,
+	// see  Permissions for AssumeRole, AssumeRoleWithSAML, and AssumeRoleWithWebIdentity
+	//  (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_control-access_assumerole.html)
 	// in the IAM User Guide.
 	//
 	// The format for this parameter, as described by its regex pattern, is a string
@@ -1638,10 +1606,10 @@ type AssumeRoleWithWebIdentityInput struct {
 	// list (\u0020-\u00FF). It can also include the tab (\u0009), linefeed (\u000A),
 	// and carriage return (\u000D) characters.
 	//
-	// The policy plain text must be 2048 bytes or shorter. However, an internal
+	// The policy plaintext must be 2048 bytes or shorter. However, an internal
 	// conversion compresses it into a packed binary format with a separate limit.
 	// The PackedPolicySize response element indicates by percentage how close to
-	// the upper size limit the policy is, with 100% equaling the maximum allowed
+	// the upper size limit the policy is, where 100 percent is the maximum allowed
 	// size.
 	Policy *string `min:"1" type:"string"`
 
@@ -1784,10 +1752,10 @@ type AssumeRoleWithWebIdentityOutput struct {
 	// The temporary security credentials, which include an access key ID, a secret
 	// access key, and a security token.
 	//
-	// Note: The size of the security token that STS APIs return is not fixed. We
-	// strongly recommend that you make no assumptions about the maximum size. As
-	// of this writing, the typical size is less than 4096 bytes, but that can vary.
-	// Also, future updates to AWS might require larger sizes.
+	// The size of the security token that STS API operations return is not fixed.
+	// We strongly recommend that you make no assumptions about the maximum size.
+	// As of this writing, the typical size is less than 4096 bytes, but that can
+	// vary. Also, future updates to AWS might require larger sizes.
 	Credentials *Credentials `type:"structure"`
 
 	// A percentage value that indicates the size of the policy in packed form.
@@ -1796,7 +1764,7 @@ type AssumeRoleWithWebIdentityOutput struct {
 	PackedPolicySize *int64 `type:"integer"`
 
 	// The issuing authority of the web identity token presented. For OpenID Connect
-	// ID Tokens this contains the value of the iss field. For OAuth 2.0 access
+	// ID tokens, this contains the value of the iss field. For OAuth 2.0 access
 	// tokens, this contains the value of the ProviderId parameter that was passed
 	// in the AssumeRoleWithWebIdentity request.
 	Provider *string `type:"string"`
@@ -1863,7 +1831,7 @@ type AssumedRoleUser struct {
 
 	// The ARN of the temporary security credentials that are returned from the
 	// AssumeRole action. For more information about ARNs and how to use them in
-	// policies, see IAM Identifiers (http://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html)
+	// policies, see IAM Identifiers (https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html)
 	// in Using IAM.
 	//
 	// Arn is a required field
@@ -2031,7 +1999,7 @@ type FederatedUser struct {
 
 	// The ARN that specifies the federated user that is associated with the credentials.
 	// For more information about ARNs and how to use them in policies, see IAM
-	// Identifiers (http://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html)
+	// Identifiers (https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html)
 	// in Using IAM.
 	//
 	// Arn is a required field
@@ -2093,8 +2061,8 @@ type GetCallerIdentityOutput struct {
 	Arn *string `min:"20" type:"string"`
 
 	// The unique identifier of the calling entity. The exact value depends on the
-	// type of entity making the call. The values returned are those listed in the
-	// aws:userid column in the Principal table (http://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_variables.html#principaltable)
+	// type of entity that is making the call. The values returned are those listed
+	// in the aws:userid column in the Principal table (https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_variables.html#principaltable)
 	// found on the Policy Variables reference page in the IAM User Guide.
 	UserId *string `type:"string"`
 }
@@ -2131,12 +2099,11 @@ type GetFederationTokenInput struct {
 	_ struct{} `type:"structure"`
 
 	// The duration, in seconds, that the session should last. Acceptable durations
-	// for federation sessions range from 900 seconds (15 minutes) to 129600 seconds
-	// (36 hours), with 43200 seconds (12 hours) as the default. Sessions obtained
-	// using AWS account (root) credentials are restricted to a maximum of 3600
+	// for federation sessions range from 900 seconds (15 minutes) to 129,600 seconds
+	// (36 hours), with 43,200 seconds (12 hours) as the default. Sessions obtained
+	// using AWS account root user credentials are restricted to a maximum of 3,600
 	// seconds (one hour). If the specified duration is longer than one hour, the
-	// session obtained by using AWS account (root) credentials defaults to one
-	// hour.
+	// session obtained by using root user credentials defaults to one hour.
 	DurationSeconds *int64 `min:"900" type:"integer"`
 
 	// The name of the federated user. The name is used as an identifier for the
@@ -2151,20 +2118,14 @@ type GetFederationTokenInput struct {
 	// Name is a required field
 	Name *string `min:"2" type:"string" required:"true"`
 
-	// An IAM policy in JSON format that is passed with the GetFederationToken call
-	// and evaluated along with the policy or policies that are attached to the
-	// IAM user whose credentials are used to call GetFederationToken. The passed
-	// policy is used to scope down the permissions that are available to the IAM
-	// user, by allowing only a subset of the permissions that are granted to the
-	// IAM user. The passed policy cannot grant more permissions than those granted
-	// to the IAM user. The final permissions for the federated user are the most
-	// restrictive set based on the intersection of the passed policy and the IAM
-	// user policy.
-	//
-	// If you do not pass a policy, the resulting temporary security credentials
-	// have no effective permissions. The only exception is when the temporary security
-	// credentials are used to access a resource that has a resource-based policy
-	// that specifically allows the federated user to access the resource.
+	// An IAM policy in JSON format. You must pass an IAM permissions policy to
+	// GetFederationToken. When you pass a policy to this operation, the resulting
+	// temporary credentials are defined by the intersection of your IAM user policies
+	// and the policy that you pass. The passed policy defines the permissions of
+	// the federated user. AWS allows the federated user's request only when both
+	// the attached policy and the IAM user policy explicitly allow the federated
+	// user to perform the requested action. The passed policy cannot grant more
+	// permissions than those that are defined in the IAM user policy.
 	//
 	// The format for this parameter, as described by its regex pattern, is a string
 	// of characters up to 2048 characters in length. The characters can be any
@@ -2172,14 +2133,14 @@ type GetFederationTokenInput struct {
 	// list (\u0020-\u00FF). It can also include the tab (\u0009), linefeed (\u000A),
 	// and carriage return (\u000D) characters.
 	//
-	// The policy plain text must be 2048 bytes or shorter. However, an internal
+	// The policy plaintext must be 2048 bytes or shorter. However, an internal
 	// conversion compresses it into a packed binary format with a separate limit.
 	// The PackedPolicySize response element indicates by percentage how close to
-	// the upper size limit the policy is, with 100% equaling the maximum allowed
+	// the upper size limit the policy is, where 100 percent is the maximum allowed
 	// size.
 	//
 	// For more information about how permissions work, see Permissions for GetFederationToken
-	// (http://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_control-access_getfederationtoken.html).
+	// (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_control-access_getfederationtoken.html).
 	Policy *string `min:"1" type:"string"`
 }
 
@@ -2241,10 +2202,10 @@ type GetFederationTokenOutput struct {
 	// The temporary security credentials, which include an access key ID, a secret
 	// access key, and a security (or session) token.
 	//
-	// Note: The size of the security token that STS APIs return is not fixed. We
-	// strongly recommend that you make no assumptions about the maximum size. As
-	// of this writing, the typical size is less than 4096 bytes, but that can vary.
-	// Also, future updates to AWS might require larger sizes.
+	// The size of the security token that STS API operations return is not fixed.
+	// We strongly recommend that you make no assumptions about the maximum size.
+	// As of this writing, the typical size is less than 4096 bytes, but that can
+	// vary. Also, future updates to AWS might require larger sizes.
 	Credentials *Credentials `type:"structure"`
 
 	// Identifiers for the federated user associated with the credentials (such
@@ -2291,11 +2252,11 @@ type GetSessionTokenInput struct {
 	_ struct{} `type:"structure"`
 
 	// The duration, in seconds, that the credentials should remain valid. Acceptable
-	// durations for IAM user sessions range from 900 seconds (15 minutes) to 129600
-	// seconds (36 hours), with 43200 seconds (12 hours) as the default. Sessions
-	// for AWS account owners are restricted to a maximum of 3600 seconds (one hour).
-	// If the duration is longer than one hour, the session for AWS account owners
-	// defaults to one hour.
+	// durations for IAM user sessions range from 900 seconds (15 minutes) to 129,600
+	// seconds (36 hours), with 43,200 seconds (12 hours) as the default. Sessions
+	// for AWS account owners are restricted to a maximum of 3,600 seconds (one
+	// hour). If the duration is longer than one hour, the session for AWS account
+	// owners defaults to one hour.
 	DurationSeconds *int64 `min:"900" type:"integer"`
 
 	// The identification number of the MFA device that is associated with the IAM
@@ -2306,16 +2267,16 @@ type GetSessionTokenInput struct {
 	// You can find the device for an IAM user by going to the AWS Management Console
 	// and viewing the user's security credentials.
 	//
-	// The regex used to validated this parameter is a string of characters consisting
+	// The regex used to validate this parameter is a string of characters consisting
 	// of upper- and lower-case alphanumeric characters with no spaces. You can
 	// also include underscores or any of the following characters: =,.@:/-
 	SerialNumber *string `min:"9" type:"string"`
 
 	// The value provided by the MFA device, if MFA is required. If any policy requires
 	// the IAM user to submit an MFA code, specify this value. If MFA authentication
-	// is required, and the user does not provide a code when requesting a set of
-	// temporary security credentials, the user will receive an "access denied"
-	// response when requesting resources that require MFA authentication.
+	// is required, the user must provide a code when requesting a set of temporary
+	// security credentials. A user who fails to provide the code receives an "access
+	// denied" response when requesting resources that require MFA authentication.
 	//
 	// The format for this parameter, as described by its regex pattern, is a sequence
 	// of six numeric digits.
@@ -2377,10 +2338,10 @@ type GetSessionTokenOutput struct {
 	// The temporary security credentials, which include an access key ID, a secret
 	// access key, and a security (or session) token.
 	//
-	// Note: The size of the security token that STS APIs return is not fixed. We
-	// strongly recommend that you make no assumptions about the maximum size. As
-	// of this writing, the typical size is less than 4096 bytes, but that can vary.
-	// Also, future updates to AWS might require larger sizes.
+	// The size of the security token that STS API operations return is not fixed.
+	// We strongly recommend that you make no assumptions about the maximum size.
+	// As of this writing, the typical size is less than 4096 bytes, but that can
+	// vary. Also, future updates to AWS might require larger sizes.
 	Credentials *Credentials `type:"structure"`
 }
 
