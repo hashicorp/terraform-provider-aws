@@ -2,12 +2,12 @@ package aws
 
 import (
 	"fmt"
-	"regexp"
-	"testing"
-
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+	"regexp"
+	"testing"
 )
 
 func testAccAwsOrganizationsOrganization_basic(t *testing.T) {
@@ -29,6 +29,11 @@ func testAccAwsOrganizationsOrganization_basic(t *testing.T) {
 					testAccMatchResourceAttrGlobalARN(resourceName, "master_account_arn", "organizations", regexp.MustCompile(`account/o-.+/.+`)),
 					resource.TestMatchResourceAttr(resourceName, "master_account_email", regexp.MustCompile(`.+@.+`)),
 					testAccCheckResourceAttrAccountID(resourceName, "master_account_id"),
+					resource.TestCheckResourceAttr(resourceName, "roots.#", "1"),
+					resource.TestMatchResourceAttr(resourceName, "roots.0.id", regexp.MustCompile(`r-[a-z0-9]{4,32}`)),
+					resource.TestCheckResourceAttrSet(resourceName, "roots.0.name"),
+					resource.TestCheckResourceAttrSet(resourceName, "roots.0.arn"),
+					resource.TestCheckResourceAttr(resourceName, "roots.0.policy_types.#", "0"),
 				),
 			},
 			{
@@ -190,4 +195,63 @@ resource "aws_organizations_organization" "test" {
   feature_set = %q
 }
 `, featureSet)
+}
+
+func TestFlattenOrganizationsRoots(t *testing.T) {
+	roots := []*organizations.Root{
+		{
+			Name: aws.String("Root1"),
+			Arn:  aws.String("arn:1"),
+			Id:   aws.String("r-1"),
+			PolicyTypes: []*organizations.PolicyTypeSummary{
+				{
+					Status: aws.String("ENABLED"),
+					Type:   aws.String("SERVICE_CONTROL_POLICY"),
+				},
+				{
+					Status: aws.String("DISABLED"),
+					Type:   aws.String("SERVICE_CONTROL_POLICY"),
+				},
+			},
+		},
+	}
+	result := flattenOrganizationsRoots(roots)
+
+	if len(result) != len(roots) {
+		t.Fatalf("expected result to have %d elements, got %d", len(roots), len(result))
+	}
+
+	for i, r := range roots {
+		if aws.StringValue(r.Name) != result[i]["name"] {
+			t.Fatalf(`expected result[%d]["name"] to equal %q, got %q`, i, aws.StringValue(r.Name), result[i]["name"])
+		}
+		if aws.StringValue(r.Arn) != result[i]["arn"] {
+			t.Fatalf(`expected result[%d]["arn"] to equal %q, got %q`, i, aws.StringValue(r.Arn), result[i]["arn"])
+		}
+		if aws.StringValue(r.Id) != result[i]["id"] {
+			t.Fatalf(`expected result[%d]["id"] to equal %q, got %q`, i, aws.StringValue(r.Id), result[i]["id"])
+		}
+		if result[i]["policy_types"] == nil {
+			continue
+		}
+		if types, ok := result[i]["policy_types"].([]map[string]interface{}); ok {
+			testFlattenOrganizationsRootPolicyTypes(t, i, types, r.PolicyTypes)
+			continue
+		}
+		t.Fatalf(`result[%d]["policy_types"] could not be converted to []map[string]interface{}`, i)
+	}
+}
+
+func testFlattenOrganizationsRootPolicyTypes(t *testing.T, index int, result []map[string]interface{}, types []*organizations.PolicyTypeSummary) {
+	if len(result) != len(types) {
+		t.Fatalf(`expected result[%d]["policy_types"] to have %d elements, got %d`, index, len(types), len(result))
+	}
+	for i, v := range types {
+		if aws.StringValue(v.Status) != result[i]["status"] {
+			t.Fatalf(`expected result[%d]["policy_types"][%d]["status"] to equal %q, got %q`, index, i, aws.StringValue(v.Status), result[i]["status"])
+		}
+		if aws.StringValue(v.Type) != result[i]["type"] {
+			t.Fatalf(`expected result[%d]["policy_types"][%d]["type"] to equal %q, got %q`, index, i, aws.StringValue(v.Type), result[i]["type"])
+		}
+	}
 }
