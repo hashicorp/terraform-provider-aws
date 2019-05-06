@@ -76,8 +76,7 @@ $ terraform import aws_lambda_event_source_mapping.event_source_mapping 12345kxo
 ```
 
 Note: AWS does not expose `startingPosition` when getting Lambda event source mappings, as such, if
-you import a mapping Terraform will want to create the mapping on the next apply,
-unless you update the value to your known setting in the `tfstate` file. 
+you import a mapping Terraform will want to create the mapping on the next apply.
 
 For information about retrieving event source mappings, see [GetEventSourceMapping][3] in the API docs.
 
