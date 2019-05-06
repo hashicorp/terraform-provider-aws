@@ -962,6 +962,7 @@ func init() {
 		"wafregional",
 		"worklink",
 		"workspaces",
+		"xray",
 	}
 }
 

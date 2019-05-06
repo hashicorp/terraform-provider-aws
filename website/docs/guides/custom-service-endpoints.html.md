@@ -159,6 +159,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
 - `wafregional`
 - `worklink`
 - `workspaces`
+- `xray`
 
 ## Connecting to Local AWS Compatible Solutions
 

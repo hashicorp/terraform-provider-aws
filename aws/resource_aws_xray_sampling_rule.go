@@ -33,54 +33,59 @@ func resourceAwsXraySamplingRule() *schema.Resource {
 				Required: true,
 			},
 			"priority": {
-				Type:     schema.TypeInt,
-				Required: true,
+				Type:         schema.TypeInt,
+				Required:     true,
+				ValidateFunc: validation.IntBetween(1, 9999),
 			},
 			"fixed_rate": {
 				Type:     schema.TypeFloat,
 				Required: true,
 			},
 			"reservoir_size": {
-				Type:     schema.TypeInt,
-				Required: true,
+				Type:         schema.TypeInt,
+				Required:     true,
+				ValidateFunc: validation.IntAtLeast(0),
 			},
 			"service_name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringLenBetween(0, 64),
 			},
 			"service_type": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringLenBetween(0, 64),
 			},
 			"host": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringLenBetween(0, 64),
 			},
 			"http_method": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringLenBetween(0, 10),
 			},
 			"url_path": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringLenBetween(0, 128),
 			},
 			"version": {
-				Type:     schema.TypeInt,
-				Required: true,
+				Type:         schema.TypeInt,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IntAtLeast(1),
 			},
 			"attributes": {
 				Type:     schema.TypeMap,
 				Optional: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringLenBetween(1, 32),
+				},
 			},
-			"created_at": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"modified_at": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"rule_arn": {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -150,7 +155,7 @@ func resourceAwsXraySamplingRuleRead(d *schema.ResourceData, meta interface{}) e
 				d.Set("attributes", aws.StringValueMap(samplingRule.Attributes))
 				d.Set("created_at", samplingRuleRecord.CreatedAt)
 				d.Set("modified_at", samplingRuleRecord.ModifiedAt)
-				d.Set("rule_arn", samplingRule.RuleARN)
+				d.Set("arn", samplingRule.RuleARN)
 				break
 			}
 		}
@@ -174,10 +179,6 @@ func resourceAwsXraySamplingRuleUpdate(d *schema.ResourceData, meta interface{})
 		Host:          aws.String(d.Get("host").(string)),
 		HTTPMethod:    aws.String(d.Get("http_method").(string)),
 		URLPath:       aws.String(d.Get("url_path").(string)),
-	}
-
-	if d.HasChange("version") {
-		return fmt.Errorf("Version cannot be modified")
 	}
 
 	if d.HasChange("attributes") {

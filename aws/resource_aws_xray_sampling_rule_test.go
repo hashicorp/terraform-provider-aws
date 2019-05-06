@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -27,7 +26,7 @@ func TestAccAWSXraySamplingRule_basic(t *testing.T) {
 				Config: testAccAWSXraySamplingRuleConfig_basic(ruleName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckXraySamplingRuleExists(resourceName, &samplingRule),
-					testAccCheckResourceAttrRegionalARN(resourceName, "rule_arn", "xray", fmt.Sprintf("sampling-rule/%s", ruleName)),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "xray", fmt.Sprintf("sampling-rule/%s", ruleName)),
 					resource.TestCheckResourceAttrSet(resourceName, "priority"),
 					resource.TestCheckResourceAttrSet(resourceName, "version"),
 					resource.TestCheckResourceAttrSet(resourceName, "reservoir_size"),
@@ -50,8 +49,6 @@ func TestAccAWSXraySamplingRule_update(t *testing.T) {
 	resourceName := "aws_xray_sampling_rule.test"
 	rString := acctest.RandString(8)
 	ruleName := fmt.Sprintf("tf_acc_sampling_rule_%s", rString)
-	initialVersion := 1
-	updatedVersion := initialVersion + 1
 	updatedPriority := acctest.RandIntRange(0, 9999)
 	updatedReservoirSize := acctest.RandIntRange(0, 2147483647)
 
@@ -61,26 +58,22 @@ func TestAccAWSXraySamplingRule_update(t *testing.T) {
 		CheckDestroy: testAccCheckAWSXraySamplingRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSXraySamplingRuleConfig_update(ruleName, acctest.RandIntRange(0, 9999), acctest.RandIntRange(0, 2147483647), initialVersion),
+				Config: testAccAWSXraySamplingRuleConfig_update(ruleName, acctest.RandIntRange(0, 9999), acctest.RandIntRange(0, 2147483647)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckXraySamplingRuleExists(resourceName, &samplingRule),
-					testAccCheckResourceAttrRegionalARN(resourceName, "rule_arn", "xray", fmt.Sprintf("sampling-rule/%s", ruleName)),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "xray", fmt.Sprintf("sampling-rule/%s", ruleName)),
 					resource.TestCheckResourceAttr(resourceName, "attributes.%", "0"),
 				),
 			},
 			{ // Update attributes
-				Config: testAccAWSXraySamplingRuleConfig_update(ruleName, updatedPriority, updatedReservoirSize, initialVersion),
+				Config: testAccAWSXraySamplingRuleConfig_update(ruleName, updatedPriority, updatedReservoirSize),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckXraySamplingRuleExists(resourceName, &samplingRule),
-					testAccCheckResourceAttrRegionalARN(resourceName, "rule_arn", "xray", fmt.Sprintf("sampling-rule/%s", ruleName)),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "xray", fmt.Sprintf("sampling-rule/%s", ruleName)),
 					resource.TestCheckResourceAttr(resourceName, "priority", fmt.Sprintf("%d", updatedPriority)),
 					resource.TestCheckResourceAttr(resourceName, "reservoir_size", fmt.Sprintf("%d", updatedReservoirSize)),
 					resource.TestCheckResourceAttr(resourceName, "attributes.%", "0"),
 				),
-			},
-			{ // Increment version
-				Config:      testAccAWSXraySamplingRuleConfig_update(ruleName, updatedPriority, updatedReservoirSize, updatedVersion),
-				ExpectError: regexp.MustCompile(`Version cannot be modified`),
 			},
 		},
 	})
@@ -190,7 +183,7 @@ resource "aws_xray_sampling_rule" "test" {
 `, ruleName)
 }
 
-func testAccAWSXraySamplingRuleConfig_update(ruleName string, priority int, reservoirSize int, version int) string {
+func testAccAWSXraySamplingRuleConfig_update(ruleName string, priority int, reservoirSize int) string {
 	return fmt.Sprintf(`
 resource "aws_xray_sampling_rule" "test" {
 	rule_name = "%s"
@@ -203,7 +196,7 @@ resource "aws_xray_sampling_rule" "test" {
 	service_name = "*"
 	fixed_rate = 0.3
 	resource_arn = "*"
-	version = %d
+	version = 1
 }
-`, ruleName, priority, reservoirSize, version)
+`, ruleName, priority, reservoirSize)
 }
