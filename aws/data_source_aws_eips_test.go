@@ -8,54 +8,6 @@ import (
 	"testing"
 )
 
-func TestAccDataSourceAwsEips_Filter(t *testing.T) {
-	var conf ec2.Address
-
-	dataSourceName := "data.aws_eips.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSEIPDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDataSourceAwsEipsConfigFilter(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEIPExists("aws_eip.test", &conf),
-					testAccCheckAWSEIPExists("aws_eip.test2", &conf),
-					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "2"),
-					resource.TestCheckResourceAttr(dataSourceName, "public_ips.#", "2"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccDataSourceAwsEipsClassic_Filter(t *testing.T) {
-	var conf ec2.Address
-
-	dataSourceName := "data.aws_eips.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSEIPDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDataSourceAwsEipsClassicConfigFilter(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEIPExists("aws_eip.test", &conf),
-					testAccCheckAWSEIPExists("aws_eip.test2", &conf),
-					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "2"),
-					resource.TestCheckResourceAttr(dataSourceName, "public_ips.#", "2"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccDataSourceAwsEips_Tags(t *testing.T) {
 	var conf ec2.Address
 
@@ -107,32 +59,6 @@ func TestAccDataSourceAwsEipsClassic_Tags(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAwsEipsConfigFilter(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_eip" "test" {
-  vpc = true
-
-  tags = {
-    Name = %q
-  }
-}
-resource "aws_eip" "test2" {
-  vpc = true
-
-  tags = {
-    Name = %q
-  }
-}
-
-data "aws_eips" "test" {
-  filter {
-    name   = "tag:Name"
-    values = ["${aws_eip.test.tags.Name}"]
-  }
-}
-`, rName, rName)
-}
-
 func testAccDataSourceAwsEipsConfigTags(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_eip" "test" {
@@ -149,32 +75,6 @@ data "aws_eips" "test" {
   }
 }
 `, rName)
-}
-
-func testAccDataSourceAwsEipsClassicConfigFilter(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_eip" "test" {
-  vpc = false
-
-  tags = {
-    Name = %q
-  }
-}
-resource "aws_eip" "test2" {
-  vpc = true
-
-  tags = {
-    Name = %q
-  }
-}
-
-data "aws_eips" "test" {
-  filter {
-    name   = "tag:Name"
-    values = ["${aws_eip.test.tags.Name}"]
-  }
-}
-`, rName, rName)
 }
 
 func testAccDataSourceAwsEipsClassicConfigTags(rName string) string {
