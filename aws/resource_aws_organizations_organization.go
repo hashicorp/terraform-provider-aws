@@ -153,7 +153,7 @@ func resourceAwsOrganizationsOrganizationRead(d *schema.ResourceData, meta inter
 	}
 
 	d.Set("arn", org.Organization.Arn)
-	if err := d.Set("roots", flattenOrgRoots(roots)); err != nil {
+	if err := d.Set("roots", flattenOrganizationsRoots(roots)); err != nil {
 		return fmt.Errorf("error setting roots: %s", err)
 	}
 	d.Set("feature_set", org.Organization.FeatureSet)
@@ -237,7 +237,7 @@ func resourceAwsOrganizationsOrganizationDelete(d *schema.ResourceData, meta int
 	return nil
 }
 
-func flattenOrgRoots(roots []*organizations.Root) []map[string]interface{} {
+func flattenOrganizationsRoots(roots []*organizations.Root) []map[string]interface{} {
 	if len(roots) == 0 {
 		return nil
 	}
@@ -247,13 +247,13 @@ func flattenOrgRoots(roots []*organizations.Root) []map[string]interface{} {
 			"id":           aws.StringValue(r.Id),
 			"name":         aws.StringValue(r.Name),
 			"arn":          aws.StringValue(r.Arn),
-			"policy_types": flattenOrgRootPolicyTypeSummaries(r.PolicyTypes),
+			"policy_types": flattenOrganizationsRootPolicyTypeSummaries(r.PolicyTypes),
 		})
 	}
 	return result
 }
 
-func flattenOrgRootPolicyTypeSummaries(summaries []*organizations.PolicyTypeSummary) []map[string]interface{} {
+func flattenOrganizationsRootPolicyTypeSummaries(summaries []*organizations.PolicyTypeSummary) []map[string]interface{} {
 	if len(summaries) == 0 {
 		return nil
 	}

@@ -197,7 +197,7 @@ resource "aws_organizations_organization" "test" {
 `, featureSet)
 }
 
-func TestFlattenOrgRoots(t *testing.T) {
+func TestFlattenOrganizationsRoots(t *testing.T) {
 	roots := []*organizations.Root{
 		{
 			Name: aws.String("Root1"),
@@ -215,7 +215,7 @@ func TestFlattenOrgRoots(t *testing.T) {
 			},
 		},
 	}
-	result := flattenOrgRoots(roots)
+	result := flattenOrganizationsRoots(roots)
 
 	if len(result) != len(roots) {
 		t.Fatalf("expected result to have %d elements, got %d", len(roots), len(result))
@@ -242,7 +242,7 @@ func TestFlattenOrgRoots(t *testing.T) {
 	}
 }
 
-func testFlattenOrgRootPolicyTypes(t *testing.T, index int, result []map[string]interface{}, types []*organizations.PolicyTypeSummary) {
+func testFlattenOrganizationsRootPolicyTypes(t *testing.T, index int, result []map[string]interface{}, types []*organizations.PolicyTypeSummary) {
 	if len(result) != len(types) {
 		t.Fatalf(`expected result[%d]["policy_types"] to have %d elements, got %d`, index, len(types), len(result))
 	}
