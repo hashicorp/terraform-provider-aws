@@ -50,7 +50,7 @@ func TestAccAWSXraySamplingRule_update(t *testing.T) {
 	resourceName := "aws_xray_sampling_rule.test"
 	rString := acctest.RandString(8)
 	ruleName := fmt.Sprintf("tf_acc_sampling_rule_%s", rString)
-	initialVersion := acctest.RandIntRange(1, 3)
+	initialVersion := 1
 	updatedVersion := initialVersion + 1
 	updatedPriority := acctest.RandIntRange(0, 9999)
 	updatedReservoirSize := acctest.RandIntRange(0, 2147483647)
