@@ -44,6 +44,8 @@ func dataSourceAwsEipsRead(d *schema.ResourceData, meta interface{}) error {
 
 	req := &ec2.DescribeAddressesInput{}
 
+	req.Filters = []*ec2.Filter{}
+
 	req.Filters = append(req.Filters, buildEC2TagFilterList(
 		tagsFromMap(d.Get("tags").(map[string]interface{})),
 	)...)
