@@ -72,14 +72,6 @@ func resourceAwsXraySamplingRule() *schema.Resource {
 				Type:     schema.TypeMap,
 				Optional: true,
 			},
-			"created_at": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"modified_at": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"rule_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
