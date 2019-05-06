@@ -165,7 +165,7 @@ func resourceAwsXraySamplingRuleRead(d *schema.ResourceData, meta interface{}) e
 func resourceAwsXraySamplingRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).xrayconn
 	samplingRuleUpdate := &xray.SamplingRuleUpdate{
-		RuleName:      aws.String(d.Get("name").(string)),
+		RuleName:      aws.String(d.Id()),
 		Priority:      aws.Int64(int64(d.Get("priority").(int))),
 		FixedRate:     aws.Float64(d.Get("fixed_rate").(float64)),
 		ReservoirSize: aws.Int64(int64(d.Get("reservoir_size").(int))),
@@ -203,5 +203,18 @@ func resourceAwsXraySamplingRuleUpdate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsXraySamplingRuleDelete(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).xrayconn
+
+	log.Printf("[INFO] Deleting XRay Sampling Rule: %s", d.Id())
+
+	params := &xray.DeleteSamplingRuleInput{
+		RuleName: aws.String(d.Id()),
+	}
+	_, err := conn.DeleteSamplingRule(params)
+	if err != nil {
+		return fmt.Errorf("Error deleting XRay Sampling Rule: %s", d.Id())
+	}
+
 	return nil
+
 }
