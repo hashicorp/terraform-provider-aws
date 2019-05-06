@@ -235,7 +235,7 @@ func TestFlattenOrganizationsRoots(t *testing.T) {
 			continue
 		}
 		if types, ok := result[i]["policy_types"].([]map[string]interface{}); ok {
-			testFlattenOrgRootPolicyTypes(t, i, types, r.PolicyTypes)
+			testFlattenOrganizationsRootPolicyTypes(t, i, types, r.PolicyTypes)
 			continue
 		}
 		t.Fatalf(`result[%d]["policy_types"] could not be converted to []map[string]interface{}`, i)
