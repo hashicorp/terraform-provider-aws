@@ -22,7 +22,7 @@ func resourceAwsXraySamplingRule() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			"rule_name": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -80,7 +80,7 @@ func resourceAwsXraySamplingRule() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
+			"rule_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -91,7 +91,7 @@ func resourceAwsXraySamplingRule() *schema.Resource {
 func resourceAwsXraySamplingRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).xrayconn
 	samplingRule := &xray.SamplingRule{
-		RuleName:      aws.String(d.Get("name").(string)),
+		RuleName:      aws.String(d.Get("rule_name").(string)),
 		ResourceARN:   aws.String(d.Get("resource_arn").(string)),
 		Priority:      aws.Int64(int64(d.Get("priority").(int))),
 		FixedRate:     aws.Float64(d.Get("fixed_rate").(float64)),
@@ -136,7 +136,7 @@ func resourceAwsXraySamplingRuleRead(d *schema.ResourceData, meta interface{}) e
 		for _, samplingRuleRecord := range out.SamplingRuleRecords {
 			samplingRule := samplingRuleRecord.SamplingRule
 			if aws.StringValue(samplingRule.RuleName) == d.Id() {
-				d.Set("name", samplingRule.RuleName)
+				d.Set("rule_name", samplingRule.RuleName)
 				d.Set("resource_arn", samplingRule.ResourceARN)
 				d.Set("priority", samplingRule.Priority)
 				d.Set("fixed_rate", samplingRule.FixedRate)
@@ -150,7 +150,7 @@ func resourceAwsXraySamplingRuleRead(d *schema.ResourceData, meta interface{}) e
 				d.Set("attributes", aws.StringValueMap(samplingRule.Attributes))
 				d.Set("created_at", samplingRuleRecord.CreatedAt)
 				d.Set("modified_at", samplingRuleRecord.ModifiedAt)
-				d.Set("arn", samplingRule.RuleARN)
+				d.Set("rule_arn", samplingRule.RuleARN)
 				break
 			}
 		}
