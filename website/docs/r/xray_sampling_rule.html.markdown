@@ -50,7 +50,8 @@ resource "aws_xray_sampling_rule" "example" {
 
 In addition to the arguments above, the following attributes are exported:
 
-* `rule_arn` - The ARN of the sampling rule.
+* `id` - The name of the sampling rule.
+* `arn` - The ARN of the sampling rule.
 
 ## Import
 
