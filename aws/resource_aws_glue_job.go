@@ -22,11 +22,12 @@ func resourceAwsGlueJob() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"allocated_capacity": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Computed:     true,
-				Deprecated:   "Please use attribute `max_capacity' instead. This attribute might be removed in future releases.",
-				ValidateFunc: validation.IntAtLeast(2),
+				Type:          schema.TypeInt,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"max_capacity"},
+				Deprecated:    "Please use attribute `max_capacity' instead. This attribute might be removed in future releases.",
+				ValidateFunc:  validation.IntAtLeast(2),
 			},
 			"command": {
 				Type:     schema.TypeList,
@@ -76,9 +77,10 @@ func resourceAwsGlueJob() *schema.Resource {
 				},
 			},
 			"max_capacity": {
-				Type:     schema.TypeFloat,
-				Optional: true,
-				Computed: true,
+				Type:          schema.TypeFloat,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"allocated_capacity"},
 			},
 			"max_retries": {
 				Type:         schema.TypeInt,
