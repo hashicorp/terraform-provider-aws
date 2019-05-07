@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/xray"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -87,7 +86,7 @@ func TestAccAWSXraySamplingRule_import(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSIotThingTypeDestroy,
+		CheckDestroy: testAccCheckAWSXraySamplingRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSXraySamplingRuleConfig_basic(ruleName),
@@ -111,8 +110,9 @@ func testAccCheckXraySamplingRuleExists(n string, samplingRule *xray.SamplingRul
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("No XRay Sampling Rule ID is set")
 		}
+		conn := testAccProvider.Meta().(*AWSClient).xrayconn
 
-		rule, err := getSamplingRule(rs.Primary.ID)
+		rule, err := getXraySamplingRule(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -130,36 +130,20 @@ func testAccCheckAWSXraySamplingRuleDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := getSamplingRule(rs.Primary.ID)
+		conn := testAccProvider.Meta().(*AWSClient).xrayconn
 
-		if err == nil {
+		rule, err := getXraySamplingRule(conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		if rule != nil {
 			return fmt.Errorf("Expected XRay Sampling Rule to be destroyed, %s found", rs.Primary.ID)
 		}
 	}
 
 	return nil
-}
-
-func getSamplingRule(ruleName string) (*xray.SamplingRule, error) {
-	conn := testAccProvider.Meta().(*AWSClient).xrayconn
-	params := &xray.GetSamplingRulesInput{}
-	for {
-		out, err := conn.GetSamplingRules(params)
-		if err != nil {
-			return nil, err
-		}
-		for _, samplingRuleRecord := range out.SamplingRuleRecords {
-			samplingRule := samplingRuleRecord.SamplingRule
-			if aws.StringValue(samplingRule.RuleName) == ruleName {
-				return samplingRule, nil
-			}
-		}
-		if out.NextToken == nil {
-			break
-		}
-		params.NextToken = out.NextToken
-	}
-	return nil, fmt.Errorf("XRay Sampling Rule: %s not found found", ruleName)
 }
 
 func testAccAWSXraySamplingRuleConfig_basic(ruleName string) string {

@@ -129,41 +129,26 @@ func resourceAwsXraySamplingRuleCreate(d *schema.ResourceData, meta interface{})
 
 func resourceAwsXraySamplingRuleRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).xrayconn
-	params := &xray.GetSamplingRulesInput{}
 
-	for {
-		out, err := conn.GetSamplingRules(params)
-		log.Printf("[DEBUG] Retrieved Rules: %s", out.SamplingRuleRecords)
-		if err != nil {
-			d.SetId("")
-			return err
-		}
-		for _, samplingRuleRecord := range out.SamplingRuleRecords {
-			samplingRule := samplingRuleRecord.SamplingRule
-			if aws.StringValue(samplingRule.RuleName) == d.Id() {
-				d.Set("rule_name", samplingRule.RuleName)
-				d.Set("resource_arn", samplingRule.ResourceARN)
-				d.Set("priority", samplingRule.Priority)
-				d.Set("fixed_rate", samplingRule.FixedRate)
-				d.Set("reservoir_size", samplingRule.ReservoirSize)
-				d.Set("service_name", samplingRule.ServiceName)
-				d.Set("service_type", samplingRule.ServiceType)
-				d.Set("host", samplingRule.Host)
-				d.Set("http_method", samplingRule.HTTPMethod)
-				d.Set("url_path", samplingRule.URLPath)
-				d.Set("version", samplingRule.Version)
-				d.Set("attributes", aws.StringValueMap(samplingRule.Attributes))
-				d.Set("created_at", samplingRuleRecord.CreatedAt)
-				d.Set("modified_at", samplingRuleRecord.ModifiedAt)
-				d.Set("arn", samplingRule.RuleARN)
-				break
-			}
-		}
-		if out.NextToken == nil {
-			break
-		}
-		params.NextToken = out.NextToken
+	samplingRule, err := getXraySamplingRule(conn, d.Id())
+
+	if err != nil {
+		return err
 	}
+
+	d.Set("rule_name", samplingRule.RuleName)
+	d.Set("resource_arn", samplingRule.ResourceARN)
+	d.Set("priority", samplingRule.Priority)
+	d.Set("fixed_rate", samplingRule.FixedRate)
+	d.Set("reservoir_size", samplingRule.ReservoirSize)
+	d.Set("service_name", samplingRule.ServiceName)
+	d.Set("service_type", samplingRule.ServiceType)
+	d.Set("host", samplingRule.Host)
+	d.Set("http_method", samplingRule.HTTPMethod)
+	d.Set("url_path", samplingRule.URLPath)
+	d.Set("version", samplingRule.Version)
+	d.Set("attributes", aws.StringValueMap(samplingRule.Attributes))
+	d.Set("arn", samplingRule.RuleARN)
 	return nil
 }
 
@@ -217,5 +202,25 @@ func resourceAwsXraySamplingRuleDelete(d *schema.ResourceData, meta interface{})
 	}
 
 	return nil
+}
 
+func getXraySamplingRule(conn *xray.XRay, ruleName string) (*xray.SamplingRule, error) {
+	params := &xray.GetSamplingRulesInput{}
+	for {
+		out, err := conn.GetSamplingRules(params)
+		if err != nil {
+			return nil, err
+		}
+		for _, samplingRuleRecord := range out.SamplingRuleRecords {
+			samplingRule := samplingRuleRecord.SamplingRule
+			if aws.StringValue(samplingRule.RuleName) == ruleName {
+				return samplingRule, nil
+			}
+		}
+		if aws.StringValue(out.NextToken) == "" {
+			break
+		}
+		params.NextToken = out.NextToken
+	}
+	return nil, nil
 }
