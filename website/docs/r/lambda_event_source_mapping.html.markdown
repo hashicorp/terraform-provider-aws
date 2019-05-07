@@ -81,7 +81,3 @@ For information about retrieving event source mappings, see [GetEventSourceMappi
 
 [3]: https://docs.aws.amazon.com/lambda/latest/dg/API_GetEventSourceMapping.html
 you import a mapping Terraform will want to create the mapping on the next apply.
-
-For information about retrieving event source mappings, see [GetEventSourceMapping][3] in the API docs.
-
-[3]: https://docs.aws.amazon.com/lambda/latest/dg/API_GetEventSourceMapping.html
