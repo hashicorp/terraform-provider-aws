@@ -2,6 +2,7 @@
 
 ENHANCEMENTS:
 
+* data-source/aws_rds_cluster: Add `resource_id` attribute [GH-8317]
 * resource/aws_organizations_organization: Add `roots` attribute [GH-8399]
 
 ## 2.9.0 (May 06, 2019)
