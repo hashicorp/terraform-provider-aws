@@ -87,6 +87,32 @@ func TestAccAwsBackupSelection_withResources(t *testing.T) {
 	})
 }
 
+func TestAccAwsBackupSelection_updateTag(t *testing.T) {
+	var selection1, selection2 backup.GetBackupSelectionOutput
+	resourceName := "aws_backup_selection.test"
+	rInt := acctest.RandInt()
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsBackupSelectionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBackupSelectionConfigBasic(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsBackupSelectionExists(resourceName, &selection1),
+				),
+			},
+			{
+				Config: testAccBackupSelectionConfigUpdateTag(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsBackupSelectionExists(resourceName, &selection2),
+					testAccCheckAwsBackupSelectionRecreated(t, &selection1, &selection2),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAwsBackupSelectionDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).backupconn
 	for _, rs := range s.RootModule().Resources {
@@ -149,6 +175,16 @@ func testAccCheckAwsBackupSelectionDisappears(selection *backup.GetBackupSelecti
 		_, err := conn.DeleteBackupSelection(input)
 
 		return err
+	}
+}
+
+func testAccCheckAwsBackupSelectionRecreated(t *testing.T,
+	before, after *backup.GetBackupSelectionOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if *before.SelectionId == *after.SelectionId {
+			t.Fatalf("Expected change of Backup Selection IDs, but both were %s", *before.SelectionId)
+		}
+		return nil
 	}
 }
 
@@ -240,6 +276,27 @@ resource "aws_backup_selection" "test" {
 
   resources = [
     "arn:${data.aws_partition.current.partition}:elasticfilesystem:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:file-system/",
+    "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:volume/"
+  ]
+}
+`, rInt)
+}
+
+func testAccBackupSelectionConfigUpdateTag(rInt int) string {
+	return testAccBackupSelectionConfigBase(rInt) + fmt.Sprintf(`
+resource "aws_backup_selection" "test" {
+  plan_id      = "${aws_backup_plan.test.id}"
+
+  name         = "tf_acc_test_backup_selection_%d"
+  iam_role_arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/service-role/AWSBackupDefaultServiceRole"
+
+  selection_tag {
+    type = "STRINGEQUALS"
+    key = "foo2"
+    value = "bar2"
+  }
+
+  resources = [
     "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:volume/"
   ]
 }

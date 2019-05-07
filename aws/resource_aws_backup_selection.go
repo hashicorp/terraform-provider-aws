@@ -47,6 +47,7 @@ func resourceAwsBackupSelection() *schema.Resource {
 						"type": {
 							Type:     schema.TypeString,
 							Required: true,
+							ForceNew: true,
 							ValidateFunc: validation.StringInSlice([]string{
 								backup.ConditionTypeStringequals,
 							}, false),
@@ -54,10 +55,12 @@ func resourceAwsBackupSelection() *schema.Resource {
 						"key": {
 							Type:     schema.TypeString,
 							Required: true,
+							ForceNew: true,
 						},
 						"value": {
 							Type:     schema.TypeString,
 							Required: true,
+							ForceNew: true,
 						},
 					},
 				},
