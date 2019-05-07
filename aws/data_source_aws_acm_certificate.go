@@ -51,11 +51,10 @@ func dataSourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) e
 	for i := 0; i < len(keyAlgorithms); i++ {
 		keyTypes[i] = &keyAlgorithms[i]
 	}
-	includesFilters := &acm.Filters{
-		KeyTypes: keyTypes,
-	}
 	params := &acm.ListCertificatesInput{
-		Includes: includesFilters,
+		Includes: &acm.Filters{
+			KeyTypes: keyTypes,
+		},
 	}
 	target := d.Get("domain")
 	statuses, ok := d.GetOk("statuses")
