@@ -119,7 +119,7 @@ func resourceAwsXraySamplingRuleCreate(d *schema.ResourceData, meta interface{})
 
 	out, err := conn.CreateSamplingRule(params)
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating XRay Sampling Rule: %s", err)
 	}
 
 	d.SetId(*out.SamplingRuleRecord.SamplingRule.RuleName)
@@ -133,7 +133,13 @@ func resourceAwsXraySamplingRuleRead(d *schema.ResourceData, meta interface{}) e
 	samplingRule, err := getXraySamplingRule(conn, d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("error reading XRay Sampling Rule (%s): %s", d.Id(), err)
+	}
+
+	if samplingRule == nil {
+		log.Printf("[WARN] XRay Sampling Rule (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
 	d.Set("rule_name", samplingRule.RuleName)
@@ -149,6 +155,7 @@ func resourceAwsXraySamplingRuleRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("version", samplingRule.Version)
 	d.Set("attributes", aws.StringValueMap(samplingRule.Attributes))
 	d.Set("arn", samplingRule.RuleARN)
+
 	return nil
 }
 
@@ -182,7 +189,7 @@ func resourceAwsXraySamplingRuleUpdate(d *schema.ResourceData, meta interface{})
 
 	_, err := conn.UpdateSamplingRule(params)
 	if err != nil {
-		return err
+		return fmt.Errorf("error updating XRay Sampling Rule (%s): %s", d.Id(), err)
 	}
 
 	return resourceAwsXraySamplingRuleRead(d, meta)
@@ -198,7 +205,7 @@ func resourceAwsXraySamplingRuleDelete(d *schema.ResourceData, meta interface{})
 	}
 	_, err := conn.DeleteSamplingRule(params)
 	if err != nil {
-		return fmt.Errorf("Error deleting XRay Sampling Rule: %s", d.Id())
+		return fmt.Errorf("error deleting XRay Sampling Rule: %s", d.Id())
 	}
 
 	return nil
