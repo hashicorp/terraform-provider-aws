@@ -13,6 +13,7 @@ import (
 
 func TestAccAwsBackupSelection_basic(t *testing.T) {
 	var selection1 backup.GetBackupSelectionOutput
+	resourceName := "aws_backup_selection.test"
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -22,8 +23,14 @@ func TestAccAwsBackupSelection_basic(t *testing.T) {
 			{
 				Config: testAccBackupSelectionConfigBasic(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsBackupSelectionExists("aws_backup_selection.test", &selection1),
+					testAccCheckAwsBackupSelectionExists(resourceName, &selection1),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSBackupSelectionImportStateIDFunc(resourceName),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -51,6 +58,7 @@ func TestAccAwsBackupSelection_disappears(t *testing.T) {
 
 func TestAccAwsBackupSelection_withTags(t *testing.T) {
 	var selection1 backup.GetBackupSelectionOutput
+	resourceName := "aws_backup_selection.test"
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -60,9 +68,15 @@ func TestAccAwsBackupSelection_withTags(t *testing.T) {
 			{
 				Config: testAccBackupSelectionConfigWithTags(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsBackupSelectionExists("aws_backup_selection.test", &selection1),
-					resource.TestCheckResourceAttr("aws_backup_selection.test", "selection_tag.#", "2"),
+					testAccCheckAwsBackupSelectionExists(resourceName, &selection1),
+					resource.TestCheckResourceAttr(resourceName, "selection_tag.#", "2"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSBackupSelectionImportStateIDFunc(resourceName),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -70,6 +84,7 @@ func TestAccAwsBackupSelection_withTags(t *testing.T) {
 
 func TestAccAwsBackupSelection_withResources(t *testing.T) {
 	var selection1 backup.GetBackupSelectionOutput
+	resourceName := "aws_backup_selection.test"
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -79,9 +94,15 @@ func TestAccAwsBackupSelection_withResources(t *testing.T) {
 			{
 				Config: testAccBackupSelectionConfigWithResources(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsBackupSelectionExists("aws_backup_selection.test", &selection1),
-					resource.TestCheckResourceAttr("aws_backup_selection.test", "resources.#", "2"),
+					testAccCheckAwsBackupSelectionExists(resourceName, &selection1),
+					resource.TestCheckResourceAttr(resourceName, "resources.#", "2"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSBackupSelectionImportStateIDFunc(resourceName),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -108,6 +129,12 @@ func TestAccAwsBackupSelection_updateTag(t *testing.T) {
 					testAccCheckAwsBackupSelectionExists(resourceName, &selection2),
 					testAccCheckAwsBackupSelectionRecreated(t, &selection1, &selection2),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSBackupSelectionImportStateIDFunc(resourceName),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -185,6 +212,21 @@ func testAccCheckAwsBackupSelectionRecreated(t *testing.T,
 			t.Fatalf("Expected change of Backup Selection IDs, but both were %s", *before.SelectionId)
 		}
 		return nil
+	}
+}
+
+func testAccAWSBackupSelectionImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		id := fmt.Sprintf("%s|%s",
+			rs.Primary.Attributes["plan_id"],
+			rs.Primary.ID)
+
+		return id, nil
 	}
 }
 
