@@ -174,6 +174,11 @@ func dataSourceAwsDbInstance() *schema.Resource {
 				Computed: true,
 			},
 
+			"resource_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"storage_encrypted": {
 				Type:     schema.TypeBool,
 				Computed: true,
