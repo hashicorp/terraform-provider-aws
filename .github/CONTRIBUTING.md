@@ -30,9 +30,9 @@ we need to be able to review and respond quickly.
         - [Documentation Update](#documentation-update)
         - [Enhancement/Bugfix to a Resource](#enhancementbugfix-to-a-resource)
         - [New Resource](#new-resource)
+        - [New and Updated Resource Guidelines](#new-and-updated-resource-guidelines)
         - [New Service](#new-service)
         - [New Region](#new-region)
-        - [Terraform Schema and Code Idiosyncracies](#terraform-schema-and-code-idiosyncracies)
     - [Writing Acceptance Tests](#writing-acceptance-tests)
         - [Acceptance Tests Often Cost Money to Run](#acceptance-tests-often-cost-money-to-run)
         - [Running an Acceptance Test](#running-an-acceptance-test)
@@ -201,7 +201,9 @@ easy for anybody to help us improve our docs.
 
 Working on existing resources is a great way to get started as a Terraform
 contributor because you can work within existing code and tests to get a feel
-for what to do.
+for what to do. In addition to the below checklist, see the [New and Updated
+Resource Guidelines section](#new-and-updated-resource-guidelines) for common
+pull request review items.
 
  - [ ] __Acceptance test coverage of new behavior__: Existing resources each
    have a set of [acceptance tests][acctests] covering their functionality.
@@ -231,6 +233,9 @@ for what to do.
 Implementing a new resource is a good way to learn more about how Terraform
 interacts with upstream APIs. There are plenty of examples to draw from in the
 existing resources, but you still get to implement something completely new.
+In addition to the below checklist, see the [New and Updated
+Resource Guidelines section](#new-and-updated-resource-guidelines) for common
+pull request review items.
 
  - [ ] __Minimal LOC__: It can be inefficient for both the reviewer
    and author to go through long feedback cycles on a big PR with many
@@ -259,6 +264,72 @@ existing resources, but you still get to implement something completely new.
  - [ ] __Vendor updates__: Create a separate PR if you are adding to the vendor
    folder. This is to avoid conflicts as the vendor versions tend to be fast
    moving targets.
+
+#### New and Updated Resource Guidelines
+
+The Terraform AWS Provider follows common practices to ensure consistent and reliable implementations across all resources in the project. While there may be older schema and resource code present that predates these guidelines, new submissions are generally expected to adhere to these items to maintain Terraform Provider quality. For any guidelines listed, contributors are encouraged to ask any questions and community reviewers are encouraged to provide review suggestions based on these guidelines to speed up the review and merge process.
+
+The below are required items that will be noted during submission review and prevent immediate merging:
+
+- [ ] __Passes Testing__: All code and documentation changes must pass unit testing, code linting, and website link testing. Resource code changes must pass all acceptance testing for the resource.
+- [ ] __Avoids API Calls Across Account, Region, and Service Boundaries__: Resources should not implement cross-account, cross-region, or cross-service API calls.
+- [ ] __Avoids Optional and Required for Non-Configurable Attributes__: Resource schema definitions for read-only attributes should not include `Optional: true` or `Required: true`.
+- [ ] __Avoids resource.Retry() without resource.RetryableError()__: Resource logic should only implement [`resource.Retry()`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#Retry) if there is a retryable condition (e.g. `return resource.RetryableError(err)`).
+- [ ] __Avoids Resource Read Function in Data Source Read Function__: Data sources should fully implement their own resource `Read` functionality including duplicating `d.Set()` calls.
+- [ ] __Avoids Reading Schema Structure in Resource Code__: The resource `Schema` should not be read in resource `Create`/`Read`/`Update`/`Delete` functions to perform looping or otherwise complex attribute logic. Use [`d.Get()`](https://godoc.org/github.com/hashicorp/terraform/helper/schema#ResourceData.Get) and [`d.Set()`](https://godoc.org/github.com/hashicorp/terraform/helper/schema#ResourceData.Set) directly with individual attributes instead.
+- [ ] __Implements Read After Create and Update__: Except where API eventual consistency prohibits immediate reading of resources or updated attributes,  resource `Create` and `Update` functions should return the resource `Read` function.
+- [ ] __Implements Immediate Resource ID Set During Create__: Immediately after calling the API creation function, the resource ID should be set with [`d.SetId()`](https://godoc.org/github.com/hashicorp/terraform/helper/schema#ResourceData.SetId) before other API operations or returning the `Read` function.
+- [ ] __Implements Attribute Refreshes During Read__: All attributes available in the API should have [`d.Set()`](https://godoc.org/github.com/hashicorp/terraform/helper/schema#ResourceData.Set) called their values in the Terraform state during the `Read` function.
+- [ ] __Implements Error Checks with Non-Primative Attribute Refreshes__: When using [`d.Set()`](https://godoc.org/github.com/hashicorp/terraform/helper/schema#ResourceData.Set) with non-primative types (`schema.TypeList`, `schema.TypeSet`, or `schema.TypeMap`), perform error checking to [prevent issues where the code is not properly able to refresh the Terraform state](https://www.terraform.io/docs/extend/best-practices/detecting-drift.html#error-checking-aggregate-types).
+- [ ] __Implements Import Acceptance Testing and Documentation__: Support for resource import (`Importer` in resource schema) must include `ImportState` acceptance testing (see also the [Acceptance Testing Guidelines](#acceptance-testing-guidelines) below) and `## Import` section in resource documentation.
+- [ ] __Implements Customizable Timeouts Documentation__: Support for customizable timeouts (`Timeouts` in resource schema) must include `## Timeouts` section in resource documentation.
+- [ ] __Implements State Migration When Adding New Virtual Attribute__: For new "virtual" attributes (those only in Terraform and not in the API), the schema should implement [State Migration](https://www.terraform.io/docs/extend/resources.html#state-migrations) to prevent differences for existing configurations that upgrade.
+- [ ] __Uses AWS Go SDK Constants__: Many AWS services provide string constants for value enumerations, error codes, and status types. See also the "Constants" sections under each of the service packages in the [AWS Go SDK documentation](https://docs.aws.amazon.com/sdk-for-go/api/).
+- [ ] __Uses AWS Go SDK Pointer Conversion Functions__: Many APIs return pointer types and these functions return the zero value for the type if the pointer is `nil`. This prevents potential panics from unchecked `*` pointer dereferences and can eliminate boilerplate `nil` checking in many cases. See also the [`aws` package in the AWS Go SDK documentation](https://docs.aws.amazon.com/sdk-for-go/api/aws/).
+- [ ] __Uses AWS Go SDK Types__: Use available SDK structs instead of implementing custom types with indirection.
+- [ ] __Uses TypeList and MaxItems: 1__: Configuration block attributes (e.g. `Type: schema.TypeList` or `Type: schema.TypeSet` with `Elem: &schema.Resource{...}`) that can only have one block should use `Type: schema.TypeList` and `MaxItems: 1` in the schema definition.
+- [ ] __Uses Existing Validation Functions__: Schema definitions including `ValidateFunc` for attribute validation should use available [Terraform `helper/validation` package](https://godoc.org/github.com/hashicorp/terraform/helper/validation) functions. `All()`/`Any()` can be used for combining multiple validation function behaviors.
+- [ ] __Uses isResourceTimeoutError() with resource.Retry()__: Resource logic implementing [`resource.Retry()`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#Retry) should error check with `isResourceTimeoutError(err error)` and potentially unset the error before returning the error. For example:
+
+  ```go
+  var output *kms.CreateKeyOutput
+  err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+    var err error
+
+    output, err = conn.CreateKey(input)
+
+    /* ... */
+
+    return nil
+  })
+
+  if isResourceTimeoutError(err) {
+    output, err = conn.CreateKey(input)
+  }
+
+  if err != nil {
+    return fmt.Errorf("error creating KMS External Key: %s", err)
+  }
+  ```
+
+- [ ] __Uses resource.NotFoundError__: Custom errors for missing resources should use [`resource.NotFoundError`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#NotFoundError).
+- [ ] __Skips Exists Function__: Implementing a resource `Exists` function is extraneous as it often duplicates resource `Read` functionality. Ensure `d.SetId("")` is used to appropriately trigger resource recreation in the resource `Read` function.
+- [ ] __Skips id Attribute__: The `id` attribute is implicit for all Terraform resources and does not need to be defined in the schema.
+
+The below are style-based items that _may_ be noted during review and are recommended for simplicity, consistency, and quality assurance:
+
+- [ ] __Avoids CustomizeDiff__: Usage of `CustomizeDiff` is generally discouraged.
+- [ ] __Implements Error Message Context__: Returning errors from resource `Create`, `Read`, `Update`, and `Delete` functions should include additional messaging about the location or cause of the error for operators and code maintainers by wrapping with [`fmt.Errorf()`](https://godoc.org/golang.org/x/exp/errors/fmt#Errorf).
+  - An example `Delete` API error: `return fmt.Errorf("error deleting {SERVICE} {THING} (%s): %s", d.Id(), err)`
+  - An example `d.Set()` error: `return fmt.Errorf("error setting {ATTRIBUTE}: %s", err)`
+- [ ] __Implements arn Attribute__: APIs that return an Amazon Resource Name (ARN), should implement `arn` as an attribute.
+- [ ] __Implements Warning Logging With Resource State Removal__: If a resource is removed outside of Terraform (e.g. via different tool, API, or web UI), `d.SetId("")` and `return nil` can be used in the resource `Read` function to trigger resource recreation. When this occurs, a warning log message should be printed beforehand: `log.Printf("[WARN] {SERVICE} {THING} (%s) not found, removing from state", d.Id())`
+- [ ] __Uses isAWSErr() with AWS Go SDK Error Objects__: Use the available `isAWSErr(err error, code string, message string)` helper function instead of the `awserr` package to compare error code and message contents.
+- [ ] __Uses %s fmt Verb with AWS Go SDK Objects__: AWS Go SDK objects implement `String()` so using the `%v`, `%#v`, or `%+v` fmt verbs with the object are extraneous or provide unhelpful detail.
+- [ ] __Uses Elem with TypeMap__: While provider schema validation does not error when the `Elem` configuration is not present with `Type: schema.TypeMap` attributes, including the explicit `Elem: &schema.Schema{Type: schema.TypeString}` is recommended.
+- [ ] __Uses American English for Attribute Naming__: For any ambiguity with attribute naming, prefer American English over British English. e.g. `color` instead of `colour`.
+- [ ] __Skips Timestamp Attributes__: Generally, creation and modification dates from the API should be omitted from the schema.
+- [ ] __Skips Error() Call with AWS Go SDK Error Objects__: Error objects do not need to have `Error()` called.
 
 #### New Service
 
@@ -317,32 +388,6 @@ manually sourced values from documentation.
  - [ ] Check [Elastic Load Balancing Access Logs docs](https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/enable-access-logs.html#attach-bucket-policy) and add Elastic Load Balancing Account ID if available to `aws/data_source_aws_elb_service_account.go`
  - [ ] Check [Redshift Database Audit Logging docs](https://docs.aws.amazon.com/redshift/latest/mgmt/db-auditing.html) and add AWS Account ID if available to `aws/data_source_aws_redshift_service_account.go`
  - [ ] Check [Regions and Endpoints Elastic Beanstalk](https://docs.aws.amazon.com/general/latest/gr/rande.html#elasticbeanstalk_region) and add Route53 Hosted Zone ID if available to `aws/data_source_aws_elastic_beanstalk_hosted_zone.go`]
-
-#### Terraform Schema and Code Idiosyncracies
-
-There are aspects of the terraform code base and models which have a common theme
-and style
-
- - [ ] __Ignore Timestamps__: Generally, creation and modification dates are not
-   included in schemas.
- - [ ] __Attribute Update Tests__: Try to add a second test step in at least one
-   test case showing attribute changes propagate during Update operations
- - [ ] __AWS Errors__: Use the helper function (`isAWSErr(err, ...)`) to check the
-   type of AWS error.
- - [ ] __`Computed`__: The `Computed` attribute is generally used in isolation for
-   any IDs or anything not defined in the config and returned by the API.
- - [ ] __`Computed` with `Optional`__: The `Computed` attribute is generally used
-   in conjunction with `Optional` when the API automatically sets unpredictable
-   default value or when the value is generally not static and depends on other
-   attributes.
- - [ ] __Spelling__: When referencing resources in the AWS API, use spelling which
-   matches that of official AWS documentation. In all other cases, use American
-   spelling for variables, functions, and constants.
- - [ ] __Removed Resources__:  If a resource is removed from AWS outside of
-   Terraform (e.g. via different tool, API or web UI), make sure to catch this case.
-   Print a `[WARN]` log message, and use `d.SetId("")` to remove the resource from
-   state inside `Read()`.
-
 
 ### Writing Acceptance Tests
 
