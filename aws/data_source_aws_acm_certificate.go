@@ -44,7 +44,19 @@ func dataSourceAwsAcmCertificate() *schema.Resource {
 func dataSourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).acmconn
 
-	params := &acm.ListCertificatesInput{}
+	// Explicitly define algorithms, by default, the API does not return all types
+	// Values from: https://docs.aws.amazon.com/acm/latest/APIReference/API_Filters.html#ACM-Type-Filters-keyTypes
+	keyAlgorithms := []string{"RSA_2048", "RSA_1024", "RSA_4096", "EC_prime256v1", "EC_secp384r1", "EC_secp521r1"}
+	keyTypes := make([]*string, len(keyAlgorithms))
+	for i := 0; i < len(keyAlgorithms); i++ {
+		keyTypes[i] = &keyAlgorithms[i]
+	}
+	includesFilters := &acm.Filters{
+		KeyTypes: keyTypes,
+	}
+	params := &acm.ListCertificatesInput{
+		Includes: includesFilters,
+	}
 	target := d.Get("domain")
 	statuses, ok := d.GetOk("statuses")
 	if ok {
