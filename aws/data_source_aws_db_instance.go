@@ -174,6 +174,11 @@ func dataSourceAwsDbInstance() *schema.Resource {
 				Computed: true,
 			},
 
+			"resource_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"storage_encrypted": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -241,6 +246,7 @@ func dataSourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("db_instance_arn", dbInstance.DBInstanceArn)
 	d.Set("db_instance_class", dbInstance.DBInstanceClass)
 	d.Set("db_name", dbInstance.DBName)
+	d.Set("resource_id", dbInstance.DbiResourceId)
 
 	var parameterGroups []string
 	for _, v := range dbInstance.DBParameterGroups {
