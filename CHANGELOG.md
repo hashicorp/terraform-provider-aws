@@ -4,6 +4,7 @@ ENHANCEMENTS:
 
 * data-source/aws_rds_cluster: Add `resource_id` attribute [GH-8317]
 * resource/aws_organizations_organization: Add `roots` attribute [GH-8399]
+* resource/aws_rds_cluster: Add `copy_tags_to_snapshot` argument [GH-8544]
 
 ## 2.9.0 (May 06, 2019)
 
