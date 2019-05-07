@@ -188,7 +188,7 @@ each type of contribution.
 
 #### Documentation Update
 
-The [Terraform AWS Provider's website source][website] is in the same repository here as the code and testing. Below are some common items that will get flagged during documentation reviews.
+The [Terraform AWS Provider's website source][website] is in this repository along with the code and testing. Below are some common items that will get flagged during documentation reviews:
 
 - [ ] __Reasoning for Change__: Most documentation updates should include an explanation for why the update is needed.
 - [ ] __Prefer AWS Documentation__: Links about AWS service features and argument valid value lists that are likely to update over time should prefer to link to AWS service user guides and API references where possible.
