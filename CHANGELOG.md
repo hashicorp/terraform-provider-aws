@@ -1,5 +1,9 @@
 ## 2.10.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_organizations_organizational_unit` [GH-4207]
+
 ENHANCEMENTS:
 
 * data-source/aws_rds_cluster: Add `resource_id` attribute [GH-8317]
