@@ -10,6 +10,27 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func testAccAwsOrganizationsUnit_importBasic(t *testing.T) {
+	resourceName := "aws_organizations_unit.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsOrganizationsUnitDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsOrganizationsUnitConfig("foo"),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccAwsOrganizationsUnit_basic(t *testing.T) {
 	var unit organizations.OrganizationalUnit
 
@@ -78,6 +99,15 @@ func testAccCheckAwsOrganizationsUnitDestroy(s *terraform.State) error {
 			continue
 		}
 
+		exists, err := existsOrganization(conn)
+		if err != nil {
+			return fmt.Errorf("failed to check for the existance of an AWS Organization: %v", err)
+		}
+
+		if !exists {
+			continue
+		}
+
 		params := &organizations.DescribeOrganizationalUnitInput{
 			OrganizationalUnitId: &rs.Primary.ID,
 		}
@@ -98,6 +128,18 @@ func testAccCheckAwsOrganizationsUnitDestroy(s *terraform.State) error {
 
 	return nil
 
+}
+
+func existsOrganization(client *organizations.Organizations) (ok bool, err error) {
+	_, err = client.DescribeOrganization(&organizations.DescribeOrganizationInput{})
+	if err != nil {
+		if isAWSErr(err, organizations.ErrCodeAWSOrganizationsNotInUseException, "") {
+			err = nil
+		}
+		return
+	}
+	ok = true
+	return
 }
 
 func testAccCheckAwsOrganizationsUnitExists(n string, ou *organizations.OrganizationalUnit) resource.TestCheckFunc {
@@ -130,12 +172,11 @@ func testAccCheckAwsOrganizationsUnitExists(n string, ou *organizations.Organiza
 
 func testAccAwsOrganizationsUnitConfig(name string) string {
 	return fmt.Sprintf(`
-data "aws_organizations_unit" "root" {
-  root = true
+resource "aws_organizations_organization" "org" {
 }
 
 resource "aws_organizations_unit" "test" {
-  parent_id = "${data.aws_organizations_unit.root.id}"
+  parent_id = "${aws_organizations_organization.org.roots.0.id}"
   name = "%s"
 }
 `, name)
