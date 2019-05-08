@@ -157,11 +157,14 @@ func testAccCheckAwsOrganizationsUnitExists(n string, ou *organizations.Organiza
 		resp, err := conn.DescribeOrganizationalUnit(params)
 
 		if err != nil {
+			if isAWSErr(err, organizations.ErrCodeOrganizationalUnitNotFoundException, "") {
+				return fmt.Errorf("Organizational Unit %q does not exist", rs.Primary.ID)
+			}
 			return err
 		}
 
-		if resp != nil || resp.OrganizationalUnit == nil {
-			return fmt.Errorf("Organizational Unit %q does not exist", rs.Primary.ID)
+		if resp == nil {
+			return fmt.Errorf("failed to DescribeOrganizationalUnit %q, response was nil", rs.Primary.ID)
 		}
 
 		ou = resp.OrganizationalUnit
