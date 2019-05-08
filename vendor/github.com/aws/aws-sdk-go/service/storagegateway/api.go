@@ -8585,6 +8585,11 @@ func (s *CreateNFSFileShareOutput) SetFileShareARN(v string) *CreateNFSFileShare
 type CreateSMBFileShareInput struct {
 	_ struct{} `type:"structure"`
 
+	// A list of users or groups in the Active Directory that have administrator
+	// rights to the file share. A group must be prefixed with the @ character.
+	// For example @group1. Can only be set if Authentication is set to ActiveDirectory.
+	AdminUserList []*string `type:"list"`
+
 	// The authentication method that users use to access the file share.
 	//
 	// Valid values are ActiveDirectory or GuestAccess. The default is ActiveDirectory.
@@ -8735,6 +8740,12 @@ func (s *CreateSMBFileShareInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetAdminUserList sets the AdminUserList field's value.
+func (s *CreateSMBFileShareInput) SetAdminUserList(v []*string) *CreateSMBFileShareInput {
+	s.AdminUserList = v
+	return s
 }
 
 // SetAuthentication sets the Authentication field's value.
@@ -14284,6 +14295,11 @@ func (s *RetrieveTapeRecoveryPointOutput) SetTapeARN(v string) *RetrieveTapeReco
 type SMBFileShareInfo struct {
 	_ struct{} `type:"structure"`
 
+	// A list of users or groups in the Active Directory that have administrator
+	// rights to the file share. A group must be prefixed with the @ character.
+	// For example @group1. Can only be set if Authentication is set to ActiveDirectory.
+	AdminUserList []*string `type:"list"`
+
 	// The authentication method of the file share.
 	//
 	// Valid values are ActiveDirectory or GuestAccess. The default is ActiveDirectory.
@@ -14378,6 +14394,12 @@ func (s SMBFileShareInfo) String() string {
 // GoString returns the string representation
 func (s SMBFileShareInfo) GoString() string {
 	return s.String()
+}
+
+// SetAdminUserList sets the AdminUserList field's value.
+func (s *SMBFileShareInfo) SetAdminUserList(v []*string) *SMBFileShareInfo {
+	s.AdminUserList = v
+	return s
 }
 
 // SetAuthentication sets the Authentication field's value.
@@ -16137,6 +16159,11 @@ func (s *UpdateNFSFileShareOutput) SetFileShareARN(v string) *UpdateNFSFileShare
 type UpdateSMBFileShareInput struct {
 	_ struct{} `type:"structure"`
 
+	// A list of users or groups in the Active Directory that have administrator
+	// rights to the file share. A group must be prefixed with the @ character.
+	// For example @group1. Can only be set if Authentication is set to ActiveDirectory.
+	AdminUserList []*string `type:"list"`
+
 	// The default storage class for objects put into an Amazon S3 bucket by the
 	// file gateway. Possible values are S3_STANDARD, S3_STANDARD_IA, or S3_ONEZONE_IA.
 	// If this field is not populated, the default value S3_STANDARD is used. Optional.
@@ -16224,6 +16251,12 @@ func (s *UpdateSMBFileShareInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetAdminUserList sets the AdminUserList field's value.
+func (s *UpdateSMBFileShareInput) SetAdminUserList(v []*string) *UpdateSMBFileShareInput {
+	s.AdminUserList = v
+	return s
 }
 
 // SetDefaultStorageClass sets the DefaultStorageClass field's value.

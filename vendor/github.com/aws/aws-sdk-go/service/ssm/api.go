@@ -4950,6 +4950,106 @@ func (c *SSM) DescribePatchGroupsWithContext(ctx aws.Context, input *DescribePat
 	return out, req.Send()
 }
 
+const opDescribePatchProperties = "DescribePatchProperties"
+
+// DescribePatchPropertiesRequest generates a "aws/request.Request" representing the
+// client's request for the DescribePatchProperties operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribePatchProperties for more information on using the DescribePatchProperties
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribePatchPropertiesRequest method.
+//    req, resp := client.DescribePatchPropertiesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribePatchProperties
+func (c *SSM) DescribePatchPropertiesRequest(input *DescribePatchPropertiesInput) (req *request.Request, output *DescribePatchPropertiesOutput) {
+	op := &request.Operation{
+		Name:       opDescribePatchProperties,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribePatchPropertiesInput{}
+	}
+
+	output = &DescribePatchPropertiesOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribePatchProperties API operation for Amazon Simple Systems Manager (SSM).
+//
+// Lists the properties of available patches organized by product, product family,
+// classification, severity, and other properties of available patches. You
+// can use the reported properties in the filters you specify in requests for
+// actions such as CreatePatchBaseline, UpdatePatchBaseline, DescribeAvailablePatches,
+// and DescribePatchBaselines.
+//
+// The following section lists the properties that can be used in filters for
+// each major operating system type:
+//
+// WINDOWSValid properties: PRODUCT, PRODUCT_FAMILY, CLASSIFICATION, MSRC_SEVERITY
+//
+// AMAZON_LINUXValid properties: PRODUCT, CLASSIFICATION, SEVERITY
+//
+// AMAZON_LINUX_2Valid properties: PRODUCT, CLASSIFICATION, SEVERITY
+//
+// UBUNTU Valid properties: PRODUCT, PRIORITY
+//
+// REDHAT_ENTERPRISE_LINUXValid properties: PRODUCT, CLASSIFICATION, SEVERITY
+//
+// SUSEValid properties: PRODUCT, CLASSIFICATION, SEVERITY
+//
+// CENTOSValid properties: PRODUCT, CLASSIFICATION, SEVERITY
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Simple Systems Manager (SSM)'s
+// API operation DescribePatchProperties for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInternalServerError "InternalServerError"
+//   An error occurred on the server side.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribePatchProperties
+func (c *SSM) DescribePatchProperties(input *DescribePatchPropertiesInput) (*DescribePatchPropertiesOutput, error) {
+	req, out := c.DescribePatchPropertiesRequest(input)
+	return out, req.Send()
+}
+
+// DescribePatchPropertiesWithContext is the same as DescribePatchProperties with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribePatchProperties for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) DescribePatchPropertiesWithContext(ctx aws.Context, input *DescribePatchPropertiesInput, opts ...request.Option) (*DescribePatchPropertiesOutput, error) {
+	req, out := c.DescribePatchPropertiesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDescribeSessions = "DescribeSessions"
 
 // DescribeSessionsRequest generates a "aws/request.Request" representing the
@@ -5449,6 +5549,8 @@ func (c *SSM) GetDeployablePatchSnapshotForInstanceRequest(input *GetDeployableP
 //   The operating systems you specified is not supported, or the operation is
 //   not supported for the operating system. Valid operating systems include:
 //   Windows, AmazonLinux, RedhatEnterpriseLinux, and Ubuntu.
+//
+//   * ErrCodeUnsupportedFeatureRequiredException "UnsupportedFeatureRequiredException"
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetDeployablePatchSnapshotForInstance
 func (c *SSM) GetDeployablePatchSnapshotForInstance(input *GetDeployablePatchSnapshotForInstanceInput) (*GetDeployablePatchSnapshotForInstanceOutput, error) {
@@ -19840,6 +19942,10 @@ type DescribePatchGroupStateOutput struct {
 
 	// The number of instances with patches that aren't applicable.
 	InstancesWithNotApplicablePatches *int64 `type:"integer"`
+
+	// The number of instances with NotApplicable patches beyond the supported limit,
+	// which are not reported by name to Systems Manager Inventory.
+	InstancesWithUnreportedNotApplicablePatches *int64 `type:"integer"`
 }
 
 // String returns the string representation
@@ -19891,6 +19997,12 @@ func (s *DescribePatchGroupStateOutput) SetInstancesWithMissingPatches(v int64) 
 // SetInstancesWithNotApplicablePatches sets the InstancesWithNotApplicablePatches field's value.
 func (s *DescribePatchGroupStateOutput) SetInstancesWithNotApplicablePatches(v int64) *DescribePatchGroupStateOutput {
 	s.InstancesWithNotApplicablePatches = &v
+	return s
+}
+
+// SetInstancesWithUnreportedNotApplicablePatches sets the InstancesWithUnreportedNotApplicablePatches field's value.
+func (s *DescribePatchGroupStateOutput) SetInstancesWithUnreportedNotApplicablePatches(v int64) *DescribePatchGroupStateOutput {
+	s.InstancesWithUnreportedNotApplicablePatches = &v
 	return s
 }
 
@@ -19993,6 +20105,125 @@ func (s *DescribePatchGroupsOutput) SetMappings(v []*PatchGroupPatchBaselineMapp
 // SetNextToken sets the NextToken field's value.
 func (s *DescribePatchGroupsOutput) SetNextToken(v string) *DescribePatchGroupsOutput {
 	s.NextToken = &v
+	return s
+}
+
+type DescribePatchPropertiesInput struct {
+	_ struct{} `type:"structure"`
+
+	// The maximum number of items to return for this call. The call also returns
+	// a token that you can specify in a subsequent call to get the next set of
+	// results.
+	MaxResults *int64 `min:"1" type:"integer"`
+
+	// The token for the next set of items to return. (You received this token from
+	// a previous call.)
+	NextToken *string `type:"string"`
+
+	// The operating system type for which to list patches.
+	//
+	// OperatingSystem is a required field
+	OperatingSystem *string `type:"string" required:"true" enum:"OperatingSystem"`
+
+	// Indicates whether to list patches for the Windows operating system or for
+	// Microsoft applications. Not applicable for Linux operating systems.
+	PatchSet *string `type:"string" enum:"PatchSet"`
+
+	// The patch property for which you want to view patch details.
+	//
+	// Property is a required field
+	Property *string `type:"string" required:"true" enum:"PatchProperty"`
+}
+
+// String returns the string representation
+func (s DescribePatchPropertiesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribePatchPropertiesInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribePatchPropertiesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribePatchPropertiesInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+	if s.OperatingSystem == nil {
+		invalidParams.Add(request.NewErrParamRequired("OperatingSystem"))
+	}
+	if s.Property == nil {
+		invalidParams.Add(request.NewErrParamRequired("Property"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *DescribePatchPropertiesInput) SetMaxResults(v int64) *DescribePatchPropertiesInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribePatchPropertiesInput) SetNextToken(v string) *DescribePatchPropertiesInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetOperatingSystem sets the OperatingSystem field's value.
+func (s *DescribePatchPropertiesInput) SetOperatingSystem(v string) *DescribePatchPropertiesInput {
+	s.OperatingSystem = &v
+	return s
+}
+
+// SetPatchSet sets the PatchSet field's value.
+func (s *DescribePatchPropertiesInput) SetPatchSet(v string) *DescribePatchPropertiesInput {
+	s.PatchSet = &v
+	return s
+}
+
+// SetProperty sets the Property field's value.
+func (s *DescribePatchPropertiesInput) SetProperty(v string) *DescribePatchPropertiesInput {
+	s.Property = &v
+	return s
+}
+
+type DescribePatchPropertiesOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The token for the next set of items to return. (You use this token in the
+	// next call.)
+	NextToken *string `type:"string"`
+
+	// A list of the properties for patches matching the filter request parameters.
+	Properties []map[string]*string `type:"list"`
+}
+
+// String returns the string representation
+func (s DescribePatchPropertiesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribePatchPropertiesOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribePatchPropertiesOutput) SetNextToken(v string) *DescribePatchPropertiesOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetProperties sets the Properties field's value.
+func (s *DescribePatchPropertiesOutput) SetProperties(v []map[string]*string) *DescribePatchPropertiesOutput {
+	s.Properties = v
 	return s
 }
 
@@ -24237,7 +24468,9 @@ type InstancePatchState struct {
 	MissingCount *int64 `type:"integer"`
 
 	// The number of patches from the patch baseline that aren't applicable for
-	// the instance and hence aren't installed on the instance.
+	// the instance and therefore aren't installed on the instance. This number
+	// may be truncated if the list of patch names is very large. The number of
+	// patches beyond this limit are reported in UnreportedNotApplicableCount.
 	NotApplicableCount *int64 `type:"integer"`
 
 	// The type of patching operation that was performed: SCAN (assess patch compliance
@@ -24268,6 +24501,10 @@ type InstancePatchState struct {
 	// The ID of the patch baseline snapshot used during the patching operation
 	// when this compliance data was collected.
 	SnapshotId *string `min:"36" type:"string"`
+
+	// The number of patches beyond the supported limit of NotApplicableCount that
+	// are not reported by name to Systems Manager Inventory.
+	UnreportedNotApplicableCount *int64 `type:"integer"`
 }
 
 // String returns the string representation
@@ -24367,6 +24604,12 @@ func (s *InstancePatchState) SetPatchGroup(v string) *InstancePatchState {
 // SetSnapshotId sets the SnapshotId field's value.
 func (s *InstancePatchState) SetSnapshotId(v string) *InstancePatchState {
 	s.SnapshotId = &v
+	return s
+}
+
+// SetUnreportedNotApplicableCount sets the UnreportedNotApplicableCount field's value.
+func (s *InstancePatchState) SetUnreportedNotApplicableCount(v int64) *InstancePatchState {
+	s.UnreportedNotApplicableCount = &v
 	return s
 }
 
@@ -28797,440 +29040,36 @@ func (s *PatchComplianceData) SetTitle(v string) *PatchComplianceData {
 	return s
 }
 
-// Defines a patch filter.
-//
-// A patch filter consists of key/value pairs, but not all keys are valid for
-// all operating system types. For example, the key PRODUCT is valid for all
-// supported operating system types. The key MSRC_SEVERITY, however, is valid
-// only for Windows operating systems, and the key SECTION is valid only for
-// Ubuntu operating systems.
-//
-// Refer to the following sections for information about which keys may be used
-// with each major operating system, and which values are valid for each key.
-//
-// Windows Operating Systems
-//
-// The supported keys for Windows operating systems are PRODUCT, CLASSIFICATION,
-// and MSRC_SEVERITY. See the following lists for valid values for each of these
-// keys.
-//
-// Supported key:PRODUCT
-//
-// Supported values:
-//
-//    * Windows7
-//
-//    * Windows8
-//
-//    * Windows8.1
-//
-//    * Windows8Embedded
-//
-//    * Windows10
-//
-//    * Windows10LTSB
-//
-//    * WindowsServer2008
-//
-//    * WindowsServer2008R2
-//
-//    * WindowsServer2012
-//
-//    * WindowsServer2012R2
-//
-//    * WindowsServer2016
-//
-//    * WindowsServer2019
-//
-//    * *
-//
-// Use a wildcard character (*) to target all supported operating system versions.
-//
-// Supported key:CLASSIFICATION
-//
-// Supported values:
-//
-//    * CriticalUpdates
-//
-//    * DefinitionUpdates
-//
-//    * Drivers
-//
-//    * FeaturePacks
-//
-//    * SecurityUpdates
-//
-//    * ServicePacks
-//
-//    * Tools
-//
-//    * UpdateRollups
-//
-//    * Updates
-//
-//    * Upgrades
-//
-// Supported key:MSRC_SEVERITY
-//
-// Supported values:
-//
-//    * Critical
-//
-//    * Important
-//
-//    * Moderate
-//
-//    * Low
-//
-//    * Unspecified
-//
-// Ubuntu Operating Systems
-//
-// The supported keys for Ubuntu operating systems are PRODUCT, PRIORITY, and
-// SECTION. See the following lists for valid values for each of these keys.
-//
-// Supported key:PRODUCT
-//
-// Supported values:
-//
-//    * Ubuntu14.04
-//
-//    * Ubuntu16.04
-//
-//    * *
-//
-// Use a wildcard character (*) to target all supported operating system versions.
-//
-// Supported key:PRIORITY
-//
-// Supported values:
-//
-//    * Required
-//
-//    * Important
-//
-//    * Standard
-//
-//    * Optional
-//
-//    * Extra
-//
-// Supported key:SECTION
-//
-// Only the length of the key value is validated. Minimum length is 1. Maximum
-// length is 64.
-//
-// Amazon Linux Operating Systems
-//
-// The supported keys for Amazon Linux operating systems are PRODUCT, CLASSIFICATION,
-// and SEVERITY. See the following lists for valid values for each of these
-// keys.
-//
-// Supported key:PRODUCT
-//
-// Supported values:
-//
-//    * AmazonLinux2012.03
-//
-//    * AmazonLinux2012.09
-//
-//    * AmazonLinux2013.03
-//
-//    * AmazonLinux2013.09
-//
-//    * AmazonLinux2014.03
-//
-//    * AmazonLinux2014.09
-//
-//    * AmazonLinux2015.03
-//
-//    * AmazonLinux2015.09
-//
-//    * AmazonLinux2016.03
-//
-//    * AmazonLinux2016.09
-//
-//    * AmazonLinux2017.03
-//
-//    * AmazonLinux2017.09
-//
-//    * *
-//
-// Use a wildcard character (*) to target all supported operating system versions.
-//
-// Supported key:CLASSIFICATION
-//
-// Supported values:
-//
-//    * Security
-//
-//    * Bugfix
-//
-//    * Enhancement
-//
-//    * Recommended
-//
-//    * Newpackage
-//
-// Supported key:SEVERITY
-//
-// Supported values:
-//
-//    * Critical
-//
-//    * Important
-//
-//    * Medium
-//
-//    * Low
-//
-// Amazon Linux 2 Operating Systems
-//
-// The supported keys for Amazon Linux 2 operating systems are PRODUCT, CLASSIFICATION,
-// and SEVERITY. See the following lists for valid values for each of these
-// keys.
-//
-// Supported key:PRODUCT
-//
-// Supported values:
-//
-//    * AmazonLinux2
-//
-//    * AmazonLinux2.0
-//
-//    * *
-//
-// Use a wildcard character (*) to target all supported operating system versions.
-//
-// Supported key:CLASSIFICATION
-//
-// Supported values:
-//
-//    * Security
-//
-//    * Bugfix
-//
-//    * Enhancement
-//
-//    * Recommended
-//
-//    * Newpackage
-//
-// Supported key:SEVERITY
-//
-// Supported values:
-//
-//    * Critical
-//
-//    * Important
-//
-//    * Medium
-//
-//    * Low
-//
-// RedHat Enterprise Linux (RHEL) Operating Systems
-//
-// The supported keys for RedHat Enterprise Linux operating systems are PRODUCT,
-// CLASSIFICATION, and SEVERITY. See the following lists for valid values for
-// each of these keys.
-//
-// Supported key:PRODUCT
-//
-// Supported values:
-//
-//    * RedhatEnterpriseLinux6.5
-//
-//    * RedhatEnterpriseLinux6.6
-//
-//    * RedhatEnterpriseLinux6.7
-//
-//    * RedhatEnterpriseLinux6.8
-//
-//    * RedhatEnterpriseLinux6.9
-//
-//    * RedhatEnterpriseLinux7.0
-//
-//    * RedhatEnterpriseLinux7.1
-//
-//    * RedhatEnterpriseLinux7.2
-//
-//    * RedhatEnterpriseLinux7.3
-//
-//    * RedhatEnterpriseLinux7.4
-//
-//    * RedhatEnterpriseLinux7.5
-//
-//    * RedhatEnterpriseLinux7.6
-//
-//    * *
-//
-// Use a wildcard character (*) to target all supported operating system versions.
-//
-// Supported key:CLASSIFICATION
-//
-// Supported values:
-//
-//    * Security
-//
-//    * Bugfix
-//
-//    * Enhancement
-//
-//    * Recommended
-//
-//    * Newpackage
-//
-// Supported key:SEVERITY
-//
-// Supported values:
-//
-//    * Critical
-//
-//    * Important
-//
-//    * Medium
-//
-//    * Low
-//
-// SUSE Linux Enterprise Server (SLES) Operating Systems
-//
-// The supported keys for SLES operating systems are PRODUCT, CLASSIFICATION,
-// and SEVERITY. See the following lists for valid values for each of these
-// keys.
-//
-// Supported key:PRODUCT
-//
-// Supported values:
-//
-//    * Suse12.0
-//
-//    * Suse12.1
-//
-//    * Suse12.2
-//
-//    * Suse12.3
-//
-//    * Suse12.4
-//
-//    * Suse12.5
-//
-//    * Suse12.6
-//
-//    * Suse12.7
-//
-//    * Suse12.8
-//
-//    * Suse12.9
-//
-//    * *
-//
-// Use a wildcard character (*) to target all supported operating system versions.
-//
-// Supported key:CLASSIFICATION
-//
-// Supported values:
-//
-//    * Security
-//
-//    * Recommended
-//
-//    * Optional
-//
-//    * Feature
-//
-//    * Document
-//
-//    * Yast
-//
-// Supported key:SEVERITY
-//
-// Supported values:
-//
-//    * Critical
-//
-//    * Important
-//
-//    * Moderate
-//
-//    * Low
-//
-// CentOS Operating Systems
-//
-// The supported keys for CentOS operating systems are PRODUCT, CLASSIFICATION,
-// and SEVERITY. See the following lists for valid values for each of these
-// keys.
-//
-// Supported key:PRODUCT
-//
-// Supported values:
-//
-//    * CentOS6.5
-//
-//    * CentOS6.6
-//
-//    * CentOS6.7
-//
-//    * CentOS6.8
-//
-//    * CentOS6.9
-//
-//    * CentOS7.0
-//
-//    * CentOS7.1
-//
-//    * CentOS7.2
-//
-//    * CentOS7.3
-//
-//    * CentOS7.4
-//
-//    * CentOS7.5
-//
-//    * CentOS7.6
-//
-//    * *
-//
-// Use a wildcard character (*) to target all supported operating system versions.
-//
-// Supported key:CLASSIFICATION
-//
-// Supported values:
-//
-//    * Security
-//
-//    * Bugfix
-//
-//    * Enhancement
-//
-//    * Recommended
-//
-//    * Newpackage
-//
-// Supported key:SEVERITY
-//
-// Supported values:
-//
-//    * Critical
-//
-//    * Important
-//
-//    * Medium
-//
-//    * Low
+// Defines which patches should be included in a patch baseline.
+//
+// A patch filter consists of a key and a set of values. The filter key is a
+// patch property. For example, the available filter keys for WINDOWS are PATCH_SET,
+// PRODUCT, PRODUCT_FAMILY, CLASSIFICATION, and MSRC_SEVERITY. The filter values
+// define a matching criterion for the patch property indicated by the key.
+// For example, if the filter key is PRODUCT and the filter values are ["Office
+// 2013", "Office 2016"], then the filter accepts all patches where product
+// name is either "Office 2013" or "Office 2016". The filter values can be exact
+// values for the patch property given as a key, or a wildcard (*), which matches
+// all values.
+//
+// You can view lists of valid values for the patch properties by running the
+// DescribePatchProperties command. For information about which patch properties
+// can be used with each major operating system, see DescribePatchProperties.
 type PatchFilter struct {
 	_ struct{} `type:"structure"`
 
 	// The key for the filter.
 	//
-	// See PatchFilter for lists of valid keys for each operating system type.
+	// Run the DescribePatchProperties command to view lists of valid keys for each
+	// operating system type.
 	//
 	// Key is a required field
 	Key *string `type:"string" required:"true" enum:"PatchFilterKey"`
 
 	// The value for the filter key.
 	//
-	// See PatchFilter for lists of valid values for each key based on operating
-	// system type.
+	// Run the DescribePatchProperties command to view lists of valid values for
+	// each key based on operating system type.
 	//
 	// Values is a required field
 	Values []*string `min:"1" type:"list" required:"true"`
@@ -35887,8 +35726,14 @@ const (
 )
 
 const (
+	// PatchFilterKeyPatchSet is a PatchFilterKey enum value
+	PatchFilterKeyPatchSet = "PATCH_SET"
+
 	// PatchFilterKeyProduct is a PatchFilterKey enum value
 	PatchFilterKeyProduct = "PRODUCT"
+
+	// PatchFilterKeyProductFamily is a PatchFilterKey enum value
+	PatchFilterKeyProductFamily = "PRODUCT_FAMILY"
 
 	// PatchFilterKeyClassification is a PatchFilterKey enum value
 	PatchFilterKeyClassification = "CLASSIFICATION"
@@ -35915,6 +35760,34 @@ const (
 
 	// PatchOperationTypeInstall is a PatchOperationType enum value
 	PatchOperationTypeInstall = "Install"
+)
+
+const (
+	// PatchPropertyProduct is a PatchProperty enum value
+	PatchPropertyProduct = "PRODUCT"
+
+	// PatchPropertyProductFamily is a PatchProperty enum value
+	PatchPropertyProductFamily = "PRODUCT_FAMILY"
+
+	// PatchPropertyClassification is a PatchProperty enum value
+	PatchPropertyClassification = "CLASSIFICATION"
+
+	// PatchPropertyMsrcSeverity is a PatchProperty enum value
+	PatchPropertyMsrcSeverity = "MSRC_SEVERITY"
+
+	// PatchPropertyPriority is a PatchProperty enum value
+	PatchPropertyPriority = "PRIORITY"
+
+	// PatchPropertySeverity is a PatchProperty enum value
+	PatchPropertySeverity = "SEVERITY"
+)
+
+const (
+	// PatchSetOs is a PatchSet enum value
+	PatchSetOs = "OS"
+
+	// PatchSetApplication is a PatchSet enum value
+	PatchSetApplication = "APPLICATION"
 )
 
 const (
