@@ -121,7 +121,7 @@ func testAccCheckAwsOrganizationsUnitDestroy(s *terraform.State) error {
 			return err
 		}
 
-		if resp == nil && resp.OrganizationalUnit != nil {
+		if resp != nil && resp.OrganizationalUnit != nil {
 			return fmt.Errorf("Bad: Organizational Unit still exists: %q", rs.Primary.ID)
 		}
 	}
@@ -160,7 +160,7 @@ func testAccCheckAwsOrganizationsUnitExists(n string, ou *organizations.Organiza
 			return err
 		}
 
-		if resp == nil || resp.OrganizationalUnit == nil {
+		if resp != nil || resp.OrganizationalUnit == nil {
 			return fmt.Errorf("Organizational Unit %q does not exist", rs.Primary.ID)
 		}
 
