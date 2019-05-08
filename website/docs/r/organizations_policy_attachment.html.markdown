@@ -24,13 +24,9 @@ resource "aws_organizations_policy_attachment" "account" {
 ### Organization Root
 
 ```hcl
-data "aws_organizations_unit" "root" {
-  root = true
-}
-
 resource "aws_organizations_policy_attachment" "root" {
   policy_id = "${aws_organizations_policy.example.id}"
-  target_id = "${data.aws_organizations_unit.root.id}"
+  target_id = "${aws_organizations_organization.example.roots.0.id}"
 }
 ```
 
@@ -39,7 +35,7 @@ resource "aws_organizations_policy_attachment" "root" {
 ```hcl
 resource "aws_organizations_policy_attachment" "unit" {
   policy_id = "${aws_organizations_policy.example.id}"
-  target_id = "ou-12345678"
+  target_id = "${aws_organizations_organizational_unit.example.id}"
 }
 ```
 

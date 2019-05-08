@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/organizations"
@@ -10,44 +11,23 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func testAccAwsOrganizationsUnit_importBasic(t *testing.T) {
-	resourceName := "aws_organizations_unit.test"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsOrganizationsUnitDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAwsOrganizationsUnitConfig("foo"),
-			},
-
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func testAccAwsOrganizationsUnit_basic(t *testing.T) {
+func testAccAwsOrganizationsOrganizationalUnit_basic(t *testing.T) {
 	var unit organizations.OrganizationalUnit
 
 	rInt := acctest.RandInt()
 	name := fmt.Sprintf("tf_outest_%d", rInt)
-	resourceName := "aws_organizations_unit.test"
+	resourceName := "aws_organizations_organizational_unit.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsOrganizationsUnitDestroy,
+		CheckDestroy: testAccCheckAwsOrganizationsOrganizationalUnitDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsOrganizationsUnitConfig(name),
+				Config: testAccAwsOrganizationsOrganizationalUnitConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsOrganizationsUnitExists(resourceName, &unit),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					testAccCheckAwsOrganizationsOrganizationalUnitExists(resourceName, &unit),
+					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "organizations", regexp.MustCompile(`ou/o-.+/ou-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 				),
 			},
@@ -60,30 +40,35 @@ func testAccAwsOrganizationsUnit_basic(t *testing.T) {
 	})
 }
 
-func testAccAwsOrganizationsUnitUpdate(t *testing.T) {
+func testAccAwsOrganizationsOrganizationalUnit_Name(t *testing.T) {
 	var unit organizations.OrganizationalUnit
 
 	rInt := acctest.RandInt()
 	name1 := fmt.Sprintf("tf_outest_%d", rInt)
 	name2 := fmt.Sprintf("tf_outest_%d", rInt+1)
-	resourceName := "aws_organizations_unit.test"
+	resourceName := "aws_organizations_organizational_unit.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsOrganizationsUnitDestroy,
+		CheckDestroy: testAccCheckAwsOrganizationsOrganizationalUnitDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsOrganizationsUnitConfig(name1),
+				Config: testAccAwsOrganizationsOrganizationalUnitConfig(name1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsOrganizationsUnitExists(resourceName, &unit),
+					testAccCheckAwsOrganizationsOrganizationalUnitExists(resourceName, &unit),
 					resource.TestCheckResourceAttr(resourceName, "name", name1),
 				),
 			},
 			{
-				Config: testAccAwsOrganizationsUnitConfig(name2),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAwsOrganizationsOrganizationalUnitConfig(name2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsOrganizationsUnitExists(resourceName, &unit),
+					testAccCheckAwsOrganizationsOrganizationalUnitExists(resourceName, &unit),
 					resource.TestCheckResourceAttr(resourceName, "name", name2),
 				),
 			},
@@ -91,20 +76,11 @@ func testAccAwsOrganizationsUnitUpdate(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsOrganizationsUnitDestroy(s *terraform.State) error {
+func testAccCheckAwsOrganizationsOrganizationalUnitDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).organizationsconn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_organizations_unit" {
-			continue
-		}
-
-		exists, err := existsOrganization(conn)
-		if err != nil {
-			return fmt.Errorf("failed to check for the existance of an AWS Organization: %v", err)
-		}
-
-		if !exists {
+		if rs.Type != "aws_organizations_organizational_unit" {
 			continue
 		}
 
@@ -115,8 +91,11 @@ func testAccCheckAwsOrganizationsUnitDestroy(s *terraform.State) error {
 		resp, err := conn.DescribeOrganizationalUnit(params)
 
 		if err != nil {
+			if isAWSErr(err, organizations.ErrCodeAWSOrganizationsNotInUseException, "") {
+				continue
+			}
 			if isAWSErr(err, organizations.ErrCodeOrganizationalUnitNotFoundException, "") {
-				return nil
+				continue
 			}
 			return err
 		}
@@ -130,19 +109,7 @@ func testAccCheckAwsOrganizationsUnitDestroy(s *terraform.State) error {
 
 }
 
-func existsOrganization(client *organizations.Organizations) (ok bool, err error) {
-	_, err = client.DescribeOrganization(&organizations.DescribeOrganizationInput{})
-	if err != nil {
-		if isAWSErr(err, organizations.ErrCodeAWSOrganizationsNotInUseException, "") {
-			err = nil
-		}
-		return
-	}
-	ok = true
-	return
-}
-
-func testAccCheckAwsOrganizationsUnitExists(n string, ou *organizations.OrganizationalUnit) resource.TestCheckFunc {
+func testAccCheckAwsOrganizationsOrganizationalUnitExists(n string, ou *organizations.OrganizationalUnit) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -173,14 +140,13 @@ func testAccCheckAwsOrganizationsUnitExists(n string, ou *organizations.Organiza
 	}
 }
 
-func testAccAwsOrganizationsUnitConfig(name string) string {
+func testAccAwsOrganizationsOrganizationalUnitConfig(name string) string {
 	return fmt.Sprintf(`
-resource "aws_organizations_organization" "org" {
-}
+resource "aws_organizations_organization" "test" {}
 
-resource "aws_organizations_unit" "test" {
-  parent_id = "${aws_organizations_organization.org.roots.0.id}"
-  name = "%s"
+resource "aws_organizations_organizational_unit" "test" {
+  name      = %[1]q
+  parent_id = "${aws_organizations_organization.test.roots.0.id}"
 }
 `, name)
 }

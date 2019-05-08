@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform/helper/validation"
 )
 
-func resourceAwsOrganizationsUnit() *schema.Resource {
+func resourceAwsOrganizationsOrganizationalUnit() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsOrganizationsUnitCreate,
-		Read:   resourceAwsOrganizationsUnitRead,
-		Update: resourceAwsOrganizationsUnitUpdate,
-		Delete: resourceAwsOrganizationsUnitDelete,
+		Create: resourceAwsOrganizationsOrganizationalUnitCreate,
+		Read:   resourceAwsOrganizationsOrganizationalUnitRead,
+		Update: resourceAwsOrganizationsOrganizationalUnitUpdate,
+		Delete: resourceAwsOrganizationsOrganizationalUnitDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -43,7 +43,7 @@ func resourceAwsOrganizationsUnit() *schema.Resource {
 	}
 }
 
-func resourceAwsOrganizationsUnitCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsOrganizationsOrganizationalUnitCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).organizationsconn
 
 	// Create the organizational unit
@@ -80,10 +80,10 @@ func resourceAwsOrganizationsUnitCreate(d *schema.ResourceData, meta interface{}
 	ouId := resp.OrganizationalUnit.Id
 	d.SetId(*ouId)
 
-	return resourceAwsOrganizationsUnitRead(d, meta)
+	return resourceAwsOrganizationsOrganizationalUnitRead(d, meta)
 }
 
-func resourceAwsOrganizationsUnitRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsOrganizationsOrganizationalUnitRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).organizationsconn
 	describeOpts := &organizations.DescribeOrganizationalUnitInput{
 		OrganizationalUnitId: aws.String(d.Id()),
@@ -105,7 +105,7 @@ func resourceAwsOrganizationsUnitRead(d *schema.ResourceData, meta interface{}) 
 		return nil
 	}
 
-	parentId, err := resourceAwsOrganizationsUnitGetParentId(conn, d.Id())
+	parentId, err := resourceAwsOrganizationsOrganizationalUnitGetParentId(conn, d.Id())
 	if err != nil {
 		log.Printf("[WARN] Unable to find parent organizational unit, removing from state: %s", d.Id())
 		d.SetId("")
@@ -118,7 +118,7 @@ func resourceAwsOrganizationsUnitRead(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func resourceAwsOrganizationsUnitUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsOrganizationsOrganizationalUnitUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("name") {
 		conn := meta.(*AWSClient).organizationsconn
 
@@ -138,7 +138,7 @@ func resourceAwsOrganizationsUnitUpdate(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAwsOrganizationsUnitDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsOrganizationsOrganizationalUnitDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).organizationsconn
 
 	input := &organizations.DeleteOrganizationalUnitInput{
@@ -155,17 +155,28 @@ func resourceAwsOrganizationsUnitDelete(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAwsOrganizationsUnitGetParentId(conn *organizations.Organizations, childId string) (string, error) {
+func resourceAwsOrganizationsOrganizationalUnitGetParentId(conn *organizations.Organizations, childId string) (string, error) {
 	input := &organizations.ListParentsInput{
 		ChildId: aws.String(childId),
 	}
-	resp, err := conn.ListParents(input)
+	var parents []*organizations.Parent
+
+	err := conn.ListParentsPages(input, func(page *organizations.ListParentsOutput, lastPage bool) bool {
+		parents = append(parents, page.Parents...)
+
+		return !lastPage
+	})
+
 	if err != nil {
 		return "", err
 	}
 
+	if len(parents) == 0 {
+		return "", nil
+	}
+
 	// assume there is only a single parent
 	// https://docs.aws.amazon.com/organizations/latest/APIReference/API_ListParents.html
-	parent := resp.Parents[0]
+	parent := parents[0]
 	return aws.StringValue(parent.Id), nil
 }
