@@ -1,17 +1,26 @@
-## 2.9.0 (Unreleased)
-
-FEATURES:
-
-* **New Resource:** aws_db_instance_role_association [GH-8466]
+## 2.10.0 (Unreleased)
 
 ENHANCEMENTS:
 
-* data-source/aws_availability_zones: Add blacklisted_names and blacklisted_zone_ids arguments [GH-8463]
-* resource/aws_elb_attachment: Retry ELB attachment on `InvalidTarget` error [GH-8483]
-* resource/aws_ssm_activation: Add `tags` argument [GH-8426]
-* resource/aws_ssm_document: Add `tags` argument [GH-8426]
-* resource/aws_ssm_maintenance_window: Add `tags` argument [GH-8426]
-* resource/aws_ssm_patch_baseline: Add `tags` argument [GH-8426]
+* data-source/aws_rds_cluster: Add `resource_id` attribute [GH-8317]
+* resource/aws_organizations_organization: Add `roots` attribute [GH-8399]
+* resource/aws_rds_cluster: Add `copy_tags_to_snapshot` argument [GH-8544]
+
+## 2.9.0 (May 06, 2019)
+
+FEATURES:
+
+* **New Resource:** aws_db_instance_role_association ([#8466](https://github.com/terraform-providers/terraform-provider-aws/issues/8466))
+
+ENHANCEMENTS:
+
+* data-source/aws_availability_zones: Add blacklisted_names and blacklisted_zone_ids arguments ([#8463](https://github.com/terraform-providers/terraform-provider-aws/issues/8463))
+* resource/aws_elb_attachment: Retry ELB attachment on `InvalidTarget` error ([#8483](https://github.com/terraform-providers/terraform-provider-aws/issues/8483))
+* resource/aws_sfn_state_machine: Bypass `UnknownOperationException` error for `ListTagsForResource` API call (additional LocalStack support) ([#8467](https://github.com/terraform-providers/terraform-provider-aws/issues/8467))
+* resource/aws_ssm_activation: Add `tags` argument ([#8426](https://github.com/terraform-providers/terraform-provider-aws/issues/8426))
+* resource/aws_ssm_document: Add `tags` argument ([#8426](https://github.com/terraform-providers/terraform-provider-aws/issues/8426))
+* resource/aws_ssm_maintenance_window: Add `tags` argument ([#8426](https://github.com/terraform-providers/terraform-provider-aws/issues/8426))
+* resource/aws_ssm_patch_baseline: Add `tags` argument ([#8426](https://github.com/terraform-providers/terraform-provider-aws/issues/8426))
 
 ## 2.8.0 (April 26, 2019)
 
@@ -104,7 +113,7 @@ ENHANCEMENTS:
 * resource/aws_cloudwatch_log_subscription_filter: Support resource import ([#8147](https://github.com/terraform-providers/terraform-provider-aws/issues/8147))
 * resource/aws_cloudwatch_metric_alarm: Add `tags` argument ([#8168](https://github.com/terraform-providers/terraform-provider-aws/issues/8168))
 * resource/aws_ecr_repository: Tag on creation (support tag limiting IAM policies) ([#8198](https://github.com/terraform-providers/terraform-provider-aws/issues/8198))
-* resource/aws_lb_target_group: Add `enabled` argument to target group health checks [[#7570](https://github.com/terraform-providers/terraform-provider-aws/issues/7570)]
+* resource/aws_lb_target_group: Add `enabled` argument to target group health checks ([#7570](https://github.com/terraform-providers/terraform-provider-aws/issues/7570))
 * resource/aws_sagemaker_notebook_instance: Add `lifecycle_config_name` argument ([#7586](https://github.com/terraform-providers/terraform-provider-aws/issues/7586))
 * service/ec2: Automatically retry `CreateVpnConnection` and `CreateVpnGateway` requests for concurrency errors ([#8161](https://github.com/terraform-providers/terraform-provider-aws/issues/8161))
 
