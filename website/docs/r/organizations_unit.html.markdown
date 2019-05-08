@@ -13,12 +13,11 @@ Provides a resource to create an organizational unit.
 ## Example Usage:
 
 ```hcl
-data "aws_organizations_unit" "root" {
-  root = true
+resource "aws_organizations_organization" "org" {
 }
 
 resource "aws_organizations_unit" "tenants" {
-  parent_id = "${data.aws_organizations_unit.root.id}"
+  parent_id = "${aws_organizations_organization.roots.0.id}"
   name = "tenants"
 }
 ```
