@@ -583,6 +583,7 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 		pointInTimeRestore := v.([]interface{})[0].(map[string]interface{})
 
 		restoreOpts := &rds.RestoreDBClusterToPointInTimeInput{
+			CopyTagsToSnapshot:        aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 			DBClusterIdentifier:       aws.String(identifier),
 			DeletionProtection:        aws.Bool(d.Get("deletion_protection").(bool)),
 			SourceDBClusterIdentifier: aws.String(pointInTimeRestore["source_db_cluster_identifier"].(string)),
