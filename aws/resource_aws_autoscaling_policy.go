@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -19,6 +20,9 @@ func resourceAwsAutoscalingPolicy() *schema.Resource {
 		Read:   resourceAwsAutoscalingPolicyRead,
 		Update: resourceAwsAutoscalingPolicyUpdate,
 		Delete: resourceAwsAutoscalingPolicyDelete,
+		Importer: &schema.ResourceImporter{
+			State: resourceAwsAutoscalingPolicyImport,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -68,10 +72,9 @@ func resourceAwsAutoscalingPolicy() *schema.Resource {
 				ValidateFunc: validation.IntAtLeast(1),
 			},
 			"min_adjustment_step": {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				Deprecated:    "Use min_adjustment_magnitude instead, otherwise you may see a perpetual diff on this resource.",
-				ConflictsWith: []string{"min_adjustment_magnitude"},
+				Type:     schema.TypeInt,
+				Optional: true,
+				Removed:  "Use `min_adjustment_magnitude` argument instead",
 			},
 			"scaling_adjustment": {
 				Type:          schema.TypeInt,
@@ -224,15 +227,16 @@ func resourceAwsAutoscalingPolicyRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("policy_type", p.PolicyType)
 	if p.MinAdjustmentMagnitude != nil {
 		d.Set("min_adjustment_magnitude", p.MinAdjustmentMagnitude)
-		d.Set("min_adjustment_step", 0)
-	} else {
-		d.Set("min_adjustment_step", p.MinAdjustmentStep)
 	}
 	d.Set("arn", p.PolicyARN)
 	d.Set("name", p.PolicyName)
 	d.Set("scaling_adjustment", p.ScalingAdjustment)
-	d.Set("step_adjustment", flattenStepAdjustments(p.StepAdjustments))
-	d.Set("target_tracking_configuration", flattenTargetTrackingConfiguration(p.TargetTrackingConfiguration))
+	if err := d.Set("step_adjustment", flattenStepAdjustments(p.StepAdjustments)); err != nil {
+		return fmt.Errorf("error setting step_adjustment: %s", err)
+	}
+	if err := d.Set("target_tracking_configuration", flattenTargetTrackingConfiguration(p.TargetTrackingConfiguration)); err != nil {
+		return fmt.Errorf("error setting target_tracking_configuration: %s", err)
+	}
 
 	return nil
 }
@@ -274,6 +278,22 @@ func resourceAwsAutoscalingPolicyDelete(d *schema.ResourceData, meta interface{}
 	}
 
 	return nil
+}
+
+func resourceAwsAutoscalingPolicyImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	idParts := strings.SplitN(d.Id(), "/", 2)
+	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
+		return nil, fmt.Errorf("unexpected format (%q), expected <asg-name>/<policy-name>", d.Id())
+	}
+
+	asgName := idParts[0]
+	policyName := idParts[1]
+
+	d.Set("name", policyName)
+	d.Set("autoscaling_group_name", asgName)
+	d.SetId(policyName)
+
+	return []*schema.ResourceData{d}, nil
 }
 
 // PutScalingPolicy can safely resend all parameters without destroying the
@@ -320,11 +340,8 @@ func getAwsAutoscalingPutScalingPolicyInput(d *schema.ResourceData) (autoscaling
 	}
 
 	// MinAdjustmentMagnitude is supported if the policy type is SimpleScaling or StepScaling.
-	// MinAdjustmentStep is available for backward compatibility. Use MinAdjustmentMagnitude instead.
 	if v, ok := d.GetOkExists("min_adjustment_magnitude"); ok && v.(int) != 0 && (policyType == "SimpleScaling" || policyType == "StepScaling") {
 		params.MinAdjustmentMagnitude = aws.Int64(int64(v.(int)))
-	} else if v, ok := d.GetOkExists("min_adjustment_step"); ok && v.(int) != 0 && (policyType == "SimpleScaling" || policyType == "StepScaling") {
-		params.MinAdjustmentStep = aws.Int64(int64(v.(int)))
 	}
 
 	// This parameter is required if the policy type is SimpleScaling and not supported otherwise.

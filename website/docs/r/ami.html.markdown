@@ -6,7 +6,7 @@ description: |-
   Creates and manages a custom Amazon Machine Image (AMI).
 ---
 
-# aws_ami
+# Resource: aws_ami
 
 The AMI resource allows the creation and management of a completely-custom
 *Amazon Machine Image* (AMI).
@@ -52,6 +52,7 @@ The following arguments are supported:
   attached to created instances. The structure of this block is described below.
 * `ephemeral_block_device` - (Optional) Nested block describing an ephemeral block device that
   should be attached to created instances. The structure of this block is described below.
+* `tags` - (Optional) A mapping of tags to assign to the resource.
 
 When `virtualization_type` is "paravirtual" the following additional arguments apply:
 

@@ -49,17 +49,6 @@ func testSweepLambdaFunctions(region string) error {
 	}
 
 	for _, f := range resp.Functions {
-		var testOptGroup bool
-		for _, testName := range []string{"tf_test", "tf_acc_"} {
-			if strings.HasPrefix(*f.FunctionName, testName) {
-				testOptGroup = true
-			}
-		}
-
-		if !testOptGroup {
-			continue
-		}
-
 		_, err := lambdaconn.DeleteFunction(
 			&lambda.DeleteFunctionInput{
 				FunctionName: f.FunctionName,
@@ -177,7 +166,7 @@ func TestAccAWSLambdaFunction_basic(t *testing.T) {
 					testAccCheckAwsLambdaFunctionName(&conf, funcName),
 					testAccCheckAwsLambdaFunctionArnHasSuffix(&conf, ":"+funcName),
 					resource.TestMatchResourceAttr(resourceName, "invoke_arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:apigateway:[^:]+:lambda:path/2015-03-31/functions/arn:[^:]+:lambda:[^:]+:[^:]+:function:%s/invocations$", funcName))),
-					resource.TestCheckResourceAttr(resourceName, "reserved_concurrent_executions", "0"),
+					resource.TestCheckResourceAttr(resourceName, "reserved_concurrent_executions", "-1"),
 				),
 			},
 		},
@@ -240,7 +229,7 @@ func TestAccAWSLambdaFunction_concurrencyCycle(t *testing.T) {
 					testAccCheckAwsLambdaFunctionExists("aws_lambda_function.lambda_function_test", funcName, &conf),
 					testAccCheckAwsLambdaFunctionName(&conf, funcName),
 					testAccCheckAwsLambdaFunctionArnHasSuffix(&conf, ":"+funcName),
-					resource.TestCheckResourceAttr("aws_lambda_function.lambda_function_test", "reserved_concurrent_executions", "0"),
+					resource.TestCheckResourceAttr("aws_lambda_function.lambda_function_test", "reserved_concurrent_executions", "-1"),
 				),
 			},
 			{
@@ -258,7 +247,7 @@ func TestAccAWSLambdaFunction_concurrencyCycle(t *testing.T) {
 					testAccCheckAwsLambdaFunctionExists("aws_lambda_function.lambda_function_test", funcName, &conf),
 					testAccCheckAwsLambdaFunctionName(&conf, funcName),
 					testAccCheckAwsLambdaFunctionArnHasSuffix(&conf, ":"+funcName),
-					resource.TestCheckResourceAttr("aws_lambda_function.lambda_function_test", "reserved_concurrent_executions", "0"),
+					resource.TestCheckResourceAttr("aws_lambda_function.lambda_function_test", "reserved_concurrent_executions", "-1"),
 				),
 			},
 		},
@@ -381,7 +370,7 @@ func TestAccAWSLambdaFunction_encryptedEnvVariables(t *testing.T) {
 	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_encrypted_env_%s", rString)
 	roleName := fmt.Sprintf("tf_acc_role_lambda_func_encrypted_env_%s", rString)
 	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_encrypted_env_%s", rString)
-	keyRegex := regexp.MustCompile("^arn:aws[\\w-]*:kms:")
+	keyRegex := regexp.MustCompile(`^arn:aws[\w-]*:kms:`)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -469,7 +458,9 @@ func TestAccAWSLambdaFunction_versionedUpdate(t *testing.T) {
 			},
 			{
 				PreConfig: func() {
-					testAccCreateZipFromFiles(map[string]string{"test-fixtures/lambda_func_modified.js": "lambda.js"}, zipFile)
+					if err := testAccCreateZipFromFiles(map[string]string{"test-fixtures/lambda_func_modified.js": "lambda.js"}, zipFile); err != nil {
+						t.Fatalf("error creating zip from files: %s", err)
+					}
 					timeBeforeUpdate = time.Now()
 				},
 				Config: testAccAWSLambdaConfigVersioned(path, funcName, policyName, roleName, sgName),
@@ -636,6 +627,75 @@ func TestAccAWSLambdaFunction_tracingConfig(t *testing.T) {
 					testAccCheckAwsLambdaFunctionName(&conf, funcName),
 					testAccCheckAwsLambdaFunctionArnHasSuffix(&conf, ":"+funcName),
 					resource.TestCheckResourceAttr("aws_lambda_function.lambda_function_test", "tracing_config.0.mode", "PassThrough"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLambdaFunction_Layers(t *testing.T) {
+	var conf lambda.GetFunctionOutput
+
+	rString := acctest.RandString(8)
+	funcName := fmt.Sprintf("tf_acc_lambda_func_layer_%s", rString)
+	layerName := fmt.Sprintf("tf_acc_layer_lambda_func_layer_%s", rString)
+	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_layer_%s", rString)
+	roleName := fmt.Sprintf("tf_acc_role_lambda_func_layer_%s", rString)
+	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_layer_%s", rString)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLambdaConfigWithLayers(funcName, layerName, policyName, roleName, sgName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaFunctionExists("aws_lambda_function.lambda_function_test", funcName, &conf),
+					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckAwsLambdaFunctionArnHasSuffix(&conf, ":"+funcName),
+					testAccCheckAWSLambdaFunctionVersion(&conf, "$LATEST"),
+					resource.TestCheckResourceAttr("aws_lambda_function.lambda_function_test", "layers.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLambdaFunction_LayersUpdate(t *testing.T) {
+	var conf lambda.GetFunctionOutput
+
+	rString := acctest.RandString(8)
+	funcName := fmt.Sprintf("tf_acc_lambda_func_layer_%s", rString)
+	layerName := fmt.Sprintf("tf_acc_lambda_layer_%s", rString)
+	layer2Name := fmt.Sprintf("tf_acc_lambda_layer2_%s", rString)
+	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_vpc_%s", rString)
+	roleName := fmt.Sprintf("tf_acc_role_lambda_func_vpc_%s", rString)
+	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_vpc_%s", rString)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLambdaConfigWithLayers(funcName, layerName, policyName, roleName, sgName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaFunctionExists("aws_lambda_function.lambda_function_test", funcName, &conf),
+					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckAwsLambdaFunctionArnHasSuffix(&conf, ":"+funcName),
+					testAccCheckAWSLambdaFunctionVersion(&conf, "$LATEST"),
+					resource.TestCheckResourceAttr("aws_lambda_function.lambda_function_test", "layers.#", "1"),
+				),
+			},
+			{
+				Config: testAccAWSLambdaConfigWithLayersUpdated(funcName, layerName, layer2Name, policyName, roleName, sgName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaFunctionExists("aws_lambda_function.lambda_function_test", funcName, &conf),
+					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckAwsLambdaFunctionArnHasSuffix(&conf, ":"+funcName),
+					testAccCheckAWSLambdaFunctionVersion(&conf, "$LATEST"),
+					resource.TestCheckResourceAttr("aws_lambda_function.lambda_function_test", "layers.#", "2"),
 				),
 			},
 		},
@@ -845,7 +905,9 @@ func TestAccAWSLambdaFunction_localUpdate(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					testAccCreateZipFromFiles(map[string]string{"test-fixtures/lambda_func.js": "lambda.js"}, zipFile)
+					if err := testAccCreateZipFromFiles(map[string]string{"test-fixtures/lambda_func.js": "lambda.js"}, zipFile); err != nil {
+						t.Fatalf("error creating zip from files: %s", err)
+					}
 				},
 				Config: genAWSLambdaFunctionConfig_local(path, roleName, funcName),
 				Check: resource.ComposeTestCheckFunc(
@@ -857,7 +919,9 @@ func TestAccAWSLambdaFunction_localUpdate(t *testing.T) {
 			},
 			{
 				PreConfig: func() {
-					testAccCreateZipFromFiles(map[string]string{"test-fixtures/lambda_func_modified.js": "lambda.js"}, zipFile)
+					if err := testAccCreateZipFromFiles(map[string]string{"test-fixtures/lambda_func_modified.js": "lambda.js"}, zipFile); err != nil {
+						t.Fatalf("error creating zip from files: %s", err)
+					}
 					timeBeforeUpdate = time.Now()
 				},
 				Config: genAWSLambdaFunctionConfig_local(path, roleName, funcName),
@@ -901,7 +965,9 @@ func TestAccAWSLambdaFunction_localUpdate_nameOnly(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					testAccCreateZipFromFiles(map[string]string{"test-fixtures/lambda_func.js": "lambda.js"}, zipFile)
+					if err := testAccCreateZipFromFiles(map[string]string{"test-fixtures/lambda_func.js": "lambda.js"}, zipFile); err != nil {
+						t.Fatalf("error creating zip from files: %s", err)
+					}
 				},
 				Config: genAWSLambdaFunctionConfig_local_name_only(path, roleName, funcName),
 				Check: resource.ComposeTestCheckFunc(
@@ -913,7 +979,9 @@ func TestAccAWSLambdaFunction_localUpdate_nameOnly(t *testing.T) {
 			},
 			{
 				PreConfig: func() {
-					testAccCreateZipFromFiles(map[string]string{"test-fixtures/lambda_func_modified.js": "lambda.js"}, updatedZipFile)
+					if err := testAccCreateZipFromFiles(map[string]string{"test-fixtures/lambda_func_modified.js": "lambda.js"}, updatedZipFile); err != nil {
+						t.Fatalf("error creating zip from files: %s", err)
+					}
 				},
 				Config: genAWSLambdaFunctionConfig_local_name_only(updatedPath, roleName, funcName),
 				Check: resource.ComposeTestCheckFunc(
@@ -951,7 +1019,9 @@ func TestAccAWSLambdaFunction_s3Update_basic(t *testing.T) {
 			{
 				PreConfig: func() {
 					// Upload 1st version
-					testAccCreateZipFromFiles(map[string]string{"test-fixtures/lambda_func.js": "lambda.js"}, zipFile)
+					if err := testAccCreateZipFromFiles(map[string]string{"test-fixtures/lambda_func.js": "lambda.js"}, zipFile); err != nil {
+						t.Fatalf("error creating zip from files: %s", err)
+					}
 				},
 				Config: genAWSLambdaFunctionConfig_s3(bucketName, key, path, roleName, funcName),
 				Check: resource.ComposeTestCheckFunc(
@@ -964,7 +1034,9 @@ func TestAccAWSLambdaFunction_s3Update_basic(t *testing.T) {
 			{
 				PreConfig: func() {
 					// Upload 2nd version
-					testAccCreateZipFromFiles(map[string]string{"test-fixtures/lambda_func_modified.js": "lambda.js"}, zipFile)
+					if err := testAccCreateZipFromFiles(map[string]string{"test-fixtures/lambda_func_modified.js": "lambda.js"}, zipFile); err != nil {
+						t.Fatalf("error creating zip from files: %s", err)
+					}
 				},
 				Config: genAWSLambdaFunctionConfig_s3(bucketName, key, path, roleName, funcName),
 				Check: resource.ComposeTestCheckFunc(
@@ -1003,7 +1075,9 @@ func TestAccAWSLambdaFunction_s3Update_unversioned(t *testing.T) {
 			{
 				PreConfig: func() {
 					// Upload 1st version
-					testAccCreateZipFromFiles(map[string]string{"test-fixtures/lambda_func.js": "lambda.js"}, zipFile)
+					if err := testAccCreateZipFromFiles(map[string]string{"test-fixtures/lambda_func.js": "lambda.js"}, zipFile); err != nil {
+						t.Fatalf("error creating zip from files: %s", err)
+					}
 				},
 				Config: testAccAWSLambdaFunctionConfig_s3_unversioned_tpl(bucketName, roleName, funcName, key, path),
 				Check: resource.ComposeTestCheckFunc(
@@ -1016,7 +1090,9 @@ func TestAccAWSLambdaFunction_s3Update_unversioned(t *testing.T) {
 			{
 				PreConfig: func() {
 					// Upload 2nd version
-					testAccCreateZipFromFiles(map[string]string{"test-fixtures/lambda_func_modified.js": "lambda.js"}, zipFile)
+					if err := testAccCreateZipFromFiles(map[string]string{"test-fixtures/lambda_func_modified.js": "lambda.js"}, zipFile); err != nil {
+						t.Fatalf("error creating zip from files: %s", err)
+					}
 				},
 				Config: testAccAWSLambdaFunctionConfig_s3_unversioned_tpl(bucketName, roleName, funcName, key2, path),
 				Check: resource.ComposeTestCheckFunc(
@@ -1045,7 +1121,7 @@ func TestAccAWSLambdaFunction_runtimeValidation_noRuntime(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAWSLambdaConfigNoRuntime(funcName, policyName, roleName, sgName),
-				ExpectError: regexp.MustCompile(`"runtime": required field is not set`),
+				ExpectError: regexp.MustCompile(`("runtime": required field is not set|The argument "runtime" is required)`),
 			},
 		},
 	})
@@ -1416,8 +1492,12 @@ func testAccCheckAttributeIsDateAfter(s *terraform.State, name string, key strin
 }
 
 func testAccCreateZipFromFiles(files map[string]string, zipFile *os.File) error {
-	zipFile.Truncate(0)
-	zipFile.Seek(0, 0)
+	if err := zipFile.Truncate(0); err != nil {
+		return err
+	}
+	if _, err := zipFile.Seek(0, 0); err != nil {
+		return err
+	}
 
 	w := zip.NewWriter(zipFile)
 
@@ -1768,7 +1848,7 @@ resource "aws_lambda_function" "lambda_function_test" {
 data "template_file" "function_version" {
   template = "$${function_version}"
 
-  vars {
+  vars = {
     function_version = "${aws_lambda_function.lambda_function_test.version}"
   }
 }
@@ -1776,7 +1856,7 @@ data "template_file" "function_version" {
 data "template_file" "last_modified" {
   template = "$${last_modified}"
 
-  vars {
+  vars = {
     last_modified = "${aws_lambda_function.lambda_function_test.last_modified}"
   }
 }
@@ -1784,7 +1864,7 @@ data "template_file" "last_modified" {
 data "template_file" "qualified_arn" {
   template = "$${qualified_arn}"
 
-  vars {
+  vars = {
     qualified_arn = "${aws_lambda_function.lambda_function_test.qualified_arn}"
   }
 }
@@ -1888,6 +1968,53 @@ resource "aws_lambda_function" "lambda_function_test" {
 `, funcName)
 }
 
+func testAccAWSLambdaConfigWithLayers(funcName, layerName, policyName, roleName, sgName string) string {
+	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
+resource "aws_lambda_layer_version" "lambda_function_test" {
+    filename = "test-fixtures/lambdatest.zip"
+    layer_name = "%s"
+    compatible_runtimes = ["nodejs8.10"]
+}
+
+resource "aws_lambda_function" "lambda_function_test" {
+    filename = "test-fixtures/lambdatest.zip"
+    function_name = "%s"
+    role = "${aws_iam_role.iam_for_lambda.arn}"
+    handler = "exports.example"
+    runtime = "nodejs8.10"
+    layers = ["${aws_lambda_layer_version.lambda_function_test.arn}"]
+}
+`, layerName, funcName)
+}
+
+func testAccAWSLambdaConfigWithLayersUpdated(funcName, layerName, layer2Name, policyName, roleName, sgName string) string {
+	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
+resource "aws_lambda_layer_version" "lambda_function_test" {
+    filename = "test-fixtures/lambdatest.zip"
+    layer_name = "%s"
+    compatible_runtimes = ["nodejs8.10"]
+}
+
+resource "aws_lambda_layer_version" "lambda_function_test_2" {
+    filename = "test-fixtures/lambdatest_modified.zip"
+    layer_name = "%s"
+    compatible_runtimes = ["nodejs8.10"]
+}
+
+resource "aws_lambda_function" "lambda_function_test" {
+    filename = "test-fixtures/lambdatest.zip"
+    function_name = "%s"
+    role = "${aws_iam_role.iam_for_lambda.arn}"
+    handler = "exports.example"
+    runtime = "nodejs8.10"
+    layers = [
+        "${aws_lambda_layer_version.lambda_function_test.arn}",
+        "${aws_lambda_layer_version.lambda_function_test_2.arn}",
+    ]
+}
+`, layerName, layer2Name, funcName)
+}
+
 func testAccAWSLambdaConfigWithVPC(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "lambda_function_test" {
@@ -1897,7 +2024,7 @@ resource "aws_lambda_function" "lambda_function_test" {
     handler = "exports.example"
     runtime = "nodejs8.10"
 
-    vpc_config = {
+    vpc_config {
         subnet_ids = ["${aws_subnet.subnet_for_lambda.id}"]
         security_group_ids = ["${aws_security_group.sg_for_lambda.id}"]
     }
@@ -1913,7 +2040,7 @@ resource "aws_lambda_function" "lambda_function_test" {
     handler = "exports.example"
     runtime = "nodejs8.10"
 
-    vpc_config = {
+    vpc_config {
         subnet_ids = ["${aws_subnet.subnet_for_lambda.id}", "${aws_subnet.subnet_for_lambda_2.id}"]
         security_group_ids = ["${aws_security_group.sg_for_lambda.id}", "${aws_security_group.sg_for_lambda_2.id}"]
     }
@@ -2160,7 +2287,7 @@ EOF
 }
 resource "aws_lambda_function" "lambda_function_local" {
     filename = "%s"
-    source_code_hash = "${base64sha256(file("%s"))}"
+    source_code_hash = "${filebase64sha256("%s")}"
     function_name = "%s"
     role = "${aws_iam_role.iam_for_lambda.arn}"
     handler = "exports.example"
@@ -2170,7 +2297,7 @@ resource "aws_lambda_function" "lambda_function_local" {
 data "template_file" "last_modified" {
   template = "$${last_modified}"
 
-  vars {
+  vars = {
     last_modified = "${aws_lambda_function.lambda_function_local.last_modified}"
   }
 }
@@ -2225,7 +2352,7 @@ resource "aws_s3_bucket_object" "o" {
     bucket = "${aws_s3_bucket.artifacts.bucket}"
     key = "%s"
     source = "%s"
-    etag = "${md5(file("%s"))}"
+    etag = "${filemd5("%s")}"
 }
 resource "aws_iam_role" "iam_for_lambda" {
     name = "%s"
@@ -2268,7 +2395,7 @@ resource "aws_s3_bucket_object" "o" {
     bucket = "${aws_s3_bucket.artifacts.bucket}"
     key = "%s"
     source = "%s"
-    etag = "${md5(file("%s"))}"
+    etag = "${filemd5("%s")}"
 }
 resource "aws_iam_role" "iam_for_lambda" {
 	name = "%s"

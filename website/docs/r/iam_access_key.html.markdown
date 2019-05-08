@@ -6,7 +6,7 @@ description: |-
   Provides an IAM access key. This is a set of credentials that allow API requests to be made as an IAM user.
 ---
 
-# aws_iam_access_key
+# Resource: aws_iam_access_key
 
 Provides an IAM access key. This is a set of credentials that allow API requests to be made as an IAM user.
 
@@ -55,6 +55,8 @@ The following arguments are supported:
 * `user` - (Required) The IAM user to associate with this access key.
 * `pgp_key` - (Optional) Either a base-64 encoded PGP public key, or a
   keybase username in the form `keybase:some_person_that_exists`.
+* `status` - (Optional) The access key status to apply. Defaults to `Active`.
+Valid values are `Active` and `Inactive`.
 
 ## Attributes Reference
 
@@ -73,5 +75,3 @@ secret from being stored in plain text
 * `ses_smtp_password` - The secret access key converted into an SES SMTP
   password by applying [AWS's documented conversion
   algorithm](https://docs.aws.amazon.com/ses/latest/DeveloperGuide/smtp-credentials.html#smtp-credentials-convert).
-* `status` - "Active" or "Inactive". Keys are initially active, but can be made
-	inactive by other means.

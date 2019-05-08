@@ -101,6 +101,97 @@ func (c *ServiceCatalog) AcceptPortfolioShareWithContext(ctx aws.Context, input 
 	return out, req.Send()
 }
 
+const opAssociateBudgetWithResource = "AssociateBudgetWithResource"
+
+// AssociateBudgetWithResourceRequest generates a "aws/request.Request" representing the
+// client's request for the AssociateBudgetWithResource operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See AssociateBudgetWithResource for more information on using the AssociateBudgetWithResource
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the AssociateBudgetWithResourceRequest method.
+//    req, resp := client.AssociateBudgetWithResourceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/AssociateBudgetWithResource
+func (c *ServiceCatalog) AssociateBudgetWithResourceRequest(input *AssociateBudgetWithResourceInput) (req *request.Request, output *AssociateBudgetWithResourceOutput) {
+	op := &request.Operation{
+		Name:       opAssociateBudgetWithResource,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &AssociateBudgetWithResourceInput{}
+	}
+
+	output = &AssociateBudgetWithResourceOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// AssociateBudgetWithResource API operation for AWS Service Catalog.
+//
+// Associates the specified budget with the specified resource.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Service Catalog's
+// API operation AssociateBudgetWithResource for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidParametersException "InvalidParametersException"
+//   One or more parameters provided to the operation are not valid.
+//
+//   * ErrCodeDuplicateResourceException "DuplicateResourceException"
+//   The specified resource is a duplicate.
+//
+//   * ErrCodeLimitExceededException "LimitExceededException"
+//   The current limits of the service would have been exceeded by this operation.
+//   Decrease your resource use or increase your service limits and retry the
+//   operation.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The specified resource was not found.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/AssociateBudgetWithResource
+func (c *ServiceCatalog) AssociateBudgetWithResource(input *AssociateBudgetWithResourceInput) (*AssociateBudgetWithResourceOutput, error) {
+	req, out := c.AssociateBudgetWithResourceRequest(input)
+	return out, req.Send()
+}
+
+// AssociateBudgetWithResourceWithContext is the same as AssociateBudgetWithResource with the addition of
+// the ability to pass a context and additional request options.
+//
+// See AssociateBudgetWithResource for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ServiceCatalog) AssociateBudgetWithResourceWithContext(ctx aws.Context, input *AssociateBudgetWithResourceInput, opts ...request.Option) (*AssociateBudgetWithResourceOutput, error) {
+	req, out := c.AssociateBudgetWithResourceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opAssociatePrincipalWithPortfolio = "AssociatePrincipalWithPortfolio"
 
 // AssociatePrincipalWithPortfolioRequest generates a "aws/request.Request" representing the
@@ -3379,6 +3470,86 @@ func (c *ServiceCatalog) DisableAWSOrganizationsAccessWithContext(ctx aws.Contex
 	return out, req.Send()
 }
 
+const opDisassociateBudgetFromResource = "DisassociateBudgetFromResource"
+
+// DisassociateBudgetFromResourceRequest generates a "aws/request.Request" representing the
+// client's request for the DisassociateBudgetFromResource operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DisassociateBudgetFromResource for more information on using the DisassociateBudgetFromResource
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DisassociateBudgetFromResourceRequest method.
+//    req, resp := client.DisassociateBudgetFromResourceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DisassociateBudgetFromResource
+func (c *ServiceCatalog) DisassociateBudgetFromResourceRequest(input *DisassociateBudgetFromResourceInput) (req *request.Request, output *DisassociateBudgetFromResourceOutput) {
+	op := &request.Operation{
+		Name:       opDisassociateBudgetFromResource,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DisassociateBudgetFromResourceInput{}
+	}
+
+	output = &DisassociateBudgetFromResourceOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DisassociateBudgetFromResource API operation for AWS Service Catalog.
+//
+// Disassociates the specified budget from the specified resource.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Service Catalog's
+// API operation DisassociateBudgetFromResource for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The specified resource was not found.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DisassociateBudgetFromResource
+func (c *ServiceCatalog) DisassociateBudgetFromResource(input *DisassociateBudgetFromResourceInput) (*DisassociateBudgetFromResourceOutput, error) {
+	req, out := c.DisassociateBudgetFromResourceRequest(input)
+	return out, req.Send()
+}
+
+// DisassociateBudgetFromResourceWithContext is the same as DisassociateBudgetFromResource with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DisassociateBudgetFromResource for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ServiceCatalog) DisassociateBudgetFromResourceWithContext(ctx aws.Context, input *DisassociateBudgetFromResourceInput, opts ...request.Option) (*DisassociateBudgetFromResourceOutput, error) {
+	req, out := c.DisassociateBudgetFromResourceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDisassociatePrincipalFromPortfolio = "DisassociatePrincipalFromPortfolio"
 
 // DisassociatePrincipalFromPortfolioRequest generates a "aws/request.Request" representing the
@@ -4202,6 +4373,144 @@ func (c *ServiceCatalog) ListAcceptedPortfolioSharesPagesWithContext(ctx aws.Con
 	cont := true
 	for p.Next() && cont {
 		cont = fn(p.Page().(*ListAcceptedPortfolioSharesOutput), !p.HasNextPage())
+	}
+	return p.Err()
+}
+
+const opListBudgetsForResource = "ListBudgetsForResource"
+
+// ListBudgetsForResourceRequest generates a "aws/request.Request" representing the
+// client's request for the ListBudgetsForResource operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListBudgetsForResource for more information on using the ListBudgetsForResource
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListBudgetsForResourceRequest method.
+//    req, resp := client.ListBudgetsForResourceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListBudgetsForResource
+func (c *ServiceCatalog) ListBudgetsForResourceRequest(input *ListBudgetsForResourceInput) (req *request.Request, output *ListBudgetsForResourceOutput) {
+	op := &request.Operation{
+		Name:       opListBudgetsForResource,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"PageToken"},
+			OutputTokens:    []string{"NextPageToken"},
+			LimitToken:      "PageSize",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &ListBudgetsForResourceInput{}
+	}
+
+	output = &ListBudgetsForResourceOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListBudgetsForResource API operation for AWS Service Catalog.
+//
+// Lists all the budgets associated to the specified resource.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Service Catalog's
+// API operation ListBudgetsForResource for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The specified resource was not found.
+//
+//   * ErrCodeInvalidParametersException "InvalidParametersException"
+//   One or more parameters provided to the operation are not valid.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListBudgetsForResource
+func (c *ServiceCatalog) ListBudgetsForResource(input *ListBudgetsForResourceInput) (*ListBudgetsForResourceOutput, error) {
+	req, out := c.ListBudgetsForResourceRequest(input)
+	return out, req.Send()
+}
+
+// ListBudgetsForResourceWithContext is the same as ListBudgetsForResource with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListBudgetsForResource for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ServiceCatalog) ListBudgetsForResourceWithContext(ctx aws.Context, input *ListBudgetsForResourceInput, opts ...request.Option) (*ListBudgetsForResourceOutput, error) {
+	req, out := c.ListBudgetsForResourceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// ListBudgetsForResourcePages iterates over the pages of a ListBudgetsForResource operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListBudgetsForResource method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListBudgetsForResource operation.
+//    pageNum := 0
+//    err := client.ListBudgetsForResourcePages(params,
+//        func(page *ListBudgetsForResourceOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *ServiceCatalog) ListBudgetsForResourcePages(input *ListBudgetsForResourceInput, fn func(*ListBudgetsForResourceOutput, bool) bool) error {
+	return c.ListBudgetsForResourcePagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListBudgetsForResourcePagesWithContext same as ListBudgetsForResourcePages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ServiceCatalog) ListBudgetsForResourcePagesWithContext(ctx aws.Context, input *ListBudgetsForResourceInput, fn func(*ListBudgetsForResourceOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListBudgetsForResourceInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListBudgetsForResourceRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListBudgetsForResourceOutput), !p.HasNextPage())
 	}
 	return p.Err()
 }
@@ -7544,6 +7853,78 @@ func (s *AccessLevelFilter) SetValue(v string) *AccessLevelFilter {
 	return s
 }
 
+type AssociateBudgetWithResourceInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the budget you want to associate.
+	//
+	// BudgetName is a required field
+	BudgetName *string `min:"1" type:"string" required:"true"`
+
+	// The resource identifier. Either a portfolio-id or a product-id.
+	//
+	// ResourceId is a required field
+	ResourceId *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s AssociateBudgetWithResourceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AssociateBudgetWithResourceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AssociateBudgetWithResourceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AssociateBudgetWithResourceInput"}
+	if s.BudgetName == nil {
+		invalidParams.Add(request.NewErrParamRequired("BudgetName"))
+	}
+	if s.BudgetName != nil && len(*s.BudgetName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("BudgetName", 1))
+	}
+	if s.ResourceId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceId"))
+	}
+	if s.ResourceId != nil && len(*s.ResourceId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetBudgetName sets the BudgetName field's value.
+func (s *AssociateBudgetWithResourceInput) SetBudgetName(v string) *AssociateBudgetWithResourceInput {
+	s.BudgetName = &v
+	return s
+}
+
+// SetResourceId sets the ResourceId field's value.
+func (s *AssociateBudgetWithResourceInput) SetResourceId(v string) *AssociateBudgetWithResourceInput {
+	s.ResourceId = &v
+	return s
+}
+
+type AssociateBudgetWithResourceOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s AssociateBudgetWithResourceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AssociateBudgetWithResourceOutput) GoString() string {
+	return s.String()
+}
+
 type AssociatePrincipalWithPortfolioInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8099,6 +8480,30 @@ func (s *BatchDisassociateServiceActionFromProvisioningArtifactOutput) SetFailed
 	return s
 }
 
+// Information about a budget.
+type BudgetDetail struct {
+	_ struct{} `type:"structure"`
+
+	// Name of the associated budget.
+	BudgetName *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s BudgetDetail) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BudgetDetail) GoString() string {
+	return s.String()
+}
+
+// SetBudgetName sets the BudgetName field's value.
+func (s *BudgetDetail) SetBudgetName(v string) *BudgetDetail {
+	s.BudgetName = &v
+	return s
+}
+
 // Information about a CloudWatch dashboard.
 type CloudWatchDashboard struct {
 	_ struct{} `type:"structure"`
@@ -8392,6 +8797,13 @@ type CreateConstraintInput struct {
 	//
 	// {"NotificationArns" : ["arn:aws:sns:us-east-1:123456789012:Topic"]}
 	//
+	// RESOURCE_UPDATESpecify the TagUpdatesOnProvisionedProduct property as follows:
+	//
+	// {"Version":"2.0","Properties":{"TagUpdateOnProvisionedProduct":"String"}}
+	//
+	// The TagUpdatesOnProvisionedProduct property accepts a string value of ALLOWED
+	// or NOT_ALLOWED.
+	//
 	// STACKSETSpecify the Parameters property as follows:
 	//
 	// {"Version": "String", "Properties": {"AccountList": [ "String" ], "RegionList":
@@ -8425,6 +8837,8 @@ type CreateConstraintInput struct {
 	//    * LAUNCH
 	//
 	//    * NOTIFICATION
+	//
+	//    * RESOURCE_UPDATE
 	//
 	//    * STACKSET
 	//
@@ -8791,7 +9205,7 @@ type CreatePortfolioShareOutput struct {
 
 	// The portfolio share unique identifier. This will only be returned if portfolio
 	// is shared to an organization node.
-	PortfolioShareToken *string `type:"string"`
+	PortfolioShareToken *string `min:"1" type:"string"`
 }
 
 // String returns the string representation
@@ -9861,7 +10275,7 @@ type DeletePortfolioShareOutput struct {
 
 	// The portfolio share unique identifier. This will only be returned if delete
 	// is made to an organization node.
-	PortfolioShareToken *string `type:"string"`
+	PortfolioShareToken *string `min:"1" type:"string"`
 }
 
 // String returns the string representation
@@ -10495,6 +10909,9 @@ func (s *DescribePortfolioInput) SetId(v string) *DescribePortfolioInput {
 type DescribePortfolioOutput struct {
 	_ struct{} `type:"structure"`
 
+	// Information about the associated budgets.
+	Budgets []*BudgetDetail `type:"list"`
+
 	// Information about the portfolio.
 	PortfolioDetail *PortfolioDetail `type:"structure"`
 
@@ -10513,6 +10930,12 @@ func (s DescribePortfolioOutput) String() string {
 // GoString returns the string representation
 func (s DescribePortfolioOutput) GoString() string {
 	return s.String()
+}
+
+// SetBudgets sets the Budgets field's value.
+func (s *DescribePortfolioOutput) SetBudgets(v []*BudgetDetail) *DescribePortfolioOutput {
+	s.Budgets = v
+	return s
 }
 
 // SetPortfolioDetail sets the PortfolioDetail field's value.
@@ -10540,7 +10963,7 @@ type DescribePortfolioShareStatusInput struct {
 	// by CreatePortfolioShare or by DeletePortfolioShare.
 	//
 	// PortfolioShareToken is a required field
-	PortfolioShareToken *string `type:"string" required:"true"`
+	PortfolioShareToken *string `min:"1" type:"string" required:"true"`
 }
 
 // String returns the string representation
@@ -10558,6 +10981,9 @@ func (s *DescribePortfolioShareStatusInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DescribePortfolioShareStatusInput"}
 	if s.PortfolioShareToken == nil {
 		invalidParams.Add(request.NewErrParamRequired("PortfolioShareToken"))
+	}
+	if s.PortfolioShareToken != nil && len(*s.PortfolioShareToken) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("PortfolioShareToken", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -10583,7 +11009,7 @@ type DescribePortfolioShareStatusOutput struct {
 	PortfolioId *string `min:"1" type:"string"`
 
 	// The token for the portfolio share operation. For example, share-6v24abcdefghi.
-	PortfolioShareToken *string `type:"string"`
+	PortfolioShareToken *string `min:"1" type:"string"`
 
 	// Information about the portfolio share operation.
 	ShareDetails *ShareDetails `type:"structure"`
@@ -10691,6 +11117,9 @@ func (s *DescribeProductAsAdminInput) SetId(v string) *DescribeProductAsAdminInp
 type DescribeProductAsAdminOutput struct {
 	_ struct{} `type:"structure"`
 
+	// Information about the associated budgets.
+	Budgets []*BudgetDetail `type:"list"`
+
 	// Information about the product view.
 	ProductViewDetail *ProductViewDetail `type:"structure"`
 
@@ -10713,6 +11142,12 @@ func (s DescribeProductAsAdminOutput) String() string {
 // GoString returns the string representation
 func (s DescribeProductAsAdminOutput) GoString() string {
 	return s.String()
+}
+
+// SetBudgets sets the Budgets field's value.
+func (s *DescribeProductAsAdminOutput) SetBudgets(v []*BudgetDetail) *DescribeProductAsAdminOutput {
+	s.Budgets = v
+	return s
 }
 
 // SetProductViewDetail sets the ProductViewDetail field's value.
@@ -10798,6 +11233,9 @@ func (s *DescribeProductInput) SetId(v string) *DescribeProductInput {
 type DescribeProductOutput struct {
 	_ struct{} `type:"structure"`
 
+	// Information about the associated budgets.
+	Budgets []*BudgetDetail `type:"list"`
+
 	// Summary information about the product view.
 	ProductViewSummary *ProductViewSummary `type:"structure"`
 
@@ -10813,6 +11251,12 @@ func (s DescribeProductOutput) String() string {
 // GoString returns the string representation
 func (s DescribeProductOutput) GoString() string {
 	return s.String()
+}
+
+// SetBudgets sets the Budgets field's value.
+func (s *DescribeProductOutput) SetBudgets(v []*BudgetDetail) *DescribeProductOutput {
+	s.Budgets = v
+	return s
 }
 
 // SetProductViewSummary sets the ProductViewSummary field's value.
@@ -11682,6 +12126,79 @@ func (s DisableAWSOrganizationsAccessOutput) GoString() string {
 	return s.String()
 }
 
+type DisassociateBudgetFromResourceInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the budget you want to disassociate.
+	//
+	// BudgetName is a required field
+	BudgetName *string `min:"1" type:"string" required:"true"`
+
+	// The resource identifier you want to disassociate from. Either a portfolio-id
+	// or a product-id.
+	//
+	// ResourceId is a required field
+	ResourceId *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DisassociateBudgetFromResourceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DisassociateBudgetFromResourceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DisassociateBudgetFromResourceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DisassociateBudgetFromResourceInput"}
+	if s.BudgetName == nil {
+		invalidParams.Add(request.NewErrParamRequired("BudgetName"))
+	}
+	if s.BudgetName != nil && len(*s.BudgetName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("BudgetName", 1))
+	}
+	if s.ResourceId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceId"))
+	}
+	if s.ResourceId != nil && len(*s.ResourceId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetBudgetName sets the BudgetName field's value.
+func (s *DisassociateBudgetFromResourceInput) SetBudgetName(v string) *DisassociateBudgetFromResourceInput {
+	s.BudgetName = &v
+	return s
+}
+
+// SetResourceId sets the ResourceId field's value.
+func (s *DisassociateBudgetFromResourceInput) SetResourceId(v string) *DisassociateBudgetFromResourceInput {
+	s.ResourceId = &v
+	return s
+}
+
+type DisassociateBudgetFromResourceOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DisassociateBudgetFromResourceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DisassociateBudgetFromResourceOutput) GoString() string {
+	return s.String()
+}
+
 type DisassociatePrincipalFromPortfolioInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12502,6 +13019,114 @@ func (s *ListAcceptedPortfolioSharesOutput) SetNextPageToken(v string) *ListAcce
 // SetPortfolioDetails sets the PortfolioDetails field's value.
 func (s *ListAcceptedPortfolioSharesOutput) SetPortfolioDetails(v []*PortfolioDetail) *ListAcceptedPortfolioSharesOutput {
 	s.PortfolioDetails = v
+	return s
+}
+
+type ListBudgetsForResourceInput struct {
+	_ struct{} `type:"structure"`
+
+	// The language code.
+	//
+	//    * en - English (default)
+	//
+	//    * jp - Japanese
+	//
+	//    * zh - Chinese
+	AcceptLanguage *string `type:"string"`
+
+	// The maximum number of items to return with this call.
+	PageSize *int64 `type:"integer"`
+
+	// The page token for the next set of results. To retrieve the first set of
+	// results, use null.
+	PageToken *string `type:"string"`
+
+	// The resource identifier.
+	//
+	// ResourceId is a required field
+	ResourceId *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ListBudgetsForResourceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListBudgetsForResourceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListBudgetsForResourceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListBudgetsForResourceInput"}
+	if s.ResourceId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceId"))
+	}
+	if s.ResourceId != nil && len(*s.ResourceId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAcceptLanguage sets the AcceptLanguage field's value.
+func (s *ListBudgetsForResourceInput) SetAcceptLanguage(v string) *ListBudgetsForResourceInput {
+	s.AcceptLanguage = &v
+	return s
+}
+
+// SetPageSize sets the PageSize field's value.
+func (s *ListBudgetsForResourceInput) SetPageSize(v int64) *ListBudgetsForResourceInput {
+	s.PageSize = &v
+	return s
+}
+
+// SetPageToken sets the PageToken field's value.
+func (s *ListBudgetsForResourceInput) SetPageToken(v string) *ListBudgetsForResourceInput {
+	s.PageToken = &v
+	return s
+}
+
+// SetResourceId sets the ResourceId field's value.
+func (s *ListBudgetsForResourceInput) SetResourceId(v string) *ListBudgetsForResourceInput {
+	s.ResourceId = &v
+	return s
+}
+
+type ListBudgetsForResourceOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Information about the associated budgets.
+	Budgets []*BudgetDetail `type:"list"`
+
+	// The page token to use to retrieve the next set of results. If there are no
+	// additional results, this value is null.
+	NextPageToken *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ListBudgetsForResourceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListBudgetsForResourceOutput) GoString() string {
+	return s.String()
+}
+
+// SetBudgets sets the Budgets field's value.
+func (s *ListBudgetsForResourceOutput) SetBudgets(v []*BudgetDetail) *ListBudgetsForResourceOutput {
+	s.Budgets = v
+	return s
+}
+
+// SetNextPageToken sets the NextPageToken field's value.
+func (s *ListBudgetsForResourceOutput) SetNextPageToken(v string) *ListBudgetsForResourceOutput {
+	s.NextPageToken = &v
 	return s
 }
 
@@ -14773,7 +15398,7 @@ type ProvisionedProductAttribute struct {
 	//    * AVAILABLE - Stable state, ready to perform any operation. The most recent
 	//    operation succeeded and completed.
 	//
-	//    * UNDER_CHANGE - Transitive state, operations performed might not have
+	//    * UNDER_CHANGE - Transitive state. Operations performed might not have
 	//    valid results. Wait for an AVAILABLE status before performing operations.
 	//
 	//    * TAINTED - Stable state, ready to perform any operation. The stack has
@@ -14781,9 +15406,14 @@ type ProvisionedProductAttribute struct {
 	//    For example, a request to update to a new version failed and the stack
 	//    rolled back to the current version.
 	//
-	//    * ERROR - An unexpected error occurred, the provisioned product exists
+	//    * ERROR - An unexpected error occurred. The provisioned product exists
 	//    but the stack is not running. For example, CloudFormation received a parameter
 	//    value that was not valid and could not launch the stack.
+	//
+	//    * PLAN_IN_PROGRESS - Transitive state. The plan operations were performed
+	//    to provision a new product, but resources have not yet been created. After
+	//    reviewing the list of resources to be created, execute the plan. Wait
+	//    for an AVAILABLE status before performing operations.
 	Status *string `type:"string" enum:"ProvisionedProductStatus"`
 
 	// The current status message of the provisioned product.
@@ -14938,7 +15568,7 @@ type ProvisionedProductDetail struct {
 	//    * AVAILABLE - Stable state, ready to perform any operation. The most recent
 	//    operation succeeded and completed.
 	//
-	//    * UNDER_CHANGE - Transitive state, operations performed might not have
+	//    * UNDER_CHANGE - Transitive state. Operations performed might not have
 	//    valid results. Wait for an AVAILABLE status before performing operations.
 	//
 	//    * TAINTED - Stable state, ready to perform any operation. The stack has
@@ -14946,9 +15576,14 @@ type ProvisionedProductDetail struct {
 	//    For example, a request to update to a new version failed and the stack
 	//    rolled back to the current version.
 	//
-	//    * ERROR - An unexpected error occurred, the provisioned product exists
+	//    * ERROR - An unexpected error occurred. The provisioned product exists
 	//    but the stack is not running. For example, CloudFormation received a parameter
 	//    value that was not valid and could not launch the stack.
+	//
+	//    * PLAN_IN_PROGRESS - Transitive state. The plan operations were performed
+	//    to provision a new product, but resources have not yet been created. After
+	//    reviewing the list of resources to be created, execute the plan. Wait
+	//    for an AVAILABLE status before performing operations.
 	Status *string `type:"string" enum:"ProvisionedProductStatus"`
 
 	// The current status message of the provisioned product.
@@ -15511,6 +16146,10 @@ type ProvisioningArtifactProperties struct {
 	// the previous provisioning artifact.
 	Description *string `type:"string"`
 
+	// If set to true, AWS Service Catalog stops validating the specified provisioning
+	// artifact even if it is invalid.
+	DisableTemplateValidation *bool `type:"boolean"`
+
 	// The URL of the CloudFormation template in Amazon S3. Specify the URL in JSON
 	// format as follows:
 	//
@@ -15562,6 +16201,12 @@ func (s *ProvisioningArtifactProperties) Validate() error {
 // SetDescription sets the Description field's value.
 func (s *ProvisioningArtifactProperties) SetDescription(v string) *ProvisioningArtifactProperties {
 	s.Description = &v
+	return s
+}
+
+// SetDisableTemplateValidation sets the DisableTemplateValidation field's value.
+func (s *ProvisioningArtifactProperties) SetDisableTemplateValidation(v bool) *ProvisioningArtifactProperties {
+	s.DisableTemplateValidation = &v
 	return s
 }
 
@@ -17900,6 +18545,10 @@ type UpdateProvisionedProductInput struct {
 	// a stack set.
 	ProvisioningPreferences *UpdateProvisioningPreferences `type:"structure"`
 
+	// One or more tags. Requires the product to have RESOURCE_UPDATE constraint
+	// with TagUpdatesOnProvisionedProduct set to ALLOWED to allow tag updates.
+	Tags []*Tag `type:"list"`
+
 	// The idempotency token that uniquely identifies the provisioning update request.
 	UpdateToken *string `min:"1" type:"string" idempotencyToken:"true"`
 }
@@ -17948,6 +18597,16 @@ func (s *UpdateProvisionedProductInput) Validate() error {
 	if s.ProvisioningPreferences != nil {
 		if err := s.ProvisioningPreferences.Validate(); err != nil {
 			invalidParams.AddNested("ProvisioningPreferences", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
 		}
 	}
 
@@ -18002,6 +18661,12 @@ func (s *UpdateProvisionedProductInput) SetProvisioningParameters(v []*UpdatePro
 // SetProvisioningPreferences sets the ProvisioningPreferences field's value.
 func (s *UpdateProvisionedProductInput) SetProvisioningPreferences(v *UpdateProvisioningPreferences) *UpdateProvisionedProductInput {
 	s.ProvisioningPreferences = v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *UpdateProvisionedProductInput) SetTags(v []*Tag) *UpdateProvisionedProductInput {
+	s.Tags = v
 	return s
 }
 

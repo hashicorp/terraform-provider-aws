@@ -31,6 +31,11 @@ func TestAccAWSAppCookieStickinessPolicy_basic(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      "aws_app_cookie_stickiness_policy.foo",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccAppCookieStickinessPolicyConfigUpdate(lbName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppCookieStickinessPolicy(

@@ -6,7 +6,7 @@ description: |-
   Manages an AWS Storage Gateway file, tape, or volume gateway in the provider region
 ---
 
-# aws_storagegateway_gateway
+# Resource: aws_storagegateway_gateway
 
 Manages an AWS Storage Gateway file, tape, or volume gateway in the provider region.
 

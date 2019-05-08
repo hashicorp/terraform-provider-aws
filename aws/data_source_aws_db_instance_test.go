@@ -30,6 +30,7 @@ func TestAccAWSDbInstanceDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("data.aws_db_instance.bar", "port"),
 					resource.TestCheckResourceAttrSet("data.aws_db_instance.bar", "enabled_cloudwatch_logs_exports.0"),
 					resource.TestCheckResourceAttrSet("data.aws_db_instance.bar", "enabled_cloudwatch_logs_exports.1"),
+					resource.TestCheckResourceAttrPair("data.aws_db_instance.bar", "resource_id", "aws_db_instance.bar", "resource_id"),
 				),
 			},
 		},

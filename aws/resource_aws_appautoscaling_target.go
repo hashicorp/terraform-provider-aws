@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
+	"strings"
 )
 
 func resourceAwsAppautoscalingTarget() *schema.Resource {
@@ -19,6 +20,9 @@ func resourceAwsAppautoscalingTarget() *schema.Resource {
 		Read:   resourceAwsAppautoscalingTargetRead,
 		Update: resourceAwsAppautoscalingTargetPut,
 		Delete: resourceAwsAppautoscalingTargetDelete,
+		Importer: &schema.ResourceImporter{
+			State: resourceAwsAppautoscalingTargetImport,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"max_capacity": {
@@ -189,4 +193,27 @@ func getAwsAppautoscalingTarget(resourceId, namespace, dimension string,
 	}
 
 	return nil, nil
+}
+
+func resourceAwsAppautoscalingTargetImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	idParts := strings.Split(d.Id(), "/")
+
+	if len(idParts) < 3 {
+		return nil, fmt.Errorf("unexpected format (%q), expected <service-namespace>/<resource-id>/<scalable-dimension>", d.Id())
+	}
+
+	serviceNamespace := idParts[0]
+	resourceId := strings.Join(idParts[1:len(idParts)-1], "/")
+	scalableDimension := idParts[len(idParts)-1]
+
+	if serviceNamespace == "" || resourceId == "" || scalableDimension == "" {
+		return nil, fmt.Errorf("unexpected format (%q), expected <service-namespace>/<resource-id>/<scalable-dimension>", d.Id())
+	}
+
+	d.Set("service_namespace", serviceNamespace)
+	d.Set("resource_id", resourceId)
+	d.Set("scalable_dimension", scalableDimension)
+	d.SetId(resourceId)
+
+	return []*schema.ResourceData{d}, nil
 }

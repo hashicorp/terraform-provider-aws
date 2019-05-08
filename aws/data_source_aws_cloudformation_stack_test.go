@@ -42,7 +42,7 @@ func testAccCheckAwsCloudFormationStackDataSourceConfig_basic(stackName string) 
 	return fmt.Sprintf(`
 resource "aws_cloudformation_stack" "cfs" {
   name = "%s"
-  parameters {
+  parameters = {
     CIDR = "10.10.10.0/24"
   }
   timeout_in_minutes = 6
@@ -117,7 +117,7 @@ func testAccCheckAwsCloudFormationStackDataSourceConfig_yaml(stackName string) s
 	return fmt.Sprintf(`
 resource "aws_cloudformation_stack" "yaml" {
   name = "%s"
-  parameters {
+  parameters = {
     CIDR = "10.10.10.0/24"
   }
   timeout_in_minutes = 6

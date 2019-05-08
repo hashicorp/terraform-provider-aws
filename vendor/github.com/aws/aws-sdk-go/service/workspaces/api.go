@@ -351,7 +351,7 @@ func (c *WorkSpaces) CreateTagsRequest(input *CreateTagsInput) (req *request.Req
 
 // CreateTags API operation for Amazon WorkSpaces.
 //
-// Creates the specified tags for the specified WorkSpace.
+// Creates the specified tags for the specified WorkSpaces resource.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -612,7 +612,7 @@ func (c *WorkSpaces) DeleteTagsRequest(input *DeleteTagsInput) (req *request.Req
 
 // DeleteTags API operation for Amazon WorkSpaces.
 //
-// Deletes the specified tags from the specified WorkSpace.
+// Deletes the specified tags from the specified WorkSpaces resource.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1108,7 +1108,7 @@ func (c *WorkSpaces) DescribeTagsRequest(input *DescribeTagsInput) (req *request
 
 // DescribeTags API operation for Amazon WorkSpaces.
 //
-// Describes the specified tags for the specified WorkSpace.
+// Describes the specified tags for the specified WorkSpaces resource.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1876,6 +1876,9 @@ func (c *WorkSpaces) ImportWorkspaceImageRequest(input *ImportWorkspaceImageInpu
 //   * ErrCodeAccessDeniedException "AccessDeniedException"
 //   The user is not authorized to access a resource.
 //
+//   * ErrCodeInvalidParameterValuesException "InvalidParameterValuesException"
+//   One or more parameter values are not valid.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/ImportWorkspaceImage
 func (c *WorkSpaces) ImportWorkspaceImage(input *ImportWorkspaceImageInput) (*ImportWorkspaceImageOutput, error) {
 	req, out := c.ImportWorkspaceImageRequest(input)
@@ -2125,7 +2128,7 @@ func (c *WorkSpaces) ModifyClientPropertiesRequest(input *ModifyClientProperties
 
 // ModifyClientProperties API operation for Amazon WorkSpaces.
 //
-// Modifies the properties of the specified Amazon WorkSpaces client.
+// Modifies the properties of the specified Amazon WorkSpaces clients.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2233,7 +2236,7 @@ func (c *WorkSpaces) ModifyWorkspacePropertiesRequest(input *ModifyWorkspaceProp
 //
 //   * ErrCodeUnsupportedWorkspaceConfigurationException "UnsupportedWorkspaceConfigurationException"
 //   The configuration of this WorkSpace is not supported for this operation.
-//   For more information, see the Amazon WorkSpaces Administration Guide (http://docs.aws.amazon.com/workspaces/latest/adminguide/).
+//   For more information, see the Amazon WorkSpaces Administration Guide (https://docs.aws.amazon.com/workspaces/latest/adminguide/).
 //
 //   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
 //   The resource could not be found.
@@ -2484,7 +2487,7 @@ func (c *WorkSpaces) RebuildWorkspacesRequest(input *RebuildWorkspacesInput) (re
 // You cannot rebuild a WorkSpace unless its state is AVAILABLE, ERROR, or UNHEALTHY.
 //
 // Rebuilding a WorkSpace is a potentially destructive action that can result
-// in the loss of data. For more information, see Rebuild a WorkSpace (http://docs.aws.amazon.com/workspaces/latest/adminguide/reset-workspace.html).
+// in the loss of data. For more information, see Rebuild a WorkSpace (https://docs.aws.amazon.com/workspaces/latest/adminguide/reset-workspace.html).
 //
 // This operation is asynchronous and returns before the WorkSpaces have been
 // completely rebuilt.
@@ -3234,6 +3237,9 @@ type CreateIpGroupInput struct {
 	// GroupName is a required field
 	GroupName *string `type:"string" required:"true"`
 
+	// The tags. Each WorkSpaces resource can have a maximum of 50 tags.
+	Tags []*Tag `type:"list"`
+
 	// The rules to add to the group.
 	UserRules []*IpRuleItem `type:"list"`
 }
@@ -3254,6 +3260,16 @@ func (s *CreateIpGroupInput) Validate() error {
 	if s.GroupName == nil {
 		invalidParams.Add(request.NewErrParamRequired("GroupName"))
 	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -3270,6 +3286,12 @@ func (s *CreateIpGroupInput) SetGroupDesc(v string) *CreateIpGroupInput {
 // SetGroupName sets the GroupName field's value.
 func (s *CreateIpGroupInput) SetGroupName(v string) *CreateIpGroupInput {
 	s.GroupName = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateIpGroupInput) SetTags(v []*Tag) *CreateIpGroupInput {
+	s.Tags = v
 	return s
 }
 
@@ -3305,12 +3327,14 @@ func (s *CreateIpGroupOutput) SetGroupId(v string) *CreateIpGroupOutput {
 type CreateTagsInput struct {
 	_ struct{} `type:"structure"`
 
-	// The identifier of the WorkSpace. To find this ID, use DescribeWorkspaces.
+	// The identifier of the WorkSpaces resource. The supported resource types are
+	// WorkSpaces, registered directories, images, custom bundles, and IP access
+	// control groups.
 	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
 
-	// The tags. Each WorkSpace can have a maximum of 50 tags.
+	// The tags. Each WorkSpaces resource can have a maximum of 50 tags.
 	//
 	// Tags is a required field
 	Tags []*Tag `type:"list" required:"true"`
@@ -3584,7 +3608,9 @@ func (s DeleteIpGroupOutput) GoString() string {
 type DeleteTagsInput struct {
 	_ struct{} `type:"structure"`
 
-	// The identifier of the WorkSpace. To find this ID, use DescribeWorkspaces.
+	// The identifier of the WorkSpaces resource. The supported resource types are
+	// WorkSpaces, registered directories, images, custom bundles, and IP access
+	// control groups.
 	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
@@ -3827,7 +3853,7 @@ func (s *DescribeAccountOutput) SetDedicatedTenancySupport(v string) *DescribeAc
 type DescribeClientPropertiesInput struct {
 	_ struct{} `type:"structure"`
 
-	// The resource identifiers, in the form of directory IDs.
+	// The resource identifier, in the form of directory IDs.
 	//
 	// ResourceIds is a required field
 	ResourceIds []*string `min:"1" type:"list" required:"true"`
@@ -3982,7 +4008,9 @@ func (s *DescribeIpGroupsOutput) SetResult(v []*IpGroup) *DescribeIpGroupsOutput
 type DescribeTagsInput struct {
 	_ struct{} `type:"structure"`
 
-	// The identifier of the WorkSpace. To find this ID, use DescribeWorkspaces.
+	// The identifier of the WorkSpaces resource. The supported resource types are
+	// WorkSpaces, registered directories, images, custom bundles, and IP access
+	// control groups.
 	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
@@ -4710,6 +4738,9 @@ type ImportWorkspaceImageInput struct {
 	//
 	// IngestionProcess is a required field
 	IngestionProcess *string `type:"string" required:"true" enum:"WorkspaceImageIngestionProcess"`
+
+	// The tags. Each WorkSpaces resource can have a maximum of 50 tags.
+	Tags []*Tag `type:"list"`
 }
 
 // String returns the string representation
@@ -4743,6 +4774,16 @@ func (s *ImportWorkspaceImageInput) Validate() error {
 	if s.IngestionProcess == nil {
 		invalidParams.Add(request.NewErrParamRequired("IngestionProcess"))
 	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -4771,6 +4812,12 @@ func (s *ImportWorkspaceImageInput) SetImageName(v string) *ImportWorkspaceImage
 // SetIngestionProcess sets the IngestionProcess field's value.
 func (s *ImportWorkspaceImageInput) SetIngestionProcess(v string) *ImportWorkspaceImageInput {
 	s.IngestionProcess = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *ImportWorkspaceImageInput) SetTags(v []*Tag) *ImportWorkspaceImageInput {
+	s.Tags = v
 	return s
 }
 
@@ -5067,7 +5114,9 @@ type ModifyClientPropertiesInput struct {
 	_ struct{} `type:"structure"`
 
 	// Information about the Amazon WorkSpaces client.
-	ClientProperties *ClientProperties `type:"structure"`
+	//
+	// ClientProperties is a required field
+	ClientProperties *ClientProperties `type:"structure" required:"true"`
 
 	// The resource identifiers, in the form of directory IDs.
 	//
@@ -5088,6 +5137,9 @@ func (s ModifyClientPropertiesInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *ModifyClientPropertiesInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "ModifyClientPropertiesInput"}
+	if s.ClientProperties == nil {
+		invalidParams.Add(request.NewErrParamRequired("ClientProperties"))
+	}
 	if s.ResourceId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ResourceId"))
 	}
@@ -5438,6 +5490,9 @@ func (s *RebuildRequest) SetWorkspaceId(v string) *RebuildRequest {
 type RebuildWorkspacesInput struct {
 	_ struct{} `type:"structure"`
 
+	// Reserved.
+	AdditionalInfo *string `type:"string"`
+
 	// The WorkSpace to rebuild. You can specify a single WorkSpace.
 	//
 	// RebuildWorkspaceRequests is a required field
@@ -5478,6 +5533,12 @@ func (s *RebuildWorkspacesInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetAdditionalInfo sets the AdditionalInfo field's value.
+func (s *RebuildWorkspacesInput) SetAdditionalInfo(v string) *RebuildWorkspacesInput {
+	s.AdditionalInfo = &v
+	return s
 }
 
 // SetRebuildWorkspaceRequests sets the RebuildWorkspaceRequests field's value.
@@ -6544,7 +6605,7 @@ type WorkspaceProperties struct {
 	RootVolumeSizeGib *int64 `type:"integer"`
 
 	// The running mode. For more information, see Manage the WorkSpace Running
-	// Mode (http://docs.aws.amazon.com/workspaces/latest/adminguide/running-mode.html).
+	// Mode (https://docs.aws.amazon.com/workspaces/latest/adminguide/running-mode.html).
 	RunningMode *string `type:"string" enum:"RunningMode"`
 
 	// The time after a user logs off when WorkSpaces are automatically stopped.

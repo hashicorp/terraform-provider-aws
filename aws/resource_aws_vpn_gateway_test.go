@@ -18,6 +18,9 @@ func init() {
 	resource.AddTestSweepers("aws_vpn_gateway", &resource.Sweeper{
 		Name: "aws_vpn_gateway",
 		F:    testSweepVPNGateways,
+		Dependencies: []string{
+			"aws_dx_gateway_association",
+		},
 	})
 }
 
@@ -371,18 +374,7 @@ func testAccAWSVpnGatewayDisappears(gateway *ec2.VpnGateway) resource.TestCheckF
 			VpcId:        gateway.VpcAttachments[0].VpcId,
 		})
 		if err != nil {
-			ec2err, ok := err.(awserr.Error)
-			if ok {
-				if ec2err.Code() == "InvalidVpnGatewayID.NotFound" {
-					return nil
-				} else if ec2err.Code() == "InvalidVpnGatewayAttachment.NotFound" {
-					return nil
-				}
-			}
-
-			if err != nil {
-				return err
-			}
+			return err
 		}
 
 		opts := &ec2.DeleteVpnGatewayInput{

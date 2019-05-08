@@ -219,7 +219,7 @@ func resourceAwsVpnGatewayAttach(d *schema.ResourceData, meta interface{}) error
 		Pending: []string{"detached", "attaching"},
 		Target:  []string{"attached"},
 		Refresh: vpnGatewayAttachStateRefreshFunc(conn, d.Id()),
-		Timeout: 10 * time.Minute,
+		Timeout: 15 * time.Minute,
 	}
 	if _, err := stateConf.WaitForState(); err != nil {
 		return fmt.Errorf(

@@ -6,7 +6,7 @@ description: |-
   Provides a Route53 query logging configuration resource.
 ---
 
-# aws_route53_query_log
+# Resource: aws_route53_query_log
 
 Provides a Route53 query logging configuration resource.
 

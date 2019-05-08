@@ -57,6 +57,8 @@
 //
 // Information about committed code in a repository, by calling the following:
 //
+//    * CreateCommit, which creates a commit for changes to a repository.
+//
 //    * GetBlob, which returns the base-64 encoded content of an individual
 //    Git blob object within a repository.
 //

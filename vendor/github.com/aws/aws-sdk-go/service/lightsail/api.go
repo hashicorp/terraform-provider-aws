@@ -1159,6 +1159,16 @@ func (c *Lightsail) CreateDiskSnapshotRequest(input *CreateDiskSnapshotInput) (r
 // snapshot. You may remount and use your disk while the snapshot status is
 // pending.
 //
+// You can also use this operation to create a snapshot of an instance's system
+// volume. You might want to do this, for example, to recover data from the
+// system volume of a botched instance or to create a backup of the system volume
+// like you would for a block storage disk. To create a snapshot of a system
+// volume, just define the instance name parameter when issuing the snapshot
+// command, and a snapshot of the defined instance's system volume will be created.
+// After the snapshot is available, you can create a block storage disk from
+// the snapshot and attach it to a running instance to access the data on the
+// disk.
+//
 // The create disk snapshot operation supports tag-based access control via
 // request tags. For more information, see the Lightsail Dev Guide (https://lightsail.aws.amazon.com/ls/docs/en/articles/amazon-lightsail-controlling-access-using-tags).
 //
@@ -1371,8 +1381,9 @@ func (c *Lightsail) CreateDomainEntryRequest(input *CreateDomainEntryInput) (req
 
 // CreateDomainEntry API operation for Amazon Lightsail.
 //
-// Creates one of the following entry records associated with the domain: A
-// record, CNAME record, TXT record, or MX record.
+// Creates one of the following entry records associated with the domain: Address
+// (A), canonical name (CNAME), mail exchanger (MX), name server (NS), start
+// of authority (SOA), service locator (SRV), or text (TXT).
 //
 // The create domain entry operation supports tag-based access control via resource
 // tags applied to the resource identified by domainName. For more information,
@@ -3192,6 +3203,118 @@ func (c *Lightsail) DeleteKeyPairWithContext(ctx aws.Context, input *DeleteKeyPa
 	return out, req.Send()
 }
 
+const opDeleteKnownHostKeys = "DeleteKnownHostKeys"
+
+// DeleteKnownHostKeysRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteKnownHostKeys operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteKnownHostKeys for more information on using the DeleteKnownHostKeys
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteKnownHostKeysRequest method.
+//    req, resp := client.DeleteKnownHostKeysRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/DeleteKnownHostKeys
+func (c *Lightsail) DeleteKnownHostKeysRequest(input *DeleteKnownHostKeysInput) (req *request.Request, output *DeleteKnownHostKeysOutput) {
+	op := &request.Operation{
+		Name:       opDeleteKnownHostKeys,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteKnownHostKeysInput{}
+	}
+
+	output = &DeleteKnownHostKeysOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeleteKnownHostKeys API operation for Amazon Lightsail.
+//
+// Deletes the known host key or certificate used by the Amazon Lightsail browser-based
+// SSH or RDP clients to authenticate an instance. This operation enables the
+// Lightsail browser-based SSH or RDP clients to connect to the instance after
+// a host key mismatch.
+//
+// Perform this operation only if you were expecting the host key or certificate
+// mismatch or if you are familiar with the new host key or certificate on the
+// instance. For more information, see Troubleshooting connection issues when
+// using the Amazon Lightsail browser-based SSH or RDP client (https://lightsail.aws.amazon.com/ls/docs/en/articles/amazon-lightsail-troubleshooting-browser-based-ssh-rdp-client-connection).
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Lightsail's
+// API operation DeleteKnownHostKeys for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeServiceException "ServiceException"
+//   A general service exception.
+//
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   Lightsail throws this exception when user input does not conform to the validation
+//   rules of an input field.
+//
+//   Domain-related APIs are only available in the N. Virginia (us-east-1) Region.
+//   Please set your AWS Region configuration to us-east-1 to create, view, or
+//   edit these resources.
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//   Lightsail throws this exception when it cannot find a resource.
+//
+//   * ErrCodeOperationFailureException "OperationFailureException"
+//   Lightsail throws this exception when an operation fails to execute.
+//
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   Lightsail throws this exception when the user cannot be authenticated or
+//   uses invalid credentials to access a resource.
+//
+//   * ErrCodeAccountSetupInProgressException "AccountSetupInProgressException"
+//   Lightsail throws this exception when an account is still in the setup in
+//   progress state.
+//
+//   * ErrCodeUnauthenticatedException "UnauthenticatedException"
+//   Lightsail throws this exception when the user has not been authenticated.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/lightsail-2016-11-28/DeleteKnownHostKeys
+func (c *Lightsail) DeleteKnownHostKeys(input *DeleteKnownHostKeysInput) (*DeleteKnownHostKeysOutput, error) {
+	req, out := c.DeleteKnownHostKeysRequest(input)
+	return out, req.Send()
+}
+
+// DeleteKnownHostKeysWithContext is the same as DeleteKnownHostKeys with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteKnownHostKeys for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Lightsail) DeleteKnownHostKeysWithContext(ctx aws.Context, input *DeleteKnownHostKeysInput, opts ...request.Option) (*DeleteKnownHostKeysOutput, error) {
+	req, out := c.DeleteKnownHostKeysRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDeleteLoadBalancer = "DeleteLoadBalancer"
 
 // DeleteLoadBalancerRequest generates a "aws/request.Request" representing the
@@ -4099,7 +4222,7 @@ func (c *Lightsail) ExportSnapshotRequest(input *ExportSnapshotInput) (req *requ
 
 // ExportSnapshot API operation for Amazon Lightsail.
 //
-// Exports a Amazon Lightsail instance or block storage disk snapshot to Amazon
+// Exports an Amazon Lightsail instance or block storage disk snapshot to Amazon
 // Elastic Compute Cloud (Amazon EC2). This operation results in an export snapshot
 // record that can be used with the create cloud formation stack operation to
 // create new Amazon EC2 instances.
@@ -9287,10 +9410,7 @@ func (c *Lightsail) RebootInstanceRequest(input *RebootInstanceInput) (req *requ
 
 // RebootInstance API operation for Amazon Lightsail.
 //
-// Restarts a specific instance. When your Amazon Lightsail instance is finished
-// rebooting, Lightsail assigns a new public IP address. To use the same IP
-// address after restarting, create a static IP address and attach it to the
-// instance.
+// Restarts a specific instance.
 //
 // The reboot instance operation supports tag-based access control via resource
 // tags applied to the resource identified by instanceName. For more information,
@@ -9613,6 +9733,11 @@ func (c *Lightsail) StartInstanceRequest(input *StartInstanceInput) (req *reques
 // Starts a specific Amazon Lightsail instance from a stopped state. To restart
 // an instance, use the reboot instance operation.
 //
+// When you start a stopped instance, Lightsail assigns a new public IP address
+// to the instance. To use the same IP address after stopping and starting an
+// instance, create a static IP address and attach it to the instance. For more
+// information, see the Lightsail Dev Guide (https://lightsail.aws.amazon.com/ls/docs/en/articles/lightsail-create-static-ip).
+//
 // The start instance operation supports tag-based access control via resource
 // tags applied to the resource identified by instanceName. For more information,
 // see the Lightsail Dev Guide (https://lightsail.aws.amazon.com/ls/docs/en/articles/amazon-lightsail-controlling-access-using-tags).
@@ -9829,6 +9954,11 @@ func (c *Lightsail) StopInstanceRequest(input *StopInstanceInput) (req *request.
 // StopInstance API operation for Amazon Lightsail.
 //
 // Stops a specific Amazon Lightsail instance that is currently running.
+//
+// When you start a stopped instance, Lightsail assigns a new public IP address
+// to the instance. To use the same IP address after stopping and starting an
+// instance, create a static IP address and attach it to the instance. For more
+// information, see the Lightsail Dev Guide (https://lightsail.aws.amazon.com/ls/docs/en/articles/lightsail-create-static-ip).
 //
 // The stop instance operation supports tag-based access control via resource
 // tags applied to the resource identified by instanceName. For more information,
@@ -12045,16 +12175,24 @@ func (s *CreateDiskOutput) SetOperations(v []*Operation) *CreateDiskOutput {
 type CreateDiskSnapshotInput struct {
 	_ struct{} `type:"structure"`
 
-	// The unique name of the source disk (e.g., my-source-disk).
+	// The unique name of the source disk (e.g., Disk-Virginia-1).
 	//
-	// DiskName is a required field
-	DiskName *string `locationName:"diskName" type:"string" required:"true"`
+	// This parameter cannot be defined together with the instance name parameter.
+	// The disk name and instance name parameters are mutually exclusive.
+	DiskName *string `locationName:"diskName" type:"string"`
 
 	// The name of the destination disk snapshot (e.g., my-disk-snapshot) based
 	// on the source disk.
 	//
 	// DiskSnapshotName is a required field
 	DiskSnapshotName *string `locationName:"diskSnapshotName" type:"string" required:"true"`
+
+	// The unique name of the source instance (e.g., Amazon_Linux-512MB-Virginia-1).
+	// When this is defined, a snapshot of the instance's system volume is created.
+	//
+	// This parameter cannot be defined together with the disk name parameter. The
+	// instance name and disk name parameters are mutually exclusive.
+	InstanceName *string `locationName:"instanceName" type:"string"`
 
 	// The tag keys and optional values to add to the resource during create.
 	//
@@ -12075,9 +12213,6 @@ func (s CreateDiskSnapshotInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *CreateDiskSnapshotInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CreateDiskSnapshotInput"}
-	if s.DiskName == nil {
-		invalidParams.Add(request.NewErrParamRequired("DiskName"))
-	}
 	if s.DiskSnapshotName == nil {
 		invalidParams.Add(request.NewErrParamRequired("DiskSnapshotName"))
 	}
@@ -12097,6 +12232,12 @@ func (s *CreateDiskSnapshotInput) SetDiskName(v string) *CreateDiskSnapshotInput
 // SetDiskSnapshotName sets the DiskSnapshotName field's value.
 func (s *CreateDiskSnapshotInput) SetDiskSnapshotName(v string) *CreateDiskSnapshotInput {
 	s.DiskSnapshotName = &v
+	return s
+}
+
+// SetInstanceName sets the InstanceName field's value.
+func (s *CreateDiskSnapshotInput) SetInstanceName(v string) *CreateDiskSnapshotInput {
+	s.InstanceName = &v
 	return s
 }
 
@@ -14007,6 +14148,67 @@ func (s *DeleteKeyPairOutput) SetOperation(v *Operation) *DeleteKeyPairOutput {
 	return s
 }
 
+type DeleteKnownHostKeysInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the instance for which you want to reset the host key or certificate.
+	//
+	// InstanceName is a required field
+	InstanceName *string `locationName:"instanceName" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteKnownHostKeysInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteKnownHostKeysInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteKnownHostKeysInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteKnownHostKeysInput"}
+	if s.InstanceName == nil {
+		invalidParams.Add(request.NewErrParamRequired("InstanceName"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetInstanceName sets the InstanceName field's value.
+func (s *DeleteKnownHostKeysInput) SetInstanceName(v string) *DeleteKnownHostKeysInput {
+	s.InstanceName = &v
+	return s
+}
+
+type DeleteKnownHostKeysOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A list of objects describing the API operation.
+	Operations []*Operation `locationName:"operations" type:"list"`
+}
+
+// String returns the string representation
+func (s DeleteKnownHostKeysOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteKnownHostKeysOutput) GoString() string {
+	return s.String()
+}
+
+// SetOperations sets the Operations field's value.
+func (s *DeleteKnownHostKeysOutput) SetOperations(v []*Operation) *DeleteKnownHostKeysOutput {
+	s.Operations = v
+	return s
+}
+
 type DeleteLoadBalancerInput struct {
 	_ struct{} `type:"structure"`
 
@@ -14816,12 +15018,20 @@ type DiskSnapshot struct {
 	// The date when the disk snapshot was created.
 	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp"`
 
-	// The Amazon Resource Name (ARN) of the source disk from which you are creating
-	// the disk snapshot.
+	// The Amazon Resource Name (ARN) of the source disk from which the disk snapshot
+	// was created.
 	FromDiskArn *string `locationName:"fromDiskArn" type:"string"`
 
-	// The unique name of the source disk from which you are creating the disk snapshot.
+	// The unique name of the source disk from which the disk snapshot was created.
 	FromDiskName *string `locationName:"fromDiskName" type:"string"`
+
+	// The Amazon Resource Name (ARN) of the source instance from which the disk
+	// (system volume) snapshot was created.
+	FromInstanceArn *string `locationName:"fromInstanceArn" type:"string"`
+
+	// The unique name of the source instance from which the disk (system volume)
+	// snapshot was created.
+	FromInstanceName *string `locationName:"fromInstanceName" type:"string"`
 
 	// The AWS Region and Availability Zone where the disk snapshot was created.
 	Location *ResourceLocation `locationName:"location" type:"structure"`
@@ -14882,6 +15092,18 @@ func (s *DiskSnapshot) SetFromDiskArn(v string) *DiskSnapshot {
 // SetFromDiskName sets the FromDiskName field's value.
 func (s *DiskSnapshot) SetFromDiskName(v string) *DiskSnapshot {
 	s.FromDiskName = &v
+	return s
+}
+
+// SetFromInstanceArn sets the FromInstanceArn field's value.
+func (s *DiskSnapshot) SetFromInstanceArn(v string) *DiskSnapshot {
+	s.FromInstanceArn = &v
+	return s
+}
+
+// SetFromInstanceName sets the FromInstanceName field's value.
+func (s *DiskSnapshot) SetFromInstanceName(v string) *DiskSnapshot {
+	s.FromInstanceName = &v
 	return s
 }
 
@@ -15078,7 +15300,25 @@ type DomainEntry struct {
 	// balancer.
 	Target *string `locationName:"target" type:"string"`
 
-	// The type of domain entry (e.g., SOA or NS).
+	// The type of domain entry, such as address (A), canonical name (CNAME), mail
+	// exchanger (MX), name server (NS), start of authority (SOA), service locator
+	// (SRV), or text (TXT).
+	//
+	// The following domain entry types can be used:
+	//
+	//    * A
+	//
+	//    * CNAME
+	//
+	//    * MX
+	//
+	//    * NS
+	//
+	//    * SOA
+	//
+	//    * SRV
+	//
+	//    * TXT
 	Type *string `locationName:"type" type:"string"`
 }
 
@@ -18700,6 +18940,107 @@ func (s *GetStaticIpsOutput) SetStaticIps(v []*StaticIp) *GetStaticIpsOutput {
 	return s
 }
 
+// Describes the public SSH host keys or the RDP certificate.
+type HostKeyAttributes struct {
+	_ struct{} `type:"structure"`
+
+	// The SSH host key algorithm or the RDP certificate format.
+	//
+	// For SSH host keys, the algorithm may be ssh-rsa, ecdsa-sha2-nistp256, ssh-ed25519,
+	// etc. For RDP certificates, the algorithm is always x509-cert.
+	Algorithm *string `locationName:"algorithm" type:"string"`
+
+	// The SHA-1 fingerprint of the returned SSH host key or RDP certificate.
+	//
+	//    * Example of an SHA-1 SSH fingerprint:
+	//
+	// SHA1:1CHH6FaAaXjtFOsR/t83vf91SR0
+	//
+	//    * Example of an SHA-1 RDP fingerprint:
+	//
+	// af:34:51:fe:09:f0:e0:da:b8:4e:56:ca:60:c2:10:ff:38:06:db:45
+	FingerprintSHA1 *string `locationName:"fingerprintSHA1" type:"string"`
+
+	// The SHA-256 fingerprint of the returned SSH host key or RDP certificate.
+	//
+	//    * Example of an SHA-256 SSH fingerprint:
+	//
+	// SHA256:KTsMnRBh1IhD17HpdfsbzeGA4jOijm5tyXsMjKVbB8o
+	//
+	//    * Example of an SHA-256 RDP fingerprint:
+	//
+	// 03:9b:36:9f:4b:de:4e:61:70:fc:7c:c9:78:e7:d2:1a:1c:25:a8:0c:91:f6:7c:e4:d6:a0:85:c8:b4:53:99:68
+	FingerprintSHA256 *string `locationName:"fingerprintSHA256" type:"string"`
+
+	// The returned RDP certificate is not valid after this point in time.
+	//
+	// This value is listed only for RDP certificates.
+	NotValidAfter *time.Time `locationName:"notValidAfter" type:"timestamp"`
+
+	// The returned RDP certificate is valid after this point in time.
+	//
+	// This value is listed only for RDP certificates.
+	NotValidBefore *time.Time `locationName:"notValidBefore" type:"timestamp"`
+
+	// The public SSH host key or the RDP certificate.
+	PublicKey *string `locationName:"publicKey" type:"string"`
+
+	// The time that the SSH host key or RDP certificate was recorded by Lightsail.
+	WitnessedAt *time.Time `locationName:"witnessedAt" type:"timestamp"`
+}
+
+// String returns the string representation
+func (s HostKeyAttributes) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s HostKeyAttributes) GoString() string {
+	return s.String()
+}
+
+// SetAlgorithm sets the Algorithm field's value.
+func (s *HostKeyAttributes) SetAlgorithm(v string) *HostKeyAttributes {
+	s.Algorithm = &v
+	return s
+}
+
+// SetFingerprintSHA1 sets the FingerprintSHA1 field's value.
+func (s *HostKeyAttributes) SetFingerprintSHA1(v string) *HostKeyAttributes {
+	s.FingerprintSHA1 = &v
+	return s
+}
+
+// SetFingerprintSHA256 sets the FingerprintSHA256 field's value.
+func (s *HostKeyAttributes) SetFingerprintSHA256(v string) *HostKeyAttributes {
+	s.FingerprintSHA256 = &v
+	return s
+}
+
+// SetNotValidAfter sets the NotValidAfter field's value.
+func (s *HostKeyAttributes) SetNotValidAfter(v time.Time) *HostKeyAttributes {
+	s.NotValidAfter = &v
+	return s
+}
+
+// SetNotValidBefore sets the NotValidBefore field's value.
+func (s *HostKeyAttributes) SetNotValidBefore(v time.Time) *HostKeyAttributes {
+	s.NotValidBefore = &v
+	return s
+}
+
+// SetPublicKey sets the PublicKey field's value.
+func (s *HostKeyAttributes) SetPublicKey(v string) *HostKeyAttributes {
+	s.PublicKey = &v
+	return s
+}
+
+// SetWitnessedAt sets the WitnessedAt field's value.
+func (s *HostKeyAttributes) SetWitnessedAt(v time.Time) *HostKeyAttributes {
+	s.WitnessedAt = &v
+	return s
+}
+
 type ImportKeyPairInput struct {
 	_ struct{} `type:"structure"`
 
@@ -18978,6 +19319,9 @@ type InstanceAccessDetails struct {
 	// For SSH access, the date on which the temporary keys expire.
 	ExpiresAt *time.Time `locationName:"expiresAt" type:"timestamp"`
 
+	// Describes the public SSH host keys or the RDP certificate.
+	HostKeys []*HostKeyAttributes `locationName:"hostKeys" type:"list"`
+
 	// The name of this Amazon Lightsail instance.
 	InstanceName *string `locationName:"instanceName" type:"string"`
 
@@ -19034,6 +19378,12 @@ func (s *InstanceAccessDetails) SetCertKey(v string) *InstanceAccessDetails {
 // SetExpiresAt sets the ExpiresAt field's value.
 func (s *InstanceAccessDetails) SetExpiresAt(v time.Time) *InstanceAccessDetails {
 	s.ExpiresAt = &v
+	return s
+}
+
+// SetHostKeys sets the HostKeys field's value.
+func (s *InstanceAccessDetails) SetHostKeys(v []*HostKeyAttributes) *InstanceAccessDetails {
+	s.HostKeys = v
 	return s
 }
 
@@ -19103,6 +19453,8 @@ type InstanceEntry struct {
 	//    * INSTANCE — Use the firewall settings from the source Lightsail instance.
 	//
 	//    * NONE — Default to Amazon EC2.
+	//
+	//    * CLOSED — All ports closed.
 	//
 	// PortInfoSource is a required field
 	PortInfoSource *string `locationName:"portInfoSource" type:"string" required:"true" enum:"PortInfoSourceType"`
@@ -23675,6 +24027,9 @@ const (
 )
 
 const (
+	// OperationTypeDeleteKnownHostKeys is a OperationType enum value
+	OperationTypeDeleteKnownHostKeys = "DeleteKnownHostKeys"
+
 	// OperationTypeDeleteInstance is a OperationType enum value
 	OperationTypeDeleteInstance = "DeleteInstance"
 
@@ -23825,6 +24180,9 @@ const (
 
 	// PortInfoSourceTypeNone is a PortInfoSourceType enum value
 	PortInfoSourceTypeNone = "NONE"
+
+	// PortInfoSourceTypeClosed is a PortInfoSourceType enum value
+	PortInfoSourceTypeClosed = "CLOSED"
 )
 
 const (

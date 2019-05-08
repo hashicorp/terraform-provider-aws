@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -46,18 +45,6 @@ func testSweepKmsKeys(region string) error {
 				continue
 			}
 
-			tOut, err := conn.ListResourceTags(&kms.ListResourceTagsInput{
-				KeyId: k.KeyId,
-			})
-			if err != nil {
-				log.Printf("Error: Failed to get tags for key %q: %s", *k.KeyId, err)
-				return false
-			}
-			if !kmsTagHasPrefix(tOut.Tags, "Name", "tf-acc-test-kms-key-") {
-				// Skip keys which don't have designated tag
-				continue
-			}
-
 			_, err = conn.ScheduleKeyDeletion(&kms.ScheduleKeyDeletionInput{
 				KeyId:               k.KeyId,
 				PendingWindowInDays: aws.Int64(int64(7)),
@@ -78,15 +65,6 @@ func testSweepKmsKeys(region string) error {
 	}
 
 	return nil
-}
-
-func kmsTagHasPrefix(tags []*kms.Tag, key, prefix string) bool {
-	for _, t := range tags {
-		if *t.TagKey == key && strings.HasPrefix(*t.TagValue, prefix) {
-			return true
-		}
-	}
-	return false
 }
 
 func TestAccAWSKmsKey_importBasic(t *testing.T) {

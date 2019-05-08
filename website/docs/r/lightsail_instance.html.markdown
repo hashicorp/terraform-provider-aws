@@ -6,7 +6,7 @@ description: |-
   Provides an Lightsail Instance
 ---
 
-# aws_lightsail_instance
+# Resource: aws_lightsail_instance
 
 Provides a Lightsail Instance. Amazon Lightsail is a service to provide easy virtual private servers
 with custom software already setup. See [What is Amazon Lightsail?](https://lightsail.aws.amazon.com/ls/docs/getting-started/article/what-is-amazon-lightsail)

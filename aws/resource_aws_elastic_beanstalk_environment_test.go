@@ -6,7 +6,6 @@ import (
 	"reflect"
 	"regexp"
 	"sort"
-	"strings"
 	"testing"
 	"time"
 
@@ -51,23 +50,6 @@ func testSweepBeanstalkEnvironments(region string) error {
 	}
 
 	for _, bse := range resp.Environments {
-		var testOptGroup bool
-		for _, testName := range []string{
-			"terraform-",
-			"tf-test-",
-			"tf_acc_",
-			"tf-acc-",
-		} {
-			if strings.HasPrefix(*bse.EnvironmentName, testName) {
-				testOptGroup = true
-			}
-		}
-
-		if !testOptGroup {
-			log.Printf("Skipping (%s) (%s)", *bse.EnvironmentName, *bse.EnvironmentId)
-			continue
-		}
-
 		log.Printf("Trying to terminate (%s) (%s)", *bse.EnvironmentName, *bse.EnvironmentId)
 
 		_, err := beanstalkconn.TerminateEnvironment(

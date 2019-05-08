@@ -717,7 +717,7 @@ resource "aws_subnet" "test" {
 resource "aws_dms_replication_subnet_group" "test" {
   replication_subnet_group_description = %q
   replication_subnet_group_id          = %q
-  subnet_ids                           = ["${aws_subnet.test.*.id}"]
+  subnet_ids                           = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
 }
 
 resource "aws_dms_replication_instance" "test" {
@@ -790,7 +790,7 @@ resource "aws_subnet" "test" {
 resource "aws_dms_replication_subnet_group" "test" {
   replication_subnet_group_description = %q
   replication_subnet_group_id          = %q
-  subnet_ids                           = ["${aws_subnet.test.*.id}"]
+  subnet_ids                           = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
 }
 
 resource "aws_dms_replication_instance" "test" {

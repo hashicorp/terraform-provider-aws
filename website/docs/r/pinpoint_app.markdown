@@ -6,7 +6,7 @@ description: |-
   Provides a Pinpoint App resource.
 ---
 
-# aws_pinpoint_app
+# Resource: aws_pinpoint_app
 
 Provides a Pinpoint App resource.
 

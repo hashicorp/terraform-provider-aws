@@ -102,6 +102,7 @@ func TestAccAWSAPIGatewayDeployment_Description(t *testing.T) {
 
 func TestAccAWSAPIGatewayDeployment_StageDescription(t *testing.T) {
 	var deployment apigateway.Deployment
+	var stage apigateway.Stage
 	resourceName := "aws_api_gateway_deployment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -113,6 +114,7 @@ func TestAccAWSAPIGatewayDeployment_StageDescription(t *testing.T) {
 				Config: testAccAWSAPIGatewayDeploymentConfigStageDescription("description1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayDeploymentExists(resourceName, &deployment),
+					testAccCheckAWSAPIGatewayDeploymentStageExists(resourceName, &stage),
 					resource.TestCheckResourceAttr(resourceName, "stage_description", "description1"),
 				),
 			},
@@ -120,7 +122,35 @@ func TestAccAWSAPIGatewayDeployment_StageDescription(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayDeployment_StageName_Empty(t *testing.T) {
+func TestAccAWSAPIGatewayDeployment_StageName(t *testing.T) {
+	var deployment apigateway.Deployment
+	var stage apigateway.Stage
+	resourceName := "aws_api_gateway_deployment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayDeploymentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayDeploymentConfigStageName("test"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayDeploymentExists(resourceName, &deployment),
+					testAccCheckAWSAPIGatewayDeploymentStageExists(resourceName, &stage),
+					resource.TestCheckResourceAttr(resourceName, "stage_name", "test"),
+				),
+			},
+			{
+				Config: testAccAWSAPIGatewayDeploymentConfigRequired(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckNoResourceAttr(resourceName, "stage_name"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSAPIGatewayDeployment_StageName_EmptyString(t *testing.T) {
 	var deployment apigateway.Deployment
 	resourceName := "aws_api_gateway_deployment.test"
 
@@ -319,9 +349,18 @@ resource "aws_api_gateway_deployment" "test" {
 
   description = %q
   rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  stage_name  = "tf-acc-test"
 }
 `, description)
+}
+
+func testAccAWSAPIGatewayDeploymentConfigRequired() string {
+	return testAccAWSAPIGatewayDeploymentConfigBase("http://example.com") + fmt.Sprintf(`
+resource "aws_api_gateway_deployment" "test" {
+  depends_on = ["aws_api_gateway_integration.test"]
+
+  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
+}
+`)
 }
 
 func testAccAWSAPIGatewayDeploymentConfigStageDescription(stageDescription string) string {
@@ -353,7 +392,6 @@ resource "aws_api_gateway_deployment" "test" {
   depends_on = ["aws_api_gateway_integration.test"]
 
   rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  stage_name  = "tf-acc-test"
 
   variables = {
     %q = %q

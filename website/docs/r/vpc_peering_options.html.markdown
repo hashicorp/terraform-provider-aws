@@ -6,7 +6,7 @@ description: |-
   Provides a resource to manage VPC peering connection options.
 ---
 
-# aws_vpc_peering_connection_options
+# Resource: aws_vpc_peering_connection_options
 
 Provides a resource to manage VPC peering connection options.
 

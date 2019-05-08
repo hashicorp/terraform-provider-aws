@@ -117,7 +117,7 @@ func testAccDataSourceAwsVpcsConfig_tags(rName string) string {
 	resource "aws_vpc" "test-vpc" {
   		cidr_block = "10.0.0.0/24"
 
-  		tags {
+  		tags = {
   			Name = "testacc-vpc-%s"
   			Service = "testacc-test"
   		}
@@ -136,7 +136,7 @@ func testAccDataSourceAwsVpcsConfig_filters(rName string) string {
 	return fmt.Sprintf(`
 	resource "aws_vpc" "test-vpc" {
   		cidr_block = "192.168.0.0/25"
-  		tags {
+  		tags = {
   			Name = "testacc-vpc-%s"
   		}
 	}

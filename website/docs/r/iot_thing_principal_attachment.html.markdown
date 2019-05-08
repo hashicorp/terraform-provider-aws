@@ -6,7 +6,7 @@ description: |-
     Provides AWS IoT Thing Principal attachment.
 ---
 
-# aws_iot_thing_principal_attachment
+# Resource: aws_iot_thing_principal_attachment
 
 Attaches Principal to AWS IoT Thing.
 

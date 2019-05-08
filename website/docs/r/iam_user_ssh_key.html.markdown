@@ -6,7 +6,7 @@ description: |-
   Uploads an SSH public key and associates it with the specified IAM user.
 ---
 
-# aws_iam_user_ssh_key
+# Resource: aws_iam_user_ssh_key
 
 Uploads an SSH public key and associates it with the specified IAM user.
 

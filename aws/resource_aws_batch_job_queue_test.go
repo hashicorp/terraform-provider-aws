@@ -307,7 +307,7 @@ resource "aws_subnet" "test_acc" {
 
 resource "aws_batch_compute_environment" "test_environment" {
   compute_environment_name = "tf_acctest_batch_compute_environment_%[1]d"
-  compute_resources = {
+  compute_resources {
     instance_role = "${aws_iam_role.aws_batch_service_role.arn}"
     instance_type = ["m3.medium"]
     max_vcpus = 1

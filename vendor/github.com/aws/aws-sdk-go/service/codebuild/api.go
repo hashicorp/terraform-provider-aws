@@ -391,7 +391,7 @@ func (c *CodeBuild) CreateWebhookRequest(input *CreateWebhookInput) (req *reques
 // for both builds. Therefore, if you are using AWS CodePipeline, we recommend
 // that you disable webhooks in AWS CodeBuild. In the AWS CodeBuild console,
 // clear the Webhook box. For more information, see step 5 in Change a Build
-// Project's Settings (http://docs.aws.amazon.com/codebuild/latest/userguide/change-project.html#change-project-console).
+// Project's Settings (https://docs.aws.amazon.com/codebuild/latest/userguide/change-project.html#change-project-console).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1834,8 +1834,11 @@ type Build struct {
 	// The AWS Key Management Service (AWS KMS) customer master key (CMK) to be
 	// used for encrypting the build output artifacts.
 	//
-	// This is expressed either as the Amazon Resource Name (ARN) of the CMK or,
-	// if specified, the CMK's alias (using the format alias/alias-name).
+	// You can use a cross-account KMS key to encrypt the build output artifacts
+	// if your service role has permission to that key.
+	//
+	// You can specify either the Amazon Resource Name (ARN) of the CMK or, if available,
+	// the CMK's alias (using the format alias/alias-name).
 	EncryptionKey *string `locationName:"encryptionKey" min:"1" type:"string"`
 
 	// When the build process ended, expressed in Unix time format.
@@ -2334,7 +2337,7 @@ type CloudWatchLogsConfig struct {
 	_ struct{} `type:"structure"`
 
 	// The group name of the logs in Amazon CloudWatch Logs. For more information,
-	// see Working with Log Groups and Log Streams (http://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/Working-with-log-groups-and-streams.html).
+	// see Working with Log Groups and Log Streams (https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/Working-with-log-groups-and-streams.html).
 	GroupName *string `locationName:"groupName" type:"string"`
 
 	// The current status of the logs in Amazon CloudWatch Logs for a build project.
@@ -2348,7 +2351,7 @@ type CloudWatchLogsConfig struct {
 	Status *string `locationName:"status" type:"string" required:"true" enum:"LogsConfigStatusType"`
 
 	// The prefix of the stream name of the Amazon CloudWatch Logs. For more information,
-	// see Working with Log Groups and Log Streams (http://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/Working-with-log-groups-and-streams.html).
+	// see Working with Log Groups and Log Streams (https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/Working-with-log-groups-and-streams.html).
 	StreamName *string `locationName:"streamName" type:"string"`
 }
 
@@ -2414,6 +2417,9 @@ type CreateProjectInput struct {
 
 	// The AWS Key Management Service (AWS KMS) customer master key (CMK) to be
 	// used for encrypting the build output artifacts.
+	//
+	// You can use a cross-account KMS key to encrypt the build output artifacts
+	// if your service role has permission to that key.
 	//
 	// You can specify either the Amazon Resource Name (ARN) of the CMK or, if available,
 	// the CMK's alias (using the format alias/alias-name).
@@ -2705,7 +2711,17 @@ type CreateWebhookInput struct {
 	// when a webhook is triggered. If the name of a branch matches the regular
 	// expression, then it is built. If branchFilter is empty, then all branches
 	// are built.
+	//
+	// It is recommended that you use filterGroups instead of branchFilter.
 	BranchFilter *string `locationName:"branchFilter" type:"string"`
+
+	// An array of arrays of WebhookFilter objects used to determine which webhooks
+	// are triggered. At least one WebhookFilter in the array must specify EVENT
+	// as its type.
+	//
+	// For a build to be triggered, at least one filter group in the filterGroups
+	// array must pass. For a filter group to pass, each of its filters must pass.
+	FilterGroups [][]*WebhookFilter `locationName:"filterGroups" type:"list"`
 
 	// The name of the AWS CodeBuild project.
 	//
@@ -2742,6 +2758,12 @@ func (s *CreateWebhookInput) Validate() error {
 // SetBranchFilter sets the BranchFilter field's value.
 func (s *CreateWebhookInput) SetBranchFilter(v string) *CreateWebhookInput {
 	s.BranchFilter = &v
+	return s
+}
+
+// SetFilterGroups sets the FilterGroups field's value.
+func (s *CreateWebhookInput) SetFilterGroups(v [][]*WebhookFilter) *CreateWebhookInput {
+	s.FilterGroups = v
 	return s
 }
 
@@ -3131,6 +3153,46 @@ func (s *EnvironmentVariable) SetType(v string) *EnvironmentVariable {
 // SetValue sets the Value field's value.
 func (s *EnvironmentVariable) SetValue(v string) *EnvironmentVariable {
 	s.Value = &v
+	return s
+}
+
+// Information about the Git submodules configuration for an AWS CodeBuild build
+// project.
+type GitSubmodulesConfig struct {
+	_ struct{} `type:"structure"`
+
+	// Set to true to fetch Git submodules for your AWS CodeBuild build project.
+	//
+	// FetchSubmodules is a required field
+	FetchSubmodules *bool `locationName:"fetchSubmodules" type:"boolean" required:"true"`
+}
+
+// String returns the string representation
+func (s GitSubmodulesConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GitSubmodulesConfig) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GitSubmodulesConfig) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GitSubmodulesConfig"}
+	if s.FetchSubmodules == nil {
+		invalidParams.Add(request.NewErrParamRequired("FetchSubmodules"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetFetchSubmodules sets the FetchSubmodules field's value.
+func (s *GitSubmodulesConfig) SetFetchSubmodules(v bool) *GitSubmodulesConfig {
+	s.FetchSubmodules = &v
 	return s
 }
 
@@ -3883,8 +3945,11 @@ type Project struct {
 	// The AWS Key Management Service (AWS KMS) customer master key (CMK) to be
 	// used for encrypting the build output artifacts.
 	//
-	// This is expressed either as the Amazon Resource Name (ARN) of the CMK or,
-	// if specified, the CMK's alias (using the format alias/alias-name).
+	// You can use a cross-account KMS key to encrypt the build output artifacts
+	// if your service role has permission to that key.
+	//
+	// You can specify either the Amazon Resource Name (ARN) of the CMK or, if available,
+	// the CMK's alias (using the format alias/alias-name).
 	EncryptionKey *string `locationName:"encryptionKey" min:"1" type:"string"`
 
 	// Information about the build environment for this build project.
@@ -4317,16 +4382,57 @@ type ProjectCache struct {
 
 	// Information about the cache location:
 	//
-	//    * NO_CACHE: This value is ignored.
+	//    * NO_CACHE or LOCAL: This value is ignored.
 	//
 	//    * S3: This is the S3 bucket name/prefix.
 	Location *string `locationName:"location" type:"string"`
+
+	// If you use a LOCAL cache, the local cache mode. You can use one or more local
+	// cache modes at the same time.
+	//
+	//    * LOCAL_SOURCE_CACHE mode caches Git metadata for primary and secondary
+	//    sources. After the cache is created, subsequent builds pull only the change
+	//    between commits. This mode is a good choice for projects with a clean
+	//    working directory and a source that is a large Git repository. If you
+	//    choose this option and your project does not use a Git repository (GitHub,
+	//    GitHub Enterprise, or Bitbucket), the option is ignored.
+	//
+	//    * LOCAL_DOCKER_LAYER_CACHE mode caches existing Docker layers. This mode
+	//    is a good choice for projects that build or pull large Docker images.
+	//    It can prevent the performance issues caused by pulling large Docker images
+	//    down from the network.
+	//
+	//  You can use a Docker layer cache in the Linux enviornment only.
+	//
+	//  The privileged flag must be set so that your project has the required Docker
+	//    permissions.
+	//
+	//  You should consider the security implications before you use a Docker layer
+	//    cache.
+	//
+	//    * LOCAL_CUSTOM_CACHE mode caches directories you specify in the buildspec
+	//    file. This mode is a good choice if your build scenario is not suited
+	//    to one of the other three local cache modes. If you use a custom cache:
+	//
+	//
+	//  Only directories can be specified for caching. You cannot specify individual
+	//    files.
+	//
+	//  Symlinks are used to reference cached directories.
+	//
+	//  Cached directories are linked to your build before it downloads its project
+	//    sources. Cached items are overriden if a source item has the same name.
+	//    Directories are specified using cache paths in the buildspec file.
+	Modes []*string `locationName:"modes" type:"list"`
 
 	// The type of cache used by the build project. Valid values include:
 	//
 	//    * NO_CACHE: The build project does not use any cache.
 	//
 	//    * S3: The build project reads and writes from and to S3.
+	//
+	//    * LOCAL: The build project stores a cache locally on a build host that
+	//    is only available to that build host.
 	//
 	// Type is a required field
 	Type *string `locationName:"type" type:"string" required:"true" enum:"CacheType"`
@@ -4361,6 +4467,12 @@ func (s *ProjectCache) SetLocation(v string) *ProjectCache {
 	return s
 }
 
+// SetModes sets the Modes field's value.
+func (s *ProjectCache) SetModes(v []*string) *ProjectCache {
+	s.Modes = v
+	return s
+}
+
 // SetType sets the Type field's value.
 func (s *ProjectCache) SetType(v string) *ProjectCache {
 	s.Type = &v
@@ -4390,10 +4502,33 @@ type ProjectEnvironment struct {
 	// project.
 	EnvironmentVariables []*EnvironmentVariable `locationName:"environmentVariables" type:"list"`
 
-	// The ID of the Docker image to use for this build project.
+	// The image tag or image digest that identifies the Docker image to use for
+	// this build project. Use the following formats:
+	//
+	//    * For an image tag: registry/repository:tag. For example, to specify an
+	//    image with the tag "latest," use registry/repository:latest.
+	//
+	//    * For an image digest: registry/repository@digest. For example, to specify
+	//    an image with the digest "sha256:cbbf2f9a99b47fc460d422812b6a5adff7dfee951d8fa2e4a98caa0382cfbdbf,"
+	//    use registry/repository@sha256:cbbf2f9a99b47fc460d422812b6a5adff7dfee951d8fa2e4a98caa0382cfbdbf.
 	//
 	// Image is a required field
 	Image *string `locationName:"image" min:"1" type:"string" required:"true"`
+
+	// The type of credentials AWS CodeBuild uses to pull images in your build.
+	// There are two valid values:
+	//
+	//    * CODEBUILD specifies that AWS CodeBuild uses its own credentials. This
+	//    requires that you modify your ECR repository policy to trust AWS CodeBuild's
+	//    service principal.
+	//
+	//    * SERVICE_ROLE specifies that AWS CodeBuild uses your build project's
+	//    service role.
+	//
+	// When you use a cross-account or private registry image, you must use SERVICE_ROLE
+	// credentials. When you use an AWS CodeBuild curated image, you must use CODEBUILD
+	// credentials.
+	ImagePullCredentialsType *string `locationName:"imagePullCredentialsType" type:"string" enum:"ImagePullCredentialsType"`
 
 	// Enables running the Docker daemon inside a Docker container. Set to true
 	// only if the build project is be used to build Docker images, and the specified
@@ -4418,6 +4553,9 @@ type ProjectEnvironment struct {
 	// --storage-driver=overlay& - timeout 15 -t sh -c "until docker info; do echo
 	// .; sleep 1; done"
 	PrivilegedMode *bool `locationName:"privilegedMode" type:"boolean"`
+
+	// The credentials for access to a private registry.
+	RegistryCredential *RegistryCredential `locationName:"registryCredential" type:"structure"`
 
 	// The type of build environment to use for related builds.
 	//
@@ -4460,6 +4598,11 @@ func (s *ProjectEnvironment) Validate() error {
 			}
 		}
 	}
+	if s.RegistryCredential != nil {
+		if err := s.RegistryCredential.Validate(); err != nil {
+			invalidParams.AddNested("RegistryCredential", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -4491,9 +4634,21 @@ func (s *ProjectEnvironment) SetImage(v string) *ProjectEnvironment {
 	return s
 }
 
+// SetImagePullCredentialsType sets the ImagePullCredentialsType field's value.
+func (s *ProjectEnvironment) SetImagePullCredentialsType(v string) *ProjectEnvironment {
+	s.ImagePullCredentialsType = &v
+	return s
+}
+
 // SetPrivilegedMode sets the PrivilegedMode field's value.
 func (s *ProjectEnvironment) SetPrivilegedMode(v bool) *ProjectEnvironment {
 	s.PrivilegedMode = &v
+	return s
+}
+
+// SetRegistryCredential sets the RegistryCredential field's value.
+func (s *ProjectEnvironment) SetRegistryCredential(v *RegistryCredential) *ProjectEnvironment {
+	s.RegistryCredential = v
 	return s
 }
 
@@ -4520,8 +4675,11 @@ type ProjectSource struct {
 	// the source code to be built.
 	Buildspec *string `locationName:"buildspec" type:"string"`
 
-	// Information about the git clone depth for the build project.
+	// Information about the Git clone depth for the build project.
 	GitCloneDepth *int64 `locationName:"gitCloneDepth" type:"integer"`
+
+	// Information about the Git submodules configuration for the build project.
+	GitSubmodulesConfig *GitSubmodulesConfig `locationName:"gitSubmodulesConfig" type:"structure"`
 
 	// Enable this flag to ignore SSL warnings while connecting to the project source
 	// code.
@@ -4623,6 +4781,11 @@ func (s *ProjectSource) Validate() error {
 			invalidParams.AddNested("Auth", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.GitSubmodulesConfig != nil {
+		if err := s.GitSubmodulesConfig.Validate(); err != nil {
+			invalidParams.AddNested("GitSubmodulesConfig", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -4645,6 +4808,12 @@ func (s *ProjectSource) SetBuildspec(v string) *ProjectSource {
 // SetGitCloneDepth sets the GitCloneDepth field's value.
 func (s *ProjectSource) SetGitCloneDepth(v int64) *ProjectSource {
 	s.GitCloneDepth = &v
+	return s
+}
+
+// SetGitSubmodulesConfig sets the GitSubmodulesConfig field's value.
+func (s *ProjectSource) SetGitSubmodulesConfig(v *GitSubmodulesConfig) *ProjectSource {
+	s.GitSubmodulesConfig = v
 	return s
 }
 
@@ -4749,9 +4918,82 @@ func (s *ProjectSourceVersion) SetSourceVersion(v string) *ProjectSourceVersion 
 	return s
 }
 
+// Information about credentials that provide access to a private Docker registry.
+// When this is set:
+//
+//    * imagePullCredentialsType must be set to SERVICE_ROLE.
+//
+//    *  images cannot be curated or an Amazon ECR image.
+//
+// For more information, see Private Registry with AWS Secrets Manager Sample
+// for AWS CodeBuild (https://docs.aws.amazon.com/codebuild/latest/userguide/sample-private-registry.html).
+type RegistryCredential struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) or name of credentials created using AWS Secrets
+	// Manager.
+	//
+	// The credential can use the name of the credentials only if they exist in
+	// your current region.
+	//
+	// Credential is a required field
+	Credential *string `locationName:"credential" min:"1" type:"string" required:"true"`
+
+	// The service that created the credentials to access a private Docker registry.
+	// The valid value, SECRETS_MANAGER, is for AWS Secrets Manager.
+	//
+	// CredentialProvider is a required field
+	CredentialProvider *string `locationName:"credentialProvider" type:"string" required:"true" enum:"CredentialProviderType"`
+}
+
+// String returns the string representation
+func (s RegistryCredential) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RegistryCredential) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *RegistryCredential) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "RegistryCredential"}
+	if s.Credential == nil {
+		invalidParams.Add(request.NewErrParamRequired("Credential"))
+	}
+	if s.Credential != nil && len(*s.Credential) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Credential", 1))
+	}
+	if s.CredentialProvider == nil {
+		invalidParams.Add(request.NewErrParamRequired("CredentialProvider"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCredential sets the Credential field's value.
+func (s *RegistryCredential) SetCredential(v string) *RegistryCredential {
+	s.Credential = &v
+	return s
+}
+
+// SetCredentialProvider sets the CredentialProvider field's value.
+func (s *RegistryCredential) SetCredentialProvider(v string) *RegistryCredential {
+	s.CredentialProvider = &v
+	return s
+}
+
 // Information about S3 logs for a build project.
 type S3LogsConfig struct {
 	_ struct{} `type:"structure"`
+
+	// Set to true if you do not want your S3 build log output encrypted. By default
+	// S3 build logs are encrypted.
+	EncryptionDisabled *bool `locationName:"encryptionDisabled" type:"boolean"`
 
 	// The ARN of an S3 bucket and the path prefix for S3 logs. If your Amazon S3
 	// bucket name is my-bucket, and your path prefix is build-log, then acceptable
@@ -4789,6 +5031,12 @@ func (s *S3LogsConfig) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetEncryptionDisabled sets the EncryptionDisabled field's value.
+func (s *S3LogsConfig) SetEncryptionDisabled(v bool) *S3LogsConfig {
+	s.EncryptionDisabled = &v
+	return s
 }
 
 // SetLocation sets the Location field's value.
@@ -4938,6 +5186,10 @@ type StartBuildInput struct {
 	// for this build only, any previous depth of history defined in the build project.
 	GitCloneDepthOverride *int64 `locationName:"gitCloneDepthOverride" type:"integer"`
 
+	// Information about the Git submodules configuration for this build of an AWS
+	// CodeBuild build project.
+	GitSubmodulesConfigOverride *GitSubmodulesConfig `locationName:"gitSubmodulesConfigOverride" type:"structure"`
+
 	// A unique, case sensitive identifier you provide to ensure the idempotency
 	// of the StartBuild request. The token is included in the StartBuild request
 	// and is valid for 12 hours. If you repeat the StartBuild request with the
@@ -4948,6 +5200,21 @@ type StartBuildInput struct {
 	// The name of an image for this build that overrides the one specified in the
 	// build project.
 	ImageOverride *string `locationName:"imageOverride" min:"1" type:"string"`
+
+	// The type of credentials AWS CodeBuild uses to pull images in your build.
+	// There are two valid values:
+	//
+	//    * CODEBUILD specifies that AWS CodeBuild uses its own credentials. This
+	//    requires that you modify your ECR repository policy to trust AWS CodeBuild's
+	//    service principal.
+	//
+	//    * SERVICE_ROLE specifies that AWS CodeBuild uses your build project's
+	//    service role.
+	//
+	// When using a cross-account or private registry image, you must use SERVICE_ROLE
+	// credentials. When using an AWS CodeBuild curated image, you must use CODEBUILD
+	// credentials.
+	ImagePullCredentialsTypeOverride *string `locationName:"imagePullCredentialsTypeOverride" type:"string" enum:"ImagePullCredentialsType"`
 
 	// Enable this flag to override the insecure SSL setting that is specified in
 	// the build project. The insecure SSL setting determines whether to ignore
@@ -4969,6 +5236,9 @@ type StartBuildInput struct {
 
 	// The number of minutes a build is allowed to be queued before it times out.
 	QueuedTimeoutInMinutesOverride *int64 `locationName:"queuedTimeoutInMinutesOverride" min:"5" type:"integer"`
+
+	// The credentials for access to a private registry.
+	RegistryCredentialOverride *RegistryCredential `locationName:"registryCredentialOverride" type:"structure"`
 
 	// Set to true to report to your source provider the status of a build's start
 	// and completion. If you use this option with a source provider other than
@@ -5079,9 +5349,19 @@ func (s *StartBuildInput) Validate() error {
 			}
 		}
 	}
+	if s.GitSubmodulesConfigOverride != nil {
+		if err := s.GitSubmodulesConfigOverride.Validate(); err != nil {
+			invalidParams.AddNested("GitSubmodulesConfigOverride", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.LogsConfigOverride != nil {
 		if err := s.LogsConfigOverride.Validate(); err != nil {
 			invalidParams.AddNested("LogsConfigOverride", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.RegistryCredentialOverride != nil {
+		if err := s.RegistryCredentialOverride.Validate(); err != nil {
+			invalidParams.AddNested("RegistryCredentialOverride", err.(request.ErrInvalidParams))
 		}
 	}
 	if s.SecondaryArtifactsOverride != nil {
@@ -5174,6 +5454,12 @@ func (s *StartBuildInput) SetGitCloneDepthOverride(v int64) *StartBuildInput {
 	return s
 }
 
+// SetGitSubmodulesConfigOverride sets the GitSubmodulesConfigOverride field's value.
+func (s *StartBuildInput) SetGitSubmodulesConfigOverride(v *GitSubmodulesConfig) *StartBuildInput {
+	s.GitSubmodulesConfigOverride = v
+	return s
+}
+
 // SetIdempotencyToken sets the IdempotencyToken field's value.
 func (s *StartBuildInput) SetIdempotencyToken(v string) *StartBuildInput {
 	s.IdempotencyToken = &v
@@ -5183,6 +5469,12 @@ func (s *StartBuildInput) SetIdempotencyToken(v string) *StartBuildInput {
 // SetImageOverride sets the ImageOverride field's value.
 func (s *StartBuildInput) SetImageOverride(v string) *StartBuildInput {
 	s.ImageOverride = &v
+	return s
+}
+
+// SetImagePullCredentialsTypeOverride sets the ImagePullCredentialsTypeOverride field's value.
+func (s *StartBuildInput) SetImagePullCredentialsTypeOverride(v string) *StartBuildInput {
+	s.ImagePullCredentialsTypeOverride = &v
 	return s
 }
 
@@ -5213,6 +5505,12 @@ func (s *StartBuildInput) SetProjectName(v string) *StartBuildInput {
 // SetQueuedTimeoutInMinutesOverride sets the QueuedTimeoutInMinutesOverride field's value.
 func (s *StartBuildInput) SetQueuedTimeoutInMinutesOverride(v int64) *StartBuildInput {
 	s.QueuedTimeoutInMinutesOverride = &v
+	return s
+}
+
+// SetRegistryCredentialOverride sets the RegistryCredentialOverride field's value.
+func (s *StartBuildInput) SetRegistryCredentialOverride(v *RegistryCredential) *StartBuildInput {
+	s.RegistryCredentialOverride = v
 	return s
 }
 
@@ -5432,10 +5730,13 @@ type UpdateProjectInput struct {
 	// A new or replacement description of the build project.
 	Description *string `locationName:"description" type:"string"`
 
-	// The replacement AWS Key Management Service (AWS KMS) customer master key
-	// (CMK) to be used for encrypting the build output artifacts.
+	// The AWS Key Management Service (AWS KMS) customer master key (CMK) to be
+	// used for encrypting the build output artifacts.
 	//
-	// You can specify either the Amazon Resource Name (ARN)of the CMK or, if available,
+	// You can use a cross-account KMS key to encrypt the build output artifacts
+	// if your service role has permission to that key.
+	//
+	// You can specify either the Amazon Resource Name (ARN) of the CMK or, if available,
 	// the CMK's alias (using the format alias/alias-name).
 	EncryptionKey *string `locationName:"encryptionKey" min:"1" type:"string"`
 
@@ -5709,7 +6010,13 @@ type UpdateWebhookInput struct {
 	// when a webhook is triggered. If the name of a branch matches the regular
 	// expression, then it is built. If branchFilter is empty, then all branches
 	// are built.
+	//
+	// It is recommended that you use filterGroups instead of branchFilter.
 	BranchFilter *string `locationName:"branchFilter" type:"string"`
+
+	// An array of arrays of WebhookFilter objects used to determine if a webhook
+	// event can trigger a build. A filter group must pcontain at least one EVENTWebhookFilter.
+	FilterGroups [][]*WebhookFilter `locationName:"filterGroups" type:"list"`
 
 	// The name of the AWS CodeBuild project.
 	//
@@ -5751,6 +6058,12 @@ func (s *UpdateWebhookInput) Validate() error {
 // SetBranchFilter sets the BranchFilter field's value.
 func (s *UpdateWebhookInput) SetBranchFilter(v string) *UpdateWebhookInput {
 	s.BranchFilter = &v
+	return s
+}
+
+// SetFilterGroups sets the FilterGroups field's value.
+func (s *UpdateWebhookInput) SetFilterGroups(v [][]*WebhookFilter) *UpdateWebhookInput {
+	s.FilterGroups = v
 	return s
 }
 
@@ -5854,7 +6167,17 @@ type Webhook struct {
 	// when a webhook is triggered. If the name of a branch matches the regular
 	// expression, then it is built. If branchFilter is empty, then all branches
 	// are built.
+	//
+	// It is recommended that you use filterGroups instead of branchFilter.
 	BranchFilter *string `locationName:"branchFilter" type:"string"`
+
+	// An array of arrays of WebhookFilter objects used to determine which webhooks
+	// are triggered. At least one WebhookFilter in the array must specify EVENT
+	// as its type.
+	//
+	// For a build to be triggered, at least one filter group in the filterGroups
+	// array must pass. For a filter group to pass, each of its filters must pass.
+	FilterGroups [][]*WebhookFilter `locationName:"filterGroups" type:"list"`
 
 	// A timestamp that indicates the last time a repository's secret token was
 	// modified.
@@ -5888,6 +6211,12 @@ func (s *Webhook) SetBranchFilter(v string) *Webhook {
 	return s
 }
 
+// SetFilterGroups sets the FilterGroups field's value.
+func (s *Webhook) SetFilterGroups(v [][]*WebhookFilter) *Webhook {
+	s.FilterGroups = v
+	return s
+}
+
 // SetLastModifiedSecret sets the LastModifiedSecret field's value.
 func (s *Webhook) SetLastModifiedSecret(v time.Time) *Webhook {
 	s.LastModifiedSecret = &v
@@ -5909,6 +6238,91 @@ func (s *Webhook) SetSecret(v string) *Webhook {
 // SetUrl sets the Url field's value.
 func (s *Webhook) SetUrl(v string) *Webhook {
 	s.Url = &v
+	return s
+}
+
+// A filter used to determine which webhooks trigger a build.
+type WebhookFilter struct {
+	_ struct{} `type:"structure"`
+
+	// Used to indicate that the pattern determines which webhook events do not
+	// trigger a build. If true, then a webhook event that does not match the pattern
+	// triggers a build. If false, then a webhook event that matches the pattern
+	// triggers a build.
+	ExcludeMatchedPattern *bool `locationName:"excludeMatchedPattern" type:"boolean"`
+
+	// For a WebHookFilter that uses EVENT type, a comma-separated string that specifies
+	// one or more events. For example, the webhook filter PUSH, PULL_REQUEST_CREATED,
+	// PULL_REQUEST_UPDATED allows all push, pull request created, and pull request
+	// updated events to trigger a build.
+	//
+	// For a WebHookFilter that uses any of the other filter types, a regular expression
+	// pattern. For example, a WebHookFilter that uses HEAD_REF for its type and
+	// the pattern ^refs/heads/ triggers a build when the head reference is a branch
+	// with a reference name refs/heads/branch-name.
+	//
+	// Pattern is a required field
+	Pattern *string `locationName:"pattern" type:"string" required:"true"`
+
+	// The type of webhook filter. There are five webhook filter types: EVENT, ACTOR_ACCOUNT_ID,
+	// HEAD_REF, BASE_REF, and FILE_PATH.
+	//
+	// EVENT  A webhook event triggers a build when the provided pattern matches
+	// one of four event types: PUSH, PULL_REQUEST_CREATED, PULL_REQUEST_UPDATED,
+	// and PULL_REQUEST_REOPENED. The EVENT patterns are specified as a comma-separated
+	// string. For example, PUSH, PULL_REQUEST_CREATED, PULL_REQUEST_UPDATED filters
+	// all push, pull request created, and pull request updated events.
+	//
+	//  The PULL_REQUEST_REOPENED works with GitHub and GitHub Enterprise only.
+	//
+	//  ACTOR_ACCOUNT_ID  A webhook event triggers a build when a GitHub, GitHub
+	// Enterprise, or Bitbucket account ID matches the regular expression pattern.
+	//
+	//  HEAD_REF  A webhook event triggers a build when the head reference matches
+	// the regular expression pattern. For example, refs/heads/branch-name and refs/tags/tag-name.
+	//
+	//  Works with GitHub and GitHub Enterprise push, GitHub and GitHub Enterprise
+	// pull request, Bitbucket push, and Bitbucket pull request events.
+	//
+	//  BASE_REF  A webhook event triggers a build when the base reference matches
+	// the regular expression pattern. For example, refs/heads/branch-name.
+	//
+	//  Works with pull request events only.
+	//
+	//  FILE_PATH  A webhook triggers a build when the path of a changed file matches
+	// the regular expression pattern.
+	//
+	//  Works with GitHub and GitHub Enterprise push events only.
+	//
+	// Type is a required field
+	Type *string `locationName:"type" type:"string" required:"true" enum:"WebhookFilterType"`
+}
+
+// String returns the string representation
+func (s WebhookFilter) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s WebhookFilter) GoString() string {
+	return s.String()
+}
+
+// SetExcludeMatchedPattern sets the ExcludeMatchedPattern field's value.
+func (s *WebhookFilter) SetExcludeMatchedPattern(v bool) *WebhookFilter {
+	s.ExcludeMatchedPattern = &v
+	return s
+}
+
+// SetPattern sets the Pattern field's value.
+func (s *WebhookFilter) SetPattern(v string) *WebhookFilter {
+	s.Pattern = &v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *WebhookFilter) SetType(v string) *WebhookFilter {
+	s.Type = &v
 	return s
 }
 
@@ -5986,11 +6400,25 @@ const (
 )
 
 const (
+	// CacheModeLocalDockerLayerCache is a CacheMode enum value
+	CacheModeLocalDockerLayerCache = "LOCAL_DOCKER_LAYER_CACHE"
+
+	// CacheModeLocalSourceCache is a CacheMode enum value
+	CacheModeLocalSourceCache = "LOCAL_SOURCE_CACHE"
+
+	// CacheModeLocalCustomCache is a CacheMode enum value
+	CacheModeLocalCustomCache = "LOCAL_CUSTOM_CACHE"
+)
+
+const (
 	// CacheTypeNoCache is a CacheType enum value
 	CacheTypeNoCache = "NO_CACHE"
 
 	// CacheTypeS3 is a CacheType enum value
 	CacheTypeS3 = "S3"
+
+	// CacheTypeLocal is a CacheType enum value
+	CacheTypeLocal = "LOCAL"
 )
 
 const (
@@ -6002,6 +6430,11 @@ const (
 
 	// ComputeTypeBuildGeneral1Large is a ComputeType enum value
 	ComputeTypeBuildGeneral1Large = "BUILD_GENERAL1_LARGE"
+)
+
+const (
+	// CredentialProviderTypeSecretsManager is a CredentialProviderType enum value
+	CredentialProviderTypeSecretsManager = "SECRETS_MANAGER"
 )
 
 const (
@@ -6018,6 +6451,14 @@ const (
 
 	// EnvironmentVariableTypeParameterStore is a EnvironmentVariableType enum value
 	EnvironmentVariableTypeParameterStore = "PARAMETER_STORE"
+)
+
+const (
+	// ImagePullCredentialsTypeCodebuild is a ImagePullCredentialsType enum value
+	ImagePullCredentialsTypeCodebuild = "CODEBUILD"
+
+	// ImagePullCredentialsTypeServiceRole is a ImagePullCredentialsType enum value
+	ImagePullCredentialsTypeServiceRole = "SERVICE_ROLE"
 )
 
 const (
@@ -6150,4 +6591,21 @@ const (
 
 	// StatusTypeStopped is a StatusType enum value
 	StatusTypeStopped = "STOPPED"
+)
+
+const (
+	// WebhookFilterTypeEvent is a WebhookFilterType enum value
+	WebhookFilterTypeEvent = "EVENT"
+
+	// WebhookFilterTypeBaseRef is a WebhookFilterType enum value
+	WebhookFilterTypeBaseRef = "BASE_REF"
+
+	// WebhookFilterTypeHeadRef is a WebhookFilterType enum value
+	WebhookFilterTypeHeadRef = "HEAD_REF"
+
+	// WebhookFilterTypeActorAccountId is a WebhookFilterType enum value
+	WebhookFilterTypeActorAccountId = "ACTOR_ACCOUNT_ID"
+
+	// WebhookFilterTypeFilePath is a WebhookFilterType enum value
+	WebhookFilterTypeFilePath = "FILE_PATH"
 )

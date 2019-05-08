@@ -158,10 +158,8 @@ func testAccCheckEIPAssociationDisappears(address *ec2.Address) resource.TestChe
 		opts := &ec2.DisassociateAddressInput{
 			AssociationId: address.AssociationId,
 		}
-		if _, err := conn.DisassociateAddress(opts); err != nil {
-			return err
-		}
-		return nil
+		_, err := conn.DisassociateAddress(opts)
+		return err
 	}
 }
 

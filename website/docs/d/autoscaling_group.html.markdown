@@ -34,7 +34,7 @@ interpolation.
 * `desired_capacity` - The desired size of the group.
 * `health_check_grace_period` - The amount of time, in seconds, that Amazon EC2 Auto Scaling waits before checking the health status of an EC2 instance that has come into service.
 * `health_check_type` - The service to use for the health checks. The valid values are EC2 and ELB.
-* `launch_configuratione` - The name of the associated launch configuration.
+* `launch_configuration` - The name of the associated launch configuration.
 * `load_balancers` - One or more load balancers associated with the group.
 * `max_size` - The maximum size of the group.
 * `min_size` - The minimum size of the group.

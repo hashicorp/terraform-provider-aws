@@ -141,11 +141,7 @@ func testAccCheckServiceCatlaogPortfolioDisappears(dpo *servicecatalog.DescribeP
 		input.Id = dpo.PortfolioDetail.Id
 
 		_, err := conn.DeletePortfolio(&input)
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

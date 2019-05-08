@@ -87,7 +87,11 @@ resource "aws_instance" "test" {
 data "aws_instances" "test" {
   filter {
     name = "instance-id"
-    values = ["${aws_instance.test.*.id}"]
+    values = [
+      "${aws_instance.test.*.id[0]}",
+      "${aws_instance.test.*.id[1]}",
+      "${aws_instance.test.*.id[2]}",
+    ]
   }
 }
 `
@@ -121,7 +125,7 @@ resource "aws_instance" "test" {
 }
 
 data "aws_instances" "test" {
-  instance_tags {
+  instance_tags = {
     Name      = "${aws_instance.test.0.tags["Name"]}"
     SecondTag = "${aws_instance.test.1.tags["Name"]}"
   }
@@ -157,7 +161,7 @@ resource "aws_instance" "test" {
 }
 
 data "aws_instances" "test" {
-  instance_tags {
+  instance_tags = {
     Name = "${aws_instance.test.0.tags["Name"]}"
   }
   

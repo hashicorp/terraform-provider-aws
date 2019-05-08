@@ -70,7 +70,17 @@ func resourceAwsEip() *schema.Resource {
 				Computed: true,
 			},
 
+			"public_dns": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"private_ip": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"private_dns": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -220,8 +230,28 @@ func resourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 	} else {
 		d.Set("network_interface", "")
 	}
+
+	region := *ec2conn.Config.Region
 	d.Set("private_ip", address.PrivateIpAddress)
+	if address.PrivateIpAddress != nil {
+		dashIP := strings.Replace(*address.PrivateIpAddress, ".", "-", -1)
+
+		if region == "us-east-1" {
+			d.Set("private_dns", fmt.Sprintf("ip-%s.ec2.internal", dashIP))
+		} else {
+			d.Set("private_dns", fmt.Sprintf("ip-%s.%s.compute.internal", dashIP, region))
+		}
+	}
 	d.Set("public_ip", address.PublicIp)
+	if address.PublicIp != nil {
+		dashIP := strings.Replace(*address.PublicIp, ".", "-", -1)
+
+		if region == "us-east-1" {
+			d.Set("public_dns", fmt.Sprintf("ec2-%s.compute-1.amazonaws.com", dashIP))
+		} else {
+			d.Set("public_dns", fmt.Sprintf("ec2-%s.%s.compute.amazonaws.com", dashIP, region))
+		}
+	}
 	d.Set("public_ipv4_pool", address.PublicIpv4Pool)
 
 	// On import (domain never set, which it must've been if we created),

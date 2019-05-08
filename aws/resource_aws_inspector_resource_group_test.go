@@ -22,7 +22,7 @@ func TestAccAWSInspectorResourceGroup_basic(t *testing.T) {
 			{
 				Config: testAccCheckAWSInspectorResourceGroupModified,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSInspectorTargetExists("aws_inspector_resource_group.foo"),
+					testAccCheckAWSInspectorResourceGroupExists("aws_inspector_resource_group.foo"),
 				),
 			},
 		},

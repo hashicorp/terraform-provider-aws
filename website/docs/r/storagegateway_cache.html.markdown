@@ -6,7 +6,7 @@ description: |-
   Manages an AWS Storage Gateway cache
 ---
 
-# aws_storagegateway_cache
+# Resource: aws_storagegateway_cache
 
 Manages an AWS Storage Gateway cache.
 

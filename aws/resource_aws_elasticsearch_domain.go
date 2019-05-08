@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
-	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/hashicorp/terraform/helper/customdiff"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/structure"
@@ -26,6 +26,31 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsElasticSearchDomainImport,
 		},
+
+		CustomizeDiff: customdiff.Sequence(
+			customdiff.ForceNewIf("elasticsearch_version", func(d *schema.ResourceDiff, meta interface{}) bool {
+				newVersion := d.Get("elasticsearch_version").(string)
+				domainName := d.Get("domain_name").(string)
+
+				conn := meta.(*AWSClient).esconn
+				resp, err := conn.GetCompatibleElasticsearchVersions(&elasticsearch.GetCompatibleElasticsearchVersionsInput{
+					DomainName: aws.String(domainName),
+				})
+				if err != nil {
+					log.Printf("[ERROR] Failed to get compatible ElasticSearch versions %s", domainName)
+					return false
+				}
+				if len(resp.CompatibleElasticsearchVersions) != 1 {
+					return true
+				}
+				for _, targetVersion := range resp.CompatibleElasticsearchVersions[0].TargetVersions {
+					if aws.StringValue(targetVersion) == newVersion {
+						return false
+					}
+				}
+				return true
+			}),
+		),
 
 		Schema: map[string]*schema.Schema{
 			"access_policies": {
@@ -253,7 +278,6 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "1.5",
-				ForceNew: true,
 			},
 			"cognito_options": {
 				Type:             schema.TypeList,
@@ -293,37 +317,6 @@ func resourceAwsElasticSearchDomainImport(
 	d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	d.Set("domain_name", d.Id())
 	return []*schema.ResourceData{d}, nil
-}
-
-// This would be created automatically if the domain is created via Console
-// see http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-vpc.html#es-enabling-slr
-func createAwsElasticsearchIAMServiceRoleIfMissing(meta interface{}) error {
-	serviceRoleName := "AWSServiceRoleForAmazonElasticsearchService"
-	serviceName := "es.amazonaws.com"
-
-	conn := meta.(*AWSClient).iamconn
-
-	getRequest := &iam.GetRoleInput{
-		RoleName: aws.String(serviceRoleName),
-	}
-	_, err := conn.GetRole(getRequest)
-	if err != nil {
-		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "Role not found") {
-			createRequest := &iam.CreateServiceLinkedRoleInput{
-				AWSServiceName: aws.String(serviceName),
-			}
-			_, err := conn.CreateServiceLinkedRole(createRequest)
-			if err != nil {
-				if isAWSErr(err, iam.ErrCodeInvalidInputException, "has been taken in this account") {
-					return nil
-				}
-				return fmt.Errorf("Error creating IAM Service-Linked Role %s: %s", serviceRoleName, err)
-			}
-			return nil
-		}
-		return fmt.Errorf("Error reading IAM Role %s: %s", serviceRoleName, err)
-	}
-	return nil
 }
 
 func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface{}) error {
@@ -413,11 +406,6 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 	}
 
 	if v, ok := d.GetOk("vpc_options"); ok {
-		err = createAwsElasticsearchIAMServiceRoleIfMissing(meta)
-		if err != nil {
-			return err
-		}
-
 		options := v.([]interface{})
 		if options[0] == nil {
 			return fmt.Errorf("At least one field is expected inside vpc_options")
@@ -740,6 +728,40 @@ func resourceAwsElasticSearchDomainUpdate(d *schema.ResourceData, meta interface
 	})
 	if err != nil {
 		return err
+	}
+
+	if d.HasChange("elasticsearch_version") {
+		upgradeInput := elasticsearch.UpgradeElasticsearchDomainInput{
+			DomainName:    aws.String(d.Get("domain_name").(string)),
+			TargetVersion: aws.String(d.Get("elasticsearch_version").(string)),
+		}
+
+		_, err := conn.UpgradeElasticsearchDomain(&upgradeInput)
+		if err != nil {
+			return fmt.Errorf("Failed to upgrade elasticsearch domain: %s", err)
+		}
+
+		stateConf := &resource.StateChangeConf{
+			Pending: []string{elasticsearch.UpgradeStatusInProgress},
+			Target:  []string{elasticsearch.UpgradeStatusSucceeded},
+			Refresh: func() (interface{}, string, error) {
+				out, err := conn.GetUpgradeStatus(&elasticsearch.GetUpgradeStatusInput{
+					DomainName: aws.String(d.Get("domain_name").(string)),
+				})
+				if err != nil {
+					return nil, "", err
+				}
+
+				return out, aws.StringValue(out.StepStatus), nil
+			},
+			Timeout:    60 * time.Minute, // TODO: Make this configurable. Large ES domains may take a very long time to upgrade
+			MinTimeout: 10 * time.Second,
+			Delay:      30 * time.Second, // The upgrade status isn't instantly available for the current upgrade so will either be nil or reflect a previous upgrade
+		}
+		_, waitErr := stateConf.WaitForState()
+		if waitErr != nil {
+			return waitErr
+		}
 	}
 
 	d.Partial(false)

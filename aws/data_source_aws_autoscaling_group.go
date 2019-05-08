@@ -143,11 +143,8 @@ func dataSourceAwsAutoscalingGroupRead(d *schema.ResourceData, meta interface{})
 
 	log.Printf("[DEBUG] aws_autoscaling_group - Single Auto Scaling Group found: %s", *group.AutoScalingGroupName)
 
-	if err := groupDescriptionAttributes(d, group); err != nil {
-		return err
-	}
-
-	return nil
+	err1 := groupDescriptionAttributes(d, group)
+	return err1
 }
 
 // Populate group attribute fields with the returned group

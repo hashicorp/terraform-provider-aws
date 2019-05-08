@@ -275,7 +275,7 @@ resource "aws_cognito_identity_pool" "main" {
   identity_pool_name               = "identity pool %s"
   allow_unauthenticated_identities = false
 
-  supported_login_providers {
+  supported_login_providers = {
     "graph.facebook.com" = "7346241598935555"
   }
 }
@@ -288,7 +288,7 @@ resource "aws_cognito_identity_pool" "main" {
   identity_pool_name               = "identity pool %s"
   allow_unauthenticated_identities = false
 
-  supported_login_providers {
+  supported_login_providers = {
     "graph.facebook.com"  = "7346241598935552"
     "accounts.google.com" = "123456789012.apps.googleusercontent.com"
   }

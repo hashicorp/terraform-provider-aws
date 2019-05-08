@@ -195,7 +195,7 @@ resource "aws_licensemanager_license_configuration" "example" {
     "#minimumSockets=3"
   ]
 
-  tags {
+  tags = {
     foo = "barr"
   }
 }
@@ -211,7 +211,7 @@ resource "aws_licensemanager_license_configuration" "example" {
     "#minimumSockets=3"
   ]
 
-  tags {
+  tags = {
     test = "test"
     abc = "def"
   }

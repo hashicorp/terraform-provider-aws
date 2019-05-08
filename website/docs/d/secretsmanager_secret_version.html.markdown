@@ -31,6 +31,16 @@ data "aws_secretsmanager_secret_version" "by-version-stage" {
 }
 ```
 
+### Handling Key-Value Secret Strings in JSON
+
+Reading key-value pairs from JSON back into a native Terraform map can be accomplished in Terraform 0.12 and later with the [`jsondecode()` function](https://www.terraform.io/docs/configuration/functions/jsondecode.html):
+
+```hcl
+output "example" {
+  value = jsondecode(aws_secretsmanager_secret_version.example.secret_string)["key1"]
+}
+```
+
 ## Argument Reference
 
 * `secret_id` - (Required) Specifies the secret containing the version that you want to retrieve. You can specify either the Amazon Resource Name (ARN) or the friendly name of the secret.

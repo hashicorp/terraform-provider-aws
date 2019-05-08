@@ -3713,6 +3713,10 @@ type ElasticsearchClusterConfig struct {
 	// The instance type for an Elasticsearch cluster.
 	InstanceType *string `type:"string" enum:"ESPartitionInstanceType"`
 
+	// Specifies the zone awareness configuration for a domain when zone awareness
+	// is enabled.
+	ZoneAwarenessConfig *ZoneAwarenessConfig `type:"structure"`
+
 	// A boolean value to indicate whether zone awareness is enabled. See About
 	// Zone Awareness (http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-managedomains.html#es-managedomains-zoneawareness)
 	// for more information.
@@ -3756,6 +3760,12 @@ func (s *ElasticsearchClusterConfig) SetInstanceCount(v int64) *ElasticsearchClu
 // SetInstanceType sets the InstanceType field's value.
 func (s *ElasticsearchClusterConfig) SetInstanceType(v string) *ElasticsearchClusterConfig {
 	s.InstanceType = &v
+	return s
+}
+
+// SetZoneAwarenessConfig sets the ZoneAwarenessConfig field's value.
+func (s *ElasticsearchClusterConfig) SetZoneAwarenessConfig(v *ZoneAwarenessConfig) *ElasticsearchClusterConfig {
+	s.ZoneAwarenessConfig = v
 	return s
 }
 
@@ -6445,6 +6455,33 @@ func (s *VPCOptions) SetSecurityGroupIds(v []*string) *VPCOptions {
 // SetSubnetIds sets the SubnetIds field's value.
 func (s *VPCOptions) SetSubnetIds(v []*string) *VPCOptions {
 	s.SubnetIds = v
+	return s
+}
+
+// Specifies the zone awareness configuration for the domain cluster, such as
+// the number of availability zones.
+type ZoneAwarenessConfig struct {
+	_ struct{} `type:"structure"`
+
+	// An integer value to indicate the number of availability zones for a domain
+	// when zone awareness is enabled. This should be equal to number of subnets
+	// if VPC endpoints is enabled
+	AvailabilityZoneCount *int64 `type:"integer"`
+}
+
+// String returns the string representation
+func (s ZoneAwarenessConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ZoneAwarenessConfig) GoString() string {
+	return s.String()
+}
+
+// SetAvailabilityZoneCount sets the AvailabilityZoneCount field's value.
+func (s *ZoneAwarenessConfig) SetAvailabilityZoneCount(v int64) *ZoneAwarenessConfig {
+	s.AvailabilityZoneCount = &v
 	return s
 }
 

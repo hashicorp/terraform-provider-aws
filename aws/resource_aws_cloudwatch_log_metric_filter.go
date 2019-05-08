@@ -95,6 +95,12 @@ func resourceAwsCloudWatchLogMetricFilterUpdate(d *schema.ResourceData, meta int
 	o := transformations[0].(map[string]interface{})
 	input.MetricTransformations = expandCloudWatchLogMetricTransformations(o)
 
+	// Creating multiple filters on the same log group can sometimes cause
+	// clashes, so use a mutex here (and on deletion) to serialise actions on
+	// log groups.
+	mutex_key := fmt.Sprintf(`log-group-%s`, d.Get(`log_group_name`))
+	awsMutexKV.Lock(mutex_key)
+	defer awsMutexKV.Unlock(mutex_key)
 	log.Printf("[DEBUG] Creating/Updating CloudWatch Log Metric Filter: %s", input)
 	_, err := conn.PutMetricFilter(&input)
 	if err != nil {
@@ -180,6 +186,12 @@ func resourceAwsCloudWatchLogMetricFilterDelete(d *schema.ResourceData, meta int
 		FilterName:   aws.String(d.Get("name").(string)),
 		LogGroupName: aws.String(d.Get("log_group_name").(string)),
 	}
+	// Creating multiple filters on the same log group can sometimes cause
+	// clashes, so use a mutex here (and on creation) to serialise actions on
+	// log groups.
+	mutex_key := fmt.Sprintf(`log-group-%s`, d.Get(`log_group_name`))
+	awsMutexKV.Lock(mutex_key)
+	defer awsMutexKV.Unlock(mutex_key)
 	log.Printf("[INFO] Deleting CloudWatch Log Metric Filter: %s", d.Id())
 	_, err := conn.DeleteMetricFilter(&input)
 	if err != nil {

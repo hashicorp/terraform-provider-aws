@@ -6,7 +6,7 @@ description: |-
   Provides a License Manager license configuration resource.
 ---
 
-# aws_licensemanager_license_configuration
+# Resource: aws_licensemanager_license_configuration
 
 Provides a License Manager license configuration resource.
 
@@ -26,7 +26,7 @@ resource "aws_licensemanager_license_configuration" "example" {
     "#minimumSockets=2"
   ]
 
-  tags {
+  tags = {
     foo = "barr"
   }
 }

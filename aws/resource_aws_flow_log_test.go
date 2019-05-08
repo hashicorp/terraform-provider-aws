@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -146,6 +147,22 @@ func TestAccAWSFlowLog_LogDestinationType_S3(t *testing.T) {
 	})
 }
 
+func TestAccAWSFlowLog_LogDestinationType_S3_Invalid(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test-flow-log-s3-invalid")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckFlowLogDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccFlowLogConfig_LogDestinationType_S3_Invalid(rName),
+				ExpectError: regexp.MustCompile(`Access Denied for LogDestination`),
+			},
+		},
+	})
+}
+
 func testAccCheckFlowLogExists(n string, flowLog *ec2.FlowLog) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -267,6 +284,25 @@ resource "aws_flow_log" "test" {
   vpc_id               = "${aws_vpc.test.id}"
 }
 `, rName, rName)
+}
+
+func testAccFlowLogConfig_LogDestinationType_S3_Invalid(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %q
+  }
+}
+
+resource "aws_flow_log" "test" {
+  log_destination      = "arn:aws:s3:::does-not-exist"
+  log_destination_type = "s3"
+  traffic_type         = "ALL"
+  vpc_id               = "${aws_vpc.test.id}"
+}
+`, rName)
 }
 
 func testAccFlowLogConfig_SubnetID(rName string) string {

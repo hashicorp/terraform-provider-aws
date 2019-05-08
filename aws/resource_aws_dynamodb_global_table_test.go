@@ -150,9 +150,7 @@ func testAccCheckAwsDynamoDbGlobalTableExists(name string) resource.TestCheckFun
 
 func testAccDynamoDbGlobalTableConfig_basic(tableName string) string {
 	return fmt.Sprintf(`
-data "aws_region" "current" {
-  current = true
-}
+data "aws_region" "current" {}
 
 resource "aws_dynamodb_table" "test" {
   hash_key         = "myAttribute"

@@ -6,6 +6,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/aws/aws-sdk-go/aws/request"
+	"github.com/aws/aws-sdk-go/private/protocol"
+	"github.com/aws/aws-sdk-go/private/protocol/restjson"
 )
 
 const opCreateApp = "CreateApp"
@@ -4990,6 +4992,80 @@ func (c *Pinpoint) GetVoiceChannelWithContext(ctx aws.Context, input *GetVoiceCh
 	return out, req.Send()
 }
 
+const opListTagsForResource = "ListTagsForResource"
+
+// ListTagsForResourceRequest generates a "aws/request.Request" representing the
+// client's request for the ListTagsForResource operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListTagsForResource for more information on using the ListTagsForResource
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListTagsForResourceRequest method.
+//    req, resp := client.ListTagsForResourceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/ListTagsForResource
+func (c *Pinpoint) ListTagsForResourceRequest(input *ListTagsForResourceInput) (req *request.Request, output *ListTagsForResourceOutput) {
+	op := &request.Operation{
+		Name:       opListTagsForResource,
+		HTTPMethod: "GET",
+		HTTPPath:   "/v1/tags/{resource-arn}",
+	}
+
+	if input == nil {
+		input = &ListTagsForResourceInput{}
+	}
+
+	output = &ListTagsForResourceOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListTagsForResource API operation for Amazon Pinpoint.
+//
+// Get list of all tags for a given resource arn
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Pinpoint's
+// API operation ListTagsForResource for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/ListTagsForResource
+func (c *Pinpoint) ListTagsForResource(input *ListTagsForResourceInput) (*ListTagsForResourceOutput, error) {
+	req, out := c.ListTagsForResourceRequest(input)
+	return out, req.Send()
+}
+
+// ListTagsForResourceWithContext is the same as ListTagsForResource with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListTagsForResource for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Pinpoint) ListTagsForResourceWithContext(ctx aws.Context, input *ListTagsForResourceInput, opts ...request.Option) (*ListTagsForResourceOutput, error) {
+	req, out := c.ListTagsForResourceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opPhoneNumberValidate = "PhoneNumberValidate"
 
 // PhoneNumberValidateRequest generates a "aws/request.Request" representing the
@@ -5550,6 +5626,156 @@ func (c *Pinpoint) SendUsersMessages(input *SendUsersMessagesInput) (*SendUsersM
 // for more information on using Contexts.
 func (c *Pinpoint) SendUsersMessagesWithContext(ctx aws.Context, input *SendUsersMessagesInput, opts ...request.Option) (*SendUsersMessagesOutput, error) {
 	req, out := c.SendUsersMessagesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opTagResource = "TagResource"
+
+// TagResourceRequest generates a "aws/request.Request" representing the
+// client's request for the TagResource operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See TagResource for more information on using the TagResource
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the TagResourceRequest method.
+//    req, resp := client.TagResourceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/TagResource
+func (c *Pinpoint) TagResourceRequest(input *TagResourceInput) (req *request.Request, output *TagResourceOutput) {
+	op := &request.Operation{
+		Name:       opTagResource,
+		HTTPMethod: "POST",
+		HTTPPath:   "/v1/tags/{resource-arn}",
+	}
+
+	if input == nil {
+		input = &TagResourceInput{}
+	}
+
+	output = &TagResourceOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// TagResource API operation for Amazon Pinpoint.
+//
+// Adds tags to a resource.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Pinpoint's
+// API operation TagResource for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/TagResource
+func (c *Pinpoint) TagResource(input *TagResourceInput) (*TagResourceOutput, error) {
+	req, out := c.TagResourceRequest(input)
+	return out, req.Send()
+}
+
+// TagResourceWithContext is the same as TagResource with the addition of
+// the ability to pass a context and additional request options.
+//
+// See TagResource for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Pinpoint) TagResourceWithContext(ctx aws.Context, input *TagResourceInput, opts ...request.Option) (*TagResourceOutput, error) {
+	req, out := c.TagResourceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUntagResource = "UntagResource"
+
+// UntagResourceRequest generates a "aws/request.Request" representing the
+// client's request for the UntagResource operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UntagResource for more information on using the UntagResource
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UntagResourceRequest method.
+//    req, resp := client.UntagResourceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/UntagResource
+func (c *Pinpoint) UntagResourceRequest(input *UntagResourceInput) (req *request.Request, output *UntagResourceOutput) {
+	op := &request.Operation{
+		Name:       opUntagResource,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/v1/tags/{resource-arn}",
+	}
+
+	if input == nil {
+		input = &UntagResourceInput{}
+	}
+
+	output = &UntagResourceOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// UntagResource API operation for Amazon Pinpoint.
+//
+// Remove tags from a resource.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Pinpoint's
+// API operation UntagResource for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/UntagResource
+func (c *Pinpoint) UntagResource(input *UntagResourceInput) (*UntagResourceOutput, error) {
+	req, out := c.UntagResourceRequest(input)
+	return out, req.Send()
+}
+
+// UntagResourceWithContext is the same as UntagResource with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UntagResource for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Pinpoint) UntagResourceWithContext(ctx aws.Context, input *UntagResourceInput, opts ...request.Option) (*UntagResourceOutput, error) {
+	req, out := c.UntagResourceRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -8583,11 +8809,17 @@ func (s *AddressConfiguration) SetTitleOverride(v string) *AddressConfiguration 
 type ApplicationResponse struct {
 	_ struct{} `type:"structure"`
 
+	// The arn for the application.
+	Arn *string `type:"string"`
+
 	// The unique application ID.
 	Id *string `type:"string"`
 
 	// The display name of the application.
 	Name *string `type:"string"`
+
+	// The Tags for the application.
+	Tags map[string]*string `locationName:"tags" type:"map"`
 }
 
 // String returns the string representation
@@ -8600,6 +8832,12 @@ func (s ApplicationResponse) GoString() string {
 	return s.String()
 }
 
+// SetArn sets the Arn field's value.
+func (s *ApplicationResponse) SetArn(v string) *ApplicationResponse {
+	s.Arn = &v
+	return s
+}
+
 // SetId sets the Id field's value.
 func (s *ApplicationResponse) SetId(v string) *ApplicationResponse {
 	s.Id = &v
@@ -8609,6 +8847,12 @@ func (s *ApplicationResponse) SetId(v string) *ApplicationResponse {
 // SetName sets the Name field's value.
 func (s *ApplicationResponse) SetName(v string) *ApplicationResponse {
 	s.Name = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *ApplicationResponse) SetTags(v map[string]*string) *ApplicationResponse {
+	s.Tags = v
 	return s
 }
 
@@ -9312,6 +9556,9 @@ type CampaignResponse struct {
 	// The ID of the application to which the campaign applies.
 	ApplicationId *string `type:"string"`
 
+	// The arn for the campaign.
+	Arn *string `type:"string"`
+
 	// The date the campaign was created in ISO 8601 format.
 	CreationDate *string `type:"string"`
 
@@ -9361,6 +9608,9 @@ type CampaignResponse struct {
 	// only when all treatments have a status of COMPLETED.
 	State *CampaignState `type:"structure"`
 
+	// The Tags for the campaign.
+	Tags map[string]*string `locationName:"tags" type:"map"`
+
 	// A custom description for the treatment.
 	TreatmentDescription *string `type:"string"`
 
@@ -9390,6 +9640,12 @@ func (s *CampaignResponse) SetAdditionalTreatments(v []*TreatmentResource) *Camp
 // SetApplicationId sets the ApplicationId field's value.
 func (s *CampaignResponse) SetApplicationId(v string) *CampaignResponse {
 	s.ApplicationId = &v
+	return s
+}
+
+// SetArn sets the Arn field's value.
+func (s *CampaignResponse) SetArn(v string) *CampaignResponse {
+	s.Arn = &v
 	return s
 }
 
@@ -9480,6 +9736,12 @@ func (s *CampaignResponse) SetSegmentVersion(v int64) *CampaignResponse {
 // SetState sets the State field's value.
 func (s *CampaignResponse) SetState(v *CampaignState) *CampaignResponse {
 	s.State = v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CampaignResponse) SetTags(v map[string]*string) *CampaignResponse {
+	s.Tags = v
 	return s
 }
 
@@ -9793,6 +10055,9 @@ type CreateApplicationRequest struct {
 
 	// The display name of the application. Used in the Amazon Pinpoint console.
 	Name *string `type:"string"`
+
+	// The Tags for the app.
+	Tags map[string]*string `locationName:"tags" type:"map"`
 }
 
 // String returns the string representation
@@ -9808,6 +10073,12 @@ func (s CreateApplicationRequest) GoString() string {
 // SetName sets the Name field's value.
 func (s *CreateApplicationRequest) SetName(v string) *CreateApplicationRequest {
 	s.Name = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateApplicationRequest) SetTags(v map[string]*string) *CreateApplicationRequest {
+	s.Tags = v
 	return s
 }
 
@@ -12586,6 +12857,15 @@ func (s *EndpointsResponse) SetItem(v []*EndpointResponse) *EndpointsResponse {
 type Event struct {
 	_ struct{} `type:"structure"`
 
+	// The package name associated with the app that's recording the event.
+	AppPackageName *string `type:"string"`
+
+	// The title of the app that's recording the event.
+	AppTitle *string `type:"string"`
+
+	// The version number of the app that's recording the event.
+	AppVersionCode *string `type:"string"`
+
 	// Custom attributes that are associated with the event you're adding or updating.
 	Attributes map[string]*string `type:"map"`
 
@@ -12597,6 +12877,9 @@ type Event struct {
 
 	// Custom metrics related to the event.
 	Metrics map[string]*float64 `type:"map"`
+
+	// The name of the SDK that's being used to record the event.
+	SdkName *string `type:"string"`
 
 	// Information about the session in which the event occurred.
 	Session *Session `type:"structure"`
@@ -12613,6 +12896,24 @@ func (s Event) String() string {
 // GoString returns the string representation
 func (s Event) GoString() string {
 	return s.String()
+}
+
+// SetAppPackageName sets the AppPackageName field's value.
+func (s *Event) SetAppPackageName(v string) *Event {
+	s.AppPackageName = &v
+	return s
+}
+
+// SetAppTitle sets the AppTitle field's value.
+func (s *Event) SetAppTitle(v string) *Event {
+	s.AppTitle = &v
+	return s
+}
+
+// SetAppVersionCode sets the AppVersionCode field's value.
+func (s *Event) SetAppVersionCode(v string) *Event {
+	s.AppVersionCode = &v
+	return s
 }
 
 // SetAttributes sets the Attributes field's value.
@@ -12636,6 +12937,12 @@ func (s *Event) SetEventType(v string) *Event {
 // SetMetrics sets the Metrics field's value.
 func (s *Event) SetMetrics(v map[string]*float64) *Event {
 	s.Metrics = v
+	return s
+}
+
+// SetSdkName sets the SdkName field's value.
+func (s *Event) SetSdkName(v string) *Event {
+	s.SdkName = &v
 	return s
 }
 
@@ -16396,6 +16703,68 @@ func (s *ItemResponse) SetEventsItemResponse(v map[string]*EventItemResponse) *I
 	return s
 }
 
+type ListTagsForResourceInput struct {
+	_ struct{} `type:"structure"`
+
+	// ResourceArn is a required field
+	ResourceArn *string `location:"uri" locationName:"resource-arn" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ListTagsForResourceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListTagsForResourceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListTagsForResourceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListTagsForResourceInput"}
+	if s.ResourceArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceArn"))
+	}
+	if s.ResourceArn != nil && len(*s.ResourceArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceArn", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetResourceArn sets the ResourceArn field's value.
+func (s *ListTagsForResourceInput) SetResourceArn(v string) *ListTagsForResourceInput {
+	s.ResourceArn = &v
+	return s
+}
+
+type ListTagsForResourceOutput struct {
+	_ struct{} `type:"structure" payload:"TagsModel"`
+
+	// TagsModel is a required field
+	TagsModel *TagsModel `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s ListTagsForResourceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListTagsForResourceOutput) GoString() string {
+	return s.String()
+}
+
+// SetTagsModel sets the TagsModel field's value.
+func (s *ListTagsForResourceOutput) SetTagsModel(v *TagsModel) *ListTagsForResourceOutput {
+	s.TagsModel = v
+	return s
+}
+
 // Message to send
 type Message struct {
 	_ struct{} `type:"structure"`
@@ -18349,6 +18718,9 @@ type SegmentResponse struct {
 	// The ID of the application that the segment applies to.
 	ApplicationId *string `type:"string"`
 
+	// The arn for the segment.
+	Arn *string `type:"string"`
+
 	// The date and time when the segment was created.
 	CreationDate *string `type:"string"`
 
@@ -18380,6 +18752,9 @@ type SegmentResponse struct {
 	// request to the jobs/import resource.
 	SegmentType *string `type:"string" enum:"SegmentType"`
 
+	// The Tags for the segment.
+	Tags map[string]*string `locationName:"tags" type:"map"`
+
 	// The segment version number.
 	Version *int64 `type:"integer"`
 }
@@ -18397,6 +18772,12 @@ func (s SegmentResponse) GoString() string {
 // SetApplicationId sets the ApplicationId field's value.
 func (s *SegmentResponse) SetApplicationId(v string) *SegmentResponse {
 	s.ApplicationId = &v
+	return s
+}
+
+// SetArn sets the Arn field's value.
+func (s *SegmentResponse) SetArn(v string) *SegmentResponse {
+	s.Arn = &v
 	return s
 }
 
@@ -18445,6 +18826,12 @@ func (s *SegmentResponse) SetSegmentGroups(v *SegmentGroupList) *SegmentResponse
 // SetSegmentType sets the SegmentType field's value.
 func (s *SegmentResponse) SetSegmentType(v string) *SegmentResponse {
 	s.SegmentType = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *SegmentResponse) SetTags(v map[string]*string) *SegmentResponse {
+	s.Tags = v
 	return s
 }
 
@@ -18913,6 +19300,112 @@ func (s *SimpleEmailPart) SetData(v string) *SimpleEmailPart {
 	return s
 }
 
+type TagResourceInput struct {
+	_ struct{} `type:"structure" payload:"TagsModel"`
+
+	// ResourceArn is a required field
+	ResourceArn *string `location:"uri" locationName:"resource-arn" type:"string" required:"true"`
+
+	// TagsModel is a required field
+	TagsModel *TagsModel `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s TagResourceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TagResourceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *TagResourceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "TagResourceInput"}
+	if s.ResourceArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceArn"))
+	}
+	if s.ResourceArn != nil && len(*s.ResourceArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceArn", 1))
+	}
+	if s.TagsModel == nil {
+		invalidParams.Add(request.NewErrParamRequired("TagsModel"))
+	}
+	if s.TagsModel != nil {
+		if err := s.TagsModel.Validate(); err != nil {
+			invalidParams.AddNested("TagsModel", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetResourceArn sets the ResourceArn field's value.
+func (s *TagResourceInput) SetResourceArn(v string) *TagResourceInput {
+	s.ResourceArn = &v
+	return s
+}
+
+// SetTagsModel sets the TagsModel field's value.
+func (s *TagResourceInput) SetTagsModel(v *TagsModel) *TagResourceInput {
+	s.TagsModel = v
+	return s
+}
+
+type TagResourceOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s TagResourceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TagResourceOutput) GoString() string {
+	return s.String()
+}
+
+type TagsModel struct {
+	_ struct{} `type:"structure"`
+
+	// Tags is a required field
+	Tags map[string]*string `locationName:"tags" type:"map" required:"true"`
+}
+
+// String returns the string representation
+func (s TagsModel) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TagsModel) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *TagsModel) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "TagsModel"}
+	if s.Tags == nil {
+		invalidParams.Add(request.NewErrParamRequired("Tags"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetTags sets the Tags field's value.
+func (s *TagsModel) SetTags(v map[string]*string) *TagsModel {
+	s.Tags = v
+	return s
+}
+
 // Treatment resource
 type TreatmentResource struct {
 	_ struct{} `type:"structure"`
@@ -18989,6 +19482,71 @@ func (s *TreatmentResource) SetTreatmentDescription(v string) *TreatmentResource
 func (s *TreatmentResource) SetTreatmentName(v string) *TreatmentResource {
 	s.TreatmentName = &v
 	return s
+}
+
+type UntagResourceInput struct {
+	_ struct{} `type:"structure"`
+
+	// ResourceArn is a required field
+	ResourceArn *string `location:"uri" locationName:"resource-arn" type:"string" required:"true"`
+
+	// TagKeys is a required field
+	TagKeys []*string `location:"querystring" locationName:"tagKeys" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s UntagResourceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UntagResourceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UntagResourceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UntagResourceInput"}
+	if s.ResourceArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceArn"))
+	}
+	if s.ResourceArn != nil && len(*s.ResourceArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceArn", 1))
+	}
+	if s.TagKeys == nil {
+		invalidParams.Add(request.NewErrParamRequired("TagKeys"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetResourceArn sets the ResourceArn field's value.
+func (s *UntagResourceInput) SetResourceArn(v string) *UntagResourceInput {
+	s.ResourceArn = &v
+	return s
+}
+
+// SetTagKeys sets the TagKeys field's value.
+func (s *UntagResourceInput) SetTagKeys(v []*string) *UntagResourceInput {
+	s.TagKeys = v
+	return s
+}
+
+type UntagResourceOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s UntagResourceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UntagResourceOutput) GoString() string {
+	return s.String()
 }
 
 type UpdateAdmChannelInput struct {
@@ -20523,6 +21081,9 @@ type WriteCampaignRequest struct {
 	// The version of the segment to which the campaign sends messages.
 	SegmentVersion *int64 `type:"integer"`
 
+	// The Tags for the campaign.
+	Tags map[string]*string `locationName:"tags" type:"map"`
+
 	// A custom description for the treatment.
 	TreatmentDescription *string `type:"string"`
 
@@ -20606,6 +21167,12 @@ func (s *WriteCampaignRequest) SetSegmentVersion(v int64) *WriteCampaignRequest 
 	return s
 }
 
+// SetTags sets the Tags field's value.
+func (s *WriteCampaignRequest) SetTags(v map[string]*string) *WriteCampaignRequest {
+	s.Tags = v
+	return s
+}
+
 // SetTreatmentDescription sets the TreatmentDescription field's value.
 func (s *WriteCampaignRequest) SetTreatmentDescription(v string) *WriteCampaignRequest {
 	s.TreatmentDescription = &v
@@ -20669,6 +21236,9 @@ type WriteSegmentRequest struct {
 	// one segment group. Your request can include either a SegmentGroups object
 	// or a Dimensions object, but not both.
 	SegmentGroups *SegmentGroupList `type:"structure"`
+
+	// The Tags for the segments.
+	Tags map[string]*string `locationName:"tags" type:"map"`
 }
 
 // String returns the string representation
@@ -20696,6 +21266,12 @@ func (s *WriteSegmentRequest) SetName(v string) *WriteSegmentRequest {
 // SetSegmentGroups sets the SegmentGroups field's value.
 func (s *WriteSegmentRequest) SetSegmentGroups(v *SegmentGroupList) *WriteSegmentRequest {
 	s.SegmentGroups = v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *WriteSegmentRequest) SetTags(v map[string]*string) *WriteSegmentRequest {
+	s.Tags = v
 	return s
 }
 

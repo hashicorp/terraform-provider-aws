@@ -213,7 +213,7 @@ resource "aws_glue_catalog_database" "test" {
   name = "my_test_catalog_database_%d"
   description = "%s"
   location_uri = "my-location"
-  parameters {
+  parameters = {
 	param1 = "value1"
 	param2 = true
 	param3 = 50

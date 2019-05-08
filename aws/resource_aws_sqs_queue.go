@@ -267,7 +267,7 @@ func resourceAwsSqsQueueRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		if awsErr, ok := err.(awserr.Error); ok {
 			log.Printf("ERROR Found %s", awsErr.Code())
-			if "AWS.SimpleQueueService.NonExistentQueue" == awsErr.Code() {
+			if awsErr.Code() == "AWS.SimpleQueueService.NonExistentQueue" {
 				d.SetId("")
 				log.Printf("[DEBUG] SQS Queue (%s) not found", d.Get("name").(string))
 				return nil
@@ -280,42 +280,121 @@ func resourceAwsSqsQueueRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	d.Set("name", name)
 
-	if attributeOutput.Attributes != nil && len(attributeOutput.Attributes) > 0 {
-		attrmap := attributeOutput.Attributes
-		resource := *resourceAwsSqsQueue()
-		// iKey = internal struct key, oKey = AWS Attribute Map key
-		for iKey, oKey := range sqsQueueAttributeMap {
-			if attrmap[oKey] != nil {
-				switch resource.Schema[iKey].Type {
-				case schema.TypeInt:
-					value, err := strconv.Atoi(*attrmap[oKey])
-					if err != nil {
-						return err
-					}
-					d.Set(iKey, value)
-					log.Printf("[DEBUG] Reading %s => %s -> %d", iKey, oKey, value)
-				case schema.TypeBool:
-					value, err := strconv.ParseBool(*attrmap[oKey])
-					if err != nil {
-						return err
-					}
-					d.Set(iKey, value)
-					log.Printf("[DEBUG] Reading %s => %s -> %t", iKey, oKey, value)
-				default:
-					log.Printf("[DEBUG] Reading %s => %s -> %s", iKey, oKey, *attrmap[oKey])
-					d.Set(iKey, *attrmap[oKey])
-				}
+	// Always set attribute defaults
+	d.Set("arn", "")
+	d.Set("content_based_deduplication", false)
+	d.Set("delay_seconds", 0)
+	d.Set("fifo_queue", false)
+	d.Set("kms_data_key_reuse_period_seconds", 300)
+	d.Set("kms_master_key_id", "")
+	d.Set("max_message_size", 262144)
+	d.Set("message_retention_seconds", 345600)
+	d.Set("name", name)
+	d.Set("policy", "")
+	d.Set("receive_wait_time_seconds", 0)
+	d.Set("redrive_policy", "")
+	d.Set("visibility_timeout_seconds", 30)
+
+	if attributeOutput != nil {
+		queueAttributes := aws.StringValueMap(attributeOutput.Attributes)
+
+		if v, ok := queueAttributes[sqs.QueueAttributeNameQueueArn]; ok {
+			d.Set("arn", v)
+		}
+
+		if v, ok := queueAttributes[sqs.QueueAttributeNameContentBasedDeduplication]; ok && v != "" {
+			vBool, err := strconv.ParseBool(v)
+
+			if err != nil {
+				return fmt.Errorf("error parsing content_based_deduplication value (%s) into boolean: %s", v, err)
 			}
+
+			d.Set("content_based_deduplication", vBool)
+		}
+
+		if v, ok := queueAttributes[sqs.QueueAttributeNameDelaySeconds]; ok && v != "" {
+			vInt, err := strconv.Atoi(v)
+
+			if err != nil {
+				return fmt.Errorf("error parsing delay_seconds value (%s) into integer: %s", v, err)
+			}
+
+			d.Set("delay_seconds", vInt)
+		}
+
+		if v, ok := queueAttributes[sqs.QueueAttributeNameFifoQueue]; ok && v != "" {
+			vBool, err := strconv.ParseBool(v)
+
+			if err != nil {
+				return fmt.Errorf("error parsing fifo_queue value (%s) into boolean: %s", v, err)
+			}
+
+			d.Set("fifo_queue", vBool)
+		}
+
+		if v, ok := queueAttributes[sqs.QueueAttributeNameKmsDataKeyReusePeriodSeconds]; ok && v != "" {
+			vInt, err := strconv.Atoi(v)
+
+			if err != nil {
+				return fmt.Errorf("error parsing kms_data_key_reuse_period_seconds value (%s) into integer: %s", v, err)
+			}
+
+			d.Set("kms_data_key_reuse_period_seconds", vInt)
+		}
+
+		if v, ok := queueAttributes[sqs.QueueAttributeNameKmsMasterKeyId]; ok {
+			d.Set("kms_master_key_id", v)
+		}
+
+		if v, ok := queueAttributes[sqs.QueueAttributeNameMaximumMessageSize]; ok && v != "" {
+			vInt, err := strconv.Atoi(v)
+
+			if err != nil {
+				return fmt.Errorf("error parsing max_message_size value (%s) into integer: %s", v, err)
+			}
+
+			d.Set("max_message_size", vInt)
+		}
+
+		if v, ok := queueAttributes[sqs.QueueAttributeNameMessageRetentionPeriod]; ok && v != "" {
+			vInt, err := strconv.Atoi(v)
+
+			if err != nil {
+				return fmt.Errorf("error parsing message_retention_seconds value (%s) into integer: %s", v, err)
+			}
+
+			d.Set("message_retention_seconds", vInt)
+		}
+
+		if v, ok := queueAttributes[sqs.QueueAttributeNamePolicy]; ok {
+			d.Set("policy", v)
+		}
+
+		if v, ok := queueAttributes[sqs.QueueAttributeNameReceiveMessageWaitTimeSeconds]; ok && v != "" {
+			vInt, err := strconv.Atoi(v)
+
+			if err != nil {
+				return fmt.Errorf("error parsing receive_wait_time_seconds value (%s) into integer: %s", v, err)
+			}
+
+			d.Set("receive_wait_time_seconds", vInt)
+		}
+
+		if v, ok := queueAttributes[sqs.QueueAttributeNameRedrivePolicy]; ok {
+			d.Set("redrive_policy", v)
+		}
+
+		if v, ok := queueAttributes[sqs.QueueAttributeNameVisibilityTimeout]; ok && v != "" {
+			vInt, err := strconv.Atoi(v)
+
+			if err != nil {
+				return fmt.Errorf("error parsing visibility_timeout_seconds value (%s) into integer: %s", v, err)
+			}
+
+			d.Set("visibility_timeout_seconds", vInt)
 		}
 	}
-
-	// Since AWS does not send the FifoQueue attribute back when the queue
-	// is a standard one (even to false), this enforces the queue to be set
-	// to the correct value.
-	d.Set("fifo_queue", d.Get("fifo_queue").(bool))
-	d.Set("content_based_deduplication", d.Get("content_based_deduplication").(bool))
 
 	tags := make(map[string]string)
 	listTagsOutput, err := sqsconn.ListQueueTags(&sqs.ListQueueTagsInput{
@@ -343,10 +422,7 @@ func resourceAwsSqsQueueDelete(d *schema.ResourceData, meta interface{}) error {
 	_, err := sqsconn.DeleteQueue(&sqs.DeleteQueueInput{
 		QueueUrl: aws.String(d.Id()),
 	})
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 func extractNameFromSqsQueueUrl(queue string) (string, error) {

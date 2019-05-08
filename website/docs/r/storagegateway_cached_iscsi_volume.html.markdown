@@ -6,7 +6,7 @@ description: |-
   Manages an AWS Storage Gateway cached iSCSI volume
 ---
 
-# aws_storagegateway_cached_iscsi_volume
+# Resource: aws_storagegateway_cached_iscsi_volume
 
 Manages an AWS Storage Gateway cached iSCSI volume.
 

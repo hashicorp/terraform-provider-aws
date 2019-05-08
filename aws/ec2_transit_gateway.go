@@ -544,7 +544,10 @@ func waitForEc2TransitGatewayRouteTableAssociationDeletion(conn *ec2.EC2, transi
 func waitForEc2TransitGatewayRouteTableAttachmentCreation(conn *ec2.EC2, transitGatewayAttachmentID string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.TransitGatewayAttachmentStatePending},
-		Target:  []string{ec2.TransitGatewayAttachmentStateAvailable},
+		Target: []string{
+			ec2.TransitGatewayAttachmentStatePendingAcceptance,
+			ec2.TransitGatewayAttachmentStateAvailable,
+		},
 		Refresh: ec2TransitGatewayVpcAttachmentRefreshFunc(conn, transitGatewayAttachmentID),
 		Timeout: 10 * time.Minute,
 	}

@@ -193,7 +193,7 @@ resource "aws_ses_event_destination" "kinesis" {
 }
 
 resource "aws_ses_event_destination" "cloudwatch" {
-  name = "%s",
+  name = "%s"
   configuration_set_name = "${aws_ses_configuration_set.test.name}"
   enabled = true
   matching_types = ["bounce", "send"]

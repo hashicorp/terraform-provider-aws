@@ -6,7 +6,7 @@ description: |-
   Provides a Pinpoint GCM Channel resource.
 ---
 
-# aws_pinpoint_gcm_channel
+# Resource: aws_pinpoint_gcm_channel
 
 Provides a Pinpoint GCM Channel resource.
 

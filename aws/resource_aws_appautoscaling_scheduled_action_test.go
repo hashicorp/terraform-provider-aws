@@ -260,7 +260,7 @@ resource "aws_security_group" "hoge" {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    self = true
   }
 
   egress {
@@ -476,7 +476,7 @@ data "aws_iam_policy_document" "autoscale_role" {
     effect  = "Allow"
     actions = ["sts:AssumeRole"]
 
-    principals = {
+    principals {
       type        = "Service"
       identifiers = ["elasticmapreduce.amazonaws.com","application-autoscaling.amazonaws.com"]
     }

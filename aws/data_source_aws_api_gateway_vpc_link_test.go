@@ -9,7 +9,7 @@ import (
 )
 
 func TestAccDataSourceAwsApiGatewayVpcLink(t *testing.T) {
-	rName := acctest.RandString(8)
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8))
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,

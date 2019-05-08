@@ -6,6 +6,7 @@ import (
 	"log"
 	"regexp"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -16,6 +17,88 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/rds"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_rds_cluster", &resource.Sweeper{
+		Name: "aws_rds_cluster",
+		F:    testSweepRdsClusters,
+		Dependencies: []string{
+			"aws_db_instance",
+		},
+	})
+}
+
+func testSweepRdsClusters(region string) error {
+	client, err := sharedClientForRegion(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+
+	conn := client.(*AWSClient).rdsconn
+	input := &rds.DescribeDBClustersInput{}
+
+	err = conn.DescribeDBClustersPages(input, func(out *rds.DescribeDBClustersOutput, lastPage bool) bool {
+		for _, cluster := range out.DBClusters {
+			id := aws.StringValue(cluster.DBClusterIdentifier)
+
+			// Automatically remove from global cluster to bypass this error on deletion:
+			// InvalidDBClusterStateFault: This cluster is a part of a global cluster, please remove it from globalcluster first
+			if aws.StringValue(cluster.EngineMode) == "global" {
+				globalCluster, err := rdsDescribeGlobalClusterFromDbClusterARN(conn, aws.StringValue(cluster.DBClusterArn))
+
+				if err != nil {
+					log.Printf("[ERROR] Failure reading RDS Global Cluster information for DB Cluster (%s): %s", id, err)
+				}
+
+				if globalCluster != nil {
+					globalClusterID := aws.StringValue(globalCluster.GlobalClusterIdentifier)
+					input := &rds.RemoveFromGlobalClusterInput{
+						DbClusterIdentifier:     cluster.DBClusterArn,
+						GlobalClusterIdentifier: globalCluster.GlobalClusterIdentifier,
+					}
+
+					log.Printf("[INFO] Removing RDS Cluster (%s) from RDS Global Cluster: %s", id, globalClusterID)
+					_, err = conn.RemoveFromGlobalCluster(input)
+
+					if err != nil {
+						log.Printf("[ERROR] Failure removing RDS Cluster (%s) from RDS Global Cluster (%s): %s", id, globalClusterID, err)
+					}
+				}
+			}
+
+			input := &rds.DeleteDBClusterInput{
+				DBClusterIdentifier: cluster.DBClusterIdentifier,
+				SkipFinalSnapshot:   aws.Bool(true),
+			}
+
+			log.Printf("[INFO] Deleting RDS DB Cluster: %s", id)
+
+			_, err := conn.DeleteDBCluster(input)
+
+			if err != nil {
+				log.Printf("[ERROR] Failed to delete RDS DB Cluster (%s): %s", id, err)
+				continue
+			}
+
+			if err := waitForRDSClusterDeletion(conn, id, 40*time.Minute); err != nil {
+				log.Printf("[ERROR] Failure while waiting for RDS DB Cluster (%s) to be deleted: %s", id, err)
+			}
+		}
+		return !lastPage
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping RDS DB Cluster sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error retrieving RDS DB Clusters: %s", err)
+	}
+
+	return nil
+}
 
 func TestAccAWSRDSCluster_importBasic(t *testing.T) {
 	resourceName := "aws_rds_cluster.default"
@@ -35,7 +118,12 @@ func TestAccAWSRDSCluster_importBasic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"master_password", "skip_final_snapshot"},
+					"apply_immediately",
+					"cluster_identifier_prefix",
+					"master_password",
+					"skip_final_snapshot",
+					"snapshot_identifier",
+				},
 			},
 		},
 	})
@@ -57,6 +145,7 @@ func TestAccAWSRDSCluster_basic(t *testing.T) {
 					testAccCheckAWSClusterExists(resourceName, &dbCluster),
 					resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(`^arn:[^:]+:rds:[^:]+:\d{12}:cluster:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "backtrack_window", "0"),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "false"),
 					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
 					resource.TestCheckResourceAttr(resourceName, "db_cluster_parameter_group_name", "default.aurora5.6"),
 					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint"),
@@ -346,6 +435,41 @@ func TestAccAWSRDSCluster_encrypted(t *testing.T) {
 						"aws_rds_cluster.default", "storage_encrypted", "true"),
 					resource.TestCheckResourceAttr(
 						"aws_rds_cluster.default", "db_cluster_parameter_group_name", "default.aurora5.6"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSRDSCluster_copyTagsToSnapshot(t *testing.T) {
+	var v rds.DBCluster
+	rInt := acctest.RandInt()
+	resourceName := "aws_rds_cluster.default"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSClusterConfigWithCopyTagsToSnapshot(rInt, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "true"),
+				),
+			},
+			{
+				Config: testAccAWSClusterConfigWithCopyTagsToSnapshot(rInt, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "false"),
+				),
+			},
+			{
+				Config: testAccAWSClusterConfigWithCopyTagsToSnapshot(rInt, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "true"),
 				),
 			},
 		},
@@ -1260,7 +1384,7 @@ func TestAccAWSRDSCluster_SnapshotIdentifier_VpcSecurityGroupIds(t *testing.T) {
 }
 
 // Regression reference: https://github.com/terraform-providers/terraform-provider-aws/issues/5450
-// This acceptance test explicitly tests when snapshot_identifer is set,
+// This acceptance test explicitly tests when snapshot_identifier is set,
 // vpc_security_group_ids is set (which triggered the resource update function),
 // and tags is set which was missing its ARN used for tagging
 func TestAccAWSRDSCluster_SnapshotIdentifier_VpcSecurityGroupIds_Tags(t *testing.T) {
@@ -1547,7 +1671,7 @@ resource "aws_s3_bucket_object" "xtrabackup_db" {
   bucket = "${aws_s3_bucket.xtrabackup.id}"
   key    = "%s/mysql-5-6-xtrabackup.tar.gz"
   source = "../files/mysql-5-6-xtrabackup.tar.gz"
-  etag   = "${md5(file("../files/mysql-5-6-xtrabackup.tar.gz"))}"
+  etag   = "${filemd5("../files/mysql-5-6-xtrabackup.tar.gz")}"
 }
 
 
@@ -1848,10 +1972,7 @@ resource "aws_rds_cluster" "default" {
 
 func testAccAWSClusterConfig_EngineVersion(rInt int, engine, engineVersion string) string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {}
-
 resource "aws_rds_cluster" "test" {
-  availability_zones              = ["${data.aws_availability_zones.available.names}"]
   cluster_identifier              = "tf-acc-test-%d"
   database_name                   = "mydb"
   db_cluster_parameter_group_name = "default.aurora-postgresql9.6"
@@ -1866,11 +1987,7 @@ resource "aws_rds_cluster" "test" {
 
 func testAccAWSClusterConfig_EngineVersionWithPrimaryInstance(rInt int, engine, engineVersion string) string {
 	return fmt.Sprintf(`
-
-data "aws_availability_zones" "available" {}
-
 resource "aws_rds_cluster" "test" {
-  availability_zones              = ["${data.aws_availability_zones.available.names}"]
   cluster_identifier              = "tf-acc-test-%d"
   database_name                   = "mydb"
   db_cluster_parameter_group_name = "default.aurora-postgresql9.6"
@@ -1892,10 +2009,7 @@ resource "aws_rds_cluster_instance" "test" {
 
 func testAccAWSClusterConfig_Port(rInt, port int) string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {}
-
 resource "aws_rds_cluster" "test" {
-  availability_zones              = ["${data.aws_availability_zones.available.names}"]
   cluster_identifier              = "tf-acc-test-%d"
   database_name                   = "mydb"
   db_cluster_parameter_group_name = "default.aurora-postgresql9.6"
@@ -2144,10 +2258,6 @@ data "aws_availability_zones" "us-east-1" {
   provider = "aws.useast1"
 }
 
-data "aws_availability_zones" "us-west-2" {
-  provider = "aws.uswest2"
-}
-
 resource "aws_rds_cluster_instance" "test_instance" {
   provider = "aws.uswest2"
   identifier = "tf-aurora-instance-%[1]d"
@@ -2171,7 +2281,6 @@ resource "aws_rds_cluster_parameter_group" "default" {
 resource "aws_rds_cluster" "test_primary" {
   provider = "aws.uswest2"
   cluster_identifier = "tf-test-primary-%[1]d"
-  availability_zones = ["${slice(data.aws_availability_zones.us-west-2.names, 0, 3)}"]
   db_cluster_parameter_group_name = "${aws_rds_cluster_parameter_group.default.name}"
   database_name = "mydb"
   master_username = "foo"
@@ -2226,7 +2335,7 @@ resource "aws_subnet" "db" {
 resource "aws_db_subnet_group" "replica" {
   provider   = "aws.useast1"
   name       = "test_replica-subnet-%[1]d"
-  subnet_ids = ["${aws_subnet.db.*.id}"]
+  subnet_ids = ["${aws_subnet.db.*.id[0]}", "${aws_subnet.db.*.id[1]}", "${aws_subnet.db.*.id[2]}"]
 }
 
 resource "aws_rds_cluster" "test_replica" {
@@ -2587,4 +2696,18 @@ resource "aws_rds_cluster" "test" {
   kms_key_id = "${aws_kms_key.test.arn}"
 }
 `, rName, rName, rName)
+}
+
+func testAccAWSClusterConfigWithCopyTagsToSnapshot(n int, f bool) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "default" {
+  cluster_identifier = "tf-aurora-cluster-%[1]d"
+  availability_zones = ["us-west-2a","us-west-2b","us-west-2c"]
+  database_name = "mydb"
+  master_username = "foo"
+  master_password = "mustbeeightcharaters"
+  db_cluster_parameter_group_name = "default.aurora5.6"
+	copy_tags_to_snapshot = %[2]t
+	skip_final_snapshot = true
+}`, n, f)
 }

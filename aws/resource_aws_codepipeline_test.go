@@ -261,7 +261,7 @@ resource "aws_codepipeline" "bar" {
       version          = "1"
       output_artifacts = ["test"]
 
-      configuration {
+      configuration = {
         Owner  = "lifesum-terraform"
         Repo   = "test"
         Branch = "master"
@@ -280,7 +280,7 @@ resource "aws_codepipeline" "bar" {
       input_artifacts = ["test"]
       version         = "1"
 
-      configuration {
+      configuration = {
         ProjectName = "test"
       }
     }
@@ -373,7 +373,7 @@ resource "aws_codepipeline" "bar" {
       version          = "1"
       output_artifacts = ["bar"]
 
-      configuration {
+      configuration = {
         Owner  = "foo-terraform"
         Repo   = "bar"
         Branch = "stable"
@@ -392,7 +392,7 @@ resource "aws_codepipeline" "bar" {
       input_artifacts = ["bar"]
       version         = "1"
 
-      configuration {
+      configuration = {
         ProjectName = "foo"
       }
     }
@@ -480,7 +480,7 @@ resource "aws_codepipeline" "bar" {
       version          = "1"
       output_artifacts = ["test"]
 
-      configuration {
+      configuration = {
         Owner  = "lifesum-terraform"
         Repo   = "test"
         Branch = "master"
@@ -500,7 +500,7 @@ resource "aws_codepipeline" "bar" {
       output_artifacts = [""]
       version          = "1"
 
-      configuration {
+      configuration = {
         ProjectName = "test"
       }
     }
@@ -646,7 +646,7 @@ resource "aws_codepipeline" "bar" {
       version          = "1"
       output_artifacts = ["bar"]
 
-      configuration {
+      configuration = {
         Owner  = "foo-terraform"
         Repo   = "bar"
         Branch = "stable"
@@ -666,7 +666,7 @@ resource "aws_codepipeline" "bar" {
       output_artifacts = ["baz"]
       version          = "1"
 
-      configuration {
+      configuration = {
         ProjectName = "foo"
       }
     }
@@ -684,13 +684,14 @@ resource "aws_codepipeline" "bar" {
       role_arn        = "${aws_iam_role.codepipeline_action_role.arn}"
       version         = "1"
 
-      configuration {
+      configuration = {
         ActionMode    = "CHANGE_SET_REPLACE"
         ChangeSetName = "changeset"
         StackName     = "stack"
         TemplatePath  = "baz::template.yaml"
       }
     }
-  }}
+  }
+}
 `, rName, rName, rName, rName)
 }

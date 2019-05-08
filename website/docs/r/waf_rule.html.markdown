@@ -6,7 +6,7 @@ description: |-
   Provides a AWS WAF rule resource.
 ---
 
-# aws_waf_rule
+# Resource: aws_waf_rule
 
 Provides a WAF Rule Resource
 

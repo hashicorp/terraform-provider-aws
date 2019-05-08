@@ -432,8 +432,8 @@ func (c *ResourceGroups) GetTagsRequest(input *GetTagsInput) (req *request.Reque
 
 // GetTags API operation for AWS Resource Groups.
 //
-// Returns a list of tags that are associated with a resource, specified by
-// an ARN.
+// Returns a list of tags that are associated with a resource group, specified
+// by an ARN.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -986,8 +986,8 @@ func (c *ResourceGroups) TagRequest(input *TagInput) (req *request.Request, outp
 
 // Tag API operation for AWS Resource Groups.
 //
-// Adds specified tags to a resource with the specified ARN. Existing tags on
-// a resource are not changed if they are not specified in the request parameters.
+// Adds tags to a resource group with the specified ARN. Existing tags on a
+// resource group are not changed if they are not specified in the request parameters.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1647,11 +1647,11 @@ func (s *GetGroupQueryOutput) SetGroupQuery(v *GroupQuery) *GetGroupQueryOutput 
 type GetTagsInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN of the resource for which you want a list of tags. The resource must
-	// exist within the account you are using.
+	// The ARN of the resource group for which you want a list of tags. The resource
+	// must exist within the account you are using.
 	//
 	// Arn is a required field
-	Arn *string `location:"uri" locationName:"Arn" type:"string" required:"true"`
+	Arn *string `location:"uri" locationName:"Arn" min:"12" type:"string" required:"true"`
 }
 
 // String returns the string representation
@@ -1670,8 +1670,8 @@ func (s *GetTagsInput) Validate() error {
 	if s.Arn == nil {
 		invalidParams.Add(request.NewErrParamRequired("Arn"))
 	}
-	if s.Arn != nil && len(*s.Arn) < 1 {
-		invalidParams.Add(request.NewErrParamMinLen("Arn", 1))
+	if s.Arn != nil && len(*s.Arn) < 12 {
+		invalidParams.Add(request.NewErrParamMinLen("Arn", 12))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -1689,10 +1689,10 @@ func (s *GetTagsInput) SetArn(v string) *GetTagsInput {
 type GetTagsOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN of the tagged resource.
-	Arn *string `type:"string"`
+	// The ARN of the tagged resource group.
+	Arn *string `min:"12" type:"string"`
 
-	// The tags associated with the specified resource.
+	// The tags associated with the specified resource group.
 	Tags map[string]*string `type:"map"`
 }
 
@@ -1728,7 +1728,7 @@ type Group struct {
 	// The ARN of a resource group.
 	//
 	// GroupArn is a required field
-	GroupArn *string `type:"string" required:"true"`
+	GroupArn *string `min:"12" type:"string" required:"true"`
 
 	// The name of a resource group.
 	//
@@ -1827,7 +1827,7 @@ type GroupIdentifier struct {
 	_ struct{} `type:"structure"`
 
 	// The ARN of a resource group.
-	GroupArn *string `type:"string"`
+	GroupArn *string `min:"12" type:"string"`
 
 	// The name of a resource group.
 	GroupName *string `min:"1" type:"string"`
@@ -2303,27 +2303,27 @@ type ResourceQuery struct {
 	// two tags, Stage and Version, with two values each. ([{"Key":"Stage","Values":["Test","Deploy"]},{"Key":"Version","Values":["1","2"]}])
 	// The results of this query might include the following.
 	//
-	//    * An EC2 instance that has the following two tags: {"Key":"Stage","Values":["Deploy"]},
-	//    and {"Key":"Version","Values":["2"]}
+	//    * An EC2 instance that has the following two tags: {"Key":"Stage","Value":"Deploy"},
+	//    and {"Key":"Version","Value":"2"}
 	//
-	//    * An S3 bucket that has the following two tags: {"Key":"Stage","Values":["Test","Deploy"]},
-	//    and {"Key":"Version","Values":["1"]}
+	//    * An S3 bucket that has the following two tags: {"Key":"Stage","Value":"Test"},
+	//    and {"Key":"Version","Value":"1"}
 	//
 	// The query would not return the following results, however. The following
 	// EC2 instance does not have all tag keys specified in the filter, so it is
 	// rejected. The RDS database has all of the tag keys, but no values that match
 	// at least one of the specified tag key values in the filter.
 	//
-	//    * An EC2 instance that has only the following tag: {"Key":"Stage","Values":["Deploy"]}.
+	//    * An EC2 instance that has only the following tag: {"Key":"Stage","Value":"Deploy"}.
 	//
-	//    * An RDS database that has the following two tags: {"Key":"Stage","Values":["Archived"]},
-	//    and {"Key":"Version","Values":["4"]}
+	//    * An RDS database that has the following two tags: {"Key":"Stage","Value":"Archived"},
+	//    and {"Key":"Version","Value":"4"}
 	//
 	// CLOUDFORMATION_STACK_1_0: A JSON syntax that lets you specify a CloudFormation
 	// stack ARN.
 	//
 	// Type is a required field
-	Type *string `type:"string" required:"true" enum:"QueryType"`
+	Type *string `min:"1" type:"string" required:"true" enum:"QueryType"`
 }
 
 // String returns the string representation
@@ -2344,6 +2344,9 @@ func (s *ResourceQuery) Validate() error {
 	}
 	if s.Type == nil {
 		invalidParams.Add(request.NewErrParamRequired("Type"))
+	}
+	if s.Type != nil && len(*s.Type) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Type", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -2483,7 +2486,7 @@ type TagInput struct {
 	// The ARN of the resource to which to add tags.
 	//
 	// Arn is a required field
-	Arn *string `location:"uri" locationName:"Arn" type:"string" required:"true"`
+	Arn *string `location:"uri" locationName:"Arn" min:"12" type:"string" required:"true"`
 
 	// The tags to add to the specified resource. A tag is a string-to-string map
 	// of key-value pairs. Tag keys can have a maximum character length of 128 characters,
@@ -2509,8 +2512,8 @@ func (s *TagInput) Validate() error {
 	if s.Arn == nil {
 		invalidParams.Add(request.NewErrParamRequired("Arn"))
 	}
-	if s.Arn != nil && len(*s.Arn) < 1 {
-		invalidParams.Add(request.NewErrParamMinLen("Arn", 1))
+	if s.Arn != nil && len(*s.Arn) < 12 {
+		invalidParams.Add(request.NewErrParamMinLen("Arn", 12))
 	}
 	if s.Tags == nil {
 		invalidParams.Add(request.NewErrParamRequired("Tags"))
@@ -2538,7 +2541,7 @@ type TagOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The ARN of the tagged resource.
-	Arn *string `type:"string"`
+	Arn *string `min:"12" type:"string"`
 
 	// The tags that have been added to the specified resource.
 	Tags map[string]*string `type:"map"`
@@ -2572,7 +2575,7 @@ type UntagInput struct {
 	// The ARN of the resource from which to remove tags.
 	//
 	// Arn is a required field
-	Arn *string `location:"uri" locationName:"Arn" type:"string" required:"true"`
+	Arn *string `location:"uri" locationName:"Arn" min:"12" type:"string" required:"true"`
 
 	// The keys of the tags to be removed.
 	//
@@ -2596,8 +2599,8 @@ func (s *UntagInput) Validate() error {
 	if s.Arn == nil {
 		invalidParams.Add(request.NewErrParamRequired("Arn"))
 	}
-	if s.Arn != nil && len(*s.Arn) < 1 {
-		invalidParams.Add(request.NewErrParamMinLen("Arn", 1))
+	if s.Arn != nil && len(*s.Arn) < 12 {
+		invalidParams.Add(request.NewErrParamMinLen("Arn", 12))
 	}
 	if s.Keys == nil {
 		invalidParams.Add(request.NewErrParamRequired("Keys"))
@@ -2625,7 +2628,7 @@ type UntagOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The ARN of the resource from which tags have been removed.
-	Arn *string `type:"string"`
+	Arn *string `min:"12" type:"string"`
 
 	// The keys of tags that have been removed.
 	Keys []*string `type:"list"`

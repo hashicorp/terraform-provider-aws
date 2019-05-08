@@ -6,7 +6,7 @@ description: |-
   Provides a DB event subscription resource.
 ---
 
-# aws_db_event_subscription
+# Resource: aws_db_event_subscription
 
 Provides a DB event subscription resource.
 

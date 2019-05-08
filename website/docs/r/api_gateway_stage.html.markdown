@@ -6,7 +6,7 @@ description: |-
   Provides an API Gateway Stage.
 ---
 
-# aws_api_gateway_stage
+# Resource: aws_api_gateway_stage
 
 Provides an API Gateway Stage.
 

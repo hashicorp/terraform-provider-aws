@@ -100,11 +100,7 @@ func testAccCheckAwsServiceDiscoveryHttpNamespaceExists(name string) resource.Te
 		}
 
 		_, err := conn.GetNamespace(input)
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

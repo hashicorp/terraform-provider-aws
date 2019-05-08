@@ -178,7 +178,7 @@ resource "aws_security_group" "allow_all" {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    self        = true
   }
 
   egress {
@@ -426,8 +426,8 @@ func testAccAWSEmrInstanceGroupConfig_ebsBasic(r int) string {
     instance_type  = "c4.large"
     ebs_optimized = true
     ebs_config {
-      "size" = 10,
-      "type" = "gp2",
+      size = 10
+      type = "gp2"
     }
   }
 	`, r, r, r, r, r, r)

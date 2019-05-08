@@ -62,7 +62,7 @@ STACK
 }
 resource "aws_cloudformation_stack" "yaml" {
   name = "%s2"
-  parameters {
+  parameters = {
     CIDR = "10.10.10.0/24"
   }
   timeout_in_minutes = 6
