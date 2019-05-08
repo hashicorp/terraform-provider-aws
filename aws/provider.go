@@ -592,6 +592,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_organizations_account":                               resourceAwsOrganizationsAccount(),
 			"aws_organizations_policy":                                resourceAwsOrganizationsPolicy(),
 			"aws_organizations_policy_attachment":                     resourceAwsOrganizationsPolicyAttachment(),
+			"aws_organizations_unit":                                  resourceAwsOrganizationsUnit(),
 			"aws_placement_group":                                     resourceAwsPlacementGroup(),
 			"aws_proxy_protocol_policy":                               resourceAwsProxyProtocolPolicy(),
 			"aws_ram_principal_association":                           resourceAwsRamPrincipalAssociation(),

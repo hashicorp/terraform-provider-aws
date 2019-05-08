@@ -24,9 +24,13 @@ resource "aws_organizations_policy_attachment" "account" {
 ### Organization Root
 
 ```hcl
+data "aws_organizations_unit" "root" {
+  root = true
+}
+
 resource "aws_organizations_policy_attachment" "root" {
   policy_id = "${aws_organizations_policy.example.id}"
-  target_id = "r-12345678"
+  target_id = "${data.aws_organizations_unit.root.id}"
 }
 ```
 
