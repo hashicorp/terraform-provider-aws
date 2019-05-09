@@ -42,6 +42,30 @@ func resourceAwsOrganizationsOrganization() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"accounts": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"email": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"roots": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -142,6 +166,16 @@ func resourceAwsOrganizationsOrganizationRead(d *schema.ResourceData, meta inter
 		return fmt.Errorf("error describing Organization: %s", err)
 	}
 
+	log.Printf("[INFO] Listing Accounts for Organization: %s", d.Id())
+	var accounts []*organizations.Account
+	err = conn.ListAccountsPages(&organizations.ListAccountsInput{}, func(page *organizations.ListAccountsOutput, lastPage bool) bool {
+		accounts = append(accounts, page.Accounts...)
+		return !lastPage
+	})
+	if err != nil {
+		return fmt.Errorf("error listing AWS Organization (%s) accounts: %s", d.Id(), err)
+	}
+
 	log.Printf("[INFO] Listing Roots for Organization: %s", d.Id())
 	var roots []*organizations.Root
 	err = conn.ListRootsPages(&organizations.ListRootsInput{}, func(page *organizations.ListRootsOutput, lastPage bool) bool {
@@ -152,14 +186,19 @@ func resourceAwsOrganizationsOrganizationRead(d *schema.ResourceData, meta inter
 		return fmt.Errorf("error listing AWS Organization (%s) roots: %s", d.Id(), err)
 	}
 
-	d.Set("arn", org.Organization.Arn)
-	if err := d.Set("roots", flattenOrganizationsRoots(roots)); err != nil {
-		return fmt.Errorf("error setting roots: %s", err)
+	if err := d.Set("accounts", flattenOrganizationsAccounts(accounts)); err != nil {
+		return fmt.Errorf("error setting accounts: %s", err)
 	}
+
+	d.Set("arn", org.Organization.Arn)
 	d.Set("feature_set", org.Organization.FeatureSet)
 	d.Set("master_account_arn", org.Organization.MasterAccountArn)
 	d.Set("master_account_email", org.Organization.MasterAccountEmail)
 	d.Set("master_account_id", org.Organization.MasterAccountId)
+
+	if err := d.Set("roots", flattenOrganizationsRoots(roots)); err != nil {
+		return fmt.Errorf("error setting roots: %s", err)
+	}
 
 	awsServiceAccessPrincipals := make([]string, 0)
 
@@ -235,6 +274,22 @@ func resourceAwsOrganizationsOrganizationDelete(d *schema.ResourceData, meta int
 	}
 
 	return nil
+}
+
+func flattenOrganizationsAccounts(accounts []*organizations.Account) []map[string]interface{} {
+	if len(accounts) == 0 {
+		return nil
+	}
+	var result []map[string]interface{}
+	for _, account := range accounts {
+		result = append(result, map[string]interface{}{
+			"arn":   aws.StringValue(account.Arn),
+			"email": aws.StringValue(account.Email),
+			"id":    aws.StringValue(account.Id),
+			"name":  aws.StringValue(account.Name),
+		})
+	}
+	return result
 }
 
 func flattenOrganizationsRoots(roots []*organizations.Root) []map[string]interface{} {
