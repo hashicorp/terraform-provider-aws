@@ -124,6 +124,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/wafregional"
 	"github.com/aws/aws-sdk-go/service/worklink"
 	"github.com/aws/aws-sdk-go/service/workspaces"
+	"github.com/aws/aws-sdk-go/service/xray"
 	awsbase "github.com/hashicorp/aws-sdk-go-base"
 	"github.com/hashicorp/terraform/helper/logging"
 	"github.com/hashicorp/terraform/terraform"
@@ -278,6 +279,7 @@ type AWSClient struct {
 	wafregionalconn                     *wafregional.WAFRegional
 	worklinkconn                        *worklink.WorkLink
 	workspacesconn                      *workspaces.WorkSpaces
+	xrayconn                            *xray.XRay
 }
 
 // Client configures and returns a fully initialized AWSClient
@@ -450,6 +452,7 @@ func (c *Config) Client() (interface{}, error) {
 		wafregionalconn:                     wafregional.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["wafregional"])})),
 		worklinkconn:                        worklink.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["worklink"])})),
 		workspacesconn:                      workspaces.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["workspaces"])})),
+		xrayconn:                            xray.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["xray"])})),
 	}
 
 	// Handle deprecated endpoint configurations
