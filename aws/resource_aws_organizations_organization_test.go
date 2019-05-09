@@ -2,12 +2,13 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
+	"testing"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	"regexp"
-	"testing"
 )
 
 func testAccAwsOrganizationsOrganization_basic(t *testing.T) {
@@ -23,6 +24,10 @@ func testAccAwsOrganizationsOrganization_basic(t *testing.T) {
 				Config: testAccAwsOrganizationsOrganizationConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsOrganizationsOrganizationExists(resourceName, &organization),
+					resource.TestCheckResourceAttr(resourceName, "accounts.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "accounts.0.arn", resourceName, "master_account_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "accounts.0.email", resourceName, "master_account_email"),
+					resource.TestCheckResourceAttrPair(resourceName, "accounts.0.id", resourceName, "master_account_id"),
 					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "organizations", regexp.MustCompile(`organization/o-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "aws_service_access_principals.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "feature_set", organizations.OrganizationFeatureSetAll),

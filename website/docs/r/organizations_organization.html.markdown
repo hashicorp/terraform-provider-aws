@@ -34,6 +34,11 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `accounts` - List of organization accounts (including the master account). All elements have these attributes:
+  * `arn` - ARN of the account
+  * `email` - Email of the account
+  * `id` - Identifier of the account
+  * `name` - Name of the account
 * `arn` - ARN of the organization
 * `id` - Identifier of the organization
 * `master_account_arn` - ARN of the master account
