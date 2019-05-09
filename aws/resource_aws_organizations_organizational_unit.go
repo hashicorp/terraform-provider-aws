@@ -24,6 +24,30 @@ func resourceAwsOrganizationsOrganizationalUnit() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"accounts": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"email": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -112,6 +136,27 @@ func resourceAwsOrganizationsOrganizationalUnitRead(d *schema.ResourceData, meta
 		return nil
 	}
 
+	log.Printf("[INFO] Listing Accounts for Organizational Unit: %s", d.Id())
+
+	var accounts []*organizations.Account
+	input := &organizations.ListAccountsForParentInput{
+		ParentId: aws.String(d.Id()),
+	}
+
+	err = conn.ListAccountsForParentPages(input, func(page *organizations.ListAccountsForParentOutput, lastPage bool) bool {
+		accounts = append(accounts, page.Accounts...)
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return fmt.Errorf("error listing AWS Organizations Organizational Unit (%s) accounts: %s", d.Id(), err)
+	}
+
+	if err := d.Set("accounts", flattenOrganizationsOrganizationalUnitAccounts(accounts)); err != nil {
+		return fmt.Errorf("error setting accounts: %s", err)
+	}
+
 	d.Set("arn", ou.Arn)
 	d.Set("name", ou.Name)
 	d.Set("parent_id", parentId)
@@ -179,4 +224,23 @@ func resourceAwsOrganizationsOrganizationalUnitGetParentId(conn *organizations.O
 	// https://docs.aws.amazon.com/organizations/latest/APIReference/API_ListParents.html
 	parent := parents[0]
 	return aws.StringValue(parent.Id), nil
+}
+
+func flattenOrganizationsOrganizationalUnitAccounts(accounts []*organizations.Account) []map[string]interface{} {
+	if len(accounts) == 0 {
+		return nil
+	}
+
+	var result []map[string]interface{}
+
+	for _, account := range accounts {
+		result = append(result, map[string]interface{}{
+			"arn":   aws.StringValue(account.Arn),
+			"email": aws.StringValue(account.Email),
+			"id":    aws.StringValue(account.Id),
+			"name":  aws.StringValue(account.Name),
+		})
+	}
+
+	return result
 }
