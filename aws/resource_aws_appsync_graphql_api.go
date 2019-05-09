@@ -12,6 +12,13 @@ import (
 	"github.com/hashicorp/terraform/helper/validation"
 )
 
+var validAppsyncAuthTypes = []string{
+	appsync.AuthenticationTypeApiKey,
+	appsync.AuthenticationTypeAwsIam,
+	appsync.AuthenticationTypeAmazonCognitoUserPools,
+	appsync.AuthenticationTypeOpenidConnect,
+}
+
 func resourceAwsAppsyncGraphqlApi() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsAppsyncGraphqlApiCreate,
@@ -24,15 +31,70 @@ func resourceAwsAppsyncGraphqlApi() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"additional_authentication_provider": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"authentication_type": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(validAppsyncAuthTypes, false),
+						},
+						"openid_connect_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"auth_ttl": {
+										Type:     schema.TypeInt,
+										Optional: true,
+									},
+									"client_id": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"iat_ttl": {
+										Type:     schema.TypeInt,
+										Optional: true,
+									},
+									"issuer": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
+						"user_pool_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"app_id_client_regex": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"aws_region": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+									},
+									"user_pool_id": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"authentication_type": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					appsync.AuthenticationTypeApiKey,
-					appsync.AuthenticationTypeAwsIam,
-					appsync.AuthenticationTypeAmazonCognitoUserPools,
-					appsync.AuthenticationTypeOpenidConnect,
-				}, false),
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(validAppsyncAuthTypes, false),
 			},
 			"schema": {
 				Type:     schema.TypeString,
@@ -160,6 +222,10 @@ func resourceAwsAppsyncGraphqlApiCreate(d *schema.ResourceData, meta interface{}
 		input.UserPoolConfig = expandAppsyncGraphqlApiUserPoolConfig(v.([]interface{}), meta.(*AWSClient).region)
 	}
 
+	if v, ok := d.GetOk("additional_authentication_provider"); ok {
+		input.AdditionalAuthenticationProviders = expandAppsyncGraphqlApiAdditionalAuthProviders(v.([]interface{}), meta.(*AWSClient).region)
+	}
+
 	if v, ok := d.GetOk("tags"); ok {
 		input.Tags = tagsFromMapGeneric(v.(map[string]interface{}))
 	}
@@ -211,6 +277,10 @@ func resourceAwsAppsyncGraphqlApiRead(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("error setting user_pool_config: %s", err)
 	}
 
+	if err := d.Set("additional_authentication_provider", flattenAppsyncGraphqlApiAdditionalAuthenticationProviders(resp.GraphqlApi.AdditionalAuthenticationProviders)); err != nil {
+		return fmt.Errorf("error setting additonal_authentication_provider: %s", err)
+	}
+
 	if err := d.Set("uris", aws.StringValueMap(resp.GraphqlApi.Uris)); err != nil {
 		return fmt.Errorf("error setting uris: %s", err)
 	}
@@ -246,6 +316,10 @@ func resourceAwsAppsyncGraphqlApiUpdate(d *schema.ResourceData, meta interface{}
 
 	if v, ok := d.GetOk("user_pool_config"); ok {
 		input.UserPoolConfig = expandAppsyncGraphqlApiUserPoolConfig(v.([]interface{}), meta.(*AWSClient).region)
+	}
+
+	if v, ok := d.GetOk("additional_authentication_provider"); ok {
+		input.AdditionalAuthenticationProviders = expandAppsyncGraphqlApiAdditionalAuthProviders(v.([]interface{}), meta.(*AWSClient).region)
 	}
 
 	_, err := conn.UpdateGraphqlApi(input)
@@ -344,6 +418,59 @@ func expandAppsyncGraphqlApiUserPoolConfig(l []interface{}, currentRegion string
 	return userPoolConfig
 }
 
+func expandAppsyncGraphqlApiAdditionalAuthProviders(items []interface{}, currentRegion string) []*appsync.AdditionalAuthenticationProvider {
+	if len(items) < 1 {
+		return nil
+	}
+
+	additionalAuthProviders := make([]*appsync.AdditionalAuthenticationProvider, 0, len(items))
+	for _, l := range items {
+		if l == nil {
+			continue
+		}
+
+		m := l.(map[string]interface{})
+		additionalAuthProvider := &appsync.AdditionalAuthenticationProvider{
+			AuthenticationType: aws.String(m["authentication_type"].(string)),
+		}
+
+		if v, ok := m["openid_connect_config"]; ok {
+			additionalAuthProvider.OpenIDConnectConfig = expandAppsyncGraphqlApiOpenIDConnectConfig(v.([]interface{}))
+		}
+
+		if v, ok := m["user_pool_config"]; ok {
+			additionalAuthProvider.UserPoolConfig = expandAppsyncGraphqlApiCognitoUserPoolConfig(v.([]interface{}), currentRegion)
+		}
+
+		additionalAuthProviders = append(additionalAuthProviders, additionalAuthProvider)
+	}
+
+	return additionalAuthProviders
+}
+
+func expandAppsyncGraphqlApiCognitoUserPoolConfig(l []interface{}, currentRegion string) *appsync.CognitoUserPoolConfig {
+	if len(l) < 1 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	userPoolConfig := &appsync.CognitoUserPoolConfig{
+		AwsRegion:  aws.String(currentRegion),
+		UserPoolId: aws.String(m["user_pool_id"].(string)),
+	}
+
+	if v, ok := m["app_id_client_regex"].(string); ok && v != "" {
+		userPoolConfig.AppIdClientRegex = aws.String(v)
+	}
+
+	if v, ok := m["aws_region"].(string); ok && v != "" {
+		userPoolConfig.AwsRegion = aws.String(v)
+	}
+
+	return userPoolConfig
+}
+
 func flattenAppsyncGraphqlApiLogConfig(logConfig *appsync.LogConfig) []interface{} {
 	if logConfig == nil {
 		return []interface{}{}
@@ -381,6 +508,40 @@ func flattenAppsyncGraphqlApiUserPoolConfig(userPoolConfig *appsync.UserPoolConf
 		"aws_region":     aws.StringValue(userPoolConfig.AwsRegion),
 		"default_action": aws.StringValue(userPoolConfig.DefaultAction),
 		"user_pool_id":   aws.StringValue(userPoolConfig.UserPoolId),
+	}
+
+	if userPoolConfig.AppIdClientRegex != nil {
+		m["app_id_client_regex"] = aws.StringValue(userPoolConfig.AppIdClientRegex)
+	}
+
+	return []interface{}{m}
+}
+
+func flattenAppsyncGraphqlApiAdditionalAuthenticationProviders(additionalAuthenticationProviders []*appsync.AdditionalAuthenticationProvider) []interface{} {
+	if len(additionalAuthenticationProviders) == 0 {
+		return []interface{}{}
+	}
+
+	result := make([]interface{}, len(additionalAuthenticationProviders))
+	for i, provider := range additionalAuthenticationProviders {
+		result[i] = map[string]interface{}{
+			"authentication_type":   aws.StringValue(provider.AuthenticationType),
+			"openid_connect_config": flattenAppsyncGraphqlApiOpenIDConnectConfig(provider.OpenIDConnectConfig),
+			"user_pool_config":      flattenAppsyncGraphqlApiCognitoUserPoolConfig(provider.UserPoolConfig),
+		}
+	}
+
+	return result
+}
+
+func flattenAppsyncGraphqlApiCognitoUserPoolConfig(userPoolConfig *appsync.CognitoUserPoolConfig) []interface{} {
+	if userPoolConfig == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"aws_region":   aws.StringValue(userPoolConfig.AwsRegion),
+		"user_pool_id": aws.StringValue(userPoolConfig.UserPoolId),
 	}
 
 	if userPoolConfig.AppIdClientRegex != nil {
