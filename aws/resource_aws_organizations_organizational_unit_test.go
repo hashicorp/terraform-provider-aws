@@ -27,6 +27,7 @@ func testAccAwsOrganizationsOrganizationalUnit_basic(t *testing.T) {
 				Config: testAccAwsOrganizationsOrganizationalUnitConfig(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsOrganizationsOrganizationalUnitExists(resourceName, &unit),
+					resource.TestCheckResourceAttr(resourceName, "accounts.#", "0"),
 					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "organizations", regexp.MustCompile(`ou/o-.+/ou-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 				),
