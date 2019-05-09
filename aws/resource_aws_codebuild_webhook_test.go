@@ -194,13 +194,13 @@ func TestAccAWSCodeBuildWebhook_FilterGroup(t *testing.T) {
 					testAccCheckAWSCodeBuildWebhookFilter(&webhook, [][]*codebuild.WebhookFilter{
 						{
 							{
-								Type:                  aws.String("HEAD_REF"),
-								Pattern:               aws.String("refs/heads/master"),
+								Type:                  aws.String("EVENT"),
+								Pattern:               aws.String("PULL_REQUEST_CREATED"),
 								ExcludeMatchedPattern: aws.Bool(false),
 							},
 							{
-								Type:                  aws.String("EVENT"),
-								Pattern:               aws.String("PULL_REQUEST_CREATED"),
+								Type:                  aws.String("HEAD_REF"),
+								Pattern:               aws.String("refs/heads/master"),
 								ExcludeMatchedPattern: aws.Bool(false),
 							},
 						},

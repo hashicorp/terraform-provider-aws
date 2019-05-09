@@ -1,11 +1,13 @@
 package aws
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codebuild"
+	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 )
@@ -58,6 +60,7 @@ func resourceAwsCodeBuildWebhook() *schema.Resource {
 						},
 					},
 				},
+				Set: resourceAwsCodeBuildWebhookFilterHash,
 			},
 			"payload_url": {
 				Type:     schema.TypeString,
@@ -124,7 +127,7 @@ func expandWebhookFilterGroup(d *schema.ResourceData) [][]*codebuild.WebhookFilt
 
 func expandWebhookFilterData(data map[string]interface{}) codebuild.WebhookFilter {
 	filter := codebuild.WebhookFilter{
-		Type:                  aws.String(data["type"].(string)),
+		Type: aws.String(data["type"].(string)),
 		ExcludeMatchedPattern: aws.Bool(data["exclude_matched_pattern"].(bool)),
 	}
 
@@ -163,7 +166,7 @@ func resourceAwsCodeBuildWebhookRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	d.Set("branch_filter", project.Webhook.BranchFilter)
-	d.Set("filter_group", project.Webhook.FilterGroups)
+	d.Set("filter_group", flattenAwsCodeBuildWebhookFilterGroups(project.Webhook.FilterGroups[0]))
 	d.Set("payload_url", project.Webhook.PayloadUrl)
 	d.Set("project_name", project.Name)
 	d.Set("url", project.Webhook.Url)
@@ -214,4 +217,36 @@ func resourceAwsCodeBuildWebhookDelete(d *schema.ResourceData, meta interface{})
 	}
 
 	return nil
+}
+
+func flattenAwsCodeBuildWebhookFilterGroups(filterList []*codebuild.WebhookFilter) *schema.Set {
+	filterSet := schema.Set{
+		F: resourceAwsCodeBuildWebhookFilterHash,
+	}
+
+	for _, filters := range filterList {
+		filterSet.Add(flattenAwsCodeBuildWebhookFilterData(*filters))
+	}
+	return &filterSet
+}
+
+func resourceAwsCodeBuildWebhookFilterHash(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.(map[string]interface{})
+
+	buf.WriteString(fmt.Sprintf("%s-", m["type"].(string)))
+	buf.WriteString(fmt.Sprintf("%s-", m["pattern"].(string)))
+	buf.WriteString(fmt.Sprintf("%q", m["exclude_matched_pattern"]))
+
+	return hashcode.String(buf.String())
+}
+
+func flattenAwsCodeBuildWebhookFilterData(filter codebuild.WebhookFilter) map[string]interface{} {
+	values := map[string]interface{}{}
+
+	values["type"] = *filter.Type
+	values["pattern"] = *filter.Pattern
+	values["exclude_matched_pattern"] = *filter.ExcludeMatchedPattern
+
+	return values
 }
