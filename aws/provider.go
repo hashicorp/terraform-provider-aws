@@ -762,6 +762,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_pinpoint_event_stream":                               resourceAwsPinpointEventStream(),
 			"aws_pinpoint_gcm_channel":                                resourceAwsPinpointGCMChannel(),
 			"aws_pinpoint_sms_channel":                                resourceAwsPinpointSMSChannel(),
+			"aws_xray_sampling_rule":                                  resourceAwsXraySamplingRule(),
 
 			// ALBs are actually LBs because they can be type `network` or `application`
 			// To avoid regressions, we will add a new resource for each and they both point
@@ -965,6 +966,7 @@ func init() {
 		"wafregional",
 		"worklink",
 		"workspaces",
+		"xray",
 	}
 }
 
